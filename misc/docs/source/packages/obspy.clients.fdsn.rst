@@ -20,5 +20,10 @@
        :nosignatures:
 
        client
+       mass_downloader
+       mass_downloader.domain
+       mass_downloader.mass_downloader.MassDownloader
+       mass_downloader.restrictions
+       mass_downloader.download_helpers
 
     .. comment to end block

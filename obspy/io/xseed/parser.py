@@ -6,12 +6,11 @@ Main module containing XML-SEED parser.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future import standard_library
 from future.utils import native_str
 
 import copy
@@ -19,26 +18,26 @@ import datetime
 import io
 import math
 import os
+import re
 import warnings
 import zipfile
 
-with standard_library.hooks():
-    import urllib.request  # @UnresolvedImport
-
+from lxml import etree
 from lxml.etree import parse as xmlparse
 from lxml.etree import Element, SubElement, tostring
 import numpy as np
 
 from obspy import Stream, Trace, __version__
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.decorator import map_example_filename, deprecated
+from obspy.core.util.base import download_to_file
+from obspy.core.util.decorator import map_example_filename
 from . import DEFAULT_XSEED_VERSION, blockette
 from .utils import IGNORE_ATTR, SEEDParserException, to_tag
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'
 HEADERS = ['V', 'A', 'S']
-# @see: http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf, p. 24-26
+# @see: https://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf, p. 24-26
 HEADER_INFO = {
     'V': {'name': 'Volume Index Control Header',
           'blockettes': [10, 11, 12]},
@@ -67,7 +66,7 @@ class Parser(object):
     .. seealso::
 
         The SEED file format description can be found at
-        http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf .
+        https://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf .
 
         The XML-SEED format was proposed in [Tsuboi2004]_.
     """
@@ -158,10 +157,11 @@ class Parser(object):
             self.__init__()
         # try to transform everything into BytesIO object
         if isinstance(data, (str, native_str)):
-            if "://" in data:
-                # some URL
-                data = urllib.request.urlopen(data).read()
-                data = io.BytesIO(data)
+            if re.search(r"://", data) is not None:
+                url = data
+                data = io.BytesIO()
+                download_to_file(url=url, filename_or_buffer=data)
+                data.seek(0, 0)
             elif os.path.isfile(data):
                 # looks like a file - read it
                 with open(data, 'rb') as f:
@@ -186,21 +186,26 @@ class Parser(object):
         data.seek(0)
         if first_byte.isdigit():
             # SEED volumes starts with a number
-            self._parse_SEED(data)
+            self._parse_seed(data)
             self._format = 'SEED'
         elif first_byte == b'<':
             # XML files should always starts with an '<'
-            self._parse_XSEED(data)
+            try:
+                self._parse_xseed(data)
+            except Exception as e:
+                # if it looks like the XML is not XSEED, tell the user
+                if not is_xseed(data):
+                    msg = ("Encountered an error during parsing XSEED file "
+                           "(%s: %s). Note that the XSEED parser can not "
+                           "parse StationXML. Please contact developers if "
+                           "your file really is XML-SEED.")
+                    raise Exception(msg % (e.__class__.__name__, str(e)))
+                raise
             self._format = 'XSEED'
         else:
             raise IOError("First byte of data must be in [0-9<]")
 
-    @deprecated("'getXSEED' has been renamed to 'get_XSEED'. "
-                "Use that instead.")
-    def getXSEED(self, *args, **kwargs):
-        return self.get_XSEED(*args, **kwargs)
-
-    def get_XSEED(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
+    def get_xseed(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
         Returns a XSEED representation of the current Parser object.
 
@@ -232,7 +237,7 @@ class Parser(object):
         # Volume header:
         sub = SubElement(doc, to_tag('Volume Index Control Header'))
         for blkt in self.volume:
-            sub.append(blkt.get_XML(xseed_version=version))
+            sub.append(blkt.get_xml(xseed_version=version))
         # Delete blockettes 11 and 12 if necessary.
         if version == '1.0':
             self._delete_blockettes_11_and_12()
@@ -240,13 +245,13 @@ class Parser(object):
         sub = SubElement(
             doc, to_tag('Abbreviation Dictionary Control Header'))
         for blkt in self.abbreviations:
-            sub.append(blkt.get_XML(xseed_version=version))
+            sub.append(blkt.get_xml(xseed_version=version))
         if not split_stations:
             # Don't split stations
             for station in self.stations:
                 sub = SubElement(doc, to_tag('Station Control Header'))
                 for blkt in station:
-                    sub.append(blkt.get_XML(xseed_version=version))
+                    sub.append(blkt.get_xml(xseed_version=version))
             if version == '1.0':
                 # To pass the XSD schema test an empty time span control header
                 # is added to the end of the file.
@@ -263,7 +268,7 @@ class Parser(object):
                 cdoc = copy.copy(doc)
                 sub = SubElement(cdoc, to_tag('Station Control Header'))
                 for blkt in station:
-                    sub.append(blkt.get_XML(xseed_version=version))
+                    sub.append(blkt.get_xml(xseed_version=version))
                 if version == '1.0':
                     # To pass the XSD schema test an empty time span control
                     # header is added to the end of the file.
@@ -278,16 +283,11 @@ class Parser(object):
                                       xml_declaration=True, encoding='UTF-8')
             return result
 
-    @deprecated("'writeXSEED' has been renamed to 'write_XSEED'. "
-                "Use that instead.")
-    def writeXSEED(self, *args, **kwargs):
-        return self.write_XSEED(*args, **kwargs)
-
-    def write_XSEED(self, filename, *args, **kwargs):
+    def write_xseed(self, filename, *args, **kwargs):
         """
         Writes a XML-SEED file with given name.
         """
-        result = self.get_XSEED(*args, **kwargs)
+        result = self.get_xseed(*args, **kwargs)
         if isinstance(result, bytes):
             with open(filename, 'wb') as f:
                 f.write(result)
@@ -307,12 +307,7 @@ class Parser(object):
         else:
             raise TypeError
 
-    @deprecated("'get_SEED' has been renamed to 'get_SEED'. "
-                "Use that instead.")
-    def getSEED(self, *args, **kwargs):
-        return self.get_SEED(*args, **kwargs)
-
-    def get_SEED(self, compact=False):
+    def get_seed(self, compact=False):
         """
         Returns a SEED representation of the current Parser object.
         """
@@ -350,25 +345,15 @@ class Parser(object):
                 cur_count += 1
         return seed_string
 
-    @deprecated("'writeSEED' has been renamed to 'write_SEED'. "
-                "Use that instead.")
-    def writeSEED(self, *args, **kwargs):
-        return self.write_SEED(*args, **kwargs)
-
-    def write_SEED(self, filename, *args, **kwargs):
+    def write_seed(self, filename, *args, **kwargs):
         """
         Writes a dataless SEED file with given name.
         """
         fh = open(filename, 'wb')
-        fh.write(self.get_SEED(*args, **kwargs))
+        fh.write(self.get_seed(*args, **kwargs))
         fh.close()
 
-    @deprecated("'get_RESP' has been renamed to 'get_RESP'. "
-                "Use that instead.")
-    def getRESP(self, *args, **kwargs):
-        return self.get_RESP(*args, **kwargs)
-
-    def get_RESP(self):
+    def get_resp(self):
         """
         Returns a RESP representation of the current Parser object.
 
@@ -401,7 +386,7 @@ class Parser(object):
                     resp.seek(_pos)
                     if _len != 0:
                         # Send the blockettes to the parser and append to list.
-                        self._get_RESP_string(resp, blockettes, cur_station)
+                        self._get_resp_string(resp, blockettes, cur_station)
                         resp_list.append([filename, resp])
                     # Create the file name.
                     filename = 'RESP.%s.%s.%s.%s' \
@@ -424,7 +409,7 @@ class Parser(object):
             # It might happen that no blockette 52 is specified,
             if len(blockettes) != 0:
                 # One last time for the last channel.
-                self._get_RESP_string(resp, blockettes, cur_station)
+                self._get_resp_string(resp, blockettes, cur_station)
                 resp_list.append([filename, resp])
         # Combine multiple channels.
         new_resp_list = []
@@ -449,7 +434,7 @@ class Parser(object):
         # parse blockettes if not SEED. Needed for XSEED to be initialized.
         # XXX: Should potentially be fixed at some point.
         if self._format != 'SEED':
-            self.__init__(self.get_SEED())
+            self.__init__(self.get_seed())
         if old_format == "XSEED":
             self._format = "XSEED"
         # split id
@@ -501,12 +486,7 @@ class Parser(object):
             raise SEEDParserException(msg % (seed_id))
         return blockettes
 
-    @deprecated("'getPAZ' has been renamed to 'get_PAZ'. "
-                "Use that instead.")
-    def getPAZ(self, *args, **kwargs):
-        return self.get_PAZ(*args, **kwargs)
-
-    def get_PAZ(self, seed_id, datetime=None):
+    def get_paz(self, seed_id, datetime=None):
         """
         Return PAZ.
 
@@ -535,7 +515,19 @@ class Parser(object):
                     data['seismometer_gain'] = blkt.sensitivity_gain
                 elif blkt.stage_sequence_number == 2:
                     data['digitizer_gain'] = blkt.sensitivity_gain
+                elif blkt.stage_sequence_number == 3:
+                    if 'digitizer_gain' in data:
+                        data['digitizer_gain'] *= blkt.sensitivity_gain
+                    else:
+                        data['digitizer_gain'] = blkt.sensitivity_gain
             elif blkt.id == 53 or blkt.id == 60:
+                # If we get a blockette 53 or 60 we should add these
+                if 'zeros' not in data:
+                    data['zeros'] = []
+                if 'poles' not in data:
+                    data['poles'] = []
+                if 'gain' not in data:
+                    data['gain'] = 1.
                 if blkt.id == 60:
                     abbreviation = blkt.stages[0][1]
                     data['seismometer_gain'] = \
@@ -558,39 +550,30 @@ class Parser(object):
                     warnings.warn(msg, UserWarning)
                     continue
                 # A0_normalization_factor
-                data['gain'] = resp.A0_normalization_factor
+                data['gain'] *= resp.A0_normalization_factor
                 # Poles
-                data['poles'] = []
                 for i in range(resp.number_of_complex_poles):
                     try:
                         p = complex(resp.real_pole[i], resp.imaginary_pole[i])
                     except TypeError:
                         p = complex(resp.real_pole, resp.imaginary_pole)
+                    # Do conversion to Laplace poles
+                    if getattr(resp, label) == "B":
+                        p *= 2. * np.pi
+                        data['gain'] *= 2. * np.pi
                     data['poles'].append(p)
                 # Zeros
-                data['zeros'] = []
                 for i in range(resp.number_of_complex_zeros):
                     try:
                         z = complex(resp.real_zero[i], resp.imaginary_zero[i])
                     except TypeError:
                         z = complex(resp.real_zero, resp.imaginary_zero)
+                    # Do conversion to Laplace zeros
+                    if getattr(resp, label) == "B":
+                        z *= 2. * np.pi
+                        data['gain'] *= 1./(2. * np.pi)
                     data['zeros'].append(z)
-                # force conversion from Hz to Laplace
-                if getattr(resp, label) == "B":
-                    def x2pi(x):
-                        return x * 2 * np.pi
-
-                    data['poles'] = list(map(x2pi, data['poles']))
-                    data['zeros'] = list(map(x2pi, data['zeros']))
-                    data['gain'] = resp.A0_normalization_factor * \
-                        (2 * np.pi) ** \
-                        (len(data['poles']) - len(data['zeros']))
         return data
-
-    @deprecated("'getCoordinates' has been renamed to 'get_coordinates'. "
-                "Use that instead.")
-    def getCoordinates(self, *args, **kwargs):
-        return self.get_coordinates(*args, **kwargs)
 
     def get_coordinates(self, seed_id, datetime=None):
         """
@@ -602,7 +585,7 @@ class Parser(object):
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param datetime: Timestamp of requested PAZ values
         :return: Dictionary containing Coordinates (latitude, longitude,
-            elevation)
+            elevation, dip, azimuth)
         """
         blockettes = self._select(seed_id, datetime)
         data = {}
@@ -612,15 +595,12 @@ class Parser(object):
                 data['longitude'] = blkt.longitude
                 data['elevation'] = blkt.elevation
                 data['local_depth'] = blkt.local_depth
+                data['dip'] = blkt.dip
+                data['azimuth'] = blkt.azimuth
                 break
         return data
 
-    @deprecated("'writeRESP' has been renamed to 'write_RESP'. "
-                "Use that instead.")
-    def writeRESP(self, *args, **kwargs):
-        return self.write_RESP(*args, **kwargs)
-
-    def write_RESP(self, folder, zipped=False):
+    def write_resp(self, folder, zipped=False):
         """
         Writes for each channel a RESP file within a given folder.
 
@@ -628,7 +608,7 @@ class Parser(object):
         :param zipped: Compresses all files into a single ZIP archive named by
             the folder name extended with the extension '.zip'.
         """
-        new_resp_list = self.get_RESP()
+        new_resp_list = self.get_resp()
         # Check if channel information could be found.
         if len(new_resp_list) == 0:
             msg = ("No channel information could be found. The SEED file "
@@ -652,7 +632,7 @@ class Parser(object):
                 zip_file.writestr(response[0], response[1].read())
             zip_file.close()
 
-    def _parse_SEED(self, data):
+    def _parse_seed(self, data):
         """
         Parses through a whole SEED volume.
 
@@ -723,12 +703,7 @@ class Parser(object):
         # Use parse once again.
         self._parse_merged_data(merged_data.strip(), record_type)
         # Update the internal structure to finish parsing.
-        self._update_internal_SEED_structure()
-
-    @deprecated("'getInventory' has been renamed to 'get_inventory'. "
-                "Use that instead.")
-    def getInventory(self, *args, **kwargs):
-        return self.get_inventory(*args, **kwargs)
+        self._update_internal_seed_structure()
 
     def get_inventory(self):
         """
@@ -795,7 +770,7 @@ class Parser(object):
             return blkt.abbreviation_description
         return ""
 
-    def _parse_XSEED(self, data):
+    def _parse_xseed(self, data):
         """
         Parse a XML-SEED string.
 
@@ -810,12 +785,12 @@ class Parser(object):
         # Parse volume which is assumed to be the first header. Only parse
         # blockette 10 and discard the rest.
         self.temp['volume'].append(
-            self._parse_XML_blockette(headers[0].getchildren()[0], 'V',
+            self._parse_xml_blockette(headers[0].getchildren()[0], 'V',
                                       xseed_version))
         # Append all abbreviations.
         for blkt in headers[1].getchildren():
             self.temp['abbreviations'].append(
-                self._parse_XML_blockette(blkt, 'A', xseed_version))
+                self._parse_xml_blockette(blkt, 'A', xseed_version))
         # Append all stations.
         for control_header in headers[2:]:
             if not control_header.tag == 'station_control_header':
@@ -823,11 +798,11 @@ class Parser(object):
             self.temp['stations'].append([])
             for blkt in control_header.getchildren():
                 self.temp['stations'][-1].append(
-                    self._parse_XML_blockette(blkt, 'S', xseed_version))
+                    self._parse_xml_blockette(blkt, 'S', xseed_version))
         # Update internal values.
-        self._update_internal_SEED_structure()
+        self._update_internal_seed_structure()
 
-    def _get_RESP_string(self, resp, blockettes, station):
+    def _get_resp_string(self, resp, blockettes, station):
         """
         Takes a file like object and a list of blockettes containing all
         blockettes for one channel and writes them RESP like to the BytesIO.
@@ -869,18 +844,18 @@ class Parser(object):
             if blkt.id not in RESP_BLOCKETTES:
                 continue
             try:
-                resp.write(blkt.get_RESP(
+                resp.write(blkt.get_resp(
                     station, channel_info['Channel'], self.abbreviations))
             except AttributeError:
                 msg = 'RESP output for blockette %s not implemented yet.'
                 raise AttributeError(msg % blkt.id)
 
-    def _parse_XML_blockette(self, XML_blockette, record_type, xseed_version):
+    def _parse_xml_blockette(self, xml_blockette, record_type, xseed_version):
         """
         Takes the lxml tree of any blockette and returns a blockette object.
         """
         # Get blockette number.
-        blockette_id = int(XML_blockette.values()[0])
+        blockette_id = int(xml_blockette.values()[0])
         if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
             class_name = 'Blockette%03d' % blockette_id
             if not hasattr(blockette, class_name):
@@ -893,7 +868,7 @@ class Parser(object):
                                             version=self.version,
                                             record_type=record_type,
                                             xseed_version=xseed_version)
-            blockette_obj.parse_XML(XML_blockette)
+            blockette_obj.parse_xml(xml_blockette)
             return blockette_obj
         elif blockette_id != 0:
             msg = "Unknown blockette type %d found" % blockette_id
@@ -928,7 +903,7 @@ class Parser(object):
                 return_records.append(record)
                 record = b''
                 rec_len = 0
-            blockette_str = blockette_.get_SEED()
+            blockette_str = blockette_.get_seed()
             # Calculate how much of the blockette is too long.
             overhead = rec_len + len(blockette_str) - length
             # If negative overhead: Write blockette.
@@ -993,7 +968,7 @@ class Parser(object):
                 return False
         return True
 
-    def _update_internal_SEED_structure(self):
+    def _update_internal_seed_structure(self):
         """
         Takes everything in the self.temp dictionary and writes it into the
         volume, abbreviations and stations attributes of the class.
@@ -1138,7 +1113,7 @@ class Parser(object):
                                                 compact=self.compact,
                                                 version=self.version,
                                                 record_type=record_type)
-                blockette_obj.parse_SEED(data, blockette_length)
+                blockette_obj.parse_seed(data, blockette_length)
                 root_attribute.append(blockette_obj)
                 self.blockettes.setdefault(blockette_id,
                                            []).append(blockette_obj)
@@ -1207,7 +1182,7 @@ class Parser(object):
         """
         self.volume = [i for i in self.volume if i.id not in [11, 12]]
 
-    def rotate_to_ZNE(self, stream):
+    def rotate_to_zne(self, stream):
         """
         Rotates the three components of a Stream to ZNE.
 
@@ -1220,7 +1195,7 @@ class Parser(object):
             components, all the same length and timespan. Furthermore all
             components need to be described in the Parser object.
         """
-        from obspy.signal.rotate import rotate2ZNE
+        from obspy.signal.rotate import rotate2zne
 
         if len(stream) != 3:
             msg = "Stream needs to have three components."
@@ -1254,7 +1229,7 @@ class Parser(object):
             all_arguments.extend([np.asarray(tr.data, dtype=np.float64),
                                   azimuth, dip])
         # Now rotate all three traces.
-        z, n, e = rotate2ZNE(*all_arguments)
+        z, n, e = rotate2zne(*all_arguments)
 
         # Assemble a new Stream object.
         common_header = {
@@ -1275,3 +1250,43 @@ class Parser(object):
         tr_e.stats.channel += "E"
 
         return Stream(traces=[tr_z, tr_n, tr_e])
+
+
+def is_xseed(path_or_file_object):
+    """
+    Simple function checking if the passed object contains a XML-SEED file.
+    Returns True of False. Only checks the name of the root tag, which should
+    be "xseed".
+
+    >>> from obspy.core.util import get_example_file
+    >>> xseed_file = get_example_file("dataless.seed.BW_FURT.xml")
+    >>> is_xseed(xseed_file)
+    True
+    >>> stationxml_file = get_example_file("IU_ANMO_00_BHZ.xml")
+    >>> is_xseed(stationxml_file)
+    False
+
+    :param path_or_file_object: File name or file like object.
+    """
+    if isinstance(path_or_file_object, etree._Element):
+        xmldoc = path_or_file_object
+    else:
+        try:
+            xmldoc = etree.parse(path_or_file_object)
+        except etree.XMLSyntaxError:
+            return False
+    try:
+        root = xmldoc.getroot()
+    except:
+        return False
+    # check tag of root element
+    try:
+        assert root.tag == "xseed"
+    except:
+        return False
+    return True
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

@@ -7,21 +7,27 @@ Provides the Station class.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
-import textwrap
 import warnings
 
+import numpy as np
+
 from obspy import UTCDateTime
-from .util import BaseNode, Equipment, Operator, Distance, Latitude, Longitude
+from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
+
+from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
+                   Longitude, _unified_content_strings, _textwrap)
 
 
+@python_2_unicode_compatible
 class Station(BaseNode):
     """
     From the StationXML definition:
@@ -36,7 +42,7 @@ class Station(BaseNode):
                  selected_number_of_channels=None, description=None,
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
-                 historical_code=None):
+                 historical_code=None, data_availability=None):
         """
         :type channels: list of :class:`~obspy.core.inventory.channel.Channel`
         :param channels: All channels belonging to this station.
@@ -92,6 +98,9 @@ class Station(BaseNode):
         :type historical_code: str
         :param historical_code: A previously used code if different from the
             current code.
+        :type data_availability: :class:`~obspy.station.util.DataAvailability`
+        :param data_availability: Information about time series availability
+            for the station.
         """
         self.latitude = latitude
         self.longitude = longitude
@@ -111,7 +120,30 @@ class Station(BaseNode):
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
-            historical_code=historical_code)
+            historical_code=historical_code,
+            data_availability=data_availability)
+
+    @property
+    def total_number_of_channels(self):
+        return self._total_number_of_channels
+
+    @total_number_of_channels.setter
+    def total_number_of_channels(self, value):
+        if value is not None and value < 0:
+            msg = "total_number_of_channels cannot be negative."
+            raise ValueError(msg)
+        self._total_number_of_channels = value
+
+    @property
+    def selected_number_of_channels(self):
+        return self._selected_number_of_channels
+
+    @selected_number_of_channels.setter
+    def selected_number_of_channels(self, value):
+        if value is not None and value < 0:
+            msg = "selected_number_of_channels cannot be negative."
+            raise ValueError(msg)
+        self._selected_number_of_channels = value
 
     def __str__(self):
         contents = self.get_contents()
@@ -136,9 +168,10 @@ class Station(BaseNode):
             historical_code="historical Code: %s " % self.historical_code if
             self.historical_code else "")
         ret += "\tAvailable Channels:\n"
-        ret += "\n".join(textwrap.wrap(
-            ", ".join(contents["channels"]), initial_indent="\t\t",
-            subsequent_indent="\t\t", expand_tabs=False))
+        ret += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["channels"])),
+            initial_indent="\t\t", subsequent_indent="\t\t",
+            expand_tabs=False))
         return ret
 
     def _repr_pretty_(self, p, cycle):
@@ -146,6 +179,9 @@ class Station(BaseNode):
 
     def __getitem__(self, index):
         return self.channels[index]
+
+    def __len__(self):
+        return len(self.channels)
 
     def get_contents(self):
         """
@@ -316,7 +352,11 @@ class Station(BaseNode):
         :func:`~fnmatch.fnmatch`).
 
         :type location: str
+        :param location: Potentially wildcarded location code. If not given,
+            all location codes will be accepted.
         :type channel: str
+        :param channel: Potentially wildcarded channel code. If not given,
+            all channel codes will be accepted.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only include channels active at given point in time.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -345,7 +385,8 @@ class Station(BaseNode):
                            "specified.")
                     warnings.warn(msg)
                     continue
-                if float(sampling_rate) != cha.sample_rate:
+                if not np.allclose(float(sampling_rate), cha.sample_rate,
+                                   rtol=1E-5, atol=1E-8):
                     continue
             if any([t is not None for t in (time, starttime, endtime)]):
                 if not cha.is_active(time=time, starttime=starttime,
@@ -434,9 +475,18 @@ class Station(BaseNode):
                                starttime=starttime, endtime=endtime)
 
         for cha in matching.channels:
-            cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
-                     label=".".join((self.code, cha.location_code, cha.code)),
-                     unwrap_phase=unwrap_phase, show=False, outfile=None)
+            try:
+                cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
+                         label=".".join((self.code, cha.location_code,
+                                         cha.code)),
+                         unwrap_phase=unwrap_phase, show=False, outfile=None)
+            except ZeroSamplingRate:
+                msg = ("Skipping plot of channel with zero "
+                       "sampling rate:\n%s")
+                warnings.warn(msg % str(cha), UserWarning)
+            except ObsPyException as e:
+                msg = "Skipping plot of channel (%s):\n%s"
+                warnings.warn(msg % (str(e), str(cha)), UserWarning)
 
         # final adjustments to plot if we created the figure in here
         if not axes:

@@ -5,7 +5,7 @@
  * Written by Chad Trabant
  *   IRIS Data Management Center
  *
- * modified: 2015.070
+ * modified: 2015.108
  ***************************************************************************/
 
 #include <stdio.h>
@@ -169,7 +169,7 @@ msr_parse_selection ( char *recbuf, int recbuflen, int64_t *offset,
       if ( retval )
         {
           if ( verbose )
-            ms_log (2, "Error parsing record at offset %lld\n", *offset);
+            ms_log (2, "Error parsing record at offset %"PRId64"\n", *offset);
 	  
           *offset += MINRECLEN;
         }
@@ -284,7 +284,7 @@ ms_detect ( const char *record, int recbuflen )
 	  
           /* Calculate record size in bytes as 2^(blkt_1000->reclen) */
 	  reclen = (unsigned int) 1 << blkt_1000->reclen;
-	  
+          
 	  break;
         }
       

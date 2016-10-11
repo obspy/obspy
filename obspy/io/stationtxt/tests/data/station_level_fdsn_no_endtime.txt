@@ -1,0 +1,4 @@
+#Network | Station | Latitude | Longitude | Elevation | SiteName | StartTime | EndTime
+TA|A04A|48.7197|-122.707|23.0|Legoe Bay, Lummi Island, WA, USA|2004-09-19T00:00:00|
+TA|A04D|48.7201|-122.7063|13.0|Lummi Island, WA, USA|2010-08-18T00:00:00|
+TR|ALNG|10.1814|-61.6883|10.0|Trinidad, Point Fortin|2000-01-01T00:00:00|

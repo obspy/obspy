@@ -11,13 +11,13 @@ import ctypes as C
 
 import numpy as np
 
-from obspy.core.util.libnames import _load_CDLL
+from obspy.core.util.libnames import _load_cdll
 
 
 # Import shared libsignal
-clibsignal = _load_CDLL("signal")
+clibsignal = _load_cdll("signal")
 # Import shared libevresp
-clibevresp = _load_CDLL("evresp")
+clibevresp = _load_cdll("evresp")
 
 clibsignal.calcSteer.argtypes = [
     C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_float,
@@ -114,6 +114,43 @@ clibsignal.hermite_interpolation.argtypes = [
     C.c_int, C.c_int, C.c_double, C.c_double]
 clibsignal.hermite_interpolation.restype = C.c_void_p
 
+clibsignal.lanczos_resample.argtypes = [
+    # y_in
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # y_out
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # dt
+    C.c_double,
+    # offset
+    C.c_double,
+    # len_in
+    C.c_int,
+    # len_out,
+    C.c_int,
+    # a,
+    C.c_int,
+    # window
+    C.c_int]
+clibsignal.lanczos_resample.restype = None
+
+clibsignal.calculate_kernel.argtypes = [
+    # double *x
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # double *y
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # int len
+    C.c_int,
+    # int a,
+    C.c_int,
+    # int return_type,
+    C.c_int,
+    # enum lanczos_window_type window
+    C.c_int]
+clibsignal.calculate_kernel.restype = None
 
 STALEN = 64
 NETLEN = 64
@@ -121,7 +158,7 @@ CHALEN = 64
 LOCIDLEN = 64
 
 
-class C_COMPLEX(C.Structure):
+class C_COMPLEX(C.Structure):  # noqa
     _fields_ = [("real", C.c_double),
                 ("imag", C.c_double)]
 

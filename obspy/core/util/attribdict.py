@@ -6,7 +6,7 @@ AttribDict class for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import collections
 import copy
+import warnings
 
 
 class AttribDict(collections.MutableMapping):
@@ -43,6 +44,8 @@ class AttribDict(collections.MutableMapping):
     """
     defaults = {}
     readonly = []
+    warn_on_non_default_key = False
+    do_not_warn_on = []
 
     def __init__(self, *args, **kwargs):
         """
@@ -80,6 +83,18 @@ class AttribDict(collections.MutableMapping):
         if key in self.readonly:
             msg = 'Attribute "%s" in %s object is read only!'
             raise AttributeError(msg % (key, self.__class__.__name__))
+        if self.warn_on_non_default_key:
+            # issue warning if not a default key
+            # (and not in the list of exceptions)
+            if key in self.defaults:
+                pass
+            elif key in self.do_not_warn_on:
+                pass
+            else:
+                msg = ('Setting attribute "{}" which is not a default '
+                       'attribute ("{}").').format(
+                            key, '", "'.join(self.defaults.keys()))
+                warnings.warn(msg)
 
         if isinstance(value, collections.Mapping) and \
            not isinstance(value, AttribDict):

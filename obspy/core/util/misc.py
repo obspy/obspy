@@ -6,7 +6,7 @@ Various additional utilities for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -262,129 +262,14 @@ def get_untracked_files_from_git():
     return files
 
 
-def wrap_long_string(string, line_length=79, prefix="",
-                     special_first_prefix=None, assumed_tab_width=8,
-                     sloppy=False):
-    """
-    Reformat a long string, wrapping it to a specified length.
-
-    :type string: str
-    :param string: Input string to wrap
-    :type line_length: int
-    :param line_length: total target length of each line, including the
-        prefix if specified
-    :type prefix: str, optional
-    :param prefix: common prefix used to start the line (e.g. some spaces,
-        tabs for indentation)
-    :type special_first_prefix: str, optional
-    :param special_first_prefix: special prefix to use on the first line,
-        instead of the general prefix
-    :type assumed_tab_width: int
-    :param assumed_tab_width: if the prefix strings include tabs the line
-        length can not be computed exactly. assume a tab in general is
-        equivalent to this many spaces.
-    :type sloppy: bool
-    :param sloppy: Controls the behavior when a single word without spaces is
-        to long to fit on a single line. Default (False) is to allow a single
-        line to be longer than the specified line length. If set to True,
-        Long words will be force-hyphenated to fit the line.
-
-    .. deprecated:: 0.10.0
-        The wrap_long_string function is deprecated. Please use the textwrap
-        module from the standard library instead.
-
-    .. rubric:: Examples
-
-    >>> string = ("Retrieve an event based on the unique origin "
-    ...           "ID numbers assigned by the IRIS DMC")
-    >>> print(wrap_long_string(string, prefix="\t*\t > ",
-    ...                        line_length=50))  # doctest: +SKIP
-            *        > Retrieve an event based on
-            *        > the unique origin ID numbers
-            *        > assigned by the IRIS DMC
-    >>> print(wrap_long_string(string, prefix="\t* ",
-    ...                        line_length=70))  # doctest: +SKIP
-            * Retrieve an event based on the unique origin ID
-            * numbers assigned by the IRIS DMC
-    >>> print(wrap_long_string(string, prefix="\t \t  > ",
-    ...                        special_first_prefix="\t*\t",
-    ...                        line_length=50))  # doctest: +SKIP
-            *        Retrieve an event based on
-                     > the unique origin ID numbers
-                     > assigned by the IRIS DMC
-    >>> problem_string = ("Retrieve_an_event_based_on_the_unique "
-    ...                   "origin ID numbers assigned by the IRIS DMC")
-    >>> print(wrap_long_string(problem_string, prefix="\t\t",
-    ...                        line_length=40, sloppy=True))  # doctest: +SKIP
-                    Retrieve_an_event_based_on_the_unique
-                    origin ID
-                    numbers
-                    assigned by
-                    the IRIS DMC
-    >>> print(wrap_long_string(problem_string, prefix="\t\t",
-    ...                        line_length=40))  # doctest: +SKIP
-                    Retrieve_an_event_base\
-                    d_on_the_unique origin
-                    ID numbers assigned by
-                    the IRIS DMC
-    """
-
-    warnings.warn('The wrap_long_string function is deprecated. Please use '
-                  'the textwrap module from the standard library instead.',
-                  DeprecationWarning)
-
-    def text_width_for_prefix(line_length, prefix):
-        text_width = line_length - len(prefix) - \
-            (assumed_tab_width - 1) * prefix.count("\t")
-        return text_width
-
-    lines = []
-    if special_first_prefix is not None:
-        text_width = text_width_for_prefix(line_length, special_first_prefix)
-    else:
-        text_width = text_width_for_prefix(line_length, prefix)
-
-    while len(string) > text_width:
-        ind = string.rfind(" ", 0, text_width)
-        # no suitable place to split found
-        if ind < 1:
-            # sloppy: search to right for space to split at
-            if sloppy:
-                ind = string.find(" ", text_width)
-                if ind == -1:
-                    ind = len(string) - 1
-                part = string[:ind]
-                string = string[ind + 1:]
-            # not sloppy: force hyphenate
-            else:
-                ind = text_width - 2
-                part = string[:ind] + "\\"
-                string = string[ind:]
-        # found a suitable place to split
-        else:
-            part = string[:ind]
-            string = string[ind + 1:]
-        # need to use special first line prefix?
-        if special_first_prefix is not None and not lines:
-            line = special_first_prefix + part
-        else:
-            line = prefix + part
-        lines.append(line)
-        # need to set default text width, just in case we had a different
-        # text width for the first line
-        text_width = text_width_for_prefix(line_length, prefix)
-    lines.append(prefix + string)
-    return "\n".join(lines)
-
-
 @contextmanager
-def CatchOutput():
+def CatchOutput():  # noqa -> this name is IMHO okay for a context manager.
     """
     A context manager that catches stdout/stderr/exit() for its scope.
 
     Always use with "with" statement. Does nothing otherwise.
 
-    Based on: http://bugs.python.org/msg184312
+    Based on: https://bugs.python.org/msg184312
 
     >>> with CatchOutput() as out:  # doctest: +SKIP
     ...    os.system('echo "mystdout"')
@@ -444,7 +329,7 @@ def CatchOutput():
 
 
 @contextmanager
-def TemporaryWorkingDirectory():
+def TemporaryWorkingDirectory():  # noqa --> this name is IMHO ok for a CM
     """
     A context manager that changes to a temporary working directory.
 
@@ -470,8 +355,7 @@ def factorize_int(x):
     Could be done faster but faster algorithm have much more lines of code and
     this is fast enough for our purposes.
 
-    http://stackoverflow.com/questions/14550794/\
-    python-integer-factorization-into-primes
+    https://stackoverflow.com/q/14550794
 
     >>> factorize_int(1800004)
     [2, 2, 450001]
@@ -488,6 +372,157 @@ def factorize_int(x):
     if num > 1:
         factors.append(int(num))
     return factors
+
+
+def get_window_times(starttime, endtime, window_length, step, offset,
+                     include_partial_windows):
+    """
+    Function calculating a list of times making up equal length windows from
+    within a given time interval.
+
+    :param starttime: The start time of the whole time interval.
+    :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param endtime: The end time of the whole time interval.
+    :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param window_length: The length of each window in seconds.
+    :type window_length: float
+    :param step: The step between the start times of two successive
+        windows in seconds. Can be negative if an offset is given.
+    :type step: float
+    :param offset: The offset of the first window in seconds relative to
+        the start time of the whole interval.
+    :type offset: float
+    :param include_partial_windows: Determines if windows that are
+        shorter then 99.9 % of the desired length are returned.
+    :type include_partial_windows: bool
+    """
+    if step > 0:
+        end = endtime.timestamp - 0.001 * step
+    else:
+        # This minus is correct here due to the way the actual window times
+        # are calculate later on.
+        end = starttime.timestamp - 0.001 * abs(step)
+    # Left sides of each window.
+    indices = np.arange(start=starttime.timestamp + offset,
+                        stop=end, step=step, dtype=np.float64)
+    if step > 0:
+        # Generate all possible windows.
+        windows = [(_i, min(_i + window_length, endtime.timestamp))
+                   for _i in indices]
+    else:
+        # Generate all possible windows.
+        windows = [(max(_i - window_length, starttime.timestamp), _i)
+                   for _i in indices]
+
+    # Potentially remove partial windows not fulfilling the window length
+    # criterion.
+    if not include_partial_windows:
+        windows = [_i for _i in windows
+                   if abs(_i[1] - _i[0]) > 0.999 * window_length]
+
+    t = type(starttime)
+    return [(t(_i[0]), t(_i[1])) for _i in windows]
+
+
+class MatplotlibBackend(object):
+    """
+    A helper class for switching the matplotlib backend.
+
+    Can be used as a context manager to temporarily switch the backend or by
+    using the :meth:`~MatplotlibBackend.switch_backend` staticmethod.
+
+    The context manager has no effect when setting ``backend=None``.
+
+    :type backend: str
+    :param backend: Name of matplotlib backend to switch to.
+    :type sloppy: bool
+    :param sloppy: If ``True``, uses :func:`matplotlib.pyplot.switch_backend`
+        and no warning will be shown if the backend was not switched
+        successfully. If ``False``, additionally tries to use
+        :func:`matplotlib.use` first and also shows a warning if the backend
+        was not switched successfully.
+    """
+    def __init__(self, backend, sloppy=True):
+        self.temporary_backend = backend
+        self.sloppy = sloppy
+        import matplotlib
+        self.previous_backend = matplotlib.get_backend()
+
+    def __enter__(self):
+        if self.temporary_backend is None:
+            return
+        self.switch_backend(backend=self.temporary_backend, sloppy=self.sloppy)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+        if self.temporary_backend is None:
+            return
+        self.switch_backend(backend=self.previous_backend, sloppy=self.sloppy)
+
+    @staticmethod
+    def switch_backend(backend, sloppy=True):
+        """
+        Switch matplotlib backend.
+
+        :type backend: str
+        :param backend: Name of matplotlib backend to switch to.
+        :type sloppy: bool
+        :param sloppy: If ``True``, only uses
+            :func:`matplotlib.pyplot.switch_backend` and no warning will be
+            shown if the backend was not switched successfully. If ``False``,
+            additionally tries to use :func:`matplotlib.use` first and also
+            shows a warning if the backend was not switched successfully.
+        """
+        import matplotlib
+        # sloppy. only do a `plt.switch_backend(..)`
+        if sloppy:
+            import matplotlib.pyplot as plt
+            plt.switch_backend(backend)
+        else:
+            # check if `matplotlib.use(..)` is emitting a warning
+            try:
+                with warnings.catch_warnings(record=True):
+                    warnings.simplefilter("error", UserWarning)
+                    matplotlib.use(backend)
+            # if that's the case, follow up with `plt.switch_backend(..)`
+            except UserWarning:
+                import matplotlib.pyplot as plt
+                plt.switch_backend(backend)
+            # finally check if the switch was successful,
+            # show a warning if not
+            if matplotlib.get_backend().upper() != backend.upper():
+                msg = "Unable to change matplotlib backend to '%s'" % backend
+                raise Exception(msg)
+
+
+def limit_numpy_fft_cache(max_size_in_mb_per_cache=100):
+    """
+    NumPy's FFT implementation utilizes caches to speedup subsequent FFTs of
+    the same size. This accumulates memory when run for various length FFTs
+    as can readily happen in seismology.
+
+    This utility function clears both, full and real-only caches if their
+    size is above the given threshold.
+
+    The default 100 MB is fairly generous but we still want to profit from
+    the cache where applicable.
+    """
+    for cache in ["_fft_cache", "_real_fft_cache"]:
+        # Guard against different numpy versions just to be safe.
+        if not hasattr(np.fft.fftpack, cache):
+            continue
+        cache = getattr(np.fft.fftpack, cache)
+        # Check type directly and don't use isinstance() as future numpy
+        # versions might use some subclass or what not.
+        if type(cache) is not dict:
+            continue
+        # Its a dictionary with list's of arrays as the values. Wrap in
+        # try/except to guard against future numpy changes.
+        try:
+            total_size = sum([_j.nbytes for _i in cache.values() for _j in _i])
+        except:
+            continue
+        if total_size > max_size_in_mb_per_cache * 1024 * 1024:
+            cache.clear()
 
 
 if __name__ == '__main__':

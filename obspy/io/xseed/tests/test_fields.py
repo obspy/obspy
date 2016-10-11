@@ -14,11 +14,11 @@ class FieldsTestCase(unittest.TestCase):
     """
     Fields test suite.
     """
-    def test_formatExponential(self):
+    def test_format_exponential(self):
         field = Float(1, "test", 12, mask='%+1.5e', strict=True)
         self.assertEqual(field.write('2.5'), b'+2.50000E+00')
 
-    def test_readDateTime(self):
+    def test_read_date_time(self):
         field = VariableString(1, "test", 1, 22, 'T', strict=True)
         # 1
         orig = b'1992,002,00:00:00.0000~'
@@ -76,7 +76,7 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEqual(dt, UTCDateTime(2008, 12, 23, 1, 30, 22, 0))
         self.assertEqual(field.write(dt), orig)
 
-    def test_readCompactDateTime(self):
+    def test_read_compact_date_time(self):
         field = VariableString(1, "test", 0, 22, 'T', strict=True,
                                compact=True)
         # 1

@@ -73,7 +73,7 @@ class CoreTestCase(unittest.TestCase):
             # The is_evt() method should not change the file pointer.
             self.assertEqual(buf.tell(), 0)
 
-    def test_read_via_ObsPy(self):
+    def test_read_via_obspy(self):
         """
         Read files via obspy.core.stream.read function.
         """

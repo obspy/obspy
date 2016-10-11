@@ -1,0 +1,18 @@
+Search Result
+Search Condition
+2011/03/01,??:?? <= Origin Time(UT) <= 2011/03/31,??:??
+20 <= Latitude(N) <= 50
+118 <= Longitude(E) <= 156
+0 <= JMA Depth(km) <= 999.9
+8 <= JMA Magnitude(Mj) <= 9.9
+0 <= Strike <= 360
+0 <= Dip <= 90
+-180 <= Rake <= 180
+0 <= Mo(Nm) <= 9.9E+25
+0 <= MT Depth(km) <= 999.9
+0 <= MT Magnitude(Mw) <= 9.9
+0 <= Variance Reduction <= 100
+#stations used >= 1
+Search Result, Total Number: 1
+Origin Time(UT)	Latitude(N)	Longitude(E)	JMA Depth(km)	JMA Magnitude(Mj)	Region	Strike	Dip	Rake	Mo(Nm)	MT Depth(km)	MT Magnitude(Mw)	Variance Reduction	mxx	mxy	mxz	myy	myz	mzz	Unit(Nm)	#stations used
+2011/03/11,05:46:18.12	38.1035	142.8610	23.74	9.0	FAR_E_OFF_MIYAGI_PREF	22;200	63;27	91;88	1.07e+22	20	8.7	71.75	-0.0677	0.3149	0.2529	-0.7636	-0.5946	0.8313	1e+22	3

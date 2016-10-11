@@ -6,7 +6,7 @@ Various types used in ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -49,7 +49,7 @@ class Enum(object):
         >>> units.xxx  # doctest: +ELLIPSIS
         Traceback (most recent call last):
         ...
-        KeyError: 'xxx'
+        AttributeError: 'xxx'
 
     Changing enum values will not work:
 
@@ -99,8 +99,11 @@ class Enum(object):
             return self._Enum__replace[key.lower()]
         return self.__enums.__getitem__(key.lower())
 
-    __getattr__ = get
-    __getitem__ = get
+    def __getattr__(self, name):
+        try:
+            return self.get(name)
+        except KeyError:
+            raise AttributeError("'%s'" % (name, ))
 
     def __setattr__(self, name, value):
         if name == '_Enum__enums':
@@ -111,6 +114,7 @@ class Enum(object):
             return
         raise NotImplementedError
 
+    __getitem__ = get
     __setitem__ = __setattr__
 
     def __contains__(self, value):
@@ -133,9 +137,47 @@ class Enum(object):
         >>> enum = Enum(["c", "a", "b"])
         >>> print(enum)
         Enum(["c", "a", "b"])
+        >>> enum = Enum(["not existing",
+        ...              "not reported",
+        ...              "earthquake",
+        ...              "controlled explosion",
+        ...              "experimental explosion",
+        ...              "industrial explosion"])
+        >>> print(enum)  # doctest: +NORMALIZE_WHITESPACE
+        Enum(["not existing", "not reported", ..., "experimental explosion",
+              "industrial explosion"])
         """
+        return self.__repr__()
+
+    def __repr__(self):
+        """
+        >>> enum = Enum(["c", "a", "b"])
+        >>> print(repr(enum))
+        Enum(["c", "a", "b"])
+        >>> enum = Enum(["not existing",
+        ...              "not reported",
+        ...              "earthquake",
+        ...              "controlled explosion",
+        ...              "experimental explosion",
+        ...              "industrial explosion"])
+        >>> print(repr(enum))  # doctest: +NORMALIZE_WHITESPACE
+        Enum(["not existing", "not reported", ..., "experimental explosion",
+              "industrial explosion"])
+        """
+        def _repr_list_of_keys(keys):
+            return ", ".join('"{}"'.format(_i) for _i in keys)
+
         keys = list(self.__enums.keys())
-        return "Enum([%s])" % ", ".join(['"%s"' % _i for _i in keys])
+        key_repr = _repr_list_of_keys(keys)
+        index = int(len(keys))
+        while len(key_repr) > 100:
+            if index == 0:
+                key_repr = "..."
+                break
+            index -= 1
+            key_repr = (_repr_list_of_keys(keys[:index]) + ", ..., " +
+                        _repr_list_of_keys(keys[-index:]))
+        return "Enum([{}])".format(key_repr)
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
@@ -409,6 +451,14 @@ class ComplexWithUncertainties(CustomComplex):
         _upper = self._attr(self.upper_uncertainty, 'imag')
         return FloatWithUncertainties(_imag, lower_uncertainty=_lower,
                                       upper_uncertainty=_upper)
+
+
+class ObsPyException(Exception):
+    pass
+
+
+class ZeroSamplingRate(ObsPyException):
+    pass
 
 
 if __name__ == '__main__':

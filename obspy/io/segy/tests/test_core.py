@@ -17,7 +17,7 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.io.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
                                 _is_segy, _is_su, _read_segy, _read_su,
                                 _write_segy, _write_su)
-from obspy.io.segy.segy import _read_segy as _read_segyInternal
+from obspy.io.segy.segy import _read_segy as _read_segy_internal
 from obspy.io.segy.segy import SEGYError
 from obspy.io.segy.tests.header import DTYPES, FILES
 
@@ -36,7 +36,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         self.files = FILES
         self.dtypes = DTYPES
 
-    def test_is_segyFile(self):
+    def test_is_segy_file(self):
         """
         Tests the _is_segy method.
         """
@@ -51,7 +51,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             file = os.path.join(self.dir, file)
             self.assertEqual(_is_segy(file), False)
 
-    def test_is_suFile(self):
+    def test_is_su_file(self):
         """
         Tests the _is_su method.
         """
@@ -69,7 +69,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, '1.su_first_trace')
         self.assertEqual(_is_su(file), True)
 
-    def test_readHeadOnly(self):
+    def test_read_head_only(self):
         """
         Tests headonly flag on _read_segy and _read_su functions.
         """
@@ -84,7 +84,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.npts, 8000)
         self.assertEqual(len(st[0].data), 0)
 
-    def test_enforcingTextualHeaderEncodingWhileReading(self):
+    def test_enforcing_textual_header_encoding_while_reading(self):
         """
         Tests whether or not the enforcing of the encoding of the textual file
         header actually works.
@@ -111,7 +111,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         self.assertEqual(st3.stats.textual_file_header_encoding,
                          'EBCDIC')
 
-    def test_enforcingEndiannessWhileWriting(self):
+    def test_enforcing_endianness_while_writing(self):
         """
         Tests whether or not the enforcing of the endianness while writing
         works.
@@ -134,7 +134,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             st4 = _read_segy(out_file)
             self.assertEqual(st4.stats.endian, '<')
 
-    def test_settingDataEncodingWorks(self):
+    def test_setting_data_encoding_works(self):
         """
         Test whether or not the enforcing the data encoding works.
         """
@@ -160,7 +160,7 @@ class SEGYCoreTestCase(unittest.TestCase):
                 data3 = f.read()
             self.assertFalse(data1 == data3)
 
-    def test_readingAndWritingDifferentDataEncodings(self):
+    def test_reading_and_writing_different_data_encodings(self):
         """
         Writes and reads different data encodings and checks if the data
         remains the same.
@@ -189,7 +189,7 @@ class SEGYCoreTestCase(unittest.TestCase):
                 # different computers.
                 np.testing.assert_array_equal(this_data, this_stream[0].data)
 
-    def test_notMatchingDataEncodingAndDtypeRaises(self):
+    def test_not_matching_data_encoding_and_dtype_raises(self):
         """
         obspy.io.segy does not automatically convert to the corresponding
         dtype.
@@ -207,7 +207,7 @@ class SEGYCoreTestCase(unittest.TestCase):
                 self.assertRaises(SEGYCoreWritingError, _write_segy, st,
                                   out_file, data_encoding=data_encoding)
 
-    def test_invalidDataEncodingRaises(self):
+    def test_invalid_data_encoding_raises(self):
         """
         Using an invalid data encoding raises an error.
         """
@@ -220,7 +220,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             self.assertRaises(SEGYCoreWritingError, _write_segy, st, out_file,
                               data_encoding='')
 
-    def test_enforcingTextualHeaderEncodingWhileWriting(self):
+    def test_enforcing_textual_header_encoding_while_writing(self):
         """
         Tests whether or not the enforcing of the endianness while writing
         works.
@@ -263,7 +263,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         self.assertEqual(st4.stats.textual_file_header_encoding,
                          'ASCII')
 
-    def test_enforcingEndiannessWhileReading(self):
+    def test_enforcing_endianness_while_reading(self):
         """
         Tests whether or not enforcing the endianness while reading a file
         works. It will actually just deactivate the autodetection in case it
@@ -283,7 +283,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         # unpack the wrong data format code cannot be found.
         self.assertRaises(KeyError, _read_segy, file, byteorder='<')
 
-    def test_readingUsingCore(self):
+    def test_reading_using_core(self):
         """
         This tests checks whether or not all necessary information is read
         during reading with core. It actually just assumes the internal
@@ -294,7 +294,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         for file, _ in self.files.items():
             file = os.path.join(self.path, file)
             # Read the file with the internal SEGY representation.
-            segy_file = _read_segyInternal(file)
+            segy_file = _read_segy_internal(file)
             # Read again using core.
             st = _read_segy(file)
             # They all should have length one because all additional traces
@@ -323,7 +323,7 @@ class SEGYCoreTestCase(unittest.TestCase):
                 self.assertEqual(getattr(st[0].stats.segy.trace_header, key),
                                  value)
 
-    def test_writingUsingCore(self):
+    def test_writing_using_core(self):
         """
         Tests the writing of SEGY rev1 files using obspy.core. It just compares
         the output of writing using obspy.core with the output of writing the
@@ -333,7 +333,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         for file, _ in self.files.items():
             file = os.path.join(self.path, file)
             # Read the file with the internal SEGY representation.
-            segy_file = _read_segyInternal(file)
+            segy_file = _read_segy_internal(file)
             # Read again using core.
             st = _read_segy(file)
             # Create two temporary files to write to.
@@ -352,7 +352,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             # Test if they are equal.
             self.assertEqual(data1[3200:3600], data2[3200:3600])
 
-    def test_invalidValuesForTextualHeaderEncoding(self):
+    def test_invalid_values_for_textual_header_encoding(self):
         """
         Invalid keyword arguments should be caught gracefully.
         """
@@ -360,7 +360,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         self.assertRaises(SEGYError, _read_segy, file,
                           textual_header_encoding='BLUB')
 
-    def test_settingDeltaandSamplingRateinStats(self):
+    def test_setting_delta_and_sampling_rate_in_stats(self):
         """
         Just checks if the delta and sampling rate attributes are correctly
         set.
@@ -375,7 +375,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         su = _read_su(file)
         self.assertEqual(su[0].stats.delta, 250E-6)
 
-    def test_writingNewSamplingRate(self):
+    def test_writing_new_sampling_rate(self):
         """
         Setting a new sample rate works.
         """
@@ -391,7 +391,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, '1.su_first_trace')
         _read_su(file)
 
-    def test_readingDate(self):
+    def test_reading_date(self):
         """
         Reads one file with a set date. The date has been read with SeisView 2
         by the DMNG.
@@ -406,7 +406,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         su = _read_su(file)
         self.assertEqual(date, su[0].stats.starttime)
 
-    def test_largeSampleRateIntervalRaises(self):
+    def test_large_sample_rate_interval_raises(self):
         """
         SEG Y supports a sample interval from 1 to 65535 microseconds in steps
         of 1 microsecond. Larger intervals cannot be supported due to the
@@ -435,7 +435,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         su[0].stats.delta = 0.065536
         self.assertRaises(SEGYSampleIntervalError, _write_su, su, outfile)
 
-    def test_writingSUFileWithNoHeader(self):
+    def test_writing_su_file_with_no_header(self):
         """
         If the trace has no trace.su attribute, one should still be able to
         write a SeismicUnix file.
@@ -468,7 +468,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         del st3[0].stats.su
         self.assertEqual(st2[0].stats, st3[0].stats)
 
-    def test_writingModifiedDate(self):
+    def test_writing_modified_date(self):
         """
         Tests if the date in Trace.stats.starttime is correctly written in SU
         and SEGY files.
@@ -492,7 +492,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             su_new = _read_su(outfile)
         self.assertEqual(new_date, su_new[0].stats.starttime)
 
-    def test_writingStarttimeTimestamp0(self):
+    def test_writing_starttime_timestamp_0(self):
         """
         If the starttime of the Trace is UTCDateTime(0) it will be interpreted
         as a missing starttime is not written. Test if this holds True.
@@ -541,7 +541,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         self.assertEqual([year == 0, julday == 0, hour == 0, minute == 0,
                           second == 0], 5 * [True])
 
-    def test_TwoDigitYearsSEGY(self):
+    def test_two_digit_years_segy(self):
         """
         Even tough not specified in the 1975 SEG Y rev 1 standard, 2 digit
         years should be read correctly. Some programs produce them.
@@ -557,7 +557,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         st = _read_segy(filename)
         self.assertEqual(1999, st[0].stats.starttime.year)
 
-    def test_TwoDigitYearsSU(self):
+    def test_two_digit_years_su(self):
         """
         Same test as test_TwoDigitYearsSEGY just for Seismic Unix files.
         """
@@ -569,7 +569,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         st = _read_su(filename)
         self.assertEqual(1999, st[0].stats.starttime.year)
 
-    def test_issue377(self):
+    def test_issue_377(self):
         """
         Tests that _read_segy() and stream.write() should handle negative trace
         header values.

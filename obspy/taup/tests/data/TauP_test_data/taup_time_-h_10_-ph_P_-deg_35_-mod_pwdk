@@ -1,0 +1,7 @@
+
+Model: pwdk
+Distance   Depth   Phase   Travel    Ray Param  Takeoff  Incident  Purist    Purist
+  (deg)     (km)   Name    Time (s)  p (s/deg)   (deg)    (deg)   Distance   Name
+-----------------------------------------------------------------------------------
+   35.00    10.0   P        415.25     8.718     27.09    27.05    35.00   = P
+

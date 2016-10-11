@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License (GNU-LGPL) for more details.  The
  * GNU-LGPL and further information can be found here:
- * http://www.gnu.org/
+ * https://www.gnu.org/
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
@@ -35,7 +35,7 @@
 off_t
 lmp_ftello (FILE *stream)
 {
-#if defined(LMP_WIN32)
+#if defined(LMP_WIN)
   return (off_t) ftell (stream);
 
 #else
@@ -54,7 +54,7 @@ lmp_ftello (FILE *stream)
 int
 lmp_fseeko (FILE *stream, off_t offset, int whence)
 {
-#if defined(LMP_WIN32)
+#if defined(LMP_WIN)
   return (int) fseek (stream, (long int) offset, whence);
   
 #else

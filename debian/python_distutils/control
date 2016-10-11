@@ -6,11 +6,11 @@ X-Python-Version: >= 2.7
 Build-Depends: debhelper (>= 5),
  python (>= 2.7), python-dev (>= 2.7),
  python-support (>= 0.7.1), python-numpy, python-setuptools (>=0.6.21), gcc,
- gfortran, help2man, quilt
+ help2man, quilt, python-future (>= 0.12.4)
 Standards-Version: 3.9.3
 Vcs-Git: git://github.com/obspy/obspy.git
 Vcs-Browser: https://github.com/obspy/obspy
-Homepage: http://www.obspy.org
+Homepage: https://www.obspy.org
 
 Package: python-obspy
 Architecture: any
@@ -20,7 +20,8 @@ Depends: python (>= 2.7),
  ${python:Depends}, python-future (>= 0.12.4),
  python-numpy (>= 1:1.6.1), python-setuptools (>= 0.6), python-lxml (>= 2.1),
  python-matplotlib (>= 1.1.0), python-scipy (>= 0.9.0), python-sqlalchemy,
- python-suds (>= 0.4), ${shlibs:Depends}, python-tornado
+ ${shlibs:Depends}, python-tornado, python-decorator,
+ python-requests
 Conflicts: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
  python-obspy-db, python-obspy-earthworm, python-obspy-fissures,
  python-obspy-gse2, python-obspy-imaging, python-obspy-iris,
@@ -37,7 +38,7 @@ Replaces: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
  python-obspy-wav, python-obspy-xseed
 Recommends: python-obspy-dbg (= ${binary:Version}),
  python-geographiclib, python-nose, python-flake8, python-imaging, python-mock,
- python-mpltoolkits.basemap
+ python-mpltoolkits.basemap, python-gdal
 Suggests: python-mlpy, python-pyproj, ipython
 Description: ObsPy: A Python Toolbox for seismology seismological observatories
  ObsPy is an open-source project dedicated to provide a Python framework for
@@ -45,8 +46,8 @@ Description: ObsPy: A Python Toolbox for seismology seismological observatories
  clients to access data centers and seismological signal processing routines
  which allow the manipulation of seismological time series.
  .
- For more information visit http://www.obspy.org.
-Homepage: http://www.obspy.org
+ For more information visit https://www.obspy.org.
+Homepage: https://www.obspy.org
 
 Package: python-obspy-dbg
 Architecture: any
@@ -59,8 +60,8 @@ Description: ObsPy: A Python Toolbox for seismology
  clients to access data centers and seismological signal processing routines
  which allow the manipulation of seismological time series.
  .
- For more information visit http://www.obspy.org.
+ For more information visit https://www.obspy.org.
  .
  This package provides data and image files, primarily those needed to run the
  test suite.
-Homepage: http://www.obspy.org
+Homepage: https://www.obspy.org

@@ -5,16 +5,15 @@ from future.builtins import *  # NOQA
 
 import unittest
 
-import matplotlib
+from obspy.core.util import add_doctests, add_unittests
+from obspy.core.util.misc import MatplotlibBackend
+
 
 # this code is needed to run the tests without any X11 or any other
 # display, e.g. via a SSH connection. Import it only once, else a nasty
 # warning occurs.
 # see also: http://matplotlib.org/faq/howto_faq.html
-matplotlib.use('AGG', warn=False)
-
-from obspy.core.util import add_doctests, add_unittests
-
+MatplotlibBackend("AGG", sloppy=False)
 
 MODULE_NAME = "obspy.imaging"
 

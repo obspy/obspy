@@ -50,6 +50,10 @@ Gallery
     :target: tutorial/code_snippets/seismometer_correction_simulation.html
     :alt: Seismometer Correction/Simulation
 
+.. gallery-plot:: tutorial/code_snippets/seismometer_correction_simulation_5.py
+    :target: tutorial/code_snippets/seismometer_correction_simulation.html
+    :alt: Seismometer Correction/Simulation
+
 .. gallery-plot:: tutorial/code_snippets/plotting_spectrograms.py
     :target: tutorial/code_snippets/plotting_spectrograms.html
     :alt: Plotting Spectrograms
@@ -69,10 +73,6 @@ Gallery
 .. gallery-plot:: tutorial/code_snippets/frequency_response.py
     :target: tutorial/code_snippets/frequency_response.html
     :alt: Poles and Zeros, Frequency Response
-
-.. gallery-plot:: tutorial/code_snippets/retrieving_data_from_datacenters_1.py
-    :target: tutorial/code_snippets/retrieving_data_from_datacenters.html
-    :alt: Retrieving Data via ArcLink
 
 .. gallery-plot:: tutorial/code_snippets/beachball_plot.py
     :target: tutorial/code_snippets/beachball_plot.html
@@ -103,6 +103,10 @@ Gallery
     :alt: Hierarchical Clustering
 
 .. gallery-plot:: tutorial/code_snippets/probabilistic_power_spectral_density.py
+    :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
+    :alt: Visualizing Probabilistic Power Spectral Densities
+
+.. gallery-plot:: tutorial/code_snippets/probabilistic_power_spectral_density3.py
     :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
     :alt: Visualizing Probabilistic Power Spectral Densities
 
@@ -147,7 +151,7 @@ Gallery
     :alt: Cross Correlation Pick Correction
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.inventory.Inventory.plot.html
+    :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
     :alt: Basemap preview plot of Inventory class
 
     from obspy import read_inventory
@@ -155,7 +159,7 @@ Gallery
     inv.plot(projection="local", color_per_network={'GR': 'blue', 'BW': 'green'})
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.network.Network.plot.html
+    :target: packages/autogen/obspy.core.inventory.network.Network.plot.html
     :alt: Basemap preview plot of Network class
 
     from obspy import read_inventory
@@ -163,7 +167,7 @@ Gallery
     net.plot(projection="ortho")
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.core.event.Catalog.plot.html
+    :target: packages/autogen/obspy.core.event.catalog.Catalog.plot.html
     :alt: Basemap preview plot of Catalog class
 
     from obspy import read_events
@@ -171,7 +175,7 @@ Gallery
     cat.plot()
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.inventory.Inventory.plot_response.html
+    :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot_response.html
     :alt: Bode plot of Inventory class
 
     from obspy import read_inventory
@@ -179,12 +183,124 @@ Gallery
     inv.plot_response(0.001, station="RJOB")
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.response.Response.plot.html
+    :target: packages/autogen/obspy.core.inventory.response.Response.plot.html
     :alt: Bode plot of Response class
 
     from obspy import read_inventory
     resp = read_inventory()[0][0][0].response
     resp.plot(0.001, output="VEL")
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.signal.interpolation.plot_lanczos_windows.html
+    :alt: Plot the Lanczos windows.
+
+    import matplotlib.pyplot as plt
+
+    plt.figure(figsize=(10, 12))
+    from obspy.signal.interpolation import plot_lanczos_windows
+    plot_lanczos_windows(a=20)
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
+    :alt: Basemap plot of station and event data together
+
+    from obspy import read_inventory, read_events
+    inv = read_inventory()
+    cat = read_events()
+    fig = inv.plot(show=False)
+    cat.plot(fig=fig)
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.signal.detrend.polynomial.html
+    :alt: Polynomial detrending
+
+    import obspy
+    from obspy.signal.detrend import polynomial
+
+    tr = obspy.read()[0].filter("highpass", freq=2)
+    tr.data += 6000 + 4 * tr.times() ** 2 - 0.1 * tr.times() ** 3 - \
+        0.00001 * tr.times() ** 5
+
+    polynomial(tr.data, order=3, plot=True)
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.core.event.event.Event.plot.html
+    :alt: Event plot
+
+    from obspy import read_events
+    event = read_events("/path/to/CMTSOLUTION")[0]
+    event.plot()
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.core.event.event.Event.plot.html
+    :alt: Event plot
+
+    from obspy import read_events
+    event = read_events("/path/to/CMTSOLUTION")[0]
+    event.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
+
+.. image:: /_static/sds_report.png
+    :target: packages/autogen/obspy.scripts.sds_html_report.html
+    :alt: SDS html report
+    :scale: 50%
+
+Colormap comparison
+===================
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import _colormap_plot_overview
+    _colormap_plot_overview()
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_cwt
+    _colormap_plot_cwt([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_array_response
+    _colormap_plot_array_response([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_similarity
+    _colormap_plot_similarity([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_beamforming_time
+    _colormap_plot_beamforming_time([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_beamforming_polar
+    _colormap_plot_beamforming_polar([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r, pqlx
+    from obspy.imaging.cm import _colormap_plot_ppsd
+    _colormap_plot_ppsd([viridis, viridis_r, viridis_white, viridis_white_r, pqlx])
 
 .. raw:: html
 

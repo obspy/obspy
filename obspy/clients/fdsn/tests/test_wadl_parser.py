@@ -7,7 +7,7 @@ The obspy.clients.fdsn.wadl_parser test suite.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -101,17 +101,7 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertIn("maxlongitude", params)
         self.assertIn("minmagnitude", params)
         self.assertIn("maxmagnitude", params)
-        # XXX hack for IRIS wadl that contains the abbreviated "magtype"
-        # XXX instead of the normal "magnitudetype" currently. Emailed them
-        # XXX about it, expecting that to be changed since no other
-        # XXX abbreviations are used in the WADL otherwise.
-        # XXX When it is changed at IRIS, we should update data/event.wadl
-        # XXX and remove this.
-        key_magnitudetype = "magnitudetype"
-        # XXX see above, remove following line again when event.wadl is fixed
-        # XXX at IRIS and data/event.wadl is updated
-        key_magnitudetype = "magtype"
-        self.assertIn(key_magnitudetype, params)
+        self.assertIn("magnitudetype", params)
         self.assertIn("catalog", params)
 
         self.assertIn("contributor", params)
@@ -135,26 +125,19 @@ class WADLParserTestCase(unittest.TestCase):
 
         # The nodata attribute should not be parsed.
         self.assertFalse("nodata" in params)
-        # Same for the format attribute.
-        self.assertFalse("format" in params)
 
-        key_magnitudetype = "magnitudetype"
-        # XXX see above, remove following line again when event.wadl is fixed
-        # XXX at IRIS and data/event.wadl is updated
-        key_magnitudetype = "magtype"
         self.assertEqual(
-            params[key_magnitudetype]["doc_title"],
+            params["magnitudetype"]["doc_title"],
             "type of Magnitude used to test minimum and maximum limits "
             "(case insensitive)")
-        self.assertEqual(params[key_magnitudetype]["doc"],
+        self.assertEqual(params["magnitudetype"]["doc"],
                          "Examples: Ml,Ms,mb,Mw\"")
 
     def test_station_wadl_parsing(self):
         """
         Tests the parsing of a station wadl.
         """
-        filename = os.path.join(self.data_path, "station.wadl")
-        parser, w = self._parse_wadl_file(filename)
+        parser, w = self._parse_wadl_file("station.wadl")
         params = parser.parameters
 
         self.assertIn("starttime", params)
@@ -183,8 +166,6 @@ class WADLParserTestCase(unittest.TestCase):
 
         # The nodata attribute should not be parsed.
         self.assertFalse("nodata" in params)
-        # Same for the format attribute.
-        self.assertFalse("format" in params)
 
         self.assertEqual(
             params["endbefore"]["doc_title"],
@@ -198,8 +179,7 @@ class WADLParserTestCase(unittest.TestCase):
         """
         Tests the reading of WADL files that have no type.
         """
-        filename = os.path.join(self.data_path, "station_no_types.wadl")
-        parser, w = self._parse_wadl_file(filename)
+        parser, w = self._parse_wadl_file("station_no_types.wadl")
         params = parser.parameters
 
         # Assert that types have been assigned.
@@ -356,7 +336,7 @@ class WADLParserTestCase(unittest.TestCase):
         parser, w = self._parse_wadl_file("2014-01-07_iris_event.wadl")
         params = parser.parameters
         # Check parsed parameters
-        expected = ['catalog', 'contributor', 'endtime', 'eventid',
+        expected = ['catalog', 'contributor', 'endtime', 'eventid', 'format',
                     'includeallmagnitudes', 'includeallorigins',
                     'includearrivals', 'latitude', 'limit', 'longitude',
                     'magtype', 'maxdepth', 'maxlatitude', 'maxlongitude',
@@ -369,7 +349,7 @@ class WADLParserTestCase(unittest.TestCase):
         parser, w = self._parse_wadl_file("2014-01-07_iris_station.wadl")
         params = parser.parameters
         # Check parsed parameters
-        expected = ['channel', 'endafter', 'endbefore', 'endtime',
+        expected = ['channel', 'endafter', 'endbefore', 'endtime', 'format',
                     'includeavailability', 'includerestricted', 'latitude',
                     'level', 'location', 'longitude', 'matchtimeseries',
                     'maxlatitude', 'maxlongitude', 'maxradius', 'minlatitude',
@@ -395,7 +375,8 @@ class WADLParserTestCase(unittest.TestCase):
         params = parser.parameters
         # Check parsed parameters
         expected = ['alertlevel', 'callback', 'catalog', 'contributor',
-                    'endtime', 'eventid', 'eventtype', 'includeallmagnitudes',
+                    'endtime', 'eventid', 'eventtype',
+                    'format', 'includeallmagnitudes',
                     'includeallorigins', 'includearrivals', 'kmlanimated',
                     'kmlcolorby', 'latitude', 'limit', 'longitude',
                     'magnitudetype', 'maxcdi', 'maxdepth', 'maxgap',
@@ -416,7 +397,7 @@ class WADLParserTestCase(unittest.TestCase):
         params = parser.parameters
         # Check parsed parameters
         expected = ['callback', 'catalog', 'contributor', 'endtime', 'eventid',
-                    'includeallmagnitudes', 'includeallorigins',
+                    'format', 'includeallmagnitudes', 'includeallorigins',
                     'includearrivals', 'latitude', 'limit', 'longitude',
                     'magtype', 'maxdepth', 'maxlatitude', 'maxlongitude',
                     'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
@@ -457,7 +438,7 @@ class WADLParserTestCase(unittest.TestCase):
         parser, w = self._parse_wadl_file("2014-01-07_ncedc_event.wadl")
         params = parser.parameters
         # Check parsed parameters
-        expected = ['catalog', 'contributor', 'endtime', 'eventid',
+        expected = ['catalog', 'contributor', 'endtime', 'eventid', 'format',
                     'includeallmagnitudes', 'includearrivals',
                     'includemechanisms', 'latitude', 'limit', 'longitude',
                     'magnitudetype', 'maxdepth', 'maxlatitude', 'maxlongitude',
@@ -470,7 +451,7 @@ class WADLParserTestCase(unittest.TestCase):
         parser, w = self._parse_wadl_file("2014-01-07_ncedc_station.wadl")
         params = parser.parameters
         # Check parsed parameters
-        expected = ['channel', 'endafter', 'endbefore', 'endtime',
+        expected = ['channel', 'endafter', 'endbefore', 'endtime', 'format',
                     'includeavailability', 'latitude', 'level', 'location',
                     'longitude', 'maxlatitude', 'maxlongitude', 'maxradius',
                     'minlatitude', 'minlongitude', 'minradius', 'network',

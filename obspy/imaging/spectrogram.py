@@ -14,7 +14,7 @@ Plotting spectrogram of seismograms.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -23,9 +23,10 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import math as M
 
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib import mlab
 from matplotlib.colors import Normalize
+
+from obspy.imaging.cm import obspy_sequential
 
 
 def _nearest_pow_2(x):
@@ -52,8 +53,8 @@ def _nearest_pow_2(x):
 
 def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
                 outfile=None, fmt=None, axes=None, dbscale=False,
-                mult=8.0, cmap=None, zorder=None, title=None, show=True,
-                sphinx=False, clip=[0.0, 1.0]):
+                mult=8.0, cmap=obspy_sequential, zorder=None, title=None,
+                show=True, sphinx=False, clip=[0.0, 1.0]):
     """
     Computes and plots spectrogram of the input data.
 
@@ -84,7 +85,8 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     :param mult: Pad zeros to length mult * wlen. This will make the
         spectrogram smoother.
     :type cmap: :class:`matplotlib.colors.Colormap`
-    :param cmap: Specify a custom colormap instance
+    :param cmap: Specify a custom colormap instance. If not specified, then the
+        default ObsPy sequential colormap is used.
     :type zorder: float
     :param zorder: Specify the zorder of the plot. Only of importance if other
         plots in the same axes are executed.
@@ -100,6 +102,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         percentages of the amplitude range (linear or logarithmic depending
         on option `dbscale`) are clipped.
     """
+    import matplotlib.pyplot as plt
     # enforce float for samp_rate
     samp_rate = float(samp_rate)
 

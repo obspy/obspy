@@ -11,10 +11,10 @@ Global Centroid-Moment-Tensor (CMT) catalog.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 The  `NDK
-<http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/
+<https://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/
 allorder.ndk_explained>`_ format is used by the
 `Global Centroid-Moment-Tensor (CMT) Project <http://www.globalcmt.org/>`_
 and also in couple of other places to describe centroid moment tensor
@@ -35,9 +35,9 @@ Acquiring NDK Files
 The GCMT project offers two types of solutions: *Quick* (calculated within
 hours of an event) and *Standard* (calculated later and with greater
 accuracy). Quick solutions are available `individually
-<http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_QUICK>`_ or
+<https://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_QUICK>`_ or
 as a `single file
-<http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_QUICK/qcmt.ndk>`_
+<https://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_QUICK/qcmt.ndk>`_
 collecting the most recent solutions. Standard solution are available via the
 `CMT Catalog Files <http://www.globalcmt.org/CMTfiles.html>`_ website.
 
@@ -70,9 +70,9 @@ can easily be achieved with ObsPy.
 Instead of passing a filename it is also possible to specify a URL (in this
 case to the solutions from February 2011).
 
->>> cat = obspy.read_events("http://www.ldeo.columbia.edu/~gcmt/projects/CMT/"
-...                        "catalog/NEW_MONTHLY/2011/"
-...                        "feb11.ndk")  # doctest: +SKIP
+>>> cat = obspy.read_events("https://www.ldeo.columbia.edu/~gcmt/projects/CMT/"
+...                         "catalog/NEW_MONTHLY/2011/"
+...                         "feb11.ndk")  # doctest: +SKIP
 >>> print(cat)  # doctest: +SKIP
 135 Event(s) in Catalog:
 2011-02-01T03:32:08.600000Z | +22.520, +144.790 | 5.02 Mwc
@@ -86,8 +86,8 @@ To see all events call 'print(CatalogObject.__str__(print_all=True))'
 .. plot::
 
     import obspy
-    cat = obspy.read_events("http://www.ldeo.columbia.edu/~gcmt/projects/CMT/"
-                           "catalog/NEW_MONTHLY/2011/feb11.ndk")
+    cat = obspy.read_events("https://www.ldeo.columbia.edu/~gcmt/projects/CMT/"
+                            "catalog/NEW_MONTHLY/2011/feb11.ndk")
     cat.plot()
 
 It can also deal with large amounts of data, though it might take a while.

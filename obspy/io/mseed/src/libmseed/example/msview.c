@@ -8,7 +8,7 @@
  *
  * Written by Chad Trabant, ORFEUS/EC-Project MEREDIAN
  *
- * modified 2006.331
+ * modified 2015.108
  ***************************************************************************/
 
 #include <stdio.h>
@@ -85,8 +85,8 @@ main (int argc, char **argv)
   ms_readmsr (&msr, NULL, 0, NULL, NULL, 0, 0, 0);
   
   if ( basicsum )
-    ms_log (1, "Records: %lld, Samples: %lld\n",
-	    (long long int)totalrecs, (long long int)totalsamps);
+    ms_log (1, "Records: %"PRId64", Samples: %"PRId64"\n",
+	    totalrecs, totalsamps);
   
   return 0;
 }  /* End of main() */

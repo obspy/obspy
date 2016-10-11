@@ -60,7 +60,7 @@ class MySLClient(SLClient):
             return False
         if (type == SLPacket.TYPE_SLINFT):
             print("-" * 40)
-            print("Complete INFO:\n" + self.slconn.getInfoString())
+            print("Complete INFO:\n" + self.slconn.get_info_string())
             if self.infolevel is not None:
                 return True
             else:
@@ -69,7 +69,7 @@ class MySLClient(SLClient):
         # can send an in-line INFO request here
         if (count % 100 == 0):
             infostr = "ID"
-            self.slconn.requestInfo(infostr)
+            self.slconn.request_info(infostr)
 
         # if here, must be a data blockette
         print("-" * 40)
@@ -118,29 +118,28 @@ def main():
           "them to an RTTrace object.")
 
     # create SeedLink client
-    slClient = None
     try:
-        slClient = MySLClient(rt_trace=rttrace)
+        sl_client = MySLClient(rt_trace=rttrace)
         #
-        slClient.slconn.setSLAddress("geofon.gfz-potsdam.de:18000")
-        slClient.multiselect = ("GE_STU:BHZ")
+        sl_client.slconn.set_sl_address("geofon.gfz-potsdam.de:18000")
+        sl_client.multiselect = ("GE_STU:BHZ")
         #
-        # slClient.slconn.setSLAddress("discovery.rm.ingv.it:39962")
+        # slClient.slconn.set_sl_address("discovery.rm.ingv.it:39962")
         # slClient.multiselect = ("IV_MGAB:BHZ")
         #
-        # slClient.slconn.setSLAddress("rtserve.iris.washington.edu:18000")
+        # slClient.slconn.set_sl_address("rtserve.iris.washington.edu:18000")
         # slClient.multiselect = ("AT_TTA:BHZ")
         #
         # set a time window from 2 min in the past to 5 sec in the future
         dt = UTCDateTime()
-        slClient.begin_time = (dt - 120.0).format_seedlink()
-        slClient.end_time = (dt + 5.0).format_seedlink()
-        print("SeedLink date-time range:", slClient.begin_time, " -> ",
+        sl_client.begin_time = (dt - 120.0).format_seedlink()
+        sl_client.end_time = (dt + 5.0).format_seedlink()
+        print("SeedLink date-time range:", sl_client.begin_time, " -> ",
               end=' ')
-        print(slClient.end_time)
-        slClient.verbose = 3
-        slClient.initialize()
-        slClient.run()
+        print(sl_client.end_time)
+        sl_client.verbose = 3
+        sl_client.initialize()
+        sl_client.run()
     except SeedLinkException as sle:
         logger.critical(sle)
         traceback.print_exc()

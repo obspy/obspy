@@ -34,7 +34,7 @@ class CoreTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         self.file = os.path.join(self.path, '3cssan.near.8.1.RNON.wav')
 
-    def test_readViaObsPy(self):
+    def test_read_via_obspy(self):
         """
         Read files via obspy.core.Trace
         """
@@ -49,7 +49,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr2.stats['sampling_rate'], 7000)
         np.testing.assert_array_equal(tr.data[:13], testdata)
 
-    def test_readHeadViaObsPy(self):
+    def test_read_head_via_obspy(self):
         """
         Read files via obspy.core.Trace
         """
@@ -58,7 +58,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats['sampling_rate'], 7000)
         self.assertEqual(str(tr.data), '[]')
 
-    def test_readAndWriteViaObsPy(self):
+    def test_read_and_write_via_obspy(self):
         """
         Read and Write files via obspy.core.Trace
         """
@@ -82,7 +82,7 @@ class CoreTestCase(unittest.TestCase):
             np.testing.assert_array_equal(tr3.data[:13], testdata)
 
     @unittest.skipIf(OLD_NUMPY, 'needs a recent NumPy version')
-    def test_rescaleOnWrite(self):
+    def test_rescale_on_write(self):
         """
         Read and Write files via obspy.core.Trace
         """
@@ -101,7 +101,7 @@ class CoreTestCase(unittest.TestCase):
                             maxint).astype(dtype)
                 np.testing.assert_array_almost_equal(tr2.data, expected)
 
-    def test_writeStreamViaObsPy(self):
+    def test_write_stream_via_obspy(self):
         """
         Write streams, i.e. multiple files via obspy.core.Trace
         """

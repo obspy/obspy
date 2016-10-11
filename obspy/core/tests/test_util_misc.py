@@ -11,17 +11,19 @@ import unittest
 from ctypes import CDLL
 from ctypes.util import find_library
 
-from obspy.core.util.misc import CatchOutput
+from obspy import UTCDateTime
+from obspy.core.util.misc import CatchOutput, get_window_times
 
 
 class UtilMiscTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.misc
     """
-    @unittest.skipIf(sys.platform == "darwin" and
+    @unittest.skipIf(sys.platform in ("darwin", "win32") and
                      platform.python_version_tuple()[0] == "3",
-                     "Does not work on OSX and Python 3 for some reason.")
-    def test_CatchOutput(self):
+                     "Does not work with Python 3 for some Windows and OSX "
+                     "versions")
+    def test_catch_output(self):
         """
         Tests for CatchOutput context manager.
         """
@@ -50,7 +52,7 @@ class UtilMiscTestCase(unittest.TestCase):
             self.assertEqual(out.stdout, b"abc\ndef\nghi\njkl\n")
             self.assertEqual(out.stderr, b"123\n456\n")
 
-    def test_CatchOutput_IO(self):
+    def test_catch_output_io(self):
         """
         Tests that CatchOutput context manager does not break I/O.
         """
@@ -70,7 +72,7 @@ class UtilMiscTestCase(unittest.TestCase):
         Check files that are used at install time for obspy imports.
         """
         from obspy.core import util
-        files = ["misc.py", "version.py"]
+        files = ["libnames.py", "version.py"]
 
         for file_ in files:
             file_ = os.path.join(os.path.dirname(util.__file__), file_)
@@ -87,6 +89,150 @@ class UtilMiscTestCase(unittest.TestCase):
                         self.fail(msg % (i, line))
                 if b"import obspy" in line:
                     self.fail(msg % (i, line))
+
+    def test_get_window_times(self):
+        """
+        Tests for the get_window_times() helper function.
+        """
+        # Basic windows. 4 pieces.
+        self.assertEqual(
+            get_window_times(
+                starttime=UTCDateTime(0),
+                endtime=UTCDateTime(20),
+                window_length=5.0,
+                step=5.0,
+                offset=0.0,
+                include_partial_windows=False),
+            [
+                (UTCDateTime(0), UTCDateTime(5)),
+                (UTCDateTime(5), UTCDateTime(10)),
+                (UTCDateTime(10), UTCDateTime(15)),
+                (UTCDateTime(15), UTCDateTime(20))
+            ]
+        )
+
+        # Different step size.
+        self.assertEqual(
+            get_window_times(
+                starttime=UTCDateTime(0),
+                endtime=UTCDateTime(20),
+                window_length=5.0,
+                step=10.0,
+                offset=0.0,
+                include_partial_windows=False),
+            [
+                (UTCDateTime(0), UTCDateTime(5)),
+                (UTCDateTime(10), UTCDateTime(15))
+                ]
+        )
+
+        # With offset.
+        self.assertEqual(
+            get_window_times(
+                starttime=UTCDateTime(0),
+                endtime=UTCDateTime(20),
+                window_length=5.0,
+                step=6.5,
+                offset=8.5,
+                include_partial_windows=False),
+            [
+                (UTCDateTime(8.5), UTCDateTime(13.5)),
+                (UTCDateTime(15), UTCDateTime(20))
+            ]
+        )
+
+        # Don't return partial windows.
+        self.assertEqual(
+            get_window_times(
+                starttime=UTCDateTime(0),
+                endtime=UTCDateTime(20),
+                window_length=15.0,
+                step=15.0,
+                offset=0.0,
+                include_partial_windows=False),
+            [
+                (UTCDateTime(0), UTCDateTime(15))
+            ]
+        )
+
+        # Return partial windows.
+        self.assertEqual(
+            get_window_times(
+                starttime=UTCDateTime(0),
+                endtime=UTCDateTime(20),
+                window_length=15.0,
+                step=15.0,
+                offset=0.0,
+                include_partial_windows=True),
+            [
+                (UTCDateTime(0), UTCDateTime(15)),
+                (UTCDateTime(15), UTCDateTime(20))
+            ]
+        )
+
+        # Negative step length has to be used together with an offset.
+        self.assertEqual(
+            get_window_times(
+                starttime=UTCDateTime(0),
+                endtime=UTCDateTime(20),
+                window_length=5.0,
+                step=-5.0,
+                offset=20.0,
+                include_partial_windows=False),
+            [
+                (UTCDateTime(15), UTCDateTime(20)),
+                (UTCDateTime(10), UTCDateTime(15)),
+                (UTCDateTime(5), UTCDateTime(10)),
+                (UTCDateTime(0), UTCDateTime(5))
+            ]
+        )
+
+        # Negative step length and not partial windows.
+        self.assertEqual(
+            get_window_times(
+                starttime=UTCDateTime(0),
+                endtime=UTCDateTime(20),
+                window_length=15.0,
+                step=-15.0,
+                offset=20.0,
+                include_partial_windows=False),
+            [
+                (UTCDateTime(5), UTCDateTime(20))
+            ]
+        )
+
+        # Negative step length with partial windows.
+        self.assertEqual(
+            get_window_times(
+                starttime=UTCDateTime(0),
+                endtime=UTCDateTime(20),
+                window_length=15.0,
+                step=-15.0,
+                offset=20.0,
+                include_partial_windows=True),
+            [
+                (UTCDateTime(5), UTCDateTime(20)),
+                (UTCDateTime(0), UTCDateTime(5))
+            ]
+        )
+
+        # Smaller step than window.
+        self.assertEqual(
+            get_window_times(
+                starttime=UTCDateTime(0),
+                endtime=UTCDateTime(2),
+                window_length=1.0,
+                step=0.25,
+                offset=0.0,
+                include_partial_windows=False),
+            [
+                (UTCDateTime(0), UTCDateTime(1)),
+                (UTCDateTime(0.25), UTCDateTime(1.25)),
+                (UTCDateTime(0.5), UTCDateTime(1.5)),
+                (UTCDateTime(0.75), UTCDateTime(1.75)),
+                (UTCDateTime(1.0), UTCDateTime(2.0))
+            ]
+        )
 
 
 def suite():

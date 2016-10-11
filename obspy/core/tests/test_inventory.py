@@ -7,7 +7,7 @@ Test suite for the inventory class.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -20,11 +20,14 @@ import warnings
 import numpy as np
 from matplotlib import rcParams
 
-from obspy import UTCDateTime, read_inventory
+import obspy
+from obspy import UTCDateTime, read_inventory, read_events
+from obspy.core.compatibility import mock
 from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
+from obspy.core.inventory.util import _unified_content_strings
 
 
 MATPLOTLIB_VERSION = get_matplotlib_version()
@@ -56,58 +59,58 @@ class InventoryTestCase(unittest.TestCase):
         self.assertLessEqual(inv.created - dt, 10.0)
 
     def test_get_response(self):
-        responseN1S1 = Response('RESPN1S1')
-        responseN1S2 = Response('RESPN1S2')
-        responseN2S1 = Response('RESPN2S1')
-        channelsN1S1 = [Channel(code='BHZ',
-                                location_code='',
-                                latitude=0.0,
-                                longitude=0.0,
-                                elevation=0.0,
-                                depth=0.0,
-                                response=responseN1S1)]
-        channelsN1S2 = [Channel(code='BHZ',
-                                location_code='',
-                                latitude=0.0,
-                                longitude=0.0,
-                                elevation=0.0,
-                                depth=0.0,
-                                response=responseN1S2)]
-        channelsN2S1 = [Channel(code='BHZ',
-                                location_code='',
-                                latitude=0.0,
-                                longitude=0.0,
-                                elevation=0.0,
-                                depth=0.0,
-                                response=responseN2S1)]
-        stations1 = [Station(code='N1S1',
-                             latitude=0.0,
-                             longitude=0.0,
-                             elevation=0.0,
-                             channels=channelsN1S1),
-                     Station(code='N1S2',
-                             latitude=0.0,
-                             longitude=0.0,
-                             elevation=0.0,
-                             channels=channelsN1S2)]
-        stations2 = [Station(code='N2S1',
-                             latitude=0.0,
-                             longitude=0.0,
-                             elevation=0.0,
-                             channels=channelsN2S1)]
-        networks = [Network('N1', stations=stations1),
-                    Network('N2', stations=stations2)]
+        response_n1_s1 = Response('RESPN1S1')
+        response_n1_s2 = Response('RESPN1S2')
+        response_n2_s1 = Response('RESPN2S1')
+        channels_n1_s1 = [Channel(code='BHZ',
+                                  location_code='',
+                                  latitude=0.0,
+                                  longitude=0.0,
+                                  elevation=0.0,
+                                  depth=0.0,
+                                  response=response_n1_s1)]
+        channels_n1_s2 = [Channel(code='BHZ',
+                                  location_code='',
+                                  latitude=0.0,
+                                  longitude=0.0,
+                                  elevation=0.0,
+                                  depth=0.0,
+                                  response=response_n1_s2)]
+        channels_n2_s1 = [Channel(code='BHZ',
+                                  location_code='',
+                                  latitude=0.0,
+                                  longitude=0.0,
+                                  elevation=0.0,
+                                  depth=0.0,
+                                  response=response_n2_s1)]
+        stations_1 = [Station(code='N1S1',
+                              latitude=0.0,
+                              longitude=0.0,
+                              elevation=0.0,
+                              channels=channels_n1_s1),
+                      Station(code='N1S2',
+                              latitude=0.0,
+                              longitude=0.0,
+                              elevation=0.0,
+                              channels=channels_n1_s2)]
+        stations_2 = [Station(code='N2S1',
+                              latitude=0.0,
+                              longitude=0.0,
+                              elevation=0.0,
+                              channels=channels_n2_s1)]
+        networks = [Network('N1', stations=stations_1),
+                    Network('N2', stations=stations_2)]
         inv = Inventory(networks=networks, source='TEST')
 
         response = inv.get_response('N1.N1S1..BHZ',
                                     UTCDateTime('2010-01-01T12:00'))
-        self.assertEqual(response, responseN1S1)
+        self.assertEqual(response, response_n1_s1)
         response = inv.get_response('N1.N1S2..BHZ',
                                     UTCDateTime('2010-01-01T12:00'))
-        self.assertEqual(response, responseN1S2)
+        self.assertEqual(response, response_n1_s2)
         response = inv.get_response('N2.N2S1..BHZ',
                                     UTCDateTime('2010-01-01T12:00'))
-        self.assertEqual(response, responseN2S1)
+        self.assertEqual(response, response_n2_s1)
 
     def test_get_coordinates(self):
         """
@@ -212,6 +215,175 @@ class InventoryTestCase(unittest.TestCase):
         self.assertIn("obspy.org", inv_1.module_uri)
         self.assertTrue((UTCDateTime() - inv_1.created) < 5)
 
+    def test_len(self):
+        """
+        Tests the __len__ property.
+        """
+        inv = read_inventory()
+        self.assertEqual(len(inv), len(inv.networks))
+        self.assertEqual(len(inv), 2)
+
+    def test_inventory_select(self):
+        """
+        Test for the Inventory.select() method.
+        """
+        inv = read_inventory()
+
+        # Currently contains 30 channels.
+        self.assertEqual(sum(len(sta) for net in inv for sta in net), 30)
+
+        # No arguments, everything should be selected.
+        self.assertEqual(
+            sum(len(sta) for net in inv.select() for sta in net),
+            30)
+
+        # All networks.
+        self.assertEqual(
+            sum(len(sta) for net in inv.select(network="*") for sta in net),
+            30)
+
+        # All stations.
+        self.assertEqual(
+            sum(len(sta) for net in inv.select(station="*") for sta in net),
+            30)
+
+        # All locations.
+        self.assertEqual(
+            sum(len(sta) for net in inv.select(location="*") for sta in net),
+            30)
+
+        # All channels.
+        self.assertEqual(
+            sum(len(sta) for net in inv.select(channel="*") for sta in net),
+            30)
+
+        # Only BW network.
+        self.assertEqual(
+            sum(len(sta) for net in inv.select(network="BW") for sta in net),
+            9)
+        self.assertEqual(
+            sum(len(sta) for net in inv.select(network="B?") for sta in net),
+            9)
+
+        # Only RJOB Station.
+        self.assertEqual(
+            sum(len(sta) for net in inv.select(station="RJOB") for sta in net),
+            9)
+        self.assertEqual(
+            sum(len(sta) for net in inv.select(station="R?O*") for sta in net),
+            9)
+
+        # Most parameters are just passed to the Network.select() method.
+        select_kwargs = {
+            "station": "BW",
+            "location": "00",
+            "channel": "EHE",
+            "keep_empty": True,
+            "time": UTCDateTime(2001, 1, 1),
+            "sampling_rate": 123.0,
+            "starttime": UTCDateTime(2002, 1, 1),
+            "endtime": UTCDateTime(2003, 1, 1)}
+        with mock.patch("obspy.core.inventory.network.Network.select") as p:
+            p.return_value = obspy.core.inventory.network.Network("BW")
+            inv.select(**select_kwargs)
+        self.assertEqual(p.call_args[1], select_kwargs)
+
+        # Artificially set start-and end dates for the first network.
+        inv[0].start_date = UTCDateTime(2000, 1, 1)
+        inv[0].end_date = UTCDateTime(2015, 1, 1)
+
+        # Nothing will stick around if keep_empty it False.
+        self.assertEqual(len(inv.select(time=UTCDateTime(2001, 1, 1))), 0)
+        # If given, both will stick around.
+        self.assertEqual(len(inv.select(time=UTCDateTime(2001, 1, 1),
+                                        keep_empty=True)), 2)
+        # Or only one.
+        self.assertEqual(len(inv.select(time=UTCDateTime(1999, 1, 1),
+                                        keep_empty=True)), 1)
+
+        # Also test the starttime and endtime parameters.
+        self.assertEqual(len(inv.select(starttime=UTCDateTime(1999, 1, 1),
+                                        keep_empty=True)), 2)
+        self.assertEqual(len(inv.select(starttime=UTCDateTime(2016, 1, 1),
+                                        keep_empty=True)), 1)
+        self.assertEqual(len(inv.select(endtime=UTCDateTime(1999, 1, 1),
+                                        keep_empty=True)), 1)
+        self.assertEqual(len(inv.select(endtime=UTCDateTime(2016, 1, 1),
+                                        keep_empty=True)), 2)
+
+    def test_inventory_select_with_empty_networks(self):
+        """
+        Tests the behaviour of the Inventory.select() method with empty
+        Network objects.
+        """
+        inv = read_inventory()
+
+        # Empty all networks.
+        for net in inv:
+            net.stations = []
+
+        self.assertEqual(len(inv), 2)
+        self.assertEqual(sum(len(net) for net in inv), 0)
+
+        # No arguments, everything should be selected.
+        self.assertEqual(len(inv), 2)
+        # Same if everything is selected.
+        self.assertEqual(len(inv.select(network="*")), 2)
+        # Select only one.
+        self.assertEqual(len(inv.select(network="BW")), 1)
+        self.assertEqual(len(inv.select(network="G?")), 1)
+        # Should only be empty if trying to select something that does not
+        # exist.
+        self.assertEqual(len(inv.select(network="RR")), 0)
+
+    def test_util_unified_content_string(self):
+        """
+        Tests helper routine that compresses inventory content lists.
+        """
+        contents = (
+            [u'IU.ULN (Ulaanbaatar, Mongolia)',
+             u'IU.ULN (Ulaanbaatar, Mongolia)',
+             u'IU.ULN (Ulaanbaatar, Mongolia)'],
+            [u'IU.ULN.00.BH1', u'IU.ULN.00.BH2', u'IU.ULN.00.BHE',
+             u'IU.ULN.00.BHE', u'IU.ULN.00.BHE', u'IU.ULN.00.BHE',
+             u'IU.ULN.00.BHN', u'IU.ULN.00.BHN', u'IU.ULN.00.BHN',
+             u'IU.ULN.00.BHN', u'IU.ULN.00.BHZ', u'IU.ULN.00.BHZ',
+             u'IU.ULN.00.BHZ', u'IU.ULN.00.BHZ', u'IU.ULN.00.BHZ',
+             u'IU.ULN.00.LH1', u'IU.ULN.00.LH2', u'IU.ULN.00.LHE',
+             u'IU.ULN.00.LHE', u'IU.ULN.00.LHE', u'IU.ULN.00.LHE',
+             u'IU.ULN.00.LHN', u'IU.ULN.00.LHN', u'IU.ULN.00.LHN',
+             u'IU.ULN.00.LHN', u'IU.ULN.00.LHZ', u'IU.ULN.00.LHZ',
+             u'IU.ULN.00.LHZ', u'IU.ULN.00.LHZ', u'IU.ULN.00.LHZ',
+             u'IU.ULN.00.UHE', u'IU.ULN.00.UHE', u'IU.ULN.00.UHN',
+             u'IU.ULN.00.UHN', u'IU.ULN.00.UHZ', u'IU.ULN.00.UHZ',
+             u'IU.ULN.00.VE1', u'IU.ULN.00.VE1', u'IU.ULN.00.VH1',
+             u'IU.ULN.00.VH2', u'IU.ULN.00.VHE', u'IU.ULN.00.VHE',
+             u'IU.ULN.00.VHE', u'IU.ULN.00.VHE', u'IU.ULN.00.VHN',
+             u'IU.ULN.00.VHN', u'IU.ULN.00.VHN', u'IU.ULN.00.VHN',
+             u'IU.ULN.00.VHZ', u'IU.ULN.00.VHZ', u'IU.ULN.00.VHZ',
+             u'IU.ULN.00.VHZ', u'IU.ULN.00.VHZ', u'IU.ULN.00.VK1',
+             u'IU.ULN.00.VK1', u'IU.ULN.00.VM1', u'IU.ULN.00.VM2',
+             u'IU.ULN.00.VME', u'IU.ULN.00.VME', u'IU.ULN.00.VMN',
+             u'IU.ULN.00.VMN', u'IU.ULN.00.VMZ', u'IU.ULN.00.VMZ',
+             u'IU.ULN.00.VMZ'],
+            )
+        expected = (
+            [u'IU.ULN (Ulaanbaatar, Mongolia) (3x)'],
+            [u'IU.ULN.00.BHZ (5x)', u'IU.ULN.00.BHN (4x)',
+             u'IU.ULN.00.BHE (4x)', u'IU.ULN.00.BH1', u'IU.ULN.00.BH2',
+             u'IU.ULN.00.LHZ (5x)', u'IU.ULN.00.LHN (4x)',
+             u'IU.ULN.00.LHE (4x)', u'IU.ULN.00.LH1', u'IU.ULN.00.LH2',
+             u'IU.ULN.00.UHZ (2x)', u'IU.ULN.00.UHN (2x)',
+             u'IU.ULN.00.UHE (2x)', u'IU.ULN.00.VE1 (2x)',
+             u'IU.ULN.00.VHZ (5x)', u'IU.ULN.00.VHN (4x)',
+             u'IU.ULN.00.VHE (4x)', u'IU.ULN.00.VH1', u'IU.ULN.00.VH2',
+             u'IU.ULN.00.VK1 (2x)', u'IU.ULN.00.VMZ (3x)',
+             u'IU.ULN.00.VMN (2x)', u'IU.ULN.00.VME (2x)', u'IU.ULN.00.VM1',
+             u'IU.ULN.00.VM2'],
+            )
+        for contents_, expected_ in zip(contents, expected):
+            self.assertEqual(expected_, _unified_content_strings(contents_))
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 class InventoryBasemapTestCase(unittest.TestCase):
@@ -253,7 +425,7 @@ class InventoryBasemapTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             inv.plot(method='basemap', projection='ortho', resolution='c',
                      continent_fill_color='0.3', marker='d', label=False,
-                     colormap='hsv', color_per_network=True, outfile=ic.name)
+                     colormap='Set3', color_per_network=True, outfile=ic.name)
 
     def test_location_plot_local(self):
         """
@@ -274,6 +446,25 @@ class InventoryBasemapTestCase(unittest.TestCase):
             inv.plot(method='basemap', projection='local', resolution='i',
                      size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                      outfile=ic.name)
+
+    def test_combined_station_event_plot(self):
+        """
+        Tests the coombined plotting of inventory/event data in one plot,
+        reusing the basemap instance.
+        """
+        inv = read_inventory()
+        cat = read_events()
+        reltol = 1.0
+        # Coordinate lines might be slightly off, depending on the basemap
+        # version.
+        if BASEMAP_VERSION < [1, 0, 7]:
+            reltol = 3.0
+        with ImageComparison(self.image_dir,
+                             'basemap_combined_stations-events.png',
+                             reltol=reltol) as ic:
+            rcParams['savefig.dpi'] = 72
+            fig = inv.plot(show=False)
+            cat.plot(outfile=ic.name, fig=fig)
 
 
 @unittest.skipIf(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),
@@ -312,7 +503,7 @@ class InventoryCartopyTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             inv.plot(method='cartopy', projection='ortho', resolution='c',
                      continent_fill_color='0.3', marker='d', label=False,
-                     colormap='hsv', color_per_network=True, outfile=ic.name)
+                     colormap='Set3', color_per_network=True, outfile=ic.name)
 
     def test_location_plot_local(self):
         """

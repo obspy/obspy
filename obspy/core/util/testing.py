@@ -6,7 +6,7 @@ Testing utilities for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -24,15 +24,38 @@ import re
 import shutil
 import unittest
 import warnings
+from distutils.version import LooseVersion
 
 from lxml import etree
 import numpy as np
 
 from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
-from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git
+from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git, \
+    MatplotlibBackend
 
 
 MATPLOTLIB_VERSION = get_matplotlib_version()
+# this dictionary contains the locations of checker routines that determine
+# whether the module's tests can be executed or not (e.g. because test server
+# is unreachable, necessary ports are blocked, etc.).
+# A checker routine should return either an empty string (tests can and will
+# be executed) or a message explaining why tests can not be executed (all
+# tests of corresponding module will be skipped).
+MODULE_TEST_SKIP_CHECKS = {
+    'clients.seishub':
+        'obspy.clients.seishub.tests.test_client._check_server_availability',
+    }
+# List of flake8 error codes to ignore. Keep it as small as possible - there
+# usually is little reason to fight flake8.
+FLAKE8_IGNORE_CODES = [
+    # E402 module level import not at top of file
+    # This is really annoying when using the standard library import hooks
+    # from the future package.
+    "E402"
+    ]
+FLAKE8_EXCLUDE_FILES = [
+    "*/__init__.py",
+    ]
 
 
 def add_unittests(testsuite, module_name):
@@ -53,17 +76,16 @@ def add_unittests(testsuite, module_name):
     >>> suite = unittest.TestSuite()
     >>> add_unittests(suite, "obspy.core")
     """
-    MODULE_NAME = module_name
-    MODULE_TESTS = __import__(MODULE_NAME + ".tests",
+    module_tests = __import__(module_name + ".tests",
                               fromlist=[native_str("obspy")])
-    filename_pattern = os.path.join(MODULE_TESTS.__path__[0], "test_*.py")
+    filename_pattern = os.path.join(module_tests.__path__[0], "test_*.py")
     files = glob.glob(filename_pattern)
     names = (os.path.basename(file).split(".")[0] for file in files)
-    module_names = (".".join([MODULE_NAME, "tests", name]) for name in names)
-    for module_name in module_names:
-        module = __import__(module_name,
-                            fromlist=[native_str("obspy")])
-        testsuite.addTest(module.suite())
+    module_names = (".".join([module_name, "tests", name]) for name in names)
+    for _module_name in module_names:
+        _module = __import__(_module_name,
+                             fromlist=[native_str("obspy")])
+        testsuite.addTest(_module.suite())
 
 
 def add_doctests(testsuite, module_name):
@@ -84,12 +106,11 @@ def add_doctests(testsuite, module_name):
     >>> suite = unittest.TestSuite()
     >>> add_doctests(suite, "obspy.core")
     """
-    MODULE_NAME = module_name
-    MODULE = __import__(MODULE_NAME, fromlist=[native_str("obspy")])
-    MODULE_PATH = MODULE.__path__[0]
-    MODULE_PATH_LEN = len(MODULE_PATH)
+    module = __import__(module_name, fromlist=[native_str("obspy")])
+    module_path = module.__path__[0]
+    module_path_len = len(module_path)
 
-    for root, _dirs, files in os.walk(MODULE_PATH):
+    for root, _dirs, files in os.walk(module_path):
         # skip directories without __init__.py
         if '__init__.py' not in files:
             continue
@@ -108,12 +129,12 @@ def add_doctests(testsuite, module_name):
             if not file.endswith('.py'):
                 continue
             # get module name
-            parts = root[MODULE_PATH_LEN:].split(os.sep)[1:]
-            module_name = ".".join([MODULE_NAME] + parts + [file[:-3]])
+            parts = root[module_path_len:].split(os.sep)[1:]
+            _module_name = ".".join([module_name] + parts + [file[:-3]])
             try:
-                module = __import__(module_name,
-                                    fromlist=[native_str("obspy")])
-                testsuite.addTest(doctest.DocTestSuite(module))
+                _module = __import__(_module_name,
+                                     fromlist=[native_str("obspy")])
+                testsuite.addTest(doctest.DocTestSuite(_module))
             except ValueError:
                 pass
 
@@ -122,7 +143,7 @@ def write_png(arr, filename):
     """
     Custom write_png() function. matplotlib < 1.3 cannot write RGBA png files.
 
-    Modified from http://stackoverflow.com/a/19174800/1657047
+    Modified from https://stackoverflow.com/a/19174800
     """
     import zlib
     import struct
@@ -219,9 +240,9 @@ def compare_images(expected, actual, tol):
         return None
 
     # Save diff image, expand differences in luminance domain
-    absDiffImage = np.abs(expected_image - actual_image)
-    absDiffImage *= 10.0
-    save_image_np = np.clip(absDiffImage, 0.0, 1.0)
+    abs_diff_image = np.abs(expected_image - actual_image)
+    abs_diff_image *= 10.0
+    save_image_np = np.clip(abs_diff_image, 0.0, 1.0)
     # Hard-code the alpha channel to fully solid
     save_image_np[:, :, 3] = 1.0
 
@@ -253,6 +274,13 @@ class ImageComparison(NamedTemporaryFile):
     :type adjust_tolerance: bool, optional
     :param adjust_tolerance: Adjust the tolerance based on the matplotlib
         version. Can optionally be turned off to simply compare two images.
+    :type plt_close_all_enter: bool
+    :param plt_close_all_enter: Whether to close all open figures when entering
+        context (:func:`matplotlib.pyplot.close` with "all" as first argument.
+    :type plt_close_all_exit: bool
+    :param plt_close_all_exit: Whether to call :func:`matplotlib.pyplot.close`
+        with "all" as first argument (close all figures) or no arguments (close
+        active figure). Has no effect if ``plt_close=False``.
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing.
@@ -285,7 +313,8 @@ class ImageComparison(NamedTemporaryFile):
     ...     # image is compared against baseline image automatically
     """
     def __init__(self, image_path, image_name, reltol=1,
-                 adjust_tolerance=True, *args, **kwargs):
+                 adjust_tolerance=True, plt_close_all_enter=True,
+                 plt_close_all_exit=True, *args, **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
         super(ImageComparison, self).__init__(suffix=self.suffix, *args,
                                               **kwargs)
@@ -296,6 +325,8 @@ class ImageComparison(NamedTemporaryFile):
         self.output_path = os.path.join(image_path, "testrun")
         self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
         self.tol = reltol * 3.0
+        self.plt_close_all_enter = plt_close_all_enter
+        self.plt_close_all_exit = plt_close_all_exit
 
         # Higher tolerance for older matplotlib versions. This is pretty
         # high but the pictures are at least guaranteed to be generated and
@@ -304,12 +335,20 @@ class ImageComparison(NamedTemporaryFile):
         if adjust_tolerance:
             if MATPLOTLIB_VERSION < [1, 3, 0]:
                 self.tol *= 30
+            # Matplotlib 1.5 changes the text positioning a bit. This
+            # results in many tests failing. Instead of changing all baseline
+            # images (which we'll have to do for mpl 2.0 in any case) we
+            # just up the tolerance a bit.
+            elif MATPLOTLIB_VERSION[:2] == [1, 5]:
+                self.tol *= 17
 
     def __enter__(self):
         """
         Set matplotlib defaults.
         """
-        from matplotlib import font_manager, get_backend, rcParams, rcdefaults
+        MatplotlibBackend.switch_backend("AGG", sloppy=False)
+
+        from matplotlib import font_manager, rcParams, rcdefaults
         import locale
 
         try:
@@ -321,14 +360,6 @@ class ImageComparison(NamedTemporaryFile):
             except:
                 msg = "Could not set locale to English/United States. " + \
                       "Some date-related tests may fail"
-                warnings.warn(msg)
-
-        if get_backend().upper() != 'AGG':
-            import matplotlib
-            try:
-                matplotlib.use('AGG', warn=False)
-            except TypeError:
-                msg = "Image comparison requires matplotlib backend 'AGG'"
                 warnings.warn(msg)
 
         # set matplotlib builtin default settings for testing
@@ -348,6 +379,13 @@ class ImageComparison(NamedTemporaryFile):
             rcParams['text.hinting_factor'] = 8
         except KeyError:
             warnings.warn("could not set rcParams['text.hinting_factor']")
+
+        if self.plt_close_all_enter:
+            import matplotlib.pyplot as plt
+            try:
+                plt.close("all")
+            except:
+                pass
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
@@ -365,12 +403,36 @@ class ImageComparison(NamedTemporaryFile):
                 msg = self.compare()
         # we can still upload images if comparison fails on two different sized
         # images
-        except ValueError as e:
+        except ImageComparisonException as e:
             failed = True
-            msg = str(e)
-            if "operands could not be broadcast together" in msg:
-                upload_msg = self._upload_images()
-                raise ImageComparisonException("\n".join([msg, upload_msg]))
+            if "is not equal to the expected shape" in msg:
+                msg = str(e) + "\n"
+                upload_result = self._upload_images()
+                if isinstance(upload_result, dict):
+                    msg += ("\tFile:      {}\n"
+                            "\tExpected:  {expected}\n"
+                            "\tActual:    {actual}\n"
+                            "\tDiff:      {diff}\n").format(self.image_name,
+                                                            **upload_result)
+                else:
+                    msg += upload_result
+                raise ImageComparisonException(msg)
+            raise
+        # we can still upload actual image if baseline image does not exist
+        except IOError as e:
+            failed = True
+            if "Baseline image" in msg and "does not exist." in msg:
+                msg = str(e) + "\n"
+                upload_result = self._upload_images()
+                if isinstance(upload_result, dict):
+                    msg += ("\tFile:      {}\n"
+                            "\tExpected:  ---\n"
+                            "\tActual:    {actual}\n"
+                            "\tDiff:      ---\n").format(self.image_name,
+                                                         **upload_result)
+                else:
+                    msg += upload_result
+                raise ImageComparisonException(msg)
             raise
         # simply reraise on any other unhandled exceptions
         except:
@@ -380,39 +442,45 @@ class ImageComparison(NamedTemporaryFile):
         # message back or the test passed if we get an empty message
         else:
             if msg:
-                upload_msg = self._upload_images()
                 failed = True
-                if self.keep_output and not (self.keep_only_failed and not
-                                             failed):
-                    self._copy_tempfiles()
+            else:
+                failed = False
+            if failed:
+                # base message on deviation of baseline and actual image
+                msg = ("Image comparison failed.\n"
+                       "\tFile:      {}\n"
+                       "\tRMS:       {rms}\n"
+                       "\tTolerance: {tol}\n").format(self.image_name, **msg)
+                # optionally, copy failed images from /tmp and append
+                # the local paths
+                if self.keep_output:
                     ff = self._get_final_filenames()
-                    msg = ("Image comparision failed.\n"
-                           "\tExpected:  {expected}\n"
-                           "\tActual:    {actual}\n"
-                           "\tDiff:      {diff}\n"
-                           "\tRMS:       {rms}\n"
-                           "\tTolerance: {tol}").format(
-                        expected=ff["expected"],
-                        actual=ff["actual"],
-                        diff=ff["diff"],
-                        rms=msg["rms"],
-                        tol=msg["tol"])
+                    msg += ("\tExpected:  {expected}\n"
+                            "\tActual:    {actual}\n"
+                            "\tDiff:      {diff}\n").format(**ff)
+                # try to upload to imgur, if successful append links to message
+                upload_result = self._upload_images()
+                if isinstance(upload_result, dict):
+                    msg += ("\tExpected:  {expected}\n"
+                            "\tActual:    {actual}\n"
+                            "\tDiff:      {diff}\n").format(**upload_result)
                 else:
-                    msg = ("Image comparision failed, RMS={rms}, "
-                           "tolerance={tol}. Set the "
-                           "OBSPY_KEEP_IMAGES env variable to keep "
-                           "the test images.").format(**msg)
-                raise ImageComparisonException("\n".join([msg, upload_msg]))
-            failed = False
+                    msg += upload_result
+                msg = msg.rstrip()
+                raise ImageComparisonException(msg)
         # finally clean up after the image test, whether failed or not.
         # if specified move generated output to source tree
         finally:
-            import matplotlib.pyplot as plt
             self.close()  # flush internal buffer
             self._fileobj.close()
-            plt.close()
+            if self.plt_close_all_exit:
+                import matplotlib.pyplot as plt
+                try:
+                    plt.close("all")
+                except:
+                    pass
             if self.keep_output:
-                if not (self.keep_only_failed and not failed):
+                if failed or not self.keep_only_failed:
                     self._copy_tempfiles()
             # delete temporary files
             os.remove(self.name)
@@ -450,82 +518,63 @@ class ImageComparison(NamedTemporaryFile):
         """
         Copies created images from tempfiles to a subfolder of baseline images.
         """
-        filenames = self._get_final_filenames()
-        directory = self.output_path
-        if os.path.exists(directory) and not os.path.isdir(directory):
-            msg = "Could not keep output image, target directory exists:" + \
-                  directory
+        try:
+            filenames = self._get_final_filenames()
+            directory = self.output_path
+            if os.path.exists(directory):
+                if not os.path.isdir(directory):
+                    msg = ("Could not keep output image, target directory "
+                           "exists but is no directory: %s") % directory
+                    warnings.warn(msg)
+                    return
+            else:
+                os.mkdir(directory)
+            if os.path.isfile(self.diff_filename):
+                shutil.copy(self.diff_filename, filenames["diff"])
+            shutil.copy(self.name, filenames["actual"])
+        except Exception as e:
+            msg = ("Failed to copy images from temporary directory "
+                   "(caught %s: %s).") % (e.__class__.__name__, str(e))
             warnings.warn(msg)
-            return
-        if not os.path.exists(directory):
-            os.mkdir(directory)
-        if os.path.isfile(self.diff_filename):
-            shutil.copy(self.diff_filename, filenames["diff"])
-        shutil.copy(self.name, filenames["actual"])
 
     def _upload_images(self):
         """
         Uploads images to imgur.
+
+        :returns: ``dict`` with links to uploaded images or ``str`` with
+            message if upload failed
         """
-        # try to import pyimgur
         try:
             import pyimgur
-        except ImportError:
-            msg = ("Upload to imgur not possible (python package "
-                   "'pyimgur' not installed).")
-            warnings.warn(msg)
-            return ""
-        # requests package should be installed since it is a dependency of
-        # pyimgur
-        import requests
-        # try to get imgur client id from environment
-        imgur_clientid = os.environ.get("OBSPY_IMGUR_CLIENTID", None)
-        if imgur_clientid is None:
-            msg = ("Upload to imgur not possible (environment "
-                   "variable OBSPY_IMGUR_CLIENTID not set).")
-            warnings.warn(msg)
-            return ""
-        # upload images and return urls
-        imgur = pyimgur.Imgur(imgur_clientid)
-        msg = []
-        try:
+            # try to get imgur client id from environment
+            imgur_clientid = \
+                os.environ.get("OBSPY_IMGUR_CLIENTID") or "53b182544dc5d89"
+            # upload images and return urls
+            links = {}
+            imgur = pyimgur.Imgur(imgur_clientid)
             if os.path.exists(self.baseline_image):
                 up = imgur.upload_image(self.baseline_image, title=self.name)
-                msg.append("Baseline image: " + up.link)
+                links['expected'] = up.link
             if os.path.exists(self.name):
                 up = imgur.upload_image(self.name, title=self.name)
-                msg.append("Failed image:   " + up.link)
+                links['actual'] = up.link
             if os.path.exists(self.diff_filename):
                 up = imgur.upload_image(self.diff_filename,
                                         title=self.diff_filename)
-                msg.append("Diff image:     " + up.link)
-        except requests.exceptions.SSLError as e:
-            msg = ("Upload to imgur not possible (caught SSLError: %s).")
-            warnings.warn(msg % str(e))
-            return ""
-        return "\n".join(msg)
-
-
-FLAKE8_EXCLUDE_FILES = [
-    "*/__init__.py",
-    ]
+                links['diff'] = up.link
+        except Exception as e:
+            msg = ("Upload to imgur failed (caught %s: %s).")
+            return msg % (e.__class__.__name__, str(e))
+        return links
 
 try:
     import flake8
 except ImportError:
     HAS_FLAKE8 = False
 else:
+    flake8_version = LooseVersion(flake8.__version__)
     # Only accept flake8 version >= 2.0
-    HAS_FLAKE8 = flake8.__version__ >= '2'
-
-# List of flake8 error codes to ignore. Keep it as small as possible - there
-# usually is little reason to fight flake8.
-FLAKE8_IGNORE_CODES = [
-    # E402 module level import not at top of file
-    # This is really annoying when using the standard library import hooks
-    # from the future package.
-    "E402"
-]
+    HAS_FLAKE8 = flake8_version >= LooseVersion('2')
 
 
 def check_flake8():
@@ -537,8 +586,6 @@ def check_flake8():
     if PY2:
         import pyflakes.checker  # @UnusedImport
         pyflakes.checker.PY2 = True
-    import flake8.main
-    from flake8.engine import get_style_guide
 
     test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
     obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
@@ -569,8 +616,17 @@ def check_flake8():
                     break
             else:
                 files.append(py_file)
-    flake8_style = get_style_guide(parse_argv=False,
-                                   config_file=flake8.main.DEFAULT_CONFIG)
+
+    if flake8_version >= LooseVersion('3.0.0'):
+        from flake8.api.legacy import get_style_guide
+    else:
+        from flake8.engine import get_style_guide
+    flake8_kwargs = {'parse_argv': False}
+    if flake8_version < LooseVersion('2.5.5'):
+        import flake8.main
+        flake8_kwargs['config_file'] = flake8.main.DEFAULT_CONFIG
+
+    flake8_style = get_style_guide(**flake8_kwargs)
     flake8_style.options.ignore = tuple(set(
         flake8_style.options.ignore).union(set(FLAKE8_IGNORE_CODES)))
 
@@ -579,18 +635,6 @@ def check_flake8():
         report = flake8_style.check_files(files)
 
     return report, out.stdout
-
-
-# this dictionary contains the locations of checker routines that determine
-# whether the module's tests can be executed or not (e.g. because test server
-# is unreachable, necessary ports are blocked, etc.).
-# A checker routine should return either an empty string (tests can and will
-# be executed) or a message explaining why tests can not be executed (all
-# tests of corresponding module will be skipped).
-MODULE_TEST_SKIP_CHECKS = {
-    'seishub':
-        'obspy.clients.seishub.tests.test_client._check_server_availability',
-    }
 
 
 def compare_xml_strings(doc1, doc2):
@@ -628,7 +672,7 @@ def compare_xml_strings(doc1, doc2):
         raise AssertionError("Strings are not equal.\n" + err_msg)
 
 
-def remove_unique_IDs(xml_string, remove_creation_time=False):
+def remove_unique_ids(xml_string, remove_creation_time=False):
     """
     Removes unique ID parts of e.g. 'publicID="..."' attributes from xml
     strings.
@@ -654,6 +698,22 @@ def remove_unique_IDs(xml_string, remove_creation_time=False):
         xml_string = re.sub("<%s>.*?</%s>" % (prefix, prefix),
                             '<%s/>' % prefix, xml_string)
     return xml_string
+
+
+def get_all_py_files():
+    """
+    Return a list with full absolute paths to all .py files in ObsPy file tree.
+
+    :rtype: list of str
+    """
+    util_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
+    obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(util_dir)))
+    py_files = set()
+    # Walk the obspy directory structure
+    for dirpath, _, filenames in os.walk(obspy_dir):
+        py_files.update([os.path.abspath(os.path.join(dirpath, i)) for i in
+                         filenames if i.endswith(".py")])
+    return sorted(py_files)
 
 
 if __name__ == '__main__':

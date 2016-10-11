@@ -7,7 +7,7 @@ Classes related to instrument responses.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -20,11 +20,15 @@ from copy import deepcopy
 from math import pi
 
 import numpy as np
+import scipy.interpolate
 
 from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
+from obspy.core.util.obspy_types import (ComplexWithUncertainties, CustomFloat,
                                          FloatWithUncertainties,
-                                         FloatWithUncertaintiesAndUnit)
+                                         FloatWithUncertaintiesAndUnit,
+                                         ObsPyException,
+                                         ZeroSamplingRate)
+
 from .util import Angle, Frequency
 
 
@@ -255,10 +259,10 @@ class PolesZerosResponseStage(ResponseStage):
 
     @zeros.setter
     def zeros(self, value):
-        for x in value:
-            if not isinstance(x, CustomComplex):
-                msg = "Zeros must be of CustomComplex type."
-                raise TypeError(msg)
+        value = list(value)
+        for i, x in enumerate(value):
+            if not isinstance(x, ComplexWithUncertainties):
+                value[i] = ComplexWithUncertainties(x)
         self._zeros = value
 
     @property
@@ -267,11 +271,19 @@ class PolesZerosResponseStage(ResponseStage):
 
     @poles.setter
     def poles(self, value):
-        for x in value:
-            if not isinstance(x, CustomComplex):
-                msg = "Poles must be of CustomComplex type."
-                raise TypeError(msg)
+        value = list(value)
+        for i, x in enumerate(value):
+            if not isinstance(x, ComplexWithUncertainties):
+                value[i] = ComplexWithUncertainties(x)
         self._poles = value
+
+    @property
+    def normalization_frequency(self):
+        return self._normalization_frequency
+
+    @normalization_frequency.setter
+    def normalization_frequency(self, value):
+        self._normalization_frequency = Frequency(value)
 
     @property
     def pz_transfer_function_type(self):
@@ -753,6 +765,11 @@ class Response(ComparingObject):
         :rtype: tuple of two arrays
         :returns: frequency response and corresponding frequencies
         """
+        if not self.response_stages:
+            msg = ("Can not use evalresp on response with no response "
+                   "stages.")
+            raise ObsPyException(msg)
+
         import obspy.signal.evrespwrapper as ew
         from obspy.signal.headers import clibevresp
 
@@ -761,6 +778,11 @@ class Response(ComparingObject):
             msg = ("requested output is '%s' but must be one of 'DISP', 'VEL' "
                    "or 'ACC'") % output
             raise ValueError(msg)
+
+        # Calculate the output frequencies.
+        fy = 1 / (t_samp * 2.0)
+        # start at zero to get zero for offset/ DC of fft
+        freqs = np.linspace(0, fy, nfft // 2 + 1).astype(np.float64)
 
         # Whacky. Evalresp uses a global variable and uses that to scale the
         # response if it encounters any unit that is not SI.
@@ -805,6 +827,7 @@ class Response(ComparingObject):
                 "VOLTS": ew.ENUM_UNITS["VOLTS"],
                 # This is weird, but evalresp appears to do the same.
                 "V/M": ew.ENUM_UNITS["VOLTS"],
+                "COUNT": ew.ENUM_UNITS["COUNTS"],
                 "COUNTS": ew.ENUM_UNITS["COUNTS"],
                 "T": ew.ENUM_UNITS["TESLA"],
                 "PA": ew.ENUM_UNITS["PRESSURE"],
@@ -851,7 +874,7 @@ class Response(ComparingObject):
         stage_objects = []
 
         for stage_number in stage_list:
-            st = ew.stage()
+            st = ew.Stage()
             st.sequence_no = stage_number
 
             stage_blkts = []
@@ -863,7 +886,7 @@ class Response(ComparingObject):
             st.output_units = get_unit_mapping(blockette.output_units)
 
             if isinstance(blockette, PolesZerosResponseStage):
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
                 # Map the transfer function type.
                 transfer_fct_mapping = {
                     "LAPLACE (RADIANS/SECOND)": "LAPLACE_PZ",
@@ -881,22 +904,22 @@ class Response(ComparingObject):
                 pz.a0_freq = blockette.normalization_frequency
 
                 # XXX: Find a better way to do this.
-                poles = (ew.complex_number * len(blockette.poles))()
+                poles = (ew.ComplexNumber * len(blockette.poles))()
                 for i, value in enumerate(blockette.poles):
                     poles[i].real = value.real
                     poles[i].imag = value.imag
 
-                zeros = (ew.complex_number * len(blockette.zeros))()
+                zeros = (ew.ComplexNumber * len(blockette.zeros))()
                 for i, value in enumerate(blockette.zeros):
                     zeros[i].real = value.real
                     zeros[i].imag = value.imag
 
                 pz.poles = C.cast(C.pointer(poles),
-                                  C.POINTER(ew.complex_number))
+                                  C.POINTER(ew.ComplexNumber))
                 pz.zeros = C.cast(C.pointer(zeros),
-                                  C.POINTER(ew.complex_number))
+                                  C.POINTER(ew.ComplexNumber))
             elif isinstance(blockette, CoefficientsTypeResponseStage):
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
                 # This type can have either an FIR or an IIR response. If
                 # the number of denominators is 0, it is a FIR. Otherwise
                 # an IIR.
@@ -940,13 +963,73 @@ class Response(ComparingObject):
                     coeff.denom = C.cast(C.pointer(coeffs),
                                          C.POINTER(C.c_double))
             elif isinstance(blockette, ResponseListResponseStage):
-                msg = ("ResponseListResponseStage not yet implemented due to "
-                       "missing example data. Please contact the developers "
-                       "with a test data set (waveforms and StationXML "
-                       "metadata).")
-                raise NotImplementedError(msg)
+                blkt = ew.Blkt()
+                blkt.type = ew.ENUM_FILT_TYPES["LIST"]
+
+                # Get values as numpy arrays.
+                f = np.array([float(_i.frequency)
+                              for _i in blockette.response_list_elements],
+                             dtype=np.float64)
+                amp = np.array([float(_i.amplitude)
+                                for _i in blockette.response_list_elements],
+                               dtype=np.float64)
+                phase = np.array([
+                    float(_i.phase)
+                    for _i in blockette.response_list_elements],
+                    dtype=np.float64)
+
+                # Sanity check.
+                min_f = freqs[freqs > 0].min()
+                max_f = freqs.max()
+
+                min_f_avail = min(f)
+                max_f_avail = max(f)
+
+                # Allow interpolation for at most two samples.
+                _d = np.abs(np.diff(f))
+                _d = _d[_d > 0].min() * 2
+                min_f_avail -= _d
+                max_f_avail += _d
+
+                if min_f < min_f_avail or max_f > max_f_avail:
+                    msg = (
+                        "Cannot calculate the response as it contains a "
+                        "response list stage with frequencies only from "
+                        "%.4f - %.4f Hz. You are requesting a response from "
+                        "%.4f - %.4f Hz.")
+                    raise ValueError(msg % (min_f_avail, max_f_avail, min_f,
+                                            max_f))
+
+                amp = scipy.interpolate.InterpolatedUnivariateSpline(
+                    f, amp, k=3)(freqs)
+                phase = scipy.interpolate.InterpolatedUnivariateSpline(
+                    f, phase, k=3)(freqs)
+
+                # Set static offset to zero.
+                amp[amp == 0] = 0
+                phase[phase == 0] = 0
+
+                rl = blkt.blkt_info.list
+                rl.nresp = len(freqs)
+
+                _freq_c = (C.c_double * rl.nresp)()
+                _amp_c = (C.c_double * rl.nresp)()
+                _phase_c = (C.c_double * rl.nresp)()
+
+                for i in range(len(freqs)):
+                    _freq_c[i] = freqs[i]
+                    _amp_c[i] = amp[i]
+                    _phase_c[i] = phase[i]
+
+                rl.freq = C.cast(C.pointer(_freq_c),
+                                 C.POINTER(C.c_double))
+                rl.amp = C.cast(C.pointer(_amp_c),
+                                C.POINTER(C.c_double))
+                rl.phase = C.cast(C.pointer(_phase_c),
+                                  C.POINTER(C.c_double))
+
             elif isinstance(blockette, FIRResponseStage):
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
 
                 if blockette.symmetry == "NONE":
                     blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
@@ -994,7 +1077,7 @@ class Response(ComparingObject):
                            "be specified.")
                     raise ValueError(msg)
             else:
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
                 blkt.type = ew.ENUM_FILT_TYPES["DECIMATION"]
                 decimation_blkt = blkt.blkt_info.decimation
 
@@ -1015,7 +1098,7 @@ class Response(ComparingObject):
             # Add the gain if it is available.
             if blockette.stage_gain is not None and \
                     blockette.stage_gain_frequency is not None:
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
                 blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
                 gain_blkt = blkt.blkt_info.gain
                 gain_blkt.gain = blockette.stage_gain
@@ -1034,11 +1117,11 @@ class Response(ComparingObject):
             stage_objects.append(st)
 
         # Attach the instrument sensitivity as stage 0 at the end.
-        st = ew.stage()
+        st = ew.Stage()
         st.sequence_no = 0
         st.input_units = 0
         st.output_units = 0
-        blkt = ew.blkt()
+        blkt = ew.Blkt()
         blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
         gain_blkt = blkt.blkt_info.gain
         gain_blkt.gain = self.instrument_sensitivity.value
@@ -1046,7 +1129,7 @@ class Response(ComparingObject):
         st.first_blkt = C.pointer(blkt)
         stage_objects.append(st)
 
-        chan = ew.channel()
+        chan = ew.Channel()
         if not stage_objects:
             msg = "At least one stage is needed."
             raise ValueError(msg)
@@ -1061,10 +1144,6 @@ class Response(ComparingObject):
         # Evalresp will take care of setting it to the overall sensitivity.
         chan.sensit = 0.0
         chan.sensfreq = 0.0
-
-        fy = 1 / (t_samp * 2.0)
-        # start at zero to get zero for offset/ DC of fft
-        freqs = np.linspace(0, fy, nfft // 2 + 1).astype(np.float64)
 
         output = np.empty(len(freqs), dtype=np.complex128)
         out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
@@ -1223,6 +1302,9 @@ class Response(ComparingObject):
                        "response stages. Please manually specify parameter "
                        "`sampling_rate`")
                 raise Exception(msg)
+        if sampling_rate == 0:
+            msg = "Can not plot response for channel with sampling rate `0`."
+            raise ZeroSamplingRate(msg)
 
         t_samp = 1.0 / sampling_rate
         nyquist = sampling_rate / 2.0
@@ -1256,18 +1338,21 @@ class Response(ComparingObject):
             arrowprops = dict(
                 arrowstyle="wedge,tail_width=1.4,shrink_factor=0.8", fc=color)
             bbox = dict(boxstyle="round", fc="w")
-            ax1.annotate("%.1g" % self.instrument_sensitivity.frequency,
-                         (self.instrument_sensitivity.frequency, 1.0),
-                         xytext=(self.instrument_sensitivity.frequency, 1.1),
-                         xycoords=trans_above, textcoords=trans_above,
-                         ha="center", va="bottom",
-                         arrowprops=arrowprops, bbox=bbox)
-            ax1.annotate("%.1e" % self.instrument_sensitivity.value,
-                         (1.0, self.instrument_sensitivity.value),
-                         xytext=(1.05, self.instrument_sensitivity.value),
-                         xycoords=trans_right, textcoords=trans_right,
-                         ha="left", va="center",
-                         arrowprops=arrowprops, bbox=bbox)
+            if self.instrument_sensitivity.frequency:
+                ax1.annotate("%.1g" % self.instrument_sensitivity.frequency,
+                             (self.instrument_sensitivity.frequency, 1.0),
+                             xytext=(self.instrument_sensitivity.frequency,
+                                     1.1),
+                             xycoords=trans_above, textcoords=trans_above,
+                             ha="center", va="bottom",
+                             arrowprops=arrowprops, bbox=bbox)
+            if self.instrument_sensitivity.value:
+                ax1.annotate("%.1e" % self.instrument_sensitivity.value,
+                             (1.0, self.instrument_sensitivity.value),
+                             xytext=(1.05, self.instrument_sensitivity.value),
+                             xycoords=trans_right, textcoords=trans_right,
+                             ha="left", va="center",
+                             arrowprops=arrowprops, bbox=bbox)
 
         # plot phase response
         phase = np.angle(cpx_response)
@@ -1321,8 +1406,7 @@ class Response(ComparingObject):
         """
         # extract paz
         paz = self.get_paz()
-        sensitivity = self.instrument_sensitivity.value
-        return paz_to_sacpz_string(paz, sensitivity)
+        return paz_to_sacpz_string(paz, self.instrument_sensitivity)
 
 
 def paz_to_sacpz_string(paz, instrument_sensitivity):
@@ -1364,7 +1448,7 @@ class InstrumentSensitivity(ComparingObject):
     def __init__(self, value, frequency, input_units,
                  output_units, input_units_description=None,
                  output_units_description=None, frequency_range_start=None,
-                 frequency_range_end=None, frequency_range_DB_variation=None):
+                 frequency_range_end=None, frequency_range_db_variation=None):
         """
         :type value: float
         :param value: Complex type for sensitivity and frequency ranges.
@@ -1410,8 +1494,8 @@ class InstrumentSensitivity(ComparingObject):
         :type frequency_range_end: float, optional
         :param frequency_range_end: End of the frequency range for which the
             SensitivityValue is valid within the dB variation specified.
-        :type frequency_range_DB_variation: float, optional
-        :param frequency_range_DB_variation: Variation in decibels within the
+        :type frequency_range_db_variation: float, optional
+        :param frequency_range_db_variation: Variation in decibels within the
             specified range.
         """
         self.value = value
@@ -1422,7 +1506,21 @@ class InstrumentSensitivity(ComparingObject):
         self.output_units_description = output_units_description
         self.frequency_range_start = frequency_range_start
         self.frequency_range_end = frequency_range_end
-        self.frequency_range_DB_variation = frequency_range_DB_variation
+        self.frequency_range_db_variation = frequency_range_db_variation
+
+    def __str__(self):
+        ret = ("Instrument Sensitivity:\n"
+               "\tValue: {value}\n"
+               "\tFrequency: {frequency}\n"
+               "\tInput units: {input_units}\n"
+               "\tInput units description: {input_units_description}\n"
+               "\tOutput units: {output_units}\n"
+               "\tOutput units description: {output_units_description}\n")
+        ret = ret.format(**self.__dict__)
+        return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
 
 # XXX duplicated code, PolynomialResponseStage could probably be implemented by

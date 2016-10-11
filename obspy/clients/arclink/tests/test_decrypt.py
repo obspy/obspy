@@ -28,7 +28,7 @@ class ClientTestCase(unittest.TestCase):
     Test cases for L{obspy.clients.arclink.client.Client}.
     """
     @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
-    def test_getWaveformWithDCIDKey(self):
+    def test_get_waveform_with_dcid_key(self):
         """
         """
         # test server for encryption
@@ -46,7 +46,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
     @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
-    def test_getWaveformWithDCIDKeyFile(self):
+    def test_get_waveform_with_dcid_key_file(self):
         """
         Tests various DCID key file formats (with space or equal sign). Also
         checks if empty lines or comment lines are ignored.
@@ -93,7 +93,7 @@ class ClientTestCase(unittest.TestCase):
     @unittest.skipIf(os.path.isfile(DCID_KEY_FILE),
                      '$HOME/dcidpasswords.txt already exists')
     @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
-    def test_getWaveformWithDefaultDCIDKeyFile(self):
+    def test_get_waveform_with_default_dcid_key_file(self):
         """
         Use $HOME/dcidpasswords.txt.
         """
@@ -117,7 +117,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
     @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
-    def test_getWaveformUnknownUser(self):
+    def test_get_waveform_unknown_user(self):
         """
         Unknown user raises an ArcLinkException: DENIED.
         """
@@ -129,7 +129,7 @@ class ClientTestCase(unittest.TestCase):
                           '', 'BHZ', start, end)
 
     @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
-    def test_getWaveformWrongPassword(self):
+    def test_get_waveform_wrong_password(self):
         """
         A wrong password password raises a "EVPError: bad decrypt".
         """
@@ -142,7 +142,7 @@ class ClientTestCase(unittest.TestCase):
                           'BHZ', start, end)
 
     @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
-    def test_getWaveformNoPassword(self):
+    def test_get_waveform_no_password(self):
         """
         No password raises a "EVPError: bad decrypt".
         """

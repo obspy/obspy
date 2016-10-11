@@ -9,6 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
+       bulletin
        core
        libgse2
        libgse1

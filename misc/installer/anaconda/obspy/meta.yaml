@@ -4,11 +4,12 @@
 
 package:
   name: obspy
-  version: "0.10.1"
+  version: "1.0.1"
 
 source:
   fn: obspy-master.zip
-  url: https://pypi.python.org/packages/source/o/obspy/obspy-0.10.1.zip#md5=0d32bcf8e9534d32c91efee84291bad3
+  url: https://pypi.python.org/packages/source/o/obspy/obspy-1.0.1.zip
+  md5: be7ca359c2898038d2da2d8486276bfd
   # alternatively we can use a local path, however this fails with
   # shutil.Error: [('/path/to/obspy/misc/docs/source/tutorial/ObsPyTutorial.pdf',
   # '/path/to/miniconda3/conda-bld/work/misc/docs/source/tutorial/ObsPyTutorial.pdf',
@@ -16,49 +17,38 @@ source:
   #path: ../../../..
 
 build:
-  number: 2
-  script: python setup.py install
+  number: 0
+  # Weird command line options but they somehow make sure that the
+  # dependencies are not needed for the building phase.
+  script: python setup.py install --single-version-externally-managed --record=/tmp/record.txt
   # Needed as obspy uses entry points.
   preserve_egg_dir: yes
 
 requirements:
   build:
     - python
-    - setuptools
-    - argparse # [py26]
-    - future
     - numpy
-    - mock  # [py2k]
-    # SciPy 0.15.0 on OSX and Python 2.6 right now is faulty.
-    - scipy ==0.14.0 # [py26 and osx]
-    - scipy # [not py26 or not osx]
-    - matplotlib
-    - lxml
-    - sqlalchemy
-    - flake8
   run:
     - python
-    - setuptools
-    - argparse # [py26]
-    - future
     - numpy
-    - mock  # [py2k]
-    # SciPy 0.15.0 on OSX and Python 2.6 right now is faulty.
-    - scipy ==0.14.0 # [py26 and osx]
-    - scipy # [not py26 or not osx]
+    - scipy
     - matplotlib
+    - future
+    - mock  # [py2k]
     - lxml
     - sqlalchemy
     - flake8
-
+    - decorator
+    - requests
+    - pyproj # [not py33]
+    - nose
 test:
   imports:
     - obspy
-    - obspy.mseed
   commands:
-    - obspy-runtests -r
+    - obspy-runtests -r --node=conda-builder
 
 about:
-  home: http://obspy.org
+  home: https://obspy.org
   license: LGPLv3
   summary: "ObsPy: A Python Toolbox for seismology/seismological observatories."

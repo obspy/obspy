@@ -34,6 +34,9 @@ The service offers the following optional standard parameters:
         Limit to events contributed by a specified contributor
     updatedafter (UTCDateTime)
         Limit to events updated after the specified time
+    format (str), Default value: xml, Choices: xml, text
+        Specify output format. This is an IRIS extension to the FDSN
+        specification
 The service offers the following non-standard parameters:
     originid (str)
         Retrieve an event based on the unique origin ID numbers assigned by the

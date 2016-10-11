@@ -17,7 +17,7 @@ to m/s.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -34,7 +34,7 @@ import scipy.signal
 
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.signal import util
-from obspy.signal.detrend import simple as simpleDetrend
+from obspy.signal.detrend import simple as simple_detrend
 from obspy.signal.headers import clibevresp
 from obspy.signal.util import _npts2nfft
 
@@ -278,7 +278,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
                                 freqs, nfreqs, rtyp, vbs, start_stage,
                                 stop_stage, stdio_flag, C.c_int(0))
         # optimizing performance, see
-        # http://wiki.python.org/moin/PythonSpeed/PerformanceTips
+        # https://wiki.python.org/moin/PythonSpeed/PerformanceTips
         try:
             nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
         except ValueError:
@@ -400,7 +400,7 @@ def simulate_seismometer(
         remove_sensitivity=True, simulate_sensitivity=True, water_level=600.0,
         zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=None,
         seedresp=None, nfft_pow2=False, pitsasim=True, sacsim=False,
-        shsim=False, **_kwargs):
+        shsim=False):
     """
     Simulate/Correct seismometer.
 
@@ -563,7 +563,7 @@ def simulate_seismometer(
     data = np.fft.irfft(data)[0:ndat]
     if pitsasim:
         # linear detrend
-        data = simpleDetrend(data)
+        data = simple_detrend(data)
     if shsim:
         # detrend using least squares
         data = scipy.signal.detrend(data, type="linear")

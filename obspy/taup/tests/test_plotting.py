@@ -31,6 +31,18 @@ class TauPyPlottingTestCase(unittest.TestCase):
                                                     plot_all=True, show=False)
             plt.savefig(ic.name)
 
+    def test_spherical_many_phases_buried_station(self):
+        """
+        Same as test_spherical_many_phases but this time the receiver is
+        buried.
+        """
+        with ImageComparison(self.image_dir,
+                             "spherical_many_phases_buried_station.png") as ic:
+            arrivals = self.model.get_ray_paths(500, 140,
+                                                receiver_depth_in_km=200)
+            arrivals.plot(plot_type="spherical", plot_all=True, show=False)
+            plt.savefig(ic.name)
+
     def test_spherical_many_phases_no_other_way(self):
         """
         Same as test_spherical_many_phases but this time no phases
@@ -66,6 +78,18 @@ class TauPyPlottingTestCase(unittest.TestCase):
                              "cartesian_many_phases.png") as ic:
             self.model.get_ray_paths(500, 140).plot(plot_type="cartesian",
                                                     plot_all=True, show=False)
+            plt.savefig(ic.name)
+
+    def test_cartesian_many_phases_buried_station(self):
+        """
+        Same as test_cartesian_many_phases but this time the receiver is
+        buried.
+        """
+        with ImageComparison(self.image_dir,
+                             "cartesian_many_phases_buried_station.png") as ic:
+            arrivals = self.model.get_ray_paths(500, 140,
+                                                receiver_depth_in_km=200)
+            arrivals.plot(plot_type="cartesian", plot_all=True, show=False)
             plt.savefig(ic.name)
 
     def test_cartesian_many_phases_no_other_way(self):

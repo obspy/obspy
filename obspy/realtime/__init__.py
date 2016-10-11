@@ -10,7 +10,7 @@ functionality.
     The ObsPy Development Team (devs@obspy.org), Anthony Lomax & Alessia Maggi
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 The obspy.realtime development has been supported by the NERA project ["Network
 of European Research Infrastructures for Earthquake Risk Assessment and

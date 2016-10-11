@@ -6,7 +6,7 @@ Module containing a UTC-based datetime class.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -203,7 +203,7 @@ class UTCDateTime(object):
 
         >>> UTCDateTime.DEFAULT_PRECISION = 6
 
-    .. _ISO8601:2004: http://en.wikipedia.org/wiki/ISO_8601
+    .. _ISO8601:2004: https://en.wikipedia.org/wiki/ISO_8601
     """
     timestamp = 0.0
     DEFAULT_PRECISION = 6
@@ -247,7 +247,7 @@ class UTCDateTime(object):
                 # check for ISO8601 date string
                 if value.count("T") == 1 or iso8601:
                     try:
-                        self.timestamp = self._parse_ISO_8601(value).timestamp
+                        self.timestamp = self._parse_iso_8601(value).timestamp
                         return
                     except:
                         if iso8601:
@@ -279,12 +279,10 @@ class UTCDateTime(object):
                     for i in range(1, min(len(parts), 6)):
                         if len(parts[i]) == 1:
                             parts[i] = '0' + parts[i]
-                    # standard date string
                     value = ''.join(parts)
-                    if len(value) > 8:
-                        pattern = "%Y%m%d%H%M%S"
-                    else:
-                        pattern = "%Y%m%d"
+                    # fill missing elements with zeros
+                    value += '0' * (14 - len(value))
+                    pattern = "%Y%m%d%H%M%S"
                 ms = 0
                 if '.' in value:
                     parts = value.split('.')
@@ -324,7 +322,7 @@ class UTCDateTime(object):
         # check if seconds are given as float value
         if len(args) == 6 and isinstance(args[5], float):
             _frac, _sec = math.modf(round(args[5], 6))
-            kwargs['microsecond'] = int(_frac * 1e6)
+            kwargs['microsecond'] = int(round(_frac * 1e6))
             kwargs['second'] = int(_sec)
             args = args[0:5]
         dt = datetime.datetime(*args, **kwargs)
@@ -368,7 +366,7 @@ class UTCDateTime(object):
                           1000000) / 1000000.0 + ms
 
     @staticmethod
-    def _parse_ISO_8601(value):
+    def _parse_iso_8601(value):
         """
         Parses an ISO8601:2004 date time string.
         """
@@ -1331,14 +1329,14 @@ class UTCDateTime(object):
         2008,275,00:30
         """
         if not compact:
-            if not self.time:
+            if self.time == datetime.time(0):
                 return "%04d,%03d" % (self.year, self.julday)
             return "%04d,%03d,%02d:%02d:%02d.%04d" % (self.year, self.julday,
                                                       self.hour, self.minute,
                                                       self.second,
                                                       self.microsecond // 100)
         temp = "%04d,%03d" % (self.year, self.julday)
-        if not self.time:
+        if self.time == datetime.time(0):
             return temp
         temp += ",%02d" % self.hour
         if self.microsecond:
@@ -1350,7 +1348,7 @@ class UTCDateTime(object):
             return temp + ":%02d" % (self.minute)
         return temp
 
-    def format_IRIS_web_service(self):
+    def format_iris_web_service(self):
         """
         Returns string representation usable for the IRIS Web services.
 
@@ -1359,7 +1357,7 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 5, 27, 12, 30, 35, 45020)
-        >>> print(dt.format_IRIS_web_service())
+        >>> print(dt.format_iris_web_service())
         2008-05-27T12:30:35.045
         """
         return "%04d-%02d-%02dT%02d:%02d:%02d.%03d" % \
@@ -1443,6 +1441,36 @@ class UTCDateTime(object):
         Returns current UTC datetime.
         """
         return UTCDateTime()
+
+    def _get_hours_after_midnight(self):
+        """
+        Calculate foating point hours after midnight.
+
+        >>> t = UTCDateTime("2015-09-27T03:16:12.123456Z")
+        >>> t._get_hours_after_midnight()
+        3.270034293333333
+        """
+        timedelta = (
+            self.datetime -
+            self.datetime.replace(hour=0, minute=0, second=0, microsecond=0))
+        return timedelta.total_seconds() / 3600.0
+
+    @property
+    def matplotlib_date(self):
+        """
+        Maplotlib date number representation.
+
+        Useful for plotting on matplotlib time-based axes, like created by e.g.
+        :meth:`obspy.core.stream.Stream.plot()`.
+
+        >>> t = UTCDateTime("2009-08-24T00:20:07.700000Z")
+        >>> t.matplotlib_date
+        733643.0139780092
+
+        :rtype: float
+        """
+        from matplotlib.dates import date2num
+        return date2num(self.datetime)
 
 
 if __name__ == '__main__':

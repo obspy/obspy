@@ -1,0 +1,13 @@
+ PDE 1999 01 01 00 00 00.00   46.1970 -122.1860 250.0 4.2 4.2 WASHINGTON
+event name:    hom_explosion
+time shift:           0.0000
+half duration:        1.5000
+latitude:            46.1970
+longitude:         -122.1860
+depth:                5.0000
+Mrr:            1.000000E+23
+Mtt:            1.000000E+23
+Mpp:            1.000000E+23
+Mrt:            0.000000E+00
+Mrp:            0.000000E+00
+Mtp:            0.000000E+00

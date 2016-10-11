@@ -7,17 +7,19 @@ Provides the Channel class.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import python_2_unicode_compatible
 
 from obspy.core.util.obspy_types import FloatWithUncertainties
 from . import BaseNode
 from .util import Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude
 
 
+@python_2_unicode_compatible
 class Channel(BaseNode):
     """
     From the StationXML definition:
@@ -148,12 +150,12 @@ class Channel(BaseNode):
         self.data_logger = data_logger
         self.equipment = equipment
         self.response = response
-        self.data_availability = data_availability
         super(Channel, self).__init__(
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
-            historical_code=historical_code)
+            historical_code=historical_code,
+            data_availability=data_availability)
 
     def __str__(self):
         ret = (
@@ -186,7 +188,8 @@ class Channel(BaseNode):
                                if self.types else ""),
                 sampling_rate=("\tSampling Rate: %.2f Hz\n" %
                                self.sample_rate if self.sample_rate else ""),
-                sensor=("\tSensor: %s\n" % self.sensor.type
+                sensor=("\tSensor (Description): %s (%s)\n" % (
+                        self.sensor.type, self.sensor.description)
                         if self.sensor else ""),
                 response=("\tResponse information available"
                           if self.response else ""))

@@ -1,1 +1,0 @@
-../docs/build-docs.sh

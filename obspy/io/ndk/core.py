@@ -9,7 +9,7 @@ The format is an ASCII format but will internally handled by unicode routines.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -177,7 +177,6 @@ def _read_ndk(filename, *args, **kwargs):  # @UnusedVariable
             prev_line = next_line
         if len(data) > prev_line + 1:
             yield data[prev_line + 1:]
-        raise StopIteration
 
     # Use one Flinn Engdahl object for all region determinations.
     fe = FlinnEngdahl()

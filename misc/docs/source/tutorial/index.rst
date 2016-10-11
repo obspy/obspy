@@ -3,6 +3,10 @@
 ObsPy Tutorial
 ==============
 
+.. note::
+    A one-hour introduction to ObsPy is
+    `available at YouTube <https://www.youtube.com/watch?v=kFwdjfiK4gk>`__.
+
 This tutorial does not attempt to be comprehensive and cover every single
 feature. Instead, it introduces many of ObsPy's most noteworthy features, and
 will give you a good idea of the library’s flavor and style.
@@ -10,11 +14,13 @@ will give you a good idea of the library’s flavor and style.
 A pdf version of the Tutorial is available :download:`here <ObsPyTutorial.pdf>`.
 
 There are also IPython notebooks available online with an
-`introduction to Python <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/python_introduction.ipynb>`__
-(`with solutions/output <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/python_introduction_with_solutions.ipynb>`__)
+`introduction to Python <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2015-08-03_iris/01_Python_Crash_Course.ipynb>`__
+(`with solutions/output <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2015-08-03_iris/01_Python_Crash_Course_with_output_and_solutions.ipynb>`__),
+an
+`introduction to ObsPy <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2015-08-03_iris/02_ObsPy_Introduction.ipynb>`__
+(`with solutions/output <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2015-08-03_iris/02_ObsPy_Introduction_with_output_and_solutions.ipynb>`__)
 and an
-`introduction to ObsPy <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/obspy_introduction.ipynb>`__
-(`with solutions/output <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/obspy_introduction_with_solutions.ipynb>`__).
+`brief primer on data center access and visualization with ObsPy <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/notebooks/Direct_Access_to_Seismological_Data_using_Python_and_ObsPy.ipynb>`__.
 
 Introduction to ObsPy
 ---------------------

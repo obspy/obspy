@@ -10,6 +10,10 @@
        :nosignatures:
 
        core
-       sacio
+       sacpz
+       header
+       arrayio
+       sactrace
+       util
 
     .. comment to end block

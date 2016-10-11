@@ -1,26 +1,115 @@
-language: python
-python:
-  - 2.7
-  - 3.3
-  - 3.4
+language: c
+
+branches:
+  only:
+    - master
+    - /^maintenance_[0-9]+\.[0-9]+\.x$/
+
+matrix:
+  include:
+    # do one build run with our minimum dependencies
+    # (or, well, at least the lowest version number that is available through
+    #  anaconda..)
+    - os: linux
+      env: PYTHON_VERSION=2.7 MINIMUM_DEPENDENCIES="True"
+    - os: linux
+      env: PYTHON_VERSION=2.7
+    - os: linux
+      env: PYTHON_VERSION=3.3
+    - os: linux
+      env: PYTHON_VERSION=3.4
+    - os: linux
+      env: PYTHON_VERSION=3.5
+
+    - os: osx
+      env: PYTHON_VERSION=2.7
+    - os: osx
+      env: PYTHON_VERSION=3.5
+
 sudo: false
-before_install:
-  - lsb_release -a # get info on the operating system
-  - pip install --upgrade pip
-  - pip install --upgrade setuptools
-  - pip install wheel
-  - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
-  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master numpy==1.8.2 scipy==0.14.0 lxml sqlalchemy mock nose pyproj
-  - pip install --use-wheel --find-links=/tmp/wheelhouse-master coveralls
-  - pip install --use-mirrors geographiclib
-  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib==1.3.1
-  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master basemap==1.0.7
-  - pip install --use-mirrors flake8
-  - pip install --use-mirrors future
-  # current pyimgur stable release has a py2.6 incompatibility
-  - pip install https://github.com/megies/PyImgur/archive/py26.zip
-  - pip freeze
+
 install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      export OS="MacOSX";
+    else
+      export OS="Linux";
+    fi
+  - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda-latest-${OS}-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+  - |
+      if [[ "$MINIMUM_DEPENDENCIES" == 'True' ]]; then
+        NUMPY_VERSION=1.6.2
+        SCIPY_VERSION=0.11.0
+        MPL_VERSION=1.1.1
+        # no basemap version works with this old numpy, so leave out
+        BASEMAP=""
+        PYPROJ="pyproj"
+        # ancient matplotlib needs to be turned to AGG before anything else,
+        # otherwise it tries to import incompatible version of Qt as a backend
+        # and hick-ups..
+        mkdir -p $HOME/.matplotlib
+        echo 'backend:AGG' > $HOME/.matplotlib/matplotlibrc
+      elif [[ "${PYTHON_VERSION}" == '3.3' ]]; then
+        # newer package versions for 3.3 not available via anaconda
+        NUMPY_VERSION=1.9.2
+        SCIPY_VERSION=0.16.0
+        MPL_VERSION=1.4.3
+        BASEMAP="basemap=1.0.7"
+        # anaconda doesn't provide pyproj for Python 3.3 anymore, looks like
+        PYPROJ=""
+      elif [[ "${PYTHON_VERSION:0:1}" == '3' ]]; then
+        NUMPY_VERSION=1.10.4
+        SCIPY_VERSION=0.17.0
+        MPL_VERSION=1.5.1
+        BASEMAP="basemap=1.0.7"
+        PYPROJ="pyproj"
+      else
+        NUMPY_VERSION=1.10.4
+        SCIPY_VERSION=0.17.0
+        MPL_VERSION=1.5.1
+        BASEMAP="basemap=1.0.7"
+        PYPROJ="pyproj"
+      fi
+  - conda create -q -n test-environment
+        python=$PYTHON_VERSION
+        numpy=$NUMPY_VERSION
+        scipy=$SCIPY_VERSION
+        matplotlib=$MPL_VERSION
+        $BASEMAP
+        $PYPROJ
+        flake8
+        future
+        lxml
+        decorator
+        sqlalchemy
+        mock
+        nose
+        gdal
+        docopt
+        coverage
+        requests
+        jsonschema
+  - source activate test-environment
+  # install packages not available via conda
+  - pip install codecov
+  - pip install geographiclib
+  # current pyimgur stable release has a py3 incompatibility
+  - pip install https://github.com/megies/PyImgur/archive/py3.zip
+  - pip freeze
+  - pip install pep8-naming
+  - pip install https://github.com/obspy/obspy_github_api/archive/0.3.0.zip
+  - conda list
+  # done installing dependencies
   - git version
   - git fetch origin --tags --unshallow
   - git remote add obspy git://github.com/obspy/obspy.git
@@ -49,23 +138,38 @@ install:
       || echo
   - git branch -vv
   - git remote -vv
-  - pip install --no-deps --use-mirrors .
+  - pip install --no-deps .
   - git status
+
 script:
   # We change directories to make sure that python won't find the copy
   # of obspy in the source directory, see
   # https://github.com/numpy/numpy/blob/master/.travis.yml#L44
   - mkdir empty
   - cd empty
-  - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
-  - coverage run --rcfile=.coveragerc --source=$MODULELIST -m obspy.scripts.runtests -n travis-ci -r
-after_success:
-  - mv .coverage ../.coverage.empty
-  - cd ..
-  - coverage combine
-  - coveralls
+  # check if any additional modules should be tested (via github issue comments)
+  - |
+      if [ "$TRAVIS_PULL_REQUEST" != "false" ]
+        # we're building a pull request, so check what modules should be tested
+        then export MODULELIST=`python -c "from obspy_github_api import get_module_test_list; print('obspy.' + ',obspy.'.join(get_module_test_list($TRAVIS_PULL_REQUEST)))"`
+             export MODULELISTSPACES=`python -c "from obspy_github_api import get_module_test_list; print(' '.join(get_module_test_list($TRAVIS_PULL_REQUEST)))"`
+        # we're building a branch on the main repo, so test *all* modules
+        else export MODULELIST=`python -c "from obspy.core.util import ALL_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
+      fi
+  - echo $MODULELIST
+  - echo $MODULELISTSPACES
+  # need to set IFS so that space-separated MODULELISTSPACES list is interpreted correctly by run_tests()
+  - export IFS=" "
+  # if not on a PR, i.e. running on a push to master or maintenance_XXX: test *all* modules
+  - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --all -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}";
+    else
+      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-url="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}" $MODULELISTSPACES;
+    fi;
+
+after_script:
+  # if coverage file was created, upload data to codecov
+  - ls .coverage && codecov
+
 notifications:
     email: false
-env:
-  global:
-    - secure: "qZzgI89uD606mP/l2IDLFmocZ8YFhXRngtWR1wroirhodKzdg89Qax8+UxkdmAyYKgl4+mLA8ZYMpHtojO2l2v96cOJemf/vhdp3Y+HnIURVwoPnPGXCFdC5SlQe6GB+zGqP7EBSRnsib8aexnHY7WFZAb+DOgpKi2gLs2AZeQo="

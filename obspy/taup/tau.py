@@ -8,23 +8,27 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import copy
+import warnings
 
 import matplotlib.cbook
-import matplotlib.pyplot as plt
+from matplotlib.cm import get_cmap
 import matplotlib.text
 import numpy as np
 
+from .helper_classes import Arrival
 from .tau_model import TauModel
-from .taup_create import TauP_Create
-from .taup_path import TauP_Path
-from .taup_pierce import TauP_Pierce
-from .taup_time import TauP_Time
+from .taup_create import TauPCreate
+from .taup_path import TauPPath
+from .taup_pierce import TauPPierce
+from .taup_time import TauPTime
+from .taup_geo import calc_dist, add_geo_to_arrivals
+import obspy.geodetics.base as geodetics
 
 
 # Pretty paired colors. Reorder to have saturated colors first and remove
 # some colors at the end.
-cmap = plt.get_cmap('Paired', lut=12)
-COLORS = ['#%02x%02x%02x' % tuple(col * 255 for col in cmap(i)[:3])
+cmap = get_cmap('Paired', lut=12)
+COLORS = ['#%02x%02x%02x' % tuple(int(col * 255) for col in cmap(i)[:3])
           for i in range(12)]
 COLORS = COLORS[1:][::2][:-1] + COLORS[::2][:-1]
 
@@ -65,7 +69,7 @@ class _SmartPolarText(matplotlib.text.Text):
 
 class Arrivals(list):
     """
-    List of arrivals returned by :class:`TauPyModel` methods.
+    List like object of arrivals returned by :class:`TauPyModel` methods.
 
     :param arrivals: Initial arrivals to store.
     :type arrivals: :class:`list` of
@@ -80,6 +84,66 @@ class Arrivals(list):
         self.model = model
         self.extend(arrivals)
 
+    def __add__(self, other):
+        if isinstance(other, Arrival):
+            other = Arrivals([other], model=self.model)
+        if not isinstance(other, Arrivals):
+            raise TypeError
+        return self.__class__(super(Arrivals, self).__add__(other),
+                              model=self.model)
+
+    def __iadd__(self, other):
+        if isinstance(other, Arrival):
+            other = Arrivals([other], model=self.model)
+        if not isinstance(other, Arrivals):
+            raise TypeError
+        self.extend(other)
+        return self
+
+    def __mul__(self, num):
+        if not isinstance(num, int):
+            raise TypeError("Integer expected")
+        arr = self.copy()
+        for _i in range(num-1):
+            arr += self.copy()
+        return arr
+
+    def __imul__(self, num):
+        if not isinstance(num, int):
+            raise TypeError("Integer expected")
+        arr = self.copy()
+        for _i in range(num-1):
+            self += arr
+        return self
+
+    def __setitem__(self, index, arrival):
+        if (isinstance(index, slice) and
+                all(isinstance(x, Arrival) for x in arrival)):
+            super(Arrivals, self).__setitem__(index, arrival)
+        elif isinstance(arrival, Arrival):
+            super(Arrivals, self).__setitem__(index, arrival)
+        else:
+            msg = 'Only Arrival objects can be assigned.'
+            raise TypeError(msg)
+
+    def __setslice__(self, i, j, seq):
+        if all(isinstance(x, Arrival) for x in seq):
+            super(Arrivals, self).__setslice__(i, j, seq)
+        else:
+            msg = 'Only Arrival objects can be assigned.'
+            raise TypeError(msg)
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return self.__class__(super(Arrivals, self).__getitem__(index),
+                                  model=self.model)
+        else:
+            return super(Arrivals, self).__getitem__(index)
+
+    def __getslice__(self, i, j):
+        return self.__class__(super(Arrivals, self).__getslice__(i, j),
+                              model=self.model)
+
     def __str__(self):
         return (
             "{count} arrivals\n\t{arrivals}"
@@ -89,6 +153,17 @@ class Arrivals(list):
 
     def __repr__(self):
         return "[%s]" % (", ".join([repr(_i) for _i in self]))
+
+    def append(self, arrival):
+        if isinstance(arrival, Arrival):
+            super(Arrivals, self).append(arrival)
+        else:
+            msg = 'Append only supports a single Arrival object as argument.'
+            raise TypeError(msg)
+
+    def copy(self):
+        return self.__class__(super(Arrivals, self).copy(),
+                              model=self.model)
 
     def plot(self, plot_type="spherical", plot_all=True, legend=True,
              label_arrivals=False, ax=None, show=True):
@@ -125,6 +200,7 @@ class Arrivals(list):
         :returns: The (possibly created) axes instance.
         :rtype: :class:`matplotlib.axes.Axes`
         """
+        import matplotlib.pyplot as plt
         arrivals = []
         for _i in self:
             if _i.path is None:
@@ -141,17 +217,17 @@ class Arrivals(list):
         if not arrivals:
             raise ValueError("Can only plot arrivals with calculated ray "
                              "paths.")
-        discons = self.model.sMod.vMod.getDisconDepths()
+        discons = self.model.s_mod.v_mod.get_discontinuity_depths()
         if plot_type == "spherical":
             if not ax:
                 plt.figure(figsize=(10, 10))
                 ax = plt.subplot(111, polar=True)
-            ax.set_theta_zero_location('N')
-            ax.set_theta_direction(-1)
+                ax.set_theta_zero_location('N')
+                ax.set_theta_direction(-1)
             ax.set_xticks([])
             ax.set_yticks([])
             intp = matplotlib.cbook.simple_linear_interpolation
-            radius = self.model.radiusOfEarth
+            radius = self.model.radius_of_planet
             for _i, ray in enumerate(arrivals):
                 # Requires interpolation otherwise diffracted phases look
                 # funny.
@@ -171,10 +247,12 @@ class Arrivals(list):
             arrowprops = dict(arrowstyle='-|>,head_length=0.8,head_width=0.5',
                               color='#C95241',
                               lw=1.5)
+            station_radius = radius - arrivals[0].receiver_depth
             ax.annotate('',
-                        xy=(np.deg2rad(distance), radius),
+                        xy=(np.deg2rad(distance), station_radius),
                         xycoords='data',
-                        xytext=(np.deg2rad(distance), radius * 1.02),
+                        xytext=(np.deg2rad(distance),
+                                station_radius + radius * 0.02),
                         textcoords='data',
                         arrowprops=arrowprops,
                         clip_on=False)
@@ -183,9 +261,10 @@ class Arrivals(list):
                               lw=1.5,
                               fill=False)
             ax.annotate('',
-                        xy=(np.deg2rad(distance), radius),
+                        xy=(np.deg2rad(distance), station_radius),
                         xycoords='data',
-                        xytext=(np.deg2rad(distance), radius * 1.01),
+                        xytext=(np.deg2rad(distance),
+                                station_radius + radius * 0.01),
                         textcoords='data',
                         arrowprops=arrowprops,
                         clip_on=False)
@@ -193,7 +272,8 @@ class Arrivals(list):
                 name = ','.join(sorted(set(ray.name for ray in arrivals)))
                 # We cannot just set the text of the annotations above because
                 # it changes the arrow path.
-                t = _SmartPolarText(np.deg2rad(distance), radius * 1.07,
+                t = _SmartPolarText(np.deg2rad(distance),
+                                    station_radius + radius * 0.07,
                                     name, clip_on=False)
                 ax.add_artist(t)
 
@@ -233,14 +313,14 @@ class Arrivals(list):
                 fig=ax.get_figure(),
                 y=ms / 2.0,
                 units="points")
-            ax.plot([distance], [0.0],
+            ax.plot([distance], [arrivals[0].receiver_depth],
                     marker="v", color="#C95241",
                     markersize=ms, zorder=10, markeredgewidth=1.5,
                     markeredgecolor="0.3", clip_on=False,
                     transform=station_marker_transform)
             if label_arrivals:
                 name = ','.join(sorted(set(ray.name for ray in arrivals)))
-                ax.annotate(name, xy=(distance, 0.0),
+                ax.annotate(name, xy=(distance, arrivals[0].receiver_depth),
                             xytext=(0, ms * 1.5), textcoords='offset points',
                             ha='center', annotation_clip=False)
 
@@ -265,7 +345,8 @@ class Arrivals(list):
             possible_distances = [_i for _i in possible_distances
                                   if x[0] <= _i <= x[1]]
             if possible_distances:
-                ax.plot(possible_distances,  [0.0] * len(possible_distances),
+                ax.plot(possible_distances,
+                        [arrivals[0].receiver_depth] * len(possible_distances),
                         marker="v", color="#C95241",
                         markersize=ms, zorder=10, markeredgewidth=1.5,
                         markeredgecolor="0.3", clip_on=False, lw=0,
@@ -283,12 +364,29 @@ class TauPyModel(object):
     Representation of a seismic model and methods for ray paths through it.
     """
 
-    def __init__(self, model="iasp91", verbose=False):
+    def __init__(self, model="iasp91", verbose=False, planet_flattening=0.0,
+                 cache=None):
         """
         Loads an already created TauPy model.
 
         :param model: The model name. Either an internal TauPy model or a
             filename in the case of custom models.
+        :param planet_flattening: Flattening parameter for the planet's
+            ellipsoid (i.e. (a-b)/a, where a is the semimajor equatorial radius
+            and b is the semiminor polar radius). A value of 0 (the default)
+            gives a spherical planet. Note that this is only used to convert
+            from geographical positions (source and receiver latitudes and
+            longitudes) to epicentral distances - the actual traveltime and
+            raypath calculations are performed on a spherical planet.
+        :type planet_flattening: float
+        :param cache: An object to use to cache models split at source depths.
+            Generating results requires splitting a model at the source depth,
+            which may be expensive. The cache allows faster calculation when
+            multiple results are requested for the same source depth. The
+            dictionary must be ordered, otherwise the LRU cache will not
+            behave correctly. If ``False`` is specified, then no cache will be
+            used.
+        :type cache: :class:`collections.OrderedDict` or bool
 
         Usage:
 
@@ -297,15 +395,16 @@ class TauPyModel(object):
         >>> print(i91.get_travel_times(10, 20)[0].name)
         P
         >>> i91.get_travel_times(10, 20)[0].time  # doctest: +ELLIPSIS
-        272.667...
+        272.675...
         >>> len(i91.get_travel_times(100, 50, phase_list = ["P", "S"]))
         2
         """
         self.verbose = verbose
-        self.model = TauModel.from_file(model)
+        self.model = TauModel.from_file(model, cache=cache)
+        self.planet_flattening = planet_flattening
 
     def get_travel_times(self, source_depth_in_km, distance_in_degree=None,
-                         phase_list=("ttall",)):
+                         phase_list=("ttall",), receiver_depth_in_km=0.0):
         """
         Return travel times of every given phase.
 
@@ -316,6 +415,8 @@ class TauPyModel(object):
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases will be used.
         :type phase_list: list of str
+        :param receiver_depth_in_km: Receiver depth in km
+        :type receiver_depth_in_km: float
 
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
@@ -325,14 +426,14 @@ class TauPyModel(object):
         # Accessing the arrivals not just by list indices but by phase name
         # might be useful, but also difficult: several arrivals can have the
         # same phase.
-        tt = TauP_Time(self.model, phase_list, source_depth_in_km,
-                       distance_in_degree)
+        tt = TauPTime(self.model, phase_list, source_depth_in_km,
+                      distance_in_degree, receiver_depth_in_km)
         tt.run()
         return Arrivals(sorted(tt.arrivals, key=lambda x: x.time),
                         model=self.model)
 
     def get_pierce_points(self, source_depth_in_km, distance_in_degree,
-                          phase_list=("ttall",)):
+                          phase_list=("ttall",), receiver_depth_in_km=0.0):
         """
         Return pierce points of every given phase.
 
@@ -343,20 +444,22 @@ class TauPyModel(object):
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases will be used.
         :type phase_list: list of str
+        :param receiver_depth_in_km: Receiver depth in km
+        :type receiver_depth_in_km: float
 
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
             attributes.
         :rtype: :class:`Arrivals`
         """
-        pp = TauP_Pierce(self.model, phase_list, source_depth_in_km,
-                         distance_in_degree)
+        pp = TauPPierce(self.model, phase_list, source_depth_in_km,
+                        distance_in_degree, receiver_depth_in_km)
         pp.run()
         return Arrivals(sorted(pp.arrivals, key=lambda x: x.time),
                         model=self.model)
 
     def get_ray_paths(self, source_depth_in_km, distance_in_degree=None,
-                      phase_list=("ttall",)):
+                      phase_list=("ttall",), receiver_depth_in_km=0.0):
         """
         Return ray paths of every given phase.
 
@@ -367,17 +470,185 @@ class TauPyModel(object):
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases will be used.
         :type phase_list: list of str
+        :param receiver_depth_in_km: Receiver depth in km
+        :type receiver_depth_in_km: float
 
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
             attributes.
         :rtype: :class:`Arrivals`
         """
-        rp = TauP_Path(self.model, phase_list, source_depth_in_km,
-                       distance_in_degree)
+        rp = TauPPath(self.model, phase_list, source_depth_in_km,
+                      distance_in_degree, receiver_depth_in_km)
         rp.run()
         return Arrivals(sorted(rp.arrivals, key=lambda x: x.time),
                         model=self.model)
+
+    def get_travel_times_geo(self, source_depth_in_km, source_latitude_in_deg,
+                             source_longitude_in_deg, receiver_latitude_in_deg,
+                             receiver_longitude_in_deg, phase_list=("ttall",)):
+        """
+        Return travel times of every given phase given geographical data.
+
+        .. note::
+
+            Note that the conversion from source and receiver latitudes and
+            longitudes to epicentral distances respects the model's flattening
+            parameter, so this calculation can be performed for a ellipsoidal
+            or spherical planet. However, the actual traveltime and raypath
+            calculations are performed on a spherical planet. Ellipticity
+            corrections of e.g. [Dziewonski1976]_ are not made.
+
+        :param source_depth_in_km: Source depth in km
+        :type source_depth_in_km: float
+        :param source_latitude_in_deg: Source latitude in degrees
+        :type source_latitude_in_deg: float
+        :param source_longitude_in_deg: Source longitude in degrees
+        :type source_longitude_in_deg: float
+        :param receiver_latitude_in_deg: Receiver latitude in degrees
+        :type receiver_latitude_in_deg: float
+        :param receiver_longitude_in_deg: Receiver longitude in degrees
+        :type receiver_longitude_in_deg: float
+        :param phase_list: List of phases for which travel times should be
+            calculated. If this is empty, all phases will be used.
+        :type phase_list: list of str
+
+        :return: List of ``Arrival`` objects, each of which has the time,
+            corresponding phase name, ray parameter, takeoff angle, etc. as
+            attributes.
+        :rtype: :class:`Arrivals`
+        """
+        distance_in_deg = calc_dist(source_latitude_in_deg,
+                                    source_longitude_in_deg,
+                                    receiver_latitude_in_deg,
+                                    receiver_longitude_in_deg,
+                                    self.model.radius_of_planet,
+                                    self.planet_flattening)
+        arrivals = self.get_travel_times(source_depth_in_km, distance_in_deg,
+                                         phase_list)
+        return arrivals
+
+    def get_pierce_points_geo(self, source_depth_in_km, source_latitude_in_deg,
+                              source_longitude_in_deg,
+                              receiver_latitude_in_deg,
+                              receiver_longitude_in_deg,
+                              phase_list=("ttall",)):
+        """
+        Return ray paths of every given phase with geographical info.
+
+        .. note::
+
+            Note that the conversion from source and receiver latitudes and
+            longitudes to epicentral distances respects the model's flattening
+            parameter, so this calculation can be performed for a ellipsoidal
+            or spherical planet. However, the actual traveltime and raypath
+            calculations are performed on a spherical planet. Ellipticity
+            corrections of e.g. [Dziewonski1976]_ are not made.
+
+        :param source_depth_in_km: Source depth in km
+        :type source_depth_in_km: float
+        :param source_latitude_in_deg: Source latitude in degrees
+        :type source_latitude_in_deg: float
+        :param source_longitude_in_deg: Source longitue in degrees
+        :type source_longitude_in_deg: float
+        :param receiver_latitude_in_deg: Receiver latitude in degrees
+        :type receiver_latitude_in_deg: float
+        :param receiver_longitude_in_deg: Receiver longitude in degrees
+        :type receiver_longitude_in_deg: float
+        :param phase_list: List of phases for which travel times should be
+            calculated. If this is empty, all phases will be used.
+        :type phase_list: list of str
+        :return: List of ``Arrival`` objects, each of which has the time,
+            corresponding phase name, ray parameter, takeoff angle, etc. as
+            attributes.
+        :rtype: :class:`Arrivals`
+        """
+        distance_in_deg = calc_dist(source_latitude_in_deg,
+                                    source_longitude_in_deg,
+                                    receiver_latitude_in_deg,
+                                    receiver_longitude_in_deg,
+                                    self.model.radius_of_planet,
+                                    self.planet_flattening)
+
+        arrivals = self.get_pierce_points(source_depth_in_km, distance_in_deg,
+                                          phase_list)
+
+        if geodetics.HAS_GEOGRAPHICLIB:
+            try:
+                arrivals = add_geo_to_arrivals(
+                    arrivals, source_latitude_in_deg, source_longitude_in_deg,
+                    receiver_latitude_in_deg, receiver_longitude_in_deg,
+                    self.model.radius_of_planet, self.planet_flattening)
+            except ImportError as e:
+                warnings.warn("ImportError: " + str(e))
+        else:
+            msg = "Not able to evaluate positions of pierce points. " + \
+                  "Arrivals object will not be modified. " + \
+                  "Install the Python module 'geographiclib' to solve " + \
+                  "this issue."
+            warnings.warn(msg)
+
+        return arrivals
+
+    def get_ray_paths_geo(self, source_depth_in_km, source_latitude_in_deg,
+                          source_longitude_in_deg, receiver_latitude_in_deg,
+                          receiver_longitude_in_deg, phase_list=("ttall",)):
+        """
+        Return ray paths of every given phase with geographical info.
+
+        .. note::
+
+            Note that the conversion from source and receiver latitudes and
+            longitudes to epicentral distances respects the model's flattening
+            parameter, so this calculation can be performed for a ellipsoidal
+            or spherical planet. However, the actual traveltime and raypath
+            calculations are performed on a spherical planet. Ellipticity
+            corrections of e.g. [Dziewonski1976]_ are not made.
+
+        :param source_depth_in_km: Source depth in km
+        :type source_depth_in_km: float
+        :param source_latitude_in_deg: Source latitude in degrees
+        :type source_latitude_in_deg: float
+        :param source_longitude_in_deg: Source longitue in degrees
+        :type source_longitude_in_deg: float
+        :param receiver_latitude_in_deg: Receiver latitude in degrees
+        :type receiver_latitude_in_deg: float
+        :param receiver_longitude_in_deg: Receiver longitude in degrees
+        :type receiver_longitude_in_deg: float
+        :param phase_list: List of phases for which travel times should be
+            calculated. If this is empty, all phases will be used.
+        :type phase_list: list of str
+        :return: List of ``Arrival`` objects, each of which has the time,
+            corresponding phase name, ray parameter, takeoff angle, etc. as
+            attributes.
+        :rtype: :class:`Arrivals`
+        """
+        distance_in_deg = calc_dist(source_latitude_in_deg,
+                                    source_longitude_in_deg,
+                                    receiver_latitude_in_deg,
+                                    receiver_longitude_in_deg,
+                                    self.model.radius_of_planet,
+                                    self.planet_flattening)
+
+        arrivals = self.get_ray_paths(source_depth_in_km, distance_in_deg,
+                                      phase_list)
+
+        if geodetics.HAS_GEOGRAPHICLIB:
+            try:
+                arrivals = add_geo_to_arrivals(
+                    arrivals, source_latitude_in_deg, source_longitude_in_deg,
+                    receiver_latitude_in_deg, receiver_longitude_in_deg,
+                    self.model.radius_of_planet, self.planet_flattening)
+            except ImportError as e:
+                warnings.warn("ImportError: " + str(e))
+        else:
+            msg = "Not able to evaluate positions of points on path. " + \
+                  "Arrivals object will not be modified. " + \
+                  "Install the Python module 'geographiclib' to solve " + \
+                  "this issue."
+            warnings.warn(msg)
+
+        return arrivals
 
 
 def create_taup_model(model_name, output_dir, input_dir):
@@ -391,4 +662,4 @@ def create_taup_model(model_name, output_dir, input_dir):
         model_file_name = model_name
     else:
         model_file_name = model_name + ".tvel"
-    TauP_Create.main(model_file_name, output_dir, input_dir)
+    TauPCreate.main(model_file_name, output_dir, input_dir)

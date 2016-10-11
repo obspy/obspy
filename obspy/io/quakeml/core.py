@@ -18,7 +18,7 @@ by a distributed team in a transparent collaborative manner.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -29,6 +29,7 @@ import io
 import os
 import warnings
 
+from collections import Mapping
 from lxml import etree
 
 from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
@@ -522,7 +523,7 @@ class Unpickler(object):
         self._extra(element, obj)
         return obj
 
-    def _origin(self, element):
+    def _origin(self, element, arrivals):
         """
         Converts an etree.Element into an Origin object.
 
@@ -538,7 +539,7 @@ class Unpickler(object):
         ... </origin>'''
         >>> xml_doc = etree.fromstring(XML)
         >>> unpickler = Unpickler(xml_doc)
-        >>> origin = unpickler._origin(xml_doc)
+        >>> origin = unpickler._origin(xml_doc, arrivals=[])
         >>> print(origin.latitude)
         34.23
         """
@@ -565,6 +566,7 @@ class Unpickler(object):
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         obj.origin_uncertainty = self._origin_uncertainty(element)
+        obj.arrivals = arrivals
         obj.resource_id = element.get('publicID')
         self._extra(element, obj)
         return obj
@@ -932,12 +934,18 @@ class Unpickler(object):
             # origins
             event.origins = []
             for origin_el in self._xpath('origin', event_el):
-                origin = self._origin(origin_el)
-                # arrivals
-                origin.arrivals = []
+                # Have to be created before the origin is created to avoid a
+                # rare issue where a warning is read when the same event is
+                # read twice - the warnings does not occur if two referred
+                # to objects compare equal - for this the arrivals have to
+                # be bound to the event before the resource id is assigned.
+                arrivals = []
                 for arrival_el in self._xpath('arrival', origin_el):
                     arrival = self._arrival(arrival_el)
-                    origin.arrivals.append(arrival)
+                    arrivals.append(arrival)
+
+                origin = self._origin(origin_el, arrivals=arrivals)
+
                 # append origin with arrivals
                 event.origins.append(origin)
             # magnitudes
@@ -987,7 +995,13 @@ class Unpickler(object):
             for el in element.iterfind("{%s}*" % ns):
                 # remove namespace from tag name
                 _, name = el.tag.split("}")
-                value = el.text
+                # check if element has children (nested tags)
+                if len(el):
+                    sub_obj = AttribDict()
+                    self._extra(el, sub_obj)
+                    value = sub_obj.extra
+                else:
+                    value = el.text
                 try:
                     extra = obj.setdefault("extra", AttribDict())
                 # Catalog object is not based on AttribDict..
@@ -1102,13 +1116,13 @@ class Pickler(object):
         if obj is None:
             return
         attrib = {}
-        if obj.network_code:
+        if obj.network_code is not None:
             attrib['networkCode'] = obj.network_code
-        if obj.station_code:
+        if obj.station_code is not None:
             attrib['stationCode'] = obj.station_code
         if obj.location_code is not None:
             attrib['locationCode'] = obj.location_code
-        if obj.channel_code:
+        if obj.channel_code is not None:
             attrib['channelCode'] = obj.channel_code
         subelement = etree.Element('waveformID', attrib=attrib)
         # WaveformStreamID has a non-mandatory resource_id
@@ -1171,7 +1185,10 @@ class Pickler(object):
         """
         if not hasattr(obj, "extra"):
             return
-        for key, item in obj.extra.items():
+        self._custom(obj.extra, element)
+
+    def _custom(self, obj, element):
+        for key, item in obj.items():
             value = item["value"]
             ns = item["namespace"]
             attrib = item.get("attrib", {})
@@ -1182,7 +1199,11 @@ class Pickler(object):
             if type_.lower() in ("attribute", "attrib"):
                 element.attrib[tag] = str(value)
             elif type_.lower() == "element":
-                if isinstance(value, bool):
+                # check if value is dictionary-like
+                if isinstance(value, Mapping):
+                    subelement = etree.SubElement(element, tag, attrib=attrib)
+                    self._custom(value, subelement)
+                elif isinstance(value, bool):
                     self._bool(value, element, tag, attrib=attrib)
                 else:
                     self._str(value, element, tag, attrib=attrib)

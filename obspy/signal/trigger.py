@@ -13,7 +13,7 @@ Various routines related to triggering/picking
 
 Module implementing the Recursive STA/LTA. Two versions, a fast ctypes one and
 a bit slower python one. Furthermore, the classic and delayed STA/LTA, the
-carl_STA_trig and the z_detect are implemented.
+carl_sta_trig and the z_detect are implemented.
 Also includes picking routines, routines for evaluation and visualization of
 characteristic functions and a coincidence triggering routine.
 
@@ -23,24 +23,24 @@ characteristic functions and a coincidence triggering routine.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+from collections import deque
 import ctypes as C
 import warnings
-from collections import deque
 
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.signal.cross_correlation import templatesMaxSimilarity
+from obspy.signal.cross_correlation import templates_max_similarity
 from obspy.signal.headers import clibsignal, head_stalta_t
 
 
-def recursive_STALTA(a, nsta, nlta):
+def recursive_sta_lta(a, nsta, nlta):
     """
     Recursive STA/LTA.
 
@@ -67,14 +67,14 @@ def recursive_STALTA(a, nsta, nlta):
     return charfct
 
 
-def recursive_STALTA_py(a, nsta, nlta):
+def recursive_sta_lta_py(a, nsta, nlta):
     """
     Recursive STA/LTA written in Python.
 
     .. note::
 
         There exists a faster version of this trigger wrapped in C
-        called :func:`~obspy.signal.trigger.recursive_STALTA` in this module!
+        called :func:`~obspy.signal.trigger.recursive_sta_lta` in this module!
 
     :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
@@ -111,7 +111,7 @@ def recursive_STALTA_py(a, nsta, nlta):
     return np.array(charfct)
 
 
-def carl_STA_trig(a, nsta, nlta, ratio, quiet):
+def carl_sta_trig(a, nsta, nlta, ratio, quiet):
     """
     Computes the carlSTAtrig characteristic function.
 
@@ -124,9 +124,9 @@ def carl_STA_trig(a, nsta, nlta, ratio, quiet):
     :type nlta: int
     :param nlta: Length of long time average window in samples
     :type ration: float
-    :param ratio: as ratio gets smaller, carl_STA_trig gets more sensitive
+    :param ratio: as ratio gets smaller, carl_sta_trig gets more sensitive
     :type quiet: float
-    :param quiet: as quiet gets smaller, carl_STA_trig gets more sensitive
+    :param quiet: as quiet gets smaller, carl_sta_trig gets more sensitive
     :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of CarlStaTrig
     """
@@ -166,7 +166,7 @@ def carl_STA_trig(a, nsta, nlta, ratio, quiet):
     return eta
 
 
-def classic_STALTA(a, nsta, nlta):
+def classic_sta_lta(a, nsta, nlta):
     """
     Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by nsta in samples, respectively is the length of the
@@ -198,7 +198,7 @@ def classic_STALTA(a, nsta, nlta):
     return charfct
 
 
-def classic_STALTA_py(a, nsta, nlta):
+def classic_sta_lta_py(a, nsta, nlta):
     """
     Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by nsta in samples, respectively is the length of the
@@ -207,7 +207,7 @@ def classic_STALTA_py(a, nsta, nlta):
     .. note::
 
         There exists a faster version of this trigger wrapped in C
-        called :func:`~obspy.signal.trigger.classic_STALTA` in this module!
+        called :func:`~obspy.signal.trigger.classic_sta_lta` in this module!
 
     :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
@@ -245,7 +245,7 @@ def classic_STALTA_py(a, nsta, nlta):
     return sta / lta
 
 
-def delayed_STALTA(a, nsta, nlta):
+def delayed_sta_lta(a, nsta, nlta):
     """
     Delayed STA/LTA.
 
@@ -293,8 +293,8 @@ def z_detect(a, nsta):
         sta = sta + np.concatenate((pad_sta, a[i:m - nsta + i] ** 2))
     a_mean = np.mean(sta)
     a_std = np.std(sta)
-    Z = (sta - a_mean) / a_std
-    return Z
+    _z = (sta - a_mean) / a_std
+    return _z
 
 
 def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
@@ -346,7 +346,12 @@ def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     #
     on = deque([ind1[0]])
     of = deque([-1])
-    of.extend(ind2[np.diff(ind2) > 1].tolist())
+    # determine the indices where charfct falls below off-threshold
+    ind2_ = np.empty_like(ind2, dtype=bool)
+    ind2_[:-1] = np.diff(ind2) > 1
+    # last occurence is missed by the diff, add it manually
+    ind2_[-1] = True
+    of.extend(ind2[ind2_].tolist())
     on.extend(ind1[np.where(np.diff(ind1) > 1)[0] + 1].tolist())
     # include last pick if trigger is on or drop it
     if max_len_delete:
@@ -446,11 +451,11 @@ def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
             C.byref(stime), l_p, l_s, s_pick)
     errcode = clibsignal.ar_picker(a, b, c, *args)
     if errcode != 0:
-        BUFS = ['buff1', 'buff1_s', 'buff2', 'buff3', 'buff4', 'buff4_s',
+        bufs = ['buff1', 'buff1_s', 'buff2', 'buff3', 'buff4', 'buff4_s',
                 'f_error', 'b_error', 'ar_f', 'ar_b', 'buf_sta', 'buf_lta',
                 'extra_tr1', 'extra_tr2', 'extra_tr3']
-        if errcode <= len(BUFS):
-            raise MemoryError('Unable to allocate %s!' % (BUFS[errcode - 1]))
+        if errcode <= len(bufs):
+            raise MemoryError('Unable to allocate %s!' % (bufs[errcode - 1]))
         raise Exception('Error during PAZ calculation!')
     return ptime.value, stime.value
 
@@ -482,11 +487,12 @@ def plot_trigger(trace, cft, thr_on, thr_off, show=True):
     ax1.plot(t, trace.data, 'k')
     ax2 = fig.add_subplot(212, sharex=ax1)
     ax2.plot(t, cft, 'k')
-    onOff = np.array(trigger_onset(cft, thr_on, thr_off))
+    on_off = np.array(trigger_onset(cft, thr_on, thr_off))
     i, j = ax1.get_ylim()
     try:
-        ax1.vlines(onOff[:, 0] / df, i, j, color='r', lw=2, label="Trigger On")
-        ax1.vlines(onOff[:, 1] / df, i, j, color='b', lw=2,
+        ax1.vlines(on_off[:, 0] / df, i, j, color='r', lw=2,
+                   label="Trigger On")
+        ax1.vlines(on_off[:, 1] / df, i, j, color='b', lw=2,
                    label="Trigger Off")
         ax1.legend()
     except IndexError:
@@ -527,7 +533,7 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
     .. note::
         An example can be found in the
         `Trigger/Picker Tutorial
-        <http://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
+        <https://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
 
     .. note::
         Setting `trigger_type=None` precomputed characteristic functions can
@@ -665,7 +671,7 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
         templates = event_templates.get(sta)
         if templates:
             event['similarity'][sta] = \
-                templatesMaxSimilarity(stream, event['time'], templates)
+                templates_max_similarity(stream, event['time'], templates)
         # compile the list of stations that overlap with the current trigger
         for trigger in triggers:
             tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std = trigger
@@ -692,7 +698,7 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
             templates = event_templates.get(tmp_sta)
             if templates:
                 event['similarity'][tmp_sta] = \
-                    templatesMaxSimilarity(stream, event['time'], templates)
+                    templates_max_similarity(stream, event['time'], templates)
         # skip if both coincidence sum and similarity thresholds are not met
         if event['coincidence_sum'] < thr_coincidence_sum:
             if not event['similarity']:

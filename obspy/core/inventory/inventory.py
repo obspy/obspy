@@ -7,38 +7,43 @@ Provides the Inventory class.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import python_2_unicode_compatible, native_str
 
 import copy
 import fnmatch
+import os
+from pkg_resources import load_entry_point
 import textwrap
 import warnings
 
-from pkg_resources import load_entry_point
-import numpy as np
-
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
-                                  _read_from_plugin)
+                                  _read_from_plugin, NamedTemporaryFile,
+                                  download_to_file)
 from obspy.core.util.decorator import map_example_filename
-from .network import Network
+from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
+from .network import Network
+from .util import _unified_content_strings, _textwrap
 
 # Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
-SOFTWARE_URI = "http://www.obspy.org"
+SOFTWARE_URI = "https://www.obspy.org"
 
 
-def _createExampleInventory():
+def _create_example_inventory():
     """
     Create an example inventory.
     """
-    return read_inventory('/path/to/BW_GR_misc.xml.gz', format="STATIONXML")
+    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "data")
+    path = os.path.join(data_dir, "BW_GR_misc.xml")
+    return read_inventory(path, format="STATIONXML")
 
 
 @map_example_filename("path_or_file_object")
@@ -54,11 +59,21 @@ def read_inventory(path_or_file_object=None, format=None):
     """
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
-        return _createExampleInventory()
+        return _create_example_inventory()
+    elif isinstance(path_or_file_object, (str, native_str)) and \
+            "://" in path_or_file_object:
+        # some URL
+        # extract extension if any
+        suffix = \
+            os.path.basename(path_or_file_object).partition('.')[2] or '.tmp'
+        with NamedTemporaryFile(suffix=suffix) as fh:
+            download_to_file(url=path_or_file_object, filename_or_buffer=fh)
+            return read_inventory(fh.name, format=format)
     return _read_from_plugin("inventory", path_or_file_object,
                              format=format)[0]
 
 
+@python_2_unicode_compatible
 class Inventory(ComparingObject):
     """
     The root object of the Inventory->Network->Station->Channel hierarchy.
@@ -114,6 +129,9 @@ class Inventory(ComparingObject):
                    "an Inventory.")
             raise TypeError(msg)
         return self
+
+    def __len__(self):
+        return len(self.networks)
 
     def __getitem__(self, index):
         return self.networks[index]
@@ -186,6 +204,7 @@ class Inventory(ComparingObject):
                 content_dict.setdefault(key, [])
                 content_dict[key].extend(value)
                 content_dict[key].sort()
+        content_dict['networks'].sort()
         return content_dict
 
     def __str__(self):
@@ -202,15 +221,21 @@ class Inventory(ComparingObject):
         contents = self.get_contents()
         ret_str += "\tContains:\n"
         ret_str += "\t\tNetworks (%i):\n" % len(contents["networks"])
-        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["networks"]])
+        ret_str += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["networks"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         ret_str += "\n"
         ret_str += "\t\tStations (%i):\n" % len(contents["stations"])
-        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
+        ret_str += "\n".join([
+            "\t\t\t%s" % _i
+            for _i in _unified_content_strings(contents["stations"])])
         ret_str += "\n"
         ret_str += "\t\tChannels (%i):\n" % len(contents["channels"])
-        ret_str += "\n".join(textwrap.wrap(
-            ", ".join(contents["channels"]), initial_indent="\t\t\t",
-            subsequent_indent="\t\t\t", expand_tabs=False))
+        ret_str += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["channels"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         return ret_str
 
     def _repr_pretty_(self, p, cycle):
@@ -356,8 +381,7 @@ class Inventory(ComparingObject):
             Sending institution: Erdbebendienst Bayern
             Contains:
                 Networks (2):
-                    GR
-                    BW
+                    BW, GR
                 Stations (2):
                     BW.RJOB (Jochberg, Bavaria, BW-Net)
                     GR.WET (Wettzell, Bavaria, GR-Net)
@@ -369,9 +393,17 @@ class Inventory(ComparingObject):
         :func:`~fnmatch.fnmatch`).
 
         :type network: str
+        :param network: Potentially wildcarded network code. If not given,
+            all network codes will be accepted.
         :type station: str
+        :param station: Potentially wildcarded station code. If not given,
+            all station codes will be accepted.
         :type location: str
+        :param location: Potentially wildcarded location code. If not given,
+            all location codes will be accepted.
         :type channel: str
+        :param channel: Potentially wildcarded channel code. If not given,
+            all channel codes will be accepted.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only include networks/stations/channels active at given
             point in time.
@@ -401,11 +433,16 @@ class Inventory(ComparingObject):
                                      endtime=endtime):
                     continue
 
+            has_stations = bool(net.stations)
+
             net_ = net.select(
                 station=station, location=location, channel=channel, time=time,
                 starttime=starttime, endtime=endtime,
                 sampling_rate=sampling_rate, keep_empty=keep_empty)
-            if not keep_empty and not net_.stations:
+
+            # If the network previously had stations but no longer has any
+            # and keep_empty is False: Skip the network.
+            if has_stations and not keep_empty and not net_.stations:
                 continue
             networks.append(net_)
         inv = copy.copy(self)
@@ -414,9 +451,9 @@ class Inventory(ComparingObject):
 
     def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
-             size=15**2, label=True, color='blue', color_per_network=False,
-             colormap="jet", legend="upper left", time=None, show=True,
-             outfile=None, method=None, **kwargs):  # @UnusedVariable
+             size=15**2, label=True, color='#b15928', color_per_network=False,
+             colormap="Paired", legend="upper left", time=None, show=True,
+             outfile=None, method=None, fig=None, **kwargs):  # @UnusedVariable
         """
         Creates a preview map of all networks/stations in current inventory
         object.
@@ -454,7 +491,8 @@ class Inventory(ComparingObject):
         :param label: Whether to label stations with "network.station" or not.
         :type color: str
         :param color: Face color of marker symbol (see
-            :func:`matplotlib.pyplot.scatter`).
+            :func:`matplotlib.pyplot.scatter`). Defaults to the first color
+            from the single-element "Paired" color map.
         :type color_per_network: bool or dict
         :param color_per_network: If set to ``True``, each network will be
             drawn in a different color. A dictionary can be provided that maps
@@ -463,7 +501,7 @@ class Inventory(ComparingObject):
         :type colormap: str, any matplotlib colormap, optional
         :param colormap: Only used if ``color_per_network=True``. Specifies
             which colormap is used to draw the colors for the individual
-            networks.
+            networks. Defaults to the "Paired" color map.
         :type legend: str or None
         :param legend: Location string for legend, if networks are plotted in
             different colors (i.e. option ``color_per_network`` in use). See
@@ -489,6 +527,16 @@ class Inventory(ComparingObject):
             * ``None`` to use the best available library
 
             Defaults to ``None``.
+        :type fig: :class:`matplotlib.figure.Figure`
+        :param fig: Figure instance to reuse, returned from a previous
+            inventory/catalog plot call with `method=basemap`.
+            If a previous basemap plot is reused, any kwargs regarding the
+            basemap plot setup will be ignored (i.e.  `projection`,
+            `resolution`, `continent_fill_color`, `water_fill_color`). Note
+            that multiple plots using colorbars likely are problematic, but
+            e.g. one station plot (without colorbar) and one event plot (with
+            colorbar) together should work well.
+        :returns: Figure instance with the plot.
 
         .. rubric:: Example
 
@@ -528,6 +576,22 @@ class Inventory(ComparingObject):
             inv.plot(projection="local",
                      color_per_network={'GR': 'blue',
                                         'BW': 'green'})
+
+        Combining a station and event plot (uses basemap):
+
+        >>> from obspy import read_inventory, read_events
+        >>> inv = read_inventory()
+        >>> cat = read_events()
+        >>> fig = inv.plot(method="basemap", show=False)  # doctest:+SKIP
+        >>> cat.plot(method="basemap", fig=fig)  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_inventory, read_events
+            inv = read_inventory()
+            cat = read_events()
+            fig = inv.plot(show=False)
+            cat.plot(fig=fig)
         """
         from obspy.imaging.maps import plot_map
         import matplotlib.pyplot as plt
@@ -544,11 +608,10 @@ class Inventory(ComparingObject):
 
         if color_per_network and not isinstance(color_per_network, dict):
             from matplotlib.cm import get_cmap
-            cmap = get_cmap(name=colormap)
             codes = set([n.code for n in inv])
-            nums = np.linspace(0, 1, endpoint=False, num=len(codes))
-            color_per_network = dict([(code, cmap(n))
-                                      for code, n in zip(sorted(codes), nums)])
+            cmap = get_cmap(name=colormap, lut=len(codes))
+            color_per_network = dict([(code, cmap(i))
+                                      for i, code in enumerate(sorted(codes))])
 
         for net in inv:
             for sta in net:
@@ -576,7 +639,7 @@ class Inventory(ComparingObject):
                        continent_fill_color=continent_fill_color,
                        water_fill_color=water_fill_color,
                        colormap=None, colorbar=False, marker=marker,
-                       title=None, show=False, **kwargs)
+                       title=None, show=False, fig=fig, **kwargs)
 
         if legend is not None and color_per_network:
             ax = fig.axes[0]
@@ -693,11 +756,20 @@ class Inventory(ComparingObject):
         for net in matching.networks:
             for sta in net.stations:
                 for cha in sta.channels:
-                    cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
-                             label=".".join((net.code, sta.code,
-                                             cha.location_code, cha.code)),
-                             unwrap_phase=unwrap_phase, show=False,
-                             outfile=None)
+                    try:
+                        cha.plot(min_freq=min_freq, output=output,
+                                 axes=(ax1, ax2),
+                                 label=".".join((net.code, sta.code,
+                                                 cha.location_code, cha.code)),
+                                 unwrap_phase=unwrap_phase, show=False,
+                                 outfile=None)
+                    except ZeroSamplingRate:
+                        msg = ("Skipping plot of channel with zero "
+                               "sampling rate:\n%s")
+                        warnings.warn(msg % str(cha), UserWarning)
+                    except ObsPyException as e:
+                        msg = "Skipping plot of channel (%s):\n%s"
+                        warnings.warn(msg % (str(e), str(cha)), UserWarning)
 
         # final adjustments to plot if we created the figure in here
         if not axes:

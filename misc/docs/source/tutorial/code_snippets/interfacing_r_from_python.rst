@@ -20,4 +20,4 @@ the R command ``summary`` on it.
 
 
 .. _rpy2: http://rpy.sourceforge.net/rpy2.html
-.. _R: http://www.r-project.org/
+.. _R: https://www.r-project.org/

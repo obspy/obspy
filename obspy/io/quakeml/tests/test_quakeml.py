@@ -66,7 +66,7 @@ class QuakeMLTestCase(unittest.TestCase):
             catalog[2].resource_id,
             ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000039'))
 
-    def test_USGS_eventype(self):
+    def test_usgs_eventype(self):
         filename = os.path.join(self.path, 'usgs_event.xml')
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
@@ -273,7 +273,7 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_stationmagnitudecontribution(self):
+    def test_station_magnitude_contribution(self):
         """
         Tests the station magnitude contribution object.
         """
@@ -307,7 +307,7 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_stationmagnitude(self):
+    def test_station_magnitude(self):
         """
         Tests StationMagnitude object.
         """
@@ -572,7 +572,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 catalog2 = _read_quakeml(tmpfile)
         self.assertTrue(len(catalog2), 1)
 
-    def test_readEvents(self):
+    def test_read_events(self):
         """
         Tests reading a QuakeML document via read_events.
         """
@@ -622,7 +622,7 @@ class QuakeMLTestCase(unittest.TestCase):
             xsd_enum_definitions[type_name] = enums
 
         # Now import all enums and check if they are correct.
-        from obspy.core import event_header
+        from obspy.core.event import header as event_header
         from obspy.core.util import Enum
         all_enums = {}
         for module_item_name in dir(event_header):
@@ -691,7 +691,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(
             ev.preferred_focal_mechanism(), ev.focal_mechanisms[1])
 
-    def test_creating_minimal_QuakeML_with_MT(self):
+    def test_creating_minimal_quakeml_with_mt(self):
         """
         Tests the creation of a minimal QuakeML containing origin, magnitude
         and moment tensor.
@@ -871,32 +871,43 @@ class QuakeMLTestCase(unittest.TestCase):
         #  - tag with explicit namespace and namespace abbreviation
         my_extra = AttribDict(
             {'public': {'value': False,
-                        'namespace': r"http://some-page.de/xmlns/1.0",
-                        'attrib': {u"some_attrib": u"some_value",
-                                   u"another_attrib": u"another_value"}},
-             'custom': {'value': u"True",
-                        'namespace': r'http://test.org/xmlns/0.1'},
+                        'namespace': 'http://some-page.de/xmlns/1.0',
+                        'attrib': {'some_attrib': 'some_value',
+                                   'another_attrib': 'another_value'}},
+             'custom': {'value': 'True',
+                        'namespace': 'http://test.org/xmlns/0.1'},
              'new_tag': {'value': 1234,
-                         'namespace': r"http://test.org/xmlns/0.1"},
+                         'namespace': 'http://test.org/xmlns/0.1'},
              'tX': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z'),
-                    'namespace': r'http://test.org/xmlns/0.1'},
-             'dataid': {'namespace': r'http://anss.org/xmlns/catalog/0.1',
-                        'type': 'attribute', 'value': '00999999'}})
-        nsmap = {"ns0": r"http://test.org/xmlns/0.1",
-                 "catalog": r'http://anss.org/xmlns/catalog/0.1'}
+                    'namespace': 'http://test.org/xmlns/0.1'},
+             'dataid': {'namespace': 'http://anss.org/xmlns/catalog/0.1',
+                        'type': 'attribute', 'value': '00999999'},
+             # some nested tags :
+             'quantity': {'namespace': 'http://some-page.de/xmlns/1.0',
+                          'attrib': {'attrib1': 'attrib_value1',
+                                     'attrib2': 'attrib_value2'},
+                          'value': {
+                             'my_nested_tag1': {
+                                 'namespace': 'http://some-page.de/xmlns/1.0',
+                                 'value': 1.23E10},
+                             'my_nested_tag2': {
+                                 'namespace': 'http://some-page.de/xmlns/1.0',
+                                 'value': False}}}})
+        nsmap = {'ns0': 'http://test.org/xmlns/0.1',
+                 'catalog': 'http://anss.org/xmlns/catalog/0.1'}
         cat[0].extra = my_extra.copy()
         # insert a pick with an extra field
         p = Pick()
         p.extra = {'weight': {'value': 2,
-                              'namespace': r"http://test.org/xmlns/0.1"}}
+                              'namespace': 'http://test.org/xmlns/0.1'}}
         cat[0].picks.append(p)
 
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             # write file
-            cat.write(tmpfile, format="QUAKEML", nsmap=nsmap)
+            cat.write(tmpfile, format='QUAKEML', nsmap=nsmap)
             # check contents
-            with open(tmpfile, "rb") as fh:
+            with open(tmpfile, 'rb') as fh:
                 # enforce reproducible attribute orders through write_c14n
                 obj = etree.fromstring(fh.read()).getroottree()
                 buf = io.BytesIO()
@@ -930,26 +941,72 @@ class QuakeMLTestCase(unittest.TestCase):
         #  - we always end up with a namespace definition, even if it was
         #    omitted when originally setting the custom tag
         #  - custom namespace abbreviations should attached to Catalog
-        self.assertTrue(hasattr(cat[0], "extra"))
+        self.assertTrue(hasattr(cat[0], 'extra'))
 
         def _tostr(x):
             if isinstance(x, bool):
                 if x:
-                    return str("true")
+                    return str('true')
                 else:
-                    return str("false")
-            return str(x)
+                    return str('false')
+            elif isinstance(x, AttribDict):
+                for key, value in x.items():
+                    x[key].value = _tostr(value['value'])
+                return x
+            else:
+                return str(x)
 
         for key, value in my_extra.items():
             my_extra[key]['value'] = _tostr(value['value'])
         self.assertEqual(cat[0].extra, my_extra)
-        self.assertTrue(hasattr(cat[0].picks[0], "extra"))
+        self.assertTrue(hasattr(cat[0].picks[0], 'extra'))
         self.assertEqual(
             cat[0].picks[0].extra,
             {'weight': {'value': '2',
-                        'namespace': r'http://test.org/xmlns/0.1'}})
-        self.assertTrue(hasattr(cat, "nsmap"))
-        self.assertEqual(getattr(cat, "nsmap")['ns0'], nsmap['ns0'])
+                        'namespace': 'http://test.org/xmlns/0.1'}})
+        self.assertTrue(hasattr(cat, 'nsmap'))
+        self.assertEqual(getattr(cat, 'nsmap')['ns0'], nsmap['ns0'])
+
+    def test_read_same_file_twice_to_same_variable(self):
+        """
+        Reading the same file twice to the same variable should not raise a
+        warning.
+        """
+        sio = io.BytesIO(b"""<?xml version='1.0' encoding='utf-8'?>
+        <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"
+                   xmlns="http://quakeml.org/xmlns/bed/1.2">
+          <eventParameters publicID="smi:local/catalog">
+            <event publicID="smi:local/event">
+              <origin publicID="smi:local/origin">
+                <time>
+                  <value>1970-01-01T00:00:00.000000Z</value>
+                </time>
+                <latitude>
+                  <value>0.0</value>
+                </latitude>
+                <longitude>
+                  <value>0.0</value>
+                </longitude>
+                <depth>
+                  <value>0.0</value>
+                </depth>
+                <arrival publicID="smi:local/arrival">
+                  <pickID>smi:local/pick</pickID>
+                  <phase>P</phase>
+                </arrival>
+              </origin>
+            </event>
+          </eventParameters>
+        </q:quakeml>
+        """)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat1 = read_events(sio)  # NOQA
+            cat2 = read_events(sio)  # NOQA
+
+        # No warning should have been raised.
+        self.assertEqual(len(w), 0)
 
 
 def suite():

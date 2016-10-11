@@ -36,7 +36,7 @@ class ZMAPTestCase(unittest.TestCase):
         self.test_data = {
             'lon': '79.689000', 'lat': '41.818000', 'month': '4',
             'year': '2012.258465590847', 'day': '4', 'hour': '14',
-            'minute': '21', 'second': '42', 'depth': '1.000000',
+            'minute': '21', 'second': '42.3', 'depth': '1.000000',
             'mag': '4.400000'
         }
 

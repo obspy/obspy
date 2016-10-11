@@ -99,7 +99,7 @@ The following example illustrates the intended usage:
         {
           /* Only print error if offset is still within buffer length */
           if ( verbose && offset < recbuflen )
-          ms_log (2, "Error parsing record at offset %lld\n", (long long int) offset);
+          ms_log (2, "Error parsing record at offset %"PRId64"\n", offset);
         }
       else /* Succesfully found and parsed record */
         {

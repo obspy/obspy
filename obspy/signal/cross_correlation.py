@@ -14,7 +14,7 @@ Signal processing routines based on cross correlation techniques.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -28,6 +28,7 @@ import numpy as np
 import scipy
 
 from obspy import Stream, Trace
+from obspy.core.util.misc import MatplotlibBackend
 from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
 
@@ -116,7 +117,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         return shift.value, coe_p.value
 
 
-def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
+def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
              full_xcorr=False, abs_max=True):
     """
     Calculates the cross correlation on each of the specified components
@@ -389,50 +390,48 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
     pick2_corr = dt
     # plot the results if selected
     if plot is True:
-        import matplotlib
-        if filename:
-            matplotlib.use('agg')
-        import matplotlib.pyplot as plt
-        fig = plt.figure()
-        ax1 = fig.add_subplot(211)
-        tmp_t = np.linspace(0, len(slices[0]) / samp_rate, len(slices[0]))
-        ax1.plot(tmp_t, slices[0].data / float(slices[0].data.max()), "k",
-                 label="Trace 1")
-        ax1.plot(tmp_t, slices[1].data / float(slices[1].data.max()), "r",
-                 label="Trace 2")
-        ax1.plot(tmp_t - dt, slices[1].data / float(slices[1].data.max()), "g",
-                 label="Trace 2 (shifted)")
-        ax1.legend(loc="lower right", prop={'size': "small"})
-        ax1.set_title("%s" % slices[0].id)
-        ax1.set_xlabel("time [s]")
-        ax1.set_ylabel("norm. amplitude")
-        ax2 = fig.add_subplot(212)
-        ax2.plot(cc_t, cc_convex, ls="", marker=".", c="k",
-                 label="xcorr (convex)")
-        ax2.plot(cc_t, cc_concave, ls="", marker=".", c="0.7",
-                 label="xcorr (concave)")
-        ax2.plot(cc_t[first_sample:last_sample + 1],
-                 cc[first_sample:last_sample + 1], "b.",
-                 label="used for fitting")
-        tmp_t = np.linspace(cc_t[first_sample], cc_t[last_sample],
-                            num_samples * 10)
-        ax2.plot(tmp_t, scipy.polyval(coeffs, tmp_t), "b", label="fit")
-        ax2.axvline(-dt, color="g", label="vertex")
-        ax2.axhline(coeff, color="g")
-        ax2.set_xlabel("%.2f at %.3f seconds correction" % (coeff, -dt))
-        ax2.set_ylabel("correlation coefficient")
-        ax2.set_ylim(-1, 1)
-        ax2.legend(loc="lower right", prop={'size': "x-small"})
-        # plt.legend(loc="lower left")
-        if filename:
-            fig.savefig(fname=filename)
-        else:
-            plt.show()
+        with MatplotlibBackend(filename and "AGG" or None, sloppy=True):
+            import matplotlib.pyplot as plt
+            fig = plt.figure()
+            ax1 = fig.add_subplot(211)
+            tmp_t = np.linspace(0, len(slices[0]) / samp_rate, len(slices[0]))
+            ax1.plot(tmp_t, slices[0].data / float(slices[0].data.max()), "k",
+                     label="Trace 1")
+            ax1.plot(tmp_t, slices[1].data / float(slices[1].data.max()), "r",
+                     label="Trace 2")
+            ax1.plot(tmp_t - dt, slices[1].data / float(slices[1].data.max()),
+                     "g", label="Trace 2 (shifted)")
+            ax1.legend(loc="lower right", prop={'size': "small"})
+            ax1.set_title("%s" % slices[0].id)
+            ax1.set_xlabel("time [s]")
+            ax1.set_ylabel("norm. amplitude")
+            ax2 = fig.add_subplot(212)
+            ax2.plot(cc_t, cc_convex, ls="", marker=".", color="k",
+                     label="xcorr (convex)")
+            ax2.plot(cc_t, cc_concave, ls="", marker=".", color="0.7",
+                     label="xcorr (concave)")
+            ax2.plot(cc_t[first_sample:last_sample + 1],
+                     cc[first_sample:last_sample + 1], "b.",
+                     label="used for fitting")
+            tmp_t = np.linspace(cc_t[first_sample], cc_t[last_sample],
+                                num_samples * 10)
+            ax2.plot(tmp_t, scipy.polyval(coeffs, tmp_t), "b", label="fit")
+            ax2.axvline(-dt, color="g", label="vertex")
+            ax2.axhline(coeff, color="g")
+            ax2.set_xlabel("%.2f at %.3f seconds correction" % (coeff, -dt))
+            ax2.set_ylabel("correlation coefficient")
+            ax2.set_ylim(-1, 1)
+            ax2.legend(loc="lower right", prop={'size': "x-small"})
+            # plt.legend(loc="lower left")
+            if filename:
+                fig.savefig(filename)
+            else:
+                plt.show()
 
     return (pick2_corr, coeff)
 
 
-def templatesMaxSimilarity(st, time, streams_templates):
+def templates_max_similarity(st, time, streams_templates):
     """
     Compares all event templates in the streams_templates list of streams
     against the given stream around the time of the suspected event. The stream
@@ -446,7 +445,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
     compared. Also see :func:`obspy.signal.trigger.coincidence_trigger` and the
     corresponding example in the
     `Trigger/Picker Tutorial
-    <http://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
+    <https://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
 
     - computes cross correlation on each component (one stream serves as
       template, one as a longer search stream)
@@ -462,7 +461,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
     >>> templ = st.copy().slice(t, t+5)
     >>> for tr in templ:
     ...     tr.data += np.random.random(len(tr)) * tr.data.max() * 0.5
-    >>> print(templatesMaxSimilarity(st, t, [templ]))
+    >>> print(templates_max_similarity(st, t, [templ]))
     0.922536411468
 
     :param time: Time around which is checked for a similarity. Cross

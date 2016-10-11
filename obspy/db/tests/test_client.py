@@ -88,7 +88,7 @@ class ClientTestCase(unittest.TestCase):
         session.commit()
         session.close()
 
-    def test_getNetworkIds(self):
+    def test_get_network_ids(self):
         """
         Tests for method getNetworkIds.
         """
@@ -97,7 +97,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertIn('BW', data)
         self.assertIn('GE', data)
 
-    def test_getStationIds(self):
+    def test_get_station_ids(self):
         """
         Tests for method get_station_ids.
         """
@@ -114,7 +114,7 @@ class ClientTestCase(unittest.TestCase):
         data = self.client.get_station_ids(network='XX')
         self.assertEqual(len(data), 0)
 
-    def test_getLocationIds(self):
+    def test_get_location_ids(self):
         """
         Tests for method get_location_ids.
         """
@@ -141,7 +141,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(data), 1)
         self.assertIn('00', data)
 
-    def test_getChannelIds(self):
+    def test_get_channel_ids(self):
         """
         Tests for method get_channel_ids.
         """
@@ -150,7 +150,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertIn('EHZ', data)
         self.assertIn('BHZ', data)
 
-    def test_getEndtimes(self):
+    def test_get_end_times(self):
         """
         Tests for method get_endtimes.
         """
@@ -171,7 +171,7 @@ class ClientTestCase(unittest.TestCase):
         data = self.client.get_endtimes(network='GE', station='*', location='')
         self.assertEqual(len(data), 0)
 
-    def test_getWaveformPath(self):
+    def test_get_waveform_path(self):
         """
         Tests for method get_waveform_path.
         """
@@ -211,7 +211,7 @@ class ClientTestCase(unittest.TestCase):
                                              channel='?HZ', location='')
         self.assertEqual(len(data), 1)
 
-    def test_getPreview(self):
+    def test_get_preview(self):
         """
         Tests for method get_preview.
         """

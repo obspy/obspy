@@ -16,7 +16,7 @@ A command-line tool to analyze Mini-SEED records.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -217,10 +217,11 @@ class RecordAnalyser(object):
         cur_blkt_offset = self.fixed_header['First blockette']
         # Loop until the beginning of the data is reached.
         while True:
-            if cur_blkt_offset >= self.fixed_header['Beginning of data']:
+            if len(self.blockettes) == \
+                    self.fixed_header["Number of blockettes that follow"]:
                 break
             # Seek to the offset.
-            self.file.seek(cur_blkt_offset, 0)
+            self.file.seek(self.record_offset + cur_blkt_offset, 0)
             # Unpack the first two values. This is always the blockette type
             # and the beginning of the next blockette.
             encoding = native_str('%s2H' % self.endian)
@@ -275,7 +276,7 @@ class RecordAnalyser(object):
         elif blkt_type == 1001:
             _tmp = self.file.read(4)
             try:
-                unpack_values = unpack(native_str('%sBBxB' % self.endian),
+                unpack_values = unpack(native_str('%sbbxb' % self.endian),
                                        _tmp)
             except:
                 if len(_tmp) == 0:

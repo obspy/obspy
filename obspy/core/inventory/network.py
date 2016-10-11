@@ -7,21 +7,24 @@ Provides the Network class.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
-import textwrap
 import warnings
 
+from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
+
 from .station import Station
-from .util import BaseNode
+from .util import BaseNode, _unified_content_strings, _textwrap
 
 
+@python_2_unicode_compatible
 class Network(BaseNode):
     """
     From the StationXML definition:
@@ -34,7 +37,7 @@ class Network(BaseNode):
                  selected_number_of_stations=None, description=None,
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
-                 historical_code=None):
+                 historical_code=None, data_availability=None):
         """
         :type code: str
         :param code: The SEED network code.
@@ -64,6 +67,9 @@ class Network(BaseNode):
         :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
+        :type data_availability: :class:`~obspy.station.util.DataAvailability`
+        :param data_availability: Information about time series availability
+            for the network.
         """
         self.stations = stations or []
         self.total_number_of_stations = total_number_of_stations
@@ -73,7 +79,33 @@ class Network(BaseNode):
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
-            historical_code=historical_code)
+            historical_code=historical_code,
+            data_availability=data_availability)
+
+    @property
+    def total_number_of_stations(self):
+        return self._total_number_of_stations
+
+    @total_number_of_stations.setter
+    def total_number_of_stations(self, value):
+        if value is not None and value < 0:
+            msg = "total_number_of_stations cannot be negative."
+            raise ValueError(msg)
+        self._total_number_of_stations = value
+
+    @property
+    def selected_number_of_stations(self):
+        return self._selected_number_of_stations
+
+    @selected_number_of_stations.setter
+    def selected_number_of_stations(self, value):
+        if value is not None and value < 0:
+            msg = "selected_number_of_stations cannot be negative."
+            raise ValueError(msg)
+        self._selected_number_of_stations = value
+
+    def __len__(self):
+        return len(self.stations)
 
     def __getitem__(self, index):
         return self.stations[index]
@@ -100,12 +132,15 @@ class Network(BaseNode):
         contents = self.get_contents()
         ret += "\tContains:\n"
         ret += "\t\tStations (%i):\n" % len(contents["stations"])
-        ret += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
+        ret += "\n".join([
+            "\t\t\t%s" % _i
+            for _i in _unified_content_strings(contents["stations"])])
         ret += "\n"
         ret += "\t\tChannels (%i):\n" % len(contents["channels"])
-        ret += "\n".join(textwrap.wrap(", ".join(
-            contents["channels"]), initial_indent="\t\t\t",
-            subsequent_indent="\t\t\t", expand_tabs=False))
+        ret += "\n".join(_textwrap(", ".join(
+            _unified_content_strings(contents["channels"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         return ret
 
     def _repr_pretty_(self, p, cycle):
@@ -291,8 +326,14 @@ class Network(BaseNode):
         :func:`~fnmatch.fnmatch`).
 
         :type station: str
+        :param station: Potentially wildcarded station code. If not given,
+            all station codes will be accepted.
         :type location: str
+        :param location: Potentially wildcarded location code. If not given,
+            all location codes will be accepted.
         :type channel: str
+        :param channel: Potentially wildcarded channel code. If not given,
+            all channel codes will be accepted.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only include stations/channels active at given point in
             time.
@@ -306,9 +347,11 @@ class Network(BaseNode):
             not be shown).
         :type sampling_rate: float
         :type keep_empty: bool
-        :param keep_empty: If set to `True`, networks/stations that match
-            themselves but have no matching child elements (stations/channels)
-            will be included in the result.
+        :param keep_empty: If set to `True`, stations that match
+            themselves but have no matching child elements (channels)
+            will be included in the result. This flag has no effect for
+            initially empty stations which will always be retained if they
+            are matched by the other parameters.
         """
         stations = []
         for sta in self.stations:
@@ -322,11 +365,16 @@ class Network(BaseNode):
                                      endtime=endtime):
                     continue
 
+            has_channels = bool(sta.channels)
+
             sta_ = sta.select(
                 location=location, channel=channel, time=time,
                 starttime=starttime, endtime=endtime,
                 sampling_rate=sampling_rate)
-            if not keep_empty and not sta_.channels:
+
+            # If the station previously had channels but no longer has any
+            # and keep_empty is False: Skip the station.
+            if has_channels and not keep_empty and not sta_.channels:
                 continue
             stations.append(sta_)
         net = copy.copy(self)
@@ -335,8 +383,8 @@ class Network(BaseNode):
 
     def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
-             size=15**2, label=True, color='blue', time=None, show=True,
-             outfile=None, method=None, **kwargs):  # @UnusedVariable
+             size=15**2, label=True, color='#b15928', time=None, show=True,
+             outfile=None, method=None, fig=None, **kwargs):  # @UnusedVariable
         """
         Creates a preview map of all stations in current network object.
 
@@ -371,7 +419,8 @@ class Network(BaseNode):
         :param label: Whether to label stations with "network.station" or not.
         :type color: str
         :param color: Face color of marker symbol (see
-            :func:`matplotlib.pyplot.scatter`).
+            :func:`matplotlib.pyplot.scatter`). Defaults to the first color
+            from the single-element "Paired" color map.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only plot stations available at given point in time.
         :type show: bool
@@ -392,6 +441,16 @@ class Network(BaseNode):
             * ``None`` to use the best available library
 
             Defaults to ``None``.
+        :type fig: :class:`matplotlib.figure.Figure`
+        :param fig: Figure instance to reuse, returned from a previous
+            inventory/catalog plot call with `method=basemap`.
+            If a previous basemap plot is reused, any kwargs regarding the
+            basemap plot setup will be ignored (i.e.  `projection`,
+            `resolution`, `continent_fill_color`, `water_fill_color`). Note
+            that multiple plots using colorbars likely are problematic, but
+            e.g. one station plot (without colorbar) and one event plot (with
+            colorbar) together should work well.
+        :returns: Figure instance with the plot.
 
         .. rubric:: Example
 
@@ -547,10 +606,19 @@ class Network(BaseNode):
 
         for sta in matching.stations:
             for cha in sta.channels:
-                cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
-                         label=".".join((self.code, sta.code,
-                                         cha.location_code, cha.code)),
-                         unwrap_phase=unwrap_phase, show=False, outfile=None)
+                try:
+                    cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
+                             label=".".join((self.code, sta.code,
+                                             cha.location_code, cha.code)),
+                             unwrap_phase=unwrap_phase, show=False,
+                             outfile=None)
+                except ZeroSamplingRate:
+                    msg = ("Skipping plot of channel with zero "
+                           "sampling rate:\n%s")
+                    warnings.warn(msg % str(cha), UserWarning)
+                except ObsPyException as e:
+                    msg = "Skipping plot of channel (%s):\n%s"
+                    warnings.warn(msg % (str(e), str(cha)), UserWarning)
 
         # final adjustments to plot if we created the figure in here
         if not axes:

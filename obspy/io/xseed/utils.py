@@ -6,13 +6,14 @@ Various additional utilities for ObsPy xseed.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
+import re
 import sys
 
 from obspy import UTCDateTime
@@ -64,7 +65,7 @@ def datetime_2_string(dt, compact=False):
         raise Exception("Invalid datetime %s: %s" % (type(dt), str(dt)))
 
 
-def compare_SEED(seed1, seed2):
+def compare_seed(seed1, seed2):
     """
     Compares two SEED files.
 
@@ -147,7 +148,7 @@ def lookup_code(blockettes, blkt_number, field_name, lookup_code,
     return None
 
 
-def format_RESP(number, digits=4):
+def format_resp(number, digits=4):
     """
     Formats a number according to the RESP format.
     """
@@ -219,3 +220,38 @@ def unique_list(seq):
     for e in seq:
         keys[e] = 1
     return list(keys.keys())
+
+
+def is_resp(filename):
+    """
+    Check if a file at the specified location appears to be a RESP file.
+
+    :type filename: str
+    :param filename: Path/filename of a local file to be checked.
+    :rtype: bool
+    :returns: `True` if file seems to be a RESP file, `False` otherwise.
+    """
+    try:
+        with open(filename, "rb") as fh:
+            try:
+                # lookup the first line that does not start with a hash sign
+                while True:
+                    # use splitlines to correctly detect e.g. mac formatted
+                    # files on Linux
+                    lines = fh.readline().splitlines()
+                    # end of file without finding an appropriate line
+                    if not lines:
+                        return False
+                    # check each line after splitting them
+                    for line in lines:
+                        if line.decode().startswith("#"):
+                            continue
+                        # do the regex check on the first non-comment line
+                        if re.match(r'[bB]0[1-6][0-9]F[0-9]{2} ',
+                                    line.decode()):
+                            return True
+                        return False
+            except UnicodeDecodeError:
+                return False
+    except IOError:
+        return False

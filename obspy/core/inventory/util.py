@@ -7,7 +7,7 @@ Utility objects.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA
 
 import copy
 import re
+from textwrap import TextWrapper
 
 from obspy import UTCDateTime
 from obspy.core.util.base import ComparingObject
@@ -32,7 +33,7 @@ class BaseNode(ComparingObject):
     """
     def __init__(self, code, description=None, comments=None, start_date=None,
                  end_date=None, restricted_status=None, alternate_code=None,
-                 historical_code=None):
+                 historical_code=None, data_availability=None):
         """
         :type code: str
         :param code: The SEED network, station, or channel code
@@ -53,6 +54,9 @@ class BaseNode(ComparingObject):
         :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
+        :type data_availability: :class:`~obspy.station.util.DataAvailability`
+        :param data_availability: Information about time series availability
+            for the network/station/channel.
         """
         self.code = code
         self.comments = comments or []
@@ -62,6 +66,7 @@ class BaseNode(ComparingObject):
         self.restricted_status = restricted_status
         self.alternate_code = alternate_code
         self.historical_code = historical_code
+        self.data_availability = data_availability
 
     @property
     def code(self):
@@ -275,6 +280,26 @@ class Equipment(ComparingObject):
                 return
             self._removal_date = UTCDateTime(value)
 
+    def __str__(self):
+        ret = ("Equipment:\n"
+               "\tType: {type}\n"
+               "\tDescription: {description}\n"
+               "\tManufacturer: {manufacturer}\n"
+               "\tVendor: {vendor}\n"
+               "\tModel: {model}\n"
+               "\tSerial number: {serial_number}\n"
+               "\tInstallation date: {installation_date}\n"
+               "\tRemoval date: {removal_date}\n"
+               "\tResource id: {resource_id}\n"
+               "\tCalibration Dates:\n")
+        for calib_date in self.calibration_dates:
+            ret += "\t\t%s\n" % calib_date
+        ret = ret.format(**self.__dict__)
+        return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 class Operator(ComparingObject):
     """
@@ -327,6 +352,8 @@ class Person(ComparingObject):
         to multiple agencies and have multiple email addresses and phone
         numbers.
     """
+    email_pattern = re.compile("[\w\.\-_]+@[\w\.\-_]+")
+
     def __init__(self, names=None, agencies=None, emails=None, phones=None):
         """
         :type names: list of str, optional
@@ -374,6 +401,11 @@ class Person(ComparingObject):
         if not hasattr(values, "__iter__"):
             msg = "emails needs to be iterable, e.g. a list."
             raise ValueError(msg)
+        for value in values:
+            if re.match(self.email_pattern, value) is None:
+                msg = ("emails needs to match the pattern "
+                       "'[\w\.\-_]+@[\w\.\-_]+'")
+                raise ValueError(msg)
         self._emails = values
 
     @property
@@ -587,8 +619,8 @@ class Latitude(FloatWithUncertaintiesFixedUnit):
     :type datum: str
     :param datum: Datum for latitude coordinate
     """
-    _minimum = -180
-    _maximum = 180
+    _minimum = -90
+    _maximum = 90
     _unit = "DEGREES"
 
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
@@ -738,6 +770,89 @@ class Angle(FloatWithUncertaintiesFixedUnit):
     _minimum = -360
     _maximum = 360
     unit = "DEGREES"
+
+
+def _unified_content_strings(contents):
+    contents_unique = sorted(set(contents), key=_seed_id_keyfunction)
+    contents_counts = [
+        (item, contents.count(item)) for item in contents_unique]
+    items = [item if count == 1 else "{} ({}x)".format(item, count)
+             for item, count in contents_counts]
+    return items
+
+
+# make TextWrapper only split on colons, so that we avoid splitting in between
+# e.g. network code and network code occurence count (can be controlled with
+# class attributes).
+# Also avoid lines starting with ", " (need to patch the class for this)
+class InventoryTextWrapper(TextWrapper):
+    wordsep_re = re.compile(r'(, )')
+    wordsep_simple_re = re.compile(r'(, )')
+
+    def _wrap_chunks(self, *args, **kwargs):
+        # the following doesn't work somehow (likely because of future??)
+        # lines = super(InventoryTextWrapper, self)._wrap_chunks(
+        #     *args, **kwargs)
+        lines = TextWrapper._wrap_chunks(self, *args, **kwargs)
+        lines = [re.sub(r'([\b\s]+), (.*)', r'\1\2', line, count=1)
+                 for line in lines]
+        return lines
+
+
+def _textwrap(text, *args, **kwargs):
+    return InventoryTextWrapper(*args, **kwargs).wrap(text)
+
+
+def _seed_id_keyfunction(x):
+    """
+    Keyfunction to use in sorting two (partial) SEED IDs
+
+    Assumes that the last (or only) "."-separated part is a channel code.
+    Assumes the last character is a the component code and sorts it
+    "Z"-"N"-"E"-others_lexical.
+    """
+    # for comparison we build a list of 5 SEED code pieces:
+    # [network, station, location, band+instrument, component]
+    # with partial codes (i.e. not 4 fields after splitting at dots),
+    # we go with the following assumptions (these seem a bit random, but that's
+    # what can be encountered in string representations of the Inventory object
+    # hierarchy):
+    #  - no dot means network code only (e.g. "IU")
+    #  - one dot means network.station code only (e.g. "IU.ANMO")
+    #  - two dots means station.location.channel code only (e.g. "ANMO.10.BHZ")
+    #  - three dots: full SEED ID (e.g. "IU.ANMO.10.BHZ")
+    #  - more dots: sort after any of the previous, plain lexical sort
+    # if no "." in the string: assume it's a network code
+    number_of_dots = x.count(".")
+    x = x.upper()
+    if number_of_dots == 0:
+        x = [x] + [""] * 4
+    elif number_of_dots == 1:
+        x = x.split(".") + [""] * 3
+    elif number_of_dots in (2, 3):
+        x = x.split(".")
+        if number_of_dots == 2:
+            x = [""] + x
+        # split channel code into band+instrument code and component code
+        x = x[:-1] + [x[-1][:-1], x[-1] and x[-1][-1] or '']
+        # special comparison for component code, convert "ZNE" to integers
+        # which compare less than any character
+        comp = "ZNE".find(x[-1])
+        # last item is component code, either the original 1-char string, or an
+        # int from 0-2 if any of "ZNE". Python3 does not allow comparison of
+        # int and string anymore (Python 2 always compares ints smaller than
+        # any string), so we need to work around this by making this last item
+        # a tuple with first item False for ints and True for strings.
+        if comp >= 0:
+            x[-1] = (False, comp)
+        else:
+            x[-1] = (True, x[-1])
+    # all other cases, just leave the upper case string, it will compare
+    # greater than any of the split lists
+    else:
+        pass
+
+    return x
 
 
 if __name__ == '__main__':

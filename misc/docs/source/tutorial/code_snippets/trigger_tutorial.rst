@@ -4,7 +4,7 @@ Trigger/Picker Tutorial
 
 This is a small tutorial that started as a practical for the UNESCO short
 course on triggering. Test data used in this tutorial can be downloaded here:
-`trigger_data.zip <http://examples.obspy.org/trigger_data.zip>`_.
+`trigger_data.zip <https://examples.obspy.org/trigger_data.zip>`_.
 
 The triggers are implemented as described in [Withers1998]_. Information on
 finding the right trigger parameters for STA/LTA type triggers can be found in
@@ -24,7 +24,7 @@ The data files are read into an ObsPy :class:`~obspy.core.trace.Trace` object
 using the :func:`~obspy.core.stream.read()` function.
 
     >>> from obspy.core import read
-    >>> st = read("http://examples.obspy.org/ev0_6.a01.gse2")
+    >>> st = read("https://examples.obspy.org/ev0_6.a01.gse2")
     >>> st = st.select(component="Z")
     >>> tr = st[0]
 
@@ -77,13 +77,51 @@ trigger routines defined in :mod:`obspy.signal.trigger`:
 .. autosummary::
     :toctree: ../../packages/autogen
 
-    ~obspy.signal.trigger.recursive_STALTA
-    ~obspy.signal.trigger.carl_STA_trig
+    ~obspy.signal.trigger.recursive_sta_lta
+    ~obspy.signal.trigger.carl_sta_trig
     ~obspy.signal.trigger.classic_STALTA
-    ~obspy.signal.trigger.delayed_STALTA
+    ~obspy.signal.trigger.delayed_sta_lta
     ~obspy.signal.trigger.z_detect
     ~obspy.signal.trigger.pk_baer
     ~obspy.signal.trigger.ar_pick
+
+Help for each function is available  HTML formatted or in the usual Python manner:
+
+    >>> from obspy.signal.trigger import classic_sta_lta
+    >>> help(classicSTALTA)  # doctest: +ELLIPSIS
+    Help on function classicSTALTA in module obspy.signal.trigger...
+
+The triggering itself mainly consists of the following two steps:
+
+* Calculating the characteristic function
+* Setting picks based on values of the characteristic function
+
+   * ~obspy.signal.trigger.recursive_sta_lta
+   * ~obspy.signal.trigger.carl_sta_trig
+   * ~obspy.signal.trigger.classic_STALTA
+   * ~obspy.signal.trigger.delayed_sta_lta
+   * ~obspy.signal.trigger.z_detect
+   * ~obspy.signal.trigger.pk_baer
+   * ~obspy.signal.trigger.ar_pick
+
+Help for each function is available  HTML formatted or in the usual Python manner:
+
+    >>> from obspy.signal.trigger import classic_sta_lta
+    >>> help(classicSTALTA)  # doctest: +ELLIPSIS
+    Help on function classicSTALTA in module obspy.signal.trigger...
+
+The triggering itself mainly consists of the following two steps:
+
+* Calculating the characteristic function
+* Setting picks based on values of the characteristic function
+
+   * ~obspy.signal.trigger.recursive_sta_lta
+   * ~obspy.signal.trigger.carl_sta_trig
+   * ~obspy.signal.trigger.classic_STALTA
+   * ~obspy.signal.trigger.delayed_sta_lta
+   * ~obspy.signal.trigger.z_detect
+   * ~obspy.signal.trigger.pk_baer
+   * ~obspy.signal.trigger.ar_pick
 
 Help for each function is available  HTML formatted or in the usual Python manner:
 
@@ -105,13 +143,17 @@ are the following:
 
     >>> from obspy.core import read
     >>> from obspy.signal.trigger import plotTrigger
-    >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
+    >>> trace = read("https://examples.obspy.org/ev0_6.a01.gse2")[0]
     >>> df = trace.stats.sampling_rate
 
 Classic Sta Lta
 ===============
 
-    >>> from obspy.signal.trigger import classic_STALTA
+    >>> from obspy.signal.trigger import classic_sta_lta
+    >>> cft = classic_STALTA(trace.data, int(5 * df), int(10 * df))
+    >>> plot_trigger(trace, cft, 1.5, 0.5)
+
+
     >>> cft = classic_STALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 1.5, 0.5)
 
@@ -130,6 +172,10 @@ Recursive Sta Lta
 =================
 
     >>> from obspy.signal.trigger import recursive_STALTA
+    >>> cft = recursive_sta_lta(trace.data, int(5 * df), int(10 * df))
+    >>> plot_trigger(trace, cft, 1.2, 0.5)
+
+
     >>> cft = recursive_STALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 1.2, 0.5)
 
@@ -139,6 +185,10 @@ Carl-Sta-Trig
 =============
 
     >>> from obspy.signal.trigger import carl_STA_trig
+    >>> cft = carl_sta_trig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
+    >>> plot_trigger(trace, cft, 20.0, -20.0)
+
+
     >>> cft = carl_STA_trig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
     >>> plot_trigger(trace, cft, 20.0, -20.0)
 
@@ -148,6 +198,10 @@ Delayed Sta Lta
 ===============
 
     >>> from obspy.signal.trigger import delayed_STALTA
+    >>> cft = delayed_sta_lta(trace.data, int(5 * df), int(10 * df))
+    >>> plot_trigger(trace, cft, 5, 10)
+
+
     >>> cft = delayed_STALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 5, 10)
 
@@ -175,7 +229,7 @@ example is available from our web server:
     ...          "BW.UH3..SHZ.D.2010.147.cut.slist.gz",
     ...          "BW.UH4..SHZ.D.2010.147.cut.slist.gz"]
     >>> for filename in files:
-    ...     st += read("http://examples.obspy.org/" + filename)
+    ...     st += read("https://examples.obspy.org/" + filename)
 
 After applying a bandpass filter we run the coincidence triggering on all data.
 In the example a recursive STA/LTA is used. The trigger parameters are set to
@@ -277,7 +331,7 @@ network trigger on vertical components only.
     ...          "BW.UH3..SHE.D.2010.147.cut.slist.gz",
     ...          "BW.UH4..SHZ.D.2010.147.cut.slist.gz"]
     >>> for filename in files:
-    ...     st += read("http://examples.obspy.org/" + filename)
+    ...     st += read("https://examples.obspy.org/" + filename)
     >>> st.filter('bandpass', freqmin=10, freqmax=20)  # optional prefiltering
 
 Here we set up a dictionary with template events for one single station. The
@@ -361,7 +415,7 @@ samples.
 
     >>> from obspy.core import read
     >>> from obspy.signal.trigger import pk_baer
-    >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
+    >>> trace = read("https://examples.obspy.org/ev0_6.a01.gse2")[0]
     >>> df = trace.stats.sampling_rate
     >>> p_pick, phase_info = pk_baer(trace.data, df,
     ...                             20, 60, 7.0, 12.0, 100, 100)
@@ -382,9 +436,9 @@ For :func:`~obspy.signal.trigger.ar_pick`, input and output are in seconds.
 
     >>> from obspy.core import read
     >>> from obspy.signal.trigger import ar_pick
-    >>> tr1 = read('http://examples.obspy.org/loc_RJOB20050801145719850.z.gse2')[0]
-    >>> tr2 = read('http://examples.obspy.org/loc_RJOB20050801145719850.n.gse2')[0]
-    >>> tr3 = read('http://examples.obspy.org/loc_RJOB20050801145719850.e.gse2')[0]
+    >>> tr1 = read('https://examples.obspy.org/loc_RJOB20050801145719850.z.gse2')[0]
+    >>> tr2 = read('https://examples.obspy.org/loc_RJOB20050801145719850.n.gse2')[0]
+    >>> tr3 = read('https://examples.obspy.org/loc_RJOB20050801145719850.e.gse2')[0]
     >>> df = tr1.stats.sampling_rate
     >>> p_pick, s_pick = ar_pick(tr1.data, tr2.data, tr3.data, df,
     ...                          1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2)

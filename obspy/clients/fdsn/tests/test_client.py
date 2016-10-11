@@ -7,7 +7,7 @@ The obspy.clients.fdsn.client test suite.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -21,13 +21,15 @@ import unittest
 import warnings
 from difflib import Differ
 
-from obspy import UTCDateTime, read, read_inventory, read_events
+from obspy import UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
-from obspy.clients.fdsn.header import DEFAULT_USER_AGENT, FDSNException
+from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
+                                       FDSNException, FDSNRedirectException)
 from obspy.core.inventory import Response
+from obspy.geodetics import locations2degrees
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
@@ -82,6 +84,51 @@ class ClientTestCase(unittest.TestCase):
         cls.client_auth = \
             Client(base_url="IRIS", user_agent=USER_AGENT,
                    user="nobody@iris.edu", password="anonymous")
+
+    def test_validate_base_url(self):
+        """
+        Tests the _validate_base_url() method.
+        """
+
+        test_urls_valid = list(URL_MAPPINGS.values())
+        test_urls_valid += [
+            "http://arclink.ethz.ch",
+            "http://example.org",
+            "https://webservices.rm.ingv.it",
+            "http://localhost:8080/test/",
+            "http://93.63.40.85/",
+            "http://[::1]:80/test/",
+            "http://[2001:db8:85a3:8d3:1319:8a2e:370:7348]",
+            "http://[2001:db8::ff00:42:8329]",
+            "http://[::ffff:192.168.89.9]",
+            "http://jane",
+            "http://localhost"
+            ]
+
+        test_urls_fails = [
+            "http://",
+            "http://127.0.1",
+            "http://127.=.0.1",
+            "http://127.0.0.0.1",
+            ]
+        test_urls_fails += [
+            "http://[]",
+            "http://[1]",
+            "http://[1:2]",
+            "http://[1::2::3]",
+            "http://[1::2:3::4]",
+            "http://[1:2:2:4:5:6:7]",
+            ]
+
+        for url in test_urls_valid:
+            self.assertEqual(
+                self.client._validate_base_url(url),
+                True)
+
+        for url in test_urls_fails:
+            self.assertEqual(
+                self.client._validate_base_url(url),
+                False)
 
     def test_url_building(self):
         """
@@ -184,6 +231,37 @@ class ClientTestCase(unittest.TestCase):
             "http://service.iris.edu/fdsnws/station/1/query?"
             "location=AA%2CBB%2C--")
 
+        # The location parameter is also passed through the
+        # _create_url_from_parameters() method and thus has to survive it!
+        # This guards against a regression where all empty location codes
+        # where removed by this function!
+        for service in ["station", "dataselect"]:
+            for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
+                        u"", u" ", u"  ", u"--"]:
+                self.assertIn(
+                    "location=--",
+                    self.client._create_url_from_parameters(
+                        service, [],
+                        {"location": loc, "starttime": 0, "endtime": 1}))
+
+        # Also check the full call with a mock test.
+        for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
+                    u"", u" ", u"  ", u"--"]:
+            with mock.patch("obspy.clients.fdsn.Client._download") as p:
+                try:
+                    self.client.get_stations(0, 0, location=loc)
+                except:
+                    pass
+            self.assertEqual(p.call_count, 1)
+            self.assertIn("location=--", p.call_args[0][0])
+            with mock.patch("obspy.clients.fdsn.Client._download") as p:
+                try:
+                    self.client.get_waveforms(1, 2, loc, 4, 0, 0)
+                except:
+                    pass
+            self.assertEqual(p.call_count, 1)
+            self.assertIn("location=--", p.call_args[0][0])
+
     def test_url_building_with_auth(self):
         """
         Tests the Client._build_url() method with authentication.
@@ -225,7 +303,7 @@ class ClientTestCase(unittest.TestCase):
                  "endbefore", "endafter", "network", "station", "location",
                  "channel", "minlatitude", "maxlatitude", "minlongitude",
                  "maxlongitude", "latitude", "longitude", "minradius",
-                 "maxradius", "level", "includerestricted",
+                 "maxradius", "level", "includerestricted", "format",
                  "includeavailability", "updatedafter", "matchtimeseries")))
         self.assertEqual(
             set(client.services["event"].keys()),
@@ -233,7 +311,7 @@ class ClientTestCase(unittest.TestCase):
                  "minlongitude", "maxlongitude", "latitude", "longitude",
                  "maxradius", "minradius", "mindepth", "maxdepth",
                  "minmagnitude", "maxmagnitude",
-                 "magnitudetype",
+                 "magnitudetype", "format",
                  "catalog", "contributor", "limit", "offset", "orderby",
                  "updatedafter", "includeallorigins", "includeallmagnitudes",
                  "includearrivals", "eventid",
@@ -252,7 +330,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(minradius["type"], float)
         self.assertEqual(minradius["options"], [])
 
-    def test_IRIS_event_catalog_availability(self):
+    def test_iris_event_catalog_availability(self):
         """
         Tests the parsing of the available event catalogs.
         """
@@ -260,7 +338,7 @@ class ClientTestCase(unittest.TestCase):
                          set(("ANF", "GCMT", "TEST", "ISC", "UofW",
                               "NEIC PDE")))
 
-    def test_IRIS_event_contributors_availability(self):
+    def test_iris_event_contributors_availability(self):
         """
         Tests the parsing of the available event contributors.
         """
@@ -271,7 +349,7 @@ class ClientTestCase(unittest.TestCase):
                               "UNKNOWN", "NEIC PDE-M", "NEIC COMCAT",
                               "NEIC PDE-Q")))
 
-    def test_simple_XML_parser(self):
+    def test_simple_xml_parser(self):
         """
         Tests the simple XML parsing helper function.
         """
@@ -290,96 +368,124 @@ class ClientTestCase(unittest.TestCase):
                                                      "ISC", "UofW",
                                                      "NEIC PDE"))})
 
-    def test_IRIS_example_queries_event(self):
+    def test_iris_example_queries_event(self):
         """
         Tests the (sometimes modified) example queries given on the IRIS
         web page.
+
+        Used to be tested against files but that was not maintainable. It
+        now tests if the queries return what was asked for.
         """
         client = self.client
 
-        queries = [
-            dict(eventid=609301),
-            dict(starttime=UTCDateTime("2001-01-07T01:00:00"),
-                 endtime=UTCDateTime("2001-01-07T01:05:00"),
-                 catalog="ISC"),
-            dict(starttime=UTCDateTime("2001-01-07T14:00:00"),
-                 endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
-                 maxlatitude=40, minlongitude=-170, maxlongitude=170,
-                 includeallmagnitudes=True, minmagnitude=4,
-                 orderby="magnitude"),
-        ]
-        result_files = ["events_by_eventid.xml",
-                        "events_by_time.xml",
-                        "events_by_misc.xml",
-                        ]
-        for query, filename in zip(queries, result_files):
-            file_ = os.path.join(self.datapath, filename)
-            # query["filename"] = file_
-            got = client.get_events(**query)
-            expected = read_events(file_)
-            self.assertEqual(got, expected, failmsg(got, expected))
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_events(filename=tf.name, **query)
-                with open(tf.name, 'rb') as fh:
-                    got = fh.read()
-                with open(file_, 'rb') as fh:
-                    expected = fh.read()
-            self.assertEqual(got, expected,
-                             filename + '\n' + failmsg(got, expected))
+        # Event id query.
+        cat = client.get_events(eventid=609301)
+        self.assertEqual(len(cat), 1)
+        self.assertIn("609301", cat[0].resource_id.id)
 
-    def test_IRIS_example_queries_station(self):
+        # Temporal query.
+        cat = client.get_events(
+            starttime=UTCDateTime("2001-01-07T01:00:00"),
+            endtime=UTCDateTime("2001-01-07T01:05:00"), catalog="ISC")
+        self.assertGreater(len(cat), 0)
+        for event in cat:
+            self.assertEqual(event.origins[0].extra.catalog.value, "ISC")
+            self.assertGreater(event.origins[0].time,
+                               UTCDateTime("2001-01-07T01:00:00"))
+            self.assertGreater(UTCDateTime("2001-01-07T01:05:00"),
+                               event.origins[0].time)
+
+        # Misc query.
+        cat = client.get_events(
+            starttime=UTCDateTime("2001-01-07T14:00:00"),
+            endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
+            maxlatitude=40, minlongitude=-170, maxlongitude=170,
+            includeallmagnitudes=True, minmagnitude=4, orderby="magnitude")
+        self.assertGreater(len(cat), 0)
+        for event in cat:
+            self.assertGreater(event.origins[0].time,
+                               UTCDateTime("2001-01-07T14:00:00"))
+            self.assertGreater(UTCDateTime("2001-01-08T00:00:00"),
+                               event.origins[0].time)
+            self.assertGreater(event.origins[0].latitude, 14.9)
+            self.assertGreater(40.1, event.origins[0].latitude)
+            self.assertGreater(event.origins[0].latitude, -170.1)
+            self.assertGreater(170.1, event.origins[0].latitude)
+            self.assertGreater(event.magnitudes[0].mag, 3.999)
+
+    def test_iris_example_queries_station(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
+
+        This test used to download files but that is almost impossible to
+        keep up to date - thus it is now a bit smarter and tests the
+        returned inventory in different ways.
         """
         client = self.client
 
-        queries = [
-            dict(latitude=-56.1, longitude=-26.7, maxradius=15),
-            dict(startafter=UTCDateTime("2003-01-07"),
-                 endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
-                 maxlatitude=55, minlongitude=170, maxlongitude=-170),
-            dict(starttime=UTCDateTime("2000-01-01"),
-                 endtime=UTCDateTime("2001-01-01"), net="IU",
-                 sta="ANMO"),
-            dict(starttime=UTCDateTime("2000-01-01"),
-                 endtime=UTCDateTime("2002-01-01"), network="IU", sta="A*",
-                 location="00"),
-        ]
-        result_files = ["stations_by_latlon.xml",
-                        "stations_by_misc.xml",
-                        "stations_by_station.xml",
-                        "stations_by_station_wildcard.xml",
-                        ]
-        for query, filename in zip(queries, result_files):
-            file_ = os.path.join(self.datapath, filename)
-            # query["filename"] = file_
-            got = client.get_stations(**query)
-            expected = read_inventory(file_, format="STATIONXML")
-            # delete both creating times and modules before comparing objects.
-            got.created = None
-            expected.created = None
-            got.module = None
-            expected.module = None
+        # Radial query.
+        inv = client.get_stations(latitude=-56.1, longitude=-26.7,
+                                  maxradius=15)
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                dist = locations2degrees(sta.latitude, sta.longitude,
+                                         -56.1, -26.7)
+                # small tolerance for WGS84.
+                self.assertGreater(15.1, dist, "%s.%s" % (net.code,
+                                                          sta.code))
 
-            # XXX Py3k: the objects differ in direct comparison, however,
-            # the strings of them are equal
-            self.assertEqual(str(got), str(expected), failmsg(got, expected))
+        # Misc query.
+        inv = client.get_stations(
+            startafter=UTCDateTime("2003-01-07"),
+            endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
+            maxlatitude=55, minlongitude=170, maxlongitude=-170, network="IM")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                msg = "%s.%s" % (net.code, sta.code)
+                self.assertGreater(sta.start_date, UTCDateTime("2003-01-07"),
+                                   msg)
+                if sta.end_date is not None:
+                    self.assertGreater(UTCDateTime("2011-02-07"), sta.end_date,
+                                       msg)
+                self.assertGreater(sta.latitude, 14.9, msg)
+                self.assertGreater(55.1, sta.latitude, msg)
+                self.assertFalse(-170.1 <= sta.longitude <= 170.1, msg)
+                self.assertEqual(net.code, "IM", msg)
 
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_stations(filename=tf.name, **query)
-                with open(tf.name, 'rb') as fh:
-                    got = fh.read()
-                with open(file_, 'rb') as fh:
-                    expected = fh.read()
-            ignore_lines = ['<Created>', '<TotalNumberStations>',
-                            '<Module>', '<ModuleURI>']
-            msg = failmsg(got.decode(), expected.decode(),
-                          ignore_lines=ignore_lines)
-            self.assertEqual(msg, "", filename + '\n' + msg)
+        # Simple query
+        inv = client.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2001-01-01"), net="IU", sta="ANMO")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                self.assertGreater(UTCDateTime("2001-01-01"), sta.start_date)
+                if sta.end_date is not None:
+                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
+                self.assertEqual(net.code, "IU")
+                self.assertEqual(sta.code, "ANMO")
 
-    def test_IRIS_example_queries_dataselect(self):
+        # Station wildcard query.
+        inv = client.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2002-01-01"), network="IU", sta="A*",
+            location="00")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                self.assertGreater(UTCDateTime("2002-01-01"), sta.start_date)
+                if sta.end_date is not None:
+                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
+                self.assertEqual(net.code, "IU")
+                self.assertTrue(sta.code.startswith("A"))
+
+    def test_iris_example_queries_dataselect(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
         """
@@ -438,7 +544,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(FDSNException, self.client.get_stations,
                           network="IU", net="IU")
 
-    def test_help_function_with_IRIS(self):
+    def test_help_function_with_iris(self):
         """
         Tests the help function with the IRIS example.
 
@@ -845,9 +951,9 @@ class ClientTestCase(unittest.TestCase):
         download_url_mock.side_effect = custom_side_effects
 
         # Some custom urls
-        base_url_event = "http://other_url.com/beta/event_service/11"
-        base_url_station = "http://some_url.com/beta2/station/7"
-        base_url_ds = "http://new.com/beta3/dataselect/8"
+        base_url_event = "http://example.com/beta/event_service/11"
+        base_url_station = "http://example.org/beta2/station/7"
+        base_url_ds = "http://example.edu/beta3/dataselect/8"
 
         # An exception will be raised if not actual WADLs are returned.
         # Catch warnings to avoid them being raised for the tests.
@@ -895,6 +1001,139 @@ class ClientTestCase(unittest.TestCase):
             pass
         self.assertTrue(
             base_url_event in download_url_mock.call_args_list[0][0][0])
+
+    def test_redirection(self):
+        """
+        Tests the redirection of GET and POST requests. We redirect
+        everything if not authentication is used.
+
+        IRIS runs three services to test it:
+            http://ds.iris.edu/files/redirect/307/station/1
+            http://ds.iris.edu/files/redirect/307/dataselect/1
+            http://ds.iris.edu/files/redirect/307/event/1
+        """
+        c = Client("IRIS", service_mappings={
+            "station":
+                "http://ds.iris.edu/files/redirect/307/station/1",
+            "dataselect":
+                "http://ds.iris.edu/files/redirect/307/dataselect/1",
+            "event":
+                "http://ds.iris.edu/files/redirect/307/event/1"},
+            user_agent=USER_AGENT)
+
+        st = c.get_waveforms(
+            network="IU", station="ANMO", location="00", channel="BHZ",
+            starttime=UTCDateTime("2010-02-27T06:30:00.000"),
+            endtime=UTCDateTime("2010-02-27T06:30:01.000"))
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(st)))
+
+        inv = c.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2001-01-01"),
+            network="IU", station="ANMO", level="network")
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(inv.networks)))
+
+        cat = c.get_events(starttime=UTCDateTime("2001-01-07T01:00:00"),
+                           endtime=UTCDateTime("2001-01-07T01:05:00"),
+                           catalog="ISC")
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(cat)))
+
+        # Also test the bulk requests which are done using POST requests.
+        bulk = (("TA", "A25A", "", "BHZ",
+                 UTCDateTime("2010-03-25T00:00:00"),
+                 UTCDateTime("2010-03-25T00:00:01")),
+                ("TA", "A25A", "", "BHE",
+                 UTCDateTime("2010-03-25T00:00:00"),
+                 UTCDateTime("2010-03-25T00:00:01")))
+        st = c.get_waveforms_bulk(bulk, quality="B", longestonly=False)
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(st)))
+
+        starttime = UTCDateTime(1990, 1, 1)
+        endtime = UTCDateTime(1990, 1, 1) + 10
+        bulk = [
+            ["IU", "ANMO", "", "BHE", starttime, endtime],
+            ["IU", "CCM", "", "BHZ", starttime, endtime],
+        ]
+        inv = c.get_stations_bulk(bulk, level="network")
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(inv.networks)))
+
+    def test_redirection_auth(self):
+        """
+        Tests the redirection of GET and POST requests using authentication.
+
+        By default these should not redirect and an exception is raised.
+        """
+        # Clear the cache.
+        Client._Client__service_discovery_cache.clear()
+
+        # The error will already be raised during the initialization in most
+        # cases.
+        self.assertRaises(
+            FDSNRedirectException,
+            Client, "IRIS", service_mappings={
+                "station": "http://ds.iris.edu/files/redirect/307/station/1",
+                "dataselect":
+                    "http://ds.iris.edu/files/redirect/307/dataselect/1",
+                "event": "http://ds.iris.edu/files/redirect/307/event/1"},
+            user="nobody@iris.edu", password="anonymous",
+            user_agent=USER_AGENT)
+
+        # The force_redirect flag overwrites that behaviour.
+        c_auth = Client("IRIS", service_mappings={
+            "station":
+                "http://ds.iris.edu/files/redirect/307/station/1",
+            "dataselect":
+                "http://ds.iris.edu/files/redirect/307/dataselect/1",
+            "event":
+                "http://ds.iris.edu/files/redirect/307/event/1"},
+            user="nobody@iris.edu", password="anonymous",
+            user_agent=USER_AGENT, force_redirect=True)
+
+        st = c_auth.get_waveforms(
+            network="IU", station="ANMO", location="00", channel="BHZ",
+            starttime=UTCDateTime("2010-02-27T06:30:00.000"),
+            endtime=UTCDateTime("2010-02-27T06:30:01.000"))
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(st)))
+
+        inv = c_auth.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2001-01-01"),
+            network="IU", station="ANMO", level="network")
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(inv.networks)))
+
+        cat = c_auth.get_events(starttime=UTCDateTime("2001-01-07T01:00:00"),
+                                endtime=UTCDateTime("2001-01-07T01:05:00"),
+                                catalog="ISC")
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(cat)))
+
+        # Also test the bulk requests which are done using POST requests.
+        bulk = (("TA", "A25A", "", "BHZ",
+                 UTCDateTime("2010-03-25T00:00:00"),
+                 UTCDateTime("2010-03-25T00:00:01")),
+                ("TA", "A25A", "", "BHE",
+                 UTCDateTime("2010-03-25T00:00:00"),
+                 UTCDateTime("2010-03-25T00:00:01")))
+        st = c_auth.get_waveforms_bulk(bulk, quality="B", longestonly=False)
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(st)))
+
+        starttime = UTCDateTime(1990, 1, 1)
+        endtime = UTCDateTime(1990, 1, 1) + 10
+        bulk = [
+            ["IU", "ANMO", "", "BHE", starttime, endtime],
+            ["IU", "CCM", "", "BHZ", starttime, endtime],
+        ]
+        inv = c_auth.get_stations_bulk(bulk, level="network")
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(inv.networks)))
 
 
 def suite():

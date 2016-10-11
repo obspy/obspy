@@ -21,7 +21,7 @@ written by Lars Krieger and Sebastian Heimann.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -31,7 +31,6 @@ import numpy as np
 import matplotlib.collections as mpl_collections
 from matplotlib import patches, transforms
 
-from obspy.core.util.decorator import deprecated
 from obspy.imaging.beachball import xy2patch
 from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
 from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
@@ -51,11 +50,6 @@ KWARG_MAP = {
     'format': ['plot_outfile_format'],
     'nofill': ['plot_only_lines']
 }
-
-
-@deprecated("Function 'Beach' has been renamed to 'beach'. Use that instead.")
-def Beach(*args, **kwargs):
-    return beach(*args, **kwargs)
 
 
 def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
@@ -202,12 +196,6 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     collection.set_linewidth(linewidth)
     collection.set_zorder(zorder)
     return collection
-
-
-@deprecated("Function 'Beachball' has been renamed to 'beachball'. Use that "
-            "instead.")
-def Beachball(*args, **kwargs):
-    return beachball(*args, **kwargs)
 
 
 def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',

@@ -7,7 +7,7 @@ GNU Lesser General Public License, Version 3 (LGPLv3)
 
 Copyright (c) 2008-2013 by:
     * Robert Barsch
-    * Lion Krischner
+    * Lion Krischer
     * Christian Sippl
     * Moritz Beyreuther
     * Tobias Megies
@@ -28,7 +28,7 @@ seismological time series (see Beyreuther et al. 2010, Megies et al. 2011).
 The goal of the ObsPy project is to facilitate rapid application development
 for seismology.
 
-For more information visit http://www.obspy.org.
+For more information visit https://www.obspy.org.
 
 
 Dependencies

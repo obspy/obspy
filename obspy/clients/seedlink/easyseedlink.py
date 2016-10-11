@@ -156,8 +156,8 @@ class EasySeedLinkClient(object):
         self.server_port = parsed_url.port or 18000
 
         self.conn = SeedLinkConnection()
-        self.conn.setSLAddress('%s:%d' %
-                               (self.server_hostname, self.server_port))
+        self.conn.set_sl_address('%s:%d' %
+                                 (self.server_hostname, self.server_port))
 
         if autoconnect:
             self.connect()
@@ -201,7 +201,7 @@ class EasySeedLinkClient(object):
             raise EasySeedLinkClientException(msg)
 
         # Send the INFO request
-        self.conn.requestInfo(level)
+        self.conn.request_info(level)
 
         # Wait for full response
         while True:
@@ -218,7 +218,7 @@ class EasySeedLinkClient(object):
             # Wait for the terminated INFO response
             packet_type = data.get_type()
             if packet_type == SLPacket.TYPE_SLINFT:
-                return self.conn.getInfoString()
+                return self.conn.get_info_string()
 
     @property
     def capabilities(self):
@@ -326,7 +326,7 @@ class EasySeedLinkClient(object):
                     # Collapse the bytearray
                     return bytes(response)
 
-    def _get_CAT(self):
+    def _get_cat(self):
         """
         Send the CAT command to a server and receive the answer.
 
@@ -372,7 +372,7 @@ class EasySeedLinkClient(object):
                   'connection has entered streaming mode.'
             raise EasySeedLinkClientException(msg)
 
-        self.conn.addStream(net, station, selector, seqnum=-1, timestamp=None)
+        self.conn.add_stream(net, station, selector, seqnum=-1, timestamp=None)
 
     def run(self):
         """

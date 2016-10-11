@@ -7,6 +7,7 @@ import os
 import shutil
 import unittest
 
+from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 
@@ -31,7 +32,7 @@ class UtilBaseTestCase(unittest.TestCase):
     Test suite for obspy.core.util.base
     """
     @unittest.skipIf(not HAS_MATPLOTLIB, 'matplotlib is not installed')
-    def test_getMatplotlibVersion(self):
+    def test_get_matplotlib_version(self):
         """
         Tests for the get_matplotlib_version() function as it continues to
         cause problems.
@@ -64,7 +65,7 @@ class UtilBaseTestCase(unittest.TestCase):
         # Set it to the original version str just in case.
         matplotlib.__version__ = original_version
 
-    def test_NamedTemporaryFile_ContextManager(self):
+    def test_named_temporay_file__context_manager(self):
         """
         Tests the automatic closing/deleting of NamedTemporaryFile using the
         context manager.
@@ -109,9 +110,12 @@ class UtilBaseTestCase(unittest.TestCase):
         self.assertFalse(os.path.exists(ic.name))
 
         # image comparison that should raise
-        self.assertRaises(ImageComparisonException,
-                          image_comparison_in_function, path, img_basename,
-                          img_fail)
+        # avoid uploading the staged test fail image
+        # (after an estimate of 10000 uploads of it.. ;-))
+        with mock.patch.object(ImageComparison, '_upload_images'):
+            self.assertRaises(ImageComparisonException,
+                              image_comparison_in_function, path, img_basename,
+                              img_fail)
         # check that temp file is deleted
         self.assertFalse(os.path.exists(ic.name))
 

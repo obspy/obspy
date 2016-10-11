@@ -9,7 +9,7 @@ data (see [Wiemer2001]_).
     The ObsPy Development Team (devs@obspy.org), Lukas Heiniger
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -137,6 +137,8 @@ class Pickler(object):
             origin = ev.preferred_origin()
             if origin:
                 dec_year = self._decimal_year(origin.time)
+                dec_second = origin.time.second + \
+                    origin.time.microsecond / 1e6
                 strings.update({
                     'depth':   self._num2str(origin.depth/1000.0),  # m to km
                     'z_err':   self._num2str(self._depth_error(origin)),
@@ -148,7 +150,7 @@ class Pickler(object):
                     'day':     self._num2str(origin.time.day, 0),
                     'hour':    self._num2str(origin.time.hour, 0),
                     'minute':  self._num2str(origin.time.minute, 0),
-                    'second':  self._num2str(origin.time.second, 0)
+                    'second':  str(dec_second)
                 })
             # magnitude
             magnitude = ev.preferred_magnitude()

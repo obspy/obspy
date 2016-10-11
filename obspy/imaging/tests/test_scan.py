@@ -12,7 +12,7 @@ import unittest
 from os.path import abspath, dirname, join, pardir
 
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.misc import TemporaryWorkingDirectory
+from obspy.core.util.misc import TemporaryWorkingDirectory, CatchOutput
 from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.scan import main as obspy_scan
 
@@ -51,7 +51,7 @@ class ScanTestCase(unittest.TestCase):
             with ImageComparison(self.path, 'scan.png') as ic:
                 obspy_scan([os.curdir] + ['--output', ic.name, '--quiet'])
 
-    def test_scanTimes(self):
+    def test_scan_times(self):
         """
         Checks for timing related options
         """
@@ -68,7 +68,7 @@ class ScanTestCase(unittest.TestCase):
                            ['--event-time', '2004-02-07T18:28:18'] +
                            ['--quiet'])
 
-    def test_multipleSamplingrates(self):
+    def test_multiple_sampling_rates(self):
         """
         Check for multiple sampling rates
         """
@@ -76,12 +76,18 @@ class ScanTestCase(unittest.TestCase):
             "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, "
             "2008-01-15T00:00:00.000000, SLIST, INTEGER, Counts",
             "TIMESERIES XX_TEST__BHZ_R,  50 samples,  50 sps, "
-            "2008-01-15T00:00:01.000000, SLIST, INTEGER, Counts",
+            "2008-01-15T00:00:00.900000, SLIST, INTEGER, Counts",
             "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, "
             "2008-01-15T00:00:02.000000, SLIST, INTEGER, Counts",
         ]
 
         files = []
+        expected_stdout_lines = [
+            "", "",
+            "XX.TEST..BHZ 2008-01-15T00:00:01.000000Z "
+            "2008-01-15T00:00:00.899995Z -0.100",
+            "XX.TEST..BHZ 2008-01-15T00:00:01.899999Z "
+            "2008-01-15T00:00:02.000000Z 0.100"]
         with NamedTemporaryFile() as f1, NamedTemporaryFile() as f2, \
                 NamedTemporaryFile() as f3:
             for i, fp in enumerate([f1, f2, f3]):
@@ -92,7 +98,10 @@ class ScanTestCase(unittest.TestCase):
                 files.append(fp.name)
             with ImageComparison(self.path, 'scan_mult_sampl.png')\
                     as ic:
-                obspy_scan(files + ['--output', ic.name, '--quiet'])
+                with CatchOutput() as out:
+                    obspy_scan(files + ['--output', ic.name, '--print-gaps'])
+                self.assertEqual(
+                    expected_stdout_lines, out.stdout.decode().splitlines())
 
 
 def suite():

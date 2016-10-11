@@ -1,17 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 from matplotlib.colorbar import ColorbarBase
 from matplotlib.colors import Normalize
 
 import obspy
-from obspy.core import AttribDict
+from obspy.core.util import AttribDict
+from obspy.imaging.cm import obspy_sequential
 from obspy.signal.invsim import corn_freq_2_paz
 from obspy.signal.array_analysis import array_processing
 
 
 # Load data
-st = obspy.read("http://examples.obspy.org/agfa.mseed")
+st = obspy.read("https://examples.obspy.org/agfa.mseed")
 
 # Set PAZ and coordinates for all 5 channels
 st[0].stats.paz = AttribDict({
@@ -69,7 +69,7 @@ st[4].stats.coordinates = AttribDict({
 paz1hz = corn_freq_2_paz(1.0, damp=0.707)
 st.simulate(paz_remove='self', paz_simulate=paz1hz)
 
-# Execute sonic
+# Execute array_processing
 kwargs = dict(
     # slowness grid: X min, X max, Y min, Y max, Slow Step
     sll_x=-3.0, slm_x=3.0, sll_y=-3.0, slm_y=3.0, sl_s=0.03,
@@ -86,7 +86,7 @@ out = array_processing(st, **kwargs)
 
 # Plot
 
-cmap = cm.hot_r
+cmap = obspy_sequential
 
 # make output human readable, adjust backazimuth to values between 0 and 360
 t, rel_power, abs_power, baz, slow = out.T
@@ -127,6 +127,7 @@ ax.set_xticklabels(['N', 'E', 'S', 'W'])
 
 # set slowness limits
 ax.set_ylim(0, 3)
+[i.set_color('grey') for i in ax.get_yticklabels()]
 ColorbarBase(cax, cmap=cmap,
              norm=Normalize(vmin=hist.min(), vmax=hist.max()))
 

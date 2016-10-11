@@ -6,7 +6,7 @@ SQLAlchemy ORM definitions (database layout) for obspy.db.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -22,7 +22,6 @@ from sqlalchemy.schema import UniqueConstraint
 import numpy as np
 
 from obspy import Trace, UTCDateTime
-from obspy.core.util.decorator import deprecated
 
 
 Base = declarative_base()
@@ -122,11 +121,6 @@ class WaveformChannel(Base):
 
     def __repr__(self):
         return "<WaveformChannel('%s')>" % (self.id)
-
-    @deprecated("'get_preview' has been renamed to 'get_preview'. Use that "
-                "instead.")
-    def getPreview(self, apply_calibration=False):
-        return self.get_preview(apply_calibration)
 
     def get_preview(self, apply_calibration=False):
         try:

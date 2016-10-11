@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import os
+from collections import Counter
+from distutils.version import LooseVersion
 from shutil import copyfile
 
 import obspy
-from obspy.core.util.testing import check_flake8
+from obspy.core.util.testing import check_flake8, flake8_version
 
 
 ROOT = os.path.dirname(__file__)
@@ -21,8 +23,18 @@ except:
     pass
 
 report, message = check_flake8()
-statistics = report.get_statistics()
-error_count = report.get_count()
+if flake8_version >= LooseVersion('3.0.0'):
+    statistics = Counter()
+    for code in 'EWFCN':
+        for stat in report.get_statistics(code):
+            count, msg = stat.split(maxsplit=1)
+            statistics[msg] += int(count)
+    statistics = ['%-7d %s' % (count, msg)
+                  for msg, count in statistics.most_common()]
+    error_count = len(statistics)
+else:
+    statistics = report.get_statistics()
+    error_count = report.get_count()
 
 # write index.rst
 head = ("""
@@ -66,7 +78,7 @@ with open(os.path.join('source', 'pep8', 'index.rst'), 'wt') as fh:
         fh.write("::\n")
         fh.write("\n")
 
-        message = message.replace(path, '    obspy')
+        message = message.decode().replace(path, '    obspy')
         fh.write(message)
         fh.write("\n")
 

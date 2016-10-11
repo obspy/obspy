@@ -7,7 +7,7 @@ FDSN Web service client for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -17,14 +17,18 @@ from future.utils import PY2, native_str
 
 import collections
 import copy
+import gzip
 import io
 import os
+import re
+from socket import timeout as socket_timeout
 import textwrap
 import threading
 import warnings
 
 with standard_library.hooks():
     import queue
+    import urllib.error
     import urllib.parse
     import urllib.request
     from collections import OrderedDict
@@ -35,11 +39,57 @@ import obspy
 from obspy import UTCDateTime, read_inventory
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
-                     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException)
+                     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
+                     FDSNRedirectException)
 from .wadl_parser import WADLParser
 
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
+
+
+class CustomRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """
+    Custom redirection handler to also do it for POST requests which the
+    standard library does not do by default.
+    """
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """
+        Copied and modified from the standard library.
+        """
+        # Force the same behaviour for GET, HEAD, and POST.
+        m = req.get_method()
+        if (not (code in (301, 302, 303, 307) and
+                 m in ("GET", "HEAD", "POST"))):
+            raise urllib.error.HTTPError(req.full_url, code, msg, headers, fp)
+
+        # be conciliant with URIs containing a space
+        newurl = newurl.replace(' ', '%20')
+        content_headers = ("content-length", "content-type")
+        newheaders = dict((k, v) for k, v in req.headers.items()
+                          if k.lower() not in content_headers)
+
+        # Also redirect the data of the request which the standard library
+        # interestingly enough does not do.
+        return urllib.request.Request(
+            newurl, headers=newheaders,
+            data=req.data,
+            origin_req_host=req.origin_req_host,
+            unverifiable=True)
+
+
+class NoRedirectionHandler(urllib.request.HTTPRedirectHandler):
+    """
+    Handler that does not direct!
+    """
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """
+        Copied and modified from the standard library.
+        """
+        raise FDSNRedirectException(
+            "Requests with credentials (username, password) are not being "
+            "redirected by default to improve security. To force redirects "
+            "and if you trust the data center, set `force_redirect` to True "
+            "when initializing the Client.")
 
 
 class Client(object):
@@ -53,9 +103,38 @@ class Client(object):
     # initializing a client with the same base URL is cheap.
     __service_discovery_cache = {}
 
+    RE_UINT8 = '(?:25[0-5]|2[0-4]\d|[0-1]?\d{1,2})'
+    RE_HEX4 = '(?:[\d,a-f]{4}|[1-9,a-f][0-9,a-f]{0,2}|0)'
+
+    RE_IPv4 = '(?:' + RE_UINT8 + '(?:\.' + RE_UINT8 + '){3})'
+    RE_IPv6 = \
+        '(?:\[' + RE_HEX4 + '(?::' + RE_HEX4 + '){7}\]' + \
+        '|\[(?:' + RE_HEX4 + ':){0,5}' + RE_HEX4 + '::\]' + \
+        '|\[::' + RE_HEX4 + '(?::' + RE_HEX4 + '){0,5}\]' + \
+        '|\[::' + RE_HEX4 + '(?::' + RE_HEX4 + '){0,3}:' + RE_IPv4 + '\]' + \
+        '|\[' + RE_HEX4 + ':' + \
+        '(?:' + RE_HEX4 + ':|:' + RE_HEX4 + '){0,4}' + \
+        ':' + RE_HEX4 + '\])'
+
+    URL_REGEX = 'https?://' + \
+                '(' + RE_IPv4 + \
+                '|' + RE_IPv6 + \
+                '|localhost' + \
+                '|\w+' + \
+                '|(?:\w(?:[\w-]{0,61}[\w])?\.){1,}([a-z]{2,6}))' + \
+                '(?::\d{2,5})?' + \
+                '(/[\w\.-]+)*/?$'
+
+    @classmethod
+    def _validate_base_url(cls, base_url):
+        if re.match(cls.URL_REGEX, base_url, re.IGNORECASE):
+            return True
+        else:
+            return False
+
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=120, service_mappings=None):
+                 timeout=120, service_mappings=None, force_redirect=False):
         """
         Initializes an FDSN Web Service client.
 
@@ -91,7 +170,8 @@ class Client(object):
         :param debug: Debug flag.
         :type timeout: float
         :param timeout: Maximum time (in seconds) to wait for a single request
-            to finish (after which an exception is raised).
+            to receive the first byte of the response (after which an exception
+            is raised).
         :type service_mappings: dict
         :param service_mappings: For advanced use only. Allows the direct
             setting of the endpoints of the different services. (e.g.
@@ -102,6 +182,13 @@ class Client(object):
             indicated by ``base_url`` and ``major_versions`` will be used. Any
             service that is manually specified as ``None`` (e.g.
             ``service_mappings={'event': None}``) will be deactivated.
+        :type force_redirect: bool
+        :param force_redirect: By default the client will follow all HTTP
+            redirects as long as no credentials (username and password)
+            are given. If credentials are given it will raise an exception
+            when a redirect is discovered. This is done to improve security.
+            Settings this flag to ``True`` will force all redirects to be
+            followed even if credentials are given.
         """
         self.debug = debug
         self.user = user
@@ -111,29 +198,41 @@ class Client(object):
         # the client more convenient.
         self.__version_cache = {}
 
-        # handle switch of SCEC to SCEDC, see #998
-        if base_url.upper() == "SCEC":
-            base_url = "SCEDC"
-            msg = ("FDSN short-URL 'SCEC' has been replaced by 'SCEDC'. "
-                   "Please change to 'Client('SCEDC')'. This re-routing will "
-                   "be removed in a future release.")
-            warnings.warn(msg)
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
+        else:
+            if base_url.isalpha():
+                msg = "The FDSN service shortcut `{}` is unknown."\
+                      .format(base_url)
+                raise ValueError(msg)
 
         # Make sure the base_url does not end with a slash.
         base_url = base_url.strip("/")
+        # Catch invalid URLs to avoid confusing error messages
+        if not self._validate_base_url(base_url):
+            msg = "The FDSN service base URL `{}` is not a valid URL."\
+                  .format(base_url)
+            raise ValueError(msg)
+
         self.base_url = base_url
 
-        # Authentication
+        # Only add the authentication handler if required.
+        handlers = []
         if user is not None and password is not None:
             # Create an OpenerDirector for HTTP Digest Authentication
             password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, base_url, user, password)
-            auth_handler = urllib.request.HTTPDigestAuthHandler(password_mgr)
-            opener = urllib.request.build_opener(auth_handler)
-            # install globally
-            urllib.request.install_opener(opener)
+            handlers.append(urllib.request.HTTPDigestAuthHandler(password_mgr))
+
+        if (user is None and password is None) or force_redirect is True:
+            # Redirect if no credentials are given or the force_redirect
+            # flag is True.
+            handlers.append(CustomRedirectHandler())
+        else:
+            handlers.append(NoRedirectionHandler())
+
+        # Don't install globally to not mess with other codes.
+        self._url_opener = urllib.request.build_opener(*handlers)
 
         self.request_headers = {"User-Agent": user_agent}
         # Avoid mutable kwarg.
@@ -219,11 +318,11 @@ class Client(object):
             of degrees from the geographic point defined by the latitude and
             longitude parameters.
         :type mindepth: float, optional
-        :param mindepth: Limit to events with depth more than the specified
-            minimum.
+        :param mindepth: Limit to events with depth, in kilometers, larger than
+            the specified minimum.
         :type maxdepth: float, optional
-        :param maxdepth: Limit to events with depth less than the specified
-            maximum.
+        :param maxdepth: Limit to events with depth, in kilometers, smaller
+            than the specified maximum.
         :type minmagnitude: float, optional
         :param minmagnitude: Limit to events with a magnitude larger than the
             specified minimum.
@@ -308,7 +407,7 @@ class Client(object):
                      minradius=None, maxradius=None, level=None,
                      includerestricted=None, includeavailability=None,
                      updatedafter=None, matchtimeseries=None, filename=None,
-                     **kwargs):
+                     format="xml", **kwargs):
         """
         Query the station service of the FDSN client.
 
@@ -407,18 +506,18 @@ class Client(object):
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
             codes or data center defined codes. Multiple codes are
-            comma-separated.
+            comma-separated (e.g. ``"IU,TA"``).
         :type station: str
         :param station: Select one or more SEED station codes. Multiple codes
-            are comma-separated.
+            are comma-separated (e.g. ``"ANMO,PFO"``).
         :type location: str
         :param location: Select one or more SEED location identifiers. Multiple
-            identifiers are comma-separated. As a special case ``“--“`` (two
-            dashes) will be translated to a string of two space characters to
-            match blank location IDs.
+            identifiers are comma-separated (e.g. ``"00,01"``).  As a
+            special case ``“--“`` (two dashes) will be translated to a string
+            of two space characters to match blank location IDs.
         :type channel: str
         :param channel: Select one or more SEED channel codes. Multiple codes
-            are comma-separated.
+            are comma-separated (e.g. ``"BHZ,HHZ"``).
         :type minlatitude: float
         :param minlatitude: Limit to stations with a latitude larger than the
             specified minimum.
@@ -464,6 +563,11 @@ class Client(object):
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
+        :type format: str
+        :param format: The format in which to request station information.
+            ``"xml"`` (StationXML) or ``"text"`` (FDSN station test format).
+            XML has more information but text is much faster.
+
         :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
         :returns: Inventory with requested station information.
 
@@ -489,7 +593,8 @@ class Client(object):
             self._write_to_file_object(filename, data_stream)
             data_stream.close()
         else:
-            inventory = read_inventory(data_stream, format="STATIONXML")
+            # This works with XML and StationXML data.
+            inventory = read_inventory(data_stream)
             data_stream.close()
             return inventory
 
@@ -542,16 +647,17 @@ class Client(object):
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
             codes or data center defined codes. Multiple codes are
-            comma-separated. Wildcards are allowed.
+            comma-separated (e.g. ``"IU,TA"``). Wildcards are allowed.
         :type station: str
         :param station: Select one or more SEED station codes. Multiple codes
-            are comma-separated. Wildcards are allowed.
+            are comma-separated (e.g. ``"ANMO,PFO"``). Wildcards are allowed.
         :type location: str
         :param location: Select one or more SEED location identifiers. Multiple
-            identifiers are comma-separated. Wildcards are allowed.
+            identifiers are comma-separated (e.g. ``"00,01"``). Wildcards are
+            allowed.
         :type channel: str
         :param channel: Select one or more SEED channel codes. Multiple codes
-            are comma-separated.
+            are comma-separated (e.g. ``"BHZ,HHZ"``).
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Limit results to time series samples on or after the
             specified start time
@@ -598,7 +704,9 @@ class Client(object):
         url = self._create_url_from_parameters(
             "dataselect", DEFAULT_PARAMETERS['dataselect'], kwargs)
 
-        data_stream = self._download(url)
+        # Gzip not worth it for MiniSEED and most likely disabled for this
+        # route in any case.
+        data_stream = self._download(url, use_gzip=False)
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -655,7 +763,7 @@ class Client(object):
             station, location, channel, starttime and endtime.
 
         (2) As a valid request string/file as defined in the
-            `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
+            `FDSNWS documentation <https://www.fdsn.org/webservices/>`_.
             The request information can be provided as a..
 
             - a string containing the request information
@@ -806,7 +914,7 @@ class Client(object):
             station, location, channel, starttime and endtime.
 
         (2) As a valid request string/file as defined in the
-            `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
+            `FDSNWS documentation <https://www.fdsn.org/webservices/>`_.
             The request information can be provided as a..
 
             - a string containing the request information
@@ -828,8 +936,7 @@ class Client(object):
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
-                    GR
-                    IU
+                    GR, IU
                 Stations (2):
                     GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
                     IU.ANMO (Albuquerque, New Mexico, USA)
@@ -859,13 +966,12 @@ class Client(object):
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
-                    GR
-                    IU
+                    GR, IU
                 Stations (2):
                     GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
                     IU.ANMO (Albuquerque, New Mexico, USA)
                 Channels (5):
-                    GR.GRA1..BHE, GR.GRA1..BHN, GR.GRA1..BHZ, IU.ANMO.00.BHZ,
+                    GR.GRA1..BHZ, GR.GRA1..BHN, GR.GRA1..BHE, IU.ANMO.00.BHZ,
                     IU.ANMO.10.BHZ
         >>> inv = client.get_stations_bulk("/tmp/request.txt") \
         ...     # doctest: +SKIP
@@ -942,7 +1048,6 @@ class Client(object):
             return inv
 
     def _get_bulk_string(self, bulk, arguments):
-        locs = locals()
         # If its an iterable, we build up the query string from it
         # StringIO objects also have __iter__ so check for 'read' as well
         if isinstance(bulk, collections.Iterable) \
@@ -1025,6 +1130,14 @@ class Client(object):
                     raise TypeError(msg)
             # Now attempt to convert the parameter to the correct type.
             this_type = service_params[key]["type"]
+
+            # Try to decode to be able to work with bytes.
+            if this_type is native_str:
+                try:
+                    value = value.decode()
+                except AttributeError:
+                    pass
+
             try:
                 value = this_type(value)
             except:
@@ -1034,7 +1147,7 @@ class Client(object):
             # Now convert to a string that is accepted by the webservice.
             value = convert_to_string(value)
             if isinstance(value, (str, native_str)):
-                if not value:
+                if not value and key != "location":
                     continue
             final_parameter_set[key] = value
 
@@ -1084,8 +1197,8 @@ class Client(object):
         for service in services:
             if service not in FDSNWS:
                 continue
-            SERVICE_DEFAULT = DEFAULT_PARAMETERS[service]
-            SERVICE_OPTIONAL = OPTIONAL_PARAMETERS[service]
+            service_default = DEFAULT_PARAMETERS[service]
+            service_optional = OPTIONAL_PARAMETERS[service]
 
             msg.append("Parameter description for the "
                        "'%s' service (v%s) of '%s':" % (
@@ -1103,17 +1216,17 @@ class Client(object):
 
             printed_something = False
 
-            for name in SERVICE_DEFAULT:
+            for name in service_default:
                 if name in self.services[service]:
                     available_default_parameters.append(name)
                 else:
                     missing_default_parameters.append(name)
 
-            for name in SERVICE_OPTIONAL:
+            for name in service_optional:
                 if name in self.services[service]:
                     optional_parameters.append(name)
 
-            defined_parameters = SERVICE_DEFAULT + SERVICE_OPTIONAL
+            defined_parameters = service_default + service_optional
             for name in self.services[service].keys():
                 if name not in defined_parameters:
                     additional_parameters.append(name)
@@ -1183,36 +1296,53 @@ class Client(object):
 
         print("\n".join(msg))
 
-    def _download(self, url, return_string=False, data=None):
+    def _download(self, url, return_string=False, data=None, use_gzip=True):
         code, data = download_url(
-            url, headers=self.request_headers, debug=self.debug,
-            return_string=return_string, data=data, timeout=self.timeout)
+            url, opener=self._url_opener, headers=self.request_headers,
+            debug=self.debug, return_string=return_string, data=data,
+            timeout=self.timeout, use_gzip=use_gzip)
+        # get detailed server response message
+        if code != 200:
+            try:
+                server_info = "\n".join([
+                    line for line in data.read().splitlines() if line])
+            except:
+                server_info = None
         # No data.
         if code == 204:
-            raise FDSNException("No data available for request.")
+            raise FDSNException("No data available for request.", server_info)
         elif code == 400:
-            msg = "Bad request. Please contact the developers."
-            raise NotImplementedError(msg)
+            msg = ("Bad request. If you think your request was valid "
+                   "please contact the developers.")
+            raise FDSNException(msg, server_info)
         elif code == 401:
-            raise FDSNException("Unauthorized, authentication required.")
+            raise FDSNException("Unauthorized, authentication required.",
+                                server_info)
         elif code == 403:
-            raise FDSNException("Authentication failed.")
+            raise FDSNException("Authentication failed.", server_info)
         elif code == 413:
             raise FDSNException("Request would result in too much data. "
                                 "Denied by the datacenter. Split the request "
-                                "in smaller parts")
+                                "in smaller parts", server_info)
         # Request URI too large.
         elif code == 414:
             msg = ("The request URI is too large. Please contact the ObsPy "
-                   "developers.")
+                   "developers.", server_info)
             raise NotImplementedError(msg)
         elif code == 500:
-            raise FDSNException("Service responds: Internal server error")
+            raise FDSNException("Service responds: Internal server error",
+                                server_info)
         elif code == 503:
-            raise FDSNException("Service temporarily unavailable")
+            raise FDSNException("Service temporarily unavailable", server_info)
+        elif code is None:
+            if "timeout" in str(data).lower():
+                raise FDSNException("Timed Out")
+            else:
+                raise FDSNException("Unknown Error (%s): %s" % (
+                    (str(data.__class__.__name__), str(data))))
         # Catch any non 200 codes.
         elif code != 200:
-            raise FDSNException("Unknown HTTP code: %i" % code)
+            raise FDSNException("Unknown HTTP code: %i" % code, server_info)
         return data
 
     def _build_url(self, service, resource_type, parameters={}):
@@ -1262,23 +1392,33 @@ class Client(object):
 
         headers = self.request_headers
         debug = self.debug
+        opener = self._url_opener
 
         def get_download_thread(url):
             class ThreadURL(threading.Thread):
                 def run(self):
                     # Catch 404s.
                     try:
-                        code, data = download_url(url, headers=headers,
-                                                  debug=debug)
+                        code, data = download_url(
+                            url, opener=opener, headers=headers,
+                            debug=debug)
                         if code == 200:
+                            wadl_queue.put((url, data))
+                        # Pass on the redirect exception.
+                        elif code is None and isinstance(
+                                data, FDSNRedirectException):
                             wadl_queue.put((url, data))
                         else:
                             wadl_queue.put((url, None))
                     except urllib.request.HTTPError as e:
-                        if e.code == 404:
+                        if e.code in [404, 502]:
                             wadl_queue.put((url, None))
                         else:
                             raise
+                    except urllib.error.URLError as e:
+                        wadl_queue.put((url, "timeout"))
+                    except socket_timeout as e:
+                        wadl_queue.put((url, "timeout"))
             return ThreadURL()
 
         threads = list(map(get_download_thread, urls))
@@ -1288,11 +1428,23 @@ class Client(object):
             thread.join(15)
 
         self.services = {}
+
+        # Collect the redirection exceptions to be able to raise nicer
+        # exceptions.
+        redirect_messages = set()
+
         for _ in range(wadl_queue.qsize()):
             item = wadl_queue.get()
             url, wadl = item
+
             if wadl is None:
                 continue
+            elif isinstance(wadl, FDSNRedirectException):
+                redirect_messages.add(str(wadl))
+                continue
+            elif wadl == "timeout":
+                raise FDSNException("Timeout while requesting '%s'." % url)
+
             if "dataselect" in url:
                 self.services["dataselect"] = WADLParser(wadl).parameters
                 if self.debug is True:
@@ -1321,6 +1473,9 @@ class Client(object):
                     msg = "Could not parse the contributors at '%s'." % url
                     warnings.warn(msg)
         if not self.services:
+            if redirect_messages:
+                raise FDSNRedirectException(", ".join(redirect_messages))
+
             msg = ("No FDSN services could be discovered at '%s'. This could "
                    "be due to a temporary service outage or an invalid FDSN "
                    "service address." % self.base_url)
@@ -1467,8 +1622,8 @@ def build_url(base_url, service, major_version, resource_type,
     return url
 
 
-def download_url(url, timeout=10, headers={}, debug=False,
-                 return_string=True, data=None):
+def download_url(url, opener, timeout=10, headers={}, debug=False,
+                 return_string=True, data=None, use_gzip=True):
     """
     Returns a pair of tuples.
 
@@ -1482,30 +1637,51 @@ def download_url(url, timeout=10, headers={}, debug=False,
     Performs a http GET if data=None, otherwise a http POST.
     """
     if debug is True:
-        print("Downloading %s" % url)
+        print("Downloading %s %s requesting gzip compression" % (
+            url, "with" if use_gzip else "without"))
+        if data:
+            print("Sending along the following payload:")
+            print("-" * 70)
+            print(data.decode())
+            print("-" * 70)
 
     try:
-        url_obj = urllib.request.urlopen(
-            urllib.request.Request(url=url, headers=headers),
-            timeout=timeout,
-            data=data)
+        request = urllib.request.Request(url=url, headers=headers)
+        # Request gzip encoding if desired.
+        if use_gzip:
+            request.add_header("Accept-encoding", "gzip")
+
+        url_obj = opener.open(request, timeout=timeout, data=data)
     # Catch HTTP errors.
     except urllib.request.HTTPError as e:
         if debug is True:
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
                   (e.code, str(e.reason), url, e.read())
             print(msg)
-        return e.code, None
+        return e.code, e
     except Exception as e:
         if debug is True:
             print("Error while downloading: %s" % url)
-        return None, None
+        return None, e
 
     code = url_obj.getcode()
-    if return_string is False:
-        data = io.BytesIO(url_obj.read())
+
+    # Unpack gzip if necessary.
+    if url_obj.info().get("Content-Encoding") == "gzip":
+        if debug is True:
+            print("Uncompressing gzipped response for %s" % url)
+        # Cannot directly stream to gzip from urllib!
+        # http://www.enricozini.org/2011/cazzeggio/python-gzip/
+        buf = io.BytesIO(url_obj.read())
+        buf.seek(0, 0)
+        f = gzip.GzipFile(fileobj=buf)
     else:
-        data = url_obj.read()
+        f = url_obj
+
+    if return_string is False:
+        data = io.BytesIO(f.read())
+    else:
+        data = f.read()
 
     if debug is True:
         print("Downloaded %s with HTTP code: %i" % (url, code))

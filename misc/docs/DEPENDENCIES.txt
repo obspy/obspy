@@ -18,6 +18,8 @@ doc2dash
 # ObsPy Library
 ## obspy.*
 future
+decorator
+requests
 
 lxml
 numpy

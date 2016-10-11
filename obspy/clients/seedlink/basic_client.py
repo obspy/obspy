@@ -6,7 +6,7 @@ SeedLink request client for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -15,7 +15,6 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import warnings
 
 from obspy import Stream
-from obspy.core.util.decorator import deprecated
 from .slclient import SLClient, SLPacket
 from .client.seedlinkconnection import SeedLinkConnection
 
@@ -47,21 +46,17 @@ class Client(object):
         """
         self.timeout = timeout
         self.debug = debug
-        self._slclient = SLClient(loglevel=debug and "DEBUG" or "CRITICAL")
+        self._slclient = SLClient(loglevel=debug and "DEBUG" or "CRITICAL",
+                                  timeout=self.timeout)
         self._server_url = "%s:%i" % (server, port)
 
     def _connect(self):
         """
         Open new connection to seedlink server.
         """
-        self._slclient.slconn = SeedLinkConnection()
-        self._slclient.slconn.setSLAddress(self._server_url)
+        self._slclient.slconn = SeedLinkConnection(timeout=self.timeout)
+        self._slclient.slconn.set_sl_address(self._server_url)
         self._slclient.slconn.netto = self.timeout
-
-    @deprecated("'get_waveform' has been renamed to 'get_waveforms'. Use "
-                "that instead.")
-    def get_waveform(self, *args, **kwargs):
-        return self.get_waveforms(*args, **kwargs)
 
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime):
@@ -155,7 +150,7 @@ class Client(object):
             return False
         elif type_ == SLPacket.TYPE_SLINFT:
             if self.debug:
-                print("Complete INFO:" + self.slconn.getInfoString())
+                print("Complete INFO:" + self.slconn.get_info_string())
             return False
 
         # process packet data

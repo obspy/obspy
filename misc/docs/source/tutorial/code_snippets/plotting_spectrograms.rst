@@ -13,7 +13,7 @@ matplotlib colormaps are given at:
 
 * http://www.physics.ox.ac.uk/users/msshin/science/code/matplotlib_cm/
 * http://matplotlib.org/examples/color/colormaps_reference.html
-* http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps
+* https://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps
 
 .. plot:: tutorial/code_snippets/plotting_spectrograms.py
    :include-source:

@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML schemaVersion="1.0" xmlns="http://www.fdsn.org/xml/station/1">
+    <Source></Source>
+    <Created>2016-07-08T07:06:36+00:00</Created>
+    <Network code="ZU" restrictedStatus="open" startDate="1980-01-01T00:00:00+00:00">
+        <Description>Network test</Description>
+        <Station code="GERES" restrictedStatus="open" startDate="1990-01-01T00:00:00+00:00">
+            <Latitude unit="DEGREES">51.008</Latitude>
+            <Longitude unit="DEGREES">8.932</Longitude>
+            <Elevation>150.0</Elevation>
+            <Site>
+                <Name>GERES</Name>
+            </Site>
+            <CreationDate>1990-01-01T00:00:00+00:00</CreationDate>
+            <Channel code="SHZ" locationCode="1" restrictedStatus="open" startDate="1990-01-01T00:00:00+00:00">
+                <Latitude unit="DEGREES">51.008</Latitude>
+                <Longitude unit="DEGREES">8.932</Longitude>
+                <Elevation>150.0</Elevation>
+                <Depth>0.0</Depth>
+            </Channel>
+            <Channel code="SHN" locationCode="1" restrictedStatus="open" startDate="1990-01-01T00:00:00+00:00">
+                <Latitude unit="DEGREES">51.008</Latitude>
+                <Longitude unit="DEGREES">8.932</Longitude>
+                <Elevation>150.0</Elevation>
+                <Depth>0.0</Depth>
+            </Channel>
+            <Channel code="SHE" locationCode="1" restrictedStatus="open" startDate="1990-01-01T00:00:00+00:00">
+                <Latitude unit="DEGREES">51.008</Latitude>
+                <Longitude unit="DEGREES">8.932</Longitude>
+                <Elevation>150.0</Elevation>
+                <Depth>0.0</Depth>
+            </Channel>
+        </Station>
+    </Network>
+</FDSNStationXML>

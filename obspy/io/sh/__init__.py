@@ -4,20 +4,20 @@ obspy.io.sh - Q and ASC (Seismic Handler) read and write support for ObsPy
 
 The obspy.io.sh package contains methods in order to read and write seismogram
 files in the Q and ASC format used by the Seismic Handler software package
-(http://www.seismic-handler.org).
+(https://www.seismic-handler.org).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------
 Importing Q or ASC files is done similar to reading any other waveform data
 format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
 the :mod:`obspy.core` module. Examples seismograms files may be found at
-http://examples.obspy.org.
+https://examples.obspy.org.
 
 >>> from obspy import read
 >>> st = read("/path/to/QFILE-TEST-ASC.ASC")

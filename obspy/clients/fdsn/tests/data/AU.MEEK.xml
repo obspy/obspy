@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+ <Source>IRIS-DMC</Source>
+ <Sender>IRIS-DMC</Sender>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
+ <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?station=MEEK&amp;network=AU&amp;level=response</ModuleURI>
+ <Created>2013-11-30T21:14:52</Created>
+ <Network code="AU" startDate="1994-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+  <Description>Geoscience Australia</Description>
+  <TotalNumberStations>154</TotalNumberStations>
+  <SelectedNumberStations>2</SelectedNumberStations>
+  <Station code="MEEK" startDate="2003-06-25T00:00:00" endDate="2008-05-12T00:00:00" restrictedStatus="open">
+   <Latitude>-26.638</Latitude>
+   <Longitude>118.615</Longitude>
+   <Elevation>530.0</Elevation>
+   <Site>
+    <Name>Meekatharra, Western Australia</Name>
+   </Site>
+   <CreationDate>2003-06-25T00:00:00</CreationDate>
+   <TotalNumberChannels>3</TotalNumberChannels>
+   <SelectedNumberChannels>1</SelectedNumberChannels>
+   <Channel locationCode="  " startDate="2003-06-25T00:00:00" restrictedStatus="open" endDate="2008-05-11T23:59:59" code="SHE">
+    <Comment>
+     <Value>T4B70 TD4</Value>
+    </Comment>
+    <Latitude>-26.638</Latitude>
+    <Longitude>118.615</Longitude>
+    <Elevation>530.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>5.0E-4</ClockDrift>
+    <CalibrationUnits>
+     <Name>V</Name>
+     <Description>emf in volts</Description>
+    </CalibrationUnits>
+    <Sensor>
+     <Type>Guralp CMG40T_1to100/GDAS</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>8.09053E8</Value>
+      <Frequency>4.0</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>velocity in meters per second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>digital counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+     <Stage number="1">
+      <PolesZeros>
+       <InputUnits>
+        <Name>M/S</Name>
+        <Description>velocity in meters per second</Description>
+       </InputUnits>
+       <OutputUnits>
+        <Name>V</Name>
+        <Description>emf in volts</Description>
+       </OutputUnits>
+       <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
+       <NormalizationFactor>911772000000</NormalizationFactor>
+       <NormalizationFrequency>4</NormalizationFrequency>
+       <Zero number="0">
+        <Real>0</Real>
+        <Imaginary>0</Imaginary>
+       </Zero>
+       <Zero number="1">
+        <Real>0</Real>
+        <Imaginary>0</Imaginary>
+       </Zero>
+       <Pole number="2">
+        <Real>-471.227</Real>
+        <Imaginary>0</Imaginary>
+       </Pole>
+       <Pole number="3">
+        <Real>-2199.06</Real>
+        <Imaginary>0</Imaginary>
+       </Pole>
+       <Pole number="4">
+        <Real>-4.4421</Real>
+        <Imaginary>4.4421</Imaginary>
+       </Pole>
+       <Pole number="5">
+        <Real>-4.4421</Real>
+        <Imaginary>-4.4421</Imaginary>
+       </Pole>
+       <Pole number="6">
+        <Real>-391.946</Real>
+        <Imaginary>850.672</Imaginary>
+       </Pole>
+       <Pole number="7">
+        <Real>-391.946</Real>
+        <Imaginary>-850.672</Imaginary>
+       </Pole>
+      </PolesZeros>
+      <StageGain>
+       <Value>2025.14</Value>
+       <Frequency>4</Frequency>
+      </StageGain>
+     </Stage>
+     <Stage number="2">
+      <StageGain>
+       <Value>8</Value>
+       <Frequency>4</Frequency>
+      </StageGain>
+     </Stage>
+     <Stage number="3">
+      <Coefficients>
+       <InputUnits>
+        <Name>V</Name>
+        <Description>emf in volts</Description>
+       </InputUnits>
+       <OutputUnits>
+        <Name>COUNTS</Name>
+        <Description>digital counts</Description>
+       </OutputUnits>
+       <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+      </Coefficients>
+      <Decimation>
+       <InputSampleRate>600</InputSampleRate>
+       <Factor>1</Factor>
+       <Offset>0</Offset>
+       <Delay>0.0</Delay>
+       <Correction>0.0</Correction>
+      </Decimation>
+      <StageGain>
+       <Value>49938</Value>
+       <Frequency>4</Frequency>
+      </StageGain>
+     </Stage>
+     <Stage number="4">
+      <Coefficients>
+       <InputUnits>
+        <Name>COUNTS</Name>
+        <Description>digital counts</Description>
+       </InputUnits>
+       <OutputUnits>
+        <Name>COUNTS</Name>
+        <Description>digital counts</Description>
+       </OutputUnits>
+       <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+       <Numerator>-.000301355</Numerator>
+       <Numerator>-.00110339</Numerator>
+       <Numerator>-.00134354</Numerator>
+       <Numerator>.000852579</Numerator>
+       <Numerator>.00584828</Numerator>
+       <Numerator>.00997214</Numerator>
+       <Numerator>.00634832</Numerator>
+       <Numerator>-.00917189</Numerator>
+       <Numerator>-.0304036</Numerator>
+       <Numerator>-.0389679</Numerator>
+       <Numerator>-.0132799</Numerator>
+       <Numerator>.055155</Numerator>
+       <Numerator>.149874</Numerator>
+       <Numerator>.23326</Numerator>
+       <Numerator>.266523</Numerator>
+       <Numerator>.23326</Numerator>
+       <Numerator>.149874</Numerator>
+       <Numerator>.055155</Numerator>
+       <Numerator>-.0132799</Numerator>
+       <Numerator>-.0389679</Numerator>
+       <Numerator>-.0304036</Numerator>
+       <Numerator>-.00917189</Numerator>
+       <Numerator>.00634832</Numerator>
+       <Numerator>.00997214</Numerator>
+       <Numerator>.00584828</Numerator>
+       <Numerator>.000852579</Numerator>
+       <Numerator>-.00134354</Numerator>
+       <Numerator>-.00110339</Numerator>
+       <Numerator>-.000301355</Numerator>
+      </Coefficients>
+      <Decimation>
+       <InputSampleRate>600</InputSampleRate>
+       <Factor>3</Factor>
+       <Offset>0</Offset>
+       <Delay>0.023333</Delay>
+       <Correction>0.023333</Correction>
+      </Decimation>
+      <StageGain>
+       <Value>1</Value>
+       <Frequency>4</Frequency>
+      </StageGain>
+     </Stage>
+     <Stage number="5">
+      <Coefficients>
+       <InputUnits>
+        <Name>COUNTS</Name>
+        <Description>digital counts</Description>
+       </InputUnits>
+       <OutputUnits>
+        <Name>COUNTS</Name>
+        <Description>digital counts</Description>
+       </OutputUnits>
+       <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+       <Numerator>.000183216</Numerator>
+       <Numerator>.000732864</Numerator>
+       <Numerator>.0010993</Numerator>
+       <Numerator>.000732864</Numerator>
+       <Numerator>.000183216</Numerator>
+       <Denominator>.517478</Denominator>
+       <Denominator>-2.40934</Denominator>
+       <Denominator>4.23886</Denominator>
+       <Denominator>-3.34407</Denominator>
+       <Denominator>1</Denominator>
+      </Coefficients>
+      <Decimation>
+       <InputSampleRate>200</InputSampleRate>
+       <Factor>10</Factor>
+       <Offset>0</Offset>
+       <Delay>0.01</Delay>
+       <Correction>0.01</Correction>
+      </Decimation>
+      <StageGain>
+       <Value>1</Value>
+       <Frequency>4</Frequency>
+      </StageGain>
+     </Stage>
+    </Response>
+   </Channel>
+  </Station>
+ </Network>
+</FDSNStationXML>

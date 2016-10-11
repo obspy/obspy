@@ -15,8 +15,17 @@ from pkg_resources import load_entry_point
 import numpy as np
 
 from obspy import Trace, read
+from obspy.core.compatibility import mock
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import NamedTemporaryFile, _get_entry_points
+from obspy.core.util.base import (NamedTemporaryFile, _get_entry_points,
+                                  DEFAULT_MODULES, WAVEFORM_ACCEPT_BYTEORDER)
+
+
+def _get_default_eps(group, subgroup=None):
+    eps = _get_entry_points(group, subgroup=subgroup)
+    eps = {ep: f for ep, f in eps.items()
+           if any(m in f.module_name for m in DEFAULT_MODULES)}
+    return eps
 
 
 class WaveformPluginsTestCase(unittest.TestCase):
@@ -25,7 +34,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
     """
     longMessage = True
 
-    def test_raiseOnEmptyFile(self):
+    def test_raise_on_empty_file(self):
         """
         Test case ensures that empty files do raise warnings.
         """
@@ -33,8 +42,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
             tmpfile = tf.name
             # create empty file
             open(tmpfile, 'wb').close()
-            formats_ep = _get_entry_points('obspy.plugin.waveform',
-                                           'readFormat')
+            formats_ep = _get_default_eps('obspy.plugin.waveform',
+                                          'readFormat')
             # using format keyword
             for ep in formats_ep.values():
                 is_format = load_entry_point(
@@ -42,20 +51,21 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     'isFormat')
                 self.assertFalse(False, is_format(tmpfile))
 
-    def test_readAndWrite(self):
+    def test_read_and_write(self):
         """
         Tests read and write methods for all waveform plug-ins.
         """
         data = np.arange(0, 2000)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
-        formats = _get_entry_points('obspy.plugin.waveform', 'writeFormat')
+        formats = _get_default_eps('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
             for native_byteorder in ['<', '>']:
-                for byteorder in ['<', '>', '=']:
+                for byteorder in (['<', '>', '='] if format in
+                                  WAVEFORM_ACCEPT_BYTEORDER else [None]):
                     if format == 'SAC' and byteorder == '=':
                         # SAC file format enforces '<' or '>'
                         # byteorder on writing
@@ -76,7 +86,11 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     # create waveform file with given format and byte order
                     with NamedTemporaryFile() as tf:
                         outfile = tf.name
-                        tr.write(outfile, format=format, byteorder=byteorder)
+                        if byteorder is None:
+                            tr.write(outfile, format=format)
+                        else:
+                            tr.write(outfile, format=format,
+                                     byteorder=byteorder)
                         if format == 'Q':
                             outfile += '.QHD'
                         # read in again using auto detection
@@ -136,23 +150,45 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         self.assertEqual(st[0].stats.delta, 0.005)
                         self.assertEqual(st[0].stats.sampling_rate, 200.0)
                     # network/station/location/channel codes
-                    if format in ['Q', 'SH_ASC', 'GSE2']:
-                        # no network or location code in Q, SH_ASC, GSE2
+                    if format in ['Q', 'SH_ASC']:
+                        # no network or location code in Q, SH_ASC
                         self.assertEqual(st[0].id, ".MANZ1..EHE")
+                    elif format == "GSE2":
+                        # no location code in GSE2
+                        self.assertEqual(st[0].id, "BW.MANZ1..EHE")
                     elif format not in ['WAV']:
                         self.assertEqual(st[0].id, "BW.MANZ1.00.EHE")
 
-    def test_isFormat(self):
+    def test_is_format(self):
         """
         Tests all isFormat methods against all data test files from the other
         modules for false positives.
         """
-        KNOWN_FALSE = [
+        known_false = [
             os.path.join('seisan', 'tests', 'data', 'SEISAN_Bug',
                          '2011-09-06-1311-36S.A1032_001BH_Z_MSEED'),
+            os.path.join('core', 'tests', 'data',
+                         'IU_ULN_00_LH1_2015-07-18T02.mseed'),
+            # That file is not in obspy.io.mseed as it is used to test an
+            # issue with the uncompress_data() decorator.
+            os.path.join('core', 'tests', 'data',
+                         'tarfile_impostor.mseed')
         ]
-        formats_ep = _get_entry_points('obspy.plugin.waveform', 'isFormat')
+        formats_ep = _get_default_eps('obspy.plugin.waveform', 'isFormat')
         formats = list(formats_ep.values())
+        # Get all the test directories.
+        paths = {}
+        all_paths = []
+        for f in formats:
+            path = os.path.join(f.dist.location,
+                                *f.module_name.split('.')[:-1])
+            path = os.path.join(path, 'tests', 'data')
+            all_paths.append(path)
+            if os.path.exists(path):
+                paths[f.name] = path
+
+        msg = 'Test data directories do not exist:\n    '
+        self.assertTrue(len(paths) > 0, msg + '\n    '.join(all_paths))
         # Collect all false positives.
         false_positives = []
         # Big loop over every format.
@@ -161,17 +197,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
             is_format = load_entry_point(
                 format.dist.key, 'obspy.plugin.waveform.' + format.name,
                 'isFormat')
-            # get all the test directories.
-            paths = [os.path.join(f.dist.location, 'obspy',
-                                  f.module_name.split('.')[1], 'tests', 'data')
-                     for f in formats
-                     if f.module_name.split('.')[1] !=
-                     format.module_name.split('.')[1]]
-            # Remove double paths because some modules can have two file
-            # formats.
-            paths = set(paths)
-            # Remove path if one module defines two file formats.
-            for path in paths:
+            for f, path in paths.items():
+                if format.name in paths and paths[f] == paths[format.name]:
+                    continue
                 # Collect all files found.
                 filelist = []
                 # Walk every path.
@@ -179,7 +207,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     filelist.extend([os.path.join(directory, _i) for _i in
                                      files])
                 for file in filelist:
-                    if any([n in file for n in KNOWN_FALSE]):
+                    if any([n in file for n in known_false]):
                         continue
                     if is_format(file) is True:  # pragma: no cover
                         false_positives.append((format.name, file))
@@ -192,7 +220,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                               false_positives])
             raise Exception(msg)
 
-    def test_readThreadSafe(self):
+    def test_read_thread_safe(self):
         """
         Tests for race conditions. Reading n_threads (currently 30) times
         the same waveform file in parallel and compare the results which must
@@ -200,7 +228,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         data = np.arange(0, 500)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
-        formats = _get_entry_points('obspy.plugin.waveform', 'writeFormat')
+        formats = _get_default_eps('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
@@ -231,7 +259,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     timeout = 570  # 30 seconds under Travis' limit
                 cond = threading.Condition()
 
-                def testFunction(streams, cond):
+                def test_functions(streams, cond):
                     st = read(outfile, format=format)
                     streams.append(st)
                     with cond:
@@ -240,7 +268,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 # created class.
                 our_threads = []
                 for _i in range(n_threads):
-                    thread = threading.Thread(target=testFunction,
+                    thread = threading.Thread(target=test_functions,
                                               args=(streams, cond))
                     thread.start()
                     our_threads.append(thread)
@@ -267,16 +295,16 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     os.remove(outfile[:-4] + '.QBN')
                     os.remove(outfile[:-4] + '.QHD')
 
-    def test_issue193(self):
+    def test_issue_193(self):
         """
         Test for issue #193: if non-contiguous array is written correctly.
         """
         warnings.filterwarnings("ignore", "Detected non contiguous data")
         # test all plugins with both read and write method
         formats_write = \
-            set(_get_entry_points('obspy.plugin.waveform', 'writeFormat'))
+            set(_get_default_eps('obspy.plugin.waveform', 'writeFormat'))
         formats_read = \
-            set(_get_entry_points('obspy.plugin.waveform', 'readFormat'))
+            set(_get_default_eps('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         # mseed will raise exception for int64 data, thus use int32 only
         data = np.arange(10, dtype=np.int32)
@@ -299,7 +327,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     os.remove(tempfile[:-4] + '.QHD')
             np.testing.assert_array_equal(tr.data, tr_test.data)
 
-    def test_readGzip2File(self):
+    def test_read_gzip2_file(self):
         """
         Tests reading gzip compressed waveforms.
         """
@@ -310,7 +338,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         st2 = read(os.path.join(ascii_path, 'tspair.ascii'))
         self.assertEqual(st1, st2)
 
-    def test_readBzip2File(self):
+    def test_read_bzip2_file(self):
         """
         Tests reading bzip2 compressed waveforms.
         """
@@ -321,7 +349,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         st2 = read(os.path.join(ascii_path, 'slist.ascii'))
         self.assertEqual(st1, st2)
 
-    def test_readTarArchive(self):
+    def test_read_tar_archive(self):
         """
         Tests reading tar compressed waveforms.
         """
@@ -345,7 +373,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         st2 = read(os.path.join(ascii_path, "slist.ascii"))
         self.assertEqual(st1, st2)
 
-    def test_readZipArchive(self):
+    def test_read_zip_archive(self):
         """
         Tests reading zip compressed waveforms.
         """
@@ -356,7 +384,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         st2 = read(os.path.join(ascii_path, 'slist.ascii'))
         self.assertEqual(st1, st2)
 
-    def test_raiseOnUnknownFormat(self):
+    def test_raise_on_unknown_format(self):
         """
         Test case for issue #338:
         """
@@ -377,9 +405,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         # find all plugins with both read and write method
         formats_write = \
-            set(_get_entry_points('obspy.plugin.waveform', 'writeFormat'))
+            set(_get_default_eps('obspy.plugin.waveform', 'writeFormat'))
         formats_read = \
-            set(_get_entry_points('obspy.plugin.waveform', 'readFormat'))
+            set(_get_default_eps('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         stream_orig = read()
         for format in formats:
@@ -405,6 +433,57 @@ class WaveformPluginsTestCase(unittest.TestCase):
             st_deepcopy.sort()
             msg = "Error in wavform format=%s" % format
             self.assertEqual(str(st), str(st_deepcopy), msg=msg)
+
+    def test_auto_file_format_during_writing(self):
+        """
+        The file format is either determined by directly specifying the
+        format or deduced from the filename. The former overwrites the latter.
+        """
+        # Get format name and name of the write function.
+        formats = [(key, value.module_name) for key, value in
+                   _get_default_eps('obspy.plugin.waveform',
+                                    'writeFormat').items()
+                   # Only test plugins that are actually part of ObsPy.
+                   if value.dist.key == "obspy"]
+
+        # Test for stream as well as for trace.
+        stream_trace = [read(), read()[0]]
+
+        for suffix, module_name in formats:
+            # A bit of magic to get the fully qualified function name...
+            fct_name = module_name + "." + load_entry_point(
+                "obspy",
+                "obspy.plugin.waveform.%s" % suffix,
+                "writeFormat").__name__
+            # For stream and trace.
+            for obj in stream_trace:
+                # Various versions of the suffix.
+                for s in [suffix.capitalize(), suffix.lower(), suffix.upper()]:
+                    with mock.patch(fct_name) as p:
+                        obj.write("temp." + s)
+                    # Make sure the fct has actually been called.
+                    self.assertEqual(p.call_count, 1)
+
+                    # Manually specifying the format name should overwrite
+                    # this.
+                    with mock.patch("obspy.io.mseed.core._write_mseed") as p:
+                        obj.write("temp." + s, format="mseed")
+                    self.assertEqual(p.call_count, 1)
+
+        # An unknown suffix should raise.
+        with self.assertRaises(TypeError):
+            for obj in stream_trace:
+                obj.write("temp.random_suffix")
+
+    def test_reading_tarfile_impostor(self):
+        """
+        Tests that a file, that by chance is interpreted as a valid tar file
+        can be read by ObsPy and is not treated as a tar file.
+
+        See #1436.
+        """
+        st = read("/path/to/tarfile_impostor.mseed")
+        self.assertEqual(st[0].id, "10.864.1B.004")
 
 
 def suite():

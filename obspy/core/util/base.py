@@ -6,7 +6,7 @@ Base utilities and constants for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -27,28 +27,35 @@ with standard_library.hooks():
 from pkg_resources import iter_entry_points, load_entry_point
 import numpy as np
 
+import requests
+
 from obspy.core.util.misc import to_int_or_zero
 
 
 # defining ObsPy modules currently used by runtests and the path function
-DEFAULT_MODULES = ['core', 'db', 'geodetics', 'imaging',
-                   'io.ah', 'io.ascii', 'io.cnv', 'io.css', 'io.datamark',
-                   'io.gse2', 'io.json', 'io.kinemetrics', 'io.mseed',
-                   'io.ndk', 'io.nlloc', 'io.pdas', 'io.pde', 'io.quakeml',
+DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
+                   'io.ah', 'io.ascii', 'io.cmtsolution', 'io.cnv', 'io.css',
+                   'io.datamark', 'io.gcf', 'io.gse2', 'io.json',
+                   'io.kinemetrics', 'io.kml', 'io.mseed', 'io.ndk',
+                   'io.nied', 'io.nlloc', 'io.pdas', 'io.pde', 'io.quakeml',
                    'io.sac', 'io.seg2', 'io.segy', 'io.seisan', 'io.sh',
+                   'io.shapefile', 'io.seiscomp', 'io.stationtxt',
                    'io.stationxml', 'io.wav', 'io.xseed', 'io.y', 'io.zmap',
                    'realtime', 'signal', 'taup']
 NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',
                    'clients.iris', 'clients.neic', 'clients.seedlink',
-                   'clients.seishub']
+                   'clients.seishub', 'clients.syngine']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
                             'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS',
-                            'AH', 'PDAS', 'KINEMETRICS_EVT']
+                            'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
+                            'GCF']
 EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
+# waveform plugins accepting a byteorder keyword
+WAVEFORM_ACCEPT_BYTEORDER = ['MSEED', 'Q', 'SAC', 'SEGY', 'SU']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
@@ -106,12 +113,15 @@ class NamedTemporaryFile(io.BufferedIOBase):
     def tell(self, *args, **kwargs):
         return self._fileobj.tell(*args, **kwargs)
 
+    def close(self, *args, **kwargs):
+        super(NamedTemporaryFile, self).close(*args, **kwargs)
+        self._fileobj.close()
+
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
-        self.close()  # flush internal buffer
-        self._fileobj.close()
+        self.close()
         os.remove(self.name)
 
 
@@ -145,6 +155,11 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
         dtype = native_str(dtype)
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
+        # fill with nan if float number and otherwise with a very small number
+        if issubclass(temp.data.dtype.type, np.integer):
+            temp.data[:] = np.iinfo(temp.data.dtype).min
+        else:
+            temp.data[:] = np.nan
     elif (isinstance(fill_value, list) or isinstance(fill_value, tuple)) \
             and len(fill_value) == 2:
         # if two values are supplied use these as samples bordering to our data
@@ -403,12 +418,12 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
     """
-    EPS = ENTRY_POINTS[plugin_type]
+    eps = ENTRY_POINTS[plugin_type]
     # get format entry point
     format_ep = None
     if not format:
         # auto detect format - go through all known formats in given sort order
-        for format_ep in EPS.values():
+        for format_ep in eps.values():
             # search isFormat for given entry point
             is_format = load_entry_point(
                 format_ep.dist.key,
@@ -433,10 +448,10 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
         # format given via argument
         format = format.upper()
         try:
-            format_ep = EPS[format]
+            format_ep = eps[format]
         except (KeyError, IndexError):
             msg = "Format \"%s\" is not supported. Supported types: %s"
-            raise TypeError(msg % (format, ', '.join(EPS)))
+            raise TypeError(msg % (format, ', '.join(eps)))
     # file format should be known by now
     try:
         # search readFormat for given entry point
@@ -446,7 +461,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
             'readFormat')
     except ImportError:
         msg = "Format \"%s\" is not supported. Supported types: %s"
-        raise TypeError(msg % (format_ep.name, ', '.join(EPS)))
+        raise TypeError(msg % (format_ep.name, ', '.join(eps)))
     # read
     list_obj = read_format(filename, **kwargs)
     return list_obj, format_ep.name
@@ -469,15 +484,19 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
     >>> print(table)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    ========= ===============... ========================================...
+    ======... ===============... ========================================...
     Format    Required Module    _`Linked Function Call`
-    ========= ===============... ========================================...
+    ======... ===============... ========================================...
+    CMTSOLUTION  :mod:`...io.cmtsolution` :func:`..._write_cmtsolution`
     CNV       :mod:`...io.cnv`   :func:`obspy.io.cnv.core._write_cnv`
     JSON      :mod:`...io.json`  :func:`obspy.io.json.core._write_json`
+    KML       :mod:`obspy.io.kml` :func:`obspy.io.kml.core._write_kml`
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
     QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
+    SHAPEFILE :mod:`obspy.io.shapefile`
+                             :func:`obspy.io.shapefile.core._write_shapefile`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`
-    ========= ===============... ========================================...
+    ======... ===============... ========================================...
 
     :type group: str
     :param group: Plugin group to search (e.g. "waveform" or "event").
@@ -563,6 +582,39 @@ def _get_deprecated_argument_action(old_name, new_name, real_action='store'):
                 setattr(namespace, self.dest, False)
 
     return _Action
+
+
+def download_to_file(url, filename_or_buffer, chunk_size=1024):
+    """
+    Helper function to download a potentially large file.
+
+    :param url: The URL to GET the data from.
+    :type url: str
+    :param filename_or_buffer: The filename_or_buffer or file-like object to
+        download to.
+    :type filename_or_buffer: str or file-like object
+    :param chunk_size: The chunk size in bytes.
+    :type chunk_size: int
+    """
+    # Workaround for old request versions.
+    try:
+        r = requests.get(url, stream=True)
+    except TypeError:
+        r = requests.get(url)
+
+    r.raise_for_status()
+
+    if hasattr(filename_or_buffer, "write"):
+        for chunk in r.iter_content(chunk_size=chunk_size):
+            if not chunk:
+                continue
+            filename_or_buffer.write(chunk)
+    else:
+        with io.open(filename_or_buffer, "wb") as fh:
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                if not chunk:
+                    continue
+                fh.write(chunk)
 
 
 if __name__ == '__main__':

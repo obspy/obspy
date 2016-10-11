@@ -7,13 +7,15 @@ import math
 import os
 import unittest
 from copy import deepcopy
+import warnings
 
 import numpy as np
 import numpy.ma as ma
 
-from obspy import Stream, Trace, UTCDateTime, __version__, read
+from obspy import Stream, Trace, UTCDateTime, __version__, read, read_inventory
 from obspy.core import Stats
 from obspy.core.compatibility import mock
+from obspy.core.util.testing import ImageComparison
 from obspy.io.xseed import Parser
 
 
@@ -337,7 +339,7 @@ class TraceTestCase(unittest.TestCase):
         # start time should be before end time
         self.assertRaises(ValueError, trace.trim, end, start)
 
-    def test_trimAllDoesNotChangeDtype(self):
+    def test_trim_all_does_not_change_dtype(self):
         """
         If a Trace is completely trimmed, e.g. no data samples are remaining,
         the dtype should remain unchanged.
@@ -352,7 +354,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(tr.data), 0)
         self.assertEqual(tr.data.dtype, np.int16)
 
-    def test_addTraceWithGap(self):
+    def test_add_trace_with_gap(self):
         """
         Tests __add__ method of the Trace class.
         """
@@ -385,7 +387,7 @@ class TraceTestCase(unittest.TestCase):
         # verify
         trace.verify()
 
-    def test_addTraceWithOverlap(self):
+    def test_add_trace_with_overlap(self):
         """
         Tests __add__ method of the Trace class.
         """
@@ -415,7 +417,7 @@ class TraceTestCase(unittest.TestCase):
         # verify
         trace.verify()
 
-    def test_addSameTrace(self):
+    def test_add_same_trace(self):
         """
         Tests __add__ method of the Trace class.
         """
@@ -429,7 +431,7 @@ class TraceTestCase(unittest.TestCase):
         # verify
         trace.verify()
 
-    def test_addTraceWithinTrace(self):
+    def test_add_trace_within_trace(self):
         """
         Tests __add__ method of the Trace class.
         """
@@ -460,7 +462,7 @@ class TraceTestCase(unittest.TestCase):
         # verify
         trace.verify()
 
-    def test_addGapAndOverlap(self):
+    def test_add_gap_and_overlap(self):
         """
         Test order of merging traces.
         """
@@ -504,12 +506,12 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(gap.data.data[:1000], tr2.data)
         np.testing.assert_array_equal(gap.data.data[1600:], tr3.data)
 
-    def test_addIntoGap(self):
+    def test_add_into_gap(self):
         """
         Test __add__ method of the Trace class
         Adding a trace that fits perfectly into gap in a trace
         """
-        myArray = np.arange(6, dtype=np.int32)
+        my_array = np.arange(6, dtype=np.int32)
 
         stats = Stats()
         stats.network = 'VI'
@@ -521,15 +523,15 @@ class TraceTestCase(unittest.TestCase):
 
         bigtrace = Trace(data=np.array([], dtype=np.int32), header=stats)
         bigtrace_sort = bigtrace.copy()
-        stats['npts'] = len(myArray)
-        myTrace = Trace(data=myArray, header=stats)
+        stats['npts'] = len(my_array)
+        my_trace = Trace(data=my_array, header=stats)
 
         stats['npts'] = 2
-        trace1 = Trace(data=myArray[0:2].copy(), header=stats)
+        trace1 = Trace(data=my_array[0:2].copy(), header=stats)
         stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 2)
-        trace2 = Trace(data=myArray[2:4].copy(), header=stats)
+        trace2 = Trace(data=my_array[2:4].copy(), header=stats)
         stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 4)
-        trace3 = Trace(data=myArray[4:6].copy(), header=stats)
+        trace3 = Trace(data=my_array[4:6].copy(), header=stats)
 
         tr1 = bigtrace
         tr2 = bigtrace_sort
@@ -550,23 +552,23 @@ class TraceTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(tr, Trace))
                 self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
-            self.assertTrue((bigtrace_sort.data == myArray).all())
+            self.assertTrue((bigtrace_sort.data == my_array).all())
 
             fail_pattern = "\n\tExpected %s\n\tbut got  %s"
-            failinfo = fail_pattern % (myTrace, bigtrace_sort)
-            failinfo += fail_pattern % (myTrace.data, bigtrace_sort.data)
-            self.assertEqual(bigtrace_sort, myTrace, failinfo)
+            failinfo = fail_pattern % (my_trace, bigtrace_sort)
+            failinfo += fail_pattern % (my_trace.data, bigtrace_sort.data)
+            self.assertEqual(bigtrace_sort, my_trace, failinfo)
 
-            failinfo = fail_pattern % (myArray, bigtrace.data)
-            self.assertTrue((bigtrace.data == myArray).all(), failinfo)
+            failinfo = fail_pattern % (my_array, bigtrace.data)
+            self.assertTrue((bigtrace.data == my_array).all(), failinfo)
 
-            failinfo = fail_pattern % (myTrace, bigtrace)
-            failinfo += fail_pattern % (myTrace.data, bigtrace.data)
-            self.assertEqual(bigtrace, myTrace, failinfo)
+            failinfo = fail_pattern % (my_trace, bigtrace)
+            failinfo += fail_pattern % (my_trace.data, bigtrace.data)
+            self.assertEqual(bigtrace, my_trace, failinfo)
 
             for array_ in (bigtrace.data, bigtrace_sort.data):
-                failinfo = fail_pattern % (myArray.dtype, array_.dtype)
-                self.assertEqual(myArray.dtype, array_.dtype, failinfo)
+                failinfo = fail_pattern % (my_array.dtype, array_.dtype)
+                self.assertEqual(my_array.dtype, array_.dtype, failinfo)
 
     def test_slice(self):
         """
@@ -591,7 +593,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertIn("processing", tr2.stats)
         self.assertIn("trim", tr2.stats.processing[0])
 
-    def test_slice_noStarttimeOrEndtime(self):
+    def test_slice_no_starttime_or_endtime(self):
         """
         Tests the slicing of trace objects with no start time or end time
         provided. Compares results against the equivalent trim() operation
@@ -684,7 +686,34 @@ class TraceTestCase(unittest.TestCase):
         self.__remove_processing(tr2)
         self.assertEqual(tr_trim, tr2)
 
-    def test_trimFloatingPoint(self):
+    def test_slice_nearest_sample(self):
+        """
+        Tests slicing with the nearest sample flag set to on or off.
+        """
+        tr = Trace(data=np.arange(6))
+        # Samples at:
+        # 0       10       20       30       40       50
+        tr.stats.sampling_rate = 0.1
+
+        # Nearest sample flag defaults to true.
+        tr2 = tr.slice(UTCDateTime(4), UTCDateTime(44))
+        self.assertEqual(tr2.stats.starttime, UTCDateTime(0))
+        self.assertEqual(tr2.stats.endtime, UTCDateTime(40))
+
+        tr2 = tr.slice(UTCDateTime(8), UTCDateTime(48))
+        self.assertEqual(tr2.stats.starttime, UTCDateTime(10))
+        self.assertEqual(tr2.stats.endtime, UTCDateTime(50))
+
+        # Setting it to False changes the returned values.
+        tr2 = tr.slice(UTCDateTime(4), UTCDateTime(44), nearest_sample=False)
+        self.assertEqual(tr2.stats.starttime, UTCDateTime(10))
+        self.assertEqual(tr2.stats.endtime, UTCDateTime(40))
+
+        tr2 = tr.slice(UTCDateTime(8), UTCDateTime(48), nearest_sample=False)
+        self.assertEqual(tr2.stats.starttime, UTCDateTime(10))
+        self.assertEqual(tr2.stats.endtime, UTCDateTime(40))
+
+    def test_trim_floating_point(self):
         """
         Tests the slicing of trace objects.
         """
@@ -768,7 +797,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.data.ctypes.data, mem_pos)
         self.assertEqual(tr.stats, org_stats)
 
-    def test_trimFloatingPointWithPadding1(self):
+    def test_trim_floating_point_with_padding_1(self):
         """
         Tests the slicing of trace objects with the use of the padding option.
         """
@@ -805,7 +834,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.data.ctypes.data, mem_pos)
         self.assertEqual(tr.stats, org_stats)
 
-    def test_trimFloatingPointWithPadding2(self):
+    def test_trim_floating_point_with_padding_2(self):
         """
         Use more complicated times and sampling rate.
         """
@@ -868,7 +897,7 @@ class TraceTestCase(unittest.TestCase):
         tr2.data = np.arange(10, dtype=np.float32)
         self.assertRaises(TypeError, tr.__add__, tr2)
 
-    def test_addOverlapsDefaultMethod(self):
+    def test_add_overlaps_default_method(self):
         """
         Test __add__ method of the Trace object.
         """
@@ -957,7 +986,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
         self.assertEqual(tr.data.tolist(), [None] * 10)
 
-    def test_addWithDifferentSamplingRates(self):
+    def test_add_with_different_sampling_rates(self):
         """
         Test __add__ method of the Trace object.
         """
@@ -987,7 +1016,7 @@ class TraceTestCase(unittest.TestCase):
         tr2 + tr4
         tr4 + tr2
 
-    def test_addWithDifferentDatatypesOrID(self):
+    def test_add_with_different_datatypes_or_id(self):
         """
         Test __add__ method of the Trace object.
         """
@@ -1081,7 +1110,7 @@ class TraceTestCase(unittest.TestCase):
             self.assertEqual(tr0 == object, False)
             self.assertEqual(tr0 != object, True)
 
-    def test_nearestSample(self):
+    def test_nearest_sample(self):
         """
         This test case shows that the libmseed is actually flooring the
         starttime to the next sample value, regardless if it is the nearest
@@ -1152,7 +1181,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
 
-    def test_maskedArrayToString(self):
+    def test_masked_array_to_string(self):
         """
         Masked arrays should be marked using __str__.
         """
@@ -1217,7 +1246,7 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             tr.data, np.concatenate([[0.0], np.cumsum(data)[:-1] * 0.1]))
 
-    def test_issue317(self):
+    def test_issue_317(self):
         """
         Tests times after breaking a stream into parts and merging it again.
         """
@@ -1350,6 +1379,7 @@ class TraceTestCase(unittest.TestCase):
         """
         tr = Trace(data=np.ones(100))
         tr.stats.sampling_rate = 20
+        delta = tr.stats.delta
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr.stats.starttime = start
         tm = tr.times()
@@ -1358,6 +1388,35 @@ class TraceTestCase(unittest.TestCase):
         tr.data[30:40] = np.ma.masked
         tm = tr.times()
         self.assertTrue(np.alltrue(tr.data.mask == tm.mask))
+        # test relative with reftime
+        tr.data = np.ones(100)
+        shift = 9.5
+        reftime = start - shift
+        got = tr.times(reftime=reftime)
+        self.assertEqual(len(got), tr.stats.npts)
+        expected = np.arange(shift, shift + 4.5 * delta, delta)
+        np.testing.assert_allclose(got[:5], expected, rtol=1e-8)
+        # test other options
+        got = tr.times("utcdatetime")
+        expected = np.array([
+            UTCDateTime(2000, 1, 1, 0, 0),
+            UTCDateTime(2000, 1, 1, 0, 0, 0, 50000),
+            UTCDateTime(2000, 1, 1, 0, 0, 0, 100000),
+            UTCDateTime(2000, 1, 1, 0, 0, 0, 150000),
+            UTCDateTime(2000, 1, 1, 0, 0, 0, 200000)], dtype=UTCDateTime)
+        self.assertTrue(isinstance(got[0], UTCDateTime))
+        np.testing.assert_allclose(
+            [t_.timestamp for t_ in got[:5]],
+            [t_.timestamp for t_ in expected], rtol=1e-17)
+        got = tr.times("timestamp")
+        expected = np.arange(0, 4.5 * delta, delta) + 946684800.0
+        np.testing.assert_allclose(got[:5], expected, rtol=1e-17)
+        got = tr.times("matplotlib")
+        expected = np.array([
+            730120.00000000000000000000, 730120.00000057870056480169,
+            730120.00000115740112960339, 730120.00000173610169440508,
+            730120.00000231480225920677])
+        np.testing.assert_allclose(got[:5], expected, rtol=1e-17)
 
     def test_modulo_operation(self):
         """
@@ -1392,7 +1451,7 @@ class TraceTestCase(unittest.TestCase):
         tr.stats.sampling_rate = 20
         tr.spectrogram(show=False)
 
-    def test_raiseMasked(self):
+    def test_raise_masked(self):
         """
         Tests that detrend() raises in case of a masked array. (see #498)
         """
@@ -1453,7 +1512,7 @@ class TraceTestCase(unittest.TestCase):
                 kwargs[key if key != "location" else "locid"], tr.stats[key],
                 msg="'%s' did not get passed on to evalresp" % key)
 
-    def test_issue540(self):
+    def test_issue_540(self):
         """
         Trim with pad=True and given fill value should not return a masked
         NumPy array.
@@ -1566,7 +1625,7 @@ class TraceTestCase(unittest.TestCase):
         tr.resample(400)
         tr.differentiate()
         tr.integrate()
-        tr.taper()
+        tr.taper(max_percentage=0.1)
 
     def test_issue_695(self):
         x = np.zeros(12)
@@ -1633,6 +1692,50 @@ class TraceTestCase(unittest.TestCase):
         tr.attach_response(inv)
         tr.remove_response()
 
+    def test_processing_info_remove_response_and_sensitivity(self):
+        """
+        Tests adding processing info for remove_response() and
+        remove_sensitivity().
+
+        See #1247.
+        """
+        # remove_sensitivity() with response object attached to the trace.
+        tr = read()[0]
+        self.assertNotIn("processing", tr.stats)
+        tr.remove_sensitivity()
+        self.assertIn("processing", tr.stats)
+        self.assertEqual(len(tr.stats.processing), 1)
+        self.assertTrue(tr.stats.processing[0].endswith(
+            "remove_sensitivity(inventory=None)"))
+
+        # With passed inventory object.
+        tr = read()[0]
+        self.assertNotIn("processing", tr.stats)
+        tr.remove_sensitivity(inventory=read_inventory())
+        self.assertIn("processing", tr.stats)
+        self.assertEqual(len(tr.stats.processing), 1)
+        self.assertIn("remove_sensitivity(inventory=<obspy.core.inventory."
+                      "inventory.Inventory object ", tr.stats.processing[0])
+
+        # remove_response()
+        tr = read()[0]
+        self.assertNotIn("processing", tr.stats)
+        tr.remove_response()
+        self.assertIn("processing", tr.stats)
+        self.assertEqual(len(tr.stats.processing), 1)
+        self.assertIn("remove_response(", tr.stats.processing[0])
+        self.assertIn("inventory=None", tr.stats.processing[0])
+
+        # With passed inventory object.
+        tr = read()[0]
+        self.assertNotIn("processing", tr.stats)
+        tr.remove_response(inventory=read_inventory())
+        self.assertIn("processing", tr.stats)
+        self.assertEqual(len(tr.stats.processing), 1)
+        self.assertIn("remove_response(", tr.stats.processing[0])
+        self.assertIn("inventory=<obspy.core.inventory.inventory.Inventory "
+                      "object", tr.stats.processing[0])
+
     def test_processing_information(self):
         """
         Test case for the automatic processing information.
@@ -1662,7 +1765,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(
             "ObsPy %s: trim(endtime=None::fill_value=None::"
             "nearest_sample=True::pad=False::starttime=%s)" % (
-                __version__, str(trimming_starttime)),
+                __version__, repr(trimming_starttime)),
             pr[0])
         self.assertIn("filter", pr[1])
         self.assertIn("simulate", pr[2])
@@ -1787,6 +1890,70 @@ class TraceTestCase(unittest.TestCase):
                                                method=inter_type)
             self.assertEqual(int_tr.stats.delta, 2.0)
             self.assertLessEqual(int_tr.stats.endtime, org_tr.stats.endtime)
+
+    def test_interpolation_time_shift(self):
+        """
+        Tests the time shift of the interpolation.
+        """
+        tr = read()[0]
+        tr.stats.sampling_rate = 1.0
+        tr.data = tr.data[:500]
+        tr.interpolate(method="lanczos", sampling_rate=10.0, a=20)
+        tr.stats.sampling_rate = 1.0
+        tr.data = tr.data[:500]
+        tr.stats.starttime = UTCDateTime(0)
+
+        org_tr = tr.copy()
+
+        # Now this does not do much for now but actually just shifts the
+        # samples.
+        tr.interpolate(method="lanczos", sampling_rate=1.0, a=1,
+                       time_shift=0.2)
+        self.assertEqual(tr.stats.starttime, org_tr.stats.starttime + 0.2)
+        self.assertEqual(tr.stats.endtime, org_tr.stats.endtime + 0.2)
+        np.testing.assert_allclose(tr.data, org_tr.data, atol=1E-9)
+
+        tr.interpolate(method="lanczos", sampling_rate=1.0, a=1,
+                       time_shift=0.4)
+        self.assertEqual(tr.stats.starttime, org_tr.stats.starttime + 0.6)
+        self.assertEqual(tr.stats.endtime, org_tr.stats.endtime + 0.6)
+        np.testing.assert_allclose(tr.data, org_tr.data, atol=1E-9)
+
+        tr.interpolate(method="lanczos", sampling_rate=1.0, a=1,
+                       time_shift=-0.6)
+        self.assertEqual(tr.stats.starttime, org_tr.stats.starttime)
+        self.assertEqual(tr.stats.endtime, org_tr.stats.endtime)
+        np.testing.assert_allclose(tr.data, org_tr.data, atol=1E-9)
+
+        # This becomes more interesting when also fixing the sample
+        # positions. Then one can shift by subsample accuracy while leaving
+        # the sample positions intact. Note that there naturally are some
+        # boundary effects and as the interpolation method does not deal
+        # with any kind of extrapolation you will lose the first or last
+        # samples.
+        # This is a fairly extreme example but of course there are errors
+        # when doing an interpolation - a shift using an FFT is more accurate.
+        tr.interpolate(method="lanczos", sampling_rate=1.0, a=50,
+                       starttime=tr.stats.starttime + tr.stats.delta,
+                       time_shift=0.2)
+        # The sample point did not change but we lost the first sample,
+        # as we shifted towards the future.
+        self.assertEqual(tr.stats.starttime, org_tr.stats.starttime + 1.0)
+        self.assertEqual(tr.stats.endtime, org_tr.stats.endtime)
+        # The data naturally also changed.
+        self.assertRaises(AssertionError, np.testing.assert_allclose,
+                          tr.data, org_tr.data[1:], atol=1E-9)
+        # Shift back. This time we will lose the last sample.
+        tr.interpolate(method="lanczos", sampling_rate=1.0, a=50,
+                       starttime=tr.stats.starttime,
+                       time_shift=-0.2)
+        self.assertEqual(tr.stats.starttime, org_tr.stats.starttime + 1.0)
+        self.assertEqual(tr.stats.endtime, org_tr.stats.endtime - 1.0)
+        # But the data (aside from edge effects - we are going forward and
+        # backwards again so they go twice as far!) should now again be the
+        # same as we started out with.
+        np.testing.assert_allclose(
+            tr.data[100:-100], org_tr.data[101:-101], atol=1E-9, rtol=1E-4)
 
     def test_interpolation_arguments(self):
         """
@@ -1930,6 +2097,523 @@ class TraceTestCase(unittest.TestCase):
         window = np.array([0, 1, 2, 3])
         self.assertRaises(ValueError, tr.resample,
                           sampling_rate=0.5, window=window, no_filter=True)
+
+    def test_slide(self):
+        """
+        Tests for sliding a window across a trace object.
+        """
+        tr = Trace(data=np.linspace(0, 100, 101))
+        tr.stats.starttime = UTCDateTime(0.0)
+        tr.stats.sampling_rate = 5.0
+
+        # First slice it in 4 pieces. Window length is in seconds.
+        slices = []
+        for window_tr in tr.slide(window_length=5.0, step=5.0):
+            slices.append(window_tr)
+
+        self.assertEqual(len(slices), 4)
+        self.assertEqual(slices[0],
+                         tr.slice(UTCDateTime(0), UTCDateTime(5)))
+        self.assertEqual(slices[1],
+                         tr.slice(UTCDateTime(5), UTCDateTime(10)))
+        self.assertEqual(slices[2],
+                         tr.slice(UTCDateTime(10), UTCDateTime(15)))
+        self.assertEqual(slices[3],
+                         tr.slice(UTCDateTime(15), UTCDateTime(20)))
+
+        # Different step which is the distance between two windows measured
+        # from the start of the first window in seconds.
+        slices = []
+        for window_tr in tr.slide(window_length=5.0, step=10.0):
+            slices.append(window_tr)
+
+        self.assertEqual(len(slices), 2)
+        self.assertEqual(slices[0],
+                         tr.slice(UTCDateTime(0), UTCDateTime(5)))
+        self.assertEqual(slices[1],
+                         tr.slice(UTCDateTime(10), UTCDateTime(15)))
+
+        # Offset determines the initial starting point. It defaults to zero.
+        slices = []
+        for window_tr in tr.slide(window_length=5.0, step=6.5, offset=8.5):
+            slices.append(window_tr)
+
+        self.assertEqual(len(slices), 2)
+        self.assertEqual(slices[0],
+                         tr.slice(UTCDateTime(8.5), UTCDateTime(13.5)))
+        self.assertEqual(slices[1],
+                         tr.slice(UTCDateTime(15.0), UTCDateTime(20.0)))
+
+        # By default only full length windows will be returned so any
+        # remainder that can no longer make up a full window will not be
+        # returned.
+        slices = []
+        for window_tr in tr.slide(window_length=15.0, step=15.0):
+            slices.append(window_tr)
+
+        self.assertEqual(len(slices), 1)
+        self.assertEqual(slices[0],
+                         tr.slice(UTCDateTime(0.0), UTCDateTime(15.0)))
+
+        # But it can optionally be returned.
+        slices = []
+        for window_tr in tr.slide(window_length=15.0, step=15.0,
+                                  include_partial_windows=True):
+            slices.append(window_tr)
+
+        self.assertEqual(len(slices), 2)
+        self.assertEqual(slices[0],
+                         tr.slice(UTCDateTime(0.0), UTCDateTime(15.0)))
+        self.assertEqual(slices[1],
+                         tr.slice(UTCDateTime(15.0), UTCDateTime(20.0)))
+
+        # Negative step lengths work together with an offset.
+        slices = []
+        for window_tr in tr.slide(window_length=5.0, step=-5.0, offset=20.0):
+            slices.append(window_tr)
+
+        self.assertEqual(len(slices), 4)
+        self.assertEqual(slices[0],
+                         tr.slice(UTCDateTime(15), UTCDateTime(20)))
+        self.assertEqual(slices[1],
+                         tr.slice(UTCDateTime(10), UTCDateTime(15)))
+        self.assertEqual(slices[2],
+                         tr.slice(UTCDateTime(5), UTCDateTime(10)))
+        self.assertEqual(slices[3],
+                         tr.slice(UTCDateTime(0), UTCDateTime(5)))
+
+    def test_slide_nearest_sample(self):
+        """
+        Tests that the nearest_sample argument is correctly passed to the
+        slice function calls.
+        """
+        tr = Trace(data=np.linspace(0, 100, 101))
+        tr.stats.starttime = UTCDateTime(0.0)
+        tr.stats.sampling_rate = 5.0
+
+        # It defaults to True.
+        with mock.patch("obspy.core.trace.Trace.slice") as patch:
+            patch.return_value = tr
+            list(tr.slide(5, 5))
+
+        self.assertEqual(patch.call_count, 4)
+        for arg in patch.call_args_list:
+            self.assertTrue(arg[1]["nearest_sample"])
+
+        # Force True.
+        with mock.patch("obspy.core.trace.Trace.slice") as patch:
+            patch.return_value = tr
+            list(tr.slide(5, 5, nearest_sample=True))
+
+        self.assertEqual(patch.call_count, 4)
+        for arg in patch.call_args_list:
+            self.assertTrue(arg[1]["nearest_sample"])
+
+        # Set to False.
+        with mock.patch("obspy.core.trace.Trace.slice") as patch:
+            patch.return_value = tr
+            list(tr.slide(5, 5, nearest_sample=False))
+
+        self.assertEqual(patch.call_count, 4)
+        for arg in patch.call_args_list:
+            self.assertFalse(arg[1]["nearest_sample"])
+
+    def test_remove_response_plot(self):
+        """
+        Tests the plotting option of remove_response().
+        """
+        tr = read("/path/to/IU_ULN_00_LH1_2015-07-18T02.mseed")[0]
+        inv = read_inventory("/path/to/IU_ULN_00_LH1.xml")
+        tr.attach_response(inv)
+
+        pre_filt = [0.001, 0.005, 10, 20]
+
+        image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        with ImageComparison(image_dir, "trace_remove_response.png",
+                             reltol=1.5) as ic:
+            tr.remove_response(pre_filt=pre_filt, output="DISP",
+                               water_level=60, end_stage=None, plot=ic.name)
+
+    def test_normalize(self):
+        """
+        Tests the normalize() method on normal and edge cases.
+        """
+        # Nothing should happen with ones.
+        tr = Trace(data=np.ones(5))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.ones(5))
+
+        # 10s should be normalized to all ones.
+        tr = Trace(data=10 * np.ones(5))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.ones(5))
+
+        # Negative 10s should be normalized to negative ones.
+        tr = Trace(data=-10 * np.ones(5))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, -np.ones(5))
+
+        # 10s and a couple of 5s should be normalized to 1s and a couple of
+        # 0.5s.
+        tr = Trace(data=np.array([10.0, 10.0, 5.0, 5.0]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([1.0, 1.0, 0.5, 0.5]))
+
+        # Same but negative values.
+        tr = Trace(data=np.array([-10.0, -10.0, -5.0, -5.0]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([-1.0, -1.0, -0.5, -0.5]))
+
+        # Mixed values.
+        tr = Trace(data=np.array([-10.0, -10.0, 5.0, 5.0]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([-1.0, -1.0, 0.5, 0.5]))
+
+        # Mixed values.
+        tr = Trace(data=np.array([-10.0, 10.0, -5.0, 5.0]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([-1.0, 1.0, -0.5, 0.5]))
+
+        # Mixed values.
+        tr = Trace(data=np.array([-10.0, -10.0, 0.0, 0.0]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([-1.0, -1.0, 0.0, 0.0]))
+
+        # Mixed values.
+        tr = Trace(data=np.array([10.0, 10.0, 0.0, 0.0]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([1.0, 1.0, 0.0, 0.0]))
+
+        # Small values get larger.
+        tr = Trace(data=np.array([-0.5, 0.5, 0.1, -0.1]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([-1.0, 1.0, 0.2, -0.2]))
+
+        # All zeros. Nothing should happen but a warning will be raised.
+        tr = Trace(data=np.array([-0.0, 0.0, 0.0, -0.0]))
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr.normalize()
+        self.assertEqual(w[0].category, UserWarning)
+        self.assertIn("Attempting to normalize by dividing through zero.",
+                      w[0].message.args[0])
+        np.testing.assert_allclose(tr.data, np.array([-0.0, 0.0, 0.0, -0.0]))
+
+        # Passing the norm specifies the division factor.
+        tr = Trace(data=np.array([10.0, 10.0, 0.0, 0.0]))
+        tr.normalize(norm=2)
+        np.testing.assert_allclose(tr.data, np.array([5.0, 5.0, 0.0, 0.0]))
+
+        # Passing the norm specifies the division factor. Nothing happens
+        # with zero.
+        tr = Trace(data=np.array([10.0, 10.0, 0.0, 0.0]))
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr.normalize(norm=0)
+        self.assertEqual(w[0].category, UserWarning)
+        self.assertIn("Attempting to normalize by dividing through zero.",
+                      w[0].message.args[0])
+        np.testing.assert_allclose(tr.data, np.array([10.0, 10.0, 0.0, 0.0]))
+
+        # Warning is raised for a negative norm, but the positive value is
+        # used.
+        tr = Trace(data=np.array([10.0, 10.0, 0.0, 0.0]))
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr.normalize(norm=-2)
+
+        self.assertEqual(w[0].category, UserWarning)
+        self.assertIn("Normalizing with negative values is forbidden.",
+                      w[0].message.args[0])
+
+        np.testing.assert_allclose(tr.data, np.array([5.0, 5.0, 0.0, 0.0]))
+
+    def test_dtype_is_not_unnecessarily_changed(self):
+        """
+        The dtype of the data should not change if not necessary. In general
+        this means that a float32 array should not become a float64 array
+        and vice-versa. Integer arrays will always be upcasted to float64
+        arrays when integer output makes no sense. Not all int32 numbers can be
+        accurately represented by float32 arrays so double precision is
+        required in order to not lose accuracy.
+
+        Exceptions are custom coded C routines where we usually opt to only
+        include either a single or a double precision version.
+        """
+        tr = read()[0]
+        tr.data = tr.data[:100]
+
+        # One for each common input dtype.
+        tr_int32 = tr.copy()
+        tr_int32.data = np.require(tr_int32.data, dtype=np.int32)
+        tr_int64 = tr.copy()
+        tr_int64.data = np.require(tr_int64.data, dtype=np.int64)
+        tr_float32 = tr.copy()
+        tr_float32.data = np.require(tr_float32.data, dtype=np.float32)
+        tr_float64 = tr.copy()
+        tr_float64.data = np.require(tr_float64.data, dtype=np.float64)
+
+        # Trimming.
+        self.assertEqual(tr_int32.copy().trim(1, 2).data.dtype, np.int32)
+        self.assertEqual(tr_int64.copy().trim(1, 2).data.dtype, np.int64)
+        self.assertEqual(tr_float32.copy().trim(1, 2).data.dtype, np.float32)
+        self.assertEqual(tr_float64.copy().trim(1, 2).data.dtype, np.float64)
+
+        # Filtering. SciPy converts data to 64bit floats. Filters are
+        # numerically tricky so a higher accuracy is justified here.
+        self.assertEqual(
+            tr_int32.copy().filter("lowpass", freq=2.0).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().filter("lowpass", freq=2.0).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().filter("lowpass", freq=2.0).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float64.copy().filter("lowpass", freq=2.0).data.dtype,
+            np.float64)
+
+        # Decimation should not change the dtype.
+        self.assertEqual(
+            tr_int32.copy().decimate(factor=2, no_filter=True).data.dtype,
+            np.int32)
+        self.assertEqual(
+            tr_int64.copy().decimate(factor=2, no_filter=True).data.dtype,
+            np.int64)
+        self.assertEqual(
+            tr_float32.copy().decimate(factor=2, no_filter=True).data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().decimate(factor=2, no_filter=True).data.dtype,
+            np.float64)
+
+        # Detrending will upcast integers but should not touch floats.
+        self.assertEqual(tr_int32.copy().detrend("simple").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().detrend("simple").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().detrend("simple").data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().detrend("simple").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int32.copy().detrend("linear").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().detrend("linear").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().detrend("linear").data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().detrend("linear").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int32.copy().detrend("constant").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().detrend("constant").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().detrend("constant").data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().detrend("constant").data.dtype,
+                         np.float64)
+        self.assertEqual(
+            tr_int32.copy().detrend("polynomial", order=3).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().detrend("polynomial", order=3).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().detrend("polynomial", order=3).data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().detrend("polynomial", order=3).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int32.copy().detrend("spline", order=3, dspline=100).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().detrend("spline", order=3, dspline=100).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().detrend("spline", order=3,
+                                      dspline=100).data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().detrend("spline", order=3,
+                                      dspline=100).data.dtype,
+            np.float64)
+
+        # Tapering. Upcast to float64 but don't change float32.
+        self.assertEqual(tr_int32.copy().taper(0.05, "hann").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().taper(0.05, "hann").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().taper(0.05, "hann").data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().taper(0.05, "hann").data.dtype,
+                         np.float64)
+
+        # Normalizing. Upcast to float64 but don't change float32.
+        self.assertEqual(tr_int32.copy().normalize().data.dtype, np.float64)
+        self.assertEqual(tr_int64.copy().normalize().data.dtype, np.float64)
+        self.assertEqual(tr_float32.copy().normalize().data.dtype, np.float32)
+        self.assertEqual(tr_float64.copy().normalize().data.dtype, np.float64)
+
+        # Differentiate. Upcast to float64 but don't change float32.
+        self.assertEqual(tr_int32.copy().differentiate().data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().differentiate().data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().differentiate().data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().differentiate().data.dtype,
+                         np.float64)
+
+        # Integrate. Upcast to float64 but don't change float32.
+        self.assertEqual(
+            tr_int32.copy().integrate(method="cumtrapz").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().integrate(method="cumtrapz").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().integrate(method="cumtrapz").data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().integrate(method="cumtrapz").data.dtype,
+            np.float64)
+        # The spline antiderivate always returns float64.
+        self.assertEqual(
+            tr_int32.copy().integrate(method="spline").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().integrate(method="spline").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().integrate(method="spline").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float64.copy().integrate(method="spline").data.dtype,
+            np.float64)
+
+        # Simulation is an operation in the spectral domain so double
+        # precision is a lot more accurate so it's fine here.
+        paz_remove = {'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j,
+                                -251.33 + 0j],
+                      'zeros': [0j, 0j], 'gain': 60077000.0,
+                      'sensitivity': 2516778400.0}
+        self.assertEqual(
+            tr_int32.copy().simulate(paz_remove=paz_remove).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().simulate(paz_remove=paz_remove).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().simulate(paz_remove=paz_remove).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float64.copy().simulate(paz_remove=paz_remove).data.dtype,
+            np.float64)
+
+        # Same with the fourier domain resampling.
+        self.assertEqual(tr_int32.copy().resample(2.0).data.dtype, np.float64)
+        self.assertEqual(tr_int64.copy().resample(2.0).data.dtype, np.float64)
+        self.assertEqual(tr_float32.copy().resample(2.0).data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float64.copy().resample(2.0).data.dtype,
+                         np.float64)
+
+        # Same with remove_response()
+        inv = read_inventory()
+        self.assertEqual(
+            tr_int32.copy().remove_response(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().remove_response(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().remove_response(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float64.copy().remove_response(inventory=inv).data.dtype,
+            np.float64)
+
+        # Remove sensitivity does not have to change the dtype for float32.
+        self.assertEqual(
+            tr_int32.copy().remove_sensitivity(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().remove_sensitivity(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().remove_sensitivity(inventory=inv).data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().remove_sensitivity(inventory=inv).data.dtype,
+            np.float64)
+
+        # Various interpolation routines.
+        # Weighted average slopes is a custom C routine that only works with
+        # double precision.
+        self.assertEqual(
+            tr_int32.copy().interpolate(
+                1.0, method="weighted_average_slopes").data.dtype, np.float64)
+        self.assertEqual(
+            tr_int64.copy().interpolate(
+                1.0, method="weighted_average_slopes").data.dtype, np.float64)
+        self.assertEqual(
+            tr_float32.copy().interpolate(
+                1.0, method="weighted_average_slopes").data.dtype, np.float64)
+        self.assertEqual(
+            tr_float64.copy().interpolate(
+                1.0, method="weighted_average_slopes").data.dtype, np.float64)
+        # Scipy treats splines as double precision. No need to convert them.
+        self.assertEqual(
+            tr_int32.copy().interpolate(
+                1.0, method="slinear").data.dtype, np.float64)
+        self.assertEqual(
+            tr_int64.copy().interpolate(
+                1.0, method="slinear").data.dtype, np.float64)
+        self.assertEqual(
+            tr_float32.copy().interpolate(
+                1.0, method="slinear").data.dtype, np.float64)
+        self.assertEqual(
+            tr_float64.copy().interpolate(
+                1.0, method="slinear").data.dtype, np.float64)
+        # Lanczos is a custom C routine that only works with double precision.
+        self.assertEqual(
+            tr_int32.copy().interpolate(
+                1.0, method="lanczos", a=2).data.dtype, np.float64)
+        self.assertEqual(
+            tr_int64.copy().interpolate(
+                1.0, method="lanczos", a=2).data.dtype, np.float64)
+        self.assertEqual(
+            tr_float32.copy().interpolate(
+                1.0, method="lanczos", a=2).data.dtype, np.float64)
+        self.assertEqual(
+            tr_float64.copy().interpolate(
+                1.0, method="lanczos", a=2).data.dtype, np.float64)
+
+    def test_set_trace_id(self):
+        """
+        Test setter of `id` property.
+        """
+        tr = Trace()
+        tr.stats.location = "00"
+        # check setting net/sta/loc/cha with an ID
+        tr.id = "GR.FUR..HHZ"
+        self.assertEqual(tr.stats.network, "GR")
+        self.assertEqual(tr.stats.station, "FUR")
+        self.assertEqual(tr.stats.location, "")
+        self.assertEqual(tr.stats.channel, "HHZ")
+        # check that invalid types will raise
+        invalid = (True, False, -10, 0, 1.0, [1, 4, 3, 2], np.ones(4))
+        for id_ in invalid:
+            with self.assertRaises(TypeError):
+                tr.id = id_
+        # check that invalid ID strings will raise
+        invalid = ("ABCD", "AB.CD", "AB.CD.00", "..EE", "....",
+                   "GR.FUR..HHZ.", "GR.FUR..HHZ...")
+        for id_ in invalid:
+            with self.assertRaises(ValueError):
+                tr.id = id_
 
 
 def suite():

@@ -13,7 +13,7 @@ the names of all available test cases.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 .. rubric:: Examples
 
@@ -68,7 +68,7 @@ the names of all available test cases.
     >>> tests = ['obspy.core.tests.test_stats.StatsTestCase.test_init']
     >>> obspy.core.run_tests(verbosity=2, tests=tests)  # DOCTEST: +SKIP
 
-(7) Report test results to http://tests.obspy.org/::
+(7) Report test results to https://tests.obspy.org/::
 
         $ obspy-runtests -r
 
@@ -96,6 +96,7 @@ import os
 import platform
 import sys
 import time
+import traceback
 import types
 import unittest
 import warnings
@@ -103,14 +104,20 @@ from argparse import ArgumentParser
 
 import numpy as np
 
+import obspy
 from obspy.core.util import ALL_MODULES, DEFAULT_MODULES, NETWORK_MODULES
+from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from obspy.core.util.version import get_git_version
 
 
-DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds', 'mpl_toolkits.basemap', 'mock', 'future',
-                "flake8", "pyflakes", "pyimgur"]
+HARD_DEPENDENCIES = [
+    "future", "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
+    "sqlalchemy", "decorator", "requests"]
+OPTIONAL_DEPENDENCIES = [
+    "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "osgeo.gdal",
+    "mpl_toolkits.basemap", "mock", "pyflakes", "geographiclib", "cartopy"]
+DEPENDENCIES = HARD_DEPENDENCIES + OPTIONAL_DEPENDENCIES
 
 PSTATS_HELP = """
 Call "python -m pstats obspy.pstats" for an interactive profiling session.
@@ -157,6 +164,7 @@ def _get_suites(verbosity=1, names=[]):
     suites = {}
     ut = unittest.TestLoader()
     status = True
+    import_failures = {}
     for name in names:
         suite = []
         if name in ALL_MODULES:
@@ -167,25 +175,42 @@ def _get_suites(verbosity=1, names=[]):
             test = name
         try:
             suite.append(ut.loadTestsFromName(test, None))
-        except Exception as e:
+        except Exception:
             status = False
+            msg = (">>> Cannot import test suite for module obspy.%s due "
+                   "to:" % name)
+            msg += "\n" + "-" * len(msg)
+            # Extract traceback from the exception.
+            exc_info = sys.exc_info()
+            stack = traceback.extract_stack()
+            tb = traceback.extract_tb(exc_info[2])
+            full_tb = stack[:-1] + tb
+            exc_line = traceback.format_exception_only(*exc_info[:2])
+            tb = "".join(traceback.format_list(full_tb))
+            tb += "\n"
+            tb += "".join(exc_line)
+            info = msg + "\n" + tb
+            import_failures[name] = info
             if verbosity:
-                print(e)
-                print("Cannot import test suite for module obspy.%s" % name)
+                print(msg)
+                print(tb)
         else:
             suites[name] = ut.suiteClass(suite)
-    return suites, status
+    return suites, status, import_failures
 
 
-def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests):
+def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
+                   ci_url=None, pr_url=None, import_failures=None):
     # import additional libraries here to speed up normal tests
     from future import standard_library
     with standard_library.hooks():
         import urllib.parse
         import http.client
     import codecs
-    from xml.etree import ElementTree as etree
+    from xml.etree import ElementTree
     from xml.sax.saxutils import escape
+    if import_failures is None:
+        import_failures = {}
     timestamp = int(time.time())
     result = {'timestamp': timestamp}
     result['slowest_tests'] = [("%0.3fs" % dt, "%s" % desc)
@@ -210,9 +235,23 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests):
     result['obspy']['installed'] = installed
     for module in sorted(ALL_MODULES):
         result['obspy'][module] = {}
+        result['obspy'][module]['installed'] = installed
+        # add a failed-to-import test module to report with an error
+        if module in import_failures:
+            result['obspy'][module]['timetaken'] = 0
+            result['obspy'][module]['tested'] = True
+            result['obspy'][module]['tests'] = 1
+            # can't say how many tests would have been in that suite so just
+            # leave 0
+            result['obspy'][module]['skipped'] = 0
+            result['obspy'][module]['failures'] = {}
+            result['obspy'][module]['errors'] = {
+                'f%s' % (errors): import_failures[module]}
+            tests += 1
+            errors += 1
+            continue
         if module not in ttrs:
             continue
-        result['obspy'][module]['installed'] = installed
         # test results
         ttr = ttrs[module]
         result['obspy'][module]['timetaken'] = ttr.__dict__['timetaken']
@@ -247,16 +286,22 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests):
     # get dependencies
     result['dependencies'] = {}
     for module in DEPENDENCIES:
-        temp = module.split('.')
+        if module == "pep8-naming":
+            module_ = "pep8ext_naming"
+        else:
+            module_ = module
+        temp = module_.split('.')
         try:
-            mod = __import__(module,
+            mod = __import__(module_,
                              fromlist=[native_str(temp[1:])])
-            if module == '_omnipy':
-                result['dependencies'][module] = mod.coreVersion()
-            else:
-                result['dependencies'][module] = mod.__version__
         except ImportError:
-            result['dependencies'][module] = ''
+            version_ = '---'
+        else:
+            try:
+                version_ = mod.__version__
+            except AttributeError:
+                version_ = '???'
+        result['dependencies'][module] = version_
     # get system / environment settings
     result['platform'] = {}
     for func in ['system', 'release', 'version', 'machine',
@@ -281,26 +326,46 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests):
     result['errors'] = errors
     result['failures'] = failures
     result['skipped'] = skipped
+    # try to append info on skipped tests:
+    result['skipped_tests_details'] = []
+    try:
+        for module, testresult_ in ttrs.items():
+            if testresult_.skipped:
+                for skipped_test, skip_message in testresult_.skipped:
+                    result['skipped_tests_details'].append(
+                        (module, skipped_test.__module__,
+                         skipped_test.__class__.__name__,
+                         skipped_test._testMethodName, skip_message))
+    except:
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        print("\n".join(traceback.format_exception(exc_type, exc_value,
+                                                   exc_tb)))
+        result['skipped_tests_details'] = []
+
+    if ci_url is not None:
+        result['ciurl'] = ci_url
+    if pr_url is not None:
+        result['prurl'] = pr_url
 
     # generate XML document
     def _dict2xml(doc, result):
         for key, value in result.items():
             key = key.split('(')[0].strip()
             if isinstance(value, dict):
-                child = etree.SubElement(doc, key)
+                child = ElementTree.SubElement(doc, key)
                 _dict2xml(child, value)
             elif value is not None:
                 if isinstance(value, (str, native_str)):
-                    etree.SubElement(doc, key).text = value
+                    ElementTree.SubElement(doc, key).text = value
                 elif isinstance(value, (str, native_str)):
-                    etree.SubElement(doc, key).text = str(value, 'utf-8')
+                    ElementTree.SubElement(doc, key).text = str(value, 'utf-8')
                 else:
-                    etree.SubElement(doc, key).text = str(value)
+                    ElementTree.SubElement(doc, key).text = str(value)
             else:
-                etree.SubElement(doc, key)
-    root = etree.Element("report")
+                ElementTree.SubElement(doc, key)
+    root = ElementTree.Element("report")
     _dict2xml(root, result)
-    xml_doc = etree.tostring(root)
+    xml_doc = ElementTree.tostring(root)
     print()
     # send result to report server
     params = urllib.parse.urlencode({
@@ -311,7 +376,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests):
         'tests': tests,
         'failures': failures,
         'errors': errors,
-        'modules': len(ttrs),
+        'modules': len(ttrs) + len(import_failures),
         'xml': xml_doc
     })
     headers = {"Content-type": "application/x-www-form-urlencoded",
@@ -342,11 +407,11 @@ class _TextTestResult(unittest._TextTestResult):
     """
     timer = []
 
-    def startTest(self, test):
+    def startTest(self, test):  # noqa
         self.start = time.time()
         super(_TextTestResult, self).startTest(test)
 
-    def stopTest(self, test):
+    def stopTest(self, test):  # noqa
         super(_TextTestResult, self).stopTest(test)
         self.timer.append((test, time.time() - self.start))
 
@@ -441,7 +506,7 @@ class _TextTestRunner:
         runs = 0
         faileds = 0
         erroreds = 0
-        wasSuccessful = True
+        was_successful = True
         if self.verbosity:
             self.stream.writeln()
         for result in results.values():
@@ -449,7 +514,7 @@ class _TextTestRunner:
             faileds += failed
             erroreds += errored
             if not result.wasSuccessful():
-                wasSuccessful = False
+                was_successful = False
                 result.printErrors()
             runs += result.testsRun
         if self.verbosity:
@@ -457,7 +522,7 @@ class _TextTestRunner:
             self.stream.writeln("Ran %d test%s in %.3fs" %
                                 (runs, runs != 1 and "s" or "", time_taken))
             self.stream.writeln()
-        if not wasSuccessful:
+        if not was_successful:
             self.stream.write("FAILED (")
             if faileds:
                 self.stream.write("failures=%d" % faileds)
@@ -471,20 +536,20 @@ class _TextTestRunner:
         return results, time_taken, (faileds + erroreds)
 
 
-def run_tests(verbosity=1, tests=[], report=False, log=None,
+def run_tests(verbosity=1, tests=None, report=False, log=None,
               server="tests.obspy.org", all=False, timeit=False,
               interactive=False, slowest=0, exclude=[], tutorial=False,
-              hostname=HOSTNAME):
+              hostname=HOSTNAME, ci_url=None, pr_url=None):
     """
     This function executes ObsPy test suites.
 
     :type verbosity: int, optional
     :param verbosity: Run tests in verbose mode (``0``=quiet, ``1``=normal,
         ``2``=verbose, default is ``1``).
-    :type tests: list of str, optional
-    :param tests: Test suites to run. If no suite is given all installed tests
-        suites will be started (default is a empty list).
-        Example ``['obspy.core.tests.suite']``.
+    :type tests: list of str
+    :param tests: List of submodules for which test suites should be run
+        (e.g. ``['io.mseed', 'io.sac']``).  If no suites are specified, all
+        non-networking submodules' test suites will be run.
     :type report: bool, optional
     :param report: Submits a test report if enabled (default is ``False``).
     :type log: str, optional
@@ -492,6 +557,9 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
     :type server: str, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
+    if tests is None:
+        tests = []
+    print("Running {}, ObsPy version '{}'".format(__file__, obspy.__version__))
     if all:
         tests = copy.copy(ALL_MODULES)
     elif not tests:
@@ -504,7 +572,7 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
             except ValueError:
                 pass
     # fetch tests suites
-    suites, status = _get_suites(verbosity, tests)
+    suites, status, import_failures = _get_suites(verbosity, tests)
     # add testsuite for all of the tutorial's rst files
     if tutorial:
         try:
@@ -546,7 +614,8 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
-        _create_report(ttr, total_time, log, server, hostname, sorted_tests)
+        _create_report(ttr, total_time, log, server, hostname, sorted_tests,
+                       ci_url, pr_url, import_failures)
     # make obspy-runtests exit with 1 if a test suite could not be added,
     # indicating failure
     if status is False:
@@ -556,15 +625,7 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
 
 
 def run(argv=None, interactive=True):
-    try:
-        import matplotlib
-        matplotlib.use("AGG")
-        if matplotlib.get_backend().upper() != "AGG":
-            raise Exception()
-    except:
-        msg = "unable to change backend to 'AGG' (to avoid windows popping up)"
-        warnings.warn(msg)
-
+    MatplotlibBackend.switch_backend("AGG", sloppy=False)
     parser = ArgumentParser(prog='obspy-runtests',
                             description='A command-line program that runs all '
                                         'ObsPy tests.')
@@ -574,6 +635,9 @@ def run(argv=None, interactive=True):
                         help='verbose mode')
     parser.add_argument('-q', '--quiet', action='store_true',
                         help='quiet mode')
+    parser.add_argument('--raise-all-warnings', action='store_true',
+                        help='All warnings are raised as exceptions when this '
+                             'flag is set. Only for debugging purposes.')
 
     # filter options
     filter = parser.add_argument_group('Module Filter',
@@ -610,6 +674,10 @@ def run(argv=None, interactive=True):
                         help='nodename visible at the report server')
     report.add_argument('-l', '--log', default=None,
                         help='append log file to test report')
+    report.add_argument('--ci-url', default=None, dest="ci_url",
+                        help='URL to Continuous Integration job page.')
+    report.add_argument('--pr-url', default=None,
+                        dest="pr_url", help='Github (Pull Request) URL.')
 
     # other options
     others = parser.add_argument_group('Additional Options')
@@ -631,9 +699,7 @@ def run(argv=None, interactive=True):
     if args.verbose:
         verbosity = 2
         # raise all NumPy warnings
-        np.seterr(all='raise')
-        # raise user and deprecation warnings
-        warnings.simplefilter("error", UserWarning)
+        np.seterr(all='warn')
     elif args.quiet:
         verbosity = 0
         # ignore user and deprecation warnings
@@ -647,6 +713,12 @@ def run(argv=None, interactive=True):
         np.seterr(all='print')
         # ignore user warnings
         warnings.simplefilter("ignore", UserWarning)
+    # whether to raise any warning that's appearing
+    if args.raise_all_warnings:
+        # raise all NumPy warnings
+        np.seterr(all='raise')
+        # raise user and deprecation warnings
+        warnings.simplefilter("error", UserWarning)
     # check for send report option or environmental settings
     if args.report or 'OBSPY_REPORT' in os.environ.keys():
         report = True
@@ -666,7 +738,8 @@ def run(argv=None, interactive=True):
     return run_tests(verbosity, args.tests, report, args.log, args.server,
                      args.all, args.timeit, interactive, args.n,
                      exclude=args.exclude, tutorial=args.tutorial,
-                     hostname=args.hostname)
+                     hostname=args.hostname, ci_url=args.ci_url,
+                     pr_url=args.pr_url)
 
 
 def main(argv=None, interactive=True):
@@ -689,7 +762,7 @@ def main(argv=None, interactive=True):
             import cProfile as Profile
         except ImportError:
             import Profile
-        Profile.run('from obspy.core.scripts.runtests import run; run()',
+        Profile.run('from obspy.scripts.runtests import run; run()',
                     'obspy.pstats')
         import pstats
         stats = pstats.Stats('obspy.pstats')

@@ -38,7 +38,7 @@
                   <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxmagnitude" style="query" type="xs:double">
                      <doc xml:lang="english" title="Limit to events with a magnitude smaller than or equal to the specified maximum"/>
                   </param>
-                  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="magtype" style="query" type="xs:string">
+                  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="magnitudetype" style="query" type="xs:string">
                      <doc xml:lang="english" title="type of Magnitude used to test minimum and maximum limits (case insensitive)">
                      Examples: Ml,Ms,mb,Mw"</doc>
                   </param>
@@ -112,7 +112,7 @@
                   <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxmagnitude" style="query" type="xs:double">
                      <doc xml:lang="english" title="Limit to events with a magnitude smaller than or equal to the specified maximum"/>
                   </param>
-                  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="magtype" style="query" type="xs:string">
+                  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="magnitudetype" style="query" type="xs:string">
                      <doc xml:lang="english" title="type of Magnitude used to test minimum and maximum limits (case insensitive)">
                      Examples: Ml,Ms,mb,Mw"</doc>
                   </param>
@@ -158,10 +158,10 @@
                   <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="updatedafter" style="query" type="xs:date">
                      <doc xml:lang="english" title="Limit to events updated after the specified time"/>
                   </param>
-                  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="eventid" style="query" type="xs:long">
+                  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="eventid" style="query" type="xs:string">
                      <doc xml:lang="english" title="Retrieve an event based on the unique ID numbers assigned by the IRIS DMC"/>
                   </param>
-                  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="originid" style="query" type="xs:long">
+                  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="originid" style="query" type="xs:string">
                      <doc xml:lang="english" title="Retrieve an event based on the unique origin ID numbers assigned by the IRIS DMC"/>
                   </param>
                   <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="includearrivals" style="query" type="xs:boolean" default="false">

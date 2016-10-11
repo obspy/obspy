@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA
 import gzip
 import os
 import unittest
+import warnings
 
 import numpy as np
 
@@ -71,14 +72,18 @@ class SEG2TestCase(unittest.TestCase):
         self.dir = os.path.dirname(__file__)
         self.path = os.path.join(self.dir, 'data')
 
-    def test_readDataFormat2(self):
+    def test_read_data_format_2(self):
         """
         Test reading a SEG2 data format code 2 file (int32).
         """
         basename = os.path.join(self.path,
                                 '20130107_103041000.CET.3c.cont.0')
         # read SEG2 data (in counts, int32)
-        st = read(basename + ".seg2.gz")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            st = read(basename + ".seg2.gz")
+        self.assertEqual(len(w), 1)
+        self.assertIn('custom', str(w[0]))
         # read reference ASCII data (in micrometer/s)
         with gzip.open(basename + ".DAT.gz", 'rb') as f:
             results = np.loadtxt(f).T

@@ -16,3 +16,5 @@ EXPORTS
     calcSteer
     generalizedBeamformer
     hermite_interpolation
+    lanczos_resample
+    calculate_kernel

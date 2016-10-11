@@ -3,13 +3,13 @@
 obspy.clients.fdsn - FDSN Web service client for ObsPy
 ======================================================
 The obspy.clients.fdsn package contains a client to access web servers that
-implement the FDSN web service definitions (http://www.fdsn.org/webservices/).
+implement the FDSN web service definitions (https://www.fdsn.org/webservices/).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Basic Usage
 -----------
@@ -30,16 +30,24 @@ available providers are:
 >>> for key in sorted(URL_MAPPINGS.keys()):
 ...     print("{0:<7} {1}".format(key,  URL_MAPPINGS[key]))
 BGR     http://eida.bgr.de
+EMSC    http://www.seismicportal.eu
+ETH     http://eida.ethz.ch
 GEONET  http://service.geonet.org.nz
 GFZ     http://geofon.gfz-potsdam.de
 INGV    http://webservices.rm.ingv.it
+IPGP    http://eida.ipgp.fr
 IRIS    http://service.iris.edu
+ISC     http://isc-mirror.iris.washington.edu
+KOERI   http://eida.koeri.boun.edu.tr
+LMU     http://erde.geophysik.uni-muenchen.de
 NCEDC   http://service.ncedc.org
-NERIES  http://www.seismicportal.eu
+NIEP    http://eida-sc3.infp.ro
+NOA     http://eida.gein.noa.gr
+ODC     http://www.orfeus-eu.org
 ORFEUS  http://www.orfeus-eu.org
 RESIF   http://ws.resif.fr
 SCEDC   http://service.scedc.caltech.edu
-USGS    http://comcat.cr.usgs.gov
+USGS    http://earthquake.usgs.gov
 USP     http://sismo.iag.usp.br
 
 (1) :meth:`~obspy.clients.fdsn.client.Client.get_waveforms()`: The following

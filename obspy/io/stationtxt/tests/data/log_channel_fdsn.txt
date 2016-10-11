@@ -1,0 +1,2 @@
+#Network | Station | Location | Channel | Latitude | Longitude | Elevation | Depth | Azimuth | Dip | Instrument | Scale | ScaleFreq | ScaleUnits | SampleRate | StartTime | EndTime
+6E|SH01|  |LOG|37.7457|-88.1368|126.0|0.0|0.0|0.0|Reftek 130 Datalogger||||0.0|2013-11-23T00:00:00|2016-12-31T23:59:59
