@@ -224,7 +224,9 @@ else
     COMMIT_STATUS=failure
     COMMIT_STATUS_DESCRIPTION="Docker tests failed"
 fi
-curl -H "Content-Type: application/json" -H "Authorization: token ${OBSPY_COMMIT_STATUS_TOKEN}" --request POST --data "{\"state\": \"${COMMIT_STATUS}\", \"context\": \"docker-testbot\", \"description\": \"${COMMIT_STATUS_DESCRIPTION}\", \"target_url\": \"${COMMIT_STATUS_TARGET_URL}\"}" https://api.github.com/repos/obspy/obspy/statuses/${COMMIT}
+
+python -c 'from obspy_github_api import __version__; assert [int(x) for x in __version__.split(".")[:2]] >= [0, 5]' || exit 1
+python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='${COMMIT}', status='${COMMIT_STATUS}', context='docker-testbot', description='${COMMIT_STATUS_DESCRIPTION}', target_url='${COMMIT_STATUS_TARGET_URL}')"
 
 rm -rf $TEMP_PATH
 
