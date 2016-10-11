@@ -86,7 +86,7 @@ git reset --hard FETCH_HEAD
 git clean -fdx
 cd $OBSPY_DOCKER
 # check version number of obspy_github_api
-python -c 'from obspy_github_api import __version__; assert [int(x) for x in __version__.split(".")[:2]] >= [0, 4]' || exit 1
+python -c 'from obspy_github_api import __version__; assert [int(x) for x in __version__.split(".")[:2]] >= [0, 5]' || exit 1
 
 # run docker tests if requested:
 cd ${OBSPY_DOCKER}
