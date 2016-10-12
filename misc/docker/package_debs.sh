@@ -15,7 +15,6 @@ while getopts "t:" opt; do
         REPO=${TARGET[0]}
         SHA=${TARGET[1]}
         TARGET=true
-        OBSPY_DOCKER_TEST_SOURCE_TREE="clone"
         extra_args=', "-f '$REPO' -t '$SHA'"'
         ;;
     esac
@@ -33,72 +32,20 @@ OBSPY_PATH=$(dirname $(dirname $(pwd)))
 
 DOCKERFILE_FOLDER=base_images
 TEMP_PATH=temp
-NEW_OBSPY_PATH=$TEMP_PATH/obspy
 
 # Determine the docker binary name. The official debian packages use docker.io
 # for the binary's name due to some legacy docker package.
 DOCKER=`which docker.io || which docker`
 
-# Execute Python once and import ObsPy to trigger building the RELEASE-VERSION
-# file.
-python -c "import obspy"
-
 # Create temporary folder.
 rm -rf $TEMP_PATH
 mkdir -p $TEMP_PATH
 
-# Copy ObsPy to the temp path. This path is the execution context of the Docker images.
-mkdir -p $NEW_OBSPY_PATH
-# depending on env variable OBSPY_DOCKER_TEST_SOURCE_TREE ("cp" or "clone")
-# we either copy the obspy tree (potentially with local changes) or
-# `git clone` from it for a tree free of local changes
-if [ ! "$OBSPY_DOCKER_TEST_SOURCE_TREE" ]
-then
-    # default to "cp" to not change default behavior
-    OBSPY_DOCKER_TEST_SOURCE_TREE="cp"
-fi
-if [ "$OBSPY_DOCKER_TEST_SOURCE_TREE" == "cp" ]
-then
-    cp -r $OBSPY_PATH/obspy $NEW_OBSPY_PATH/obspy/
-    cp $OBSPY_PATH/setup.py $NEW_OBSPY_PATH/setup.py
-    cp $OBSPY_PATH/MANIFEST.in $NEW_OBSPY_PATH/MANIFEST.in
-    rm -f $NEW_OBSPY_PATH/obspy/lib/*.so
-    COMMIT=`cd $OBSPY_PATH && git log -1 --pretty=format:%H`
-elif [ "$OBSPY_DOCKER_TEST_SOURCE_TREE" == "clone" ]
-then
-    git clone file://$OBSPY_PATH $NEW_OBSPY_PATH
-    # we're cloning so we have a non-dirty version actually
-    cat $OBSPY_PATH/obspy/RELEASE-VERSION | sed 's#\.dirty$##' > $NEW_OBSPY_PATH/obspy/RELEASE-VERSION
-    if [ "$TARGET" = true ] ; then
-        # get a fresh and clean obspy main repo clone (e.g. to avoid unofficial
-        # tags tampering with version number lookup)
-        rm -rf $NEW_OBSPY_PATH
-        git clone git://github.com/$REPO/obspy $NEW_OBSPY_PATH || exit 1
-        # be nice, make sure to only run git commands when successfully changed
-        # to new temporary clone, exit otherwise
-        cd $NEW_OBSPY_PATH || exit 1
-        if [ "$REPO" != "obspy" ]
-        then
-            git remote add obspy git://github.com/obspy/obspy
-            git fetch --tags obspy
-        fi
-        # everything comes from a clean clone, so there should be no need to
-        # git-clean the repo
-        git checkout -b build-branch `git log -1 --pretty=format:'%H' $SHA` || exit 1
-        git status
-        cd $CURDIR
-        # write RELEASE-VERSION file in temporary obspy clone without
-        # installation, same magic as done in setup.py
-        python -c "import os, sys; sys.path.insert(0, os.path.join(\"${NEW_OBSPY_PATH}\", 'obspy', 'core', 'util')); from version import get_git_version; sys.path.pop(0); print(get_git_version())" > $NEW_OBSPY_PATH/obspy/RELEASE-VERSION
-        cat $NEW_OBSPY_PATH/obspy/RELEASE-VERSION
-    fi
-    COMMIT=`cd $NEW_OBSPY_PATH && git log -1 --pretty=format:%H`
-else
-    echo "Bad value for OBSPY_DOCKER_TEST_SOURCE_TREE: $OBSPY_DOCKER_TEST_SOURCE_TREE"
-    exit 1
-fi
+# Deb packaging is always performed using the deb build script from misc/debian
+# from the current state of the local repository.
+cp -a $OBSPY_PATH/misc/debian/deb__build_debs.sh $TEMP_PATH/
+
 cd $CURDIR
-FULL_VERSION=`cat $NEW_OBSPY_PATH/obspy/RELEASE-VERSION`
 
 # Copy the install script.
 cp scripts/package_debs.sh $TEMP_PATH/package_debs.sh
