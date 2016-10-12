@@ -11,7 +11,7 @@ cd /obspy/misc/debian
 # option.
 set -o pipefail
 
-./deb__build_debs.sh $1 2>&1 | tee /BUILD_LOG.txt
+(./deb__build_debs.sh $1 && ls -l /tmp/python-obspy_build/packages/python*-obspy_*.deb /tmp/python-obspy_build/packages/python-obspy-dbg_*.deb) 2>&1 | tee /BUILD_LOG.txt
 if [ $? != 0 ]; then
     echo -e "${red}Deb packaging failed!${no_color}"
     touch /build.failure
