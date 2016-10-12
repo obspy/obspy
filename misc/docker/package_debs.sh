@@ -84,7 +84,7 @@ then
         fi
         # everything comes from a clean clone, so there should be no need to
         # git-clean the repo
-        git checkout -b test-branch origin/$SHA || exit 1
+        git checkout -b build-branch `git log -1 --pretty=format:'%H' $SHA` || exit 1
         git status
         cd $CURDIR
         # write RELEASE-VERSION file in temporary obspy clone without
