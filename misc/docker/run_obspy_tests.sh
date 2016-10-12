@@ -193,7 +193,7 @@ done
 printf "\n\e[44m\e[30mSTEP 2: EXECUTING THE TESTS\e[0m\n"
 
 # Loop over all ObsPy Docker images.
-for image_name in $($DOCKER images | grep ${DOCKER_REPOSITORY} | awk '{print $2}'); do
+for image_name in $($DOCKER images ${DOCKER_REPOSITORY} | awk '{print $2}'); do
     if [ $# != 0 ]; then
         if list_not_contains "$*" $image_name; then
             continue
