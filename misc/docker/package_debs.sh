@@ -44,6 +44,14 @@ mkdir -p $TEMP_PATH
 # Deb packaging is always performed using the deb build script from misc/debian
 # from the current state of the local repository.
 cp -a $OBSPY_PATH/misc/debian/deb__build_debs.sh $TEMP_PATH/
+# but we need to find out the SHA of the git target (e.g. if a branch name was
+# specified..)
+git clone git://github.com/$REPO/obspy $TEMP_PATH/obspy
+cd $TEMP_PATH/obspy
+git checkout $GITTARGET
+SHA=`git log -1 --pretty=format:'%H'`
+cd $CURDIR
+rm -rf $TEMP_PATH/obspy
 
 cd $CURDIR
 
@@ -181,7 +189,7 @@ fi
 echo $COMMIT_STATUS_DESCRIPTION
 
 python -c 'from obspy_github_api import __version__; assert [int(x) for x in __version__.split(".")[:2]] >= [0, 5]' || exit 1
-python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='${COMMIT}', status='${COMMIT_STATUS}', context='docker-deb-buildbot', description='${COMMIT_STATUS_DESCRIPTION}', target_url='${COMMIT_STATUS_TARGET_URL}')"
+python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='${SHA}', status='${COMMIT_STATUS}', context='docker-deb-buildbot', description='${COMMIT_STATUS_DESCRIPTION}', target_url='${COMMIT_STATUS_TARGET_URL}')"
 
 rm -rf $TEMP_PATH
 
