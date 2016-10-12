@@ -100,8 +100,8 @@ def calc_dist_azi(source_latitude_in_deg, source_longitude_in_deg,
                                   a=radius_of_planet_in_km * 1000.0,
                                   f=flattening_of_planet)
         distance_in_km = values[0]/1000.0
-        source_receiver_azimuth = values[1]
-        receiver_to_source_backazimuth = values[2]
+        source_receiver_azimuth = values[1] % 360
+        receiver_to_source_backazimuth = values[2] % 360
         # NB - km2deg assumes spherical planet... generate a warning
         if flattening_of_planet != 0.0:
             msg = "Assuming spherical planet when calculating epicentral " + \
