@@ -101,15 +101,15 @@ then
         # only allowed special character in github user names is dash ('-'),
         # so we use underscore as a separator after the issue number
         # TARGET is e.g. 1397_andres-h:3f9d48fdaad19051e7f8993dc81119f379d1041b
-        PR_REPO_SHA=(${TARGET//_/ })
-        PR=${PR_REPO_SHA[0]}
-        REPO_SHA=${PR_REPO_SHA[1]}
-        echo "##### RUNNING DOCKER TESTS FOR TARGET: ${REPO_SHA}"
+        PR_REPO_GITTARGET=(${TARGET//_/ })
+        PR=${PR_REPO_GITTARGET[0]}
+        REPO_GITTARGET=${PR_REPO_GITTARGET[1]}
+        echo "##### RUNNING DOCKER TESTS FOR TARGET: ${REPO_GITTARGET}"
         if [ "$PR" = "XXX" ]
         then
-            bash run_obspy_tests.sh -t${REPO_SHA} -e"--all"
+            bash run_obspy_tests.sh -t${REPO_GITTARGET} -e"--all"
         else
-            bash run_obspy_tests.sh -t${REPO_SHA} -e"--pr-url=https://github.com/obspy/obspy/pull/${PR}"
+            bash run_obspy_tests.sh -t${REPO_GITTARGET} -e"--pr-url=https://github.com/obspy/obspy/pull/${PR}"
         fi
     done
 fi
@@ -126,11 +126,11 @@ then
         # only allowed special character in github user names is dash ('-'),
         # so we use underscore as a separator after the issue number
         # TARGET is e.g. 1397_andres-h:3f9d48fdaad19051e7f8993dc81119f379d1041b
-        PR_REPO_SHA=(${TARGET//_/ })
-        PR=${PR_REPO_SHA[0]}
-        REPO_SHA=${PR_REPO_SHA[1]}
-        echo "##### DOCKER DEB PACKAGING, PACKAGING AND RUNNING TESTS FOR TARGET: ${REPO_SHA}"
-        bash package_debs.sh -t${REPO_SHA}
+        PR_REPO_GITTARGET=(${TARGET//_/ })
+        PR=${PR_REPO_GITTARGET[0]}
+        REPO_GITTARGET=${PR_REPO_GITTARGET[1]}
+        echo "##### DOCKER DEB PACKAGING, PACKAGING AND RUNNING TESTS FOR TARGET: ${REPO_GITTARGET}"
+        bash package_debs.sh -t${REPO_GITTARGET}
     done
 fi
 

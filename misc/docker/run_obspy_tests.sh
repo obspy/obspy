@@ -17,7 +17,7 @@ while getopts "t:e:" opt; do
         ;;
     t)  TARGET=(${OPTARG//:/ })
         REPO=${TARGET[0]}
-        SHA=${TARGET[1]}
+        GITTARGET=${TARGET[1]}
         TARGET=true
         OBSPY_DOCKER_TEST_SOURCE_TREE="clone"
         ;;
@@ -93,7 +93,7 @@ then
         fi
         # everything comes from a clean clone, so there should be no need to
         # git-clean the repo
-        git checkout -b build-branch `git log -1 --pretty=format:'%H' $SHA` || exit 1
+        git checkout $GITTARGET || exit 1
         git status
         cd $CURDIR
         # write RELEASE-VERSION file in temporary obspy clone without

@@ -13,9 +13,9 @@ while getopts "t:" opt; do
     case "$opt" in
     t)  TARGET=(${OPTARG//:/ })
         REPO=${TARGET[0]}
-        SHA=${TARGET[1]}
+        GITTARGET=${TARGET[1]}
         TARGET=true
-        extra_args=', "-f '$REPO' -t '$SHA'"'
+        extra_args=', "-f '$REPO' -t '$GITTARGET'"'
         ;;
     esac
 done
