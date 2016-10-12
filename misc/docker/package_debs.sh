@@ -84,7 +84,7 @@ then
         fi
         # everything comes from a clean clone, so there should be no need to
         # git-clean the repo
-        git checkout $SHA
+        git checkout $SHA || exit 1
         git status
         cd $CURDIR
         # write RELEASE-VERSION file in temporary obspy clone without
