@@ -11,7 +11,8 @@ DOCKER_REPOSITORY=obspy
 # Parse the additional args later passed to `obspy-runtests` in
 # the docker images.
 extra_args=""
-while getopts "t:e:" opt; do
+SET_COMMIT_STATUS=false
+while getopts "t:e:s" opt; do
     case "$opt" in
     e)  extra_args=', "'$OPTARG'"'
         ;;
@@ -21,6 +22,7 @@ while getopts "t:e:" opt; do
         TARGET=true
         OBSPY_DOCKER_TEST_SOURCE_TREE="clone"
         ;;
+    s)  SET_COMMIT_STATUS=true;;
     esac
 done
 shift $(expr $OPTIND - 1 )
@@ -72,7 +74,7 @@ then
     cp $OBSPY_PATH/setup.py $NEW_OBSPY_PATH/setup.py
     cp $OBSPY_PATH/MANIFEST.in $NEW_OBSPY_PATH/MANIFEST.in
     rm -f $NEW_OBSPY_PATH/obspy/lib/*.so
-    COMMIT=`cd $OBSPY_PATH && git log -1 --pretty=format:%H`
+    SHA=`cd $OBSPY_PATH && git log -1 --pretty=format:%H`
 elif [ "$OBSPY_DOCKER_TEST_SOURCE_TREE" == "clone" ]
 then
     git clone file://$OBSPY_PATH $NEW_OBSPY_PATH
@@ -101,7 +103,7 @@ then
         python -c "import os, sys; sys.path.insert(0, os.path.join(\"${NEW_OBSPY_PATH}\", 'obspy', 'core', 'util')); from version import get_git_version; sys.path.pop(0); print(get_git_version())" > $NEW_OBSPY_PATH/obspy/RELEASE-VERSION
         cat $NEW_OBSPY_PATH/obspy/RELEASE-VERSION
     fi
-    COMMIT=`cd $NEW_OBSPY_PATH && git log -1 --pretty=format:%H`
+    SHA=`cd $NEW_OBSPY_PATH && git log -1 --pretty=format:%H`
 else
     echo "Bad value for OBSPY_DOCKER_TEST_SOURCE_TREE: $OBSPY_DOCKER_TEST_SOURCE_TREE"
     exit 1
@@ -225,8 +227,9 @@ else
     COMMIT_STATUS_DESCRIPTION="Docker tests failed"
 fi
 
-python -c 'from obspy_github_api import __version__; assert [int(x) for x in __version__.split(".")[:2]] >= [0, 5]' || exit 1
-python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='${COMMIT}', status='${COMMIT_STATUS}', context='docker-testbot', description='${COMMIT_STATUS_DESCRIPTION}', target_url='${COMMIT_STATUS_TARGET_URL}')"
+if [ "$SET_COMMIT_STATUS" = true ] ; then
+    (python -c 'from obspy_github_api import __version__; assert [int(x) for x in __version__.split(".")[:2]] >= [0, 5]' && python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='${SHA}', status='${COMMIT_STATUS}', context='docker-testbot', description='${COMMIT_STATUS_DESCRIPTION}', target_url='${COMMIT_STATUS_TARGET_URL}')" && echo "Set commit status for '$SHA' to '$COMMIT_STATUS' with description '$COMMIT_STATUS_DESCRIPTION' and target url '$COMMIT_STATUS_TARGET_URL'") || echo "Failed to set commit status"
+fi
 
 rm -rf $TEMP_PATH
 

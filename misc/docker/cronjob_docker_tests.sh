@@ -107,9 +107,9 @@ then
         echo "##### RUNNING DOCKER TESTS FOR TARGET: ${REPO_GITTARGET}"
         if [ "$PR" = "XXX" ]
         then
-            bash run_obspy_tests.sh -t${REPO_GITTARGET} -e"--all"
+            bash run_obspy_tests.sh -s -t${REPO_GITTARGET} -e"--all"
         else
-            bash run_obspy_tests.sh -t${REPO_GITTARGET} -e"--pr-url=https://github.com/obspy/obspy/pull/${PR}"
+            bash run_obspy_tests.sh -s -t${REPO_GITTARGET} -e"--pr-url=https://github.com/obspy/obspy/pull/${PR}"
         fi
     done
 fi
@@ -130,7 +130,7 @@ then
         PR=${PR_REPO_GITTARGET[0]}
         REPO_GITTARGET=${PR_REPO_GITTARGET[1]}
         echo "##### DOCKER DEB PACKAGING, PACKAGING AND RUNNING TESTS FOR TARGET: ${REPO_GITTARGET}"
-        bash package_debs.sh -t${REPO_GITTARGET}
+        bash package_debs.sh -s -t${REPO_GITTARGET}
     done
 fi
 

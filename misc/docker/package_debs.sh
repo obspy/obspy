@@ -9,7 +9,8 @@ mkdir -p $LOG_DIR_BASE
 DOCKER_IMAGES="debian_7_wheezy debian_7_wheezy_32bit debian_8_jessie debian_8_jessie_32bit ubuntu_12_04_precise ubuntu_12_04_precise_32bit ubuntu_14_04_trusty ubuntu_14_04_trusty_32bit ubuntu_16_04_xenial ubuntu_16_04_xenial_32bit"
 
 # Parse the target for deb package building (e.g. "-tmegies:deb_1.0.2")
-while getopts "t:" opt; do
+SET_COMMIT_STATUS=false
+while getopts "t:s" opt; do
     case "$opt" in
     t)  TARGET=(${OPTARG//:/ })
         REPO=${TARGET[0]}
@@ -17,6 +18,7 @@ while getopts "t:" opt; do
         TARGET=true
         extra_args=', "-f '$REPO' -t '$GITTARGET'"'
         ;;
+    s)  SET_COMMIT_STATUS=true;;
     esac
 done
 shift $(expr $OPTIND - 1 )
@@ -188,8 +190,9 @@ else
 fi
 echo $COMMIT_STATUS_DESCRIPTION
 
-python -c 'from obspy_github_api import __version__; assert [int(x) for x in __version__.split(".")[:2]] >= [0, 5]' || exit 1
-python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='${SHA}', status='${COMMIT_STATUS}', context='docker-deb-buildbot', description='${COMMIT_STATUS_DESCRIPTION}', target_url='${COMMIT_STATUS_TARGET_URL}')"
+if [ "$SET_COMMIT_STATUS" = true ] ; then
+    (python -c 'from obspy_github_api import __version__; assert [int(x) for x in __version__.split(".")[:2]] >= [0, 5]' && python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='${SHA}', status='${COMMIT_STATUS}', context='docker-deb-buildbot', description='${COMMIT_STATUS_DESCRIPTION}', target_url='${COMMIT_STATUS_TARGET_URL}')" && echo "Set commit status for '$SHA' to '$COMMIT_STATUS' with description '$COMMIT_STATUS_DESCRIPTION' and target url '$COMMIT_STATUS_TARGET_URL'") || echo "Failed to set commit status"
+fi
 
 rm -rf $TEMP_PATH
 
