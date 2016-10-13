@@ -7,6 +7,7 @@ from future.utils import native_str
 import copy
 import glob
 import io
+import re
 import os
 import unittest
 import warnings
@@ -1395,10 +1396,20 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                                     msg=filename)
                             _read_keys.append(key)
             elif test_type == "failure":
+                # There is only one file that uses this so far so special
+                # handling is okay I guess.
+                self.assertIn("invalid-blockette-offset", filename)
                 with self.assertRaises(InternalMSEEDReadingError,
-                                       msg=filename):
-                    # XXX: Test the raised warning!
-                    read(filename)
+                                       msg=filename) as e:
+                    # The file has a couple other issues as well and the
+                    # data cannot be unpacked. Unpacking it would raises an
+                    # earlier error than the one we are testing here.
+                    read(filename, headonly=True)
+
+                with io.open(reference, "rt") as fh:
+                    err_msg = fh.readlines()[-1]
+                err_msg = re.sub("^Error:\s", "", err_msg).strip()
+                self.assertEqual(err_msg, e.exception.args[0])
             elif test_type == "summary":
                 st = read(filename)
                 # This is mainly used for a test with chunks in arbitrary
