@@ -1369,6 +1369,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
                     self.assertEqual(tr.id, _id, msg=filename)
 
+                    _read_keys = []
+
                     for line in fh:
                         line = line.strip()
                         # Only parse until the first blockette.
@@ -1376,16 +1378,22 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                             break
 
                         key = line.split(":")[0]
+                        if key in _read_keys:
+                            continue
                         value = ":".join(line.split(":")[1:]).strip()
 
                         if key == "start time":
                             self.assertEqual(tr.stats.starttime,
                                              UTCDateTime(value),
                                              msg=filename)
+                            _read_keys.append(key)
                         elif key == "number of samples":
-                            self.assertEqual(tr.stats.npts,
-                                             int(value),
-                                             msg=filename)
+                            # The reference might have multiple records -
+                            # ObsPy does not distinguish between records.
+                            self.assertGreaterEqual(tr.stats.npts,
+                                                    int(value),
+                                                    msg=filename)
+                            _read_keys.append(key)
             elif test_type == "failure":
                 with self.assertRaises(InternalMSEEDReadingError,
                                        msg=filename):
@@ -1467,7 +1475,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             count += 1
 
         # Make sure 23 files have been tested.
-        self.assertEqual(count, 23)
+        self.assertEqual(count, 24)
 
 
 def suite():
