@@ -140,7 +140,7 @@ done
 printf "\n\e[44m\e[30mSTEP 2: BUILDING DEB PACKAGES\e[0m\n"
 
 # Loop over all ObsPy Docker images.
-for image_name in $($DOCKER images obspy | awk '{print $2}'); do
+for image_name in $($DOCKER images obspy --format '{{.Tag}}'); do
     # skip images that are not in our Debian/Ubuntu build targets
     if list_not_contains "${DOCKER_IMAGES}" $image_name; then
         continue
