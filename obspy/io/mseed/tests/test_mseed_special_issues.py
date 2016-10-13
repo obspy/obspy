@@ -994,17 +994,34 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 np.float32(sr))
             self.assertTrue(has_blkt_100(tempfile))
 
-            # As does a very large one.
+            # A very large (but "clean") one does not need it.
             sr = 1E6
             tr.stats.sampling_rate = sr
             tr.write(tempfile, format="mseed")
             self.assertEqual(
                 np.float32(read(tempfile)[0].stats.sampling_rate),
                 np.float32(sr))
-            self.assertTrue(has_blkt_100(tempfile))
+            self.assertFalse(has_blkt_100(tempfile))
 
-            # And a very small one.
+            # Same for a very small but "clean" one.
             sr = 1E-6
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
+            # But small perturbations resulting in "unclean" sampling rates
+            # will cause blockette 100 to be written.
+            sr = 1E6 + 0.123456
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertTrue(has_blkt_100(tempfile))
+            sr = 1E-6 + 0.325247 * 1E-7
             tr.stats.sampling_rate = sr
             tr.write(tempfile, format="mseed")
             self.assertEqual(

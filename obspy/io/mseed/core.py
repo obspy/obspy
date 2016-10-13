@@ -865,20 +865,19 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Determine if a blockette 100 will be needed to represent the input
         # sample rate or if the sample rate in the fixed section of the data
         # header will suffice (see ms_genfactmult in libmseed/genutils.c)
-        #
-        # It is definitely necessary for very large or small sampling rates (
-        # using libmseed for the test would result in an overflow).
-        if trace.stats.sampling_rate >= 32727.0 or \
-                trace.stats.sampling_rate <= (1.0 / 32727.0):
-            use_blkt_100 = True
-        else:
-            use_blkt_100 = False
+        use_blkt_100 = False
 
-            _factor = C.c_int16()
-            _multiplier = C.c_int16()
-            clibmseed.ms_genfactmult(
-                trace.stats.sampling_rate, C.pointer(_factor),
-                C.pointer(_multiplier))
+        _factor = C.c_int16()
+        _multiplier = C.c_int16()
+        _retval = clibmseed.ms_genfactmult(
+            trace.stats.sampling_rate, C.pointer(_factor),
+            C.pointer(_multiplier))
+        # Use blockette 100 if ms_genfactmult() failed.
+        if _retval != 0:
+            use_blkt_100 = True
+        # Otherwise figure out if ms_genfactmult() found exact factors.
+        # Otherwise write blockette 100.
+        else:
             ms_sr = clibmseed.ms_nomsamprate(_factor.value, _multiplier.value)
 
             # It is also necessary if the libmseed calculated sampling rate
