@@ -1037,6 +1037,29 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 np.float32(sr))
             self.assertFalse(has_blkt_100(tempfile))
 
+    def test_reading_file_with_data_offset_of_48(self):
+        """
+        Tests reading a file which has a data offset of 48 bytes.
+
+        It thus does not have a single blockette.
+        """
+        file = os.path.join(
+            self.path, "data",
+            "mseed_not_a_single_blkt_48byte_data_offset.mseed")
+        st = read(file)
+
+        self.assertEqual(len(st), 1)
+        tr = st[0]
+        self.assertEqual(tr.stats.npts, 3632)
+        np.testing.assert_allclose(tr.stats.sampling_rate, 20.0)
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime(1995, 9, 22, 0, 0, 18, 238400))
+        self.assertEqual(tr.id, "XX.TEST..BHE")
+
+        np.testing.assert_equal(
+            st[0].data[:6],
+            [337, 396, 454, 503, 547, 581])
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
