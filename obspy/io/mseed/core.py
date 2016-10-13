@@ -860,12 +860,37 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
                 clibmseed.msr_free(C.pointer(msr))
                 del msr
                 raise Exception('Error in msr_addblockette')
+
         # Only use Blockette 100 if necessary.
         # Determine if a blockette 100 will be needed to represent the input
         # sample rate or if the sample rate in the fixed section of the data
         # header will suffice (see ms_genfactmult in libmseed/genutils.c)
+        #
+        # It is definitely necessary for very large or small sampling rates (
+        # using libmseed for the test would result in an overflow).
         if trace.stats.sampling_rate >= 32727.0 or \
                 trace.stats.sampling_rate <= (1.0 / 32727.0):
+            use_blkt_100 = True
+        else:
+            use_blkt_100 = False
+
+            _factor = C.c_int16()
+            _multiplier = C.c_int16()
+            clibmseed.ms_genfactmult(
+                trace.stats.sampling_rate, C.pointer(_factor),
+                C.pointer(_multiplier))
+            ms_sr = clibmseed.ms_nomsamprate(_factor.value, _multiplier.value)
+
+            # It is also necessary if the libmseed calculated sampling rate
+            # would result in a loss of accuracy - the floating point
+            # comparision is on purpose here as it will always try to
+            # preserve all accuracy.
+            # Cast to float32 to not add blockette 100 for values
+            # that cannot be represented with 32bits.
+            if np.float32(ms_sr) != np.float32(trace.stats.sampling_rate):
+                use_blkt_100 = True
+
+        if use_blkt_100:
             size = C.sizeof(Blkt100S)
             blkt100 = C.c_char(b' ')
             C.memset(C.pointer(blkt100), 0, size)

@@ -735,6 +735,21 @@ clibmseed.allocate_bytes.argtypes = (C.c_int,)
 clibmseed.allocate_bytes.restype = C.c_void_p
 
 
+clibmseed.ms_genfactmult.argtypes = [
+    C.c_double,
+    C.POINTER(C.c_int16),
+    C.POINTER(C.c_int16)
+]
+clibmseed.ms_genfactmult.restype = C.c_int
+
+
+clibmseed.ms_nomsamprate.argtypes = [
+    C.c_int,
+    C.c_int
+]
+clibmseed.ms_nomsamprate.restype = C.c_double
+
+
 # Python callback functions for C
 def _py_file_callback(_f):
     return 1

@@ -286,6 +286,21 @@ class CoreTestCase(unittest.TestCase):
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
         self.assertEqual(tr.stats.sh.COMMENT, tr2.stats.sh.COMMENT)
 
+    def test_header_whitespaces(self):
+        """
+        Test for issue #1552
+        """
+        tr = read()[0]
+        tr.stats.sh = {'COMMENT': 30 * '   *   '}
+        with NamedTemporaryFile(suffix='.QHD') as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format="Q")
+            tr2 = read(tempfile)[0]
+            # remove binary file too (dynamically created)
+            os.remove(os.path.splitext(tempfile)[0] + '.QBN')
+        self.assertEqual(len(tr.stats.sh.COMMENT), len(tr2.stats.sh.COMMENT))
+        self.assertEqual(tr.stats.sh.COMMENT, tr2.stats.sh.COMMENT)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

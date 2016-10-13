@@ -69,12 +69,16 @@ master:
    * ObsPy can now read MiniSEED files with micro-second wrap arounds.
      (see #1531)
    * ObsPy can now read MiniSEED files with no blockette 1000. (see #1544)
+   * ObsPy now always writes Blockette 100 if sampling rate accuracy is
+     otherwise lost. (see #1550)
  - obspy.io.sac:
    * `SACTrace.lpspol` and `lcalda` are `True` and `False` by default, when
       created via `SACTrace.from_obspy_trace` with a `Trace` that has no SAC
       inheritance. (see #1507)
 - obspy.io.sh:
    * Fix writing of long headers for Python 3 (see #1526)
+   * Fix writing of long headers for python3
+   * Whitespace in header fields is not ignored anymore (see #1552)
  - obspy.io.stationxml:
    * Datetime fields are written with microseconds to StationXML if
      microseconds are present. (see #1511)
