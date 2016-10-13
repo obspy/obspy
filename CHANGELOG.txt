@@ -58,6 +58,9 @@ master:
  - obspy.signal:
    * New obspy.signal.quality_control module to compute quality metrics from
      MiniSEED files. (see #1141)
+ - obspy.taup:
+   * Add obspy.taup.taup_geo.calc_dist_azi, a function to return the distance,
+     azimuth and backazimuth for a source - receiver pair. (see #1538)
 
 1.0.3:
  - obspy.io.mseed:
