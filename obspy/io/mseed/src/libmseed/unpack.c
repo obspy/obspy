@@ -30,11 +30,11 @@ static int check_environment (int verbose);
 /* Header and data byte order flags controlled by environment variables */
 /* -2 = not checked, -1 = checked but not set, or 0 = LE and 1 = BE */
 flag unpackheaderbyteorder = -2;
-flag unpackdatabyteorder = -2;
+flag unpackdatabyteorder   = -2;
 
 /* Data encoding format/fallback controlled by environment variable */
 /* -2 = not checked, -1 = checked but not set, or = encoding */
-int unpackencodingformat = -2;
+int unpackencodingformat   = -2;
 int unpackencodingfallback = -2;
 
 /***************************************************************************
@@ -70,7 +70,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
             flag dataflag, flag verbose)
 {
   flag headerswapflag = 0;
-  flag dataswapflag = 0;
+  flag dataswapflag   = 0;
   int retval;
 
   MSRecord *msr = NULL;
@@ -168,9 +168,9 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
 
   /* Populate some of the common header fields */
   strncpy (sequence_number, msr->fsdh->sequence_number, 6);
-  sequence_number[6] = '\0';
+  sequence_number[6]   = '\0';
   msr->sequence_number = (int32_t)strtol (sequence_number, NULL, 10);
-  msr->dataquality = msr->fsdh->dataquality;
+  msr->dataquality     = msr->fsdh->dataquality;
   ms_strncpcleantail (msr->network, msr->fsdh->network, 2);
   ms_strncpcleantail (msr->station, msr->fsdh->station, 5);
   ms_strncpcleantail (msr->location, msr->fsdh->location, 2);
@@ -243,7 +243,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_100 = (struct blkt_100_s *)blkt_link->blktdata;
 
@@ -266,7 +266,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_200 = (struct blkt_200_s *)blkt_link->blktdata;
 
@@ -290,7 +290,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_201 = (struct blkt_201_s *)blkt_link->blktdata;
 
@@ -314,7 +314,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_300 = (struct blkt_300_s *)blkt_link->blktdata;
 
@@ -339,7 +339,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_310 = (struct blkt_310_s *)blkt_link->blktdata;
 
@@ -364,7 +364,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_320 = (struct blkt_320_s *)blkt_link->blktdata;
 
@@ -388,7 +388,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_390 = (struct blkt_390_s *)blkt_link->blktdata;
 
@@ -411,7 +411,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_395 = (struct blkt_395_s *)blkt_link->blktdata;
 
@@ -432,7 +432,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_400 = (struct blkt_400_s *)blkt_link->blktdata;
 
@@ -455,7 +455,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_405 = (struct blkt_405_s *)blkt_link->blktdata;
 
@@ -482,7 +482,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_500 = (struct blkt_500_s *)blkt_link->blktdata;
 
@@ -505,7 +505,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_1000 = (struct blkt_1000_s *)blkt_link->blktdata;
 
@@ -519,7 +519,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
                 srcname, msr->reclen, reclen);
       }
 
-      msr->encoding = blkt_1000->encoding;
+      msr->encoding  = blkt_1000->encoding;
       msr->byteorder = blkt_1000->byteorder;
     }
 
@@ -532,7 +532,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
     }
 
     else if (blkt_type == 2000)
@@ -554,7 +554,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
         break;
 
       blkt_link->blktoffset = blkt_offset - 4;
-      blkt_link->next_blkt = next_blkt;
+      blkt_link->next_blkt  = next_blkt;
 
       blkt_2000 = (struct blkt_2000_s *)blkt_link->blktdata;
 
@@ -578,7 +578,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
           break;
 
         blkt_link->blktoffset = blkt_offset - 4;
-        blkt_link->next_blkt = next_blkt;
+        blkt_link->next_blkt  = next_blkt;
       }
     }
 
@@ -631,7 +631,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
 
   /* Populate remaining common header fields */
   msr->starttime = msr_starttime (msr);
-  msr->samprate = msr_samprate (msr);
+  msr->samprate  = msr_samprate (msr);
 
   /* Set MSRecord->byteorder if data byte order is forced */
   if (unpackdatabyteorder >= 0)
@@ -646,7 +646,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
   }
 
   /* Use encoding format fallback if defined and no encoding is set,
-   * also make sure the byteorder is set by default to big endian */
+     also make sure the byteorder is set by default to big endian */
   if (unpackencodingfallback >= 0 && msr->encoding == -1)
   {
     msr->encoding = unpackencodingfallback;
@@ -660,7 +660,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
   /* Unpack the data samples if requested */
   if (dataflag && msr->samplecnt > 0)
   {
-    flag dswapflag = headerswapflag;
+    flag dswapflag     = headerswapflag;
     flag bigendianhost = ms_bigendianhost ();
 
     /* Determine byte order of the data and set the dswapflag as
@@ -700,7 +700,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
       free (msr->datasamples);
 
     msr->datasamples = 0;
-    msr->numsamples = 0;
+    msr->numsamples  = 0;
   }
 
   return MS_NOERROR;
@@ -763,7 +763,7 @@ msr_unpack_data (MSRecord *msr, int swapflag, flag verbose)
   }
 
   datasize = msr->reclen - msr->fsdh->data_offset;
-  dbuf = msr->record + msr->fsdh->data_offset;
+  dbuf     = msr->record + msr->fsdh->data_offset;
 
   switch (msr->encoding)
   {
@@ -810,7 +810,7 @@ msr_unpack_data (MSRecord *msr, int swapflag, flag verbose)
     if (msr->datasamples)
       free (msr->datasamples);
     msr->datasamples = 0;
-    msr->numsamples = 0;
+    msr->numsamples  = 0;
   }
 
   if (verbose > 2)

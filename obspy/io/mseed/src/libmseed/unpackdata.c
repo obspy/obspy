@@ -3,7 +3,7 @@
  * STEIM2, GEOSCOPE (24bit and gain ranged), CDSN, SRO and DWWSSN
  * encoded data.
  *
- * modified: 2016.274
+ * modified: 2016.281
  ************************************************************************/
 
 #include <memory.h>
@@ -45,7 +45,7 @@ msr_decode_int16 (int16_t *input, int samplecount, int32_t *output,
   if (!input || !output || outputlength <= 0)
     return -1;
 
-  for (idx = 0; idx < samplecount && outputlength > 0; idx++)
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (int32_t); idx++)
   {
     sample = input[idx];
 
@@ -81,7 +81,7 @@ msr_decode_int32 (int32_t *input, int samplecount, int32_t *output,
   if (!input || !output || outputlength <= 0)
     return -1;
 
-  for (idx = 0; idx < samplecount && outputlength > 0; idx++)
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (int32_t); idx++)
   {
     sample = input[idx];
 
@@ -117,9 +117,9 @@ msr_decode_float32 (float *input, int samplecount, float *output,
   if (!input || !output || outputlength <= 0)
     return -1;
 
-  for (idx = 0; idx < samplecount && outputlength > 0; idx++)
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (float); idx++)
   {
-    memcpy(&sample, &input[idx], sizeof(float));
+    memcpy (&sample, &input[idx], sizeof (float));
 
     if (swapflag)
       ms_gswap4a (&sample);
@@ -153,9 +153,9 @@ msr_decode_float64 (double *input, int samplecount, double *output,
   if (!input || !output || outputlength <= 0)
     return -1;
 
-  for (idx = 0; idx < samplecount && outputlength > 0; idx++)
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (double); idx++)
   {
-    memcpy(&sample, &input[idx], sizeof(double));
+    memcpy (&sample, &input[idx], sizeof (double));
 
     if (swapflag)
       ms_gswap8a (&sample);
@@ -183,9 +183,9 @@ msr_decode_steim1 (int32_t *input, int inputlength, int samplecount,
 {
   int32_t *outputptr = output; /* Pointer to next output sample location */
   uint32_t frame[16];          /* Frame, 16 x 32-bit quantities = 64 bytes */
-  int32_t X0     = 0;          /* Forward integration constant, aka first sample */
-  int32_t Xn     = 0;          /* Reverse integration constant, aka last sample */
-  int maxframes  = inputlength / 64;
+  int32_t X0    = 0;           /* Forward integration constant, aka first sample */
+  int32_t Xn    = 0;           /* Reverse integration constant, aka last sample */
+  int maxframes = inputlength / 64;
   int frameidx;
   int startnibble;
   int nibble;
@@ -215,7 +215,7 @@ msr_decode_steim1 (int32_t *input, int inputlength, int samplecount,
     memcpy (frame, input + (16 * frameidx), 64);
 
     /* Save forward integration constant (X0) and reverse integration constant (Xn)
-       * and set the starting nibble index depending on frame. */
+       and set the starting nibble index depending on frame. */
     if (frameidx == 0)
     {
       if (swapflag)
@@ -340,7 +340,7 @@ msr_decode_steim2 (int32_t *input, int inputlength, int samplecount,
   int32_t Xn = 0;              /* Reverse integration constant, aka last sample */
   int32_t diff[7];
   int32_t semask;
-  int maxframes  = inputlength / 64;
+  int maxframes = inputlength / 64;
   int frameidx;
   int startnibble;
   int nibble;
@@ -370,7 +370,7 @@ msr_decode_steim2 (int32_t *input, int inputlength, int samplecount,
     memcpy (frame, input + (16 * frameidx), 64);
 
     /* Save forward integration constant (X0) and reverse integration constant (Xn)
-       * and set the starting nibble index depending on frame. */
+       and set the starting nibble index depending on frame. */
     if (frameidx == 0)
     {
       if (swapflag)
@@ -612,7 +612,7 @@ msr_decode_geoscope (char *input, int samplecount, float *output,
     return -1;
   }
 
-  for (idx = 0; idx < samplecount && outputlength > 0; idx++)
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (float); idx++)
   {
     switch (encoding)
     {
@@ -747,7 +747,7 @@ msr_decode_cdsn (int16_t *input, int samplecount, int32_t *output,
   if (samplecount <= 0)
     return 0;
 
-  for (idx = 0; idx < samplecount && outputlength > 0; idx++)
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (int32_t); idx++)
   {
     memcpy (&sint, &input[idx], sizeof (int16_t));
     if (swapflag)
@@ -840,7 +840,7 @@ msr_decode_sro (int16_t *input, int samplecount, int32_t *output,
   mult       = -1;
   add2result = 10;
 
-  for (idx = 0; idx < samplecount && outputlength > 0; idx++)
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (int32_t); idx++)
   {
     memcpy (&sint, &input[idx], sizeof (int16_t));
     if (swapflag)
@@ -894,7 +894,7 @@ msr_decode_dwwssn (int16_t *input, int samplecount, int32_t *output,
   if (samplecount < 0)
     return 0;
 
-  for (idx = 0; idx < samplecount && outputlength > 0; idx++)
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (int32_t); idx++)
   {
     memcpy (&sint, &input[idx], sizeof (uint16_t));
     if (swapflag)

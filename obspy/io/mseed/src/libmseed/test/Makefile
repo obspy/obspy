@@ -14,34 +14,40 @@ CFLAGS += -I..
 LDFLAGS = -L..
 LDLIBS = -lmseed
 
-SRCS := $(wildcard *.c)
+SRCS := $(sort $(wildcard *.c))
 BINS := $(SRCS:%.c=%)
 
-TESTS := $(wildcard *.test)
+TESTS := $(sort $(wildcard *.test))
 TESTOUTS := $(TESTS:%.test=%.test.out)
 
 # ASCII color coding for test results, green for PASSED and red for FAILED
 PASSED := \033[0;32mPASSED\033[0m
 FAILED := \033[0;31mFAILED\033[0m
 
+TESTCOUNT := 0
+
 test all: $(BINS) $(TESTOUTS)
-	@printf "All tests conducted.\n"
+	@printf '%d tests conducted\n' $(TESTCOUNT)
 
 # Build programs and check for executable
 $(BINS) : % : %.c
+	@$(eval TESTCOUNT=$(shell echo $$(($(TESTCOUNT)+1))))
 	@$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS); exit 0;
 	@if test -x $@; \
 	  then printf '$(PASSED) Building $<\n'; \
-	  else printf '$(FAILED) Building $<\n'; exit 1;\
+	  else printf '$(FAILED) Building $<\n'; exit 1; \
         fi
 
 # Run test scripts, create %.test.out files and compare to %.test.ref references
 $(TESTOUTS) : %.test.out : %.test $(BINS) FORCE
+	@$(eval TESTCOUNT=$(shell echo $$(($(TESTCOUNT)+1))))
 	@$(shell ./$< > $@ 2>&1)
-	@diff $<.ref $@ >/dev/null; if [ $$? -eq 0 ]; \
-          then printf '$(PASSED) Test $<\n'; \
-          else printf '$(FAILED) Test $<, Compare $<.ref $@\n'; exit 0;\
-        fi
+	@diff $<.ref $@ >/dev/null; \
+          if [ $$? -eq 0 ]; \
+            then printf '$(PASSED) Test $<\n'; \
+            else printf '$(FAILED) Test $<, Compare $<.ref $@\n'; \
+	    exit 0; \
+          fi
 
 clean:
 	@rm -f $(BINS) $(TESTOUTS)

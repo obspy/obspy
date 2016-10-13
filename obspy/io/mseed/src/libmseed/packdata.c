@@ -2,7 +2,7 @@
  * Routines for packing text/ASCII, INT_16, INT_32, FLOAT_32, FLOAT_64,
  * STEIM1 and STEIM2 data records.
  *
- * modified: 2016.273
+ * modified: 2016.277
  ************************************************************************/
 
 #include <memory.h>
@@ -521,7 +521,7 @@ msr_encode_steim2 (int32_t *input, int samplecount, int32_t *output,
        * 2 x 15-bit differences
        * 1 x 30-bit difference */
 
-      packedsamples  = 0;
+      packedsamples = 0;
 
       /* 7 x 4-bit differences */
       if (diffcount == 7 && bitwidth[0] <= 4 &&

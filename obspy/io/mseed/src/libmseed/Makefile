@@ -49,7 +49,7 @@ $(LIB_DYN): $(LIB_DOBJS)
 	$(CC) $(CFLAGS) -dynamiclib -compatibility_version $(COMPAT_VER) -current_version $(CURRENT_VER) -install_name $(LIB_DYN_ALIAS) -o $(LIB_DYN) $(LIB_DOBJS)
 	ln -sf $(LIB_DYN) $(LIB_DYN_ALIAS)
 
-test: FORCE
+test: static FORCE
 	@$(MAKE) -C test test
 
 clean:

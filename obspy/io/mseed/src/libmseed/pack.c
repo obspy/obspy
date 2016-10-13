@@ -34,7 +34,7 @@ static int msr_pack_data (void *dest, void *src, int maxsamples, int maxdatabyte
 /* Header and data byte order flags controlled by environment variables */
 /* -2 = not checked, -1 = checked but not set, or 0 = LE and 1 = BE */
 flag packheaderbyteorder = -2;
-flag packdatabyteorder = -2;
+flag packdatabyteorder   = -2;
 
 /***************************************************************************
  * msr_pack:
@@ -80,7 +80,7 @@ msr_pack (MSRecord *msr, void (*record_handler) (char *, int, void *),
   char srcname[50];
 
   flag headerswapflag = 0;
-  flag dataswapflag = 0;
+  flag dataswapflag   = 0;
 
   int samplesize;
   int headerlen;
@@ -328,11 +328,11 @@ msr_pack (MSRecord *msr, void (*record_handler) (char *, int, void *),
   }
 
   /* Pack samples into records */
-  *HPnumsamples = 0;
+  *HPnumsamples      = 0;
   totalpackedsamples = 0;
+  packoffset         = 0;
   if (packedsamples)
     *packedsamples = 0;
-  packoffset = 0;
 
   while ((msr->numsamples - totalpackedsamples) > maxsamples || flush)
   {
@@ -560,7 +560,7 @@ msr_pack_header_raw (MSRecord *msr, char *rawrec, int maxheaderlen,
     return -1;
   }
 
-  fsdh = (struct fsdh_s *)rawrec;
+  fsdh   = (struct fsdh_s *)rawrec;
   offset = 48;
 
   /* Roll-over sequence number if necessary */

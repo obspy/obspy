@@ -1,3 +1,31 @@
+2016.286: 2.18
+	- Remove limitation on sample rate before calling ms_genfactmult()
+	in the normal path of packing records.  Previously generating the
+	factor and multiplier was not attempted for rates higher than
+	32,767.
+
+2016.281: 2.18rc4
+	- ms_genfactmult() now support a much larger range of integer
+	sample rates and periods.
+	- ms_genfactmult() now sets the factor and multiplier using the
+	SECONDS/SAMPLE notation for sample rates less than 1.0 to retain
+	precision for low rates.
+	- ms_genfactmult() now assumes the specified rate is a sample
+	period in seconds if the samprate value is negative.
+	- Add ms_rsqrt64() as a general use reciprocal sqrt for doubles.
+	- Use memcpy() instead of assignment when unpacking float32 and
+	float64 samples to avoid problems with NaN's.  Thanks Lion Krischer.
+	- Add test for reading records without Blockette 1000.
+	- Reformat all source code using included clang-format profile.
+
+2016.277:
+	- A more elegant sanity check for output length in packing by mbyt.
+
+2016:276: 2.18rc3
+	- Improvements for test suite, more consistency.
+	- Remove msr_decode_steim? from libmseed.def, they are internal.
+	- Add sanity to length check before memset calls in packing functions.
+
 2016:274: 2.18rc2
 	- Check for environment variables ENCODE_DEBUG and DECODE_DEBUG
 	and set debugging output, at this point it is Steim frame details

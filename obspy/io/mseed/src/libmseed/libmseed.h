@@ -32,8 +32,8 @@ extern "C" {
 
 #include "lmplatform.h"
 
-#define LIBMSEED_VERSION "2.18rc2"
-#define LIBMSEED_RELEASE "2016.274"
+#define LIBMSEED_VERSION "2.18"
+#define LIBMSEED_RELEASE "2016.286"
 
 #define MINRECLEN   128      /* Minimum Mini-SEED record length, 2^7 bytes */
                              /* Note: the SEED specification minimum is 256 */
@@ -673,6 +673,7 @@ extern int      ms_genfactmult (double samprate, int16_t *factor, int16_t *multi
 extern int      ms_ratapprox (double real, int *num, int *den, int maxval, double precision);
 extern int      ms_bigendianhost (void);
 extern double   ms_dabs (double val);
+extern double   ms_rsqrt64 (double val);
 
 
 /* Lookup functions */

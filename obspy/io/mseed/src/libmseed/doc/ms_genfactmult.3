@@ -1,4 +1,4 @@
-.TH MS_GENFACTMULT 3 2004/11/22 "Libmseed API"
+.TH MS_GENFACTMULT 3 2016/10/07 "Libmseed API"
 .SH DESCRIPTION
 Generate SEED sample rate factor and multiplier
 
@@ -16,15 +16,23 @@ Generate SEED sample rate factor and multiplier
 .SH DESCRIPTION
 \fBms_genfactmult\fP generates an appropriate SEED sample rate
 \fIfactor\fP and \fImultiplier\fP pair from a double precision sample
-rate (\fIsamprate\fP).  The factor and multiplier are cast as int16_t
-because that is the integer size needed for the fixed section of the
-SEED data header.
+rate.  If \fIsamprate\fP is positive it is expected to represent a
+rate in samples/second, if negative is is expected to represent a
+period in seconds/sample.
 
-If the input sample rate is already integer (within 0.000001) it will
-be placed into the factor and the multiplier will be set to 1.
+Non-integer sample rates and periods are supported between 32767.0 and
+1/32767.0.  An error will be returned for non-integer rates and
+periods outside this range.
 
-An error will be produced if the sample rate is very high (> 32727) or
-negative.
+Integer sample rates and periods are supported between 1 and the
+maximum possible value (32767 * 32767).  Values from 1 to 32767 are
+represented directly.  Values larger than 32767 are factored and
+represented exactly when possible and approximated otherwise, with the
+discrepency becoming larger as the values reach the maximum possible
+value.
+
+The factor and multiplier are int16_t because that is the integer size
+needed for the fixed section of the SEED data header.
 
 \fBms_ratapprox\fP finds an approximate rational number for a real
 through continued fraction expansion.  Given a double precision
@@ -34,7 +42,8 @@ not larger than \fImaxval\fP while trying to reach a specified
 \fIprecision\fP.
 
 .SH RETURN VALUES
-\fBms_genfactmult\fP returns 0 on success and -1 on error.
+\fBms_genfactmult\fP returns 0 on success and -1 when value is outside
+of the supported range or error.
 
 \fBms_ratapprox\fP returns the number of iterations performed.
 
