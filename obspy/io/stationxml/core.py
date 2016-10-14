@@ -155,7 +155,7 @@ def _read_stationxml(path_or_file_object):
     inv = obspy.core.inventory.Inventory(networks=networks, source=source,
                                          sender=sender, created=created,
                                          module=module, module_uri=module_uri)
-    _read_extra(root, inv) # read extra tags from root element
+    _read_extra(root, inv)  # read extra tags from root element
     return inv
 
 
@@ -187,6 +187,7 @@ def _read_base_node(element, object_to_write_to, _ns):
         object_to_write_to.data_availability = \
             _read_data_availability(data_availability, _ns)
     _read_extra(element, object_to_write_to)
+
 
 def _read_network(net_element, _ns):
     network = obspy.core.inventory.Network(net_element.get("code"))
@@ -515,7 +516,7 @@ def _read_response_stage(stage_elem, _ns):
             normalization_frequency=normalization_frequency,
             normalization_factor=normalization_factor, zeros=zeros,
             poles=poles, **kwargs)
-        _read_extra(elem,obj)
+        _read_extra(elem, obj)
         return obj
 
     # Handle the coefficients Response Stage Type.
@@ -531,7 +532,7 @@ def _read_response_stage(stage_elem, _ns):
         obj = obspy.core.inventory.CoefficientsTypeResponseStage(
             cf_transfer_function_type=cf_transfer_function_type,
             numerator=numerator, denominator=denominator, **kwargs)
-        _read_extra(elem,obj)
+        _read_extra(elem, obj)
         return obj
 
     # Handle the response list response stage type.
@@ -547,7 +548,7 @@ def _read_response_stage(stage_elem, _ns):
                     frequency=freq, amplitude=amp, phase=phase))
         obj = obspy.core.inventory.ResponseListResponseStage(
             response_list_elements=rlist_elems, **kwargs)
-        _read_extra(elem,obj)
+        _read_extra(elem, obj)
         return obj
 
     # Handle the FIR response stage type.
@@ -579,6 +580,7 @@ def _read_response_stage(stage_elem, _ns):
             coefficients=coeffs, **kwargs)
         _read_extra(elem, obj)
         return obj
+
 
 def _read_instrument_sensitivity(sensitivity_element, _ns):
     value = _tag2obj(sensitivity_element, _ns("Value"), float)
@@ -637,11 +639,12 @@ def _read_instrument_polynomial(element, _ns):
     _read_extra(element, obj)
     return obj
 
+
 def _read_external_reference(ref_element, _ns):
     uri = _tag2obj(ref_element, _ns("URI"), str)
     description = _tag2obj(ref_element, _ns("Description"), str)
     obj = obspy.core.inventory.ExternalReference(uri=uri,
-                                                  description=description)
+                                                 description=description)
     _read_extra(ref_element, obj)
     return obj
 
@@ -653,7 +656,7 @@ def _read_operator(operator_element, _ns):
         contacts.append(_read_person(contact, _ns))
     website = _tag2obj(operator_element, _ns("WebSite"), str)
     obj = obspy.core.inventory.Operator(agencies=agencies, contacts=contacts,
-                                         website=website)
+                                        website=website)
     _read_extra(operator_element, obj)
     return obj
 
@@ -724,6 +727,7 @@ def _read_comment(comment_element, _ns):
     _read_extra(comment_element, obj)
     return obj
 
+
 def _read_person(person_element, _ns):
     names = _tags2obj(person_element, _ns("Name"), str)
     agencies = _tags2obj(person_element, _ns("Agency"), str)
@@ -732,7 +736,7 @@ def _read_person(person_element, _ns):
     for phone in person_element.findall(_ns("Phone")):
         phones.append(_read_phone(phone, _ns))
     obj = obspy.core.inventory.Person(names=names, agencies=agencies,
-                                       emails=emails, phones=phones)
+                                      emails=emails, phones=phones)
     _read_extra(person_element, obj)
     return obj
 
@@ -773,9 +777,9 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
                "Use other namespace abbreviations for custom namespace tags.")
         raise ValueError(msg)
 
-    nsmap[None] = "http://www.fdsn.org/xml/station/1" 
+    nsmap[None] = "http://www.fdsn.org/xml/station/1"
     attrib = {"schemaVersion": SCHEMA_VERSION}
-    
+
     # Check if any of the channels has a data availability element. In that
     # case the namespaces need to be adjusted.
     data_availability = False
@@ -803,9 +807,9 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
                    "namespace abbreviations for custom namespace tags.")
             raise ValueError(msg)
         nsmap["xsi"] = "http://www.w3.org/2001/XMLSchema-instance"
-        
+
     root = etree.Element("FDSNStationXML", attrib=attrib, nsmap=nsmap)
-        
+
     etree.SubElement(root, "Source").text = inventory.source
     if inventory.sender:
         etree.SubElement(root, "Sender").text = inventory.sender
@@ -819,13 +823,13 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         etree.SubElement(root, "ModuleURI").text = inventory.module_uri
 
     etree.SubElement(root, "Created").text = _format_time(inventory.created)
-    
-    for network in inventory.networks:  
+
+    for network in inventory.networks:
         _write_network(root, network)
-        
+
     # Add custom namespace tags to root element
     _write_extra(root, inventory)
-        
+
     tree = root.getroottree()
 
     # The validation has to be done after parsing once again so that the
@@ -841,9 +845,10 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
             for err in errors:
                 msg += "\t%s\n" % err
             raise Exception(msg)
-        
-    # Register all namespaces with the tree. This allows for additional namespaces
-    # to be added to an inventory that was not created by reading a StationXML file.
+
+    # Register all namespaces with the tree. This allows for
+    # additional namespaces to be added to an inventory that
+    # was not created by reading a StationXML file.
     for prefix, ns in nsmap.items():
         if prefix and ns:
             etree.register_namespace(prefix, ns)
@@ -874,6 +879,7 @@ def _write_base_node(element, object_to_read_from):
     for comment in object_to_read_from.comments:
         _write_comment(element, comment)
     _write_extra(element, object_to_read_from)
+
 
 def _write_network(parent, network):
     """
@@ -983,6 +989,7 @@ def _write_polezero_list(parent, obj):
     for obj_ in poles:
         _polezero2tag(parent, "Pole", obj_)
     _write_extra(parent, obj)
+
 
 def _write_station(parent, station):
     # Write the base node type fields.
@@ -1120,6 +1127,7 @@ def _write_polynomial_common_fields(element, polynomial):
                           additional_mapping={"number": "number"})
     _write_extra(element, polynomial)
 
+
 def _write_response(parent, resp):
     attr = {}
     if resp.resource_id is not None:
@@ -1253,11 +1261,13 @@ def _write_response_stage(parent, stage):
     _obj2tag(sub_, "Frequency", stage.stage_gain_frequency)
     _write_extra(parent, stage)
 
+
 def _write_external_reference(parent, ref):
     ref_elem = etree.SubElement(parent, "ExternalReference")
     etree.SubElement(ref_elem, "URI").text = ref.uri
     etree.SubElement(ref_elem, "Description").text = ref.description
     _write_extra(parent, ref)
+
 
 def _write_equipment(parent, equipment, tag="Equipment"):
     if equipment is None:
@@ -1285,6 +1295,7 @@ def _write_equipment(parent, equipment, tag="Equipment"):
             _format_time(calibration_date)
     _write_extra(parent, equipment)
 
+
 def _write_site(parent, site):
     site_elem = etree.SubElement(parent, "Site")
     etree.SubElement(site_elem, "Name").text = site.name
@@ -1295,6 +1306,7 @@ def _write_site(parent, site):
     _obj2tag(site_elem, "Region", site.region)
     _obj2tag(site_elem, "Country", site.country)
     _write_extra(parent, site)
+
 
 def _write_comment(parent, comment):
     attribs = {}
@@ -1312,6 +1324,7 @@ def _write_comment(parent, comment):
         _write_person(comment_elem, author, "Author")
     _write_extra(parent, comment)
 
+
 def _write_person(parent, person, tag_name):
     person_elem = etree.SubElement(parent, tag_name)
     for name in person.names:
@@ -1323,6 +1336,7 @@ def _write_person(parent, person, tag_name):
     for phone in person.phones:
         _write_phone(person_elem, phone)
     _write_extra(parent, person)
+
 
 def _write_phone(parent, phone):
     attribs = {}
@@ -1341,14 +1355,15 @@ def _write_element(parent, element, name):
     """
     Recursively write custom namespace elements.
     """
-    customName = "{%s}%s" % (element.namespace, name) # name of the attribute/tag
+    customName = "{%s}%s" % (
+        element.namespace, name)  # name of the attribute/tag
     attrib = element.get("attrib", {})
     if hasattr(element, "type") and \
-        element.type.lower() in ("attribute", "attrib"):
+            element.type.lower() in ("attribute", "attrib"):
         parent.set(customName, element.value)
-    else: #if not a attribute, then create a tag
+    else:  # if not a attribute, then create a tag
         sub = etree.SubElement(parent, customName, attrib=attrib)
-        if type(element.value) is AttribDict: #nested extra tags
+        if type(element.value) is AttribDict:  # nested extra tags
             for tagname, tag_element in element.value.items():
                 _write_element(sub, tag_element, tagname)
         else:
@@ -1362,8 +1377,8 @@ def _write_extra(parent, obj):
     if hasattr(obj, "extra"):
         for tagname, element in obj.extra.items():
             _write_element(parent, element, tagname)
-            
-            
+
+
 def _tag2obj(element, tag, convert):
     # we use future.builtins.str and are sure we have unicode here
     try:
@@ -1409,7 +1424,7 @@ def _format_time(value):
     else:
         return value.strftime("%Y-%m-%dT%H:%M:%S.%f+00:00")
 
-       
+
 def _read_element(prefix, ns, element, extra):
     """
     Recursively read custom namespace elements and add them to extra.
@@ -1419,17 +1434,17 @@ def _read_element(prefix, ns, element, extra):
     etree.register_namespace(prefix, ns)
     extra[name] = AttribDict()
     extra[name].namespace = ns
-    if(len(element) > 0): # element contains nested elements
+    if(len(element) > 0):  # element contains nested elements
         extra[name].value = AttribDict()
         for nested_el in element:
             _read_element(prefix, ns, nested_el, extra[name].value)
-    else: # element contains values
+    else:  # element contains values
         extra[name].value = element.text
-        if element.attrib: # adds custom attributes dictionary to tag
-            extra[name].attrib = element.attrib 
+        if element.attrib:  # adds custom attributes dictionary to tag
+            extra[name].attrib = element.attrib
     return extra
-        
-        
+
+
 def _read_extra(element, obj):
     """
     Add information stored in custom tags/attributes in obj.extra.

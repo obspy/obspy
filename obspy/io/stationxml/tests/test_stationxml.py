@@ -32,6 +32,7 @@ import obspy.io.stationxml.core
 class StationXMLTestCase(unittest.TestCase):
     """
     """
+
     def setUp(self):
         self.maxDiff = 10000
         # Most generic way to get the actual data directory.
@@ -703,29 +704,37 @@ class StationXMLTestCase(unittest.TestCase):
         network = inv[0]
         network.extra = {}
         ns = 'http://test.myns.ns/'
-        # manually add a new custom namespace tag and attribute to the inventory
-        network.extra['mynsNetworkTag'] = AttribDict({'value':'mynsNetworkTagValue',
-                                               'namespace':ns})
-        network.extra['mynsNetworkAttrib'] = AttribDict({'value':'mynsNetworkAttribValue',
-                                                  'namespace':ns, 
-                                                  'type':'attribute'})
+        # manually add a new custom namespace tag and attribute to the
+        # inventory
+        network.extra['mynsNetworkTag'] = AttribDict({
+                                            'value': 'mynsNetworkTagValue',
+                                            'namespace': ns})
+        network.extra['mynsNetworkAttrib'] = AttribDict({
+                                            'value': 'mynsNetworkAttribValue',
+                                            'namespace': ns,
+                                            'type': 'attribute'})
         station = inv[0][0]
         station.extra = {}
-        station.extra['mynsStationTag'] = AttribDict({'value':'mynsStationTagValue',
-                                                      'namespace':ns})
-        station.extra['mynsStationAttrib'] = AttribDict({'value':'mynsStationAttribValue',
-                                                         'namespace':ns, 
-                                                         'type':'attribute'})
+        station.extra['mynsStationTag'] = AttribDict({
+                                            'value': 'mynsStationTagValue',
+                                            'namespace': ns})
+        station.extra['mynsStationAttrib'] = AttribDict({
+                                            'value': 'mynsStationAttribValue',
+                                            'namespace': ns,
+                                            'type': 'attribute'})
         channel = inv[0][0][0]
-        #add data availability to inventory
-        channel.data_availability = AttribDict({'start':obspy.UTCDateTime('1998-10-26T20:35:58+00:00'),
-                                                'end':obspy.UTCDateTime('2014-07-21T12:00:00+00:00')})
+        # add data availability to inventory
+        channel.data_availability = AttribDict({
+                    'start': obspy.UTCDateTime('1998-10-26T20:35:58+00:00'),
+                    'end': obspy.UTCDateTime('2014-07-21T12:00:00+00:00')})
         channel.extra = {}
-        channel.extra['mynsChannelTag'] = AttribDict({'value':'mynsChannelTagValue',
-                                                      'namespace':ns})
-        channel.extra['mynsChannelAttrib'] = AttribDict({'value':'mynsChannelAttribValue',
-                                                         'namespace':ns, 
-                                                         'type':'attribute'})
+        channel.extra['mynsChannelTag'] = AttribDict({
+                                        'value': 'mynsChannelTagValue',
+                                        'namespace': ns})
+        channel.extra['mynsChannelAttrib'] = AttribDict({
+                                            'value': 'mynsChannelAttribValue',
+                                            'namespace': ns,
+                                            'type': 'attribute'})
         # add nested tags
         nested_tag = AttribDict()
         nested_tag.namespace = ns
@@ -737,7 +746,8 @@ class StationXMLTestCase(unittest.TestCase):
         nested_tag.value.my_nested_tag2 = AttribDict()
         nested_tag.value.my_nested_tag2.namespace = ns
         nested_tag.value.my_nested_tag2.value = True
-        nested_tag.value.my_nested_tag2.attrib = {'{%s}%s' % (ns, 'nestedAttribute1') : 'nestedAttributeValue1' }
+        nested_tag.value.my_nested_tag2.attrib = {'{%s}%s' % (
+            ns, 'nestedAttribute1'): 'nestedAttributeValue1'}
         channel.extra['nested'] = nested_tag
         # add attribute to the outer nested tag
 
@@ -745,13 +755,17 @@ class StationXMLTestCase(unittest.TestCase):
             # manually add custom namespace definition
             tmpfile = tf.name
             # assert that namespace prefix of None raises ValueError
-            mynsmap = {None:'http://bad.custom.ns/'}
-            self.assertRaises(ValueError, inv.write, path_or_file_object=tmpfile, format="STATIONXML", nsmap=mynsmap)
+            mynsmap = {None: 'http://bad.custom.ns/'}
+            self.assertRaises(
+                ValueError, inv.write, path_or_file_object=tmpfile,
+                format="STATIONXML", nsmap=mynsmap)
             # assert that namespace prefix of xsi raises ValueError
-            mynsmap = {'xsi':'http://bad.custom.ns/'}
-            self.assertRaises(ValueError, inv.write, path_or_file_object=tmpfile, format="STATIONXML", nsmap=mynsmap)
+            mynsmap = {'xsi': 'http://bad.custom.ns/'}
+            self.assertRaises(
+                ValueError, inv.write, path_or_file_object=tmpfile,
+                format="STATIONXML", nsmap=mynsmap)
             # reset namespace map to include only valid custom namespaces
-            mynsmap = {'myns':ns}
+            mynsmap = {'myns': ns}
             # write file with manually defined namespace map
             inv.write(tmpfile, format="STATIONXML", nsmap=mynsmap)
             # check contents
@@ -763,35 +777,48 @@ class StationXMLTestCase(unittest.TestCase):
                 buf.seek(0, 0)
                 content = buf.read()
             # check namespace definitions in root element
-            expected = [b'xmlns="http://www.fdsn.org/xml/station/1"',
-                        b'xmlns:myns="http://test.myns.ns/"',
-                        b'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
-                        ]
+            expected = [
+                b'xmlns="http://www.fdsn.org/xml/station/1"',
+                b'xmlns:myns="http://test.myns.ns/"',
+                b'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"']
             for line in expected:
                 self.assertIn(line, content)
             # check additional tags
             expected = [
-                b'<myns:mynsNetworkTag>mynsNetworkTagValue</myns:mynsNetworkTag>',
+                b'<myns:mynsNetworkTag>' +
+                b'mynsNetworkTagValue' +
+                b'</myns:mynsNetworkTag>',
                 b'myns:mynsNetworkAttrib="mynsNetworkAttribValue"',
-                b'<myns:mynsStationTag>mynsStationTagValue</myns:mynsStationTag>',
+                b'<myns:mynsStationTag>' +
+                b'mynsStationTagValue' +
+                b'</myns:mynsStationTag>',
                 b'myns:mynsStationAttrib="mynsStationAttribValue"',
-                b'<myns:mynsChannelTag>mynsChannelTagValue</myns:mynsChannelTag>',
+                b'<myns:mynsChannelTag>' +
+                b'mynsChannelTagValue' +
+                b'</myns:mynsChannelTag>',
                 b'myns:mynsChannelAttrib="mynsChannelAttribValue"',
                 b'<myns:nested>',
-                b'<myns:my_nested_tag1>12300000000.0</myns:my_nested_tag1>',
-                b'<myns:my_nested_tag2 myns:nestedAttribute1="nestedAttributeValue1">True</myns:my_nested_tag2>',
+                b'<myns:my_nested_tag1>' +
+                b'12300000000.0' +
+                b'</myns:my_nested_tag1>',
+                b'<myns:my_nested_tag2 ' +
+                b'myns:nestedAttribute1="nestedAttributeValue1">' +
+                b'True' +
+                b'</myns:my_nested_tag2>',
                 b'</myns:nested>'
             ]
             for line in expected:
-                self.assertIn(line, content)       
-        
+                self.assertIn(line, content)
+
     def test_write_with_extra_tags_and_read(self):
         """
-        First tests that a StationXML file with additional custom "extra" tags gets
-        written correctly. Then tests that when reading the written file
-        again the extra tags are parsed correctly.
+        First tests that a StationXML file with additional
+        custom "extra" tags gets written correctly. Then
+        tests that when reading the written file again the
+        extra tags are parsed correctly.
         """
-        filename = os.path.join(self.data_dir, "IRIS_single_channel_with_response_custom_tags.xml")
+        filename = os.path.join(
+            self.data_dir, "IRIS_single_channel_with_response_custom_tags.xml")
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -815,7 +842,7 @@ class StationXMLTestCase(unittest.TestCase):
                         ]
             for line in expected:
                 self.assertIn(line, content)
-            # check custom tags, nested custom tags, and attributes 
+            # check custom tags, nested custom tags, and attributes
             # at every level of the StationXML hierarchy
             expected = [
                 # root
@@ -827,21 +854,27 @@ class StationXMLTestCase(unittest.TestCase):
                 b'</test:CustomNestedRootTag>',
                 # network
                 b'test:customNetworkAttrib="testNetworkAttribute"',
-                b'<test:CustomNetworkTag>testNetworkTag</test:CustomNetworkTag>',
+                b'<test:CustomNetworkTag>' +
+                b'testNetworkTag' +
+                b'</test:CustomNetworkTag>',
                 b'<test:CustomNestedNetworkTag>',
                 b'<test:NestedTag1>nestedNetworkTag1</test:NestedTag1>',
                 b'<test:NestedTag2>nestedNetworkTag2</test:NestedTag2>',
                 b'</test:CustomNestedNetworkTag>',
                 # station
                 b'test:customStationAttrib="testStationAttribute"',
-                b'<test:CustomStationTag>testStationTag</test:CustomStationTag>',
+                b'<test:CustomStationTag>' +
+                b'testStationTag' +
+                b'</test:CustomStationTag>',
                 b'<test:CustomNestedStationTag>',
                 b'<test:NestedTag1>nestedStationTag1</test:NestedTag1>',
                 b'<test:NestedTag2>nestedStationTag2</test:NestedTag2>',
                 b'</test:CustomNestedStationTag>',
                 # comment
                 b'test:customCommentAttrib="testCommentAttribute"',
-                b'<test:CustomCommentTag>testCommentTag</test:CustomCommentTag>',
+                b'<test:CustomCommentTag>' +
+                b'testCommentTag' +
+                b'</test:CustomCommentTag>',
                 b'<test:CustomNestedCommentTag>',
                 b'<test:NestedTag1>nestedCommentTag1</test:NestedTag1>',
                 b'<test:NestedTag2>nestedCommentTag2</test:NestedTag2>',
@@ -869,14 +902,18 @@ class StationXMLTestCase(unittest.TestCase):
                 b'</test:CustomNestedSiteTag>',
                 # equipment
                 b'test:customEquipmentAttrib="testEquipmentAttribute"',
-                b'<test:CustomEquipmentTag>testEquipmentTag</test:CustomEquipmentTag>',
+                b'<test:CustomEquipmentTag>' +
+                b'testEquipmentTag' +
+                b'</test:CustomEquipmentTag>',
                 b'<test:CustomNestedEquipmentTag>',
                 b'<test:NestedTag1>nestedEquipmentTag1</test:NestedTag1>',
                 b'<test:NestedTag2>nestedEquipmentTag2</test:NestedTag2>',
                 b'</test:CustomNestedEquipmentTag>',
                 # operator
                 b'test:customOperatorAttrib="testOperatorAttribute"',
-                b'<test:CustomOperatorTag>testOperatorTag</test:CustomOperatorTag>',
+                b'<test:CustomOperatorTag>' +
+                b'testOperatorTag' +
+                b'</test:CustomOperatorTag>',
                 b'<test:CustomNestedOperatorTag>',
                 b'<test:NestedTag1>nestedOperatorTag1</test:NestedTag1>',
                 b'<test:NestedTag2>nestedOperatorTag2</test:NestedTag2>',
@@ -890,14 +927,18 @@ class StationXMLTestCase(unittest.TestCase):
                 b'</test:CustomNestedExtRefTag>',
                 # channel
                 b'test:customChannelAttrib="testChannelAttribute"',
-                b'<test:CustomChannelTag>testChannelTag</test:CustomChannelTag>',
+                b'<test:CustomChannelTag>' +
+                b'testChannelTag' +
+                b'</test:CustomChannelTag>',
                 b'<test:CustomNestedChannelTag>',
                 b'<test:NestedTag1>nestedChannelTag1</test:NestedTag1>',
                 b'<test:NestedTag2>nestedChannelTag2</test:NestedTag2>',
                 b'</test:CustomNestedChannelTag>',
                 # response
                 b'test:customResponseAttrib="testResponseAttribute"',
-                b'<test:CustomResponseTag>testResponseTag</test:CustomResponseTag>',
+                b'<test:CustomResponseTag>' +
+                b'testResponseTag' +
+                b'</test:CustomResponseTag>',
                 b'<test:CustomNestedResponseTag>',
                 b'<test:NestedTag1>nestedResponseTag1</test:NestedTag1>',
                 b'<test:NestedTag2>nestedResponseTag2</test:NestedTag2>',
@@ -911,21 +952,27 @@ class StationXMLTestCase(unittest.TestCase):
                 b'</test:CustomNestedDATag>',
                 # response stage (PolesZeros response stage)
                 b'test:customStagePZAttrib="testStagePZAttribute"',
-                b'<test:CustomStagePZTag>testStagePZTag</test:CustomStagePZTag>',
+                b'<test:CustomStagePZTag>' +
+                b'testStagePZTag' +
+                b'</test:CustomStagePZTag>',
                 b'<test:CustomNestedStagePZTag>',
                 b'<test:NestedTag1>nestedStagePZTag1</test:NestedTag1>',
                 b'<test:NestedTag2>nestedStagePZTag2</test:NestedTag2>',
                 b'</test:CustomNestedStagePZTag>',
                 # response stage (Coefficients response stage)
                 b'test:customStageCoefAttrib="testStageCoefAttribute"',
-                b'<test:CustomStageCoefTag>testStageCoefTag</test:CustomStageCoefTag>',
+                b'<test:CustomStageCoefTag>' +
+                b'testStageCoefTag' +
+                b'</test:CustomStageCoefTag>',
                 b'<test:CustomNestedStageCoefTag>',
                 b'<test:NestedTag1>nestedStageCoefTag1</test:NestedTag1>',
                 b'<test:NestedTag2>nestedStageCoefTag2</test:NestedTag2>',
                 b'</test:CustomNestedStageCoefTag>',
                 # instrument sensitivity
                 b'test:customSensitivityAttrib="testSensitivityAttribute"',
-                b'<test:CustomSensitivityTag>testSensitivityTag</test:CustomSensitivityTag>',
+                b'<test:CustomSensitivityTag>' +
+                b'testSensitivityTag' +
+                b'</test:CustomSensitivityTag>',
                 b'<test:CustomNestedSensitivityTag>',
                 b'<test:NestedTag1>nestedSensitivityTag1</test:NestedTag1>',
                 b'<test:NestedTag2>nestedSensitivityTag2</test:NestedTag2>',
@@ -935,6 +982,7 @@ class StationXMLTestCase(unittest.TestCase):
                 self.assertIn(line, content)
             # now, read again to test if it's parsed correctly..
             inv = obspy.read_inventory(tmpfile)
+
 
 def suite():
     return unittest.makeSuite(StationXMLTestCase, "test")
