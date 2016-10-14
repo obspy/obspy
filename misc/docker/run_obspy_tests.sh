@@ -217,7 +217,7 @@ overall_status() {
 # it's just looking up the correct quoting function from urllib depending on
 # py2/3 and works with requests >= 1.0 (which is from 2012)
 FULL_VERSION_URLENCODED=`python -c "from requests.compat import quote; print(quote(\"${FULL_VERSION}\"))"`
-COMMIT_STATUS_TARGET_URL="http://tests.obspy.org/?version=${FULL_VERSION_URLENCODED}"
+COMMIT_STATUS_TARGET_URL="http://tests.obspy.org/?version=${FULL_VERSION_URLENCODED}&node=docker-"
 if overall_status ;
 then
     COMMIT_STATUS=success

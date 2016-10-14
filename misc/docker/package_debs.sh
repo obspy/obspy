@@ -173,7 +173,7 @@ overall_test_status() {
     return 1
 }
 
-COMMIT_STATUS_TARGET_URL="http://tests.obspy.org/?node=docker-deb-"
+COMMIT_STATUS_TARGET_URL="http://tests.obspy.org/?git=${SHA}&node=docker-deb-"
 if overall_build_status ;
 then
     if overall_test_status ;
