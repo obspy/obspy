@@ -8,7 +8,7 @@
  <Created>2013-04-16T06:15:28</Created>
  <test:CustomRootTag>testRootTag</test:CustomRootTag>
  <test:CustomNestedRootTag>
-  <test:NestedTag1>nestedRootTag1</test:NestedTag1>
+  <test:NestedTag1 nestedTagAttrib="testNestedAttribute">nestedRootTag1</test:NestedTag1>
   <test:NestedTag2>nestedRootTag2</test:NestedTag2>
  </test:CustomNestedRootTag>
  <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open" test:customNetworkAttrib="testNetworkAttribute">

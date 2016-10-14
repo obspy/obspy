@@ -693,6 +693,29 @@ class StationXMLTestCase(unittest.TestCase):
             '<Pole number="1"> <Real>2.0</Real> '
             '<Imaginary>3.0</Imaginary> </Pole>', data)
 
+    def test_write_with_extra_tags_namespace_redef(self):
+        """
+        Tests the exceptions are raised when namespaces
+        are redefined.
+        """
+        filename = os.path.join(
+            self.data_dir, "stationxml_with_availability.xml")
+        # read the StationXML with availability
+        inv = obspy.read_inventory(filename)
+        with NamedTemporaryFile() as tf:
+            # manually add custom namespace definition
+            tmpfile = tf.name
+            # assert that namespace prefix of xsi raises ValueError
+            mynsmap = {'xsi': 'http://bad.custom.ns/'}
+            self.assertRaises(
+                ValueError, inv.write, path_or_file_object=tmpfile,
+                format="STATIONXML", nsmap=mynsmap)
+            # assert that namespace prefix of None raises ValueError
+            mynsmap = {None: 'http://bad.custom.ns/'}
+            self.assertRaises(
+                ValueError, inv.write, path_or_file_object=tmpfile,
+                format="STATIONXML", nsmap=mynsmap)
+
     def test_write_with_extra_tags_without_read_extra(self):
         """
         Tests that a Inventory object that was instantiated with
@@ -749,22 +772,10 @@ class StationXMLTestCase(unittest.TestCase):
         nested_tag.value.my_nested_tag2.attrib = {'{%s}%s' % (
             ns, 'nestedAttribute1'): 'nestedAttributeValue1'}
         channel.extra['nested'] = nested_tag
-        # add attribute to the outer nested tag
-
         with NamedTemporaryFile() as tf:
             # manually add custom namespace definition
             tmpfile = tf.name
-            # assert that namespace prefix of None raises ValueError
-            mynsmap = {None: 'http://bad.custom.ns/'}
-            self.assertRaises(
-                ValueError, inv.write, path_or_file_object=tmpfile,
-                format="STATIONXML", nsmap=mynsmap)
-            # assert that namespace prefix of xsi raises ValueError
-            mynsmap = {'xsi': 'http://bad.custom.ns/'}
-            self.assertRaises(
-                ValueError, inv.write, path_or_file_object=tmpfile,
-                format="STATIONXML", nsmap=mynsmap)
-            # reset namespace map to include only valid custom namespaces
+            # set namespace map to include only valid custom namespaces
             mynsmap = {'myns': ns}
             # write file with manually defined namespace map
             inv.write(tmpfile, format="STATIONXML", nsmap=mynsmap)
@@ -849,7 +860,9 @@ class StationXMLTestCase(unittest.TestCase):
                 b'test:customRootAttrib="testRootAttribute"',
                 b'<test:CustomRootTag>testRootTag</test:CustomRootTag>',
                 b'<test:CustomNestedRootTag>',
-                b'<test:NestedTag1>nestedRootTag1</test:NestedTag1>',
+                b'<test:NestedTag1 nestedTagAttrib="testNestedAttribute">' +
+                b'nestedRootTag1' +
+                b'</test:NestedTag1>',
                 b'<test:NestedTag2>nestedRootTag2</test:NestedTag2>',
                 b'</test:CustomNestedRootTag>',
                 # network

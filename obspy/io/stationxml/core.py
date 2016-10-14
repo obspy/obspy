@@ -1355,14 +1355,14 @@ def _write_element(parent, element, name):
     """
     Recursively write custom namespace elements.
     """
-    customName = "{%s}%s" % (
+    custom_name = "{%s}%s" % (
         element.namespace, name)  # name of the attribute/tag
     attrib = element.get("attrib", {})
     if hasattr(element, "type") and \
             element.type.lower() in ("attribute", "attrib"):
-        parent.set(customName, element.value)
+        parent.set(custom_name, element.value)
     else:  # if not a attribute, then create a tag
-        sub = etree.SubElement(parent, customName, attrib=attrib)
+        sub = etree.SubElement(parent, custom_name, attrib=attrib)
         if type(element.value) is AttribDict:  # nested extra tags
             for tagname, tag_element in element.value.items():
                 _write_element(sub, tag_element, tagname)
