@@ -94,6 +94,8 @@ cd ${OBSPY_DOCKER}
 if [ "$DOCKER_TESTS" = true ]
 then
     TARGETS=`python -c "from obspy_github_api import get_docker_build_targets; print(get_docker_build_targets(context='docker-testbot', branches=${WORK_ON_BRANCHES}, prs=${WORK_ON_PRS}))"`
+    TARGET_ARRAY=(${TARGETS// / })
+    echo "##### DOCKER TESTS, ALL TARGETS (${#TARGET_ARRAY[@]}): ${TARGETS}"
     for TARGET in $TARGETS
     do
         echo "##### DOCKER TESTS, WORKING ON TARGET: ${TARGET}"
@@ -119,6 +121,8 @@ cd ${OBSPY_DOCKER}
 if [ "$DOCKER_DEB_PACKAGING" = true ]
 then
     TARGETS=`python -c "from obspy_github_api import get_docker_build_targets; print(get_docker_build_targets(context='docker-deb-buildbot', branches=${WORK_ON_BRANCHES}, prs=${WORK_ON_PRS}))"`
+    TARGET_ARRAY=(${TARGETS// / })
+    echo "##### DOCKER DEB PACKAGING, ALL TARGETS (${#TARGET_ARRAY[@]}): ${TARGETS}"
     for TARGET in $TARGETS
     do
         echo "##### DOCKER DEB PACKAGING, WORKING ON TARGET: ${TARGET}"
