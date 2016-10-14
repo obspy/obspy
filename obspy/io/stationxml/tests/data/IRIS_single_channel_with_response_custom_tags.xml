@@ -1,29 +1,145 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" xmlns:test="http://just.a.test/xmlns/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd" test:customAttrib="test123">
+<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" xmlns:test="http://just.a.test/xmlns/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd" test:customRootAttrib="testRootAttribute">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.2</Module>
  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?starttime=2013-01-01&amp;network=IU&amp;sta=ANMO&amp;level=response&amp;nodata=404</ModuleURI>
  <Created>2013-04-16T06:15:28</Created>
- <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+ <test:CustomRootTag>testRootTag</test:CustomRootTag>
+ <test:CustomNestedRootTag>
+  <test:NestedTag1>nestedRootTag1</test:NestedTag1>
+  <test:NestedTag2>nestedRootTag2</test:NestedTag2>
+ </test:CustomNestedRootTag>
+ <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open" test:customNetworkAttrib="testNetworkAttribute">
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
-  <test:CustomTag>testTag1234</test:CustomTag>
+  <test:CustomNetworkTag>testNetworkTag</test:CustomNetworkTag>
+  <test:CustomNestedNetworkTag>
+   <test:NestedTag1>nestedNetworkTag1</test:NestedTag1>
+   <test:NestedTag2>nestedNetworkTag2</test:NestedTag2>
+  </test:CustomNestedNetworkTag>
   <TotalNumberStations>252</TotalNumberStations>
   <SelectedNumberStations>1</SelectedNumberStations>
-  <Station code="ANMO" startDate="2008-06-30T20:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
-   <test:CustomTag>testTag1234</test:CustomTag>
+  <Station code="ANMO" startDate="2008-06-30T20:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" test:customStationAttrib="testStationAttribute">
+   <test:CustomStationTag>testStationTag</test:CustomStationTag>
+   <test:CustomNestedStationTag>
+    <test:NestedTag1>nestedStationTag1</test:NestedTag1>
+    <test:NestedTag2>nestedStationTag2</test:NestedTag2>
+   </test:CustomNestedStationTag>
+   <Comment id="0" test:customCommentAttrib="testCommentAttribute">
+    <test:CustomCommentTag>testCommentTag</test:CustomCommentTag>
+    <test:CustomNestedCommentTag>
+     <test:NestedTag1>nestedCommentTag1</test:NestedTag1>
+     <test:NestedTag2>nestedCommentTag2</test:NestedTag2>
+    </test:CustomNestedCommentTag>
+    <Value>Comment number 1</Value>
+    <BeginEffectiveTime>1990-05-05T00:00:00+00:00</BeginEffectiveTime>
+    <EndEffectiveTime>2008-02-03T00:00:00+00:00</EndEffectiveTime>
+    <Author test:customPersonAttrib="testPersonAttribute">
+     <Name>This person</Name>
+     <Name>has multiple names!</Name>
+     <Agency>And also</Agency>
+     <Agency>many</Agency>
+     <Agency>many Agencies</Agency>
+     <Email>email1@mail.com</Email>
+     <Email>email2@mail.com</Email>
+     <Email>email3@mail.com</Email>
+     <Email>email4@mail.com</Email>
+     <test:CustomPersonTag>testPersonTag</test:CustomPersonTag>
+     <test:CustomNestedPersonTag>
+      <test:NestedTag1>nestedPersonTag1</test:NestedTag1>
+      <test:NestedTag2>nestedPersonTag2</test:NestedTag2>
+     </test:CustomNestedPersonTag>
+     <Phone description="phone number 1" test:customPhoneAttrib="testPhoneAttribute">
+      <test:CustomPhoneTag>testPhoneTag</test:CustomPhoneTag>
+      <test:CustomNestedPhoneTag>
+       <test:NestedTag1>nestedPhoneTag1</test:NestedTag1>
+       <test:NestedTag2>nestedPhoneTag2</test:NestedTag2>
+      </test:CustomNestedPhoneTag>
+      <CountryCode>49</CountryCode>
+      <AreaCode>123</AreaCode>
+      <PhoneNumber>456-7890</PhoneNumber>
+     </Phone>
+     <Phone description="phone number 2">
+      <CountryCode>34</CountryCode>
+      <AreaCode>321</AreaCode>
+      <PhoneNumber>129-7890</PhoneNumber>
+     </Phone>
+    </Author>
+   </Comment>
    <Latitude>34.94591</Latitude>
    <Longitude>-106.4572</Longitude>
    <Elevation>1820.0</Elevation>
-   <Site>
+   <Site test:customSiteAttrib="testSiteAttribute">
     <Name>Albuquerque, New Mexico, USA</Name>
+    <test:CustomSiteTag>testSiteTag</test:CustomSiteTag>
+    <test:CustomNestedSiteTag>
+     <test:NestedTag1>nestedSiteTag1</test:NestedTag1>
+     <test:NestedTag2>nestedSiteTag2</test:NestedTag2>
+    </test:CustomNestedSiteTag>
    </Site>
+   <Equipment resourceId="some_id" test:customEquipmentAttrib="testEquipmentAttribute">
+    <test:CustomEquipmentTag>testEquipmentTag</test:CustomEquipmentTag>
+    <test:CustomNestedEquipmentTag>
+     <test:NestedTag1>nestedEquipmentTag1</test:NestedTag1>
+     <test:NestedTag2>nestedEquipmentTag2</test:NestedTag2>
+    </test:CustomNestedEquipmentTag>
+    <Type>Some type</Type>
+    <Description>Some description</Description>
+    <Manufacturer>Some manufacturer</Manufacturer>
+    <Vendor>Some vendor</Vendor>
+    <Model>Some model</Model>
+    <SerialNumber>12345-ABC</SerialNumber>
+    <InstallationDate>1990-05-05T00:00:00+00:00</InstallationDate>
+    <RemovalDate>1999-05-05T00:00:00+00:00</RemovalDate>
+    <CalibrationDate>1990-05-05T00:00:00+00:00</CalibrationDate>
+    <CalibrationDate>1992-05-05T00:00:00+00:00</CalibrationDate>
+   </Equipment>
+   <Operator test:customOperatorAttrib="testOperatorAttribute">
+    <test:CustomOperatorTag>testOperatorTag</test:CustomOperatorTag>
+    <test:CustomNestedOperatorTag>
+     <test:NestedTag1>nestedOperatorTag1</test:NestedTag1>
+     <test:NestedTag2>nestedOperatorTag2</test:NestedTag2>
+    </test:CustomNestedOperatorTag>
+    <Agency>Agency</Agency>
+    <Contact>
+     <Name>New Name</Name>
+     <Agency>Agency</Agency>
+     <Email>email@mail.com</Email>
+     <Phone description="phone number 1">
+      <CountryCode>49</CountryCode>
+      <AreaCode>123</AreaCode>
+      <PhoneNumber>456-7890</PhoneNumber>
+     </Phone>
+    </Contact>
+    <WebSite>http://www.web.site</WebSite>
+   </Operator>
    <CreationDate>1989-08-29T00:00:00</CreationDate>
    <TotalNumberChannels>117</TotalNumberChannels>
    <SelectedNumberChannels>1</SelectedNumberChannels>
-   <Channel locationCode="10" startDate="2012-03-13T08:10:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BHZ">
-    <test:CustomTag>testTag1234</test:CustomTag>
+   <ExternalReference test:customExtRefAttrib="testExtRefAttribute">
+    <URI>http://path.to/something</URI>
+    <Description>Some description</Description>
+    <test:CustomExtRefTag>testExtRefTag</test:CustomExtRefTag>
+    <test:CustomNestedExtRefTag>
+     <test:NestedTag1>nestedExtRefTag1</test:NestedTag1>
+     <test:NestedTag2>nestedExtRefTag2</test:NestedTag2>
+    </test:CustomNestedExtRefTag>
+   </ExternalReference>
+   <Channel locationCode="10" startDate="2012-03-13T08:10:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BHZ" test:customChannelAttrib="testChannelAttribute">
+    <test:CustomChannelTag>testChannelTag</test:CustomChannelTag>
+    <test:CustomNestedChannelTag>
+     <test:NestedTag1>nestedChannelTag1</test:NestedTag1>
+     <test:NestedTag2>nestedChannelTag2</test:NestedTag2>
+    </test:CustomNestedChannelTag>
+    <DataAvailability test:customDAAttrib="testDAAttribute">
+     <Extent end="2014-07-21T12:00:00+00:00" start="1998-10-26T20:35:58+00:00"/>
+     <test:CustomDATag>testDATag</test:CustomDATag>
+     <test:CustomNestedDATag>
+      <test:NestedTag1>nestedDATag1</test:NestedTag1>
+      <test:NestedTag2>nestedDATag2</test:NestedTag2>
+     </test:CustomNestedDATag>
+    </DataAvailability>
     <Latitude>34.945913</Latitude>
     <Longitude>-106.457122</Longitude>
     <Elevation>1759.0</Elevation>
@@ -37,8 +153,18 @@
     <Sensor>
      <Type>Guralp CMG3-T Seismometer (borehole)</Type>
     </Sensor>
-    <Response>
-     <InstrumentSensitivity>
+    <Response test:customResponseAttrib="testResponseAttribute">
+     <test:CustomResponseTag>testResponseTag</test:CustomResponseTag>
+     <test:CustomNestedResponseTag>
+      <test:NestedTag1>nestedResponseTag1</test:NestedTag1>
+      <test:NestedTag2>nestedResponseTag2</test:NestedTag2>
+     </test:CustomNestedResponseTag>
+     <InstrumentSensitivity test:customSensitivityAttrib="testSensitivityAttribute">
+      <test:CustomSensitivityTag>testSensitivityTag</test:CustomSensitivityTag>
+      <test:CustomNestedSensitivityTag>
+       <test:NestedTag1>nestedSensitivityTag1</test:NestedTag1>
+       <test:NestedTag2>nestedSensitivityTag2</test:NestedTag2>
+      </test:CustomNestedSensitivityTag>
       <Value>3.31283E10</Value>
       <Frequency>0.02</Frequency>
       <InputUnits>
@@ -51,7 +177,12 @@
       </OutputUnits>
      </InstrumentSensitivity>
      <Stage number="1">
-      <PolesZeros>
+      <PolesZeros test:customStagePZAttrib="testStagePZAttribute">
+       <test:CustomStagePZTag>testStagePZTag</test:CustomStagePZTag>
+       <test:CustomNestedStagePZTag>
+        <test:NestedTag1>nestedStagePZTag1</test:NestedTag1>
+        <test:NestedTag2>nestedStagePZTag2</test:NestedTag2>
+       </test:CustomNestedStagePZTag>
        <InputUnits>
         <Name>M/S</Name>
         <Description>Velocity in Meters Per Second</Description>
@@ -98,7 +229,12 @@
       </StageGain>
      </Stage>
      <Stage number="2">
-      <Coefficients>
+      <Coefficients test:customStageCoefAttrib="testStageCoefAttribute">
+       <test:CustomStageCoefTag>testStageCoefTag</test:CustomStageCoefTag>
+       <test:CustomNestedStageCoefTag>
+        <test:NestedTag1>nestedStageCoefTag1</test:NestedTag1>
+        <test:NestedTag2>nestedStageCoefTag2</test:NestedTag2>
+       </test:CustomNestedStageCoefTag>
        <InputUnits>
         <Name>V</Name>
         <Description>Volts</Description>
@@ -131,7 +267,6 @@
         <Name>COUNTS</Name>
         <Description>Digital Counts</Description>
        </OutputUnits>
-       <test:CustomTag>testTag1234</test:CustomTag>
        <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
        <Numerator>.000000000000418952</Numerator>
        <Numerator>.000330318</Numerator>
@@ -185,10 +320,8 @@
        <Frequency>0</Frequency>
       </StageGain>
      </Stage>
-     <test:CustomTag>testTag1234</test:CustomTag>
     </Response>
    </Channel>
   </Station>
  </Network>
- <test:CustomTag>testTag1234</test:CustomTag>
 </FDSNStationXML>
