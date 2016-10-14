@@ -2,6 +2,8 @@
 """
 GSE2.0 bulletin read support.
 
+:author:
+    EOST (École et Observatoire des Sciences de la Terre)
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
