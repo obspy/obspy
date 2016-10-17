@@ -20,7 +20,6 @@ import math
 import os
 import re
 import warnings
-import types
 
 from lxml import etree
 
