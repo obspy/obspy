@@ -20,6 +20,7 @@ import math
 import os
 import re
 import warnings
+import types
 
 from lxml import etree
 
@@ -35,6 +36,7 @@ from obspy.core.inventory import (CoefficientsTypeResponseStage,
                                   ResponseListResponseStage, ResponseStage)
 from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip,  Distance,
                                   Frequency, Latitude, Longitude, SampleRate)
+from _ast import Dict
 
 
 # Define some constants for writing StationXML files.
@@ -1356,18 +1358,19 @@ def _write_element(parent, element, name):
     Recursively write custom namespace elements.
     """
     custom_name = "{%s}%s" % (
-        element.namespace, name)  # name of the attribute/tag
+        element['namespace'], name)  # name of the attribute/tag
     attrib = element.get("attrib", {})
     if hasattr(element, "type") and \
-            element.type.lower() in ("attribute", "attrib"):
-        parent.set(custom_name, element.value)
+            element['type'].lower() in ("attribute", "attrib"):
+        parent.set(custom_name, element['value'])
     else:  # if not a attribute, then create a tag
         sub = etree.SubElement(parent, custom_name, attrib=attrib)
-        if type(element.value) is AttribDict:  # nested extra tags
-            for tagname, tag_element in element.value.items():
+        if isinstance(element['value'], AttribDict) or \
+            isinstance(element['value'], dict):  # nested extra tags
+            for tagname, tag_element in element['value'].items():
                 _write_element(sub, tag_element, tagname)
         else:
-            sub.text = _float_to_str(element.value)
+            sub.text = _float_to_str(element['value'])
 
 
 def _write_extra(parent, obj):
