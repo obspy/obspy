@@ -63,7 +63,7 @@ The xml output of the above example looks like:
 	<?xml version='1.0' encoding='UTF-8'?>
 	<FDSNStationXML xmlns:my_ns="http://test.org/xmlns/0.1" xmlns:somepage_ns="http://some-page.de/xmlns/1.0" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0">
 	  <Source>XX</Source>
-	  <Module>ObsPy 1.0.2.post0+507.g70c8bd20db.dirty.nick.iris.stationxml.custom.tags</Module>
+	  <Module>ObsPy 1.0.2</Module>
 	  <ModuleURI>https://www.obspy.org</ModuleURI>
 	  <Created>2016-10-17T18:32:28.696287+00:00</Created>
 	  <Network code="XX">
@@ -107,29 +107,29 @@ Custom tags can be nested:
 
 .. code-block:: python
 
-from obspy import Inventory
-from obspy.core.inventory import Network
-from obspy.core.util import AttribDict
-
-ns = 'http://some-page.de/xmlns/1.0'
-
-my_tag = AttribDict()
-my_tag.namespace = ns
-my_tag.value = AttribDict()
-
-my_tag.value.my_nested_tag1 = AttribDict()
-my_tag.value.my_nested_tag1.namespace = ns
-my_tag.value.my_nested_tag1.value = 1.23E+10
-
-my_tag.value.my_nested_tag2 = AttribDict()
-my_tag.value.my_nested_tag2.namespace = ns
-my_tag.value.my_nested_tag2.value = True
-
-inv = Inventory([Network('XX')], 'XX')
-inv[0].extra = AttribDict()
-inv[0].extra.my_tag = my_tag
-inv.write('my_inventory.xml', format='STATIONXML',
-          nsmap={'somepage_ns': 'http://some-page.de/xmlns/1.0'})
+	from obspy import Inventory
+	from obspy.core.inventory import Network
+	from obspy.core.util import AttribDict
+	
+	ns = 'http://some-page.de/xmlns/1.0'
+	
+	my_tag = AttribDict()
+	my_tag.namespace = ns
+	my_tag.value = AttribDict()
+	
+	my_tag.value.my_nested_tag1 = AttribDict()
+	my_tag.value.my_nested_tag1.namespace = ns
+	my_tag.value.my_nested_tag1.value = 1.23E+10
+	
+	my_tag.value.my_nested_tag2 = AttribDict()
+	my_tag.value.my_nested_tag2.namespace = ns
+	my_tag.value.my_nested_tag2.value = True
+	
+	inv = Inventory([Network('XX')], 'XX')
+	inv[0].extra = AttribDict()
+	inv[0].extra.my_tag = my_tag
+	inv.write('my_inventory.xml', format='STATIONXML',
+	          nsmap={'somepage_ns': 'http://some-page.de/xmlns/1.0'})
 
 This will produce an xml output similar to the following:
 
@@ -138,7 +138,7 @@ This will produce an xml output similar to the following:
 	<?xml version='1.0' encoding='UTF-8'?>
 	<FDSNStationXML xmlns:somepage_ns="http://some-page.de/xmlns/1.0" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0">
 	  <Source>XX</Source>
-	  <Module>ObsPy 1.0.2.post0+507.g70c8bd20db.dirty.nick.iris.stationxml.custom.tags</Module>
+	  <Module>ObsPy 1.0.2</Module>
 	  <ModuleURI>https://www.obspy.org</ModuleURI>
 	  <Created>2016-10-17T18:45:14.302265+00:00</Created>
 	  <Network code="XX">
