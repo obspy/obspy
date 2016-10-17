@@ -21,6 +21,7 @@ import os
 import re
 import warnings
 
+from collections import Mapping
 from lxml import etree
 
 import obspy
@@ -35,7 +36,6 @@ from obspy.core.inventory import (CoefficientsTypeResponseStage,
                                   ResponseListResponseStage, ResponseStage)
 from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip,  Distance,
                                   Frequency, Latitude, Longitude, SampleRate)
-from _ast import Dict
 
 
 # Define some constants for writing StationXML files.
@@ -1364,8 +1364,7 @@ def _write_element(parent, element, name):
         parent.set(custom_name, element['value'])
     else:  # if not a attribute, then create a tag
         sub = etree.SubElement(parent, custom_name, attrib=attrib)
-        if isinstance(element['value'], AttribDict) or \
-            isinstance(element['value'], dict):  # nested extra tags
+        if isinstance(element['value'], Mapping):  # nested extra tags
             for tagname, tag_element in element['value'].items():
                 _write_element(sub, tag_element, tagname)
         else:
