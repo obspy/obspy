@@ -50,6 +50,8 @@ master:
      get_timing_and_data_quality() function obsolete which is thus
      deprecated and will be removed with the next release. The get_flags()
      function is also much faster. (see #1141)
+   * Update to libmseed v2.18 (see #1540).
+   * Correctly read MiniSEED files with a data offset of 48 bytes (see #1540).
  - obspy.io.xseed:
    * Added azimuth and dip to the get_coordinates() function.  (see #1315)
  - obspy.scripts:
