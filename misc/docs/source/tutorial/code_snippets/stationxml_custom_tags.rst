@@ -135,29 +135,29 @@ Custom tags can be nested:
 
 .. code-block:: python
 
-	from obspy import Inventory
-	from obspy.core.inventory import Network
-	from obspy.core.util import AttribDict
-	
-	ns = 'http://some-page.de/xmlns/1.0'
-	
-	my_tag = AttribDict()
-	my_tag.namespace = ns
-	my_tag.value = AttribDict()
-	
-	my_tag.value.my_nested_tag1 = AttribDict()
-	my_tag.value.my_nested_tag1.namespace = ns
-	my_tag.value.my_nested_tag1.value = 1.23E+10
-	
-	my_tag.value.my_nested_tag2 = AttribDict()
-	my_tag.value.my_nested_tag2.namespace = ns
-	my_tag.value.my_nested_tag2.value = True
-	
-	inv = Inventory([Network('XX')], 'XX')
-	inv[0].extra = AttribDict()
-	inv[0].extra.my_tag = my_tag
-	inv.write('my_inventory.xml', format='STATIONXML',
-	          nsmap={'somepage_ns': 'http://some-page.de/xmlns/1.0'})
+    from obspy import Inventory
+    from obspy.core.inventory import Network
+    from obspy.core.util import AttribDict
+    
+    ns = 'http://some-page.de/xmlns/1.0'
+    
+    my_tag = AttribDict()
+    my_tag.namespace = ns
+    my_tag.value = AttribDict()
+    
+    my_tag.value.my_nested_tag1 = AttribDict()
+    my_tag.value.my_nested_tag1.namespace = ns
+    my_tag.value.my_nested_tag1.value = 1.23E+10
+    
+    my_tag.value.my_nested_tag2 = AttribDict()
+    my_tag.value.my_nested_tag2.namespace = ns
+    my_tag.value.my_nested_tag2.value = True
+    
+    inv = Inventory([Network('XX')], 'XX')
+    inv[0].extra = AttribDict()
+    inv[0].extra.my_tag = my_tag
+    inv.write('my_inventory.xml', format='STATIONXML',
+              nsmap={'somepage_ns': 'http://some-page.de/xmlns/1.0'})
 
 This will produce an xml output similar to the following:
 
