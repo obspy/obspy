@@ -131,11 +131,13 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         both methods, readMSTracesViaRecords and readMSTraces
         """
         file = os.path.join(self.path, "data", "brokenlastrecord.mseed")
+
         # independent reading of the data
         with open(file, 'rb') as fp:
             data_string = fp.read()[128:]  # 128 Bytes header
         data = util._unpack_steim_2(data_string, 5980, swapflag=self.swap,
                                     verbose=0)
+
         # test readMSTraces. Will raise an internal warning.
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -144,10 +146,14 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEqual(len(w), 1)
         self.assertEqual(w[0].category, InternalMSEEDReadingWarning)
 
+        # Test against reference data.
         self.assertEqual(len(data_record), 5980)
         last10samples = [2862, 2856, 2844, 2843, 2851,
                          2853, 2853, 2854, 2857, 2863]
         np.testing.assert_array_equal(data_record[-10:], last10samples)
+
+        # Also test against independently unpacked data.
+        np.testing.assert_allclose(data_record, data)
 
     def test_one_sample_overlap(self):
         """
