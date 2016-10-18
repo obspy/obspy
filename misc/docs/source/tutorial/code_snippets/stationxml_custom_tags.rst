@@ -8,7 +8,7 @@ StationXML allows use of custom elements in addition to the 'usual' information
 defined by the StationXML standard. It allows *a)* custom namespace attributes to
 StationXML namespace tags and *b)* custom namespace subtags to StationXML namespace
 elements.
-ObsPy can handle both basic custom tags in event type objects (*a*) and custom
+ObsPy can handle both basic custom tags in the Inventory object's Network, Station, and Channel objects (*a*) and custom
 attributes (*b*) during input/output to/from StationXML.
 The following basic example illustrates how to output a StationXML file
 that contains additional xml tags/attributes:
