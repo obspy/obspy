@@ -22,6 +22,7 @@ TWO_DIGIT_YEAR_MSG = ("SAC file with 2-digit year header field encountered. "
                       "This is not supported by the SAC file format standard. "
                       "Prepending '19'.")
 
+DEFAULT_REFTIME = UTCDateTime(0)
 
 # ------------- SAC-SPECIFIC EXCEPTIONS ---------------------------------------
 class SacError(Exception):
@@ -376,9 +377,7 @@ def merge_sac_headers(primary, secondary):
         header['e'] = b + (stats['endtime'] - stats['starttime'])
     except SacHeaderTimeError:
         # Can't determine reftime. Any relative time headers are lost.
-        # If none are set, and the "iztype" is 9 or null, we will assume
-        # that user intends use the Trace.stats starttime as the reftime.
-        # ObsPy issue 1204
+        # Use the Trace.stats starttime as the reftime. ObsPy issue 1204
 
         # If there are relative times, even if there's a "b", throw an
         #   error/warning
@@ -464,3 +463,17 @@ def get_sac_reftime(header):
         raise SacHeaderTimeError(msg)
 
     return reftime
+
+
+def pop_nztimes(header):
+    """Pop the nz time headers into a new dict.
+
+    Raises KeyError if an nztime is missing.
+    """
+    nztimes = ['nzyear', 'nzjday', 'nzhour', 'nzmin', 'nzsec', 'nzmsec']
+    return {hdr: header.pop(hdr) for hdr in nztimes}
+
+def pop_relative_time_headers(header):
+    """Pop any relative time headers into a new dict."""
+    rel_headers = ['b', 'e', 'a', 'f'] + ['t' + str(i) for i in range(10)]
+    return {hdr: header.pop(hdr) for hdr in rel_headers if header.get(hdr)}
