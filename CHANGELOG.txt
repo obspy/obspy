@@ -38,6 +38,8 @@ master:
     * Read support for GSE2.0 bulletin (see #1528)
  - obspy.io.quakeml
     * Read and write support for nested custom tags (see #1463)
+ - obspy.io.stationxml
+    * Read and write support for custom tags (see #1024)
  - obspy.io.segy:
     * Iterative reading of large SEG-Y and SU files with
       `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
