@@ -49,9 +49,24 @@ def _is_reftek130(filename):
     return True
 
 
-def _read_reftek130(filename, network="", component_codes=None, location=""):
+def _read_reftek130(filename, network="", location="", component_codes=None):
     """
     Read a REFTEK130 file into an ObsPy Stream.
+
+    :type filename: str
+    :param filename: REFTEK130 file to be checked.
+    :type network: str
+    :param network: Network code to fill in for all data (network code is not
+        stored in EH/ET/DT packets).
+    :type location: str
+    :param location: Location code to fill in for all data (network code is not
+        stored in EH/ET/DT packets).
+    :type component_codes: list
+    :param component_codes: Iterable of single-character component codes (e.g.
+        ``['Z', 'N', 'E']``) to be appended to two-character stream name parsed
+        from event header packet (e.g. ``'HH'``) for each of the channels in
+        the data (e.g. to make the channel codes in a three channel data file
+        to ``'HHZ'``, ``'HHN'``, ``'HHE'`` in the created stream object).
     """
     from obspy.io.mseed.util import _unpack_steim_1
 
