@@ -13,7 +13,6 @@ import warnings
 import numpy as np
 
 from obspy import Trace, Stream
-from obspy.core.compatibility import from_buffer
 from .header import PACKETS_IMPLEMENTED, PAYLOAD
 from .util import _bcd_int, _bcd_str, _bcd_hexstr, _parse_short_time
 
@@ -129,13 +128,15 @@ def _read_reftek130(filename, network="", component_codes=None, location=""):
         data_contiguous.append(chunk_list)
         # read each contiguous block into one trace
         for data_ in data_contiguous:
-            npts = sum(npts_ for _, _, npts_, _ in data_)
             starttime = data_[0][0]
-            data = from_buffer(
-                b"".join(dat_[44:] for _, _, _, dat_ in data_), dtype=np.uint8)
-
-            data = _unpack_steim_1(data_string=data,
-                                   npts=npts, swapflag=1)
+            data = []
+            npts = 0
+            for _, _, npts_, dat_ in data_:
+                piece = _unpack_steim_1(data_string=dat_[44:],
+                                        npts=npts_, swapflag=1)
+                data.append(piece)
+                npts += npts_
+            data = np.hstack(data)
 
             tr = Trace(data=data, header=header.copy())
             tr.stats.starttime = starttime
@@ -149,13 +150,14 @@ def _read_reftek130(filename, network="", component_codes=None, location=""):
             # check if endtime of trace is consistent
             t_last, _, npts_last, _ = data_[-1]
             try:
+                assert npts == len(data)
                 assert tr.stats.endtime == t_last + (npts_last - 1) * delta
                 assert tr.stats.endtime == (
                     tr.stats.starttime + (npts - 1) * delta)
             except AssertionError:
-                msg = ("Reftek file has a trace with an inconsistent endtime. "
-                       "Please open an issue on GitHub and provide your file "
-                       "for testing.")
+                msg = ("Reftek file has a trace with an inconsistent endtime "
+                       "or number of samples. Please open an issue on GitHub "
+                       "and provide your file for testing.")
                 raise Exception(msg)
             st += tr
 
