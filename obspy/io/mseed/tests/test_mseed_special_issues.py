@@ -131,11 +131,13 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         both methods, readMSTracesViaRecords and readMSTraces
         """
         file = os.path.join(self.path, "data", "brokenlastrecord.mseed")
+
         # independent reading of the data
         with open(file, 'rb') as fp:
             data_string = fp.read()[128:]  # 128 Bytes header
         data = util._unpack_steim_2(data_string, 5980, swapflag=self.swap,
                                     verbose=0)
+
         # test readMSTraces. Will raise an internal warning.
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -144,7 +146,14 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEqual(len(w), 1)
         self.assertEqual(w[0].category, InternalMSEEDReadingWarning)
 
-        np.testing.assert_array_equal(data, data_record)
+        # Test against reference data.
+        self.assertEqual(len(data_record), 5980)
+        last10samples = [2862, 2856, 2844, 2843, 2851,
+                         2853, 2853, 2854, 2857, 2863]
+        np.testing.assert_array_equal(data_record[-10:], last10samples)
+
+        # Also test against independently unpacked data.
+        np.testing.assert_allclose(data_record, data)
 
     def test_one_sample_overlap(self):
         """
@@ -685,50 +694,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 os.kill(process.pid, signal.SIGKILL)
         self.assertFalse(fail)
 
-    def test_writing_blockette_100(self):
-        """
-        Tests that blockette 100 is written correctly. It is only used if
-        the sampling rate is higher than 32727 Hz or smaller than 1.0 /
-        32727.0 Hz.
-        """
-        # Three traces, only the middle one needs it.
-        tr = Trace(data=np.linspace(0, 100, 101))
-        st = Stream(traces=[tr.copy(), tr.copy(), tr.copy()])
-
-        st[1].stats.sampling_rate = 60000.0
-
-        with io.BytesIO() as buf:
-            st.write(buf, format="mseed")
-            buf.seek(0, 0)
-            st2 = read(buf)
-
-        self.assertTrue(np.allclose(
-            st[0].stats.sampling_rate,
-            st2[0].stats.sampling_rate))
-        self.assertTrue(np.allclose(
-            st[1].stats.sampling_rate,
-            st2[1].stats.sampling_rate))
-        self.assertTrue(np.allclose(
-            st[2].stats.sampling_rate,
-            st2[2].stats.sampling_rate))
-
-        st[1].stats.sampling_rate = 1.0 / 60000.0
-
-        with io.BytesIO() as buf:
-            st.write(buf, format="mseed")
-            buf.seek(0, 0)
-            st2 = read(buf)
-
-        self.assertTrue(np.allclose(
-            st[0].stats.sampling_rate,
-            st2[0].stats.sampling_rate))
-        self.assertTrue(np.allclose(
-            st[1].stats.sampling_rate,
-            st2[1].stats.sampling_rate))
-        self.assertTrue(np.allclose(
-            st[2].stats.sampling_rate,
-            st2[2].stats.sampling_rate))
-
     def test_microsecond_accuracy_reading_and_writing_before_1970(self):
         """
         Tests that reading and writing data with microsecond accuracy and
@@ -996,17 +961,34 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 np.float32(sr))
             self.assertTrue(has_blkt_100(tempfile))
 
-            # As does a very large one.
+            # A very large (but "clean") one does not need it.
             sr = 1E6
             tr.stats.sampling_rate = sr
             tr.write(tempfile, format="mseed")
             self.assertEqual(
                 np.float32(read(tempfile)[0].stats.sampling_rate),
                 np.float32(sr))
-            self.assertTrue(has_blkt_100(tempfile))
+            self.assertFalse(has_blkt_100(tempfile))
 
-            # And a very small one.
+            # Same for a very small but "clean" one.
             sr = 1E-6
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
+            # But small perturbations resulting in "unclean" sampling rates
+            # will cause blockette 100 to be written.
+            sr = 1E6 + 0.123456
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertTrue(has_blkt_100(tempfile))
+            sr = 1E-6 + 0.325247 * 1E-7
             tr.stats.sampling_rate = sr
             tr.write(tempfile, format="mseed")
             self.assertEqual(
@@ -1038,6 +1020,29 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 np.float32(read(tempfile)[0].stats.sampling_rate),
                 np.float32(sr))
             self.assertFalse(has_blkt_100(tempfile))
+
+    def test_reading_file_with_data_offset_of_48(self):
+        """
+        Tests reading a file which has a data offset of 48 bytes.
+
+        It thus does not have a single blockette.
+        """
+        file = os.path.join(
+            self.path, "data",
+            "mseed_not_a_single_blkt_48byte_data_offset.mseed")
+        st = read(file)
+
+        self.assertEqual(len(st), 1)
+        tr = st[0]
+        self.assertEqual(tr.stats.npts, 3632)
+        np.testing.assert_allclose(tr.stats.sampling_rate, 20.0)
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime(1995, 9, 22, 0, 0, 18, 238400))
+        self.assertEqual(tr.id, "XX.TEST..BHE")
+
+        np.testing.assert_equal(
+            st[0].data[:6],
+            [337, 396, 454, 503, 547, 581])
 
 
 def suite():

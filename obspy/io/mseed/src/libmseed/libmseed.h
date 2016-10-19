@@ -4,19 +4,21 @@
  * 
  * Interface declarations for the Mini-SEED library (libmseed).
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License
- * as published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License (GNU-LGPL) for more details.  The
- * GNU-LGPL and further information can be found here:
- * https://www.gnu.org/
+ * Lesser General Public License (GNU-LGPL) for more details.
  *
- * Written by Chad Trabant
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Copyright (C) 2016 Chad Trabant
  * IRIS Data Management Center
  ***************************************************************************/
 
@@ -30,8 +32,8 @@ extern "C" {
 
 #include "lmplatform.h"
 
-#define LIBMSEED_VERSION "2.17"
-#define LIBMSEED_RELEASE "2015.213"
+#define LIBMSEED_VERSION "2.18"
+#define LIBMSEED_RELEASE "2016.286"
 
 #define MINRECLEN   128      /* Minimum Mini-SEED record length, 2^7 bytes */
                              /* Note: the SEED specification minimum is 256 */
@@ -671,6 +673,7 @@ extern int      ms_genfactmult (double samprate, int16_t *factor, int16_t *multi
 extern int      ms_ratapprox (double real, int *num, int *den, int maxval, double precision);
 extern int      ms_bigendianhost (void);
 extern double   ms_dabs (double val);
+extern double   ms_rsqrt64 (double val);
 
 
 /* Lookup functions */
