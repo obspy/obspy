@@ -107,10 +107,9 @@ install:
   # "--no-update-dependencies" to not change versions of already installed packages
   # github3.py is dependency of obspy_github_api
   - ADDITIONAL_PACKAGES="pep8-naming github3.py codecov geographiclib"
-  - PIP_PACKAGES=""
-  - for PACKAGE in $ADDITIONAL_PACKAGES; do conda install --no-update-dependencies $PACKAGE || PIP_PACKAGES="$PACKAGE $PIP_PACKAGES"; done
+  - for PACKAGE in $ADDITIONAL_PACKAGES; do conda install --no-update-dependencies $PACKAGE; done
   # install packages not available via conda
-  - if [[ $PIP_PACKAGES ]]; then pip install $PIP_PACKAGES; fi
+  - pip install ${ADDITIONAL_PACKAGES}
   # install packages from urls
   # current pyimgur stable release has a py3 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py3.zip
