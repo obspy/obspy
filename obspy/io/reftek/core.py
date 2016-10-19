@@ -13,6 +13,8 @@ import warnings
 import numpy as np
 
 from obspy import Trace, Stream
+from obspy.io.mseed.util import _unpack_steim_1
+
 from .header import PACKETS_IMPLEMENTED, PAYLOAD
 from .util import _bcd_int, _bcd_str, _bcd_hexstr, _parse_short_time
 
@@ -68,8 +70,6 @@ def _read_reftek130(filename, network="", location="", component_codes=None):
         the data (e.g. to make the channel codes in a three channel data file
         to ``'HHZ'``, ``'HHN'``, ``'HHE'`` in the created stream object).
     """
-    from obspy.io.mseed.util import _unpack_steim_1
-
     # read all packets from file, sort by packet sequence number
     packets = _read_into_packetlist(filename)
     packets = sorted(packets, key=lambda x: x.packet_sequence)
