@@ -71,12 +71,16 @@ def _read_reftek130(filename, network="", component_codes=None, location=""):
         raise NotImplementedError(msg)
     # drop everything up to first EH packet
     p = packets.pop(0)
+    dropped_packets = 0
     while p.type != "EH":
-        # warn if packet sequence does not start with EH packet
-        msg = ("Reftek file not starting with EH (event header) packet. "
-               "Dropping all packets up to the first EH packet")
-        warnings.warn(msg)
         p = packets.pop(0)
+        dropped_packets += 1
+    if dropped_packets:
+        # warn if packet sequence does not start with EH packet
+        msg = ("Reftek file does not start with EH (event header) packet. "
+               "Dropped {:d} packet(s) at the start until encountering the "
+               "first EH packet.").format(dropped_packets)
+        warnings.warn(msg)
     eh = p
     # set common header fields from EH packet
     header = {
