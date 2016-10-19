@@ -170,7 +170,7 @@ class EventTestCase(unittest.TestCase):
                         [-1.698, 3.32980367, -3.16993006, 1.64100194,
                          -0.15311543,
                         -0.04592479]])
-        self.assertTrue(np.allclose(result, ref))
+        np.testing.assert_allclose(result, ref)
 
 
 class OriginTestCase(unittest.TestCase):

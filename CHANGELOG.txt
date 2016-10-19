@@ -4,7 +4,7 @@
      low-level plotting routines (e.g. events were not shown properly in
      dayplot of a trace, see #1566)
  - obspy.core.event.source:
-   * Fix `farfield` if input `points` is a 2D array. (see #1499)
+   * Fix `farfield` if input `points` is a 2D array. (see #1499, #1553)
  - obspy.clients.neic:
    * Better end of stream detection. (see #1563)
  - obspy.io.mseed:
