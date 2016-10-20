@@ -42,7 +42,7 @@ def _is_reftek130(filename):
     with open(filename, 'rb') as fp:
         # check each expected packet's type header field
         while True:
-            packet_type = fp.read(2)
+            packet_type = fp.read(2).decode("ASCII", "ignore")
             if not packet_type:
                 break
             if packet_type not in PACKETS_IMPLEMENTED:
@@ -225,7 +225,7 @@ class Packet(object):
             msg = "Ignoring incomplete packet."
             warnings.warn(msg)
             return None
-        type = string[0:2]
+        packet_type = string[0:2].decode("ASCII")
         experiment_number = _bcd_str(string[2:3])
         year = _bcd_int(string[3:4])
         unit_id = _bcd_hexstr(string[4:6])
@@ -233,8 +233,8 @@ class Packet(object):
         byte_count = _bcd_int(string[12:14])
         packet_sequence = _bcd_int(string[14:16])
         payload = string[16:]
-        return Packet(type, experiment_number, year, unit_id, time, byte_count,
-                      packet_sequence, payload)
+        return Packet(packet_type, experiment_number, year, unit_id, time,
+                      byte_count, packet_sequence, payload)
 
     def _parse_payload(self, data):
         """

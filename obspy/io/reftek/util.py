@@ -68,10 +68,14 @@ def _parse_short_time(year, time_string):
     else:
         year += 1900
     time_string = str(year) + time_string
-    return _parse_long_time(time_string)
+    return _parse_long_time(time_string, decode=False)
 
 
-def _parse_long_time(time_string):
+def _parse_long_time(time_bytestring, decode=True):
+    if decode:
+        time_string = time_bytestring.decode()
+    else:
+        time_string = time_bytestring
     if not time_string.strip():
         return None
     time_string, milliseconds = time_string[:-3], int(time_string[-3:])
@@ -97,6 +101,10 @@ def _channel_codes(chars):
         return None
     codes = np.fromstring(chars, dtype="S4").tolist()
     return [c.strip() for c in codes]
+
+
+def _decode_ascii(chars):
+    return chars.decode("ASCII")
 
 
 if __name__ == '__main__':
