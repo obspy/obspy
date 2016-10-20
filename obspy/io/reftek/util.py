@@ -96,15 +96,25 @@ def _parse_data(data):
         raise NotImplementedError()
 
 
-def _channel_codes(chars):
-    if not chars.strip():
-        return None
-    codes = np.fromstring(chars, dtype="S4").tolist()
-    return [c.strip() for c in codes]
-
-
 def _decode_ascii(chars):
     return chars.decode("ASCII")
+
+
+def _16_tuple_ascii(bytestring):
+    item_count = 16
+    chars = bytestring.decode("ASCII")
+    if len(chars) % item_count != 0:
+        raise NotImplementedError("Should not happen, contact developers.")
+    item_size = int(len(chars) / item_count)
+    return tuple(chars[i*item_size:(i+1)*item_size]
+                 for i in range(item_count))
+
+
+def _16_tuple_int(bytestring):
+    ascii_tuple = _16_tuple_ascii(bytestring)
+    int_tuple = tuple(int(chars) if chars.strip() else None
+                      for chars in ascii_tuple)
+    return int_tuple
 
 
 if __name__ == '__main__':
