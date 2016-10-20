@@ -76,7 +76,8 @@ def _read_reftek130(filename, network="", location="", component_codes=None):
     try:
         # check if packet sequence is uninterrupted
         np.testing.assert_array_equal(
-            np.bincount(np.diff([p.packet_sequence for p in packets])),
+            np.bincount(np.diff([p.packet_sequence
+                                 for p in packets]).astype(np.int_)),
             [0, len(packets) - 1])
     except AssertionError:
         # for now only support uninterrupted packet sequences
