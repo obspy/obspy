@@ -88,6 +88,11 @@ class ReftekTestCase(unittest.TestCase):
             tr.stats.channel = "EH" + tr.stats.channel[-1]
             tr.stats.pop("_format")
             tr.stats.pop("mseed")
+        # check reftek130 low-level headers separately:
+        for tr in st_reftek:
+            self.assertTrue("reftek130" in tr.stats)
+            # XXX TODO check reftek specific headers
+            tr.stats.pop("reftek130")
         # sort streams
         st_reftek = st_reftek.sort()
         st_mseed = st_mseed.sort()

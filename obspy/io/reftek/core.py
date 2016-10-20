@@ -102,7 +102,8 @@ def _read_reftek130(filename, network="", location="", component_codes=None):
     header = {
         "network": network,
         "station": (p.station_name + p.station_name_extension).strip(),
-        "location": location, "sampling_rate": p.sampling_rate}
+        "location": location, "sampling_rate": p.sampling_rate,
+        "reftek130": eh._to_dict()}
     # set up a list of data (DT) packets per channel number
     data = {}
     p = packets.pop(0)
@@ -249,6 +250,17 @@ class Packet(object):
             if converter is not None:
                 value = converter(value)
             setattr(self, key, value)
+
+    def _to_dict(self):
+        """
+        Convert to dictionary structure.
+        """
+        if self.type not in PAYLOAD:
+            raise NotImplementedError()
+        keys = [key for _, _, key, _ in PAYLOAD[self.type]]
+        if self.type == "DT":
+            keys.remove("sample_data")
+        return {key: getattr(self, key) for key in keys}
 
 
 def _parse_next_packet(fh):
