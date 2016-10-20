@@ -74,6 +74,9 @@ def _read_reftek130(filename, network="", location="", component_codes=None):
     packets = _read_into_packetlist(filename)
     packets = sorted(packets, key=lambda x: x.packet_sequence)
     try:
+        if not packets:
+            msg = ("Could not extract any data packets from file.")
+            raise Exception(msg)
         # check if packet sequence is uninterrupted
         np.testing.assert_array_equal(
             np.bincount(np.diff([p.packet_sequence
