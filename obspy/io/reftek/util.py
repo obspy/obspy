@@ -38,7 +38,7 @@ def _bcd_str(chars):
 
 
 def _bcd_hexstr(chars):
-    return "".join(map(lambda x: '{:X}'.format(x), _bcd(chars)))
+    return "".join(map(lambda x: '{:X}'.format(int(x)), _bcd(chars)))
 
 
 def _bits(char):
