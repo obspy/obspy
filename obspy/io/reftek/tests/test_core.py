@@ -10,7 +10,7 @@ import unittest
 
 import numpy as np
 
-from obspy import read, Stream
+import obspy
 from obspy.io.reftek.core import _read_reftek130, _is_reftek130
 
 
@@ -79,9 +79,9 @@ class ReftekTestCase(unittest.TestCase):
         st_reftek = _read_reftek130(
             self.reftek_file, network="XX", location="01",
             component_codes=["1", "2", "3"])
-        st_mseed = Stream()
+        st_mseed = obspy.Stream()
         for file_ in self.mseed_files:
-            st_mseed += read(file_, "MSEED")
+            st_mseed += obspy.read(file_, "MSEED")
         # reftek reader correctly fills in band+instrument code but rt_mseed
         # does not apparently, so set it now for the comparison
         for tr in st_mseed:
@@ -112,6 +112,25 @@ class ReftekTestCase(unittest.TestCase):
         self.assertTrue(_is_reftek130(self.reftek_file))
         for file_ in self.mseed_files:
             self.assertFalse(_is_reftek130(file_))
+
+    def test_integration_with_obspy_core(self):
+        """
+        Test the integration with ObsPy core.
+        """
+        st_reftek = obspy.read(
+            self.reftek_file, network="XX", location="01",
+            component_codes=["1", "2", "3"])
+        st_mseed = obspy.Stream()
+        for file_ in self.mseed_files:
+            st_mseed += obspy.read(file_, "MSEED")
+        # sort streams
+        st_reftek = st_reftek.sort()
+        st_mseed = st_mseed.sort()
+        # check amount of traces
+        self.assertEqual(len(st_reftek), len(st_mseed))
+        # check equality of data
+        for tr_got, tr_expected in zip(st_reftek, st_mseed):
+            np.testing.assert_array_equal(tr_got.data, tr_expected.data)
 
 
 def suite():

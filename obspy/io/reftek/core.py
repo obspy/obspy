@@ -51,7 +51,8 @@ def _is_reftek130(filename):
     return True
 
 
-def _read_reftek130(filename, network="", location="", component_codes=None):
+def _read_reftek130(filename, network="", location="", component_codes=None,
+                    **kwargs):
     """
     Read a REFTEK130 file into an ObsPy Stream.
 
