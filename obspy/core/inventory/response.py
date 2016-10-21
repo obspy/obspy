@@ -1773,6 +1773,55 @@ def response_from_resp(sensor_resp_data, datalogger_resp_data, frequency=None):
     b58 = next((b for b in sensor_xseedparser.blockettes[58]
                 if b.stage_sequence_number == 1), None)
     sensor_xseedparser._get_abbreviation
+
+    # Make a list of zeros
+    zeros = list()
+    if b53.number_of_complex_zeros == 1:
+        zeros.append(ComplexWithUncertainties(
+            FloatWithUncertainties(
+                b53.real_zero,
+                lower_uncertainty=b53.real_zero_error,
+                upper_uncertainty=b53.real_zero_error),
+            FloatWithUncertainties(
+                b53.imaginary_zero,
+                lower_uncertainty=b53.imaginary_zero_error,
+                upper_uncertainty=b53.imaginary_zero_error)))
+    else:
+        for i in range(b53.number_of_complex_zeros):
+            zeros.append(ComplexWithUncertainties(
+                FloatWithUncertainties(
+                    b53.real_zero[i],
+                    lower_uncertainty=b53.real_zero_error[i],
+                    upper_uncertainty=b53.real_zero_error[i]),
+                FloatWithUncertainties(
+                    b53.imaginary_zero[i],
+                    lower_uncertainty=b53.imaginary_zero_error[i],
+                    upper_uncertainty=b53.imaginary_zero_error[i])))
+
+    # Make a list of poles
+    poles = list()
+    if b53.number_of_complex_poles == 1:
+        poles.append(ComplexWithUncertainties(
+            FloatWithUncertainties(
+                b53.real_pole,
+                lower_uncertainty=b53.real_pole_error,
+                upper_uncertainty=b53.real_pole_error),
+            FloatWithUncertainties(
+                b53.imaginary_pole,
+                lower_uncertainty=b53.imaginary_pole_error,
+                upper_uncertainty=b53.imaginary_pole_error)))
+    else:
+        for i in range(b53.number_of_complex_poles):
+            poles.append(ComplexWithUncertainties(
+                FloatWithUncertainties(
+                    b53.real_pole[i],
+                    lower_uncertainty=b53.real_pole_error[i],
+                    upper_uncertainty=b53.real_pole_error[i]),
+                FloatWithUncertainties(
+                    b53.imaginary_pole[i],
+                    lower_uncertainty=b53.imaginary_pole_error[i],
+                    upper_uncertainty=b53.imaginary_pole_error[i])))
+
     stage1 = PolesZerosResponseStage(
         stage_sequence_number=b53.stage_sequence_number,
         stage_gain=b58.sensitivity_gain,
@@ -1784,10 +1833,8 @@ def response_from_resp(sensor_resp_data, datalogger_resp_data, frequency=None):
         pz_transfer_function_type=transform_map[b53.transfer_function_types],
         normalization_frequency=FloatWithUncertainties(
             b53.normalization_frequency),
-        zeros=list(map(ComplexWithUncertainties,
-                       b53.real_zero, b53.imaginary_zero)),
-        poles=list(map(ComplexWithUncertainties,
-                       b53.real_pole, b53.imaginary_pole)),
+        zeros=zeros,
+        poles=poles,
         normalization_factor=b53.A0_normalization_factor,
         resource_id='GENERATOR:obspy_from_RESP',   # XXX what should id be?
     )
