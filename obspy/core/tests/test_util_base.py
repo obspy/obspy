@@ -112,7 +112,8 @@ class UtilBaseTestCase(unittest.TestCase):
         # image comparison that should raise
         # avoid uploading the staged test fail image
         # (after an estimate of 10000 uploads of it.. ;-))
-        with mock.patch.object(ImageComparison, '_upload_images'):
+        with mock.patch.object(ImageComparison, '_upload_images',
+                               new=mock.MagicMock(return_value='')):
             self.assertRaises(ImageComparisonException,
                               image_comparison_in_function, path, img_basename,
                               img_fail)
