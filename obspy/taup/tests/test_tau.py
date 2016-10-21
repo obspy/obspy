@@ -17,7 +17,7 @@ import warnings
 import numpy as np
 
 from obspy.taup import TauPyModel
-from obspy.taup.taup_geo import calc_dist
+from obspy.taup.tau import Arrivals
 import obspy.geodetics.base as geodetics
 
 
@@ -109,33 +109,6 @@ class TauPyModelTestCase(unittest.TestCase):
         self.assertAlmostEqual(p_arrival.incident_angle, 26.70, 2)
         self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
         self.assertEqual(p_arrival.purist_name, "P")
-
-    def test_taup_geo_calc_dist(self):
-        """Test for calc_dist"""
-        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=20.0,
-                                         source_longitude_in_deg=33.0,
-                                         receiver_latitude_in_deg=55.0,
-                                         receiver_longitude_in_deg=33.0,
-                                         radius_of_planet_in_km=6371.0,
-                                         flattening_of_planet=0.0), 35.0, 5)
-        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=55.0,
-                                         source_longitude_in_deg=33.0,
-                                         receiver_latitude_in_deg=20.0,
-                                         receiver_longitude_in_deg=33.0,
-                                         radius_of_planet_in_km=6371.0,
-                                         flattening_of_planet=0.0), 35.0, 5)
-        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=-20.0,
-                                         source_longitude_in_deg=33.0,
-                                         receiver_latitude_in_deg=-55.0,
-                                         receiver_longitude_in_deg=33.0,
-                                         radius_of_planet_in_km=6371.0,
-                                         flattening_of_planet=0.0), 35.0, 5)
-        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=-20.0,
-                                         source_longitude_in_deg=33.0,
-                                         receiver_latitude_in_deg=-55.0,
-                                         receiver_longitude_in_deg=33.0,
-                                         radius_of_planet_in_km=6.371,
-                                         flattening_of_planet=0.0), 35.0, 5)
 
     @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
                      'Module geographiclib is not installed')
@@ -951,6 +924,55 @@ class TauPyModelTestCase(unittest.TestCase):
                                    paths[1].path["dist"])
         np.testing.assert_allclose([_i[1] for _i in pn_path],
                                    paths[1].path["depth"])
+
+    def test_arrivals_class(self):
+        """
+        Tests list operations on the Arrivals class.
+
+        See #1518.
+        """
+        model = TauPyModel(model='iasp91')
+        arrivals = model.get_ray_paths(source_depth_in_km=0,
+                                       distance_in_degree=1,
+                                       phase_list=['Pn', 'PmP'])
+        self.assertEqual(len(arrivals), 2)
+        # test copy
+        self.assertTrue(isinstance(arrivals.copy(), Arrivals))
+        # test sum
+        self.assertTrue(isinstance(arrivals+arrivals, Arrivals))
+        self.assertTrue(isinstance(arrivals+arrivals[0], Arrivals))
+        # test multiplying
+        self.assertTrue(isinstance(arrivals*2, Arrivals))
+        arrivals *= 3
+        self.assertEqual(len(arrivals), 6)
+        self.assertTrue(isinstance(arrivals, Arrivals))
+        # test slicing
+        self.assertTrue(isinstance(arrivals[2:5], Arrivals))
+        # test appending
+        arrivals.append(arrivals[0])
+        self.assertEqual(len(arrivals), 7)
+        self.assertTrue(isinstance(arrivals, Arrivals))
+        # test assignment
+        arrivals[0] = arrivals[-1]
+        self.assertTrue(isinstance(arrivals, Arrivals))
+        arrivals[2:5] = arrivals[1:4]
+        self.assertTrue(isinstance(arrivals, Arrivals))
+        # test assignment with wrong type
+        with self.assertRaises(TypeError):
+            arrivals[0] = 10.
+        with self.assertRaises(TypeError):
+            arrivals[2:5] = [0, 1, 2]
+        with self.assertRaises(TypeError):
+            arrivals.append(arrivals)
+        # test add and mul with wrong type
+        with self.assertRaises(TypeError):
+            arrivals + [2, ]
+        with self.assertRaises(TypeError):
+            arrivals += [2, ]
+        with self.assertRaises(TypeError):
+            arrivals * [2, ]
+        with self.assertRaises(TypeError):
+            arrivals *= [2, ]
 
 
 def suite():

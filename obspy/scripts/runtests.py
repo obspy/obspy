@@ -536,7 +536,7 @@ class _TextTestRunner:
         return results, time_taken, (faileds + erroreds)
 
 
-def run_tests(verbosity=1, tests=[], report=False, log=None,
+def run_tests(verbosity=1, tests=None, report=False, log=None,
               server="tests.obspy.org", all=False, timeit=False,
               interactive=False, slowest=0, exclude=[], tutorial=False,
               hostname=HOSTNAME, ci_url=None, pr_url=None):
@@ -546,10 +546,10 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
     :type verbosity: int, optional
     :param verbosity: Run tests in verbose mode (``0``=quiet, ``1``=normal,
         ``2``=verbose, default is ``1``).
-    :type tests: list of str, optional
-    :param tests: Test suites to run. If no suite is given all installed tests
-        suites will be started (default is a empty list).
-        Example ``['obspy.core.tests.suite']``.
+    :type tests: list of str
+    :param tests: List of submodules for which test suites should be run
+        (e.g. ``['io.mseed', 'io.sac']``).  If no suites are specified, all
+        non-networking submodules' test suites will be run.
     :type report: bool, optional
     :param report: Submits a test report if enabled (default is ``False``).
     :type log: str, optional
@@ -557,6 +557,8 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
     :type server: str, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
+    if tests is None:
+        tests = []
     print("Running {}, ObsPy version '{}'".format(__file__, obspy.__version__))
     if all:
         tests = copy.copy(ALL_MODULES)

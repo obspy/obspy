@@ -102,5 +102,3 @@ EXPORTS
    ms_gswap2a
    ms_gswap4a
    ms_gswap8a
-   msr_unpack_steim2
-   msr_unpack_steim1

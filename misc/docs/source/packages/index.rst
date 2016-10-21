@@ -61,6 +61,7 @@ The functionality is provided through the following packages:
 
    obspy.io.cmtsolution
    obspy.io.cnv
+   obspy.io.gse2
    obspy.io.json
    obspy.io.kml
    obspy.io.ndk

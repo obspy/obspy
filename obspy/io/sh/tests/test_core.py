@@ -16,8 +16,10 @@ from obspy.io.sh.core import (STANDARD_ASC_HEADERS, _is_asc, _is_q, _read_asc,
 
 
 class CoreTestCase(unittest.TestCase):
+
     """
     """
+
     def setUp(self):
         # Directory where the test files are located
         self.path = os.path.dirname(__file__)
@@ -268,6 +270,36 @@ class CoreTestCase(unittest.TestCase):
                     if format == 'Q':
                         os.remove(tempfile[:-4] + '.QBN')
                         os.remove(tempfile[:-4] + '.QHD')
+
+    def test_write_long_header(self):
+        """
+        Test for issue #1526
+        """
+        tr = read()[0]
+        comment = 'This is a long comment for testing purposes.'
+        tr.stats.sh = {'COMMENT': ' '.join(4 * [comment])}
+        with NamedTemporaryFile(suffix='.QHD') as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format="Q")
+            tr2 = read(tempfile)[0]
+            # remove binary file too (dynamically created)
+            os.remove(os.path.splitext(tempfile)[0] + '.QBN')
+        self.assertEqual(tr.stats.sh.COMMENT, tr2.stats.sh.COMMENT)
+
+    def test_header_whitespaces(self):
+        """
+        Test for issue #1552
+        """
+        tr = read()[0]
+        tr.stats.sh = {'COMMENT': 30 * '   *   '}
+        with NamedTemporaryFile(suffix='.QHD') as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format="Q")
+            tr2 = read(tempfile)[0]
+            # remove binary file too (dynamically created)
+            os.remove(os.path.splitext(tempfile)[0] + '.QBN')
+        self.assertEqual(len(tr.stats.sh.COMMENT), len(tr2.stats.sh.COMMENT))
+        self.assertEqual(tr.stats.sh.COMMENT, tr2.stats.sh.COMMENT)
 
 
 def suite():

@@ -22,7 +22,7 @@ from obspy import UTCDateTime
 from obspy.core.util.decorator import ObsPyDeprecationWarning
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
                       FIXED_HEADER_DATA_QUAL_FLAGS,
-                      FIXED_HEADER_IO_CLOCK_FLAGS, FRAME, HPTMODULUS,
+                      FIXED_HEADER_IO_CLOCK_FLAGS, HPTMODULUS,
                       SAMPLESIZES, UNSUPPORTED_ENCODINGS, MSRecord,
                       MS_NOERROR, clibmseed)
 
@@ -640,28 +640,37 @@ def _get_record_information(file_object, offset=0, endian=None):
     def fmt(s):
         return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
 
+    def _parse_time(values):
+        # The spec says values[5] (.0001 seconds) must be between 0-9999 but
+        # we've  encountered files which have a value of 10000. We interpret
+        # this as an additional second. The approach here is general enough
+        # to work for any value of values[5].
+        msec = values[5] * 100
+        offset = msec // 1000000
+        if offset:
+            warnings.warn(
+                "Record contains a fractional seconds (.0001 secs) of %i - "
+                "the maximum strictly allowed value is 9999. It will be "
+                "interpreted as one or more additional seconds." % values[5],
+                category=UserWarning)
+        return UTCDateTime(
+            year=values[0], julday=values[1],
+            hour=values[2], minute=values[3], second=values[4],
+            microsecond=msec % 1000000) + offset
+
     if endian is None:
         try:
             endian = ">"
             values = unpack(fmt(endian), data)
-            starttime = UTCDateTime(
-                year=values[0], julday=values[1],
-                hour=values[2], minute=values[3], second=values[4],
-                microsecond=values[5] * 100)
+            starttime = _parse_time(values)
         except:
             endian = "<"
             values = unpack(fmt(endian), data)
-            starttime = UTCDateTime(
-                year=values[0], julday=values[1],
-                hour=values[2], minute=values[3], second=values[4],
-                microsecond=values[5] * 100)
+            starttime = _parse_time(values)
     else:
         values = unpack(fmt(endian), data)
         try:
-            starttime = UTCDateTime(
-                year=values[0], julday=values[1],
-                hour=values[2], minute=values[3], second=values[4],
-                microsecond=values[5] * 100)
+            starttime = _parse_time(values)
         except:
             msg = ("Invalid starttime found. The passed byte order is likely "
                    "wrong.")
@@ -719,6 +728,23 @@ def _get_record_information(file_object, offset=0, endian=None):
         elif blkt_type == 100:
             samp_rate = unpack(native_str('%sf' % endian),
                                file_object.read(4))[0]
+
+    # No blockette 1000 found.
+    if "record_length" not in info:
+        file_object.seek(record_start, 0)
+        # Read 16 kb - should be a safe maximal record length.
+        buf = np.fromstring(file_object.read(2 ** 14), dtype=np.int8)
+        # This is a messy check - we just delegate to libmseed.
+        reclen = clibmseed.ms_detect(buf, len(buf))
+        if reclen < 0:
+            raise ValueError("Could not detect data record.")
+        elif reclen == 0:
+            # It might be at the end of the file.
+            if len(buf) in [2 ** _i for _i in range(7, 256)]:
+                reclen = len(buf)
+            else:
+                raise ValueError("Could not determine record length.")
+        info["record_length"] = reclen
 
     # If samprate not set via blockette 100 calculate the sample rate according
     # to the SEED manual.
@@ -815,13 +841,10 @@ def _unpack_steim_1(data_string, npts, swapflag=0, verbose=0):
     datasize = len(dbuf)
     samplecnt = npts
     datasamples = np.empty(npts, dtype=np.int32)
-    diffbuff = np.empty(npts, dtype=np.int32)
-    x0 = C.c_int32()
-    xn = C.c_int32()
-    nsamples = clibmseed.msr_unpack_steim1(
-        C.cast(dbuf, C.POINTER(FRAME)), datasize,
-        samplecnt, samplecnt, datasamples, diffbuff,
-        C.byref(x0), C.byref(xn), swapflag, verbose)
+    nsamples = clibmseed.msr_decode_steim1(
+        C.cast(dbuf, C.POINTER(C.c_int32)),
+        datasize, samplecnt, datasamples,
+        npts, None, swapflag)
     if nsamples != npts:
         raise Exception("Error in unpack_steim1")
     return datasamples
@@ -840,13 +863,10 @@ def _unpack_steim_2(data_string, npts, swapflag=0, verbose=0):
     datasize = len(dbuf)
     samplecnt = npts
     datasamples = np.empty(npts, dtype=np.int32)
-    diffbuff = np.empty(npts, dtype=np.int32)
-    x0 = C.c_int32()
-    xn = C.c_int32()
-    nsamples = clibmseed.msr_unpack_steim2(
-        C.cast(dbuf, C.POINTER(FRAME)), datasize,
-        samplecnt, samplecnt, datasamples, diffbuff,
-        C.byref(x0), C.byref(xn), swapflag, verbose)
+    nsamples = clibmseed.msr_decode_steim2(
+        C.cast(dbuf, C.POINTER(C.c_int32)),
+        datasize, samplecnt, datasamples,
+        npts, None, swapflag)
     if nsamples != npts:
         raise Exception("Error in unpack_steim2")
     return datasamples

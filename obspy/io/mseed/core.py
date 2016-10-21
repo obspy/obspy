@@ -260,7 +260,10 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     info = util.get_record_information(mseed_object, endian=bo)
 
     # Map the encoding to a readable string value.
-    if info["encoding"] in ENCODINGS:
+    if "encoding" not in info:
+        # Hopefully detected by libmseed.
+        info["encoding"] = None
+    elif info["encoding"] in ENCODINGS:
         info['encoding'] = ENCODINGS[info['encoding']][0]
     elif info["encoding"] in UNSUPPORTED_ENCODINGS:
         msg = ("Encoding '%s' (%i) is not supported by ObsPy. Please send "
@@ -288,10 +291,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         bfr_np = np.fromstring(mseed_object.read(), dtype=np.int8)
 
     # Get the record length
-    try:
-        record_length = pow(2, int(''.join([chr(_i) for _i in bfr_np[19:21]])))
-    except ValueError:
-        record_length = 4096
+    record_length = info["record_length"]
 
     # Search for data records and pass only the data part to the underlying C
     # routine.
@@ -860,12 +860,36 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
                 clibmseed.msr_free(C.pointer(msr))
                 del msr
                 raise Exception('Error in msr_addblockette')
+
         # Only use Blockette 100 if necessary.
         # Determine if a blockette 100 will be needed to represent the input
         # sample rate or if the sample rate in the fixed section of the data
         # header will suffice (see ms_genfactmult in libmseed/genutils.c)
-        if trace.stats.sampling_rate >= 32727.0 or \
-                trace.stats.sampling_rate <= (1.0 / 32727.0):
+        use_blkt_100 = False
+
+        _factor = C.c_int16()
+        _multiplier = C.c_int16()
+        _retval = clibmseed.ms_genfactmult(
+            trace.stats.sampling_rate, C.pointer(_factor),
+            C.pointer(_multiplier))
+        # Use blockette 100 if ms_genfactmult() failed.
+        if _retval != 0:
+            use_blkt_100 = True
+        # Otherwise figure out if ms_genfactmult() found exact factors.
+        # Otherwise write blockette 100.
+        else:
+            ms_sr = clibmseed.ms_nomsamprate(_factor.value, _multiplier.value)
+
+            # It is also necessary if the libmseed calculated sampling rate
+            # would result in a loss of accuracy - the floating point
+            # comparision is on purpose here as it will always try to
+            # preserve all accuracy.
+            # Cast to float32 to not add blockette 100 for values
+            # that cannot be represented with 32bits.
+            if np.float32(ms_sr) != np.float32(trace.stats.sampling_rate):
+                use_blkt_100 = True
+
+        if use_blkt_100:
             size = C.sizeof(Blkt100S)
             blkt100 = C.c_char(b' ')
             C.memset(C.pointer(blkt100), 0, size)

@@ -1,0 +1,26 @@
+XX_TEST__BHE, 000000, D
+             start time: 1995,265,00:00:18.238400
+      number of samples: 3632
+     sample rate factor: 20  (20 samples per second)
+ sample rate multiplier: 1
+         activity flags: [00000000] 8 bits
+    I/O and clock flags: [00000000] 8 bits
+     data quality flags: [00000000] 8 bits
+   number of blockettes: 0
+        time correction: 0
+            data offset: 48
+ first blockette offset: 0
+       337         396         454         503         547         581  
+XX_TEST__BHE, 000000, D
+             start time: 1995,265,00:03:19.838500
+      number of samples: 3680
+     sample rate factor: 20  (20 samples per second)
+ sample rate multiplier: 1
+         activity flags: [00000000] 8 bits
+    I/O and clock flags: [00000000] 8 bits
+     data quality flags: [00000000] 8 bits
+   number of blockettes: 0
+        time correction: 0
+            data offset: 48
+ first blockette offset: 0
+      -110        -188        -261        -329        -391        -448  

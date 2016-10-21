@@ -420,24 +420,50 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
 def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
             l_p, l_s, s_pick=True):
     """
-    Return corresponding picks of the AR picker
+    Pick P and S arrivals with an AR-AIC + STA/LTA algorithm.
 
-    :param a: Z signal of numpy.ndarray float32 point data
-    :param b: N signal of numpy.ndarray float32 point data
-    :param c: E signal of numpy.ndarray float32 point data
-    :param samp_rate: no of samples per second
-    :param f1: frequency of lower Bandpass window
-    :param f2: frequency of upper Bandpass window
-    :param lta_p: length of LTA for parrival in seconds
-    :param sta_p: length of STA for parrival in seconds
-    :param lta_s: length of LTA for sarrival in seconds
-    :param sta_s: length of STA for sarrival in seconds
-    :param m_p: number of AR coefficients for parrival
-    :param m_s: number of AR coefficients for sarrival
-    :param l_p: length of variance window for parrival in seconds
-    :param l_s: length of variance window for sarrival in seconds
-    :param s_pick: if true pick also S phase, else only P
-    :return: (ptime, stime) parrival and sarrival
+    The algorithm picks onset times using an Auto Regression - Akaike
+    Information Criterion (AR-AIC) method. The detection intervals are
+    successively narrowed down with the help of STA/LTA ratios as well as
+    STA-LTA difference calculations. For details, please see [Akazawa2004]_.
+
+    An important feature of this algorithm is that it requires comparatively
+    little tweaking and site-specific settings and is thus applicable to large,
+    diverse data sets.
+
+    :type a: :class:`numpy.ndarray`
+    :param a: Z signal the data.
+    :type b: :class:`numpy.ndarray`
+    :param b: N signal of the data.
+    :type c: :class:`numpy.ndarray`
+    :param c: E signal of the data.
+    :type samp_rate: float
+    :param samp_rate: Number of samples per second.
+    :type f1: float
+    :param f1: Frequency of the lower bandpass window.
+    :type f2: float
+    :param f2: Frequency of the upper .andpass window.
+    :type lta_p: float
+    :param lta_p: Length of LTA for the P arrival in seconds.
+    :type sta_p: float
+    :param sta_p: Length of STA for the P arrival in seconds.
+    :type lta_s: float
+    :param lta_s: Length of LTA for the S arrival in seconds.
+    :type sta_s: float
+    :param sta_s: Length of STA for the S arrival in seconds.
+    :type m_p: int
+    :param m_p: Number of AR coefficients for the P arrival.
+    :type m_s: int
+    :param m_s: Number of AR coefficients for the S arrival.
+    :type l_p: float
+    :param l_p: Length of variance window for the P arrival in seconds.
+    :type l_s: float
+    :param l_s: Length of variance window for the S arrival in seconds.
+    :type s_pick: bool
+    :param s_pick: If ``True``, also pick the S phase, otherwise only the P
+        phase.
+    :rtype: tuple
+    :returns: A tuple with the P and the S arrival.
     """
     # be nice and adapt type if necessary
     a = np.ascontiguousarray(a, np.float32)

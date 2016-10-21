@@ -384,6 +384,27 @@ class InventoryTestCase(unittest.TestCase):
         for contents_, expected_ in zip(contents, expected):
             self.assertEqual(expected_, _unified_content_strings(contents_))
 
+    def test_util_unified_content_string_with_dots_in_description(self):
+        """
+        The unified content string might have dots in the station description.
+
+        Make sure it still works.
+        """
+        contents = (
+            ['II.ABKT (Alibek, Turkmenistan)',
+             'II.ALE (Alert, N.W.T., Canada)'],
+            [u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)',
+             u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)',
+             u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)'],
+        )
+        expected = (
+            ['II.ABKT (Alibek, Turkmenistan)',
+             'II.ALE (Alert, N.W.T., Canada)'],
+            [u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia) (3x)'],
+        )
+        for contents_, expected_ in zip(contents, expected):
+            self.assertEqual(expected_, _unified_content_strings(contents_))
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 class InventoryBasemapTestCase(unittest.TestCase):

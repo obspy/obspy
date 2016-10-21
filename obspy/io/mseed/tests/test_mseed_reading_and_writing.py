@@ -5,7 +5,9 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import copy
+import glob
 import io
+import re
 import os
 import unittest
 import warnings
@@ -17,7 +19,8 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import AttribDict
 from obspy.core.util import CatchOutput, NamedTemporaryFile
-from obspy.io.mseed import util, InternalMSEEDReadingWarning
+from obspy.io.mseed import (util, InternalMSEEDReadingWarning,
+                            InternalMSEEDReadingError)
 from obspy.io.mseed.core import _is_mseed, _read_mseed, _write_mseed
 from obspy.io.mseed.headers import ENCODINGS, clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
@@ -1302,6 +1305,188 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             self.assertRaises(ValueError, st.write, tf, format="mseed",
                               encoding=11, reclen=512)
+
+    def test_libmseed_test_cases(self):
+        """
+        Test that uses all the test files and reference data coming with
+        libmseed.
+        """
+        def assert_valid(filename, reference, test_type):
+            if test_type == "data":
+
+                st = read(filename)
+                self.assertEqual(len(st), 1, msg=filename)
+                tr = st[0]
+
+                if "text-encoded" not in reference:
+                    data = []
+                    with io.open(reference, "rt") as fh:
+                        header = fh.readline().strip()
+                        # np.loadtxt cannot deal with varying column lenghts.
+                        for line in fh:
+                            data.extend([
+                                float(_i) for _i in line.strip().split()])
+                    data = np.array(data, dtype=np.float64)
+                    np.testing.assert_allclose(tr.data, data,
+                                               err_msg=filename)
+                else:
+                    with io.open(reference, "rt") as fh:
+                        header = fh.readline().strip()
+                        data = fh.read()
+
+                    self.assertEqual(
+                        data.strip().splitlines()[2:],
+                        "".join(_i.decode()
+                                for _i in tr.data).splitlines()[1:],
+                        msg=filename)
+
+                _id, _, dq, reclen, npts, _, sr, _, dt = \
+                    [_i.rstrip(",") for _i in header.split()]
+
+                _id = _id.replace("_", ".")
+                reclen = int(reclen)
+                npts = int(npts)
+                sr = float(sr)
+                dt = UTCDateTime(dt)
+
+                self.assertEqual(tr.id, _id, msg=filename)
+                self.assertEqual(tr.stats.mseed.record_length, reclen,
+                                 msg=filename)
+                self.assertEqual(tr.stats.mseed.dataquality, dq,
+                                 msg=filename)
+                self.assertEqual(tr.stats.npts, npts, msg=filename)
+                np.testing.assert_allclose(
+                    tr.stats.sampling_rate, sr, err_msg=filename)
+                self.assertEqual(tr.stats.starttime, dt, msg=filename)
+
+            elif test_type == "header":
+                st = read(filename)
+                self.assertEqual(len(st), 1, msg=filename)
+                tr = st[0]
+
+                with io.open(reference, "rt") as fh:
+                    _id, _, dq = fh.readline().strip().split()
+                    _id = _id.rstrip(",").replace("_", ".")
+
+                    self.assertEqual(tr.id, _id, msg=filename)
+
+                    _read_keys = []
+
+                    for line in fh:
+                        line = line.strip()
+                        # Only parse until the first blockette.
+                        if "BLOCKETTE" in line:
+                            break
+
+                        key = line.split(":")[0]
+                        if key in _read_keys:
+                            continue
+                        value = ":".join(line.split(":")[1:]).strip()
+
+                        if key == "start time":
+                            self.assertEqual(tr.stats.starttime,
+                                             UTCDateTime(value),
+                                             msg=filename)
+                            _read_keys.append(key)
+                        elif key == "number of samples":
+                            # The reference might have multiple records -
+                            # ObsPy does not distinguish between records.
+                            self.assertGreaterEqual(tr.stats.npts,
+                                                    int(value),
+                                                    msg=filename)
+                            _read_keys.append(key)
+            elif test_type == "failure":
+                # There is only one file that uses this so far so special
+                # handling is okay I guess.
+                self.assertIn("invalid-blockette-offset", filename)
+                with self.assertRaises(InternalMSEEDReadingError,
+                                       msg=filename) as e:
+                    # The file has a couple other issues as well and the
+                    # data cannot be unpacked. Unpacking it would raises an
+                    # earlier error than the one we are testing here.
+                    read(filename, headonly=True)
+
+                with io.open(reference, "rt") as fh:
+                    err_msg = fh.readlines()[-1]
+                err_msg = re.sub("^Error:\s", "", err_msg).strip()
+                self.assertEqual(err_msg, e.exception.args[0])
+            elif test_type == "summary":
+                st = read(filename)
+                # This is mainly used for a test with chunks in arbitrary
+                # order - ObsPy preserves the original order. It thus has to
+                # be sorted and later on merged.
+                st.sort()
+                st.merge()
+                self.assertEqual(len(st), 1, msg=filename)
+                tr = st[0]
+
+                with io.open(reference, "rt") as fh:
+                    fh.readline()
+                    _id, starttime, endtime, _, sr, npts = \
+                        fh.readline().split()
+                    # XXX: Currently only works with a single line summary.
+                    # Might have to be changed at some point in the future.
+
+                _id = _id.replace("_", ".")
+                starttime = UTCDateTime(starttime)
+                endtime = UTCDateTime(endtime)
+                sr = float(sr)
+                npts = int(npts)
+                self.assertEqual(tr.id, _id, msg=filename)
+                self.assertEqual(tr.stats.starttime, starttime, msg=filename)
+                self.assertEqual(tr.stats.endtime, endtime, msg=filename)
+                np.testing.assert_allclose(tr.stats.sampling_rate, sr,
+                                           err_msg=filename)
+                self.assertEqual(tr.stats.npts, npts, msg=filename)
+            else:  # pragma: no cover
+                raise NotImplemented
+
+        folder = os.path.join(self.path, os.path.pardir, "src", "libmseed",
+                              "test")
+
+        # Get all the tests.
+        tests = sorted(glob.glob(os.path.join(folder, "*.test")))
+        # And all the test data.
+        test_files = glob.glob(os.path.join(folder, "data", "*.mseed"))
+        # And their paths relative to the test folder.
+        rel_test_files = [os.path.normpath(os.path.relpath(_i, folder))
+                          for _i in test_files]
+
+        count = 0
+
+        for filename in tests:
+            with io.open(filename, "rt") as fh:
+                content = fh.read().strip()
+
+            # Only do the parsing tests for now.
+            if "lmtestparse" not in content:
+                continue
+
+            # Get the type of test based on the passed flags.
+            if content.endswith(" -D"):
+                test_type = "data"
+            elif content.endswith(" -pp"):
+                test_type = "header"
+            elif content.endswith(" -tg"):
+                test_type = "summary"
+            elif content.endswith(".mseed"):
+                test_type = "failure"
+
+            test_file = [_i for _i in rel_test_files
+                         if os.path.basename(_i) in content]
+            if not test_file:
+                continue
+            self.assertEqual(len(test_file), 1, msg=str(test_file))
+
+            test_file = os.path.normpath(os.path.join(folder, test_file[0]))
+            ref_file = filename + ".ref"
+
+            assert_valid(test_file, ref_file, test_type)
+
+            count += 1
+
+        # Make sure 23 files have been tested.
+        self.assertEqual(count, 24)
 
 
 def suite():

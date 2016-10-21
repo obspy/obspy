@@ -1,0 +1,2 @@
+#!/bin/sh
+./lmtestparse data/no-blockette1000-steim1.mseed -d -pp

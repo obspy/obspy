@@ -485,7 +485,8 @@ class ParserTestCase(unittest.TestCase):
         # SEED
         sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
         result = {'elevation': 860.0, 'latitude': 47.737166999999999,
-                  'longitude': 12.795714, 'local_depth': 0}
+                  'longitude': 12.795714, 'local_depth': 0,
+                  'azimuth': 0.0, 'local_depth': 0, 'dip': -90.0}
         paz = sp.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
@@ -495,6 +496,13 @@ class ParserTestCase(unittest.TestCase):
         paz = sp2.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp2.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
+        # Additional test with non-trivial azimuth
+        sp = Parser(os.path.join(self.path, 'dataless.seed.II_COCO'))
+        result = {'elevation': 1.0, 'latitude': -12.1901,
+                  'longitude': 96.8349, 'local_depth': 1.3,
+                  'azimuth': 92.0, 'local_depth': 1.3, 'dip': 0.0}
+        paz = sp.get_coordinates("II.COCO.10.BH2", UTCDateTime("2010-11-11"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
     def test_select_does_not_change_the_parser_format(self):
@@ -620,7 +628,8 @@ class ParserTestCase(unittest.TestCase):
         Test case for issue #157: re-using parser object.
         """
         expected = {'latitude': 48.162899, 'elevation': 565.0,
-                    'longitude': 11.2752, 'local_depth': 0.0}
+                    'longitude': 11.2752, 'local_depth': 0.0,
+                    'azimuth': 0.0, 'dip': -90.0}
         filename1 = os.path.join(self.path, 'dataless.seed.BW_FURT')
         filename2 = os.path.join(self.path, 'dataless.seed.BW_MANZ')
         t = UTCDateTime("2010-07-01")

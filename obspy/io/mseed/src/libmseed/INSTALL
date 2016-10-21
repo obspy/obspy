@@ -8,22 +8,23 @@ available guesses are made in lmplatform.h.
 
 A simple 'make' on most Unix-like systems should build the library.
 
-The included Makefile should work for most Unix-like environments; a
-special target of 'gcc' will explicitly use gcc with '-02'
-optimization and more warnings.  By default a statically linked
-version of the library is built: 'libmseed.a'.
+The included Makefile should work for most Unix-like environments and
+most make variants; it is know to work with GNU make.
 
-Using gcc it is possible to build a shared library with 'make shared'.
-If 'make' has been run before 'make shared' the object files will
-need to be cleaned up using 'make clean' before running 'make shared'.
+The CC and CFLAGS environment variables can be set to control the build.
 
--- Mac OSX (Darwin) --
+By default a statically linked version of the library is built: 'libmseed.a'.
+
+With GCC, clang or compatible build tools it is possible to build a shared
+library with 'make shared'.
+
+-- macOS --
 
 A static library can be compiled using the above Unix instructions,
-just run 'make'.  Using gcc it is possible to build a dynamic library
-with 'make dynamic'.  If 'make' has been run before 'make dynamic' the
-object files will need to be cleaned up using 'make clean' before
-running 'make dynamic'.
+just run 'make'.
+
+Using GCC, clang or compatible build tools it is possible to build a dynamic
+library with 'make dynamic'.
 
 -- Windows (Win32) --
 

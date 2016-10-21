@@ -20,6 +20,7 @@ import warnings
 from math import pi
 
 import numpy as np
+import scipy.interpolate
 from matplotlib import rcParams
 
 from obspy import UTCDateTime, read_inventory
@@ -176,6 +177,68 @@ class ResponseTestCase(unittest.TestCase):
         self.assertEqual(type(stage.poles[0]), ComplexWithUncertainties)
         self.assertEqual(stage.poles, poles)
         self.assertEqual(stage.zeros, zeros)
+
+    def test_response_list_stage(self):
+        """
+        This is quite rare but it happens.
+        """
+        inv = read_inventory(os.path.join(self.data_dir, "IM_IL31__BHZ.xml"))
+
+        sampling_rate = 40.0
+        t_samp = 1.0 / sampling_rate
+        nfft = 100.0
+
+        cpx_response, freq = inv[0][0][0].response.get_evalresp_response(
+            t_samp=t_samp, nfft=nfft, output="VEL", start_stage=None,
+            end_stage=None)
+
+        # Cut of the zero frequency.
+        cpx_response = cpx_response[1:]
+
+        amp = np.abs(cpx_response)
+        phase = np.angle(cpx_response)
+        freq = freq[1:]
+
+        # The expected output goes from 1 to 20 Hz - its somehow really hard
+        # to get evalresp to produce results for the desired frequencies so
+        # I just gave up on it.
+        exp_f, exp_amp, exp_ph = np.loadtxt(os.path.join(
+            self.data_dir, "expected_response_IM_IL31__BHZ.txt")).T
+        # Interpolate.
+        exp_amp = scipy.interpolate.InterpolatedUnivariateSpline(
+            exp_f, exp_amp, k=3)(freq)
+        exp_ph = scipy.interpolate.InterpolatedUnivariateSpline(
+            exp_f, exp_ph, k=3)(freq)
+        exp_ph = np.deg2rad(exp_ph)
+
+        # The output is not exactle the same as ObsPy performs a different
+        # but visually quite a bit better interpolation.
+        np.testing.assert_allclose(amp, exp_amp, rtol=1E-3)
+        np.testing.assert_allclose(phase, exp_ph, rtol=1E-3)
+
+    def test_response_list_raises_error_if_out_of_range(self):
+        """
+        If extrpolating a lot it should raise an error.
+        """
+        inv = read_inventory(os.path.join(self.data_dir, "IM_IL31__BHZ.xml"))
+
+        # The true sampling rate is 40 - this will thus request data that is
+        # too high frequent and thus cannot be extracted from the response
+        # list.
+        sampling_rate = 45.0
+        t_samp = 1.0 / sampling_rate
+        nfft = 100.0
+
+        with self.assertRaises(ValueError) as e:
+            inv[0][0][0].response.get_evalresp_response(
+                t_samp=t_samp, nfft=nfft, output="VEL", start_stage=None,
+                end_stage=None)
+
+        self.assertEqual(
+            str(e.exception),
+            "Cannot calculate the response as it contains a response list "
+            "stage with frequencies only from -0.0096 - 20.0096 Hz. You are "
+            "requesting a response from 0.4500 - 22.5000 Hz.")
 
 
 def suite():

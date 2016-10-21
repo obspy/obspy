@@ -115,6 +115,10 @@ class FIRType(C.Structure):
 
 class ListType(C.Structure):
     _fields_ = [
+        ("nresp", C.c_int),
+        ("freq", C.POINTER(C.c_double)),
+        ("amp", C.POINTER(C.c_double)),
+        ("phase", C.POINTER(C.c_double))
     ]
 
 
@@ -149,6 +153,7 @@ class BlktInfoUnion(C.Union):
     _fields_ = [
         ("pole_zero", PoleZeroType),
         ("fir", FIRType),
+        ("list", ListType),
         ("decimation", DecimationType),
         ("gain", GainType),
         ("coeff", CoeffType)

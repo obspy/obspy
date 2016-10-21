@@ -575,6 +575,29 @@ class PsdTestCase(unittest.TestCase):
         self.assertIsNotNone(ppsd.current_histogram)
         self.assertIsNotNone(ppsd._current_hist_stack)
 
+    def test_wrong_trace_id_message(self):
+        """
+        Test that we get the expected warning message on waveform/metadata
+        mismatch.
+        """
+        tr, paz = _get_sample_data()
+        inv = read_inventory(os.path.join(self.path, 'IUANMO.xml'))
+        st = Stream([tr])
+        ppsd = PPSD(tr.stats, inv)
+        # metadata doesn't fit the trace ID specified via stats
+        # should show a warning..
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            ret = ppsd.add(st)
+            # the trace is sliced into four segments, so we get the warning
+            # message four times..
+            self.assertEqual(len(w), 4)
+            for w_ in w:
+                self.assertTrue(str(w_.message).startswith(
+                    "Error getting response from provided metadata"))
+        # should not add the data to the ppsd
+        self.assertFalse(ret)
+
 
 def suite():
     return unittest.makeSuite(PsdTestCase, 'test')

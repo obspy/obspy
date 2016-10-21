@@ -581,22 +581,48 @@ class QualityControlTestCase(unittest.TestCase):
         # first sample is 625000, so we introduce a gap of 0.025
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 600000)
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
-        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime,
+                           add_c_segments=True)
 
         self.assertTrue(md.meta["num_gaps"] == 1)
         self.assertTrue(md.meta["sum_gaps"] == 0.025)
         self.assertTrue(md.meta["start_gap"] == 0.025)
 
+        # Test single continuous segments
+        # Gap in beginning, cseg starts at first sample
+        cseg = md.meta['c_segments'][0]
+        self.assertEqual(cseg['start_time'],
+                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000))
+        self.assertEqual(cseg['end_time'],
+                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000))
+
         # Start beyond a sample, but it is padded to the left, no gap
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 630000)
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
-        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime,
+                           add_c_segments=True)
         self.assertTrue(md.meta["num_gaps"] == 0)
         self.assertTrue(md.meta["start_gap"] is None)
 
-        md = MSEEDMetadata([file])
+        # Test single continuous segments
+        # first sample is padded, first cseg starttime is window starttime
+        cseg = md.meta['c_segments'][0]
+        self.assertEqual(cseg['start_time'],
+                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 630000))
+        self.assertEqual(cseg['end_time'],
+                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000))
+
+        md = MSEEDMetadata([file], add_c_segments=True)
         self.assertTrue(md.meta["num_gaps"] == 0)
         self.assertTrue(md.meta["start_gap"] is None)
+
+        # Test single continuous segments
+        # No window, start time is first sample, end time is last sample + dt
+        cseg = md.meta['c_segments'][0]
+        self.assertEqual(cseg['start_time'],
+                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000))
+        self.assertEqual(cseg['end_time'],
+                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 325000))
 
     def test_random_window(self):
         """

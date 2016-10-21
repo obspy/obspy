@@ -18,6 +18,8 @@ master:
    * A trace's stats.network/station/location/channel can now also be set in
      one line using a SEED ID string (e.g. `trace.id = "GR.FUR..HHZ"`,
      see #1439).
+   * Instrument correction for response list stages originating from inventory
+     objects (see #1514).
  - obspy.clients.fdsn:
    * The mass downloader now has `exclude_networks` and `exclude_stations`
      arguments to not download certain pieces of data. (see #1305)
@@ -32,8 +34,12 @@ master:
  - obspy.imaging.waveform
    * Support for filling the wiggles when plotting sections (horizontal and
      vertical, see #1445).
+ - obspy.io.gse2
+    * Read support for GSE2.0 bulletin (see #1528)
  - obspy.io.quakeml
     * Read and write support for nested custom tags (see #1463)
+ - obspy.io.stationxml
+    * Read and write support for custom tags (see #1024)
  - obspy.io.segy:
     * Iterative reading of large SEG-Y and SU files with
       `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
@@ -46,21 +52,43 @@ master:
      get_timing_and_data_quality() function obsolete which is thus
      deprecated and will be removed with the next release. The get_flags()
      function is also much faster. (see #1141)
+   * Update to libmseed v2.18 (see #1540).
+   * Correctly read MiniSEED files with a data offset of 48 bytes (see #1540).
+ - obspy.io.xseed:
+   * Added azimuth and dip to the get_coordinates() function.  (see #1315)
  - obspy.scripts:
    * obspy-scan command line script now also plots and prints overlaps
      alongside gaps (see #1366)
  - obspy.signal:
    * New obspy.signal.quality_control module to compute quality metrics from
      MiniSEED files. (see #1141)
+ - obspy.taup:
+   * Add obspy.taup.taup_geo.calc_dist_azi, a function to return the distance,
+     azimuth and backazimuth for a source - receiver pair. (see #1538)
 
 1.0.3:
  - obspy.io.mseed:
    * ObsPy can now also read (Mini)SEED files with noise records. (see #1495)
-   * ObsPy can now read records with a data-offset of zero. (see #1509)
+   * ObsPy can now read records with a data-offset of zero. (see #1509, #1525)
+   * ObsPy can now read MiniSEED files with micro-second wrap arounds.
+     (see #1531)
+   * ObsPy can now read MiniSEED files with no blockette 1000. (see #1544)
+   * ObsPy now always writes Blockette 100 if sampling rate accuracy is
+     otherwise lost. (see #1550)
  - obspy.io.sac:
    * `SACTrace.lpspol` and `lcalda` are `True` and `False` by default, when
       created via `SACTrace.from_obspy_trace` with a `Trace` that has no SAC
       inheritance. (see #1507)
+- obspy.io.sh:
+   * Fix writing of long headers for Python 3 (see #1526)
+   * Fix writing of long headers for python3
+   * Whitespace in header fields is not ignored anymore (see #1552)
+ - obspy.io.stationxml:
+   * Datetime fields are written with microseconds to StationXML if
+     microseconds are present. (see #1511)
+ - obspy.signal:
+   * PPSD: fix warning message on Python 3 that gets shown when waveforms and
+     metadata mismatch (see #1506)
 
 1.0.2: (doi: 10.5281/zenodo.49636)
  - obspy.core:

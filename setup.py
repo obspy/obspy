@@ -135,9 +135,6 @@ ENTRY_POINTS = {
         'obspy-xseed2dataless = obspy.io.xseed.scripts.xseed2dataless:main',
         'obspy-dataless2resp = obspy.io.xseed.scripts.dataless2resp:main',
         ],
-    'distutils.commands': [
-        'build_man = Help2Man'
-        ],
     'obspy.plugin.waveform': [
         'TSPAIR = obspy.io.ascii.core',
         'SLIST = obspy.io.ascii.core',
@@ -284,7 +281,8 @@ ENTRY_POINTS = {
         'CMTSOLUTION = obspy.io.cmtsolution.core',
         'SHAPEFILE = obspy.io.shapefile.core',
         'KML = obspy.io.kml.core',
-        'FNETMT = obspy.io.nied.fnetmt'
+        'FNETMT = obspy.io.nied.fnetmt',
+        'GSE2 = obspy.io.gse2.bulletin'
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -325,6 +323,10 @@ ENTRY_POINTS = {
     'obspy.plugin.event.FNETMT': [
         'isFormat = obspy.io.nied.fnetmt:_is_fnetmt_catalog',
         'readFormat = obspy.io.nied.fnetmt:_read_fnetmt_catalog',
+        ],
+    'obspy.plugin.event.GSE2': [
+        'isFormat = obspy.io.gse2.bulletin:_is_gse2',
+        'readFormat = obspy.io.gse2.bulletin:_read_gse2',
         ],
     'obspy.plugin.event.SHAPEFILE': [
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
@@ -612,6 +614,18 @@ def add_data_files(config):
         for folder in EXCLUDE_DIRS:
             if folder in dirs:
                 dirs.remove(folder)
+
+    # Force include the contents of some directories.
+    FORCE_INCLUDE_DIRS = [
+        os.path.join(SETUP_DIRECTORY, 'obspy', 'io', 'mseed', 'src',
+                     'libmseed', 'test')]
+
+    for folder in FORCE_INCLUDE_DIRS:
+        for root, _, files in os.walk(folder):
+            for filename in files:
+                config.add_data_files(
+                    os.path.relpath(os.path.join(root, filename),
+                                    SETUP_DIRECTORY))
 
 
 # Auto-generate man pages from --help output
