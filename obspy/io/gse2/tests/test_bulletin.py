@@ -2,6 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 The gse2.bulletin test suite.
+
+:author:
+    EOST (École et Observatoire des Sciences de la Terre)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
