@@ -100,14 +100,21 @@ install:
         requests
         jsonschema
   - source activate test-environment
+  # install additional packages through conda-forge, wherever possible, since
+  # it seems a bit more stable than pip which sometimes fails with what looks
+  # like network errors
+  - conda config --add channels conda-forge
+  # "--no-update-dependencies" to not change versions of already installed packages
+  # github3.py is dependency of obspy_github_api
+  - ADDITIONAL_PACKAGES="pep8-naming github3.py codecov geographiclib"
+  - for PACKAGE in $ADDITIONAL_PACKAGES; do conda install --no-update-dependencies $PACKAGE; done
   # install packages not available via conda
-  - pip install codecov
-  - pip install geographiclib
+  - pip install ${ADDITIONAL_PACKAGES}
+  # install packages from urls
   # current pyimgur stable release has a py3 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py3.zip
+  - pip install https://github.com/obspy/obspy_github_api/archive/0.5.0.zip
   - pip freeze
-  - pip install pep8-naming
-  - pip install https://github.com/obspy/obspy_github_api/archive/0.3.0.zip
   - conda list
   # done installing dependencies
   - git version
