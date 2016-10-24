@@ -85,8 +85,8 @@ class CoreTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter('always')
                 tr.write(tempfile, format='SACXY')
-                self.assertEqual(len(w), 1)
-                self.assertIn('reftime', str(w[-1].message))
+                self.assertEqual(len(w), 2)
+                self.assertIn('reference', str(w[-1].message))
             tr1 = read(tempfile)[0]
         self.assertEqual(tr, tr1)
 
@@ -625,8 +625,8 @@ class CoreTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter('always')
                 _write_sac_xy(st, fh)
-                self.assertEqual(len(w), 1)
-                self.assertIn('reftime', str(w[-1].message))
+                self.assertEqual(len(w), 2)
+                self.assertIn('reference', str(w[-1].message))
             fh.seek(0, 0)
             st2 = _read_sac_xy(fh)
 
@@ -643,8 +643,8 @@ class CoreTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter('always')
                 _write_sac_xy(st, tf)
-                self.assertEqual(len(w), 1)
-                self.assertIn('reftime', str(w[-1].message))
+                self.assertEqual(len(w), 2)
+                self.assertIn('reference', str(w[-1].message))
             tf.seek(0, 0)
             st2 = _read_sac_xy(tf)
 
@@ -779,11 +779,7 @@ class CoreTestCase(unittest.TestCase):
 
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
-                tr.write(tempfile, format='SAC')
-                self.assertEqual(len(w), 1)
-                self.assertIn('reftime', str(w[-1].message))
+            tr.write(tempfile, format='SAC')
             tr1 = read(tempfile)[0]
 
         # starttime made its way to SAC file
@@ -821,7 +817,7 @@ class CoreTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter('always')
                 tr.write(tempfile, format='SAC')
-                self.assertEqual(len(w), 1)
+                self.assertEqual(len(w), 2)
             tr1 = read(tempfile)[0]
 
         self.assertEqual(tr1.stats.starttime, tr.stats.starttime)
