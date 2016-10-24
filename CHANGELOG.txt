@@ -1,4 +1,8 @@
 1.0.3:
+ - obspy.core:
+   * properly pass through kwargs specified for Trace.plot() down to the
+     low-level plotting routines (e.g. events were not shown properly in
+     dayplot of a trace, see #1566)
  - obspy.io.mseed:
    * ObsPy can now also read (Mini)SEED files with noise records. (see #1495)
    * ObsPy can now read records with a data-offset of zero. (see #1509, #1525)
