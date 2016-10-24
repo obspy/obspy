@@ -11,6 +11,7 @@ import unittest
 import numpy as np
 
 import obspy
+from obspy.core.util import NamedTemporaryFile
 from obspy.io.reftek.core import _read_reftek130, _is_reftek130
 
 
@@ -131,6 +132,32 @@ class ReftekTestCase(unittest.TestCase):
         # check equality of data
         for tr_got, tr_expected in zip(st_reftek, st_mseed):
             np.testing.assert_array_equal(tr_got.data, tr_expected.data)
+
+    def test_error_no_packets_read(self):
+        """
+        Test error message when no packets could be read from file.
+        """
+        with NamedTemporaryFile() as fh:
+            # try to read empty file, finding no packets
+            self.assertRaises(Exception, _read_reftek130, fh.name)
+        # try to read mseed file, finding no packets
+        self.assertRaises(Exception, _read_reftek130, self.mseed_files[0])
+
+    def test_error_disturbed_packet_sequence(self):
+        """
+        Test error message when packet sequence is non-contiguous (one packet
+        missing).
+        """
+        with NamedTemporaryFile() as fh:
+            with open(self.reftek_file, 'rb') as fh2:
+                # write packages to the file and omit one packet
+                # (packets are 1024 byte each)
+                fh.write(fh2.read(1024 * 5))
+                fh2.seek(1024 * 6)
+                fh.write(fh2.read())
+            fh.seek(0)
+            # try to read file, finding a non-contiguous packet sequence
+            self.assertRaises(NotImplementedError, _read_reftek130, fh.name)
 
 
 def suite():
