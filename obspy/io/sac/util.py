@@ -342,11 +342,9 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             header['b'] = b
             header['e'] = b + (stats['endtime'] - stats['starttime'])
         else:
-            msg = "Invalid reference time detected."
-            warnings.warn(msg)
+            # Invalid reference time.
             if relhdrs:
-                msg = ("Relative times cannot be absolutely referenced.")
-                warnings.warn(msg)
+                # Relative times cannot be absolutely referenced.
                 if 'b' in relhdrs:
                     # Use the 'b' and add an 'e', but don't add a reftime.
                     header['e'] = header['b'] + (stats['endtime'] -

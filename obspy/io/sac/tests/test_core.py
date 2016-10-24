@@ -82,11 +82,7 @@ class CoreTestCase(unittest.TestCase):
         tr = read(self.filexy, format='SACXY')[0]
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
-                tr.write(tempfile, format='SACXY')
-                self.assertEqual(len(w), 2)
-                self.assertIn('reference', str(w[-1].message))
+            tr.write(tempfile, format='SACXY')
             tr1 = read(tempfile)[0]
         self.assertEqual(tr, tr1)
 
@@ -622,11 +618,7 @@ class CoreTestCase(unittest.TestCase):
         st = _read_sac_xy(self.filexy)
 
         with io.BytesIO() as fh:
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
-                _write_sac_xy(st, fh)
-                self.assertEqual(len(w), 2)
-                self.assertIn('reference', str(w[-1].message))
+            _write_sac_xy(st, fh)
             fh.seek(0, 0)
             st2 = _read_sac_xy(fh)
 
@@ -640,11 +632,7 @@ class CoreTestCase(unittest.TestCase):
         st = _read_sac_xy(self.filexy)
 
         with NamedTemporaryFile() as tf:
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
-                _write_sac_xy(st, tf)
-                self.assertEqual(len(w), 2)
-                self.assertIn('reference', str(w[-1].message))
+            _write_sac_xy(st, tf)
             tf.seek(0, 0)
             st2 = _read_sac_xy(tf)
 
@@ -814,10 +802,7 @@ class CoreTestCase(unittest.TestCase):
 
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
-                tr.write(tempfile, format='SAC')
-                self.assertEqual(len(w), 2)
+            tr.write(tempfile, format='SAC')
             tr1 = read(tempfile)[0]
 
         self.assertEqual(tr1.stats.starttime, tr.stats.starttime)
