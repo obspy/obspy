@@ -22,6 +22,7 @@ TWO_DIGIT_YEAR_MSG = ("SAC file with 2-digit year header field encountered. "
                       "This is not supported by the SAC file format standard. "
                       "Prepending '19'.")
 
+
 # ------------- SAC-SPECIFIC EXCEPTIONS ---------------------------------------
 class SacError(Exception):
     """
@@ -360,7 +361,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
                 header['b'] = microsecond * 1e-6
                 header['e'] = header['b'] +\
                     (stats['npts'] - 1) * stats['delta']
-    
+
         # merge some values from stats if they're missing in the SAC header
         # ObsPy issues 1204, 1457
         # XXX: If Stats values are empty/"" and SAC header values are real,

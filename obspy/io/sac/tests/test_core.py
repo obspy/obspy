@@ -897,6 +897,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(tr1.stats.sac.stlo, -5., places=4)
         self.assertAlmostEqual(tr1.stats.sac.a, 12.34, places=5)
 
+
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
 
