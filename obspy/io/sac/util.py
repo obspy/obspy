@@ -22,8 +22,6 @@ TWO_DIGIT_YEAR_MSG = ("SAC file with 2-digit year header field encountered. "
                       "This is not supported by the SAC file format standard. "
                       "Prepending '19'.")
 
-DEFAULT_REFTIME = UTCDateTime(0)
-
 # ------------- SAC-SPECIFIC EXCEPTIONS ---------------------------------------
 class SacError(Exception):
     """
@@ -334,7 +332,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
                        't9', 'b', 'e', 'a', 'o', 'f']
         relhdrs = [hdr for hdr in relhdrnames
                    if header.get(hdr) not in (None, HD.SNULL)]
-    
+
         if reftime:
             # oldsac probably came from an actual SAC file
             # Set "b" and "e" relative to the old SAC 'b' and reftime.
@@ -353,7 +351,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
                     header['e'] = header['b'] + (stats['endtime'] -
                                                  stats['starttime'])
             else:
-                # Assume it's an "ib" type file. 
+                # Assume it's an "ib" type file.
                 # Set the stats.starttime as the reftime, set 'b' and 'e'.
                 # ObsPy issue 1204
                 reftime = stats['starttime']
@@ -362,7 +360,6 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
                 header['b'] = microsecond * 1e-6
                 header['e'] = header['b'] +\
                     (stats['npts'] - 1) * stats['delta']
-    
     
         # merge some values from stats if they're missing in the SAC header
         # ObsPy issues 1204, 1457
@@ -457,17 +454,3 @@ def get_sac_reftime(header):
         raise SacHeaderTimeError(msg)
 
     return reftime
-
-
-def pop_nztimes(header):
-    """Pop the nz time headers into a new dict.
-
-    Raises KeyError if an nztime is missing.
-    """
-    nztimes = ['nzyear', 'nzjday', 'nzhour', 'nzmin', 'nzsec', 'nzmsec']
-    return {hdr: header.pop(hdr) for hdr in nztimes}
-
-def pop_relative_time_headers(header):
-    """Pop any relative time headers into a new dict."""
-    rel_headers = ['b', 'e', 'a', 'f'] + ['t' + str(i) for i in range(10)]
-    return {hdr: header.pop(hdr) for hdr in rel_headers if header.get(hdr)}
