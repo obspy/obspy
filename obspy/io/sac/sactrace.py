@@ -342,7 +342,7 @@ from obspy import Trace, UTCDateTime
 from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
 from . import header as HD  # noqa
-from .util import SacError, SacHeaderError
+from .util import SacError, SacHeaderError, SacHeaderTimeError
 from . import util as _ut
 from . import arrayio as _io
 
@@ -764,13 +764,9 @@ class SACTrace(object):
                   'lcalda': lcalda, 'lpspol': lpspol, 'lovrok': lovrok,
                   'internal0': internal0}
 
-        # required = ['delta', 'b', 'npts', ...]
-        # provided = locals()
-        # for hdr in required:
-        #     header[hdr] = kwargs.pop(hdr, provided[hdr])
-
         # combine header with remaining non-required args.
-        # XXX: user can put non-SAC key:value pairs into the header.
+        # user can put non-SAC key:value pairs into the header, but they're
+        # ignored on write.
         header.update(kwargs)
 
         # -------------------------- DATA ARRAY -------------------------------
@@ -1286,15 +1282,7 @@ class SACTrace(object):
         :type keep_sac_header: bool
 
         """
-        header = _ut.obspy_to_sac_header(trace.stats)
-
-        if keep_sac_header and trace.stats.get('sac'):
-            try:
-                header = _ut.merge_sac_headers(trace.stats.sac, header)
-            except SacError:
-                # not enough time info in old SAC header
-                # XXX: do something besides ignore the old header
-                pass
+        header = _ut.obspy_to_sac_header(trace.stats, keep_sac_header)
 
         # handle the data headers
         data = trace.data
