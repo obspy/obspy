@@ -106,15 +106,22 @@ def _16_tuple_ascii(bytestring):
     if len(chars) % item_count != 0:
         raise NotImplementedError("Should not happen, contact developers.")
     item_size = int(len(chars) / item_count)
-    return tuple(chars[i*item_size:(i+1)*item_size]
-                 for i in range(item_count))
+    result = []
+    for i in range(item_count):
+        chars_ = chars[i*item_size:(i+1)*item_size]
+        result.append(chars_.strip() or None)
+    return tuple(result)
 
 
 def _16_tuple_int(bytestring):
     ascii_tuple = _16_tuple_ascii(bytestring)
-    int_tuple = tuple(int(chars) if chars.strip() else None
-                      for chars in ascii_tuple)
-    return int_tuple
+    result = []
+    for chars in ascii_tuple:
+        if chars is None or not chars.strip():
+            result.append(None)
+            continue
+        result.append(int(chars))
+    return tuple(result)
 
 
 if __name__ == '__main__':
