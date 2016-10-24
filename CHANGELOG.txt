@@ -23,6 +23,9 @@
  - obspy.io.stationxml:
    * Datetime fields are written with microseconds to StationXML if
      microseconds are present. (see #1511)
+ - obspy.io.zmap:
+   * Use first origin/magnitude when writing to zmap if no origin/magnitude is
+     set as preferred. (see #1569)
  - obspy.signal:
    * PPSD: fix warning message on Python 3 that gets shown when waveforms and
      metadata mismatch (see #1506)
