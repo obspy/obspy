@@ -12,7 +12,8 @@ import numpy as np
 
 import obspy
 from obspy.core.util import NamedTemporaryFile
-from obspy.io.reftek.core import _read_reftek130, _is_reftek130
+from obspy.io.reftek.core import (
+    _read_reftek130, _is_reftek130, _parse_next_packet)
 
 
 class ReftekTestCase(unittest.TestCase):
@@ -158,6 +159,81 @@ class ReftekTestCase(unittest.TestCase):
             fh.seek(0)
             # try to read file, finding a non-contiguous packet sequence
             self.assertRaises(NotImplementedError, _read_reftek130, fh.name)
+
+    def test_string_formatting_of_packet(self):
+        """
+        Check print formatting of packets
+        """
+        expected_eh_first_lines = (
+            'EH Packet',
+            '\texperiment_number: 00',
+            '\tunit_id: AE4C',
+            '\ttime: 2015-10-09T22:50:51.000000Z',
+            '\tbyte_count: 416',
+            '\tpacket_sequence: 0',
+            '\t--------------------',
+            '\tevent_number: 427',
+            '\tdata_stream_number: 0',
+            )
+        some_other_eh_lines = (
+            '\tevent_number: 427',
+            '\tdata_stream_number: 0',
+            '\tdata_format: C0',
+            '\ttrigger_time_message: Trigger Time = 2015282225051000',
+            '\ttime_source: 1',
+            '\ttime_quality: ?',
+            '\tstation_name_extension:  ',
+            '\tstation_name: KW1 ',
+            '\tstream_name: EH              ',
+            '\tsampling_rate: 200',
+            '\ttrigger_type: CON ',
+            '\ttrigger_time: 2015-10-09T22:50:51.000000Z',
+            '\tfirst_sample_time: 2015-10-09T22:50:51.000000Z',
+            '\tdetrigger_time: None',
+            '\tlast_sample_time: None',
+            "\tchannel_adjusted_nominal_bit_weights: (u'104.2 mV', "
+            "u'104.2 mV', u'104.2 mV', None, None, None, None, None, None, "
+            "None, None, None, None, None, None, None)",
+            "\tchannel_true_bit_weights: (u'1.585 uV', u'1.587 uV', "
+            "u'1.587 uV', None, None, None, None, None, None, None, None, "
+            "None, None, None, None, None)",
+            "\tchannel_gain_code: (u'1', u'1', u'1', None, None, None, None, "
+            "None, None, None, None, None, None, None, None, None)",
+            "\tchannel_ad_resolution_code: (u'3', u'3', u'3', None, None, "
+            "None, None, None, None, None, None, None, None, None, None, "
+            "None)",
+            "\tchannel_fsa_code: (u'3', u'3', u'3', None, None, None, None, "
+            "None, None, None, None, None, None, None, None, None)",
+            '\tchannel_code: (None, None, None, None, None, None, None, None, '
+            'None, None, None, None, None, None, None, None)',
+            '\ttotal_installed_channels: 3',
+            '\tstation_comment: STATION COMMENT                         ',
+            )
+        expected_dt_first_lines = (
+            'DT Packet',
+            '\texperiment_number: 00',
+            '\tunit_id: AE4C',
+            '\ttime: 2015-10-09T22:50:51.000000Z',
+            '\tbyte_count: 1024',
+            '\tpacket_sequence: 1',
+            '\t--------------------',
+            '\tevent_number: 0427',
+            '\tdata_stream_number: 0',
+            '\tchannel_number: 0',
+            '\tnumber_of_samples: 549')
+
+        with open(self.reftek_file, 'rb') as fh:
+            eh_packet = _parse_next_packet(fh)
+            dt_packet = _parse_next_packet(fh)
+        eh_lines = str(eh_packet).splitlines()
+        dt_lines = str(dt_packet).splitlines()
+
+        for expected, got in zip(expected_eh_first_lines, eh_lines):
+            self.assertEqual(got, expected)
+        for line in some_other_eh_lines:
+            self.assertTrue(line in eh_lines)
+        for expected, got in zip(expected_dt_first_lines, dt_lines):
+            self.assertEqual(got, expected)
 
 
 def suite():
