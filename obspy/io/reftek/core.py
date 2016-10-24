@@ -213,13 +213,6 @@ class Packet(object):
         info += ["{}: {}".format(key, getattr(self, key))
                  for _, _, key, _ in PAYLOAD[self.type]
                  if key != "sample_data"]
-        # shorter string for sample data..
-        sample_data = getattr(self, "sample_data", None)
-        if sample_data is not None:
-            np_printoptions = np.get_printoptions()
-            np.set_printoptions(threshold=20)
-            info.append("sample_data: {}".format(sample_data))
-            np.set_printoptions(**np_printoptions)
         return "{} Packet\n\t".format(self.type) + "\n\t".join(info)
 
     @staticmethod
