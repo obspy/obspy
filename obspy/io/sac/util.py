@@ -282,56 +282,6 @@ def utcdatetime_to_sac_nztimes(utcdt):
     return nztimes, microsecond
 
 
-# TODO: do this in SACTrace? has some reftime handling overlap w/ set_reftime.
-# TODO: this needs to be refactored.  It's really two functions: one makes
-#       a SAC header from an ObsPy header from scratch, the other merges a
-#       SAC header and an ObsPy header.  Splitting it will hopefully reduce
-#       maintenance complexity.
-def stats_to_sac_header(stats):
-    """
-    Make a SAC header dictionary from an ObsPy Stats or dict instance.
-
-    A new SAC header is constructed information found in the Stats dictionary,
-    with some default values introduced.  It will be an iztype 9 ("ib") header,
-    with small reference time adjustments for micro/milliseconds precision
-    issues.  SAC headers nvhdr, level, lovrok, and iftype are always produced.
-
-    :param stats: Filled ObsPy Stats header
-    :type stats: dict or :class:`~obspy.core.Stats`
-    :rtype header: dict
-    :return: SAC header
-
-    """
-    header = {'iztype': 9,
-              'lpspol': True,
-              'lcalda': False,
-              'nvhdr': 6,
-              'leven': 1,
-              'lovrok': 1,
-              'iftype': 1,
-              'npts': stats['npts'],
-              'delta': stats['delta']}
-
-    # Reference Time:
-    # nz times have less precision than UTCDateTimes, so push microseconds
-    # into b, using integer arithmetic
-    starttime = stats['starttime']
-    nztimes, microseconds = utcdatetime_to_sac_nztimes(starttime)
-    header.update(nztimes)
-    header['b'] = microseconds * 1e-6
-    header['e'] = header['b'] + (stats['npts'] - 1) * stats['delta']
-    # header['e'] = header['b'] + (stats['endtime'] - stats['starttime']) ?
-
-    header['kcmpnm'] = stats['channel'] if stats['channel'] else HD.SNULL
-    header['kstnm'] = stats['station'] if stats['station'] else HD.SNULL
-    header['knetwk'] = stats['network'] if stats['network'] else HD.SNULL
-    header['khole'] = stats['location'] if stats['location'] else HD.SNULL
-
-    header['scale'] = stats.get('calib', HD.FNULL)
-
-    return header
-
-
 def obspy_to_sac_header(stats, keep_sac_header=True):
     """
     Merge a primary with a secondary header, reconciling some differences.
