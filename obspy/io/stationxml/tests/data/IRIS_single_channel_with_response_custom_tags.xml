@@ -33,8 +33,8 @@
      <test:NestedTag2>nestedCommentTag2</test:NestedTag2>
     </test:CustomNestedCommentTag>
     <Value>Comment number 1</Value>
-    <BeginEffectiveTime>1990-05-05T00:00:00+00:00</BeginEffectiveTime>
-    <EndEffectiveTime>2008-02-03T00:00:00+00:00</EndEffectiveTime>
+    <BeginEffectiveTime>1990-05-05T00:00:00</BeginEffectiveTime>
+    <EndEffectiveTime>2008-02-03T00:00:00</EndEffectiveTime>
     <Author test:customPersonAttrib="testPersonAttribute">
      <Name>This person</Name>
      <Name>has multiple names!</Name>
@@ -90,10 +90,10 @@
     <Vendor>Some vendor</Vendor>
     <Model>Some model</Model>
     <SerialNumber>12345-ABC</SerialNumber>
-    <InstallationDate>1990-05-05T00:00:00+00:00</InstallationDate>
-    <RemovalDate>1999-05-05T00:00:00+00:00</RemovalDate>
-    <CalibrationDate>1990-05-05T00:00:00+00:00</CalibrationDate>
-    <CalibrationDate>1992-05-05T00:00:00+00:00</CalibrationDate>
+    <InstallationDate>1990-05-05T00:00:00</InstallationDate>
+    <RemovalDate>1999-05-05T00:00:00</RemovalDate>
+    <CalibrationDate>1990-05-05T00:00:00</CalibrationDate>
+    <CalibrationDate>1992-05-05T00:00:00</CalibrationDate>
    </Equipment>
    <Operator test:customOperatorAttrib="testOperatorAttribute">
     <test:CustomOperatorTag>testOperatorTag</test:CustomOperatorTag>
@@ -133,7 +133,7 @@
      <test:NestedTag2>nestedChannelTag2</test:NestedTag2>
     </test:CustomNestedChannelTag>
     <DataAvailability test:customDAAttrib="testDAAttribute">
-     <Extent end="2014-07-21T12:00:00+00:00" start="1998-10-26T20:35:58+00:00"/>
+     <Extent end="2014-07-21T12:00:00" start="1998-10-26T20:35:58"/>
      <test:CustomDATag>testDATag</test:CustomDATag>
      <test:CustomNestedDATag>
       <test:NestedTag1>nestedDATag1</test:NestedTag1>
