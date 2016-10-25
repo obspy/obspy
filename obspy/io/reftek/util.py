@@ -17,7 +17,7 @@ NOW = UTCDateTime()
 
 
 def _bcd_str(chars):
-    return codecs.encode(chars, "hex").decode("ASCII").upper()
+    return codecs.encode(chars, "hex_codec").decode("ASCII").upper()
 
 
 def _bits(char):
@@ -35,7 +35,8 @@ def _flags(char):
 
 
 def _bcd_int(chars):
-    return int(codecs.encode(chars, "hex").decode("ASCII")) if chars else None
+    return int(codecs.encode(chars, "hex_codec").decode("ASCII")) \
+        if chars else None
 
 
 def _parse_short_time(year, time_string):

@@ -237,7 +237,7 @@ class Packet(object):
             msg = "Ignoring incomplete packet."
             warnings.warn(msg)
             return None
-        bcd = codecs.encode(string[:16], "hex").decode("ASCII")
+        bcd = codecs.encode(string[:16], "hex_codec").decode("ASCII")
         packet_type = string[0:2].decode("ASCII")
         experiment_number = bcd[4:6]
         year = int(bcd[6:8])
