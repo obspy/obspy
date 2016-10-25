@@ -121,6 +121,36 @@ class ReftekTestCase(unittest.TestCase):
         # tests..
         self._assert_reftek130_test_stream(st_reftek)
 
+    def test_read_reftek130_no_component_codes_specified(self):
+        """
+        Test reading reftek 130 data file not providing component codes
+        (relying on the information in header packet).
+
+        rt_mseed fills in network as "XX", location as "01" and channels as
+        "001", "002", "003".
+        """
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            st_reftek = _read_reftek130(
+                self.reftek_file, network="XX", location="01")
+        self.assertEqual(len(w), 8)
+        for w_ in w:
+            self.assertEqual(
+                str(w_.message),
+                'No channel code specified in the data file and no component '
+                'codes specified. Using stream label and number of channel in '
+                'file as channel codes.')
+        # check that channel codes are set with stream label from EH packet +
+        # enumerated channel number starting at 0
+        for tr, cha in zip(st_reftek, ('EH0', 'EH0', 'EH0', 'EH1', 'EH1',
+                                       'EH1', 'EH2', 'EH2')):
+            self.assertEqual(tr.stats.channel, cha)
+        for tr in st_reftek:
+            # need to adapt channel codes to compare against mseed stream now..
+            tr.stats.channel = (
+                'EH' + {'0': '1', '1': '2', '2': '3'}[tr.stats.channel[-1]])
+        self._assert_reftek130_test_stream(st_reftek)
+
     def test_is_reftek130(self):
         """
         Test checking whether file is REFTEK130 format or not.

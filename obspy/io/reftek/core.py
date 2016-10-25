@@ -167,13 +167,24 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
 
             tr = Trace(data=data, header=header.copy())
             tr.stats.starttime = starttime
+            # if component codes were explicitly provided, use them together
+            # with the stream label
             if component_codes is not None:
                 tr.stats.channel = (
                     eh.stream_name.strip() + component_codes[channel_number])
-            elif eh.channel_code is not None:
+            # otherwise check if channel code is set for the given channel
+            # (seems to be not the case usually)
+            elif eh.channel_code[channel_number] is not None:
                 tr.stats.channel = eh.channel_code[channel_number]
+            # otherwise fall back to using the stream label together with the
+            # number of the channel in the file (starting with 0, as Z-1-2 is
+            # common use for data streams not oriented against North)
             else:
-                tr.stats.channel = str(channel_number)
+                msg = ("No channel code specified in the data file and no "
+                       "component codes specified. Using stream label and "
+                       "number of channel in file as channel codes.")
+                warnings.warn(msg)
+                tr.stats.channel = eh.stream_name.strip() + str(channel_number)
             # check if endtime of trace is consistent
             t_last, _, npts_last, _ = data_[-1]
             try:
