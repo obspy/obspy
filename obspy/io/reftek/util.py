@@ -8,7 +8,7 @@ from future.builtins import *  # NOQA
 
 import numpy as np
 from obspy import UTCDateTime
-from obspy.io.mseed.util import _unpack_steim_1
+# from obspy.io.mseed.util import _unpack_steim_1
 
 
 NOW = UTCDateTime()
@@ -83,17 +83,17 @@ def _parse_long_time(time_bytestring, decode=True):
             1e-3 * milliseconds)
 
 
-def _parse_data(data):
-    npts = _bcd_int(data[0:2])
-    # flags = _bcd_int(data[2])
-    data_format = _bcd_hexstr(data[3])
-    data = data[4:]
-    if data_format == "C0":
-        data = data[40:]
-        # XXX why need to swap? verbose for now..
-        return _unpack_steim_1(data, npts, swapflag=1, verbose=True)
-    else:
-        raise NotImplementedError()
+# def _parse_data(data):
+#     npts = _bcd_int(data[0:2])
+#     # flags = _bcd_int(data[2])
+#     data_format = _bcd_hexstr(data[3])
+#     data = data[4:]
+#     if data_format == "C0":
+#         data = data[40:]
+#         # XXX why need to swap? verbose for now..
+#         return _unpack_steim_1(data, npts, swapflag=1, verbose=True)
+#     else:
+#         raise NotImplementedError()
 
 
 def _decode_ascii(chars):
