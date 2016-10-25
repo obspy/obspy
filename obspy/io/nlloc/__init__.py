@@ -29,12 +29,13 @@ Hypocenter-Phase file into an ObsPy :class:`~obspy.core.event.Catalog` object:
 >>> print(event)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
 Event:	2006-07-15T17:21:20.195670Z | +51.658,   +7.737
 <BLANKLINE>
-       resource_id: ResourceIdentifier(id="smi:local/...")
-     creation_info: CreationInfo(creation_time=UTCDateTime(2013, 6, 21, ...),
-                                 version='NLLoc:v6.02.07')
-    ---------
-             picks: 5 Elements
-           origins: 1 Elements
+         resource_id: ResourceIdentifier(id="smi:local/...")
+       creation_info: CreationInfo(creation_time=UTCDateTime(2013, 6, 21, ...),
+                                   version='NLLoc:v6.02.07')
+ preferred_origin_id: ResourceIdentifier(id="smi:local/...")
+                ---------
+               picks: 5 Elements
+             origins: 1 Elements
 
 >>> origin = event.origins[0]
 >>> print(origin)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
