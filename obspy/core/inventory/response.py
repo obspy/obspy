@@ -1790,7 +1790,8 @@ def response_from_respfile(sensor_resp_file, datalogger_resp_file,
                                       frequency=frequency)
 
 
-def response_from_resp(sensor_resp_data, datalogger_resp_data, frequency=None):
+def response_from_resp(sensor_resp_data, datalogger_resp_data,
+                       frequency=None, sr=None):
     """
     Returns a Response object built using a sensor,
     and datalogger NRL type RESP format file.
@@ -1983,6 +1984,8 @@ def response_from_resp(sensor_resp_data, datalogger_resp_data, frequency=None):
     # for now we will use the sensor stage1 if not provided as arg.
     if frequency is None:
         sensitivity_frequency = stage1.stage_gain_frequency
+        if sr is not None:
+            sensitivity_frequency = min(sensitivity_frequency, sr*.4)
     else:
         sensitivity_frequency = frequency
     # dummy stage0

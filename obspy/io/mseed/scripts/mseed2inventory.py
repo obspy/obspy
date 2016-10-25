@@ -19,7 +19,7 @@ from calendar import timegm
 from itertools import groupby
 from operator import attrgetter
 from os import walk
-from os.path import join, isfile, getsize
+from os.path import join, isfile, getsize, isdir
 from struct import Struct
 from time import strftime, strptime, gmtime
 from obspy.core import inventory
@@ -550,7 +550,7 @@ def attach_response(inv, sensor_nick, dl_nick, gain):
                 else:
                     # Response not computed create and cache.
                     inv_resp = inventory.response.response_from_resp(
-                        sens_resp, dl_resp)
+                        sens_resp, dl_resp, sr=sr)
                     resp_dict[(sensor_nick, dl_nick, gain, sr)] = inv_resp
                 chan.response = inv_resp
 
@@ -605,7 +605,10 @@ if __name__ == '__main__':
     parser.add_argument('-o', dest='outfile')
     args = parser.parse_args()
 
-    manifest = get_manifest_of_filelist(args.msfile)
+    if len(args.msfile) == 1 and isdir(args.msfile[0]):
+        manifest = get_manifest_of_dir(args.msfile[0])
+    else:
+        manifest = get_manifest_of_filelist(args.msfile)
     inv = make_inventory(manifest, latitude=args.latitude,
                          longitude=args.longitude)
     attach_equipment_sensor(inv, sensor_sn=args.sensor_sn,
