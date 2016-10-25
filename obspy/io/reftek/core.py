@@ -120,12 +120,14 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
             raise NotImplementedError(msg)
         data.setdefault(p.channel_number, []).append(
             (p.time, p.packet_sequence, p.number_of_samples, p.sample_data))
+        if not packets:
+            break
         p = packets.pop(0)
     # expecting an ET packet at the end
     if p.type != "ET":
-        msg = ("Data not ending with an ET (event trailer) package. Please "
-               "open an issue on GitHub and provide your file for testing.")
-        raise NotImplementedError(msg)
+        msg = ("Data not ending with an ET (event trailer) package. Data "
+               "might be unexpectedly truncated.")
+        warnings.warn(msg)
 
     st = Stream()
     delta = 1.0 / eh.sampling_rate
@@ -168,7 +170,7 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
             if component_codes is not None:
                 tr.stats.channel = (
                     eh.stream_name.strip() + component_codes[channel_number])
-            elif p.channel_code is not None:
+            elif eh.channel_code is not None:
                 tr.stats.channel = eh.channel_code[channel_number]
             else:
                 tr.stats.channel = str(channel_number)

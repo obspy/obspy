@@ -7,6 +7,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import inspect
 import os
 import unittest
+import warnings
 
 import numpy as np
 
@@ -162,6 +163,31 @@ class ReftekTestCase(unittest.TestCase):
             fh.seek(0)
             # try to read file, finding a non-contiguous packet sequence
             self.assertRaises(NotImplementedError, _read_reftek130, fh.name)
+
+    def test_missing_event_trailer_packet(self):
+        """
+        Test that reading the file if the ET packet is missing works and a
+        warning is shown.
+        """
+        with NamedTemporaryFile() as fh:
+            with open(self.reftek_file, 'rb') as fh2:
+                # write packages to the file and omit last (ET) packet
+                # (packets are 1024 byte each)
+                tmp = fh2.read()
+                tmp = tmp[:-1024]
+            fh.write(tmp)
+            fh.seek(0)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                st_reftek = _read_reftek130(
+                    fh.name, network="XX", location="01",
+                    component_codes=["1", "2", "3"])
+        self.assertEqual(len(w), 1)
+        self.assertEqual(
+            str(w[0].message),
+            'Data not ending with an ET (event trailer) package. '
+            'Data might be unexpectedly truncated.')
+        self._assert_reftek130_test_stream(st_reftek)
 
     def test_string_formatting_of_packet(self):
         """
