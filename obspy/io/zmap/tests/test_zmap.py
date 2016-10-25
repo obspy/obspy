@@ -55,18 +55,18 @@ class ZMAPTestCase(unittest.TestCase):
         dump = pickler.dumps(self.catalog)
         self.assertIn(self._expected_string(self.test_data), dump)
         self.assertEqual(dump.count('\n'), 3)
-        # no preferred origin
+        # no preferred origin -- still dump first origin
         oid = self.test_event.preferred_origin_id
         self.test_event.preferred_origin_id = None
         dump = pickler.dumps(self.catalog)
-        self.assertIn(self._expected_string({'mag': '4.400000'}), dump)
+        self.assertIn(self._expected_string(self.test_data), dump)
         self.test_event.preferred_origin_id = oid
-        # no preferred magnitude
+        # no preferred magnitude -- still dump first magnitude
+        mid = self.test_event.preferred_origin_id
         self.test_event.preferred_magnitude_id = None
         dump = pickler.dumps(self.catalog)
-        test_data = self.test_data.copy()
-        del test_data['mag']
-        self.assertIn(self._expected_string(test_data), dump)
+        self.assertIn(self._expected_string(self.test_data), dump)
+        self.test_event.preferred_magnitude_id = mid
 
     def test_plugin_interface(self):
         """
