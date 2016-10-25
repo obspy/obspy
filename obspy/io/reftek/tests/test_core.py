@@ -219,6 +219,35 @@ class ReftekTestCase(unittest.TestCase):
             'Data might be unexpectedly truncated.')
         self._assert_reftek130_test_stream(st_reftek)
 
+    def test_truncated_last_packet(self):
+        """
+        Test that reading the file works, if the ET packet at the end is
+        truncated and thus omitted.
+        """
+        with NamedTemporaryFile() as fh:
+            with open(self.reftek_file, 'rb') as fh2:
+                # write packages to the file and truncate last (ET) packet
+                # (packets are 1024 byte each)
+                tmp = fh2.read()
+                tmp = tmp[:-10]
+            fh.write(tmp)
+            fh.seek(0)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                st_reftek = _read_reftek130(
+                    fh.name, network="XX", location="01",
+                    component_codes=["1", "2", "3"])
+        self.assertEqual(len(w), 2)
+        # we get two warnings, one about the truncated packet and one about the
+        # missing last (ET) packet
+        self.assertEqual(str(w[0].message), 'Dropping incomplete packet.')
+        self.assertEqual(
+            str(w[1].message),
+            'Data not ending with an ET (event trailer) package. '
+            'Data might be unexpectedly truncated.')
+        # data should be read OK aside from the warnings
+        self._assert_reftek130_test_stream(st_reftek)
+
     def test_string_formatting_of_packet(self):
         """
         Check print formatting of packets
