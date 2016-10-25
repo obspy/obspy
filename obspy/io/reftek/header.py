@@ -7,7 +7,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from .util import (
-    _bcd_int, _bcd_str, _bcd_hexstr, _parse_long_time,
+    _bcd_int, _bcd_str, _parse_long_time,
     _flags, _decode_ascii, _16_tuple_ascii, _16_tuple_int)
 
 
@@ -31,7 +31,7 @@ PAYLOAD = {
         (2, 1, "data_stream_number", _bcd_int),
         (3, 3, "_reserved_1", None),
         (6, 1, "flags", _flags),
-        (7, 1, "data_format", _bcd_hexstr),
+        (7, 1, "data_format", _bcd_str),
         (8, 33, "trigger_time_message", _decode_ascii),
         (41, 1, "time_source", _decode_ascii),
         (42, 1, "time_quality", _decode_ascii),
@@ -68,7 +68,7 @@ PAYLOAD = {
         (3, 1, "channel_number", _bcd_int),
         (4, 2, "number_of_samples", _bcd_int),
         (6, 1, "flags", _flags),
-        (7, 1, "data_format", _bcd_hexstr),
+        (7, 1, "data_format", _bcd_str),
         (4, 1004, "sample_data", None),
         ),
     }

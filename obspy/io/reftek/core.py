@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA
 import os
 import traceback
 import warnings
+import codecs
 
 import numpy as np
 
@@ -16,7 +17,7 @@ from obspy import Trace, Stream
 from obspy.io.mseed.util import _unpack_steim_1
 
 from .header import PACKETS_IMPLEMENTED, PAYLOAD
-from .util import _bcd_int, _bcd_str, _bcd_hexstr, _parse_short_time
+from .util import _parse_short_time
 
 
 def _is_reftek130(filename):
@@ -236,13 +237,14 @@ class Packet(object):
             msg = "Ignoring incomplete packet."
             warnings.warn(msg)
             return None
+        bcd = codecs.encode(string[:16], "hex").decode("ASCII")
         packet_type = string[0:2].decode("ASCII")
-        experiment_number = _bcd_str(string[2:3])
-        year = _bcd_int(string[3:4])
-        unit_id = _bcd_hexstr(string[4:6])
-        time = _bcd_str(string[6:12])
-        byte_count = _bcd_int(string[12:14])
-        packet_sequence = _bcd_int(string[14:16])
+        experiment_number = bcd[4:6]
+        year = int(bcd[6:8])
+        unit_id = bcd[8:12].upper()
+        time = bcd[12:24]
+        byte_count = int(bcd[24:28])
+        packet_sequence = int(bcd[28:32])
         payload = string[16:]
         return Packet(packet_type, experiment_number, year, unit_id, time,
                       byte_count, packet_sequence, payload)

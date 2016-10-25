@@ -6,6 +6,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import codecs
+
 import numpy as np
 from obspy import UTCDateTime
 # from obspy.io.mseed.util import _unpack_steim_1
@@ -14,31 +16,8 @@ from obspy import UTCDateTime
 NOW = UTCDateTime()
 
 
-def _bcd_uint_array(chars):
-    """
-    http://stackoverflow.com/questions/11668969/..
-    ..python-how-to-decode-binary-coded-decimal-bcd
-    http://stackoverflow.com/questions/26369520/..
-    ..how-to-load-4-bit-data-into-numpy-array
-    """
-    right = np.bitwise_and(chars, 0x0f)
-    left = np.bitwise_and(chars >> 4, 0x0f)
-    result = np.empty(2 * len(chars), dtype=np.uint8)
-    result[::2] = left
-    result[1::2] = right
-    return result
-
-
-def _bcd(chars):
-    return _bcd_uint_array(np.fromstring(chars, dtype=np.int8))
-
-
 def _bcd_str(chars):
-    return "".join(map(str, _bcd(chars)))
-
-
-def _bcd_hexstr(chars):
-    return "".join(map(lambda x: '{:X}'.format(int(x)), _bcd(chars)))
+    return codecs.encode(chars, "hex").decode("ASCII").upper()
 
 
 def _bits(char):
@@ -56,8 +35,7 @@ def _flags(char):
 
 
 def _bcd_int(chars):
-    chars = _bcd_str(chars)
-    return int(chars) if chars else None
+    return int(codecs.encode(chars, "hex").decode("ASCII")) if chars else None
 
 
 def _parse_short_time(year, time_string):
