@@ -70,17 +70,14 @@ class ReftekTestCase(unittest.TestCase):
         #   26 2 759 2015-10-09T22:51:21.595000Z
         #   27 0 067 2015-10-09T22:51:25.055000Z
 
-    def test_read_reftek130(self):
+    def _assert_reftek130_test_stream(self, st_reftek):
         """
-        Test original reftek 130 data file against miniseed files converted
-        using "rt_mseed" utility from Trimble/Reftek.
+        Test reftek 130 data read into a stream object against miniseed files
+        converted using "rt_mseed" utility from Trimble/Reftek.
 
-        rt_mseed fills in network as "XX", location as "01" and channels as
-        "001", "002", "003".
+        Note that rt_mseed fills in network as "XX", location as "01" and
+        channels as "001", "002", "003".
         """
-        st_reftek = _read_reftek130(
-            self.reftek_file, network="XX", location="01",
-            component_codes=["1", "2", "3"])
         st_mseed = obspy.Stream()
         for file_ in self.mseed_files:
             st_mseed += obspy.read(file_, "MSEED")
@@ -95,6 +92,7 @@ class ReftekTestCase(unittest.TestCase):
             self.assertTrue("reftek130" in tr.stats)
             # XXX TODO check reftek specific headers
             tr.stats.pop("reftek130")
+            tr.stats.pop("_format", None)
         # sort streams
         st_reftek = st_reftek.sort()
         st_mseed = st_mseed.sort()
@@ -106,6 +104,21 @@ class ReftekTestCase(unittest.TestCase):
         # check equality of data
         for tr_got, tr_expected in zip(st_reftek, st_mseed):
             np.testing.assert_array_equal(tr_got.data, tr_expected.data)
+
+    def test_read_reftek130(self):
+        """
+        Test original reftek 130 data file against miniseed files converted
+        using "rt_mseed" utility from Trimble/Reftek.
+
+        rt_mseed fills in network as "XX", location as "01" and channels as
+        "001", "002", "003".
+        """
+        st_reftek = _read_reftek130(
+            self.reftek_file, network="XX", location="01",
+            component_codes=["1", "2", "3"])
+        # centralized the equality check, so that it can be reused in other
+        # tests..
+        self._assert_reftek130_test_stream(st_reftek)
 
     def test_is_reftek130(self):
         """
@@ -122,17 +135,7 @@ class ReftekTestCase(unittest.TestCase):
         st_reftek = obspy.read(
             self.reftek_file, network="XX", location="01",
             component_codes=["1", "2", "3"])
-        st_mseed = obspy.Stream()
-        for file_ in self.mseed_files:
-            st_mseed += obspy.read(file_, "MSEED")
-        # sort streams
-        st_reftek = st_reftek.sort()
-        st_mseed = st_mseed.sort()
-        # check amount of traces
-        self.assertEqual(len(st_reftek), len(st_mseed))
-        # check equality of data
-        for tr_got, tr_expected in zip(st_reftek, st_mseed):
-            np.testing.assert_array_equal(tr_got.data, tr_expected.data)
+        self._assert_reftek130_test_stream(st_reftek)
 
     def test_error_no_packets_read(self):
         """
