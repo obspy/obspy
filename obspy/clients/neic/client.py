@@ -203,7 +203,7 @@ class Client(object):
                             if self.debug:
                                 print(ascdate(), asctime(), "read len",
                                       str(len(data)), " total", str(totlen))
-                            if data.find(b"EOR") >= 0:
+                            if data.find(b"<EOR>") >= 0:
                                 if self.debug:
                                     print(ascdate(), asctime(), b"<EOR> seen")
                                 tf.write(data[0:data.find(b"<EOR>")])
