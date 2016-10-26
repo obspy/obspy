@@ -12,12 +12,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 import socket
 import traceback
 from time import sleep
 
 from obspy import Stream, UTCDateTime, read
-from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.decorator import deprecated
 from .util import ascdate, asctime
 
@@ -185,10 +185,7 @@ class Client(object):
         while not success:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                with NamedTemporaryFile() as tf:
-                    if self.debug:
-                        print(ascdate(), asctime(), "connecting temp file",
-                              tf.name)
+                with io.BytesIO() as tf:
                     s.connect((self.host, self.port))
                     s.setblocking(0)
                     s.send(line.encode('ascii', 'strict'))
@@ -210,7 +207,7 @@ class Client(object):
                                 totlen += len(data[0:data.find(b"<EOR>")])
                                 tf.seek(0)
                                 try:
-                                    st = read(tf.name, 'MSEED')
+                                    st = read(tf, 'MSEED')
                                 except Exception as e:
                                     st = Stream()
                                 st.trim(starttime, starttime + duration)
