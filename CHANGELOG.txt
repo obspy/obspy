@@ -56,6 +56,8 @@ master:
      function is also much faster. (see #1141)
    * Update to libmseed v2.18 (see #1540).
    * Correctly read MiniSEED files with a data offset of 48 bytes (see #1540).
+ - obspy.io.nlloc:
+   * Set preferred origin of event (see #1570)
  - obspy.io.xseed:
    * Added azimuth and dip to the get_coordinates() function.  (see #1315)
  - obspy.scripts:

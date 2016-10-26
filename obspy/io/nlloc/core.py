@@ -223,6 +223,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
     event = Event()
     o = Origin()
     event.origins = [o]
+    event.preferred_origin_id = o.resource_id
     o.origin_uncertainty = OriginUncertainty()
     o.quality = OriginQuality()
     ou = o.origin_uncertainty
