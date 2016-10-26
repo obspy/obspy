@@ -81,12 +81,12 @@ requests seismograms for all of these.
 ...     bulk=bulk, starttime="P-10", endtime="P+20")
 >>> print(st)  # doctest: +ELLIPSIS
 6 Trace(s) in Stream:
-XX.AA.SE.MXZ | 2010-02-27T06:48:11.500000Z - ... | 4.0 Hz, 120 samples
-XX.AA.SE.MXN | 2010-02-27T06:48:11.500000Z - ... | 4.0 Hz, 120 samples
-XX.AA.SE.MXE | 2010-02-27T06:48:11.500000Z - ... | 4.0 Hz, 120 samples
-XX.BB.SE.MXZ | 2010-02-27T06:48:15.250000Z - ... | 4.0 Hz, 120 samples
-XX.BB.SE.MXN | 2010-02-27T06:48:15.250000Z - ... | 4.0 Hz, 120 samples
-XX.BB.SE.MXE | 2010-02-27T06:48:15.250000Z - ... | 4.0 Hz, 120 samples
+XX.AA.SE.MXZ | 2010-02-27T06:48:11... - ... | 4.0 Hz, 120 samples
+XX.AA.SE.MXN | 2010-02-27T06:48:11... - ... | 4.0 Hz, 120 samples
+XX.AA.SE.MXE | 2010-02-27T06:48:11... - ... | 4.0 Hz, 120 samples
+XX.BB.SE.MXZ | 2010-02-27T06:48:15... - ... | 4.0 Hz, 120 samples
+XX.BB.SE.MXN | 2010-02-27T06:48:15... - ... | 4.0 Hz, 120 samples
+XX.BB.SE.MXE | 2010-02-27T06:48:15... - ... | 4.0 Hz, 120 samples
 
 
 Other Useful Methods
