@@ -40,6 +40,8 @@ master:
     * Read and write support for nested custom tags (see #1463)
  - obspy.io.stationxml
     * Read and write support for custom tags (see #1024)
+    * No longer add the (unused) time zone field to StationXML datetimes to
+      follow the example of big data centers. (see #1572)
  - obspy.io.segy:
     * Iterative reading of large SEG-Y and SU files with
       `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
