@@ -1,5 +1,5 @@
 =============================================================================
-Creating a StationXML file from Scratch
+Creating a StationXML file (without instrument responses) from Scratch
 =============================================================================
 
 Creating a custom StationXML file is a task that sometimes comes up in
@@ -13,6 +13,9 @@ Note that this assumes a certain familiarity with the `FDSN StationXML standard
 StationXML file and many arguments are optional. ObsPy will validate the
 resulting StationXML file against its schema upon writing so the final file is
 assured to be valid against the StationXML schema.
+
+Please note that this tutorial does not cover the authoring of instrument
+responses which would be a larger endeavour.
 
 The following illustration shows the basic structure of ObsPy's internal
 representation.
