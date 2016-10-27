@@ -3,13 +3,13 @@ Creating a StationXML file from Scratch
 =============================================================================
 
 Creating a custom StationXML file is a task that sometimes comes up in
-seismology. This sections demonstrates how to it with ObsPy. Please note that
+seismology. This section demonstrates how to it with ObsPy. Please note that
 this is not necessarily easier or more obvious then directly editing an XML
 file but it does provider tighter integration with the rest of ObsPy and can
 guarantee a valid result at the end.
 
 Note that this assumes a certain familiarity with the `FDSN StationXML standard
-<http://www.fdsn.org/xml/station/>`_. We'll create a fairly simplistic
+<https://www.fdsn.org/xml/station/>`_. We'll create a fairly simplistic
 StationXML file and many arguments are optional. ObsPy will validate the
 resulting StationXML file against its schema upon writing so the final file is
 assured to be valid against the StationXML schema.
@@ -45,6 +45,7 @@ channels and not discussed here.
         source="ObsPy-Tutorial")
 
     net = Network(
+        # This is the network code according to the SEED standard.
         code="XX",
         # A list of stations. We'll add one later.
         stations=[],
@@ -53,6 +54,7 @@ channels and not discussed here.
         start_date=obspy.UTCDateTime(2016, 1, 2))
 
     sta = Station(
+        # This is the station code according to the SEED standard.
         code="ABC",
         latitude=1.0,
         longitude=2.0,
@@ -61,7 +63,9 @@ channels and not discussed here.
         site=Site(name="First station"))
 
     cha = Channel(
+        # This is the channel code according to the SEED standard.
         code="EHZ",
+        # This is the location code according to the SEED standard.
         location_code="",
         # Note that these coordinates can differ from the station coordinates.
         latitude=1.0,
@@ -78,7 +82,7 @@ channels and not discussed here.
     sta.channels.append(cha)
 
     # And finally write it to a StationXML file. We also force a validation against
-    # the StationXML schema to assure it produces a valid StationXML file.
+    # the StationXML schema to ensure it produces a valid StationXML file.
     #
     # Note that it is also possible to serialize to any of the other inventory
     # output formats ObsPy supports.
