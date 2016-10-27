@@ -100,6 +100,12 @@ install:
         requests
         jsonschema
   - source activate test-environment
+  # additional, optional packages that run some more tests but are not
+  # available for all archs. "--no-update-dependencies" keeps other packages at
+  # already installed version (ideally we should handle package versions
+  # through pinning or an environment file..)
+  - conda config --add channels conda-forge
+  - conda install --no-update-dependencies m2crypto || true
   # install packages not available via conda
   - pip install codecov
   - pip install geographiclib
