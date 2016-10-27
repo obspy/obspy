@@ -14,7 +14,7 @@ for pr in get_pull_requests(state="open"):
     commit = pr.head.sha
 
     if not check_docs_build_requested(number):
-        print("PR #{} does not request a docs build.")
+        print("PR #{} does not request a docs build.".format(number))
         continue
 
     time = get_commit_time(commit=commit, fork=fork)
