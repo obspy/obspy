@@ -88,6 +88,11 @@ git checkout $GITTARGET
 COMMIT=`git rev-parse HEAD`
 git clean -fxd
 
+# create github pull request status
+if [ "$BUILD_PR" = true ] ; then
+    python -c "from obspy_github_api import set_commit_status; set_commit_status(commit=$COMMIT, status='pending', context='docs-buildbot', description='Docs build started..', target_url=\"http://docs.obspy.org/pull-requests/pull_request_docs.log\")"
+fi
+
 if [ "$GITFORK" != "obspy" ]
 then
     git remote add upstream git://github.com/obspy/obspy.git
