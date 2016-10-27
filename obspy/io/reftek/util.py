@@ -101,7 +101,7 @@ def _parse_long_time(time_bytestring, decode=True):
     if not time_string.strip():
         return None
     time_string, milliseconds = time_string[:-3], int(time_string[-3:])
-    return (UTCDateTime().strptime(time_string, '%Y%j%H%M%S') +
+    return (UTCDateTime.strptime(time_string, '%Y%j%H%M%S') +
             1e-3 * milliseconds)
 
 
