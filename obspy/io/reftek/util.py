@@ -6,7 +6,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import calendar
 import codecs
+import datetime
 
 import numpy as np
 from obspy import UTCDateTime
@@ -14,6 +16,24 @@ from obspy import UTCDateTime
 
 
 NOW = UTCDateTime()
+
+_timegm_cache = {}
+
+
+def _get_timestamp_for_start_of_year(year):
+    if NOW.year > 2050:
+        raise NotImplementedError()
+    if year < 50:
+        year += 2000
+    else:
+        year += 1900
+
+    try:
+        t = _timegm_cache[year]
+    except KeyError:
+        t = calendar.timegm(datetime.datetime(year, 1, 1).utctimetuple())
+        _timegm_cache[year] = t
+    return t
 
 
 def _bcd_str(chars):
@@ -39,15 +59,39 @@ def _bcd_int(chars):
         if chars else None
 
 
+def _prepare_time(packets):
+    """
+    Helper routine to set POSIX timestamp information for a list of packets,
+    based on their raw time information (year as integer without century and
+    timestring DDDHHMMSSsss)
+    """
+    # split up the time string into tuple of
+    # (day of year, hours, minutes, seconds, milliseconds), still as string
+    seconds = [(p._time_raw[1][:3], p._time_raw[1][3:5], p._time_raw[1][5:7],
+                p._time_raw[1][7:9], p._time_raw[1][9:]) for p in packets]
+    # "S8" to have same itemsize as float64, might speed it up
+    seconds = np.array(seconds, dtype="S8").astype(np.float64, copy=False)
+    # now scale the columns of the array, so that everything is in seconds
+    seconds[:, 0] -= 1
+    seconds[:, 0] *= 86400
+    seconds[:, 1] *= 3600
+    seconds[:, 2] *= 60
+    seconds[:, 4] *= 1e-3
+    # sum up days, hours, minutes etc. for every row of the array
+    seconds = seconds.sum(axis=1)
+    # now set every packet's time with the base POSIX timestamp of the start of
+    # respective year (which we calculate only once) and adding the previously
+    # calculated seconds from start of year
+    for p, s in zip(packets, seconds):
+        p._time = _get_timestamp_for_start_of_year(p._time_raw[0]) + s
+
+
 def _parse_short_time(year, time_string):
-    if NOW.year > 2050:
-        raise NotImplementedError()
-    if year < 50:
-        year += 2000
-    else:
-        year += 1900
-    time_string = str(year) + time_string
-    return _parse_long_time(time_string, decode=False)
+    t = _get_timestamp_for_start_of_year(year)
+    t += (86400 * (int(time_string[:3]) - 1) + 3600 * int(time_string[3:5]) +
+          60 * int(time_string[5:7]) + int(time_string[7:9]) +
+          1e-3 * int(time_string[9:]))
+    return t
 
 
 def _parse_long_time(time_bytestring, decode=True):

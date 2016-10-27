@@ -17,7 +17,7 @@ from obspy import Trace, Stream, UTCDateTime
 from obspy.io.mseed.util import _unpack_steim_1
 
 from .header import PACKETS_IMPLEMENTED, PAYLOAD
-from .util import _parse_short_time
+from .util import _parse_short_time, _prepare_time
 
 
 def _is_reftek130(filename):
@@ -75,6 +75,9 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
     # read all packets from file, sort by packet sequence number
     packets = _read_into_packetlist(filename)
     packets = sorted(packets, key=lambda x: x.packet_sequence)
+    # parse all times infostrings in the packet headers into POSIX timestamps
+    # in one vectorized run
+    _prepare_time(packets)
     try:
         if not packets:
             msg = ("Could not extract any data packets from file.")
@@ -120,7 +123,8 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
                    "test file.").format(p.type)
             raise NotImplementedError(msg)
         data.setdefault(p.channel_number, []).append(
-            (p._time, p.packet_sequence, p.number_of_samples, p.sample_data))
+            (p.timestamp, p.packet_sequence, p.number_of_samples,
+             p.sample_data))
         if not packets:
             break
         p = packets.pop(0)
@@ -227,12 +231,29 @@ class Packet(object):
         self.packet_sequence = packet_sequence
         # internally store time as timestamp, so that comparisons with time of
         # other packets can be done with simple floating point arithmetic
-        self._time = year and _parse_short_time(year, time).timestamp or None
+        self._time_raw = (year, time)
         self._parse_payload(payload)
 
     @property
+    def timestamp(self):
+        """
+        Return the packet header time as POSIX timestamp
+        """
+        try:
+            t = self._time
+        except AttributeError:
+            year, time = self._time_raw
+            self._time = year and _parse_short_time(year, time) or None
+            t = self._time
+        return t
+
+    @property
     def time(self):
-        return UTCDateTime(self._time)
+        """
+        Return the packet header time as a
+        :class:`~obspy.core.utcdatetime.UTCDateTime`
+        """
+        return UTCDateTime(self.timestamp)
 
     def __str__(self):
         keys = ("experiment_number", "unit_id", "time", "byte_count",
