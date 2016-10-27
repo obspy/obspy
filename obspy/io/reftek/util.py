@@ -69,8 +69,7 @@ def _prepare_time(packets):
     # (day of year, hours, minutes, seconds, milliseconds), still as string
     seconds = [(p._time_raw[1][:3], p._time_raw[1][3:5], p._time_raw[1][5:7],
                 p._time_raw[1][7:9], p._time_raw[1][9:]) for p in packets]
-    # "S8" to have same itemsize as float64, might speed it up
-    seconds = np.array(seconds, dtype="S8").astype(np.float64, copy=False)
+    seconds = np.array(seconds, dtype="S3").astype(np.float64)
     # now scale the columns of the array, so that everything is in seconds
     seconds[:, 0] -= 1
     seconds[:, 0] *= 86400
