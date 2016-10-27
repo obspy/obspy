@@ -172,7 +172,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
 
     line = line.rstrip().split('"')[1]
     signature, version, date, time = line.rsplit(" ", 3)
-    creation_time = UTCDateTime().strptime(date + time, str("%d%b%Y%Hh%Mm%S"))
+    creation_time = UTCDateTime.strptime(date + time, str("%d%b%Y%Hh%Mm%S"))
 
     if coordinate_converter:
         # maximum likelihood origin location in km info line
@@ -313,7 +313,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         # empty network code
         wid = WaveformStreamID(network_code="", station_code=station)
         date, hourmin, sec = map(str, line[6:9])
-        t = UTCDateTime().strptime(date + hourmin, "%Y%m%d%H%M") + float(sec)
+        t = UTCDateTime.strptime(date + hourmin, "%Y%m%d%H%M") + float(sec)
         pick.waveform_id = wid
         pick.time = t
         pick.time_errors.uncertainty = float(line[10])
