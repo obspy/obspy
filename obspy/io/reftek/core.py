@@ -13,7 +13,7 @@ import codecs
 
 import numpy as np
 
-from obspy import Trace, Stream
+from obspy import Trace, Stream, UTCDateTime
 from obspy.io.mseed.util import _unpack_steim_1
 
 from .header import PACKETS_IMPLEMENTED, PAYLOAD
@@ -120,7 +120,7 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
                    "test file.").format(p.type)
             raise NotImplementedError(msg)
         data.setdefault(p.channel_number, []).append(
-            (p.time, p.packet_sequence, p.number_of_samples, p.sample_data))
+            (p._time, p.packet_sequence, p.number_of_samples, p.sample_data))
         if not packets:
             break
         p = packets.pop(0)
@@ -146,7 +146,15 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
             if chunk_list:
                 t_last, _, npts_last, _ = chunk_list[-1]
                 # check if next starttime matches seamless to last chunk
-                if t != t_last + npts_last * delta:
+                # 1e-3 seconds == 1 millisecond is the smallest time difference
+                # reftek130 format can represent, so anything larger or equal
+                # means a gap/overlap.
+                # for now be conservative and check even more rigorous against
+                # 1e-4 to be on the safe side, but in the gapless data example
+                # the differences are always 0 or -2e-7 (for POSIX timestamps
+                # of order 1e9) which seems like a floating point accuracy
+                # issue for np.float64.
+                if abs(t - (t_last + npts_last * delta)) > 1e-4:
                     # gap/overlap, so start new contiguous list
                     data_contiguous.append(chunk_list)
                     chunk_list = [chunk]
@@ -167,7 +175,7 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
             data = np.hstack(data)
 
             tr = Trace(data=data, header=header.copy())
-            tr.stats.starttime = starttime
+            tr.stats.starttime = UTCDateTime(starttime)
             # if component codes were explicitly provided, use them together
             # with the stream label
             if component_codes is not None:
@@ -190,8 +198,9 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
             t_last, _, npts_last, _ = data_[-1]
             try:
                 assert npts == len(data)
-                assert tr.stats.endtime == t_last + (npts_last - 1) * delta
-                assert tr.stats.endtime == (
+                assert tr.stats.endtime == UTCDateTime(
+                    t_last + (npts_last - 1) * delta)
+                assert tr.stats.endtime == UTCDateTime(
                     tr.stats.starttime + (npts - 1) * delta)
             except AssertionError:
                 msg = ("Reftek file has a trace with an inconsistent endtime "
@@ -216,8 +225,14 @@ class Packet(object):
         self.unit_id = unit_id
         self.byte_count = byte_count
         self.packet_sequence = packet_sequence
-        self.time = year and _parse_short_time(year, time) or None
+        # internally store time as timestamp, so that comparisons with time of
+        # other packets can be done with simple floating point arithmetic
+        self._time = year and _parse_short_time(year, time).timestamp or None
         self._parse_payload(payload)
+
+    @property
+    def time(self):
+        return UTCDateTime(self._time)
 
     def __str__(self):
         keys = ("experiment_number", "unit_id", "time", "byte_count",
