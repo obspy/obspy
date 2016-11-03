@@ -11,6 +11,6 @@
 
        core
        util
-       header
+       packet
 
     .. comment to end block

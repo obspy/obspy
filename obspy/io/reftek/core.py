@@ -5,12 +5,7 @@ REFTEK130 read support.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
 
-import calendar
-import codecs
-import ctypes as C
-import datetime
 import io
 import warnings
 
@@ -18,133 +13,27 @@ import numpy as np
 
 from obspy import Trace, Stream, UTCDateTime
 from obspy.io.mseed.headers import clibmseed
-from obspy.io.mseed.util import _unpack_steim_1
+
+from .packet import EHPacket, _initial_unpack_packets
 
 
 NOW = UTCDateTime()
 
 
-_timegm_cache = {}
-
-
-def _get_timestamp_for_start_of_year(year):
-    if year < 50:
-        year += 2000
-    else:
-        year += 1900
-
-    try:
-        t = _timegm_cache[year]
-    except KeyError:
-        t = calendar.timegm(datetime.datetime(year, 1, 1).utctimetuple())
-        _timegm_cache[year] = t
-    return t
-
-
-def _timestrings_to_seconds(timestrings):
-    """
-    Helper routine to convert timestrings of form "DDDHHMMSSsss" to array of
-    floating point seconds.
-
-    :param timestring: numpy.ndarray
-    :rtype: numpy.ndarray
-    """
-    # split up the time string into tuple of
-    # (day of year, hours, minutes, seconds, milliseconds), still as string
-    seconds = [(string[:3], string[3:5], string[5:7],
-                string[7:9], string[9:]) for string in timestrings]
-    seconds = np.array(seconds, dtype="S3").astype(np.float64)
-    # now scale the columns of the array, so that everything is in seconds
-    seconds[:, 0] -= 1
-    seconds[:, 0] *= 86400
-    seconds[:, 1] *= 3600
-    seconds[:, 2] *= 60
-    seconds[:, 4] *= 1e-3
-    # sum up days, hours, minutes etc. for every row of the array
-    seconds = seconds.sum(axis=1)
-    return seconds
-
-
-def bcd(_i):
-    return (_i >> 4 & 0xF).astype(np.uint32) * 10 + (_i & 0xF)
-
-
-def bcd_16bit_int(_i):
-    _i = bcd(_i)
-    return _i[::, 0] * 100 + _i[::, 1]
-
-
-def bcd_hex(_i):
-    result = [codecs.encode(chars, "hex_codec").decode("ASCII").upper()
-              for chars in _i]
-    return np.array(result)
-
-
-def bcd_8bit_hex(_i):
-    return np.array(["{:X}".format(x) for x in _i], dtype="|S2")
-
-
-def bcd_julian_day_string_to_seconds_of_year(_i):
-    timestrings = bcd_hex(_i)
-    return _timestrings_to_seconds(timestrings)
-
-
-# The extended header which is the same for EH/ET/DT packets.
-# tuples are:
-#  - field name
-#  - dtype during initial reading
-#  - conversion routine (if any)
-#  - dtype after conversion
-PACKET = [
-    ("packet_type", native_str("|S2"), None, native_str("S2")),
-    ("experiment_number", np.uint8, bcd, np.uint8),
-    ("year", np.uint8, bcd, np.uint8),
-    ("unit_id", (np.uint8, 2), bcd_hex, native_str("S4")),
-    ("time", (np.uint8, 6), bcd_julian_day_string_to_seconds_of_year,
-     np.float64),
-    ("byte_count", (np.uint8, 2), bcd_16bit_int, np.uint16),
-    ("packet_sequence", (np.uint8, 2), bcd_16bit_int, np.uint16),
-    ("event_number", (np.uint8, 2), bcd_16bit_int, np.uint16),
-    ("data_stream_number", np.uint8, bcd, np.uint8),
-    ("channel_number", np.uint8, bcd, np.uint8),
-    ("number_of_samples", (np.uint8, 2), bcd_16bit_int, np.uint32),
-    ("flags", np.uint8, None, np.uint8),
-    ("data_format", np.uint8, bcd_8bit_hex, native_str("S2")),
-    # Temporarily store the payload here.
-    ("payload", (np.uint8, 1000), None, (np.uint8, 1000)),
-]
-
-
-packet_initial_unpack_dtype = np.dtype([
-    (native_str(name), dtype_initial)
-    for name, dtype_initial, converter, dtype_final in PACKET])
-
-packet_final_dtype = np.dtype([
-    (native_str(name), dtype_final)
-    for name, dtype_initial, converter, dtype_final in PACKET])
-
-
-def _initial_unpack_packets(bytestring):
-    data = np.fromstring(
-        bytestring, dtype=packet_initial_unpack_dtype)
-    result = np.empty_like(data, dtype=packet_final_dtype)
-
-    for name, dtype_initial, converter, dtype_final in PACKET:
-        if converter is None:
-            result[name][:] = data[name][:]
-            continue
-        result[name][:] = converter(data[name])
-    # time unpacking is special and needs some additional work.
-    # we need to add the POSIX timestamp of the start of respective year to the
-    # already unpacked seconds into the respective year..
-    result['time'][:] += [_get_timestamp_for_start_of_year(y)
-                          for y in result['year']]
-
-    return result
+def _read_reftek130(filename):
+    # Reftek 130 data format stores only the last two digits of the year.  We
+    # currently assume that 00-49 are years 2000-2049 and 50-99 are years
+    # 2050-2099. We deliberately raise an exception if the current year will
+    # become 2050 (just in case someone really still uses this code then.. ;-)
+    # At that point the year would probably have to be explicitly specified
+    # when reading data to be on the safe side.
+    if NOW.year > 2050:
+        raise NotImplementedError()
+    return Reftek130.from_file(filename).to_stream()
 
 
 class Reftek130(object):
-    def __init__(self, filename=None):
+    def __init__(self):
         pass
 
     @staticmethod
@@ -337,124 +226,6 @@ class Reftek130(object):
         return st
 
 
-def _decode_ascii(chars):
-    return chars.decode("ASCII")
-
-
-def _parse_long_time(time_bytestring, decode=True):
-    if decode:
-        time_string = time_bytestring.decode()
-    else:
-        time_string = time_bytestring
-    if not time_string.strip():
-        return None
-    time_string, milliseconds = time_string[:-3], int(time_string[-3:])
-    return (UTCDateTime.strptime(time_string, '%Y%j%H%M%S') +
-            1e-3 * milliseconds)
-
-
-def _16_tuple_ascii(bytestring):
-    item_count = 16
-    chars = bytestring.decode("ASCII")
-    if len(chars) % item_count != 0:
-        raise NotImplementedError("Should not happen, contact developers.")
-    item_size = int(len(chars) / item_count)
-    result = []
-    for i in range(item_count):
-        chars_ = chars[i*item_size:(i+1)*item_size]
-        result.append(chars_.strip() or None)
-    return tuple(result)
-
-
-def _16_tuple_int(bytestring):
-    ascii_tuple = _16_tuple_ascii(bytestring)
-    result = []
-    for chars in ascii_tuple:
-        if chars is None or not chars.strip():
-            result.append(None)
-            continue
-        result.append(int(chars))
-    return tuple(result)
-
-
-EH_PAYLOAD = {
-    "trigger_time_message": (0, 33, _decode_ascii),
-    "time_source": (33, 1, _decode_ascii),
-    "time_quality": (34, 1, _decode_ascii),
-    "station_name_extension": (35, 1, _decode_ascii),
-    "station_name": (36, 4, _decode_ascii),
-    "stream_name": (40, 16, _decode_ascii),
-    "_reserved_2": (56, 8, _decode_ascii),
-    "sampling_rate": (64, 4, int),
-    "trigger_type": (68, 4, _decode_ascii),
-    "trigger_time": (72, 16, _parse_long_time),
-    "first_sample_time": (88, 16, _parse_long_time),
-    "detrigger_time": (104, 16, _parse_long_time),
-    "last_sample_time": (120, 16, _parse_long_time),
-    "channel_adjusted_nominal_bit_weights": (136, 128, _16_tuple_ascii),
-    "channel_true_bit_weights": (264, 128, _16_tuple_ascii),
-    "channel_gain_code": (392, 16, _16_tuple_ascii),
-    "channel_ad_resolution_code": (408, 16, _16_tuple_ascii),
-    "channel_fsa_code": (424, 16, _16_tuple_ascii),
-    "channel_code": (440, 64, _16_tuple_ascii),
-    "channel_sensor_fsa_code": (504, 16, _16_tuple_ascii),
-    "channel_sensor_vpu": (520, 96, _16_tuple_int),
-    "channel_sensor_units_code": (616, 16, _16_tuple_ascii),
-    "station_channel_number": (632, 48, _16_tuple_int),
-    "_reserved_3": (680, 156, _decode_ascii),
-    "total_installed_channels": (836, 2, int),
-    "station_comment": (838, 40, _decode_ascii),
-    "digital_filter_list": (878, 16, _decode_ascii),
-    "position": (894, 26, _decode_ascii),
-    "reftek_120": (920, 80, None)}
-
-
-class EHPacket(object):
-    __slots__ = ["_data"] + list(EH_PAYLOAD.keys())
-    _headers = ('experiment_number', 'unit_id', 'byte_count',
-                'packet_sequence', 'time', 'event_number',
-                'data_stream_number', 'data_format', 'flags')
-
-    def __init__(self, data):
-        self._data = data
-        payload = self._data["payload"].tobytes()
-        for name, (start, length, converter) in EH_PAYLOAD.items():
-            data = payload[start:start+length]
-            if converter is not None:
-                data = converter(data)
-            setattr(self, name, data)
-
-    @property
-    def type(self):
-        return self._data['packet_type'].item()
-
-    def __getattr__(self, name):
-        if name in self._headers:
-            return self._data[name].item()
-
-    @property
-    def timestamp(self):
-        return self._data['time'].item()
-
-    @property
-    def time(self):
-        return UTCDateTime(self._data['time'].item())
-
-    def _to_dict(self):
-        """
-        Convert to dictionary structure.
-        """
-        return {key: getattr(self, key) for key in EH_PAYLOAD.keys()}
-
-
-def _read_reftek130(filename):
-    if NOW.year > 2050:
-        raise NotImplementedError()
-    return Reftek130.from_file(filename).to_stream()
-
-
-if __name__ == "__main__":
-    filename = "_helpers/000000000_0036EE80.rt130"
-    rt = Reftek130.from_file(filename)
-    st = rt.to_stream()
-    from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
