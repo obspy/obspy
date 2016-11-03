@@ -86,7 +86,9 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
     # when reading data to be on the safe side.
     if NOW.year > 2050:
         raise NotImplementedError()
-    return Reftek130.from_file(filename).to_stream(headonly=headonly)
+    return Reftek130.from_file(filename).to_stream(
+        network=network, location=location, component_codes=component_codes,
+        headonly=headonly)
 
 
 class Reftek130(object):
