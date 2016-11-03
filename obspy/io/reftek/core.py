@@ -7,6 +7,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import io
+import os
 import warnings
 
 import numpy as np
@@ -14,10 +15,42 @@ import numpy as np
 from obspy import Trace, Stream, UTCDateTime
 from obspy.io.mseed.headers import clibmseed
 
-from .packet import EHPacket, _initial_unpack_packets
+from .packet import EHPacket, _initial_unpack_packets, PACKET_TYPES
 
 
 NOW = UTCDateTime()
+
+
+def _is_reftek130(filename):
+    """
+    Checks whether a file is REFTEK130 format or not.
+
+    :type filename: str
+    :param filename: REFTEK130 file to be checked.
+    :rtype: bool
+    :return: ``True`` if a REFTEK130 file.
+
+    Checks if overall length of file is consistent (i.e. multiple of 1024
+    bytes) and checks for valid packet type identifiers in the first 20
+    expected packet positions.
+    """
+    if not os.path.isfile(filename):
+        return False
+    filesize = os.stat(filename).st_size
+    # check if overall file size is a multiple of 1024
+    if filesize < 1024 or filesize % 1024 != 0:
+        return False
+
+    with open(filename, 'rb') as fp:
+        # check first 20 expected packets' type header field
+        while True:
+            packet_type = fp.read(2).decode("ASCII", "ignore")
+            if not packet_type:
+                break
+            if packet_type not in PACKET_TYPES:
+                return False
+            fp.seek(1022, os.SEEK_CUR)
+    return True
 
 
 def _read_reftek130(filename):

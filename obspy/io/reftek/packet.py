@@ -22,6 +22,11 @@ from .util import (
     bcd_8bit_hex, _get_timestamp_for_start_of_year)
 
 
+PACKET_TYPES_IMPLEMENTED = ("EH", "ET", "DT")
+PACKET_TYPES_NOT_IMPLEMENTED = ("AD", "CD", "DS", "FD", "OM", "SC", "SH")
+PACKET_TYPES = PACKET_TYPES_IMPLEMENTED + PACKET_TYPES_NOT_IMPLEMENTED
+
+
 # The extended header which is the same for EH/ET/DT packets.
 # tuples are:
 #  - field name
