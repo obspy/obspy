@@ -215,8 +215,8 @@ class ReftekTestCase(unittest.TestCase):
         self.assertEqual(len(w), 1)
         self.assertEqual(
             str(w[0].message),
-            'Data not ending with an ET (event trailer) package. '
-            'Data might be unexpectedly truncated.')
+            'No event trailer (ET) packets in packet sequence. File might be '
+            'truncated.')
         self._assert_reftek130_test_stream(st_reftek)
 
     def test_truncated_last_packet(self):
@@ -240,11 +240,13 @@ class ReftekTestCase(unittest.TestCase):
         self.assertEqual(len(w), 2)
         # we get two warnings, one about the truncated packet and one about the
         # missing last (ET) packet
-        self.assertEqual(str(w[0].message), 'Dropping incomplete packet.')
+        self.assertEqual(str(w[0].message), 'Length of data not a multiple of '
+                         '1024. Data might be truncated. Dropping 1014 '
+                         'byte(s) at the end.')
         self.assertEqual(
             str(w[1].message),
-            'Data not ending with an ET (event trailer) package. '
-            'Data might be unexpectedly truncated.')
+            'No event trailer (ET) packets in packet sequence. File might be '
+            'truncated.')
         # data should be read OK aside from the warnings
         self._assert_reftek130_test_stream(st_reftek)
 

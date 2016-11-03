@@ -12,6 +12,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import warnings
+
 import numpy as np
 
 from obspy import UTCDateTime
@@ -140,6 +142,12 @@ def _initial_unpack_packets(bytestring):
     file, than allocate result array with dtypes for storage of python
     objects/arrays and fill it with the unpacked data.
     """
+    if len(bytestring) % 1024 != 0:
+        tail = len(bytestring) % 1024
+        bytestring = bytestring[:-tail]
+        msg = ("Length of data not a multiple of 1024. Data might be "
+               "truncated. Dropping {:d} byte(s) at the end.").format(tail)
+        warnings.warn(msg)
     data = np.fromstring(
         bytestring, dtype=PACKET_INITIAL_UNPACK_DTYPE)
     result = np.empty_like(data, dtype=PACKET_FINAL_DTYPE)
