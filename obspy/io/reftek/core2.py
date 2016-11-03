@@ -7,6 +7,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import codecs
 import io
 
 import numpy as np
@@ -57,9 +58,10 @@ def bcd_16bit_int(_i):
     return _i[::, 0] * 100 + _i[::, 1]
 
 
-def bcd_16bit_hex(_i):
-    return np.array(["{:X}".format(x) for x in
-                    (_i[::, 0] * 256 + _i[::, 1])], dtype="|S4")
+def bcd_hex(_i):
+    result = [codecs.encode(chars, "hex_codec").decode("ASCII").upper()
+              for chars in _i]
+    return np.array(result)
 
 
 def bcd_8bit_hex(_i):
