@@ -7,10 +7,58 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import calendar
 import codecs
+import datetime
 import io
 
 import numpy as np
+
+from obspy import UTCDateTime
+
+
+NOW = UTCDateTime()
+
+
+_timegm_cache = {}
+
+
+def _get_timestamp_for_start_of_year(year):
+    if year < 50:
+        year += 2000
+    else:
+        year += 1900
+
+    try:
+        t = _timegm_cache[year]
+    except KeyError:
+        t = calendar.timegm(datetime.datetime(year, 1, 1).utctimetuple())
+        _timegm_cache[year] = t
+    return t
+
+
+def _timestrings_to_seconds(timestrings):
+    """
+    Helper routine to convert timestrings of form "DDDHHMMSSsss" to array of
+    floating point seconds.
+
+    :param timestring: numpy.ndarray
+    :rtype: numpy.ndarray
+    """
+    # split up the time string into tuple of
+    # (day of year, hours, minutes, seconds, milliseconds), still as string
+    seconds = [(string[:3], string[3:5], string[5:7],
+                string[7:9], string[9:]) for string in timestrings]
+    seconds = np.array(seconds, dtype="S3").astype(np.float64)
+    # now scale the columns of the array, so that everything is in seconds
+    seconds[:, 0] -= 1
+    seconds[:, 0] *= 86400
+    seconds[:, 1] *= 3600
+    seconds[:, 2] *= 60
+    seconds[:, 4] *= 1e-3
+    # sum up days, hours, minutes etc. for every row of the array
+    seconds = seconds.sum(axis=1)
+    return seconds
 
 
 # # All the other headers as a dictionary of dictionaries.
@@ -68,16 +116,10 @@ def bcd_8bit_hex(_i):
     return np.array(["{:X}".format(x) for x in _i], dtype="|S2")
 
 
-def bcd_time(_i):
-    # Time is a bit wild.
-    t = bcd(_i)
-    julday = t[::, 0] * 10 + t[::, 1] // 10.0
-    # XXX
-    hour = t[::, 1] % 10 * 10 + t[::, 2] // 10.0
-    minute = t[::, 2] % 10 * 10 + t[::, 3] // 10.0
-    second = t[::, 3] % 10 * 10 + t[::, 4] // 10.0
-    microsecond = t[::, 4] % 10 * 100 + t[::, 5] * 1000
-    return julday
+def bcd_julian_day_string_to_seconds_of_year(_i):
+    timestrings = bcd_hex(_i)
+    return _timestrings_to_seconds(timestrings)
+
 
 # The extended header which is the same for EH/ET/DT packets.
 # tuples are:
@@ -90,7 +132,8 @@ PACKET = [
     ("experiment_number", np.uint8, bcd, np.uint8),
     ("year", np.uint8, bcd, np.uint8),
     ("unit_id", (np.uint8, 2), bcd_hex, native_str("S4")),
-    ("time", (np.uint8, 6), bcd_hex, np.float64),
+    ("time", (np.uint8, 6), bcd_julian_day_string_to_seconds_of_year,
+     np.float64),
     ("byte_count", (np.uint8, 2), bcd_16bit_int, np.uint16),
     ("packet_sequence", (np.uint8, 2), bcd_16bit_int, np.uint16),
     ("event_number", (np.uint8, 2), bcd_16bit_int, np.uint16),
@@ -110,8 +153,7 @@ packet_initial_unpack_dtype = np.dtype([
 
 packet_final_dtype = np.dtype([
     (native_str(name), dtype_final)
-    for name, dtype_initial, converter, dtype_final in PACKET
-    if dtype_final is not None])
+    for name, dtype_initial, converter, dtype_final in PACKET])
 
 
 def _initial_unpack_packets(bytestring):
@@ -120,12 +162,15 @@ def _initial_unpack_packets(bytestring):
     result = np.empty_like(data, dtype=packet_final_dtype)
 
     for name, dtype_initial, converter, dtype_final in PACKET:
-        if dtype_final is None:
-            continue
         if converter is None:
             result[name][:] = data[name][:]
             continue
         result[name][:] = converter(data[name])
+    # time unpacking is special and needs some additional work.
+    # we need to add the POSIX timestamp of the start of respective year to the
+    # already unpacked seconds into the respective year..
+    result['time'][:] += [_get_timestamp_for_start_of_year(y)
+                          for y in result['year']]
 
     return result
 
@@ -141,6 +186,8 @@ class Reftek130(object):
 
 
 def _read_reftek130(filename):
+    if NOW.year > 2050:
+        raise NotImplementedError()
     return Reftek130(filename).to_stream()
 
 
