@@ -14,8 +14,7 @@ import numpy as np
 
 import obspy
 from obspy.core.util import NamedTemporaryFile
-from obspy.io.reftek.core import (
-    _read_reftek130, _is_reftek130, _parse_next_packet)
+from obspy.io.reftek.core import _read_reftek130, _is_reftek130
 
 
 class ReftekTestCase(unittest.TestCase):

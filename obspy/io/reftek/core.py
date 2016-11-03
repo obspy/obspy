@@ -53,7 +53,30 @@ def _is_reftek130(filename):
     return True
 
 
-def _read_reftek130(filename):
+def _read_reftek130(filename, network="", location="", component_codes=None,
+                    headonly=False, **kwargs):
+    """
+    Read a REFTEK130 file into an ObsPy Stream.
+
+    :type filename: str
+    :param filename: REFTEK130 file to be read.
+    :type network: str
+    :param network: Network code to fill in for all data (network code is not
+        stored in EH/ET/DT packets).
+    :type location: str
+    :param location: Location code to fill in for all data (network code is not
+        stored in EH/ET/DT packets).
+    :type component_codes: list
+    :param component_codes: Iterable of single-character component codes (e.g.
+        ``['Z', 'N', 'E']``) to be appended to two-character stream name parsed
+        from event header packet (e.g. ``'HH'``) for each of the channels in
+        the data (e.g. to make the channel codes in a three channel data file
+        to ``'HHZ'``, ``'HHN'``, ``'HHE'`` in the created stream object).
+    :type headonly: bool
+    :param headonly: Determines whether or not to unpack the data or just
+        read the headers.
+    :rtype: :class:`~obspy.core.stream.Stream`
+    """
     # Reftek 130 data format stores only the last two digits of the year.  We
     # currently assume that 00-49 are years 2000-2049 and 50-99 are years
     # 2050-2099. We deliberately raise an exception if the current year will
@@ -62,7 +85,7 @@ def _read_reftek130(filename):
     # when reading data to be on the safe side.
     if NOW.year > 2050:
         raise NotImplementedError()
-    return Reftek130.from_file(filename).to_stream()
+    return Reftek130.from_file(filename).to_stream(headonly=headonly)
 
 
 class Reftek130(object):
@@ -139,7 +162,12 @@ class Reftek130(object):
             return
 
     def to_stream(self, network="", location="", component_codes=None,
-                  **kwargs):
+                  headonly=False):
+        """
+        :type headonly: bool
+        :param headonly: Determines whether or not to unpack the data or just
+            read the headers.
+        """
         self.check_packet_sequence_and_sort()
         self.check_packet_sequence_contiguous()
         self.drop_leading_non_eh_packets()
@@ -203,21 +231,26 @@ class Reftek130(object):
                 # Writing this directly in C would be about 3 times as fast so
                 # it might be worth it.
                 npts = packets_["number_of_samples"].sum()
-                data = np.empty(npts, dtype=np.int32)
-                pos = 0
-                s = packets_[0]["payload"][40:].ctypes.data
-                if len(packets_) >= 1:
-                    offset = packets_[1]["payload"][40:].ctypes.data - s
+                if headonly:
+                    data = np.array([], dtype=np.int32)
                 else:
-                    offset = 0
-                for p in packets_:
-                    _npts = p["number_of_samples"]
-                    clibmseed.msr_decode_steim1(
-                        s, 960, _npts, data[pos:], _npts, None, 1)
-                    pos += _npts
-                    s += offset
+                    data = np.empty(npts, dtype=np.int32)
+                    pos = 0
+                    s = packets_[0]["payload"][40:].ctypes.data
+                    if len(packets_) >= 1:
+                        offset = packets_[1]["payload"][40:].ctypes.data - s
+                    else:
+                        offset = 0
+                    for p in packets_:
+                        _npts = p["number_of_samples"]
+                        clibmseed.msr_decode_steim1(
+                            s, 960, _npts, data[pos:], _npts, None, 1)
+                        pos += _npts
+                        s += offset
 
                 tr = Trace(data=data, header=header.copy())
+                if headonly:
+                    tr.stats.npts = npts
                 tr.stats.starttime = UTCDateTime(starttime)
                 # if component codes were explicitly provided, use them
                 # together with the stream label
@@ -243,7 +276,8 @@ class Reftek130(object):
                 t_last = packets[-1]['time']
                 npts_last = packets[-1]['number_of_samples']
                 try:
-                    assert npts == len(data)
+                    if not headonly:
+                        assert npts == len(data)
                     assert tr.stats.endtime == UTCDateTime(
                         t_last + (npts_last - 1) * delta)
                     assert tr.stats.endtime == UTCDateTime(
