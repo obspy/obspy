@@ -5,6 +5,7 @@ REFTEK130 read support.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import io
 import os
@@ -110,7 +111,7 @@ class Reftek130(object):
         if np.any(np.diff(self._data['packet_sequence']) - 1):
             msg = ("Detected permuted packet sequence, sorting.")
             warnings.warn(msg)
-            self._data.sort(order="packet_sequence")
+            self._data.sort(order=native_str("packet_sequence"))
 
     def check_packet_sequence_contiguous(self):
         """
@@ -208,8 +209,8 @@ class Reftek130(object):
             # issue for np.float64.
             gaps = np.abs(packets[1:]["time"] - endtimes) > 1e-4
             if np.any(gaps):
-                gap_split_indices = np.nonzero(gaps) + 1
-                contiguous = np.split_array(gap_split_indices)
+                gap_split_indices = np.nonzero(gaps)[0] + 1
+                contiguous = np.array_split(packets, gap_split_indices)
             else:
                 contiguous = [packets]
 
