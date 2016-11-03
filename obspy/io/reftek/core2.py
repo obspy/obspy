@@ -9,6 +9,7 @@ from future.utils import native_str
 
 import calendar
 import codecs
+import ctypes as C
 import datetime
 import io
 import warnings
@@ -16,6 +17,7 @@ import warnings
 import numpy as np
 
 from obspy import Trace, Stream, UTCDateTime
+from obspy.io.mseed.headers import clibmseed
 from obspy.io.mseed.util import _unpack_steim_1
 
 
@@ -263,15 +265,35 @@ class Reftek130(object):
 
             for packets_ in contiguous:
                 starttime = packets_[0]['time']
-                data = []
-                npts = 0
+
+                # Unfortunately the whole data cannot be unpacked with one
+                # call to libmseed as some payloads do not take the full 960
+                # bytes. They are thus padded which would results in padded
+                # pieces directly in a large array and libmseed
+                # (understandably) does not support that.
+                #
+                # Thus we resort to *tada* pointer arithmetics in Python ;-)
+                # This is quite a bit faster then correctly casting to an
+                # integer pointer so its worth it.
+                #
+                # Also avoid a data copy.
+                #
+                # Writing this directly in C would be about 3 times as fast so
+                # it might be worth it.
+                npts = packets_["number_of_samples"].sum()
+                data = np.empty(npts, dtype=np.int32)
+                pos = 0
+                s = packets_[0]["payload"][40:].ctypes.data
+                if len(packets_) >= 1:
+                    offset = packets_[1]["payload"][40:].ctypes.data - s
+                else:
+                    offset = 0
                 for p in packets_:
-                    piece = _unpack_steim_1(
-                        data_string=p['payload'][40:].tobytes(),
-                        npts=p['number_of_samples'], swapflag=1)
-                    data.append(piece)
-                    npts += p['number_of_samples']
-                data = np.hstack(data)
+                    _npts = p["number_of_samples"]
+                    clibmseed.msr_decode_steim1(
+                        s, 960, _npts, data[pos:], _npts, None, 1)
+                    pos += _npts
+                    s += offset
 
                 tr = Trace(data=data, header=header.copy())
                 tr.stats.starttime = UTCDateTime(starttime)

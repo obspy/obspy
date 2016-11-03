@@ -515,9 +515,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
         steim1_file = os.path.join(self.path, 'data',
                                    'BW.BGLD.__.EHE.D.2008.001.first_record')
         # 64 Bytes header.
-        with open(steim1_file, 'rb') as fp:
-            data_string = fp.read()[64:]
-        data = util._unpack_steim_1(data_string, 412, swapflag=self.swap,
+        d = np.fromfile(steim1_file, dtype=np.uint8)[64:]
+        data = util._unpack_steim_1(d, 412, swapflag=self.swap,
                                     verbose=0)
         data_record = _read_mseed(steim1_file)[0].data
         np.testing.assert_array_equal(data, data_record)
@@ -529,9 +528,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         steim2_file = os.path.join(self.path, 'data', 'steim2.mseed')
         # 128 Bytes header.
-        with open(steim2_file, 'rb') as fp:
-            data_string = fp.read()[128:]
-        data = util._unpack_steim_2(data_string, 5980, swapflag=self.swap,
+        d = np.fromfile(steim2_file, dtype=np.uint8)[128:]
+        data = util._unpack_steim_2(d, 5980, swapflag=self.swap,
                                     verbose=0)
         data_record = _read_mseed(steim2_file)[0].data
         np.testing.assert_array_equal(data, data_record)
