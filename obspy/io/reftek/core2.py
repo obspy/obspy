@@ -1,75 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+REFTEK130 read support.
+"""
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
+
 import io
+
 import numpy as np
-
-
-def bcd(_i):
-    return (_i >> 4 & 0xF).astype(np.uint32) * 10 + (_i & 0xF)
-
-
-def bcd_16bit_int(_i):
-    _i = bcd(_i)
-    return _i[::, 0] * 100 + _i[::, 1]
-
-
-def bcd_16bit_hex(_i):
-    return np.array(["{:X}".format(x) for x in
-                    (_i[::, 0] * 256 + _i[::, 1])], dtype="|S4")
-
-
-def bcd_8bit_hex(_i):
-    return np.array(["{:X}".format(x) for x in _i], dtype="|S2")
-
-
-def bcd_time(_i):
-    # Time is a bit wild.
-    t = bcd(_i)
-    julday = t[::, 0] * 10 + t[::, 1] // 10.0
-    # XXX
-    hour = t[::, 1] % 10 * 10 + t[::, 2] // 10.0
-    minute = t[::, 2] % 10 * 10 + t[::, 3] // 10.0
-    second = t[::, 3] % 10 * 10 + t[::, 4] // 10.0
-    microsecond = t[::, 4] % 10 * 100 + t[::, 5] * 1000
-    return julday
-
-
-dtype = [
-    ("packet_type", "|S2"),
-    ("experiment_number", "uint8"),
-    ("year", "uint8"),
-    ("unit_id", "uint8", 2),
-    ("time", "uint8", 6),
-    ("byte_count", "uint8", 2),
-    ("packet_sequence", "uint8", 2),
-    ("payload", "unit8", 1024 - 16)
-]
-
-# Defines the types of header values and how to unpack them.
-HEADER_TYPES = {
-    "bcd": (("uint8", ), bcd),
-    "bcd_16bit_int": (("uint8", 2), bcd_16bit_int),
-    "bcd_16bit_hex": (("uint8", 2), bcd_16bit_hex),
-    "bcd_8bit_hex": (("uint8", 1), bcd_8bit_hex),
-    "bcd_time": (("uint8", 6), bcd_time)
-}
-
-# The fixed header which is the same for all packets.
-EXTENDED_HEADER = [
-    ("packet_type", ("|S2", )),
-    ("experiment_number", "bcd"),
-    ("year", "bcd"),
-    ("unit_id", "bcd_16bit_hex"),
-    ("time", "bcd_time"),
-    ("byte_count", "bcd_16bit_int"),
-    ("packet_sequence", "bcd_16bit_int"),
-    ("event_number", "bcd_16bit_int"),
-    ("data_stream_number", "bcd"),
-    ("channel_number", "bcd"),
-    ("number_of_samples", "bcd_16bit_int"),
-    ("flags", ("uint8",)),
-    ("data_format", "bcd_8bit_hex"),
-    # Temporarily store the payload here.
-    ("payload", ("uint8", 1000)),
-]
 
 
 # # All the other headers as a dictionary of dictionaries.
@@ -108,37 +48,91 @@ EXTENDED_HEADER = [
 # }
 
 
-def _header_to_dtype(h):
-    dtype = []
-    for name, h_type in h:
-        dtype.append((name,) + HEADER_TYPES[h_type][0]
-                     if h_type in HEADER_TYPES else (name,) + h_type)
-    return dtype
+def bcd(_i):
+    return (_i >> 4 & 0xF).astype(np.uint32) * 10 + (_i & 0xF)
 
 
-def _unpack_extended_header(string):
-    data = np.fromstring(string, dtype=_header_to_dtype(EXTENDED_HEADER))
-    results = {}
-    dtype = []
+def bcd_16bit_int(_i):
+    _i = bcd(_i)
+    return _i[::, 0] * 100 + _i[::, 1]
+
+
+def bcd_16bit_hex(_i):
+    return np.array(["{:X}".format(x) for x in
+                    (_i[::, 0] * 256 + _i[::, 1])], dtype="|S4")
+
+
+def bcd_8bit_hex(_i):
+    return np.array(["{:X}".format(x) for x in _i], dtype="|S2")
+
+
+def bcd_time(_i):
+    # Time is a bit wild.
+    t = bcd(_i)
+    julday = t[::, 0] * 10 + t[::, 1] // 10.0
     # XXX
-    for name, h_type in EXTENDED_HEADER:
-        if h_type not in HEADER_TYPES:
-            results[name] = data[name]
+    hour = t[::, 1] % 10 * 10 + t[::, 2] // 10.0
+    minute = t[::, 2] % 10 * 10 + t[::, 3] // 10.0
+    second = t[::, 3] % 10 * 10 + t[::, 4] // 10.0
+    microsecond = t[::, 4] % 10 * 100 + t[::, 5] * 1000
+    return julday
+
+# The extended header which is the same for EH/ET/DT packets.
+# tuples are:
+#  - field name
+#  - dtype during initial reading
+#  - conversion routine (if any)
+#  - dtype after conversion
+PACKET = [
+    ("packet_type", native_str("|S2"), None, native_str("S2")),
+    ("experiment_number", np.uint8, bcd, np.uint32),
+    ("year", np.uint8, bcd, None),
+    ("unit_id", (np.uint8, 2), bcd_16bit_hex, native_str("S4")),
+    ("time", (np.uint8, 6), bcd_time, np.float64),
+    ("byte_count", (np.uint8, 2), bcd_16bit_int, np.uint32),
+    ("packet_sequence", (np.uint8, 2), bcd_16bit_int, np.uint32),
+    ("event_number", (np.uint8, 2), bcd_16bit_int, np.uint32),
+    ("data_stream_number", np.uint8, bcd, np.uint32),
+    ("channel_number", np.uint8, bcd, np.uint32),
+    ("number_of_samples", (np.uint8, 2), bcd_16bit_int, np.uint32),
+    ("flags", np.uint8, None, np.uint8),
+    ("data_format", np.uint8, bcd_8bit_hex, native_str("S2")),
+    # Temporarily store the payload here.
+    ("payload", (np.uint8, 1000), None, (np.uint8, 1000)),
+]
+
+
+packet_initial_unpack_dtype = np.dtype([
+    (native_str(name), dtype_initial)
+    for name, dtype_initial, converter, dtype_final in PACKET])
+
+packet_final_dtype = np.dtype([
+    (native_str(name), dtype_final)
+    for name, dtype_initial, converter, dtype_final in PACKET
+    if dtype_final is not None])
+
+
+def _initial_unpack_packets(bytestring):
+    data = np.fromstring(
+        bytestring, dtype=packet_initial_unpack_dtype)
+    result = np.empty_like(data, dtype=packet_final_dtype)
+
+    for name, dtype_initial, converter, dtype_final in PACKET:
+        if dtype_final is None:
             continue
-        results[name] = HEADER_TYPES[h_type][1](data[name])
-    for name, h_type in EXTENDED_HEADER:
-        if h_type not in HEADER_TYPES:
-            results[name] = data[name]
+        if converter is None:
+            result[name][:] = data[name][:]
             continue
-        results[name] = HEADER_TYPES[h_type][1](data[name])
-    return results
+        result[name][:] = converter(data[name])
+
+    return result
 
 
 class Reftek130(object):
     def __init__(self, filename):
         with io.open(filename, "rb") as fh:
             string = fh.read(1024*3)
-        self._data = _unpack_extended_header(string)
+        self._data = _initial_unpack_packets(string)
 
     def to_stream(self):
         raise NotImplementedError()
