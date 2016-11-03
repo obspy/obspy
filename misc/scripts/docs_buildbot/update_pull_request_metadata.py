@@ -5,18 +5,16 @@ from obspy_github_api import (
     check_docs_build_requested, get_pull_requests, get_commit_time)
 
 
-prs = get_pull_requests(state="open")
-pr_numbers = [x[0] for x in prs]
-print("Checking the following open PRs if a docs build is requested and "
-      "needed: {}".format(str(pr_numbers)))
+print("Checking the open PRs if a docs build is requested and needed..")
 
-for pr in prs:
+for pr in get_pull_requests(state="open"):
     number = pr.number
     fork = pr.head.user.login
     branch = pr.head.ref
     commit = pr.head.sha
 
     if not check_docs_build_requested(number):
+        print("PR #{} does not request a docs build.".format(number))
         continue
 
     time = get_commit_time(commit=commit, fork=fork)

@@ -867,7 +867,7 @@ class Trace(object):
         """
         from obspy.imaging.waveform import WaveformPlotting
         waveform = WaveformPlotting(stream=self, **kwargs)
-        return waveform.plot_waveform()
+        return waveform.plot_waveform(**kwargs)
 
     def spectrogram(self, **kwargs):
         """

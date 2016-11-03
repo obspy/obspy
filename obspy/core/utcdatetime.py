@@ -1133,7 +1133,8 @@ class UTCDateTime(object):
         """
         return self._get_datetime().strftime(format)
 
-    def strptime(self, date_string, format):
+    @staticmethod
+    def strptime(date_string, format):
         """
         Return a UTCDateTime corresponding to date_string, parsed according to
         given format.

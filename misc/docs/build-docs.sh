@@ -88,6 +88,11 @@ git checkout $GITTARGET
 COMMIT=`git rev-parse HEAD`
 git clean -fxd
 
+# create github pull request status
+if [ "$BUILD_PR" = true ] ; then
+    python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='${COMMIT}', status='pending', context='docs-buildbot', description='Docs build started..', target_url='http://docs.obspy.org/pull-requests/pull_request_docs.log')"
+fi
+
 if [ "$GITFORK" != "obspy" ]
 then
     git remote add upstream git://github.com/obspy/obspy.git
@@ -172,9 +177,9 @@ fi
 # create github pull request status
 if [ "$BUILD_PR" = true ] ; then
     if [ "$SUCCESS" = true ] ; then
-        python -c "from obspy_github_api import set_commit_status; set_commit_status(commit=$COMMIT, status='success', context='docs-buildbot', description='Check out Pull Request docs build here:', target_url=\"http://docs.obspy.org/pull-requests/${PR_NUMBER}/\")"
+        python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='$COMMIT', status='success', context='docs-buildbot', description='Check out Pull Request docs build here:', target_url='http://docs.obspy.org/pull-requests/${PR_NUMBER}/')"
     else
-        python -c "from obspy_github_api import set_commit_status; set_commit_status(commit=$COMMIT, status='error', context='docs-buildbot', description='Log for failed Pull Request docs build here:', target_url=\"http://docs.obspy.org/pull-requests/${PR_NUMBER}.log\")"
+        python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='$COMMIT', status='error', context='docs-buildbot', description='Log for failed Pull Request docs build here:', target_url='http://docs.obspy.org/pull-requests/${PR_NUMBER}.log')"
     fi
 fi
 
