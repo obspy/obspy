@@ -240,7 +240,7 @@ class Reftek130(object):
                     data = np.empty(npts, dtype=np.int32)
                     pos = 0
                     s = packets_[0]["payload"][40:].ctypes.data
-                    if len(packets_) >= 1:
+                    if len(packets_) > 1:
                         offset = packets_[1]["payload"][40:].ctypes.data - s
                     else:
                         offset = 0
