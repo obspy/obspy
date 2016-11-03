@@ -276,8 +276,8 @@ class Reftek130(object):
                     tr.stats.channel = (
                         eh.stream_name.strip() + str(channel_number))
                 # check if endtime of trace is consistent
-                t_last = packets[-1]['time']
-                npts_last = packets[-1]['number_of_samples']
+                t_last = packets_[-1]['time']
+                npts_last = packets_[-1]['number_of_samples']
                 try:
                     if not headonly:
                         assert npts == len(data)
