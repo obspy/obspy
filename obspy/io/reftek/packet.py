@@ -97,7 +97,8 @@ class EHPacket(object):
 
     def __init__(self, data):
         self._data = data
-        payload = self._data["payload"].tobytes()
+        # ndarray.tobytes() only exists since numpy 1.9.0, so use bytes(...)
+        payload = bytes(self._data["payload"])
         for name, (start, length, converter) in EH_PAYLOAD.items():
             data = payload[start:start+length]
             if converter is not None:
