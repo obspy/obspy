@@ -181,8 +181,8 @@ class Reftek130(object):
         Checks if first packet is an event header (EH) packet. Drop any other
         packets before the first EH packet.
         """
-        if self._data['packet_type'][0] != "EH":
-            is_eh = self._data['packet_type'] == "EH"
+        if self._data['packet_type'][0] != b"EH":
+            is_eh = self._data['packet_type'] == b"EH"
             if not np.any(is_eh):
                 msg = ("No event header (EH) packets in packet sequence.")
                 raise NotImplementedError(msg)
@@ -198,13 +198,13 @@ class Reftek130(object):
         Checks if last packet is an event trailer (ET) packet. Drop any other
         packets after the first ET packet. Warn if no ET packet is present.
         """
-        is_et = self._data['packet_type'] == "ET"
+        is_et = self._data['packet_type'] == b"ET"
         if not np.any(is_et):
             msg = ("No event trailer (ET) packets in packet sequence. "
                    "File might be truncated.")
             warnings.warn(msg)
             return
-        if self._data['packet_type'][-1] != "ET":
+        if self._data['packet_type'][-1] != b"ET":
             first_et = np.nonzero(is_et)[0][0]
             msg = ("Last packet in sequence is not an event trailer (ET) "
                    "packet. Dropped {:d} packet(s) at the end after "
@@ -222,7 +222,7 @@ class Reftek130(object):
         self.drop_trailing_packets_after_et_packet()
         eh = EHPacket(self._data[0])
         # only "C0" encoding supported right now
-        if eh.data_format != "C0":
+        if eh.data_format != b"C0":
             msg = ("Reftek data encoding '{}' not implemented yet. Please "
                    "open an issue on GitHub and provide a small (< 50kb) "
                    "test file.").format(eh.type)
@@ -238,7 +238,7 @@ class Reftek130(object):
             inds = self._data['channel_number'] == channel_number
             # channel number of EH/ET packets also equals zero (one of the
             # three unused bytes in the extended header of EH/ET packets)
-            inds &= self._data['packet_type'] == "DT"
+            inds &= self._data['packet_type'] == b"DT"
             packets = self._data[inds]
 
             # split into contiguous blocks, i.e. find gaps. packet sequence was
@@ -388,7 +388,7 @@ EH_PAYLOAD = {
 
 
 class EHPacket(object):
-    __slots__ = ["_data"] + EH_PAYLOAD.keys()
+    __slots__ = ["_data"] + list(EH_PAYLOAD.keys())
     _headers = ('experiment_number', 'unit_id', 'byte_count',
                 'packet_sequence', 'time', 'event_number',
                 'data_stream_number', 'data_format', 'flags')
