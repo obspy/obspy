@@ -5,6 +5,8 @@ branches:
     - master
     - /^maintenance_[0-9]+\.[0-9]+\.x$/
 
+sudo: true
+
 matrix:
   include:
     # do one build run with our minimum dependencies
@@ -20,13 +22,12 @@ matrix:
       env: PYTHON_VERSION=3.4
     - os: linux
       env: PYTHON_VERSION=3.5
-
+    - os: linux
+      env: PYTHON_VERSION=3.5 ARCHITECTURE_32BIT="True"
     - os: osx
       env: PYTHON_VERSION=2.7
     - os: osx
       env: PYTHON_VERSION=3.5
-
-sudo: false
 
 install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
@@ -34,10 +35,19 @@ install:
     else
       export OS="Linux";
     fi
-  - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda-latest-${OS}-x86_64.sh -O miniconda.sh;
+  # OPT used by setuptools patches contained in newer numpy versions
+  - |
+      if [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
+      export ARCH="";
+      export OPT="-m32";
+      sudo dpkg --add-architecture i386;
     else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-x86_64.sh -O miniconda.sh;
+      export ARCH="_64";
+    fi
+  - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
