@@ -523,7 +523,7 @@ clibmseed.ms_detect.argtypes = [
 clibmseed.ms_detect.restype = C.c_int
 
 clibmseed.msr_decode_steim2.argtypes = [
-    C.c_longlong,
+    C.c_void_p,
     C.c_int,
     C.c_int,
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
@@ -532,7 +532,7 @@ clibmseed.msr_decode_steim2.argtypes = [
 clibmseed.msr_decode_steim2.restype = C.c_int
 
 clibmseed.msr_decode_steim1.argtypes = [
-    C.c_longlong,
+    C.c_void_p,
     C.c_int,
     C.c_int,
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
