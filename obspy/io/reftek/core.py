@@ -170,8 +170,9 @@ class Reftek130(object):
         Checks if there are packets of a type that is currently not implemented
         and drop them showing a warning message.
         """
-        is_implemented = np.in1d(self._data['packet_type'],
-                                 PACKET_TYPES_IMPLEMENTED)
+        is_implemented = np.in1d(
+            self._data['packet_type'],
+            [x.encode() for x in PACKET_TYPES_IMPLEMENTED])
         if not np.all(is_implemented):
             not_implemented = np.invert(is_implemented)
             count_not_implemented = not_implemented.sum()
@@ -179,8 +180,10 @@ class Reftek130(object):
                 self._data['packet_type'][not_implemented])
             msg = ("Encountered some packets of types that are not "
                    "implemented yet (types: '{}'). Dropped {:d} packets "
-                   "overall.").format("', '".join(types_not_implemented),
-                                      count_not_implemented)
+                   "overall.")
+            msg = msg.format(
+                "', '".join(str(x) for x in types_not_implemented.tolist()),
+                count_not_implemented)
             warnings.warn(msg)
             return
         self._data = self._data[is_implemented]
