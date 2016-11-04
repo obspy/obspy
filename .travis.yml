@@ -38,12 +38,12 @@ install:
   # OPT used by setuptools patches contained in newer numpy versions
   - |
       if [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
-      export ARCH="";
-      export OPT="-m32";
-      sudo dpkg --add-architecture i386;
-    else
-      export ARCH="_64";
-    fi
+        export ARCH=""
+        export OPT="-m32"
+        sudo dpkg --add-architecture i386
+      else
+        export ARCH="_64"
+      fi
   - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
     else
