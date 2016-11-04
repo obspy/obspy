@@ -6,6 +6,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import inspect
 import os
+import re
 import unittest
 import warnings
 
@@ -192,6 +193,47 @@ class ReftekTestCase(unittest.TestCase):
             fh.seek(0)
             # try to read file, finding a non-contiguous packet sequence
             self.assertRaises(NotImplementedError, _read_reftek130, fh.name)
+
+    def test_drop_not_implemented_packets(self):
+        """
+        Test error message when some not implemented packet types are dropped
+        """
+        with NamedTemporaryFile() as fh:
+            with open(self.reftek_file, 'rb') as fh2:
+                # write packages to the file and write the last three packets
+                # with a different packet type
+                # (packets are 1024 byte each)
+                tmp = fh2.read()[:-(1024*3)]
+                fh2.seek(-(1024*3), 2)
+                tmp2 = fh2.read(1024)
+                tmp3 = fh2.read(1024)
+                tmp4 = fh2.read(1024)
+            # write last three packages with some different packet types
+            fh.write(tmp)
+            fh.write(b"AA")
+            fh.write(tmp2[2:])
+            fh.write(b"AA")
+            fh.write(tmp3[2:])
+            fh.write(b"BB")
+            fh.write(tmp4[2:])
+            fh.seek(0)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                _read_reftek130(
+                    fh.name, network="XX", location="01",
+                    component_codes=["1", "2", "3"])
+        self.assertEqual(len(w), 2)
+        self.assertTrue(
+            re.match(
+                r"Encountered some packets of types that are not implemented "
+                r"yet \(types: \[b?'AA', b?'BB'\]\). Dropped 3 packets "
+                r"overall.",
+                str(w[0].message)))
+        # this message we get because ET packet at end is now missing
+        self.assertEqual(
+            str(w[1].message),
+            'No event trailer (ET) packets in packet sequence. File might be '
+            'truncated.')
 
     def test_missing_event_trailer_packet(self):
         """

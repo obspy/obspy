@@ -179,11 +179,10 @@ class Reftek130(object):
             types_not_implemented = np.unique(
                 self._data['packet_type'][not_implemented])
             msg = ("Encountered some packets of types that are not "
-                   "implemented yet (types: '{}'). Dropped {:d} packets "
+                   "implemented yet (types: {}). Dropped {:d} packets "
                    "overall.")
-            msg = msg.format(
-                "', '".join(str(x) for x in types_not_implemented.tolist()),
-                count_not_implemented)
+            msg = msg.format(types_not_implemented.tolist(),
+                             count_not_implemented)
             warnings.warn(msg)
             return
         self._data = self._data[is_implemented]
