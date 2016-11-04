@@ -43,10 +43,9 @@ install:
         export OPT="-m32"
         ls /etc/dpkg/dpkg.cfg.d/
         sudo sh -c "echo 'foreign-architecture i386' > /etc/dpkg/dpkg.cfg.d/multiarch"
-        sudo apt-get install ia32-libs
-        sudo apt-get install libc6-dev:i386
         sudo apt-get install libstdc++6:i386
         sudo apt-get install gcc-multilib
+        gcc --version
       else
         export ARCH="_64"
       fi
