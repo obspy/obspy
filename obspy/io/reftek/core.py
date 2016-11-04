@@ -16,7 +16,8 @@ import numpy as np
 from obspy import Trace, Stream, UTCDateTime
 from obspy.io.mseed.headers import clibmseed
 
-from .packet import EHPacket, _initial_unpack_packets, PACKET_TYPES
+from .packet import (EHPacket, _initial_unpack_packets, PACKET_TYPES,
+                     PACKET_TYPES_IMPLEMENTED)
 
 
 NOW = UTCDateTime()
@@ -164,6 +165,26 @@ class Reftek130(object):
             self._data = self._data[:first_et+1]
             return
 
+    def drop_not_implemented_packet_types(self):
+        """
+        Checks if there are packets of a type that is currently not implemented
+        and drop them showing a warning message.
+        """
+        is_implemented = np.in1d(self._data['packet_type'],
+                                 PACKET_TYPES_IMPLEMENTED)
+        if not np.all(is_implemented):
+            not_implemented = np.invert(is_implemented)
+            count_not_implemented = not_implemented.sum()
+            types_not_implemented = np.unique(
+                self._data['packet_type'][not_implemented])
+            msg = ("Encountered some packets of types that are not "
+                   "implemented yet (types: '{}'). Dropped {:d} packets "
+                   "overall.").format("', '".join(types_not_implemented),
+                                      count_not_implemented)
+            warnings.warn(msg)
+            return
+        self._data = self._data[is_implemented]
+
     def to_stream(self, network="", location="", component_codes=None,
                   headonly=False):
         """
@@ -173,6 +194,7 @@ class Reftek130(object):
         """
         self.check_packet_sequence_and_sort()
         self.check_packet_sequence_contiguous()
+        self.drop_not_implemented_packet_types()
         self.drop_leading_non_eh_packets()
         self.drop_trailing_packets_after_et_packet()
         eh = EHPacket(self._data[0])
