@@ -28,7 +28,7 @@ def bcd_hex(_i):
 
 
 def bcd_8bit_hex(_i):
-    return np.array(["{:X}".format(x) for x in _i], dtype="|S2")
+    return np.array(["{:X}".format(int(x)) for x in _i], dtype="|S2")
 
 
 def bcd_julian_day_string_to_seconds_of_year(_i):
