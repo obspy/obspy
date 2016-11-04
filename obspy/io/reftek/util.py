@@ -22,9 +22,9 @@ def bcd_16bit_int(_i):
 
 
 def bcd_hex(_i):
-    result = [codecs.encode(chars, "hex_codec").decode("ASCII").upper()
-              for chars in _i]
-    return np.array(result)
+    m = _i.shape[1]
+    _bcd = codecs.encode(_i.ravel(), "hex_codec").decode("ASCII").upper()
+    return np.fromstring(_bcd, dtype="|S%d" % (m * 2))
 
 
 def bcd_8bit_hex(_i):
