@@ -25,6 +25,12 @@ matrix:
     - os: linux
       env: PYTHON_VERSION=3.5 ARCHITECTURE_32BIT="True"
       sudo: true
+      addons:
+        apt:
+          packages:
+            # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
+            - libstdc++6:i386
+            - gcc-multilib
     #- os: osx
     #  env: PYTHON_VERSION=2.7
     #- os: osx
@@ -36,15 +42,13 @@ install:
     else
       export OS="Linux";
     fi
-  # OPT used by setuptools patches contained in newer numpy versions
   - |
       if [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
         export ARCH=""
+        # OPT used by setuptools patches contained in newer numpy versions
         export OPT="-m32"
         ls /etc/dpkg/dpkg.cfg.d/
         sudo sh -c "echo 'foreign-architecture i386' > /etc/dpkg/dpkg.cfg.d/multiarch"
-        sudo apt-get install libstdc++6:i386
-        sudo apt-get install gcc-multilib
         gcc --version
       else
         export ARCH="_64"
