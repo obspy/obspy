@@ -24,7 +24,6 @@ matrix:
     #  env: PYTHON_VERSION=3.5
     - os: linux
       env: PYTHON_VERSION=3.5 ARCHITECTURE_32BIT="True"
-      sudo: true
       addons:
         apt:
           packages:
@@ -47,9 +46,13 @@ install:
         export ARCH=""
         # OPT used by setuptools patches contained in newer numpy versions
         export OPT="-m32"
+        # workaround for sudo dpkg --add-architecture i386
+        # be sure multiarch is the only file in this directory
         ls /etc/dpkg/dpkg.cfg.d/
-        sudo sh -c "echo 'foreign-architecture i386' > /etc/dpkg/dpkg.cfg.d/multiarch"
-        gcc --version
+        # multiarch must contain foreign-architecture i386. If not it will
+        # error later and you need to do 
+        #sudo sh -c "echo 'foreign-architecture i386' > /etc/dpkg/dpkg.cfg.d/multiarch"
+        cat /etc/dpkg/dpkg.cfg.d/multiarch
       else
         export ARCH="_64"
       fi
