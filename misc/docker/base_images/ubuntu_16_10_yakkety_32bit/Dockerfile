@@ -49,6 +49,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-pip \
     python3-requests \
     python3-scipy \
+    python3-setuptools \
     python3-sqlalchemy \
     python3-tornado \
     python3-wheel \
