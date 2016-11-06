@@ -322,45 +322,39 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     if keep_sac_header and oldsac:
         header.update(oldsac)
 
-        # Figure out what stuff is in the primary
-        # 1. Is there a valid reftime? UTCDateTime or 0.
         try:
             reftime = get_sac_reftime(header)
         except SacHeaderTimeError:
-            reftime = 0
-        # 2. Are there relative times?  Put 'em in a list.
-        relhdrnames = ['t0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8',
-                       't9', 'b', 'e', 'a', 'o', 'f']
-        relhdrs = [hdr for hdr in relhdrnames
+            reftime = None
+
+        relhdrs = [hdr for hdr in HD.RELHDRS
                    if header.get(hdr) not in (None, HD.SNULL)]
 
         if reftime:
-            # oldsac probably came from an actual SAC file
-            # Set "b" and "e" relative to the old SAC 'b' and reftime.
-            # NOTE: if "b" or "e" were null, they will become set here.
+            # Set current 'b' relative to the old reftime.
             b = stats['starttime'] - reftime
-            header['b'] = b
-            header['e'] = b + (stats['endtime'] - stats['starttime'])
         else:
-            # Invalid reference time.
-            if relhdrs:
-                # Relative times cannot be absolutely referenced.
-                if 'b' in relhdrs:
-                    # Use the 'b' and add an 'e', but don't add a reftime.
-                    header['e'] = header['b'] + (stats['endtime'] -
-                                                 stats['starttime'])
+            # Invalid reference time. Relative times like 'b' cannot be
+            # unambiguously referenced to stats.starttime.
+            if 'b' in relhdrs:
+                # Assume no trimming/expanding of the Trace occurred relative
+                # to the old 'b', and just use the old 'b' value.
+                b = header['b']
             else:
-                # Assume it's an "ib" type file.
-                # Set the stats.starttime as the reftime, set 'b' and 'e'.
-                # ObsPy issue 1204
-                reftime = stats['starttime']
-                nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
-                header.update(nztimes)
-                header['b'] = microsecond * 1e-6
-                header['e'] = header['b'] +\
-                    (stats['npts'] - 1) * stats['delta']
+                # Assume it's an iztype=ib (9) type file. Also set iztype?
+                b = 0
 
-        # merge some values from stats if they're missing in the SAC header
+            # Set the stats.starttime as the reftime and set 'b' and 'e'.
+            # ObsPy issue 1204
+            reftime = stats['starttime'] - b
+            nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
+            header.update(nztimes)
+            b += (microsecond * 1e-6)
+
+        header['b'] = b
+        header['e'] = b + (stats['endtime'] - stats['starttime'])
+
+        # Merge some values from stats if they're missing in the SAC header
         # ObsPy issues 1204, 1457
         # XXX: If Stats values are empty/"" and SAC header values are real,
         #   this will replace the real SAC values with SAC null values.
