@@ -56,7 +56,7 @@ def _is_reftek130(filename):
 
 
 def _read_reftek130(filename, network="", location="", component_codes=None,
-                    headonly=False, **kwargs):
+                    headonly=False, verbose=False, **kwargs):
     """
     Read a REFTEK130 file into an ObsPy Stream.
 
@@ -89,7 +89,7 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
         raise NotImplementedError()
     return Reftek130.from_file(filename).to_stream(
         network=network, location=location, component_codes=component_codes,
-        headonly=headonly)
+        headonly=headonly, verbose=verbose)
 
 
 class Reftek130(object):
@@ -209,12 +209,14 @@ class Reftek130(object):
         self._data = self._data[is_implemented]
 
     def to_stream(self, network="", location="", component_codes=None,
-                  headonly=False):
+                  headonly=False, verbose=False):
         """
         :type headonly: bool
         :param headonly: Determines whether or not to unpack the data or just
             read the headers.
         """
+        if verbose:
+            print(self)
         self.check_packet_sequence_and_sort()
         self.check_packet_sequence_contiguous()
         self.drop_not_implemented_packet_types()
