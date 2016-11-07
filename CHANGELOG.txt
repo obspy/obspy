@@ -1,4 +1,4 @@
-1.0.3:
+1.0.3: (doi: 10.5281/zenodo.165134)
  - obspy.core:
    * properly pass through kwargs specified for Trace.plot() down to the
      low-level plotting routines (e.g. events were not shown properly in
