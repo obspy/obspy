@@ -16,8 +16,8 @@ import numpy as np
 from obspy import Trace, Stream, UTCDateTime
 from obspy.io.mseed.headers import clibmseed
 
-from .packet import (EHPacket, _initial_unpack_packets, PACKET_TYPES,
-                     PACKET_TYPES_IMPLEMENTED)
+from .packet import (Packet, EHPacket, _initial_unpack_packets, PACKET_TYPES,
+                     PACKET_TYPES_IMPLEMENTED, PACKET_FINAL_DTYPE)
 
 
 NOW = UTCDateTime()
@@ -94,7 +94,29 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
 
 class Reftek130(object):
     def __init__(self):
-        pass
+        self._data = np.array([], dtype=PACKET_FINAL_DTYPE)
+
+    def __str__(self, compact=True):
+        if compact:
+            info = [
+                "Reftek130 ({:d} packets)".format(len(self._data)),
+                "Packet Sequence  Byte Count  Data Fmt  Sampling Rate      "
+                "Time",
+                "  | Packet Type   |  Event #  | Station | Channel #         "
+                "|",
+                "  |   |  Unit ID  |    | Data Stream #  |   |  # of samples "
+                "|",
+                "  |   |   |  Exper.#   |   |  |  |      |   |    |          "
+                "|"]
+            for data in self._data:
+                info.append(Packet.from_data(data).__str__(compact=True))
+            info.append("(detailed packet information with: "
+                        "'print(Reftek130.__str__(compact=False))')")
+        else:
+            info = ["Reftek130 ({:d} packets)".format(len(self._data))]
+            for data in self._data:
+                info.append(str(Packet.from_data(data)))
+        return "\n".join(info)
 
     @staticmethod
     def from_file(filename):

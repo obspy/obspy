@@ -14,7 +14,7 @@ import numpy as np
 
 import obspy
 from obspy.core.util import NamedTemporaryFile
-from obspy.io.reftek.core import _read_reftek130, _is_reftek130
+from obspy.io.reftek.core import _read_reftek130, _is_reftek130, Reftek130
 
 
 class ReftekTestCase(unittest.TestCase):
@@ -290,6 +290,80 @@ class ReftekTestCase(unittest.TestCase):
             'truncated.')
         # data should be read OK aside from the warnings
         self._assert_reftek130_test_stream(st_reftek)
+
+    def test_string_representations(self):
+        """
+        Test string representations of Reftek object and Packets
+        """
+        expected = [
+            "Reftek130 (29 packets)",
+            "Packet Sequence  Byte Count  Data Fmt  Sampling Rate      Time",
+            "  | Packet Type   |  Event #  | Station | Channel #         |",
+            "  |   |  Unit ID  |    | Data Stream #  |   |  # of samples |",
+            "  |   |   |  Exper.#   |   |  |  |      |   |    |          |",
+            "0000 EH AE4C  0  416  427  0 C0 KW1    200         "
+            "2015-10-09T22:50:51.000000Z",
+            "0001 DT AE4C  0 1024  427  0 C0             0  549 "
+            "2015-10-09T22:50:51.000000Z",
+            "0002 DT AE4C  0 1024  427  0 C0             1  447 "
+            "2015-10-09T22:50:51.000000Z",
+            "0003 DT AE4C  0 1024  427  0 C0             2  805 "
+            "2015-10-09T22:50:51.000000Z",
+            "0004 DT AE4C  0 1024  427  0 C0             0  876 "
+            "2015-10-09T22:50:53.745000Z",
+            "0005 DT AE4C  0 1024  427  0 C0             1  482 "
+            "2015-10-09T22:50:53.235000Z",
+            "0006 DT AE4C  0 1024  427  0 C0             1  618 "
+            "2015-10-09T22:50:55.645000Z",
+            "0007 DT AE4C  0 1024  427  0 C0             2  872 "
+            "2015-10-09T22:50:55.025000Z",
+            "0008 DT AE4C  0 1024  427  0 C0             0  892 "
+            "2015-10-09T22:50:58.125000Z",
+            "0009 DT AE4C  0 1024  427  0 C0             1  770 "
+            "2015-10-09T22:50:58.735000Z",
+            "0010 DT AE4C  0 1024  427  0 C0             2  884 "
+            "2015-10-09T22:50:59.385000Z",
+            "0011 DT AE4C  0 1024  427  0 C0             0  848 "
+            "2015-10-09T22:51:02.585000Z",
+            "0012 DT AE4C  0 1024  427  0 C0             1  790 "
+            "2015-10-09T22:51:02.585000Z",
+            "0013 DT AE4C  0 1024  427  0 C0             2  844 "
+            "2015-10-09T22:51:03.805000Z",
+            "0014 DT AE4C  0 1024  427  0 C0             0  892 "
+            "2015-10-09T22:51:06.215000Z",
+            "0015 DT AE4C  0 1024  427  0 C0             1  768 "
+            "2015-10-09T22:51:05.925000Z",
+            "0016 DT AE4C  0 1024  427  0 C0             2  884 "
+            "2015-10-09T22:51:08.415000Z",
+            "0017 DT AE4C  0 1024  427  0 C0             1  778 "
+            "2015-10-09T22:51:10.765000Z",
+            "0018 DT AE4C  0 1024  427  0 C0             0  892 "
+            "2015-10-09T22:51:11.675000Z",
+            "0019 DT AE4C  0 1024  427  0 C0             2  892 "
+            "2015-10-09T22:51:12.835000Z",
+            "0020 DT AE4C  0 1024  427  0 C0             1  736 "
+            "2015-10-09T22:51:14.655000Z",
+            "0021 DT AE4C  0 1024  427  0 C0             0  892 "
+            "2015-10-09T22:51:16.135000Z",
+            "0022 DT AE4C  0 1024  427  0 C0             2  860 "
+            "2015-10-09T22:51:17.295000Z",
+            "0023 DT AE4C  0 1024  427  0 C0             1  738 "
+            "2015-10-09T22:51:18.335000Z",
+            "0024 DT AE4C  0 1024  427  0 C0             0  892 "
+            "2015-10-09T22:51:20.595000Z",
+            "0025 DT AE4C  0 1024  427  0 C0             1  673 "
+            "2015-10-09T22:51:22.025000Z",
+            "0026 DT AE4C  0 1024  427  0 C0             2  759 "
+            "2015-10-09T22:51:21.595000Z",
+            "0027 DT AE4C  0 1024  427  0 C0             0   67 "
+            "2015-10-09T22:51:25.055000Z",
+            "0028 ET AE4C  0  416  427  0 C0 KW1    200         "
+            "2015-10-09T22:50:51.000000Z",
+            "(detailed packet information with: "
+            "'print(Reftek130.__str__(compact=False))')"]
+        with warnings.catch_warnings(record=True):
+            rt130 = Reftek130.from_file(self.reftek_file)
+        self.assertEqual(expected, str(rt130).splitlines())
 
 
 def suite():

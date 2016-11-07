@@ -89,21 +89,22 @@ EH_PAYLOAD = {
     }
 
 
-class EHPacket(object):
-    __slots__ = ["_data"] + list(EH_PAYLOAD.keys())
+class Packet(object):
     _headers = ('experiment_number', 'unit_id', 'byte_count',
-                'packet_sequence', 'time', 'event_number',
-                'data_stream_number', 'data_format', 'flags')
+                'packet_sequence', 'time')
+
+    @staticmethod
+    def from_data(data):
+        packet_type = data['packet_type'].decode("ASCII", "ignore")
+        if packet_type in ("EH", "ET"):
+            return EHPacket(data)
+        elif packet_type == "DT":
+            return DTPacket(data)
+        else:
+            raise NotImplementedError()
 
     def __init__(self, data):
-        self._data = data
-        # ndarray.tobytes() only exists since numpy 1.9.0, so use bytes(...)
-        payload = bytes(self._data["payload"])
-        for name, (start, length, converter) in EH_PAYLOAD.items():
-            data = payload[start:start+length]
-            if converter is not None:
-                data = converter(data)
-            setattr(self, name, data)
+        raise NotImplementedError()
 
     @property
     def type(self):
@@ -121,11 +122,73 @@ class EHPacket(object):
     def time(self):
         return UTCDateTime(self._data['time'].item())
 
+
+class EHPacket(Packet):
+    __slots__ = ["_data"] + list(EH_PAYLOAD.keys())
+    _headers = ('packet_sequence', 'experiment_number', 'unit_id',
+                'byte_count', 'time', 'event_number', 'data_stream_number',
+                'data_format', 'flags')
+
+    def __init__(self, data):
+        self._data = data
+        # ndarray.tobytes() only exists since numpy 1.9.0, so use bytes(...)
+        payload = bytes(self._data["payload"])
+        for name, (start, length, converter) in EH_PAYLOAD.items():
+            data = payload[start:start+length]
+            if converter is not None:
+                data = converter(data)
+            setattr(self, name, data)
+
     def _to_dict(self):
         """
         Convert to dictionary structure.
         """
         return {key: getattr(self, key) for key in EH_PAYLOAD.keys()}
+
+    def __str__(self, compact=False):
+        if compact:
+            sta = (self.station_name.strip() +
+                   self.station_name_extension.strip())
+            info = ("{:04d} {:2s} {:4s} {:2d} {:4d} {:4d} {:2d} {:2s} "
+                    "{:5s} {:4d}         {!s}").format(
+                        self.packet_sequence, self.type.decode(),
+                        self.unit_id.decode(), self.experiment_number,
+                        self.byte_count, self.event_number,
+                        self.data_stream_number, self.data_format.decode(),
+                        sta, self.sampling_rate, self.time)
+        else:
+            info = ["{}: {}".format(key, getattr(self, key))
+                    for key in self._headers]
+            info.append("-" * 20)
+            info += ["{}: {}".format(key, getattr(self, key))
+                     for key in sorted(EH_PAYLOAD.keys())]
+            info = "{} Packet\n\t".format(self.type) + "\n\t".join(info)
+        return info
+
+
+class DTPacket(Packet):
+    __slots__ = ["_data"]
+    _headers = ('packet_sequence', 'experiment_number', 'unit_id',
+                'byte_count', 'time', 'event_number', 'data_stream_number',
+                'channel_number', 'number_of_samples', 'data_format', 'flags')
+
+    def __init__(self, data):
+        self._data = data
+
+    def __str__(self, compact=False):
+        if compact:
+            info = ("{:04d} {:2s} {:4s} {:2d} {:4d} {:4d} {:2d} {:2s} "
+                    "           {:2d} {:4d} {!s}").format(
+                        self.packet_sequence, self.type.decode(),
+                        self.unit_id.decode(), self.experiment_number,
+                        self.byte_count, self.event_number,
+                        self.data_stream_number, self.data_format.decode(),
+                        self.channel_number, self.number_of_samples, self.time)
+        else:
+            info = ["{}: {}".format(key, getattr(self, key))
+                    for key in self._headers]
+            info = "{} Packet\n\t".format(self.type) + "\n\t".join(info)
+        return info
 
 
 PACKET_INITIAL_UNPACK_DTYPE = np.dtype([
