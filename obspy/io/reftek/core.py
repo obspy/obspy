@@ -133,7 +133,7 @@ class Reftek130(object):
         are properly enclosed by the appropriate event header/trailer (EH/ET)
         packets.
         """
-        if np.any(np.diff(self._data['packet_sequence']) - 1):
+        if np.any(np.diff(self._data['packet_sequence']) - 1 < 0):
             msg = ("Detected permuted packet sequence, sorting.")
             warnings.warn(msg)
             self._data.sort(order=native_str("packet_sequence"))
