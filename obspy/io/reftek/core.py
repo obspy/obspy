@@ -327,10 +327,12 @@ class Reftek130(object):
                 try:
                     if not headonly:
                         assert npts == len(data)
-                    assert tr.stats.endtime == UTCDateTime(
-                        t_last + (npts_last - 1) * delta)
-                    assert tr.stats.endtime == UTCDateTime(
-                        tr.stats.starttime + (npts - 1) * delta)
+                    if npts_last:
+                        assert tr.stats.endtime == UTCDateTime(
+                            t_last + (npts_last - 1) * delta)
+                    if npts:
+                        assert tr.stats.endtime == UTCDateTime(
+                            tr.stats.starttime + (npts - 1) * delta)
                 except AssertionError:
                     msg = ("Reftek file has a trace with an inconsistent "
                            "endtime or number of samples. Please open an "
