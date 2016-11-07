@@ -127,7 +127,7 @@ list_not_contains() {
 # Function creating an image if it does not exist.
 create_image () {
     image_name=$1;
-    has_image=$($DOCKER images | grep ${DOCKER_REPOSITORY} | grep $image_name)
+    has_image=$($DOCKER images ${DOCKER_REPOSITORY} --format '{{.Tag}}' | grep $image_name)
     if [ "$has_image" ]; then
         printf "\e[101m\e[30m  >>> Image '$image_name' already exists.\e[0m\n"
     else
