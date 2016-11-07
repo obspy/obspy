@@ -63,6 +63,7 @@ master: (doi: 10.5281/zenodo.165135)
  - obspy.scripts:
    * obspy-scan command line script now also plots and prints overlaps
      alongside gaps (see #1366)
+   * obspy-plot now has option to disable min/max plot (see #1583)
  - obspy.signal:
    * New obspy.signal.quality_control module to compute quality metrics from
      MiniSEED files. (see #1141)
