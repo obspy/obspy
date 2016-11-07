@@ -88,6 +88,7 @@ install:
         SCIPY_VERSION=0.16.0
         MPL_VERSION=1.4.3
         BASEMAP="basemap=1.0.7"
+        # no cartopy for py33 in conda-forge channel
         # anaconda doesn't provide pyproj for Python 3.3 anymore, looks like
         PYPROJ=""
       elif [[ "${PYTHON_VERSION:0:1}" == '3' ]]; then
@@ -123,6 +124,8 @@ install:
         requests
         jsonschema
   - source activate test-environment
+  - conda config --add channels conda-forge
+  - conda install --no-update-dependencies cartopy || true
   # install packages not available via conda
   - pip install codecov
   - pip install geographiclib
