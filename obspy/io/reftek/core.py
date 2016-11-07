@@ -148,44 +148,6 @@ class Reftek130(object):
             msg = ("Detected a non-contiguous packet sequence!")
             warnings.warn(msg)
 
-    def drop_leading_non_eh_packets(self):
-        """
-        Checks if first packet is an event header (EH) packet. Drop any other
-        packets before the first EH packet.
-        """
-        if self._data['packet_type'][0] != b"EH":
-            is_eh = self._data['packet_type'] == b"EH"
-            if not np.any(is_eh):
-                msg = ("No event header (EH) packets in packet sequence.")
-                raise NotImplementedError(msg)
-            first_eh = np.nonzero(is_eh)[0][0]
-            msg = ("First packet in sequence is not an event header (EH) "
-                   "packet. Dropped {:d} packet(s) at the start until first "
-                   "EH packet in sequence.").format(first_eh)
-            warnings.warn(msg)
-            self._data = self._data[first_eh:]
-
-    def drop_trailing_packets_after_et_packet(self):
-        """
-        Checks if last packet is an event trailer (ET) packet. Drop any other
-        packets after the first ET packet. Warn if no ET packet is present.
-        """
-        is_et = self._data['packet_type'] == b"ET"
-        if not np.any(is_et):
-            msg = ("No event trailer (ET) packets in packet sequence. "
-                   "File might be truncated.")
-            warnings.warn(msg)
-            return
-        if self._data['packet_type'][-1] != b"ET":
-            first_et = np.nonzero(is_et)[0][0]
-            msg = ("Last packet in sequence is not an event trailer (ET) "
-                   "packet. Dropped {:d} packet(s) at the end after "
-                   "encountering the first ET packet in sequence.").format(
-                        len(self._data) - first_et + 1)
-            warnings.warn(msg)
-            self._data = self._data[:first_et+1]
-            return
-
     def drop_not_implemented_packet_types(self):
         """
         Checks if there are packets of a type that is currently not implemented
@@ -220,127 +182,156 @@ class Reftek130(object):
         self.check_packet_sequence_and_sort()
         self.check_packet_sequence_contiguous()
         self.drop_not_implemented_packet_types()
-        self.drop_leading_non_eh_packets()
-        self.drop_trailing_packets_after_et_packet()
-        eh = EHPacket(self._data[0])
-        # only "C0" encoding supported right now
-        if eh.data_format != b"C0":
-            msg = ("Reftek data encoding '{}' not implemented yet. Please "
-                   "open an issue on GitHub and provide a small (< 50kb) "
-                   "test file.").format(eh.type)
-            raise NotImplementedError(msg)
-        header = {
-            "network": network,
-            "station": (eh.station_name + eh.station_name_extension).strip(),
-            "location": location, "sampling_rate": eh.sampling_rate,
-            "reftek130": eh._to_dict()}
-        delta = 1.0 / eh.sampling_rate
-        st = Stream()
-        for channel_number in np.unique(self._data['channel_number']):
-            inds = self._data['channel_number'] == channel_number
-            # channel number of EH/ET packets also equals zero (one of the
-            # three unused bytes in the extended header of EH/ET packets)
-            inds &= self._data['packet_type'] == b"DT"
-            packets = self._data[inds]
-
-            # split into contiguous blocks, i.e. find gaps. packet sequence was
-            # sorted already..
-            endtimes = (packets[:-1]["time"] +
-                        packets[:-1]["number_of_samples"] * delta)
-            # check if next starttime matches seamless to last chunk
-            # 1e-3 seconds == 1 millisecond is the smallest time difference
-            # reftek130 format can represent, so anything larger or equal
-            # means a gap/overlap.
-            # for now be conservative and check even more rigorous against
-            # 1e-4 to be on the safe side, but in the gapless data example
-            # the differences are always 0 or -2e-7 (for POSIX timestamps
-            # of order 1e9) which seems like a floating point accuracy
-            # issue for np.float64.
-            gaps = np.abs(packets[1:]["time"] - endtimes) > 1e-4
-            if np.any(gaps):
-                gap_split_indices = np.nonzero(gaps)[0] + 1
-                contiguous = np.array_split(packets, gap_split_indices)
+        for event_number in np.unique(self._data['event_number']):
+            data = self._data[self._data['event_number'] == event_number]
+            # we should have exactly one EH and one ET packet, truncated data
+            # sometimes misses the header or trailer packet.
+            eh_packets = data[data['packet_type'] == b"EH"]
+            et_packets = data[data['packet_type'] == b"ET"]
+            if len(eh_packets) == 0 and len(et_packets) == 0:
+                msg = ("Reftek data contains data packets without "
+                       "corresponding header or trailer packet.")
+                raise Exception(msg)
+            if len(eh_packets) > 1 or len(et_packets) > 1:
+                msg = ("Reftek data contains data packets with multiple "
+                       "corresponding header or trailer packets.")
+                raise Exception(msg)
+            if len(eh_packets) != 1:
+                msg = ("No event header (EH) packets in packet sequence. "
+                       "File might be truncated.")
+                warnings.warn(msg)
+            if len(et_packets) != 1:
+                msg = ("No event trailer (ET) packets in packet sequence. "
+                       "File might be truncated.")
+                warnings.warn(msg)
+            # use either the EH or ET packet, they have the same content (only
+            # trigger stop time is not in EH)
+            if len(eh_packets):
+                eh = EHPacket(eh_packets[0])
             else:
-                contiguous = [packets]
+                eh = EHPacket(et_packets[0])
+            # only "C0" encoding supported right now
+            if eh.data_format != b"C0":
+                msg = ("Reftek data encoding '{}' not implemented yet. Please "
+                       "open an issue on GitHub and provide a small (< 50kb) "
+                       "test file.").format(eh.type)
+                raise NotImplementedError(msg)
+            header = {
+                "network": network,
+                "station": (eh.station_name +
+                            eh.station_name_extension).strip(),
+                "location": location, "sampling_rate": eh.sampling_rate,
+                "reftek130": eh._to_dict()}
+            delta = 1.0 / eh.sampling_rate
+            st = Stream()
+            for channel_number in np.unique(data['channel_number']):
+                inds = data['channel_number'] == channel_number
+                # channel number of EH/ET packets also equals zero (one of the
+                # three unused bytes in the extended header of EH/ET packets)
+                inds &= data['packet_type'] == b"DT"
+                packets = data[inds]
 
-            for packets_ in contiguous:
-                starttime = packets_[0]['time']
-
-                # Unfortunately the whole data cannot be unpacked with one
-                # call to libmseed as some payloads do not take the full 960
-                # bytes. They are thus padded which would results in padded
-                # pieces directly in a large array and libmseed
-                # (understandably) does not support that.
-                #
-                # Thus we resort to *tada* pointer arithmetics in Python ;-)
-                # This is quite a bit faster then correctly casting to an
-                # integer pointer so its worth it.
-                #
-                # Also avoid a data copy.
-                #
-                # Writing this directly in C would be about 3 times as fast so
-                # it might be worth it.
-                npts = packets_["number_of_samples"].sum()
-                if headonly:
-                    data = np.array([], dtype=np.int32)
+                # split into contiguous blocks, i.e. find gaps. packet sequence
+                # was sorted already..
+                endtimes = (packets[:-1]["time"] +
+                            packets[:-1]["number_of_samples"] * delta)
+                # check if next starttime matches seamless to last chunk
+                # 1e-3 seconds == 1 millisecond is the smallest time difference
+                # reftek130 format can represent, so anything larger or equal
+                # means a gap/overlap.
+                # for now be conservative and check even more rigorous against
+                # 1e-4 to be on the safe side, but in the gapless data example
+                # the differences are always 0 or -2e-7 (for POSIX timestamps
+                # of order 1e9) which seems like a floating point accuracy
+                # issue for np.float64.
+                gaps = np.abs(packets[1:]["time"] - endtimes) > 1e-4
+                if np.any(gaps):
+                    gap_split_indices = np.nonzero(gaps)[0] + 1
+                    contiguous = np.array_split(packets, gap_split_indices)
                 else:
-                    data = np.empty(npts, dtype=np.int32)
-                    pos = 0
-                    s = packets_[0]["payload"][40:].ctypes.data
-                    if len(packets_) > 1:
-                        offset = packets_[1]["payload"][40:].ctypes.data - s
+                    contiguous = [packets]
+
+                for packets_ in contiguous:
+                    starttime = packets_[0]['time']
+
+                    # Unfortunately the whole data cannot be unpacked with one
+                    # call to libmseed as some payloads do not take the full
+                    # 960 bytes. They are thus padded which would results in
+                    # padded pieces directly in a large array and libmseed
+                    # (understandably) does not support that.
+                    #
+                    # Thus we resort to *tada* pointer arithmetics in Python
+                    # ;-) This is quite a bit faster then correctly casting to
+                    # an integer pointer so its worth it.
+                    #
+                    # Also avoid a data copy.
+                    #
+                    # Writing this directly in C would be about 3 times as fast
+                    # so it might be worth it.
+                    npts = packets_["number_of_samples"].sum()
+                    if headonly:
+                        sample_data = np.array([], dtype=np.int32)
                     else:
-                        offset = 0
-                    for p in packets_:
-                        _npts = p["number_of_samples"]
-                        clibmseed.msr_decode_steim1(
-                            s, 960, _npts, data[pos:], _npts, None, 1)
-                        pos += _npts
-                        s += offset
+                        sample_data = np.empty(npts, dtype=np.int32)
+                        pos = 0
+                        s = packets_[0]["payload"][40:].ctypes.data
+                        if len(packets_) > 1:
+                            offset = (
+                                packets_[1]["payload"][40:].ctypes.data - s)
+                        else:
+                            offset = 0
+                        for p in packets_:
+                            _npts = p["number_of_samples"]
+                            clibmseed.msr_decode_steim1(
+                                s, 960, _npts, sample_data[pos:], _npts, None,
+                                1)
+                            pos += _npts
+                            s += offset
 
-                tr = Trace(data=data, header=header.copy())
-                if headonly:
-                    tr.stats.npts = npts
-                tr.stats.starttime = UTCDateTime(starttime)
-                # if component codes were explicitly provided, use them
-                # together with the stream label
-                if component_codes is not None:
-                    tr.stats.channel = (eh.stream_name.strip() +
-                                        component_codes[channel_number])
-                # otherwise check if channel code is set for the given channel
-                # (seems to be not the case usually)
-                elif eh.channel_code[channel_number] is not None:
-                    tr.stats.channel = eh.channel_code[channel_number]
-                # otherwise fall back to using the stream label together with
-                # the number of the channel in the file (starting with 0, as
-                # Z-1-2 is common use for data streams not oriented against
-                # North)
-                else:
-                    msg = ("No channel code specified in the data file and no "
-                           "component codes specified. Using stream label and "
-                           "number of channel in file as channel codes.")
-                    warnings.warn(msg)
-                    tr.stats.channel = (
-                        eh.stream_name.strip() + str(channel_number))
-                # check if endtime of trace is consistent
-                t_last = packets_[-1]['time']
-                npts_last = packets_[-1]['number_of_samples']
-                try:
-                    if not headonly:
-                        assert npts == len(data)
-                    if npts_last:
-                        assert tr.stats.endtime == UTCDateTime(
-                            t_last + (npts_last - 1) * delta)
-                    if npts:
-                        assert tr.stats.endtime == UTCDateTime(
-                            tr.stats.starttime + (npts - 1) * delta)
-                except AssertionError:
-                    msg = ("Reftek file has a trace with an inconsistent "
-                           "endtime or number of samples. Please open an "
-                           "issue on GitHub and provide your file for"
-                           "testing.")
-                    raise Exception(msg)
-                st += tr
+                    tr = Trace(data=sample_data, header=header.copy())
+                    if headonly:
+                        tr.stats.npts = npts
+                    tr.stats.starttime = UTCDateTime(starttime)
+                    # if component codes were explicitly provided, use them
+                    # together with the stream label
+                    if component_codes is not None:
+                        tr.stats.channel = (eh.stream_name.strip() +
+                                            component_codes[channel_number])
+                    # otherwise check if channel code is set for the given
+                    # channel (seems to be not the case usually)
+                    elif eh.channel_code[channel_number] is not None:
+                        tr.stats.channel = eh.channel_code[channel_number]
+                    # otherwise fall back to using the stream label together
+                    # with the number of the channel in the file (starting with
+                    # 0, as Z-1-2 is common use for data streams not oriented
+                    # against North)
+                    else:
+                        msg = ("No channel code specified in the data file "
+                               "and no component codes specified. Using "
+                               "stream label and number of channel in file as "
+                               "channel codes.")
+                        warnings.warn(msg)
+                        tr.stats.channel = (
+                            eh.stream_name.strip() + str(channel_number))
+                    # check if endtime of trace is consistent
+                    t_last = packets_[-1]['time']
+                    npts_last = packets_[-1]['number_of_samples']
+                    try:
+                        if not headonly:
+                            assert npts == len(sample_data)
+                        if npts_last:
+                            assert tr.stats.endtime == UTCDateTime(
+                                t_last + (npts_last - 1) * delta)
+                        if npts:
+                            assert tr.stats.endtime == UTCDateTime(
+                                tr.stats.starttime + (npts - 1) * delta)
+                    except AssertionError:
+                        msg = ("Reftek file has a trace with an inconsistent "
+                               "endtime or number of samples. Please open an "
+                               "issue on GitHub and provide your file for"
+                               "testing.")
+                        raise Exception(msg)
+                    st += tr
 
         return st
 
