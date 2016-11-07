@@ -145,9 +145,8 @@ class Reftek130(object):
         not covered by test data yet.
         """
         if np.any(np.diff(self._data['packet_sequence']) - 1 != 0):
-            msg = ("Detected a non-contiguous packet sequence, this is not "
-                   "yet tested, please provide an example file for testing.")
-            raise NotImplementedError(msg)
+            msg = ("Detected a non-contiguous packet sequence!")
+            warnings.warn(msg)
 
     def drop_leading_non_eh_packets(self):
         """

@@ -178,9 +178,9 @@ class ReftekTestCase(unittest.TestCase):
         # try to read mseed file, finding no packets
         self.assertRaises(Exception, _read_reftek130, self.mseed_files[0])
 
-    def test_error_disturbed_packet_sequence(self):
+    def test_warning_disturbed_packet_sequence(self):
         """
-        Test error message when packet sequence is non-contiguous (one packet
+        Test warning message when packet sequence is non-contiguous (one packet
         missing).
         """
         with NamedTemporaryFile() as fh:
@@ -192,7 +192,13 @@ class ReftekTestCase(unittest.TestCase):
                 fh.write(fh2.read())
             fh.seek(0)
             # try to read file, finding a non-contiguous packet sequence
-            self.assertRaises(NotImplementedError, _read_reftek130, fh.name)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                _read_reftek130(fh.name, network="XX", location="01",
+                                component_codes=["1", "2", "3"])
+        self.assertEqual(len(w), 1)
+        self.assertEqual(str(w[0].message),
+                         'Detected a non-contiguous packet sequence!')
 
     def test_drop_not_implemented_packets(self):
         """
