@@ -31,7 +31,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
     def test_xcorr_depreciation_full_xcorr(self):
         import warnings
         with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+            warnings.simplefilter("always", DeprecationWarning)
             shift, corr = xcorr(self.a, self.b, 15)
             self.assertEqual(len(w), 1)
             self.assertEqual(w[-1].category, DeprecationWarning)

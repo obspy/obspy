@@ -140,7 +140,7 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
     >>> a, b, x = xcorr(tr1, tr2, 1000, full_xcorr=True)
     >>> a
     0
-    >>> round(b, 7)
+    >>> round(b, 6)
     1.0
     """
     a, b = tr1, tr2
@@ -154,12 +154,16 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
         b = b - np.mean(b)
     if normalize:
         stdev = (np.sum(a ** 2)) ** 0.5 * (np.sum(b ** 2)) ** 0.5
+        if stdev == 0:
+            # set stdev to 1 to prevent division by 0
+            # cross-correlation function will have only zeros anyway
+            stdev = 1
     else:
         stdev = 1
     # choose the usually faster xcorr method for each domain
     _xcorr = _xcorr_slice if domain == 'freq' else _xcorr_padzeros
     c = _xcorr(a, b, shift_len, domain=domain) / stdev
-    if full_xcorr is not True:
+    if not full_xcorr:
         msg = ('Keyword full_xcorr will default to True starting with the next'
                ' major release (v1.2) and will be removed in the subsquent '
                'major release (v.1.3). Please set full_xcorr=True now.')
