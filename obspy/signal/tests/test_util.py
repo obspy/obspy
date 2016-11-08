@@ -35,7 +35,7 @@ class UtilTestCase(unittest.TestCase):
         tr2 = np.zeros(10000, dtype=np.float32)
         shift, corr = xcorr(tr1, tr2, 100)
         # comment next line, because shift is not unique
-        #self.assertEqual(shift, 0)
+        # self.assertEqual(shift, 0)
         self.assertAlmostEqual(corr, 0, 2)
         # example 3 - shift of 10 samples
         tr1 = np.random.randn(10000).astype(np.float32)

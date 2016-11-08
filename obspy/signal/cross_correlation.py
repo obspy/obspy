@@ -164,10 +164,11 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
     _xcorr = _xcorr_slice if domain == 'freq' else _xcorr_padzeros
     c = _xcorr(a, b, shift_len, domain=domain) / stdev
     if not full_xcorr:
+        from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
         msg = ('Keyword full_xcorr will default to True starting with the next'
                ' major release (v1.2) and will be removed in the subsquent '
                'major release (v.1.3). Please set full_xcorr=True now.')
-        warnings.warn(msg, DeprecationWarning)
+        warnings.warn(msg, ObsPyDeprecationWarning)
         shift = np.argmax(c)
         return shift - len(c) // 2, c[shift]
     if return_shift:
@@ -222,7 +223,7 @@ def _xcorr_old_implementation(tr1, tr2, shift_len, full_xcorr=False):
 
     >>> tr1 = np.random.randn(10000).astype(np.float32)
     >>> tr2 = tr1.copy()
-    >>> a, b = xcorr(tr1, tr2, 1000)
+    >>> a, b = _xcorr_old_implementation(tr1, tr2, 1000)
     >>> a
     0
     >>> round(b, 7)
