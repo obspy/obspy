@@ -28,6 +28,7 @@
  - obspy.io.zmap:
    * Use first origin/magnitude when writing to zmap if no origin/magnitude is
      set as preferred. (see #1569)
+   * Parse origin time seconds as a float to avoid losing accuracy (see #1573)
  - obspy.signal:
    * PPSD: fix warning message on Python 3 that gets shown when waveforms and
      metadata mismatch (see #1506)

@@ -26,6 +26,7 @@ class ZMAPTestCase(unittest.TestCase):
     """
     def setUp(self):
         data_dir = os.path.join(os.path.dirname(__file__), 'data')
+        self.data_dir = data_dir
         path_to_catalog = os.path.join(data_dir, 'neries_events.xml')
         self.catalog = read_events(path_to_catalog)
         self.zmap_fields = _STD_ZMAP_FIELDS
@@ -237,6 +238,16 @@ class ZMAPTestCase(unittest.TestCase):
         # direct ZMAP string
         catalog = zmap._read_zmap(zmap_str)
         self._assert_zmap_equal(catalog, test_events)
+
+    def test_read_float_seconds(self):
+        """
+        Test that floating point part of seconds is parsed correctly.
+        """
+        catalog = zmap._read_zmap(os.path.join(self.data_dir, "templates.txt"))
+        self.assertEqual(catalog[0].origins[0].time.microsecond, 840000)
+        self.assertEqual(catalog[1].origins[0].time.microsecond, 880000)
+        self.assertEqual(catalog[2].origins[0].time.microsecond, 550000)
+        self.assertEqual(catalog[3].origins[0].time.microsecond, 450000)
 
     def _assert_zmap_equal(self, catalog, dicts):
         """
