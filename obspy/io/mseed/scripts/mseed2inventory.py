@@ -549,7 +549,7 @@ def attach_response(inv, sensor_nick, dl_nick, gain):
                     inv_resp = resp_dict[(sensor_nick, dl_nick, gain, sr)]
                 else:
                     # Response not computed create and cache.
-                    inv_resp = inventory.response.response_from_resp(
+                    inv_resp = inventory.response.response_from_resps(
                         sens_resp, dl_resp, sr=sr)
                     resp_dict[(sensor_nick, dl_nick, gain, sr)] = inv_resp
                 chan.response = inv_resp
@@ -560,7 +560,7 @@ def inventory_from_mseed(directory, sens_resp, dl_resp):
     manifest = get_manifest_of_dir(directory)
     inv = make_inventory(manifest)
     # Attach response to inventory
-    inv_resp = inventory.response.response_from_respfile(sens_resp, dl_resp)
+    inv_resp = inventory.response.response_from_respfiles(sens_resp, dl_resp)
     inv_of_wf = inv.select(channel='CH*')
     for net in inv_of_wf.networks:
         for sta in net.stations:
