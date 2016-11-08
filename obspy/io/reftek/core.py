@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-REFTEK130 read support.
+REFTEK130 read support, core routines.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
