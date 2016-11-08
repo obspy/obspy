@@ -22,6 +22,16 @@ class ReftekTestCase(unittest.TestCase):
     Test suite for obspy.io.reftek
     """
     def setUp(self):
+        try:
+            # doctests of __init__.py produce warnings that get caught. if we
+            # don't raze the slate out the registry here, we can't test those
+            # warnings in the unit tests (if doctests run before unittests)..
+            from obspy.io.reftek.core import __warningregistry__
+            __warningregistry__.clear()
+        except ImportError:
+            # import error means no warning has been issued
+            # before, so nothing to do.
+            pass
         self.path = os.path.dirname(os.path.abspath(inspect.getfile(
             inspect.currentframe())))
         self.datapath = os.path.join(self.path, "data")
