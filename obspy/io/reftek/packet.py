@@ -157,12 +157,17 @@ class EHPacket(Packet):
                         self.data_stream_number, self.data_format.decode(),
                         sta, self.sampling_rate, self.time)
         else:
-            info = ["{}: {}".format(key, getattr(self, key))
-                    for key in self._headers]
+            info = []
+            for key in self._headers:
+                value = getattr(self, key)
+                if key in ("unit_id", "data_format"):
+                    value = value.decode()
+                info.append("{}: {}".format(key, value))
             info.append("-" * 20)
             info += ["{}: {}".format(key, getattr(self, key))
                      for key in sorted(EH_PAYLOAD.keys())]
-            info = "{} Packet\n\t".format(self.type) + "\n\t".join(info)
+            info = "{} Packet\n\t{}".format(self.type.decode(),
+                                            "\n\t".join(info))
         return info
 
 
@@ -185,9 +190,14 @@ class DTPacket(Packet):
                         self.data_stream_number, self.data_format.decode(),
                         self.channel_number, self.number_of_samples, self.time)
         else:
-            info = ["{}: {}".format(key, getattr(self, key))
-                    for key in self._headers]
-            info = "{} Packet\n\t".format(self.type) + "\n\t".join(info)
+            info = []
+            for key in self._headers:
+                value = getattr(self, key)
+                if key in ("unit_id", "data_format"):
+                    value = value.decode()
+                info.append("{}: {}".format(key, value))
+            info = "{} Packet\n\t{}".format(self.type.decode(),
+                                            "\n\t".join(info))
         return info
 
 
