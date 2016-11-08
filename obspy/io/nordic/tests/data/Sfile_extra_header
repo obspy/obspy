@@ -1,0 +1,24 @@
+ # Funky monkey with extra info here                                           #
+ 2013  9 1 0411 15.7 L -43.340 170.376  8.5  VUW  8 0.2 0.6LVUW                1
+ GAP= 86        0.45       1.2     1.6  3.2 -0.3384E+00  0.1270E+01  0.1667E+01E
+ ACTION:NEW 15- 8-11 13:39 OP:CALU STATUS:               ID:20130901041117     I
+ 2013-09-01-0410-35.DFDPC_024_00                                               6
+ STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU VELO AIN AR TRES W  DIS CAZ7
+ GCSZ SZ IP        411 17.24                             145    0.0610    4 304 
+ GCSZ S1 IS        411 18.22                             145    0.0210    4 304 
+ GCSZ EZ  IAML     411 18.47         1.8 0.08                             4 304 
+ WZ11 HZ IP        411 17.19                             140   -0.0410    5  30 
+ WZ11 HZ  IAML     411 20.43         8.9 0.46                             5  30 
+ WV03 SZ IP        411 17.19                             140   -0.0710    5  25 
+ WV03 SZ  IAML     411 20.56        10.90.232                             5  25 
+ WZ02 EN IS        411 18.81                             127   -0.2010    8  96 
+ WZ02 EZ  IAML     411 20.59         1.0 0.22                             8  96 
+ WHYM SZ IP        411 18.30                             123    0.2210   11 182 
+ WHYM SN IS        411 19.89                             123    0.1810   11 182 
+ WHYM SZ  IAML     411 20.51         3.1 0.14                            11 182 
+ EORO SZ IP        411 19.43                             107    0.1410   19 240 
+ EORO SZ  IAML     411 21.38         1.3 0.28                            19 240 
+ EORO SN IS        411 21.53                             107   -0.2210   19 240 
+ LABE SN IS        411 23.36                             105   -0.1910   25 205 
+ LABE SZ  IAML     411 23.61         1.0 0.23                            25 205 
+                                                                                

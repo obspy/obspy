@@ -90,11 +90,11 @@ KEYWORDS = [
     'focal mechanism', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
     'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
     'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
-    'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS', 'PDAS', 'picker',
-    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK', 'REFTEK130',
-    'RT-130', 'RESP', 'response file', 'RT', 'SAC', 'sc3ml', 'SDS', 'SEED',
-    'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
-    'seismology',
+    'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'observatory', 'ORFEUS', 'PDAS',
+    'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
+    'REFTEK130', 'RT-130', 'RESP', 'response file', 'RT', 'SAC', 'sc3ml',
+    'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic
+    Handler', 'seismology',
     'seismogram', 'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram',
     'StationXML', 'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV',
     'waveform', 'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston',
@@ -284,6 +284,7 @@ ENTRY_POINTS = {
         'NDK = obspy.io.ndk.core',
         'NLLOC_HYP = obspy.io.nlloc.core',
         'NLLOC_OBS = obspy.io.nlloc.core',
+        'NORDIC = obspy.io.nordic.core',
         'CNV = obspy.io.cnv.core',
         'CMTSOLUTION = obspy.io.cmtsolution.core',
         'SHAPEFILE = obspy.io.shapefile.core',
@@ -321,6 +322,11 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.event.NLLOC_OBS': [
         'writeFormat = obspy.io.nlloc.core:write_nlloc_obs',
+        ],
+    'obspy.plugin.event.NORDIC': [
+        'writeFormat = obspy.io.nordic.core:write_select',
+        'readFormat = obspy.io.nordic.core:read_nordic',
+        'isFormat = obspy.io.nordic.core:_is_sfile'
         ],
     'obspy.plugin.event.CMTSOLUTION': [
         'isFormat = obspy.io.cmtsolution.core:_is_cmtsolution',
