@@ -26,6 +26,7 @@ import warnings
 
 import numpy as np
 import scipy
+from scipy.signal import correlate, fftconvolve
 
 from obspy import Stream, Trace
 from obspy.core.util.misc import MatplotlibBackend
@@ -33,7 +34,146 @@ from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
 
 
-def xcorr(tr1, tr2, shift_len, full_xcorr=False):
+def __pad_zeros(a, num):
+    """Pad num zeros at both sides of array a"""
+    hstack = [np.zeros(num, dtype=a.dtype), a, np.zeros(num, dtype=a.dtype)]
+    return np.hstack(hstack)
+
+
+def _xcorr_padzeros(a, b, num, domain='freq'):
+    """
+    Cross-correlation using SciPy with mode='valid' and precedent zero padding
+    """
+    if num is None:
+        num = (a + b - 1) // 2
+    dif = len(a) - len(b) - 2 * num
+    if dif > 0:
+        b = __pad_zeros(b, dif // 2)
+    else:
+        a = __pad_zeros(a, -dif // 2)
+    if domain == 'freq':
+        c = fftconvolve(a, b[::-1], 'valid')
+    else:
+        c = correlate(a, b, 'valid')
+    return c
+
+
+def _xcorr_slice(a, b, num, domain='freq'):
+    """
+    Cross-correlation using SciPy with mode='full' and subsequent slicing
+    """
+    if domain == 'freq':
+        c = fftconvolve(a, b[::-1], 'full')
+    else:
+        c = correlate(a, b, 'full')
+    mid = len(c) // 2
+    if num is None:
+        num = mid
+    if num > mid:
+        msg = 'sift_len too large, use largest possible shift %d instead'
+        warnings.warn(msg % mid)
+        num = mid
+    return c[mid - num:mid + num + len(c) % 2]
+
+
+def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
+          return_shift=True, full_xcorr=False):
+    """
+    Cross-correlation of signals tr1 and tr2.
+
+    :type tr1: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param tr1: signal a
+    :type tr2: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param tr2: signal b to correlate with signal a
+    :param shift_len: Total length of samples to shift for cross correlation.
+        The cross-correlation will consist of 2*shift_len+1 or
+        2*shift_len samples, so that sample with 0 shift will be in the middle.
+    :param demean: Demean data beforehand.
+    :param normalize: Normalize cross-correlation so that a perfect correlation
+        will correspond to the value 1.
+    :param domain: Correlation will be performed in frequency domain with
+        :func:`scipy.signal.fftconvolve` for ``domain='freq'``
+        and in time domain with :func:`scipy.signal.correlate` for
+        ``domain='time'``.
+    :param full_xcorr: Keyword full_xcorr will default to True starting with
+        the next major release (v1.2) and will be removed in the subsquent
+        major release (v.1.3). Please set ``full_xcorr=True`` now.
+        Return the full cross-correlation function together with shift and
+        maximum correlation.
+    :param return_shift: Only applicable for ``full_xcorr=True``. Return
+        shift and maximum correlation together with full cross-correlation
+        function
+
+    :return: *shift, max_corr, corr_fun* for ``return_shift=True`` otherwise
+             only *corr_fun* for ``return_shift=True`` or
+             *shift, max_corr* for ``full_xcorr=False`` (depreciated).
+             *shift* is the sample index of the maximum correlation
+             relative to the zero shift index. *max_corr* is the value at this
+             sample. *corr_fun* is the complete cross-correlation function.
+
+    .. note::
+
+        For most input parameters cross-correlation in frequency domain is much
+        faster.
+        Only for small values of ``shift_len`` time domain cross-correlation
+        migth save some time (around ``shifth_len<100``).
+
+    .. note::
+
+        If the signals have different length, they will be aligned around
+        their middle. The sample with zero shift in the cross-correlation
+        function corresponds to this correlation:
+
+        ::
+
+            --aaaa--
+            bbbbbbbb
+
+        For odd ``len(a)-len(b)`` the cross-correlation function will consist
+        of only ``2*shift_len`` samples because a shift of 0 corresponds to
+        to the middle between two samples.
+
+    .. rubric:: Example
+
+    >>> tr1 = np.random.randn(10000).astype(np.float32)
+    >>> tr2 = tr1.copy()
+    >>> a, b, x = xcorr(tr1, tr2, 1000, full_xcorr=True)
+    >>> a
+    0
+    >>> round(b, 7)
+    1.0
+    """
+    a, b = tr1, tr2
+    # if we get Trace objects, use their data arrays
+    if isinstance(a, Trace):
+        a = a.data
+    if isinstance(b, Trace):
+        b = b.data
+    if demean:
+        a = a - np.mean(a)
+        b = b - np.mean(b)
+    if normalize:
+        stdev = (np.sum(a ** 2)) ** 0.5 * (np.sum(b ** 2)) ** 0.5
+    else:
+        stdev = 1
+    # choose the usually faster xcorr method for each domain
+    _xcorr = _xcorr_slice if domain == 'freq' else _xcorr_padzeros
+    c = _xcorr(a, b, shift_len, domain=domain) / stdev
+    if full_xcorr is not True:
+        msg = ('Keyword full_xcorr will default to True starting with the next'
+               ' major release (v1.2) and will be removed in the subsquent '
+               'major release (v.1.3). Please set full_xcorr=True now.')
+        warnings.warn(msg, DeprecationWarning)
+        shift = np.argmax(c)
+        return shift - len(c) // 2, c[shift]
+    if return_shift:
+        shift = np.argmax(c)
+        return shift - len(c) // 2, c[shift], c
+    else:
+        return c
+
+
+def _xcorr_old_implementation(tr1, tr2, shift_len, full_xcorr=False):
     """
     Cross correlation of tr1 and tr2 in the time domain using window_len.
 
@@ -221,7 +361,7 @@ def xcorr_max(fct, abs_max=True):
 
 def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
                           cc_maxlag, filter=None, filter_options={},
-                          plot=False, filename=None):
+                          plot=False, filename=None, xcorr_domain='time'):
     """
     Calculate the correction for the differential pick time determined by cross
     correlation of the waveforms in narrow windows around the pick times.
@@ -326,7 +466,8 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
     # cross correlate
     shift_len = int(cc_maxlag * samp_rate)
     _cc_shift, cc_max, cc = xcorr(slices[0].data, slices[1].data,
-                                  shift_len, full_xcorr=True)
+                                  shift_len, full_xcorr=True,
+                                  domain=xcorr_domain)
     cc_curvature = np.concatenate((np.zeros(1), np.diff(cc, 2), np.zeros(1)))
     cc_convex = np.ma.masked_where(np.sign(cc_curvature) >= 0, cc)
     cc_concave = np.ma.masked_where(np.sign(cc_curvature) < 0, cc)
