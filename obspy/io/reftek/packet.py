@@ -253,12 +253,18 @@ def _initial_unpack_packets(bytestring):
 
 def _unpack_C0_data(packets):  # noqa
     """
-    Unpacks sample data from a packet array.
+    Unpacks sample data from a packet array that uses 'C0' data encoding.
 
     :type packets: :class:`numpy.ndarray` (dtype ``PACKET_FINAL_DTYPE``)
     :param packets: Array of data packets (``packet_type`` ``'DT'``) from which
-        to unpack the sample data.
+        to unpack the sample data (with data encoding 'C0').
     """
+    if np.any(packets['data_format'] != b'C0'):
+        differing_formats = np.unique(
+            packets[packets['data_format'] != b'C0']['data_format']).tolist()
+        msg = ("Using 'C0' data format unpacking routine but some packet(s) "
+               "specify other data format(s): {}".format(differing_formats))
+        warnings.warn(msg)
     npts = packets["number_of_samples"].sum()
     unpacked_data = np.empty(npts, dtype=np.int32)
     pos = 0
