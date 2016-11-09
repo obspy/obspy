@@ -30,7 +30,11 @@ for FILE in `ls pull_request_docs/*.todo 2> /dev/null`
 do
     PR=${FILE##*/}
     PR=${PR%.*}
-    DATETIME=`date --iso-8601=seconds`
+    # for the "<pr-number>.done" file, use the time of the "<pr-number>.todo"
+    # file, which is set to one second after the "<pr-number>" file (that
+    # reflects the time of the commit). This should make sure that the "done"
+    # status correctly reflects the build.
+    DATETIME=`stat -c '%y' $FILE`
     echo "Starting docs build for PR $PR"
     bash $HOME/update-docs.sh -p $PR
     STATUS=`echo $?`
