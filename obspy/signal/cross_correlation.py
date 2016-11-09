@@ -77,7 +77,7 @@ def _xcorr_slice(a, b, num, domain='freq'):
 
 
 def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
-          return_shift=True, full_xcorr=False):
+          full_xcorr=False):
     """
     Cross-correlation of signals tr1 and tr2.
 
@@ -96,18 +96,15 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
         :func:`scipy.signal.fftconvolve` for ``domain='freq'``
         and in time domain with :func:`scipy.signal.correlate` for
         ``domain='time'``.
-    :param bool full_xcorr: Keyword full_xcorr will default to True starting
+    :param bool full_xcorr: Return the full cross-correlation function
+        together with shift and maximum correlation.
+        Keyword full_xcorr will default to True starting
         with the next major release (v1.2) and will be removed in the subsquent
-        major release (v.1.3). Please set ``full_xcorr=True`` now.
-        Return the full cross-correlation function together with shift and
-        maximum correlation.
-    :param bool return_shift: Only applicable for ``full_xcorr=True``. Return
-        shift and maximum correlation together with full cross-correlation
-        function
+        major release (v1.3). Please set ``full_xcorr=True``.
 
-    :return: *shift, max_corr, corr_fun* for ``return_shift=True`` otherwise
-             only *corr_fun* for ``return_shift=True`` or
-             *shift, max_corr* for ``full_xcorr=False`` (depreciated).
+
+    :return: *shift, max_corr, corr_fun* for ``full_xcorr=False`` and
+             only *corr_fun* for ``full_xcorr=False`` (depreciated).
              *shift* is the sample index of the maximum correlation
              relative to the zero shift index. *max_corr* is the value at this
              sample. *corr_fun* is the complete cross-correlation function.
@@ -170,21 +167,17 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
     # choose the usually faster xcorr method for each domain
     _xcorr = _xcorr_slice if domain == 'freq' else _xcorr_padzeros
     c = _xcorr(a, b, shift_len, domain=domain) / stdev
+    shift = np.argmax(c)
     if not full_xcorr:
         from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
         msg = ('Keyword full_xcorr will default to True starting with the next'
                ' major release (v1.2) and will be removed in the subsquent '
-               'major release (v.1.3). Please set full_xcorr=True now.')
+               'major release (v.1.3). Please set full_xcorr=True.')
         warnings.warn(msg, ObsPyDeprecationWarning)
-        shift = np.argmax(c)
         return shift - len(c) // 2, float(c[shift])
-    if return_shift:
-        shift = np.argmax(c)
-        # float() call is workaround for future package
-        # see https://travis-ci.org/obspy/obspy/jobs/174284750
-        return shift - len(c) // 2, float(c[shift]), c
-    else:
-        return c
+    # float() call is workaround for future package
+    # see https://travis-ci.org/obspy/obspy/jobs/174284750
+    return shift - len(c) // 2, float(c[shift]), c
 
 
 def _xcorr_old_implementation(tr1, tr2, shift_len, full_xcorr=False):
