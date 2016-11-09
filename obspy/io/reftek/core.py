@@ -310,8 +310,7 @@ class Reftek130(object):
                                 packets_[1]["payload"][40:].ctypes.data - s)
                         else:
                             offset = 0
-                        for p in packets_:
-                            _npts = p["number_of_samples"]
+                        for _npts in packets_["number_of_samples"]:
                             clibmseed.msr_decode_steim1(
                                 s, 960, _npts, sample_data[pos:], _npts, None,
                                 1)
