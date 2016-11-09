@@ -830,9 +830,10 @@ def _convert_mstime_to_datetime(timestring):
 
 def _unpack_steim_1(data, npts, swapflag=0, verbose=0):
     """
-    Unpack steim1 compressed data given as string.
+    Unpack steim1 compressed data given as numpy array.
 
-    :param data: data as string
+    :type data: :class:`numpy.ndarray`
+    :param data: steim compressed data as a numpy array
     :param npts: number of data points
     :param swapflag: Swap bytes, defaults to 0
     :return: Return data as numpy.ndarray of dtype int32
@@ -852,9 +853,10 @@ def _unpack_steim_1(data, npts, swapflag=0, verbose=0):
 
 def _unpack_steim_2(data, npts, swapflag=0, verbose=0):
     """
-    Unpack steim2 compressed data given as string.
+    Unpack steim2 compressed data given as numpy array.
 
-    :param data: data as string
+    :type data: :class:`numpy.ndarray`
+    :param data: steim compressed data as a numpy array
     :param npts: number of data points
     :param swapflag: Swap bytes, defaults to 0
     :return: Return data as numpy.ndarray of dtype int32

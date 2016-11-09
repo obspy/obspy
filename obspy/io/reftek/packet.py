@@ -105,7 +105,8 @@ class Packet(object):
         elif packet_type == "DT":
             return DTPacket(data)
         else:
-            raise NotImplementedError()
+            msg = "Can not create Reftek packet for packet type '{}'"
+            raise NotImplementedError(msg.format(packet_type))
 
     def __init__(self, data):
         raise NotImplementedError()
@@ -236,11 +237,11 @@ def _initial_unpack_packets(bytestring):
     for name, dtype_initial, converter, dtype_final in PACKET:
         if converter is None:
             result[name][:] = data[name][:]
-            continue
-        try:
-            result[name][:] = converter(data[name])
-        except Exception as e:
-            raise Reftek130UnpackPacketError(str(e))
+        else:
+            try:
+                result[name][:] = converter(data[name])
+            except Exception as e:
+                raise Reftek130UnpackPacketError(str(e))
     # time unpacking is special and needs some additional work.
     # we need to add the POSIX timestamp of the start of respective year to the
     # already unpacked seconds into the respective year..

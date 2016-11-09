@@ -7,6 +7,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import copy
 import io
 import os
 import warnings
@@ -51,9 +52,10 @@ def _is_reftek130(filename):
 
     with open(filename, 'rb') as fp:
         # check first 20 expected packets' type header field
-        while True:
-            packet_type = fp.read(2).decode("ASCII", "ignore")
+        for i in range(20):
+            packet_type = fp.read(2).decode("ASCII", "replace")
             if not packet_type:
+                # reached end of file..
                 break
             if packet_type not in PACKET_TYPES:
                 return False
@@ -107,27 +109,29 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
 
 
 class Reftek130(object):
+    _info_header = "Reftek130 ({:d} packets{})"
+    _info_compact_header = [
+        "Packet Sequence  Byte Count  Data Fmt  Sampling Rate      Time",
+        "  | Packet Type   |  Event #  | Station | Channel #         |",
+        "  |   |  Unit ID  |    | Data Stream #  |   |  # of samples |",
+        "  |   |   |  Exper.#   |   |  |  |      |   |    |          |"]
+    _info_compact_footer = ("(detailed packet information with: "
+                            "'print(Reftek130.__str__(compact=False))')")
+
     def __init__(self):
         self._data = np.array([], dtype=PACKET_FINAL_DTYPE)
+        self._filename = None
 
     def __str__(self, compact=True):
+        filename = self._filename and ', file: {}'.format(self._filename) or ''
+        info = [self._info_header.format(len(self._data), filename)]
         if compact:
-            info = [
-                "Reftek130 ({:d} packets)".format(len(self._data)),
-                "Packet Sequence  Byte Count  Data Fmt  Sampling Rate      "
-                "Time",
-                "  | Packet Type   |  Event #  | Station | Channel #         "
-                "|",
-                "  |   |  Unit ID  |    | Data Stream #  |   |  # of samples "
-                "|",
-                "  |   |   |  Exper.#   |   |  |  |      |   |    |          "
-                "|"]
+            info += copy.deepcopy(self._info_compact_header)
+            info[0] = info[0].format(len(self._data))
             for data in self._data:
                 info.append(Packet.from_data(data).__str__(compact=True))
-            info.append("(detailed packet information with: "
-                        "'print(Reftek130.__str__(compact=False))')")
+            info.append(self._info_compact_footer)
         else:
-            info = ["Reftek130 ({:d} packets)".format(len(self._data))]
             for data in self._data:
                 info.append(str(Packet.from_data(data)))
         return "\n".join(info)
@@ -138,6 +142,7 @@ class Reftek130(object):
             string = fh.read()
         rt = Reftek130()
         rt._data = _initial_unpack_packets(string)
+        rt._filename = filename
         return rt
 
     def check_packet_sequence_and_sort(self):
@@ -170,18 +175,20 @@ class Reftek130(object):
         is_implemented = np.in1d(
             self._data['packet_type'],
             [x.encode() for x in PACKET_TYPES_IMPLEMENTED])
-        if not np.all(is_implemented):
-            not_implemented = np.invert(is_implemented)
-            count_not_implemented = not_implemented.sum()
-            types_not_implemented = np.unique(
-                self._data['packet_type'][not_implemented])
-            msg = ("Encountered some packets of types that are not "
-                   "implemented yet (types: {}). Dropped {:d} packets "
-                   "overall.")
-            msg = msg.format(types_not_implemented.tolist(),
-                             count_not_implemented)
-            warnings.warn(msg)
+        # if all packets are of a type that is implemented, the nothing to do..
+        if np.all(is_implemented):
             return
+        # otherwise reduce packet list to what is implemented and warn
+        not_implemented = np.invert(is_implemented)
+        count_not_implemented = not_implemented.sum()
+        types_not_implemented = np.unique(
+            self._data['packet_type'][not_implemented])
+        msg = ("Encountered some packets of types that are not "
+               "implemented yet (types: {}). Dropped {:d} packets "
+               "overall.")
+        msg = msg.format(types_not_implemented.tolist(),
+                         count_not_implemented)
+        warnings.warn(msg)
         self._data = self._data[is_implemented]
 
     def to_stream(self, network="", location="", component_codes=None,
@@ -283,7 +290,7 @@ class Reftek130(object):
                     #
                     # Thus we resort to *tada* pointer arithmetics in Python
                     # ;-) This is quite a bit faster then correctly casting to
-                    # an integer pointer so its worth it.
+                    # an integer pointer so it's worth it.
                     #
                     # Also avoid a data copy.
                     #

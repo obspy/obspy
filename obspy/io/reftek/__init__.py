@@ -14,9 +14,9 @@ data at hand recorded with a Reftek 130 do contain the information on the first
 two channel code characters, the band and instrument code but lack information
 on the component codes, i.e. ZNE, which with high likelihood were set in the
 acquisition parameters). Therefore, additional information on network and
-location codes should be supplied and component codes should ideally be
+location codes should be supplied and ideally component codes should be
 supplied as well when reading files with :func:`~obspy.core.stream.read` (or
-have to be filled in manually after reading). See the low-level routine
+should be filled in manually after reading). See the low-level routine
 :func:`obspy.io.reftek.core._read_reftek130` for additional arguments that can
 be supplied to :func:`~obspy.core.stream.read`.
 Currently, only event header/trailer (EH/ET) and data packets (DT) are
@@ -67,7 +67,7 @@ Network, location and component codes can be specified during reading:
 ...           component_codes="ZNE")
 >>> st  # doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
->>> print(st)  #doctest: +ELLIPSIS
+>>> print(st)  # doctest: +ELLIPSIS
 8 Trace(s) in Stream:
 BW.KW1..EHZ | 2015-10-09T22:50:51.000000Z - ... | 200.0 Hz, 3165 samples
 BW.KW1..EHZ | 2015-10-09T22:51:06.215000Z - ... | 200.0 Hz, 892 samples
@@ -87,8 +87,8 @@ Details on the individual packets can be retrieved with the low level
 >>> from obspy.core.util.base import get_example_file
 >>> from obspy.io.reftek.core import Reftek130
 >>> rt = Reftek130.from_file(get_example_file("225051000_00008656"))
->>> print(rt)
-Reftek130 (29 packets)
+>>> print(rt)  # doctest: +ELLIPSIS
+Reftek130 (29 packets, file: ...225051000_00008656)
 Packet Sequence  Byte Count  Data Fmt  Sampling Rate      Time
   | Packet Type   |  Event #  | Station | Channel #         |
   |   |  Unit ID  |    | Data Stream #  |   |  # of samples |
@@ -124,7 +124,7 @@ Packet Sequence  Byte Count  Data Fmt  Sampling Rate      Time
 0028 ET AE4C  0  416  427  0 C0 KW1    200         2015-10-09T22:50:51.000000Z
 (detailed packet information with: 'print(Reftek130.__str__(compact=False))')
 >>> print(rt.__str__(compact=False)) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-Reftek130 (29 packets)
+Reftek130 (29 packets, file: ...225051000_00008656)
 EH Packet
     packet_sequence: 0
     experiment_number: 0

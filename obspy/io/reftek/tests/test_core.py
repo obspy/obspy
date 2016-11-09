@@ -128,8 +128,6 @@ class ReftekTestCase(unittest.TestCase):
         st_reftek = _read_reftek130(
             self.reftek_file, network="XX", location="01",
             component_codes=["1", "2", "3"])
-        # centralized the equality check, so that it can be reused in other
-        # tests..
         self._assert_reftek130_test_stream(st_reftek)
 
     def test_read_reftek130_no_component_codes_specified(self):
@@ -314,7 +312,7 @@ class ReftekTestCase(unittest.TestCase):
         Test string representations of Reftek object and Packets
         """
         expected = [
-            "Reftek130 (29 packets)",
+            "Reftek130 (29 packets, file: {})".format(self.reftek_file),
             "Packet Sequence  Byte Count  Data Fmt  Sampling Rate      Time",
             "  | Packet Type   |  Event #  | Station | Channel #         |",
             "  |   |  Unit ID  |    | Data Stream #  |   |  # of samples |",
@@ -380,6 +378,7 @@ class ReftekTestCase(unittest.TestCase):
             "(detailed packet information with: "
             "'print(Reftek130.__str__(compact=False))')"]
         with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
             rt130 = Reftek130.from_file(self.reftek_file)
         self.assertEqual(expected, str(rt130).splitlines())
 
