@@ -25,6 +25,10 @@ def main(argv=None):
     parser.add_argument('-n', '--no-automerge', dest='automerge',
                         action='store_false',
                         help='Disable automatic merging of matching channels.')
+    parser.add_argument('--full', dest='full', action='store_true',
+                        help='Disable min/max-plot, i.e. always plot every '
+                             'single sample (Stream.plot(..., method="full"), '
+                             'for interactive zooming).')
     parser.add_argument('files', nargs='+',
                         help='Files to plot.')
     args = parser.parse_args(argv)
@@ -35,7 +39,11 @@ def main(argv=None):
     st = Stream()
     for f in args.files:
         st += read(f, format=args.format)
-    st.plot(outfile=args.outfile, automerge=args.automerge)
+    kwargs = {"outfile": args.outfile,
+              "automerge": args.automerge}
+    if args.full:
+        kwargs['method'] = "full"
+    st.plot(**kwargs)
 
 
 if __name__ == "__main__":

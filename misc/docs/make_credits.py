@@ -40,8 +40,9 @@ def name_key_function(name):
     return last, first
 
 filename = os.path.join(os.pardir, os.pardir, 'CONTRIBUTORS.txt')
-contributors = sorted(codecs.open(filename, 'r', 'utf-8').readlines(),
-                      key=name_key_function)
+lines = [line for line in codecs.open(filename, 'r', 'utf-8').readlines()
+         if line.strip()]
+contributors = sorted(lines, key=name_key_function)
 
 for item in contributors:
     fh.write("    * %s" % (item))

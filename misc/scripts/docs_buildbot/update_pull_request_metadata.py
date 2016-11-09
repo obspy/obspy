@@ -41,8 +41,10 @@ for pr in get_pull_requests(state="open"):
                   "new build.".format(
                       number, str(datetime.fromtimestamp(time_done))))
             continue
-    # ..otherwise touch the .todo file
+    # ..otherwise touch the .todo file and set it's time to the time of the
+    # last commit +1 second (we'll use that time as the time of the docs build)
     with open(filename_todo, "wb"):
         print("PR #{} build has been queued.".format(number))
+    os.utime(filename_todo, (time + 1, time + 1))
 
 print("Done checking which PRs require a docs build.")
