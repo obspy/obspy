@@ -147,7 +147,7 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
     >>> a
     -50
     >>> round(b, 6)
-    0.992313
+    0.995369
 
     """
     a, b = tr1, tr2

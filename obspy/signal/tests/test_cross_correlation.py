@@ -106,7 +106,9 @@ class CrossCorrelationTestCase(unittest.TestCase):
             self.assertIn('full_xcorr', str(w[-1].message))
 
     def test_xcorr_vs_old_implementation(self):
-        """Test against output of xcorr from ObsPy<1.1"""
+        """
+        Test against output of xcorr from ObsPy<1.1
+        """
         # Results of xcorr(self.a, self.b, 15, full_xcorr=True)
         # for ObsPy==1.0.2:
         # -5, 0.9651607597888241
@@ -128,13 +130,25 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.assertEqual(shift, -5 - (len(self.a) - len(self.c)) // 2)
 
     def test_xcorr_different_implementations(self):
-        xcorrs = []
+        """
+        Test correct length and different implementations against each other
+        """
+        xcorrs1 = []
+        xcorrs2 = []
         for xcorr_func in (_xcorr_padzeros, _xcorr_slice):
             for domain in ('freq', 'time'):
                 x = xcorr_func(self.a, self.b, 40, domain=domain)
-                xcorrs.append(x)
-        for x_other in xcorrs[1:]:
-            np.testing.assert_allclose(x_other, xcorrs[0])
+                y = xcorr_func(self.a, self.b[:-1], 40, domain=domain)
+                self.assertEqual((len(self.a) - len(self.b)) % 2, 0)
+                self.assertEqual(len(x), 2 * 40 + 1)
+                self.assertEqual(len(y), 2 * 40)
+                xcorrs1.append(x)
+                xcorrs2.append(y)
+        for x_other in xcorrs1[1:]:
+            np.testing.assert_allclose(x_other, xcorrs1[0])
+        for x_other in xcorrs2[1:]:
+            np.testing.assert_allclose(x_other, xcorrs2[0])
+
 
     def test_xcorr_pick_correction(self):
         """
