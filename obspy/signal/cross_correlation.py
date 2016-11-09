@@ -34,7 +34,7 @@ from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
 
 
-def __pad_zeros(a, num):
+def _pad_zeros(a, num):
     """Pad num zeros at both sides of array a"""
     hstack = [np.zeros(num, dtype=a.dtype), a, np.zeros(num, dtype=a.dtype)]
     return np.hstack(hstack)
@@ -48,9 +48,9 @@ def _xcorr_padzeros(a, b, num, domain='freq'):
         num = (a + b - 1) // 2
     dif = len(a) - len(b) - 2 * num
     if dif > 0:
-        b = __pad_zeros(b, dif // 2)
+        b = _pad_zeros(b, dif // 2)
     else:
-        a = __pad_zeros(a, -dif // 2)
+        a = _pad_zeros(a, -dif // 2)
     if domain == 'freq':
         c = fftconvolve(a, b[::-1], 'valid')
     else:
@@ -170,10 +170,12 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
                'major release (v.1.3). Please set full_xcorr=True now.')
         warnings.warn(msg, ObsPyDeprecationWarning)
         shift = np.argmax(c)
-        return shift - len(c) // 2, c[shift]
+        return shift - len(c) // 2, float(c[shift])
     if return_shift:
         shift = np.argmax(c)
-        return shift - len(c) // 2, c[shift], c
+        # float() call is workaround for future package
+        # see https://travis-ci.org/obspy/obspy/jobs/174284750
+        return shift - len(c) // 2, float(c[shift]), c
     else:
         return c
 

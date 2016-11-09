@@ -27,23 +27,23 @@ class UtilTestCase(unittest.TestCase):
         np.random.seed(815)  # make test reproducible
         tr1 = np.random.randn(10000).astype(np.float32)
         tr2 = tr1.copy()
-        shift, corr = xcorr(tr1, tr2, 100)
+        shift, corr, _ = xcorr(tr1, tr2, 100, full_xcorr=True)
         self.assertEqual(shift, 0)
         self.assertAlmostEqual(corr, 1, 2)
         # example 2 - all samples are different
         tr1 = np.ones(10000, dtype=np.float32)
         tr2 = np.zeros(10000, dtype=np.float32)
-        shift, corr = xcorr(tr1, tr2, 100)
+        shift, corr, _ = xcorr(tr1, tr2, 100, full_xcorr=True)
         # comment next line, because shift is not unique
         # self.assertEqual(shift, 0)
         self.assertAlmostEqual(corr, 0, 2)
         # example 3 - shift of 10 samples
         tr1 = np.random.randn(10000).astype(np.float32)
         tr2 = np.concatenate((np.zeros(10), tr1[0:-10]))
-        shift, corr = xcorr(tr1, tr2, 100)
+        shift, corr, _ = xcorr(tr1, tr2, 100, full_xcorr=True)
         self.assertEqual(shift, -10)
         self.assertAlmostEqual(corr, 1, 2)
-        shift, corr = xcorr(tr2, tr1, 100)
+        shift, corr, _ = xcorr(tr2, tr1, 100, full_xcorr=True)
         self.assertEqual(shift, 10)
         self.assertAlmostEqual(corr, 1, 2)
         # example 4 - shift of 10 samples + small sine disturbance
@@ -51,10 +51,10 @@ class UtilTestCase(unittest.TestCase):
         var = np.sin(np.arange(10000, dtype=np.float32) * 0.1)
         tr2 = np.concatenate((np.zeros(10), tr1[0:-10])) * 0.9
         tr2 += var
-        shift, corr = xcorr(tr1, tr2, 100)
+        shift, corr, _ = xcorr(tr1, tr2, 100, full_xcorr=True)
         self.assertEqual(shift, -10)
         self.assertAlmostEqual(corr, 1, 2)
-        shift, corr = xcorr(tr2, tr1, 100)
+        shift, corr, _ = xcorr(tr2, tr1, 100, full_xcorr=True)
         self.assertEqual(shift, 10)
         self.assertAlmostEqual(corr, 1, 2)
 
