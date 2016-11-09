@@ -119,6 +119,9 @@ master: (doi: 10.5281/zenodo.165135)
  - obspy.signal:
    * New obspy.signal.quality_control module to compute quality metrics from
      MiniSEED files. (see #1141)
+   * New implementation of cross-correlation which is backwards compatible
+     but more flexible (see #1585), keyword full_xcorr will default to True
+     with the next major release and will be depreciated afterwards.
  - obspy.taup:
    * Add obspy.taup.taup_geo.calc_dist_azi, a function to return the distance,
      azimuth and backazimuth for a source - receiver pair. (see #1538)
