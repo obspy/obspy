@@ -157,6 +157,8 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
         a = a.data
     if isinstance(b, Trace):
         b = b.data
+    a = np.asarray(a)
+    b = np.asarray(b)
     if demean:
         a = a - np.mean(a)
         b = b - np.mean(b)
