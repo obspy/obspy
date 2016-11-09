@@ -149,7 +149,6 @@ class CrossCorrelationTestCase(unittest.TestCase):
         for x_other in xcorrs2[1:]:
             np.testing.assert_allclose(x_other, xcorrs2[0])
 
-
     def test_xcorr_pick_correction(self):
         """
         Test cross correlation pick correction on a set of two small local
