@@ -17,6 +17,7 @@ import warnings
 import numpy as np
 
 from obspy import UTCDateTime
+from obspy.io.mseed.headers import clibmseed
 
 from .util import (
     _decode_ascii, _parse_long_time, _16_tuple_ascii, _16_tuple_int, bcd,
@@ -248,6 +249,61 @@ def _initial_unpack_packets(bytestring):
     result['time'][:] += [_get_timestamp_for_start_of_year(y)
                           for y in result['year']]
     return result
+
+
+def _unpack_C0_data(packets):  # noqa
+    """
+    Unpacks sample data from a packet array.
+
+    :type packets: :class:`numpy.ndarray` (dtype ``PACKET_FINAL_DTYPE``)
+    :param packets: Array of data packets (``packet_type`` ``'DT'``) from which
+        to unpack the sample data.
+    """
+    npts = packets["number_of_samples"].sum()
+    unpacked_data = np.empty(npts, dtype=np.int32)
+    pos = 0
+    # if the packet array is contiguous in memory (which it generally should
+    # be), we can work with the memory address of the first packed data byte
+    # and advance it by a fixed offset when moving from one packet to the next
+    if packets.flags['C_CONTIGUOUS'] and packets.flags['F_CONTIGUOUS']:
+        # Unfortunately the whole data cannot be unpacked with one call to
+        # libmseed as some payloads do not take the full 960 bytes. They are
+        # thus padded which would results in padded pieces directly in a large
+        # array and libmseed (understandably) does not support that.
+        #
+        # Thus we resort to *tada* pointer arithmetics in Python ;-) This is
+        # quite a bit faster then correctly casting to an integer pointer so
+        # it's worth it.
+        #
+        # Also avoid a data copy.
+        #
+        # Writing this directly in C would be about 3 times as fast so it might
+        # be worth it.
+        s = packets[0]["payload"][40:].ctypes.data
+        if len(packets) > 1:
+            offset = (
+                packets[1]["payload"][40:].ctypes.data - s)
+        else:
+            offset = 0
+        for _npts in packets["number_of_samples"]:
+            clibmseed.msr_decode_steim1(
+                s, 960, _npts, unpacked_data[pos:], _npts, None,
+                1)
+            pos += _npts
+            s += offset
+    # if the packet array is *not* contiguous in memory, fall back to slightly
+    # slower unpacking with looking up the memory position of the first packed
+    # byte in each packet individually.
+    else:
+        # Sample data starts at byte 40 in the DT packet's
+        # payload.
+        for p in packets:
+            _npts = p["number_of_samples"]
+            clibmseed.msr_decode_steim1(
+                p["payload"][40:].ctypes.data, 960, _npts,
+                unpacked_data[pos:], _npts, None, 1)
+            pos += _npts
+    return unpacked_data
 
 
 if __name__ == '__main__':
