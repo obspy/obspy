@@ -10,6 +10,7 @@ import ctypes as C
 import numpy as np
 import os
 import unittest
+import warnings
 
 from obspy import UTCDateTime, read
 from obspy.core.util.libnames import _load_cdll
@@ -130,6 +131,32 @@ class CrossCorrelationTestCase(unittest.TestCase):
         shift, _, _ = xcorr(self.a, self.c, 50, full_xcorr=True)
         self.assertEqual(shift, -5 - (len(self.a) - len(self.c)) // 2)
 
+    def test_xcorr2(self):
+        # simple test
+        a, b = [0, 1], [20, 10]
+        shift, value, x = xcorr(a, b, 1, demean=False, normalize=False,
+                                full_xcorr=True)
+        self.assertEqual(shift, 1)
+        self.assertAlmostEqual(value, 20.)
+        np.testing.assert_allclose(x, [0., 10., 20.], atol=1e-14)
+        # test symetry and different length of a and b
+        a, b = [0, 1, 2], [20, 10]
+        shift1, _, x1 = xcorr(a, b, 1, demean=False, normalize=False,
+                              full_xcorr=True)
+        shift2, _, x2 = xcorr(a, b, 1, demean=False, normalize=False,
+                              full_xcorr=True, domain='time')
+        shift3, _, x3 = xcorr(b, a, 1, demean=False, normalize=False,
+                              full_xcorr=True)
+        shift4, _, x4 = xcorr(b, a, 1, demean=False, normalize=False,
+                              full_xcorr=True, domain='time')
+        self.assertEqual(shift1, 0.5)
+        self.assertEqual(shift2, 0.5)
+        self.assertEqual(shift3, -0.5)
+        self.assertEqual(shift4, -0.5)
+        np.testing.assert_allclose(x1, x2)
+        np.testing.assert_allclose(x3, x4)
+        np.testing.assert_allclose(x1, x3[::-1])
+
     def test_xcorr_different_implementations(self):
         """
         Test correct length and different implementations against each other
@@ -150,6 +177,35 @@ class CrossCorrelationTestCase(unittest.TestCase):
         for x_other in xcorrs2[1:]:
             np.testing.assert_allclose(x_other, xcorrs2[0])
 
+    def test_xcorr_extreme_shifts_for_freq_xcorr(self):
+        """
+        Also test shift_len=None
+        """
+        a, b = [1, 2, 3], [1, 2, 3]
+        n = len(a) + len(b) - 1
+        _, _, x1 = xcorr(a, b, 2, domain='freq', full_xcorr=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            _, _, x2 = xcorr(a, b, 3, domain='freq', full_xcorr=True)
+        _, _, x3 = xcorr(a, b, None, domain='freq', full_xcorr=True)
+        _, _, x4 = xcorr(a, b, None, domain='time', full_xcorr=True)
+        self.assertEqual(len(x1), n)
+        self.assertEqual(len(x2), n)
+        self.assertEqual(len(x3), n)
+        self.assertEqual(len(x4), n)
+        a, b = [1, 2, 3], [1, 2]
+        n = len(a) + len(b) - 1
+        _, _, x1 = xcorr(a, b, 2, domain='freq', full_xcorr=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            _, _, x2 = xcorr(a, b, 3, domain='freq', full_xcorr=True)
+        _, _, x3 = xcorr(a, b, None, domain='freq', full_xcorr=True)
+        _, _, x4 = xcorr(a, b, None, domain='time', full_xcorr=True)
+        self.assertEqual(len(x1), n)
+        self.assertEqual(len(x2), n)
+        self.assertEqual(len(x3), n)
+        self.assertEqual(len(x4), n)
+
     def test_xcorr_max(self):
         shift, value = xcorr_max((1, 3, -5))
         self.assertEqual(shift, 1)
@@ -162,7 +218,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
         st = read()
         st2 = read()
         for tr in st2:
-            tr.data = -5*np.roll(tr.data, 50)
+            tr.data = -5 * np.roll(tr.data, 50)
         shift, value, x = xcorr_3c(st, st2, 200, full_xcorr=True)
         self.assertEqual(shift, -50)
         self.assertAlmostEqual(value, -0.998, 3)

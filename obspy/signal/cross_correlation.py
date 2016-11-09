@@ -36,7 +36,7 @@ from obspy.signal.invsim import cosine_taper
 
 def _pad_zeros(a, num):
     """Pad num zeros at both sides of array a"""
-    hstack = [np.zeros(num, dtype=a.dtype), a, np.zeros(num, dtype=a.dtype)]
+    hstack = [np.zeros(num), a, np.zeros(num)]
     return np.hstack(hstack)
 
 
@@ -45,7 +45,7 @@ def _xcorr_padzeros(a, b, num, domain='freq'):
     Cross-correlation using SciPy with mode='valid' and precedent zero padding
     """
     if num is None:
-        num = (a + b - 1) // 2
+        num = (len(a) + len(b) - 1) // 2
     dif = len(a) - len(b) - 2 * num
     if dif > 0:
         b = _pad_zeros(b, dif // 2)
