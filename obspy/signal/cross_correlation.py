@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------
 # Filename: cross_correlation.py
-#   Author: Moritz Beyreuther, Tobias Megies
+#   Author: Moritz Beyreuther, Tobias Megies, Tom Eulenfeld
 #    Email: megies@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2012 Moritz Beyreuther, Tobias Megies
+# Copyright (C) 2008-2016 Moritz Beyreuther, Tobias Megies, Tom Eulenfeld
 # ------------------------------------------------------------------
 """
 Signal processing routines based on cross correlation techniques.
@@ -77,7 +77,7 @@ def _xcorr_slice(a, b, num, domain='freq'):
 
 
 def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
-          full_xcorr=False):
+          full_xcorr=False, abs_max=True):
     """
     Cross-correlation of signals tr1 and tr2.
 
@@ -101,13 +101,16 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
         Keyword full_xcorr will default to True starting
         with the next major release (v1.2) and will be removed in the subsquent
         major release (v1.3). Please set ``full_xcorr=True``.
+    :param bool abs_max: *shift* will be calculated for maximum or
+        absolute maximum.
 
-
-    :return: *shift, max_corr, corr_fun* for ``full_xcorr=False`` and
-             only *corr_fun* for ``full_xcorr=False`` (depreciated).
+    :return: *shift, value, corr_fun* for ``full_xcorr=False`` and
+             only *shift, value* for ``full_xcorr=False`` (depreciated).
              *shift* is the sample index of the maximum correlation
-             relative to the zero shift index. *max_corr* is the value at this
-             sample. *corr_fun* is the complete cross-correlation function.
+             relative to zero shift (the middle). If this is nonunique the
+             smallest value of *shift* will be returned.
+             *value* is the value at this sample.
+             *corr_fun* is the complete cross-correlation function.
 
     .. note::
 
@@ -129,7 +132,8 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
 
         For odd ``len(tr1)-len(tr2)`` the cross-correlation function will
         consist of only ``2*shift_len`` samples because a shift of 0
-        corresponds to the middle between two samples.
+        corresponds to the middle between two samples. *shift* will be a float
+        value in this case (otherwise int).
 
     .. rubric:: Example
 
@@ -167,17 +171,16 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
     # choose the usually faster xcorr method for each domain
     _xcorr = _xcorr_slice if domain == 'freq' else _xcorr_padzeros
     c = _xcorr(a, b, shift_len, domain=domain) / stdev
-    shift = np.argmax(c)
+    shift, value = xcorr_max(c, abs_max=abs_max)
     if not full_xcorr:
         from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
         msg = ('Keyword full_xcorr will default to True starting with the next'
                ' major release (v1.2) and will be removed in the subsquent '
                'major release (v.1.3). Please set full_xcorr=True.')
         warnings.warn(msg, ObsPyDeprecationWarning)
-        return shift - len(c) // 2, float(c[shift])
-    # float() call is workaround for future package
-    # see https://travis-ci.org/obspy/obspy/jobs/174284750
-    return shift - len(c) // 2, float(c[shift]), c
+        return shift, value
+
+    return shift, value, c
 
 
 def _xcorr_old_implementation(tr1, tr2, shift_len, full_xcorr=False):
@@ -290,6 +293,8 @@ def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
     :type full_xcorr: bool
     :param full_xcorr: If ``True``, the complete xcorr function will be
         returned as :class:`~numpy.ndarray`.
+    :param bool abs_max: *shift* will be calculated for maximum or
+        absolute maximum.
     :return: **index, value[, fct]** - index of maximum xcorr value and the
         value itself. The complete xcorr function is returned only if
         ``full_xcorr=True``.
@@ -310,20 +315,21 @@ def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
         raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
     corp = np.zeros(2 * shift_len + 1, dtype=np.float64, order='C')
-
     for component in components:
         xx = xcorr(streams[0].select(component=component)[0],
                    streams[1].select(component=component)[0],
                    shift_len, full_xcorr=True)
         corp += xx[2]
-
     corp /= len(components)
-
     shift, value = xcorr_max(corp, abs_max=abs_max)
-
     if full_xcorr:
         return shift, value, corp
     else:
+        from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+        msg = ('Keyword full_xcorr will default to True starting with the next'
+               ' major release (v1.2) and will be removed in the subsquent '
+               'major release (v.1.3). Please set full_xcorr=True.')
+        warnings.warn(msg, ObsPyDeprecationWarning)
         return shift, value
 
 
@@ -342,28 +348,28 @@ def xcorr_max(fct, abs_max=True):
     >>> fct = np.zeros(101)
     >>> fct[50] = -1.0
     >>> xcorr_max(fct)
-    (0.0, -1.0)
+    (0, -1.0)
     >>> fct[50], fct[60] = 0.0, 1.0
     >>> xcorr_max(fct)
-    (10.0, 1.0)
+    (10, 1.0)
     >>> fct[60], fct[40] = 0.0, -1.0
     >>> xcorr_max(fct)
-    (-10.0, -1.0)
+    (-10, -1.0)
     >>> fct[60], fct[40] = 0.5, -1.0
     >>> xcorr_max(fct, abs_max=True)
-    (-10.0, -1.0)
+    (-10, -1.0)
     >>> xcorr_max(fct, abs_max=False)
-    (10.0, 0.5)
+    (10, 0.5)
+    >>> xcorr_max(fct[:-1], abs_max=False)
+    (10.5, 0.5)
     """
-    value = fct.max()
-    if abs_max:
-        _min = fct.min()
-        if abs(_min) > abs(value):
-            value = _min
-
     mid = (len(fct) - 1) / 2
-    shift = np.where(fct == value)[0][0] - mid
-    return float(shift), float(value)
+    if len(fct) % 2 == 1:
+        mid = int(mid)
+    index = np.argmax(np.abs(fct) if abs_max else fct)
+    # float() call is workaround for future package
+    # see https://travis-ci.org/obspy/obspy/jobs/174284750
+    return index - mid, float(fct[index])
 
 
 def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,

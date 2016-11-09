@@ -15,6 +15,7 @@ from obspy import UTCDateTime, read
 from obspy.core.util.libnames import _load_cdll
 from obspy.core.util.testing import ImageComparison
 from obspy.signal.cross_correlation import (xcorr, xcorr_pick_correction,
+                                            xcorr_3c, xcorr_max,
                                             _xcorr_padzeros, _xcorr_slice)
 
 
@@ -148,6 +149,23 @@ class CrossCorrelationTestCase(unittest.TestCase):
             np.testing.assert_allclose(x_other, xcorrs1[0])
         for x_other in xcorrs2[1:]:
             np.testing.assert_allclose(x_other, xcorrs2[0])
+
+    def test_xcorr_max(self):
+        shift, value = xcorr_max((1, 3, -5))
+        self.assertEqual(shift, 1)
+        self.assertEqual(value, -5)
+        shift, value = xcorr_max((3., -5.), abs_max=False)
+        self.assertEqual(shift, -0.5)
+        self.assertEqual(value, 3.)
+
+    def test_xcorr_3c(self):
+        st = read()
+        st2 = read()
+        for tr in st2:
+            tr.data = -5*np.roll(tr.data, 50)
+        shift, value, x = xcorr_3c(st, st2, 200, full_xcorr=True)
+        self.assertEqual(shift, -50)
+        self.assertAlmostEqual(value, -0.998, 3)
 
     def test_xcorr_pick_correction(self):
         """
