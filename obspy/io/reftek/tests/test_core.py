@@ -14,7 +14,8 @@ import numpy as np
 
 import obspy
 from obspy.core.util import NamedTemporaryFile
-from obspy.io.reftek.core import _read_reftek130, _is_reftek130, Reftek130
+from obspy.io.reftek.core import (
+    _read_reftek130, _is_reftek130, Reftek130, Reftek130Exception)
 
 
 class ReftekTestCase(unittest.TestCase):
@@ -184,9 +185,10 @@ class ReftekTestCase(unittest.TestCase):
         """
         with NamedTemporaryFile() as fh:
             # try to read empty file, finding no packets
-            self.assertRaises(Exception, _read_reftek130, fh.name)
+            self.assertRaises(Reftek130Exception, _read_reftek130, fh.name)
         # try to read mseed file, finding no packets
-        self.assertRaises(Exception, _read_reftek130, self.mseed_files[0])
+        self.assertRaises(Reftek130Exception, _read_reftek130,
+                          self.mseed_files[0])
 
     def test_warning_disturbed_packet_sequence(self):
         """

@@ -14,13 +14,19 @@ import warnings
 import numpy as np
 
 from obspy import Trace, Stream, UTCDateTime
+from obspy.core.util.obspy_types import ObsPyException
 from obspy.io.mseed.headers import clibmseed
 
 from .packet import (Packet, EHPacket, _initial_unpack_packets, PACKET_TYPES,
-                     PACKET_TYPES_IMPLEMENTED, PACKET_FINAL_DTYPE)
+                     PACKET_TYPES_IMPLEMENTED, PACKET_FINAL_DTYPE,
+                     Reftek130UnpackPacketError)
 
 
 NOW = UTCDateTime()
+
+
+class Reftek130Exception(ObsPyException):
+    pass
 
 
 def _is_reftek130(filename):
@@ -87,9 +93,17 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
     # when reading data to be on the safe side.
     if NOW.year > 2050:
         raise NotImplementedError()
-    return Reftek130.from_file(filename).to_stream(
-        network=network, location=location, component_codes=component_codes,
-        headonly=headonly, verbose=verbose)
+    try:
+        rt130 = Reftek130.from_file(filename)
+        st = rt130.to_stream(
+            network=network, location=location,
+            component_codes=component_codes, headonly=headonly,
+            verbose=verbose)
+        return st
+    except Reftek130UnpackPacketError:
+        msg = ("Unable to read file '{}' as a Reftek130 file. Please contact "
+               "developers if you think this is a valid Reftek130 file.")
+        raise Reftek130Exception(msg.format(filename))
 
 
 class Reftek130(object):
@@ -179,9 +193,16 @@ class Reftek130(object):
         """
         if verbose:
             print(self)
+        if not len(self._data):
+            msg = "No packet data in Reftek130 object (file: {})"
+            raise Reftek130Exception(msg.format(self._filename))
         self.check_packet_sequence_and_sort()
         self.check_packet_sequence_contiguous()
         self.drop_not_implemented_packet_types()
+        if not len(self._data):
+            msg = ("No packet data left in Reftek130 object after dropping "
+                   "non-implemented packets (file: {})").format(self._filename)
+            raise Reftek130Exception(msg)
         for event_number in np.unique(self._data['event_number']):
             data = self._data[self._data['event_number'] == event_number]
             # we should have exactly one EH and one ET packet, truncated data
@@ -191,11 +212,11 @@ class Reftek130(object):
             if len(eh_packets) == 0 and len(et_packets) == 0:
                 msg = ("Reftek data contains data packets without "
                        "corresponding header or trailer packet.")
-                raise Exception(msg)
+                raise Reftek130Exception(msg)
             if len(eh_packets) > 1 or len(et_packets) > 1:
                 msg = ("Reftek data contains data packets with multiple "
                        "corresponding header or trailer packets.")
-                raise Exception(msg)
+                raise Reftek130Exception(msg)
             if len(eh_packets) != 1:
                 msg = ("No event header (EH) packets in packet sequence. "
                        "File might be truncated.")
@@ -330,7 +351,7 @@ class Reftek130(object):
                                "endtime or number of samples. Please open an "
                                "issue on GitHub and provide your file for"
                                "testing.")
-                        raise Exception(msg)
+                        raise Reftek130Exception(msg)
                     st += tr
 
         return st

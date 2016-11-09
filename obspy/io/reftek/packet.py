@@ -24,6 +24,10 @@ from .util import (
     bcd_8bit_hex, _get_timestamp_for_start_of_year)
 
 
+class Reftek130UnpackPacketError(ValueError):
+    pass
+
+
 PACKET_TYPES_IMPLEMENTED = ("EH", "ET", "DT")
 PACKET_TYPES_NOT_IMPLEMENTED = ("AD", "CD", "DS", "FD", "OM", "SC", "SH")
 PACKET_TYPES = PACKET_TYPES_IMPLEMENTED + PACKET_TYPES_NOT_IMPLEMENTED
@@ -216,6 +220,9 @@ def _initial_unpack_packets(bytestring):
     file, than allocate result array with dtypes for storage of python
     objects/arrays and fill it with the unpacked data.
     """
+    if not len(bytestring):
+        return np.array([], dtype=PACKET_FINAL_DTYPE)
+
     if len(bytestring) % 1024 != 0:
         tail = len(bytestring) % 1024
         bytestring = bytestring[:-tail]
@@ -230,7 +237,10 @@ def _initial_unpack_packets(bytestring):
         if converter is None:
             result[name][:] = data[name][:]
             continue
-        result[name][:] = converter(data[name])
+        try:
+            result[name][:] = converter(data[name])
+        except Exception as e:
+            raise Reftek130UnpackPacketError(str(e))
     # time unpacking is special and needs some additional work.
     # we need to add the POSIX timestamp of the start of respective year to the
     # already unpacked seconds into the respective year..
