@@ -210,6 +210,42 @@ class ReftekTestCase(unittest.TestCase):
         self.assertEqual(str(w[0].message),
                          'Detected a non-contiguous packet sequence!')
 
+    def test_read_file_perturbed_packet_sequence(self):
+        """
+        Test data read from file when packet sequence is perturbed. This makes
+        sure that data is read correctly even when the array storing the
+        packets gets permuted and thus becomes incontiguous for C.
+        """
+        with NamedTemporaryFile() as fh:
+            with open(self.reftek_file, 'rb') as fh2:
+                # write packages to the file and move some packets around in
+                # the file
+                # (packets are 1024 byte each)
+                tmp1 = fh2.read(1024 * 2)
+                tmp2 = fh2.read(1024 * 4)
+                tmp3 = fh2.read(1024 * 1)
+                tmp4 = fh2.read(1024 * 2)
+                tmp5 = fh2.read(1024 * 3)
+                tmp6 = fh2.read()
+            fh.write(tmp1)
+            fh.write(tmp3)
+            fh.write(tmp5)
+            fh.write(tmp6)
+            fh.write(tmp2)
+            fh.write(tmp4)
+            fh.seek(0)
+            # try to read file, finding a non-contiguous packet sequence
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                st_reftek = _read_reftek130(
+                    fh.name, network="XX", location="01",
+                    component_codes=["1", "2", "3"])
+        st_reftek.merge(-1)
+        self.assertEqual(len(w), 1)
+        self.assertEqual(str(w[0].message),
+                         'Detected permuted packet sequence, sorting.')
+        self._assert_reftek130_test_stream(st_reftek)
+
     def test_drop_not_implemented_packets(self):
         """
         Test error message when some not implemented packet types are dropped

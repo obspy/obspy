@@ -152,7 +152,8 @@ class Reftek130(object):
         are properly enclosed by the appropriate event header/trailer (EH/ET)
         packets.
         """
-        if np.any(np.diff(self._data['packet_sequence']) - 1 < 0):
+        diff = np.diff(self._data['packet_sequence'].astype(np.int16))
+        if np.any(diff < 1):
             msg = ("Detected permuted packet sequence, sorting.")
             warnings.warn(msg)
             self._data.sort(order=native_str("packet_sequence"))
@@ -163,7 +164,8 @@ class Reftek130(object):
         in between. Currently raises if that is the case because this case is
         not covered by test data yet.
         """
-        if np.any(np.diff(self._data['packet_sequence']) - 1 != 0):
+        diff = np.diff(self._data['packet_sequence'].astype(np.int16))
+        if np.any(diff > 1):
             msg = ("Detected a non-contiguous packet sequence!")
             warnings.warn(msg)
 
