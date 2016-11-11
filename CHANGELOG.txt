@@ -2,6 +2,8 @@ master: (doi: 10.5281/zenodo.165135)
  - General:
    * Read support for Guralp Compressed Format (GCF) waveform data,
      obspy.io.gcf (see #1449)
+   * Read support for Reftek 130 (rt130) waveform data,
+     obspy.io.reftek (see #1433)
  - obspy.core:
    * Stream/Trace.write() can now autodetect file format from file extension
      (see #1321).
