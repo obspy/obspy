@@ -1003,6 +1003,16 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(UTCDateTime('2015-07-03-06-42-1.5123'),
                          UTCDateTime(2015, 7, 3, 6, 42, 1, 512300))
 
+    def test_add_error_message(self):
+        t = UTCDateTime()
+        t2 = UTCDateTime()
+        with self.assertRaises(TypeError) as context:
+            t + t2
+        self.assertEqual(
+            str(context.exception),
+            "unsupported operand type(s) for +: 'UTCDateTime' and "
+            "'UTCDateTime'")
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
