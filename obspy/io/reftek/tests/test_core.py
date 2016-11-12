@@ -16,6 +16,8 @@ import obspy
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.reftek.core import (
     _read_reftek130, _is_reftek130, Reftek130, Reftek130Exception)
+from obspy.io.reftek.packet import (
+    _unpack_C0_data_fast, _unpack_C0_data_safe, _unpack_C0_data)
 
 
 class ReftekTestCase(unittest.TestCase):
@@ -342,6 +344,39 @@ class ReftekTestCase(unittest.TestCase):
             'truncated.')
         # data should be read OK aside from the warnings
         self._assert_reftek130_test_stream(st_reftek)
+
+    def test_no_eh_et_packet(self):
+        """
+        Test error messages when reading a file without any EH/ET packet.
+        """
+        with NamedTemporaryFile() as fh:
+            with open(self.reftek_file, 'rb') as fh2:
+                # write packages to the file and omit first and last (EH/ET)
+                # packet
+                # (packets are 1024 byte each)
+                tmp = fh2.read()
+            fh.write(tmp[1024:-1024])
+            fh.seek(0)
+            with self.assertRaises(Reftek130Exception) as context:
+                _read_reftek130(
+                    fh.name, network="XX", location="01",
+                    component_codes=["1", "2", "3"])
+        self.assertEqual(
+            str(context.exception),
+            "Reftek data contains data packets without corresponding header "
+            "or trailer packet.")
+
+    def test_data_unpacking(self):
+        """
+        Test both unpacking routines for C0 data coding
+        """
+        rt = Reftek130.from_file(self.reftek_file)
+        expected = np.load(os.path.join(self.datapath, "unpacked_data.npy"))
+        packets = rt._data[rt._data['packet_type'] == 'DT'][:10]
+        for func in (_unpack_C0_data, _unpack_C0_data_fast,
+                     _unpack_C0_data_safe):
+            got = _unpack_C0_data(packets)
+            np.testing.assert_array_equal(got, expected)
 
     def test_string_representations(self):
         """
