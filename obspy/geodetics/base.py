@@ -261,7 +261,7 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
             raise e
 
 
-def kilometer2degrees(kilometer, radius=6371):
+def kilometers2degrees(kilometer, radius=6371):
     """
     Convenience function to convert kilometers to degrees assuming a perfectly
     spherical Earth.
@@ -275,14 +275,14 @@ def kilometer2degrees(kilometer, radius=6371):
 
     .. rubric:: Example
 
-    >>> from obspy.geodetics import kilometer2degrees
-    >>> kilometer2degrees(300)
+    >>> from obspy.geodetics import kilometers2degrees
+    >>> kilometers2degrees(300)
     2.6979648177561915
     """
     return kilometer / (2.0 * radius * math.pi / 360.0)
 
 
-kilometers2degrees = kilometer2degrees
+kilometer2degrees = kilometers2degrees
 
 
 def degrees2kilometers(degrees, radius=6371):
