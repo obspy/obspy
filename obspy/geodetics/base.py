@@ -282,6 +282,9 @@ def kilometer2degrees(kilometer, radius=6371):
     return kilometer / (2.0 * radius * math.pi / 360.0)
 
 
+kilometers2degrees = kilometer2degrees
+
+
 def degrees2kilometers(degrees, radius=6371):
     """
     Convenience function to convert (great circle) degrees to kilometers
