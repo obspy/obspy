@@ -372,7 +372,7 @@ class ReftekTestCase(unittest.TestCase):
         """
         rt = Reftek130.from_file(self.reftek_file)
         expected = np.load(os.path.join(self.datapath, "unpacked_data.npy"))
-        packets = rt._data[rt._data['packet_type'] == 'DT'][:10]
+        packets = rt._data[rt._data['packet_type'] == b'DT'][:10]
         for func in (_unpack_C0_data, _unpack_C0_data_fast,
                      _unpack_C0_data_safe):
             got = _unpack_C0_data(packets)
