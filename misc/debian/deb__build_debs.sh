@@ -53,7 +53,7 @@ git fetch --all
 git checkout -- .
 if [ "$GITTARGET" != "master" ]
 then
-    git checkout -b $GITTARGET origin/$GITTARGET
+    git checkout $GITTARGET
 fi
 git clean -fxd
 # first of all selectively use debian build instructions for either

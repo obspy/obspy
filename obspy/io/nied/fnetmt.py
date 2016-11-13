@@ -188,9 +188,9 @@ def _internal_read_single_fnetmt_entry(line, **kwargs):
 
     a = line.split()
     try:
-        ot = UTCDateTime().strptime(a[0], '%Y/%m/%d,%H:%M:%S.%f')
+        ot = UTCDateTime.strptime(a[0], '%Y/%m/%d,%H:%M:%S.%f')
     except ValueError:
-        ot = UTCDateTime().strptime(a[0], '%Y/%m/%d,%H:%M:%S')
+        ot = UTCDateTime.strptime(a[0], '%Y/%m/%d,%H:%M:%S')
     lat, lon, depjma, magjma = map(float, a[1:5])
     depjma *= 1000
     region = a[5]

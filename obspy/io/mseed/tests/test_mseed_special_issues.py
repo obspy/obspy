@@ -21,9 +21,10 @@ from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
+from obspy.io.mseed import InternalMSEEDReadingError, \
+    InternalMSEEDReadingWarning
 from obspy.io.mseed import util
-from obspy.io.mseed.core import _read_mseed, _write_mseed, \
-    InternalMSEEDReadingError, InternalMSEEDReadingWarning
+from obspy.io.mseed.core import _read_mseed, _write_mseed
 from obspy.io.mseed.headers import clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
 
@@ -130,11 +131,12 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         both methods, readMSTracesViaRecords and readMSTraces
         """
         file = os.path.join(self.path, "data", "brokenlastrecord.mseed")
-        # independent reading of the data
-        with open(file, 'rb') as fp:
-            data_string = fp.read()[128:]  # 128 Bytes header
-        data = util._unpack_steim_2(data_string, 5980, swapflag=self.swap,
+
+        # independent reading of the data, 128 Bytes header
+        d = np.fromfile(file, dtype=np.uint8)[128:]
+        data = util._unpack_steim_2(d, 5980, swapflag=self.swap,
                                     verbose=0)
+
         # test readMSTraces. Will raise an internal warning.
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -143,7 +145,14 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEqual(len(w), 1)
         self.assertEqual(w[0].category, InternalMSEEDReadingWarning)
 
-        np.testing.assert_array_equal(data, data_record)
+        # Test against reference data.
+        self.assertEqual(len(data_record), 5980)
+        last10samples = [2862, 2856, 2844, 2843, 2851,
+                         2853, 2853, 2854, 2857, 2863]
+        np.testing.assert_array_equal(data_record[-10:], last10samples)
+
+        # Also test against independently unpacked data.
+        np.testing.assert_allclose(data_record, data)
 
     def test_one_sample_overlap(self):
         """
@@ -684,50 +693,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 os.kill(process.pid, signal.SIGKILL)
         self.assertFalse(fail)
 
-    def test_writing_blockette_100(self):
-        """
-        Tests that blockette 100 is written correctly. It is only used if
-        the sampling rate is higher than 32727 Hz or smaller than 1.0 /
-        32727.0 Hz.
-        """
-        # Three traces, only the middle one needs it.
-        tr = Trace(data=np.linspace(0, 100, 101))
-        st = Stream(traces=[tr.copy(), tr.copy(), tr.copy()])
-
-        st[1].stats.sampling_rate = 60000.0
-
-        with io.BytesIO() as buf:
-            st.write(buf, format="mseed")
-            buf.seek(0, 0)
-            st2 = read(buf)
-
-        self.assertTrue(np.allclose(
-            st[0].stats.sampling_rate,
-            st2[0].stats.sampling_rate))
-        self.assertTrue(np.allclose(
-            st[1].stats.sampling_rate,
-            st2[1].stats.sampling_rate))
-        self.assertTrue(np.allclose(
-            st[2].stats.sampling_rate,
-            st2[2].stats.sampling_rate))
-
-        st[1].stats.sampling_rate = 1.0 / 60000.0
-
-        with io.BytesIO() as buf:
-            st.write(buf, format="mseed")
-            buf.seek(0, 0)
-            st2 = read(buf)
-
-        self.assertTrue(np.allclose(
-            st[0].stats.sampling_rate,
-            st2[0].stats.sampling_rate))
-        self.assertTrue(np.allclose(
-            st[1].stats.sampling_rate,
-            st2[1].stats.sampling_rate))
-        self.assertTrue(np.allclose(
-            st[2].stats.sampling_rate,
-            st2[2].stats.sampling_rate))
-
     def test_microsecond_accuracy_reading_and_writing_before_1970(self):
         """
         Tests that reading and writing data with microsecond accuracy and
@@ -755,6 +720,328 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
 
             self.assertEqual(tr2.stats.starttime, starttime)
             self.assertEqual(tr2, tr)
+
+    def test_reading_noise_records(self):
+        """
+        Tests reading a noise record. See #1495.
+        """
+        file = os.path.join(self.path, "data",
+                            "single_record_plus_noise_record.mseed")
+        st = read(file)
+        self.assertEqual(len(st), 1)
+        tr = st[0]
+        self.assertEqual(tr.id, "IM.NV32..BHE")
+        self.assertEqual(tr.stats.npts, 277)
+        self.assertEqual(tr.stats.sampling_rate, 40.0)
+
+    def test_read_file_with_various_noise_records(self):
+        """
+        Tests reading a custom made file with noise records.
+        """
+        # This file has the following layout:
+        # 1. 256 byte NOISE record
+        # 2. 512 byte normal record - station NV30
+        # 3. 128 byte NOISE record
+        # 4. 512 byte normal record - station NV31
+        # 5. 512 byte NOISE record
+        # 6. 512 byte NOISE record
+        # 7. 512 byte normal record - station NV32
+        # 8. 1024 byte NOISE record
+        # 9. 512 byte normal record - station NV33
+        file = os.path.join(self.path, "data", "various_noise_records.mseed")
+        st = read(file)
+
+        self.assertTrue(len(st), 4)
+        self.assertTrue(st[0].stats.station, "NV30")
+        self.assertTrue(st[1].stats.station, "NV31")
+        self.assertTrue(st[2].stats.station, "NV32")
+        self.assertTrue(st[3].stats.station, "NV33")
+
+        # Data is the same across all records.
+        np.testing.assert_allclose(st[0].data, st[1].data)
+        np.testing.assert_allclose(st[0].data, st[2].data)
+        np.testing.assert_allclose(st[0].data, st[3].data)
+
+    def test_mseed_zero_data_offset(self):
+        """
+        Tests that a data offset of zero in the fixed header does not
+        confuse ObsPy.
+
+        The file contains three records: a normal one, followed by one with
+        a data-offset of zero, followed by another normal one.
+
+        This currently results in three returned traces:
+
+        * CH.PANIX..LHZ |
+          2016-08-21T01:41:19.000000Z - 2016-08-21T01:45:30.000000Z |
+          1.0 Hz, 252 samples
+        * CH.PANIX..LHZ |
+          2016-08-21T01:43:37.000000Z - 2016-08-21T01:43:37.000000Z |
+          1.0 Hz, 0 samples
+        * CH.PANIX..LHZ |
+          2016-08-21T01:45:31.000000Z - 2016-08-21T01:49:52.000000Z |
+          1.0 Hz, 262 samples
+        """
+        file = os.path.join(self.path, "data", "bizarre",
+                            "mseed_data_offset_0.mseed")
+        st = read(file)
+
+        self.assertEqual(len(st), 3)
+
+        tr = st[0]
+        self.assertEqual(tr.id, "CH.PANIX..LHZ")
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime("2016-08-21T01:41:19.000000Z"))
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2016-08-21T01:45:30.000000Z"))
+        self.assertEqual(tr.stats.npts, len(tr.data))
+        self.assertEqual(tr.stats.npts, 252)
+
+        tr = st[1]
+        self.assertEqual(tr.id, "CH.PANIX..LHZ")
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime("2016-08-21T01:43:37.000000Z"))
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2016-08-21T01:43:37.000000Z"))
+        self.assertEqual(tr.stats.npts, len(tr.data))
+        self.assertEqual(tr.stats.npts, 0)
+
+        tr = st[2]
+        self.assertEqual(tr.id, "CH.PANIX..LHZ")
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime("2016-08-21T01:45:31.000000Z"))
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2016-08-21T01:49:52.000000Z"))
+        self.assertEqual(tr.stats.npts, len(tr.data))
+        self.assertEqual(tr.stats.npts, 262)
+
+    def test_mseed_zero_data_headonly(self):
+        """
+        Tests that records with no data correctly work in headonly mode.
+        """
+        file = os.path.join(self.path, "data",
+                            "three_records_zero_data_in_middle.mseed")
+
+        expected = [
+            ("BW.BGLD..EHE", UTCDateTime("2007-12-31T23:59:59.765000Z"),
+             UTCDateTime("2008-01-01T00:00:01.820000Z"), 200.0, 412),
+            ("BW.BGLD..EHE", UTCDateTime("2008-01-01T00:00:01.825000Z"),
+             UTCDateTime("2008-01-01T00:00:01.825000Z"), 200.0, 0),
+            ("BW.BGLD..EHE", UTCDateTime("2008-01-01T00:00:03.885000Z"),
+             UTCDateTime("2008-01-01T00:00:05.940000Z"), 200.0, 412)]
+
+        # Default full read.
+        st = read(file)
+        self.assertEqual(len(st), 3)
+        for tr, exp in zip(st, expected):
+            self.assertEqual(tr.id, exp[0])
+            self.assertEqual(tr.stats.starttime, exp[1])
+            self.assertEqual(tr.stats.endtime, exp[2])
+            self.assertEqual(tr.stats.sampling_rate, exp[3])
+            self.assertEqual(tr.stats.npts, exp[4])
+
+        # Headonly read.
+        st = read(file, headonly=True)
+        self.assertEqual(len(st), 3)
+        for tr, exp in zip(st, expected):
+            self.assertEqual(tr.id, exp[0])
+            self.assertEqual(tr.stats.starttime, exp[1])
+            self.assertEqual(tr.stats.endtime, exp[2])
+            self.assertEqual(tr.stats.sampling_rate, exp[3])
+            self.assertEqual(tr.stats.npts, exp[4])
+
+    def test_read_file_with_microsecond_wrap(self):
+        """
+        This is not strictly valid but I encountered such a file in practice
+        so I guess it happens. Libmseed can also correctly deal with it.
+
+        The test file is a single record with the .0001 seconds field set to
+        10000. SEED strictly allows only 0-9999 in this field.
+        """
+        file = os.path.join(self.path, "data",
+                            "microsecond_wrap.mseed")
+
+        with warnings.catch_warnings(record=True) as w_1:
+            warnings.simplefilter("always")
+            info = util.get_record_information(file)
+
+        self.assertEqual(w_1[0].message.args[0],
+                         'Record contains a fractional seconds (.0001 secs) '
+                         'of 10000 - the maximum strictly allowed value is '
+                         '9999. It will be interpreted as one or more '
+                         'additional seconds.')
+
+        with warnings.catch_warnings(record=True) as w_2:
+            warnings.simplefilter("always")
+            tr = read(file)[0]
+
+        # First warning is identical.
+        self.assertEqual(w_1[0].message.args[0], w_2[0].message.args[0])
+        # Second warning is raised by libmseed.
+        self.assertEqual(w_2[1].message.args[0],
+                         'readMSEEDBuffer(): Record with offset=0 has a '
+                         'fractional second (.0001 seconds) of 10000. This '
+                         'is not strictly valid but will be interpreted as '
+                         'one or more additional seconds.')
+
+        # Make sure libmseed and the internal ObsPy record parser produce
+        # the same result.
+        self.assertEqual(info["starttime"], tr.stats.starttime)
+        self.assertEqual(info["endtime"], tr.stats.endtime)
+
+        # Read with a hex-editor.
+        ref_time = UTCDateTime(year=2008, julday=8, hour=4, minute=58,
+                               second=5 + 1)
+        self.assertEqual(ref_time, info["starttime"])
+        self.assertEqual(ref_time, tr.stats.starttime)
+
+    def test_reading_miniseed_with_no_blockette_1000(self):
+        """
+        Blockette 1000 was only introduced with SEED version 2.3.
+        """
+        file = os.path.join(self.path, "data", "bizarre",
+                            "mseed_no_blkt_1000.mseed")
+        st = read(file)
+
+        self.assertEqual(len(st), 1)
+        tr = st[0]
+        self.assertEqual(tr.stats.npts, 7536)
+        np.testing.assert_allclose(tr.stats.sampling_rate, 20.0)
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime(1976, 3, 10, 3, 28))
+        self.assertEqual(tr.id, ".GRA1..BHZ")
+
+        # Also test the data to make sure the unpacking was successful.
+        np.testing.assert_equal(
+            st[0].data[:10],
+            [-185, -200, -209, -220, -228, -246, -252, -262, -262, -269])
+
+    def test_writing_of_blockette_100(self):
+        """
+        Tests the writing of blockette 100 if necessary.
+        """
+        def has_blkt_100(filename):
+            ms = _MSStruct(filename)
+            ms.read(-1, 0, 1, 0)
+            blkt_link = ms.msr.contents.blkts
+            has_blkt_100 = False
+            while True:
+                try:
+                    if blkt_link.contents.blkt_type == 100:
+                        has_blkt_100 = True
+                        break
+                    blkt_link = blkt_link.contents.next
+                except ValueError:
+                    break
+            del ms
+            return has_blkt_100
+
+        tr = read()[0]
+        tr.data = tr.data[:10]
+
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+
+            # A "clean" sampling rate does not require blockette 100.
+            sr = 200.0
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
+            # A more detailed one does.
+            sr = 199.9997
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertTrue(has_blkt_100(tempfile))
+
+            # A very large (but "clean") one does not need it.
+            sr = 1E6
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
+            # Same for a very small but "clean" one.
+            sr = 1E-6
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
+            # But small perturbations resulting in "unclean" sampling rates
+            # will cause blockette 100 to be written.
+            sr = 1E6 + 0.123456
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertTrue(has_blkt_100(tempfile))
+            sr = 1E-6 + 0.325247 * 1E-7
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertTrue(has_blkt_100(tempfile))
+
+            # Three more "clean" ones.
+            sr = 1.0
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
+            sr = 0.5
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
+            sr = 0.1
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
+    def test_reading_file_with_data_offset_of_48(self):
+        """
+        Tests reading a file which has a data offset of 48 bytes.
+
+        It thus does not have a single blockette.
+        """
+        file = os.path.join(
+            self.path, "data",
+            "mseed_not_a_single_blkt_48byte_data_offset.mseed")
+        st = read(file)
+
+        self.assertEqual(len(st), 1)
+        tr = st[0]
+        self.assertEqual(tr.stats.npts, 3632)
+        np.testing.assert_allclose(tr.stats.sampling_rate, 20.0)
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime(1995, 9, 22, 0, 0, 18, 238400))
+        self.assertEqual(tr.id, "XX.TEST..BHE")
+
+        np.testing.assert_equal(
+            st[0].data[:6],
+            [337, 396, 454, 503, 547, 581])
 
 
 def suite():

@@ -42,7 +42,8 @@ else:
 # Valid control headers in ASCII numbers.
 SEED_CONTROL_HEADERS = [ord('V'), ord('A'), ord('S'), ord('T')]
 MINI_SEED_CONTROL_HEADERS = [ord('D'), ord('R'), ord('Q'), ord('M')]
-VALID_CONTROL_HEADERS = SEED_CONTROL_HEADERS + MINI_SEED_CONTROL_HEADERS
+VALID_CONTROL_HEADERS = SEED_CONTROL_HEADERS + MINI_SEED_CONTROL_HEADERS + \
+    [ord(' ')]
 
 # expected data types for libmseed id: (numpy, ctypes)
 DATATYPES = {b"a": C.c_char, b"i": C.c_int32, b"f": C.c_float,
@@ -476,16 +477,6 @@ class UDIFF(C.Union):
     ]
 
 
-class FRAME(C.Structure):
-    """
-    Frame in a seed data record.
-    """
-    _fields_ = [
-        ("ctrl", C.c_uint32),  # control word for frame.
-        ("w", UDIFF * 14),  # compressed data.
-    ]
-
-
 # Declare function of libmseed library, argument parsing
 clibmseed.mst_init.argtypes = [C.POINTER(MSTrace)]
 clibmseed.mst_init.restype = C.POINTER(MSTrace)
@@ -525,26 +516,29 @@ clibmseed.msr_starttime.restype = C.c_int64
 clibmseed.msr_endtime.argtypes = [C.POINTER(MSRecord)]
 clibmseed.msr_endtime.restype = C.c_int64
 
-clibmseed.ms_detect.argtypes = [C.c_char_p, C.c_int]
+clibmseed.ms_detect.argtypes = [
+    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    C.c_int]
 clibmseed.ms_detect.restype = C.c_int
 
-clibmseed.msr_unpack_steim2.argtypes = [
-    C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
+clibmseed.msr_decode_steim2.argtypes = [
+    C.c_void_p,
+    C.c_int,
+    C.c_int,
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
-    C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
-clibmseed.msr_unpack_steim2.restype = C.c_int
+    C.c_int, C.c_char_p, C.c_int]
+clibmseed.msr_decode_steim2.restype = C.c_int
 
-clibmseed.msr_unpack_steim1.argtypes = [
-    C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
+clibmseed.msr_decode_steim1.argtypes = [
+    C.c_void_p,
+    C.c_int,
+    C.c_int,
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
-    C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
-clibmseed.msr_unpack_steim2.restype = C.c_int
+    C.c_int, C.c_char_p, C.c_int]
+clibmseed.msr_decode_steim1.restype = C.c_int
 
 # tricky, C.POINTER(C.c_char) is a pointer to single character fields
 # this is completely different to C.c_char_p which is a string
@@ -560,9 +554,10 @@ clibmseed.msr_addblockette.argtypes = [C.POINTER(MSRecord),
                                        C.c_int, C.c_int, C.c_int]
 clibmseed.msr_addblockette.restype = C.POINTER(BlktLink)
 
-clibmseed.msr_parse.argtypes = [C.POINTER(C.c_char), C.c_int,
-                                C.POINTER(C.POINTER(MSRecord)),
-                                C.c_int, C.c_int, C.c_int]
+clibmseed.msr_parse.argtypes = [
+    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1), C.c_int,
+    C.POINTER(C.POINTER(MSRecord)),
+    C.c_int, C.c_int, C.c_int]
 clibmseed.msr_parse.restype = C.c_int
 
 #####################################
@@ -728,6 +723,21 @@ clibmseed.lil_free.restype = C.c_void_p
 
 clibmseed.allocate_bytes.argtypes = (C.c_int,)
 clibmseed.allocate_bytes.restype = C.c_void_p
+
+
+clibmseed.ms_genfactmult.argtypes = [
+    C.c_double,
+    C.POINTER(C.c_int16),
+    C.POINTER(C.c_int16)
+]
+clibmseed.ms_genfactmult.restype = C.c_int
+
+
+clibmseed.ms_nomsamprate.argtypes = [
+    C.c_int,
+    C.c_int
+]
+clibmseed.ms_nomsamprate.restype = C.c_double
 
 
 # Python callback functions for C

@@ -159,24 +159,25 @@ def is_same_byteorder(bo1, bo2):
     return (bo1.lower() in le) == (bo2.lower() in le)
 
 
-def _clean_str(value):
-    # Remove null values and whitespace, return a str
-    try:
-        # value is a str
-        null_term = value.find('\x00')
-    except TypeError:
-        # value is a bytes
-        # null_term = value.decode().find('\x00')
-        null_term = value.find(b'\x00')
+def _clean_str(value, strip_whitespace=True):
+    """
+    Remove null values and whitespace, return a str
 
-    if null_term >= 0:
-        value = value[:null_term]
-    value = value.strip()
-
+    This fn is used in two places: in SACTrace.read, to sanitize strings for
+    SACTrace, and in sac_to_obspy_header, to sanitize strings for making a
+    Trace that the user may have manually added.
+    """
     try:
-        value = value.decode()
+        value = value.decode('ASCII', 'replace')
     except AttributeError:
         pass
+
+    null_term = value.find('\x00')
+    if null_term >= 0:
+        value = value[:null_term] + " " * len(value[null_term:])
+
+    if strip_whitespace:
+        value = value.strip()
 
     return value
 
@@ -300,10 +301,11 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
           and "b" is not set, the reftime will be set from stats.starttime
           (with micro/milliseconds precision adjustments) and "b" and "e" are
           set accordingly.
-        * If 'kstnm', 'knetwk', 'kcmpnm', or 'khole' are not set, they are
-          taken from 'station', 'network', 'channel', and 'location' in stats.
+        * If 'kstnm', 'knetwk', 'kcmpnm', or 'khole' are not set or differ
+          from Stats values 'station', 'network', 'channel', or 'location',
+          they are taken from the Stats values.
         If keep_sac_header is False, a new SAC header is constructed from only
-        information found in the stats dictionary, with some other default
+        information found in the Stats dictionary, with some other default
         values introduced.  It will be an iztype 9 ("ib") file, with small
         reference time adjustments for micro/milliseconds precision issues.
         SAC headers nvhdr, level, lovrok, and iftype are always produced.
@@ -312,9 +314,6 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     """
     header = {}
     oldsac = stats.get('sac', {})
-
-    header['npts'] = stats['npts']
-    header['delta'] = stats['delta']
 
     if keep_sac_header and oldsac:
         # start with the old header
@@ -371,20 +370,20 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             warnings.warn(msg)
 
         # merge some values from stats if they're missing in the SAC header
-        # ObsPy issue 1204
-        if header.get('kstnm') in (None, HD.SNULL):
-            header['kstnm'] = stats['station'] or HD.SNULL
-        if header.get('knetwk') in (None, HD.SNULL):
-            header['knetwk'] = stats['network'] or HD.SNULL
-        if header.get('kcmpnm') in (None, HD.SNULL):
-            header['kcmpnm'] = stats['channel'] or HD.SNULL
-        if header.get('khole') in (None, HD.SNULL):
-            header['khole'] = stats['location'] or HD.SNULL
+        # ObsPy issues 1204, 1457
+        # XXX: If Stats values are empty/"" and SAC header values are real,
+        #   this will replace the real SAC values with SAC null values.
+        # TODO: make this operation into a private helper function
+        for sachdr, statshdr in [('kstnm', 'station'), ('knetwk', 'network'),
+                                 ('kcmpnm', 'channel'), ('khole', 'location')]:
+            if (header.get(sachdr) in (None, HD.SNULL)) or \
+               (header.get(sachdr).strip() != stats[statshdr]):
+                header[sachdr] = stats[statshdr] or HD.SNULL
 
     else:
-        # SAC header from scratch.  Just use stats.
+        # SAC header from scratch.  Just use Stats.
 
-        # Here, set headers from stats that would otherwise depend on the old
+        # Here, set headers from Stats that would otherwise depend on the old
         # SAC header
         header['iztype'] = 9
         starttime = stats['starttime']
@@ -406,6 +405,9 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         header['kstnm'] = stats['station'] if stats['station'] else HD.SNULL
         header['knetwk'] = stats['network'] if stats['network'] else HD.SNULL
         header['khole'] = stats['location'] if stats['location'] else HD.SNULL
+
+        header['lpspol'] = True
+        header['lcalda'] = False
 
     # ObsPy issue 1204
     header['nvhdr'] = 6

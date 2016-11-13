@@ -10,11 +10,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <time.h>
 #include <ctype.h>
 
 #include "libmseed/libmseed.h"
 #include "libmseed/unpackdata.h"
+
+
+// Similar to MS_ISVALIDBLANK but also works for blocks consisting only of
+// spaces.
+#define OBSPY_ISVALIDBLANK(X) (                            \
+  (isdigit ((int) *(X))   || !*(X)   || *(X) == ' ') &&    \
+  (isdigit ((int) *(X+1)) || !*(X+1) || *(X+1) == ' ') &&  \
+  (isdigit ((int) *(X+2)) || !*(X+2) || *(X+2) == ' ') &&  \
+  (isdigit ((int) *(X+3)) || !*(X+3) || *(X+3) == ' ') &&  \
+  (isdigit ((int) *(X+4)) || !*(X+4) || *(X+4) == ' ') &&  \
+  (isdigit ((int) *(X+5)) || !*(X+5) || *(X+5) == ' ') &&  \
+  (*(X+6) ==' ') && (*(X+7) ==' ') && (*(X+8) ==' ') &&  \
+  (*(X+9) ==' ') && (*(X+10)==' ') && (*(X+11)==' ') &&  \
+  (*(X+12)==' ') && (*(X+13)==' ') && (*(X+14)==' ') &&  \
+  (*(X+15)==' ') && (*(X+16)==' ') && (*(X+17)==' ') &&  \
+  (*(X+18)==' ') && (*(X+19)==' ') && (*(X+20)==' ') &&  \
+  (*(X+21)==' ') && (*(X+22)==' ') && (*(X+23)==' ') &&  \
+  (*(X+24)==' ') && (*(X+25)==' ') && (*(X+26)==' ') &&  \
+  (*(X+27)==' ') && (*(X+28)==' ') && (*(X+29)==' ') &&  \
+  (*(X+30)==' ') && (*(X+31)==' ') && (*(X+32)==' ') &&  \
+  (*(X+33)==' ') && (*(X+34)==' ') && (*(X+35)==' ') &&  \
+  (*(X+36)==' ') && (*(X+37)==' ') && (*(X+38)==' ') &&  \
+  (*(X+39)==' ') && (*(X+40)==' ') && (*(X+41)==' ') &&  \
+  (*(X+42)==' ') && (*(X+43)==' ') && (*(X+44)==' ') &&  \
+  (*(X+45)==' ') && (*(X+46)==' ') && (*(X+47)==' ') )
+
+
+float roundf_(float x)
+{
+   return x >= 0.0f ? floorf(x + 0.5f) : ceilf(x - 0.5f);
+}
 
 
 // Dummy wrapper around malloc.
@@ -180,6 +212,54 @@ lil_free(LinkedIDList * lil)
 void empty_print(char *string) {}
 
 
+// Simple function logging nice error messages.
+void log_error(int errcode, int offset) {
+    switch ( errcode ) {
+        case MS_ENDOFFILE:
+            ms_log(1, "readMSEEDBuffer(): Unexpected end of file when "
+                      "parsing record starting at offset %d. The rest "
+                      "of the file will not be read.\n", offset);
+            break;
+        case MS_GENERROR:
+            ms_log(1, "readMSEEDBuffer(): Generic error when parsing "
+                      "record starting at offset %d. The rest of the "
+                      "file will not be read.\n", offset);
+            break;
+        case MS_NOTSEED:
+            ms_log(1, "readMSEEDBuffer(): Record starting at offset "
+                      "%d is not valid SEED. The rest of the file "
+                      "will not be read.\n", offset);
+            break;
+        case MS_WRONGLENGTH:
+            ms_log(1, "readMSEEDBuffer(): Length of data read was not "
+                      "correct when parsing record starting at "
+                      "offset %d. The rest of the file will not be "
+                      "read.\n", offset);
+            break;
+        case MS_OUTOFRANGE:
+            ms_log(1, "readMSEEDBuffer(): SEED record length out of "
+                      "range for record starting at offset %d. The "
+                      "rest of the file will not be read.\n", offset);
+            break;
+        case MS_UNKNOWNFORMAT:
+            ms_log(1, "readMSEEDBuffer(): Unknown data encoding "
+                      "format for record starting at offset %d. The "
+                      "rest of the file will not be read.\n", offset);
+            break;
+        case MS_STBADCOMPFLAG:
+            ms_log(1, "readMSEEDBuffer(): Invalid STEIM compression "
+                      "flag(s) in record starting at offset %d. The "
+                      "rest of the file will not be read.\n", offset);
+            break;
+        default:
+            ms_log(1, "readMSEEDBuffer(): Unknown error '%d' in "
+                      "record starting at offset %d. The rest of the "
+                      "file will not be read.\n", errcode, offset);
+            break;
+    }
+}
+
+
 // Function that reads from a MiniSEED binary file from a char buffer and
 // returns a LinkedIDList.
 LinkedIDList *
@@ -191,6 +271,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     int retcode = 0;
     int retval = 0;
     flag swapflag = 0;
+    flag bigendianhost = ms_bigendianhost();
 
     // current offset of mseed char pointer
     int offset = 0;
@@ -220,7 +301,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     int datasize;
     int record_count = 0;
 
-    // A negative verbosity suppressed as much as possible.
+    // A negative verbosity suppresses as much as possible.
     if (verbose < 0) {
         ms_loginit(&empty_print, NULL, &empty_print, NULL);
     }
@@ -242,9 +323,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         MS_UNPACKHEADERBYTEORDER(-1);
     }
 
-    //
     // Read all records and save them in a linked list.
-    //
     while (offset < buflen) {
         msr = msr_init(NULL);
         if ( msr == NULL ) {
@@ -268,7 +347,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         // Otherwise assume the smallest possible record length and assure that enough
         // data is present.
         else {
-            if (offset + 256 > buflen) {
+            if (offset + MINRECLEN > buflen) {
                 ms_log(1, "readMSEEDBuffer(): Last record only has %i byte(s) which "
                           "is not enough to constitute a full SEED record. Corrupt data? "
                           "Record will be skipped.\n", buflen - offset);
@@ -277,56 +356,52 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             }
         }
 
+        // Skip empty or noise records.
+        if (OBSPY_ISVALIDBLANK(mseed + offset)) {
+            offset += MINRECLEN;
+            continue;
+        }
+
         // Pass (buflen - offset) because msr_parse() expects only a single record. This
         // way libmseed can take care to not overstep bounds.
-        retcode = msr_parse ( (mseed+offset), buflen - offset, &msr, reclen, dataflag, verbose);
-        if (retcode != MS_NOERROR) {
-            switch ( retcode ) {
-                case MS_ENDOFFILE:
-                    ms_log(1, "readMSEEDBuffer(): Unexpected end of file when "
-                              "parsing record starting at offset %d. The rest "
-                              "of the file will not be read.\n", offset);
-                    break;
-                case MS_GENERROR:
-                    ms_log(1, "readMSEEDBuffer(): Generic error when parsing "
-                              "record starting at offset %d. The rest of the "
-                              "file will not be read.\n", offset);
-                    break;
-                case MS_NOTSEED:
-                    ms_log(1, "readMSEEDBuffer(): Record starting at offset "
-                              "%d is not valid SEED. The rest of the file "
-                              "will not be read.\n", offset);
-                    break;
-                case MS_WRONGLENGTH:
-                    ms_log(1, "readMSEEDBuffer(): Length of data read was not "
-                              "correct when parsing record starting at "
-                              "offset %d. The rest of the file will not be "
-                              "read.\n", offset);
-                    break;
-                case MS_OUTOFRANGE:
-                    ms_log(1, "readMSEEDBuffer(): SEED record length out of "
-                              "range for record starting at offset %d. The "
-                              "rest of the file will not be read.\n", offset);
-                    break;
-                case MS_UNKNOWNFORMAT:
-                    ms_log(1, "readMSEEDBuffer(): Unknown data encoding "
-                              "format for record starting at offset %d. The "
-                              "rest of the file will not be read.\n", offset);
-                    break;
-                case MS_STBADCOMPFLAG:
-                    ms_log(1, "readMSEEDBuffer(): Invalid STEIM compression "
-                              "flag(s) in record starting at offset %d. The "
-                              "rest of the file will not be read.\n", offset);
-                    break;
-                default:
-                    ms_log(1, "readMSEEDBuffer(): Unknown error '%d' in "
-                              "record starting at offset %d. The rest of the "
-                              "file will not be read.\n", retcode, offset);
-                    break;
-            }
+        // Return values:
+        //   0 : Success, populates the supplied MSRecord.
+        //  >0 : Data record detected but not enough data is present, the
+        //       return value is a hint of how many more bytes are needed.
+        //  <0 : libmseed error code (listed in libmseed.h) is returned.
+        retcode = msr_parse ((mseed+offset), buflen - offset, &msr, reclen, dataflag, verbose);
+        // Handle error.
+        if (retcode < 0) {
+            log_error(retcode, offset);
             msr_free(&msr);
             break;
         }
+        // msr_parse() returns > 0 if a data record has been detected but the buffer either has not enough
+        // data (this cannot happen with ObsPy's logic) or the last record has no Blockette 1000 and it cannot
+        // determine the record length because there is no next record (this can happen in ObsPy) - handle that
+        // case by just calling msr_parse() with an explicit record length set.
+        else if ( retcode > 0 && retcode < (buflen - offset)) {
+
+            // Check if the remaining bytes can exactly make up a record length.
+            int r_bytes = buflen - offset;
+            float exp = log10((float)r_bytes) / log10(2.0);
+            if ((fmodf(exp, 1.0) < 0.0000001) && ((int)roundf_(exp) >= 7) && ((int)roundf_(exp) <= 256)) {
+
+                retcode = msr_parse((mseed + offset), buflen - offset, &msr, r_bytes, dataflag, verbose);
+
+                if ( retcode != 0 ) {
+                    log_error(retcode, offset);
+                    msr_free(&msr);
+                    break;
+                }
+
+            }
+            else {
+                msr_free(&msr);
+                break;
+            }
+        }
+
         if (offset + msr->reclen > buflen) {
             ms_log(1, "readMSEEDBuffer(): Last msr->reclen exceeds buflen, skipping.\n");
             msr_free(&msr);
@@ -365,32 +440,51 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         }
         recordCurrent->record = msr;
 
-        // Determine the byte order swapflag only for the very first record.
-        // The byte order should not change within the file.
-        // XXX: Maybe check for every record?
-        if (swapflag <= 0) {
-            // Returns 0 if the host is little endian, otherwise 1.
-            flag bigendianhost = ms_bigendianhost();
-            // Set the swapbyteflag if it is needed.
-            if ( msr->Blkt1000 != 0) {
-                /* If BE host and LE data need swapping */
-                if ( bigendianhost && msr->byteorder == 0 ) {
-                    swapflag = 1;
-                }
-                /* If LE host and BE data (or bad byte order value) need swapping */
-                if ( !bigendianhost && msr->byteorder > 0 ) {
-                    swapflag = 1;
-                }
+
+        // Figure out if the byte-order of the data has to be swapped.
+        swapflag = 0;
+        // If blockette 1000 is present, use it.
+        if ( msr->Blkt1000 != 0) {
+            /* If BE host and LE data need swapping */
+            if ( bigendianhost && msr->byteorder == 0 ) {
+                swapflag = 1;
+            }
+            /* If LE host and BE data (or bad byte order value) need swapping */
+            if ( !bigendianhost && msr->byteorder > 0 ) {
+                swapflag = 1;
+            }
+        }
+        // Otherwise assume the data has the same byte order as the header.
+        // This needs to be done on the raw header bytes as libmseed only returns
+        // header fields in the native byte order.
+        else {
+            unsigned char* _t = (unsigned char*)mseed + offset + 20;
+            unsigned int year = _t[0] | _t[1] << 8;
+            unsigned int day = _t[2] | _t[3] << 8;
+            // Swap data if header needs to be swapped.
+            if (!MS_ISVALIDYEARDAY(year, day)) {
+                swapflag = 1;
             }
         }
 
-        // Actually unpack the data if the flag is not set.
-        if (unpack_data != 0) {
+        // Actually unpack the data if the flag is not set and if the data
+        // offset is valid.
+        if ((unpack_data != 0) && (msr->fsdh->data_offset >= 48) &&
+            (msr->fsdh->data_offset < msr->reclen) &&
+            (msr->samplecnt > 0)) {
             retval = msr_unpack_data (msr, swapflag, verbose);
         }
 
         if ( retval > 0 ) {
             msr->numsamples = retval;
+        }
+
+        if ( msr->fsdh->start_time.fract > 9999 ) {
+            ms_log(1, "readMSEEDBuffer(): Record with offset=%d has a "
+                      "fractional second (.0001 seconds) of %d. This is not "
+                      "strictly valid but will be interpreted as one or more "
+                      "additional seconds.",
+                      offset, msr->fsdh->start_time.fract);
         }
 
         // Add the record length for the next iteration
@@ -491,6 +585,12 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             }
         }
         if ( segmentCurrent != NULL &&
+
+             // This is important for zero data record coupled with not unpacking
+             // the data. It needs to be split in two places: Before the zero data
+             // record and after it.
+             recordCurrent->record->samplecnt > 0 && segmentCurrent->samplecnt > 0 &&
+
              segmentCurrent->sampletype == recordCurrent->record->sampletype &&
              // Test the default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
              MS_ISRATETOLERABLE (segmentCurrent->samprate, recordCurrent->record->samprate) &&

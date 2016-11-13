@@ -224,6 +224,26 @@ class CmtsolutionTestCase(unittest.TestCase):
         self.assertEqual(data.decode().splitlines(),
                          new_data.decode().splitlines())
 
+    def test_reading_newer_cmtsolution_files(self):
+        """
+        The format changed a bit. Make sure these files can also be read.
+        """
+        filename = os.path.join(self.datapath, "CMTSOLUTION_NEW")
+        cat = obspy.read_events(filename)
+
+        self.assertEqual(len(cat), 3)
+
+        # Test the hypocentral origins as the "change" to the format only
+        # affected the first line.
+        self.assertEqual(cat[0].origins[1].latitude, 55.29)
+        self.assertEqual(cat[0].origins[1].longitude, 163.06)
+
+        self.assertEqual(cat[1].origins[1].latitude, -13.75)
+        self.assertEqual(cat[1].origins[1].longitude, -111.75)
+
+        self.assertEqual(cat[2].origins[1].latitude, -13.68)
+        self.assertEqual(cat[2].origins[1].longitude, -111.93)
+
 
 def suite():
     return unittest.makeSuite(CmtsolutionTestCase, "test")

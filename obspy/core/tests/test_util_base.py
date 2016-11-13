@@ -7,6 +7,7 @@ import os
 import shutil
 import unittest
 
+from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 
@@ -109,9 +110,13 @@ class UtilBaseTestCase(unittest.TestCase):
         self.assertFalse(os.path.exists(ic.name))
 
         # image comparison that should raise
-        self.assertRaises(ImageComparisonException,
-                          image_comparison_in_function, path, img_basename,
-                          img_fail)
+        # avoid uploading the staged test fail image
+        # (after an estimate of 10000 uploads of it.. ;-))
+        with mock.patch.object(ImageComparison, '_upload_images',
+                               new=mock.MagicMock(return_value='')):
+            self.assertRaises(ImageComparisonException,
+                              image_comparison_in_function, path, img_basename,
+                              img_fail)
         # check that temp file is deleted
         self.assertFalse(os.path.exists(ic.name))
 

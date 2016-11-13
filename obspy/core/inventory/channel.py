@@ -188,7 +188,8 @@ class Channel(BaseNode):
                                if self.types else ""),
                 sampling_rate=("\tSampling Rate: %.2f Hz\n" %
                                self.sample_rate if self.sample_rate else ""),
-                sensor=("\tSensor: %s\n" % self.sensor.type
+                sensor=("\tSensor (Description): %s (%s)\n" % (
+                        self.sensor.type, self.sensor.description)
                         if self.sensor else ""),
                 response=("\tResponse information available"
                           if self.response else ""))

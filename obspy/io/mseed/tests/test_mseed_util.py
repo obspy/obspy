@@ -27,6 +27,65 @@ from obspy.io.mseed.headers import (FIXED_HEADER_ACTIVITY_FLAGS,
 from obspy.io.mseed.util import set_flags_in_fixed_headers
 
 
+def _create_mseed_file(filename, record_count, sampling_rate=1.0,
+                       starttime=UTCDateTime(0), flags=None, seed=None,
+                       skiprecords=0):
+    """
+    Helper function to create MiniSEED files with certain flags set for
+    testing purposes.
+    """
+    all_flags = {
+        "data_quality_flags": {"offset": 38, "flags": [
+            "amplifier_saturation", "digitizer_clipping",
+            "spikes", "glitches", "missing_padded_data",
+            "telemetry_sync_error", "digital_filter_charging",
+            "suspect_time_tag"]},
+        "activity_flags": {"offset": 36, "flags": [
+            "calibration_signal", "time_correction_applied",
+            "event_begin", "event_end", "positive_leap", "negative_leap",
+            "event_in_progress"]},
+        "io_and_clock_flags": {"offset": 37, "flags": [
+            "station_volume", "long_record_read",
+            "short_record_read", "start_time_series", "end_time_series",
+            "clock_locked"]}
+    }
+
+    # With uncompressed float32 it is 50 samples per record.
+    data = np.arange(50 * record_count, dtype=np.float32)
+    tr = Trace(data=data,
+               header={"sampling_rate": sampling_rate, "starttime": starttime})
+    tr.write(filename, format="mseed", reclen=256, encoding="FLOAT32")
+
+    if not flags:
+        return
+
+    # Reproducibility!
+    if seed is not None:
+        np.random.seed(seed)
+
+    data = np.fromfile(filename, dtype=np.int8)
+
+    # Modify the flags to get the required statistics.
+    for key, value in all_flags.items():
+        if key not in flags:
+            continue
+        _f = value["flags"]
+        _flag_values = np.zeros(record_count - skiprecords, dtype=np.int8)
+        for _i, name in enumerate(_f):
+            if name not in flags[key]:
+                continue
+            # Create array with the correct number of flags set.
+            arr = np.zeros(record_count - skiprecords, dtype=np.int8)
+            arr[:flags[key][name]] = 1 << _i
+            np.random.shuffle(arr)
+            _flag_values |= arr
+        data[value["offset"]:: 256] = np.concatenate([
+            np.zeros(skiprecords, dtype=np.int8), _flag_values])
+
+    # Write again.
+    data.tofile(filename)
+
+
 class MSEEDUtilTestCase(unittest.TestCase):
     """
     Tests suite for util module of obspy.io.mseed.
@@ -40,7 +99,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         else:
             self.swap = 0
 
-    def test_convert_date_time(self):
+    def test_convert_datetime(self):
         """
         Tests all time conversion methods.
         """
@@ -120,22 +179,271 @@ class MSEEDUtilTestCase(unittest.TestCase):
         This test reads a self-made Mini-SEED file with set Data Quality Bits.
         A real test file would be better as this test tests a file that was
         created by the inverse method that reads the bits.
+
+        The method used to be called getTimingAndDataQuality() but has in
+        the meanwhile been replaced by a more general get_flags() method.
+        This test uses the general method but is otherwise not altered.
         """
         filename = os.path.join(self.path, 'data', 'qualityflags.mseed')
         # Read quality flags.
-        result = util.get_timing_and_data_quality(filename)
+        result = util.get_flags(filename, timing_quality=False,
+                                io_flags=False, activity_flags=False,
+                                data_quality_flags=True)
         # The test file contains 18 records. The first record has no set bit,
         # bit 0 of the second record is set, bit 1 of the third, ..., bit 7 of
         # the 9th record is set. The last nine records have 0 to 8 set bits,
         # starting with 0 bits, bit 0 is set, bits 0 and 1 are set...
         # Altogether the file contains 44 set bits.
-        self.assertEqual(result,
-                         {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]})
+        self.assertEqual(result['data_quality_flags_counts'], {
+            "amplifier_saturation": 9,
+            "digitizer_clipping": 8,
+            "spikes": 7,
+            "glitches": 6,
+            "missing_padded_data": 5,
+            "telemetry_sync_error": 4,
+            "digital_filter_charging": 3,
+            "suspect_time_tag": 2})
+
         # No set quality flags should result in a list of zeros.
         filename = os.path.join(self.path, 'data', 'test.mseed')
-        result = util.get_timing_and_data_quality(filename)
-        self.assertEqual(result,
-                         {'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0]})
+        result = util.get_flags(filename, timing_quality=False,
+                                io_flags=False, activity_flags=False,
+                                data_quality_flags=True)
+        self.assertEqual(result['data_quality_flags_counts'], {
+            "amplifier_saturation": 0,
+            "digitizer_clipping": 0,
+            "spikes": 0,
+            "glitches": 0,
+            "missing_padded_data": 0,
+            "telemetry_sync_error": 0,
+            "digital_filter_charging": 0,
+            "suspect_time_tag": 0})
+
+    def test_get_flags(self):
+        """
+        This test reads a real Mini-SEED file which has been
+        modified ad hoc.
+        """
+        with NamedTemporaryFile() as tf:
+            _create_mseed_file(
+                tf.name, record_count=112, seed=3412,
+                starttime="2015-10-16T00:00:00", skiprecords=5, flags={
+                    'data_quality_flags': {
+                        "amplifier_saturation": 55,
+                        "digitizer_clipping": 72,
+                        "spikes": 55,
+                        "glitches": 63,
+                        "missing_padded_data": 55,
+                        "telemetry_sync_error": 63,
+                        "digital_filter_charging": 4,
+                        "suspect_time_tag": 8},
+                    'activity_flags': {
+                        "calibration_signal": 1,
+                        "time_correction_applied": 2,
+                        "event_begin": 3,
+                        "event_end": 53,
+                        "positive_leap": 4,
+                        "negative_leap": 11,
+                        "event_in_progress": 5},
+                    'io_and_clock_flags': {
+                        "station_volume": 1,
+                        "long_record_read": 33,
+                        "short_record_read": 2,
+                        "start_time_series": 3,
+                        "end_time_series": 4,
+                        "clock_locked": 32}})
+
+            result = util.get_flags(tf.name, timing_quality=False)
+
+            self.assertEqual(result["record_count"], 112)
+
+            self.assertEqual(result['data_quality_flags_counts'], {
+                "amplifier_saturation": 55,
+                "digitizer_clipping": 72,
+                "spikes": 55,
+                "glitches": 63,
+                "missing_padded_data": 55,
+                "telemetry_sync_error": 63,
+                "digital_filter_charging": 4,
+                "suspect_time_tag": 8})
+
+            self.assertEqual(result['activity_flags_counts'], {
+                "calibration_signal": 1,
+                "time_correction_applied": 2,
+                "event_begin": 3,
+                "event_end": 53,
+                "positive_leap": 4,
+                "negative_leap": 11,
+                "event_in_progress": 5})
+
+            self.assertEqual(result['io_and_clock_flags_counts'], {
+                "station_volume": 1,
+                "long_record_read": 33,
+                "short_record_read": 2,
+                "start_time_series": 3,
+                "end_time_series": 4,
+                "clock_locked": 32})
+
+            # Test time settings. Everything is still present.
+            starttime = '2015-10-16T00:00:00'
+            result = util.get_flags(tf.name, starttime=starttime,
+                                    io_flags=False, activity_flags=False,
+                                    timing_quality=False)
+            self.assertEqual(result['data_quality_flags_counts'], {
+                "amplifier_saturation": 55,
+                "digitizer_clipping": 72,
+                "spikes": 55,
+                "glitches": 63,
+                "missing_padded_data": 55,
+                "telemetry_sync_error": 63,
+                "digital_filter_charging": 4,
+                "suspect_time_tag": 8})
+
+            # Nothing is present.
+            starttime = '2015-10-17T00:00:00'
+            result = util.get_flags(tf.name, starttime=starttime,
+                                    io_flags=False, activity_flags=False,
+                                    timing_quality=False)
+            self.assertEqual(result['data_quality_flags_counts'], {
+                "amplifier_saturation": 0,
+                "digitizer_clipping": 0,
+                "spikes": 0,
+                "glitches": 0,
+                "missing_padded_data": 0,
+                "telemetry_sync_error": 0,
+                "digital_filter_charging": 0,
+                "suspect_time_tag": 0})
+
+            # There are exactly 10 records at the front which have nothing.
+            # Thus reading until that point should yield nothing.
+            endtime = UTCDateTime('2015-10-15T00:00:00') + 50 * 10
+            result = util.get_flags(tf.name, endtime=endtime,
+                                    io_flags=False, activity_flags=False,
+                                    timing_quality=False)
+            self.assertEqual(result['data_quality_flags_counts'], {
+                "amplifier_saturation": 0,
+                "digitizer_clipping": 0,
+                "spikes": 0,
+                "glitches": 0,
+                "missing_padded_data": 0,
+                "telemetry_sync_error": 0,
+                "digital_filter_charging": 0,
+                "suspect_time_tag": 0})
+
+            # Reading after that point should yield everything.
+            result = util.get_flags(tf.name, starttime=endtime,
+                                    io_flags=False, activity_flags=False,
+                                    timing_quality=False)
+            self.assertEqual(result['data_quality_flags_counts'], {
+                "amplifier_saturation": 55,
+                "digitizer_clipping": 72,
+                "spikes": 55,
+                "glitches": 63,
+                "missing_padded_data": 55,
+                "telemetry_sync_error": 63,
+                "digital_filter_charging": 4,
+                "suspect_time_tag": 8})
+
+    def test_get_flags_from_files_and_file_like_objects(self):
+        """
+        Similar to test_get_flags() but with file-like objects.
+        """
+        with NamedTemporaryFile() as tf:
+            _create_mseed_file(
+                    tf.name, record_count=112, seed=3412,
+                    starttime="2015-10-16T00:00:00", skiprecords=5, flags={
+                        'data_quality_flags': {
+                            "amplifier_saturation": 55,
+                            "digitizer_clipping": 72,
+                            "spikes": 55,
+                            "glitches": 63,
+                            "missing_padded_data": 55,
+                            "telemetry_sync_error": 63,
+                            "digital_filter_charging": 4,
+                            "suspect_time_tag": 8},
+                        'activity_flags': {
+                            "calibration_signal": 1,
+                            "time_correction_applied": 2,
+                            "event_begin": 3,
+                            "event_end": 53,
+                            "positive_leap": 4,
+                            "negative_leap": 11,
+                            "event_in_progress": 5},
+                        'io_and_clock_flags': {
+                            "station_volume": 1,
+                            "long_record_read": 33,
+                            "short_record_read": 2,
+                            "start_time_series": 3,
+                            "end_time_series": 4,
+                            "clock_locked": 32}})
+
+            tf.seek(0, 0)
+
+            # Directly from the file.
+            result = util.get_flags(tf, timing_quality=False)
+
+            self.assertEqual(result["record_count"], 112)
+
+            self.assertEqual(result['data_quality_flags_counts'], {
+                "amplifier_saturation": 55,
+                "digitizer_clipping": 72,
+                "spikes": 55,
+                "glitches": 63,
+                "missing_padded_data": 55,
+                "telemetry_sync_error": 63,
+                "digital_filter_charging": 4,
+                "suspect_time_tag": 8})
+
+            self.assertEqual(result['activity_flags_counts'], {
+                "calibration_signal": 1,
+                "time_correction_applied": 2,
+                "event_begin": 3,
+                "event_end": 53,
+                "positive_leap": 4,
+                "negative_leap": 11,
+                "event_in_progress": 5})
+
+            self.assertEqual(result['io_and_clock_flags_counts'], {
+                "station_volume": 1,
+                "long_record_read": 33,
+                "short_record_read": 2,
+                "start_time_series": 3,
+                "end_time_series": 4,
+                "clock_locked": 32})
+
+            # From a BytesIO objects.
+            tf.seek(0, 0)
+            with io.BytesIO(tf.read()) as buf:
+                result = util.get_flags(buf, timing_quality=False)
+
+                self.assertEqual(result["record_count"], 112)
+
+                self.assertEqual(result['data_quality_flags_counts'], {
+                    "amplifier_saturation": 55,
+                    "digitizer_clipping": 72,
+                    "spikes": 55,
+                    "glitches": 63,
+                    "missing_padded_data": 55,
+                    "telemetry_sync_error": 63,
+                    "digital_filter_charging": 4,
+                    "suspect_time_tag": 8})
+
+                self.assertEqual(result['activity_flags_counts'], {
+                    "calibration_signal": 1,
+                    "time_correction_applied": 2,
+                    "event_begin": 3,
+                    "event_end": 53,
+                    "positive_leap": 4,
+                    "negative_leap": 11,
+                    "event_in_progress": 5})
+
+                self.assertEqual(result['io_and_clock_flags_counts'], {
+                    "station_volume": 1,
+                    "long_record_read": 33,
+                    "short_record_read": 2,
+                    "start_time_series": 3,
+                    "end_time_series": 4,
+                    "clock_locked": 32})
 
     def test_get_start_and_end_time(self):
         """
@@ -166,26 +474,38 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
         V <- 0:100; min(V); max(V); mean(V); median(V); quantile(V, 0.75,
         type = 3); quantile(V, 0.25, type = 3)
+
+        The method used to be called getTimingAndDataQuality() but has in
+        the meanwhile been replaced by a more general get_flags() method.
+        This test uses the general method but is otherwise not altered.
         """
         filename = os.path.join(self.path, 'data', 'timingquality.mseed')
-        result = util.get_timing_and_data_quality(filename)
-        self.assertEqual(result,
-                         {'timing_quality_upper_quantile': 75.0,
-                          'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0],
-                          'timing_quality_min': 0.0,
-                          'timing_quality_lower_quantile': 25.0,
-                          'timing_quality_average': 50.0,
-                          'timing_quality_median': 50.0,
-                          'timing_quality_max': 100.0})
+        result = util.get_flags(filename, timing_quality=True,
+                                io_flags=False, activity_flags=False,
+                                data_quality_flags=False)
+
+        # Test all values separately.
+        np.testing.assert_allclose(
+            sorted(result["timing_quality"]["all_values"]),
+            np.arange(0, 101))
+
+        del result["timing_quality"]["all_values"]
+
+        self.assertEqual(result["timing_quality"], {
+            'upper_quartile': 75.0,
+            'min': 0.0,
+            'lower_quartile': 25.0,
+            'mean': 50.0,
+            'median': 50.0,
+            'max': 100.0})
+
         # No timing quality set should result in an empty dictionary.
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
-        result = util.get_timing_and_data_quality(filename)
-        self.assertEqual(result,
-                         {'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0]})
-        result = util.get_timing_and_data_quality(filename)
-        self.assertEqual(result,
-                         {'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0]})
+        result = util.get_flags(filename, timing_quality=True,
+                                io_flags=False, activity_flags=False,
+                                data_quality_flags=False)
+        self.assertEqual(result["timing_quality"], {})
 
     def test_unpack_steim_1(self):
         """
@@ -195,9 +515,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
         steim1_file = os.path.join(self.path, 'data',
                                    'BW.BGLD.__.EHE.D.2008.001.first_record')
         # 64 Bytes header.
-        with open(steim1_file, 'rb') as fp:
-            data_string = fp.read()[64:]
-        data = util._unpack_steim_1(data_string, 412, swapflag=self.swap,
+        d = np.fromfile(steim1_file, dtype=np.uint8)[64:]
+        data = util._unpack_steim_1(d, 412, swapflag=self.swap,
                                     verbose=0)
         data_record = _read_mseed(steim1_file)[0].data
         np.testing.assert_array_equal(data, data_record)
@@ -209,9 +528,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         steim2_file = os.path.join(self.path, 'data', 'steim2.mseed')
         # 128 Bytes header.
-        with open(steim2_file, 'rb') as fp:
-            data_string = fp.read()[128:]
-        data = util._unpack_steim_2(data_string, 5980, swapflag=self.swap,
+        d = np.fromfile(steim2_file, dtype=np.uint8)[128:]
+        data = util._unpack_steim_2(d, 5980, swapflag=self.swap,
                                     verbose=0)
         data_record = _read_mseed(steim2_file)[0].data
         np.testing.assert_array_equal(data, data_record)
@@ -306,7 +624,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         Test case for obspy.io.mseed.util._check_flag_value
         """
-
         # Valid value for a boolean flag
         corrected_flag = util._check_flag_value(True)
         self.assertTrue(isinstance(corrected_flag, bool))
@@ -554,7 +871,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         Test case for obspy.io.mseed.util._convert_flags_to_raw_byte
         """
-
         recstart = UTCDateTime("2009-12-25T06:00:00.0")
         recend = UTCDateTime("2009-12-26T06:00:00.0")
         user_flags = {
@@ -620,9 +936,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         Test case for obspy.io.mseed.util.set_flags_in_fixed_headers
         """
-
         # Write mseed file with several traces
-
         npts = 1000
         np.random.seed(42)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
@@ -798,7 +1112,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
         :type reclen: int
         :param reclen: record length across the file
         """
-
         prev_pos = file_bfr.tell()
         file_bfr.seek(0, os.SEEK_END)
         filesize = file_bfr.tell()

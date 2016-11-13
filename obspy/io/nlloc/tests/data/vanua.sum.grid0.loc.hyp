@@ -1,0 +1,51 @@
+NLLOC "./loc/vanua.20080501.012216.grid0" "LOCATED" "Location completed."
+SIGNATURE "Océane Foix   NLLoc:v6.00.0 28Jul2016 10h58m18"
+COMMENT "Central Vanuatu (3D tomo 2016)"
+GRID  131 131 48  0 0 -5  2.22 2.22 2.22 PROB_DENSITY
+SEARCH OCTREE nInitial 600 nEvaluated 20008 smallestNodeSide 0.450938/0.450938/0.277500 oct_tree_integral 1.389518e+03 scatter_volume 1.379897e+03
+HYPOCENTER  x 145.427 y 265.828 z 34.2663  OT 1.59327  ix -1 iy -1 iz -1
+GEOGRAPHIC  OT 2008 05 01  01 22   1.59327  Lat -14.4937 Long 167.049 Depth 34.2663
+QUALITY  Pmax 1.0155e+29 MFmin 10.9922 MFmax 11.6077 RMS 0.120564 Nphs 14 Gap 345.132 Dist 79.6901 Mamp  -9.9 0 Mdur  -9.9 0
+VPVSRATIO  VpVsRatio 2.26416  Npair 3  Diff 1.29
+STATISTICS  ExpectX 144.318 Y 265.961 Z 38.0436  CovXX 66.0577 XY 4.27419 XZ -15.9435 YY 17.0491 YZ -4.45977 ZZ 60.9848 EllAz1  356.51 Dip1  4.46827 Len1  7.61778 Az2  271.721 Dip2  -49.2932 Len2  12.9338 Len3  1.683236e+01
+STAT_GEOG  ExpectLat -14.4925 Long 167.038 Depth 38.0436
+TRANSFORM  LAMBERT RefEllipsoid WGS-84  LatOrig -16.900000  LongOrig 165.700000  FirstStdParal -15.600000  SecondStdParal -16.000000  RotCW 0.000000
+QML_OriginQuality  assocPhCt 14  usedPhCt 14  assocStaCt -1  usedStaCt 7  depthPhCt -1  stdErr 0.120564  azGap 345.132  secAzGap 345.132  gtLevel -  minDist 79.6901 maxDist 106.701 medDist 93.865
+QML_OriginUncertainty  horUnc -1  minHorUnc 6.1937  maxHorUnc 12.3606  azMaxHorUnc 85.0528
+FOCALMECH  Hyp  -14.4937 167.049 34.2663 Mech  0 0 0 mf  0 nObs 0
+END_NLLOC
+
+NLLOC "./loc/vanua.20080501.020022.grid0" "LOCATED" "Location completed."
+SIGNATURE "Océane Foix   NLLoc:v6.00.0 28Jul2016 10h58m18"
+COMMENT "Central Vanuatu (3D tomo 2016)"
+GRID  131 131 48  0 0 -5  2.22 2.22 2.22 PROB_DENSITY
+SEARCH OCTREE nInitial 600 nEvaluated 20000 smallestNodeSide 0.225469/0.225469/0.138750 oct_tree_integral 3.166559e+01 scatter_volume 3.152480e+01
+HYPOCENTER  x 129.532 y 200.78 z 28.9244  OT 16.2697  ix -1 iy -1 iz -1
+GEOGRAPHIC  OT 2008 05 01  02 00   16.2697  Lat -15.0823 Long 166.905 Depth 28.9244
+QUALITY  Pmax 1.45675e+33 MFmin 15.3006 MFmax 16.2016 RMS 0.0467109 Nphs 14 Gap 291.341 Dist 17.5069 Mamp  -9.9 0 Mdur  -9.9 0
+VPVSRATIO  VpVsRatio 1.64079  Npair 5  Diff 2.25
+STATISTICS  ExpectX 129.594 Y 200.491 Z 29.2749  CovXX 1.30733 XY 0.330253 XZ -0.165591 YY 2.72351 YZ -1.33432 ZZ 3.63563 EllAz1  287.34 Dip1  5.66818 Len1  2.07645 Az2  21.43 Dip2  35.702 Len2  2.5368 Len3  4.039263e+00
+STAT_GEOG  ExpectLat -15.0849 Long 166.905 Depth 29.2749
+TRANSFORM  LAMBERT RefEllipsoid WGS-84  LatOrig -16.900000  LongOrig 165.700000  FirstStdParal -15.600000  SecondStdParal -16.000000  RotCW 0.000000
+QML_OriginQuality  assocPhCt 14  usedPhCt 14  assocStaCt -1  usedStaCt 7  depthPhCt -1  stdErr 0.0467109  azGap 291.341  secAzGap 291.341  gtLevel -  minDist 17.5069 maxDist 50.3096 medDist 30.1179
+QML_OriginUncertainty  horUnc -1  minHorUnc 1.68476  maxHorUnc 2.53624  azMaxHorUnc 12.5021
+FOCALMECH  Hyp  -15.0823 166.905 28.9244 Mech  0 0 0 mf  0 nObs 0
+END_NLLOC
+
+NLLOC "./loc/vanua.20080501.021043.grid0" "LOCATED" "Location completed."
+SIGNATURE "Océane Foix   NLLoc:v6.00.0 28Jul2016 10h58m18"
+COMMENT "Central Vanuatu (3D tomo 2016)"
+GRID  131 131 48  0 0 -5  2.22 2.22 2.22 PROB_DENSITY
+SEARCH OCTREE nInitial 600 nEvaluated 20008 smallestNodeSide 1.803750/1.803750/1.110000 oct_tree_integral 2.593585e+04 scatter_volume 2.593585e+04
+HYPOCENTER  x 124.459 y 193.001 z 36.07  OT 36.6601  ix -1 iy -1 iz -1
+GEOGRAPHIC  OT 2008 05 01  02 10   36.6601  Lat -15.1529 Long 166.858 Depth 36.07
+QUALITY  Pmax 18052 MFmin 2.48416 MFmax 2.94402 RMS 0.26971 Nphs 5 Gap 326.194 Dist 15.7094 Mamp  -9.9 0 Mdur  -9.9 0
+VPVSRATIO  VpVsRatio 1  Npair 2  Diff 3.78
+STATISTICS  ExpectX 135.773 Y 201.369 Z 32.7818  CovXX 444.703 XY 252.458 XZ 20.5462 YY 312.338 YZ 63.5696 ZZ 243.079 EllAz1  144.056 Dip1  16.1068 Len1  19.4001 Az2  296.783 Dip2  72.0022 Len2  29.4938 Len3  4.779304e+01
+STAT_GEOG  ExpectLat -15.0767 Long 166.963 Depth 32.7818
+TRANSFORM  LAMBERT RefEllipsoid WGS-84  LatOrig -16.900000  LongOrig 165.700000  FirstStdParal -15.600000  SecondStdParal -16.000000  RotCW 0.000000
+QML_OriginQuality  assocPhCt 5  usedPhCt 5  assocStaCt -1  usedStaCt 3  depthPhCt -1  stdErr 0.26971  azGap 326.194  secAzGap 347.01  gtLevel -  minDist 15.7094 maxDist 60.5281 medDist 48.2052
+QML_OriginUncertainty  horUnc -1  minHorUnc 16.4415  maxHorUnc 38.3519  azMaxHorUnc 52.3449
+FOCALMECH  Hyp  -15.1529 166.858 36.07 Mech  0 0 0 mf  0 nObs 0
+END_NLLOC
+

@@ -32,83 +32,80 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         Tests the creation of the smoothing window.
         """
         # Disable div by zero errors.
-        temp = np.geterr()
-        np.seterr(all='ignore')
-        # Frequency of zero results in a delta peak at zero (there usually
-        # should be just one zero in the frequency array.
-        window = konno_ohmachi_smoothing_window(
-            np.array([0, 1, 0, 3], dtype=np.float32), 0)
-        np.testing.assert_array_equal(window, np.array([1, 0, 1, 0],
-                                                       dtype=np.float32))
-        # Wrong dtypes raises.
-        self.assertRaises(ValueError, konno_ohmachi_smoothing_window,
-                          np.arange(10, dtype=np.int32), 10)
-        # If frequency=center frequency, log results in infinity. Limit of
-        # whole formulae is 1.
-        window = konno_ohmachi_smoothing_window(
-            np.array([5.0, 1.0, 5.0, 2.0], dtype=np.float32), 5)
-        np.testing.assert_array_equal(
-            window[[0, 2]], np.array([1.0, 1.0], dtype=np.float32))
-        # Output dtype should be the dtype of frequencies.
-        self.assertEqual(konno_ohmachi_smoothing_window(np.array([1, 6, 12],
-                         dtype=np.float32), 5).dtype, np.float32)
-        self.assertEqual(konno_ohmachi_smoothing_window(np.array([1, 6, 12],
-                         dtype=np.float64), 5).dtype, np.float64)
-        # Check if normalizing works.
-        window = konno_ohmachi_smoothing_window(self.frequencies, 20)
-        self.assertGreater(window.sum(), 1.0)
-        window = konno_ohmachi_smoothing_window(self.frequencies, 20,
-                                                normalize=True)
-        self.assertAlmostEqual(window.sum(), 1.0, 5)
-        # Just one more to test if there are no invalid values and the range if
-        # ok.
-        window = konno_ohmachi_smoothing_window(self.frequencies, 20)
-        self.assertEqual(np.any(np.isnan(window)), False)
-        self.assertEqual(np.any(np.isinf(window)), False)
-        self.assertTrue(np.all(window <= 1.0))
-        self.assertTrue(np.all(window >= 0.0))
-        np.seterr(**temp)
+        with np.errstate(all='ignore'):
+            # Frequency of zero results in a delta peak at zero (there usually
+            # should be just one zero in the frequency array.
+            window = konno_ohmachi_smoothing_window(
+                np.array([0, 1, 0, 3], dtype=np.float32), 0)
+            np.testing.assert_array_equal(window, np.array([1, 0, 1, 0],
+                                                           dtype=np.float32))
+            # Wrong dtypes raises.
+            self.assertRaises(ValueError, konno_ohmachi_smoothing_window,
+                              np.arange(10, dtype=np.int32), 10)
+            # If frequency=center frequency, log results in infinity. Limit of
+            # whole formulae is 1.
+            window = konno_ohmachi_smoothing_window(
+                np.array([5.0, 1.0, 5.0, 2.0], dtype=np.float32), 5)
+            np.testing.assert_array_equal(
+                window[[0, 2]], np.array([1.0, 1.0], dtype=np.float32))
+            # Output dtype should be the dtype of frequencies.
+            self.assertEqual(konno_ohmachi_smoothing_window(
+                np.array([1, 6, 12], dtype=np.float32), 5).dtype, np.float32)
+            self.assertEqual(konno_ohmachi_smoothing_window(
+                np.array([1, 6, 12], dtype=np.float64), 5).dtype, np.float64)
+            # Check if normalizing works.
+            window = konno_ohmachi_smoothing_window(self.frequencies, 20)
+            self.assertGreater(window.sum(), 1.0)
+            window = konno_ohmachi_smoothing_window(self.frequencies, 20,
+                                                    normalize=True)
+            self.assertAlmostEqual(window.sum(), 1.0, 5)
+            # Just one more to test if there are no invalid values and the
+            # range if ok.
+            window = konno_ohmachi_smoothing_window(self.frequencies, 20)
+            self.assertEqual(np.any(np.isnan(window)), False)
+            self.assertEqual(np.any(np.isinf(window)), False)
+            self.assertTrue(np.all(window <= 1.0))
+            self.assertTrue(np.all(window >= 0.0))
 
     def test_smoothing_matrix(self):
         """
         Tests some aspects of the matrix.
         """
         # Disable div by zero errors.
-        temp = np.geterr()
-        np.seterr(all='ignore')
-        frequencies = np.array([0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
-                               dtype=np.float32)
-        matrix = calculate_smoothing_matrix(frequencies, 20.0)
-        self.assertEqual(matrix.dtype, np.float32)
-        for _i, freq in enumerate(frequencies):
-            np.testing.assert_array_equal(
-                matrix[_i],
-                konno_ohmachi_smoothing_window(frequencies, freq, 20.0))
-            # Should not be normalized. Test only for larger frequencies
-            # because smaller ones have a smaller window.
-            if freq >= 10.0:
-                self.assertGreater(matrix[_i].sum(), 1.0)
-        # Input should be output dtype.
-        frequencies = np.array(
-            [0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
-            dtype=np.float64)
-        matrix = calculate_smoothing_matrix(frequencies, 20.0)
-        self.assertEqual(matrix.dtype, np.float64)
-        # Check normalization.
-        frequencies = np.array(
-            [0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
-            dtype=np.float32)
-        matrix = calculate_smoothing_matrix(frequencies, 20.0, normalize=True)
-        self.assertEqual(matrix.dtype, np.float32)
-        for _i, freq in enumerate(frequencies):
-            np.testing.assert_array_equal(
-                matrix[_i],
-                konno_ohmachi_smoothing_window(frequencies, freq, 20.0,
-                                               normalize=True))
-            # Should not be normalized. Test only for larger frequencies
-            # because smaller ones have a smaller window.
-            self.assertAlmostEqual(matrix[_i].sum(), 1.0, 5)
-        np.seterr(**temp)
+        with np.errstate(all='ignore'):
+            frequencies = np.array([0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
+                                   dtype=np.float32)
+            matrix = calculate_smoothing_matrix(frequencies, 20.0)
+            self.assertEqual(matrix.dtype, np.float32)
+            for _i, freq in enumerate(frequencies):
+                np.testing.assert_array_equal(
+                    matrix[_i],
+                    konno_ohmachi_smoothing_window(frequencies, freq, 20.0))
+                # Should not be normalized. Test only for larger frequencies
+                # because smaller ones have a smaller window.
+                if freq >= 10.0:
+                    self.assertGreater(matrix[_i].sum(), 1.0)
+            # Input should be output dtype.
+            frequencies = np.array(
+                [0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
+                dtype=np.float64)
+            matrix = calculate_smoothing_matrix(frequencies, 20.0)
+            self.assertEqual(matrix.dtype, np.float64)
+            # Check normalization.
+            frequencies = np.array(
+                [0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
+                dtype=np.float32)
+            matrix = calculate_smoothing_matrix(frequencies, 20.0,
+                                                normalize=True)
+            self.assertEqual(matrix.dtype, np.float32)
+            for _i, freq in enumerate(frequencies):
+                np.testing.assert_array_equal(
+                    matrix[_i],
+                    konno_ohmachi_smoothing_window(
+                        frequencies, freq, 20.0, normalize=True))
+                # Should not be normalized. Test only for larger frequencies
+                # because smaller ones have a smaller window.
+                self.assertAlmostEqual(matrix[_i].sum(), 1.0, 5)
 
     def test_konno_ohmachi_smoothing(self):
         """

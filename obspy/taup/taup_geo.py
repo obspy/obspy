@@ -32,7 +32,7 @@ def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
               receiver_latitude_in_deg, receiver_longitude_in_deg,
               radius_of_planet_in_km, flattening_of_planet):
     """
-    Given the source and receiver location, calculate the azimuth and distance.
+    Given the source and receiver location, calculate distance.
 
     :param source_latitude_in_deg: Source location latitude in degrees
     :type source_latitude_in_deg: float
@@ -50,6 +50,36 @@ def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
     :return: distance_in_deg
     :rtype: float
     """
+    return calc_dist_azi(source_latitude_in_deg, source_longitude_in_deg,
+                         receiver_latitude_in_deg, receiver_longitude_in_deg,
+                         radius_of_planet_in_km, flattening_of_planet)[0]
+
+
+def calc_dist_azi(source_latitude_in_deg, source_longitude_in_deg,
+                  receiver_latitude_in_deg, receiver_longitude_in_deg,
+                  radius_of_planet_in_km, flattening_of_planet):
+    """
+    Given the source and receiver location, calculate the azimuth from the
+    source to the receiver at the source, the backazimuth from the receiver
+    to the source at the receiver and distance between the source and receiver.
+
+    :param source_latitude_in_deg: Source location latitude in degrees
+    :type source_latitude_in_deg: float
+    :param source_longitude_in_deg: Source location longitude in degrees
+    :type source_longitude_in_deg: float
+    :param receiver_latitude_in_deg: Receiver location latitude in degrees
+    :type receiver_latitude_in_deg: float
+    :param receiver_longitude_in_deg: Receiver location longitude in degrees
+    :type receiver_longitude_in_deg: float
+    :param radius_of_planet_in_km: Radius of the planet in km
+    :type radius_of_planet_in_km: float
+    :param flattening_of_planet: Flattening of planet (0 for a sphere)
+    :type receiver_longitude_in_deg: float
+
+    :returns: distance_in_deg (in degrees), source_receiver_azimuth (in
+              degrees) and receiver_to_source_backazimuth (in degrees).
+    :rtype: tuple of three floats
+    """
     if geodetics.HAS_GEOGRAPHICLIB:
         ellipsoid = Geodesic(a=radius_of_planet_in_km * 1000.0,
                              f=flattening_of_planet)
@@ -58,6 +88,8 @@ def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
                               receiver_latitude_in_deg,
                               receiver_longitude_in_deg)
         distance_in_deg = g['a12']
+        source_receiver_azimuth = g['azi1'] % 360
+        receiver_to_source_backazimuth = (g['azi2'] + 180) % 360
 
     else:
         # geographiclib is not installed - use obspy/geodetics
@@ -68,6 +100,8 @@ def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
                                   a=radius_of_planet_in_km * 1000.0,
                                   f=flattening_of_planet)
         distance_in_km = values[0]/1000.0
+        source_receiver_azimuth = values[1] % 360
+        receiver_to_source_backazimuth = values[2] % 360
         # NB - km2deg assumes spherical planet... generate a warning
         if flattening_of_planet != 0.0:
             msg = "Assuming spherical planet when calculating epicentral " + \
@@ -76,7 +110,8 @@ def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
             warnings.warn(msg)
         distance_in_deg = kilometer2degrees(distance_in_km,
                                             radius=radius_of_planet_in_km)
-    return distance_in_deg
+    return (distance_in_deg, source_receiver_azimuth,
+            receiver_to_source_backazimuth)
 
 
 def add_geo_to_arrivals(arrivals, source_latitude_in_deg,

@@ -91,14 +91,16 @@ KEYWORDS = [
     'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
     'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
     'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS', 'PDAS', 'picker',
-    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2',
-    'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology',
+    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK', 'REFTEK130',
+    'RT-130', 'RESP', 'response file', 'RT', 'SAC', 'sc3ml', 'SDS', 'SEED',
+    'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
+    'seismology',
     'seismogram', 'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram',
     'StationXML', 'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV',
     'waveform', 'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston',
     'XML-SEED', 'XSEED']
 
+# when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
 INSTALL_REQUIRES = [
     'future>=0.12.4',
     'numpy>=1.6.1',
@@ -135,9 +137,6 @@ ENTRY_POINTS = {
         'obspy-xseed2dataless = obspy.io.xseed.scripts.xseed2dataless:main',
         'obspy-dataless2resp = obspy.io.xseed.scripts.dataless2resp:main',
         ],
-    'distutils.commands': [
-        'build_man = Help2Man'
-        ],
     'obspy.plugin.waveform': [
         'TSPAIR = obspy.io.ascii.core',
         'SLIST = obspy.io.ascii.core',
@@ -162,7 +161,8 @@ ENTRY_POINTS = {
         'WAV = obspy.io.wav.core',
         'AH = obspy.io.ah.core',
         'KNET = obspy.io.nied.knet',
-        'GCF = obspy.io.gcf.core'
+        'GCF = obspy.io.gcf.core',
+        'REFTEK130 = obspy.io.reftek.core',
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -272,6 +272,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.gcf.core:_is_gcf',
         'readFormat = obspy.io.gcf.core:_read_gcf',
         ],
+    'obspy.plugin.waveform.REFTEK130': [
+        'isFormat = obspy.io.reftek.core:_is_reftek130',
+        'readFormat = obspy.io.reftek.core:_read_reftek130',
+        ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
         'ZMAP = obspy.io.zmap.core',
@@ -284,7 +288,8 @@ ENTRY_POINTS = {
         'CMTSOLUTION = obspy.io.cmtsolution.core',
         'SHAPEFILE = obspy.io.shapefile.core',
         'KML = obspy.io.kml.core',
-        'FNETMT = obspy.io.nied.fnetmt'
+        'FNETMT = obspy.io.nied.fnetmt',
+        'GSE2 = obspy.io.gse2.bulletin'
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -325,6 +330,10 @@ ENTRY_POINTS = {
     'obspy.plugin.event.FNETMT': [
         'isFormat = obspy.io.nied.fnetmt:_is_fnetmt_catalog',
         'readFormat = obspy.io.nied.fnetmt:_read_fnetmt_catalog',
+        ],
+    'obspy.plugin.event.GSE2': [
+        'isFormat = obspy.io.gse2.bulletin:_is_gse2',
+        'readFormat = obspy.io.gse2.bulletin:_read_gse2',
         ],
     'obspy.plugin.event.SHAPEFILE': [
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
@@ -612,6 +621,18 @@ def add_data_files(config):
         for folder in EXCLUDE_DIRS:
             if folder in dirs:
                 dirs.remove(folder)
+
+    # Force include the contents of some directories.
+    FORCE_INCLUDE_DIRS = [
+        os.path.join(SETUP_DIRECTORY, 'obspy', 'io', 'mseed', 'src',
+                     'libmseed', 'test')]
+
+    for folder in FORCE_INCLUDE_DIRS:
+        for root, _, files in os.walk(folder):
+            for filename in files:
+                config.add_data_files(
+                    os.path.relpath(os.path.join(root, filename),
+                                    SETUP_DIRECTORY))
 
 
 # Auto-generate man pages from --help output

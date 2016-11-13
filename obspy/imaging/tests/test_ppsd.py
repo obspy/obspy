@@ -30,9 +30,7 @@ class PPSDTestCase(unittest.TestCase):
         Test plot of ppsd example data, normal (non-cumulative) style.
         """
         # Catch underflow warnings due to plotting on log-scale.
-        _t = np.geterr()
-        np.seterr(all="ignore")
-        try:
+        with np.errstate(all='ignore'):
             with ImageComparison(self.path, 'ppsd.png', reltol=1.5) as ic:
                 self.ppsd.plot(
                     show=False, show_coverage=True, show_histogram=True,
@@ -44,18 +42,14 @@ class PPSDTestCase(unittest.TestCase):
                 ax.set_ylim(-160, -130)
                 plt.draw()
                 fig.savefig(ic.name)
-        finally:
-            np.seterr(**_t)
 
     def test_ppsd_plot_frequency(self):
         """
         Test plot of ppsd example data, normal (non-cumulative) style.
         """
         # Catch underflow warnings due to plotting on log-scale.
-        _t = np.geterr()
-        np.seterr(all="ignore")
-        try:
-            with ImageComparison(self.path, 'ppsd_freq.png', reltol=1.5) as ic:
+        with np.errstate(all='ignore'):
+            with ImageComparison(self.path, 'ppsd_freq.png', reltol=2.0) as ic:
                 self.ppsd.plot(
                     show=False, show_coverage=False, show_histogram=True,
                     show_percentiles=True, percentiles=[20, 40],
@@ -67,17 +61,13 @@ class PPSDTestCase(unittest.TestCase):
                 ax.set_ylim(-160, -130)
                 plt.draw()
                 fig.savefig(ic.name, dpi=50)
-        finally:
-            np.seterr(**_t)
 
     def test_ppsd_plot_cumulative(self):
         """
         Test plot of ppsd example data, cumulative style.
         """
         # Catch underflow warnings due to plotting on log-scale.
-        _t = np.geterr()
-        np.seterr(all="ignore")
-        try:
+        with np.errstate(all='ignore'):
             with ImageComparison(self.path, 'ppsd_cumulative.png',
                                  reltol=1.5) as ic:
                 self.ppsd.plot(
@@ -93,8 +83,6 @@ class PPSDTestCase(unittest.TestCase):
                 ax.set_ylim(-160, -130)
                 plt.draw()
                 fig.savefig(ic.name)
-        finally:
-            np.seterr(**_t)
 
 
 def suite():

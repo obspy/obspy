@@ -69,10 +69,10 @@ else:
     encoding = sys.getdefaultencoding() or "UTF-8"
     platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
 # The default User Agent that will be sent with every request.
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (
+DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (
     obspy.__version__, platform_, platform.python_version())
 # The user agent tests should use by default.
-DEFAULT_TESTING_USER_AGENT = "ObsPy %s (test suite) (%s, Python %s)" % (
+DEFAULT_TESTING_USER_AGENT = "ObsPy/%s (test suite) (%s, Python %s)" % (
     obspy.__version__, platform_, platform.python_version())
 
 
@@ -218,6 +218,9 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
             if data is None:
                 r = requests.get(**_request_args)
             else:
+                # Compatibility with old request versions.
+                if hasattr(data, "read"):
+                    data = data.read()
                 _request_args["data"] = data
                 r = requests.post(**_request_args)
         except TypeError:

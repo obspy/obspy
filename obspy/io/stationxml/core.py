@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
 import inspect
 import io
 import math
@@ -20,9 +21,11 @@ import os
 import re
 import warnings
 
+from collections import Mapping
 from lxml import etree
 
 import obspy
+from obspy.core.util import AttribDict
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (CoefficientsTypeResponseStage,
@@ -153,6 +156,7 @@ def _read_stationxml(path_or_file_object):
     inv = obspy.core.inventory.Inventory(networks=networks, source=source,
                                          sender=sender, created=created,
                                          module=module, module_uri=module_uri)
+    _read_extra(root, inv)  # read extra tags from root element
     return inv
 
 
@@ -183,6 +187,7 @@ def _read_base_node(element, object_to_write_to, _ns):
     if data_availability is not None:
         object_to_write_to.data_availability = \
             _read_data_availability(data_availability, _ns)
+    _read_extra(element, object_to_write_to)
 
 
 def _read_network(net_element, _ns):
@@ -372,6 +377,7 @@ def _read_response(resp_element, _ns):
         if not len(stage):
             continue
         response.response_stages.append(_read_response_stage(stage, _ns))
+    _read_extra(resp_element, response)
     return response
 
 
@@ -416,7 +422,6 @@ def _read_response_stage(stage_elem, _ns):
     response_list_elem = stage_elem.find(_ns("ResponseList"))
     fir_elem = stage_elem.find(_ns("FIR"))
     polynomial_elem = stage_elem.find(_ns("Polynomial"))
-
     type_elems = [poles_zeros_elem, coefficients_elem, response_list_elem,
                   fir_elem, polynomial_elem]
 
@@ -507,11 +512,13 @@ def _read_response_stage(stage_elem, _ns):
 
         zeros = [_tag2pole_or_zero(el) for el in elem.findall(_ns("Zero"))]
         poles = [_tag2pole_or_zero(el) for el in elem.findall(_ns("Pole"))]
-        return obspy.core.inventory.PolesZerosResponseStage(
+        obj = obspy.core.inventory.PolesZerosResponseStage(
             pz_transfer_function_type=pz_transfer_function_type,
             normalization_frequency=normalization_frequency,
             normalization_factor=normalization_factor, zeros=zeros,
             poles=poles, **kwargs)
+        _read_extra(elem, obj)
+        return obj
 
     # Handle the coefficients Response Stage Type.
     elif elem is coefficients_elem:
@@ -523,9 +530,11 @@ def _read_response_stage(stage_elem, _ns):
         denominator = \
             _read_floattype_list(elem, _ns("Denominator"),
                                  FloatWithUncertaintiesAndUnit, unit=True)
-        return obspy.core.inventory.CoefficientsTypeResponseStage(
+        obj = obspy.core.inventory.CoefficientsTypeResponseStage(
             cf_transfer_function_type=cf_transfer_function_type,
             numerator=numerator, denominator=denominator, **kwargs)
+        _read_extra(elem, obj)
+        return obj
 
     # Handle the response list response stage type.
     elif elem is response_list_elem:
@@ -538,8 +547,10 @@ def _read_response_stage(stage_elem, _ns):
             rlist_elems.append(
                 obspy.core.inventory.response.ResponseListElement(
                     frequency=freq, amplitude=amp, phase=phase))
-        return obspy.core.inventory.ResponseListResponseStage(
+        obj = obspy.core.inventory.ResponseListResponseStage(
             response_list_elements=rlist_elems, **kwargs)
+        _read_extra(elem, obj)
+        return obj
 
     # Handle the FIR response stage type.
     elif elem is fir_elem:
@@ -547,8 +558,10 @@ def _read_response_stage(stage_elem, _ns):
         coeffs = _read_floattype_list(elem, _ns("NumeratorCoefficient"),
                                       FilterCoefficient,
                                       additional_mapping={'i': "number"})
-        return obspy.core.inventory.FIRResponseStage(
+        obj = obspy.core.inventory.FIRResponseStage(
             coefficients=coeffs, symmetry=symmetry, **kwargs)
+        _read_extra(elem, obj)
+        return obj
 
     # Handle polynomial instrument responses.
     elif elem is polynomial_elem:
@@ -561,11 +574,13 @@ def _read_response_stage(stage_elem, _ns):
         coeffs = _read_floattype_list(elem, _ns("Coefficient"),
                                       CoefficientWithUncertainties,
                                       additional_mapping={"number": "number"})
-        return obspy.core.inventory.PolynomialResponseStage(
+        obj = obspy.core.inventory.PolynomialResponseStage(
             approximation_type=appr_type, frequency_lower_bound=f_low,
             frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
             approximation_upper_bound=appr_high, maximum_error=max_err,
             coefficients=coeffs, **kwargs)
+        _read_extra(elem, obj)
+        return obj
 
 
 def _read_instrument_sensitivity(sensitivity_element, _ns):
@@ -587,6 +602,7 @@ def _read_instrument_sensitivity(sensitivity_element, _ns):
         _tag2obj(sensitivity_element, _ns("FrequencyEnd"), float)
     sensitivity.frequency_range_db_variation = \
         _tag2obj(sensitivity_element, _ns("FrequencyDBVariation"), float)
+    _read_extra(sensitivity_element, sensitivity)
     return sensitivity
 
 
@@ -612,7 +628,7 @@ def _read_instrument_polynomial(element, _ns):
     coeffs = _read_floattype_list(element, _ns("Coefficient"),
                                   CoefficientWithUncertainties,
                                   additional_mapping={"number": "number"})
-    return obspy.core.inventory.response.InstrumentPolynomial(
+    obj = obspy.core.inventory.response.InstrumentPolynomial(
         approximation_type=appr_type, frequency_lower_bound=f_low,
         frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
         approximation_upper_bound=appr_high, maximum_error=max_err,
@@ -621,13 +637,17 @@ def _read_instrument_polynomial(element, _ns):
         output_units=output_units,
         output_units_description=output_units_description,
         description=description, resource_id=resource_id, name=name)
+    _read_extra(element, obj)
+    return obj
 
 
 def _read_external_reference(ref_element, _ns):
     uri = _tag2obj(ref_element, _ns("URI"), str)
     description = _tag2obj(ref_element, _ns("Description"), str)
-    return obspy.core.inventory.ExternalReference(uri=uri,
-                                                  description=description)
+    obj = obspy.core.inventory.ExternalReference(uri=uri,
+                                                 description=description)
+    _read_extra(ref_element, obj)
+    return obj
 
 
 def _read_operator(operator_element, _ns):
@@ -636,8 +656,10 @@ def _read_operator(operator_element, _ns):
     for contact in operator_element.findall(_ns("Contact")):
         contacts.append(_read_person(contact, _ns))
     website = _tag2obj(operator_element, _ns("WebSite"), str)
-    return obspy.core.inventory.Operator(agencies=agencies, contacts=contacts,
-                                         website=website)
+    obj = obspy.core.inventory.Operator(agencies=agencies, contacts=contacts,
+                                        website=website)
+    _read_extra(operator_element, obj)
+    return obj
 
 
 def _read_data_availability(avail_element, _ns):
@@ -647,7 +669,9 @@ def _read_data_availability(avail_element, _ns):
         return extent
     start = obspy.UTCDateTime(extent.get("start"))
     end = obspy.UTCDateTime(extent.get("end"))
-    return obspy.core.inventory.util.DataAvailability(start=start, end=end)
+    obj = obspy.core.inventory.util.DataAvailability(start=start, end=end)
+    _read_extra(avail_element, obj)
+    return obj
 
 
 def _read_equipment(equip_element, _ns):
@@ -665,11 +689,13 @@ def _read_equipment(equip_element, _ns):
     calibration_dates = \
         [obspy.core.UTCDateTime(_i.text)
          for _i in equip_element.findall(_ns("CalibrationDate"))]
-    return obspy.core.inventory.Equipment(
+    obj = obspy.core.inventory.Equipment(
         resource_id=resource_id, type=type, description=description,
         manufacturer=manufacturer, vendor=vendor, model=model,
         serial_number=serial_number, installation_date=installation_date,
         removal_date=removal_date, calibration_dates=calibration_dates)
+    _read_extra(equip_element, obj)
+    return obj
 
 
 def _read_site(site_element, _ns):
@@ -679,9 +705,11 @@ def _read_site(site_element, _ns):
     county = _tag2obj(site_element, _ns("County"), str)
     region = _tag2obj(site_element, _ns("Region"), str)
     country = _tag2obj(site_element, _ns("Country"), str)
-    return obspy.core.inventory.Site(name=name, description=description,
-                                     town=town, county=county, region=region,
-                                     country=country)
+    obj = obspy.core.inventory.Site(name=name, description=description,
+                                    town=town, county=county, region=region,
+                                    country=country)
+    _read_extra(site_element, obj)
+    return obj
 
 
 def _read_comment(comment_element, _ns):
@@ -694,9 +722,11 @@ def _read_comment(comment_element, _ns):
     id = _attr2obj(comment_element, "id", int)
     for author in comment_element.findall(_ns("Author")):
         authors.append(_read_person(author, _ns))
-    return obspy.core.inventory.Comment(
+    obj = obspy.core.inventory.Comment(
         value=value, begin_effective_time=begin_effective_time,
         end_effective_time=end_effective_time, authors=authors, id=id)
+    _read_extra(comment_element, obj)
+    return obj
 
 
 def _read_person(person_element, _ns):
@@ -706,8 +736,10 @@ def _read_person(person_element, _ns):
     phones = []
     for phone in person_element.findall(_ns("Phone")):
         phones.append(_read_phone(phone, _ns))
-    return obspy.core.inventory.Person(names=names, agencies=agencies,
-                                       emails=emails, phones=phones)
+    obj = obspy.core.inventory.Person(names=names, agencies=agencies,
+                                      emails=emails, phones=phones)
+    _read_extra(person_element, obj)
+    return obj
 
 
 def _read_phone(phone_element, _ns):
@@ -715,16 +747,17 @@ def _read_phone(phone_element, _ns):
     area_code = _tag2obj(phone_element, _ns("AreaCode"), int)
     phone_number = _tag2obj(phone_element, _ns("PhoneNumber"), str)
     description = phone_element.get("description")
-    return obspy.core.inventory.PhoneNumber(
+    obj = obspy.core.inventory.PhoneNumber(
         country_code=country_code, area_code=area_code,
         phone_number=phone_number, description=description)
+    _read_extra(phone_element, obj)
+    return obj
 
 
 def _write_stationxml(inventory, file_or_file_object, validate=False,
-                      **kwargs):
+                      nsmap=None, **kwargs):
     """
     Writes an inventory object to a buffer.
-
     :type inventory: :class:`~obspy.core.inventory.Inventory`
     :param inventory: The inventory instance to be written.
     :param file_or_file_object: The file or file-like object to be written to.
@@ -732,7 +765,22 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
     :param validate: If True, the created document will be validated with the
         StationXML schema before being written. Useful for debugging or if you
         don't trust ObsPy. Defaults to False.
+    :type nsmap: dict
+    :param nsmap: Additional custom namespace abbreviation mappings
+        (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
+
     """
+    if nsmap is None:
+        nsmap = {}
+    elif None in nsmap:
+        msg = ("Custom namespace mappings do not allow redefinition of "
+               "default StationXML namespace (key `None`). "
+               "Use other namespace abbreviations for custom namespace tags.")
+        raise ValueError(msg)
+
+    nsmap[None] = "http://www.fdsn.org/xml/station/1"
+    attrib = {"schemaVersion": SCHEMA_VERSION}
+
     # Check if any of the channels has a data availability element. In that
     # case the namespaces need to be adjusted.
     data_availability = False
@@ -748,26 +796,20 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         else:
             continue
         break
-
     if data_availability:
-        root = etree.Element(
-            "FDSNStationXML",
-            attrib={
-                ("{http://www.w3.org/2001/XMLSchema-instance}"
-                 "schemaLocation"): "http://www.fdsn.org/xml/station/1 "
-                "http://www.fdsn.org/xml/station/fdsn-station+"
-                "availability-1.0.xsd",
-                "schemaVersion": SCHEMA_VERSION},
-            nsmap={None: "http://www.fdsn.org/xml/station/1",
-                   "xsi": "http://www.w3.org/2001/XMLSchema-instance"}
-        )
-    else:
-        root = etree.Element(
-            "FDSNStationXML",
-            attrib={
-                "xmlns": "http://www.fdsn.org/xml/station/1",
-                "schemaVersion": SCHEMA_VERSION}
-        )
+        attrib["{http://www.w3.org/2001/XMLSchema-instance}"
+               "schemaLocation"] = (
+            "http://www.fdsn.org/xml/station/1 "
+            "http://www.fdsn.org/xml/station/fdsn-station+"
+            "availability-1.0.xsd")
+        if "xsi" in nsmap:
+            msg = ("Custom namespace mappings do not allow redefinition of "
+                   "StationXML availability namespace (key `xsi`). Use other "
+                   "namespace abbreviations for custom namespace tags.")
+            raise ValueError(msg)
+        nsmap["xsi"] = "http://www.w3.org/2001/XMLSchema-instance"
+
+    root = etree.Element("FDSNStationXML", attrib=attrib, nsmap=nsmap)
 
     etree.SubElement(root, "Source").text = inventory.source
     if inventory.sender:
@@ -786,6 +828,9 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
     for network in inventory.networks:
         _write_network(root, network)
 
+    # Add custom namespace tags to root element
+    _write_extra(root, inventory)
+
     tree = root.getroottree()
 
     # The validation has to be done after parsing once again so that the
@@ -801,6 +846,13 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
             for err in errors:
                 msg += "\t%s\n" % err
             raise Exception(msg)
+
+    # Register all namespaces with the tree. This allows for
+    # additional namespaces to be added to an inventory that
+    # was not created by reading a StationXML file.
+    for prefix, ns in nsmap.items():
+        if prefix and ns:
+            etree.register_namespace(prefix, ns)
 
     tree.write(file_or_file_object, pretty_print=True, xml_declaration=True,
                encoding="UTF-8")
@@ -827,6 +879,7 @@ def _write_base_node(element, object_to_read_from):
             object_to_read_from.description
     for comment in object_to_read_from.comments:
         _write_comment(element, comment)
+    _write_extra(element, object_to_read_from)
 
 
 def _write_network(parent, network):
@@ -893,8 +946,7 @@ def _float_to_str(x):
 def _write_polezero_list(parent, obj):
     def _polezero2tag(parent, tag, obj_):
         attribs = {}
-        if hasattr(obj_, "number") and obj_.number is not None:
-            attribs["number"] = str(obj_.number)
+        attribs["number"] = str(obj_.number)
         sub = etree.SubElement(parent, tag, attribs)
         attribs_real = {}
         attribs_imag = {}
@@ -913,10 +965,31 @@ def _write_polezero_list(parent, obj):
         etree.SubElement(sub, "Imaginary", attribs_imag).text = \
             _float_to_str(obj_.imag)
 
-    for obj_ in obj.zeros:
+    # Assign numbers if not given - stationxml requires them. Create copies
+    # to not modify the original objects.
+    zeros = copy.deepcopy(obj.zeros)
+    poles = copy.deepcopy(obj.poles)
+
+    # All or nothing - either all have numbers or we manually assign them
+    # starting with the zeros.
+    #
+    # This is done here to catch all cases - otherwise it would have to be
+    # done at poles + zeros assignment time and that would be pretty nasty
+    # as it would have to work across poles and zeros.
+    if not all([hasattr(i, "number") and i.number is not None
+                for i in zeros + poles]):
+        # Start numbers for both at zero - other variants are out there but
+        # this is what IRIS does.
+        for i, v in enumerate(zeros):
+            v.number = i
+        for i, v in enumerate(poles):
+            v.number = i
+
+    for obj_ in zeros:
         _polezero2tag(parent, "Zero", obj_)
-    for obj_ in obj.poles:
+    for obj_ in poles:
         _polezero2tag(parent, "Pole", obj_)
+    _write_extra(parent, obj)
 
 
 def _write_station(parent, station):
@@ -945,6 +1018,7 @@ def _write_station(parent, station):
         for contact in operator.contacts:
             _write_person(operator_elem, contact, "Contact")
         etree.SubElement(operator_elem, "WebSite").text = operator.website
+        _write_extra(operator_elem, operator)
 
     etree.SubElement(station_elem, "CreationDate").text = \
         _format_time(station.creation_date)
@@ -977,6 +1051,7 @@ def _write_channel(parent, channel):
             "start": _format_time(channel.data_availability.start),
             "end": _format_time(channel.data_availability.end)
         })
+        _write_extra(da, channel.data_availability)
 
     for ref in channel.external_references:
         _write_external_reference(channel_elem, ref)
@@ -1032,6 +1107,7 @@ def _write_io_units(parent, obj):
         str(obj.output_units)
     etree.SubElement(sub, "Description").text = \
         str(obj.output_units_description)
+    _write_extra(parent, obj)
 
 
 def _write_polynomial_common_fields(element, polynomial):
@@ -1050,6 +1126,7 @@ def _write_polynomial_common_fields(element, polynomial):
     _write_floattype_list(element, polynomial,
                           "coefficients", "Coefficient",
                           additional_mapping={"number": "number"})
+    _write_extra(element, polynomial)
 
 
 def _write_response(parent, resp):
@@ -1066,6 +1143,7 @@ def _write_response(parent, resp):
             _float_to_str(ins_sens.value)
         etree.SubElement(sub, "Frequency").text = \
             _float_to_str(ins_sens.frequency)
+        _write_extra(sub, resp.instrument_sensitivity)
         _write_io_units(sub, ins_sens)
         freq_range_group = [True if getattr(ins_sens, key, None) is not None
                             else False
@@ -1100,9 +1178,11 @@ def _write_response(parent, resp):
             str(resp.instrument_polynomial.description)
         _write_io_units(sub, resp.instrument_polynomial)
         _write_polynomial_common_fields(sub, resp.instrument_polynomial)
+        _write_extra(sub, resp.instrument_polynomial)
     # write response stages
     for stage in resp.response_stages:
         _write_response_stage(parent, stage)
+    _write_extra(parent, resp)
 
 
 def _write_response_stage(parent, stage):
@@ -1180,12 +1260,14 @@ def _write_response_stage(parent, stage):
     sub_ = etree.SubElement(sub, "StageGain")
     _obj2tag(sub_, "Value", stage.stage_gain)
     _obj2tag(sub_, "Frequency", stage.stage_gain_frequency)
+    _write_extra(parent, stage)
 
 
 def _write_external_reference(parent, ref):
     ref_elem = etree.SubElement(parent, "ExternalReference")
     etree.SubElement(ref_elem, "URI").text = ref.uri
     etree.SubElement(ref_elem, "Description").text = ref.description
+    _write_extra(parent, ref)
 
 
 def _write_equipment(parent, equipment, tag="Equipment"):
@@ -1212,6 +1294,7 @@ def _write_equipment(parent, equipment, tag="Equipment"):
     for calibration_date in equipment.calibration_dates:
         etree.SubElement(equipment_elem, "CalibrationDate").text = \
             _format_time(calibration_date)
+    _write_extra(parent, equipment)
 
 
 def _write_site(parent, site):
@@ -1223,6 +1306,7 @@ def _write_site(parent, site):
     _obj2tag(site_elem, "County", site.county)
     _obj2tag(site_elem, "Region", site.region)
     _obj2tag(site_elem, "Country", site.country)
+    _write_extra(parent, site)
 
 
 def _write_comment(parent, comment):
@@ -1239,6 +1323,7 @@ def _write_comment(parent, comment):
             _format_time(comment.end_effective_time)
     for author in comment.authors:
         _write_person(comment_elem, author, "Author")
+    _write_extra(parent, comment)
 
 
 def _write_person(parent, person, tag_name):
@@ -1251,6 +1336,7 @@ def _write_person(parent, person, tag_name):
         etree.SubElement(person_elem, "Email").text = email
     for phone in person.phones:
         _write_phone(person_elem, phone)
+    _write_extra(parent, person)
 
 
 def _write_phone(parent, phone):
@@ -1263,6 +1349,35 @@ def _write_phone(parent, phone):
             str(phone.country_code)
     etree.SubElement(phone_elem, "AreaCode").text = str(phone.area_code)
     etree.SubElement(phone_elem, "PhoneNumber").text = phone.phone_number
+    _write_extra(parent, phone)
+
+
+def _write_element(parent, element, name):
+    """
+    Recursively write custom namespace elements.
+    """
+    custom_name = "{%s}%s" % (
+        element['namespace'], name)  # name of the attribute/tag
+    attrib = element.get("attrib", {})
+    if hasattr(element, "type") and \
+            element['type'].lower() in ("attribute", "attrib"):
+        parent.set(custom_name, element['value'])
+    else:  # if not a attribute, then create a tag
+        sub = etree.SubElement(parent, custom_name, attrib=attrib)
+        if isinstance(element['value'], Mapping):  # nested extra tags
+            for tagname, tag_element in element['value'].items():
+                _write_element(sub, tag_element, tagname)
+        else:
+            sub.text = _float_to_str(element['value'])
+
+
+def _write_extra(parent, obj):
+    """
+    Write information stored in custom tags/attributes in obj.extra.
+    """
+    if hasattr(obj, "extra"):
+        for tagname, element in obj.extra.items():
+            _write_element(parent, element, tagname)
 
 
 def _tag2obj(element, tag, convert):
@@ -1305,8 +1420,68 @@ def _obj2tag(parent, tag_name, tag_value):
 
 
 def _format_time(value):
-    return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    if value.microsecond == 0:
+        return value.strftime("%Y-%m-%dT%H:%M:%S")
+    else:
+        return value.strftime("%Y-%m-%dT%H:%M:%S.%f")
 
+
+def _read_element(prefix, ns, element, extra):
+    """
+    Recursively read custom namespace elements and add them to extra.
+    """
+    # remove namespace from tag name
+    _, name = element.tag.split("}")
+    etree.register_namespace(prefix, ns)
+    extra[name] = AttribDict()
+    extra[name].namespace = ns
+    if(len(element) > 0):  # element contains nested elements
+        extra[name].value = AttribDict()
+        for nested_el in element:
+            _read_element(prefix, ns, nested_el, extra[name].value)
+    else:  # element contains values
+        extra[name].value = element.text
+        if element.attrib:  # adds custom attributes dictionary to tag
+            extra[name].attrib = element.attrib
+    return extra
+
+
+def _read_extra(element, obj):
+    """
+    Add information stored in custom tags/attributes in obj.extra.
+    """
+    # search all namespaces in current scope
+    for prefix, ns in element.nsmap.items():
+        # skip any fdsn namespaces,
+        # we're not interested in StationXML defined tags here
+        if re.match("(http|https)://www.(fdsn|w3).org/", ns):
+            continue
+        # process all elements of this custom namespace, if any
+        if hasattr(obj, "extra"):
+            extra = obj.extra
+        else:
+            extra = AttribDict()
+            obj.extra = extra
+        for el in element.iterfind("{%s}*" % ns):
+            extra = _read_element(prefix, ns, el, extra)
+    # process all attributes of custom namespaces, if any
+    for key, value in element.attrib.items():
+        # no custom namespace
+        if "}" not in key:
+            continue
+        # separate namespace from tag name
+        _t = etree.QName(key)
+        ns, name = _t.namespace, _t.localname
+        if re.match("(http|https)://www.(fdsn|w3).org/", ns):
+            continue
+        if hasattr(obj, "extra"):
+            extra = obj.extra
+        else:
+            extra = AttribDict()
+            obj.extra = extra
+        extra[name] = {'value': str(value),
+                       'namespace': '%s' % ns,
+                       'type': 'attribute'}
 
 if __name__ == '__main__':
     import doctest

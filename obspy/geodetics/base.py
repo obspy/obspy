@@ -364,7 +364,12 @@ def mean_longitude(longitudes):
     :param longitudes: Geographical longitude values ranging from -180 to 180
         in degrees.
     """
-    return circmean(np.array(longitudes), low=-180, high=180)
+    mean_longitude = circmean(np.array(longitudes), low=-180, high=180)
+    while mean_longitude < -180:
+        mean_longitude += 360
+    while mean_longitude > 180:
+        mean_longitude -= 360
+    return mean_longitude
 
 
 if __name__ == '__main__':

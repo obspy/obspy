@@ -585,7 +585,7 @@ class Parser(object):
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param datetime: Timestamp of requested PAZ values
         :return: Dictionary containing Coordinates (latitude, longitude,
-            elevation)
+            elevation, dip, azimuth)
         """
         blockettes = self._select(seed_id, datetime)
         data = {}
@@ -595,6 +595,8 @@ class Parser(object):
                 data['longitude'] = blkt.longitude
                 data['elevation'] = blkt.elevation
                 data['local_depth'] = blkt.local_depth
+                data['dip'] = blkt.dip
+                data['azimuth'] = blkt.azimuth
                 break
         return data
 

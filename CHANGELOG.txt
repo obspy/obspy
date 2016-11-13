@@ -1,12 +1,15 @@
-master:
+master: (doi: 10.5281/zenodo.165135)
  - General:
    * Read support for Guralp Compressed Format (GCF) waveform data,
      obspy.io.gcf (see #1449)
+   * Read support for Reftek 130 (rt130) waveform data,
+     obspy.io.reftek (see #1433)
  - obspy.core:
-   * Stream/Trace.write() can now autodetect file format from file extension.
+   * Stream/Trace.write() can now autodetect file format from file extension
+     (see #1321).
    * New convenience property `.matplotlib_date` for `UTCDateTime` objects to
      get matplotlib datetime float representation (which can be used in
-     time-based matplotlib axes, e.g. by Stream.plot()).
+     time-based matplotlib axes, e.g. by Stream.plot(); see #1339).
    * Trace.times() has new options `type` and `reftime` to support fetching an
      array of sampletimes in various different timing varieties ("relative":
      the old default, float relative to trace starttime or `reftime` in
@@ -17,12 +20,15 @@ master:
    * A trace's stats.network/station/location/channel can now also be set in
      one line using a SEED ID string (e.g. `trace.id = "GR.FUR..HHZ"`,
      see #1439).
+   * Instrument correction for response list stages originating from inventory
+     objects (see #1514).
  - obspy.clients.fdsn:
    * The mass downloader now has `exclude_networks` and `exclude_stations`
      arguments to not download certain pieces of data. (see #1305)
    * The mass downloader can now download stations that are part of a given
      inventory object.
- - obspy.imaging.cm
+   * The mass downloader now also works with restricted data. (See #1350)
+ - obspy.imaging.cm:
    * new colormap: viridis_white. This is a modification of viridis that
      goes to white instead of yellow but remains perceptually uniform. It
      is especially useful for printing when an image should merge with the
@@ -30,17 +36,70 @@ master:
  - obspy.imaging.waveform
    * Support for filling the wiggles when plotting sections (horizontal and
      vertical, see #1445).
- - obspy.io.css
-    * Read support for NNSA KB Core format waveform data. (see #1332)
+ - obspy.io.gse2
+    * Read support for GSE2.0 bulletin (see #1528)
  - obspy.io.quakeml
     * Read and write support for nested custom tags (see #1463)
+ - obspy.io.stationxml
+    * Read and write support for custom tags (see #1024)
+    * No longer add the (unused) time zone field to StationXML datetimes to
+      follow the example of big data centers. (see #1572)
  - obspy.io.segy:
     * Iterative reading of large SEG-Y and SU files with
       `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
       (see #1400).
+ - obspy.io.css:
+   * Read support for NNSA KB Core format waveform data. (see #1332)
+ - obspy.io.mseed:
+   * New generic get_flags() utility function able to retrieve statistics
+     about all fixed header flags and the timing quality. This makes the
+     get_timing_and_data_quality() function obsolete which is thus
+     deprecated and will be removed with the next release. The get_flags()
+     function is also much faster. (see #1141)
+   * Update to libmseed v2.18 (see #1540).
+   * Correctly read MiniSEED files with a data offset of 48 bytes (see #1540).
+ - obspy.io.nlloc:
+   * Set preferred origin of event (see #1570)
+ - obspy.io.xseed:
+   * Added azimuth and dip to the get_coordinates() function.  (see #1315)
  - obspy.scripts:
    * obspy-scan command line script now also plots and prints overlaps
      alongside gaps (see #1366)
+   * obspy-plot now has option to disable min/max plot (see #1583)
+ - obspy.signal:
+   * New obspy.signal.quality_control module to compute quality metrics from
+     MiniSEED files. (see #1141)
+ - obspy.taup:
+   * Add obspy.taup.taup_geo.calc_dist_azi, a function to return the distance,
+     azimuth and backazimuth for a source - receiver pair. (see #1538)
+
+1.0.3:
+ - obspy.core:
+   * properly pass through kwargs specified for Trace.plot() down to the
+     low-level plotting routines (e.g. events were not shown properly in
+     dayplot of a trace, see #1566)
+ - obspy.io.mseed:
+   * ObsPy can now also read (Mini)SEED files with noise records. (see #1495)
+   * ObsPy can now read records with a data-offset of zero. (see #1509, #1525)
+   * ObsPy can now read MiniSEED files with micro-second wrap arounds.
+     (see #1531)
+   * ObsPy can now read MiniSEED files with no blockette 1000. (see #1544)
+   * ObsPy now always writes Blockette 100 if sampling rate accuracy is
+     otherwise lost. (see #1550)
+ - obspy.io.sac:
+   * `SACTrace.lpspol` and `lcalda` are `True` and `False` by default, when
+      created via `SACTrace.from_obspy_trace` with a `Trace` that has no SAC
+      inheritance. (see #1507)
+- obspy.io.sh:
+   * Fix writing of long headers for Python 3 (see #1526)
+   * Fix writing of long headers for python3
+   * Whitespace in header fields is not ignored anymore (see #1552)
+ - obspy.io.stationxml:
+   * Datetime fields are written with microseconds to StationXML if
+     microseconds are present. (see #1511)
+ - obspy.signal:
+   * PPSD: fix warning message on Python 3 that gets shown when waveforms and
+     metadata mismatch (see #1506)
 
 1.0.2: (doi: 10.5281/zenodo.49636)
  - obspy.core:
@@ -55,6 +114,9 @@ master:
  - obspy.clients.fdsn:
    * Fixing issue with location codes potentially resulting in unwanted data
      to be requested. (see #1422)
+   * Included low-gain seismometers in default channel filters in
+     mass-downloader, also included non-oriented channels by default
+     (see #1373).
  - obspy.db:
    * Fixed a bug in obspy-indexer command line script (see #1369,
      command line script was not working, probably since 0.10.0)
@@ -64,10 +126,15 @@ master:
      see #1464)
    * Fixed a bug when plotting non-DC beachball patches without fill colors
      (i.e. with "nofill=True", see #1464)
+   * Fix arbitrary units in waveform section plot's offset axis, making it
+     possible to add customizations to the plot afterwards (see #1382, see
+     #1383)
  - obspy.io.ascii:
    * Fixed a bug that lead to wrong header information in output files when
      writing non-integer sampling rate data to SLIST or TSPAIR formats
      (see #1447)
+- obspy.io.cmtsolution:
+   * Make sure newer CMTSOLUTION files can also be read (see #1479).
  - obspy.io.gse2:
    * Fixed a bug that could lead to network code not present in GSE2 output
      (see #1448)
@@ -75,10 +142,16 @@ master:
    * Fixed a bug in obspy-mseed-recordanalyzer (see #1386)
  - obspy.io.nlloc:
    * Use geographic coordinates from the NonLinLoc Hypocenter-Phase file if
-     no custom coordinate converter is provided.
+     no custom coordinate converter is provided. (see #1390)
+   * Fix reading NonLinLoc Hypocenter-Phase files with more than one
+     hypocenter in it. (see #1480)
+   * Fix reading NonLinLoc Hypocenter-Phase files with unicode characters in
+     them. (see #1483)
  - obspy.io.quakeml:
    * Fixed issue with improperly raised warnings when the same file is read
      twice. (#1376)
+   * Fix writing empty network/station/channel codes in WaveformStreamID
+     objects to QuakeML. (see #1483)
  - obspy.io.sac:
    * Try to set SAC distances (dist, az, baz, gcarc) on read, if "lcalda" is
      true.  If "dist" header is found, distances aren't calculated.
@@ -86,6 +159,11 @@ master:
      NumPy types.
    * SACTrace.iqual is no longer accepts enumerated string values, but
      arbitrary integer values. (see #1472)
+   * SACTrace.read now replaces non-ASCII and null-termination characters in
+     string headers with whitespace unless the "debug_strings=True" flag is
+     used. (see #1432)
+ - obspy.io.stationxml:
+   * Always set the number attribute for poles and zeros. (see #1481)
  - obspy.signal:
    * PPSD.plot(): fix plotting of percentiles, mode and mean and setting
      period limits when using "xaxis_frequency=True" (see #1406, #1416)

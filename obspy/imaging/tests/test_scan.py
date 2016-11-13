@@ -51,6 +51,21 @@ class ScanTestCase(unittest.TestCase):
             with ImageComparison(self.path, 'scan.png') as ic:
                 obspy_scan([os.curdir] + ['--output', ic.name, '--quiet'])
 
+    def test_scan_save_load_npz(self):
+        """
+        Run obspy-scan on selected tests/data directories, saving/loading
+        to/from npz.
+        """
+        # Copy files to a temp folder to avoid wildcard scans.
+        with TemporaryWorkingDirectory():
+            for filename in self.all_files:
+                shutil.copy(filename, os.curdir)
+
+            obspy_scan([os.curdir, '--write', 'scan.npz', '--quiet'])
+            with ImageComparison(self.path, 'scan.png') as ic:
+                obspy_scan(['--load', 'scan.npz', '--output', ic.name,
+                            '--quiet'])
+
     def test_scan_times(self):
         """
         Checks for timing related options

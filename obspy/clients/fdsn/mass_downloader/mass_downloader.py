@@ -64,7 +64,8 @@ class MassDownloader(object):
         more then one provider it will always be downloaded from the
         provider that comes first in the list.
     :param debug: Debug flag passed to the underlying FDSN web service clients.
-    :type providers: list of str
+    :type providers: list of str or :class:`~obspy.clients.fdsn.client.Client`
+        instances
     """
     def __init__(self, providers=None, debug=False):
         self.debug = debug
@@ -283,28 +284,36 @@ class MassDownloader(object):
         """
         Initialize all clients.
         """
-        logger.info("Initializing FDSN client(s) for %s."
-                    % ", ".join(self.providers))
+        logger.info("Initializing FDSN client(s) for %s." % ", ".join(
+            _i.base_url if hasattr(_i, "base_url") else _i
+            for _i in self.providers))
 
         def _get_client(client_name):
-            try:
-                this_client = Client(client_name, debug=self.debug)
-            except utils.ERRORS as e:
-                if "timeout" in str(e).lower():
-                    extra = " (timeout)"
-                else:
-                    extra = ""
-                logger.warn("Failed to initialize client '%s'.%s"
-                            % (client_name, extra))
-                return client_name, None
-            services = sorted([_i for _i in this_client.services.keys()
+            # It might already be an initialized client - in that case just
+            # use it.
+            if isinstance(client_name, Client):
+                name, client = client_name.base_url, client_name
+            else:
+                try:
+                    this_client = Client(client_name, debug=self.debug)
+                    name, client = client_name, this_client
+                except utils.ERRORS as e:
+                    if "timeout" in str(e).lower():
+                        extra = " (timeout)"
+                    else:
+                        extra = ""
+                    logger.warn("Failed to initialize client '%s'.%s"
+                                % (client_name, extra))
+                    return client_name, None
+
+            services = sorted([_i for _i in client.services.keys()
                                if not _i.startswith("available")])
             if "dataselect" not in services or "station" not in services:
                 logger.info("Cannot use client '%s' as it does not have "
                             "'dataselect' and/or 'station' services."
-                            % client_name)
-                return client_name, None
-            return client_name, this_client
+                            % name)
+                return name, None
+            return name, client
 
         # Catch warnings in the main thread. The catch_warnings() context
         # manager does not reliably work when used in multiple threads.
@@ -318,11 +327,15 @@ class MassDownloader(object):
                          "clients: " + str(warning.message))
 
         clients = {key: value for key, value in clients if value is not None}
-        # Write to initialized clients dictionary preserving order.
+
+        # Write to initialized clients dictionary preserving order. Remember
+        # that each passed provider might already be an initialized client
+        # instance.
         for client in self.providers:
-            if client not in clients:
+            if client not in clients and client not in clients.values():
                 continue
-            self._initialized_clients[client] = clients[client]
+            name = client.base_url if hasattr(client, "base_url") else client
+            self._initialized_clients[name] = clients[name]
 
         logger.info("Successfully initialized %i client(s): %s."
                     % (len(self._initialized_clients),

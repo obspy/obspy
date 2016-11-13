@@ -56,6 +56,12 @@ def read_inventory(path_or_file_object=None, format=None):
         object will be returned.
     :type format: str, optional
     :param format: Format of the file to read (e.g. ``"STATIONXML"``).
+
+    .. note::
+
+        For handling additional information not covered by the
+        StationXML standard and how to output it to StationXML
+        see the :ref:`ObsPy Tutorial <stationxml-extra>`.
     """
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
@@ -100,6 +106,12 @@ class Inventory(ComparingObject):
         :param module_uri: This is the address of the query that generated the
             document, or, if applicable, the address of the software that
             generated this document, defaults to ObsPy related information.
+
+        .. note::
+
+            For handling additional information not covered by the
+            StationXML standard and how to output it to StationXML
+            see the :ref:`ObsPy Tutorial <stationxml-extra>`.
         """
         self.networks = networks
         self.source = source

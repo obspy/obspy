@@ -6,6 +6,7 @@
       <version>ObsPy 1.0.1.post0+20.gbeb9f46723.dirty</version>
     </creationInfo>
     <event publicID="smi:local/0eee2e6f-064b-458a-934f-c5d3105e9529">
+      <preferredOriginID>smi:local/a2260002-95c6-42f7-8c44-f46124355228</preferredOriginID>
       <creationInfo>
         <creationTime>2013-06-21T12:53:34.000000Z</creationTime>
         <version>NLLoc:v6.02.07</version>
@@ -15,11 +16,11 @@
           <value>2006-07-15T17:21:20.195670Z</value>
         </time>
         <latitude>
-          <value>7.736781</value>
+          <value>51.657659</value>
           <uncertainty>0.00724156630677</uncertainty>
         </latitude>
         <longitude>
-          <value>51.657659</value>
+          <value>7.736781</value>
           <uncertainty>0.00989286468574</uncertainty>
         </longitude>
         <depth>

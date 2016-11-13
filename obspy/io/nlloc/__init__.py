@@ -23,26 +23,27 @@ Hypocenter-Phase file into an ObsPy :class:`~obspy.core.event.Catalog` object:
 >>> cat = read_events("/path/to/nlloc.hyp")
 >>> print(cat)
 1 Event(s) in Catalog:
-2006-07-15T17:21:20.195670Z |  +7.737,  +51.658
+2006-07-15T17:21:20.195670Z | +51.658,   +7.737
 
 >>> event = cat[0]
 >>> print(event)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-Event:	2006-07-15T17:21:20.195670Z |  +7.737,  +51.658
+Event:	2006-07-15T17:21:20.195670Z | +51.658,   +7.737
 <BLANKLINE>
-       resource_id: ResourceIdentifier(id="smi:local/...")
-     creation_info: CreationInfo(creation_time=UTCDateTime(2013, 6, 21, ...),
-                                 version='NLLoc:v6.02.07')
-    ---------
-             picks: 5 Elements
-           origins: 1 Elements
+         resource_id: ResourceIdentifier(id="smi:local/...")
+       creation_info: CreationInfo(creation_time=UTCDateTime(2013, 6, 21, ...),
+                                   version='NLLoc:v6.02.07')
+ preferred_origin_id: ResourceIdentifier(id="smi:local/...")
+                ---------
+               picks: 5 Elements
+             origins: 1 Elements
 
 >>> origin = event.origins[0]
 >>> print(origin)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
 Origin
        resource_id: ResourceIdentifier(id="smi:local/...")
               time: UTCDateTime(2006, 7, 15, 17, 21, 20, 1956...)
-         longitude: 51.657659...
-          latitude: 7.736781...
+         longitude: 7.736781...
+          latitude: 51.657659...
              depth: 1433.5... [confidence_level=68, uncertainty=...]
                 ...
      creation_info: CreationInfo(creation_time=UTCDateTime(2013, 6, 21, ...),

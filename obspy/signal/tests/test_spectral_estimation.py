@@ -435,12 +435,8 @@ class PsdTestCase(unittest.TestCase):
             # days, axis is in mpl days). See e.g.
             # https://tests.obspy.org/30657/#1
             fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
-            _t = np.geterr()
-            np.seterr(under="ignore")
-            try:
+            with np.errstate(under='ignore'):
                 fig.savefig(ic.name)
-            finally:
-                np.seterr(**_t)
 
         # test it again, checking that updating an existing plot with different
         # stack selection works..
@@ -457,12 +453,8 @@ class PsdTestCase(unittest.TestCase):
             # days, axis is in mpl days). See e.g.
             # https://tests.obspy.org/30657/#1
             fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
-            _t = np.geterr()
-            np.seterr(under="ignore")
-            try:
+            with np.errstate(under='ignore'):
                 fig.savefig(ic.name)
-            finally:
-                np.seterr(**_t)
         #  b) now reuse figure and set the histogram with a different stack,
         #     image test should fail:
         ppsd.calculate_histogram(**stack_criteria_list[3])
@@ -477,12 +469,8 @@ class PsdTestCase(unittest.TestCase):
                 if MATPLOTLIB_VERSION == [1, 1, 1]:
                     ic.tol = 33
                 ppsd._plot_histogram(fig=fig, draw=True)
-                _t = np.geterr()
-                np.seterr(under="ignore")
-                try:
+                with np.errstate(under='ignore'):
                     fig.savefig(ic.name)
-                except:
-                    np.seterr(**_t)
         except ImageComparisonException:
             pass
         else:
@@ -495,12 +483,8 @@ class PsdTestCase(unittest.TestCase):
                              'ppsd_restricted_stack.png', reltol=1.5,
                              plt_close_all_enter=False) as ic:
             ppsd._plot_histogram(fig=fig, draw=True)
-            _t = np.geterr()
-            np.seterr(under="ignore")
-            try:
+            with np.errstate(under='ignore'):
                 fig.savefig(ic.name)
-            except:
-                np.seterr(**_t)
 
     def test_ppsd_add_npz(self):
         """
@@ -574,6 +558,29 @@ class PsdTestCase(unittest.TestCase):
         # Accessing current_histogram again calculates the stack
         self.assertIsNotNone(ppsd.current_histogram)
         self.assertIsNotNone(ppsd._current_hist_stack)
+
+    def test_wrong_trace_id_message(self):
+        """
+        Test that we get the expected warning message on waveform/metadata
+        mismatch.
+        """
+        tr, paz = _get_sample_data()
+        inv = read_inventory(os.path.join(self.path, 'IUANMO.xml'))
+        st = Stream([tr])
+        ppsd = PPSD(tr.stats, inv)
+        # metadata doesn't fit the trace ID specified via stats
+        # should show a warning..
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            ret = ppsd.add(st)
+            # the trace is sliced into four segments, so we get the warning
+            # message four times..
+            self.assertEqual(len(w), 4)
+            for w_ in w:
+                self.assertTrue(str(w_.message).startswith(
+                    "Error getting response from provided metadata"))
+        # should not add the data to the ppsd
+        self.assertFalse(ret)
 
 
 def suite():
