@@ -132,10 +132,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         file = os.path.join(self.path, "data", "brokenlastrecord.mseed")
 
-        # independent reading of the data
-        with open(file, 'rb') as fp:
-            data_string = fp.read()[128:]  # 128 Bytes header
-        data = util._unpack_steim_2(data_string, 5980, swapflag=self.swap,
+        # independent reading of the data, 128 Bytes header
+        d = np.fromfile(file, dtype=np.uint8)[128:]
+        data = util._unpack_steim_2(d, 5980, swapflag=self.swap,
                                     verbose=0)
 
         # test readMSTraces. Will raise an internal warning.

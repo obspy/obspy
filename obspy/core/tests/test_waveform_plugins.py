@@ -172,8 +172,16 @@ class WaveformPluginsTestCase(unittest.TestCase):
             # That file is not in obspy.io.mseed as it is used to test an
             # issue with the uncompress_data() decorator.
             os.path.join('core', 'tests', 'data',
-                         'tarfile_impostor.mseed')
-        ]
+                         'tarfile_impostor.mseed'),
+            # these files are not in /mseed because they hold the data to
+            # validate the read output of the reftek file
+            os.path.join('io', 'reftek', 'tests', 'data',
+                         '2015282_225051_0ae4c_1_1.msd'),
+            os.path.join('io', 'reftek', 'tests', 'data',
+                         '2015282_225051_0ae4c_1_2.msd'),
+            os.path.join('io', 'reftek', 'tests', 'data',
+                         '2015282_225051_0ae4c_1_3.msd'),
+            ]
         formats_ep = _get_default_eps('obspy.plugin.waveform', 'isFormat')
         formats = list(formats_ep.values())
         # Get all the test directories.
