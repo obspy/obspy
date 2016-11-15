@@ -18,5 +18,5 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -                      "still work but the maps might be wrong. Please update "
 -                      "your basemap installation.")
  else:
-     warnings.warn("basemap not installed.")
      HAS_BASEMAP = False
+ 
