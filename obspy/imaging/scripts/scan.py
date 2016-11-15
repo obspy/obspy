@@ -43,7 +43,7 @@ from matplotlib.patches import Rectangle
 from matplotlib.collections import PatchCollection
 from matplotlib.dates import date2num, num2date
 
-from obspy import UTCDateTime, __version__, read
+from obspy import UTCDateTime, __version__, read, Trace, Stream
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.imaging.util import ObsPyAutoDateFormatter, \
@@ -112,7 +112,6 @@ def compress_start_end(x, stop_iteration, merge_overlaps=False,
 
 def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
                        verbose=False, quiet=False, ignore_links=False):
-    from matplotlib.dates import date2num
     if ignore_links and os.path.islink(file):
         if verbose or not quiet:
             print("Ignoring symlink: %s" % (file))
@@ -129,21 +128,27 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
         for line in str(stream).split("\n"):
             sys.stdout.write("    " + line + "\n")
         sys.stdout.flush()
+    add_stream_to_dict(data_dict, samp_int_dict, stream,
+                       verbose=verbose and not quiet)
+    return (counter + 1)
+
+
+def add_stream_to_dict(data_dict, samp_int_dict, stream, verbose=False):
+    from matplotlib.dates import date2num
     for tr in stream:
+        try:
+            delta = 1. / (24 * 3600 * tr.stats.sampling_rate)
+        except ZeroDivisionError:
+            if verbose:
+                print("Skipping trace with zero samlingrate: {!s}".format(tr))
+            continue
         _id = tr.get_id()
         _samp_int_list = samp_int_dict.setdefault(_id, [])
-        try:
-            _samp_int_list.\
-                append(1. / (24 * 3600 * tr.stats.sampling_rate))
-        except ZeroDivisionError:
-            if verbose or not quiet:
-                print("Skipping file with zero samlingrate: %s" % (file))
-            return counter
         _data_list = data_dict.setdefault(_id, [])
+        _samp_int_list.append(delta)
         _data_list.append(
             [date2num(tr.stats.starttime.datetime),
              date2num((tr.stats.endtime + tr.stats.delta).datetime)])
-    return (counter + 1)
 
 
 def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
@@ -613,6 +618,19 @@ class Scanner(object):
             self.data, self.samp_int, path, self.counter, self.format,
             verbose=self.verbose, quiet=not self.verbose,
             ignore_links=ignore_links)
+
+    def add_stream(self, stream):
+        """
+        Add information of provided stream to scanner object.
+
+        :type stream: :class:`~obspy.core.stream.Stream` or
+            :class:`~obspy.core.trace.Trace`
+        """
+        if isinstance(stream, Trace):
+            stream = Stream(traces=[stream])
+        add_stream_to_dict(self.data, self.samp_int, stream,
+                           verbose=self.verbose)
+        self.counter += 1
 
 
 def scan(paths, format=None, verbose=False, recursive=True,

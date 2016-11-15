@@ -11,6 +11,7 @@ import shutil
 import unittest
 from os.path import abspath, dirname, join, pardir
 
+from obspy import read
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import TemporaryWorkingDirectory, CatchOutput
 from obspy.core.util.testing import ImageComparison
@@ -67,6 +68,28 @@ class ScanTestCase(unittest.TestCase):
 
             with ImageComparison(self.path, 'scan.png') as ic:
                 scan(paths=os.curdir, plot=ic.name)
+
+        with ImageComparison(self.path, 'scan.png') as ic:
+            scanner.plot(ic.name)
+
+    def test_scanner_manually_add_streams(self):
+        """
+        Test Scanner class, manually adding streams of read data files
+        """
+        scanner = Scanner()
+        # Copy files to a temp folder to avoid wildcard scans.
+        with TemporaryWorkingDirectory():
+            for filename in self.all_files:
+                shutil.copy(filename, os.curdir)
+
+            for file_ in os.listdir(os.curdir):
+                # some files used in the test cases actually can not
+                # be read with obspy..
+                if file_ in ('STA2.testlines_out', 'STA2.testlines',
+                             'seism-shorter.sac', 'seism-longer.sac'):
+                    continue
+                st = read(file_, headonly=True)
+                scanner.add_stream(st)
 
         with ImageComparison(self.path, 'scan.png') as ic:
             scanner.plot(ic.name)
