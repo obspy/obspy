@@ -13,6 +13,11 @@ override_dh_auto_install:
 	dh_numpy
 
 override_dh_install:
+	# hard link test files of libmseed to normal mseed test directories
+	mkdir debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/tests/data/libmseed
+	ln debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/src/libmseed/test/*.test debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/tests/data/libmseed
+	ln debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/src/libmseed/test/*.test.ref debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/tests/data/libmseed
+	ln debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/src/libmseed/test/data/*.mseed debian/tmp/usr/lib/python2.7/dist-packages/obspy/io/mseed/tests/data/libmseed
 	# data files get separated into /usr/share for both python2/3 to use
 	sh -x debian/_dh_install_data_files.sh
 	# files for normal packages
