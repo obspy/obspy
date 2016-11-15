@@ -27,7 +27,7 @@ misc/docs/source/_templates/navbar-local.html
 misc/docs/source/credits.rst
 misc/docs/source/citations.rst
 misc/docs/_build/
-misc/docker_tests/logs/
+misc/docker/logs/
 obspy/lib/*.pyd
 obspy/lib/*.so
 /obspy.pstats
