@@ -79,8 +79,8 @@ if __name__ == '__main__':
     fig.axes[0].legend(loc='lower center')
     # Change line style so very similar response can be seen
     for i, line in enumerate(fig.axes[0].lines[::2]):
-        line.set_dashes([3,6-i])
+        line.set_dashes([3, 6-i])
     for i, line in enumerate(fig.axes[1].lines[::2]):
-        line.set_dashes([3,6-i])
+        line.set_dashes([3, 6-i])
 
     plt.show()
