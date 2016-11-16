@@ -1135,6 +1135,39 @@ class ClientTestCase(unittest.TestCase):
         # Just make sure something is being downloaded.
         self.assertTrue(bool(len(inv.networks)))
 
+    def test_get_waveforms_empty_seed_codes(self):
+        """
+        Make sure that network, station, and channel codes specified as empty
+        strings are not omitted in `get_waveforms(...)` when building the url
+        (which results in default values '*' (wildcards) at the server,
+        see #1578).
+        """
+        t = UTCDateTime(2000, 1, 1)
+        url_base = "http://service.iris.edu/fdsnws/dataselect/1/query?"
+        kwargs = dict(network='IU', station='ANMO', location='00',
+                      channel='HHZ', starttime=t, endtime=t)
+
+        for key in ('network', 'station', 'channel'):
+            kwargs_ = kwargs.copy()
+            # set empty SEED code for given key
+            kwargs_.update(((key, ''),))
+
+            # use a mock object and check what URL would have been downloaded
+            with mock.patch.object(
+                    self.client, '_download') as m:
+                try:
+                    self.client.get_waveforms(**kwargs_)
+                except Exception as e:
+                    # due to the return value None of the mock we get an mseed
+                    # reading error, which is expected here
+                    self.assertEqual(
+                        'unpack requires a string argument of length 28',
+                        str(e))
+                # URL downloading comes before the error and can be checked now
+                url = m.call_args[0][0]
+            url_parts = url.replace(url_base, '').split("&")
+            self.assertIn('{}='.format(key), url_parts)
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
