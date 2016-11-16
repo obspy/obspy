@@ -853,6 +853,10 @@ class UTCDateTime(object):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
                      86400) * 1000000) / 1000000.0
+        elif isinstance(value, UTCDateTime):
+            msg = ("unsupported operand type(s) for +: 'UTCDateTime' and "
+                   "'UTCDateTime'")
+            raise TypeError(msg)
         return UTCDateTime(self.timestamp + value)
 
     def __sub__(self, value):

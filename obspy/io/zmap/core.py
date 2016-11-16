@@ -135,6 +135,8 @@ class Pickler(object):
             strings = dict.fromkeys(self.zmap_columns, 'NaN')
             # origin
             origin = ev.preferred_origin()
+            if origin is None and ev.origins:
+                origin = ev.origins[0]
             if origin:
                 dec_year = self._decimal_year(origin.time)
                 dec_second = origin.time.second + \
@@ -154,6 +156,8 @@ class Pickler(object):
                 })
             # magnitude
             magnitude = ev.preferred_magnitude()
+            if magnitude is None and ev.magnitudes:
+                magnitude = ev.magnitudes[0]
             if magnitude:
                 strings.update({
                     'mag':     self._num2str(magnitude.mag),

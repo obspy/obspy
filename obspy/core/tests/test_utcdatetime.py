@@ -1016,6 +1016,16 @@ class UTCDateTimeTestCase(unittest.TestCase):
             np.testing.assert_almost_equal(
                 t.matplotlib_date, expected, decimal=8)
 
+    def test_add_error_message(self):
+        t = UTCDateTime()
+        t2 = UTCDateTime()
+        with self.assertRaises(TypeError) as context:
+            t + t2
+        self.assertEqual(
+            str(context.exception),
+            "unsupported operand type(s) for +: 'UTCDateTime' and "
+            "'UTCDateTime'")
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')

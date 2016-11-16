@@ -764,13 +764,9 @@ class SACTrace(object):
                   'lcalda': lcalda, 'lpspol': lpspol, 'lovrok': lovrok,
                   'internal0': internal0}
 
-        # required = ['delta', 'b', 'npts', ...]
-        # provided = locals()
-        # for hdr in required:
-        #     header[hdr] = kwargs.pop(hdr, provided[hdr])
-
         # combine header with remaining non-required args.
-        # XXX: user can put non-SAC key:value pairs into the header.
+        # user can put non-SAC key:value pairs into the header, but they're
+        # ignored on write.
         header.update(kwargs)
 
         # -------------------------- DATA ARRAY -------------------------------
@@ -1286,13 +1282,7 @@ class SACTrace(object):
         :type keep_sac_header: bool
 
         """
-        try:
-            header = _ut.obspy_to_sac_header(trace.stats, keep_sac_header)
-        except SacError:
-            # not enough time info in old SAC header
-            # XXX: try to do something besides ignore the old header?
-            header = _ut.obspy_to_sac_header(trace.stats,
-                                             keep_sac_header=False)
+        header = _ut.obspy_to_sac_header(trace.stats, keep_sac_header)
 
         # handle the data headers
         data = trace.data

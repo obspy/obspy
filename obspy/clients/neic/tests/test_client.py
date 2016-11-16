@@ -86,8 +86,7 @@ class ClientTestCase(unittest.TestCase):
                     "IUANMO BH.*",
                     "IUANMO BH[Z12].*",
                     "IUANMO BH[Z12]..",
-                    "IUANMO B.*",
-                    "..ANMO B.*"]
+                    "..ANMO BH.*"]
         for pattern in patterns:
             st2 = client.get_waveforms_nscl(pattern, t, duration)
             self.assertEqual(st, st2)
