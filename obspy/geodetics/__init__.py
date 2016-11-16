@@ -14,7 +14,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from .base import (calc_vincenty_inverse, degrees2kilometers, gps2dist_azimuth,
-                   kilometer2degrees, locations2degrees)
+                   kilometer2degrees, kilometers2degrees, locations2degrees)
 from .flinnengdahl import FlinnEngdahl
 
 
