@@ -285,7 +285,9 @@ class ZMAPTestCase(unittest.TestCase):
                     end = UTCDateTime(int(year) + 1, 1, 1)
                     utc = start + (year % 1) * (end - start)
                 elif any(d.get(k, 0) > 0 for k in comps[1:]):
-                    utc = UTCDateTime(*[int(d.get(k)) for k in comps])
+                    utc = UTCDateTime(*[
+                        k == 'second' and d.get(k) or int(d.get(k))
+                        for k in comps])
                 self.assertEqual(utc, event.preferred_origin().time)
             if 'mag' in d:
                 self.assertEqual(d['mag'], magnitude.mag)
