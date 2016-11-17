@@ -12,12 +12,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 import socket
 import traceback
 from time import sleep
 
 from obspy import Stream, UTCDateTime, read
-from obspy.core.util import NamedTemporaryFile
 from .util import ascdate, asctime
 from ..httpproxy import get_proxy_tuple, http_proxy_connect
 
@@ -190,10 +190,7 @@ class Client(object):
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.connect((self.host, self.port))
 
-                with NamedTemporaryFile() as tf:
-                    if self.debug:
-                        print(ascdate(), asctime(), "connecting temp file",
-                              tf.name)
+                with io.BytesIO() as tf:
                     s.setblocking(0)
                     s.send(line.encode('ascii', 'strict'))
                     if self.debug:
@@ -203,18 +200,22 @@ class Client(object):
                     totlen = 0
                     while True:
                         try:
-                            data = s.recv(102400)
+                            # Recommended bufsize is a small power of 2.
+                            data = s.recv(4096)
                             if self.debug:
                                 print(ascdate(), asctime(), "read len",
                                       str(len(data)), " total", str(totlen))
-                            if data.find(b"EOR") >= 0:
+                            _pos = data.find(b"<EOR>")
+                            # <EOR> can be after every 512 bytes which seems to
+                            # be the record length cwb query uses.
+                            if _pos >= 0 and (_pos + totlen) % 512 == 0:
                                 if self.debug:
                                     print(ascdate(), asctime(), b"<EOR> seen")
-                                tf.write(data[0:data.find(b"<EOR>")])
-                                totlen += len(data[0:data.find(b"<EOR>")])
+                                tf.write(data[0:_pos])
+                                totlen += len(data[0:_pos])
                                 tf.seek(0)
                                 try:
-                                    st = read(tf.name, 'MSEED')
+                                    st = read(tf, 'MSEED')
                                 except Exception as e:
                                     st = Stream()
                                 st.trim(starttime, starttime + duration)

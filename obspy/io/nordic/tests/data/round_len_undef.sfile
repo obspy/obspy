@@ -1,0 +1,16 @@
+ 2010  1 1 0216  3.0 L -44.542 171.486  4.4  VUW  511.7                        1
+ GAP=356        3.43     999.9   174.5  0.0  0.2587E+05 -0.1307E+01 -0.9163E+00E
+ ACTION:ARG 16-06-22 15:03 OP:PYTH STATUS:               ID:20100101021639     I
+ 2010-01-01T02:16:06.MSEED                                                     6
+ STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU VELO AIN AR TRES W  DIS CAZ7
+ GOVA SE  S        216 37.60                              66   -2.1510  128 322 
+ GOVA SN  S        216 37.60                                            128 322 
+ LABE SE  S        216 44.18                                            149 318 
+ LABE SN  S        216 44.18                              66   -1.6610  149 318 
+ EORO SE  S        216 51.04                              66    1.3710  163 319 
+ EORO SN  S        216 51.04                                            163 319 
+ POCR2SE  S        216 50.95                              66    0.2110  167 322 
+ POCR2SN  S        216 50.95                                            167 322 
+ FRAN S2  S        216 53.16                              66    2.2410  167 320 
+ FRAN S3  S        216 53.16                                            167 320 
+                                                                                

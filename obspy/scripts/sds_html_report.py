@@ -41,7 +41,7 @@ from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.clients.filesystem.sds import Client
-from obspy.imaging.scripts.scan import main as obspy_scan
+from obspy.imaging.scripts.scan import scan
 
 
 HTML_TEMPLATE = """\
@@ -411,21 +411,20 @@ def main(argv=None):
         np.savetxt(streams_file, nslc, delimiter=",",
                    fmt=["%s", "%s", "%s", "%s", "%f", "%f", "%d"])
         # generate obspy-scan image
-        scan_args = ["--start-time={}".format(availability_check_starttime),
-                     "--end-time={}".format(availability_check_endtime),
-                     "-o={}".format(scan_file), "-q",
-                     "-f={}".format(args.format)]
         files = []
+        seed_ids = set()
         for nslc_ in nslc:
             net, sta, loc, cha, latency, _, _ = nslc_
             if np.isinf(latency) or latency > args.check_back_days * 24 * 3600:
                 continue
-            scan_args.append("--id={}.{}.{}.{}".format(net, sta, loc, cha))
+            seed_ids.add(".".join((net, sta, loc, cha)))
             files += client._get_filenames(
                 net, sta, loc, cha, availability_check_starttime,
                 availability_check_endtime)
-        scan_args += files
-        obspy_scan(scan_args)
+        scan(files, format=args.format, starttime=availability_check_starttime,
+             endtime=availability_check_endtime, plot=scan_file, verbose=False,
+             recursive=True, ignore_links=False, seed_ids=seed_ids,
+             print_gaps=False)
 
     # request and assemble current latency information
     data = []
