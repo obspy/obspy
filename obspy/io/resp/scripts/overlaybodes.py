@@ -29,6 +29,7 @@ def add_nrl_to_fig(fig, sensor_short, dl_short, sr, gain):
                                                       frequency=None,
                                                       sr=sr)
     label = '{} {}'.format(sensor_short, dl_short)
+    print(inv_resp.get_sacpz())
     # First plot no figure to pass
     if fig is None:
         return inv_resp.plot(MIN_FREQ, UNIT, label=label, show=False)
@@ -41,6 +42,7 @@ def add_resp_to_fig(fig, resp_file):
     resp_data = open(resp_file).read()
     resp = inventory.response.response_from_resp(resp_data)
     label = basename(resp_file)
+    print(resp.get_sacpz())
     if fig is None:
         return resp.plot(MIN_FREQ, UNIT, label=label, show=False)
     else:
