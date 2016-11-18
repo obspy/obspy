@@ -37,10 +37,19 @@ class ArclinkInventoryTestCase(unittest.TestCase):
         self.arclink_xml_path = os.path.join(self.data_dir,
                                              "arclink_inventory.xml")
         self.station_xml_path = os.path.join(self.data_dir, "gols_station.xml")
+        self.arclink_xml_poly = os.path.join(self.data_dir,
+                                             "arclink_inventory_poly.xml")
 
     def test_validate_inventories_against_schema(self):
         self.assertTrue(validate_arclink_xml(self.arclink_xml_path)[0])
         self.assertFalse(validate_arclink_xml(self.station_xml_path)[0])
+
+    def test_raise_polynomial(self):
+        with self.assertRaises(NotImplementedError) as e:
+            read_inventory(self.arclink_xml_poly)
+
+        self.assertEqual(e.exception.args[0], "responsePolynomial not"
+                         "implemented. Contact the ObsPy developers")
 
     def test_auto_read_arclink_xml(self):
         arclink_inv = read_inventory(self.arclink_xml_path)

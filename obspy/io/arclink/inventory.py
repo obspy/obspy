@@ -795,6 +795,8 @@ def _read_response_stage(stage, rate, stage_number, input_units,
             numerator=numerator, denominator=denominator, **kwargs)
 
     elif elem_type == 'responsePolynomial':
+        raise NotImplementedError("responsePolynomial not"
+                                  "implemented. Contact the ObsPy developers")
         # Polynomial response (UNTESTED)
         # Currently not implemented in ObsPy (20-11-2015)
         f_low = None
@@ -855,9 +857,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
             coefficients=coeffs_float, symmetry=symmetry, **kwargs)
 
     else:
-        msg = "Unsupported response type (%s).\
-               Please contact developers." % elem_type
-        warnings.warn(msg)
+        raise NotImplementedError
 
 
 def _tag2pole_or_zero(paz_element, count):
