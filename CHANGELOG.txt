@@ -55,6 +55,9 @@ master: (doi: 10.5281/zenodo.165135)
     * Iterative reading of large SEG-Y and SU files with
       `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
       (see #1400).
+ - obspy.io.sac:
+   * Reference time not written to SAC file when made from scratch
+     (see #1575)
  - obspy.io.css:
    * Read support for NNSA KB Core format waveform data. (see #1332)
  - obspy.io.mseed:
