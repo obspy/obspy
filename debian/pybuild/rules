@@ -19,7 +19,6 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	dh_auto_install #-- release
-	python2 setup.py build_man
 	dh_numpy
 	dh_numpy3
 	set -ex; for python in $(shell py3versions -r); do \
@@ -45,6 +44,7 @@ override_dh_auto_install:
 	fi;
 	########## lib naming hack end
 	sh -x debian/_copy_lib_extensions_to_source_tree.sh
+	python2 setup.py build_man
 	python3 setup.py build_man
 	ln build/man/* debian/
 	ls -1 build/man/obspy-* | sed 's#.*/#./debian/#' > debian/python-obspy.manpages
