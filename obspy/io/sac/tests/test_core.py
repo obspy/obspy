@@ -84,6 +84,10 @@ class CoreTestCase(unittest.TestCase):
             tempfile = tf.name
             tr.write(tempfile, format='SACXY')
             tr1 = read(tempfile)[0]
+
+        tr.stats.pop('sac', None)
+        tr1.stats.pop('sac', None)
+
         self.assertEqual(tr, tr1)
 
     def test_read_write_xy_via_obspy(self):
@@ -622,6 +626,9 @@ class CoreTestCase(unittest.TestCase):
             fh.seek(0, 0)
             st2 = _read_sac_xy(fh)
 
+        st[0].stats.pop('sac', None)
+        st2[0].stats.pop('sac', None)
+
         self.assertEqual(st, st2)
 
     def test_read_xy_write_xy_from_open_file_binary_mode(self):
@@ -635,6 +642,9 @@ class CoreTestCase(unittest.TestCase):
             _write_sac_xy(st, tf)
             tf.seek(0, 0)
             st2 = _read_sac_xy(tf)
+
+        st[0].stats.pop('sac', None)
+        st2[0].stats.pop('sac', None)
 
         self.assertEqual(st, st2)
 
@@ -881,6 +891,29 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(tr1.stats.sac.stla, 10., places=4)
         self.assertAlmostEqual(tr1.stats.sac.stlo, -5., places=4)
         self.assertAlmostEqual(tr1.stats.sac.a, 12.34, places=5)
+
+    def test_always_sac_reftime(self):
+        """
+        Writing a SAC file from a .stats.sac with no reference time should
+        still write a SAC file with a reference time.
+        """
+        reftime = UTCDateTime('2010001')
+        a = 12.34
+        b = 0.0
+        tr = Trace(np.zeros(1000))
+        tr.stats.delta = 0.01
+        tr.stats.station = 'XXX'
+        tr.stats.starttime = reftime
+        tr.stats.sac = {}
+        tr.stats.sac['a'] = a
+        tr.stats.sac['b'] = b
+        with io.BytesIO() as tf:
+            tr.write(tf, format='SAC')
+            tf.seek(0)
+            tr1 = read(tf)[0]
+        self.assertEqual(tr1.stats.starttime, reftime)
+        self.assertAlmostEqual(tr1.stats.sac.a, a, places=5)
+        self.assertEqual(tr1.stats.sac.b, b)
 
 
 def suite():

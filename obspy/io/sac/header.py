@@ -250,6 +250,10 @@ STRHDRS = ('kstnm', 'kevnm', 'kevnm2', 'khole', 'ko', 'ka', 'kt0', 'kt1',
            'kt2', 'kt3', 'kt4', 'kt5', 'kt6', 'kt7', 'kt8', 'kt9', 'kf',
            'kuser0', 'kuser1', 'kuser2', 'kcmpnm', 'knetwk', 'kdatrd', 'kinst')
 
+# Headers that are in seconds relative to the reference "nz" times
+RELHDRS = ('b', 'e', 'a', 'o', 'f', 't0', 't1', 't2', 't3', 't4', 't5', 't6',
+           't7', 't8', 't9')
+
 """
 NOTE:
 
