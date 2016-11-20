@@ -19,6 +19,8 @@
    * `SACTrace.lpspol` and `lcalda` are `True` and `False` by default, when
       created via `SACTrace.from_obspy_trace` with a `Trace` that has no SAC
       inheritance. (see #1507)
+   * Reference time not written to SAC file when made from scratch
+     (see #1575)
 - obspy.io.sh:
    * Fix writing of long headers for python3
    * Whitespace in header fields is not ignored anymore (see #1552)
