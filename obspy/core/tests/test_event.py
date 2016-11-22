@@ -940,6 +940,31 @@ class BaseTestCase(unittest.TestCase):
                 obj.some_custom_non_default_crazy_key = "my_text_here"
                 self.assertEqual(len(w), 1)
 
+    def test_setting_nans_or_inf_fails(self):
+        """
+        Tests that settings NaNs or infs as floating point values fails.
+        """
+        o = Origin()
+
+        with self.assertRaises(ValueError) as e:
+            o.latitude = float('nan')
+        self.assertEqual(
+            e.exception.args[0],
+            "Value 'nan' for 'latitude' is not a finite floating point value.")
+
+        with self.assertRaises(ValueError) as e:
+            o.latitude = float('inf')
+        self.assertEqual(
+            e.exception.args[0],
+            "Value 'inf' for 'latitude' is not a finite floating point value.")
+
+        with self.assertRaises(ValueError) as e:
+            o.latitude = float('-inf')
+        self.assertEqual(
+            e.exception.args[0],
+            "Value '-inf' for 'latitude' is "
+            "not a finite floating point value.")
+
 
 def suite():
     suite = unittest.TestSuite()

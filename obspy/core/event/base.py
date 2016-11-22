@@ -27,6 +27,7 @@ from future.utils import native_str
 import collections
 import copy
 import inspect
+import math
 import re
 import warnings
 import weakref
@@ -370,6 +371,15 @@ def _event_type_class_factory(class_name, class_attributes=[],
                         (str(value), str(attrib_type))
                     raise ValueError(msg)
                 value = new_value
+
+            # Make sure all floats are finite - otherwise this is most
+            # likely a user error.
+            if attrib_type is float and value is not None:
+                if not math.isfinite(value):
+                    msg = "Value '%s' for '%s' is not a finite floating " \
+                          "point value." % (str(value), name)
+                    raise ValueError(msg)
+
             AttribDict.__setattr__(self, name, value)
             # If "name" is resource_id and value is not None, set the referred
             # object of the ResourceIdentifier to self.
