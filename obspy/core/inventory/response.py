@@ -736,16 +736,13 @@ class Response(ComparingObject):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
-    def get_evalresp_response(self, t_samp, nfft, output="VEL",
-                              start_stage=None, end_stage=None):
+    def get_evalresp_response_for_frequencies(
+            self, frequencies, output="VEL", start_stage=None, end_stage=None):
         """
-        Returns frequency response and corresponding frequencies using
-        evalresp.
+        Returns frequency response for given frequencies using evalresp.
 
-        :type t_samp: float
-        :param t_samp: time resolution (inverse frequency resolution)
-        :type nfft: int
-        :param nfft: Number of FFT points to use
+        :type frequencies: list of float
+        :param frequencies: Discrete frequencies to calculate response for.
         :type output: str
         :param output: Output units. One of:
 
@@ -762,8 +759,8 @@ class Response(ComparingObject):
         :type end_stage: int, optional
         :param end_stage: Stage sequence number of last stage that will be
             used (disregarding all later stages).
-        :rtype: tuple of two arrays
-        :returns: frequency response and corresponding frequencies
+        :rtype: :class:`numpy.ndarray`
+        :returns: frequency response at requested frequencies
         """
         if not self.response_stages:
             msg = ("Can not use evalresp on response with no response "
@@ -779,10 +776,7 @@ class Response(ComparingObject):
                    "or 'ACC'") % output
             raise ValueError(msg)
 
-        # Calculate the output frequencies.
-        fy = 1 / (t_samp * 2.0)
-        # start at zero to get zero for offset/ DC of fft
-        freqs = np.linspace(0, fy, nfft // 2 + 1).astype(np.float64)
+        frequencies = np.array(frequencies)
 
         # Whacky. Evalresp uses a global variable and uses that to scale the
         # response if it encounters any unit that is not SI.
@@ -1178,7 +1172,45 @@ class Response(ComparingObject):
         finally:
             clibevresp.curr_file.value = None
 
-        return output, freqs
+        return output
+
+    def get_evalresp_response(self, t_samp, nfft, output="VEL",
+                              start_stage=None, end_stage=None):
+        """
+        Returns frequency response and corresponding frequencies using
+        evalresp.
+
+        :type t_samp: float
+        :param t_samp: time resolution (inverse frequency resolution)
+        :type nfft: int
+        :param nfft: Number of FFT points to use
+        :type output: str
+        :param output: Output units. One of:
+
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :rtype: tuple of two arrays
+        :returns: frequency response and corresponding frequencies
+        """
+        # Calculate the output frequencies.
+        fy = 1 / (t_samp * 2.0)
+        # start at zero to get zero for offset/ DC of fft
+        freqs = np.linspace(0, fy, nfft // 2 + 1).astype(np.float64)
+
+        response = self.get_evalresp_response_for_frequencies(
+            freqs, output=output, start_stage=start_stage, end_stage=end_stage)
+        return response, freqs
 
     def __str__(self):
         i_s = self.instrument_sensitivity
