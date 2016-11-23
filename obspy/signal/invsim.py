@@ -33,6 +33,7 @@ import numpy as np
 import scipy.signal
 
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.inventory.response import Response
 from obspy.signal import util
 from obspy.signal.detrend import simple as simple_detrend
 from obspy.signal.headers import clibevresp
@@ -643,12 +644,14 @@ def paz_2_amplitude_value_of_freq_resp(paz, freq):
 
 def estimate_magnitude(paz, amplitude, timespan, h_dist):
     """
-    Estimates local magnitude from poles and zeros of given instrument, the
-    peak to peak amplitude and the time span from peak to peak.
+    Estimates local magnitude from poles and zeros or full response of given
+    instrument, the peak to peak amplitude and the time span from peak to peak.
     Readings on two components can be used in magnitude estimation by providing
     lists for ``paz``, ``amplitude`` and ``timespan``.
 
-    :param paz: PAZ of the instrument [m/s] or list of the same
+    :param paz: PAZ of the instrument [m/s] (as a dictionary) or response of
+        the instrument (as :class:`~obspy.core.inventory.response.Response`) or
+        list of the same
     :param amplitude: Peak to peak amplitude [counts] or list of the same
     :param timespan: Timespan of peak to peak amplitude [s] or list of the same
     :param h_dist: Hypocentral distance [km]
@@ -675,6 +678,18 @@ def estimate_magnitude(paz, amplitude, timespan, h_dist):
     # convert input to lists
     if not isinstance(paz, list) and not isinstance(paz, tuple):
         paz = [paz]
+    # check if PAZ or Response objects are given and set correct functions to
+    # calculate wood anderson amplitude(s)
+    wood_anderson_amplitude_functions = []
+    for i in paz:
+        if isinstance(i, dict):
+            wood_anderson_amplitude_functions.append(
+                estimate_wood_anderson_amplitude)
+        elif isinstance(i, Response):
+            wood_anderson_amplitude_functions.append(
+                estimate_wood_anderson_amplitude_using_response)
+        else:
+            raise TypeError()
     if not isinstance(amplitude, list) and not isinstance(amplitude, tuple):
         amplitude = [amplitude]
     if not isinstance(timespan, list) and not isinstance(timespan, tuple):
@@ -682,9 +697,9 @@ def estimate_magnitude(paz, amplitude, timespan, h_dist):
     # convert every input amplitude to Wood Anderson and calculate the mean
     wa_ampl_mean = 0.0
     count = 0
-    for paz, amplitude, timespan in zip(paz, amplitude, timespan):
-        wa_ampl_mean += estimate_wood_anderson_amplitude(paz, amplitude,
-                                                         timespan)
+    for func, paz, amplitude, timespan in zip(
+            wood_anderson_amplitude_functions, paz, amplitude, timespan):
+        wa_ampl_mean += func(paz, amplitude, timespan)
         count += 1
     wa_ampl_mean /= count
     # mean of input amplitudes (if more than one) should be used in final
@@ -712,6 +727,35 @@ def estimate_wood_anderson_amplitude(paz, amplitude, timespan):
     wa_ampl = amplitude / 2.0  # half peak to peak amplitude
     wa_ampl /= (paz_2_amplitude_value_of_freq_resp(paz, freq) *
                 paz['sensitivity'])
+    wa_ampl *= paz_2_amplitude_value_of_freq_resp(WOODANDERSON, freq) * \
+        WOODANDERSON['sensitivity']
+    wa_ampl *= 1000  # convert to mm
+    return wa_ampl
+
+
+def estimate_wood_anderson_amplitude_using_response(response, amplitude,
+                                                    timespan):
+    """
+    Convert amplitude in counts measured of instrument with given response
+    information for use in :func:`estimate_magnitude`.
+    Amplitude should be measured as full peak to peak amplitude, timespan as
+    difference of the two readings.
+
+    :param response: response of the instrument
+    :type response: :class:`obspy.core.inventory.response.Response`
+    :param amplitude: Peak to peak amplitude [counts] or list of the same
+    :type amplitude: float
+    :param timespan: Timespan of peak to peak amplitude [s] or list of the same
+    :type timespan: float
+    :returns: Simulated zero to peak displacement amplitude on Wood Anderson
+        seismometer [mm] for use in local magnitude estimation.
+    """
+    freq = 1.0 / (2 * timespan)
+    wa_ampl = amplitude / 2.0  # half peak to peak amplitude
+    response = response.get_evalresp_response_for_frequencies(
+        [freq], output="VEL", start_stage=None, end_stage=None)[0]
+    response_amplitude = np.absolute(response)
+    wa_ampl /= response_amplitude
     wa_ampl *= paz_2_amplitude_value_of_freq_resp(WOODANDERSON, freq) * \
         WOODANDERSON['sensitivity']
     wa_ampl *= 1000  # convert to mm
