@@ -21,8 +21,9 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput
 from obspy.io.sac import attach_paz
 from obspy.signal.headers import clibevresp
-from obspy.signal.invsim import (cosine_taper, estimate_magnitude, evalresp,
-                                 simulate_seismometer)
+from obspy.signal.invsim import (
+    cosine_taper, estimate_magnitude, evalresp, simulate_seismometer,
+    evalresp_for_frequencies)
 
 
 # Seismometers defined as in Pitsa with one zero less. The corrected
@@ -351,6 +352,31 @@ class InvSimTestCase(unittest.TestCase):
             kwargs = {'units': 'VEL', 'freq': True}
             _h, f = evalresp(*args, **kwargs)
             self.assertEqual(len(f), nfft // 2 + 1)
+
+    def test_evalresp_specific_frequencies(self):
+        """
+        Test getting response for specific frequencies from evalresp
+        """
+        resp = os.path.join(self.path, 'RESP.CH._.HHZ.gz')
+        # test some frequencies (results taken from routine
+        # test_evalresp_bug_395)
+        freqs = [0.0, 0.0021303792075, 0.21303792075, 0.63911376225,
+                 2.1303792075, 21.303792075, 59.9978696208, 60.0]
+        expected = [0j, -38033660.9731+14722854.5862j,
+                    623756964.698+34705336.5587j, 625815840.91+11748438.5949j,
+                    634173301.327-2261888.45356j, 689435074.739-216615642.231j,
+                    -105.682658137-4360.67242023j,
+                    -101.693155157-4172.61059939j,
+                    ]
+        with NamedTemporaryFile() as fh:
+            tmpfile = fh.name
+            with gzip.open(resp) as f:
+                fh.write(f.read())
+            samprate = 120.0
+            t = UTCDateTime(2012, 9, 4, 5, 12, 15, 863300)
+            h = evalresp_for_frequencies(
+                1.0 / samprate, freqs, tmpfile, t, units='VEL')
+        np.testing.assert_allclose(h, expected)
 
     def test_evalresp_file_like_object(self):
         """
