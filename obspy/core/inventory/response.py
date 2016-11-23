@@ -979,8 +979,8 @@ class Response(ComparingObject):
                     dtype=np.float64)
 
                 # Sanity check.
-                min_f = freqs[freqs > 0].min()
-                max_f = freqs.max()
+                min_f = frequencies[frequencies > 0].min()
+                max_f = frequencies.max()
 
                 min_f_avail = min(f)
                 max_f_avail = max(f)
@@ -1001,23 +1001,23 @@ class Response(ComparingObject):
                                             max_f))
 
                 amp = scipy.interpolate.InterpolatedUnivariateSpline(
-                    f, amp, k=3)(freqs)
+                    f, amp, k=3)(frequencies)
                 phase = scipy.interpolate.InterpolatedUnivariateSpline(
-                    f, phase, k=3)(freqs)
+                    f, phase, k=3)(frequencies)
 
                 # Set static offset to zero.
                 amp[amp == 0] = 0
                 phase[phase == 0] = 0
 
                 rl = blkt.blkt_info.list
-                rl.nresp = len(freqs)
+                rl.nresp = len(frequencies)
 
                 _freq_c = (C.c_double * rl.nresp)()
                 _amp_c = (C.c_double * rl.nresp)()
                 _phase_c = (C.c_double * rl.nresp)()
 
-                for i in range(len(freqs)):
-                    _freq_c[i] = freqs[i]
+                for i in range(len(frequencies)):
+                    _freq_c[i] = frequencies[i]
                     _amp_c[i] = amp[i]
                     _phase_c[i] = phase[i]
 
@@ -1145,7 +1145,7 @@ class Response(ComparingObject):
         chan.sensit = 0.0
         chan.sensfreq = 0.0
 
-        output = np.empty(len(freqs), dtype=np.complex128)
+        output = np.empty(len(frequencies), dtype=np.complex128)
         out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
 
         # Set global variables
@@ -1165,7 +1165,8 @@ class Response(ComparingObject):
                 e, m = ew.ENUM_ERROR_CODES[rc]
                 raise e('norm_resp: ' + m)
 
-            rc = clibevresp._obspy_calc_resp(C.byref(chan), freqs, len(freqs),
+            rc = clibevresp._obspy_calc_resp(C.byref(chan), frequencies,
+                                             len(frequencies),
                                              output, out_units, -1, 0, 0)
             if rc:
                 e, m = ew.ENUM_ERROR_CODES[rc]
