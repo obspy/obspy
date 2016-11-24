@@ -776,7 +776,7 @@ class Response(ComparingObject):
                    "or 'ACC'") % output
             raise ValueError(msg)
 
-        frequencies = np.array(frequencies)
+        frequencies = np.asarray(frequencies)
 
         # Whacky. Evalresp uses a global variable and uses that to scale the
         # response if it encounters any unit that is not SI.
@@ -1010,10 +1010,9 @@ class Response(ComparingObject):
                 _amp_c = (C.c_double * rl.nresp)()
                 _phase_c = (C.c_double * rl.nresp)()
 
-                for i in range(len(frequencies)):
-                    _freq_c[i] = frequencies[i]
-                    _amp_c[i] = amp[i]
-                    _phase_c[i] = phase[i]
+                _freq_c[:] = frequencies[:]
+                _amp_c[:] = amp[:]
+                _phase_c[:] = phase[:]
 
                 rl.freq = C.cast(C.pointer(_freq_c),
                                  C.POINTER(C.c_double))

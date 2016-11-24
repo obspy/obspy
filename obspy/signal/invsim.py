@@ -272,7 +272,7 @@ def evalresp_for_frequencies(t_samp, frequencies, filename, date, station='*',
         datime = C.create_string_buffer(
             date.format_seed().encode('ascii', 'strict'))
         fn = C.create_string_buffer(tempfile.encode('ascii', 'strict'))
-        frequencies = np.array(frequencies)
+        frequencies = np.asarray(frequencies)
         nfreqs = C.c_int(frequencies.shape[0])
         res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
                                 frequencies, nfreqs, rtyp, vbs, start_stage,
@@ -689,7 +689,10 @@ def estimate_magnitude(paz, amplitude, timespan, h_dist):
             wood_anderson_amplitude_functions.append(
                 estimate_wood_anderson_amplitude_using_response)
         else:
-            raise TypeError()
+            msg = ("Unknown response specification (type '{}'). Use a "
+                   "dictionary structure with poles and zeros information or "
+                   "an obspy Response object.").format(type(i))
+            raise TypeError(msg)
     if not isinstance(amplitude, list) and not isinstance(amplitude, tuple):
         amplitude = [amplitude]
     if not isinstance(timespan, list) and not isinstance(timespan, tuple):
