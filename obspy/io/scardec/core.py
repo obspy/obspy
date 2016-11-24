@@ -413,7 +413,7 @@ def _internal_write_single_scardec(buf, event, **kwargs):
         "{latitude:9.4f} {longitude:9.4f}\n"
         "{depth:5.1f} {scalmom:9.3E} {mw:5.3f}"
         "{strike1:4d} {dip1:4d} {rake1:4d}"
-        "{strike2:4d} {dip2:4d} {rake2:4d}\n"
+        "{strike2:4d} {dip2:4d} {rake2:4d}"
     )
 
     np1 = foc_mec.nodal_planes.nodal_plane_1
@@ -441,15 +441,19 @@ def _internal_write_single_scardec(buf, event, **kwargs):
     )
 
     # Write to a buffer/file opened in binary mode.
-    buf.write(template.encode())
 
     stf = foc_mec.moment_tensor.source_time_function.extra
-    t = stf['offset']['value']
+    t_offset = stf['offset']['value']
     scalmom = foc_mec.moment_tensor.scalar_moment
-    for sample in stf['moment_rate']['value']:
-        line = ' %16.9E %16.9E\n' % (t, sample*scalmom)
-        buf.write(line.encode())
-        t += stf['dt']['value']
+
+    nsamples = len(stf['moment_rate']['value'])
+
+    times = np.arange(0, nsamples) * stf['dt']['value'] + t_offset
+    samples = stf['moment_rate']['value'] * scalmom
+
+    np.savetxt(buf, np.asarray([times, samples]).T,
+               fmt=' %16.9E %16.9E'.encode('ascii', 'strict'),
+               header=template, comments='')
 
 
 if __name__ == '__main__':
