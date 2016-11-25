@@ -413,7 +413,7 @@ def _internal_write_single_scardec(buf, event, **kwargs):
         "{latitude:9.4f} {longitude:9.4f}\n"
         "{depth:5.1f} {scalmom:9.3E} {mw:5.3f}"
         "{strike1:4d} {dip1:4d} {rake1:4d}"
-        "{strike2:4d} {dip2:4d} {rake2:4d}"
+        "{strike2:4d} {dip2:4d} {rake2:4d}\n"
     )
 
     np1 = foc_mec.nodal_planes.nodal_plane_1
@@ -440,6 +440,8 @@ def _internal_write_single_scardec(buf, event, **kwargs):
         rake2=int(np2.rake)
     )
 
+    buf.write(template.encode('ascii', 'strict'))
+
     # Write to a buffer/file opened in binary mode.
 
     stf = foc_mec.moment_tensor.source_time_function.extra
@@ -452,8 +454,7 @@ def _internal_write_single_scardec(buf, event, **kwargs):
     samples = stf['moment_rate']['value'] * scalmom
 
     np.savetxt(buf, np.asarray([times, samples]).T,
-               fmt=' %16.9E %16.9E'.encode('ascii', 'strict'),
-               header=template, comments='')
+               fmt=' %16.9E %16.9E'.encode('ascii', 'strict'))
 
 
 if __name__ == '__main__':
