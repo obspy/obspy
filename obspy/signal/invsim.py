@@ -32,6 +32,7 @@ import warnings
 import numpy as np
 import scipy.signal
 
+from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.inventory.response import Response
 from obspy.signal import util
@@ -682,7 +683,9 @@ def estimate_magnitude(paz, amplitude, timespan, h_dist):
     # calculate wood anderson amplitude(s)
     wood_anderson_amplitude_functions = []
     for i in paz:
-        if isinstance(i, dict):
+        # unfortunately AttribDict is not a subclass of dict so we have to
+        # explicitly include it here
+        if isinstance(i, (dict, AttribDict)):
             wood_anderson_amplitude_functions.append(
                 estimate_wood_anderson_amplitude)
         elif isinstance(i, Response):
