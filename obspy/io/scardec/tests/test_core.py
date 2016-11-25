@@ -8,6 +8,7 @@ import inspect
 import io
 import os
 import unittest
+import numpy as np
 
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
@@ -54,8 +55,18 @@ class ScardecTestCase(unittest.TestCase):
             except:
                 pass
 
-        self.assertEqual(data.decode().splitlines(),
-                         new_data.decode().splitlines())
+        # Test file header
+        self.assertEqual(data.decode().splitlines()[0:2],
+                         new_data.decode().splitlines()[0:2])
+
+        for line_data, line_new in zip(data.decode().splitlines()[2:],
+                                       new_data.decode().splitlines()[2:]):
+            # Compare time stamps
+            self.assertTrue(np.allclose(float(line_data.split()[0]),
+                                        float(line_new.split()[0])))
+            # Compare moment rate values
+            self.assertTrue(np.allclose(float(line_data.split()[1]),
+                                        float(line_new.split()[1])))
 
     def test_read_and_write_scardec_from_open_files(self):
         """
@@ -75,8 +86,18 @@ class ScardecTestCase(unittest.TestCase):
             tf.seek(0, 0)
             new_data = tf.read()
 
-        self.assertEqual(data.decode().splitlines(),
-                         new_data.decode().splitlines())
+        # Test file header
+        self.assertEqual(data.decode().splitlines()[0:2],
+                         new_data.decode().splitlines()[0:2])
+
+        for line_data, line_new in zip(data.decode().splitlines()[2:],
+                                       new_data.decode().splitlines()[2:]):
+            # Compare time stamps
+            self.assertTrue(np.allclose(float(line_data.split()[0]),
+                                        float(line_new.split()[0])))
+            # Compare moment rate values
+            self.assertTrue(np.allclose(float(line_data.split()[1]),
+                                        float(line_new.split()[1])))
 
     def test_read_and_write_scardec_from_bytes_io(self):
         """
@@ -100,8 +121,18 @@ class ScardecTestCase(unittest.TestCase):
                 buf2.seek(0, 0)
                 new_data = buf2.read()
 
-        self.assertEqual(data.decode().splitlines(),
-                         new_data.decode().splitlines())
+        # Test file header
+        self.assertEqual(data.decode().splitlines()[0:2],
+                         new_data.decode().splitlines()[0:2])
+
+        for line_data, line_new in zip(data.decode().splitlines()[2:],
+                                       new_data.decode().splitlines()[2:]):
+            # Compare time stamps
+            self.assertTrue(np.allclose(float(line_data.split()[0]),
+                                        float(line_new.split()[0])))
+            # Compare moment rate values
+            self.assertTrue(np.allclose(float(line_data.split()[1]),
+                                        float(line_new.split()[1])))
 
     def test_is_scardec(self):
         """
