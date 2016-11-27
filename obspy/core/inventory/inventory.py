@@ -773,15 +773,6 @@ class Inventory(ComparingObject):
 
         return fig
 
-    def plot_rays(self, *args, **kwargs):
-        """
-        Plot ray paths between this inventory and one or more events.
-
-        All options are passed to :func:`obspy.imaging.ray_paths.plot_rays`.
-        """
-        from obspy.imaging.ray_paths import plot_rays
-        plot_rays(inventory=self, *args, **kwargs)
-
     def plot_response(self, min_freq, output="VEL", network="*", station="*",
                       location="*", channel="*", time=None, starttime=None,
                       endtime=None, axes=None, unwrap_phase=False,
