@@ -29,6 +29,7 @@ from distutils.version import LooseVersion
 from lxml import etree
 import numpy as np
 
+from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
 from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git, \
     MatplotlibBackend
@@ -716,12 +717,13 @@ def get_all_py_files():
     return sorted(py_files)
 
 
-class MockResponse(object):
+class MockResponse(mock.MagicMock):
     """
     Mimicks a `requests.Response` object resulting from a successful http
     request, serving the specified data (usually bytes).
     """
     def __init__(self, data, stream=False):
+        super(MockResponse, self).__init__(return_value=self)
         self.data = data
         self.stream = stream
 
