@@ -1435,7 +1435,8 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     .. rubric:: Example
 
     >>> from obspy import read
-    >>> tr = read("https://examples.obspy.org/a02i.2008.240.mseed")[0]
+    >>> tr = read(  # doctest: +SKIP
+    ...     "https://examples.obspy.org/a02i.2008.240.mseed")[0]
     >>> plot_tfr(tr.data, dt=tr.stats.delta, fmin=.01, # doctest: +SKIP
     ...         fmax=50., w0=8., nf=64, fft_zero_pad_fac=4)
 
