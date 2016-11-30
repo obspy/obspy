@@ -153,8 +153,9 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     (3) Reading a remote file via HTTP protocol.
 
         >>> from obspy import read
-        >>> st = read("https://examples.obspy.org/loc_RJOB20050831023349.z")
-        >>> print(st)  # doctest: +ELLIPSIS
+        >>> st = read(  # doctest: +SKIP
+        ...     "https://examples.obspy.org/loc_RJOB20050831023349.z")
+        >>> print(st)  # doctest: +SKIP
         1 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:49.850000Z - ... | 200.0 Hz, 12000 samples
 
@@ -166,8 +167,9 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         1 Trace(s) in Stream:
         XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - ... | 40.0 Hz, 635 samples
 
-        >>> st = read("https://examples.obspy.org/slist.ascii.bz2")
-        >>> print(st)  # doctest: +ELLIPSIS
+        >>> st = read(  # doctest: +SKIP
+        ...     "https://examples.obspy.org/slist.ascii.bz2")
+        >>> print(st)  # doctest: +SKIP
         1 Trace(s) in Stream:
         XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - ... | 40.0 Hz, 635 samples
 
@@ -176,9 +178,10 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         >>> import requests
         >>> import io
         >>> example_url = "https://examples.obspy.org/loc_RJOB20050831023349.z"
-        >>> stringio_obj = io.BytesIO(requests.get(example_url).content)
-        >>> st = read(stringio_obj)
-        >>> print(st)  # doctest: +ELLIPSIS
+        >>> stringio_obj = io.BytesIO(
+        ...     requests.get(example_url).content)  # doctest: +SKIP
+        >>> st = read(stringio_obj)  # doctest: +SKIP
+        >>> print(st)  # doctest: +SKIP
         1 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:49.850000Z - ... | 200.0 Hz, 12000 samples
 
@@ -187,8 +190,8 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         >>> from obspy import read
         >>> dt = UTCDateTime("2005-08-31T02:34:00")
         >>> st = read("https://examples.obspy.org/loc_RJOB20050831023349.z",
-        ...           starttime=dt, endtime=dt+10)
-        >>> print(st)  # doctest: +ELLIPSIS
+        ...           starttime=dt, endtime=dt+10)  # doctest: +SKIP
+        >>> print(st)  # doctest: +SKIP
         1 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:34:00.000000Z - ... | 200.0 Hz, 2001 samples
     """
