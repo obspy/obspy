@@ -716,5 +716,24 @@ def get_all_py_files():
     return sorted(py_files)
 
 
+class MockResponse(object):
+    """
+    Mimicks a `requests.Response` object resulting from a successful http
+    request, serving the specified data (usually bytes).
+    """
+    def __init__(self, data, stream=False):
+        self.data = data
+        self.stream = stream
+
+    def raise_for_status(self):
+        pass
+
+    def iter_content(self, chunk_size=1, decode_unicode=False):
+        pos = 0
+        while pos < len(self.data):
+            yield self.data[pos:pos + chunk_size]
+            pos += chunk_size
+
+
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)
