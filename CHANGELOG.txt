@@ -3,6 +3,8 @@
    * properly pass through kwargs specified for Trace.plot() down to the
      low-level plotting routines (e.g. events were not shown properly in
      dayplot of a trace, see #1566)
+   * properly pass through kwargs from Stream.detrend() to Trace.detrend()
+     (see #1607)
  - obspy.core.event.source:
    * Fix `farfield` if input `points` is a 2D array. (see #1499, #1553)
  - obspy.clients.neic:

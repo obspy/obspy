@@ -2400,7 +2400,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     @raise_if_masked
-    def detrend(self, type='simple'):
+    def detrend(self, type='simple', **options):
         """
         Remove a trend from all traces.
 
@@ -2409,7 +2409,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :class:`~obspy.core.trace.Trace`.
         """
         for tr in self:
-            tr.detrend(type=type)
+            tr.detrend(type=type, **options)
         return self
 
     def taper(self, *args, **kwargs):
