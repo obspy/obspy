@@ -27,12 +27,13 @@ from future.utils import native_str
 import collections
 import copy
 import inspect
-import math
 import re
 import warnings
 import weakref
 from copy import deepcopy
 from uuid import uuid4
+
+import numpy as np
 
 from obspy.core.event.header import DataUsedWaveType, ATTRIBUTE_HAS_ERRORS
 from obspy.core.utcdatetime import UTCDateTime
@@ -376,7 +377,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
             # Make sure all floats are finite - otherwise this is most
             # likely a user error.
             if attrib_type is float and value is not None:
-                if not math.isfinite(value):
+                if not np.isfinite(value):
                     msg = "Value '%s' for '%s' is not a finite floating " \
                           "point value." % (str(value), name)
                     raise ValueError(msg)
