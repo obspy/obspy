@@ -950,19 +950,21 @@ class BaseTestCase(unittest.TestCase):
             o.latitude = float('nan')
         self.assertEqual(
             e.exception.args[0],
-            "Value 'nan' for 'latitude' is not a finite floating point value.")
+            "On Origin object: Value 'nan' for 'latitude' is not a finite "
+            "floating point value.")
 
         with self.assertRaises(ValueError) as e:
             o.latitude = float('inf')
         self.assertEqual(
             e.exception.args[0],
-            "Value 'inf' for 'latitude' is not a finite floating point value.")
+            "On Origin object: Value 'inf' for 'latitude' is not a finite "
+            "floating point value.")
 
         with self.assertRaises(ValueError) as e:
             o.latitude = float('-inf')
         self.assertEqual(
             e.exception.args[0],
-            "Value '-inf' for 'latitude' is "
+            "On Origin object: Value '-inf' for 'latitude' is "
             "not a finite floating point value.")
 
 

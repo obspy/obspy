@@ -378,8 +378,10 @@ def _event_type_class_factory(class_name, class_attributes=[],
             # likely a user error.
             if attrib_type is float and value is not None:
                 if not np.isfinite(value):
-                    msg = "Value '%s' for '%s' is not a finite floating " \
-                          "point value." % (str(value), name)
+                    msg = "On %s object: Value '%s' for '%s' is " \
+                          "not a finite floating point value." % (
+                            type(self).__name__, str(value), name)
+
                     raise ValueError(msg)
 
             AttribDict.__setattr__(self, name, value)
