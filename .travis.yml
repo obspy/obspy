@@ -80,6 +80,7 @@ install:
         BASEMAP="basemap=1.0.7"
         PYPROJ="pyproj"
       fi
+  # for now fix requests version, can be changed when a new requests is released (see #1599)
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
         numpy=$NUMPY_VERSION
@@ -97,7 +98,7 @@ install:
         gdal
         docopt
         coverage
-        requests
+        'requests<2.12'
         jsonschema
   - source activate test-environment
   # additional, optional packages that run some more tests but are not
