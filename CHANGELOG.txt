@@ -5,8 +5,12 @@
      dayplot of a trace, see #1566)
  - obspy.core.event.source:
    * Fix `farfield` if input `points` is a 2D array. (see #1499, #1553)
+ - obspy.clients.earthworm:
+   * Better end of stream detection. (see #1605)
  - obspy.clients.neic:
    * Better end of stream detection. (see #1563)
+ - obspy.clients.seedlink:
+   * Better end of stream detection. (see #1605)
  - obspy.io.mseed:
    * ObsPy can now also read (Mini)SEED files with noise records. (see #1495)
    * ObsPy can now read records with a data-offset of zero. (see #1509, #1525)
