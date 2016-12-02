@@ -81,7 +81,7 @@ class TauPySeismicPhaseTestCase(unittest.TestCase):
             output_folder=folder, verbose=False)
         m = TauPyModel(os.path.join(folder, model_name + ".npz"))
         arr = m.get_ray_paths(172.8000, 46.762440693494824, ["SS"])
-        self.assertGreaterEqual(len(arr), 10)
+        self.assertGreater(len(arr), 10)
 
 
 def suite():
