@@ -2409,6 +2409,10 @@ class StreamTestCase(unittest.TestCase):
         for arg in patch.call_args_list:
             self.assertFalse(arg[1]["nearest_sample"])
 
+    def test_add_processing_info(self):
+        stream = read().rotate('ZNE->LQT', 10, 10)
+        self.assertIn('rotate', stream[0].stats.processing[0])
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
