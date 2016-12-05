@@ -21,17 +21,22 @@ import gzip
 import io
 import os
 import re
+import sys
 from socket import timeout as socket_timeout
 import textwrap
 import threading
 import warnings
 
 with standard_library.hooks():
-    import queue
     import urllib.error
     import urllib.parse
     import urllib.request
     from collections import OrderedDict
+
+if sys.version_info.major == 2:
+    import Queue as queue
+else:
+    import queue
 
 from lxml import etree
 
