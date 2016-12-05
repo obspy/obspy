@@ -320,6 +320,8 @@ class EasySeedLinkClient(object):
         while True:
             bytes_read = self.conn.socket.recv(
                 SeedLinkConnection.DFT_READBUF_SIZE)
+            if not bytes_read:
+                break
             response += bytes_read
             for stopword in stop_on:
                 if response.endswith(stopword):

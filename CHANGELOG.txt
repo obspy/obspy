@@ -89,10 +89,16 @@ master: (doi: 10.5281/zenodo.165135)
    * properly pass through kwargs specified for Trace.plot() down to the
      low-level plotting routines (e.g. events were not shown properly in
      dayplot of a trace, see #1566)
+   * properly pass through kwargs from Stream.detrend() to Trace.detrend()
+     (see #1607)
  - obspy.core.event.source:
    * Fix `farfield` if input `points` is a 2D array. (see #1499, #1553)
+ - obspy.clients.earthworm:
+   * Better end of stream detection. (see #1605)
  - obspy.clients.neic:
    * Better end of stream detection. (see #1563)
+ - obspy.clients.seedlink:
+   * Better end of stream detection. (see #1605)
  - obspy.io.mseed:
    * ObsPy can now also read (Mini)SEED files with noise records. (see #1495)
    * ObsPy can now read records with a data-offset of zero. (see #1509, #1525)
@@ -117,9 +123,13 @@ master: (doi: 10.5281/zenodo.165135)
  - obspy.io.zmap:
    * Use first origin/magnitude when writing to zmap if no origin/magnitude is
      set as preferred. (see #1569)
+   * Parse origin time seconds as a float to avoid losing accuracy (see #1573)
  - obspy.signal:
    * PPSD: fix warning message on Python 3 that gets shown when waveforms and
      metadata mismatch (see #1506)
+ - obspy.taup:
+   * Allow for more than 10 phases with identical names (can happen for certain
+     custom models, see #1593).
 
 1.0.2: (doi: 10.5281/zenodo.49636)
  - obspy.core:

@@ -32,6 +32,9 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
+import warnings
+import requests
+
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime  # NOQA
 from obspy.core.util import _get_version_string
@@ -70,6 +73,13 @@ else:
     Catalog.write.__doc__ = \
         Catalog.write.__doc__ % make_format_plugin_table("event", "write",
                                                          numspaces=8)
+
+
+if requests.__version__ in ('2.12.0', '2.12.1', '2.12.2'):
+    msg = ("ObsPy has some known issues with 'requests' version {} (see "
+           "github issue #1599). Please consider updating module 'requests' "
+           "to a newer version.").format(requests.__version__)
+    warnings.warn(msg)
 
 
 if __name__ == '__main__':
