@@ -40,6 +40,9 @@
  - obspy.signal:
    * PPSD: fix warning message on Python 3 that gets shown when waveforms and
      metadata mismatch (see #1506)
+ - obspy.taup:
+   * Allow for more than 10 phases with identical names (can happen for certain
+     custom models, see #1593).
 
 1.0.2: (doi: 10.5281/zenodo.49636)
  - obspy.core:
