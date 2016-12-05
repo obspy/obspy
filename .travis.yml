@@ -119,7 +119,6 @@ install:
         matplotlib=$MPL_VERSION
         $BASEMAP
         $PYPROJ
-        future
         lxml
         decorator
         sqlalchemy
