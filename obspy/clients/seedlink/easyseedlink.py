@@ -57,9 +57,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from future import standard_library
-with standard_library.hooks():
-    import urllib.parse
+import sys
+
+if sys.version_info.major == 2:
+    from urlparse import urlparse
+else:
+    from urllib.parse import urlparse
 
 import lxml
 
@@ -141,7 +144,7 @@ class EasySeedLinkClient(object):
         if '://' not in server_url and not server_url.startswith('//'):
             server_url = '//' + server_url
 
-        parsed_url = urllib.parse.urlparse(server_url, scheme='seedlink')
+        parsed_url = urlparse(server_url, scheme='seedlink')
 
         # Check the provided scheme
         if not parsed_url.scheme == 'seedlink':

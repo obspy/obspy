@@ -12,7 +12,6 @@ FDSN Web service client for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
 from future.utils import PY2, native_str
 
 import collections
@@ -26,16 +25,15 @@ from socket import timeout as socket_timeout
 import textwrap
 import threading
 import warnings
-
-with standard_library.hooks():
-    import urllib.error
-    import urllib.parse
-    import urllib.request
-    from collections import OrderedDict
+from collections import OrderedDict
 
 if sys.version_info.major == 2:
+    from urllib import urlencode
+    import urllib2 as urllib_request
     import Queue as queue
 else:
+    from urllib.parse import urlencode
+    import urllib.request as urllib_request
     import queue
 
 from lxml import etree
@@ -52,7 +50,7 @@ from .wadl_parser import WADLParser
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
 
 
-class CustomRedirectHandler(urllib.request.HTTPRedirectHandler):
+class CustomRedirectHandler(urllib_request.HTTPRedirectHandler):
     """
     Custom redirection handler to also do it for POST requests which the
     standard library does not do by default.
@@ -65,7 +63,8 @@ class CustomRedirectHandler(urllib.request.HTTPRedirectHandler):
         m = req.get_method()
         if (not (code in (301, 302, 303, 307) and
                  m in ("GET", "HEAD", "POST"))):
-            raise urllib.error.HTTPError(req.full_url, code, msg, headers, fp)
+            raise urllib_request.HTTPError(req.full_url, code, msg, headers,
+                                           fp)
 
         # be conciliant with URIs containing a space
         newurl = newurl.replace(' ', '%20')
@@ -75,14 +74,14 @@ class CustomRedirectHandler(urllib.request.HTTPRedirectHandler):
 
         # Also redirect the data of the request which the standard library
         # interestingly enough does not do.
-        return urllib.request.Request(
+        return urllib_request.Request(
             newurl, headers=newheaders,
             data=req.data,
             origin_req_host=req.origin_req_host,
             unverifiable=True)
 
 
-class NoRedirectionHandler(urllib.request.HTTPRedirectHandler):
+class NoRedirectionHandler(urllib_request.HTTPRedirectHandler):
     """
     Handler that does not direct!
     """
@@ -248,9 +247,9 @@ class Client(object):
         handlers = []
         if user is not None and password is not None:
             # Create an OpenerDirector for HTTP Digest Authentication
-            password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, base_url, user, password)
-            handlers.append(urllib.request.HTTPDigestAuthHandler(password_mgr))
+            handlers.append(urllib_request.HTTPDigestAuthHandler(password_mgr))
 
         if (user is None and password is None) or force_redirect is True:
             # Redirect if no credentials are given or the force_redirect
@@ -260,7 +259,7 @@ class Client(object):
             handlers.append(NoRedirectionHandler())
 
         # Don't install globally to not mess with other codes.
-        self._url_opener = urllib.request.build_opener(*handlers)
+        self._url_opener = urllib_request.build_opener(*handlers)
 
         self.request_headers = {"User-Agent": user_agent}
         # Avoid mutable kwarg.
@@ -1440,12 +1439,12 @@ class Client(object):
                             wadl_queue.put((url, data))
                         else:
                             wadl_queue.put((url, None))
-                    except urllib.request.HTTPError as e:
+                    except urllib_request.HTTPError as e:
                         if e.code in [404, 502]:
                             wadl_queue.put((url, None))
                         else:
                             raise
-                    except urllib.error.URLError as e:
+                    except urllib_request.URLError as e:
                         wadl_queue.put((url, "timeout"))
                     except socket_timeout as e:
                         wadl_queue.put((url, "timeout"))
@@ -1648,7 +1647,7 @@ def build_url(base_url, service, major_version, resource_type,
                 parameters[key] = value.strip()
             except:
                 pass
-        url = "?".join((url, urllib.parse.urlencode(parameters)))
+        url = "?".join((url, urlencode(parameters)))
     return url
 
 
@@ -1676,14 +1675,14 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
             print("-" * 70)
 
     try:
-        request = urllib.request.Request(url=url, headers=headers)
+        request = urllib_request.Request(url=url, headers=headers)
         # Request gzip encoding if desired.
         if use_gzip:
             request.add_header("Accept-encoding", "gzip")
 
         url_obj = opener.open(request, timeout=timeout, data=data)
     # Catch HTTP errors.
-    except urllib.request.HTTPError as e:
+    except urllib_request.HTTPError as e:
         if debug is True:
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
                   (e.code, str(e.reason), url, e.read())

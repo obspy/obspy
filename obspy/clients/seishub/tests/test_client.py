@@ -6,12 +6,14 @@ The obspy.clients.seishub.client test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
 
+import sys
 import unittest
 
-with standard_library.hooks():
-    import urllib.request
+if sys.version_info.major == 2:
+    from urllib2 import urlopen
+else:
+    from urllib.request import urlopen
 
 from obspy.core import AttribDict, UTCDateTime
 from obspy.clients.seishub import Client
@@ -27,7 +29,7 @@ def _check_server_availability():
     otherwise.
     """
     try:
-        code = urllib.request.urlopen(TESTSERVER, timeout=3).getcode()
+        code = urlopen(TESTSERVER, timeout=3).getcode()
         assert(code == 200)
     except:
         return TESTSERVER_UNREACHABLE_MSG
