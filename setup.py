@@ -102,7 +102,6 @@ KEYWORDS = [
 
 # when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
 INSTALL_REQUIRES = [
-    'future>=0.12.4',
     'numpy>=1.6.1',
     'scipy>=0.9.0',
     'matplotlib>=1.1.0',
