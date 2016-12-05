@@ -9,9 +9,9 @@ from future.builtins import *  # NOQA
 
 import inspect
 import os
-import tempfile
 import unittest
 
+from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.taup import TauPyModel
 from obspy.taup.tau_model import TauModel
 from obspy.taup.seismic_phase import SeismicPhase
@@ -72,14 +72,15 @@ class TauPySeismicPhaseTestCase(unittest.TestCase):
     def test_many_identically_named_phases(self):
         """
         Regression test to make sure obspy.taup works with models that
-        produce many identially names seismic phases.
+        produce many identically names seismic phases.
         """
-        folder = tempfile.mkdtemp()
-        model_name = "smooth_geodynamic_model"
-        build_taup_model(
-            filename=os.path.join(DATA, model_name + ".tvel"),
-            output_folder=folder, verbose=False)
-        m = TauPyModel(os.path.join(folder, model_name + ".npz"))
+        with TemporaryWorkingDirectory():
+            folder = os.path.abspath(os.curdir)
+            model_name = "smooth_geodynamic_model"
+            build_taup_model(
+                filename=os.path.join(DATA, model_name + ".tvel"),
+                output_folder=folder, verbose=False)
+            m = TauPyModel(os.path.join(folder, model_name + ".npz"))
         arr = m.get_ray_paths(172.8000, 46.762440693494824, ["SS"])
         self.assertGreater(len(arr), 10)
 
