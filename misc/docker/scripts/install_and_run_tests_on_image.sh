@@ -20,7 +20,9 @@ fi
 
 cd
 
-obspy-runtests -r --keep-images --no-flake8 --node=docker-$(cat /container_name.txt) $1 2>&1 | tee /TEST_LOG.txt
+# obspy-runtests -r --keep-images --no-flake8 --node=docker-$(cat /container_name.txt) $1 2>&1 | tee /TEST_LOG.txt
+pip install pytest
+py.test /obspy/obspy --pdb
 if [ $? != 0 ]; then
     echo -e "${red}Tests failed!${no_color}"
     touch /failure
