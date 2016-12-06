@@ -11,22 +11,23 @@ Parsing of the text files from the FDSN station web services.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-from future import standard_library
-with standard_library.hooks():
-    import collections
-
 import csv
 import io
 import re
 import warnings
+import six
 
 import obspy
 from obspy import UTCDateTime
 from obspy.core.inventory import (Inventory, Network, Station, Channel,
                                   Response, Equipment, Site,
                                   InstrumentSensitivity)
+
+from future.builtins import *  # NOQA
+from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    import collections
 
 
 def float_or_none(value):
@@ -250,8 +251,16 @@ def read_fdsn_station_text_file(path_or_file_object):
         inv.networks.extend(list(networks.values()))
     else:
         # Cannot really happen - just a safety measure.
-        raise NotImplementedError("Unkown level: " + str(level))
+        raise NotImplementedError("Unknown level: " + str(level))
     return inv
+
+
+def _format_time(value):
+    if isinstance(value, UTCDateTime):
+        if value.microsecond == 0:
+            return value.strftime("%Y-%m-%dT%H:%M:%S")
+        else:
+            return value.strftime("%Y-%m-%dT%H:%M:%S.%f")
 
 
 def inventory_to_station_text(inventory_or_network):
@@ -298,7 +307,7 @@ def inventory_to_station_text(inventory_or_network):
     if any(cha is not None for net, sta, cha in items):
         header = ("#Network|Station|Location|Channel|Latitude|Longitude|"
                   "Elevation|Depth|Azimuth|Dip|SensorDescription|Scale|"
-                  "ScaleFrequency|ScaleUnits|SampleRate|StartTime|EndTime")
+                  "ScaleFreq|ScaleUnits|SampleRate|StartTime|EndTime")
         lines = [header]
         for net, sta, cha in items:
             # omit stations with no channels and warn
@@ -320,12 +329,13 @@ def inventory_to_station_text(inventory_or_network):
                 sensitivity and sensitivity.value,
                 sensitivity and sensitivity.frequency,
                 sensitivity and sensitivity.input_units,
-                cha.sample_rate, cha.start_date, cha.end_date))
+                cha.sample_rate, _format_time(cha.start_date),
+                _format_time(cha.end_date)))
             lines.append(line)
     # write with station detail level
     elif any(sta is not None for net, sta, cha in items):
-        header = ("#Network|Station|Latitude|Longitude|Elevation|StartTime|"
-                  "EndTime")
+        header = ("#Network|Station|Latitude|Longitude|Elevation|SiteName|"
+                  "StartTime|EndTime")
         lines = [header]
         for net, sta, cha in items:
             # omit networks with no stations and warn
@@ -337,7 +347,8 @@ def inventory_to_station_text(inventory_or_network):
                 continue
             line = "|".join(_to_str(x) for x in (
                 net.code, sta.code, sta.latitude, sta.longitude, sta.elevation,
-                sta.site and sta.site.name, sta.start_date, sta.end_date))
+                sta.site and sta.site.name, _format_time(sta.start_date),
+                _format_time(sta.end_date)))
             lines.append(line)
     # write with network detail level
     else:
@@ -345,11 +356,29 @@ def inventory_to_station_text(inventory_or_network):
         lines = [header]
         for net, sta, cha in items:
             line = "|".join(_to_str(x) for x in (
-                net.code, net.description, net.start_date, net.end_date,
-                net.total_number_of_stations))
+                net.code, net.description, _format_time(net.start_date),
+                _format_time(net.end_date), net.total_number_of_stations))
             lines.append(line)
 
     return "\n".join(lines)
+
+
+def _write_stationtxt(inventory, path_or_file_object, **kwargs):
+    """
+    Writes an inventory object to a file or file-like object.
+
+    :type inventory: :class:`~obspy.core.inventory.Inventory`
+    :param inventory: The inventory instance to be written.
+    :param file_or_file_object: The file or file-like object to be written to.
+    """
+    stationtxt = inventory_to_station_text(inventory)
+    if isinstance(path_or_file_object, six.string_types):
+        path_or_file_object = open(path_or_file_object, 'w')
+    if hasattr(path_or_file_object, 'write'):
+        path_or_file_object.write(stationtxt)
+    else:
+        msg = ("path_or_file_object must be a string or a file-like object")
+        raise TypeError(msg)
 
 
 if __name__ == '__main__':

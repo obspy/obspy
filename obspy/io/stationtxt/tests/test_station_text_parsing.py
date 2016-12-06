@@ -17,12 +17,14 @@ import inspect
 import io
 import os
 import unittest
+import StringIO
 
 import obspy
 from obspy.io.stationtxt.core import (is_fdsn_station_text_file,
                                       read_fdsn_station_text_file)
 from obspy.core.inventory import (Channel, Station, Network, Inventory, Site,
                                   Equipment, Response, InstrumentSensitivity)
+from obspy.core.util.base import NamedTemporaryFile
 
 
 class StationTextTestCase(unittest.TestCase):
@@ -678,6 +680,123 @@ class StationTextTestCase(unittest.TestCase):
             self.assertEqual(inv_a, inv_obs_a)
             self.assertEqual(inv_a, inv_b)
             self.assertEqual(inv_a, inv_obs_b)
+
+    def test_write_stationtxt(self):
+        """
+        Test writing stationtxt at channel level
+        """
+        # Manually create a test Inventory object.
+        test_inv = Inventory(source=None, networks=[
+            Network(
+                code="IU", stations=[
+                    Station(
+                        code="ANMO",
+                        latitude=34.9459,
+                        longitude=-106.4572,
+                        elevation=1850.0,
+                        channels=[
+                            Channel(
+                                code="BCI", location_code="",
+                                latitude=34.9459,
+                                longitude=-106.4572,
+                                elevation=1850.0,
+                                depth=100.0,
+                                azimuth=0.0,
+                                dip=0.0,
+                                sample_rate=0.0,
+                                sensor=Equipment(
+                                    type="Geotech KS-36000-I Borehole "
+                                         "Seismometer"),
+                                start_date=obspy.UTCDateTime(
+                                    "1989-08-29T00:00:00"),
+                                end_date=obspy.UTCDateTime(
+                                    "1995-02-01T00:00:00")),
+                            Channel(
+                                code="LNZ", location_code="20",
+                                latitude=34.9459,
+                                longitude=-106.4572,
+                                elevation=1820.7,
+                                depth=0.0,
+                                azimuth=0.0,
+                                dip=-90.0,
+                                sample_rate=0.0,
+                                sensor=Equipment(
+                                    type="Titan Accelerometer"),
+                                start_date=obspy.UTCDateTime(
+                                    "2013-06-20T16:30:00")),
+                        ]),
+                ]),
+            Network(
+                code="6E", stations=[
+                    Station(
+                        code="SH01",
+                        latitude=37.7457,
+                        longitude=-88.1368,
+                        elevation=126.0,
+                        channels=[
+                            Channel(
+                                code="LOG", location_code="",
+                                latitude=37.7457,
+                                longitude=-88.1368,
+                                elevation=126.0,
+                                depth=0.0,
+                                azimuth=0.0,
+                                dip=0.0,
+                                sample_rate=0.0,
+                                sensor=Equipment(
+                                    type="Reftek 130 Datalogger"),
+                                start_date=obspy.UTCDateTime(
+                                    "2013-11-23T00:00:00"),
+                                end_date=obspy.UTCDateTime(
+                                    "2016-12-31T23:59:59"))
+                        ]),
+                ])
+        ])
+        # write file
+        stio = StringIO.StringIO()
+        test_inv.write(stio, format="STATIONTXT")
+        # check contents
+        content = stio.getvalue()
+        expected = [(b"Network|Station|Location|Channel|Latitude|Longitude|"
+                     "Elevation|Depth|Azimuth|Dip|SensorDescription|Scale|"
+                     "ScaleFreq|ScaleUnits|SampleRate|StartTime|EndTime"),
+                    (b"IU|ANMO||BCI|34.9459|-106.4572|1850.0|100.0|0.0|"
+                     "0.0|Geotech KS-36000-I Borehole Seismometer||||0.0|"
+                     "1989-08-29T00:00:00|1995-02-01T00:00:00"),
+                    (b"IU|ANMO|20|LNZ|34.9459|-106.4572|1820.7|0.0|0.0|"
+                     "-90.0|Titan Accelerometer||||0.0|2013-06-20T16:30:00|"),
+                    (b"6E|SH01||LOG|37.7457|-88.1368|126.0|0.0|0.0|0.0|"
+                     "Reftek 130 Datalogger||||0.0|2013-11-23T00:00:00|"
+                     "2016-12-31T23:59:59"),
+                    ]
+        for line in expected:
+            self.assertIn(line, content)
+
+    def test_read_write_stationtxt(self):
+        """
+        Test reading and then writing stationtxt at network, station,
+        and channel levels
+        """
+        file_list = ["network_level_fdsn.txt",
+                     "station_level_fdsn.txt",
+                     "channel_level_fdsn.txt"]
+        for filename in file_list:
+            filename = os.path.join(self.data_dir, filename)
+            with open(filename, "rb") as fh:
+                # read stationtxt file text
+                expected_content = fh.read()
+            # read stationtxt file into a inventory object
+            inv_obs = obspy.read_inventory(filename)
+            with NamedTemporaryFile() as tf:
+                tmpfile = tf.name
+                # write file
+                inv_obs.write(tmpfile, format="STATIONTXT")
+                written_text_file = tf.read()
+            # ignores whitespace
+            expected_content = "".join(expected_content.split(" "))
+            written_content = "".join(written_text_file.split(" "))
+            for line in written_content:
+                self.assertIn(line, expected_content)
 
 
 def suite():
