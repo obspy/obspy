@@ -456,6 +456,22 @@ class TestNordicMethods(unittest.TestCase):
             self.assertTrue(pick.time in pick_times)
         self.assertEqual(event_2.origins[0].time, event.origins[0].time)
 
+    def test_distance_conversion(self):
+        """Check that distances are converted properly."""
+        testing_path = os.path.join(self.testing_path, '01-0411-15L.S201309')
+        cat = read_events(testing_path)
+        event = cat[0]
+        self.assertEqual(sorted(event.origins[0].arrivals,
+                                key=lambda x: x.distance)[0].distance,
+                         0.035972864236749225)
+        pick_strings = nordpick(event)
+        self.assertEqual(int([p for p in pick_strings
+                              if p.split()[0] == 'GCSZ'
+                              and p.split()[1] == 'SZ'][0].split()[-1]), 304)
+        self.assertEqual(int([p for p in pick_strings
+                              if p.split()[0] == 'WZ11'
+                              and p.split()[1] == 'HZ'][0].split()[-1]), 30)
+
 
 def test_similarity(event_1, event_2, verbose=False):
     """
