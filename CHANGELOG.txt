@@ -26,6 +26,9 @@ master: (doi: 10.5281/zenodo.165135)
    * Instrument responses can now also be calculated for a given list of
      frequencies (see #1598).
  - obspy.clients.fdsn:
+   * empty SEED codes (e.g. ``network=''``) will now be properly sent to the
+     server as options and not omitted, which led to wildcard matching (for
+     details see #1578)
    * The mass downloader now has `exclude_networks` and `exclude_stations`
      arguments to not download certain pieces of data. (see #1305)
    * The mass downloader can now download stations that are part of a given

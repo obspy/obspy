@@ -1151,9 +1151,6 @@ class Client(object):
                 raise TypeError(msg)
             # Now convert to a string that is accepted by the webservice.
             value = convert_to_string(value)
-            if isinstance(value, (str, native_str)):
-                if not value and key != "location":
-                    continue
             final_parameter_set[key] = value
 
         return self._build_url(service, "query",
