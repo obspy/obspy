@@ -1297,6 +1297,9 @@ class PPSD(object):
         """
         Plot the temporal evolution of the PSD in a spectrogram-like plot.
 
+        .. note::
+            For example plots see the :ref:`Obspy Gallery <gallery>`.
+
         :type cmap: :class:`matplotlib.colors.Colormap`
         :param cmap: Specify a custom colormap instance. If not specified, then
             the default ObsPy sequential colormap is used.
@@ -1372,6 +1375,9 @@ class PPSD(object):
         Additional keyword arguments are passed on to :meth:`_stack_selection`
         to restrict at which times PSD values are selected (e.g. to compare
         temporal evolution during a specific time span of each day).
+
+        .. note::
+            For example plots see the :ref:`Obspy Gallery <gallery>`.
 
         :type period: float (or list thereof)
         :param period: Period of PSD values to plot. The period bin with the
@@ -1484,6 +1490,9 @@ class PPSD(object):
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
         a plot window is shown.
+
+        .. note::
+            For example plots see the :ref:`Obspy Gallery <gallery>`.
 
         :type filename: str, optional
         :param filename: Name of output file
