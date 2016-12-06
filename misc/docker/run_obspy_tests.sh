@@ -40,10 +40,10 @@ OBSPY_PATH=$(dirname $(dirname $(pwd)))
 # images.
 rm -rf $OBSPY_PATH/obspy/core/tests/images/testrun
 rm -rf $OBSPY_PATH/obspy/imaging/tests/images/testrun
-rm -rf $OBSPY_PATH/obspy/station/tests/images/testrun
+
 
 DOCKERFILE_FOLDER=base_images
-TEMP_PATH=temp
+TEMP_PATH=temp/$RANDOM
 NEW_OBSPY_PATH=$TEMP_PATH/obspy
 
 # Determine the docker binary name. The official debian packages use docker.io
@@ -148,10 +148,11 @@ run_tests_on_image () {
     LOG_DIR=${LOG_DIR_BASE}/$image_name
     mkdir -p $LOG_DIR
     ID=$RANDOM-$RANDOM-$RANDOM
+    TAG=run_obspy_tests-$RANDOM
 
-    $DOCKER build -t temp:temp $TEMP_PATH
+    $DOCKER build -t temp:$TAG $TEMP_PATH
 
-    $DOCKER run --name=$ID temp:temp
+    $DOCKER run --name=$ID temp:$TAG
 
     $DOCKER cp $ID:/INSTALL_LOG.txt $LOG_DIR
     $DOCKER cp $ID:/TEST_LOG.txt $LOG_DIR
@@ -173,7 +174,7 @@ run_tests_on_image () {
     rm -rf $LOG_DIR/station_testrun
 
     $DOCKER rm $ID
-    $DOCKER rmi temp:temp
+    $DOCKER rmi temp:$TAG
 }
 
 

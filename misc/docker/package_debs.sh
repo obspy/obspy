@@ -33,7 +33,7 @@ ls -tp $LOG_DIR_ROOT | tail -n +4 | xargs -I % rm -rf -- $LOG_DIR_ROOT/%
 OBSPY_PATH=$(dirname $(dirname $(pwd)))
 
 DOCKERFILE_FOLDER=base_images
-TEMP_PATH=temp
+TEMP_PATH=temp/$RANDOM
 
 # Determine the docker binary name. The official debian packages use docker.io
 # for the binary's name due to some legacy docker package.
@@ -104,10 +104,11 @@ package_debs_on_image () {
     LOG_DIR=${LOG_DIR_BASE}/$image_name
     mkdir -p $LOG_DIR
     ID=$RANDOM-$RANDOM-$RANDOM
+    TAG=package_debs-$RANDOM
 
-    $DOCKER build -t temp:temp $TEMP_PATH
+    $DOCKER build -t temp:$TAG $TEMP_PATH
 
-    $DOCKER run --name=$ID temp:temp
+    $DOCKER run --name=$ID temp:$TAG
 
     $DOCKER cp $ID:/BUILD_LOG.txt $LOG_DIR
     $DOCKER cp $ID:/TEST_LOG.txt $LOG_DIR
@@ -119,7 +120,7 @@ package_debs_on_image () {
     $DOCKER cp $ID:/tmp/python-obspy_build/packages $LOG_DIR/packages
 
     $DOCKER rm $ID
-    $DOCKER rmi temp:temp
+    $DOCKER rmi temp:$TAG
 }
 
 
