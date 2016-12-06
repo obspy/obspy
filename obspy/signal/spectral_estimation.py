@@ -1442,8 +1442,13 @@ class PPSD(object):
             psd_values = [psd[index] for psd in self.psd_values]
             if mask is not None:
                 psd_values = np.ma.masked_array(psd_values, mask=mask)
-            ax.plot(times, psd_values, color=color, label=label, ls=linestyle,
-                    marker=marker)
+            # older matplotlib raises when passing in `color=None`
+            if color is None:
+                color = {}
+            else:
+                color = {'color': color}
+            ax.plot(times, psd_values, label=label, ls=linestyle,
+                    marker=marker, **color)
 
         if legend:
             ax.legend()
