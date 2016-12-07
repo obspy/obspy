@@ -225,32 +225,28 @@ class BeachballTestCase(unittest.TestCase):
               [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94],
               [150, 87, 1]]
 
-        # Initialize figure
-        try:
-            plt.close("all")
-        except Exception:
-            pass
-        fig = plt.figure(figsize=(6, 6), dpi=300)
-        ax = fig.add_subplot(111, aspect='equal')
+        with ImageComparison(self.path, 'bb_collection.png') as ic:
+            # Initialize figure
+            fig = plt.figure(figsize=(6, 6), dpi=300)
+            ax = fig.add_subplot(111, aspect='equal')
 
-        # Plot the stations or borders
-        ax.plot([-100, -100, 100, 100], [-100, 100, -100, 100], 'rv')
+            # Plot the stations or borders
+            ax.plot([-100, -100, 100, 100], [-100, 100, -100, 100], 'rv')
 
-        x = -100
-        y = -100
-        for i, t in enumerate(mt):
-            # add the beachball (a collection of two patches) to the axis
-            ax.add_collection(beach(t, width=30, xy=(x, y), linewidth=.6))
-            x += 50
-            if (i + 1) % 5 == 0:
-                x = -100
-                y += 50
+            x = -100
+            y = -100
+            for i, t in enumerate(mt):
+                # add the beachball (a collection of two patches) to the axis
+                ax.add_collection(beach(t, width=30, xy=(x, y), linewidth=.6))
+                x += 50
+                if (i + 1) % 5 == 0:
+                    x = -100
+                    y += 50
 
-        # set the x and y limits and save the output
-        ax.axis([-120, 120, -120, 120])
-        # create and compare image
-        with ImageComparison(self.path, 'bb_collection.png',
-                             plt_close_all_enter=False) as ic:
+            # set the x and y limits
+            ax.axis([-120, 120, -120, 120])
+
+            # save the output
             fig.savefig(ic.name)
 
     def collection_aspect(self, axis, filename_width, filename_width_height):
@@ -260,39 +256,32 @@ class BeachballTestCase(unittest.TestCase):
         mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
 
         # Test passing only a width
-        # Initialize figure
-        try:
-            plt.close("all")
-        except Exception:
-            pass
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        # add the beachball (a collection of two patches) to the axis
-        # give it an axes to keep make the beachballs circular
-        # even though axes are not scaled
-        ax.add_collection(beach(mt, width=400, xy=(0, 0), linewidth=.6,
-                                axes=ax))
-        # set the x and y limits
-        ax.axis(axis)
-        # create and compare image
-        with ImageComparison(self.path, filename_width,
-                             plt_close_all_enter=False) as ic:
+        with ImageComparison(self.path, filename_width) as ic:
+            # Initialize figure
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            # add the beachball (a collection of two patches) to the axis
+            # give it an axes to keep make the beachballs circular
+            # even though axes are not scaled
+            ax.add_collection(beach(mt, width=400, xy=(0, 0), linewidth=.6,
+                                    axes=ax))
+            # set the x and y limits
+            ax.axis(axis)
             fig.savefig(ic.name)
 
         # Test passing a width and a height
-        # Initialize figure
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        # add the beachball (a collection of two patches) to the axis
-        # give it an axes to keep make the beachballs circular
-        # even though axes are not scaled
-        ax.add_collection(beach(mt, width=(400, 200), xy=(0, 0), linewidth=.6,
-                          axes=ax))
-        # set the x and y limits and save the output
-        ax.axis(axis)
-        # create and compare image
-        with ImageComparison(self.path, filename_width_height,
-                             plt_close_all_enter=False) as ic:
+        with ImageComparison(self.path, filename_width_height) as ic:
+            # Initialize figure
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            # add the beachball (a collection of two patches) to the axis
+            # give it an axes to keep make the beachballs circular
+            # even though axes are not scaled
+            ax.add_collection(beach(mt, width=(400, 200), xy=(0, 0),
+                                    linewidth=.6, axes=ax))
+            # set the x and y limits
+            ax.axis(axis)
+            # save the output
             fig.savefig(ic.name)
 
     def test_collection_aspect_x(self):
