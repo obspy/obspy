@@ -21,6 +21,9 @@ import unittest
 import warnings
 from difflib import Differ
 
+import lxml
+import requests
+
 from obspy import UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
@@ -342,12 +345,16 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests the parsing of the available event contributors.
         """
-        self.assertEqual(set(
-                         self.client.services["available_event_contributors"]),
-                         set(("University of Washington", "ANF", "GCMT",
-                              "GCMT-Q", "ISC", "NEIC ALERT", "NEIC PDE-W",
-                              "UNKNOWN", "NEIC PDE-M", "NEIC COMCAT",
-                              "NEIC PDE-Q")))
+        response = requests.get(
+            'http://service.iris.edu/fdsnws/event/1/contributors')
+        xml = lxml.etree.fromstring(response.content)
+        expected = {
+            elem.text for elem in xml.xpath('/Contributors/Contributor')}
+        # check that we have some values in there
+        self.assertTrue(len(expected) > 5)
+        self.assertEqual(
+            set(self.client.services["available_event_contributors"]),
+            expected)
 
     def test_simple_xml_parser(self):
         """
