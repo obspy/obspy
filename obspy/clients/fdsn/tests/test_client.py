@@ -411,7 +411,11 @@ class ClientTestCase(unittest.TestCase):
             self.assertGreater(40.1, event.origins[0].latitude)
             self.assertGreater(event.origins[0].latitude, -170.1)
             self.assertGreater(170.1, event.origins[0].latitude)
-            self.assertGreater(event.magnitudes[0].mag, 3.999)
+            # events returned by FDSNWS can contain many magnitudes with a wide
+            # range, and currently (at least for IRIS) the magnitude threshold
+            # sent to the server checks if at least one magnitude matches, it
+            # does not only check the preferred magnitude..
+            self.assertTrue(any(m.mag >= 3.999 for m in event.magnitudes))
 
     def test_iris_example_queries_station(self):
         """
