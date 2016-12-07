@@ -319,14 +319,15 @@ class ImageComparison(NamedTemporaryFile):
         self.plt_close_all_enter = plt_close_all_enter
         self.plt_close_all_exit = plt_close_all_exit
 
-        import matplotlib.style as mstyle
         if MATPLOTLIB_VERSION < [1, 4, 0]:
             # No style support.
             self.style = None
-        elif MATPLOTLIB_VERSION < [2, 0, 0]:
-            self.style = mstyle.context(style or 'default')
         else:
-            self.style=  mstyle.context(style or 'classic')
+            import matplotlib.style as mstyle
+            default_style = ('default'
+                             if MATPLOTLIB_VERSION < [2, 0, 0]
+                             else 'classic')
+            self.style = mstyle.context(style or default_style)
 
         # Higher tolerance for older matplotlib versions. This is pretty
         # high but the pictures are at least guaranteed to be generated and
