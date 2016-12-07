@@ -2409,6 +2409,23 @@ class StreamTestCase(unittest.TestCase):
         for arg in patch.call_args_list:
             self.assertFalse(arg[1]["nearest_sample"])
 
+    def test_passing_kwargs_to_trace_detrend(self):
+        """
+        Simple regression test making sure kwargs are passed to the Trace's
+        detrend method.
+        """
+        st = read()
+
+        with mock.patch("obspy.core.trace.Trace.detrend") as patch:
+            st.detrend("polynomial", order=2, plot=True)
+
+        # 3 Traces.
+        self.assertEqual(patch.call_count, 3)
+
+        for arg in patch.call_args_list:
+            self.assertEqual(arg[1]["order"], 2)
+            self.assertEqual(arg[1]["plot"], True)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

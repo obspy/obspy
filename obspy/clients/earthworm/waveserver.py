@@ -156,6 +156,8 @@ def get_sock_char_line(sock, timeout=10.):
             # see https://github.com/obspy/obspy/issues/383
             # indat = sock.recv(8192)
             indat = sock.recv(1)
+            if not indat:
+                break
             chunks.append(indat)
     except socket.timeout:
         print('socket timeout in get_sock_char_line()', file=sys.stderr)
@@ -178,6 +180,8 @@ def get_sock_bytes(sock, nbytes, timeout=None):
     try:
         while btoread:
             indat = sock.recv(min(btoread, 8192))
+            if not indat:
+                break
             btoread -= len(indat)
             chunks.append(indat)
     except socket.timeout:

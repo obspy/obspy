@@ -369,6 +369,12 @@ from . import arrayio as _io
 # See:
 # https://stackoverflow.com/q/2123585
 #
+# TODO: Replace all these factories and properties with Python Descriptors.
+#   http://nbviewer.jupyter.org/urls/gist.github.com/ChrisBeaumont/
+#       5758381/raw/descriptor_writeup.ipynb
+#   Also, don't forget to worry about access to __doc__ on both the class and
+#   the instances.
+#
 # floats
 def _floatgetter(hdr):
     def get_float(self):

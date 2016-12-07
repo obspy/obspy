@@ -191,7 +191,7 @@ class Client(object):
         doc = response.read()
         return doc
 
-    def _http_request(self, url, method, xml_string="", headers={}):
+    def _http_request(self, url, method, xml_string=None, headers={}):
         """
         Send a HTTP request via urllib2.
 

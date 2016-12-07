@@ -32,7 +32,9 @@ import warnings
 import numpy as np
 import scipy.signal
 
+from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.inventory.response import Response
 from obspy.signal import util
 from obspy.signal.detrend import simple as simple_detrend
 from obspy.signal.headers import clibevresp
@@ -211,6 +213,87 @@ def cosine_sac_taper(freqs, flimit):
     return taper
 
 
+def evalresp_for_frequencies(t_samp, frequencies, filename, date, station='*',
+                             channel='*', network='*', locid='*', units="VEL",
+                             debug=False):
+    """
+    Use the evalresp library to extract instrument response information from a
+    SEED RESP-file for the specified frequencies.
+
+    :type t_samp: float
+    :param t_samp: Sampling interval in seconds
+    :type frequencies: list of float
+    :param frequencies: Discrete frequencies to calculate response for.
+    :type filename: str or file
+    :param filename: SEED RESP-filename or open file like object with RESP
+        information. Any object that provides a read() method will be
+        considered to be a file like object.
+    :type date: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param date: Date of interest
+    :type station: str
+    :param station: Station id
+    :type channel: str
+    :param channel: Channel id
+    :type network: str
+    :param network: Network id
+    :type locid: str
+    :param locid: Location id
+    :type units: str
+    :param units: Units to return response in. Can be either DIS, VEL or ACC
+    :type debug: bool
+    :param debug: Verbose output to stdout. Disabled by default.
+    :rtype: :class:`numpy.ndarray` complex128
+    :return: Frequency response from SEED RESP-file for given frequencies
+    """
+    if isinstance(filename, (str, native_str)):
+        with open(filename, 'rb') as fh:
+            data = fh.read()
+    elif hasattr(filename, 'read'):
+        data = filename.read()
+    # evalresp needs files with correct line separators depending on OS
+    with NamedTemporaryFile() as fh:
+        tempfile = fh.name
+        fh.write(os.linesep.encode('ascii', 'strict').join(data.splitlines()))
+        fh.close()
+
+        # start at zero to get zero for offset/ DC of fft
+        start_stage = C.c_int(-1)
+        stop_stage = C.c_int(0)
+        stdio_flag = C.c_int(0)
+        sta = C.create_string_buffer(station.encode('ascii', 'strict'))
+        cha = C.create_string_buffer(channel.encode('ascii', 'strict'))
+        net = C.create_string_buffer(network.encode('ascii', 'strict'))
+        locid = C.create_string_buffer(locid.encode('ascii', 'strict'))
+        unts = C.create_string_buffer(units.encode('ascii', 'strict'))
+        if debug:
+            vbs = C.create_string_buffer(b"-v")
+        else:
+            vbs = C.create_string_buffer(b"")
+        rtyp = C.create_string_buffer(b"CS")
+        datime = C.create_string_buffer(
+            date.format_seed().encode('ascii', 'strict'))
+        fn = C.create_string_buffer(tempfile.encode('ascii', 'strict'))
+        frequencies = np.asarray(frequencies)
+        nfreqs = C.c_int(frequencies.shape[0])
+        res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
+                                frequencies, nfreqs, rtyp, vbs, start_stage,
+                                stop_stage, stdio_flag, C.c_int(0))
+        # optimizing performance, see
+        # https://wiki.python.org/moin/PythonSpeed/PerformanceTips
+        try:
+            nfreqs, rfreqs, rvec = \
+                res[0].nfreqs, res[0].freqs, res[0].rvec
+        except ValueError:
+            msg = "evalresp failed to calculate a response."
+            raise ValueError(msg)
+        h = np.empty(nfreqs, dtype=np.complex128)
+        for i in range(nfreqs):
+            h[i] = rvec[i].real + rvec[i].imag * 1j
+        clibevresp.free_response(res)
+        del nfreqs, rfreqs, rvec, res
+    return h
+
+
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
              network='*', locid='*', units="VEL", freq=False,
              debug=False):
@@ -243,56 +326,13 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :rtype: :class:`numpy.ndarray` complex128
     :return: Frequency response from SEED RESP-file of length nfft
     """
-    if isinstance(filename, (str, native_str)):
-        with open(filename, 'rb') as fh:
-            data = fh.read()
-    elif hasattr(filename, 'read'):
-        data = filename.read()
-    # evalresp needs files with correct line separators depending on OS
-    with NamedTemporaryFile() as fh:
-        tempfile = fh.name
-        fh.write(os.linesep.encode('ascii', 'strict').join(data.splitlines()))
-        fh.close()
-
-        fy = 1 / (t_samp * 2.0)
-        # start at zero to get zero for offset/ DC of fft
-        freqs = np.linspace(0, fy, nfft // 2 + 1)
-        start_stage = C.c_int(-1)
-        stop_stage = C.c_int(0)
-        stdio_flag = C.c_int(0)
-        sta = C.create_string_buffer(station.encode('ascii', 'strict'))
-        cha = C.create_string_buffer(channel.encode('ascii', 'strict'))
-        net = C.create_string_buffer(network.encode('ascii', 'strict'))
-        locid = C.create_string_buffer(locid.encode('ascii', 'strict'))
-        unts = C.create_string_buffer(units.encode('ascii', 'strict'))
-        if debug:
-            vbs = C.create_string_buffer(b"-v")
-        else:
-            vbs = C.create_string_buffer(b"")
-        rtyp = C.create_string_buffer(b"CS")
-        datime = C.create_string_buffer(
-            date.format_seed().encode('ascii', 'strict'))
-        fn = C.create_string_buffer(tempfile.encode('ascii', 'strict'))
-        nfreqs = C.c_int(freqs.shape[0])
-        res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
-                                freqs, nfreqs, rtyp, vbs, start_stage,
-                                stop_stage, stdio_flag, C.c_int(0))
-        # optimizing performance, see
-        # https://wiki.python.org/moin/PythonSpeed/PerformanceTips
-        try:
-            nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
-        except ValueError:
-            msg = "evalresp failed to calculate a response."
-            raise ValueError(msg)
-        h = np.empty(nfreqs, dtype=np.complex128)
-        f = np.empty(nfreqs, dtype=np.float64)
-        for i in range(nfreqs):
-            h[i] = rvec[i].real + rvec[i].imag * 1j
-            f[i] = rfreqs[i]
-        clibevresp.free_response(res)
-        del nfreqs, rfreqs, rvec, res
+    fy = 1 / (t_samp * 2.0)
+    # start at zero to get zero for offset/ DC of fft
+    freqs = np.linspace(0, fy, nfft // 2 + 1)
+    h = evalresp_for_frequencies(t_samp, freqs, filename, date, station,
+                                 channel, network, locid, units, debug=debug)
     if freq:
-        return h, f
+        return h, freqs
     return h
 
 
@@ -605,12 +645,14 @@ def paz_2_amplitude_value_of_freq_resp(paz, freq):
 
 def estimate_magnitude(paz, amplitude, timespan, h_dist):
     """
-    Estimates local magnitude from poles and zeros of given instrument, the
-    peak to peak amplitude and the time span from peak to peak.
+    Estimates local magnitude from poles and zeros or full response of given
+    instrument, the peak to peak amplitude and the time span from peak to peak.
     Readings on two components can be used in magnitude estimation by providing
     lists for ``paz``, ``amplitude`` and ``timespan``.
 
-    :param paz: PAZ of the instrument [m/s] or list of the same
+    :param paz: PAZ of the instrument [m/s] (as a dictionary) or response of
+        the instrument (as :class:`~obspy.core.inventory.response.Response`) or
+        list of the same
     :param amplitude: Peak to peak amplitude [counts] or list of the same
     :param timespan: Timespan of peak to peak amplitude [s] or list of the same
     :param h_dist: Hypocentral distance [km]
@@ -637,6 +679,23 @@ def estimate_magnitude(paz, amplitude, timespan, h_dist):
     # convert input to lists
     if not isinstance(paz, list) and not isinstance(paz, tuple):
         paz = [paz]
+    # check if PAZ or Response objects are given and set correct functions to
+    # calculate wood anderson amplitude(s)
+    wood_anderson_amplitude_functions = []
+    for i in paz:
+        # unfortunately AttribDict is not a subclass of dict so we have to
+        # explicitly include it here
+        if isinstance(i, (dict, AttribDict)):
+            wood_anderson_amplitude_functions.append(
+                estimate_wood_anderson_amplitude)
+        elif isinstance(i, Response):
+            wood_anderson_amplitude_functions.append(
+                estimate_wood_anderson_amplitude_using_response)
+        else:
+            msg = ("Unknown response specification (type '{}'). Use a "
+                   "dictionary structure with poles and zeros information or "
+                   "an obspy Response object.").format(type(i))
+            raise TypeError(msg)
     if not isinstance(amplitude, list) and not isinstance(amplitude, tuple):
         amplitude = [amplitude]
     if not isinstance(timespan, list) and not isinstance(timespan, tuple):
@@ -644,9 +703,9 @@ def estimate_magnitude(paz, amplitude, timespan, h_dist):
     # convert every input amplitude to Wood Anderson and calculate the mean
     wa_ampl_mean = 0.0
     count = 0
-    for paz, amplitude, timespan in zip(paz, amplitude, timespan):
-        wa_ampl_mean += estimate_wood_anderson_amplitude(paz, amplitude,
-                                                         timespan)
+    for func, paz, amplitude, timespan in zip(
+            wood_anderson_amplitude_functions, paz, amplitude, timespan):
+        wa_ampl_mean += func(paz, amplitude, timespan)
         count += 1
     wa_ampl_mean /= count
     # mean of input amplitudes (if more than one) should be used in final
@@ -674,6 +733,35 @@ def estimate_wood_anderson_amplitude(paz, amplitude, timespan):
     wa_ampl = amplitude / 2.0  # half peak to peak amplitude
     wa_ampl /= (paz_2_amplitude_value_of_freq_resp(paz, freq) *
                 paz['sensitivity'])
+    wa_ampl *= paz_2_amplitude_value_of_freq_resp(WOODANDERSON, freq) * \
+        WOODANDERSON['sensitivity']
+    wa_ampl *= 1000  # convert to mm
+    return wa_ampl
+
+
+def estimate_wood_anderson_amplitude_using_response(response, amplitude,
+                                                    timespan):
+    """
+    Convert amplitude in counts measured of instrument with given response
+    information for use in :func:`estimate_magnitude`.
+    Amplitude should be measured as full peak to peak amplitude, timespan as
+    difference of the two readings.
+
+    :param response: response of the instrument
+    :type response: :class:`obspy.core.inventory.response.Response`
+    :param amplitude: Peak to peak amplitude [counts] or list of the same
+    :type amplitude: float
+    :param timespan: Timespan of peak to peak amplitude [s] or list of the same
+    :type timespan: float
+    :returns: Simulated zero to peak displacement amplitude on Wood Anderson
+        seismometer [mm] for use in local magnitude estimation.
+    """
+    freq = 1.0 / (2 * timespan)
+    wa_ampl = amplitude / 2.0  # half peak to peak amplitude
+    response = response.get_evalresp_response_for_frequencies(
+        [freq], output="VEL", start_stage=None, end_stage=None)[0]
+    response_amplitude = np.absolute(response)
+    wa_ampl /= response_amplitude
     wa_ampl *= paz_2_amplitude_value_of_freq_resp(WOODANDERSON, freq) * \
         WOODANDERSON['sensitivity']
     wa_ampl *= 1000  # convert to mm

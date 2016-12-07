@@ -241,7 +241,15 @@ class Unpickler(object):
                 if year % 1 != 0:
                     origin.time = self._decyear2utc(year)
                 elif any(v > 0 for v in comps[1:]):
-                    utc_args = [int(v) for v in comps if v is not None]
+                    # no seconds involved
+                    if len(comps) < 6:
+                        utc_args = [int(v) for v in comps if v is not None]
+                    # we also have to handle seconds
+                    else:
+                        utc_args = [int(v) if v is not None else 0
+                                    for v in comps[:-1]]
+                        # just leave float seconds as is
+                        utc_args.append(comps[-1])
                     origin.time = UTCDateTime(*utc_args)
             mag = self._str2num(values.get('mag'))
             # Extract magnitude

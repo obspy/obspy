@@ -7,10 +7,20 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import inspect
+import os
 import unittest
 
+from obspy.core.util.misc import TemporaryWorkingDirectory
+from obspy.taup import TauPyModel
 from obspy.taup.tau_model import TauModel
 from obspy.taup.seismic_phase import SeismicPhase
+from obspy.taup.taup_create import build_taup_model
+
+
+# Most generic way to get the data folder path.
+DATA = os.path.join(os.path.dirname(os.path.abspath(
+    inspect.getfile(inspect.currentframe()))), "data")
 
 
 class TauPySeismicPhaseTestCase(unittest.TestCase):
@@ -58,6 +68,21 @@ class TauPySeismicPhaseTestCase(unittest.TestCase):
                                    max_rp_arrival.purist_dist, delta=0.1)
             self.assertAlmostEqual(phase.time[i + 1], max_rp_arrival.time,
                                    delta=time_tol)
+
+    def test_many_identically_named_phases(self):
+        """
+        Regression test to make sure obspy.taup works with models that
+        produce many identically names seismic phases.
+        """
+        with TemporaryWorkingDirectory():
+            folder = os.path.abspath(os.curdir)
+            model_name = "smooth_geodynamic_model"
+            build_taup_model(
+                filename=os.path.join(DATA, model_name + ".tvel"),
+                output_folder=folder, verbose=False)
+            m = TauPyModel(os.path.join(folder, model_name + ".npz"))
+        arr = m.get_ray_paths(172.8000, 46.762440693494824, ["SS"])
+        self.assertGreater(len(arr), 10)
 
 
 def suite():

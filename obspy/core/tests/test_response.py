@@ -106,6 +106,15 @@ class ResponseTestCase(unittest.TestCase):
                 self.assertTrue(np.allclose(seed_response, xml_response,
                                             rtol=1E-5))
 
+                # also test getting response for a set of discrete frequencies
+                indices = (-2, 0, -1, 1, 2, 20, -30, -100)
+                freqs = [seed_freq[i_] for i_ in indices]
+                response = inv[0][0][0].response
+                got = response.get_evalresp_response_for_frequencies(
+                    freqs, output=unit)
+                expected = [seed_response[i_] for i_ in indices]
+                np.testing.assert_allclose(got, expected, rtol=1E-5)
+
     def test_pitick2latex(self):
         self.assertEqual(_pitick2latex(3 * pi / 2), r'$\frac{3\pi}{2}$')
         self.assertEqual(_pitick2latex(2 * pi / 2), r'$\pi$')

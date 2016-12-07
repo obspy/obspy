@@ -1010,9 +1010,10 @@ class SeismicPhase(object):
         """
         Calculate arrival times for this phase, sorted by time.
         """
-        # 10 should be enough. This is only for one phase.
-        r_dist = np.empty(10, dtype=np.float64)
-        r_ray_num = np.empty(10, dtype=np.int32)
+        # 100 should finally be enough...this in only for one phase after
+        # all..
+        r_dist = np.empty(100, dtype=np.float64)
+        r_ray_num = np.empty(100, dtype=np.int32)
 
         # This saves around 17% runtime when calculating arrival times which
         # is probably the major use case.

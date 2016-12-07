@@ -151,7 +151,7 @@ def get_builtin_model_files():
     return files
 
 
-def build_taup_model(filename, output_folder=None):
+def build_taup_model(filename, output_folder=None, verbose=True):
     """
     Build an ObsPy model file from a "tvel" or "nd" file.
 
@@ -173,7 +173,8 @@ def build_taup_model(filename, output_folder=None):
     model_name = os.path.splitext(os.path.basename(filename))[0]
     output_filename = os.path.join(output_folder, model_name + ".npz")
 
-    print("Building obspy.taup model for '%s' ..." % filename)
+    if verbose:
+        print("Building obspy.taup model for '%s' ..." % filename)
     mod_create = TauPCreate(input_filename=filename,
                             output_filename=output_filename)
     mod_create.load_velocity_model()

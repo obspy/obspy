@@ -290,7 +290,10 @@ class Reftek130(object):
                         sample_data = _unpack_C0_data(packets_)
                         npts = len(sample_data)
 
-                    tr = Trace(data=sample_data, header=header.copy())
+                    tr = Trace(data=sample_data, header=copy.deepcopy(header))
+                    # channel number is not included in the EH/ET packet
+                    # payload, so add it to stats as well..
+                    tr.stats.reftek130['channel_number'] = channel_number
                     if headonly:
                         tr.stats.npts = npts
                     tr.stats.starttime = UTCDateTime(starttime)
