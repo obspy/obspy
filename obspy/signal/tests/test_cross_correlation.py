@@ -162,7 +162,6 @@ class CrossCorrelationTestCase(unittest.TestCase):
         _, _, x2 = xcorr(b, a, 2, full_xcorr=True, domain='time')
         np.testing.assert_allclose(x1, x2[::-1])
 
-
     def test_xcorr_different_implementations(self):
         """
         Test correct length and different implementations against each other
