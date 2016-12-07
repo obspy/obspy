@@ -1292,8 +1292,8 @@ class PPSD(object):
             msg = msg % (duplicates, len(_times_processed), filename)
             warnings.warn(msg)
 
-    def plot_spectrogram(self, cmap=None, clim=None, grid=True, filename=None,
-                         show=True):
+    def plot_spectrogram(self, cmap=obspy_sequential, clim=None, grid=True,
+                         filename=None, show=True):
         """
         Plot the temporal evolution of the PSD in a spectrogram-like plot.
 
@@ -1317,9 +1317,6 @@ class PPSD(object):
         """
         import matplotlib.pyplot as plt
         from matplotlib.dates import date2num
-
-        if cmap is None:
-            cmap = obspy_sequential
 
         xedges = date2num(
             [t.datetime for t in self.times_processed] +
