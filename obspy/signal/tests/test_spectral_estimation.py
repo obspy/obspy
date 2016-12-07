@@ -623,13 +623,13 @@ class PsdTestCase(unittest.TestCase):
                         'year': [2011],
                         'time_of_weekday': [(-1, 2, 23)]}
 
-        with ImageComparison(self.path_images,
-                             'ppsd_temporal.png') as ic:
+        with ImageComparison(self.path_images, 'ppsd_temporal.png',
+                             reltol=1.5) as ic:
             fig = ppsd.plot_temporal([0.1, 1, 10], filename=None, show=False,
                                      **restrictions)
             fig.savefig(ic.name)
-        with ImageComparison(self.path_images,
-                             'ppsd_temporal.png') as ic:
+        with ImageComparison(self.path_images, 'ppsd_temporal.png',
+                             reltol=1.5) as ic:
             ppsd.plot_temporal([0.1, 1, 10], filename=ic.name, show=False,
                                **restrictions)
 
@@ -639,12 +639,12 @@ class PsdTestCase(unittest.TestCase):
         """
         ppsd = PPSD.load_npz(self.example_ppsd_npz)
 
-        with ImageComparison(self.path_images,
-                             'ppsd_spectrogram.png') as ic:
+        with ImageComparison(self.path_images, 'ppsd_spectrogram.png',
+                             reltol=1.5) as ic:
             fig = ppsd.plot_spectrogram(filename=None, show=False)
             fig.savefig(ic.name)
-        with ImageComparison(self.path_images,
-                             'ppsd_spectrogram.png') as ic:
+        with ImageComparison(self.path_images, 'ppsd_spectrogram.png',
+                             reltol=1.5) as ic:
             ppsd.plot_spectrogram(filename=ic.name, show=False)
 
 
