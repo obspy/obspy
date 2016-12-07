@@ -17,7 +17,6 @@ import inspect
 import io
 import os
 import unittest
-import StringIO
 
 import obspy
 from obspy.io.stationtxt.core import (is_fdsn_station_text_file,
@@ -686,9 +685,26 @@ class StationTextTestCase(unittest.TestCase):
         Test writing stationtxt at channel level
         """
         # Manually create a test Inventory object.
+        resp_1 = Response(
+            instrument_sensitivity=InstrumentSensitivity(
+                frequency=0.02, input_units="M/S", output_units=None,
+                value=8.48507E8))
+        resp_2 = Response(
+            instrument_sensitivity=InstrumentSensitivity(
+                frequency=1.0, input_units="M/S**2",
+                output_units=None, value=53435.4))
+        resp_3 = Response(
+            instrument_sensitivity=InstrumentSensitivity(
+                frequency=0.03, input_units="M/S",
+                output_units=None, value=6.27252E8))
         test_inv = Inventory(source=None, networks=[
             Network(
-                code="IU", stations=[
+                code="IU",
+                start_date=obspy.UTCDateTime("1988-01-01T00:00:00"),
+                end_date=obspy.UTCDateTime("2500-12-31T23:59:59"),
+                total_number_of_stations=1,
+                description="Global Seismograph Network (GSN - IRIS/USGS)",
+                stations=[
                     Station(
                         code="ANMO",
                         latitude=34.9459,
@@ -710,7 +726,8 @@ class StationTextTestCase(unittest.TestCase):
                                 start_date=obspy.UTCDateTime(
                                     "1989-08-29T00:00:00"),
                                 end_date=obspy.UTCDateTime(
-                                    "1995-02-01T00:00:00")),
+                                    "1995-02-01T00:00:00"),
+                                response=resp_1),
                             Channel(
                                 code="LNZ", location_code="20",
                                 latitude=34.9459,
@@ -723,11 +740,17 @@ class StationTextTestCase(unittest.TestCase):
                                 sensor=Equipment(
                                     type="Titan Accelerometer"),
                                 start_date=obspy.UTCDateTime(
-                                    "2013-06-20T16:30:00")),
+                                    "2013-06-20T16:30:00"),
+                                response=resp_2),
                         ]),
                 ]),
             Network(
-                code="6E", stations=[
+                code="6E",
+                start_date=obspy.UTCDateTime("2013-01-01T00:00:00"),
+                end_date=obspy.UTCDateTime("2016-12-31T23:59:59"),
+                total_number_of_stations=1,
+                description="Wabash Valley Seismic Zone",
+                stations=[
                     Station(
                         code="SH01",
                         latitude=37.7457,
@@ -748,29 +771,75 @@ class StationTextTestCase(unittest.TestCase):
                                 start_date=obspy.UTCDateTime(
                                     "2013-11-23T00:00:00"),
                                 end_date=obspy.UTCDateTime(
-                                    "2016-12-31T23:59:59"))
+                                    "2016-12-31T23:59:59"),
+                                response=resp_3)
                         ]),
                 ])
         ])
-        # write file
-        stio = StringIO.StringIO()
-        test_inv.write(stio, format="STATIONTXT")
+
+        # CHANNEL level test
+        stio = io.StringIO()
+        test_inv.write(stio, format="STATIONTXT", level="CHANNEL")
         # check contents
         content = stio.getvalue()
         expected = [(b"Network|Station|Location|Channel|Latitude|Longitude|"
-                     "Elevation|Depth|Azimuth|Dip|SensorDescription|Scale|"
-                     "ScaleFreq|ScaleUnits|SampleRate|StartTime|EndTime"),
+                     b"Elevation|Depth|Azimuth|Dip|SensorDescription|Scale|"
+                     b"ScaleFreq|ScaleUnits|SampleRate|StartTime|EndTime"),
                     (b"IU|ANMO||BCI|34.9459|-106.4572|1850.0|100.0|0.0|"
-                     "0.0|Geotech KS-36000-I Borehole Seismometer||||0.0|"
-                     "1989-08-29T00:00:00|1995-02-01T00:00:00"),
+                     b"0.0|Geotech KS-36000-I Borehole Seismometer|"
+                     b"848507000.0|0.02|M/S|0.0|1989-08-29T00:00:00|"
+                     b"1995-02-01T00:00:00"),
                     (b"IU|ANMO|20|LNZ|34.9459|-106.4572|1820.7|0.0|0.0|"
-                     "-90.0|Titan Accelerometer||||0.0|2013-06-20T16:30:00|"),
+                     b"-90.0|Titan Accelerometer|53435.4|1.0|M/S**2|0.0|"
+                     b"2013-06-20T16:30:00|"),
                     (b"6E|SH01||LOG|37.7457|-88.1368|126.0|0.0|0.0|0.0|"
-                     "Reftek 130 Datalogger||||0.0|2013-11-23T00:00:00|"
-                     "2016-12-31T23:59:59"),
+                     b"Reftek 130 Datalogger|627252000.0|0.03|M/S|0.0|"
+                     b"2013-11-23T00:00:00|2016-12-31T23:59:59"),
                     ]
+        num_lines_written = 0
         for line in expected:
             self.assertIn(line, content)
+            num_lines_written = num_lines_written + 1
+        # assert that the number of lines written equals
+        # the number of lines expected
+        self.assertEqual(num_lines_written, len(expected))
+
+        # STATION level test
+        stio = io.StringIO()
+        test_inv.write(stio, format="STATIONTXT", level="STATION")
+        # check contents
+        content = stio.getvalue()
+        expected = [(b"Network|Station|Latitude|Longitude|"
+                     b"Elevation|SiteName|StartTime|EndTime"),
+                    (b"IU|ANMO|34.9459|-106.4572|1850.0||"),
+                    (b"6E|SH01|37.7457|-88.1368|126.0||"),
+                    ]
+        num_lines_written = 0
+        for line in expected:
+            self.assertIn(line, content)
+            num_lines_written = num_lines_written + 1
+        # assert that the number of lines written equals
+        # the number of lines expected
+        self.assertEqual(num_lines_written, len(expected))
+
+        # NETWORK level test
+        stio = io.StringIO()
+        test_inv.write(stio, format="STATIONTXT", level="NETWORK")
+        # check contents
+        content = stio.getvalue()
+        expected = [(b"Network|Description|StartTime|EndTime|TotalStations"),
+                    (b"IU|Global Seismograph Network (GSN - IRIS/USGS)|"
+                     b"1988-01-01T00:00:00|2500-12-31T23:59:59|1"),
+                    (b"6E|Wabash Valley Seismic Zone|"
+                     b"2013-01-01T00:00:00|2016-12-31T23:59:59|1"),
+                    ]
+        num_lines_written = 0
+        for line in expected:
+            self.assertIn(line, content)
+            num_lines_written = num_lines_written + 1
+        # assert that the number of lines written equals
+        # the number of lines expected
+        self.assertEqual(num_lines_written, len(expected))
 
     def test_read_write_stationtxt(self):
         """
@@ -790,7 +859,30 @@ class StationTextTestCase(unittest.TestCase):
             with NamedTemporaryFile() as tf:
                 tmpfile = tf.name
                 # write file
-                inv_obs.write(tmpfile, format="STATIONTXT")
+                if filename == "network_level_fdsn.txt":
+                    inv_obs.write(tmpfile,
+                                  format="STATIONTXT",
+                                  level="NETWORK")
+                    self.assertRaises(inv_obs.write(tmpfile,
+                                                    format="STATIONTXT",
+                                                    level="STATION"),
+                                      ValueError)
+                    self.assertRaises(inv_obs.write(tmpfile,
+                                                    format="STATIONTXT",
+                                                    level="CHANNEL"),
+                                      ValueError)
+                elif filename == "station_level_fdsn.txt":
+                    inv_obs.write(tmpfile,
+                                  format="STATIONTXT",
+                                  level="STATION")
+                    self.assertRaises(inv_obs.write(tmpfile,
+                                                    format="STATIONTXT",
+                                                    level="CHANNEL"),
+                                      ValueError)
+                elif filename == "channel_level_fdsn.txt":
+                    inv_obs.write(tmpfile,
+                                  format="STATIONTXT",
+                                  level="CHANNEL")
                 written_text_file = tf.read()
             # ignores whitespace
             expected_content = "".join(expected_content.split(" "))
