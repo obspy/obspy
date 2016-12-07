@@ -76,8 +76,8 @@ def _xcorr_slice(a, b, num, domain='freq'):
     return c[mid - num:mid + num + len(c) % 2]
 
 
-def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
-          full_xcorr=False, abs_max=True):
+def xcorr(tr1, tr2, shift_len, full_xcorr=False, demean=True, normalize=True,
+          domain='freq', abs_max=True):
     """
     Cross-correlation of signals tr1 and tr2.
 
@@ -89,6 +89,11 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
         cross correlation.
         The cross-correlation will consist of 2*shift_len+1 or
         2*shift_len samples. The sample with zero shift will be in the middle.
+    :param bool full_xcorr: Return the full cross-correlation function
+        together with shift and maximum correlation.
+        Keyword full_xcorr will default to True starting
+        with the next major release (v1.2) and will be removed in the subsquent
+        major release (v1.3). Please set ``full_xcorr=True``.
     :param bool demean: Demean data beforehand.
     :param bool normalize: Normalize cross-correlation. A perfect
         correlation will correspond to the value 1.
@@ -96,11 +101,6 @@ def xcorr(tr1, tr2, shift_len, demean=True, normalize=True, domain='freq',
         :func:`scipy.signal.fftconvolve` for ``domain='freq'``
         and in time domain with :func:`scipy.signal.correlate` for
         ``domain='time'``.
-    :param bool full_xcorr: Return the full cross-correlation function
-        together with shift and maximum correlation.
-        Keyword full_xcorr will default to True starting
-        with the next major release (v1.2) and will be removed in the subsquent
-        major release (v1.3). Please set ``full_xcorr=True``.
     :param bool abs_max: *shift* will be calculated for maximum or
         absolute maximum.
 
