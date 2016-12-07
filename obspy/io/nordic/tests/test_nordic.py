@@ -465,12 +465,12 @@ class TestNordicMethods(unittest.TestCase):
                                 key=lambda x: x.distance)[0].distance,
                          0.035972864236749225)
         pick_strings = nordpick(event)
-        self.assertEqual(int([p for p in pick_strings
-                              if p.split()[0] == 'GCSZ'
-                              and p.split()[1] == 'SZ'][0].split()[-1]), 304)
-        self.assertEqual(int([p for p in pick_strings
-                              if p.split()[0] == 'WZ11'
-                              and p.split()[1] == 'HZ'][0].split()[-1]), 30)
+        self.assertEqual(
+            int([p for p in pick_strings if p.split()[0] == 'GCSZ' and
+                 p.split()[1] == 'SZ'][0].split()[-1]), 304)
+        self.assertEqual(
+            int([p for p in pick_strings if p.split()[0] == 'WZ11' and
+                 p.split()[1] == 'HZ'][0].split()[-1]), 30)
 
 
 def test_similarity(event_1, event_2, verbose=False):
