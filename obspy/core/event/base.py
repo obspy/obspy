@@ -33,6 +33,8 @@ import weakref
 from copy import deepcopy
 from uuid import uuid4
 
+import numpy as np
+
 from obspy.core.event.header import DataUsedWaveType, ATTRIBUTE_HAS_ERRORS
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
@@ -370,6 +372,17 @@ def _event_type_class_factory(class_name, class_attributes=[],
                         (str(value), str(attrib_type))
                     raise ValueError(msg)
                 value = new_value
+
+            # Make sure all floats are finite - otherwise this is most
+            # likely a user error.
+            if attrib_type is float and value is not None:
+                if not np.isfinite(value):
+                    msg = "On %s object: Value '%s' for '%s' is " \
+                          "not a finite floating point value." % (
+                            type(self).__name__, str(value), name)
+
+                    raise ValueError(msg)
+
             AttribDict.__setattr__(self, name, value)
             # If "name" is resource_id and value is not None, set the referred
             # object of the ResourceIdentifier to self.
