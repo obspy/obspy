@@ -135,6 +135,8 @@
    * The functionality behind the `obspy-scan` command line script has been
      refactored into a `Scanner` class so that it can be reused in custom
      workflows. (see #1444)
+   * Almost always return the figure handle for the plots to make it work with
+     the jupyter notebooks (see #1615).
  - obspy.imaging.cm:
    * new colormap: viridis_white. This is a modification of viridis that
      goes to white instead of yellow but remains perceptually uniform. It
