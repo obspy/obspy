@@ -151,6 +151,8 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False, demean=True, normalize=True,
     0.995369
 
     """
+    if domain not in ('freq', 'time'):
+        raise ValueError("domain keyword has to be one of ('freq', 'time')")
     a, b = tr1, tr2
     # if we get Trace objects, use their data arrays
     if isinstance(a, Trace):
@@ -236,6 +238,11 @@ def _xcorr_old_implementation(tr1, tr2, shift_len, full_xcorr=False):
     >>> round(b, 7)
     1.0
     """
+    from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+    msg = ('_xcorr_old_implementation is the old implementation of xcorr '
+           'used in ObsPy versions<1.1. It is kept in Obspy v1.1 for reference'
+           ', but will be removed with the next major release.')
+    warnings.warn(msg, ObsPyDeprecationWarning)
     # if we get Trace objects, use their data arrays
     for tr in [tr1, tr2]:
         if isinstance(tr, Trace):
