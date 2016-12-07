@@ -265,6 +265,13 @@ class ImageComparison(NamedTemporaryFile):
     :param plt_close_all_exit: Whether to call :func:`matplotlib.pyplot.close`
         with "all" as first argument (close all figures) or no arguments (close
         active figure). Has no effect if ``plt_close=False``.
+    :type style: str
+    :param style: The Matplotlib style to use to generate the figure. When
+        using matplotlib 2.0 or newer, the default will be ``'classic'`` to
+        ensure compatibility with older releases. On older releases, the
+        default will be ``'default'``. You may wish to set it to ``'default'``
+        to enable the new style from Matplotlib 2.0, but this will make the
+        results incompatible with older Matplotlib releases.
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing.
@@ -298,7 +305,7 @@ class ImageComparison(NamedTemporaryFile):
     """
     def __init__(self, image_path, image_name, reltol=1,
                  adjust_tolerance=True, plt_close_all_enter=True,
-                 plt_close_all_exit=True, *args, **kwargs):
+                 plt_close_all_exit=True, style=None, *args, **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
         super(ImageComparison, self).__init__(suffix=self.suffix, *args,
                                               **kwargs)
@@ -311,6 +318,15 @@ class ImageComparison(NamedTemporaryFile):
         self.tol = reltol * 3.0
         self.plt_close_all_enter = plt_close_all_enter
         self.plt_close_all_exit = plt_close_all_exit
+
+        import matplotlib.style as mstyle
+        if MATPLOTLIB_VERSION < [1, 4, 0]:
+            # No style support.
+            self.style = None
+        elif MATPLOTLIB_VERSION < [2, 0, 0]:
+            self.style = mstyle.context(style or 'default')
+        else:
+            self.style=  mstyle.context(style or 'classic')
 
         # Higher tolerance for older matplotlib versions. This is pretty
         # high but the pictures are at least guaranteed to be generated and
@@ -348,6 +364,8 @@ class ImageComparison(NamedTemporaryFile):
 
         # set matplotlib builtin default settings for testing
         rcdefaults()
+        if self.style is not None:
+            self.style.__enter__()
         rcParams['font.family'] = 'Bitstream Vera Sans'
         with warnings.catch_warnings(record=True) as w:
             warnings.filterwarnings('always', 'findfont:.*')
@@ -372,7 +390,7 @@ class ImageComparison(NamedTemporaryFile):
                 pass
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+    def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
         environment variable is set.
@@ -463,6 +481,8 @@ class ImageComparison(NamedTemporaryFile):
                     plt.close("all")
                 except Exception:
                     pass
+            if self.style is not None:
+                self.style.__exit__(exc_type, exc_val, exc_tb)
             if self.keep_output:
                 if failed or not self.keep_only_failed:
                     self._copy_tempfiles()
