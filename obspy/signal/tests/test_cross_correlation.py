@@ -156,6 +156,12 @@ class CrossCorrelationTestCase(unittest.TestCase):
         np.testing.assert_allclose(x1, x2)
         np.testing.assert_allclose(x3, x4)
         np.testing.assert_allclose(x1, x3[::-1])
+        # test sysmetry for domain='time' and len(a) - len(b) - 2 * num > 0
+        a, b = [0, 1, 2, 3, 4, 5, 6, 7], [20, 10]
+        _, _, x1 = xcorr(a, b, 2, full_xcorr=True, domain='time')
+        _, _, x2 = xcorr(b, a, 2, full_xcorr=True, domain='time')
+        np.testing.assert_allclose(x1, x2[::-1])
+
 
     def test_xcorr_different_implementations(self):
         """
