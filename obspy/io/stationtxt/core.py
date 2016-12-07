@@ -347,12 +347,12 @@ def inventory_to_station_text(inventory_or_network, level):
                 sensitivity = resp and resp.instrument_sensitivity
                 line = "|".join(_to_str(x) for x in (
                     net.code, sta.code, cha.location_code, cha.code,
-                    cha.latitude is not None
-                    and cha.latitude or sta.latitude,
-                    cha.longitude is not None
-                    and cha.longitude or sta.longitude,
-                    cha.elevation is not None
-                    and cha.elevation or sta.elevation,
+                    cha.latitude is not None and
+                    cha.latitude or sta.latitude,
+                    cha.longitude is not None and
+                    cha.longitude or sta.longitude,
+                    cha.elevation is not None and
+                    cha.elevation or sta.elevation,
                     cha.depth, cha.azimuth, cha.dip,
                     cha.sensor.type
                     if (cha.sensor and cha.sensor.type) else None,

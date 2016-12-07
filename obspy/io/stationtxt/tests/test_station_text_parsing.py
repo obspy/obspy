@@ -782,19 +782,19 @@ class StationTextTestCase(unittest.TestCase):
         test_inv.write(stio, format="STATIONTXT", level="CHANNEL")
         # check contents
         content = stio.getvalue()
-        expected = [(b"Network|Station|Location|Channel|Latitude|Longitude|"
-                     b"Elevation|Depth|Azimuth|Dip|SensorDescription|Scale|"
-                     b"ScaleFreq|ScaleUnits|SampleRate|StartTime|EndTime"),
-                    (b"IU|ANMO||BCI|34.9459|-106.4572|1850.0|100.0|0.0|"
-                     b"0.0|Geotech KS-36000-I Borehole Seismometer|"
-                     b"848507000.0|0.02|M/S|0.0|1989-08-29T00:00:00|"
-                     b"1995-02-01T00:00:00"),
-                    (b"IU|ANMO|20|LNZ|34.9459|-106.4572|1820.7|0.0|0.0|"
-                     b"-90.0|Titan Accelerometer|53435.4|1.0|M/S**2|0.0|"
-                     b"2013-06-20T16:30:00|"),
-                    (b"6E|SH01||LOG|37.7457|-88.1368|126.0|0.0|0.0|0.0|"
-                     b"Reftek 130 Datalogger|627252000.0|0.03|M/S|0.0|"
-                     b"2013-11-23T00:00:00|2016-12-31T23:59:59"),
+        expected = [("Network|Station|Location|Channel|Latitude|Longitude|"
+                     "Elevation|Depth|Azimuth|Dip|SensorDescription|Scale|"
+                     "ScaleFreq|ScaleUnits|SampleRate|StartTime|EndTime"),
+                    ("IU|ANMO||BCI|34.9459|-106.4572|1850.0|100.0|0.0|"
+                     "0.0|Geotech KS-36000-I Borehole Seismometer|"
+                     "848507000.0|0.02|M/S|0.0|1989-08-29T00:00:00|"
+                     "1995-02-01T00:00:00"),
+                    ("IU|ANMO|20|LNZ|34.9459|-106.4572|1820.7|0.0|0.0|"
+                     "-90.0|Titan Accelerometer|53435.4|1.0|M/S**2|0.0|"
+                     "2013-06-20T16:30:00|"),
+                    ("6E|SH01||LOG|37.7457|-88.1368|126.0|0.0|0.0|0.0|"
+                     "Reftek 130 Datalogger|627252000.0|0.03|M/S|0.0|"
+                     "2013-11-23T00:00:00|2016-12-31T23:59:59"),
                     ]
         num_lines_written = 0
         for line in expected:
@@ -809,10 +809,10 @@ class StationTextTestCase(unittest.TestCase):
         test_inv.write(stio, format="STATIONTXT", level="STATION")
         # check contents
         content = stio.getvalue()
-        expected = [(b"Network|Station|Latitude|Longitude|"
-                     b"Elevation|SiteName|StartTime|EndTime"),
-                    (b"IU|ANMO|34.9459|-106.4572|1850.0||"),
-                    (b"6E|SH01|37.7457|-88.1368|126.0||"),
+        expected = [("Network|Station|Latitude|Longitude|"
+                     "Elevation|SiteName|StartTime|EndTime"),
+                    ("IU|ANMO|34.9459|-106.4572|1850.0||"),
+                    ("6E|SH01|37.7457|-88.1368|126.0||"),
                     ]
         num_lines_written = 0
         for line in expected:
@@ -827,11 +827,11 @@ class StationTextTestCase(unittest.TestCase):
         test_inv.write(stio, format="STATIONTXT", level="NETWORK")
         # check contents
         content = stio.getvalue()
-        expected = [(b"Network|Description|StartTime|EndTime|TotalStations"),
-                    (b"IU|Global Seismograph Network (GSN - IRIS/USGS)|"
-                     b"1988-01-01T00:00:00|2500-12-31T23:59:59|1"),
-                    (b"6E|Wabash Valley Seismic Zone|"
-                     b"2013-01-01T00:00:00|2016-12-31T23:59:59|1"),
+        expected = [("Network|Description|StartTime|EndTime|TotalStations"),
+                    ("IU|Global Seismograph Network (GSN - IRIS/USGS)|"
+                     "1988-01-01T00:00:00|2500-12-31T23:59:59|1"),
+                    ("6E|Wabash Valley Seismic Zone|"
+                     "2013-01-01T00:00:00|2016-12-31T23:59:59|1"),
                     ]
         num_lines_written = 0
         for line in expected:
