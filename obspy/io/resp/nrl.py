@@ -45,7 +45,7 @@ class NRL:
         'cmg3t': ['Guralp', 'CMG-3T', '120s - 50 Hz', '1500'],
         'trillium_240_1': [
             'Nanometrics', 'Trillium 240', '1 - serial numbers < 400'],
-        'l22': ['Sercel/Mark Products', 'L-22D', '5470 Ohms', '22336 Ohms'],
+        'l22': ['Sercel/Mark Products', 'L-22D', '5470 Ohms', '20000 Ohms'],
         'sts2_g3': [
             'Streckeisen', 'STS-2', '1500', '3 - installed 04/97 to present']
         }

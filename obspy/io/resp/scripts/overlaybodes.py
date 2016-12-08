@@ -69,10 +69,10 @@ if __name__ == '__main__':
     UNIT = args.unit
 
     fig = None
-    for sn_nick, dl_nick, sr, gain in args.nrl:
+    for sn_nick, dl_nick, sr, gain in args.nrl or []:
         print(sn_nick, dl_nick, sr, gain)
         fig = add_nrl_to_fig(fig, sn_nick, dl_nick, float(sr), gain)
-    for filename in args.resp_file:
+    for filename in args.resp_file or []:
         print(filename)
         fig = add_resp_to_fig(fig, filename)
 
