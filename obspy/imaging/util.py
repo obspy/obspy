@@ -107,6 +107,8 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
         self.scaled[1. / 24.] = FuncFormatter(format_hour_minute)
         self.scaled[1. / (24. * 60.)] = \
             FuncFormatter(format_hour_minute_second)
+        self.scaled[_seconds_to_days(1)] = \
+            FuncFormatter(format_hour_minute_second)
         self.scaled[_seconds_to_days(10)] = \
             FuncFormatter(decimal_seconds_format_x_decimals(1))
         # for some reason matplotlib is not using the following intermediate
