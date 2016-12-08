@@ -267,11 +267,11 @@ class ImageComparison(NamedTemporaryFile):
         active figure). Has no effect if ``plt_close=False``.
     :type style: str
     :param style: The Matplotlib style to use to generate the figure. When
-        using matplotlib 2.0 or newer, the default will be ``'classic'`` to
+        using matplotlib 1.5 or newer, the default will be ``'classic'`` to
         ensure compatibility with older releases. On older releases, the
-        default will be ``'default'``. You may wish to set it to ``'default'``
-        to enable the new style from Matplotlib 2.0, but this will make the
-        results incompatible with older Matplotlib releases.
+        default will leave the style as is. You may wish to set it to
+        ``'default'`` to enable the new style from Matplotlib 2.0, or some
+        alternate style, which will work back to Matplotlib 1.4.0.
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing.
@@ -319,15 +319,13 @@ class ImageComparison(NamedTemporaryFile):
         self.plt_close_all_enter = plt_close_all_enter
         self.plt_close_all_exit = plt_close_all_exit
 
-        if MATPLOTLIB_VERSION < [1, 4, 0]:
-            # No style support.
+        if (MATPLOTLIB_VERSION < [1, 4, 0] or
+                (MATPLOTLIB_VERSION[:2] == [1, 4] and style is None)):
+            # No good style support.
             self.style = None
         else:
             import matplotlib.style as mstyle
-            default_style = ('default'
-                             if MATPLOTLIB_VERSION < [2, 0, 0]
-                             else 'classic')
-            self.style = mstyle.context(style or default_style)
+            self.style = mstyle.context(style or 'classic')
 
         # Higher tolerance for older matplotlib versions. This is pretty
         # high but the pictures are at least guaranteed to be generated and
