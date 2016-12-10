@@ -625,16 +625,15 @@ class ClientTestCase(unittest.TestCase):
         expected = (
             "FDSN Webservice Client (base url: http://service.iris.edu)\n"
             "Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6), "
-            "'station' (v1.0.7), 'available_event_contributors', "
-            "'available_event_catalogs'\n\n"
+            "'station' (v1.0.7), 'available_event_catalogs', "
+            "'available_event_contributors'\n\n"
             "Use e.g. client.help('dataselect') for the\n"
             "parameter description of the individual services\n"
             "or client.help() for parameter description of\n"
             "all webservices.")
-        self.assertEqual(normalize_version_number(got),
-                         normalize_version_number(expected),
-                         failmsg(normalize_version_number(got),
-                                 normalize_version_number(expected)))
+        got = normalize_version_number(got)
+        expected = normalize_version_number(expected)
+        self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_dataselect_bulk(self):
         """
