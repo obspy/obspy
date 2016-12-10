@@ -108,7 +108,7 @@ class ClientTestCase(unittest.TestCase):
             'host': u'erde.geophysik.uni-muenchen.de', 'end': None,
             'port': 18001}]}
         expected_routing_iv = {
-            'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+            'IV...': [{'priority': 1, 'start': UTCDateTime(1988, 1, 1, 0, 0),
                        'host': 'eida.ingv.it', 'end': None,
                        'port': 18002}]}
         expected_routing_ge = {
