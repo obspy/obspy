@@ -70,8 +70,7 @@ def normalize_version_number(string):
     input string, independent of commas and newlines.
     """
     repl = re.sub('v[0-9]+\.[0-9]+\.[0-9]+', "vX.X.X", string).replace(",", "")
-    return " ".join(
-        sorted(s.strip() for l in repl.splitlines() for s in l.split(" ")))
+    return [l.strip() for l in repl.splitlines()]
 
 
 class ClientTestCase(unittest.TestCase):
@@ -576,10 +575,15 @@ class ClientTestCase(unittest.TestCase):
             with open(os.path.join(self.datapath, filename)) as fh:
                 expected = fh.read()
             # allow for changes in version number..
-            self.assertEqual(normalize_version_number(got),
-                             normalize_version_number(expected),
-                             failmsg(normalize_version_number(got),
-                                     normalize_version_number(expected)))
+            got = normalize_version_number(got)
+            expected = normalize_version_number(expected)
+            # catalogs/contributors are checked in separate tests
+            self.assertTrue(got[-2].startswith('Available catalogs:'))
+            self.assertTrue(got[-1].startswith('Available contributors:'))
+            got = got[:-2]
+            expected = expected[:-2]
+            for line_got, line_expected in zip(got, expected):
+                self.assertEqual(line_got, line_expected)
 
             # Reset. Creating a new one is faster then clearing the old one.
             tmp = io.StringIO()
@@ -593,10 +597,9 @@ class ClientTestCase(unittest.TestCase):
             filename = "station_helpstring.txt"
             with open(os.path.join(self.datapath, filename)) as fh:
                 expected = fh.read()
-            self.assertEqual(normalize_version_number(got),
-                             normalize_version_number(expected),
-                             failmsg(normalize_version_number(got),
-                                     normalize_version_number(expected)))
+            got = normalize_version_number(got)
+            expected = normalize_version_number(expected)
+            self.assertEqual(got, expected, failmsg(got, expected))
 
             # Reset.
             tmp = io.StringIO()
@@ -610,10 +613,9 @@ class ClientTestCase(unittest.TestCase):
             filename = "dataselect_helpstring.txt"
             with open(os.path.join(self.datapath, filename)) as fh:
                 expected = fh.read()
-            self.assertEqual(normalize_version_number(got),
-                             normalize_version_number(expected),
-                             failmsg(normalize_version_number(got),
-                                     normalize_version_number(expected)))
+            got = normalize_version_number(got)
+            expected = normalize_version_number(expected)
+            self.assertEqual(got, expected, failmsg(got, expected))
 
         finally:
             sys.stdout = sys.__stdout__
