@@ -46,8 +46,9 @@ class PathPlottingTestCase(unittest.TestCase):
         inventory = obspy.core.inventory.Inventory(
                 source='ME', networks=[network])
 
+        otime = obspy.UTCDateTime()
         origin = obspy.core.event.Origin(latitude=0., longitude=90.,
-                                         depth=100000.)
+                                         depth=100000., time=otime)
         magnitude = obspy.core.event.Magnitude(mag=7.)
         event = obspy.core.event.Event(origins=[origin],
                                        magnitudes=[magnitude])
