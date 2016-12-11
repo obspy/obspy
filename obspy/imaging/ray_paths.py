@@ -22,7 +22,7 @@ import numpy as np
 from matplotlib.colors import hex2color
 
 
-def plot_rays(inventory=None, catalog=None, phase_list=('P',),
+def plot_rays(inventory, catalog, phase_list=('P',),
               kind='mayavi', colorscheme='default', animate=False,
               savemovie=False, figsize=(800, 800), coastlines='internal',
               taup_model='iasp91', icol=0, event_labels=True,
@@ -67,14 +67,14 @@ def plot_rays(inventory=None, catalog=None, phase_list=('P',),
     >>> from obspy.imaging.ray_paths import plot_rays
     >>> inventory = read_inventory("/path/to/IU_stations.txt")
     >>> catalog = read_events()
-    >>> plot_rays(inventory=inventory, catalog=catalog, phase_list=['Pdiff'])
+    >>> plot_rays(inventory, catalog, phase_list=['Pdiff'])  # doctest: +SKIP
 
     .. figure:: /_images/expensive_plots/mayavi_ray_paths.png
     """
 
     if kind == 'mayavi':
         _plot_rays_mayavi(
-            inventory=inventory, catalog=catalog, phase_list=phase_list,
+            inventory, catalog, phase_list=phase_list,
             colorscheme=colorscheme, animate=animate, savemovie=savemovie,
             figsize=figsize, taup_model='iasp91', coastlines=coastlines,
             icol=icol, event_labels=event_labels,
@@ -82,13 +82,13 @@ def plot_rays(inventory=None, catalog=None, phase_list=('P',),
             view_dict=view_dict)
     elif kind == 'vtkfiles':
         _write_vtk_files(
-            inventory=inventory, catalog=catalog,
+            inventory, catalog,
             phase_list=phase_list)
     else:
         raise NotImplementedError
 
 
-def _write_vtk_files(inventory=None, catalog=None,
+def _write_vtk_files(inventory, catalog,
                      phase_list=('P'), taup_model='iasp91'):
     """
     internal vtk output routine. Check out the plot_rays routine
@@ -189,8 +189,8 @@ def _write_vtk_files(inventory=None, catalog=None,
             vtk_file.write('{:.4e} {:.4e} {:.4e}\n'.format(*location))
 
 
-def _plot_rays_mayavi(inventory=None, catalog=None,
-                      phase_list=['P'], colorscheme='default', animate=False,
+def _plot_rays_mayavi(inventory, catalog, phase_list=['P'],
+                      colorscheme='default', animate=False,
                       savemovie=False, figsize=(800, 800), taup_model='iasp91',
                       coastlines='internal', icol=0, event_labels=True,
                       station_labels=True, fname_out=None, view_dict=None):

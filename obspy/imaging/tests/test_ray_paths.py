@@ -7,6 +7,7 @@ import unittest
 
 import os
 
+import obspy
 from obspy.core.util.testing import ImageComparison
 from obspy import read_inventory, read_events
 from obspy.imaging.ray_paths import plot_rays, get_ray_paths
