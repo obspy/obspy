@@ -142,11 +142,6 @@ install:
   # least our builds work..
   # XXX - conda install --no-update-dependencies m2crypto || true
   # XXX - conda install --no-update-dependencies cartopy || true
-  # install mayavi
-  # we need to emulate an xserver for mayavi offscreen rendering
-  - export DISPLAY=:99.0;
-  - sh -e /etc/init.d/xvfb start;
-  - conda install -c menpo mayavi;
   # install packages not available via conda
   - pip install codecov
   - pip install geographiclib
