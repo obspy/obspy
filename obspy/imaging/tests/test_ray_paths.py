@@ -39,10 +39,23 @@ class PathPlottingTestCase(unittest.TestCase):
         #        taup_model='iasp91')
 
         # this test checks if we get a single P wave greatcircle
-        greatcircles = get_ray_paths(
-                stlat=0., stlon=30., evlat=0., evlon=90.,
-                evdepth_km=100., phase_list=['P'], coordinate_system='XYZ',
-                taup_model='iasp91')
+        station = obspy.core.inventory.Station(
+                    code='STA', latitude=0., longitude=30., elevation=0.)
+        network = obspy.core.inventory.Network(
+                    code='NET', stations=[station])
+        inventory = obspy.core.inventory.Inventory(
+                source='ME', networks=[network])
+
+        origin = obspy.core.event.Origin(latitude=0., longitude=90.,
+                                         depth=100000.)
+        magnitude = obspy.core.event.Magnitude(mag=7.)
+        event = obspy.core.event.Event(origins=[origin],
+                                       magnitudes=[magnitude])
+        catalog = obspy.core.event.Catalog(events=[event])
+
+        greatcircles = get_ray_paths(inventory, catalog, phase_list=['P'],
+                                     coordinate_system='XYZ',
+                                     taup_model='iasp91')
         self.assertEqual(len(greatcircles), 1)
         self.assertEqual(greatcircles[0][1], 'P')
 

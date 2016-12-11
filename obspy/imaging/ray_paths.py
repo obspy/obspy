@@ -22,9 +22,7 @@ import numpy as np
 from matplotlib.colors import hex2color
 
 
-def plot_rays(inventory=None, catalog=None, station_latitude=None,
-              station_longitude=None, event_latitude=None,
-              event_longitude=None, event_depth_in_km=None, phase_list=('P',),
+def plot_rays(inventory=None, catalog=None, phase_list=('P',),
               kind='mayavi', colorscheme='default', animate=False,
               savemovie=False, figsize=(800, 800), coastlines='internal',
               taup_model='iasp91', icol=0, event_labels=True,
@@ -34,11 +32,6 @@ def plot_rays(inventory=None, catalog=None, station_latitude=None,
 
     :param inventory: an obspy station inventory
     :param catalog: an obspy event catalog
-    :param station_latitude: station latitude (alternative to inventory)
-    :param station_longitude: station longitude (alternative to inventory)
-    :param event_latitude: event latitude (alternative to catalog)
-    :param event_longitude: event longitude (alternative to catalog)
-    :param event_depth_in_km: event depth in km (alternative to a catalog)
     :param phase_list: a list of seismic phase names that is passed to taup
     :param kind: selects the plot type.
                  'mayavi' uses the mayavi library for plotting
@@ -81,11 +74,7 @@ def plot_rays(inventory=None, catalog=None, station_latitude=None,
 
     if kind == 'mayavi':
         _plot_rays_mayavi(
-            inventory=inventory, catalog=catalog,
-            event_latitude=event_latitude, event_longitude=event_longitude,
-            event_depth_in_km=event_depth_in_km,
-            station_latitude=station_latitude,
-            station_longitude=station_longitude, phase_list=phase_list,
+            inventory=inventory, catalog=catalog, phase_list=phase_list,
             colorscheme=colorscheme, animate=animate, savemovie=savemovie,
             figsize=figsize, taup_model='iasp91', coastlines=coastlines,
             icol=icol, event_labels=event_labels,
@@ -94,17 +83,12 @@ def plot_rays(inventory=None, catalog=None, station_latitude=None,
     elif kind == 'vtkfiles':
         _write_vtk_files(
             inventory=inventory, catalog=catalog,
-            event_latitude=event_latitude, event_longitude=event_longitude,
-            event_depth_in_km=event_depth_in_km,
-            station_latitude=station_latitude,
-            station_longitude=station_longitude, phase_list=phase_list)
+            phase_list=phase_list)
     else:
         raise NotImplementedError
 
 
-def _write_vtk_files(inventory=None, catalog=None, station_latitude=None,
-                     station_longitude=None, event_latitude=None,
-                     event_longitude=None, event_depth_in_km=None,
+def _write_vtk_files(inventory=None, catalog=None,
                      phase_list=('P'), taup_model='iasp91'):
     """
     internal vtk output routine. Check out the plot_rays routine
@@ -205,9 +189,7 @@ def _write_vtk_files(inventory=None, catalog=None, station_latitude=None,
             vtk_file.write('{:.4e} {:.4e} {:.4e}\n'.format(*location))
 
 
-def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
-                      station_longitude=None, event_latitude=None,
-                      event_longitude=None, event_depth_in_km=None,
+def _plot_rays_mayavi(inventory=None, catalog=None,
                       phase_list=['P'], colorscheme='default', animate=False,
                       savemovie=False, figsize=(800, 800), taup_model='iasp91',
                       coastlines='internal', icol=0, event_labels=True,
@@ -246,10 +228,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
     nphases = len(phase_list)
 
     greatcircles = get_ray_paths(
-        inventory=inventory, catalog=catalog, stlat=station_latitude,
-        stlon=station_longitude,
-        evlat=event_latitude, evlon=event_longitude,
-        evdepth_km=event_depth_in_km, phase_list=phase_list,
+        inventory=inventory, catalog=catalog, phase_list=phase_list,
         coordinate_system='XYZ', taup_model=model)
 
     if len(greatcircles) == 0:
@@ -467,8 +446,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
             mlab.show()
 
 
-def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
-                  evlat=None, evlon=None, evdepth_km=None, phase_list=['P'],
+def get_ray_paths(inventory, catalog, phase_list=['P'],
                   coordinate_system='XYZ', taup_model='iasp91'):
     """
     This function returns lat, lon, depth coordinates from an event
@@ -476,14 +454,6 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
 
     :param inventory: an obspy station inventory
     :param catalog: an obspy event catalog
-    :param stlat: station latitude (stlat/stlon are alternative to inventory)
-    :param stlon: station longitude (stlat/stlon are alternative to inventory)
-    :param evlat: event latitude (evlat/evlon/evdepth_km are alternative to
-                  a catalog)
-    :param evlon: event longitude (evlat/evlon/evdepth_km are alternative to
-                  a catalog)
-    :param evdepth_km: event depth in km (evlat/evlon/evdepth_km are
-                  alternative to a catalog)
     :param phase_list: a list of seismic phase names that is passed to taup
     :param coordinate_system: can be either 'XYZ' or 'RTP'.
     :param taup_model: the taup model for which the greatcircle paths are
@@ -501,24 +471,17 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
     stlats = []
     stlons = []
     stlabels = []
-    if inventory is not None:
-        for network in inventory:
-            for station in network:
-                label_ = "   " + ".".join((network.code, station.code))
-                if station.latitude is None or station.longitude is None:
-                    msg = ("Station '%s' does not have latitude/longitude "
-                           "information and will not be plotted." % label_)
-                    warnings.warn(msg)
-                    continue
-                stlats.append(station.latitude)
-                stlons.append(station.longitude)
-                stlabels.append(label_)
-    elif stlat is not None and stlon is not None:
-        stlats.append(stlat)
-        stlons.append(stlon)
-        stlabels.append('')
-    else:
-        raise ValueError("either inventory or stlat and stlon have to be set")
+    for network in inventory:
+        for station in network:
+            label_ = "   " + ".".join((network.code, station.code))
+            if station.latitude is None or station.longitude is None:
+                msg = ("Station '%s' does not have latitude/longitude "
+                       "information and will not be plotted." % label_)
+                warnings.warn(msg)
+                continue
+            stlats.append(station.latitude)
+            stlons.append(station.longitude)
+            stlabels.append(label_)
 
     # make a big list of event coordinates and names
     # this part should be included as a subroutine of catalog that extracts
@@ -529,39 +492,27 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
     evlons = []
     evdepths = []
     evlabels = []
-    use_catalog = catalog is not None
-    use_location = (evlon is not None and evlat is not None and
-                    evdepth_km is not None)
-    if use_catalog:
-        for event in catalog:
-            if not event.origins:
-                msg = ("Event '%s' does not have an origin and will not be "
-                       "plotted." % str(event.resource_id))
-                warnings.warn(msg)
-                continue
-            if not event.magnitudes:
-                msg = ("Event '%s' does not have a magnitude and will not be "
-                       "plotted." % str(event.resource_id))
-                warnings.warn(msg)
-                continue
-            origin = event.preferred_origin() or event.origins[0]
-            evlats.append(origin.latitude)
-            evlons.append(origin.longitude)
-            if not origin.get('depth'):
-                origin.depth = 0.
-            evdepths.append(origin.get('depth') * 1e-3)
-            magnitude = event.preferred_magnitude() or event.magnitudes[0]
-            mag = magnitude.mag
-            label = '  {:s} | M{:.1f}'.format(str(origin.time.date), mag)
-            evlabels.append(label)
-    elif use_location:
-        evlats.append(evlat)
-        evlons.append(evlon)
-        evdepths.append(evdepth_km)
-        evlabels.append('')
-    else:
-        raise ValueError("either catalog or evlat, evlon and evdepth_km have "
-                         "to be set")
+    for event in catalog:
+        if not event.origins:
+            msg = ("Event '%s' does not have an origin and will not be "
+                   "plotted." % str(event.resource_id))
+            warnings.warn(msg)
+            continue
+        if not event.magnitudes:
+            msg = ("Event '%s' does not have a magnitude and will not be "
+                   "plotted." % str(event.resource_id))
+            warnings.warn(msg)
+            continue
+        origin = event.preferred_origin() or event.origins[0]
+        evlats.append(origin.latitude)
+        evlons.append(origin.longitude)
+        if not origin.get('depth'):
+            origin.depth = 0.
+        evdepths.append(origin.get('depth') * 1e-3)
+        magnitude = event.preferred_magnitude() or event.magnitudes[0]
+        mag = magnitude.mag
+        label = '  {:s} | M{:.1f}'.format(str(origin.time.date), mag)
+        evlabels.append(label)
 
     # initialize taup model if it is not provided
     if isinstance(taup_model, str):
