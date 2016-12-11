@@ -101,9 +101,7 @@ def _write_vtk_files(inventory, catalog,
 
     # get 3d paths for all station/event combinations
     greatcircles = get_ray_paths(
-        inventory=inventory, catalog=catalog, stlat=station_latitude,
-        stlon=station_longitude, evlat=event_latitude, evlon=event_longitude,
-        evdepth_km=event_depth_in_km, phase_list=phase_list,
+        inventory, catalog, phase_list=phase_list,
         coordinate_system='XYZ', taup_model=taup_model)
 
     # now assemble all points, stations and connectivity
