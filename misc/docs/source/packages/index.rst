@@ -46,6 +46,7 @@ The functionality is provided through the following packages:
    obspy.io.nied.knet
    obspy.io.pdas
    obspy.io.reftek
+   obspy.io.resp
    obspy.io.sac
    obspy.io.seisan
    obspy.io.seg2
