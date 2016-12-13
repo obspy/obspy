@@ -12,6 +12,9 @@ from obspy.core.util.testing import ImageComparison
 from obspy import read_inventory, read_events
 from obspy.imaging.ray_paths import plot_rays, get_ray_paths
 
+import obspy.geodetics.base as geodetics
+
+
 
 try:
     from mayavi import mlab  # @UnusedImport # NOQA
@@ -32,6 +35,8 @@ class PathPlottingTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'images')
         pass
 
+    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
+                     'geographiclib is not installed or doesn\'t run')
     def test_compute_ray_paths(self):
         # careful, the full inventory, catalog test is long (1min)
         # greatcircles = get_ray_paths(
@@ -61,6 +66,8 @@ class PathPlottingTestCase(unittest.TestCase):
         self.assertEqual(len(greatcircles), 1)
         self.assertEqual(greatcircles[0][1], 'P')
 
+    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
+                     'geographiclib is not installed or doesn\'t run')
     @unittest.skipIf(not HAS_MAYAVI,
                      'Module mayavi is not installed or doesn\'t run')
     def test_path_plotting(self):

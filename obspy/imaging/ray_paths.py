@@ -21,6 +21,8 @@ import warnings
 import numpy as np
 from matplotlib.colors import hex2color
 
+import ..geodetics.base as geodetics
+
 
 def plot_rays(inventory, catalog, phase_list=('P',),
               kind='mayavi', colorscheme='default', animate=False,
@@ -465,7 +467,11 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
               station_label is the name of the station that belongs to the path
               event_label is the name of the event that belongs to the path
     """
-    # make a big list of station coordinates and names
+    # GEOGRAPHICLIB is mandatory for this function
+    if not geodetics.HAS_GEOGRAPHICLIB:
+        raise ImportError('Geographiclib not found but required by ray path '
+                          'routine')
+
     stlats = []
     stlons = []
     stlabels = []
