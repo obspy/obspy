@@ -16,12 +16,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy.core import inventory
-from obspy.io.resp.nrl import NRL
+from obspy.clients.nrl.core import NRL
 from os.path import basename
 
 
 def add_nrl_to_fig(fig, sensor_short, dl_short, sr, gain):
-    nrl = NRL(local=False)
+    nrl = NRL()
     sensor_resp = nrl.sensor_from_short(sensor_short)
     dl_resp = nrl.datalogger_from_short(dl_short, gain, sr)
     inv_resp = inventory.response.response_from_resps(sensor_resp,

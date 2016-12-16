@@ -7,7 +7,7 @@ import unittest
 
 import os
 
-from obspy.io.resp.nrl import NRL
+from obspy.clients.nrl.core import NRL
 
 LOCAL_NRL_ROOT = '/Users/lloyd/GitHub/obspy/Lloyd/IRIS/'
 

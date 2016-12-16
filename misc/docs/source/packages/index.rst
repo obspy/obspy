@@ -101,6 +101,7 @@ The functionality is provided through the following packages:
    obspy.clients.filesystem
    obspy.clients.iris
    obspy.clients.neic
+   obspy.clients.nrl
    obspy.clients.seedlink
    obspy.clients.seishub
    obspy.clients.syngine

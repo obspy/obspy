@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-nrl.py for navigating, and picking responses from the
+obspy.clients.nrl.core.py for navigating, and picking responses from the
 Nominal Response Library.
 
 :copyright:
@@ -174,7 +174,8 @@ class NRL(object):
         for answer in answers_filled[:-1]:
             path = self.choose(str(answer), path)
         # path to RESP File
-        return self._join(self.root, self.choose(str(answers_filled[-1]), path))
+        return self._join(self.root,
+                          self.choose(str(answers_filled[-1]), path))
 
     def datalogger_path_from_short(self, shortname, gain, sr):
         return self.datalogger_path(NRL.dl_shortcuts[shortname], gain, sr)
@@ -270,7 +271,8 @@ class NRL(object):
         if self.sensors is None:
             info.append('  Sensors not parsed yet.')
         else:
-            info.append('  Sensors: {} manufacturers'.format(len(self.sensors)))
+            info.append(
+                '  Sensors: {} manufacturers'.format(len(self.sensors)))
             if len(self.sensors):
                 keys = [key for key in sorted(self.sensors)]
                 lines = _textwrap("'" + "', '".join(keys) + "'",

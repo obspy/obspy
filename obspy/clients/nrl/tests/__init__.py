@@ -5,19 +5,17 @@ from future.builtins import *  # NOQA
 
 import unittest
 
-# from obspy.io.resp.parser import read_resp
+from obspy.core.util import add_doctests, add_unittests
 
 
-class ParserTestCase(unittest.TestCase):
-    """
-    RESP Parser test suite
-
-    """
-    pass
+MODULE_NAME = "obspy.clients.core.nrl"
 
 
 def suite():
-    return unittest.makeSuite(ParserTestCase, 'test')
+    suite = unittest.TestSuite()
+    add_doctests(suite, MODULE_NAME)
+    add_unittests(suite, MODULE_NAME)
+    return suite
 
 
 if __name__ == '__main__':

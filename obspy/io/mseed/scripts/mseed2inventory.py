@@ -25,7 +25,7 @@ from time import strftime, strptime, gmtime
 from obspy.core import inventory
 from obspy.core.inventory.util import Site
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.io.resp.nrl import NRL
+from obspy.clients.nrl.core import NRL
 
 
 class SeisTime:
@@ -534,7 +534,7 @@ def make_inventory(manifest, latitude=0.0, longitude=0.0):
 def attach_response(inv, sensor_nick, dl_nick, gain):
     # inv is populated inventory object lacking responses
     # will add sensor & dl to all channels
-    nrl = NRL(local=False)
+    nrl = NRL()
     # Cache responses computed to reuse key (sens_nick, dl_nick, gain, sr)
     resp_dict = {}
     for net in inv.networks:

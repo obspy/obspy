@@ -9,9 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
-       parser.make_xseed()
-       parser.read_resp()
-       parser.record_type_from_blocketteid()
+       nrl.NRL
 
     .. comment to end block
 
@@ -21,7 +19,7 @@
        :toctree: autogen
        :nosignatures:
 
-       parser
+       nrl
 
     .. comment to end block
 
@@ -32,8 +30,5 @@
        :toctree: autogen
        :nosignatures:
 
-       scripts.dataless2resp
-       scripts.dataless2xseed
-       scripts.xseed2dataless
 
     .. comment to end block
