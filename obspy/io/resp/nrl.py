@@ -18,17 +18,36 @@ import codecs
 import io
 import os
 import sys
-import textwrap
 import warnings
 
 import requests
 
 if sys.version_info.major == 2:
     from urlparse import urljoin
-    from ConfigParser import SafeConfigParser
+    import ConfigParser as configparser
 else:
     from urllib.parse import urljoin
-    from configparser import SafeConfigParser
+    import configparser
+
+from obspy.core.inventory.util import _textwrap
+
+
+class NRLDict(dict):
+    def __str__(self):
+        if len(self):
+            if self._question:
+                info = ['{} ({} items):'.format(self._question, len(self))]
+            else:
+                info = ['{} items:'.format(len(self))]
+            texts = ["'{}'".format(k) for k in sorted(self.keys())]
+            info.extend(_textwrap(", ".join(texts), initial_indent='  ',
+                                  subsequent_indent='  '))
+            return '\n'.join(info)
+        else:
+            return '0 items.'
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
 
 class NRL(object):
@@ -89,7 +108,7 @@ class NRL(object):
 
     def _read_ini_from_filesystem(self, path):
         # Don't use directly init sets read_ini()
-        cp = SafeConfigParser()
+        cp = configparser.SafeConfigParser()
         # XXX coding should be UTF-8 or ASCII??
         with codecs.open(path, mode='r', encoding='UTF-8') as f:
             if sys.version_info.major == 2:
@@ -100,7 +119,7 @@ class NRL(object):
 
     def _read_ini_from_url(self, path):
         # Don't use directly init sets read_ini()
-        cp = SafeConfigParser()
+        cp = configparser.SafeConfigParser()
         response = requests.get(path)
         string_io = io.StringIO(response.text)
         if sys.version_info.major == 2:
@@ -195,21 +214,39 @@ class NRL(object):
         return self._dataloggers
 
     def _recursive_parse(self, path):
-        data = {}
+        data = NRLDict()
         cp = self._read_ini(path)
         for section in cp.sections():
-            if section == 'Main':
+            options = sorted(cp.options(section))
+            if section.lower() == 'main':
+                if options not in (['question'], ['detail', 'question']):
+                    msg = "Unexpected structure of NRL file '{}'".format(path)
+                    raise NotImplementedError(msg)
+                data._question = cp.get(section, 'question').strip('\'"')
                 continue
-            for options in cp.options(section):
-                if 'path' in options:
+            else:
+                if options == ['path']:
                     data[section] = self._recursive_parse(
                         self.choose(section, path))
                     # XXX is it safe to assume that if "path" is present we
                     # just follow down to the next level?
                     continue
-                elif 'resp' in options:
-                    data[section] = self._join(path, cp.get(section, 'resp'))
+                # sometimes the description field is named 'description', but
+                # sometimes also 'descr'
+                elif options in (['description', 'resp'], ['descr', 'resp'],
+                                 ['resp']):
+                    if 'descr' in options:
+                        descr = cp.get(section, 'descr')
+                    elif 'description' in options:
+                        descr = cp.get(section, 'description', '')
+                    else:
+                        descr = '<no description>'
+                    data[section] = (descr.strip('\'"'), self._join(
+                        path, cp.get(section, 'resp').strip('\'"')))
                     continue
+                else:
+                    msg = "Unexpected structure of NRL file '{}'".format(path)
+                    raise NotImplementedError(msg)
                 # XXX elif 'question' in options:
                 # XXX     print(cp.get(section, 'question'))
         return data
@@ -233,23 +270,23 @@ class NRL(object):
         if self.sensors is None:
             info.append('  Sensors not parsed yet.')
         else:
-            info.append('  Sensors: {} items'.format(len(self.sensors)))
+            info.append('  Sensors: {} manufacturers'.format(len(self.sensors)))
             if len(self.sensors):
                 keys = [key for key in sorted(self.sensors)]
-                lines = textwrap.wrap("'" + "', '".join(keys) + "'",
-                                      initial_indent='    ',
-                                      subsequent_indent='    ')
+                lines = _textwrap("'" + "', '".join(keys) + "'",
+                                  initial_indent='    ',
+                                  subsequent_indent='    ')
                 info.extend(lines)
         if self.dataloggers is None:
             info.append('  Dataloggers not parsed yet.')
         else:
-            info.append('  Dataloggers: {} items'.format(
+            info.append('  Dataloggers: {} manufacturers'.format(
                 len(self.dataloggers)))
             if len(self.dataloggers):
                 keys = [key for key in sorted(self.dataloggers)]
-                lines = textwrap.wrap("'" + "', '".join(keys) + "'",
-                                      initial_indent='    ',
-                                      subsequent_indent='    ')
+                lines = _textwrap("'" + "', '".join(keys) + "'",
+                                  initial_indent='    ',
+                                  subsequent_indent='    ')
                 info.extend(lines)
         return '\n'.join(info)
 
