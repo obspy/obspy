@@ -53,7 +53,6 @@ def add_resp_to_fig(fig, resp_file):
 if __name__ == '__main__':
     from argparse import ArgumentParser
     import matplotlib.pyplot as plt
-    VERSION = '2016.309'
     parser = ArgumentParser(description='Shows bode plot responses overlayed')
     parser.add_argument('-nrl', dest='nrl', nargs=4,
                         required=False, action='append',
