@@ -59,28 +59,27 @@ class NRL:
     def __init__(self, root='http://ds.iris.edu/NRL/'):
         if "://" in root:
             # use online, urls etc
-            self.read_ini = self.read_url_ini
-            self.read_resp = self.read_resp_url
+            self.read_ini = self._read_ini_from_url
+            self.read_resp = self._read_resp_from_url
             self.join = urljoin
-            self.root = root
+            if not root.endswith('/'):
+                root += '/'
         else:
             # use local copy of NRL on filesystem
-            self.read_ini = self.read_fs_ini
-            self.read_resp = self.read_resp_local
-            self.join = self.join_fs
-            self.root = root
-            if not os.path.isdir(self.root):
-                msg = "Not a local directory: '{}'".format(self.root)
+            self.read_ini = self._read_ini_from_filesystem
+            self.read_resp = self._read_resp_from_filesystem
+            self.join = self._join_filesystem
+            if not os.path.isdir(root):
+                msg = "Not a local directory: '{}'".format(root)
                 raise ValueError(msg)
+            if not root.endswith(os.sep):
+                root += os.sep
+        self.root = root
 
-    def join_fs(self, path1, path2):
+    def _join_filesystem(self, path1, path2):
         return os.path.join(os.path.dirname(path1), path2)
 
-    def read_ini(self, path):
-        # Replaced with fs or url version on __init__
-        pass
-
-    def read_fs_ini(self, path):
+    def _read_ini_from_filesystem(self, path):
         # Don't use directly init sets read_ini()
         cp = SafeConfigParser()
         # XXX coding should be UTF-8 or ASCII??
@@ -91,10 +90,10 @@ class NRL:
                 cp.read_file(f)
         return cp
 
-    def read_url_ini(self, url):
+    def _read_ini_from_url(self, path):
         # Don't use directly init sets read_ini()
         cp = SafeConfigParser()
-        response = requests.get(url)
+        response = requests.get(path)
         string_io = io.StringIO(response.text)
         if sys.version_info.major == 2:
             cp.readfp(string_io)
@@ -102,17 +101,13 @@ class NRL:
             cp.read_file(string_io)
         return cp
 
-    def read_resp(self, path):
-        # Points to read_resp_[local url] set in init
-        pass
-
-    def read_resp_local(self, path):
+    def _read_resp_from_filesystem(self, path):
         # Returns Unicode string of RESP
         with open(path, 'r') as f:
             return f.read()
 
-    def read_resp_url(self, url):
-        response = requests.get(url)
+    def _read_resp_from_url(self, path):
+        response = requests.get(path)
         return response.text
 
     def print_ini(self, path):
