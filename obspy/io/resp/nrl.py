@@ -30,8 +30,7 @@ else:
     from configparser import SafeConfigParser
 
 
-
-class NRL:
+class NRL(object):
     """
     Object representing the Nominal Response library.
     Can be Accessed online from the DMC or with a local copy
