@@ -18,9 +18,9 @@ from future.standard_library import install_aliases
 install_aliases()  # NOQA
 from urllib.parse import urljoin
 from urllib.request import urlopen
-from os.path import join, dirname
 from ConfigParser import SafeConfigParser
 
+import os
 
 class NRL:
     """
@@ -71,7 +71,7 @@ class NRL:
                 self.root = root
 
     def join_fs(self, path1, path2):
-        return join(dirname(path1), path2)
+        return os.path.join(os.path.dirname(path1), path2)
 
     def read_ini(self, path):
         # Replaced with fs or url version on __init__
