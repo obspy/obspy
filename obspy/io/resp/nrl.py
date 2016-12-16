@@ -13,14 +13,21 @@ Nominal Response Library.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-# Urllib for py 2 and 3
-from future.standard_library import install_aliases
-install_aliases()  # NOQA
-from urllib.parse import urljoin
-from urllib.request import urlopen
-from ConfigParser import SafeConfigParser
 
+import codecs
+import io
 import os
+import sys
+
+import requests
+
+if sys.version_info.major == 2:
+    from urlparse import urljoin
+    from ConfigParser import SafeConfigParser
+else:
+    from urllib.parse import urljoin
+    from configparser import SafeConfigParser
+
 
 class NRL:
     """
@@ -80,15 +87,23 @@ class NRL:
     def read_fs_ini(self, path):
         # Don't use directly init sets read_ini()
         cp = SafeConfigParser()
-        with open(path, 'r') as f:
-            cp.readfp(f)
+        # XXX coding should be UTF-8 or ASCII??
+        with codecs.open(path, mode='r', encoding='UTF-8') as f:
+            if sys.version_info.major == 2:
+                cp.readfp(f)
+            else:
+                cp.read_file(f)
         return cp
 
     def read_url_ini(self, url):
         # Don't use directly init sets read_ini()
         cp = SafeConfigParser()
-        with urlopen(url) as response:
-            cp.readfp(response)
+        response = requests.get(url)
+        string_io = io.StringIO(response.text)
+        if sys.version_info.major == 2:
+            cp.readfp(string_io)
+        else:
+            cp.read_file(string_io)
         return cp
 
     def read_resp(self, path):
@@ -101,9 +116,8 @@ class NRL:
             return f.read()
 
     def read_resp_url(self, url):
-        # Returns Unicode string of RESP
-        with urlopen(url) as f:
-            return f.read().decode('ascii')
+        response = requests.get(url)
+        return response.text
 
     def print_ini(self, path):
         cp = self.read_ini(path)
@@ -117,9 +131,9 @@ class NRL:
         cp = self.read_ini(path)
         options = cp.options(choice)
         if 'path' in options:
-            newpath = cp.get(choice, 'path').decode('ascii')
+            newpath = cp.get(choice, 'path')
         elif 'resp' in options:
-            newpath = cp.get(choice, 'resp').decode('ascii')
+            newpath = cp.get(choice, 'resp')
             # Strip quotes of new path
         if newpath.startswith('"'):
             newpath = newpath[1:]
