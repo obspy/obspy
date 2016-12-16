@@ -195,6 +195,5 @@ class NRL:
 
 
 if __name__ == "__main__":
-    FSroot = '/Users/lloyd/GitHub/obspy/Lloyd/IRIS/'
-    nrl = NRL(root=FSroot)
-    url = NRL()
+    import doctest
+    doctest.testmod(exclude_empty=True)

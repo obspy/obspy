@@ -160,5 +160,7 @@ def make_xseed(resp_blockettelist):
     seedparser._update_internal_seed_structure()
     return seedparser
 
+
 if __name__ == '__main__':
-    pass
+    import doctest
+    doctest.testmod(exclude_empty=True)
