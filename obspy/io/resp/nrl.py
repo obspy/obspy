@@ -18,6 +18,7 @@ import codecs
 import io
 import os
 import sys
+import textwrap
 import warnings
 
 import requests
@@ -185,6 +186,14 @@ class NRL(object):
         """
         return self._read_resp(self.sensor_path_from_short(shortname))
 
+    @property
+    def sensors(self):
+        return self._sensors
+
+    @property
+    def dataloggers(self):
+        return self._dataloggers
+
     def _recursive_parse(self, path):
         data = {}
         cp = self._read_ini(path)
@@ -218,6 +227,34 @@ class NRL(object):
         self._dataloggers = self._recursive_parse(
             path=self._join(self.root,
                             'dataloggers' + self._sep + self._index))
+
+    def __str__(self):
+        info = ['NRL library at ' + self.root]
+        if self.sensors is None:
+            info.append('  Sensors not parsed yet.')
+        else:
+            info.append('  Sensors: {} items'.format(len(self.sensors)))
+            if len(self.sensors):
+                keys = [key for key in sorted(self.sensors)]
+                lines = textwrap.wrap("'" + "', '".join(keys) + "'",
+                                      initial_indent='    ',
+                                      subsequent_indent='    ')
+                info.extend(lines)
+        if self.dataloggers is None:
+            info.append('  Dataloggers not parsed yet.')
+        else:
+            info.append('  Dataloggers: {} items'.format(
+                len(self.dataloggers)))
+            if len(self.dataloggers):
+                keys = [key for key in sorted(self.dataloggers)]
+                lines = textwrap.wrap("'" + "', '".join(keys) + "'",
+                                      initial_indent='    ',
+                                      subsequent_indent='    ')
+                info.extend(lines)
+        return '\n'.join(info)
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
 
 if __name__ == "__main__":
