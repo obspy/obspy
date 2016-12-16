@@ -40,7 +40,6 @@ class NRL:
     The NRL has txt desision files formatted as windows ini
 
     """
-    URLroot = 'http://ds.iris.edu/NRL/'
     index = 'index.txt'
     # Placholder for sample rate and gain
     SR = object()
@@ -57,25 +56,22 @@ class NRL:
             'Streckeisen', 'STS-2', '1500', '3 - installed 04/97 to present']
         }
 
-    def __init__(self, local=True, root=None):
-        if local:
-            # use local copy of NRL on filesystem
-            self.read_ini = self.read_fs_ini
-            self.read_resp = self.read_resp_local
-            self.join = self.join_fs
-            if root is None:
-                raise Exception('Root path of NRL required')
-            else:
-                self.root = root
-        else:
+    def __init__(self, root='http://ds.iris.edu/NRL/'):
+        if "://" in root:
             # use online, urls etc
             self.read_ini = self.read_url_ini
             self.read_resp = self.read_resp_url
             self.join = urljoin
-            if root is None:
-                self.root = self.URLroot
-            else:
-                self.root = root
+            self.root = root
+        else:
+            # use local copy of NRL on filesystem
+            self.read_ini = self.read_fs_ini
+            self.read_resp = self.read_resp_local
+            self.join = self.join_fs
+            self.root = root
+            if not os.path.isdir(self.root):
+                msg = "Not a local directory: '{}'".format(self.root)
+                raise ValueError(msg)
 
     def join_fs(self, path1, path2):
         return os.path.join(os.path.dirname(path1), path2)
@@ -206,4 +202,4 @@ class NRL:
 if __name__ == "__main__":
     FSroot = '/Users/lloyd/GitHub/obspy/Lloyd/IRIS/'
     nrl = NRL(root=FSroot)
-    url = NRL(local=False)
+    url = NRL()
