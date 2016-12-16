@@ -19,8 +19,6 @@ import re
 
 from obspy.io.xseed import (parser, blockette, fields)
 
-DEBUG = False
-
 
 def read_resp(data):
     # List of blockettes which is a list of fields
@@ -76,12 +74,12 @@ def record_type_from_blocketteid(bid):
             return voltype
 
 
-def make_xseed(resp_blockettelist):
+def make_xseed(resp_blockettelist, debug=False):
     seedparser = parser.Parser()
     seedparser.temp = {'volume': [], 'abbreviations': [], 'stations': []}
     # Make an empty blockette10
     seedparser.temp['volume'].append(blockette.Blockette010(
-        debug=DEBUG, strict=False, compact=False, record_type='V'))
+        debug=debug, strict=False, compact=False, record_type='V'))
     # Make unit lookup blockette34
     b34s = ('034  44  4M/S~velocity in meters per second~',
             '034  25  5V~emf in volts~',
@@ -91,7 +89,7 @@ def make_xseed(resp_blockettelist):
 
     for b34 in b34s:
         data = io.BytesIO(b34.encode('utf-8'))
-        b34_obj = blockette.Blockette034(debug=DEBUG,
+        b34_obj = blockette.Blockette034(debug=debug,
                                          record_type='A')
         b34_obj.parse_seed(data, expected_length=len(b34))
         seedparser.temp['abbreviations'].append(b34_obj)
@@ -104,7 +102,7 @@ def make_xseed(resp_blockettelist):
         class_name = 'Blockette%03d' % int(RESPblockette_id)
         blockette_class = getattr(blockette, class_name)
         record_type = record_type_from_blocketteid(blockette_class.id)
-        blockette_obj = blockette_class(debug=DEBUG,
+        blockette_obj = blockette_class(debug=debug,
                                         strict=False,
                                         compact=False,
                                         record_type=record_type)
