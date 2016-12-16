@@ -18,6 +18,7 @@ import codecs
 import io
 import os
 import sys
+import warnings
 
 import requests
 
@@ -66,6 +67,7 @@ class NRL:
             self._sep = '/'
             if not root.endswith('/'):
                 root += '/'
+            self._local = False
         else:
             # use local copy of NRL on filesystem
             self._read_ini = self._read_ini_from_filesystem
@@ -77,6 +79,7 @@ class NRL:
                 raise ValueError(msg)
             if not root.endswith(os.sep):
                 root += os.sep
+            self._local = True
         self.root = root
         self._sensors = None
         self._dataloggers = None
@@ -207,6 +210,10 @@ class NRL:
         """
         Parse the entire NRL
         """
+        if not self._local:
+            msg = ("Parsing the entire NRL library via http can take a *very* "
+                   "long time.")
+            warnings.warn(msg)
         self._sensors = self._recursive_parse(
             path=self._join(self.root, 'sensors' + self._sep + self._index))
         self._dataloggers = self._recursive_parse(
