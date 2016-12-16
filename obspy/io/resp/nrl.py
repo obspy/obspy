@@ -29,6 +29,7 @@ else:
     from configparser import SafeConfigParser
 
 
+
 class NRL:
     """
     Object representing the Nominal Response library.
@@ -62,6 +63,7 @@ class NRL:
             self._read_ini = self._read_ini_from_url
             self._read_resp = self._read_resp_from_url
             self._join = urljoin
+            self._sep = '/'
             if not root.endswith('/'):
                 root += '/'
         else:
@@ -69,12 +71,15 @@ class NRL:
             self._read_ini = self._read_ini_from_filesystem
             self._read_resp = self._read_resp_from_filesystem
             self._join = self._join_filesystem
+            self._sep = os.sep
             if not os.path.isdir(root):
                 msg = "Not a local directory: '{}'".format(root)
                 raise ValueError(msg)
             if not root.endswith(os.sep):
                 root += os.sep
         self.root = root
+        self._sensors = None
+        self._dataloggers = None
 
     def _join_filesystem(self, path1, path2):
         return os.path.join(os.path.dirname(path1), path2)
@@ -178,20 +183,35 @@ class NRL:
         """
         return self._read_resp(self.sensor_path_from_short(shortname))
 
-    def parse_entire_library(self, path=None):
-        # Parse the entire NRL, for testing, or building another index.
-        if path is None:
-            path = self.join(self.root, self.index)
-        cp = self.read_ini(path)
+    def _recursive_parse(self, path):
+        data = {}
+        cp = self._read_ini(path)
         for section in cp.sections():
+            if section == 'Main':
+                continue
             for options in cp.options(section):
                 if 'path' in options:
-                    self.parse_entire_library(self.choose(section, path))
+                    data[section] = self._recursive_parse(
+                        self.choose(section, path))
+                    # XXX is it safe to assume that if "path" is present we
+                    # just follow down to the next level?
+                    continue
                 elif 'resp' in options:
-                    print(cp.get(section, 'resp'))
-                    pass
-                elif 'question' in options:
-                    print(cp.get(section, 'question'))
+                    data[section] = self._join(path, cp.get(section, 'resp'))
+                    continue
+                # XXX elif 'question' in options:
+                # XXX     print(cp.get(section, 'question'))
+        return data
+
+    def parse_entire_library(self):
+        """
+        Parse the entire NRL
+        """
+        self._sensors = self._recursive_parse(
+            path=self._join(self.root, 'sensors' + self._sep + self._index))
+        self._dataloggers = self._recursive_parse(
+            path=self._join(self.root,
+                            'dataloggers' + self._sep + self._index))
 
 
 if __name__ == "__main__":
