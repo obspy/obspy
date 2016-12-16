@@ -238,7 +238,7 @@ class NRL(object):
                     if 'descr' in options:
                         descr = cp.get(section, 'descr')
                     elif 'description' in options:
-                        descr = cp.get(section, 'description', '')
+                        descr = cp.get(section, 'description')
                     else:
                         descr = '<no description>'
                     data[section] = (descr.strip('\'"'), self._join(
