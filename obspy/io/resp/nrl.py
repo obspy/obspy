@@ -40,7 +40,7 @@ class NRL:
     The NRL has txt desision files formatted as windows ini
 
     """
-    index = 'index.txt'
+    _index = 'index.txt'
     # Placholder for sample rate and gain
     SR = object()
     GAIN = object()
@@ -59,16 +59,16 @@ class NRL:
     def __init__(self, root='http://ds.iris.edu/NRL/'):
         if "://" in root:
             # use online, urls etc
-            self.read_ini = self._read_ini_from_url
-            self.read_resp = self._read_resp_from_url
-            self.join = urljoin
+            self._read_ini = self._read_ini_from_url
+            self._read_resp = self._read_resp_from_url
+            self._join = urljoin
             if not root.endswith('/'):
                 root += '/'
         else:
             # use local copy of NRL on filesystem
-            self.read_ini = self._read_ini_from_filesystem
-            self.read_resp = self._read_resp_from_filesystem
-            self.join = self._join_filesystem
+            self._read_ini = self._read_ini_from_filesystem
+            self._read_resp = self._read_resp_from_filesystem
+            self._join = self._join_filesystem
             if not os.path.isdir(root):
                 msg = "Not a local directory: '{}'".format(root)
                 raise ValueError(msg)
@@ -110,8 +110,8 @@ class NRL:
         response = requests.get(path)
         return response.text
 
-    def print_ini(self, path):
-        cp = self.read_ini(path)
+    def _print_ini(self, path):
+        cp = self._read_ini(path)
         for section in cp.sections():
             print(section)
             for item in cp.items(section):
@@ -119,7 +119,7 @@ class NRL:
 
     def choose(self, choice, path):
         # Should return either a path or a resp
-        cp = self.read_ini(path)
+        cp = self._read_ini(path)
         options = cp.options(choice)
         if 'path' in options:
             newpath = cp.get(choice, 'path')
@@ -130,11 +130,11 @@ class NRL:
             newpath = newpath[1:]
         if newpath.endswith('"'):
             newpath = newpath[:-1]
-        return self.join(path, newpath)
+        return self._join(path, newpath)
 
     def datalogger_path(self, answers, gain, sr):
         # Returns path of response file
-        path = self.choose('Datalogger', self.join(self.root, self.index))
+        path = self.choose('Datalogger', self._join(self.root, self._index))
         # Fill placeholders for sr and gain
         answers_filled = list()
         for answer in answers:
@@ -147,7 +147,7 @@ class NRL:
         for answer in answers_filled[:-1]:
             path = self.choose(str(answer), path)
         # path to RESP File
-        return self.join(self.root, self.choose(str(answers_filled[-1]), path))
+        return self._join(self.root, self.choose(str(answers_filled[-1]), path))
 
     def datalogger_path_from_short(self, shortname, gain, sr):
         return self.datalogger_path(NRL.dl_shortcuts[shortname], gain, sr)
@@ -156,18 +156,18 @@ class NRL:
         """
         Returns a unicode string of contents of RESP file
         """
-        return self.read_resp(self.datalogger_path_from_short(
+        return self._read_resp(self.datalogger_path_from_short(
             shortname, gain, sr))
 
     def sensor_path(self, answers):
         # Returns path of response file
         # Args are usually: make, model, period, sensitivity
-        path = self.choose('Sensor', self.join(self.root, self.index))
+        path = self.choose('Sensor', self._join(self.root, self._index))
         # All but the last arg will return a ini file
         for answer in answers[:-1]:
             path = self.choose(str(answer), path)
         # The last arg returns a path to RESP
-        return self.join(self.root, self.choose(str(answers[-1]), path))
+        return self._join(self.root, self.choose(str(answers[-1]), path))
 
     def sensor_path_from_short(self, shortname):
         return self.sensor_path(NRL.sensor_shortcuts[shortname])
@@ -176,7 +176,7 @@ class NRL:
         """
         Returns a unicode string of contents of RESP file
         """
-        return self.read_resp(self.sensor_path_from_short(shortname))
+        return self._read_resp(self.sensor_path_from_short(shortname))
 
     def parse_entire_library(self, path=None):
         # Parse the entire NRL, for testing, or building another index.
