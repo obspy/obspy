@@ -28,6 +28,7 @@ else:
     from urllib.parse import urljoin
     import configparser
 
+from obspy.core.inventory.response import response_from_resps
 from obspy.core.inventory.util import _textwrap
 
 
@@ -293,6 +294,45 @@ class NRL(object):
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
+
+    def get_response(self, datalogger_keys, sensor_keys):
+        """
+        Get Response from NRL tree structure
+
+        >>> nrl = NRL()  # doctest : +SKIP
+        >>> response = nrl.get_response(  # doctest : +SKIP
+        ...     sensor_keys=['Nanometrics', 'Trillium Compact', '120 s'],
+        ...     datalogger_keys=['REF TEK', 'RT 130 & 130-SMA', '1', '200'])
+        >>> print(response)  # doctest : +SKIP
+        Channel Response
+          From M/S () to COUNTS ()
+          Overall Sensitivity: 4.74576e+08 defined at 1.000 Hz
+          10 stages:
+            Stage 1: PolesZerosResponseStage from M/S to V, gain: 754.3
+            Stage 2: ResponseStage from V to V, gain: 1
+            Stage 3: CoefficientsTypeResponseStage from V to COUNTS
+            Stage 4: CoefficientsTypeResponseStage from COUNTS to COUNTS
+            Stage 5: CoefficientsTypeResponseStage from COUNTS to COUNTS
+            Stage 6: CoefficientsTypeResponseStage from COUNTS to COUNTS
+            Stage 7: CoefficientsTypeResponseStage from COUNTS to COUNTS
+            Stage 8: CoefficientsTypeResponseStage from COUNTS to COUNTS
+            Stage 9: CoefficientsTypeResponseStage from COUNTS to COUNTS
+            Stage 10: CoefficientsTypeResponseStage from COUNTS to COUNTS
+
+        :type datalogger_keys: list of str
+        :type sensor_keys: list of str
+        :rtype: :class:`~obspy.core.inventory.response.Response`
+        """
+        datalogger = self.dataloggers
+        while datalogger_keys:
+            datalogger = datalogger[datalogger_keys.pop(0)]
+        datalogger_resp = self._read_resp(datalogger[1])
+        sensor = self.sensors
+        while sensor_keys:
+            sensor = sensor[sensor_keys.pop(0)]
+        sensor_resp = self._read_resp(sensor[1])
+        return response_from_resps(sensor_resp_data=sensor_resp,
+                                   datalogger_resp_data=datalogger_resp)
 
 
 if __name__ == "__main__":
