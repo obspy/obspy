@@ -18,7 +18,6 @@ import codecs
 import io
 import os
 import sys
-import warnings
 
 import requests
 
@@ -33,6 +32,9 @@ from obspy.core.inventory.util import _textwrap
 
 
 class NRLDict(dict):
+    def __init__(self, nrl):
+        self._nrl = nrl
+
     def __str__(self):
         if len(self):
             if self._question:
@@ -48,6 +50,18 @@ class NRLDict(dict):
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
+
+    def __getitem__(self, name):
+        value = super(NRLDict, self).__getitem__(name)
+        # if encountering a not yet parsed NRL Path, expand it now
+        if isinstance(value, NRLPath):
+            value = self._nrl._parse(value)
+            self[name] = value
+        return value
+
+
+class NRLPath(str):
+    pass
 
 
 class NRL(object):
@@ -100,8 +114,12 @@ class NRL(object):
                 root += os.sep
             self._local = True
         self.root = root
-        self._sensors = None
-        self._dataloggers = None
+        # read the two root nodes for sensors and dataloggers
+        self._sensors = self._parse(
+            path=self._join(self.root, 'sensors' + self._sep + self._index))
+        self._dataloggers = self._parse(
+            path=self._join(self.root,
+                            'dataloggers' + self._sep + self._index))
 
     def _join_filesystem(self, path1, path2):
         return os.path.join(os.path.dirname(path1), path2)
@@ -214,8 +232,8 @@ class NRL(object):
     def dataloggers(self):
         return self._dataloggers
 
-    def _recursive_parse(self, path):
-        data = NRLDict()
+    def _parse(self, path):
+        data = NRLDict(self)
         cp = self._read_ini(path)
         for section in cp.sections():
             options = sorted(cp.options(section))
@@ -227,10 +245,7 @@ class NRL(object):
                 continue
             else:
                 if options == ['path']:
-                    data[section] = self._recursive_parse(
-                        self.choose(section, path))
-                    # XXX is it safe to assume that if "path" is present we
-                    # just follow down to the next level?
+                    data[section] = NRLPath(self.choose(section, path))
                     continue
                 # sometimes the description field is named 'description', but
                 # sometimes also 'descr'
@@ -248,23 +263,7 @@ class NRL(object):
                 else:
                     msg = "Unexpected structure of NRL file '{}'".format(path)
                     raise NotImplementedError(msg)
-                # XXX elif 'question' in options:
-                # XXX     print(cp.get(section, 'question'))
         return data
-
-    def parse_entire_library(self):
-        """
-        Parse the entire NRL
-        """
-        if not self._local:
-            msg = ("Parsing the entire NRL library via http can take a *very* "
-                   "long time.")
-            warnings.warn(msg)
-        self._sensors = self._recursive_parse(
-            path=self._join(self.root, 'sensors' + self._sep + self._index))
-        self._dataloggers = self._recursive_parse(
-            path=self._join(self.root,
-                            'dataloggers' + self._sep + self._index))
 
     def __str__(self):
         info = ['NRL library at ' + self.root]
