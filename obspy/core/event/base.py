@@ -353,6 +353,12 @@ def _event_type_class_factory(class_name, class_attributes=[],
             Custom property implementation that works if the class is
             inheriting from AttribDict.
             """
+            # avoid type casting of 'extra' attribute, to make it possible to
+            # control ordering of extra tags by using an OrderedDict for
+            # 'extra'.
+            if name == 'extra':
+                dict.__setattr__(self, name, value)
+                return
             # Pass to the parent method if not a custom property.
             if name not in self._property_dict.keys():
                 AttribDict.__setattr__(self, name, value)
