@@ -1157,7 +1157,7 @@ class Pickler(object):
     def _station_magnitude_contributions(self, stat_contrib, element):
         for contrib in stat_contrib:
             contrib_el = etree.Element('stationMagnitudeContribution')
-            self._str(contrib.station_magnitude_id.id, contrib_el, 
+            self._str(contrib.station_magnitude_id.id, contrib_el,
                       'stationMagnitudeID')
             self._str(contrib.weight, contrib_el, 'weight')
             self._str(contrib.residual, contrib_el, 'residual')
