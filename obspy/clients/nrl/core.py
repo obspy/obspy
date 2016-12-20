@@ -67,6 +67,8 @@ class NRLPath(str):
 
 class NRL(object):
     """
+    Base NRL class subclassed by LocalNRL and RemoteNRL.
+    
     Object representing the Nominal Response library.
     Can be Accessed online from the DMC or with a local copy
     Decision tree: Usually!!!! depth of tree and order can change!
@@ -92,28 +94,13 @@ class NRL(object):
             'Streckeisen', 'STS-2', '1500', '3 - installed 04/97 to present']
         }
 
-    def __init__(self, root='http://ds.iris.edu/NRL/'):
+    def __new__(cls,root='http://ds.iris.edu/NRL/'):
         if "://" in root:
-            # use online, urls etc
-            self._read_ini = self._read_ini_from_url
-            self._read_resp = self._read_resp_from_url
-            self._join = urljoin
-            self._sep = '/'
-            if not root.endswith('/'):
-                root += '/'
-            self._local = False
+            return super(NRL, cls).__new__(RemoteNRL)
         else:
-            # use local copy of NRL on filesystem
-            self._read_ini = self._read_ini_from_filesystem
-            self._read_resp = self._read_resp_from_filesystem
-            self._join = self._join_filesystem
-            self._sep = os.sep
-            if not os.path.isdir(root):
-                msg = "Not a local directory: '{}'".format(root)
-                raise ValueError(msg)
-            if not root.endswith(os.sep):
-                root += os.sep
-            self._local = True
+            return super(NRL, cls).__new__(LocalNRL)
+
+    def __init__(self, root='http://ds.iris.edu/NRL/'):
         self.root = root
         # read the two root nodes for sensors and dataloggers
         self._sensors = self._parse(
@@ -121,40 +108,6 @@ class NRL(object):
         self._dataloggers = self._parse(
             path=self._join(self.root,
                             'dataloggers' + self._sep + self._index))
-
-    def _join_filesystem(self, path1, path2):
-        return os.path.join(os.path.dirname(path1), path2)
-
-    def _read_ini_from_filesystem(self, path):
-        # Don't use directly init sets read_ini()
-        cp = configparser.SafeConfigParser()
-        # XXX coding should be UTF-8 or ASCII??
-        with codecs.open(path, mode='r', encoding='UTF-8') as f:
-            if sys.version_info.major == 2:
-                cp.readfp(f)
-            else:
-                cp.read_file(f)
-        return cp
-
-    def _read_ini_from_url(self, path):
-        # Don't use directly init sets read_ini()
-        cp = configparser.SafeConfigParser()
-        response = requests.get(path)
-        string_io = io.StringIO(response.text)
-        if sys.version_info.major == 2:
-            cp.readfp(string_io)
-        else:
-            cp.read_file(string_io)
-        return cp
-
-    def _read_resp_from_filesystem(self, path):
-        # Returns Unicode string of RESP
-        with open(path, 'r') as f:
-            return f.read()
-
-    def _read_resp_from_url(self, path):
-        response = requests.get(path)
-        return response.text
 
     def _print_ini(self, path):
         cp = self._read_ini(path)
@@ -335,6 +288,60 @@ class NRL(object):
                                    datalogger_resp_data=datalogger_resp)
 
 
+class LocalNRL(NRL):
+    def __init__(self, root=''):
+        # use local copy of NRL on filesystem
+        self._sep = os.sep
+        if not os.path.isdir(root):
+            msg = "Not a local directory: '{}'".format(root)
+            raise ValueError(msg)
+        if not root.endswith(os.sep):
+            root += os.sep
+        super(LocalNRL, self).__init__(root)
+                
+    def _read_ini(self, path):
+        # Don't use directly init sets read_ini()
+        cp = configparser.SafeConfigParser()
+        # XXX coding should be UTF-8 or ASCII??
+        with codecs.open(path, mode='r', encoding='UTF-8') as f:
+            if sys.version_info.major == 2:
+                cp.readfp(f)
+            else:
+                cp.read_file(f)
+        return cp
+    
+    def _read_resp(self, path):
+        # Returns Unicode string of RESP
+        with open(path, 'r') as f:
+            return f.read()
+
+    def _join_filesystem(self, path1, path2):
+        return os.path.join(os.path.dirname(path1), path2)
+    
+        
+class RemoteNRL(NRL):
+    def __init__(self, root='http://ds.iris.edu/NRL/'):
+        # use online NRL
+        self._join = urljoin
+        self._sep = '/'
+        if not root.endswith('/'):
+            root += '/'
+        super(RemoteNRL, self).__init__(root)
+ 
+    def _read_ini(self, path):
+        cp = configparser.SafeConfigParser()
+        response = requests.get(path)
+        string_io = io.StringIO(response.text)
+        if sys.version_info.major == 2:
+            cp.readfp(string_io)
+        else:
+            cp.read_file(string_io)
+        return cp
+    
+    def _read_resp(self, path):
+        response = requests.get(path)
+        return response.text
+        
 if __name__ == "__main__":
     import doctest
     doctest.testmod(exclude_empty=True)
