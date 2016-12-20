@@ -55,7 +55,7 @@ class ClientTestCase(unittest.TestCase):
                                       cleanup=False)
         self.assertGreaterEqual(len(stream), 2)
         summed_length = sum(len(tr) for tr in stream)
-        self.assertTrue(len(trace) in (100, 101))
+        self.assertTrue(summed_length in (100, 101))
         self.assertGreaterEqual(stream[0].stats.starttime, start - delta)
         self.assertLessEqual(stream[0].stats.starttime, start + delta)
         self.assertGreaterEqual(stream[-1].stats.endtime, end - delta)
