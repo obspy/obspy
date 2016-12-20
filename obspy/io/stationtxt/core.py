@@ -287,6 +287,7 @@ def inventory_to_station_text(inventory_or_network, level):
 
     # Write items at to the requested level of detail. Raises a ValueError if
     # insufficient information is present for the requested level of detail.
+    level = level.upper()
     if level == "NETWORK":
         # get network level items
         for net in networks:
@@ -307,7 +308,7 @@ def inventory_to_station_text(inventory_or_network, level):
             else:
                 raise ValueError("Unable to write stationtxt "
                                  "at STATION level. One or more "
-                                 "networks contain no stations.")
+                                 "networks contains no stations.")
         if all(sta is not None for net, sta, cha in items):
             header = ("#Network|Station|Latitude|Longitude|Elevation|SiteName|"
                       "StartTime|EndTime")
