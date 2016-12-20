@@ -135,7 +135,7 @@ def correlate(a, b, shift, type=None, demean=True, normalize=True,
     >>> shift, value = xcorr_max(cc)
     >>> shift
     0
-    >>> round(value, 6)
+    >>> round(value, 5)
     1.0
     >>> b = np.roll(a, 50)  # shift a by 50 samples
     >>> cc = correlate(a, b, 1000)
