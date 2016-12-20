@@ -26,7 +26,6 @@ import warnings
 
 import numpy as np
 import scipy
-from scipy.signal import correlate, fftconvolve
 
 from obspy import Stream, Trace
 from obspy.core.util.misc import MatplotlibBackend
@@ -40,60 +39,60 @@ def _pad_zeros(a, num):
     return np.hstack(hstack)
 
 
-def _xcorr_padzeros(a, b, num, domain='freq'):
+def _xcorr_padzeros(a, b, shift, domain='freq'):
     """
     Cross-correlation using SciPy with mode='valid' and precedent zero padding
     """
-    if num is None:
-        num = (len(a) + len(b) - 1) // 2
-    dif = len(a) - len(b) - 2 * num
+    if shift is None:
+        shift = (len(a) + len(b) - 1) // 2
+    dif = len(a) - len(b) - 2 * shift
     if dif > 0:
         b = _pad_zeros(b, dif // 2)
     else:
         a = _pad_zeros(a, -dif // 2)
     if domain == 'freq':
-        c = fftconvolve(a, b[::-1], 'valid')
+        c = scipy.signal.fftconvolve(a, b[::-1], 'valid')
+    elif domain == 'time':
+        c = scipy.signal.correlate(a, b, 'valid')
     else:
-        c = correlate(a, b, 'valid')
+        raise NotImplementedError
     return c
 
 
-def _xcorr_slice(a, b, num, domain='freq'):
+def _xcorr_slice(a, b, shift, domain='freq'):
     """
     Cross-correlation using SciPy with mode='full' and subsequent slicing
     """
     if domain == 'freq':
-        c = fftconvolve(a, b[::-1], 'full')
+        c = scipy.signal.fftconvolve(a, b[::-1], 'full')
+    elif domain == 'time':
+        c = scipy.signal.correlate(a, b, 'full')
     else:
-        c = correlate(a, b, 'full')
+        raise NotImplementedError
     mid = len(c) // 2
-    if num is None:
-        num = mid
-    if num > mid:
-        msg = 'sift_len too large, use largest possible shift %d instead'
+    if shift is None:
+        shift = mid
+    if shift > mid:
+        msg = 'sift too large, use largest possible shift %d instead'
         warnings.warn(msg % mid)
-        num = mid
-    return c[mid - num:mid + num + len(c) % 2]
+        shift = mid
+    return c[mid - shift:mid + shift + len(c) % 2]
 
 
-def xcorr(tr1, tr2, shift_len, full_xcorr=False, demean=True, normalize=True,
-          domain='freq', abs_max=True):
+def correlate(a, b, shift, type=None, demean=True, normalize=True,
+              domain='freq'):
     """
-    Cross-correlation of signals tr1 and tr2.
+    Cross-correlation of signals a and b.
 
-    :type tr1: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
-    :param tr1: first signal
-    :type tr2: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
-    :param tr2: second signal to correlate with first signal
-    :param int shift_len: Total length of samples to shift for
-        cross correlation.
-        The cross-correlation will consist of 2*shift_len+1 or
-        2*shift_len samples. The sample with zero shift will be in the middle.
-    :param bool full_xcorr: Return the full cross-correlation function
-        together with shift and maximum correlation.
-        Keyword full_xcorr will default to True starting
-        with the next major release (v1.2) and will be removed in the subsquent
-        major release (v1.3). Please set ``full_xcorr=True``.
+    :type a: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param a: first signal
+    :type b: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param b: second signal to correlate with first signal
+    :param int shift: Total length of samples to shift for cross correlation.
+        The cross-correlation will consist of ``2*shift+1`` or
+        ``2*shift`` samples. The sample with zero shift will be in the middle.
+    :param type: Different cross-correlation functions might be introduced in
+         future with the help of the type keyword. Do not use it at the moment.
     :param bool demean: Demean data beforehand.
     :param bool normalize: Normalize cross-correlation. A perfect
         correlation will correspond to the value 1.
@@ -101,23 +100,18 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False, demean=True, normalize=True,
         :func:`scipy.signal.fftconvolve` for ``domain='freq'``
         and in time domain with :func:`scipy.signal.correlate` for
         ``domain='time'``.
-    :param bool abs_max: *shift* will be calculated for maximum or
-        absolute maximum.
 
-    :return: *shift, value, corr_fun* for ``full_xcorr=False`` and
-             only *shift, value* for ``full_xcorr=False`` (depreciated).
-             *shift* is the sample index of the maximum correlation
-             relative to zero shift (the middle). If this is nonunique the
-             smallest value of *shift* will be returned.
-             *value* is the value at this sample.
-             *corr_fun* is the complete cross-correlation function.
+    :return: cross-correlation function.
+
+    To calculate shift and value of the maximum of the returned
+    cross-correlation function use `xcorr_max`.
 
     .. note::
 
         For most input parameters cross-correlation in frequency domain is much
         faster.
-        Only for small values of ``shift_len`` time domain cross-correlation
-        migth save some time (``shifth_len⪅100``).
+        Only for small values of ``shift`` time domain cross-correlation
+        migth save some time (``shift⪅100``).
 
     .. note::
 
@@ -130,30 +124,32 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False, demean=True, normalize=True,
             --aaaa--
             bbbbbbbb
 
-        For odd ``len(tr1)-len(tr2)`` the cross-correlation function will
-        consist of only ``2*shift_len`` samples because a shift of 0
-        corresponds to the middle between two samples. *shift* will be a float
-        value in this case (otherwise int).
+        For odd ``len(a)-len(b)`` the cross-correlation function will
+        consist of only ``2*shift`` samples because a shift of 0
+        corresponds to the middle between two samples.
 
     .. rubric:: Example
 
-    >>> tr1 = np.random.randn(10000).astype(np.float32)
-    >>> a, b, x = xcorr(tr1, tr1, 1000, full_xcorr=True)
-    >>> a
+    >>> a = np.random.randn(10000).astype(np.float32)
+    >>> cc = correlate(a, a, 1000)
+    >>> shift, value = xcorr_max(cc)
+    >>> shift
     0
-    >>> round(b, 6)
+    >>> round(value, 6)
     1.0
-    >>> tr2 = np.roll(tr1, 50)  # shift tr2 by 50 samples
-    >>> a, b, x = xcorr(tr1, tr2, 1000, full_xcorr=True)
-    >>> a
+    >>> b = np.roll(a, 50)  # shift a by 50 samples
+    >>> cc = correlate(a, b, 1000)
+    >>> shift, value = xcorr_max(cc)
+    >>> shift
     -50
-    >>> round(b, 6)
-    0.995369
+    >>> round(value, 2)
+    1.0
 
     """
+    if type is not None:
+        raise ValueError("Do not use the type keyword, it has to be None.")
     if domain not in ('freq', 'time'):
         raise ValueError("domain keyword has to be one of ('freq', 'time')")
-    a, b = tr1, tr2
     # if we get Trace objects, use their data arrays
     if isinstance(a, Trace):
         a = a.data
@@ -174,17 +170,69 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False, demean=True, normalize=True,
         stdev = 1
     # choose the usually faster xcorr method for each domain
     _xcorr = _xcorr_slice if domain == 'freq' else _xcorr_padzeros
-    c = _xcorr(a, b, shift_len, domain=domain) / stdev
-    shift, value = xcorr_max(c, abs_max=abs_max)
-    if not full_xcorr:
-        from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
-        msg = ('Keyword full_xcorr will default to True starting with the next'
-               ' major release (v1.2) and will be removed in the subsquent '
-               'major release (v.1.3). Please set full_xcorr=True.')
-        warnings.warn(msg, ObsPyDeprecationWarning)
-        return shift, value
+    return _xcorr(a, b, shift, domain=domain) / stdev
 
-    return shift, value, c
+
+def xcorr(tr1, tr2, shift_len, full_xcorr=False):
+    """
+    Cross correlation of tr1 and tr2 in the time domain using window_len.
+
+    ::
+
+                                    Mid Sample
+                                        |
+        |AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|
+        |BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|
+        |<-shift_len/2->|   <- region of support ->     |<-shift_len/2->|
+
+
+    :type tr1: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param tr1: Trace 1
+    :type tr2: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param tr2: Trace 2 to correlate with trace 1
+    :type shift_len: int
+    :param shift_len: Total length of samples to shift for cross correlation.
+    :type full_xcorr: bool
+    :param full_xcorr: If ``True``, the complete xcorr function will be
+        returned as :class:`~numpy.ndarray`
+    :return: **index, value[, fct]** - Index of maximum xcorr value and the
+        value itself. The complete xcorr function is returned only if
+        ``full_xcorr=True``.
+
+    .. note::
+       Please use the `correlate` function for new code.
+
+    .. note::
+       As shift_len gets higher the window supporting the cross correlation
+       actually gets smaller. So with shift_len=0 you get the correlation
+       coefficient of both traces as a whole without any shift applied. As the
+       xcorr function works in time domain and does not zero pad at all, with
+       higher shifts allowed the window of support gets smaller so that the
+       moving windows shifted against each other do not run out of the
+       timeseries bounds at high time shifts. Of course there are other
+       possibilities to do cross correlations e.g. in frequency domain.
+
+    .. seealso::
+       `ObsPy-users mailing list
+       <http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html>`_
+       and `issue #249 <https://github.com/obspy/obspy/issues/249>`_.
+
+    .. rubric:: Example
+
+    >>> tr1 = np.random.randn(10000).astype(np.float32)
+    >>> tr2 = tr1.copy()
+    >>> a, b = xcorr(tr1, tr2, 1000)
+    >>> a
+    0
+    >>> round(b, 6)
+    1.0
+    """
+    x = correlate(tr1, tr2, shift_len, domain='time')
+    a, b = xcorr_max(x)
+    if full_xcorr:
+        return a, b, x
+    else:
+        return a, b
 
 
 def _xcorr_old_implementation(tr1, tr2, shift_len, full_xcorr=False):
@@ -325,20 +373,15 @@ def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
     # everything should be ok with the input data...
     corp = np.zeros(2 * shift_len + 1, dtype=np.float64, order='C')
     for component in components:
-        xx = xcorr(streams[0].select(component=component)[0],
-                   streams[1].select(component=component)[0],
-                   shift_len, full_xcorr=True)
-        corp += xx[2]
+        xx = correlate(streams[0].select(component=component)[0],
+                       streams[1].select(component=component)[0],
+                       shift_len)
+        corp += xx
     corp /= len(components)
     shift, value = xcorr_max(corp, abs_max=abs_max)
     if full_xcorr:
         return shift, value, corp
     else:
-        from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
-        msg = ('Keyword full_xcorr will default to True starting with the next'
-               ' major release (v1.2) and will be removed in the subsquent '
-               'major release (v.1.3). Please set full_xcorr=True.')
-        warnings.warn(msg, ObsPyDeprecationWarning)
         return shift, value
 
 
@@ -347,10 +390,11 @@ def xcorr_max(fct, abs_max=True):
     Return shift and value of maximum xcorr function
 
     :type fct: :class:`~numpy.ndarray`
-    :param fct: xcorr function e.g. returned by xcorr
+    :param fct: xcorr function e.g. returned by correlate
     :type abs_max: bool
     :param abs_max: determines if the absolute maximum should be used.
-    :return: **shift, value** - Shift and value of maximum xcorr.
+    :return: **shift, value** - Shift and value of maximum of
+        cross-correlation.
 
     .. rubric:: Example
 
@@ -487,8 +531,8 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
         slices.append(tr.slice(start, end))
     # cross correlate
     shift_len = int(cc_maxlag * samp_rate)
-    _cc_shift, cc_max, cc = xcorr(slices[0].data, slices[1].data,
-                                  shift_len, full_xcorr=True, domain='time')
+    cc = correlate(slices[0].data, slices[1].data, shift_len, domain='time')
+    _cc_shift, cc_max = xcorr_max(cc)
     cc_curvature = np.concatenate((np.zeros(1), np.diff(cc, 2), np.zeros(1)))
     cc_convex = np.ma.masked_where(np.sign(cc_curvature) >= 0, cc)
     cc_concave = np.ma.masked_where(np.sign(cc_curvature) < 0, cc)
