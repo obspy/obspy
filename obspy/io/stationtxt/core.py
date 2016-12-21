@@ -261,16 +261,18 @@ def inventory_to_station_text(inventory_or_network, level):
     Function to convert inventory or network to station text representation.
 
     :type inventory_or_network:
-        :param:`~obspy.core.inventory.inventory.Inventory` or
-        :param:`~obspy.core.inventory.network.Network`
-        :param level: Specify level of detail using NETWORK, STATION or CHANNEL
+        :class:`~obspy.core.inventory.inventory.Inventory` or
+        :class:`~obspy.core.inventory.network.Network`
+    :type level: str
+    :param level: Specify level of detail using ``'network'``, ``'station'`` or
+        ``'channel'``
     """
     if isinstance(inventory_or_network, Inventory):
         networks = inventory_or_network.networks
     elif isinstance(inventory_or_network, Network):
         networks = [inventory_or_network.networks]
     else:
-        msg = ("inventory_or_network must be a "
+        msg = ("'inventory_or_network' must be a "
                "obspy.core.inventory.network.Network or a "
                "obspy.core.inventory.inventory.Inventory object.")
         raise TypeError(msg)
@@ -306,9 +308,11 @@ def inventory_to_station_text(inventory_or_network, level):
                 for sta in net.stations:
                     items.append((net, sta, None))
             else:
-                raise ValueError("Unable to write stationtxt "
-                                 "at STATION level. One or more "
-                                 "networks contains no stations.")
+                msg = ("Unable to write stationtxt at station level. One or "
+                       "more networks contain no stations. Using "
+                       "`level='network'` might work (with less detail in "
+                       "the output).")
+                raise ValueError(msg)
         if all(sta is not None for net, sta, cha in items):
             header = ("#Network|Station|Latitude|Longitude|Elevation|SiteName|"
                       "StartTime|EndTime")
@@ -330,13 +334,17 @@ def inventory_to_station_text(inventory_or_network, level):
                         for cha in sta.channels:
                             items.append((net, sta, cha))
                     else:
-                        raise ValueError("Unable to write stationtxt "
-                                         "at CHANNEL level. One or more "
-                                         "stations contains no channels.")
+                        msg = ("Unable to write stationtxt at channel level. "
+                               "One or more stations contain no channels. "
+                               "Using `level='station'` might work (with less "
+                               "detail in the output).")
+                        raise ValueError(msg)
             else:
-                raise ValueError("Unable to write stationtxt "
-                                 "at CHANNEL level. One or more "
-                                 "networks contains no stations.")
+                msg = ("Unable to write stationtxt at channel level. "
+                       "One or more networks contain no stations. "
+                       "Using `level='network'` might work (with less "
+                       "detail in the output).")
+                raise ValueError(msg)
 
         if all(cha is not None for net, sta, cha in items):
             header = ("#Network|Station|Location|Channel|Latitude|Longitude|"
@@ -367,12 +375,13 @@ def inventory_to_station_text(inventory_or_network, level):
                     _format_time(cha.end_date)))
                 lines.append(line)
     else:
-        raise NotImplementedError("Unknown level: %s" % str(level))
+        raise ValueError("Unknown level: %s" % str(level))
 
     return "\n".join(lines)
 
 
-def _write_stationtxt(inventory, path_or_file_object, level='channel', **kwargs):
+def _write_stationtxt(inventory, path_or_file_object, level='channel',
+                      **kwargs):
     """
     Writes an inventory object to a file or file-like object in stationtxt
     format.
@@ -380,7 +389,8 @@ def _write_stationtxt(inventory, path_or_file_object, level='channel', **kwargs)
     :type inventory: :class:`~obspy.core.inventory.Inventory`
     :param inventory: The inventory instance to be written.
     :param file_or_file_object: The file or file-like object to be written to.
-    :param level: Specify level of detail using NETWORK, STATION or CHANNEL
+    :param level: Specify level of detail using one of: ``'network'``,
+        ``'station'`` or ``'channel'``.
     """
     stationtxt = inventory_to_station_text(inventory, level)
     if isinstance(path_or_file_object, str):
