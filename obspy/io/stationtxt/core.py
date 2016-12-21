@@ -393,13 +393,15 @@ def _write_stationtxt(inventory, path_or_file_object, level='channel',
         ``'station'`` or ``'channel'``.
     """
     stationtxt = inventory_to_station_text(inventory, level)
-    if isinstance(path_or_file_object, str):
-        path_or_file_object = open(path_or_file_object, 'w')
-    if hasattr(path_or_file_object, 'write'):
-        path_or_file_object.write(stationtxt)
+    if not hasattr(path_or_file_object, 'write'):
+        f = open(path_or_file_object, 'w')
     else:
-        msg = ("path_or_file_object must be a string or a file-like object")
-        raise TypeError(msg)
+        f = path_or_file_object
+    try:
+        f.write(stationtxt)
+    finally:
+        if not hasattr(path_or_file_object, 'write'):
+            f.close()
 
 
 if __name__ == '__main__':
