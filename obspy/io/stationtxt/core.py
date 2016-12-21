@@ -372,7 +372,7 @@ def inventory_to_station_text(inventory_or_network, level):
     return "\n".join(lines)
 
 
-def _write_stationtxt(inventory, path_or_file_object, level, **kwargs):
+def _write_stationtxt(inventory, path_or_file_object, level='channel', **kwargs):
     """
     Writes an inventory object to a file or file-like object in stationtxt
     format.
