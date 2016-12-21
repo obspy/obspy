@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.io.resp
-.. automodule:: obspy.io.resp
+.. currentmodule:: obspy.clients.nrl
+.. automodule:: obspy.clients.nrl
 
     .. comment to end block
 
