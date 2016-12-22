@@ -15,7 +15,6 @@ from obspy.imaging.ray_paths import plot_rays, get_ray_paths
 import obspy.geodetics.base as geodetics
 
 
-
 try:
     from mayavi import mlab  # @UnusedImport # NOQA
     HAS_MAYAVI = True
@@ -88,16 +87,6 @@ class PathPlottingTestCase(unittest.TestCase):
                       phase_list=['Pdiff'], colorscheme='dark',
                       kind='mayavi', view_dict=view_dict, icol=2,
                       fname_out=ic.name)
-
-        # the following test is for an animated mayavi windows
-        # and movie plotting.
-        # Needs third party coastlines by default, otherwise
-        # remove the coastlines keyword !
-        #
-        # plot_rays(inventory=inv, catalog=cat,
-        #           phase_list=['PKP'], animate=True, savemovie=False,
-        #           kind='mayavi', figsize=(1920, 1080),
-        #           coastlines='data/coastlines.vtk')
 
 
 def suite():

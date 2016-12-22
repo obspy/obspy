@@ -21,7 +21,7 @@ import warnings
 import numpy as np
 from matplotlib.colors import hex2color
 
-import ..geodetics.base as geodetics
+import obspy.geodetics.base as geodetics
 
 
 def plot_rays(inventory, catalog, phase_list=('P',),
@@ -78,7 +78,7 @@ def plot_rays(inventory, catalog, phase_list=('P',),
         _plot_rays_mayavi(
             inventory, catalog, phase_list=phase_list,
             colorscheme=colorscheme, animate=animate, savemovie=savemovie,
-            figsize=figsize, taup_model='iasp91', coastlines=coastlines,
+            figsize=figsize, taup_model=taup_model, coastlines=coastlines,
             icol=icol, event_labels=event_labels,
             station_labels=station_labels, fname_out=fname_out,
             view_dict=view_dict)
