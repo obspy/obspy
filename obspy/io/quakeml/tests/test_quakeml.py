@@ -159,6 +159,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(
             origin.earth_model_id,
             ResourceIdentifier(id="smi:same/model/maeh"))
+        self.assertEqual(origin.region, 'Kalamazoo')
         self.assertEqual(origin.evaluation_mode, "manual")
         self.assertEqual(origin.evaluation_status, "preliminary")
         self.assertEqual(origin.origin_type, "hypocenter")
@@ -298,8 +299,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(
             stat_contrib.station_magnitude_id.id,
             "smi:ch.ethz.sed/magnitude/station/881334")
-        self.assertEqual(stat_contrib.weight, 0.55)
-        self.assertEqual(stat_contrib.residual, 0.11)
+        self.assertEqual(stat_contrib.weight, 0.)
+        self.assertEqual(stat_contrib.residual, 0.)
 
         # exporting back to XML should result in the same document
         with open(filename, "rt") as fp:

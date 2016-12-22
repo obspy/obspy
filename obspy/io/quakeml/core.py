@@ -563,6 +563,7 @@ class Unpickler(object):
         obj.composite_times = self._composite_times(element)
         obj.quality = self._origin_quality(element)
         obj.origin_type = self._xpath2obj('type', element)
+        obj.region = self._xpath2obj('region', element)
         obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
         obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
         obj.creation_info = self._creation_info(element)
@@ -1152,14 +1153,10 @@ class Pickler(object):
     def _station_magnitude_contributions(self, stat_contrib, element):
         for contrib in stat_contrib:
             contrib_el = etree.Element('stationMagnitudeContribution')
-            etree.SubElement(contrib_el, 'stationMagnitudeID').text = \
-                contrib.station_magnitude_id.id
-            if contrib.weight:
-                etree.SubElement(contrib_el, 'weight').text = \
-                    str(contrib.weight)
-            if contrib.residual:
-                etree.SubElement(contrib_el, 'residual').text = \
-                    str(contrib.residual)
+            self._str(contrib.station_magnitude_id.id, contrib_el,
+                      'stationMagnitudeID')
+            self._str(contrib.weight, contrib_el, 'weight')
+            self._str(contrib.residual, contrib_el, 'residual')
             self._extra(contrib, contrib_el)
             element.append(contrib_el)
 
@@ -1395,6 +1392,7 @@ class Pickler(object):
             if len(qu_el) > 0:
                 element.append(qu_el)
         self._str(origin.origin_type, element, 'type')
+        self._str(origin.region, element, 'region')
         self._str(origin.evaluation_mode, element, 'evaluationMode')
         self._str(origin.evaluation_status, element, 'evaluationStatus')
         self._comments(origin.comments, element)

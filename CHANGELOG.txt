@@ -21,13 +21,16 @@
    * ObsPy can now read MiniSEED files with no blockette 1000. (see #1544)
    * ObsPy now always writes Blockette 100 if sampling rate accuracy is
      otherwise lost. (see #1550)
+ - obspy.io.quakeml:
+   * write StationMagnitude.residual even when it is zero (see #1625)
+   * read & write Event.region
  - obspy.io.sac:
    * `SACTrace.lpspol` and `lcalda` are `True` and `False` by default, when
       created via `SACTrace.from_obspy_trace` with a `Trace` that has no SAC
       inheritance. (see #1507)
    * Reference time not written to SAC file when made from scratch
      (see #1575)
-- obspy.io.sh:
+ - obspy.io.sh:
    * Fix writing of long headers for python3
    * Whitespace in header fields is not ignored anymore (see #1552)
  - obspy.io.stationxml:
