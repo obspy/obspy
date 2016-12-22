@@ -112,6 +112,9 @@ master: (doi: 10.5281/zenodo.165135)
    * ObsPy can now read MiniSEED files with no blockette 1000. (see #1544)
    * ObsPy now always writes Blockette 100 if sampling rate accuracy is
      otherwise lost. (see #1550)
+ - obspy.io.quakeml:
+   * write StationMagnitude.residual even when it is zero (see #1625)
+   * read & write Event.region
  - obspy.io.sac:
    * `SACTrace.lpspol` and `lcalda` are `True` and `False` by default, when
       created via `SACTrace.from_obspy_trace` with a `Trace` that has no SAC

@@ -21,6 +21,9 @@ import unittest
 import warnings
 from difflib import Differ
 
+import lxml
+import requests
+
 from obspy import UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
@@ -67,8 +70,7 @@ def normalize_version_number(string):
     input string, independent of commas and newlines.
     """
     repl = re.sub('v[0-9]+\.[0-9]+\.[0-9]+', "vX.X.X", string).replace(",", "")
-    return " ".join(
-        sorted(s.strip() for l in repl.splitlines() for s in l.split(" ")))
+    return [l.strip() for l in repl.splitlines()]
 
 
 class ClientTestCase(unittest.TestCase):
@@ -335,19 +337,22 @@ class ClientTestCase(unittest.TestCase):
         Tests the parsing of the available event catalogs.
         """
         self.assertEqual(set(self.client.services["available_event_catalogs"]),
-                         set(("ANF", "GCMT", "TEST", "ISC", "UofW",
-                              "NEIC PDE")))
+                         set(("GCMT", "ISC", "NEIC PDE")))
 
     def test_iris_event_contributors_availability(self):
         """
         Tests the parsing of the available event contributors.
         """
-        self.assertEqual(set(
-                         self.client.services["available_event_contributors"]),
-                         set(("University of Washington", "ANF", "GCMT",
-                              "GCMT-Q", "ISC", "NEIC ALERT", "NEIC PDE-W",
-                              "UNKNOWN", "NEIC PDE-M", "NEIC COMCAT",
-                              "NEIC PDE-Q")))
+        response = requests.get(
+            'http://service.iris.edu/fdsnws/event/1/contributors')
+        xml = lxml.etree.fromstring(response.content)
+        expected = {
+            elem.text for elem in xml.xpath('/Contributors/Contributor')}
+        # check that we have some values in there
+        self.assertTrue(len(expected) > 5)
+        self.assertEqual(
+            set(self.client.services["available_event_contributors"]),
+            expected)
 
     def test_simple_xml_parser(self):
         """
@@ -411,7 +416,11 @@ class ClientTestCase(unittest.TestCase):
             self.assertGreater(40.1, event.origins[0].latitude)
             self.assertGreater(event.origins[0].latitude, -170.1)
             self.assertGreater(170.1, event.origins[0].latitude)
-            self.assertGreater(event.magnitudes[0].mag, 3.999)
+            # events returned by FDSNWS can contain many magnitudes with a wide
+            # range, and currently (at least for IRIS) the magnitude threshold
+            # sent to the server checks if at least one magnitude matches, it
+            # does not only check the preferred magnitude..
+            self.assertTrue(any(m.mag >= 3.999 for m in event.magnitudes))
 
     def test_iris_example_queries_station(self):
         """
@@ -566,10 +575,15 @@ class ClientTestCase(unittest.TestCase):
             with open(os.path.join(self.datapath, filename)) as fh:
                 expected = fh.read()
             # allow for changes in version number..
-            self.assertEqual(normalize_version_number(got),
-                             normalize_version_number(expected),
-                             failmsg(normalize_version_number(got),
-                                     normalize_version_number(expected)))
+            got = normalize_version_number(got)
+            expected = normalize_version_number(expected)
+            # catalogs/contributors are checked in separate tests
+            self.assertTrue(got[-2].startswith('Available catalogs:'))
+            self.assertTrue(got[-1].startswith('Available contributors:'))
+            got = got[:-2]
+            expected = expected[:-2]
+            for line_got, line_expected in zip(got, expected):
+                self.assertEqual(line_got, line_expected)
 
             # Reset. Creating a new one is faster then clearing the old one.
             tmp = io.StringIO()
@@ -583,10 +597,9 @@ class ClientTestCase(unittest.TestCase):
             filename = "station_helpstring.txt"
             with open(os.path.join(self.datapath, filename)) as fh:
                 expected = fh.read()
-            self.assertEqual(normalize_version_number(got),
-                             normalize_version_number(expected),
-                             failmsg(normalize_version_number(got),
-                                     normalize_version_number(expected)))
+            got = normalize_version_number(got)
+            expected = normalize_version_number(expected)
+            self.assertEqual(got, expected, failmsg(got, expected))
 
             # Reset.
             tmp = io.StringIO()
@@ -600,10 +613,9 @@ class ClientTestCase(unittest.TestCase):
             filename = "dataselect_helpstring.txt"
             with open(os.path.join(self.datapath, filename)) as fh:
                 expected = fh.read()
-            self.assertEqual(normalize_version_number(got),
-                             normalize_version_number(expected),
-                             failmsg(normalize_version_number(got),
-                                     normalize_version_number(expected)))
+            got = normalize_version_number(got)
+            expected = normalize_version_number(expected)
+            self.assertEqual(got, expected, failmsg(got, expected))
 
         finally:
             sys.stdout = sys.__stdout__
@@ -613,16 +625,15 @@ class ClientTestCase(unittest.TestCase):
         expected = (
             "FDSN Webservice Client (base url: http://service.iris.edu)\n"
             "Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6), "
-            "'station' (v1.0.7), 'available_event_contributors', "
-            "'available_event_catalogs'\n\n"
+            "'station' (v1.0.7), 'available_event_catalogs', "
+            "'available_event_contributors'\n\n"
             "Use e.g. client.help('dataselect') for the\n"
             "parameter description of the individual services\n"
             "or client.help() for parameter description of\n"
             "all webservices.")
-        self.assertEqual(normalize_version_number(got),
-                         normalize_version_number(expected),
-                         failmsg(normalize_version_number(got),
-                                 normalize_version_number(expected)))
+        got = normalize_version_number(got)
+        expected = normalize_version_number(expected)
+        self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_dataselect_bulk(self):
         """
