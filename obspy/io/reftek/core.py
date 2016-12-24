@@ -244,7 +244,7 @@ class Reftek130(object):
             if eh.data_format != b"C0":
                 msg = ("Reftek data encoding '{}' not implemented yet. Please "
                        "open an issue on GitHub and provide a small (< 50kb) "
-                       "test file.").format(eh.type)
+                       "test file.").format(eh.data_format)
                 raise NotImplementedError(msg)
             header = {
                 "network": network,
