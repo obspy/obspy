@@ -251,35 +251,49 @@ def _initial_unpack_packets(bytestring):
     return result
 
 
-def _unpack_C0_data(packets):  # noqa
+def _unpack_C0_C2_data(packets, encoding):  # noqa
     """
-    Unpacks sample data from a packet array that uses 'C0' data encoding.
+    Unpacks sample data from a packet array that uses 'C0' or 'C2' data
+    encoding.
 
     :type packets: :class:`numpy.ndarray` (dtype ``PACKET_FINAL_DTYPE``)
     :param packets: Array of data packets (``packet_type`` ``'DT'``) from which
-        to unpack the sample data (with data encoding 'C0').
+        to unpack the sample data (with data encoding 'C0' or 'C2').
+    :type encoding: str
+    :param encoding: Reftek data encoding as specified in event header (EH)
+        packet, either ``'C0'`` or ``'C2'``.
     """
-    if np.any(packets['data_format'] != b'C0'):
+    if encoding == 'C0':
+        encoding_bytes = b'C0'
+    elif encoding == 'C2':
+        encoding_bytes = b'C2'
+    else:
+        msg = "Unregonized encoding: '{}'".format(encoding)
+        raise ValueError(msg)
+    if np.any(packets['data_format'] != encoding_bytes):
         differing_formats = np.unique(
-            packets[packets['data_format'] != b'C0']['data_format']).tolist()
-        msg = ("Using 'C0' data format unpacking routine but some packet(s) "
-               "specify other data format(s): {}".format(differing_formats))
+            packets[packets['data_format'] !=
+                    encoding_bytes]['data_format']).tolist()
+        msg = ("Using '{}' data format unpacking routine but some packet(s) "
+               "specify other data format(s): {}".format(encoding,
+                                                         differing_formats))
         warnings.warn(msg)
     # if the packet array is contiguous in memory (which it generally should
     # be), we can work with the memory address of the first packed data byte
     # and advance it by a fixed offset when moving from one packet to the next
     if packets.flags['C_CONTIGUOUS'] and packets.flags['F_CONTIGUOUS']:
-        return _unpack_C0_data_fast(packets)
+        return _unpack_C0_C2_data_fast(packets, encoding)
     # if the packet array is *not* contiguous in memory, fall back to slightly
     # slower unpacking with looking up the memory position of the first packed
     # byte in each packet individually.
     else:
-        return _unpack_C0_data_safe(packets)
+        return _unpack_C0_C2_data_safe(packets, encoding)
 
 
-def _unpack_C0_data_fast(packets):  # noqa
+def _unpack_C0_C2_data_fast(packets, encoding):  # noqa
     """
-    Unpacks sample data from a packet array that uses 'C0' data encoding.
+    Unpacks sample data from a packet array that uses 'C0' or 'C2' data
+    encoding.
 
     Unfortunately the whole data cannot be unpacked with one call to
     libmseed as some payloads do not take the full 960 bytes. They are
@@ -297,8 +311,18 @@ def _unpack_C0_data_fast(packets):  # noqa
 
     :type packets: :class:`numpy.ndarray` (dtype ``PACKET_FINAL_DTYPE``)
     :param packets: Array of data packets (``packet_type`` ``'DT'``) from which
-        to unpack the sample data (with data encoding 'C0').
+        to unpack the sample data (with data encoding 'C0' or 'C2').
+    :type encoding: str
+    :param encoding: Reftek data encoding as specified in event header (EH)
+        packet, either ``'C0'`` or ``'C2'``.
     """
+    if encoding == 'C0':
+        decode_steim = clibmseed.msr_decode_steim1
+    elif encoding == 'C2':
+        decode_steim = clibmseed.msr_decode_steim2
+    else:
+        msg = "Unregonized encoding: '{}'".format(encoding)
+        raise ValueError(msg)
     npts = packets["number_of_samples"].sum()
     unpacked_data = np.empty(npts, dtype=np.int32)
     pos = 0
@@ -309,7 +333,7 @@ def _unpack_C0_data_fast(packets):  # noqa
     else:
         offset = 0
     for _npts in packets["number_of_samples"]:
-        clibmseed.msr_decode_steim1(
+        decode_steim(
             s, 960, _npts, unpacked_data[pos:], _npts, None,
             1)
         pos += _npts
@@ -317,9 +341,10 @@ def _unpack_C0_data_fast(packets):  # noqa
     return unpacked_data
 
 
-def _unpack_C0_data_safe(packets):  # noqa
+def _unpack_C0_C2_data_safe(packets, encoding):  # noqa
     """
-    Unpacks sample data from a packet array that uses 'C0' data encoding.
+    Unpacks sample data from a packet array that uses 'C0' or 'C2' data
+    encoding.
 
     If the packet array is *not* contiguous in memory, fall back to slightly
     slower unpacking with looking up the memory position of the first packed
@@ -327,8 +352,18 @@ def _unpack_C0_data_safe(packets):  # noqa
 
     :type packets: :class:`numpy.ndarray` (dtype ``PACKET_FINAL_DTYPE``)
     :param packets: Array of data packets (``packet_type`` ``'DT'``) from which
-        to unpack the sample data (with data encoding 'C0').
+        to unpack the sample data (with data encoding 'C0' or 'C2').
+    :type encoding: str
+    :param encoding: Reftek data encoding as specified in event header (EH)
+        packet, either ``'C0'`` or ``'C2'``.
     """
+    if encoding == 'C0':
+        decode_steim = clibmseed.msr_decode_steim1
+    elif encoding == 'C2':
+        decode_steim = clibmseed.msr_decode_steim2
+    else:
+        msg = "Unregonized encoding: '{}'".format(encoding)
+        raise ValueError(msg)
     npts = packets["number_of_samples"].sum()
     unpacked_data = np.empty(npts, dtype=np.int32)
     pos = 0
@@ -336,99 +371,7 @@ def _unpack_C0_data_safe(packets):  # noqa
     # payload.
     for p in packets:
         _npts = p["number_of_samples"]
-        clibmseed.msr_decode_steim1(
-            p["payload"][40:].ctypes.data, 960, _npts,
-            unpacked_data[pos:], _npts, None, 1)
-        pos += _npts
-    return unpacked_data
-
-
-def _unpack_C2_data(packets):  # noqa
-    """
-    Unpacks sample data from a packet array that uses 'C2' data encoding.
-
-    :type packets: :class:`numpy.ndarray` (dtype ``PACKET_FINAL_DTYPE``)
-    :param packets: Array of data packets (``packet_type`` ``'DT'``) from which
-        to unpack the sample data (with data encoding 'C2').
-    """
-    if np.any(packets['data_format'] != b'C2'):
-        differing_formats = np.unique(
-            packets[packets['data_format'] != b'C2']['data_format']).tolist()
-        msg = ("Using 'C2' data format unpacking routine but some packet(s) "
-               "specify other data format(s): {}".format(differing_formats))
-        warnings.warn(msg)
-    # if the packet array is contiguous in memory (which it generally should
-    # be), we can work with the memory address of the first packed data byte
-    # and advance it by a fixed offset when moving from one packet to the next
-    if packets.flags['C_CONTIGUOUS'] and packets.flags['F_CONTIGUOUS']:
-        return _unpack_C2_data_fast(packets)
-    # if the packet array is *not* contiguous in memory, fall back to slightly
-    # slower unpacking with looking up the memory position of the first packed
-    # byte in each packet individually.
-    else:
-        return _unpack_C2_data_safe(packets)
-
-
-def _unpack_C2_data_fast(packets):  # noqa
-    """
-    Unpacks sample data from a packet array that uses 'C2' data encoding.
-
-    Unfortunately the whole data cannot be unpacked with one call to
-    libmseed as some payloads do not take the full 960 bytes. They are
-    thus padded which would results in padded pieces directly in a large
-    array and libmseed (understandably) does not support that.
-
-    Thus we resort to *tada* pointer arithmetics in Python ;-) This is
-    quite a bit faster then correctly casting to an integer pointer so
-    it's worth it.
-
-    Also avoid a data copy.
-
-    Writing this directly in C would be about 3 times as fast so it might
-    be worth it.
-
-    :type packets: :class:`numpy.ndarray` (dtype ``PACKET_FINAL_DTYPE``)
-    :param packets: Array of data packets (``packet_type`` ``'DT'``) from which
-        to unpack the sample data (with data encoding 'C2').
-    """
-    npts = packets["number_of_samples"].sum()
-    unpacked_data = np.empty(npts, dtype=np.int32)
-    pos = 0
-    s = packets[0]["payload"][40:].ctypes.data
-    if len(packets) > 1:
-        offset = (
-            packets[1]["payload"][40:].ctypes.data - s)
-    else:
-        offset = 0
-    for _npts in packets["number_of_samples"]:
-        clibmseed.msr_decode_steim2(
-            s, 960, _npts, unpacked_data[pos:], _npts, None,
-            1)
-        pos += _npts
-        s += offset
-    return unpacked_data
-
-
-def _unpack_C2_data_safe(packets):  # noqa
-    """
-    Unpacks sample data from a packet array that uses 'C2' data encoding.
-
-    If the packet array is *not* contiguous in memory, fall back to slightly
-    slower unpacking with looking up the memory position of the first packed
-    byte in each packet individually.
-
-    :type packets: :class:`numpy.ndarray` (dtype ``PACKET_FINAL_DTYPE``)
-    :param packets: Array of data packets (``packet_type`` ``'DT'``) from which
-        to unpack the sample data (with data encoding 'C2').
-    """
-    npts = packets["number_of_samples"].sum()
-    unpacked_data = np.empty(npts, dtype=np.int32)
-    pos = 0
-    # Sample data starts at byte 40 in the DT packet's
-    # payload.
-    for p in packets:
-        _npts = p["number_of_samples"]
-        clibmseed.msr_decode_steim2(
+        decode_steim(
             p["payload"][40:].ctypes.data, 960, _npts,
             unpacked_data[pos:], _npts, None, 1)
         pos += _npts
