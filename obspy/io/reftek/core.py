@@ -19,7 +19,8 @@ from obspy.core.util.obspy_types import ObsPyException
 
 from .packet import (Packet, EHPacket, _initial_unpack_packets, PACKET_TYPES,
                      PACKET_TYPES_IMPLEMENTED, PACKET_FINAL_DTYPE,
-                     Reftek130UnpackPacketError, _unpack_C0_data)
+                     Reftek130UnpackPacketError, _unpack_C0_data,
+                     _unpack_C2_data)
 
 
 NOW = UTCDateTime()
@@ -241,7 +242,11 @@ class Reftek130(object):
             else:
                 eh = EHPacket(et_packets[0])
             # only "C0" encoding supported right now
-            if eh.data_format != b"C0":
+            if eh.data_format == b"C0":
+                _unpack_data = _unpack_C0_data
+            elif eh.data_format == b"C2":
+                _unpack_data = _unpack_C2_data
+            else:
                 msg = ("Reftek data encoding '{}' not implemented yet. Please "
                        "open an issue on GitHub and provide a small (< 50kb) "
                        "test file.").format(eh.data_format)
@@ -287,7 +292,7 @@ class Reftek130(object):
                         sample_data = np.array([], dtype=np.int32)
                         npts = packets_["number_of_samples"].sum()
                     else:
-                        sample_data = _unpack_C0_data(packets_)
+                        sample_data = _unpack_data(packets_)
                         npts = len(sample_data)
 
                     tr = Trace(data=sample_data, header=copy.deepcopy(header))
