@@ -183,25 +183,21 @@ class CrossCorrelationTestCase(unittest.TestCase):
         a, b = [1, 2, 3], [1, 2, 3]
         n = len(a) + len(b) - 1
         cc1 = correlate(a, b, 2, domain='freq')
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            cc2 = correlate(a, b, 3, domain='freq')
+        cc2 = correlate(a, b, 3, domain='freq')
         cc3 = correlate(a, b, None, domain='freq')
         cc4 = correlate(a, b, None, domain='time')
         self.assertEqual(len(cc1), n)
-        self.assertEqual(len(cc2), n)
+        self.assertEqual(len(cc2), 2 + n)
         self.assertEqual(len(cc3), n)
         self.assertEqual(len(cc4), n)
         a, b = [1, 2, 3], [1, 2]
         n = len(a) + len(b) - 1
         cc1 = correlate(a, b, 2, domain='freq')
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            cc2 = correlate(a, b, 3, domain='freq')
+        cc2 = correlate(a, b, 3, domain='freq')
         cc3 = correlate(a, b, None, domain='freq')
         cc4 = correlate(a, b, None, domain='time')
         self.assertEqual(len(cc1), n)
-        self.assertEqual(len(cc2), n)
+        self.assertEqual(len(cc2), 2 + n)
         self.assertEqual(len(cc3), n)
         self.assertEqual(len(cc4), n)
 

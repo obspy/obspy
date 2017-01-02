@@ -43,7 +43,7 @@ def _xcorr_padzeros(a, b, shift, domain='freq'):
     """
     Cross-correlation using SciPy with mode='valid' and precedent zero padding
     """
-    assert domian in ('freq', 'time')
+    assert domain in ('freq', 'time')
     if shift is None:
         shift = (len(a) + len(b) - 1) // 2
     dif = len(a) - len(b) - 2 * shift
@@ -62,18 +62,17 @@ def _xcorr_slice(a, b, shift, domain='freq'):
     """
     Cross-correlation using SciPy with mode='full' and subsequent slicing
     """
-    assert domian in ('freq', 'time')
+    assert domain in ('freq', 'time')
+    mid = (len(a) + len(b) - 1) // 2
+    if shift > mid:
+        # Such a large shift is not possible without zero padding
+        return _xcorr_padzeros(a, b, shift, domain=domain)
+    if shift is None:
+        shift = mid
     if domain == 'freq':
         c = scipy.signal.fftconvolve(a, b[::-1], 'full')
     else:
         c = scipy.signal.correlate(a, b, 'full')
-    mid = len(c) // 2
-    if shift is None:
-        shift = mid
-    if shift > mid:
-        msg = 'sift too large, use largest possible shift %d instead'
-        warnings.warn(msg % mid)
-        shift = mid
     return c[mid - shift:mid + shift + len(c) % 2]
 
 
