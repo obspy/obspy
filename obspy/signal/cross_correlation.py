@@ -64,11 +64,11 @@ def _xcorr_slice(a, b, shift, domain='freq'):
     """
     assert domain in ('freq', 'time')
     mid = (len(a) + len(b) - 1) // 2
+    if shift is None:
+        shift = mid
     if shift > mid:
         # Such a large shift is not possible without zero padding
         return _xcorr_padzeros(a, b, shift, domain=domain)
-    if shift is None:
-        shift = mid
     if domain == 'freq':
         c = scipy.signal.fftconvolve(a, b[::-1], 'full')
     else:

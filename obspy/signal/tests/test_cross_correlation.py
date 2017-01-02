@@ -10,7 +10,6 @@ import ctypes as C
 import numpy as np
 import os
 import unittest
-import warnings
 
 from obspy import UTCDateTime, read
 from obspy.core.util.libnames import _load_cdll
