@@ -43,6 +43,7 @@ def _xcorr_padzeros(a, b, shift, domain='freq'):
     """
     Cross-correlation using SciPy with mode='valid' and precedent zero padding
     """
+    assert domian in ('freq', 'time')
     if shift is None:
         shift = (len(a) + len(b) - 1) // 2
     dif = len(a) - len(b) - 2 * shift
@@ -52,10 +53,8 @@ def _xcorr_padzeros(a, b, shift, domain='freq'):
         a = _pad_zeros(a, -dif // 2)
     if domain == 'freq':
         c = scipy.signal.fftconvolve(a, b[::-1], 'valid')
-    elif domain == 'time':
-        c = scipy.signal.correlate(a, b, 'valid')
     else:
-        raise NotImplementedError
+        c = scipy.signal.correlate(a, b, 'valid')
     return c
 
 
@@ -63,12 +62,11 @@ def _xcorr_slice(a, b, shift, domain='freq'):
     """
     Cross-correlation using SciPy with mode='full' and subsequent slicing
     """
+    assert domian in ('freq', 'time')
     if domain == 'freq':
         c = scipy.signal.fftconvolve(a, b[::-1], 'full')
-    elif domain == 'time':
-        c = scipy.signal.correlate(a, b, 'full')
     else:
-        raise NotImplementedError
+        c = scipy.signal.correlate(a, b, 'full')
     mid = len(c) // 2
     if shift is None:
         shift = mid
