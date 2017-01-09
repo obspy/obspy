@@ -17,7 +17,8 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.io.reftek.core import (
     _read_reftek130, _is_reftek130, Reftek130, Reftek130Exception)
 from obspy.io.reftek.packet import (
-    _unpack_C0_data_fast, _unpack_C0_data_safe, _unpack_C0_data)
+    _unpack_C0_data_fast, _unpack_C0_data_safe, _unpack_C0_data,
+    EHPacket, _initial_unpack_packets)
 
 
 class ReftekTestCase(unittest.TestCase):
@@ -83,6 +84,8 @@ class ReftekTestCase(unittest.TestCase):
         #   25 1 673 2015-10-09T22:51:22.025000Z
         #   26 2 759 2015-10-09T22:51:21.595000Z
         #   27 0 067 2015-10-09T22:51:25.055000Z
+        self.reftek_file_vpu = os.path.join(self.datapath,
+                                            '221935615_00000000')
 
     def _assert_reftek130_test_stream(self, st_reftek):
         """
@@ -452,6 +455,28 @@ class ReftekTestCase(unittest.TestCase):
             warnings.simplefilter("always")
             rt130 = Reftek130.from_file(self.reftek_file)
         self.assertEqual(expected, str(rt130).splitlines())
+
+    def test_reading_packet_with_vpu_float_string(self):
+        """
+        Test reading a data stream with VPU floating point in header, see #1632
+        """
+        with open(self.reftek_file_vpu, 'rb') as fh:
+            data = fh.read(1024)
+        data = _initial_unpack_packets(data)
+        eh = EHPacket(data[0])
+        self.assertEqual(
+            eh.channel_sensor_vpu,
+            (2.4, 2.4, 2.4, None, None, None, None, None, None, None, None,
+             None, None, None, None, None))
+        # reading the file should work..
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            st = obspy.read(self.reftek_file_vpu)
+        self.assertEqual(len(st), 2)
+        self.assertEqual(len(st[0]), 890)
+        self.assertEqual(len(st[1]), 890)
+        np.testing.assert_array_equal(
+            st[0][:10], [210, 212, 208, 211, 211, 220, 216, 215, 219, 218])
 
 
 def suite():
