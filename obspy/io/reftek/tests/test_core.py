@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import inspect
+import io
 import os
 import re
 import unittest
@@ -477,6 +478,27 @@ class ReftekTestCase(unittest.TestCase):
         self.assertEqual(len(st[1]), 890)
         np.testing.assert_array_equal(
             st[0][:10], [210, 212, 208, 211, 211, 220, 216, 215, 219, 218])
+
+    def test_reading_file_with_multiple_events(self):
+        """
+        Test reading a "multiplexed" file with multiple "events" in it.
+
+        Simply reuse the existing test data in one read operation.
+        """
+        with open(self.reftek_file_vpu, 'rb') as fh:
+            data = fh.read()
+        with open(self.reftek_file, 'rb') as fh:
+            data += fh.read()
+        bytes_ = io.BytesIO(data)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            st = obspy.read(bytes_, format='REFTEK130')
+        self.assertEqual(len(st), 10)
+        # we should have data from two different files/stations in there
+        for tr in st[:8]:
+            self.assertEqual(tr.stats.station, 'KW1')
+        for tr in st[8:]:
+            self.assertEqual(tr.stats.station, 'TL02')
 
 
 def suite():
