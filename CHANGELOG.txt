@@ -5,6 +5,8 @@
      dayplot of a trace, see #1566)
    * properly pass through kwargs from Stream.detrend() to Trace.detrend()
      (see #1607)
+   * Resource identifiers will now always point to the newest object in case
+     they are created multiple times with identical objects. (see #1629)
  - obspy.core.event.source:
    * Fix `farfield` if input `points` is a 2D array. (see #1499, #1553)
  - obspy.clients.earthworm:

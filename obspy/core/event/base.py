@@ -623,17 +623,21 @@ class ResourceIdentifier(object):
         Will also append self again to the global class level reference list so
         everything stays consistent.
         """
-        # If it does not yet exists simply set it.
-        if self.id not in ResourceIdentifier.__resource_id_weak_dict:
+        # If it does not yet exists, set it.
+        #
+        # If it already exists, set the referred object to the current one if
+        # the existing referred object is identical to the new one.
+        # Use the new one as the old might be more readily garbage collected.
+        # This is a weak heuristic but it is all we can do from here.
+        if self.id not in ResourceIdentifier.__resource_id_weak_dict or \
+                ResourceIdentifier.__resource_id_weak_dict[self.id] == \
+                referred_object:
             ResourceIdentifier.__resource_id_weak_dict[self.id] = \
                 referred_object
             return
-        # Otherwise check if the existing element the same as the new one. If
-        # it is do nothing, otherwise raise a warning and set the new object as
-        # the referred object.
-        if ResourceIdentifier.__resource_id_weak_dict[self.id] == \
-                referred_object:
-            return
+
+        # Otherwise raise a warning and set the new object as the referred
+        # object.
         msg = "The resource identifier '%s' already exists and points to " + \
               "another object: '%s'." +\
               "It will now point to the object referred to by the new " + \
