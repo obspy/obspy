@@ -70,7 +70,8 @@ typedef struct ContinuousSegment_s {
     double samprate;                        // Sample rate
     char sampletype;                        // Sampletype
     hptime_t hpdelta;                       // High precission sample period
-    int64_t samplecnt;                         // Total sample count
+    hptime_t leapseconds;                   // Counter for the leap seconds.
+    int64_t samplecnt;                      // Total sample count
     /* Timing quality is a vendor specific value from 0 to 100% of maximum
      * accuracy, taking into account both clock quality and data flags. */
     uint8_t timing_qual;
@@ -623,6 +624,8 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             // Calculate high-precision sample period
             segmentCurrent->hpdelta = (hptime_t) (( recordCurrent->record->samprate ) ?
                            (HPTMODULUS / recordCurrent->record->samprate) : 0.0);
+            // Initially set the leap seconds counter to zero.
+            segmentCurrent->leapseconds = 0;
             segmentCurrent->timing_qual = timing_qual;
             segmentCurrent->calibration_type = calibration_type;
             segmentCurrent->firstRecord = segmentCurrent->lastRecord = recordCurrent;
@@ -631,8 +634,14 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         recordPrevious = recordCurrent->next;
         recordCurrent->next = NULL;
         recordCurrent = recordPrevious;
-    }
 
+        // Add to the leap second counter if bit-4 in the activity flags is set.
+        if ( recordCurrent->record->fsdh ) {
+            if ( recordCurrent->record->fsdh->act_flags & 0x10 ) {
+                segmentCurrent->leapseconds -= HPTMODULUS;
+            }
+        }
+    }
 
     // Now loop over all segments, combine the records and free the msr
     // structures.
