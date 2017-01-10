@@ -664,6 +664,7 @@ ContinuousSegment._fields_ = [
     ('samprate', C.c_double),
     ('sampletype', C.c_char),
     ('hpdelta', C.c_longlong),
+    ('leapseconds', C.c_longlong),
     ('samplecnt', C.c_int64),
     ('timing_quality', C.c_uint8),
     ('calibration_type', C.c_int8),

@@ -261,6 +261,48 @@ void log_error(int errcode, int offset) {
 }
 
 
+/***************************************************************************
+ * segment_endtime:
+ *
+ * Calculate the time of the last sample in the segment. Similar to
+ * msr_endtime() but for the ObsPy internal segment structure.
+ ***************************************************************************/
+hptime_t segment_endtime(ContinuousSegment *seg)
+{
+  hptime_t span = 0;
+  LeapSecond *lslist = leapsecondlist;
+
+  if ( ! seg )
+    return HPTERROR;
+
+  if ( seg->samprate > 0.0 && seg->samplecnt > 0 )
+    span = (hptime_t)(((double) (seg->samplecnt - 1) / seg->samprate * HPTMODULUS) + 0.5);
+
+  /* Check if the record contains a leap second, if list is available */
+  if ( lslist )
+    {
+      while ( lslist )
+        {
+          if ( lslist->leapsecond > seg->starttime &&
+               lslist->leapsecond < (seg->starttime + span) )
+            {
+              span -= HPTMODULUS;
+              break;
+            }
+          lslist = lslist->next;
+        }
+    }
+  else
+    {
+      // Otherwise just use the offset as determined from the
+      // activity flags.
+      span += seg->leapseconds;
+    }
+
+  return (seg->starttime + span);
+} /* End of segment_endtime() */
+
+
 // Function that reads from a MiniSEED binary file from a char buffer and
 // returns a LinkedIDList.
 LinkedIDList *
@@ -592,17 +634,31 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
              // record and after it.
              recordCurrent->record->samplecnt > 0 && segmentCurrent->samplecnt > 0 &&
 
+             // Test the sampletype.
              segmentCurrent->sampletype == recordCurrent->record->sampletype &&
+
              // Test the default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
              MS_ISRATETOLERABLE (segmentCurrent->samprate, recordCurrent->record->samprate) &&
+
              // Check if the times are within the time tolerance
              lastgap <= hptimetol && lastgap >= nhptimetol &&
              segmentCurrent->timing_qual == timing_qual &&
+
+             // And check the calibration type.
              segmentCurrent->calibration_type == calibration_type) {
-            recordCurrent->previous = segmentCurrent->lastRecord;
-            segmentCurrent->lastRecord = segmentCurrent->lastRecord->next = recordCurrent;
-            segmentCurrent->samplecnt += recordCurrent->record->samplecnt;
-            segmentCurrent->endtime = msr_endtime(recordCurrent->record);
+
+             recordCurrent->previous = segmentCurrent->lastRecord;
+             segmentCurrent->lastRecord = segmentCurrent->lastRecord->next = recordCurrent;
+             segmentCurrent->samplecnt += recordCurrent->record->samplecnt;
+
+             // Add leap seconds to the current segment if there are any.
+             if ( recordCurrent && recordCurrent->record && recordCurrent->record->fsdh ) {
+                 if ( recordCurrent->record->fsdh->act_flags & 0x10 ) {
+                     segmentCurrent->leapseconds -= HPTMODULUS;
+                 }
+             }
+
+             segmentCurrent->endtime = segment_endtime(segmentCurrent);
         }
         // Otherwise create a new segment and add the current record.
         else {
@@ -617,30 +673,32 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             idListCurrent->lastSegment = segmentCurrent;
 
             segmentCurrent->starttime = recordCurrent->record->starttime;
-            segmentCurrent->endtime = msr_endtime(recordCurrent->record);
             segmentCurrent->samprate = recordCurrent->record->samprate;
             segmentCurrent->sampletype = recordCurrent->record->sampletype;
             segmentCurrent->samplecnt = recordCurrent->record->samplecnt;
             // Calculate high-precision sample period
             segmentCurrent->hpdelta = (hptime_t) (( recordCurrent->record->samprate ) ?
                            (HPTMODULUS / recordCurrent->record->samprate) : 0.0);
-            // Initially set the leap seconds counter to zero.
-            segmentCurrent->leapseconds = 0;
             segmentCurrent->timing_qual = timing_qual;
             segmentCurrent->calibration_type = calibration_type;
             segmentCurrent->firstRecord = segmentCurrent->lastRecord = recordCurrent;
+
+            // Initially set the leap seconds counter to zero.
+            segmentCurrent->leapseconds = 0;
+
+            // Add the ones from the first record.
+            if ( recordCurrent && recordCurrent->record && recordCurrent->record->fsdh ) {
+                if ( recordCurrent->record->fsdh->act_flags & 0x10 ) {
+                    segmentCurrent->leapseconds -= HPTMODULUS;
+                }
+            }
+
+            segmentCurrent->endtime = segment_endtime(segmentCurrent);
             recordCurrent->previous = NULL;
         }
         recordPrevious = recordCurrent->next;
         recordCurrent->next = NULL;
         recordCurrent = recordPrevious;
-
-        // Add to the leap second counter if bit-4 in the activity flags is set.
-        if ( recordCurrent->record->fsdh ) {
-            if ( recordCurrent->record->fsdh->act_flags & 0x10 ) {
-                segmentCurrent->leapseconds -= HPTMODULUS;
-            }
-        }
     }
 
     // Now loop over all segments, combine the records and free the msr
