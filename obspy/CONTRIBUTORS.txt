@@ -61,6 +61,7 @@ Christian Sippl
 Arthur Snoke
 Stefan Stange
 Benjamin Sullivan
+Dongdong Tian
 Chad Trabant
 Tommaso Fabbri
 Leonardo Uieda
