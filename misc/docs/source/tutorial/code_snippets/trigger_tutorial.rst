@@ -79,55 +79,17 @@ trigger routines defined in :mod:`obspy.signal.trigger`:
 
     ~obspy.signal.trigger.recursive_sta_lta
     ~obspy.signal.trigger.carl_sta_trig
-    ~obspy.signal.trigger.classic_STALTA
+    ~obspy.signal.trigger.classic_sta_lta
     ~obspy.signal.trigger.delayed_sta_lta
     ~obspy.signal.trigger.z_detect
     ~obspy.signal.trigger.pk_baer
     ~obspy.signal.trigger.ar_pick
 
-Help for each function is available  HTML formatted or in the usual Python manner:
+Help for each function is available HTML formatted or in the usual Python manner:
 
     >>> from obspy.signal.trigger import classic_sta_lta
-    >>> help(classicSTALTA)  # doctest: +ELLIPSIS
-    Help on function classicSTALTA in module obspy.signal.trigger...
-
-The triggering itself mainly consists of the following two steps:
-
-* Calculating the characteristic function
-* Setting picks based on values of the characteristic function
-
-   * ~obspy.signal.trigger.recursive_sta_lta
-   * ~obspy.signal.trigger.carl_sta_trig
-   * ~obspy.signal.trigger.classic_STALTA
-   * ~obspy.signal.trigger.delayed_sta_lta
-   * ~obspy.signal.trigger.z_detect
-   * ~obspy.signal.trigger.pk_baer
-   * ~obspy.signal.trigger.ar_pick
-
-Help for each function is available  HTML formatted or in the usual Python manner:
-
-    >>> from obspy.signal.trigger import classic_sta_lta
-    >>> help(classicSTALTA)  # doctest: +ELLIPSIS
-    Help on function classicSTALTA in module obspy.signal.trigger...
-
-The triggering itself mainly consists of the following two steps:
-
-* Calculating the characteristic function
-* Setting picks based on values of the characteristic function
-
-   * ~obspy.signal.trigger.recursive_sta_lta
-   * ~obspy.signal.trigger.carl_sta_trig
-   * ~obspy.signal.trigger.classic_STALTA
-   * ~obspy.signal.trigger.delayed_sta_lta
-   * ~obspy.signal.trigger.z_detect
-   * ~obspy.signal.trigger.pk_baer
-   * ~obspy.signal.trigger.ar_pick
-
-Help for each function is available  HTML formatted or in the usual Python manner:
-
-    >>> from obspy.signal.trigger import classic_STALTA
-    >>> help(classicSTALTA)  # doctest: +ELLIPSIS
-    Help on function classicSTALTA in module obspy.signal.trigger...
+    >>> help(classic_sta_lta)  # doctest: +ELLIPSIS
+    Help on function classic_sta_lta in module obspy.signal.trigger...
 
 The triggering itself mainly consists of the following two steps:
 
@@ -142,7 +104,7 @@ For all the examples, the commands to read in the data and to load the modules
 are the following:
 
     >>> from obspy.core import read
-    >>> from obspy.signal.trigger import plotTrigger
+    >>> from obspy.signal.trigger import plot_trigger
     >>> trace = read("https://examples.obspy.org/ev0_6.a01.gse2")[0]
     >>> df = trace.stats.sampling_rate
 
@@ -150,11 +112,7 @@ Classic Sta Lta
 ===============
 
     >>> from obspy.signal.trigger import classic_sta_lta
-    >>> cft = classic_STALTA(trace.data, int(5 * df), int(10 * df))
-    >>> plot_trigger(trace, cft, 1.5, 0.5)
-
-
-    >>> cft = classic_STALTA(trace.data, int(5 * df), int(10 * df))
+    >>> cft = classic_sta_lta(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 1.5, 0.5)
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_classic_sta_lta.py
@@ -171,12 +129,8 @@ Z-Detect
 Recursive Sta Lta
 =================
 
-    >>> from obspy.signal.trigger import recursive_STALTA
+    >>> from obspy.signal.trigger import recursive_sta_lta
     >>> cft = recursive_sta_lta(trace.data, int(5 * df), int(10 * df))
-    >>> plot_trigger(trace, cft, 1.2, 0.5)
-
-
-    >>> cft = recursive_STALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 1.2, 0.5)
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_recursive_sta_lta.py
@@ -184,12 +138,8 @@ Recursive Sta Lta
 Carl-Sta-Trig
 =============
 
-    >>> from obspy.signal.trigger import carl_STA_trig
+    >>> from obspy.signal.trigger import carl_sta_trig
     >>> cft = carl_sta_trig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
-    >>> plot_trigger(trace, cft, 20.0, -20.0)
-
-
-    >>> cft = carl_STA_trig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
     >>> plot_trigger(trace, cft, 20.0, -20.0)
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_carl_sta_trig.py
@@ -197,12 +147,8 @@ Carl-Sta-Trig
 Delayed Sta Lta
 ===============
 
-    >>> from obspy.signal.trigger import delayed_STALTA
+    >>> from obspy.signal.trigger import delayed_sta_lta
     >>> cft = delayed_sta_lta(trace.data, int(5 * df), int(10 * df))
-    >>> plot_trigger(trace, cft, 5, 10)
-
-
-    >>> cft = delayed_STALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 5, 10)
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_delayed_sta_lta.py
@@ -240,7 +186,7 @@ weighting for every station/channel can be customized. We want to keep
 our original data so we work with a copy of the original stream:
 
     >>> st.filter('bandpass', freqmin=10, freqmax=20)  # optional prefiltering
-    >>> from obspy.signal import coincidence_trigger
+    >>> from obspy.signal.trigger import coincidence_trigger
     >>> st2 = st.copy()
     >>> trig = coincidence_trigger("recstalta", 3.5, 1, st2, 3, sta=0.5, lta=10)
 
@@ -322,7 +268,7 @@ correlations.
 In the example we use two three-component event templates on top of a common
 network trigger on vertical components only.
 
-    >>> from obspy.core import Stream, read
+    >>> from obspy.core import Stream, read, UTCDateTime
     >>> st = Stream()
     >>> files = ["BW.UH1..SHZ.D.2010.147.cut.slist.gz",
     ...          "BW.UH2..SHZ.D.2010.147.cut.slist.gz",
@@ -355,7 +301,7 @@ template waveforms. Note that the coincidence sum is set to 4 and we manually
 specify to only use vertical components with equal station coincidence values
 of 1.
 
-    >>> from obspy.signal import coincidence_trigger
+    >>> from obspy.signal.trigger import coincidence_trigger
     >>> st2 = st.copy()
     >>> trace_ids = {"BW.UH1..SHZ": 1,
     ...              "BW.UH2..SHZ": 1,
