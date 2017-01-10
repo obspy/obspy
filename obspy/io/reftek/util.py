@@ -121,6 +121,17 @@ def _16_tuple_int(bytestring):
     return tuple(result)
 
 
+def _16_tuple_float(bytestring):
+    ascii_tuple = _16_tuple_ascii(bytestring)
+    result = []
+    for chars in ascii_tuple:
+        if chars is None or not chars.strip():
+            result.append(None)
+            continue
+        result.append(float(chars))
+    return tuple(result)
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

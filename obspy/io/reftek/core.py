@@ -211,6 +211,7 @@ class Reftek130(object):
             msg = ("No packet data left in Reftek130 object after dropping "
                    "non-implemented packets (file: {})").format(self._filename)
             raise Reftek130Exception(msg)
+        st = Stream()
         for event_number in np.unique(self._data['event_number']):
             data = self._data[self._data['event_number'] == event_number]
             # we should have exactly one EH and one ET packet, truncated data
@@ -252,7 +253,6 @@ class Reftek130(object):
                 "location": location, "sampling_rate": eh.sampling_rate,
                 "reftek130": eh._to_dict()}
             delta = 1.0 / eh.sampling_rate
-            st = Stream()
             for channel_number in np.unique(data['channel_number']):
                 inds = data['channel_number'] == channel_number
                 # channel number of EH/ET packets also equals zero (one of the

@@ -20,9 +20,9 @@ from obspy import UTCDateTime
 from obspy.io.mseed.headers import clibmseed
 
 from .util import (
-    _decode_ascii, _parse_long_time, _16_tuple_ascii, _16_tuple_int, bcd,
-    bcd_hex, bcd_julian_day_string_to_seconds_of_year, bcd_16bit_int,
-    bcd_8bit_hex, _get_timestamp_for_start_of_year)
+    _decode_ascii, _parse_long_time, _16_tuple_ascii, _16_tuple_int,
+    _16_tuple_float, bcd, bcd_hex, bcd_julian_day_string_to_seconds_of_year,
+    bcd_16bit_int, bcd_8bit_hex, _get_timestamp_for_start_of_year)
 
 
 class Reftek130UnpackPacketError(ValueError):
@@ -82,7 +82,7 @@ EH_PAYLOAD = {
     "channel_fsa_code": (424, 16, _16_tuple_ascii),
     "channel_code": (440, 64, _16_tuple_ascii),
     "channel_sensor_fsa_code": (504, 16, _16_tuple_ascii),
-    "channel_sensor_vpu": (520, 96, _16_tuple_int),
+    "channel_sensor_vpu": (520, 96, _16_tuple_float),
     "channel_sensor_units_code": (616, 16, _16_tuple_ascii),
     "station_channel_number": (632, 48, _16_tuple_int),
     "_reserved_3": (680, 156, _decode_ascii),
