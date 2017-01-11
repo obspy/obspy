@@ -67,10 +67,11 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        the :meth:`~obspy.core.event.Catalog.write` method of an
-        ObsPy :class:`~obspy.core.event.Catalog` object, call this instead.
+        the :meth:`~obspy.core.event.catalog.Catalog.write` method of an
+        ObsPy :class:`~obspy.core.event.catalog.Catalog` object, call this
+        instead.
 
-    :type catalog: :class:`~obspy.core.stream.Catalog`
+    :type catalog: :class:`~obspy.core.event.catalog.Catalog`
     :param catalog: The ObsPy Catalog object to write.
     :type filename: str or file
     :param filename: Filename to write or open file-like object.
@@ -108,8 +109,9 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
         file_opened = False
         fh = filename
 
-    fh.write(sc3ml_doc)
-
-    # Close if a file has been opened by this function.
-    if file_opened is True:
-        fh.close()
+    try:
+        fh.write(sc3ml_doc)
+    finally:
+        # Close if a file has been opened by this function.
+        if file_opened is True:
+            fh.close()

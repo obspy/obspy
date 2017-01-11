@@ -29,10 +29,10 @@ class EventTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        quakeml_directory = \
+        io_directory = \
             os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         self.quakeml_path = \
-            os.path.join(quakeml_directory, 'quakeml', 'tests', 'data')
+            os.path.join(io_directory, 'quakeml', 'tests', 'data')
         self.path = os.path.join(os.path.dirname(__file__), 'data')
 
     def cmp_file(self, quakeml_file, sc3ml_file, path=None,

@@ -1808,7 +1808,7 @@ def _write_quakeml(catalog, filename, validate=False, nsmap=None,
         the :meth:`~obspy.core.event.Catalog.write` method of an
         ObsPy :class:`~obspy.core.event.Catalog` object, call this instead.
 
-    :type catalog: :class:`~obspy.core.stream.Catalog`
+    :type catalog: :class:`~obspy.core.event.catalog.Catalog`
     :param catalog: The ObsPy Catalog object to write.
     :type filename: str or file
     :param filename: Filename to write or open file-like object.
@@ -1837,11 +1837,12 @@ def _write_quakeml(catalog, filename, validate=False, nsmap=None,
         file_opened = False
         fh = filename
 
-    fh.write(xml_doc)
-
-    # Close if a file has been opened by this function.
-    if file_opened is True:
-        fh.close()
+    try:
+        fh.write(xml_doc)
+    finally:
+        # Close if a file has been opened by this function.
+        if file_opened is True:
+            fh.close()
 
 
 def _read_seishub_event_xml(filename):
