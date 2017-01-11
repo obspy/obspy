@@ -39,9 +39,10 @@ def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
 
     :param st1: Stream or Trace object, (known)
     :param st2: Stream or Trace object, (unknown)
-    :type calib_file: str
+    :type calib_file: str or dict
     :param calib_file: file name of calibration file containing the PAZ of the
-        known instrument in GSE2 standard.
+        known instrument in GSE2 standard or a dictionary with poles and zeros
+        information (with keys ``'poles'``, ``'zeros'`` and ``'sensitivity'``).
     :type window_len: float
     :param window_len: length of sliding window in seconds
     :type overlap_frac: float
@@ -144,13 +145,20 @@ def _calc_resp(calfile, nfft, sampfreq):
 
     :type calfile: str
     :param calfile: file containing poles, zeros and scale factor for known
-        system
+        system or a dictionary with poles and zeros information (with keys
+        ``'poles'``, ``'zeros'`` and ``'sensitivity'``).
     :returns: complex transfer function, array of frequencies
     """
+    # test if calfile is a paz dict
+    if isinstance(calfile, dict):
+        paz = calfile
+    # or read paz file if a filename is specified
+    else:
+        paz = dict()
+        paz['poles'], paz['zeros'], paz['sensitivity'] = read_paz(calfile)
     # calculate transfer function
-    poles, zeros, scale_fac = read_paz(calfile)
-    h, f = paz_to_freq_resp(poles, zeros, scale_fac, 1.0 / sampfreq,
-                            nfft, freq=True)
+    h, f = paz_to_freq_resp(paz['poles'], paz['zeros'], paz['sensitivity'],
+                            1.0 / sampfreq, nfft, freq=True)
     return h, f
 
 
