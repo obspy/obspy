@@ -278,6 +278,7 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
+        'SC3ML = obspy.io.seiscomp.event',
         'ZMAP = obspy.io.zmap.core',
         'MCHEDR = obspy.io.pde.mchedr',
         'JSON = obspy.io.json.core',
@@ -296,6 +297,9 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
         'readFormat = obspy.io.quakeml.core:_read_quakeml',
         'writeFormat = obspy.io.quakeml.core:_write_quakeml',
+        ],
+    'obspy.plugin.event.SC3ML': [
+        'writeFormat = obspy.io.seiscomp.event:_write_sc3ml',
         ],
     'obspy.plugin.event.MCHEDR': [
         'isFormat = obspy.io.pde.mchedr:_is_mchedr',

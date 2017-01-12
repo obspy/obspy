@@ -70,6 +70,7 @@ The functionality is provided through the following packages:
    obspy.io.nlloc
    obspy.io.nordic
    obspy.io.pde
+   obspy.io.seiscomp
    obspy.io.shapefile
    obspy.io.quakeml
    obspy.io.zmap
