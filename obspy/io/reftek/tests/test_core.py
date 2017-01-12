@@ -18,7 +18,7 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.io.reftek.core import (
     _read_reftek130, _is_reftek130, Reftek130, Reftek130Exception)
 from obspy.io.reftek.packet import (
-    _unpack_C0_data_fast, _unpack_C0_data_safe, _unpack_C0_data,
+    _unpack_C0_C2_data_fast, _unpack_C0_C2_data_safe, _unpack_C0_C2_data,
     EHPacket, _initial_unpack_packets)
 
 
@@ -42,6 +42,8 @@ class ReftekTestCase(unittest.TestCase):
         self.datapath = os.path.join(self.path, "data")
         self.reftek_filename = "225051000_00008656"
         self.reftek_file = os.path.join(self.datapath, self.reftek_filename)
+        self.reftek_file_steim2 = os.path.join(self.datapath,
+                                               '104800000_000093F8')
         self.mseed_filenames = [
             "2015282_225051_0ae4c_1_1.msd",
             "2015282_225051_0ae4c_1_2.msd", "2015282_225051_0ae4c_1_3.msd"]
@@ -123,7 +125,7 @@ class ReftekTestCase(unittest.TestCase):
         for tr_got, tr_expected in zip(st_reftek, st_mseed):
             np.testing.assert_array_equal(tr_got.data, tr_expected.data)
 
-    def test_read_reftek130(self):
+    def test_read_reftek130_steim1(self):
         """
         Test original reftek 130 data file against miniseed files converted
         using "rt_mseed" utility from Trimble/Reftek.
@@ -135,6 +137,32 @@ class ReftekTestCase(unittest.TestCase):
             self.reftek_file, network="XX", location="01",
             component_codes=["1", "2", "3"])
         self._assert_reftek130_test_stream(st_reftek)
+
+    def test_read_reftek130_steim2(self):
+        """
+        Test reading a steim2 encoded data file.
+
+        Unpacking of data is tested separately so just checking a few samples
+        at the start should suffice.
+        """
+        st = _read_reftek130(
+            self.reftek_file_steim2, network="XX", location="01",
+            component_codes=["1", "2", "3"])
+        # note: test data has stream name defined as 'DS 1', so we end up with
+        # non-SEED conforming channel codes which is expected
+        self.assertEqual(len(st), 3)
+        self.assertEqual(len(st[0]), 3788)
+        self.assertEqual(len(st[1]), 3788)
+        self.assertEqual(len(st[2]), 3788)
+        self.assertEqual(st[0].id, 'XX.TL01.01.DS 11')
+        self.assertEqual(st[1].id, 'XX.TL01.01.DS 12')
+        self.assertEqual(st[2].id, 'XX.TL01.01.DS 13')
+        np.testing.assert_array_equal(
+            st[0].data[:5], [26814, 26823, 26878, 26941, 26942])
+        np.testing.assert_array_equal(
+            st[1].data[:5], [-1987, -1984, -1959, -1966, -1978])
+        np.testing.assert_array_equal(
+            st[2].data[:5], [-2404, -2376, -2427, -2452, -2452])
 
     def test_read_reftek130_no_component_codes_specified(self):
         """
@@ -370,16 +398,30 @@ class ReftekTestCase(unittest.TestCase):
             "Reftek data contains data packets without corresponding header "
             "or trailer packet.")
 
-    def test_data_unpacking(self):
+    def test_data_unpacking_steim1(self):
         """
-        Test both unpacking routines for C0 data coding
+        Test both unpacking routines for C0 data coding (STEIM1)
         """
         rt = Reftek130.from_file(self.reftek_file)
-        expected = np.load(os.path.join(self.datapath, "unpacked_data.npy"))
+        expected = np.load(os.path.join(self.datapath,
+                                        "unpacked_data_steim1.npy"))
         packets = rt._data[rt._data['packet_type'] == b'DT'][:10]
-        for func in (_unpack_C0_data, _unpack_C0_data_fast,
-                     _unpack_C0_data_safe):
-            got = _unpack_C0_data(packets)
+        for func in (_unpack_C0_C2_data, _unpack_C0_C2_data_fast,
+                     _unpack_C0_C2_data_safe):
+            got = func(packets, encoding='C0')
+            np.testing.assert_array_equal(got, expected)
+
+    def test_data_unpacking_steim2(self):
+        """
+        Test both unpacking routines for C2 data coding (STEIM2)
+        """
+        rt = Reftek130.from_file(self.reftek_file_steim2)
+        expected = np.load(os.path.join(self.datapath,
+                                        "unpacked_data_steim2.npy"))
+        packets = rt._data[rt._data['packet_type'] == b'DT'][:10]
+        for func in (_unpack_C0_C2_data, _unpack_C0_C2_data_fast,
+                     _unpack_C0_C2_data_safe):
+            got = func(packets, encoding='C2')
             np.testing.assert_array_equal(got, expected)
 
     def test_string_representations(self):
