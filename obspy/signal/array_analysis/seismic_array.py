@@ -435,7 +435,7 @@ class SeismicArray(object):
                 "z": absolute_height_in_km - value["absolute_height_in_km"]
             }
         if correct_3dplane:
-            self.correct_with_3dplane(geometry)
+            self._correct_with_3dplane(geometry)
         return geometry
 
     def _get_timeshift_baz(self, sll, slm, sls, baz, latitude, longitude,
@@ -490,9 +490,9 @@ class SeismicArray(object):
 
         return time_shift_tbl
 
-    def get_timeshift(self, sllx, slly, sls, grdpts_x, grdpts_y,
-                      latitude=None, longitude=None, absolute_height=None,
-                      vel_cor=4., static3d=False):
+    def _get_timeshift(self, sllx, slly, sls, grdpts_x, grdpts_y,
+                       latitude=None, longitude=None, absolute_height=None,
+                       vel_cor=4., static3d=False):
         """
         Returns timeshift table for the geometry of the current array, in
         kilometres relative to a given centre (uses geometric centre if not
@@ -1097,13 +1097,13 @@ class SeismicArray(object):
 
             # now let's do the plotting
             if "baz_slow_map" in plots:
-                self._plot_array_analysis(outarr, sllx, slmx, slly, slmy, sls,
-                                          filename_patterns, True, method,
-                                          st_workon, starttime, wlen, endtime)
+                _plot_array_analysis(outarr, sllx, slmx, slly, slmy, sls,
+                                     filename_patterns, True, method,
+                                     st_workon, starttime, wlen, endtime)
             if "slowness_xy" in plots:
-                self._plot_array_analysis(outarr, sllx, slmx, slly, slmy, sls,
-                                          filename_patterns, False, method,
-                                          st_workon, starttime, wlen, endtime)
+                _plot_array_analysis(outarr, sllx, slmx, slly, slmy, sls,
+                                     filename_patterns, False, method,
+                                     st_workon, starttime, wlen, endtime)
             plt.show()
             # Return the beamforming results to allow working more on them,
             # make other plots etc.
@@ -1206,7 +1206,7 @@ class SeismicArray(object):
         grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
 
         if correct_3dplane:
-            self.correct_with_3dplane(self.geometry)
+            self._correct_with_3dplane(self.geometry)
 
         if verbose:
             print("geometry:")
@@ -1215,10 +1215,10 @@ class SeismicArray(object):
             print(stream)
             print("stime = " + str(stime) + ", etime = " + str(etime))
 
-        time_shift_table = self.get_timeshift(sll_x, sll_y, sl_s,
-                                              grdpts_x, grdpts_y,
-                                              vel_cor=vel_cor,
-                                              static3d=static3d)
+        time_shift_table = self._get_timeshift(sll_x, sll_y, sl_s,
+                                               grdpts_x, grdpts_y,
+                                               vel_cor=vel_cor,
+                                               static3d=static3d)
 
         spoint, _epoint = _get_stream_offsets(stream, stime, etime)
 
@@ -1859,8 +1859,8 @@ class SeismicArray(object):
         :param kstep: Step in wavenumber.
         """
         import matplotlib.pyplot as plt
-        transff = self.array_transff_wavenumber(klim, kstep)
-        self._plot_transff_helper(transff, klim, kstep)
+        transff = self.array_transfer_function_wavenumber(klim, kstep)
+        self._plot_transfer_function_helper(transff, klim, kstep)
         plt.xlabel('Wavenumber West-East')
         plt.ylabel('Wavenumber North-South')
         plt.show()
@@ -1878,15 +1878,15 @@ class SeismicArray(object):
         :param freq_step: Frequency sample distance
         """
         import matplotlib.pyplot as plt
-        transff = self.array_transff_freqslowness(slim, sstep, freq_min,
-                                                  freq_max, freq_step)
-        self._plot_transff_helper(transff, slim, sstep)
+        transff = self.array_transfer_function_freqslowness(
+            slim, sstep, freq_min, freq_max, freq_step)
+        self._plot_transfer_function_helper(transff, slim, sstep)
         plt.xlabel('Slowness West-East')
         plt.ylabel('Slowness North-South')
         plt.show()
 
     @staticmethod
-    def _plot_transff_helper(transff, lim, step):
+    def _plot_transfer_function_helper(transff, lim, step):
         """
         Plot array transfer function.
 
@@ -1902,7 +1902,7 @@ class SeismicArray(object):
         plt.xlim(-lim, lim)
         plt.ylim(-lim, lim)
 
-    def array_transff_wavenumber(self, klim, kstep):
+    def array_transfer_function_wavenumber(self, klim, kstep):
         """
         Return array transfer function as a function of wavenumber difference.
 
@@ -1910,10 +1910,10 @@ class SeismicArray(object):
             differences or the tuple (kxmin, kxmax, kymin, kymax).
         :param kstep: Step in wavenumber.
         """
-        return self._array_transff_helper(klim, kstep, 'wavenumber')
+        return self._array_transfer_function_helper(klim, kstep, 'wavenumber')
 
-    def array_transff_freqslowness(self, slim, sstep, fmin, fmax,
-                                   fstep):
+    def array_transfer_function_freqslowness(self, slim, sstep, fmin, fmax,
+                                             fstep):
         """
         Return array transfer function as a function of slowness difference
         and frequency.
@@ -1926,11 +1926,11 @@ class SeismicArray(object):
         :param fstep: Frequency sample distance.
         """
 
-        return self._array_transff_helper(slim, sstep, 'slowness', fmin, fmax,
-                                          fstep)
+        return self._array_transfer_function_helper(
+            slim, sstep, 'slowness', fmin, fmax, fstep)
 
-    def _array_transff_helper(self, plim, pstep, param, fmin=None, fmax=None,
-                              fstep=None):
+    def _array_transfer_function_helper(
+            self, plim, pstep, param, fmin=None, fmax=None, fstep=None):
         """
         Return array transfer function as function of wavenumber or slowness
         and frequency.
@@ -2069,10 +2069,10 @@ class SeismicArray(object):
             print(stream)
             print("stime = " + str(stime) + ", etime = " + str(etime))
 
-        time_shift_table = self.get_timeshift(sll_x, sll_y, sl_s,
-                                              grdpts_x, grdpts_y,
-                                              vel_cor=vel_cor,
-                                              static3d=static3d)
+        time_shift_table = self._get_timeshift(sll_x, sll_y, sl_s,
+                                               grdpts_x, grdpts_y,
+                                               vel_cor=vel_cor,
+                                               static3d=static3d)
 
         mini = np.min(time_shift_table[:, :, :])
         maxi = np.max(time_shift_table[:, :, :])
@@ -2363,7 +2363,7 @@ class SeismicArray(object):
                 geom_array[_i, 2] = value["absolute_height_in_km"]
         return geom_array
 
-    def correct_with_3dplane(self, geometry):
+    def _correct_with_3dplane(self, geometry):
         """
         Correct a given array geometry with a best-fitting plane.
 
@@ -2420,128 +2420,128 @@ class SeismicArray(object):
         geometry = geodict
         return geometry
 
-    @staticmethod
-    def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
-                             filename_patterns, baz_plot, method,
-                             st_workon, starttime, wlen, endtime):
-        """
-        Some plotting taken out from _array_analysis_helper. Can't do the array
-        response overlay now though.
-        :param baz_plot: Whether to show backazimuth-slowness map (True) or
-         slowness x-y map (False).
-        """
-        import matplotlib.pyplot as plt
-        trace = []
-        t, rel_power, abs_power, baz, slow = out.T
-        baz[baz < 0.0] += 360
-        # now let's do the plotting
-        cmap = cm.rainbow
-        # we will plot everything in s/deg
-        slow = degrees2kilometers(slow)
-        sllx = degrees2kilometers(sllx)
-        slmx = degrees2kilometers(slmx)
-        slly = degrees2kilometers(slly)
-        slmy = degrees2kilometers(slmy)
-        sls = degrees2kilometers(sls)
 
-        numslice = len(t)
-        powmap = []
+def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
+                         filename_patterns, baz_plot, method,
+                         st_workon, starttime, wlen, endtime):
+    """
+    Some plotting taken out from _array_analysis_helper. Can't do the array
+    response overlay now though.
+    :param baz_plot: Whether to show backazimuth-slowness map (True) or
+     slowness x-y map (False).
+    """
+    import matplotlib.pyplot as plt
+    trace = []
+    t, rel_power, abs_power, baz, slow = out.T
+    baz[baz < 0.0] += 360
+    # now let's do the plotting
+    cmap = cm.rainbow
+    # we will plot everything in s/deg
+    slow = degrees2kilometers(slow)
+    sllx = degrees2kilometers(sllx)
+    slmx = degrees2kilometers(slmx)
+    slly = degrees2kilometers(slly)
+    slmy = degrees2kilometers(slmy)
+    sls = degrees2kilometers(sls)
 
-        slx = np.arange(sllx - sls, slmx, sls)
-        sly = np.arange(slly - sls, slmy, sls)
+    numslice = len(t)
+    powmap = []
+
+    slx = np.arange(sllx - sls, slmx, sls)
+    sly = np.arange(slly - sls, slmy, sls)
+    if baz_plot:
+        maxslowg = np.sqrt(slmx * slmx + slmy * slmy)
+        bzs = np.arctan2(sls, np.sqrt(
+            slmx * slmx + slmy * slmy)) * 180 / np.pi
+        xi = np.arange(0., maxslowg, sls)
+        yi = np.arange(-180., 180., bzs)
+        grid_x, grid_y = np.meshgrid(xi, yi)
+    # reading in the rel-power maps
+    for i in range(numslice):
+        powmap.append(np.load(filename_patterns[0] % i))
+        if method != 'FK':
+            trace.append(np.load(filename_patterns[1] % i))
+    # remove last item as a cludge to get plotting to work - not sure
+    # it's always clever or just a kind of rounding or modulo problem
+    if len(slx) == len(powmap[0][0]) + 1:
+        slx = slx[:-1]
+    if len(sly) == len(powmap[0][1]) + 1:
+        sly = sly[:-1]
+
+    npts = st_workon[0].stats.npts
+    df = st_workon[0].stats.sampling_rate
+    t = np.arange(0, npts / df, 1 / df)
+
+    # if we choose windowlen > 0. we now move through our slices
+    for i in range(numslice):
+        st = UTCDateTime(t[i]) - starttime
+        if wlen <= 0:
+            en = endtime
+        else:
+            en = st + wlen
+        print(UTCDateTime(t[i]))
+        # add polar and colorbar axes
+        fig = plt.figure(figsize=(12, 12))
+        ax1 = fig.add_axes([0.1, 0.87, 0.7, 0.10])
+        # here we plot the first trace on top of the slowness map
+        # and indicate the possibiton of the lsiding window as green box
+        if method == 'FK':
+            ax1.plot(t, st_workon[0].data, 'k')
+            if wlen > 0.:
+                try:
+                    ax1.axvspan(st, en, facecolor='g', alpha=0.3)
+                except IndexError:
+                    pass
+        else:
+            t = np.arange(0, len(trace[i]) / df, 1 / df)
+            ax1.plot(t, trace[i], 'k')
+
+        ax1.yaxis.set_major_locator(MaxNLocator(3))
+
+        ax = fig.add_axes([0.10, 0.1, 0.70, 0.7])
+
+        # if we have chosen the baz_plot option a re-griding
+        # of the sx,sy slowness map is needed
         if baz_plot:
-            maxslowg = np.sqrt(slmx * slmx + slmy * slmy)
-            bzs = np.arctan2(sls, np.sqrt(
-                slmx * slmx + slmy * slmy)) * 180 / np.pi
-            xi = np.arange(0., maxslowg, sls)
-            yi = np.arange(-180., 180., bzs)
-            grid_x, grid_y = np.meshgrid(xi, yi)
-        # reading in the rel-power maps
-        for i in range(numslice):
-            powmap.append(np.load(filename_patterns[0] % i))
-            if method != 'FK':
-                trace.append(np.load(filename_patterns[1] % i))
-        # remove last item as a cludge to get plotting to work - not sure
-        # it's always clever or just a kind of rounding or modulo problem
-        if len(slx) == len(powmap[0][0]) + 1:
-            slx = slx[:-1]
-        if len(sly) == len(powmap[0][1]) + 1:
-            sly = sly[:-1]
+            slowgrid = []
+            power = np.asarray(powmap[i])
+            for ix, sx in enumerate(slx):
+                for iy, sy in enumerate(sly):
+                    bbaz = np.arctan2(sx, sy) * 180 / np.pi + 180.
+                    if bbaz > 180.:
+                        bbaz = -180. + (bbaz - 180.)
+                    slowgrid.append((np.sqrt(sx * sx + sy * sy), bbaz,
+                                     power[ix, iy]))
 
-        npts = st_workon[0].stats.npts
-        df = st_workon[0].stats.sampling_rate
-        t = np.arange(0, npts / df, 1 / df)
+            slowgrid = np.asarray(slowgrid)
+            sl = slowgrid[:, 0]
+            bz = slowgrid[:, 1]
+            slowg = slowgrid[:, 2]
+            grid = interpolate.griddata((sl, bz), slowg,
+                                        (grid_x, grid_y),
+                                        method='nearest')
+            ax.pcolormesh(xi, yi, grid, cmap=cmap)
 
-        # if we choose windowlen > 0. we now move through our slices
-        for i in range(numslice):
-            st = UTCDateTime(t[i]) - starttime
-            if wlen <= 0:
-                en = endtime
-            else:
-                en = st + wlen
-            print(UTCDateTime(t[i]))
-            # add polar and colorbar axes
-            fig = plt.figure(figsize=(12, 12))
-            ax1 = fig.add_axes([0.1, 0.87, 0.7, 0.10])
-            # here we plot the first trace on top of the slowness map
-            # and indicate the possibiton of the lsiding window as green box
-            if method == 'FK':
-                ax1.plot(t, st_workon[0].data, 'k')
-                if wlen > 0.:
-                    try:
-                        ax1.axvspan(st, en, facecolor='g', alpha=0.3)
-                    except IndexError:
-                        pass
-            else:
-                t = np.arange(0, len(trace[i]) / df, 1 / df)
-                ax1.plot(t, trace[i], 'k')
+            ax.set_xlabel('slowness [s/deg]')
+            ax.set_ylabel('backazimuth [deg]')
+            ax.set_xlim(xi[0], xi[-1])
+            ax.set_ylim(yi[0], yi[-1])
+        else:
+            ax.set_xlabel('slowness [s/deg]')
+            ax.set_ylabel('slowness [s/deg]')
+            slow_x = np.cos((baz[i] + 180.) * np.pi / 180.) * slow[i]
+            slow_y = np.sin((baz[i] + 180.) * np.pi / 180.) * slow[i]
+            ax.pcolormesh(slx, sly, powmap[i].T)
+            ax.arrow(0, 0, slow_y, slow_x, head_width=0.005,
+                     head_length=0.01, fc='k', ec='k')
+            ax.set_ylim(slx[0], slx[-1])
+            ax.set_xlim(sly[0], sly[-1])
+        new_time = t[i]
 
-            ax1.yaxis.set_major_locator(MaxNLocator(3))
-
-            ax = fig.add_axes([0.10, 0.1, 0.70, 0.7])
-
-            # if we have chosen the baz_plot option a re-griding
-            # of the sx,sy slowness map is needed
-            if baz_plot:
-                slowgrid = []
-                power = np.asarray(powmap[i])
-                for ix, sx in enumerate(slx):
-                    for iy, sy in enumerate(sly):
-                        bbaz = np.arctan2(sx, sy) * 180 / np.pi + 180.
-                        if bbaz > 180.:
-                            bbaz = -180. + (bbaz - 180.)
-                        slowgrid.append((np.sqrt(sx * sx + sy * sy), bbaz,
-                                         power[ix, iy]))
-
-                slowgrid = np.asarray(slowgrid)
-                sl = slowgrid[:, 0]
-                bz = slowgrid[:, 1]
-                slowg = slowgrid[:, 2]
-                grid = interpolate.griddata((sl, bz), slowg,
-                                            (grid_x, grid_y),
-                                            method='nearest')
-                ax.pcolormesh(xi, yi, grid, cmap=cmap)
-
-                ax.set_xlabel('slowness [s/deg]')
-                ax.set_ylabel('backazimuth [deg]')
-                ax.set_xlim(xi[0], xi[-1])
-                ax.set_ylim(yi[0], yi[-1])
-            else:
-                ax.set_xlabel('slowness [s/deg]')
-                ax.set_ylabel('slowness [s/deg]')
-                slow_x = np.cos((baz[i] + 180.) * np.pi / 180.) * slow[i]
-                slow_y = np.sin((baz[i] + 180.) * np.pi / 180.) * slow[i]
-                ax.pcolormesh(slx, sly, powmap[i].T)
-                ax.arrow(0, 0, slow_y, slow_x, head_width=0.005,
-                         head_length=0.01, fc='k', ec='k')
-                ax.set_ylim(slx[0], slx[-1])
-                ax.set_xlim(sly[0], sly[-1])
-            new_time = t[i]
-
-            result = "BAZ: %.2f, Slow: %.2f s/deg, Time %s" % (
-                baz[i], slow[i], UTCDateTime(new_time))
-            ax.set_title(result)
-            plt.show()
+        result = "BAZ: %.2f, Slow: %.2f s/deg, Time %s" % (
+            baz[i], slow[i], UTCDateTime(new_time))
+        ax.set_title(result)
+        plt.show()
 
 
 class BeamformerResult(object):

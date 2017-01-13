@@ -134,10 +134,10 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     :param grdpts_x: number of grid points in y direction
     """
     sa = __geometry_to_inventory(geometry)
-    return sa.get_timeshift(sllx=sll_x, slly=sll_y, sls=sl_s,
-                            grdpts_x=grdpts_x, grdpts_y=grdpts_y,
-                            latitude=0.0, longitude=0.0, absolute_height=0,
-                            static3d=False)
+    return sa._get_timeshift(sllx=sll_x, slly=sll_y, sls=sl_s,
+                             grdpts_x=grdpts_x, grdpts_y=grdpts_y,
+                             latitude=0.0, longitude=0.0, absolute_height=0,
+                             static3d=False)
 
 
 def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
@@ -160,7 +160,7 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     """
     geometry = get_geometry(coords, coordsys)
     sa = __geometry_to_inventory(geometry)
-    return sa.array_transff_wavenumber(klim=klim, kstep=kstep)
+    return sa.array_transfer_function_wavenumber(klim=klim, kstep=kstep)
 
 
 def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
@@ -191,8 +191,8 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     """
     geometry = get_geometry(coords, coordsys)
     sa = __geometry_to_inventory(geometry)
-    return sa.array_transff_freqslowness(slim=slim, sstep=sstep, fmin=fmin,
-                                         fmax=fmax, fstep=fstep)
+    return sa.array_transfer_function_freqslowness(
+        slim=slim, sstep=sstep, fmin=fmin, fmax=fmax, fstep=fstep)
 
 
 def dump(pow_map, apow_map, i):

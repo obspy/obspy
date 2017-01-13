@@ -265,8 +265,8 @@ class SeismicArrayTestCase(unittest.TestCase):
         self.assertTrue(np.allclose([8, 5, 7], epoint))
 
     def test_fk_array_transff_freqslowness(self):
-        transff = self.transff_array.array_transff_freqslowness(40, 20, 1,
-                                                                10, 1)
+        transff = self.transff_array.array_transfer_function_freqslowness(40, 20, 1,
+                                                                          10, 1)
         transffth = np.array(
             [[0.41915119, 0.33333333, 0.32339525, 0.24751548, 0.67660475],
              [0.25248452, 0.41418215, 0.34327141, 0.65672859, 0.33333333],
@@ -276,7 +276,7 @@ class SeismicArrayTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(transff, transffth, decimal=6)
 
     def test_fk_array_transff_wavenumber(self):
-        transff = self.transff_array.array_transff_wavenumber(40, 20)
+        transff = self.transff_array.array_transfer_function_wavenumber(40, 20)
         transffth = np.array(
             [[3.13360360e-01, 4.23775796e-02, 6.73650243e-01,
               4.80470652e-01, 8.16891615e-04],
