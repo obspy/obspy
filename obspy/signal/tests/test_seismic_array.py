@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util.testing import ImageComparison
 from obspy.signal.array_analysis import SeismicArray
+from obspy.signal.array_analysis.seismic_array import _get_stream_offsets
 from obspy.signal.util import util_lon_lat
 from obspy import read
 from obspy.core.inventory import read_inventory
@@ -259,7 +260,7 @@ class SeismicArrayTestCase(unittest.TestCase):
             Trace(data, {'starttime': stime - 4}),
             Trace(data, {'starttime': stime - 2}),
         ])
-        spoint, epoint = self.fk_array.get_stream_offsets(st, stime, etime)
+        spoint, epoint = _get_stream_offsets(st, stime, etime)
         self.assertTrue(np.allclose([1, 4, 2], spoint))
         self.assertTrue(np.allclose([8, 5, 7], epoint))
 

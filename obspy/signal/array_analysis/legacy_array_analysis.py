@@ -133,34 +133,6 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
                             static3d=False)
 
 
-def get_spoint(stream, stime, etime):
-    """
-    Calculates start and end offsets relative to stime and etime for each
-    trace in stream in samples.
-
-    :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param stime: Start time
-    :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param etime: End time
-    :returns: start and end sample offset arrays
-    """
-    spoint = np.empty(len(stream), dtype=np.int32, order="C")
-    epoint = np.empty(len(stream), dtype=np.int32, order="C")
-    for i, tr in enumerate(stream):
-        if tr.stats.starttime > stime:
-            msg = "Specified stime %s is smaller than starttime %s in stream"
-            raise ValueError(msg % (stime, tr.stats.starttime))
-        if tr.stats.endtime < etime:
-            msg = "Specified etime %s is bigger than endtime %s in stream"
-            raise ValueError(msg % (etime, tr.stats.endtime))
-        # now we have to adjust to the beginning of real start time
-        spoint[i] = int((stime - tr.stats.starttime) *
-                        tr.stats.sampling_rate + .5)
-        epoint[i] = int((tr.stats.endtime - etime) *
-                        tr.stats.sampling_rate + .5)
-    return spoint, epoint
-
-
 def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     """
     Returns array transfer function as a function of wavenumber difference
@@ -330,6 +302,9 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :return: :class:`numpy.ndarray` of timestamp, relative relpow, absolute
         relpow, backazimuth, slowness
     """
+    # Import here to avoid circular imports.
+    from obspy.signal.array_analysis import seismic_array
+
     res = []
     eotr = True
 
@@ -354,7 +329,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     time_shift_table = get_timeshift(geometry, sll_x, sll_y,
                                      sl_s, grdpts_x, grdpts_y)
     # offset of arrays
-    spoint, _epoint = get_spoint(stream, stime, etime)
+    spoint, _epoint = seismic_array._get_stream_offsets(stream, stime, etime)
     #
     # loop with a sliding window over the dat trace array and apply bbfk
     #

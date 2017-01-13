@@ -13,7 +13,7 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.signal.array_analysis import (array_processing,
                                          array_transff_freqslowness,
-                                         array_transff_wavenumber, get_spoint)
+                                         array_transff_wavenumber)
 from obspy.signal.util import util_lon_lat
 
 
@@ -146,20 +146,6 @@ class SonicTestCase(unittest.TestCase):
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
         np.testing.assert_allclose(ref, out[:, 1:], rtol=1E-4)
-
-    def test_get_spoint(self):
-        stime = UTCDateTime(1970, 1, 1, 0, 0)
-        etime = UTCDateTime(1970, 1, 1, 0, 0) + 10
-        data = np.empty(20)
-        # sampling rate defaults to 1 Hz
-        st = Stream([
-            Trace(data, {'starttime': stime - 1}),
-            Trace(data, {'starttime': stime - 4}),
-            Trace(data, {'starttime': stime - 2}),
-        ])
-        spoint, epoint = get_spoint(st, stime, etime)
-        self.assertTrue(np.allclose([1, 4, 2], spoint))
-        self.assertTrue(np.allclose([8, 5, 7], epoint))
 
     def test_array_transff_freqslowness(self):
         coords = np.array([[10., 60., 0.],

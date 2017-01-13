@@ -40,6 +40,35 @@ from obspy.signal.invsim import cosine_taper
 from obspy.signal.util import util_geo_km, next_pow_2
 
 
+def _get_stream_offsets(stream, stime, etime):
+    """
+    Calculates start and end offsets relative to stime and etime for each
+    trace in stream in samples.
+
+    :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param stime: Start time
+    :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param etime: End time
+    :returns: start and end sample offset arrays
+    """
+    spoint = np.empty(len(stream), dtype=np.int32, order="C")
+    epoint = np.empty(len(stream), dtype=np.int32, order="C")
+    for i, tr in enumerate(stream):
+        if tr.stats.starttime > stime:
+            msg = "Specified stime %s is smaller than starttime %s " \
+                  "in stream"
+            raise ValueError(msg % (stime, tr.stats.starttime))
+        if tr.stats.endtime < etime:
+            msg = "Specified etime %s is bigger than endtime %s in stream"
+            raise ValueError(msg % (etime, tr.stats.endtime))
+        # now we have to adjust to the beginning of real start time
+        spoint[i] = int(
+            (stime - tr.stats.starttime) * tr.stats.sampling_rate + .5)
+        epoint[i] = int(
+            (tr.stats.endtime - etime) * tr.stats.sampling_rate + .5)
+    return spoint, epoint
+
+
 class SeismicArray(object):
     """
     Class representing a seismic array.
@@ -1171,7 +1200,7 @@ class SeismicArray(object):
                                               vel_cor=vel_cor,
                                               static3d=static3d)
 
-        spoint, _epoint = self.get_stream_offsets(stream, stime, etime)
+        spoint, _epoint = _get_stream_offsets(stream, stime, etime)
 
         # loop with a sliding window over the dat trace array and apply bbfk
         nstat = len(stream)
@@ -1753,35 +1782,6 @@ class SeismicArray(object):
 
         return out
 
-    @staticmethod
-    def get_stream_offsets(stream, stime, etime):
-        """
-        Calculates start and end offsets relative to stime and etime for each
-        trace in stream in samples.
-
-        :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param stime: Start time
-        :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param etime: End time
-        :returns: start and end sample offset arrays
-        """
-        spoint = np.empty(len(stream), dtype=np.int32, order="C")
-        epoint = np.empty(len(stream), dtype=np.int32, order="C")
-        for i, tr in enumerate(stream):
-            if tr.stats.starttime > stime:
-                msg = "Specified stime %s is smaller than starttime %s " \
-                      "in stream"
-                raise ValueError(msg % (stime, tr.stats.starttime))
-            if tr.stats.endtime < etime:
-                msg = "Specified etime %s is bigger than endtime %s in stream"
-                raise ValueError(msg % (etime, tr.stats.endtime))
-            # now we have to adjust to the beginning of real start time
-            spoint[i] = int(
-                (stime - tr.stats.starttime) * tr.stats.sampling_rate + .5)
-            epoint[i] = int(
-                (tr.stats.endtime - etime) * tr.stats.sampling_rate + .5)
-        return spoint, epoint
-
     def plot_radial_transfer_function(self, smin, smax, sstep, freqs):
         """
         Plot array transfer function radially, as function of slowness.
@@ -2056,8 +2056,8 @@ class SeismicArray(object):
 
         mini = np.min(time_shift_table[:, :, :])
         maxi = np.max(time_shift_table[:, :, :])
-        spoint, _epoint = self.get_stream_offsets(stream, (stime - mini),
-                                                  (etime - maxi))
+        spoint, _epoint = _get_stream_offsets(stream, (stime - mini),
+                                              (etime - maxi))
 
         # recalculate the maximum possible trace length
         #    ndat = int(((etime-maxi) - (stime-mini))*fs)
@@ -2242,8 +2242,8 @@ class SeismicArray(object):
 
         mini = min(min(i.values()) for i in list(time_shift_table.values()))
         maxi = max(max(i.values()) for i in list(time_shift_table.values()))
-        spoint, _ = self.get_stream_offsets(stream, (starttime - mini),
-                                            (endtime - maxi))
+        spoint, _ = _get_stream_offsets(stream, (starttime - mini),
+                                        (endtime - maxi))
 
         # Recalculate the maximum possible trace length
         ndat = int(((endtime - maxi) - (starttime - mini)) * fs)
