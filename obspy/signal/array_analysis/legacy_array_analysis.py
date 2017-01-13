@@ -95,6 +95,28 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
         return geometry
 
 
+def __geometry_to_inventory(geometry):
+    """
+    Internal helper routine to convert a local xyz geometry to an inventory
+    object.
+    """
+    # Import here to avoid circular imports.
+    from obspy.signal.array_analysis import SeismicArray
+
+    # A bit of an ugly hack to reduce the code duplication and use the
+    # routine in the new array class.
+    stations = [
+        Station(code="%i" % _i,
+                # Manually inverted for the best constant that work with
+                # ObsPy's internal conversions.
+                latitude=geom[1] / 110.5748180,
+                longitude=geom[0] / 111.319941,
+                elevation=0) for _i, geom in enumerate(geometry)]
+    network = Network(code="XX", stations=stations)
+    inv = Inventory(networks=[network], source="me")
+    return SeismicArray(name="", inventory=inv)
+
+
 def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     """
     Returns timeshift table for given array geometry
@@ -112,21 +134,7 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     :param grdpts_x: number of grid points in x direction
     :param grdpts_x: number of grid points in y direction
     """
-    # Import here to avoid circular imports.
-    from obspy.signal.array_analysis import SeismicArray
-
-    # A bit of an ugly hack to reduce the code duplication and use the
-    # routine in the new array class.
-    stations = [
-        Station(code="%i" % _i,
-                # Manually inverted for the best constant that work with
-                # ObsPy's internal conversions.
-                latitude=geom[1] / 110.5748180,
-                longitude=geom[0] / 111.319941,
-                elevation=0) for _i, geom in enumerate(geometry)]
-    network = Network(code="XX", stations=stations)
-    inv = Inventory(networks=[network], source="me")
-    sa = SeismicArray(name="", inventory=inv)
+    sa = __geometry_to_inventory(geometry)
     return sa.get_timeshift(sllx=sll_x, slly=sll_y, sls=sl_s,
                             grdpts_x=grdpts_x, grdpts_y=grdpts_y,
                             latitude=0.0, longitude=0.0, absolute_height=0,
@@ -137,6 +145,11 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     """
     Returns array transfer function as a function of wavenumber difference
 
+    .. note::
+        Legacy routine - please slowly transition towards using the
+        :class:`~obspy.signal.array_analysis.seismic_array.SeismicArray`
+        class.
+
     :type coords: numpy.ndarray
     :param coords: coordinates of stations in longitude and latitude in degrees
         elevation in km, or x, y, z in km
@@ -146,35 +159,9 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     :param klim: either a float to use symmetric limits for wavenumber
         differences or the tuple (kxmin, kxmax, kymin, kymax)
     """
-    coords = get_geometry(coords, coordsys)
-    if isinstance(klim, float):
-        kxmin = -klim
-        kxmax = klim
-        kymin = -klim
-        kymax = klim
-    elif isinstance(klim, tuple):
-        if len(klim) == 4:
-            kxmin = klim[0]
-            kxmax = klim[1]
-            kymin = klim[2]
-            kymax = klim[3]
-    else:
-        raise TypeError('klim must either be a float or a tuple of length 4')
-
-    nkx = int(np.ceil((kxmax + kstep / 10. - kxmin) / kstep))
-    nky = int(np.ceil((kymax + kstep / 10. - kymin) / kstep))
-
-    # careful with meshgrid indexing
-    kygrid, kxgrid = np.meshgrid(np.linspace(kymin, kymax, nky),
-                                 np.linspace(kxmin, kxmax, nkx))
-
-    ks = np.transpose(np.vstack((kxgrid.flatten(), kygrid.flatten())))
-
-    # z coordinate is not used
-    k_dot_r = np.einsum('ni,mi->nm', ks, coords[:, :2])
-    transff = np.abs(np.sum(np.exp(1j * k_dot_r), axis=1))**2 / len(coords)**2
-
-    return transff.reshape(nkx, nky)
+    geometry = get_geometry(coords, coordsys)
+    sa = __geometry_to_inventory(geometry)
+    return sa.array_transff_wavenumber(klim=klim, kstep=kstep)
 
 
 def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
@@ -182,6 +169,11 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     """
     Returns array transfer function as a function of slowness difference and
     frequency.
+
+    .. note::
+        Legacy routine - please slowly transition towards using the
+        :class:`~obspy.signal.array_analysis.seismic_array.SeismicArray`
+        class.
 
     :type coords: numpy.ndarray
     :param coords: coordinates of stations in longitude and latitude in degrees
