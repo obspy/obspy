@@ -552,8 +552,6 @@ class SeismicArray(object):
                                      absolute_height)
 
         geometry = self._geometry_dict_to_array(geom)
-        import pprint
-        pprint.pprint(geometry)
 
         if static3d:
             nstat = len(geometry)
