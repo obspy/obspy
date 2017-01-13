@@ -2308,7 +2308,9 @@ class SeismicArray(object):
                 if bs > max_beam:
                     max_beam = bs
                     beam_max = _i
-                    slow = np.abs(sll + slowness * sls)
+                    slow = slowness
+                    if slow < 1e-8:
+                        slow = 1e-8
 
             elif method == 'PWS':
                 stack = np.zeros(ndat, dtype='c8')
