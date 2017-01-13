@@ -29,6 +29,8 @@ import matplotlib.patheffects as PathEffects
 from matplotlib.ticker import MaxNLocator, MultipleLocator
 
 from obspy.core import Trace, Stream, UTCDateTime
+from obspy.core.event.event import Event
+from obspy.core.event.origin import Origin
 from obspy.core.inventory import Inventory
 from obspy.core.util import AttribDict
 from obspy.geodetics import gps2dist_azimuth, degrees2kilometers
@@ -437,9 +439,8 @@ class SeismicArray(object):
 
         return min_distance_station
 
-    def get_timeshift_baz(self, sll, slm, sls, baz, latitude=None,
-                          longitude=None, absolute_height=None,
-                          static3d=False, vel_cor=4.0):
+    def _get_timeshift_baz(self, sll, slm, sls, baz, latitude, longitude,
+                           absolute_height_in_km, static3d=False, vel_cor=4.0):
         """
         Returns timeshift table for the geometry of the current array, in
         kilometres relative to a given centre (uses geometric centre if not
@@ -461,12 +462,8 @@ class SeismicArray(object):
             t = rxy*s - rz*cos(inc)/vel_cor
             where inc is defined by inv = asin(vel_cor*slow)
         """
-        if any([_i is None for _i in [latitude, longitude, absolute_height]]):
-            latitude = self.geometrical_center["latitude"]
-            longitude = self.geometrical_center["longitude"]
-            absolute_height = self.geometrical_center["absolute_height_in_km"]
         geom = self.get_geometry_xyz(latitude, longitude,
-                                     absolute_height)
+                                     absolute_height_in_km)
 
         baz = math.pi * baz / 180.0
 
@@ -557,21 +554,49 @@ class SeismicArray(object):
                 dtype='float32')
 
     def vespagram(self, stream, event_or_baz, sll, slm, sls, starttime,
-                  endtime, latitude=None, longitude=None,
-                  absolute_height_in_km=None, method="DLS", nthroot=1,
-                  static3d=False, vel_cor=4.0):
-        baz = float(event_or_baz)
-        if(latitude is None or longitude is None or
-           absolute_height_in_km is None):
-            time_shift_table = self.get_timeshift_baz(sll, slm, sls, baz,
-                                                      static3d=static3d,
-                                                      vel_cor=vel_cor)
+                  endtime, reference='center_of_gravity', method="DLS",
+                  nthroot=1, static3d=False, vel_cor=4.0):
+        """
+        :type event_or_baz: float or :class:`~obspy.core.event.event.Event` or
+            :class:`~obspy.core.event.origin.Origin`
+        :param event_or_baz: Backazimuth for vespagram or event/origin object
+            to calculate theoretical backazimuth from.
+        :type reference: str or dict
+        :param reference: Determines what is used as reference origin. Either
+            ``'center_of_gravity'``, ``'geometrical_center'`` or a dictionary
+            with keys ``'latitude'``, ``'longitude'``, ``'elevation'``
+            (elevation in meters).
+        """
+        if reference == 'center_of_gravity':
+            center_ = self.center_of_gravity
+        elif reference == 'geometrical_center':
+            center_ = self.geometrical_center
+        elif isinstance(reference, dict):
+            center_ = reference
+            center_['absolute_height_in_km'] = (
+                center_.pop('elevation') / 1000.0)
         else:
-            time_shift_table = self.get_timeshift_baz(sll, slm, sls, baz,
-                                                      latitude, longitude,
-                                                      absolute_height_in_km,
-                                                      static3d=static3d,
-                                                      vel_cor=vel_cor)
+            msg = "Unrecognized value for 'reference' option: {}"
+            raise ValueError(msg.format(reference))
+
+        if isinstance(event_or_baz, Event):
+            origin_ = event_or_baz.origins[0]
+            baz = gps2dist_azimuth(
+                center_['latitude'], center_['longitude'],
+                origin_['latitude'], origin_['longitude'])[1]
+        elif isinstance(event_or_baz, Origin):
+            origin_ = event_or_baz
+            baz = gps2dist_azimuth(
+                center_['latitude'], center_['longitude'],
+                origin_['latitude'], origin_['longitude'])[1]
+        else:
+            baz = float(event_or_baz)
+
+        time_shift_table = self._get_timeshift_baz(
+            sll, slm, sls, baz, latitude=center_['latitude'],
+            longitude=center_['longitude'],
+            absolute_height_in_km=center_['absolute_height_in_km'],
+            static3d=static3d, vel_cor=vel_cor)
 
         return self._vespagram_baz(stream, time_shift_table,
                                    starttime=starttime,
