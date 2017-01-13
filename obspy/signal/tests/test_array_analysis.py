@@ -11,7 +11,8 @@ import unittest
 
 import numpy as np
 
-from obspy.signal.array_analysis import array_rotation_strain, get_geometry
+from obspy.signal.array_analysis import (array_rotation_strain, get_geometry,
+                                         get_timeshift)
 
 
 class ArrayTestCase(unittest.TestCase):
@@ -196,6 +197,34 @@ class ArrayTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(la[:, 0].sum(), 0., decimal=8)
         np.testing.assert_almost_equal(la[:, 1].sum(), 0., decimal=8)
         np.testing.assert_almost_equal(la[:, 2].sum(), 0., decimal=8)
+
+    def test_get_timeshift(self):
+        """
+        Tests the get_timeshift function.
+        """
+        geometry = np.array(
+            [[-2, 0, 0], [-1, 0, 0], [0, 0, 0], [1, 1, 0], [2, 2, 0]])
+
+        t = get_timeshift(geometry=geometry, sll_x=1, sll_y=1, sl_s=2,
+                          grdpts_x=2, grdpts_y=2)
+
+        np.testing.assert_allclose(t, np.array([
+            # (x_s, y_s) = 1, 1;  1, 3; 3, 1; 3, 3
+            #
+            # The timeshift is not a geometric distance but sums up x + y
+            # axis.
+            #
+            # Station at index 0.
+            [[-2, -2], [-6, -6]],
+            # Station at index 1.
+            [[-1, -1], [-3, -3]],
+            # Station at index 2.
+            [[0, 0], [0, 0]],
+            # Station at index 3.
+            [[2, 4], [4, 6]],
+            # Station at index 4.
+            [[4, 8], [8, 12]]
+        ]))
 
 
 def suite():
