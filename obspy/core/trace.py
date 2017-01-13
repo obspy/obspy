@@ -1937,7 +1937,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :type type: str
         :param type: Type of taper to use for detrending. Defaults to
-            ``'cosine'``.  See the `Supported Methods`_ section below for
+            ``'hann'``.  See the `Supported Methods`_ section below for
             further details.
         :type max_percentage: None, float
         :param max_percentage: Decimal percentage of taper at one end (ranging
