@@ -2259,6 +2259,9 @@ class SeismicArray(object):
         :return: numpy.ndarray of beams with different slownesses
         """
         fs = stream[0].stats.sampling_rate
+        if len(stream) != len(stream.select(sampling_rate=fs)):
+            msg = 'All traces must have same sampling rate.'
+            raise ValueError(msg)
 
         mini = min(value.min() for key, value in time_shift_table.items()
                    if key is not None)
