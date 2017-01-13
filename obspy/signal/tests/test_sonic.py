@@ -132,8 +132,7 @@ class SonicTestCase(unittest.TestCase):
 6.08349575e+03 6.08349575e+03  1.77709390e+02  2.50199920e+00
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
-        # XXX relative tolerance should be lower!
-        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=5e-3))
+        np.testing.assert_allclose(ref, out[:, 1:], rtol=1E-4)
 
     def test_sonic_capon_prew(self):
         out = self.array_processing(prewhiten=1, method=1)
@@ -146,8 +145,7 @@ class SonicTestCase(unittest.TestCase):
 3.10761699e-02 7.38667657e+00  1.13099325e+01  1.52970585e+00
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
-        # XXX relative tolerance should be lower!
-        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=4e-5))
+        np.testing.assert_allclose(ref, out[:, 1:], rtol=1E-4)
 
     def test_get_spoint(self):
         stime = UTCDateTime(1970, 1, 1, 0, 0)

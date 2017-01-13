@@ -224,7 +224,7 @@ class ArrayTestCase(unittest.TestCase):
             [[2, 4], [4, 6]],
             # Station at index 4.
             [[4, 8], [8, 12]]
-        ]))
+        ]), rtol=1E-5)
 
 
 def suite():

@@ -17,12 +17,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import math
-import warnings
 
 import numpy as np
 from scipy.integrate import cumtrapz
 
 from obspy.core import Stream
+from obspy.core.inventory import Inventory, Network, Station
 from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.util import next_pow_2, util_geo_km
@@ -99,32 +99,38 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     """
     Returns timeshift table for given array geometry
 
-    :param geometry: Nested list containing the arrays geometry, as returned by
-            get_group_geometry
+    .. note::
+        Legacy routine - please slowly transition towards using the
+        :class:`~obspy.signal.array_analysis.seismic_array.SeismicArray`
+        class.
+
+    :param geometry: Nested list containing the arrays geometry, as
+        returned by get_group_geometry
     :param sll_x: slowness x min (lower)
     :param sll_y: slowness y min (lower)
     :param sl_s: slowness step
     :param grdpts_x: number of grid points in x direction
     :param grdpts_x: number of grid points in y direction
     """
-    # unoptimized version for reference
-    # nstat = len(geometry)  # last index are center coordinates
-    #
-    # time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype=np.float32)
-    # for k in xrange(grdpts_x):
-    #    sx = sll_x + k * sl_s
-    #    for l in xrange(grdpts_y):
-    #        sy = sll_y + l * sl_s
-    #        time_shift_tbl[:,k,l] = sx * geometry[:, 0] + sy * geometry[:,1]
-    # time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
-    # return time_shift_tbl
-    # optimized version
-    mx = np.outer(geometry[:, 0], sll_x + np.arange(grdpts_x) * sl_s)
-    my = np.outer(geometry[:, 1], sll_y + np.arange(grdpts_y) * sl_s)
-    return np.require(
-        mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) +
-        my[:, np.newaxis, :].repeat(grdpts_x, axis=1),
-        dtype=np.float32)
+    # Import here to avoid circular imports.
+    from obspy.signal.array_analysis import SeismicArray
+
+    # A bit of an ugly hack to reduce the code duplication and use the
+    # routine in the new array class.
+    stations = [
+        Station(code="%i" % _i,
+                # Manually inverted for the best constant that work with
+                # ObsPy's internal conversions.
+                latitude=geom[1] / 110.5748180,
+                longitude=geom[0] / 111.319941,
+                elevation=0) for _i, geom in enumerate(geometry)]
+    network = Network(code="XX", stations=stations)
+    inv = Inventory(networks=[network], source="me")
+    sa = SeismicArray(name="", inventory=inv)
+    return sa.get_timeshift(sllx=sll_x, slly=sll_y, sls=sl_s,
+                            grdpts_x=grdpts_x, grdpts_y=grdpts_y,
+                            latitude=0.0, longitude=0.0, absolute_height=0,
+                            static3d=False)
 
 
 def get_spoint(stream, stime, etime):
