@@ -73,16 +73,17 @@ def _get_stream_offsets(stream, stime, etime):
 
 class SeismicArray(object):
     """
-    Class representing a seismic array.
+    Class representing a seismic (or other) array.
 
     The SeismicArray class is a named container for an
     :class:`~obspy.core.inventory.Inventory` containing the components
     making up the array along with methods for array processing. It does not
     contain any seismic data. The locations of the array components
     (stations or channels) must be set in the respective objects (for an
-    overview of the inventory system, see :mod:`~obspy.station`). While the
-    inventory must be composed of :class:`~obspy.station.station.Station`
-    and/or :class:`~obspy.station.channel.Channel` objects, they do not need
+    overview of the inventory system, see :mod:`~obspy.core.inventory`).
+    While the inventory must be composed of
+    :class:`~obspy.core.inventory.station.Station` and/or
+    :class:`~obspy.core.inventory.channel.Channel` objects, they do not need
     to represent actual seismic stations; their only required attribute is
     the location information.
 
@@ -100,15 +101,13 @@ class SeismicArray(object):
     >>> print(array)
     Seismic Array 'AGFA' with 5 Stations, aperture: 0.06 km.
 
-
     .. rubric:: Coordinate conventions:
+
     * Right handed
     * X positive to east
     * Y positive to north
     * Z positive up
-
     """
-
     def __init__(self, name, inventory):
         self.name = name
         self.inventory = inventory
