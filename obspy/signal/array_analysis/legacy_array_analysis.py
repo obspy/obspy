@@ -2,6 +2,10 @@
 """
 Functions for array analysis.
 
+These routines are largely still around to ensure compatibility with
+existing codes. Please try to use the new class based
+:class:`~obspy.signals.array_analysis.seismic_array.SeismicArray` interface.
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
