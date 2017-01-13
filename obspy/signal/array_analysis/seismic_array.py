@@ -112,7 +112,7 @@ class SeismicArray(object):
         self.name = name
         if not isinstance(inventory, Inventory):
             raise TypeError("Inventory must be an ObsPy Inventory.")
-        self.inventory = inventory.copy()
+        self.inventory = copy.deepcopy(inventory)
 
     def __str__(self):
         """
@@ -437,34 +437,6 @@ class SeismicArray(object):
         if correct_3dplane:
             self.correct_with_3dplane(geometry)
         return geometry
-
-    def find_closest_station(self, latitude, longitude,
-                             absolute_height_in_km=0.0):
-        """
-        Return the array station closest to a given reference point.
-
-        :param latitude: Latitude of reference origin.
-        :param longitude: Longitude of reference origin.
-        :param absolute_height_in_km: Elevation of reference origin.
-        """
-        min_distance = None
-        min_distance_station = None
-
-        for key, value in list(self.geometry.items()):
-            # output in [km]
-            x, y = util_geo_km(longitude, latitude, value["longitude"],
-                               value["latitude"])
-            x *= 1000.0
-            y *= 1000.0
-
-            z = absolute_height_in_km
-
-            distance = np.sqrt(x ** 2 + y ** 2 + z ** 2)
-            if min_distance is None or distance < min_distance:
-                min_distance = distance
-                min_distance_station = key
-
-        return min_distance_station
 
     def _get_timeshift_baz(self, sll, slm, sls, baz, latitude, longitude,
                            absolute_height_in_km, static3d=False, vel_cor=4.0):
