@@ -24,6 +24,7 @@ import numpy as np
 import scipy as sp
 from scipy import interpolate
 from scipy.integrate import cumtrapz
+import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.patheffects as PathEffects
 from matplotlib.ticker import MaxNLocator, MultipleLocator
@@ -35,6 +36,7 @@ from obspy.core.inventory import Inventory
 from obspy.core.util import AttribDict
 from obspy.geodetics import gps2dist_azimuth, degrees2kilometers
 from obspy.imaging import cm
+from obspy.imaging.cm import obspy_sequential
 from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.util import util_geo_km, next_pow_2
@@ -583,7 +585,8 @@ class SeismicArray(object):
 
     def vespagram(self, stream, event_or_baz, sll, slm, sls, starttime,
                   endtime, reference='center_of_gravity', method="DLS",
-                  nthroot=1, static3d=False, vel_cor=4.0):
+                  nthroot=1, static3d=False, vel_cor=4.0, wiggle_scale=1.0,
+                  density_cmap=obspy_sequential, plot="wiggle", show=True):
         """
         :type event_or_baz: float or :class:`~obspy.core.event.event.Event` or
             :class:`~obspy.core.event.origin.Origin`
@@ -594,6 +597,14 @@ class SeismicArray(object):
             ``'center_of_gravity'``, ``'geometrical_center'`` or a dictionary
             with keys ``'latitude'``, ``'longitude'``, ``'elevation'``
             (elevation in meters).
+        :type wiggle_scale: float
+        :param wiggle_scale: Relative scaling for wiggle plot (unused for
+            density plot).
+        :type plot: str or None
+        :param plot: Whether to create a plot or not. Can be either
+            ``'wiggle'``, ``'density'``, or ``None``.
+        :type show: bool
+        :param show: Whether to open the plot (if any) interactively or not.
         """
         if reference == 'center_of_gravity':
             center_ = self.center_of_gravity
@@ -626,10 +637,56 @@ class SeismicArray(object):
             absolute_height_in_km=center_['absolute_height_in_km'],
             static3d=static3d, vel_cor=vel_cor)
 
-        return self._vespagram_baz(stream, time_shift_table,
-                                   starttime=starttime,
-                                   endtime=endtime, method=method,
-                                   nthroot=nthroot)
+        slownesses = time_shift_table[None]
+
+        slow, beams, beam_max, max_beam = self._vespagram_baz(
+            stream, time_shift_table, starttime=starttime, endtime=endtime,
+            method=method, nthroot=nthroot)
+
+        if plot:
+            if plot not in ('wiggle', 'density'):
+                msg = "Unknown plotting option: '{!s}'".format(plot)
+                raise ValueError(msg)
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            # XXX need to check that all sampling rates are equal!?
+            sampling_rate = stream[0].stats.sampling_rate
+            delta = 1 / sampling_rate
+            npts = len(beams[0])
+            t = np.arange(0, npts/sampling_rate, delta)
+            max_amp = np.max(np.abs(beams))
+            scale = 2.0 * sls / max_amp
+            scale *= wiggle_scale
+
+            if plot == 'wiggle':
+                for i, (beam, slowness) in enumerate(zip(beams, slownesses)):
+                    if i == beam_max:
+                        color = "r"
+                        zorder = 2
+                    else:
+                        color = "k"
+                        zorder = 1
+                    ax.plot(t, slowness + scale * beam,
+                            color, zorder=zorder)
+
+                ax.set_xlim(t[0], t[-1])
+            elif plot == 'density':
+                extent = (t[0] - delta * 0.5, t[-1] + delta * 0.5,
+                          slownesses[0] - sls * 0.5,
+                          slownesses[-1] + sls * 0.5)
+
+                ax.imshow(np.flipud(beams), cmap=density_cmap,
+                          interpolation="nearest", extent=extent,
+                          aspect='auto')
+
+            ax.set_ylabel('slowness [s/XXX]')
+            ax.set_xlabel('Time [s]')
+            if show:
+                plt.show()
+        else:
+            fig = None
+
+        return slow, beams, beam_max, max_beam, fig
 
     def derive_rotation_from_array(self, stream, vp, vs, sigmau, latitude,
                                    longitude, absolute_height_in_km=0.0):
