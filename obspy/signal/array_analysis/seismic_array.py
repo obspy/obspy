@@ -482,7 +482,7 @@ class SeismicArray(object):
         :param baz:  backazimuth applied
         :param latitude: latitude of reference origin
         :param longitude: longitude of reference origin
-        :param absolute_height: elevation of reference origin, in km
+        :param absolute_height_in_km: elevation of reference origin, in km
         :param vel_cor: correction velocity (upper layer) in km/s. May be given
             at each station as a dictionary with the station/channel IDs as
             keys (same as in self.geometry).
@@ -497,29 +497,26 @@ class SeismicArray(object):
         baz = math.pi * baz / 180.0
 
         time_shift_tbl = {}
-        sx = sll
-        while sx < slm:
-            try:
-                inc = math.asin(vel_cor * sx)
-            except ValueError:
-                # if vel_cor given as dict:
-                inc = np.pi / 2.0
+        slownesses = np.arange(sll, slm, sls)
+        time_shift_tbl[None] = slownesses
 
-            time_shifts = {}
-            for key, value in list(geom.items()):
-                time_shifts[key] = sx * (value["x"] * math.sin(baz) +
-                                         value["y"] * math.cos(baz))
+        for key, value in list(geom.items()):
+            time_shifts = slownesses * (value["x"] * math.sin(baz) +
+                                        value["y"] * math.cos(baz))
 
-                if static3d:
-                    try:
-                        v = vel_cor[key]
-                    except TypeError:
-                        # if vel_cor is a constant:
-                        v = vel_cor
-                    time_shifts[key] += value["z"] * math.cos(inc) / v
-
-                time_shift_tbl[sx] = time_shifts
-            sx += sls
+            if static3d:
+                try:
+                    inc = np.arcsin(vel_cor * slownesses)
+                except ValueError:
+                    # if vel_cor given as dict:
+                    inc = np.pi / 2.0
+                try:
+                    v = vel_cor[key]
+                except TypeError:
+                    # if vel_cor is a constant:
+                    v = vel_cor
+                time_shifts += value["z"] * np.cos(inc) / v
+            time_shift_tbl[key] = time_shifts
 
         return time_shift_tbl
 
@@ -2240,28 +2237,35 @@ class SeismicArray(object):
         """
         fs = stream[0].stats.sampling_rate
 
-        mini = min(min(i.values()) for i in list(time_shift_table.values()))
-        maxi = max(max(i.values()) for i in list(time_shift_table.values()))
+        mini = min(value.min() for key, value in time_shift_table.items()
+                   if key is not None)
+        maxi = min(value.min() for key, value in time_shift_table.items()
+                   if key is not None)
+        # mini = min(min(i.values()) for i in list(time_shift_table.values()))
+        # maxi = max(max(i.values()) for i in list(time_shift_table.values()))
         spoint, _ = _get_stream_offsets(stream, (starttime - mini),
                                         (endtime - maxi))
 
+        # time shift table has slowness array under key `None`
+        slownesses = time_shift_table[None]
+
         # Recalculate the maximum possible trace length
         ndat = int(((endtime - maxi) - (starttime - mini)) * fs)
-        beams = np.zeros((len(time_shift_table), ndat), dtype='f8')
+        beams = np.zeros((len(slownesses), ndat), dtype='f8')
 
         max_beam = 0.0
         slow = 0.0
 
-        slownesses = sorted(time_shift_table.keys())
         sll = slownesses[0]
         sls = slownesses[1] - sll
 
-        for _i, slowness in enumerate(time_shift_table.keys()):
+        # ids = [key for key in time_shift_table.keys() if key is not None]
+        for _i, slowness in enumerate(slownesses):
             singlet = 0.0
             if method == 'DLS':
                 for _j, tr in enumerate(stream.traces):
                     station = tr.id
-                    s = spoint[_j] + int(time_shift_table[slowness][station] *
+                    s = spoint[_j] + int(time_shift_table[station][_i] *
                                          fs + 0.5)
                     shifted = tr.data[s: s + ndat]
                     singlet += 1. / len(stream) * np.sum(shifted * shifted)
@@ -2283,6 +2287,7 @@ class SeismicArray(object):
             elif method == 'PWS':
                 stack = np.zeros(ndat, dtype='c8')
                 nstat = len(stream)
+                raise NotImplementedError()
                 for i in range(nstat):
                     s = spoint[i] + int(time_shift_table[i, _i] * fs + 0.5)
                     try:
