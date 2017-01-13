@@ -398,11 +398,11 @@ class SeismicArray(object):
             hgt.append(coordinates["absolute_height_in_km"])
         return lats, lngs, hgt
 
-    def get_geometry_xyz(self, latitude, longitude, absolute_height_in_km,
-                         correct_3dplane=False):
+    def _get_geometry_xyz(self, latitude, longitude, absolute_height_in_km,
+                          correct_3dplane=False):
         """
-        Return the array geometry as each components's offset
-        relative to a given reference point, in km.
+        Return the array geometry as each components's offset relative to a
+        given reference point, in km.
 
         The returned geometry is a nested dictionary with each component's SEED
         ID as key and a dictionary of its coordinates as value, similar to that
@@ -413,7 +413,7 @@ class SeismicArray(object):
         gravity, use:
 
         >>> array = SeismicArray('', inv) # doctest: +SKIP
-        >>> array.get_geometry_xyz(**array.center_of_gravity) # doctest: +SKIP
+        >>> array._get_geometry_xyz(**array.center_of_gravity) # doctest: +SKIP
 
         :param latitude: Latitude of reference origin.
         :param longitude: Longitude of reference origin.
@@ -489,8 +489,8 @@ class SeismicArray(object):
             t = rxy*s - rz*cos(inc)/vel_cor
             where inc is defined by inv = asin(vel_cor*slow)
         """
-        geom = self.get_geometry_xyz(latitude, longitude,
-                                     absolute_height_in_km)
+        geom = self._get_geometry_xyz(latitude, longitude,
+                                      absolute_height_in_km)
 
         baz = math.pi * baz / 180.0
 
@@ -544,8 +544,8 @@ class SeismicArray(object):
             latitude = self.geometrical_center["latitude"]
             longitude = self.geometrical_center["longitude"]
             absolute_height = self.geometrical_center["absolute_height_in_km"]
-        geom = self.get_geometry_xyz(latitude, longitude,
-                                     absolute_height)
+        geom = self._get_geometry_xyz(latitude, longitude,
+                                      absolute_height)
 
         geometry = self._geometry_dict_to_array(geom)
 
@@ -1408,7 +1408,7 @@ class SeismicArray(object):
         npts = stream_n[0].stats.npts
 
         geo_array = self._geometry_dict_to_array(
-            self.get_geometry_xyz(**self.center_of_gravity))
+            self._get_geometry_xyz(**self.center_of_gravity))
         # NB at this point these offset arrays will contain three times as many
         # entries as needed because each channel is listed individually. These
         # are cut later on by indexing with the ans array which sorts and
@@ -1841,7 +1841,7 @@ class SeismicArray(object):
         u_y = -np.cos(theo_backazi)
         u_x = -np.sin(theo_backazi)
         geo_array = self._geometry_dict_to_array(
-            self.get_geometry_xyz(**self.center_of_gravity))
+            self._get_geometry_xyz(**self.center_of_gravity))
         x_ = geo_array[:, 0]
         y_ = geo_array[:, 1]
         x_ = np.array(x_)
@@ -1984,7 +1984,7 @@ class SeismicArray(object):
         else:
             raise TypeError('Parameter slim must either be a float '
                             'or a tuple of length 4.')
-        geometry = self._geometry_dict_to_array(self.get_geometry_xyz(
+        geometry = self._geometry_dict_to_array(self._get_geometry_xyz(
             **self.center_of_gravity))
         npx = int(np.ceil((pxmax + pstep / 10. - pxmin) / pstep))
         npy = int(np.ceil((pymax + pstep / 10. - pymin) / pstep))
@@ -2086,7 +2086,7 @@ class SeismicArray(object):
         grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
 
         abspow_map = np.empty((grdpts_x, grdpts_y), dtype='f8')
-        geometry = self._geometry_dict_to_array(self.get_geometry_xyz(
+        geometry = self._geometry_dict_to_array(self._get_geometry_xyz(
             correct_3dplane=correct_3dplane,
             **self.center_of_gravity))
 
@@ -2372,7 +2372,7 @@ class SeismicArray(object):
     def _geometry_dict_to_array(geometry):
         """
         Take a geometry dictionary (as provided by self.geometry, or by
-        get_geometry_xyz) and convert to a numpy array, as used in some
+        _get_geometry_xyz) and convert to a numpy array, as used in some
         methods.
         """
         geom_array = np.empty((len(geometry), 3))
@@ -2394,7 +2394,7 @@ class SeismicArray(object):
 
         :type geometry: dict
         :param geometry: Nested dictionary of stations, as returned for example
-            by :attr:`geometry` or :meth:`get_geometry_xyz`.
+            by :attr:`geometry` or :meth:`_get_geometry_xyz`.
         :return: The corrected geometry as dictionary, with the same keys as
             passed in.
         """

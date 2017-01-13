@@ -96,7 +96,7 @@ class SeismicArrayTestCase(unittest.TestCase):
 
     def test_get_geometry_xyz(self):
         """
-        Test get_geometry_xyz and, implicitly, _get_geometry (necessary because
+        Test _get_geometry_xyz and, implicitly, _get_geometry (necessary because
         self.geometry is a property and can't be set).
         """
         geox_exp = {'testnetwork.0..': {'x': -111.31564682647114,
@@ -108,10 +108,10 @@ class SeismicArrayTestCase(unittest.TestCase):
                                         110.5751633754653, 'z': 0.0},
                     'testnetwork.4..': {'x': 111.28219117308639, 'y':
                                         110.5751633754653, 'z': 0.0}}
-        geoxno3d = self.geometry_array.get_geometry_xyz(1, 1, 0,
-                                                        correct_3dplane=False)
-        geox = self.geometry_array.get_geometry_xyz(1, 1, 0,
-                                                    correct_3dplane=True)
+        geoxno3d = self.geometry_array._get_geometry_xyz(1, 1, 0,
+                                                         correct_3dplane=False)
+        geox = self.geometry_array._get_geometry_xyz(1, 1, 0,
+                                                     correct_3dplane=True)
         # For flat array:
         self.assertEqual(geoxno3d, geox)
         # Use almost equal as calculations appear to be imprecise on OS X.
