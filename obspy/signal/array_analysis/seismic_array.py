@@ -110,12 +110,9 @@ class SeismicArray(object):
     """
     def __init__(self, name, inventory):
         self.name = name
-        self.inventory = inventory
         if not isinstance(inventory, Inventory):
             raise TypeError("Inventory must be an ObsPy Inventory.")
-        # Must use deepcopy, otherwise even temporary changes to the array
-        # inventory will affect the 'original' inventory.
-        self.inventory = copy.deepcopy(inventory)
+        self.inventory = inventory.copy()
 
     def __str__(self):
         """
