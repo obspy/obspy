@@ -19,7 +19,6 @@ from future.builtins import *  # NOQA
 import math
 
 import numpy as np
-from scipy.integrate import cumtrapz
 
 from obspy.core import Stream
 from obspy.core.inventory import Inventory, Network, Station
@@ -104,7 +103,7 @@ def __geometry_to_inventory(geometry):
     from obspy.signal.array_analysis import SeismicArray
 
     # A bit of an ugly hack to reduce the code duplication and use the
-    # routine in the new array class.
+    # routines in the new array class.
     stations = [
         Station(code="%i" % _i,
                 # Manually inverted for the best constant that work with
@@ -190,41 +189,10 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     :type fstep: float
     :param fmin: frequency sample distance
     """
-    coords = get_geometry(coords, coordsys)
-    if isinstance(slim, float):
-        sxmin = -slim
-        sxmax = slim
-        symin = -slim
-        symax = slim
-    elif isinstance(slim, tuple):
-        if len(slim) == 4:
-            sxmin = slim[0]
-            sxmax = slim[1]
-            symin = slim[2]
-            symax = slim[3]
-    else:
-        raise TypeError('slim must either be a float or a tuple of length 4')
-
-    nsx = int(np.ceil((sxmax + sstep / 10. - sxmin) / sstep))
-    nsy = int(np.ceil((symax + sstep / 10. - symin) / sstep))
-    nf = int(np.ceil((fmax + fstep / 10. - fmin) / fstep))
-
-    transff = np.empty((nsx, nsy))
-    buff = np.zeros(nf)
-
-    for i, sx in enumerate(np.arange(sxmin, sxmax + sstep / 10., sstep)):
-        for j, sy in enumerate(np.arange(symin, symax + sstep / 10., sstep)):
-            for k, f in enumerate(np.arange(fmin, fmax + fstep / 10., fstep)):
-                _sum = 0j
-                for l in np.arange(len(coords)):
-                    _sum += np.exp(
-                        complex(0., (coords[l, 0] * sx + coords[l, 1] * sy) *
-                                2 * np.pi * f))
-                buff[k] = abs(_sum) ** 2
-            transff[i, j] = cumtrapz(buff, dx=fstep)[-1]
-
-    transff /= transff.max()
-    return transff
+    geometry = get_geometry(coords, coordsys)
+    sa = __geometry_to_inventory(geometry)
+    return sa.array_transff_freqslowness(slim=slim, sstep=sstep, fmin=fmin,
+                                         fmax=fmax, fstep=fstep)
 
 
 def dump(pow_map, apow_map, i):
