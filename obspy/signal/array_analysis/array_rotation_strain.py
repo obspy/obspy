@@ -445,12 +445,9 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         # sum the lengths of the displ difference vectors
         sumlen = 0
         for i in range(n):
-            udif[0, i] = ts1[itime, subarray[i + 1]] - \
-                         ts1[itime, subarray[0]]
-            udif[1, i] = ts2[itime, subarray[i + 1]] - \
-                         ts2[itime, subarray[0]]
-            udif[2, i] = ts3[itime, subarray[i + 1]] - \
-                         ts3[itime, subarray[0]]
+            udif[0, i] = ts1[itime, subarray[i + 1]] - ts1[itime, subarray[0]]
+            udif[1, i] = ts2[itime, subarray[i + 1]] - ts2[itime, subarray[0]]
+            udif[2, i] = ts3[itime, subarray[i + 1]] - ts3[itime, subarray[0]]
             sumlen = sumlen + np.sqrt(np.sum(udif[:, i].T ** 2))
 
         data = udif.T.reshape(udif.size)
