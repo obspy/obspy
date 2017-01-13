@@ -61,6 +61,7 @@ class SeismicArray(object):
     .. rubric:: Basic Usage
 
     >>> from obspy.core.inventory import read_inventory
+    >>> from obspy.signal.array_analysis import SeismicArray
     >>> inv = read_inventory('http://examples.obspy.org/agfainventory.xml')
     >>> array = SeismicArray('AGFA', inv)
     >>> print(array)
@@ -159,6 +160,20 @@ class SeismicArray(object):
 
         Shows all the array's stations as well as it's geometric center and its
         center of gravity.
+
+        >>> from obspy.core.inventory import read_inventory
+        >>> from obspy.signal.array_analysis import SeismicArray
+        >>> inv = read_inventory('http://examples.obspy.org/agfainventory.xml')
+        >>> array = SeismicArray('AGFA', inv)
+        >>> array.plot()
+
+        .. plot::
+
+            from obspy.core.inventory import read_inventory
+            from obspy.signal.array_analysis import SeismicArray
+            inv = read_inventory('http://examples.obspy.org/agfainventory.xml')
+            array = SeismicArray('AGFA', inv)
+            array.plot()
 
         :type projection: str, optional
         :param projection: The map projection. Currently supported are:
