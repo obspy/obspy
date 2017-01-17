@@ -785,10 +785,10 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         self.assertFalse(rid1.get_referred_object() is
                          rid2.get_referred_object())
         del obj1
-        warnings.simplefilter('error', UserWarning)
-        with self.assertRaises(UserWarning):
+        warnings.simplefilter('default')
+        with warnings.catch_warnings(record=True) as w:
             rid1.get_referred_object()
-        warnings.simplefilter('ignore', UserWarning)
+            assert len(w)
         # now both rids should return the same object
         self.assertIs(rid1.get_referred_object(), rid2.get_referred_object())
         # the object id should have been reset

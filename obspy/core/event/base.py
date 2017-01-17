@@ -658,7 +658,7 @@ class ResourceIdentifier(object):
         if self.object_id is not None:
             msg = ("The object with identity of: %d no longer exists, "
                    "returning the most recently created object with a"
-                   " resource id of: %s.") % (self.object_id, self.id)
+                   " resource id of: %s") % (self.object_id, self.id)
             line_number = inspect.currentframe().f_back.f_lineno
             warnings.warn_explicit(msg, UserWarning, __file__,
                                    line_number)
