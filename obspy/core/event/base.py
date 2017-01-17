@@ -664,10 +664,10 @@ class ResourceIdentifier(object):
                                    line_number)
             self.object_id = None  # reset object id
         # find a obj that is not None starting at last in ordered dict
-        for key in reversed(rdic):
-            obj = rdic[key]
+        for key in list(reversed(rdic)):
+            obj = rdic[key]()
             if obj is not None:
-                return obj()
+                return obj
             else:  # remove references that are None
                 rdic.pop(key)
         else:  # if iter runs out all objects are none; pop rid, return None

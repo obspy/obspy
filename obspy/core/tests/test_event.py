@@ -488,6 +488,36 @@ class CatalogTestCase(unittest.TestCase):
         cat = read_events(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
+    def test_latest_in_scope_object_returned(self):
+        """
+        Test that the most recently defined object with the same resource_id,
+        that is still in scope, is returned from the get_referred_object
+        method
+        """
+        cat1 = read_events()
+        # The resource_id attached to the first event is self-pointing
+        self.assertIs(cat1[0], cat1[0].resource_id.get_referred_object())
+        # make a copy and re-read catalog
+        cat2 = cat1.copy()
+        cat3 = read_events()
+        # the resource_id on the new catalogs point to their attached objects
+        self.assertIs(cat1[0], cat1[0].resource_id.get_referred_object())
+        self.assertIs(cat2[0], cat2[0].resource_id.get_referred_object())
+        self.assertIs(cat3[0], cat3[0].resource_id.get_referred_object())
+        # now delete cat1 and make sure cat2 and cat3 still work
+        del cat1
+        self.assertIs(cat2[0], cat2[0].resource_id.get_referred_object())
+        self.assertIs(cat3[0], cat3[0].resource_id.get_referred_object())
+        # create a resource_id with the same id as the last defined object
+        # with the same resource id (that is still in scope) is returned
+        new_id = cat2[0].resource_id.id
+        rid = ResourceIdentifier(new_id)
+        self.assertIs(rid.get_referred_object(), cat3[0])
+        del cat3
+        self.assertIs(rid.get_referred_object(), cat2[0])
+        del cat2
+        self.assertIs(rid.get_referred_object(), None)
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 class CatalogBasemapTestCase(unittest.TestCase):
