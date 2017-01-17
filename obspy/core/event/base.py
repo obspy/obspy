@@ -401,6 +401,23 @@ def _event_type_class_factory(class_name, class_attributes=[],
             super(AbstractEventTypeWithResourceID, self).__init__(*args,
                                                                   **kwargs)
 
+        def __deepcopy__(self, memodict=None):
+            """
+            reset resource_id's object_id after deep copy to allow the
+            object specific behavior of get_referred_object
+            """
+            memodict = memodict or {}
+            cls = self.__class__
+            result = cls.__new__(cls)
+            memodict[id(self)] = result
+            for k, v in self.__dict__.items():
+                setattr(result, k, deepcopy(v, memodict))
+            result.resource_id.object_id = id(result)
+            return result
+
+
+
+
     if "resource_id" in [item[0] for item in class_attributes]:
         base_class = AbstractEventTypeWithResourceID
     else:
@@ -451,7 +468,11 @@ class ResourceIdentifier(object):
     :type referred_object: Python object, optional
     :param referred_object: The object this instance refers to. All instances
         created with the same resource_id will be able to access the object as
-        long as at least one instance actual has a reference to it.
+        long as at least one instance actually has a reference to it.
+        Additionally, ResourceIdentifier instances that have the same id but
+        different referred_objects will still return the referred object,
+        provided it doesn't get garbage collected. If the referred object no
+        longer exists any object with the same id will be returned.
 
     .. rubric:: General Usage
 
@@ -565,10 +586,10 @@ class ResourceIdentifier(object):
     ...'foo' bar2
     """
     # Class (not instance) attribute that keeps track of all resource
-    # identifier throughout one Python run. Will only store weak references and
-    # therefore does not interfere with the garbage collection.
+    # identifier throughout one Python run. Will only store weak references
+    # and therefore does not interfere with the garbage collection.
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
-    __resource_id_weak_dict = weakref.WeakValueDictionary()
+    __resource_id_weak_dict = {}  # a nested dict for weak object references
     # Use an additional dictionary to track all resource ids.
     __resource_id_tracker = collections.defaultdict(int)
 
@@ -587,6 +608,7 @@ class ResourceIdentifier(object):
             self.id = id
         # Append the referred object in case one is given to the class level
         # reference dictionary.
+        self.object_id = None  # the object specific ID
         if referred_object is not None:
             self.set_referred_object(referred_object)
 
@@ -617,8 +639,39 @@ class ResourceIdentifier(object):
         Will return None if no object could be found.
         """
         try:
-            return ResourceIdentifier.__resource_id_weak_dict[self.id]
+            rdic = ResourceIdentifier.__resource_id_weak_dict[self.id]
         except KeyError:
+            return None
+        else:
+            if self.object_id in rdic and rdic[self.object_id]() is not None:
+                return rdic[self.object_id]()
+            else:  # find last added obj that is not None
+                return self._get_similar_referred_object()
+
+    def _get_similar_referred_object(self):
+        """
+        Find an object with the same resource_id that is not None and
+        return it. Also pop all keys that have None values in the
+        __resource_id_weak_dict
+        """
+        rdic = ResourceIdentifier.__resource_id_weak_dict[self.id]
+        if self.object_id is not None:
+            msg = ("The object with identity of: %d no longer exists, "
+                   "returning the most recently created object with a"
+                   " resource id of: %s.") % (self.object_id, self.id)
+            line_number = inspect.currentframe().f_back.f_lineno
+            warnings.warn_explicit(msg, UserWarning, __file__,
+                                   line_number)
+            self.object_id = None  # reset object id
+        # find a obj that is not None starting at last in ordered dict
+        for key in reversed(rdic):
+            obj = rdic[key]
+            if obj is not None:
+                return obj()
+            else:  # remove references that are None
+                rdic.pop(key)
+        else:  # if iter runs out all objects are none; pop rid, return None
+            ResourceIdentifier.__resource_id_weak_dict.pop(self.id)
             return None
 
     def set_referred_object(self, referred_object):
@@ -628,32 +681,17 @@ class ResourceIdentifier(object):
         If it already a weak reference it will be used, otherwise one will be
         created. If the object is None, None will be set.
 
-        Will also append self again to the global class level reference list so
-        everything stays consistent.
+        Will also append self again to the global class level reference list
+        so everything stays consistent.
         """
-        # If it does not yet exists simply set it.
-        if self.id not in ResourceIdentifier.__resource_id_weak_dict:
-            ResourceIdentifier.__resource_id_weak_dict[self.id] = \
-                referred_object
-            return
-        # Otherwise check if the existing element the same as the new one. If
-        # it is do nothing, otherwise raise a warning and set the new object as
-        # the referred object.
-        if ResourceIdentifier.__resource_id_weak_dict[self.id] == \
-                referred_object:
-            return
-        msg = "The resource identifier '%s' already exists and points to " + \
-              "another object: '%s'." +\
-              "It will now point to the object referred to by the new " + \
-              "resource identifier."
-        msg = msg % (
-            self.id,
-            repr(ResourceIdentifier.__resource_id_weak_dict[self.id]))
-        # Always raise the warning!
-        warnings.warn_explicit(msg, UserWarning, __file__,
-                               inspect.currentframe().f_back.f_lineno)
-        ResourceIdentifier.__resource_id_weak_dict[self.id] = \
-            referred_object
+        self.object_id = id(referred_object)  # identity of object
+        rdic = ResourceIdentifier.__resource_id_weak_dict
+        # if the resource_id is in the rid_dict but not object identity set it
+        if self.id in rdic and self.object_id not in rdic[self.id]:
+            rdic[self.id][self.object_id] = weakref.ref(referred_object)
+        else:
+            rdic[self.id] = collections.OrderedDict()
+            rdic[self.id][self.object_id] = weakref.ref(referred_object)
 
     def convert_id_to_quakeml_uri(self, authority_id="local"):
         """
