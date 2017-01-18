@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated from Seiscomp Schema, do not edit -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:qml="http://quakeml.org/xmlns/quakeml/1.0" xmlns:scs="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.8" targetNamespace="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.8" elementFormDefault="qualified" attributeFormDefault="unqualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:qml="http://quakeml.org/xmlns/quakeml/1.0" xmlns:scs="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9" targetNamespace="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9" elementFormDefault="qualified" attributeFormDefault="unqualified">
   <xs:import namespace="http://quakeml.org/xmlns/quakeml/1.0" schemaLocation="quakeml_types.xsd"/>
   <xs:simpleType name="OriginUncertaintyDescription">
     <xs:restriction base="xs:string">
@@ -589,6 +589,7 @@
   </xs:complexType>
   <xs:complexType name="ConfigStation">
     <xs:sequence>
+      <xs:element name="creationInfo" type="scs:CreationInfo" minOccurs="0" maxOccurs="1"/>
       <xs:element name="setup" type="scs:Setup" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute name="publicID" type="qml:ResourceIdentifier" use="required"/>
