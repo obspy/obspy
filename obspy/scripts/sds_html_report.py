@@ -395,6 +395,7 @@ def main(argv=None):
             net, sta, loc, cha = id.split(".")
             latency = client.get_latency(net, sta, loc, cha,
                                          stop_time=stop_time)
+            latency = latency or np.inf
             nslc.append((net, sta, loc, cha, latency))
         nslc_ = []
         # request and assemble availability information.
