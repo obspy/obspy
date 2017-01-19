@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The array_analysis test suite.
+Test suite for
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -11,7 +11,8 @@ import unittest
 
 import numpy as np
 
-from obspy.signal.array_analysis import array_rotation_strain, get_geometry
+from obspy.signal.array_analysis import (array_rotation_strain, get_geometry,
+                                         get_timeshift)
 
 
 class ArrayTestCase(unittest.TestCase):
@@ -41,8 +42,10 @@ class ArrayTestCase(unittest.TestCase):
         pass
 
     def test_array_rotation(self):
-        # tests function array_rotation_strain with synthetic data with pure
-        # rotation and no strain
+        """
+        Tests function array_rotation_strain with synthetic data with pure
+        rotation and no strain
+        """
         array_coords = self.array_coords
         subarray = self.subarray
         ts1 = self.ts1
@@ -80,8 +83,10 @@ class ArrayTestCase(unittest.TestCase):
                                              decimal=12)
 
     def test_array_dilation(self):
-        # tests function array_rotation_strain with synthetic data with pure
-        # dilation and no rotation or shear strain
+        """
+        Tests function array_rotation_strain with synthetic data with pure
+        dilation and no rotation or shear strain
+        """
         array_coords = self.array_coords
         subarray = self.subarray
         ts1 = self.ts1
@@ -126,8 +131,10 @@ class ArrayTestCase(unittest.TestCase):
                                              decimal=12)
 
     def test_array_horizontal_shear(self):
-        # tests function array_rotation_strain with synthetic data with pure
-        # horizontal shear strain, no rotation or dilation
+        """
+        Tests function array_rotation_strain with synthetic data with pure
+        horizontal shear strain, no rotation or dilation.
+        """
         array_coords = self.array_coords
         subarray = self.subarray
         ts1 = self.ts1
@@ -169,7 +176,7 @@ class ArrayTestCase(unittest.TestCase):
 
     def test_get_geometry(self):
         """
-        test get_geometry() in array_analysis.py
+        Test get_geometry() in array_analysis.py
         """
         ll = np.array([[24.5797167, 121.4842444, 385.106],
                        [24.5797611, 121.4842333, 384.893],
@@ -190,6 +197,34 @@ class ArrayTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(la[:, 0].sum(), 0., decimal=8)
         np.testing.assert_almost_equal(la[:, 1].sum(), 0., decimal=8)
         np.testing.assert_almost_equal(la[:, 2].sum(), 0., decimal=8)
+
+    def test_get_timeshift(self):
+        """
+        Tests the get_timeshift function.
+        """
+        geometry = np.array(
+            [[-2, 0, 0], [-1, 0, 0], [0, 0, 0], [1, 1, 0], [2, 2, 0]])
+
+        t = get_timeshift(geometry=geometry, sll_x=1, sll_y=1, sl_s=2,
+                          grdpts_x=2, grdpts_y=2)
+
+        np.testing.assert_allclose(t, np.array([
+            # (x_s, y_s) = 1, 1;  1, 3; 3, 1; 3, 3
+            #
+            # The timeshift is not a geometric distance but sums up x + y
+            # axis.
+            #
+            # Station at index 0.
+            [[-2, -2], [-6, -6]],
+            # Station at index 1.
+            [[-1, -1], [-3, -3]],
+            # Station at index 2.
+            [[0, 0], [0, 0]],
+            # Station at index 3.
+            [[2, 4], [4, 6]],
+            # Station at index 4.
+            [[4, 8], [8, 12]]
+        ]), rtol=1E-5)
 
 
 def suite():

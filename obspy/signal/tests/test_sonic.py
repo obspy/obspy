@@ -13,7 +13,7 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.signal.array_analysis import (array_processing,
                                          array_transff_freqslowness,
-                                         array_transff_wavenumber, get_spoint)
+                                         array_transff_wavenumber)
 from obspy.signal.util import util_lon_lat
 
 
@@ -132,8 +132,7 @@ class SonicTestCase(unittest.TestCase):
 6.08349575e+03 6.08349575e+03  1.77709390e+02  2.50199920e+00
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
-        # XXX relative tolerance should be lower!
-        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=5e-3))
+        np.testing.assert_allclose(ref, out[:, 1:], rtol=1E-4)
 
     def test_sonic_capon_prew(self):
         out = self.array_processing(prewhiten=1, method=1)
@@ -146,22 +145,7 @@ class SonicTestCase(unittest.TestCase):
 3.10761699e-02 7.38667657e+00  1.13099325e+01  1.52970585e+00
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
-        # XXX relative tolerance should be lower!
-        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=4e-5))
-
-    def test_get_spoint(self):
-        stime = UTCDateTime(1970, 1, 1, 0, 0)
-        etime = UTCDateTime(1970, 1, 1, 0, 0) + 10
-        data = np.empty(20)
-        # sampling rate defaults to 1 Hz
-        st = Stream([
-            Trace(data, {'starttime': stime - 1}),
-            Trace(data, {'starttime': stime - 4}),
-            Trace(data, {'starttime': stime - 2}),
-        ])
-        spoint, epoint = get_spoint(st, stime, etime)
-        self.assertTrue(np.allclose([1, 4, 2], spoint))
-        self.assertTrue(np.allclose([8, 5, 7], epoint))
+        np.testing.assert_allclose(ref, out[:, 1:], rtol=1E-4)
 
     def test_array_transff_freqslowness(self):
         coords = np.array([[10., 60., 0.],
