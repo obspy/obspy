@@ -180,8 +180,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             os.path.join('io', 'reftek', 'tests', 'data',
                          '2015282_225051_0ae4c_1_2.msd'),
             os.path.join('io', 'reftek', 'tests', 'data',
-                         '2015282_225051_0ae4c_1_3.msd'),
-            ]
+                         '2015282_225051_0ae4c_1_3.msd')]
         formats_ep = _get_default_eps('obspy.plugin.waveform', 'isFormat')
         formats = list(formats_ep.values())
         # Get all the test directories.

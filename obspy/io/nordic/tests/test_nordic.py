@@ -671,5 +671,6 @@ def full_test_event():
 def suite():
     return unittest.makeSuite(TestNordicMethods, 'test')
 
+
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

@@ -105,7 +105,7 @@ def _16_tuple_ascii(bytestring):
     item_size = int(len(chars) / item_count)
     result = []
     for i in range(item_count):
-        chars_ = chars[i*item_size:(i+1)*item_size]
+        chars_ = chars[i * item_size:(i + 1) * item_size]
         result.append(chars_.strip() or None)
     return tuple(result)
 

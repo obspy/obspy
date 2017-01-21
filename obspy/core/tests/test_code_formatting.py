@@ -168,8 +168,7 @@ class MatplotlibBackendUsageTestCase(unittest.TestCase):
             r"(?<!# )from pylab\..*? import",
             r"(?<!# )import pylab",
             r"(?<!# )from matplotlib import (pyplot)|(backends)",
-            r"(?<!# )import matplotlib\.(pyplot)|(backends)",
-            )
+            r"(?<!# )import matplotlib\.(pyplot)|(backends)")
         msg = ("File '{}' (line {})\nmatches a forbidden matplotlib import "
                "statement outside of class/def statements\n(breaking "
                "matplotlib backend switching on some systems):\n    '{}'")

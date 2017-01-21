@@ -379,7 +379,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
                 if not np.isfinite(value):
                     msg = "On %s object: Value '%s' for '%s' is " \
                           "not a finite floating point value." % (
-                            type(self).__name__, str(value), name)
+                              type(self).__name__, str(value), name)
 
                     raise ValueError(msg)
 

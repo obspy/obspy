@@ -365,8 +365,7 @@ class InventoryTestCase(unittest.TestCase):
              u'IU.ULN.00.VK1', u'IU.ULN.00.VM1', u'IU.ULN.00.VM2',
              u'IU.ULN.00.VME', u'IU.ULN.00.VME', u'IU.ULN.00.VMN',
              u'IU.ULN.00.VMN', u'IU.ULN.00.VMZ', u'IU.ULN.00.VMZ',
-             u'IU.ULN.00.VMZ'],
-            )
+             u'IU.ULN.00.VMZ'])
         expected = (
             [u'IU.ULN (Ulaanbaatar, Mongolia) (3x)'],
             [u'IU.ULN.00.BHZ (5x)', u'IU.ULN.00.BHN (4x)',
@@ -379,8 +378,7 @@ class InventoryTestCase(unittest.TestCase):
              u'IU.ULN.00.VHE (4x)', u'IU.ULN.00.VH1', u'IU.ULN.00.VH2',
              u'IU.ULN.00.VK1 (2x)', u'IU.ULN.00.VMZ (3x)',
              u'IU.ULN.00.VMN (2x)', u'IU.ULN.00.VME (2x)', u'IU.ULN.00.VM1',
-             u'IU.ULN.00.VM2'],
-            )
+             u'IU.ULN.00.VM2'])
         for contents_, expected_ in zip(contents, expected):
             self.assertEqual(expected_, _unified_content_strings(contents_))
 

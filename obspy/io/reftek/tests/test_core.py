@@ -289,8 +289,8 @@ class ReftekTestCase(unittest.TestCase):
                 # write packages to the file and write the last three packets
                 # with a different packet type
                 # (packets are 1024 byte each)
-                tmp = fh2.read()[:-(1024*3)]
-                fh2.seek(-(1024*3), 2)
+                tmp = fh2.read()[:-(1024 * 3)]
+                fh2.seek(-(1024 * 3), 2)
                 tmp2 = fh2.read(1024)
                 tmp3 = fh2.read(1024)
                 tmp4 = fh2.read(1024)

@@ -251,9 +251,9 @@ class SDSTestCase(unittest.TestCase):
             got_nslc = client.get_all_nslc(datetime=t)
             self.assertEqual(expected_nslc, got_nslc)
             # other dates that have no data should return empty list
-            got_nslc = client.get_all_nslc(datetime=t+2*24*3600)
+            got_nslc = client.get_all_nslc(datetime=t + 2 * 24 * 3600)
             self.assertEqual([], got_nslc)
-            got_nslc = client.get_all_nslc(datetime=t-2*24*3600)
+            got_nslc = client.get_all_nslc(datetime=t - 2 * 24 * 3600)
             self.assertEqual([], got_nslc)
 
 

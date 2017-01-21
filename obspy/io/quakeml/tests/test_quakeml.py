@@ -888,12 +888,12 @@ class QuakeMLTestCase(unittest.TestCase):
                           'attrib': {'attrib1': 'attrib_value1',
                                      'attrib2': 'attrib_value2'},
                           'value': {
-                             'my_nested_tag1': {
-                                 'namespace': 'http://some-page.de/xmlns/1.0',
-                                 'value': 1.23E10},
-                             'my_nested_tag2': {
-                                 'namespace': 'http://some-page.de/xmlns/1.0',
-                                 'value': False}}}})
+                              'my_nested_tag1': {
+                                  'namespace': 'http://some-page.de/xmlns/1.0',
+                                  'value': 1.23E10},
+                              'my_nested_tag2': {
+                                  'namespace': 'http://some-page.de/xmlns/1.0',
+                                  'value': False}}}})
         nsmap = {'ns0': 'http://test.org/xmlns/0.1',
                  'catalog': 'http://anss.org/xmlns/catalog/0.1'}
         cat[0].extra = my_extra.copy()

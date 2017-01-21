@@ -350,32 +350,32 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         with NamedTemporaryFile() as tf:
             _create_mseed_file(
-                    tf.name, record_count=112, seed=3412,
-                    starttime="2015-10-16T00:00:00", skiprecords=5, flags={
-                        'data_quality_flags': {
-                            "amplifier_saturation": 55,
-                            "digitizer_clipping": 72,
-                            "spikes": 55,
-                            "glitches": 63,
-                            "missing_padded_data": 55,
-                            "telemetry_sync_error": 63,
-                            "digital_filter_charging": 4,
-                            "suspect_time_tag": 8},
-                        'activity_flags': {
-                            "calibration_signal": 1,
-                            "time_correction_applied": 2,
-                            "event_begin": 3,
-                            "event_end": 53,
-                            "positive_leap": 4,
-                            "negative_leap": 11,
-                            "event_in_progress": 5},
-                        'io_and_clock_flags': {
-                            "station_volume": 1,
-                            "long_record_read": 33,
-                            "short_record_read": 2,
-                            "start_time_series": 3,
-                            "end_time_series": 4,
-                            "clock_locked": 32}})
+                tf.name, record_count=112, seed=3412,
+                starttime="2015-10-16T00:00:00", skiprecords=5, flags={
+                    'data_quality_flags': {
+                        "amplifier_saturation": 55,
+                        "digitizer_clipping": 72,
+                        "spikes": 55,
+                        "glitches": 63,
+                        "missing_padded_data": 55,
+                        "telemetry_sync_error": 63,
+                        "digital_filter_charging": 4,
+                        "suspect_time_tag": 8},
+                    'activity_flags': {
+                        "calibration_signal": 1,
+                        "time_correction_applied": 2,
+                        "event_begin": 3,
+                        "event_end": 53,
+                        "positive_leap": 4,
+                        "negative_leap": 11,
+                        "event_in_progress": 5},
+                    'io_and_clock_flags': {
+                        "station_volume": 1,
+                        "long_record_read": 33,
+                        "short_record_read": 2,
+                        "start_time_series": 3,
+                        "end_time_series": 4,
+                        "clock_locked": 32}})
 
             tf.seek(0, 0)
 

@@ -531,9 +531,8 @@ class MSEEDMetadata(object):
             else:
                 c_segs.append(c_seg)
                 c_seg = {
-                  'data': self.data[i + 1].data,
-                  'start': self.data[i + 1].stats.starttime,
-                }
+                    'data': self.data[i + 1].data,
+                    'start': self.data[i + 1].stats.starttime}
 
         # Set array of continuous segments from this data
         self.meta['c_segments'] = [self._parse_c_stats(seg) for seg in c_segs]

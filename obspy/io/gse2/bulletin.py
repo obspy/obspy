@@ -349,9 +349,7 @@ class Unpickler(object):
         if self.inventory is None:
             return None
 
-        sub_inventory = self.inventory.select(
-                        station=station,
-                        time=time)
+        sub_inventory = self.inventory.select(station=station, time=time)
 
         if len(sub_inventory) == 0:
             self._warn("Can't find station %s in inventory" % station)

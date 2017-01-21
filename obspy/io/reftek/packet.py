@@ -56,8 +56,7 @@ PACKET = [
     ("flags", np.uint8, None, np.uint8),
     ("data_format", np.uint8, bcd_8bit_hex, native_str("S2")),
     # Temporarily store the payload here.
-    ("payload", (np.uint8, 1000), None, (np.uint8, 1000)),
-    ]
+    ("payload", (np.uint8, 1000), None, (np.uint8, 1000))]
 
 
 # name, offset, length (bytes) and converter routine for EH/ET packet payload
@@ -90,8 +89,7 @@ EH_PAYLOAD = {
     "station_comment": (838, 40, _decode_ascii),
     "digital_filter_list": (878, 16, _decode_ascii),
     "position": (894, 26, _decode_ascii),
-    "reftek_120": (920, 80, None),
-    }
+    "reftek_120": (920, 80, None)}
 
 
 class Packet(object):
@@ -143,7 +141,7 @@ class EHPacket(Packet):
             # for numpy < 1.9.0, does not work for python 3.6
             payload = bytes(self._data["payload"])
         for name, (start, length, converter) in EH_PAYLOAD.items():
-            data = payload[start:start+length]
+            data = payload[start:start + length]
             if converter is not None:
                 data = converter(data)
             setattr(self, name, data)

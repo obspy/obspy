@@ -97,8 +97,8 @@ class CalibrationTestCase(unittest.TestCase):
         st2 = read(os.path.join(self.path, 'ref_unknown'))
         calfile = os.path.join(self.path, 'STS2_simp.cal')
         calpaz = dict()
-        calpaz['poles'] = [-0.03677+0.03703j, -0.03677-0.03703j]
-        calpaz['zeros'] = [0+0j, 0-0j]
+        calpaz['poles'] = [-0.03677 + 0.03703j, -0.03677 - 0.03703j]
+        calpaz['zeros'] = [0 + 0j, 0 - 0j]
         calpaz['sensitivity'] = 1500
 
         # stream
