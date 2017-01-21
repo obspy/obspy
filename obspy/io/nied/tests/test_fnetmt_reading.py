@@ -77,5 +77,6 @@ class FNETMTCatalogReadingTestCase(unittest.TestCase):
 def suite():
     return unittest.makeSuite(FNETMTCatalogReadingTestCase, 'test')
 
+
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

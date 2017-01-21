@@ -30,7 +30,7 @@ FIXED SECTION OF DATA HEADER
 	Sequence number: 763445
 	Data header/quality indicator: D
 	Station identifier code: BGLD
-	Location identifier: 
+	Location identifier:
 	Channel identifier: EHE
 	Network code: BW
 	Record start time: 2007-12-31T23:59:59.915000Z
@@ -57,7 +57,7 @@ CALCULATED VALUES
 	Corrected Starttime: 2007-12-31T23:59:59.765000Z
 
 ''' % (self.test_file,)  # noqa
-        self.assertEqual(expected.encode('utf-8'),
+        self.assertEqual(expected.encode('utf-8'),  # noqa
                          out.stdout)
 
     def test_second_record(self):
@@ -73,7 +73,7 @@ FIXED SECTION OF DATA HEADER
 	Sequence number: 763446
 	Data header/quality indicator: D
 	Station identifier code: BGLD
-	Location identifier: 
+	Location identifier:
 	Channel identifier: EHE
 	Network code: BW
 	Record start time: 2008-01-01T00:00:01.975000Z
@@ -100,7 +100,7 @@ CALCULATED VALUES
 	Corrected Starttime: 2008-01-01T00:00:01.825000Z
 
 ''' % (self.test_file,)  # noqa
-        self.assertEqual(expected.encode('utf-8'),
+        self.assertEqual(expected.encode('utf-8'),  # noqa
                          out.stdout)
 
     def test_record_with_data_offset_zero(self):
@@ -123,7 +123,7 @@ FIXED SECTION OF DATA HEADER
 	Sequence number: 1
 	Data header/quality indicator: D
 	Station identifier code: PANIX
-	Location identifier: 
+	Location identifier:
 	Channel identifier: LHZ
 	Network code: CH
 	Record start time: 2016-08-21T01:43:37.000000Z
@@ -148,7 +148,7 @@ CALCULATED VALUES
 	Corrected Starttime: 2016-08-21T01:43:37.000000Z
 
 ''' % (filename,)  # noqa
-        self.assertEqual(expected.encode('utf-8'),
+        self.assertEqual(expected.encode('utf-8'),  # noqa
                          out.stdout)
 
         with CatchOutput() as out:
@@ -163,7 +163,7 @@ FIXED SECTION OF DATA HEADER
 	Sequence number: 189
 	Data header/quality indicator: D
 	Station identifier code: PANIX
-	Location identifier: 
+	Location identifier:
 	Channel identifier: LHZ
 	Network code: CH
 	Record start time: 2016-08-21T01:45:31.000000Z
@@ -190,7 +190,7 @@ CALCULATED VALUES
 	Corrected Starttime: 2016-08-21T01:45:31.000000Z
 
 ''' % (filename,)  # noqa
-        self.assertEqual(expected.encode('utf-8'),
+        self.assertEqual(expected.encode('utf-8'),  # noqa
                          out.stdout)
 
 

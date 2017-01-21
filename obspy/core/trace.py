@@ -1641,8 +1641,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             else:
                 large_w = np.fft.ifftshift(get_window(native_str(window),
                                                       self.stats.npts))
-            x_r *= large_w[:self.stats.npts//2+1]
-            x_i *= large_w[:self.stats.npts//2+1]
+            x_r *= large_w[:self.stats.npts // 2 + 1]
+            x_i *= large_w[:self.stats.npts // 2 + 1]
 
         # interpolate
         num = int(self.stats.npts / factor)
@@ -1651,7 +1651,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         f = df * np.arange(0, self.stats.npts // 2 + 1, dtype=np.int32)
         n_large_f = num // 2 + 1
         large_f = d_large_f * np.arange(0, n_large_f, dtype=np.int32)
-        large_y = np.zeros((2*n_large_f))
+        large_y = np.zeros((2 * n_large_f))
         large_y[::2] = np.interp(large_f, f, x_r)
         large_y[1::2] = np.interp(large_f, f, x_i)
 

@@ -100,8 +100,8 @@ def _add_catalog_layer(data_source, catalog):
         ["Longitude", ogr.OFTReal, 16, 10],
         ["Latitude", ogr.OFTReal, 16, 10],
         ["Depth", ogr.OFTReal, 8, 3],
-        ["Magnitude", ogr.OFTReal, 8, 3],
-        ]
+        ["Magnitude", ogr.OFTReal, 8, 3]
+    ]
 
     layer = _create_layer(data_source, "earthquakes", field_definitions)
 
@@ -197,8 +197,8 @@ def _add_inventory_layer(data_source, inventory):
         ["Elevation", ogr.OFTReal, 9, 3],
         ["StartDate", ogr.OFTDate, None, None],
         ["EndDate", ogr.OFTDate, None, None],
-        ["Channels", ogr.OFTString, 254, None],
-        ]
+        ["Channels", ogr.OFTString, 254, None]
+    ]
 
     layer = _create_layer(data_source, "stations", field_definitions)
 

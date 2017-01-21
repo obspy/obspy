@@ -219,5 +219,6 @@ class SC3MLTestCase(unittest.TestCase):
 def suite():
     return unittest.makeSuite(SC3MLTestCase, "test")
 
+
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

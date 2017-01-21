@@ -11,11 +11,10 @@ Testing utilities for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
+from future.utils import native_str
 
 import difflib
 import doctest
-import fnmatch
 import glob
 import inspect
 import io
@@ -24,7 +23,6 @@ import re
 import shutil
 import unittest
 import warnings
-from distutils.version import LooseVersion
 
 from lxml import etree
 import numpy as np
@@ -42,8 +40,7 @@ MATPLOTLIB_VERSION = get_matplotlib_version()
 # tests of corresponding module will be skipped).
 MODULE_TEST_SKIP_CHECKS = {
     'clients.seishub':
-        'obspy.clients.seishub.tests.test_client._check_server_availability',
-    }
+        'obspy.clients.seishub.tests.test_client._check_server_availability'}
 
 
 def add_unittests(testsuite, module_name):

@@ -62,6 +62,8 @@ class CodeFormattingTestCase(unittest.TestCase):
         untracked_files = get_untracked_files_from_git() or []
         files = []
         for filename in get_all_py_files():
+            if filename in untracked_files:
+                continue
             for pattern in FLAKE8_EXCLUDE_FILES:
                 if fnmatch.fnmatch(filename, pattern):
                     break

@@ -245,8 +245,7 @@ class PolesZerosResponseStage(ResponseStage):
             norm_fact=self.normalization_factor,
             norm_freq=self.normalization_frequency,
             poles=", ".join(map(str, self.poles)),
-            zeros=", ".join(map(str, self.zeros)),
-            )
+            zeros=", ".join(map(str, self.zeros)))
         return ret
 
     def _repr_pretty_(self, p, cycle):

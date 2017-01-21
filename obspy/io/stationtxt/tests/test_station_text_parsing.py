@@ -399,10 +399,7 @@ class StationTextTestCase(unittest.TestCase):
                                     "2013-10-22T19:30:00"),
                                 end_date=obspy.UTCDateTime(
                                     "2599-12-31T23:59:59"),
-                                response=resp_3)
-                        ])
-                ])
-            ])
+                                response=resp_3)])])])
 
         # Read from a filename.
         filename = os.path.join(self.data_dir, "channel_level_fdsn.txt")

@@ -53,10 +53,10 @@ def integrate_spline(data, dx, k=3, **kwargs):
         t, c, k = spline._eval_args
 
         # Compute the multiplier in the antiderivative formula.
-        dt = t[k+1:] - t[:-k-1]
+        dt = t[k + 1:] - t[:-k - 1]
         # Compute the new coefficients
-        c = np.cumsum(c[:-k-1] * dt) / (k + 1)
-        c = np.r_[0, c, [c[-1]]*(k+2)]
+        c = np.cumsum(c[:-k - 1] * dt) / (k + 1)
+        c = np.r_[0, c, [c[-1]] * (k + 2)]
         # New knots
         t = np.r_[t[0], t, t[-1]]
         k += 1

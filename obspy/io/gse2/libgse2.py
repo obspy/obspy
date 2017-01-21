@@ -102,6 +102,7 @@ class GSEUtiError(Exception):
 def _str(s):
     return s.strip()
 
+
 GSE2_FIELDS = [
     # local used date fields
     ('year', 5, 9, int),

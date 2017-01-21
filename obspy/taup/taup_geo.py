@@ -67,7 +67,7 @@ def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
                                   receiver_longitude_in_deg,
                                   a=radius_of_planet_in_km * 1000.0,
                                   f=flattening_of_planet)
-        distance_in_km = values[0]/1000.0
+        distance_in_km = values[0] / 1000.0
         # NB - km2deg assumes spherical planet... generate a warning
         if flattening_of_planet != 0.0:
             msg = "Assuming spherical planet when calculating epicentral " + \
