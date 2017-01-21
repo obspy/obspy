@@ -30,7 +30,7 @@ FIXED SECTION OF DATA HEADER
 	Sequence number: 763445
 	Data header/quality indicator: D
 	Station identifier code: BGLD
-	Location identifier:
+	Location identifier: 
 	Channel identifier: EHE
 	Network code: BW
 	Record start time: 2007-12-31T23:59:59.915000Z
@@ -73,7 +73,7 @@ FIXED SECTION OF DATA HEADER
 	Sequence number: 763446
 	Data header/quality indicator: D
 	Station identifier code: BGLD
-	Location identifier:
+	Location identifier: 
 	Channel identifier: EHE
 	Network code: BW
 	Record start time: 2008-01-01T00:00:01.975000Z
@@ -123,7 +123,7 @@ FIXED SECTION OF DATA HEADER
 	Sequence number: 1
 	Data header/quality indicator: D
 	Station identifier code: PANIX
-	Location identifier:
+	Location identifier: 
 	Channel identifier: LHZ
 	Network code: CH
 	Record start time: 2016-08-21T01:43:37.000000Z
@@ -163,7 +163,7 @@ FIXED SECTION OF DATA HEADER
 	Sequence number: 189
 	Data header/quality indicator: D
 	Station identifier code: PANIX
-	Location identifier:
+	Location identifier: 
 	Channel identifier: LHZ
 	Network code: CH
 	Record start time: 2016-08-21T01:45:31.000000Z
