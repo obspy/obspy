@@ -523,7 +523,11 @@ class UTCDateTime(object):
         # avoid through adding timedelta - also avoids the year 2038 problem
         dt = datetime.timedelta(seconds=self._ns // 10**9,
                                 microseconds=self._ns % 10**9 // 1000)
-        return TIMESTAMP0 + dt
+        try:
+            return TIMESTAMP0 + dt
+        except OverflowError:
+            # for very large future / past dates
+            return datetime.datetime.utcfromtimestamp(self.timestamp)
 
     datetime = property(_get_datetime)
 
