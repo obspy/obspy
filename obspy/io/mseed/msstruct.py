@@ -227,6 +227,7 @@ class _MSStruct(object):
 
     offset = property(get_offset, set_offset)
 
+
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),

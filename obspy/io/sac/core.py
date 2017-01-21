@@ -469,6 +469,7 @@ def _internal_write_sac(trace, buf, byteorder="<", **kwargs):
     sac = SACTrace.from_obspy_trace(trace)
     sac.write(buf, ascii=False, byteorder=byteorder)
 
+
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),

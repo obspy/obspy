@@ -419,5 +419,6 @@ class WaveformTestCase(unittest.TestCase):
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')
 
+
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

@@ -58,6 +58,7 @@ def _get_cmap(name, lut=None, reverse=False):
     cmap = LinearSegmentedColormap(name=name, segmentdata=data, **kwargs)
     return cmap
 
+
 viridis = _get_cmap("viridis")
 viridis_r = _get_cmap("viridis", reverse=True)
 obspy_sequential = viridis

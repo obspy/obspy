@@ -1023,6 +1023,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         raise ValueError(msg)
     return np.array(res)
 
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

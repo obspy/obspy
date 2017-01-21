@@ -104,23 +104,20 @@ class ClientTestCase(unittest.TestCase):
             "http://[2001:db8::ff00:42:8329]",
             "http://[::ffff:192.168.89.9]",
             "http://jane",
-            "http://localhost"
-            ]
+            "http://localhost"]
 
         test_urls_fails = [
             "http://",
             "http://127.0.1",
             "http://127.=.0.1",
-            "http://127.0.0.0.1",
-            ]
+            "http://127.0.0.0.1"]
         test_urls_fails += [
             "http://[]",
             "http://[1]",
             "http://[1:2]",
             "http://[1::2::3]",
             "http://[1::2:3::4]",
-            "http://[1:2:2:4:5:6:7]",
-            ]
+            "http://[1:2:2:4:5:6:7]"]
 
         for url in test_urls_valid:
             self.assertEqual(

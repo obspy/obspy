@@ -240,9 +240,9 @@ def _plot_radiation_pattern_sphere(
         if p_sphere_direction == 'outwards':
             points *= (1. + np.abs(magn) / 2.)
         elif p_sphere_direction == 'inwards':
-            points *= (1. + magn/2.)
+            points *= (1. + magn / 2.)
     else:
-        points *= (1. + magn/2.)
+        points *= (1. + magn / 2.)
     colors = np.array([cmap(norm(val)) for val in magn])
     colors = colors.reshape(ntheta, nphi, 4)
 
@@ -308,7 +308,7 @@ def _plot_radiation_pattern_quiver(ax3d, ned_mt, type):
         norm = plt.Normalize(-1., 1.)
         color = cmap(norm(mag))
         if is_p_wave:
-            loc *= (1. + mag/2.)
+            loc *= (1. + mag / 2.)
             length = abs(mag) / 2.0
         else:
             length = abs(mag) / 5.0
@@ -476,7 +476,7 @@ def _write_radiation_pattern_vtk(
     with open(fname_beachlines, 'w') as vtk_file:
         npts_neg = neg_nodalline.shape[1]
         npts_pos = pos_nodalline.shape[1]
-        npts_tot = npts_neg+npts_pos
+        npts_tot = npts_neg + npts_pos
         vtk_header = '# vtk DataFile Version 2.0\n' + \
                      'beachball nodal lines\n' + \
                      'ASCII\n' + \
@@ -494,7 +494,7 @@ def _write_radiation_pattern_vtk(
         vtk_file.write('\nCELLS 2 {:d}\n'.format(npts_tot + 4))
 
         ipoints = list(range(0, npts_neg)) + [0]
-        vtk_file.write('{:d} '.format(npts_neg+1))
+        vtk_file.write('{:d} '.format(npts_neg + 1))
         for ipoint in ipoints:
             if ipoint % 30 == 29:
                 vtk_file.write('\n')
@@ -582,8 +582,8 @@ def _equalarea_spherical_grid(nlat=30):
     colatgrid, longrid = [], []
     for ilat in range(nlat):
         nlon = nlons[ilat]
-        dlon = 2.*np.pi / nlon
-        lons = np.linspace(0.+dlon/2., 2.*np.pi-dlon/2., nlon)
+        dlon = 2. * np.pi / nlon
+        lons = np.linspace(0. + dlon / 2., 2. * np.pi - dlon / 2., nlon)
         for ilon in range(nlon):
             colatgrid.append(colats[ilat])
             longrid.append(lons[ilon])

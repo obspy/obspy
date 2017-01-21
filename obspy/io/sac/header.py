@@ -201,8 +201,8 @@ DOC = {
     'kuser0': 'K    User defined variable storage area 0.',
     'kuser1': 'K    User defined variable storage area 1.',
     'kuser2': 'K    User defined variable storage area 2.',
-    'lovrok': 'L    TRUE if it is okay to overwrite this file on disk.'
-    }
+    'lovrok': 'L    TRUE if it is okay to overwrite this file on disk.'}
+
 
 # because readable
 _hdritems = sorted(DOC.items())

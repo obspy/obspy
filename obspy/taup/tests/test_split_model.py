@@ -81,12 +81,12 @@ class SplitTauModelTestCase(unittest.TestCase):
                     depth_branch.time[s_index + 1:p_index],
                     atol=0.00000001)
                 np.testing.assert_allclose(
-                    orig.dist[p_index:orig_len-s_index-2],
-                    depth_branch.dist[p_index+2:orig_len-s_index],
+                    orig.dist[p_index:orig_len - s_index - 2],
+                    depth_branch.dist[p_index + 2:orig_len - s_index],
                     atol=0.00000001)
                 np.testing.assert_allclose(
-                    orig.time[p_index:orig_len-s_index-2],
-                    depth_branch.time[p_index+2:orig_len-s_index],
+                    orig.time[p_index:orig_len - s_index - 2],
+                    depth_branch.time[p_index + 2:orig_len - s_index],
                     atol=0.00000001)
 
         # now check branch split

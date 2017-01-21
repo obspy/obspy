@@ -445,8 +445,8 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
     """
     if nulls:
         items = list(zip(HD.FLOATHDRS, hf)) + \
-                list(zip(HD.INTHDRS, hi)) + \
-                [(key, val.decode()) for (key, val) in zip(HD.STRHDRS, hs)]
+            list(zip(HD.INTHDRS, hi)) + \
+            [(key, val.decode()) for (key, val) in zip(HD.STRHDRS, hs)]
     else:
         # more readable
         items = [(key, val) for (key, val) in zip(HD.FLOATHDRS, hf)

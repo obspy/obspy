@@ -72,8 +72,7 @@ class UtilsTestCase(unittest.TestCase):
             "RESP.NZ.CRLZ.10.HHZ",
             "RESP.NZ.CRLZ.10.HHZ.mac",
             "RESP.NZ.CRLZ.10.HHZ.windows",
-            "RESP.OB.AAA._.BH_",
-            ]
+            "RESP.OB.AAA._.BH_"]
         for filename in glob.glob(signal_test_files):
             got = is_resp(filename)
             expected = os.path.basename(filename) in resp_filenames

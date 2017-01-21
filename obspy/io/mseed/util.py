@@ -848,7 +848,7 @@ def set_flags_in_fixed_headers(filename, flags):
                                                         recstart)
                 # Transformation to UTCDatetime()
                 recstart = UTCDateTime(year=yr, julday=doy, hour=hr, minute=mn,
-                                       second=sec, microsecond=mil*100)
+                                       second=sec, microsecond=mil * 100)
                 # Read data to date begin and end of record
                 (nb_samples, fact, mult) = unpack(native_str(">Hhh"),
                                                   mseed_file.read(6))
@@ -874,7 +874,7 @@ def set_flags_in_fixed_headers(filename, flags):
                 else:
                     microsec = 0
 
-                realstarttime = recstart + microsec*0.000001
+                realstarttime = recstart + microsec * 0.000001
 
                 # If samprate not set via blockette 100 calculate the sample
                 # rate according to the SEED manual.
