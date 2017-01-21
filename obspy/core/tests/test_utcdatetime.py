@@ -1090,6 +1090,11 @@ class UTCDateTimeTestCase(unittest.TestCase):
                          datetime.datetime(9999, 1, 1, 0, 0, 0, 500000))
         self.assertEqual(str(dt), '9999-01-01T00:00:00.500000Z')
 
+    def test_utcdatetime_from_utcdatetime(self):
+        a = UTCDateTime(1, 1, 1, 1, 1, 1, 999999)
+        self.assertEqual(UTCDateTime(a)._ns, a._ns)
+        self.assertEqual(str(UTCDateTime(a)), str(a))
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')

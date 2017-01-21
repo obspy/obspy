@@ -227,6 +227,9 @@ class UTCDateTime(object):
             return
         elif len(args) == 1 and len(kwargs) == 0:
             value = args[0]
+            if isinstance(value, UTCDateTime):
+                self._ns = value._ns
+                return
             # check types
             try:
                 # got a timestamp

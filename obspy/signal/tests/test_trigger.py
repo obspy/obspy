@@ -383,18 +383,26 @@ class TriggerTestCase(unittest.TestCase):
             # two warnings get raised
             self.assertEqual(len(w), 2)
         # check floats in resulting dictionary separately
-        self.assertAlmostEqual(trig[0].pop('duration'), 3.9600000381469727)
-        self.assertAlmostEqual(trig[1].pop('duration'), 1.9900000095367432)
-        self.assertAlmostEqual(trig[2].pop('duration'), 1.9200000762939453)
-        self.assertAlmostEqual(trig[3].pop('duration'), 3.9200000762939453)
-        self.assertAlmostEqual(trig[0]['similarity'].pop('UH1'), 0.94149447384)
-        self.assertAlmostEqual(trig[0]['similarity'].pop('UH3'), 1)
-        self.assertAlmostEqual(trig[1]['similarity'].pop('UH1'), 0.65228204570)
-        self.assertAlmostEqual(trig[1]['similarity'].pop('UH3'), 0.72679293429)
-        self.assertAlmostEqual(trig[2]['similarity'].pop('UH1'), 0.89404458774)
-        self.assertAlmostEqual(trig[2]['similarity'].pop('UH3'), 0.74581409371)
-        self.assertAlmostEqual(trig[3]['similarity'].pop('UH1'), 1)
-        self.assertAlmostEqual(trig[3]['similarity'].pop('UH3'), 1)
+        self.assertAlmostEqual(trig[0].pop('duration'), 3.96, places=6)
+        self.assertAlmostEqual(trig[1].pop('duration'), 1.99, places=6)
+        self.assertAlmostEqual(trig[2].pop('duration'), 1.92, places=6)
+        self.assertAlmostEqual(trig[3].pop('duration'), 3.92, places=6)
+        self.assertAlmostEqual(trig[0]['similarity'].pop('UH1'),
+                               0.94149447384, places=6)
+        self.assertAlmostEqual(trig[0]['similarity'].pop('UH3'), 1,
+                               places=6)
+        self.assertAlmostEqual(trig[1]['similarity'].pop('UH1'),
+                               0.65228204570, places=6)
+        self.assertAlmostEqual(trig[1]['similarity'].pop('UH3'),
+                               0.72679293429, places=6)
+        self.assertAlmostEqual(trig[2]['similarity'].pop('UH1'),
+                               0.89404458774, places=6)
+        self.assertAlmostEqual(trig[2]['similarity'].pop('UH3'),
+                               0.74581409371, places=6)
+        self.assertAlmostEqual(trig[3]['similarity'].pop('UH1'), 1,
+                               places=6)
+        self.assertAlmostEqual(trig[3]['similarity'].pop('UH3'), 1,
+                               places=6)
         remaining_results = \
             [{'coincidence_sum': 4.0,
               'similarity': {},
