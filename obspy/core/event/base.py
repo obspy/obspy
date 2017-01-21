@@ -390,10 +390,12 @@ def _event_type_class_factory(class_name, class_attributes=[],
                     raise ValueError(msg)
 
             AttribDict.__setattr__(self, name, value)
-            # If "name" is resource_id and value is not None, set the referred
-            # object of the ResourceIdentifier to self.
-            if name == "resource_id" and value is not None:
-                self.resource_id.set_referred_object(self)
+            # if value is a resource id bind or unbind the resource_id
+            if isinstance(value, ResourceIdentifier):
+                if name == "resource_id":  # bind the resource_id to self
+                    self.resource_id.set_referred_object(self, warn=False)
+                else:  # else unbind to allow event scoping later
+                    value.object_id = None
 
     class AbstractEventTypeWithResourceID(AbstractEventType):
         def __init__(self, force_resource_id=True, *args, **kwargs):
@@ -412,11 +414,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
             memodict[id(self)] = result
             for k, v in self.__dict__.items():
                 setattr(result, k, deepcopy(v, memodict))
-            result.resource_id.object_id = id(result)
             return result
-
-
-
 
     if "resource_id" in [item[0] for item in class_attributes]:
         base_class = AbstractEventTypeWithResourceID
@@ -532,6 +530,28 @@ class ResourceIdentifier(object):
     >>> assert(id(ref_b.get_referred_object()) == obj_id)
     >>> assert(id(ref_c.get_referred_object()) == obj_id)
 
+    Resource identifiers are bound to an object once the get_referred_object
+    method has been called. The results is that  get_referred_object will
+    always return the same object it did on the first call as long as the
+    object still exists. If the bound object gets garage collected a warning
+    will be issued and another object with the same resource_id will be
+    returned if one exists. If no other object has the same resource_id, an
+    additional warning will be issued and None returned.
+
+    >>> res_id = 'obspy.org/tests/test_resource_doc_example'
+    >>> obj_a = UTCDateTime(10)
+    >>> obj_b = UTCDateTime(10)
+    >>> ref_a = ResourceIdentifier(res_id, referred_object=obj_a)
+    >>> ref_b = ResourceIdentifier(res_id, referred_object=obj_b)
+    >>> assert ref_a.get_referred_object() == ref_b.get_referred_object()
+    >>> assert ref_a.get_referred_object() is not ref_b.get_referred_object()
+    >>> assert ref_a.get_referred_object() is obj_a
+    >>> assert ref_b.get_referred_object() is obj_b
+    >>> del obj_b  # if obj_b gets garbage collected
+    >>> assert ref_b.get_referred_object() is obj_a
+    >>> del obj_a  # now no object with res_id exists
+    >>> assert ref_b.get_referred_object() is None
+
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convert_id_to_quakeml_uri() method. The resulting id will be of the
     form::
@@ -592,6 +612,9 @@ class ResourceIdentifier(object):
     __resource_id_weak_dict = {}  # a nested dict for weak object references
     # Use an additional dictionary to track all resource ids.
     __resource_id_tracker = collections.defaultdict(int)
+    # yet another dictionary for keep track of resources id that are not bound
+    # keys are the id and values are a weak ref to the resource identifier
+    __unbound_resource_id = weakref.WeakValueDictionary()
 
     def __init__(self, id=None, prefix="smi:local",
                  referred_object=None):
@@ -628,6 +651,17 @@ class ResourceIdentifier(object):
                 del ResourceIdentifier.__resource_id_weak_dict[self.id]
             except KeyError:
                 pass
+
+    @classmethod
+    def bind_resource_ids(cls):
+        """
+        bind all of the unbound resource_ids to the objects returned from
+        the get_referred_object method
+        """
+        for rid_id in list(cls.__unbound_resource_id):
+            rid = cls.__unbound_resource_id.pop(rid_id, None)
+            if rid is not None:  # if the resource id still exists
+                rid.get_referred_object()  # will bind rid to referred object
 
     def get_referred_object(self):
         """
@@ -667,27 +701,41 @@ class ResourceIdentifier(object):
         for key in list(reversed(rdic)):
             obj = rdic[key]()
             if obj is not None:
+                self.object_id = id(obj)  # bind object ID
                 return obj
             else:  # remove references that are None
                 rdic.pop(key)
         else:  # if iter runs out all objects are none; pop rid, return None
             ResourceIdentifier.__resource_id_weak_dict.pop(self.id)
+            msg = ('no object found with resource id %s, returning None'
+                   % self.id)
+            line_number = inspect.currentframe().f_back.f_lineno
+            warnings.warn_explicit(msg, UserWarning, __file__, line_number)
             return None
 
-    def set_referred_object(self, referred_object):
+    def set_referred_object(self, referred_object, warn=True):
         """
-        Sets the object the ResourceIdentifier refers to.
+        Binds a ResourceIdentifier instance to an object.
 
         If it already a weak reference it will be used, otherwise one will be
         created. If the object is None, None will be set.
 
         Will also append self again to the global class level reference list
-        so everything stays consistent.
+        so everything stays consistent. Warning can be ignored by setting
+        the warn parameter to False.
         """
         self.object_id = id(referred_object)  # identity of object
         rdic = ResourceIdentifier.__resource_id_weak_dict
-        # if the resource_id is in the rid_dict but not object identity set it
+        # if the resource_id is in the rid_dict
         if self.id in rdic and self.object_id not in rdic[self.id]:
+            last_obj = rdic[self.id][next(reversed(rdic[self.id]))]()
+            if warn and last_obj is not None and last_obj != referred_object:
+                msg = ('Warning, binding object to resource ID %s which '
+                       'is not equal to the last object bound to this '
+                       'resource_id') % self.id
+                line_number = inspect.currentframe().f_back.f_lineno
+                warnings.warn_explicit(msg, UserWarning, __file__,
+                                       line_number)
             rdic[self.id][self.object_id] = weakref.ref(referred_object)
         else:
             rdic[self.id] = collections.OrderedDict()
@@ -752,6 +800,18 @@ class ResourceIdentifier(object):
         True
         """
         return deepcopy(self)
+
+    @property
+    def object_id(self):
+        return self.__dict__['object_id']
+
+    @object_id.setter
+    def object_id(self, value):
+        if value is None:  # add instance to unbound dict
+            self.__class__.__unbound_resource_id[id(self)] = self
+        else:  # binding to object, remove instance from unbound dict
+            self.__class__.__unbound_resource_id.pop(id(self), None)
+        self.__dict__['object_id'] = value
 
     @property
     def id(self):

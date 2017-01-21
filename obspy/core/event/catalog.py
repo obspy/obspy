@@ -217,6 +217,20 @@ class Catalog(object):
         else:
             super(Catalog, self).__setitem__(index, event)
 
+    def __deepcopy__(self, memodict=None):
+        """
+        reset resource_id's object_id after deep copy to allow the
+        object specific behavior of get_referred_object
+        """
+        memodict = memodict or {}
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memodict[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, copy.deepcopy(v, memodict))
+        result.resource_id.bind_resource_ids()  # bind all resource_ids
+        return result
+
     def __str__(self, print_all=False):
         """
         Returns short summary string of the current catalog.
@@ -424,8 +438,8 @@ class Catalog(object):
             True
 
         2. The following example shows how to make an alias but not copy the
-           data. Any changes on ``st3`` would also change the contents of
-           ``st``.
+           data. Any changes on ``cat3`` would also change the contents of
+           ``cat``.
 
             >>> cat3 = cat
             >>> cat is cat3
@@ -840,6 +854,7 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
         if len(pathnames) > 1:
             for filename in pathnames[1:]:
                 catalog.extend(_read(filename, format, **kwargs).events)
+        catalog.resource_id.bind_resource_ids()
         return catalog
 
 

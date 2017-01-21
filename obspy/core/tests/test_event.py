@@ -8,6 +8,7 @@ import os
 import sys
 import unittest
 import warnings
+import tempfile
 
 from matplotlib import rcParams
 
@@ -15,7 +16,7 @@ import numpy as np
 
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               Pick, ResourceIdentifier, WaveformStreamID,
-                              read_events, Magnitude, FocalMechanism)
+                              read_events, Magnitude, FocalMechanism, Arrival)
 from obspy.core.event.source import farfield
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import get_basemap_version, get_cartopy_version
@@ -113,7 +114,7 @@ class EventTestCase(unittest.TestCase):
         self.assertFalse(hasattr(p, "test_1"))
         self.assertFalse(hasattr(p, "test_2"))
 
-    def test_event_copying_does_not_raise_duplicate_resource_id_warnings(self):
+    def test_event_copying_does_not_raise_duplicate_resource_id_warning(self):
         """
         Tests that copying an event does not raise a duplicate resource id
         warning.
@@ -719,20 +720,33 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         instances are created that have the same resource id but different
         objects. The referred objects should still return the same objects
         used in the ResourceIdentifier construction or set_referred_object
-        call
+        call. However, if an object is set to a resource_id that is not
+        equal to the last object set it should issue a warning.
         """
+        warnings.simplefilter('default')
         object_a = UTCDateTime(1000)
-        object_b = UTCDateTime(1001)
+        object_b = UTCDateTime(1000)
+        object_c = UTCDateTime(1001)
         self.assertFalse(object_a is object_b)
         id = 'obspy.org/tests/test_resource'
         res_a = ResourceIdentifier(id=id, referred_object=object_a)
         # Now create a new resource with the same id but a different object.
-        # This will no longer raise a warning
-        res_b = ResourceIdentifier(id=id, referred_object=object_b)
+        # This should not raise a warning as the object a and b are equal.
+        with warnings.catch_warnings(record=True) as w:
+            res_b = ResourceIdentifier(id=id, referred_object=object_b)
+            self.assertEqual(len(w), 0)
+        # if the set object is not equal to the last object set to the same
+        # resource_id, however, a warning should be issued.
+        with warnings.catch_warnings(record=True) as w:
+            res_c = ResourceIdentifier(id=id, referred_object=object_c)
+            self.assertEqual(len(w), 1)
+            expected_text = 'which is not equal to the last object bound'
+            self.assertIn(expected_text, str(w[0]))
         # even though the resource_id are the same, the referred objects
         # should point to the original (different) objects
         self.assertIs(object_a, res_a.get_referred_object())
         self.assertIs(object_b, res_b.get_referred_object())
+        self.assertIs(object_c, res_c.get_referred_object())
 
     def test_objects_garbage_collection(self):
         """
@@ -808,21 +822,23 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         id and issues a warning
         """
         uri = 'testuri'
-        obj1 = UTCDateTime()
-        obj2 = UTCDateTime()
+        obj1 = UTCDateTime(1000)
+        obj2 = UTCDateTime(1000)
         rid1 = ResourceIdentifier(uri, referred_object=obj1)
         rid2 = ResourceIdentifier(uri, referred_object=obj2)
         self.assertFalse(rid1.get_referred_object() is
                          rid2.get_referred_object())
+        self.assertNotEqual(rid1.object_id, rid2.object_id)
         del obj1
         warnings.simplefilter('default')
         with warnings.catch_warnings(record=True) as w:
             rid1.get_referred_object()
-            assert len(w)
+            self.assertEqual(len(w), 1)
+            self.assertIn('The object with identity', str(w[0]))
         # now both rids should return the same object
         self.assertIs(rid1.get_referred_object(), rid2.get_referred_object())
-        # the object id should have been reset
-        self.assertIs(rid1.object_id, None)
+        # the object id should now be bound to obj2
+        self.assertEqual(rid1.object_id, rid2.object_id)
 
     def test_resources_in_global_dict_get_garbage_collected(self):
         """
@@ -837,8 +853,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         # Now two keys should be in the global dict.
         rdict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
         self.assertEqual(len(list(rdict.keys())), 2)
-        # Deleting the objects will no longer remove them from the dict, but
-        # the weak reference still behave as expected
         del obj_a, obj_b
         self.assertIs(res1.get_referred_object(), None)
         self.assertIs(res2.get_referred_object(), None)
@@ -959,6 +973,78 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         rid3 = ResourceIdentifier(rid)
         self.assertEqual(rid, rid2)
         self.assertEqual(rid, rid3)
+
+
+class ResourceIDEventScopeTestCase(unittest.TestCase):
+    """
+    Test suit for ensuring event scoping of objects bound to
+    ResourceIdentifier instances
+    """
+
+    def make_test_catalog(self):
+        """
+        Make a test catalog with fixed resource IDs some of which reference
+        other objects belonging to the event (eg arrivals -> picks)
+        """
+        pick_rid = ResourceIdentifier(id='obspy.org/tests/test_pick')
+        origin_rid = ResourceIdentifier(id='obspy.org/tests/test_origin')
+        arrival_rid = ResourceIdentifier(id='obspy.org/tests/test_arrival')
+        ar_pick_rid = ResourceIdentifier(id='obspy.org/tests/test_pick')
+        catatlog_rid = ResourceIdentifier(id='obspy.org/tests/test_catalog')
+
+        picks = [Pick(time=UTCDateTime(), resource_id=pick_rid)]
+        arrivals = [Arrival(resource_id=arrival_rid, pick_id=ar_pick_rid)]
+        origins = [Origin(arrivals=arrivals, resource_id=origin_rid)]
+        events = [Event(picks=picks, origins=origins)]
+        events[0].preferred_origin_id = str(origin_rid.id)
+        catalog = Catalog(events=events, resource_id=catatlog_rid)
+        # next bind all unbound resource_ids to the current event scope
+        catalog.resource_id.bind_resource_ids()
+        return catalog
+
+    def setUp(self):
+        # Clear the Resource Identifier dict for the tests. NEVER do this
+        # otherwise.
+        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
+        # Also clear the tracker.
+        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
+        # set the test catalog as an attr for test access
+        self.catalog = self.make_test_catalog()
+        # save the catalog to a temp file for testing reading in the catalog
+        self.catalog_path = tempfile.mkstemp()[1]
+        self.catalog.write(self.catalog_path, 'quakeml')
+        # create a list of equal catalogs/events created with read and copy
+        self.event_list = [
+            self.catalog[0],
+            read_events(self.catalog_path)[0],
+            read_events(self.catalog_path)[0],
+            self.catalog.copy()[0],
+            self.catalog.copy()[0],
+        ]
+
+    def test_preferred_origins(self):
+        """
+        test that the objects bound to the preferred origins are event scoped
+        """
+        for ev in self.event_list:
+            self.assertIs(ev.preferred_origin(), ev.origins[0])
+
+    def test_arrivals_refer_to_picks_in_same_event(self):
+        """
+        ensure the pick_ids of the arrivals refer to the pick belonging
+        to the same event
+        """
+        for ev in self.event_list:
+            pick_id = ev.picks[0].resource_id
+            arrival_pick_id = ev.origins[0].arrivals[0].pick_id
+            self.assertEqual(pick_id, arrival_pick_id)
+            pick = ev.picks[0]
+            arrival_pick = arrival_pick_id.get_referred_object()
+            self.assertIs(pick, arrival_pick)
+
+    def tearDown(self):
+        # remove the temp file
+        os.remove(self.catalog_path)
 
 
 class BaseTestCase(unittest.TestCase):
