@@ -571,7 +571,7 @@ class Parser(object):
                     # Do conversion to Laplace zeros
                     if getattr(resp, label) == "B":
                         z *= 2. * np.pi
-                        data['gain'] *= 1./(2. * np.pi)
+                        data['gain'] *= 1.0 / (2.0 * np.pi)
                     data['zeros'].append(z)
         return data
 
@@ -828,8 +828,8 @@ class Parser(object):
             'B052F04     Channel:     %s\n' % channel_info['Channel'] +
             'B052F22     Start date:  %s\n' % channel_info['Start date'] +
             'B052F23     End date:    %s\n' % channel_info['End date'] +
-            '#\t\t=======================================\n'
-            ).encode('ascii', 'strict'))
+            '#\t\t=======================================\n').encode(
+            'ascii', 'strict'))
         # Write all other blockettes. Sort by stage number (0 at the end) and
         # the specified blockette id order.
         order = [53, 54, 55, 56, 60, 61, 62, 57, 58, 59]

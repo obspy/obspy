@@ -172,7 +172,7 @@ class Blkt100S(C.Structure):
         ('flags', C.c_byte),
         ('reserved', C.c_ubyte * 3),
     ]
-blkt_100 = Blkt100S
+blkt_100 = Blkt100S  # noqa
 
 
 # Blockette 200, Generic Event Detection (without header)
@@ -325,7 +325,7 @@ class Blkt1001S(C.Structure):
         ('reserved', C.c_ubyte),
         ('framecnt', C.c_ubyte),
     ]
-blkt_1001 = Blkt1001S
+blkt_1001 = Blkt1001S  # noqa
 
 
 # Blockette 2000, Opaque Data (without header)
@@ -345,6 +345,7 @@ class Blkt2000S(C.Structure):
 class BlktLinkS(C.Structure):
     pass
 
+
 BlktLinkS._fields_ = [
     ('blktoffset', C.c_ushort),  # Blockette offset
     ('blkt_type', C.c_ushort),  # Blockette type
@@ -352,7 +353,7 @@ BlktLinkS._fields_ = [
     ('blktdata', C.POINTER(None)),  # Blockette data
     ('blktdatalen', C.c_ushort),  # Length of blockette data in bytes
     ('next', C.POINTER(BlktLinkS))]
-BlktLink = BlktLinkS
+BlktLink = BlktLinkS  # noqa
 
 
 class StreamstateS(C.Structure):
@@ -363,11 +364,12 @@ class StreamstateS(C.Structure):
         ('comphistory', C.c_byte),        # Control use of lastintsample for
                                           # compression history
     ]
-StreamState = StreamstateS
+StreamState = StreamstateS  # noqa
 
 
 class MsrecordS(C.Structure):
     pass
+
 
 MsrecordS._fields_ = [
     ('record', C.POINTER(C.c_char)),  # Mini-SEED record
@@ -403,11 +405,12 @@ MsrecordS._fields_ = [
     ('ststate',
      C.POINTER(StreamState)),         # Stream processing state information
 ]
-MSRecord = MsrecordS
+MSRecord = MsrecordS  # noqa
 
 
 class MstraceS(C.Structure):
     pass
+
 
 MstraceS._fields_ = [
     ('network', C.c_char * 11),       # Network designation, NULL terminated
@@ -429,17 +432,18 @@ MstraceS._fields_ = [
      C.POINTER(StreamState)),         # Stream processing state information
     ('next', C.POINTER(MstraceS)),   # Pointer to next trace
 ]
-MSTrace = MstraceS
+MSTrace = MstraceS  # noqa
 
 
 class MstracegroupS(C.Structure):
     pass
 
+
 MstracegroupS._fields_ = [
     ('numtraces', C.c_int),            # Number of MSTraces in the trace chain
     ('traces', C.POINTER(MstraceS)),  # Root of the trace chain
 ]
-MSTraceGroup = MstracegroupS
+MSTraceGroup = MstracegroupS  # noqa
 
 
 # Define the high precision time tick interval as 1/modulus seconds */
@@ -450,6 +454,7 @@ HPTMODULUS = 1000000.0
 # Reading Mini-SEED records from files
 class MsfileparamS(C.Structure):
     pass
+
 
 MsfileparamS._fields_ = [
     ('fp', C.POINTER(Py_ssize_t)),
@@ -463,7 +468,7 @@ MsfileparamS._fields_ = [
     ('filesize', C.c_long),
     ('recordcount', C.c_int),
 ]
-MSFileParam = MsfileparamS
+MSFileParam = MsfileparamS  # noqa
 
 
 class UDIFF(C.Union):
@@ -590,6 +595,7 @@ MSTraceSeg._fields_ = [
 class MSTraceID(C.Structure):
     pass
 
+
 MSTraceID._fields_ = [
     ('network', C.c_char * 11),       # Network designation, NULL terminated
     ('station', C.c_char * 11),       # Station designation, NULL terminated
@@ -615,6 +621,7 @@ MSTraceID._fields_ = [
 class MSTraceList(C.Structure):
     pass
 
+
 MSTraceList._fields_ = [
     ('numtraces', C.c_int),            # Number of traces in list
     ('traces', C.POINTER(MSTraceID)),  # Pointer to list of traces
@@ -625,6 +632,7 @@ MSTraceList._fields_ = [
 # Data selection structure time window definition containers
 class SelectTime(C.Structure):
     pass
+
 
 SelectTime._fields_ = [
     ('starttime', C.c_longlong),  # Earliest data for matching channels
@@ -637,6 +645,7 @@ SelectTime._fields_ = [
 class Selections(C.Structure):
     pass
 
+
 Selections._fields_ = [
     ('srcname', C.c_char * 100),  # Matching (globbing) source name:
                                   # Net_Sta_Loc_Chan_Qual
@@ -648,6 +657,7 @@ Selections._fields_ = [
 # Container for a continuous linked list of records.
 class ContinuousSegment(C.Structure):
     pass
+
 
 ContinuousSegment._fields_ = [
     ('starttime', C.c_longlong),
@@ -670,6 +680,7 @@ ContinuousSegment._fields_ = [
 # A container for continuous segments with the same id
 class LinkedIDList(C.Structure):
     pass
+
 
 LinkedIDList._fields_ = [
     ('network', C.c_char * 11),      # Network designation, NULL terminated
@@ -743,4 +754,6 @@ clibmseed.ms_nomsamprate.restype = C.c_double
 # Python callback functions for C
 def _py_file_callback(_f):
     return 1
+
+
 _PyFile_callback = C.CFUNCTYPE(C.c_int, Py_ssize_t)(_py_file_callback)

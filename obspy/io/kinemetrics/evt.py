@@ -33,15 +33,15 @@ FRAME_STRUCT = b"BBHHLHHBBHB13s"
 # 0 - 0x7c (0-34)
 HEADER_STRUCT1 = b"3sB2H3B3x6Hh2Hh22x3B5x2H4hH2x2h6L16x"
 # 0x7c - 0x22c (35-106)
-HEADER_STRUCT2 = b"lLlL2l12x"*12
+HEADER_STRUCT2 = b"lLlL2l12x" * 12
 # 0x22c-0x2c8(->139)
 HEADER_STRUCT3 = b"3L4H2L4x2H5s33sh2f4h4B2LB17s2B2B6xh22x"
 # 0x2c8 - 0x658 (140 - 464) (27*12)
-HEADER_STRUCT4 = b"5sbH5h3H4BHBx8f2B10x"*12
+HEADER_STRUCT4 = b"5sbH5h3H4BHBx8f2B10x" * 12
 # 0x658 - 0x688
 HEADER_STRUCT5 = b"3B5x6H2hb2Bxh3Hl8x"
 # 0x688 - 0x6c4 (3*15)
-HEADER_STRUCT6 = b"cBh"*15
+HEADER_STRUCT6 = b"cBh" * 15
 # 0x6c4 - 0x7f8
 HEADER_STRUCT7 = b"64s16s16s16s16s16s24s24s24s24s3B3b5h4xH46s"
 
@@ -335,7 +335,7 @@ class EvtFrameHeader(EvtVirtual):
 
     def analyse_frame32(self, head_buff):
         self.numframe += 1
-        val = unpack(self.endian+FRAME_STRUCT, head_buff)
+        val = unpack(self.endian + FRAME_STRUCT, head_buff)
         self.set_dict(val, 0)
         if not self.verify(verbose=False):
             raise EvtBadHeaderError("Bad Frame values")

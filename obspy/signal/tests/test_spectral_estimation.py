@@ -233,7 +233,8 @@ class PsdTestCase(unittest.TestCase):
         # Use a canned ANMO response which will stay static
         paz = {'gain': 86298.5, 'zeros': [0, 0],
                'poles': [-59.4313, -22.7121 + 27.1065j, -22.7121 + 27.1065j,
-                         -0.0048004, -0.073199], 'sensitivity': 3.3554*10**9}
+                         -0.0048004, -0.073199],
+               'sensitivity': 3.3554 * 10 ** 9}
 
         # Make an empty PPSD and add the data
         # use highest frequency given by IRIS Mustang noise-pdf web service
@@ -297,7 +298,8 @@ class PsdTestCase(unittest.TestCase):
         # Read in metadata in various different formats
         paz = {'gain': 86298.5, 'zeros': [0, 0],
                'poles': [-59.4313, -22.7121 + 27.1065j, -22.7121 + 27.1065j,
-                         -0.0048004, -0.073199], 'sensitivity': 3.3554*10**9}
+                         -0.0048004, -0.073199],
+               'sensitivity': 3.3554 * 10 ** 9}
         resp = os.path.join(self.path, 'IUANMO.resp')
         parser = Parser(os.path.join(self.path, 'IUANMO.dataless'))
         inv = read_inventory(os.path.join(self.path, 'IUANMO.xml'))
@@ -411,8 +413,7 @@ class PsdTestCase(unittest.TestCase):
             dict(isoweek=[4, 5, 6, 13, 22, 23, 24, 44, 45]),
             dict(time_of_weekday=[(5, 22, 24), (6, 0, 2), (6, 22, 24)]),
             dict(callback=callback, month=[1, 3, 5, 7]),
-            dict(callback=callback),
-            ]
+            dict(callback=callback)]
         expected_selections = np.load(
             os.path.join(self.path, "ppsd_stack_selections.npy"))
 

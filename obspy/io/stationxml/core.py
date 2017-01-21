@@ -34,7 +34,7 @@ from obspy.core.inventory import (CoefficientsTypeResponseStage,
                                   PolesZerosResponseStage,
                                   PolynomialResponseStage,
                                   ResponseListResponseStage, ResponseStage)
-from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip,  Distance,
+from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip, Distance,
                                   Frequency, Latitude, Longitude, SampleRate)
 
 

@@ -93,7 +93,7 @@ class AttribDict(collections.MutableMapping):
             else:
                 msg = ('Setting attribute "{}" which is not a default '
                        'attribute ("{}").').format(
-                            key, '", "'.join(self.defaults.keys()))
+                    key, '", "'.join(self.defaults.keys()))
                 warnings.warn(msg)
 
         if isinstance(value, collections.Mapping) and \

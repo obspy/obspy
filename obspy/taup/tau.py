@@ -104,7 +104,7 @@ class Arrivals(list):
         if not isinstance(num, int):
             raise TypeError("Integer expected")
         arr = self.copy()
-        for _i in range(num-1):
+        for _i in range(num - 1):
             arr += self.copy()
         return arr
 
@@ -112,7 +112,7 @@ class Arrivals(list):
         if not isinstance(num, int):
             raise TypeError("Integer expected")
         arr = self.copy()
-        for _i in range(num-1):
+        for _i in range(num - 1):
             self += arr
         return self
 

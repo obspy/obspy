@@ -151,6 +151,7 @@ class _WritelnDecorator(object):
             self.write(arg)
         self.write('\n')  # text-mode streams translate to \r\n if needed
 
+
 unittest._WritelnDecorator = _WritelnDecorator
 # XXX: end of ugly monkey patch
 

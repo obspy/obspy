@@ -125,7 +125,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         raise Exception(msg)
     for start, end in zip(lines_start, lines_end):
         event = _read_single_hypocenter(
-            lines[start:end+1], coordinate_converter=coordinate_converter,
+            lines[start:end + 1], coordinate_converter=coordinate_converter,
             original_picks=original_picks)
         cat.append(event)
     cat.creation_info.creation_time = UTCDateTime()

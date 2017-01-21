@@ -2023,7 +2023,7 @@ class TraceTestCase(unittest.TestCase):
         resolved.
         """
         starttime = UTCDateTime("1970-01-01T00:00:00.000000Z")
-        tr0 = Trace(np.sin(np.linspace(0, 2*np.pi, 10)),
+        tr0 = Trace(np.sin(np.linspace(0, 2 * np.pi, 10)),
                     {'sampling_rate': 1.0,
                      'starttime': starttime})
         # downsample
@@ -2038,7 +2038,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 5)
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
-                         starttime + tr.stats.delta * (tr.stats.npts-1))
+                         starttime + tr.stats.delta * (tr.stats.npts - 1))
 
         # upsample
         tr = tr0.copy()
@@ -2049,21 +2049,21 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 20)
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
-                         starttime + tr.stats.delta * (tr.stats.npts-1))
+                         starttime + tr.stats.delta * (tr.stats.npts - 1))
 
         # downsample with non integer ratio
         tr = tr0.copy()
         tr.resample(0.75, window='hanning', no_filter=True)
-        self.assertEqual(len(tr.data), int(10*.75))
+        self.assertEqual(len(tr.data), int(10 * .75))
         expected = np.array([0.15425413, 0.66991128, 0.74610418, 0.11960477,
                              -0.60644662, -0.77403839, -0.30938935])
         self.assertTrue(np.all(np.abs(tr.data - expected) < 1e-7))
         self.assertEqual(tr.stats.sampling_rate, 0.75)
-        self.assertEqual(tr.stats.delta, 1/0.75)
-        self.assertEqual(tr.stats.npts, int(10*.75))
+        self.assertEqual(tr.stats.delta, 1 / 0.75)
+        self.assertEqual(tr.stats.npts, int(10 * .75))
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
-                         starttime + tr.stats.delta * (tr.stats.npts-1))
+                         starttime + tr.stats.delta * (tr.stats.npts - 1))
 
         # downsample without window
         tr = tr0.copy()
@@ -2074,7 +2074,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 5)
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
-                         starttime + tr.stats.delta * (tr.stats.npts-1))
+                         starttime + tr.stats.delta * (tr.stats.npts - 1))
 
         # downsample with window and automatic filtering
         tr = tr0.copy()
@@ -2085,7 +2085,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 5)
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
-                         starttime + tr.stats.delta * (tr.stats.npts-1))
+                         starttime + tr.stats.delta * (tr.stats.npts - 1))
 
         # downsample with custom window
         tr = tr0.copy()

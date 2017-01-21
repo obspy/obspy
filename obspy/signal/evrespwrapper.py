@@ -28,7 +28,7 @@ ENUM_ERROR_CODES = {
     -6: (ValueError, 'Undef sepstr'),
     -7: (IOError, 'Unrecognized file type'),
     -8: (EOFError, 'Unexpected EOF'),
-    -9:  (IndexError, 'Array bounds exceeded'),
+    -9: (IndexError, 'Array bounds exceeded'),
     -10: (ValueError, 'Improper data type'),
     -11: (NotImplementedError, 'Unsupported file type'),
     -12: (ValueError, 'Illegal filter specification'),
@@ -163,6 +163,7 @@ class BlktInfoUnion(C.Union):
 class Blkt(C.Structure):
     pass
 
+
 Blkt._fields_ = [
     ("type", C.c_int),
     ("blkt_info", BlktInfoUnion),
@@ -173,6 +174,7 @@ Blkt._fields_ = [
 
 class Stage(C.Structure):
     pass
+
 
 Stage._fields_ = [
     ("sequence_no", C.c_int),
@@ -203,6 +205,7 @@ FIR_NORM_TOL = 0.02
 
 class Channel(C.Structure):
     pass
+
 
 Channel._fields_ = [
     ("staname", C.c_char * STALEN),

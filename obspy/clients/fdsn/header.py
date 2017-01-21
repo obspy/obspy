@@ -54,8 +54,7 @@ URL_MAPPINGS = {
     "RESIF": "http://ws.resif.fr",
     "SCEDC": "http://service.scedc.caltech.edu",
     "USGS": "http://earthquake.usgs.gov",
-    "USP": "http://sismo.iag.usp.br",
-    }
+    "USP": "http://sismo.iag.usp.br"}
 
 FDSNWS = ("dataselect", "event", "station")
 

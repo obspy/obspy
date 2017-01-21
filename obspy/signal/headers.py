@@ -166,6 +166,7 @@ class C_COMPLEX(C.Structure):  # noqa
 class RESPONSE(C.Structure):
     pass
 
+
 RESPONSE._fields_ = [("station", C.c_char * STALEN),
                      ("network", C.c_char * NETLEN),
                      ("locid", C.c_char * LOCIDLEN),
