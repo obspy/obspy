@@ -804,10 +804,10 @@ def set_flags_in_fixed_headers(filename, flags):
             # Ignore sequence number and data header
             mseed_file.seek(8, os.SEEK_CUR)
             # Read identifier
-            sta = mseed_file.read(5).strip()
-            loc = mseed_file.read(2).strip()
-            chan = mseed_file.read(3).strip()
-            net = mseed_file.read(2).strip()
+            sta = mseed_file.read(5).strip().decode()
+            loc = mseed_file.read(2).strip().decode()
+            chan = mseed_file.read(3).strip().decode()
+            net = mseed_file.read(2).strip().decode()
 
             # Search the nested dict for the network identifier
             if net in flags_bytes:

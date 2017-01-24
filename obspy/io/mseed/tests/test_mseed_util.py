@@ -808,10 +808,10 @@ class MSEEDUtilTestCase(unittest.TestCase):
         while file_bfr.tell() < filesize:
             file_bfr.seek(8, os.SEEK_CUR)
             # Read trace id
-            sta = file_bfr.read(5)
-            loc = file_bfr.read(2)
-            cha = file_bfr.read(3)
-            net = file_bfr.read(2)
+            sta = file_bfr.read(5).decode()
+            loc = file_bfr.read(2).decode()
+            cha = file_bfr.read(3).decode()
+            net = file_bfr.read(2).decode()
 
             # Check whether we want to check this trace
             expectedtrace = trace_id.split(".")
