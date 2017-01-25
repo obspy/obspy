@@ -25,7 +25,7 @@ from obspy.io.quakeml.core import Pickler
 
 def _validate_sc3ml(path_or_object, verbose=False):
     """
-    Validates a SC3ML file against the SC3ML 0.8 schema. Returns either True or
+    Validates a SC3ML file against the SC3ML 0.9 schema. Returns either True or
     False.
 
     :param path_or_object: File name or file like object. Can also be an etree
@@ -35,7 +35,7 @@ def _validate_sc3ml(path_or_object, verbose=False):
     """
     # Get the schema location.
     schema_location = os.path.join(os.path.dirname(__file__), 'data',
-                                   'sc3ml_0.8.xsd')
+                                   'sc3ml_0.9.xsd')
     xmlschema = etree.XMLSchema(etree.parse(schema_location))
 
     if isinstance(path_or_object, etree._Element):
@@ -89,7 +89,7 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
     nsmap_ = getattr(catalog, "nsmap", {})
     quakeml_doc = Pickler(nsmap=nsmap_).dumps(catalog)
     xslt_filename = os.path.join(os.path.dirname(__file__), 'data',
-                                 'quakeml_1.2__sc3ml_0.8.xsl')
+                                 'quakeml_1.2__sc3ml_0.9.xsl')
     transform = etree.XSLT(etree.parse(xslt_filename))
     sc3ml_doc = transform(etree.parse(io.BytesIO(quakeml_doc)))
 

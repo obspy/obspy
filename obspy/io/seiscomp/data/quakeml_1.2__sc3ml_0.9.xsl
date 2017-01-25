@@ -2,7 +2,7 @@
 <!--
     ***************************************************************************
 
-QuakeML 1.2 to SC3ML 0.8 stylesheet converter
+QuakeML 1.2 to SC3ML 0.9 stylesheet converter
 
 Author:
     EOST (École et Observatoire des Sciences de la Terre)
@@ -18,8 +18,8 @@ Usage
 This stylesheet converts a QuakeML to a SC3ML document. It may be invoked using
 xalan or xsltproc:
 
-    xalan -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.8.xsl -out sc3ml.xml
-    xsltproc quakeml_1.2__sc3ml_0.8.xsl quakeml.xml -o sc3ml.xml
+    xalan -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.9.xsl -out sc3ml.xml
+    xsltproc quakeml_1.2__sc3ml_0.9.xsl quakeml.xml -o sc3ml.xml
 
 Transformation
 ==============
@@ -119,8 +119,8 @@ SC3ML. Unnecessary attributes must also be removed.
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
         xmlns:ext="http://exslt.org/common"
-        xmlns:sc="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.8"
-        xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.8"
+        xmlns:sc="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9"
+        xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9"
         xmlns:qml="http://quakeml.org/xmlns/bed/1.2"
         xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"
         exclude-result-prefixes="q qml xsl">
@@ -128,8 +128,8 @@ SC3ML. Unnecessary attributes must also be removed.
     <xsl:strip-space elements="*"/>
 
     <!-- Define some global variables -->
-    <xsl:variable name="version" select="0.8"/>
-    <xsl:variable name="schema" select="document('sc3ml_0.8.xsd')"/>
+    <xsl:variable name="version" select="0.9"/>
+    <xsl:variable name="schema" select="document('sc3ml_0.9.xsd')"/>
 
     <!-- Define key to remove duplicates-->
     <xsl:key name="pick_key" match="qml:pick" use="@publicID"/>
