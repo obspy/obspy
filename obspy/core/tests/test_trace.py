@@ -1459,14 +1459,12 @@ class TraceTestCase(unittest.TestCase):
         """
         Test split method with a masked array without any data.
         """
-        tr1 = Trace(data=np.arange(1000))
-        tr2 = Trace(data=np.arange(1000, 2000))
-        trace = tr1 + tr2
+        tr = Trace(data=np.ma.masked_all(100))
 
-        self.assertTrue(isinstance(trace.data, np.ma.masked_array))
-        self.assertTrue(isinstance(trace, Trace))
+        self.assertTrue(isinstance(tr.data, np.ma.masked_array))
+        self.assertTrue(isinstance(tr, Trace))
 
-        st = trace.split()
+        st = tr.split()
 
         self.assertTrue(isinstance(st, Stream))
         self.assertEqual(len(st), 0)
