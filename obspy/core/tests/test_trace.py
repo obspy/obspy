@@ -1455,6 +1455,20 @@ class TraceTestCase(unittest.TestCase):
         self.assertFalse(isinstance(st[0].data, np.ma.masked_array))
         self.assertFalse(isinstance(st[1].data, np.ma.masked_array))
 
+    def test_split_empty_masked_array(self):
+        """
+        Test split method with a masked array without any data.
+        """
+        tr = Trace(data=np.ma.masked_all(100))
+
+        self.assertTrue(isinstance(tr.data, np.ma.masked_array))
+        self.assertTrue(isinstance(tr, Trace))
+
+        st = tr.split()
+
+        self.assertTrue(isinstance(st, Stream))
+        self.assertEqual(len(st), 0)
+
     def test_simulate_evalresp(self):
         """
         Tests that trace.simulate calls evalresp with the correct network,
