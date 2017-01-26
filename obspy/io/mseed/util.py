@@ -866,7 +866,7 @@ def set_flags_in_fixed_headers(filename, flags):
                 # Search for blockette 100's "Actual sample rate" field
                 samp_rate = _search_flag_in_blockette(mseed_file, 4, 100, 4, 1)
                 if samp_rate is not None:
-                    samp_rate = unpack(native_str(">b"), samp_rate)
+                    samp_rate = unpack(native_str(">b"), samp_rate)[0]
                 # Search for blockette 1001's "microsec" field
                 microsec = _search_flag_in_blockette(mseed_file, 4, 1001, 5, 1)
                 if microsec is not None:

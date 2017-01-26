@@ -8,6 +8,7 @@ import copy
 import io
 import os
 import random
+import shutil
 import sys
 import unittest
 import warnings
@@ -770,6 +771,29 @@ class MSEEDUtilTestCase(unittest.TestCase):
             wrong_trace = {'not_three_points': copy.deepcopy(classic_flags)}
             self.assertRaises(ValueError, set_flags_in_fixed_headers,
                               file_name, wrong_trace)
+
+    def test_set_flags_in_fixed_header_with_blockette_100(self):
+        """
+        Test the set_flags_in_fixed_header function for a file with
+        blockette 100.
+        """
+        with NamedTemporaryFile() as tf:
+            tf.close()
+            shutil.copy(os.path.join(self.path, 'data', 'test.mseed'),
+                        tf.name)
+            # No flags set.
+            flags = util.get_timing_and_data_quality(tf.name)
+            self.assertEqual(flags["data_quality_flags"], [0] * 8)
+            # Set flags.
+            util.set_flags_in_fixed_headers(tf.name, {
+                "NL.HGN.00.BHZ": {"data_qual_flags": {
+                    'glitches_detected': True,
+                    'time_tag_questionable': True}}})
+            # Flags are set now.
+            flags = util.get_timing_and_data_quality(tf.name)
+            # 2 because file contains two records.
+            self.assertEqual(flags["data_quality_flags"],
+                             [0, 0, 0, 2, 0, 0, 0, 2])
 
     def _check_values(self, file_bfr, trace_id, record_numbers, expected_bytes,
                       reclen):
