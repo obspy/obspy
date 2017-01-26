@@ -1103,8 +1103,6 @@ class UTCDateTimeTestCase(unittest.TestCase):
                          "9999-12-31T23:59:59.999900Z")
         self.assertEqual(str(UTCDateTime("9999-12-31T23:59:59.999999")),
                          "9999-12-31T23:59:59.999999Z")
-        self.assertEqual(str(UTCDateTime(9224781964325.78)),
-                         "32147-09-14T18:32:05.779669Z")
 
 
 def suite():
