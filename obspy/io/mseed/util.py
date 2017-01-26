@@ -587,7 +587,7 @@ def _get_record_information(file_object, offset=0, endian=None):
     elif _code == b' ':
         try:
             _t = file_object.read(120).decode().strip()
-        except:
+        except Exception:
             raise ValueError("Invalid MiniSEED file.")
         if not _t:
             info = _get_record_information(file_object=file_object,
@@ -663,7 +663,7 @@ def _get_record_information(file_object, offset=0, endian=None):
             endian = ">"
             values = unpack(fmt(endian), data)
             starttime = _parse_time(values)
-        except:
+        except Exception:
             endian = "<"
             values = unpack(fmt(endian), data)
             starttime = _parse_time(values)
@@ -671,7 +671,7 @@ def _get_record_information(file_object, offset=0, endian=None):
         values = unpack(fmt(endian), data)
         try:
             starttime = _parse_time(values)
-        except:
+        except Exception:
             msg = ("Invalid starttime found. The passed byte order is likely "
                    "wrong.")
             raise ValueError(msg)
@@ -1640,7 +1640,7 @@ def _convert_and_check_encoding_for_writing(encoding):
 
     try:
         encoding = int(encoding)
-    except:
+    except Exception:
         pass
 
     if isinstance(encoding, int):

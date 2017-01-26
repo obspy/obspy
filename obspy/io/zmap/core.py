@@ -328,7 +328,7 @@ def _read_zmap(filename, **kwargs):
         try:
             with open(filename):
                 pass
-        except:
+        except Exception:
             # we assume it's a string now
             return Unpickler().loads(filename)
     return Unpickler().load(filename)
@@ -366,10 +366,10 @@ def _is_zmap(filename):
         try:
             with open(filename, 'rb') as f:
                 first_line = f.readline().decode()
-        except:
+        except Exception:
             try:
                 first_line = filename.decode()
-            except:
+            except Exception:
                 first_line = str(filename)
             line_ending = first_line.find("\n")
             if line_ending == -1:

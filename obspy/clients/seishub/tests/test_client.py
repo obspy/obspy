@@ -29,7 +29,7 @@ def _check_server_availability():
     try:
         code = urllib.request.urlopen(TESTSERVER, timeout=3).getcode()
         assert(code == 200)
-    except:
+    except Exception:
         return TESTSERVER_UNREACHABLE_MSG
     return ""
 

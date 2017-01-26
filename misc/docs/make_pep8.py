@@ -19,7 +19,7 @@ path = obspy.__path__[0]
 
 try:
     os.makedirs(os.path.join('source', 'pep8'))
-except:
+except Exception:
     pass
 
 report, message = check_flake8()
@@ -85,7 +85,7 @@ with open(os.path.join('source', 'pep8', 'index.rst'), 'wt') as fh:
 # remove any old image
 try:
     os.remove(PEP8_IMAGE)
-except:
+except Exception:
     pass
 # copy correct pep8 image
 if error_count > 0:

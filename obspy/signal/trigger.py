@@ -89,7 +89,7 @@ def recursive_sta_lta_py(a, nsta, nlta):
     """
     try:
         a = a.tolist()
-    except:
+    except Exception:
         pass
     ndat = len(a)
     # compute the short time average (STA) and long time average (LTA)

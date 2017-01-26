@@ -38,7 +38,7 @@ def _is_seisan(filename):
     try:
         with open(filename, 'rb') as f:
             data = f.read(12 * 80)
-    except:
+    except Exception:
         return False
     # read some data - contains at least 12 lines a 80 characters
     if _get_version(data):

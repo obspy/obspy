@@ -141,7 +141,7 @@ class Client(object):
         try:
             with open(dcid_key_file, 'rt') as fp:
                 lines = fp.readlines()
-        except:
+        except Exception:
             pass
         else:
             for line in lines:
@@ -167,7 +167,7 @@ class Client(object):
             self._client.open(native_str(self._client.host),
                               self._client.port,
                               self._client.timeout)
-        except:
+        except Exception:
             # old Python 2.7: port needs to be native int or string -> not long
             self._client.open(native_str(self._client.host),
                               native_str(self._client.port),
@@ -281,7 +281,7 @@ class Client(object):
             status = self._read_ln()
             try:
                 req_id = int(status)
-            except:
+            except Exception:
                 if 'ERROR' in status:
                     self._bye()
                     raise ArcLinkException('Error requesting status id')
@@ -543,7 +543,7 @@ class Client(object):
         if compressed:
             try:
                 import bz2
-            except:
+            except Exception:
                 compressed = False
             else:
                 rtype += " compression=bzip2"
@@ -633,7 +633,7 @@ class Client(object):
                 temp = {}
                 try:
                     temp['priority'] = int(node.get('priority'))
-                except:
+                except Exception:
                     temp['priority'] = -1
                 temp['start'] = UTCDateTime(node.get('start'))
                 if node.get('end'):
@@ -816,7 +816,7 @@ class Client(object):
         # Response type: A=Laplace(rad/s), B=Analog(Hz), C, D
         try:
             paz['response_type'] = xml_doc.get('type')
-        except:
+        except Exception:
             paz['response_type'] = None
 
         # normalization factor
@@ -826,7 +826,7 @@ class Client(object):
                     float(xml_doc.get('normalizationFactor'))
             else:
                 paz['normalization_factor'] = float(xml_doc.get('norm_fac'))
-        except:
+        except Exception:
             paz['normalization_factor'] = None
 
         try:
@@ -836,7 +836,7 @@ class Client(object):
             else:
                 paz['normalization_frequency'] = \
                     float(xml_doc.get('norm_freq'))
-        except:
+        except Exception:
             paz['normalization_frequency'] = None
 
         # for backwards compatibility (but this is wrong naming!)
@@ -854,7 +854,7 @@ class Client(object):
             temp = zeros.strip().replace(' ', '').replace(')(', ') (')
             for zeros in temp.split():
                 paz['zeros'].append(complexify_string(zeros))
-        except:
+        except Exception:
             pass
         # check number of zeros
         if len(paz['zeros']) != nzeros:
@@ -871,7 +871,7 @@ class Client(object):
             temp = poles.strip().replace(' ', '').replace(')(', ') (')
             for poles in temp.split():
                 paz['poles'].append(complexify_string(poles))
-        except:
+        except Exception:
             pass
         # check number of poles
         if len(paz['poles']) != npoles:
@@ -944,7 +944,7 @@ class Client(object):
             else:
                 # new schema
                 return result[id][0].paz
-        except:
+        except Exception:
             msg = 'Could not find PAZ for channel %s' % id
             raise ArcLinkException(msg)
 
@@ -1144,17 +1144,17 @@ class Client(object):
             # date / times
             try:
                 net.start = UTCDateTime(network.get('start'))
-            except:
+            except Exception:
                 net.start = None
             try:
                 net.end = UTCDateTime(network.get('end'))
-            except:
+            except Exception:
                 net.end = None
             # remark
             try:
                 net.remark = network.xpath(
                     'ns:remark', namespaces={'ns': xml_ns})[0].text or ''
-            except:
+            except Exception:
                 net.remark = ''
             # write network entries
             data[net.code] = net
@@ -1170,7 +1170,7 @@ class Client(object):
                 for key in ['elevation', 'longitude', 'depth', 'latitude']:
                     try:
                         sta[key] = float(station.get(key))
-                    except:
+                    except Exception:
                         sta[key] = None
                 # restricted
                 if station.get('restricted', '') == 'false':
@@ -1180,17 +1180,17 @@ class Client(object):
                 # date / times
                 try:
                     sta.start = UTCDateTime(station.get('start'))
-                except:
+                except Exception:
                     sta.start = None
                 try:
                     sta.end = UTCDateTime(station.get('end'))
-                except:
+                except Exception:
                     sta.end = None
                 # remark
                 try:
                     sta.remark = station.xpath(
                         'ns:remark', namespaces={'ns': xml_ns})[0].text or ''
-                except:
+                except Exception:
                     sta.remark = ''
                 # write station entry
                 data[net.code + '.' + sta.code] = sta
@@ -1203,11 +1203,11 @@ class Client(object):
                         # date / times
                         try:
                             start = UTCDateTime(comp.get('start'))
-                        except:
+                        except Exception:
                             start = None
                         try:
                             end = UTCDateTime(comp.get('end'))
-                        except:
+                        except Exception:
                             end = None
                         # check date/time boundaries
                         if start > endtime:
@@ -1238,28 +1238,28 @@ class Client(object):
                         # fetch sensitivity etc
                         try:
                             temp['sensitivity'] = float(comp.get('gain'))
-                        except:
+                        except Exception:
                             temp['sensitivity'] = None
                         # again keep it backwards compatible
                         temp['gain'] = temp['sensitivity']
                         try:
                             temp['sensitivity_frequency'] = \
                                 float(comp.get('gainFrequency'))
-                        except:
+                        except Exception:
                             temp['sensitivity_frequency'] = None
                         try:
                             temp['sensitivity_unit'] = comp.get('gainUnit')
-                        except:
+                        except Exception:
                             temp['sensitivity_unit'] = None
 
                         # date / times
                         try:
                             temp['starttime'] = UTCDateTime(comp.get('start'))
-                        except:
+                        except Exception:
                             temp['starttime'] = None
                         try:
                             temp['endtime'] = UTCDateTime(comp.get('end'))
-                        except:
+                        except Exception:
                             temp['endtime'] = None
                         if not instruments or not seismometer_id:
                             continue
@@ -1309,7 +1309,7 @@ class Client(object):
                             paz['sensor_manufacturer'] = \
                                 sensors[public_id]['manufacturer']
                             paz['sensor_model'] = sensors[public_id]['model']
-                        except:
+                        except Exception:
                             paz['sensor_manufacturer'] = None
                             paz['sensor_model'] = None
 

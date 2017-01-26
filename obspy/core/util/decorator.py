@@ -162,13 +162,13 @@ def uncompress_file(func, filename, *args, **kwargs):
                     if not data:
                         continue
                     obj_list.append(data)
-        except:
+        except Exception:
             pass
     elif zipfile.is_zipfile(filename):
         try:
             zip = zipfile.ZipFile(filename)
             obj_list = [zip.read(name) for name in zip.namelist()]
-        except:
+        except Exception:
             pass
     elif filename.endswith('.bz2'):
         # bz2 module
@@ -176,7 +176,7 @@ def uncompress_file(func, filename, *args, **kwargs):
             import bz2
             with open(filename, 'rb') as fp:
                 obj_list.append(bz2.decompress(fp.read()))
-        except:
+        except Exception:
             pass
     elif filename.endswith('.gz'):
         # gzip module
@@ -184,7 +184,7 @@ def uncompress_file(func, filename, *args, **kwargs):
             import gzip
             with gzip.open(filename, 'rb') as fp:
                 obj_list.append(fp.read())
-        except:
+        except Exception:
             pass
     # handle results
     if obj_list:

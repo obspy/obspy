@@ -221,7 +221,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         # Use try except to produce a meaningful error message.
         try:
             self.assertEqual(len(false_positives), 0)
-        except:  # pragma: no cover
+        except Exception:  # pragma: no cover
             msg = 'False positives for isFormat:\n'
             msg += '\n'.join(['\tFormat %s: %s' % (_i[0], _i[1]) for _i in
                               false_positives])

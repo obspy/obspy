@@ -338,11 +338,11 @@ class ImageComparison(NamedTemporaryFile):
 
         try:
             locale.setlocale(locale.LC_ALL, native_str('en_US.UTF-8'))
-        except:
+        except Exception:
             try:
                 locale.setlocale(locale.LC_ALL,
                                  native_str('English_United States.1252'))
-            except:
+            except Exception:
                 msg = "Could not set locale to English/United States. " + \
                       "Some date-related tests may fail"
                 warnings.warn(msg)
@@ -369,7 +369,7 @@ class ImageComparison(NamedTemporaryFile):
             import matplotlib.pyplot as plt
             try:
                 plt.close("all")
-            except:
+            except Exception:
                 pass
         return self
 
@@ -462,7 +462,7 @@ class ImageComparison(NamedTemporaryFile):
                 import matplotlib.pyplot as plt
                 try:
                     plt.close("all")
-                except:
+                except Exception:
                     pass
             if self.keep_output:
                 if failed or not self.keep_only_failed:
@@ -564,7 +564,7 @@ def compare_xml_strings(doc1, doc2):
     try:
         doc1 = doc1.encode()
         doc2 = doc2.encode()
-    except:
+    except Exception:
         pass
     obj1 = etree.fromstring(doc1).getroottree()
     obj2 = etree.fromstring(doc2).getroottree()

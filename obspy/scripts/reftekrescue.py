@@ -104,7 +104,7 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
                     # at least for packet types 'DT', 'EH' and 'ET'
                     try:
                         event_no = int(b2a_hex(m[(ind + 16):(ind + 18)]))
-                    except:
+                    except Exception:
                         msg = "Could not decode event number. Dropping " + \
                               "possibly corrupted packet at byte position" + \
                               " %d in input file."

@@ -156,7 +156,7 @@ class Client(object):
             t1 = time.time()
             urllib.request.urlopen(self.base_url, timeout=self.timeout).read()
             return (time.time() - t1) * 1000.0
-        except:
+        except Exception:
             pass
 
     def test_auth(self):
@@ -733,7 +733,7 @@ master/seishub/plugins/seismology/waveform.py
                 paz = parser.get_paz(seed_id=seed_id,
                                      datetime=UTCDateTime(datetime))
                 return paz
-            except:
+            except Exception:
                 continue
         network, station, location, channel = seed_id.split(".")
         # request station information

@@ -709,7 +709,7 @@ class Trace(object):
             elif method == 1 and interpolation_samples >= -1:
                 try:
                     ls = lt.data[-delta - 1]
-                except:
+                except Exception:
                     ls = lt.data[0]
                 if interpolation_samples == -1:
                     interpolation_samples = delta
@@ -2344,7 +2344,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         try:
             method = method.lower()
-        except:
+        except Exception:
             pass
 
         dt = float(sampling_rate)
@@ -2511,7 +2511,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             try:
                 responses.append(inv.get_response(self.id,
                                                   self.stats.starttime))
-            except:
+            except Exception:
                 pass
         if len(responses) > 1:
             msg = "Found more than one matching response. Using first."

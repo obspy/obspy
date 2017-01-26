@@ -76,7 +76,7 @@ def _get_ah_version(filename):
             data = xdrlib.Unpacker(fh.read(8))
             # check for magic version number
             magic = data.unpack_int()
-        except:
+        except Exception:
             return False
         if magic == 1100:
             try:
@@ -84,7 +84,7 @@ def _get_ah_version(filename):
                 length = data.unpack_uint()
                 # read first record
                 fh.read(length)
-            except:
+            except Exception:
                 return False
             # seems to be AH v2
             return '2.0'
@@ -104,7 +104,7 @@ def _get_ah_version(filename):
                 fh.seek(784)
                 if xdrlib.Unpacker(fh.read(4)).unpack_int() != 202:
                     return False
-            except:
+            except Exception:
                 return False
             return '1.0'
         else:
@@ -170,7 +170,7 @@ def _read_ah1(filename):
         ot_sec = data.unpack_float()
         try:
             ot = UTCDateTime(ot_year, ot_mon, ot_day, ot_hour, ot_min, ot_sec)
-        except:
+        except Exception:
             ot = None
         ah_stats.event.origin_time = ot
         ah_stats.event.comment = _unpack_string(data)
@@ -291,7 +291,7 @@ def _read_ah2(filename):
         ot_sec = data.unpack_float()
         try:
             ot = UTCDateTime(ot_year, ot_mon, ot_day, ot_hour, ot_min, ot_sec)
-        except:
+        except Exception:
             ot = None
         ah_stats.event.origin_time = ot
         data.unpack_int()  # and again?

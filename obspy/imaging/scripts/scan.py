@@ -118,7 +118,7 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
         return counter
     try:
         stream = read(file, format=format, headonly=True)
-    except:
+    except Exception:
         if verbose or not quiet:
             print("Can not read %s" % (file))
         return counter

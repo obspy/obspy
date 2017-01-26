@@ -253,7 +253,7 @@ def _get_ordered_entry_points(group, subgroup=None, order_list=[]):
     for name in order_list:
         try:
             entry_points[name] = ep_dict.pop(name)
-        except:
+        except Exception:
             # skip plug-ins which are not installed
             continue
     # extend entry points with any left over waveform plug-ins

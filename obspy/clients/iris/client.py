@@ -349,7 +349,7 @@ class Client(object):
             tf.seek(0)
             try:
                 stream = read(tf.name, 'MSEED')
-            except:
+            except Exception:
                 stream = Stream()
         return stream
 
@@ -425,18 +425,18 @@ class Client(object):
             try:
                 kwargs['starttime'] = \
                     UTCDateTime(starttime).format_iris_web_service()
-            except:
+            except Exception:
                 kwargs['starttime'] = starttime
             try:
                 kwargs['endtime'] = \
                     UTCDateTime(endtime).format_iris_web_service()
-            except:
+            except Exception:
                 kwargs['endtime'] = endtime
         elif 'time' in kwargs:
             try:
                 kwargs['time'] = \
                     UTCDateTime(kwargs['time']).format_iris_web_service()
-            except:
+            except Exception:
                 pass
         # build up query
         try:
@@ -539,18 +539,18 @@ class Client(object):
             try:
                 kwargs['starttime'] = \
                     UTCDateTime(starttime).format_iris_web_service()
-            except:
+            except Exception:
                 kwargs['starttime'] = starttime
             try:
                 kwargs['endtime'] = \
                     UTCDateTime(endtime).format_iris_web_service()
-            except:
+            except Exception:
                 kwargs['endtime'] = endtime
         elif starttime:
             try:
                 kwargs['time'] = \
                     UTCDateTime(starttime).format_iris_web_service()
-            except:
+            except Exception:
                 kwargs['time'] = starttime
         data = self._fetch("sacpz", **kwargs)
         return self._to_file_or_data(filename, data)
@@ -962,7 +962,7 @@ class Client(object):
         kwargs['channel'] = str(channel)
         try:
             kwargs['time'] = UTCDateTime(time).format_iris_web_service()
-        except:
+        except Exception:
             kwargs['time'] = time
         kwargs['minfreq'] = float(minfreq)
         if maxfreq:

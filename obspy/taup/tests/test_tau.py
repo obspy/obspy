@@ -386,7 +386,7 @@ class TauPyModelTestCase(unittest.TestCase):
                 line = line.split()
                 try:
                     float(line[0])
-                except:
+                except Exception:
                     continue
                 expected[(float(line[0]), float(line[1]))].append({
                     "distance": float(line[0]),

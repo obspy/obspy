@@ -52,7 +52,7 @@ def _is_gcf(filename):
     try:
         with open(filename, 'rb') as f:
             libgcf.is_gcf(f)
-    except:
+    except Exception:
         return False
     return True
 

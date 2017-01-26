@@ -52,7 +52,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                 expected = expected.encode(sys.stdout.encoding)
             else:
                 expected = expected.encode()
-        except:
+        except Exception:
             expected = expected.replace('°', ' deg')
             if sys.stdout.encoding is not None:
                 expected = expected.encode(sys.stdout.encoding)
@@ -164,7 +164,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                 expected = expected.encode(sys.stdout.encoding)
             else:
                 expected = expected.encode()
-        except:
+        except Exception:
             expected = expected.replace('°', ' deg')
             if sys.stdout.encoding is not None:
                 expected = expected.encode(sys.stdout.encoding)

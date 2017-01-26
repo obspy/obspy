@@ -1249,7 +1249,7 @@ class SeedLinkConnection(object):
                 # print("DEBUG: tmpstr:", tmpstr)
                 # print("DEBUG: tmpstr[0:endndx]:", tmpstr[0:endndx])
                 self.server_version = float(tmpstr[0:endndx])
-        except:
+        except Exception:
             msg = "bad server ID/version string: '%s'"
             raise SeedLinkException(msg % (servstr))
 
@@ -1476,7 +1476,7 @@ class SeedLinkConnection(object):
         curstream = None
         try:
             curstream = self.streams[0]
-        except:
+        except Exception:
             msg = "cannot negotiate uni-station, stream list does not " + \
                 "have exactly one element"
             raise SeedLinkException(msg)
@@ -1589,7 +1589,7 @@ class SeedLinkConnection(object):
             curstream = None
             try:
                 curstream = self.streams[0]
-            except:
+            except Exception:
                 msg = "cannot update uni-station stream, stream list does " + \
                     "not have exactly one element"
                 raise SeedLinkException(msg)

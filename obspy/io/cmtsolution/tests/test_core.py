@@ -47,7 +47,7 @@ class CmtsolutionTestCase(unittest.TestCase):
         finally:
             try:
                 os.remove(temp_filename)
-            except:
+            except Exception:
                 pass
 
         self.assertEqual(data.decode().splitlines(),
@@ -75,7 +75,7 @@ class CmtsolutionTestCase(unittest.TestCase):
         finally:
             try:
                 os.remove(temp_filename)
-            except:
+            except Exception:
                 pass
 
         self.assertEqual(data.decode().splitlines(),
@@ -191,7 +191,7 @@ class CmtsolutionTestCase(unittest.TestCase):
         finally:
             try:
                 os.remove(temp_filename)
-            except:
+            except Exception:
                 pass
 
         self.assertEqual(data.decode().splitlines(),

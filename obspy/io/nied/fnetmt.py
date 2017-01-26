@@ -113,7 +113,7 @@ def _internal_is_fnetmt_catalog(buf):
                         return False
                     return True
             cnt += 1
-    except:
+    except Exception:
         return False
     else:
         return True

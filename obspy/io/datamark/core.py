@@ -47,7 +47,7 @@ def _is_datamark(filename, century="20"):  # @UnusedVariable
             ord(buff[3:4])
             idata00 = fpin.read(4)
             np.fromstring(idata00, native_str('>i'))[0]
-    except:
+    except Exception:
         return False
     return True
 

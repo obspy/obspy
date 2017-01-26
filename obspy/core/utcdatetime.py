@@ -235,7 +235,7 @@ class UTCDateTime(object):
                 # got a timestamp
                 self._from_timestamp(value.__float__())
                 return
-            except:
+            except Exception:
                 pass
             if isinstance(value, datetime.datetime):
                 # got a Python datetime.datetime object
@@ -256,7 +256,7 @@ class UTCDateTime(object):
                     try:
                         self._from_iso8601_string(value)
                         return
-                    except:
+                    except Exception:
                         if iso8601:
                             raise
                 # try to apply some standard patterns
@@ -296,7 +296,7 @@ class UTCDateTime(object):
                     value = parts[0].strip()
                     try:
                         ms = float('.' + parts[1].strip())
-                    except:
+                    except Exception:
                         pass
                 # all parts should be digits now - here we filter unknown
                 # patterns and pass it directly to Python's  datetime.datetime
@@ -320,7 +320,7 @@ class UTCDateTime(object):
                 temp = "%4d%03d" % (int(year),
                                     int(kwargs['julday']))
                 dt = datetime.datetime.strptime(temp, '%Y%j')
-            except:
+            except Exception:
                 pass
             else:
                 kwargs['month'] = dt.month
@@ -399,7 +399,7 @@ class UTCDateTime(object):
         # split between date and time
         try:
             (date, time) = value.split("T")
-        except:
+        except Exception:
             date = value
             time = ""
         # remove all hyphens in date
