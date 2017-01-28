@@ -395,7 +395,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
                 if name == "resource_id":  # bind the resource_id to self
                     self.resource_id.set_referred_object(self, warn=False)
                 else:  # else unbind to allow event scoping later
-                    value.object_id = None
+                    value._object_id = None
 
     class AbstractEventTypeWithResourceID(AbstractEventType):
         def __init__(self, force_resource_id=True, *args, **kwargs):
@@ -631,7 +631,7 @@ class ResourceIdentifier(object):
             self.id = id
         # Append the referred object in case one is given to the class level
         # reference dictionary.
-        self.object_id = None  # the object specific ID
+        self._object_id = None  # the object specific ID
         if referred_object is not None:
             self.set_referred_object(referred_object)
 
@@ -655,8 +655,12 @@ class ResourceIdentifier(object):
     @classmethod
     def bind_resource_ids(cls):
         """
-        bind all of the unbound resource_ids to the objects returned from
-        the get_referred_object method
+        Bind the unbound ResourceIdentifier instances to referred objects.
+
+        Binds all of the unbound ResourceIdentifier instances to the most
+        recent object assigned to the resource_id. This ensures that all
+        resource identifiers will return the same object they are bound to
+        until the object goes out of scope.
         """
         for rid_id in list(cls.__unbound_resource_id):
             rid = cls.__unbound_resource_id.pop(rid_id, None)
@@ -677,8 +681,8 @@ class ResourceIdentifier(object):
         except KeyError:
             return None
         else:
-            if self.object_id in rdic and rdic[self.object_id]() is not None:
-                return rdic[self.object_id]()
+            if self._object_id in rdic and rdic[self._object_id]() is not None:
+                return rdic[self._object_id]()
             else:  # find last added obj that is not None
                 return self._get_similar_referred_object()
 
@@ -689,19 +693,19 @@ class ResourceIdentifier(object):
         __resource_id_weak_dict
         """
         rdic = ResourceIdentifier.__resource_id_weak_dict[self.id]
-        if self.object_id is not None:
+        if self._object_id is not None:
             msg = ("The object with identity of: %d no longer exists, "
                    "returning the most recently created object with a"
-                   " resource id of: %s") % (self.object_id, self.id)
+                   " resource id of: %s") % (self._object_id, self.id)
             line_number = inspect.currentframe().f_back.f_lineno
             warnings.warn_explicit(msg, UserWarning, __file__,
                                    line_number)
-            self.object_id = None  # reset object id
+            self._object_id = None  # reset object id
         # find a obj that is not None starting at last in ordered dict
         for key in list(reversed(rdic)):
             obj = rdic[key]()
             if obj is not None:
-                self.object_id = id(obj)  # bind object ID
+                self._object_id = id(obj)  # bind object ID
                 return obj
             else:  # remove references that are None
                 rdic.pop(key)
@@ -724,10 +728,10 @@ class ResourceIdentifier(object):
         so everything stays consistent. Warning can be ignored by setting
         the warn parameter to False.
         """
-        self.object_id = id(referred_object)  # identity of object
+        self._object_id = id(referred_object)  # identity of object
         rdic = ResourceIdentifier.__resource_id_weak_dict
         # if the resource_id is in the rid_dict
-        if self.id in rdic and self.object_id not in rdic[self.id]:
+        if self.id in rdic and self._object_id not in rdic[self.id]:
             last_obj = rdic[self.id][next(reversed(rdic[self.id]))]()
             if warn and last_obj is not None and last_obj != referred_object:
                 msg = ('Warning, binding object to resource ID %s which '
@@ -736,10 +740,10 @@ class ResourceIdentifier(object):
                 line_number = inspect.currentframe().f_back.f_lineno
                 warnings.warn_explicit(msg, UserWarning, __file__,
                                        line_number)
-            rdic[self.id][self.object_id] = weakref.ref(referred_object)
+            rdic[self.id][self._object_id] = weakref.ref(referred_object)
         else:
             rdic[self.id] = collections.OrderedDict()
-            rdic[self.id][self.object_id] = weakref.ref(referred_object)
+            rdic[self.id][self._object_id] = weakref.ref(referred_object)
 
     def convert_id_to_quakeml_uri(self, authority_id="local"):
         """
@@ -802,16 +806,16 @@ class ResourceIdentifier(object):
         return deepcopy(self)
 
     @property
-    def object_id(self):
-        return self.__dict__['object_id']
+    def _object_id(self):
+        return self.__dict__['_object_id']
 
-    @object_id.setter
-    def object_id(self, value):
+    @_object_id.setter
+    def _object_id(self, value):
         if value is None:  # add instance to unbound dict
             self.__class__.__unbound_resource_id[id(self)] = self
         else:  # binding to object, remove instance from unbound dict
             self.__class__.__unbound_resource_id.pop(id(self), None)
-        self.__dict__['object_id'] = value
+        self.__dict__['_object_id'] = value
 
     @property
     def id(self):

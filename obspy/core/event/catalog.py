@@ -854,7 +854,7 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
         if len(pathnames) > 1:
             for filename in pathnames[1:]:
                 catalog.extend(_read(filename, format, **kwargs).events)
-        catalog.resource_id.bind_resource_ids()
+        ResourceIdentifier.bind_resource_ids()
         return catalog
 
 

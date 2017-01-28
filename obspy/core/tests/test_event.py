@@ -142,8 +142,8 @@ class EventTestCase(unittest.TestCase):
         self.assertIsNot(rid1, rid3)
         self.assertEqual(rid1, rid3)
         # make sure the object_id on the resource_ids are not the same
-        self.assertEqual(rid1.object_id, rid2.object_id)
-        self.assertNotEqual(rid1.object_id, rid3.object_id)
+        self.assertEqual(rid1._object_id, rid2._object_id)
+        self.assertNotEqual(rid1._object_id, rid3._object_id)
         # copy should point to the same object, deep copy should not
         self.assertIs(rob1, rob2)
         self.assertIsNot(rob1, rob3)
@@ -828,7 +828,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         rid2 = ResourceIdentifier(uri, referred_object=obj2)
         self.assertFalse(rid1.get_referred_object() is
                          rid2.get_referred_object())
-        self.assertNotEqual(rid1.object_id, rid2.object_id)
+        self.assertNotEqual(rid1._object_id, rid2._object_id)
         del obj1
         warnings.simplefilter('default')
         with warnings.catch_warnings(record=True) as w:
@@ -838,7 +838,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         # now both rids should return the same object
         self.assertIs(rid1.get_referred_object(), rid2.get_referred_object())
         # the object id should now be bound to obj2
-        self.assertEqual(rid1.object_id, rid2.object_id)
+        self.assertEqual(rid1._object_id, rid2._object_id)
 
     def test_resources_in_global_dict_get_garbage_collected(self):
         """
