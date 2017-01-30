@@ -4,25 +4,32 @@ The obspy.clients.neic.client test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
 import unittest
 
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.vcr import vcr
 from obspy.clients.neic import Client
+
+
+# unix timestamp where this test has been recorded via vcr - needs to be set
+# to newer timestamp if recorded later again or executing without vcr
+VCR_TIMESTAMP = 1485568123.7079487
 
 
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.neic.client.Client.
     """
+    @vcr
     def test_get_waveform(self):
         """
         Tests get_waveforms method. Tests against get_waveforms_nscl method.
         """
         client = Client(host="137.227.224.97", port=2061)
         # now - 5 hours
-        t = UTCDateTime() - 5 * 60 * 60
+        t = UTCDateTime(VCR_TIMESTAMP) - 5 * 60 * 60
         duration = 1.0
         st = client.get_waveforms_nscl("IUANMO BH.00", t, duration)
         # try a series of requests, compare against get_waveforms_nscl
@@ -36,13 +43,14 @@ class ClientTestCase(unittest.TestCase):
                                        endtime=t + duration)
             self.assertEqual(st, st2)
 
+    @vcr
     def test_get_waveform_nscl(self):
         """
         Tests get_waveforms_nscl method.
         """
         client = Client(host="137.227.224.97", port=2061)
         # now - 5 hours
-        t = UTCDateTime() - 5 * 60 * 60
+        t = UTCDateTime(VCR_TIMESTAMP) - 5 * 60 * 60
         duration_long = 3600.0
         duration = 1.0
         components = ["1", "2", "Z"]

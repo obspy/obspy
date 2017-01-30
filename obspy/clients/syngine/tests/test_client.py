@@ -15,6 +15,7 @@ import numpy as np
 import obspy
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.vcr import vcr
 from obspy.clients.syngine import Client
 from obspy.clients.base import DEFAULT_TESTING_USER_AGENT, ClientHTTPException
 
@@ -58,6 +59,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(p.call_args[1]["headers"],
                          {'User-Agent': DEFAULT_TESTING_USER_AGENT})
 
+    @vcr
     def test_get_model_info(self):
         """
         Actual test for the get_model_info() method.
@@ -84,6 +86,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(p.call_args[1]["headers"],
                          {'User-Agent': DEFAULT_TESTING_USER_AGENT})
 
+    @vcr
     def test_get_available_models(self):
         models = self.c.get_available_models()
         self.assertIsInstance(models, dict)
@@ -249,6 +252,7 @@ class ClientTestCase(unittest.TestCase):
             "format": native_str("miniseed"),
             "sourceforce": "3.32,4.23,5.11"})
 
+    @vcr
     def test_error_handling(self):
         """
         Tests the error handling. The clients just pass on most things to
@@ -276,7 +280,7 @@ class ClientTestCase(unittest.TestCase):
 
         payload = []
 
-        def side_effect(*args, **kwargs):
+        def side_effect(*_args, **kwargs):
             payload[:] = [kwargs["data"].decode()]
             return r
 
@@ -340,6 +344,7 @@ class ClientTestCase(unittest.TestCase):
             "12 13.1 LOCCODE=00",
             "12 13.1 NETCODE=IU STACODE=ANMO LOCCODE=00\n"]))
 
+    @vcr
     def test_get_waveforms(self):
         """
         Test get_waveforms() and get_waveforms_bulk() by actually downloading
@@ -413,6 +418,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(st_bulk), 1)
         self.assertEqual(st, st_bulk)
 
+    @vcr
     def test_saving_directly_to_file(self):
         # Save to a filename.
         with NamedTemporaryFile() as tf:
@@ -440,6 +446,7 @@ class ClientTestCase(unittest.TestCase):
             st = obspy.read(buf)
             self.assertEqual(len(st), 1)
 
+    @vcr
     def test_reading_saczip_files(self):
         st = self.c.get_waveforms(
             model="test", network="IU", station="ANMO",
@@ -467,7 +474,7 @@ class ClientTestCase(unittest.TestCase):
 
         payload = []
 
-        def side_effect(*args, **kwargs):
+        def side_effect(*_args, **kwargs):
             payload[:] = [kwargs["data"]]
             return r
 

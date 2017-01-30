@@ -13,6 +13,7 @@ import numpy as np
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.vcr import vcr
 from obspy.clients.iris import Client
 
 
@@ -24,6 +25,7 @@ class ClientTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.dirname(__file__)
 
+    @vcr
     def test_sacpz(self):
         """
         Fetches SAC poles and zeros information.
@@ -51,6 +53,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertIn(b"* STATION    (KSTNM): LON", result)
         self.assertIn(b"* LOCATION   (KHOLE):   ", result)
 
+    @vcr
     def test_distaz(self):
         """
         Tests distance and azimuth calculation between two points on a sphere.
@@ -76,6 +79,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(Exception, client.distaz, stalat=1.1, stalon=1.2)
         self.assertRaises(Exception, client.distaz, 1.1, 1.2)
 
+    @vcr
     def test_flinnengdahl(self):
         """
         Tests calculation of Flinn-Engdahl region code or name.
@@ -109,6 +113,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(Exception, client.flinnengdahl, lat=0, lon=-180.1)
         self.assertRaises(Exception, client.flinnengdahl, lat=0, lon=180.1)
 
+    @vcr
     def test_traveltime(self):
         """
         Tests calculation of travel-times for seismic phases.
@@ -119,6 +124,7 @@ class ClientTestCase(unittest.TestCase):
             staloc=[(-33.45, -70.67), (47.61, -122.33), (35.69, 139.69)])
         self.assertTrue(result.startswith(b'Model: iasp91'))
 
+    @vcr
     def test_evalresp(self):
         """
         Tests evaluating instrument response information.
@@ -214,6 +220,7 @@ class ClientTestCase(unittest.TestCase):
         np.testing.assert_array_equal(
             data[0], [1.00000000e-05, -1.05589600e+04, 1.47305400e+02])
 
+    @vcr
     def test_resp(self):
         """
         Tests resp Web service interface.
@@ -239,6 +246,7 @@ class ClientTestCase(unittest.TestCase):
         result = client.resp("IU", "ANMO", "*", "*", dt)
         self.assertIn(b'B050F03     Station:     ANMO', result)
 
+    @vcr
     def test_timeseries(self):
         """
         Tests timeseries Web service interface.

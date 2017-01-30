@@ -11,7 +11,7 @@ The obspy.clients.fdsn.client test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
 import io
 import os
@@ -27,6 +27,7 @@ import requests
 from obspy import UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.vcr import vcr
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
@@ -337,6 +338,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(set(self.client.services["available_event_catalogs"]),
                          set(("GCMT", "ISC", "NEIC PDE")))
 
+    @vcr
     def test_iris_event_contributors_availability(self):
         """
         Tests the parsing of the available event contributors.
@@ -371,6 +373,7 @@ class ClientTestCase(unittest.TestCase):
                                                      "ISC", "UofW",
                                                      "NEIC PDE"))})
 
+    @vcr
     def test_iris_example_queries_event(self):
         """
         Tests the (sometimes modified) example queries given on the IRIS
@@ -420,6 +423,7 @@ class ClientTestCase(unittest.TestCase):
             # does not only check the preferred magnitude..
             self.assertTrue(any(m.mag >= 3.999 for m in event.magnitudes))
 
+    @vcr
     def test_iris_example_queries_station(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
@@ -492,6 +496,7 @@ class ClientTestCase(unittest.TestCase):
                 self.assertEqual(net.code, "IU")
                 self.assertTrue(sta.code.startswith("A"))
 
+    @vcr
     def test_iris_example_queries_dataselect(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
@@ -530,6 +535,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(got, expected, "Dataselect failed for query %s" %
                              repr(query))
 
+    @vcr
     def test_authentication(self):
         """
         Test dataselect with authentication.
@@ -618,6 +624,7 @@ class ClientTestCase(unittest.TestCase):
         finally:
             sys.stdout = sys.__stdout__
 
+    @vcr
     def test_str_method(self):
         got = str(self.client)
         expected = (
@@ -633,6 +640,7 @@ class ClientTestCase(unittest.TestCase):
         expected = normalize_version_number(expected)
         self.assertEqual(got, expected, failmsg(got, expected))
 
+    @vcr
     def test_dataselect_bulk(self):
         """
         Test bulk dataselect requests, POSTing data to server. Also tests
@@ -689,6 +697,7 @@ class ClientTestCase(unittest.TestCase):
             got = client.get_waveforms_bulk(io.StringIO(bulk))
             self.assertEqual(got, expected, failmsg(got, expected))
 
+    @vcr
     def test_station_bulk(self):
         """
         Test bulk station requests, POSTing data to server. Also tests
@@ -752,6 +761,7 @@ class ClientTestCase(unittest.TestCase):
                         "IU.HRV..LHN"]))
         return
 
+    @vcr
     def test_get_waveform_attach_response(self):
         """
         minimal test for automatic attaching of metadata
@@ -937,7 +947,7 @@ class ClientTestCase(unittest.TestCase):
         base_url = "http://example.com"
 
         # More extensive mock setup simulation service discovery.
-        def custom_side_effects(*args, **kwargs):
+        def custom_side_effects(*args, **_kwargs):
             if "version" in args[0]:
                 return 200, "1.0.200"
             elif "event" in args[0]:

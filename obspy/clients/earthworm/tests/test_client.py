@@ -11,8 +11,13 @@ import unittest
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import skip_on_network_error
+from obspy.core.util.vcr import vcr
 from obspy.clients.earthworm import Client
+
+
+# unix timestamp where this test has been recorded via vcr - needs to be set
+# to newer timestamp if recorded later again or executing without vcr
+VCR_TIMESTAMP = 1485568123.7079487
 
 
 class ClientTestCase(unittest.TestCase):
@@ -28,13 +33,13 @@ class ClientTestCase(unittest.TestCase):
         # restore default precision of all UTCDateTime objects
         UTCDateTime.DEFAULT_PRECISION = 6
 
-    @skip_on_network_error
+    @vcr
     def test_get_waveform(self):
         """
         Tests get_waveforms method.
         """
         client = self.client
-        start = UTCDateTime() - 3600
+        start = UTCDateTime(VCR_TIMESTAMP) - 3600
         end = start + 1.0
         # example 1 -- 1 channel, cleanup
         stream = client.get_waveforms('AV', 'ACH', '', 'EHE', start, end)
@@ -81,14 +86,14 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(stream[1].stats.channel, 'EHN')
         self.assertEqual(stream[2].stats.channel, 'EHE')
 
-    @skip_on_network_error
+    @vcr
     def test_save_waveform(self):
         """
         Tests save_waveforms method.
         """
         # initialize client
         client = self.client
-        start = UTCDateTime() - 3600
+        start = UTCDateTime(VCR_TIMESTAMP) - 3600
         end = start + 1.0
         with NamedTemporaryFile() as tf:
             testfile = tf.name
@@ -109,7 +114,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(trace.stats.location, '')
         self.assertEqual(trace.stats.channel, 'EHE')
 
-    @skip_on_network_error
+    @vcr
     def test_availability(self):
         data = self.client.get_availability()
         seeds = ["%s.%s.%s.%s" % (d[0], d[1], d[2], d[3]) for d in data]
