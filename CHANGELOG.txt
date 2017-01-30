@@ -5,6 +5,8 @@
      dayplot of a trace, see #1566)
    * properly pass through kwargs from Stream.detrend() to Trace.detrend()
      (see #1607)
+   * Correctly splitting masked arrays in Trace objects for a couple of corner
+     cases (see #1650, #1653).
  - obspy.core.event.source:
    * Fix `farfield` if input `points` is a 2D array. (see #1499, #1553)
  - obspy.clients.earthworm:
