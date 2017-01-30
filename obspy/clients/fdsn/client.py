@@ -45,7 +45,7 @@ from obspy import UTCDateTime, read_inventory
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
-                     FDSNRedirectException)
+                     FDSNRedirectException, FDSNNoDataException)
 from .wadl_parser import WADLParser
 
 
@@ -1312,7 +1312,7 @@ class Client(object):
                 server_info = None
         # No data.
         if code == 204:
-            raise FDSNException("No data available for request.", server_info)
+            raise FDSNNoDataException("No data available for request.", server_info)
         elif code == 400:
             msg = ("Bad request. If you think your request was valid "
                    "please contact the developers.")
