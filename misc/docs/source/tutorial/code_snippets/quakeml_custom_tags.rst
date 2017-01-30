@@ -158,3 +158,25 @@ retrieved in the following way:
 
     12300000000.0
     true
+
+The order of extra tags can be controlled by using an
+:py:class:`~collections.OrderedDict` for the extra attribute (using a plain
+`dict` or :class:`~obspy.core.util.attribdict.AttribDict` can result in
+arbitrary order of tags):
+
+.. code-block:: python
+
+    from collections import OrderedDict
+    from obspy.core.event import Catalog, Event
+
+    ns = 'http://some-page.de/xmlns/1.0'
+
+    my_tag1 = {'namespace': ns, 'value': 'some value 1'}
+    my_tag2 = {'namespace': ns, 'value': 'some value 2'}
+
+    event = Event()
+    cat = Catalog(events=[event])
+    event.extra = OrderedDict()
+    event.extra['myFirstExtraTag'] = my_tag2
+    event.extra['mySecondExtraTag'] = my_tag1
+    cat.write('my_catalog.xml', 'QUAKEML')

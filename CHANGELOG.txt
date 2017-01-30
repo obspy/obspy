@@ -25,6 +25,8 @@ master: (doi: 10.5281/zenodo.165135)
      objects (see #1514).
    * Instrument responses can now also be calculated for a given list of
      frequencies (see #1598).
+   * Order of extra tags for event type classes serialized to QuakeML can now
+     be controlled by using an OrderedDict (see #1617)
  - obspy.clients.fdsn:
    * empty SEED codes (e.g. ``network=''``) will now be properly sent to the
      server as options and not omitted, which led to wildcard matching (for
