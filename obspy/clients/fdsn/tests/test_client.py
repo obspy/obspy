@@ -1165,7 +1165,7 @@ class ClientTestCase(unittest.TestCase):
                     self.client, '_download') as m:
                 try:
                     self.client.get_waveforms(**kwargs_)
-                except Exception as e:
+                except Exception:
                     # Mocking returns something different.
                     continue
                 # URL downloading comes before the error and can be checked now
