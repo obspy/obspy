@@ -136,7 +136,7 @@ class Field(object):
         self.compact = blockette.compact
         try:
             result = getattr(blockette, self.attribute_name)
-        except:
+        except Exception:
             if blockette.strict:
                 msg = "Missing attribute %s in Blockette %s"
                 raise Exception(msg % (self.name, blockette))
@@ -159,7 +159,7 @@ class Field(object):
             return []
         try:
             result = getattr(blockette, self.attribute_name)
-        except:
+        except Exception:
             if blockette.strict:
                 msg = "Missing attribute %s in Blockette %s"
                 raise Exception(msg % (self.name, blockette))
@@ -171,7 +171,7 @@ class Field(object):
         if self.optional:
             try:
                 result = result.strip()
-            except:
+            except Exception:
                 pass
             if not result:
                 # debug
@@ -200,7 +200,7 @@ class Field(object):
         """
         try:
             text = xml_doc.xpath(self.field_name + "/text()")[pos]
-        except:
+        except Exception:
             setattr(blockette, self.attribute_name, self.default_value)
             # debug
             if blockette.debug:
@@ -239,7 +239,7 @@ class Integer(Field):
                 return [int(_i) for _i in value]
             else:
                 return int(value)
-        except:
+        except Exception:
             if not self.strict:
                 return self.default_value
             msg = "No integer value found for %s." % self.attribute_name
@@ -253,7 +253,7 @@ class Integer(Field):
         format_str = "%%0%dd" % self.length
         try:
             temp = int(data)
-        except:
+        except Exception:
             msg = "No integer value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
         result = format_str % temp
@@ -282,7 +282,7 @@ class Float(Field):
                 return [float(_i) for _i in value]
             else:
                 return float(value)
-        except:
+        except Exception:
             if not self.strict:
                 return self.default_value
             msg = "No float value found for %s." % self.attribute_name
@@ -296,7 +296,7 @@ class Float(Field):
         format_str = "%%0%ds" % self.length
         try:
             temp = float(data)
-        except:
+        except Exception:
             msg = "No float value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
         # special format for exponential output
@@ -448,7 +448,7 @@ class Loop(Field):
         """
         try:
             self.length = int(getattr(blockette, self.index_field))
-        except:
+        except Exception:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         # loop over number of entries
@@ -474,7 +474,7 @@ class Loop(Field):
         """
         try:
             self.length = int(getattr(blockette, self.index_field))
-        except:
+        except Exception:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         # loop over number of entries
@@ -492,7 +492,7 @@ class Loop(Field):
             return []
         try:
             self.length = int(getattr(blockette, self.index_field))
-        except:
+        except Exception:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         if self.length == 0 and self.optional:
@@ -535,7 +535,7 @@ class Loop(Field):
         """
         try:
             self.length = int(getattr(blockette, self.index_field))
-        except:
+        except Exception:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         if self.length == 0:

@@ -65,7 +65,7 @@ def unicode_csv_reader(unicode_csv_data, **kwargs):
     for row in csv_reader:
         try:
             yield [str(cell, "utf8") for cell in row]
-        except:
+        except Exception:
             yield [str(cell) for cell in row]
 
 
@@ -91,13 +91,13 @@ def is_fdsn_station_text_file(path_or_file_object):
         else:
             with open(path_or_file_object, "rt", encoding="utf8") as fh:
                 first_line = fh.readline()
-    except:
+    except Exception:
         return False
 
     # Attempt to move the file pointer to the old position.
     try:
         path_or_file_object.seek(cur_pos, 0)
-    except:
+    except Exception:
         pass
 
     first_line = first_line.strip()
@@ -105,7 +105,7 @@ def is_fdsn_station_text_file(path_or_file_object):
     # Attempt to decode.
     try:
         first_line = first_line.decode("utf-8")
-    except:
+    except Exception:
         pass
 
     if not first_line.startswith("#"):

@@ -107,7 +107,7 @@ def _internal_is_sac(buf):
             return False
         if lcalda != 0 and lcalda != 1 and lcalda != -12345:
             return False
-    except:
+    except Exception:
         return False
     finally:
         # Reset buffer head position after reading.
@@ -160,7 +160,7 @@ def _internal_is_sac_xy(buf):
             npts = int(hdcards[15].split()[-1])
             # read in the seismogram
             seis = buf.read(-1).split()
-        except:
+        except Exception:
             return False
         # check that npts header value and seismogram length are consistent
         if npts != len(seis):

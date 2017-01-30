@@ -64,7 +64,7 @@ def _is_sfile(sfile):
         try:
             with open(sfile, 'r') as f:
                 head_line = _get_headline(f)
-        except:
+        except Exception:
             return False
     else:
         head_line = _get_headline(sfile)
@@ -81,7 +81,7 @@ def _is_sfile(sfile):
                         int(head_line[13:15]), sfile_seconds,
                         int(head_line[19:20]) * 100000)
             return True
-        except:
+        except Exception:
             return False
     else:
         return False
@@ -110,7 +110,7 @@ def _int_conv(string):
     """
     try:
         intstring = int(string)
-    except:
+    except Exception:
         intstring = None
     return intstring
 
@@ -129,7 +129,7 @@ def _float_conv(string):
     """
     try:
         floatstring = float(string)
-    except:
+    except Exception:
         floatstring = None
     return floatstring
 
@@ -266,7 +266,7 @@ def _readheader(f):
                                                 int(topline[19:20]) *
                                                 100000)\
             + add_seconds
-    except:
+    except Exception:
         NordicParsingError("Couldn't read a date from sfile")
     # new_event.loc_mod_ind=topline[20]
     new_event.event_descriptions.append(EventDescription())
@@ -444,10 +444,10 @@ def read_nordic(select_file, return_wavnames=False):
     if not hasattr(select_file, "readline"):
         try:
             f = open(select_file, 'r')
-        except:
+        except Exception:
             try:
                 f = select_file.decode()
-            except:
+            except Exception:
                 f = str(select_file)
     else:
         f = select_file
@@ -676,7 +676,7 @@ def blanksfile(wavefile, evtype, userid, overwrite=False, evtime=None):
         try:
             st = read(wavefile)
             evtime = st[0].stats.starttime
-        except:
+        except Exception:
             raise NordicParsingError('Wavefile: ' + wavefile +
                                      ' is invalid, try again with real data.')
     # Check that user ID is the correct length

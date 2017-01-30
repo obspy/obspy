@@ -784,7 +784,7 @@ class Response(ComparingObject):
         def get_unit_mapping(key):
             try:
                 key = key.upper()
-            except:
+            except Exception:
                 pass
             units_mapping = {
                 "M": ew.ENUM_UNITS["DIS"],

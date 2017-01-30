@@ -70,13 +70,13 @@ def _xml_doc_from_anything(source):
     """
     try:
         xml_doc = etree.parse(source)
-    except:
+    except Exception:
         try:
             xml_doc = etree.fromstring(source)
-        except:
+        except Exception:
             try:
                 xml_doc = etree.fromstring(source.encode())
-            except:
+            except Exception:
                 raise ValueError("Could not parse '%s' to an etree element." %
                                  source)
     return xml_doc
@@ -105,7 +105,7 @@ def _is_quakeml(filename):
 
     try:
         xml_doc = _xml_doc_from_anything(filename)
-    except:
+    except Exception:
         return False
     finally:
         if file_like_object:
@@ -118,7 +118,7 @@ def _is_quakeml(filename):
         else:
             namespace = _get_first_child_namespace(xml_doc)
         xml_doc.xpath('q:eventParameters', namespaces={"q": namespace})[0]
-    except:
+    except Exception:
         return False
     return True
 
@@ -176,7 +176,7 @@ class Unpickler(object):
             return None
         try:
             return convert_to(text)
-        except:
+        except Exception:
             msg = "Could not convert %s to type %s. Returning None."
             warnings.warn(msg % (text, convert_to))
         return None
@@ -726,7 +726,7 @@ class Unpickler(object):
         # optional attribute
         try:
             obj.preferred_plane = int(sub_el.get('preferredPlane'))
-        except:
+        except Exception:
             obj.preferred_plane = None
         self._extra(sub_el, obj)
         return obj
@@ -1081,7 +1081,7 @@ class Pickler(object):
     def _id(self, obj):
         try:
             return obj.get_quakeml_uri()
-        except:
+        except Exception:
             return ResourceIdentifier().get_quakeml_uri()
 
     def _str(self, value, root, tag, always_create=False, attrib=None):

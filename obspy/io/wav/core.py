@@ -59,7 +59,7 @@ def _is_wav(filename):
                 fh.getparams()
         finally:
             fh.close()
-    except:
+    except Exception:
         return False
     if width in [1, 2, 4]:
         return True

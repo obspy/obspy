@@ -26,12 +26,12 @@ For more information visit https://www.obspy.org.
 # setuptools.
 try:
     import setuptools  # @UnusedImport # NOQA
-except:
+except ImportError:
     pass
 
 try:
     import numpy  # @UnusedImport # NOQA
-except:
+except ImportError:
     msg = ("No module named numpy. "
            "Please install numpy first, it is needed before installing ObsPy.")
     raise ImportError(msg)
@@ -93,10 +93,10 @@ KEYWORDS = [
     'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'observatory', 'ORFEUS', 'PDAS',
     'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
     'REFTEK130', 'RT-130', 'RESP', 'response file', 'RT', 'SAC', 'sc3ml',
-    'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 
-    'Seismic Handler', 'seismology', 'seismogram', 'seismograms', 
+    'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub',
+    'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
     'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
-    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 
+    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
     'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston',
     'XML-SEED', 'XSEED']
 
@@ -758,24 +758,24 @@ if __name__ == '__main__':
         path = os.path.join(SETUP_DIRECTORY, 'build')
         try:
             shutil.rmtree(path)
-        except:
+        except Exception:
             pass
         # delete all shared libs from lib directory
         path = os.path.join(SETUP_DIRECTORY, 'obspy', 'lib')
         for filename in glob.glob(path + os.sep + '*.pyd'):
             try:
                 os.remove(filename)
-            except:
+            except Exception:
                 pass
         for filename in glob.glob(path + os.sep + '*.so'):
             try:
                 os.remove(filename)
-            except:
+            except Exception:
                 pass
         path = os.path.join(SETUP_DIRECTORY, 'obspy', 'taup', 'data', 'models')
         try:
             shutil.rmtree(path)
-        except:
+        except Exception:
             pass
     else:
         setupPackage()

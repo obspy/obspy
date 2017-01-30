@@ -67,7 +67,7 @@ def _is_css(filename):
                 assert(line[71:72] == b".")
                 UTCDateTime(float(line[61:78]))
                 assert(line[143:145] in DTYPE)
-    except:
+    except Exception:
         return False
     return True
 
@@ -101,7 +101,7 @@ def _is_nnsa_kb_core(filename):
                 assert(line[73:74] == b".")
                 UTCDateTime(float(line[62:79]))
                 assert(line[144:146] in DTYPE)
-    except:
+    except Exception:
         return False
     return True
 

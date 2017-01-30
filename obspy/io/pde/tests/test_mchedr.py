@@ -20,7 +20,7 @@ try:
     version = float(__version__.rsplit('.', 1)[0])
     if version >= 2.3:
         IS_RECENT_LXML = True
-except:
+except Exception:
     pass
 
 

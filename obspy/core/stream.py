@@ -2611,13 +2611,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if back_azimuth is None:
             try:
                 back_azimuth = self[0].stats.back_azimuth
-            except:
+            except Exception:
                 msg = "No back-azimuth specified."
                 raise TypeError(msg)
         if len(input_components) == 3 and inclination is None:
             try:
                 inclination = self[0].stats.inclination
-            except:
+            except Exception:
                 msg = "No inclination specified."
                 raise TypeError(msg)
         # Do one of the two-component rotations.
@@ -3120,12 +3120,12 @@ def _is_pickle(filename):  # @UnusedVariable
         try:
             with open(filename, 'rb') as fp:
                 st = pickle.load(fp)
-        except:
+        except Exception:
             return False
     else:
         try:
             st = pickle.load(filename)
-        except:
+        except Exception:
             return False
     return isinstance(st, Stream)
 

@@ -228,7 +228,7 @@ class BeachballTestCase(unittest.TestCase):
         # Initialize figure
         try:
             plt.close("all")
-        except:
+        except Exception:
             pass
         fig = plt.figure(figsize=(6, 6), dpi=300)
         ax = fig.add_subplot(111, aspect='equal')
@@ -263,7 +263,7 @@ class BeachballTestCase(unittest.TestCase):
         # Initialize figure
         try:
             plt.close("all")
-        except:
+        except Exception:
             pass
         fig = plt.figure()
         ax = fig.add_subplot(111)

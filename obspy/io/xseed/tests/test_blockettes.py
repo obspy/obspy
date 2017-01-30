@@ -180,7 +180,7 @@ class BlocketteTestCase(unittest.TestCase):
             # Check whether the blockette class can be loaded.
             try:
                 __import__('obspy.io.xseed.blockette.blockette' + blkt_number)
-            except:
+            except Exception:
                 msg = 'Failed to import blockette', blkt_number
                 raise ImportError(msg)
             # Parse the file.

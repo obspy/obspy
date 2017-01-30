@@ -37,7 +37,7 @@ def get_json(r):
     c = r.content
     try:
         c = c.decode()
-    except:
+    except Exception:
         pass
     return json.loads(c)
 
@@ -49,7 +49,7 @@ def get_text(r):
     c = r.content
     try:
         c = c.decode()
-    except:
+    except Exception:
         pass
     return c
 
@@ -183,7 +183,7 @@ class Client(WaveformClient, HTTPClient):
             elif isinstance(value, (str, native_str)):
                 try:
                     value = obspy.UTCDateTime(value)
-                except:
+                except Exception:
                     pass
             # Last but not least just try to pass it to the datetime
             # constructor without catching the error.
@@ -213,7 +213,7 @@ class Client(WaveformClient, HTTPClient):
             # it's a saczip file.
             try:
                 st = obspy.read(buf)
-            except:
+            except Exception:
                 st = obspy.Stream()
                 # Seek as some bytes might have been already read.
                 buf.seek(0, 0)

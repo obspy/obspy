@@ -111,7 +111,7 @@ class Parser(object):
         try:
             if len(self.stations) == 0:
                 return 'No data'
-        except:
+        except Exception:
             return 'No data'
         ret_str = ""
         inv = self.get_inventory()
@@ -170,11 +170,11 @@ class Parser(object):
             else:
                 try:
                     data = data.encode()
-                except:
+                except Exception:
                     pass
                 try:
                     data = io.BytesIO(data)
-                except:
+                except Exception:
                     raise IOError("data is neither filename nor valid URL")
         # but could also be a big string with data
         elif isinstance(data, bytes):
@@ -1050,7 +1050,7 @@ class Parser(object):
             for blkt in station:
                 try:
                     fields = blockettes[blkt.blockette_type]
-                except:
+                except Exception:
                     continue
                 for field in fields:
                     setattr(blkt, blkt.get_fields()[field - 2].field_name,
@@ -1099,7 +1099,7 @@ class Parser(object):
             try:
                 blockette_id = int(data.read(3))
                 blockette_length = int(data.read(4))
-            except:
+            except Exception:
                 break
             data.seek(data.tell() - 7)
             if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
@@ -1277,12 +1277,12 @@ def is_xseed(path_or_file_object):
             return False
     try:
         root = xmldoc.getroot()
-    except:
+    except Exception:
         return False
     # check tag of root element
     try:
         assert root.tag == "xseed"
-    except:
+    except Exception:
         return False
     return True
 

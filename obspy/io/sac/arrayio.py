@@ -413,7 +413,7 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
             np.savetxt(f, np.reshape(data[0:5 * rows], (rows, 5)),
                        fmt=native_str("%#15.7g"), delimiter='')
             np.savetxt(f, data[5 * rows:], delimiter=b'\t')
-        except:
+        except Exception:
             f.close()
             raise SacIOError("Cannot write trace values: " + f.name)
 

@@ -125,7 +125,7 @@ class WaveformChannel(Base):
     def get_preview(self, apply_calibration=False):
         try:
             data = np.loads(self.preview)
-        except:
+        except Exception:
             data = np.array([])
         if apply_calibration:
             data = data * self.calib

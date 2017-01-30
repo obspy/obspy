@@ -14,7 +14,7 @@ try:
         import mock  # NOQA
     else:
         from unittest import mock  # NOQA
-except:
+except ImportError:
     pass
 
 if PY2:

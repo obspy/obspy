@@ -1499,7 +1499,7 @@ class TraceTestCase(unittest.TestCase):
                 tr.simulate(seedresp={"filename": "RESP.dummy",
                                       "units": "VEL",
                                       "date": tr.stats.starttime})
-        except:
+        except Exception:
             pass
 
         self.assertEqual(patch.call_count, 1)

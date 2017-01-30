@@ -61,7 +61,7 @@ def datetime_2_string(dt, compact=False):
     try:
         dt = UTCDateTime(dt)
         return dt.format_seed(compact)
-    except:
+    except Exception:
         raise Exception("Invalid datetime %s: %s" % (type(dt), str(dt)))
 
 
@@ -165,7 +165,7 @@ def blockette_34_lookup(abbr, lookup):
         l2 = lookup_code(abbr, 34, 'unit_description', 'unit_lookup_code',
                          lookup)
         return l1 + ' - ' + l2
-    except:
+    except Exception:
         msg = '\nWarning: Abbreviation reference not found.'
         sys.stdout.write(msg)
         return 'No Abbreviation Referenced'
@@ -177,7 +177,7 @@ def set_xpath(blockette, identifier):
     """
     try:
         identifier = int(identifier)
-    except:
+    except Exception:
         msg = 'X-Path identifier needs to be an integer.'
         raise TypeError(msg)
     abbr_path = '/xseed/abbreviation_dictionary_control_header/'

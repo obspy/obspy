@@ -222,7 +222,7 @@ class MomentTensor:
         if len(mech) == 3 or len(mech) == 4:
             try:
                 [float(val) for val in mech]
-            except:
+            except Exception:
                 msg = "angles must be given as floats, separated by commas"
                 sys.exit('\n  ERROR -  %s\n  ' % msg)
 
@@ -1810,7 +1810,7 @@ def fancy_matrix(m_in):
                 out += "  \\ %5.2F %5.2F %5.2F /\n" % \
                     (m[2, 0], m[2, 1], m[2, 2])
                 return out
-    except:
+    except Exception:
         pass
 
     return "\n  / %5.2F %5.2F %5.2F \\\n" % (m[0, 0], m[0, 1], m[0, 2]) + \
@@ -1891,30 +1891,30 @@ class BeachBall:
         if self._plot_outfile_format == 'svg':
             try:
                 matplotlib.use('SVG')
-            except:
+            except Exception:
                 matplotlib.use('Agg')
         elif self._plot_outfile_format == 'pdf':
             try:
                 matplotlib.use('PDF')
-            except:
+            except Exception:
                 matplotlib.use('Agg')
                 pass
         elif self._plot_outfile_format == 'ps':
             try:
                 matplotlib.use('PS')
-            except:
+            except Exception:
                 matplotlib.use('Agg')
                 pass
         elif self._plot_outfile_format == 'eps':
             try:
                 matplotlib.use('Agg')
-            except:
+            except Exception:
                 matplotlib.use('PS')
                 pass
         elif self._plot_outfile_format == 'png':
             try:
                 matplotlib.use('AGG')
-            except:
+            except Exception:
                 mp_out = matplotlib.use('GTKCairo')
                 if mp_out:
                     mp_out2 = matplotlib.use('Cairo')
@@ -1935,7 +1935,7 @@ class BeachBall:
             plotfig.savefig(outfile_abs_name, dpi=self._plot_dpi,
                             transparent=True, facecolor='k',
                             format=outfile_format)
-        except:
+        except Exception:
             print('ERROR!! -- Saving of plot not possible')
             return
         plt.close(667)
@@ -2346,7 +2346,7 @@ class BeachBall:
                                 self._plot_outfile_format, dpi=self._plot_dpi,
                                 transparent=True,
                                 format=self._plot_outfile_format)
-            except:
+            except Exception:
                 print('saving of plot not possible')
 
         plt.show()
@@ -2402,7 +2402,7 @@ class BeachBall:
                             self._plot_outfile_format, dpi=self._plot_dpi,
                             transparent=True,
                             format=self._plot_outfile_format)
-            except:
+            except Exception:
                 print('saving of plot not possible')
         plt.show()
 
@@ -3669,7 +3669,7 @@ class BeachBall:
                                 self._plot_outfile_format, dpi=self._plot_dpi,
                                 transparent=True,
                                 format=self._plot_outfile_format)
-            except:
+            except Exception:
                 print('saving of plot not possible')
         plt.show()
         plt.close('all')
@@ -4089,7 +4089,7 @@ def main(argv=None):
                 decomp = MT.get_full_decomposition()
                 try:
                     print(decomp)
-                except:
+                except Exception:
                     print(decomp.replace('°', ' deg'))
                 return
             else:
@@ -4200,7 +4200,7 @@ def main(argv=None):
                     raise
                 consistent_kwargs_dict['plot_viewpoint'] = \
                     [float(vp[0]), float(vp[1]), float(vp[2])]
-            except:
+            except Exception:
                 pass
 
         if args.GMT_projection:
@@ -4216,7 +4216,7 @@ def main(argv=None):
                         do_allowed_projections[gmtp]
                 else:
                     consistent_kwargs_dict['plot_projection'] = 'stereo'
-            except:
+            except Exception:
                 pass
 
         consistent_kwargs_dict['_GMT_scaling'] = args.GMT_scaling
@@ -4392,7 +4392,7 @@ def main(argv=None):
                     consistent_kwargs_dict['plot_outfile_format'] = \
                         lo_possible_formats[0]
 
-            except:
+            except Exception:
                 msg = 'please provide valid filename: <name>.<format>  !!\n'
                 msg += ' <format> must be svg, png, eps, pdf, or ps '
                 exit(msg)
@@ -4421,7 +4421,7 @@ def main(argv=None):
                     raise
                 consistent_kwargs_dict['plot_viewpoint'] = \
                     [float(vp[0]), float(vp[1]), float(vp[2])]
-            except:
+            except Exception:
                 pass
 
         if args.plot_projection:
@@ -4437,7 +4437,7 @@ def main(argv=None):
                         do_allowed_projections[ppl]
                 else:
                     consistent_kwargs_dict['plot_projection'] = 'stereo'
-            except:
+            except Exception:
                 pass
 
         if args.plot_show_upper_hemis:
@@ -4458,7 +4458,7 @@ def main(argv=None):
                     consistent_kwargs_dict['plot_size'] = 5
                 consistent_kwargs_dict['plot_aux_plot_size'] = \
                     consistent_kwargs_dict['plot_size']
-            except:
+            except Exception:
                 pass
 
         if args.plot_pressure_colour:
@@ -4480,7 +4480,7 @@ def main(argv=None):
                          float(sec_colour_raw[2]) / 255.)
                 else:
                     raise
-            except:
+            except Exception:
                 pass
 
         if args.plot_tension_colour:
@@ -4502,7 +4502,7 @@ def main(argv=None):
                          float(sec_colour_raw[2]) / 255.)
                 else:
                     raise
-            except:
+            except Exception:
                 pass
 
         if args.plot_total_alpha:
@@ -4547,16 +4547,16 @@ def main(argv=None):
                              float(sec_colour_raw[2]) / 255.)
                     else:
                         raise
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_faultplane_colour'] = 'k'
 
                 try:
                     if 0 <= float(fp_args[3]) <= 1:
                         consistent_kwargs_dict['plot_faultplane_alpha'] = \
                             float(fp_args[3])
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_faultplane_alpha'] = 1
-            except:
+            except Exception:
                 pass
 
         if args.plot_show_faultplanes:
@@ -4597,16 +4597,16 @@ def main(argv=None):
                              float(sec_colour_raw[2]) / 255.)
                     else:
                         raise
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_outerline_colour'] = 'k'
 
                 try:
                     if 0 <= float(fp_args[2]) <= 1:
                         consistent_kwargs_dict['plot_outerline_alpha'] = \
                             float(fp_args[2])
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_outerline_alpha'] = 1
-            except:
+            except Exception:
                 pass
 
         if args.plot_nodalline:
@@ -4637,15 +4637,15 @@ def main(argv=None):
                              float(sec_colour_raw[2]) / 255.)
                     else:
                         raise
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_nodalline_colour'] = 'k'
                 try:
                     if 0 <= float(fp_args[2]) <= 1:
                         consistent_kwargs_dict['plot_nodalline_alpha'] = \
                             float(fp_args[2])
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_nodalline_alpha'] = 1
-            except:
+            except Exception:
                 pass
 
         if args.plot_show_princ_axes:
@@ -4668,9 +4668,9 @@ def main(argv=None):
                     if 0 <= float(fp_args[2]) <= 1:
                         consistent_kwargs_dict['plot_princ_axes_alpha'] = \
                             float(fp_args[2])
-                except:
+                except Exception:
                     consistent_kwargs_dict['plot_princ_axes_alpha'] = 1
-            except:
+            except Exception:
                 pass
 
         if args.plot_show_basis_axes:
@@ -5091,7 +5091,7 @@ The 'source mechanism' as a comma-separated list of length:
 
     try:
         M_raw = [float(xx) for xx in args.mechanism.split(',')]
-    except:
+    except Exception:
         parser.error('invalid source mechanism')
 
     if not len(M_raw) in [3, 4, 6, 7, 9]:
@@ -5103,7 +5103,7 @@ The 'source mechanism' as a comma-separated list of length:
     if aa is not None:
         try:
             print(aa)
-        except:
+        except Exception:
             print(aa.replace('°', ' deg'))
 
 

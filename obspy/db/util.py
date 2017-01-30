@@ -54,7 +54,7 @@ def parse_mapping_data(lines):
         if len(data) > 2:
             try:
                 temp['starttime'] = UTCDateTime(data[2])
-            except:
+            except Exception:
                 msg += "starttime '%s' is not a time format"
                 raise Exception(msg % data[2])
         else:
@@ -62,7 +62,7 @@ def parse_mapping_data(lines):
         if len(data) > 3:
             try:
                 temp['endtime'] = UTCDateTime(data[3])
-            except:
+            except Exception:
                 msg += "endtime '%s' is not a time format"
                 raise Exception(msg % data[3])
             if temp['endtime'] < temp['starttime']:

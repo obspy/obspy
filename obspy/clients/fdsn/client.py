@@ -1145,7 +1145,7 @@ class Client(object):
 
             try:
                 value = this_type(value)
-            except:
+            except Exception:
                 msg = "'%s' could not be converted to type '%s'." % (
                     str(value), this_type.__name__)
                 raise TypeError(msg)
@@ -1308,7 +1308,7 @@ class Client(object):
             try:
                 server_info = "\n".join([
                     line for line in data.read().splitlines() if line])
-            except:
+            except Exception:
                 server_info = None
         # No data.
         if code == 204:
@@ -1618,7 +1618,7 @@ def build_url(base_url, service, major_version, resource_type,
         for key, value in parameters.items():
             try:
                 parameters[key] = value.strip()
-            except:
+            except Exception:
                 pass
         url = "?".join((url, urllib.parse.urlencode(parameters)))
     return url

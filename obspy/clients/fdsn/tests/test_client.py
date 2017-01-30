@@ -249,14 +249,14 @@ class ClientTestCase(unittest.TestCase):
             with mock.patch("obspy.clients.fdsn.Client._download") as p:
                 try:
                     self.client.get_stations(0, 0, location=loc)
-                except:
+                except Exception:
                     pass
             self.assertEqual(p.call_count, 1)
             self.assertIn("location=--", p.call_args[0][0])
             with mock.patch("obspy.clients.fdsn.Client._download") as p:
                 try:
                     self.client.get_waveforms(1, 2, loc, 4, 0, 0)
-                except:
+                except Exception:
                     pass
             self.assertEqual(p.call_count, 1)
             self.assertIn("location=--", p.call_args[0][0])
@@ -983,7 +983,7 @@ class ClientTestCase(unittest.TestCase):
         try:
             c.get_waveforms("A", "B", "C", "D", UTCDateTime() - 100,
                             UTCDateTime())
-        except:
+        except Exception:
             pass
         self.assertTrue(
             base_url_ds in download_url_mock.call_args_list[0][0][0])
@@ -994,7 +994,7 @@ class ClientTestCase(unittest.TestCase):
         download_url_mock.return_value = 404, None
         try:
             c.get_stations()
-        except:
+        except Exception:
             pass
         self.assertTrue(
             base_url_station in download_url_mock.call_args_list[0][0][0])
@@ -1005,7 +1005,7 @@ class ClientTestCase(unittest.TestCase):
         download_url_mock.return_value = 404, None
         try:
             c.get_events()
-        except:
+        except Exception:
             pass
         self.assertTrue(
             base_url_event in download_url_mock.call_args_list[0][0][0])

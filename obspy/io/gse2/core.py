@@ -25,7 +25,7 @@ def _is_gse2(filename):
     try:
         with open(filename, 'rb') as f:
             libgse2.is_gse2(f)
-    except:
+    except Exception:
         return False
     return True
 
@@ -124,7 +124,7 @@ def _is_gse1(filename):
     with open(filename, 'rb') as f:
         try:
             data = f.readline()
-        except:
+        except Exception:
             return False
     if data.startswith(b'WID1') or data.startswith(b'XW01'):
         return True
