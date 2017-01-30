@@ -263,6 +263,7 @@ def inventory_to_station_text(inventory_or_network, level):
     :type inventory_or_network:
         :class:`~obspy.core.inventory.inventory.Inventory` or
         :class:`~obspy.core.inventory.network.Network`
+    :param inventory_or_network: The object to convert.
     :type level: str
     :param level: Specify level of detail using ``'network'``, ``'station'`` or
         ``'channel'``
