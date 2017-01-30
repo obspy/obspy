@@ -382,6 +382,7 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.stationtxt.core:is_fdsn_station_text_file',
         'readFormat = '
         'obspy.io.stationtxt.core:read_fdsn_station_text_file',
+        'writeFormat = obspy.io.stationtxt.core:_write_stationtxt',
         ],
     'obspy.plugin.inventory.KML': [
         'writeFormat = obspy.io.kml.core:_write_kml',
