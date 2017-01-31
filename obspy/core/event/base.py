@@ -38,6 +38,7 @@ import numpy as np
 from obspy.core.event.header import DataUsedWaveType, ATTRIBUTE_HAS_ERRORS
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
+from obspy.core.util.decorator import rlock
 
 
 class QuantityError(AttribDict):
@@ -206,6 +207,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
         defaults.update(dict.fromkeys(_property_keys, None))
         do_not_warn_on = ["extra"]
 
+        @rlock
         def __init__(self, *args, **kwargs):
             # Make sure the args work as expected. Therefore any specified
             # arg will overwrite a potential kwarg, e.g. arg at position 0 will

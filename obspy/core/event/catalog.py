@@ -34,7 +34,7 @@ from pkg_resources import load_entry_point
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _read_from_plugin
 from obspy.core.util.base import ENTRY_POINTS, download_to_file
-from obspy.core.util.decorator import (map_example_filename,
+from obspy.core.util.decorator import (map_example_filename, rlock,
                                        uncompress_file)
 from obspy.imaging.cm import obspy_sequential
 
@@ -216,20 +216,6 @@ class Catalog(object):
             self.events.__setitem__(index, event)
         else:
             super(Catalog, self).__setitem__(index, event)
-
-    def __deepcopy__(self, memodict=None):
-        """
-        reset resource_id's object_id after deep copy to allow the
-        object specific behavior of get_referred_object
-        """
-        memodict = memodict or {}
-        cls = self.__class__
-        result = cls.__new__(cls)
-        memodict[id(self)] = result
-        for k, v in self.__dict__.items():
-            setattr(result, k, copy.deepcopy(v, memodict))
-        result.resource_id.bind_resource_ids()  # bind all resource_ids
-        return result
 
     def __str__(self, print_all=False):
         """

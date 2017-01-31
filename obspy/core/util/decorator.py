@@ -19,6 +19,7 @@ import os
 import re
 import socket
 import tarfile
+import threading
 import unittest
 import warnings
 import zipfile
@@ -293,6 +294,16 @@ def map_example_filename(arg_kwarg_name):
                             pass
         return func(*args, **kwargs)
     return _map_example_filename
+
+
+@decorator
+def rlock(func, *args, **kwargs):
+    """
+    Place a threading recursive lock (Rlock) on the wrapped function
+    """
+    rlock = threading.RLock()
+    with rlock:
+        return func(*args, **kwargs)
 
 
 if __name__ == '__main__':
