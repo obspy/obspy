@@ -299,8 +299,6 @@ def map_example_filename(arg_kwarg_name):
 def rlock(func):
         """
         Place a threading recursive lock (Rlock) on the wrapped function
-
-        This decorator has to be called as a function!
         """
         # This lock will be instantiated at function creation time, i.e. at the
         # time the Python interpreter sees the decorated function the very
