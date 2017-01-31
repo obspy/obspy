@@ -25,7 +25,7 @@ import warnings
 import zipfile
 
 import numpy as np
-from decorator import decorator
+from decorator import decorator, decorate
 
 from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile
@@ -296,14 +296,22 @@ def map_example_filename(arg_kwarg_name):
     return _map_example_filename
 
 
-@decorator
-def rlock(func, *args, **kwargs):
-    """
-    Place a threading recursive lock (Rlock) on the wrapped function
-    """
-    rlock = threading.RLock()
-    with rlock:
-        return func(*args, **kwargs)
+def rlock(func):
+        """
+        Place a threading recursive lock (Rlock) on the wrapped function
+
+        This decorator has to be called as a function!
+        """
+        # This lock will be instantiated at function creation time, i.e. at the
+        # time the Python interpreter sees the decorated function the very
+        # first time - this lock thus exists once for each decorated function.
+        _rlock = threading.RLock()
+
+        def _locked_f(f, *args, **kwargs):
+            with _rlock:
+                return func(*args, **kwargs)
+
+        return decorate(func, _locked_f)
 
 
 if __name__ == '__main__':
