@@ -762,6 +762,7 @@ class Catalog(object):
         return fig
 
 
+@rlock
 @map_example_filename("pathname_or_url")
 def read_events(pathname_or_url=None, format=None, **kwargs):
     """

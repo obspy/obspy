@@ -207,7 +207,6 @@ def _event_type_class_factory(class_name, class_attributes=[],
         defaults.update(dict.fromkeys(_property_keys, None))
         do_not_warn_on = ["extra"]
 
-        @rlock
         def __init__(self, *args, **kwargs):
             # Make sure the args work as expected. Therefore any specified
             # arg will overwrite a potential kwarg, e.g. arg at position 0 will
