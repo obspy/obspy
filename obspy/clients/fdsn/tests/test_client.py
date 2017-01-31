@@ -30,7 +30,8 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
-                                       FDSNException, FDSNRedirectException)
+                                       FDSNException, FDSNRedirectException,
+                                       FDSNNoDataException)
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
 
@@ -1172,6 +1173,16 @@ class ClientTestCase(unittest.TestCase):
                 url = m.call_args[0][0]
             url_parts = url.replace(url_base, '').split("&")
             self.assertIn('{}='.format(key), url_parts)
+
+    def test_no_data(self):
+        """
+        Verify that a request returning no data raises an identifiable
+        exception
+        """
+        self.assertRaises(FDSNNoDataException, self.client.get_events,
+                          starttime=UTCDateTime("2001-01-07T01:00:00"),
+                          endtime=UTCDateTime("2001-01-07T01:01:00"),
+                          minmagnitude=8)
 
 
 def suite():

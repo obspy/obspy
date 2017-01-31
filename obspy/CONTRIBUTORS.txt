@@ -12,6 +12,7 @@ Beyreuther, Moritz
 Bonaimé, Sébastien
 Carothers, Lloyd
 Chamberlain, Calum
+Clark, Adam
 Danecek, Peter
 van Driel, Martin
 Egdorf, Sven

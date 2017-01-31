@@ -36,6 +36,8 @@ master: (doi: 10.5281/zenodo.165135)
    * The mass downloader can now download stations that are part of a given
      inventory object.
    * The mass downloader now also works with restricted data. (See #1350)
+   * No data (HTTP 204) responses now raise `FDSNNoDataException` rather than
+     the more general `FDSNException`.
  - obspy.imaging:
    * The functionality behind the `obspy-scan` command line script has been
      refactored into a `Scanner` class so that it can be reused in custom
