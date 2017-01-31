@@ -2219,9 +2219,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             still be returned as Stream with only one entry.
         """
         from obspy import Stream
+
+        # Not a masked array.
         if not isinstance(self.data, np.ma.masked_array):
             # no gaps
-            return Stream([self])
+            return Stream([self.copy()])
+        # Masked array but no actually masked values.
+        elif isinstance(self.data, np.ma.masked_array) and \
+                not np.ma.is_masked(self.data):
+            _tr = self.copy()
+            _tr.data = np.ma.getdata(_tr.data)
+            return Stream([_tr])
+
         slices = flat_not_masked_contiguous(self.data)
         trace_list = []
         for slice in slices:

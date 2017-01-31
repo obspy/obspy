@@ -153,7 +153,7 @@ def flat_not_masked_contiguous(a):
         if not k:
             result.append(slice(i, i + n))
         i += n
-    return result or None
+    return result
 
 
 def complexify_string(line):

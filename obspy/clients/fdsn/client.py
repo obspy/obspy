@@ -1270,7 +1270,7 @@ class Client(object):
                 printed_something = True
                 msg.append("The service offers the following "
                            "non-standard parameters:")
-                for name in additional_parameters:
+                for name in sorted(additional_parameters):
                     msg.append(_param_info_string(name))
 
             if missing_default_parameters:
