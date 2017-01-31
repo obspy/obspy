@@ -38,7 +38,6 @@ import numpy as np
 from obspy.core.event.header import DataUsedWaveType, ATTRIBUTE_HAS_ERRORS
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
-from obspy.core.util.decorator import rlock
 
 
 class QuantityError(AttribDict):
