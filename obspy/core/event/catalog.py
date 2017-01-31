@@ -34,7 +34,7 @@ from pkg_resources import load_entry_point
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _read_from_plugin
 from obspy.core.util.base import ENTRY_POINTS, download_to_file
-from obspy.core.util.decorator import (map_example_filename,
+from obspy.core.util.decorator import (map_example_filename, rlock,
                                        uncompress_file)
 from obspy.imaging.cm import obspy_sequential
 
@@ -424,8 +424,8 @@ class Catalog(object):
             True
 
         2. The following example shows how to make an alias but not copy the
-           data. Any changes on ``st3`` would also change the contents of
-           ``st``.
+           data. Any changes on ``cat3`` would also change the contents of
+           ``cat``.
 
             >>> cat3 = cat
             >>> cat is cat3
@@ -762,6 +762,7 @@ class Catalog(object):
         return fig
 
 
+@rlock
 @map_example_filename("pathname_or_url")
 def read_events(pathname_or_url=None, format=None, **kwargs):
     """
@@ -840,6 +841,7 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
         if len(pathnames) > 1:
             for filename in pathnames[1:]:
                 catalog.extend(_read(filename, format, **kwargs).events)
+        ResourceIdentifier.bind_resource_ids()
         return catalog
 
 
