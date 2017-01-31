@@ -1176,11 +1176,13 @@ class ClientTestCase(unittest.TestCase):
 
     def test_no_data(self):
         """
-        Verify that a request returning no data raises an identifiable exception
+        Verify that a request returning no data raises an identifiable
+        exception
         """
         self.assertRaises(FDSNNoDataException, self.client.get_events,
                           starttime=UTCDateTime("2001-01-07T01:00:00"),
-                          endtime=UTCDateTime("2001-01-07T01:01:00"), minmagnitude=8)
+                          endtime=UTCDateTime("2001-01-07T01:01:00"),
+                          minmagnitude=8)
 
 
 def suite():

@@ -1312,7 +1312,8 @@ class Client(object):
                 server_info = None
         # No data.
         if code == 204:
-            raise FDSNNoDataException("No data available for request.", server_info)
+            raise FDSNNoDataException("No data available for request.",
+                                      server_info)
         elif code == 400:
             msg = ("Bad request. If you think your request was valid "
                    "please contact the developers.")
