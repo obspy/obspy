@@ -67,7 +67,7 @@ def _is_sc3ml(path_or_file_object):
         try:
             match = re.match(
                 r'{http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[-+]?'
-                '[0-9]*\.?[0-9]+}', root.tag)
+                r'[0-9]*\.?[0-9]+}', root.tag)
             assert match is not None
         except:
             return False
