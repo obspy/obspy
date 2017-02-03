@@ -99,6 +99,7 @@ class GSEUtiError(Exception):
 def _str(s):
     return s.strip()
 
+
 GSE2_FIELDS = [
     # local used date fields
     ('year', 5, 9, int),
@@ -226,7 +227,7 @@ def write_header(f, headdict):
             )
     try:
         sta2_line = compile_sta2(headdict)
-    except:
+    except Exception:
         msg = "GSE2: Error while compiling the STA2 header line, omitting it."
         warnings.warn(msg)
     else:
@@ -525,7 +526,7 @@ def parse_sta2(line):
         header['coordsys'] = line[36:48].strip()
         header['elev'] = elev
         header['edepth'] = edepth
-    except:
+    except Exception:
         msg = 'GSE2: Invalid STA2 header, ignoring.'
         warnings.warn(msg)
         return {}

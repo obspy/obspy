@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import inspect
+import io
 import os
 import re
 import unittest
@@ -17,7 +18,8 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.io.reftek.core import (
     _read_reftek130, _is_reftek130, Reftek130, Reftek130Exception)
 from obspy.io.reftek.packet import (
-    _unpack_C0_data_fast, _unpack_C0_data_safe, _unpack_C0_data)
+    _unpack_C0_C2_data_fast, _unpack_C0_C2_data_safe, _unpack_C0_C2_data,
+    EHPacket, _initial_unpack_packets)
 
 
 class ReftekTestCase(unittest.TestCase):
@@ -40,6 +42,8 @@ class ReftekTestCase(unittest.TestCase):
         self.datapath = os.path.join(self.path, "data")
         self.reftek_filename = "225051000_00008656"
         self.reftek_file = os.path.join(self.datapath, self.reftek_filename)
+        self.reftek_file_steim2 = os.path.join(self.datapath,
+                                               '104800000_000093F8')
         self.mseed_filenames = [
             "2015282_225051_0ae4c_1_1.msd",
             "2015282_225051_0ae4c_1_2.msd", "2015282_225051_0ae4c_1_3.msd"]
@@ -83,6 +87,8 @@ class ReftekTestCase(unittest.TestCase):
         #   25 1 673 2015-10-09T22:51:22.025000Z
         #   26 2 759 2015-10-09T22:51:21.595000Z
         #   27 0 067 2015-10-09T22:51:25.055000Z
+        self.reftek_file_vpu = os.path.join(self.datapath,
+                                            '221935615_00000000')
 
     def _assert_reftek130_test_stream(self, st_reftek):
         """
@@ -119,7 +125,7 @@ class ReftekTestCase(unittest.TestCase):
         for tr_got, tr_expected in zip(st_reftek, st_mseed):
             np.testing.assert_array_equal(tr_got.data, tr_expected.data)
 
-    def test_read_reftek130(self):
+    def test_read_reftek130_steim1(self):
         """
         Test original reftek 130 data file against miniseed files converted
         using "rt_mseed" utility from Trimble/Reftek.
@@ -131,6 +137,32 @@ class ReftekTestCase(unittest.TestCase):
             self.reftek_file, network="XX", location="01",
             component_codes=["1", "2", "3"])
         self._assert_reftek130_test_stream(st_reftek)
+
+    def test_read_reftek130_steim2(self):
+        """
+        Test reading a steim2 encoded data file.
+
+        Unpacking of data is tested separately so just checking a few samples
+        at the start should suffice.
+        """
+        st = _read_reftek130(
+            self.reftek_file_steim2, network="XX", location="01",
+            component_codes=["1", "2", "3"])
+        # note: test data has stream name defined as 'DS 1', so we end up with
+        # non-SEED conforming channel codes which is expected
+        self.assertEqual(len(st), 3)
+        self.assertEqual(len(st[0]), 3788)
+        self.assertEqual(len(st[1]), 3788)
+        self.assertEqual(len(st[2]), 3788)
+        self.assertEqual(st[0].id, 'XX.TL01.01.DS 11')
+        self.assertEqual(st[1].id, 'XX.TL01.01.DS 12')
+        self.assertEqual(st[2].id, 'XX.TL01.01.DS 13')
+        np.testing.assert_array_equal(
+            st[0].data[:5], [26814, 26823, 26878, 26941, 26942])
+        np.testing.assert_array_equal(
+            st[1].data[:5], [-1987, -1984, -1959, -1966, -1978])
+        np.testing.assert_array_equal(
+            st[2].data[:5], [-2404, -2376, -2427, -2452, -2452])
 
     def test_read_reftek130_no_component_codes_specified(self):
         """
@@ -257,8 +289,8 @@ class ReftekTestCase(unittest.TestCase):
                 # write packages to the file and write the last three packets
                 # with a different packet type
                 # (packets are 1024 byte each)
-                tmp = fh2.read()[:-(1024*3)]
-                fh2.seek(-(1024*3), 2)
+                tmp = fh2.read()[:-(1024 * 3)]
+                fh2.seek(-(1024 * 3), 2)
                 tmp2 = fh2.read(1024)
                 tmp3 = fh2.read(1024)
                 tmp4 = fh2.read(1024)
@@ -366,16 +398,30 @@ class ReftekTestCase(unittest.TestCase):
             "Reftek data contains data packets without corresponding header "
             "or trailer packet.")
 
-    def test_data_unpacking(self):
+    def test_data_unpacking_steim1(self):
         """
-        Test both unpacking routines for C0 data coding
+        Test both unpacking routines for C0 data coding (STEIM1)
         """
         rt = Reftek130.from_file(self.reftek_file)
-        expected = np.load(os.path.join(self.datapath, "unpacked_data.npy"))
+        expected = np.load(os.path.join(self.datapath,
+                                        "unpacked_data_steim1.npy"))
         packets = rt._data[rt._data['packet_type'] == b'DT'][:10]
-        for func in (_unpack_C0_data, _unpack_C0_data_fast,
-                     _unpack_C0_data_safe):
-            got = _unpack_C0_data(packets)
+        for func in (_unpack_C0_C2_data, _unpack_C0_C2_data_fast,
+                     _unpack_C0_C2_data_safe):
+            got = func(packets, encoding='C0')
+            np.testing.assert_array_equal(got, expected)
+
+    def test_data_unpacking_steim2(self):
+        """
+        Test both unpacking routines for C2 data coding (STEIM2)
+        """
+        rt = Reftek130.from_file(self.reftek_file_steim2)
+        expected = np.load(os.path.join(self.datapath,
+                                        "unpacked_data_steim2.npy"))
+        packets = rt._data[rt._data['packet_type'] == b'DT'][:10]
+        for func in (_unpack_C0_C2_data, _unpack_C0_C2_data_fast,
+                     _unpack_C0_C2_data_safe):
+            got = func(packets, encoding='C2')
             np.testing.assert_array_equal(got, expected)
 
     def test_string_representations(self):
@@ -452,6 +498,49 @@ class ReftekTestCase(unittest.TestCase):
             warnings.simplefilter("always")
             rt130 = Reftek130.from_file(self.reftek_file)
         self.assertEqual(expected, str(rt130).splitlines())
+
+    def test_reading_packet_with_vpu_float_string(self):
+        """
+        Test reading a data stream with VPU floating point in header, see #1632
+        """
+        with open(self.reftek_file_vpu, 'rb') as fh:
+            data = fh.read(1024)
+        data = _initial_unpack_packets(data)
+        eh = EHPacket(data[0])
+        self.assertEqual(
+            eh.channel_sensor_vpu,
+            (2.4, 2.4, 2.4, None, None, None, None, None, None, None, None,
+             None, None, None, None, None))
+        # reading the file should work..
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            st = obspy.read(self.reftek_file_vpu)
+        self.assertEqual(len(st), 2)
+        self.assertEqual(len(st[0]), 890)
+        self.assertEqual(len(st[1]), 890)
+        np.testing.assert_array_equal(
+            st[0][:10], [210, 212, 208, 211, 211, 220, 216, 215, 219, 218])
+
+    def test_reading_file_with_multiple_events(self):
+        """
+        Test reading a "multiplexed" file with multiple "events" in it.
+
+        Simply reuse the existing test data in one read operation.
+        """
+        with open(self.reftek_file_vpu, 'rb') as fh:
+            data = fh.read()
+        with open(self.reftek_file, 'rb') as fh:
+            data += fh.read()
+        bytes_ = io.BytesIO(data)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            st = obspy.read(bytes_, format='REFTEK130')
+        self.assertEqual(len(st), 10)
+        # we should have data from two different files/stations in there
+        for tr in st[:8]:
+            self.assertEqual(tr.stats.station, 'KW1')
+        for tr in st[8:]:
+            self.assertEqual(tr.stats.station, 'TL02')
 
 
 def suite():

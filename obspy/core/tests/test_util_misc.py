@@ -123,7 +123,7 @@ class UtilMiscTestCase(unittest.TestCase):
             [
                 (UTCDateTime(0), UTCDateTime(5)),
                 (UTCDateTime(10), UTCDateTime(15))
-                ]
+            ]
         )
 
         # With offset.

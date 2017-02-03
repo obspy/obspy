@@ -97,10 +97,10 @@ def _is_ndk(filename):
         try:
             with open(filename, "rt") as fh:
                 first_line = fh.readline()
-        except:
+        except Exception:
             try:
                 filename = filename.decode()
-            except:
+            except Exception:
                 filename = str(filename)
             filename = filename.strip()
             line_ending = filename.find("\n")
@@ -155,10 +155,10 @@ def _read_ndk(filename, *args, **kwargs):  # @UnusedVariable
         try:
             with open(filename, "rt") as fh:
                 data = fh.read()
-        except:
+        except Exception:
             try:
                 data = filename.decode()
-            except:
+            except Exception:
                 data = str(filename)
             data = data.strip()
     else:

@@ -89,7 +89,7 @@ class Enum(object):
     def __call__(self, enum):
         try:
             return self.get(enum)
-        except:
+        except Exception:
             return None
 
     def get(self, key):

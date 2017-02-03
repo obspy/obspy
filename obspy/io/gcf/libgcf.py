@@ -68,8 +68,9 @@ def decode_date_time(data):
     Bits 0-16 contain the number of seconds since midnight,
     and bits 17-31 the number of days since 17th November 1989.
     """
-    days = data >> 17
-    secs = data & 0x1FFFF
+    # prevent numpy array
+    days = int(data >> 17)
+    secs = int(data & 0x1FFFF)
     starttime = UTCDateTime('1989-11-17') + days * 86400 + secs
     return starttime
 

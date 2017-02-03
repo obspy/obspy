@@ -33,7 +33,7 @@ from obspy.io.mseed.msstruct import _MSStruct
 NO_NEGATIVE_TIMESTAMPS = False
 try:
     UTCDateTime(-50000)
-except:
+except Exception:
     NO_NEGATIVE_TIMESTAMPS = True
 
 

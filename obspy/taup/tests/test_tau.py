@@ -386,7 +386,7 @@ class TauPyModelTestCase(unittest.TestCase):
                 line = line.split()
                 try:
                     float(line[0])
-                except:
+                except Exception:
                     continue
                 expected[(float(line[0]), float(line[1]))].append({
                     "distance": float(line[0]),
@@ -939,10 +939,10 @@ class TauPyModelTestCase(unittest.TestCase):
         # test copy
         self.assertTrue(isinstance(arrivals.copy(), Arrivals))
         # test sum
-        self.assertTrue(isinstance(arrivals+arrivals, Arrivals))
-        self.assertTrue(isinstance(arrivals+arrivals[0], Arrivals))
+        self.assertTrue(isinstance(arrivals + arrivals, Arrivals))
+        self.assertTrue(isinstance(arrivals + arrivals[0], Arrivals))
         # test multiplying
-        self.assertTrue(isinstance(arrivals*2, Arrivals))
+        self.assertTrue(isinstance(arrivals * 2, Arrivals))
         arrivals *= 3
         self.assertEqual(len(arrivals), 6)
         self.assertTrue(isinstance(arrivals, Arrivals))

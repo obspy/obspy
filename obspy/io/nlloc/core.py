@@ -38,7 +38,7 @@ def is_nlloc_hyp(filename):
     try:
         with open(filename, 'rb') as fh:
             temp = fh.read(6)
-    except:
+    except Exception:
         return False
     if temp != b'NLLOC ':
         return False
@@ -86,10 +86,10 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
             with open(filename, "rb") as fh:
                 data = fh.read()
             data = data.decode("UTF-8")
-        except:
+        except Exception:
             try:
                 data = filename.decode("UTF-8")
-            except:
+            except Exception:
                 data = str(filename)
             data = data.strip()
     else:
@@ -125,7 +125,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         raise Exception(msg)
     for start, end in zip(lines_start, lines_end):
         event = _read_single_hypocenter(
-            lines[start:end+1], coordinate_converter=coordinate_converter,
+            lines[start:end + 1], coordinate_converter=coordinate_converter,
             original_picks=original_picks)
         cat.append(event)
     cat.creation_info.creation_time = UTCDateTime()
@@ -145,7 +145,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         for line in lines[1:-1]:
             assert not line.startswith("NLLOC ")
             assert not line.startswith("END_NLLOC")
-    except:
+    except Exception:
         msg = ("This should not have happened, please report this as a bug at "
                "https://github.com/obspy/obspy/issues.")
         raise Exception(msg)
@@ -403,7 +403,7 @@ def write_nlloc_obs(catalog, filename, **kwargs):
             try:
                 time_error = (pick.time_errors.upper_uncertainty +
                               pick.time_errors.lower_uncertainty) / 2.0
-            except:
+            except Exception:
                 pass
         info_ = fmt % (station.ljust(6), "?".ljust(4), component.ljust(4),
                        onset.ljust(1), phase_type.ljust(6), polarity.ljust(1),

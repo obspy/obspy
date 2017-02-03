@@ -325,7 +325,7 @@ class WaveformPlotting(object):
                     if not self.fig_obj and self.show:
                         try:
                             plt.show(block=self.block)
-                        except:
+                        except Exception:
                             plt.show()
 
     def plot(self, *args, **kwargs):
@@ -1168,7 +1168,7 @@ class WaveformPlotting(object):
             try:
                 for _i, tr in enumerate(self.stream):
                     self._tr_offsets[_i] = tr.stats.distance
-            except:
+            except Exception:
                 msg = 'trace.stats.distance undefined ' +\
                       '(set before plotting [in m], ' +\
                       'or use the ev_coords argument)'
@@ -1181,7 +1181,7 @@ class WaveformPlotting(object):
                         tr.stats.coordinates.latitude,
                         tr.stats.coordinates.longitude,
                         self.ev_coord[0], self.ev_coord[1])
-            except:
+            except Exception:
                 msg = 'Define latitude/longitude in trace.stats.' + \
                     'coordinates and ev_coord. See documentation.'
                 raise ValueError(msg)

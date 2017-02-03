@@ -19,7 +19,7 @@ from obspy.core.util.obspy_types import ObsPyException
 
 from .packet import (Packet, EHPacket, _initial_unpack_packets, PACKET_TYPES,
                      PACKET_TYPES_IMPLEMENTED, PACKET_FINAL_DTYPE,
-                     Reftek130UnpackPacketError, _unpack_C0_data)
+                     Reftek130UnpackPacketError, _unpack_C0_C2_data)
 
 
 NOW = UTCDateTime()
@@ -211,6 +211,7 @@ class Reftek130(object):
             msg = ("No packet data left in Reftek130 object after dropping "
                    "non-implemented packets (file: {})").format(self._filename)
             raise Reftek130Exception(msg)
+        st = Stream()
         for event_number in np.unique(self._data['event_number']):
             data = self._data[self._data['event_number'] == event_number]
             # we should have exactly one EH and one ET packet, truncated data
@@ -240,10 +241,14 @@ class Reftek130(object):
             else:
                 eh = EHPacket(et_packets[0])
             # only "C0" encoding supported right now
-            if eh.data_format != b"C0":
+            if eh.data_format == b"C0":
+                encoding = 'C0'
+            elif eh.data_format == b"C2":
+                encoding = 'C2'
+            else:
                 msg = ("Reftek data encoding '{}' not implemented yet. Please "
                        "open an issue on GitHub and provide a small (< 50kb) "
-                       "test file.").format(eh.type)
+                       "test file.").format(eh.data_format)
                 raise NotImplementedError(msg)
             header = {
                 "network": network,
@@ -252,7 +257,6 @@ class Reftek130(object):
                 "location": location, "sampling_rate": eh.sampling_rate,
                 "reftek130": eh._to_dict()}
             delta = 1.0 / eh.sampling_rate
-            st = Stream()
             for channel_number in np.unique(data['channel_number']):
                 inds = data['channel_number'] == channel_number
                 # channel number of EH/ET packets also equals zero (one of the
@@ -287,7 +291,7 @@ class Reftek130(object):
                         sample_data = np.array([], dtype=np.int32)
                         npts = packets_["number_of_samples"].sum()
                     else:
-                        sample_data = _unpack_C0_data(packets_)
+                        sample_data = _unpack_C0_C2_data(packets_, encoding)
                         npts = len(sample_data)
 
                     tr = Trace(data=sample_data, header=copy.deepcopy(header))

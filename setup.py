@@ -26,12 +26,12 @@ For more information visit https://www.obspy.org.
 # setuptools.
 try:
     import setuptools  # @UnusedImport # NOQA
-except:
+except ImportError:
     pass
 
 try:
     import numpy  # @UnusedImport # NOQA
-except:
+except ImportError:
     msg = ("No module named numpy. "
            "Please install numpy first, it is needed before installing ObsPy.")
     raise ImportError(msg)
@@ -278,6 +278,7 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
+        'SC3ML = obspy.io.seiscomp.event',
         'ZMAP = obspy.io.zmap.core',
         'MCHEDR = obspy.io.pde.mchedr',
         'JSON = obspy.io.json.core',
@@ -296,6 +297,9 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
         'readFormat = obspy.io.quakeml.core:_read_quakeml',
         'writeFormat = obspy.io.quakeml.core:_write_quakeml',
+        ],
+    'obspy.plugin.event.SC3ML': [
+        'writeFormat = obspy.io.seiscomp.event:_write_sc3ml',
         ],
     'obspy.plugin.event.MCHEDR': [
         'isFormat = obspy.io.pde.mchedr:_is_mchedr',
@@ -378,6 +382,7 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.stationtxt.core:is_fdsn_station_text_file',
         'readFormat = '
         'obspy.io.stationtxt.core:read_fdsn_station_text_file',
+        'writeFormat = obspy.io.stationtxt.core:_write_stationtxt',
         ],
     'obspy.plugin.inventory.KML': [
         'writeFormat = obspy.io.kml.core:_write_kml',
@@ -754,24 +759,24 @@ if __name__ == '__main__':
         path = os.path.join(SETUP_DIRECTORY, 'build')
         try:
             shutil.rmtree(path)
-        except:
+        except Exception:
             pass
         # delete all shared libs from lib directory
         path = os.path.join(SETUP_DIRECTORY, 'obspy', 'lib')
         for filename in glob.glob(path + os.sep + '*.pyd'):
             try:
                 os.remove(filename)
-            except:
+            except Exception:
                 pass
         for filename in glob.glob(path + os.sep + '*.so'):
             try:
                 os.remove(filename)
-            except:
+            except Exception:
                 pass
         path = os.path.join(SETUP_DIRECTORY, 'obspy', 'taup', 'data', 'models')
         try:
             shutil.rmtree(path)
-        except:
+        except Exception:
             pass
     else:
         setupPackage()

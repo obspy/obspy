@@ -1589,7 +1589,7 @@ class SACTrace(object):
         The iztype setter will deal with shifting the time values.
 
         """
-        for hdr in ['b', 'o', 'a', 'f'] + ['t'+str(i) for i in range(10)]:
+        for hdr in ['b', 'o', 'a', 'f'] + ['t' + str(i) for i in range(10)]:
             val = getattr(self, hdr)
             if val is not None:
                 setattr(self, hdr, val + shift)

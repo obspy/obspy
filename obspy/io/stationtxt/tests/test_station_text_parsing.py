@@ -23,6 +23,7 @@ from obspy.io.stationtxt.core import (is_fdsn_station_text_file,
                                       read_fdsn_station_text_file)
 from obspy.core.inventory import (Channel, Station, Network, Inventory, Site,
                                   Equipment, Response, InstrumentSensitivity)
+from obspy.core.util.base import NamedTemporaryFile
 
 
 class StationTextTestCase(unittest.TestCase):
@@ -399,10 +400,7 @@ class StationTextTestCase(unittest.TestCase):
                                     "2013-10-22T19:30:00"),
                                 end_date=obspy.UTCDateTime(
                                     "2599-12-31T23:59:59"),
-                                response=resp_3)
-                        ])
-                ])
-            ])
+                                response=resp_3)])])])
 
         # Read from a filename.
         filename = os.path.join(self.data_dir, "channel_level_fdsn.txt")
@@ -681,6 +679,216 @@ class StationTextTestCase(unittest.TestCase):
             self.assertEqual(inv_a, inv_obs_a)
             self.assertEqual(inv_a, inv_b)
             self.assertEqual(inv_a, inv_obs_b)
+
+    def test_write_stationtxt(self):
+        """
+        Test writing stationtxt at channel level
+        """
+        # Manually create a test Inventory object.
+        resp_1 = Response(
+            instrument_sensitivity=InstrumentSensitivity(
+                frequency=0.02, input_units="M/S", output_units=None,
+                value=8.48507E8))
+        resp_2 = Response(
+            instrument_sensitivity=InstrumentSensitivity(
+                frequency=1.0, input_units="M/S**2",
+                output_units=None, value=53435.4))
+        resp_3 = Response(
+            instrument_sensitivity=InstrumentSensitivity(
+                frequency=0.03, input_units="M/S",
+                output_units=None, value=6.27252E8))
+        test_inv = Inventory(source=None, networks=[
+            Network(
+                code="IU",
+                start_date=obspy.UTCDateTime("1988-01-01T00:00:00"),
+                end_date=obspy.UTCDateTime("2500-12-31T23:59:59"),
+                total_number_of_stations=1,
+                description="Global Seismograph Network (GSN - IRIS/USGS)",
+                stations=[
+                    Station(
+                        code="ANMO",
+                        latitude=34.9459,
+                        longitude=-106.4572,
+                        elevation=1850.0,
+                        channels=[
+                            Channel(
+                                code="BCI", location_code="",
+                                latitude=34.9459,
+                                longitude=-106.4572,
+                                elevation=1850.0,
+                                depth=100.0,
+                                azimuth=0.0,
+                                dip=0.0,
+                                sample_rate=0.0,
+                                sensor=Equipment(
+                                    type="Geotech KS-36000-I Borehole "
+                                         "Seismometer"),
+                                start_date=obspy.UTCDateTime(
+                                    "1989-08-29T00:00:00"),
+                                end_date=obspy.UTCDateTime(
+                                    "1995-02-01T00:00:00"),
+                                response=resp_1),
+                            Channel(
+                                code="LNZ", location_code="20",
+                                latitude=34.9459,
+                                longitude=-106.4572,
+                                elevation=1820.7,
+                                depth=0.0,
+                                azimuth=0.0,
+                                dip=-90.0,
+                                sample_rate=0.0,
+                                sensor=Equipment(
+                                    type="Titan Accelerometer"),
+                                start_date=obspy.UTCDateTime(
+                                    "2013-06-20T16:30:00"),
+                                response=resp_2),
+                        ]),
+                ]),
+            Network(
+                code="6E",
+                start_date=obspy.UTCDateTime("2013-01-01T00:00:00"),
+                end_date=obspy.UTCDateTime("2016-12-31T23:59:59"),
+                total_number_of_stations=1,
+                description="Wabash Valley Seismic Zone",
+                stations=[
+                    Station(
+                        code="SH01",
+                        latitude=37.7457,
+                        longitude=-88.1368,
+                        elevation=126.0,
+                        channels=[
+                            Channel(
+                                code="LOG", location_code="",
+                                latitude=37.7457,
+                                longitude=-88.1368,
+                                elevation=126.0,
+                                depth=0.0,
+                                azimuth=0.0,
+                                dip=0.0,
+                                sample_rate=0.0,
+                                sensor=Equipment(
+                                    type="Reftek 130 Datalogger"),
+                                start_date=obspy.UTCDateTime(
+                                    "2013-11-23T00:00:00"),
+                                end_date=obspy.UTCDateTime(
+                                    "2016-12-31T23:59:59"),
+                                response=resp_3)
+                        ]),
+                ])
+        ])
+
+        # CHANNEL level test
+        stio = io.StringIO()
+        test_inv.write(stio, format="STATIONTXT", level="CHANNEL")
+        # check contents
+        content = stio.getvalue()
+        expected = [("Network|Station|Location|Channel|Latitude|Longitude|"
+                     "Elevation|Depth|Azimuth|Dip|SensorDescription|Scale|"
+                     "ScaleFreq|ScaleUnits|SampleRate|StartTime|EndTime"),
+                    ("IU|ANMO||BCI|34.9459|-106.4572|1850.0|100.0|0.0|"
+                     "0.0|Geotech KS-36000-I Borehole Seismometer|"
+                     "848507000.0|0.02|M/S|0.0|1989-08-29T00:00:00|"
+                     "1995-02-01T00:00:00"),
+                    ("IU|ANMO|20|LNZ|34.9459|-106.4572|1820.7|0.0|0.0|"
+                     "-90.0|Titan Accelerometer|53435.4|1.0|M/S**2|0.0|"
+                     "2013-06-20T16:30:00|"),
+                    ("6E|SH01||LOG|37.7457|-88.1368|126.0|0.0|0.0|0.0|"
+                     "Reftek 130 Datalogger|627252000.0|0.03|M/S|0.0|"
+                     "2013-11-23T00:00:00|2016-12-31T23:59:59"),
+                    ]
+        num_lines_written = 0
+        for line in expected:
+            self.assertIn(line, content)
+            num_lines_written = num_lines_written + 1
+        # assert that the number of lines written equals
+        # the number of lines expected
+        self.assertEqual(num_lines_written, len(expected))
+
+        # STATION level test
+        stio = io.StringIO()
+        test_inv.write(stio, format="STATIONTXT", level="STATION")
+        # check contents
+        content = stio.getvalue()
+        expected = [("Network|Station|Latitude|Longitude|"
+                     "Elevation|SiteName|StartTime|EndTime"),
+                    ("IU|ANMO|34.9459|-106.4572|1850.0||"),
+                    ("6E|SH01|37.7457|-88.1368|126.0||"),
+                    ]
+        num_lines_written = 0
+        for line in expected:
+            self.assertIn(line, content)
+            num_lines_written = num_lines_written + 1
+        # assert that the number of lines written equals
+        # the number of lines expected
+        self.assertEqual(num_lines_written, len(expected))
+
+        # NETWORK level test
+        stio = io.StringIO()
+        test_inv.write(stio, format="STATIONTXT", level="NETWORK")
+        # check contents
+        content = stio.getvalue()
+        expected = [("Network|Description|StartTime|EndTime|TotalStations"),
+                    ("IU|Global Seismograph Network (GSN - IRIS/USGS)|"
+                     "1988-01-01T00:00:00|2500-12-31T23:59:59|1"),
+                    ("6E|Wabash Valley Seismic Zone|"
+                     "2013-01-01T00:00:00|2016-12-31T23:59:59|1"),
+                    ]
+        num_lines_written = 0
+        for line in expected:
+            self.assertIn(line, content)
+            num_lines_written = num_lines_written + 1
+        # assert that the number of lines written equals
+        # the number of lines expected
+        self.assertEqual(num_lines_written, len(expected))
+
+    def test_read_write_stationtxt(self):
+        """
+        Test reading and then writing stationtxt at network, station,
+        and channel levels
+        """
+        file_list = ["network_level_fdsn.txt",
+                     "station_level_fdsn.txt",
+                     "channel_level_fdsn.txt"]
+        for filename in file_list:
+            filename = os.path.join(self.data_dir, filename)
+            with open(filename, "rb") as fh:
+                # read stationtxt file text
+                expected_content = fh.read()
+            # read stationtxt file into a inventory object
+            inv_obs = obspy.read_inventory(filename)
+            with NamedTemporaryFile() as tf:
+                tmpfile = tf.name
+                # write file
+                if filename == "network_level_fdsn.txt":
+                    inv_obs.write(tmpfile,
+                                  format="STATIONTXT",
+                                  level="NETWORK")
+                    self.assertRaises(inv_obs.write(tmpfile,
+                                                    format="STATIONTXT",
+                                                    level="STATION"),
+                                      ValueError)
+                    self.assertRaises(inv_obs.write(tmpfile,
+                                                    format="STATIONTXT",
+                                                    level="CHANNEL"),
+                                      ValueError)
+                elif filename == "station_level_fdsn.txt":
+                    inv_obs.write(tmpfile,
+                                  format="STATIONTXT",
+                                  level="STATION")
+                    self.assertRaises(inv_obs.write(tmpfile,
+                                                    format="STATIONTXT",
+                                                    level="CHANNEL"),
+                                      ValueError)
+                elif filename == "channel_level_fdsn.txt":
+                    inv_obs.write(tmpfile,
+                                  format="STATIONTXT",
+                                  level="CHANNEL")
+                written_text_file = tf.read()
+            # ignores whitespace
+            expected_content = b"".join(expected_content.split(b" "))
+            written_content = b"".join(written_text_file.split(b" "))
+            for line in written_content:
+                self.assertIn(line, expected_content)
 
 
 def suite():

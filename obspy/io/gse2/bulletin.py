@@ -115,7 +115,7 @@ def _is_gse2(filename):
     try:
         with open(filename, 'rb') as fh:
             temp = fh.read(12)
-    except:
+    except Exception:
         return False
     if temp != b'BEGIN GSE2.0':
         return False
@@ -349,9 +349,7 @@ class Unpickler(object):
         if self.inventory is None:
             return None
 
-        sub_inventory = self.inventory.select(
-                        station=station,
-                        time=time)
+        sub_inventory = self.inventory.select(station=station, time=time)
 
         if len(sub_inventory) == 0:
             self._warn("Can't find station %s in inventory" % station)
@@ -967,7 +965,7 @@ class Unpickler(object):
         except StopIteration:
             message = self._add_line_nb('Unexpected EOF while parsing')
             raise GSE2BulletinSyntaxError(message)
-        except:
+        except Exception:
             self._warn('Unexpected error')
             raise
 

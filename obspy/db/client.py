@@ -198,13 +198,13 @@ class Client(object):
         # start and end time
         try:
             starttime = UTCDateTime(starttime)
-        except:
+        except Exception:
             starttime = UTCDateTime() - 60 * 20
         finally:
             query = query.filter(WaveformChannel.endtime > starttime.datetime)
         try:
             endtime = UTCDateTime(endtime)
-        except:
+        except Exception:
             # 10 minutes
             endtime = UTCDateTime()
         finally:
@@ -231,13 +231,13 @@ class Client(object):
         # start and end time
         try:
             starttime = UTCDateTime(starttime)
-        except:
+        except Exception:
             starttime = UTCDateTime() - 60 * 20
         finally:
             query = query.filter(WaveformChannel.endtime > starttime.datetime)
         try:
             endtime = UTCDateTime(endtime)
-        except:
+        except Exception:
             # 10 minutes
             endtime = UTCDateTime()
         finally:

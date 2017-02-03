@@ -80,12 +80,12 @@ def _is_segy(filename):
             _format_number = fp.read(2)
             _fixed_length = fp.read(2)
             _extended_number = fp.read(2)
-    except:
+    except Exception:
         return False
     # Unpack using big endian first and check if it is valid.
     try:
         format = unpack(b'>h', data_format_code)[0]
-    except:
+    except Exception:
         return False
     if format in VALID_FORMATS:
         _endian = '>'
@@ -696,6 +696,7 @@ class LazyTraceHeaderAttribDict(AttribDict):
             data=dict((k, deepcopy(v)) for k, v in self.__dict__.items()
                       if k not in ('unpacked_data', 'endian')))
         return ad
+
 
 if __name__ == '__main__':
     import doctest

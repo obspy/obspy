@@ -300,7 +300,7 @@ def main(argv=None):
         '--latency-warn-color', dest='latency_warn_color', default="#FFFF33",
         help='Latency warning threshold color (valid HTML color string).')
     parser.add_argument(
-        '--latency-error', dest='latency_error', default=24*3600,
+        '--latency-error', dest='latency_error', default=24 * 3600,
         type=float, help='Latency error threshold in seconds.')
     parser.add_argument(
         '--latency-error-color', dest='latency_error_color', default="#E41A1C",
@@ -395,6 +395,7 @@ def main(argv=None):
             net, sta, loc, cha = id.split(".")
             latency = client.get_latency(net, sta, loc, cha,
                                          stop_time=stop_time)
+            latency = latency or np.inf
             nslc.append((net, sta, loc, cha, latency))
         nslc_ = []
         # request and assemble availability information.

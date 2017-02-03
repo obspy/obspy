@@ -587,7 +587,7 @@ def _get_record_information(file_object, offset=0, endian=None):
     elif _code == b' ':
         try:
             _t = file_object.read(120).decode().strip()
-        except:
+        except Exception:
             raise ValueError("Invalid MiniSEED file.")
         if not _t:
             info = _get_record_information(file_object=file_object,
@@ -663,7 +663,7 @@ def _get_record_information(file_object, offset=0, endian=None):
             endian = ">"
             values = unpack(fmt(endian), data)
             starttime = _parse_time(values)
-        except:
+        except Exception:
             endian = "<"
             values = unpack(fmt(endian), data)
             starttime = _parse_time(values)
@@ -671,7 +671,7 @@ def _get_record_information(file_object, offset=0, endian=None):
         values = unpack(fmt(endian), data)
         try:
             starttime = _parse_time(values)
-        except:
+        except Exception:
             msg = ("Invalid starttime found. The passed byte order is likely "
                    "wrong.")
             raise ValueError(msg)
@@ -1024,10 +1024,10 @@ def set_flags_in_fixed_headers(filename, flags):
             # Ignore sequence number and data header
             mseed_file.seek(8, os.SEEK_CUR)
             # Read identifier
-            sta = mseed_file.read(5).strip()
-            loc = mseed_file.read(2).strip()
-            chan = mseed_file.read(3).strip()
-            net = mseed_file.read(2).strip()
+            sta = mseed_file.read(5).strip().decode()
+            loc = mseed_file.read(2).strip().decode()
+            chan = mseed_file.read(3).strip().decode()
+            net = mseed_file.read(2).strip().decode()
 
             # Search the nested dict for the network identifier
             if net in flags_bytes:
@@ -1068,7 +1068,7 @@ def set_flags_in_fixed_headers(filename, flags):
                                                         recstart)
                 # Transformation to UTCDatetime()
                 recstart = UTCDateTime(year=yr, julday=doy, hour=hr, minute=mn,
-                                       second=sec, microsecond=mil*100)
+                                       second=sec, microsecond=mil * 100)
                 # Read data to date begin and end of record
                 (nb_samples, fact, mult) = unpack(native_str(">Hhh"),
                                                   mseed_file.read(6))
@@ -1086,7 +1086,7 @@ def set_flags_in_fixed_headers(filename, flags):
                 # Search for blockette 100's "Actual sample rate" field
                 samp_rate = _search_flag_in_blockette(mseed_file, 4, 100, 4, 1)
                 if samp_rate is not None:
-                    samp_rate = unpack(native_str(">b"), samp_rate)
+                    samp_rate = unpack(native_str(">b"), samp_rate)[0]
                 # Search for blockette 1001's "microsec" field
                 microsec = _search_flag_in_blockette(mseed_file, 4, 1001, 5, 1)
                 if microsec is not None:
@@ -1094,7 +1094,7 @@ def set_flags_in_fixed_headers(filename, flags):
                 else:
                     microsec = 0
 
-                realstarttime = recstart + microsec*0.000001
+                realstarttime = recstart + microsec * 0.000001
 
                 # If samprate not set via blockette 100 calculate the sample
                 # rate according to the SEED manual.
@@ -1640,7 +1640,7 @@ def _convert_and_check_encoding_for_writing(encoding):
 
     try:
         encoding = int(encoding)
-    except:
+    except Exception:
         pass
 
     if isinstance(encoding, int):

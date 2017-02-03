@@ -13,15 +13,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import native_str
-from future import standard_library
-with standard_library.hooks():
-    import collections
+import collections
 
 import csv
 import io
 import warnings
 
 import obspy
+from obspy import UTCDateTime
 from obspy.core.inventory import (Inventory, Network, Station, Channel,
                                   Response, Equipment, Site,
                                   InstrumentSensitivity)
@@ -65,7 +64,7 @@ def unicode_csv_reader(unicode_csv_data, **kwargs):
     for row in csv_reader:
         try:
             yield [str(cell, "utf8") for cell in row]
-        except:
+        except Exception:
             yield [str(cell) for cell in row]
 
 
@@ -91,13 +90,13 @@ def is_fdsn_station_text_file(path_or_file_object):
         else:
             with open(path_or_file_object, "rt", encoding="utf8") as fh:
                 first_line = fh.readline()
-    except:
+    except Exception:
         return False
 
     # Attempt to move the file pointer to the old position.
     try:
         path_or_file_object.seek(cur_pos, 0)
-    except:
+    except Exception:
         pass
 
     first_line = first_line.strip()
@@ -105,7 +104,7 @@ def is_fdsn_station_text_file(path_or_file_object):
     # Attempt to decode.
     try:
         first_line = first_line.decode("utf-8")
-    except:
+    except Exception:
         pass
 
     if not first_line.startswith("#"):
@@ -248,8 +247,162 @@ def read_fdsn_station_text_file(path_or_file_object):
         inv.networks.extend(list(networks.values()))
     else:
         # Cannot really happen - just a safety measure.
-        raise NotImplementedError("Unkown level: " + str(level))
+        raise NotImplementedError("Unknown level: %s" % str(level))
     return inv
+
+
+def _format_time(value):
+    if isinstance(value, UTCDateTime):
+        return value.strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def inventory_to_station_text(inventory_or_network, level):
+    """
+    Function to convert inventory or network to station text representation.
+
+    :type inventory_or_network:
+        :class:`~obspy.core.inventory.inventory.Inventory` or
+        :class:`~obspy.core.inventory.network.Network`
+    :param inventory_or_network: The object to convert.
+    :type level: str
+    :param level: Specify level of detail using ``'network'``, ``'station'`` or
+        ``'channel'``
+    """
+    if isinstance(inventory_or_network, Inventory):
+        networks = inventory_or_network.networks
+    elif isinstance(inventory_or_network, Network):
+        networks = [inventory_or_network.networks]
+    else:
+        msg = ("'inventory_or_network' must be a "
+               "obspy.core.inventory.network.Network or a "
+               "obspy.core.inventory.inventory.Inventory object.")
+        raise TypeError(msg)
+
+    def _to_str(item):
+        if item is None:
+            return ""
+        x = str(item)
+        if isinstance(item, UTCDateTime):
+            x = _format_time(item)
+        return x
+
+    items = []  # list of items to write
+
+    # Write items at to the requested level of detail. Raises a ValueError if
+    # insufficient information is present for the requested level of detail.
+    level = level.upper()
+    if level == "NETWORK":
+        # get network level items
+        for net in networks:
+            items.append((net, None, None))
+        header = "#Network|Description|StartTime|EndTime|TotalStations"
+        lines = [header]
+        for net, sta, cha in items:
+            line = "|".join(_to_str(x) for x in (
+                net.code, net.description, _format_time(net.start_date),
+                _format_time(net.end_date), net.total_number_of_stations))
+            lines.append(line)
+    elif level == "STATION":
+        # get station level items
+        for net in networks:
+            if hasattr(net, 'stations') and net.stations:
+                for sta in net.stations:
+                    items.append((net, sta, None))
+            else:
+                msg = ("Unable to write stationtxt at station level. One or "
+                       "more networks contain no stations. Using "
+                       "`level='network'` might work (with less detail in "
+                       "the output).")
+                raise ValueError(msg)
+        if all(sta is not None for net, sta, cha in items):
+            header = ("#Network|Station|Latitude|Longitude|Elevation|SiteName|"
+                      "StartTime|EndTime")
+            lines = [header]
+            for net, sta, cha in items:
+                line = "|".join(_to_str(x) for x in (
+                    net.code, sta.code, sta.latitude,
+                    sta.longitude, sta.elevation,
+                    sta.site and sta.site.name,
+                    _format_time(sta.start_date),
+                    _format_time(sta.end_date)))
+                lines.append(line)
+    elif level == "CHANNEL":
+        # get channel level items.
+        for net in networks:
+            if hasattr(net, 'stations') and net.stations:
+                for sta in net.stations:
+                    if hasattr(sta, 'channels') and sta.channels:
+                        for cha in sta.channels:
+                            items.append((net, sta, cha))
+                    else:
+                        msg = ("Unable to write stationtxt at channel level. "
+                               "One or more stations contain no channels. "
+                               "Using `level='station'` might work (with less "
+                               "detail in the output).")
+                        raise ValueError(msg)
+            else:
+                msg = ("Unable to write stationtxt at channel level. "
+                       "One or more networks contain no stations. "
+                       "Using `level='network'` might work (with less "
+                       "detail in the output).")
+                raise ValueError(msg)
+
+        if all(cha is not None for net, sta, cha in items):
+            header = ("#Network|Station|Location|Channel|Latitude|Longitude|"
+                      "Elevation|Depth|Azimuth|Dip|SensorDescription|Scale|"
+                      "ScaleFreq|ScaleUnits|SampleRate|StartTime|EndTime")
+            lines = [header]
+            for net, sta, cha in items:
+                resp = cha and cha.response
+                sensitivity = resp and resp.instrument_sensitivity
+                line = "|".join(_to_str(x) for x in (
+                    net.code, sta.code, cha.location_code, cha.code,
+                    cha.latitude is not None and
+                    cha.latitude or sta.latitude,
+                    cha.longitude is not None and
+                    cha.longitude or sta.longitude,
+                    cha.elevation is not None and
+                    cha.elevation or sta.elevation,
+                    cha.depth, cha.azimuth, cha.dip,
+                    cha.sensor.type
+                    if (cha.sensor and cha.sensor.type) else None,
+                    sensitivity.value
+                    if (sensitivity and sensitivity.value) else None,
+                    sensitivity.frequency
+                    if (sensitivity and sensitivity.frequency) else None,
+                    sensitivity.input_units
+                    if (sensitivity and sensitivity.input_units) else None,
+                    cha.sample_rate, _format_time(cha.start_date),
+                    _format_time(cha.end_date)))
+                lines.append(line)
+    else:
+        raise ValueError("Unknown level: %s" % str(level))
+
+    return "\n".join(lines)
+
+
+def _write_stationtxt(inventory, path_or_file_object, level='channel',
+                      **kwargs):
+    """
+    Writes an inventory object to a file or file-like object in stationtxt
+    format.
+
+    :type inventory: :class:`~obspy.core.inventory.Inventory`
+    :param inventory: The inventory instance to be written.
+    :param file_or_file_object: The file or file-like object to be written to.
+    :param level: Specify level of detail using one of: ``'network'``,
+        ``'station'`` or ``'channel'``.
+    """
+    stationtxt = inventory_to_station_text(inventory, level)
+    if not hasattr(path_or_file_object, 'write'):
+        f = open(path_or_file_object, 'w')
+    else:
+        f = path_or_file_object
+    try:
+        f.write(stationtxt)
+    finally:
+        if not hasattr(path_or_file_object, 'write'):
+            f.close()
 
 
 if __name__ == '__main__':

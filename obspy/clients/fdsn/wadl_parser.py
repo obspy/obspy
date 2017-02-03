@@ -212,7 +212,7 @@ class WADLParser(object):
                 return True
             else:
                 return None
-        except:
+        except Exception:
             return None
 
     def _xpath(self, doc, expr):

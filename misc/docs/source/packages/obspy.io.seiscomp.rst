@@ -9,6 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
+       event
        sc3ml
 
     .. comment to end block

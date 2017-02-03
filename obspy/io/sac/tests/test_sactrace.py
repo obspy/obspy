@@ -232,5 +232,6 @@ class SACTraceTestCase(unittest.TestCase):
 def suite():
     return unittest.makeSuite(SACTraceTestCase, 'test')
 
+
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

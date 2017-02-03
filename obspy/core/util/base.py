@@ -253,7 +253,7 @@ def _get_ordered_entry_points(group, subgroup=None, order_list=[]):
     for name in order_list:
         try:
             entry_points[name] = ep_dict.pop(name)
-        except:
+        except Exception:
             # skip plug-ins which are not installed
             continue
     # extend entry points with any left over waveform plug-ins
@@ -494,6 +494,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
     NORDIC    :mod:`obspy.io.nordic` :func:`obspy.io.nordic.core.write_select`
     QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
+    SC3ML   :mod:`...io.seiscomp` :func:`obspy.io.seiscomp.event._write_sc3ml`
     SHAPEFILE :mod:`obspy.io.shapefile`
                              :func:`obspy.io.shapefile.core._write_shapefile`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`

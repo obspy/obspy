@@ -251,7 +251,7 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
                 for f in open_files.values():
                     try:
                         f.close()
-                    except:
+                    except Exception:
                         pass
     logger.info("Client '%s' - Successfully downloaded %i channels (of %i)" % (
         client_name, len(open_files), original_bulk_length))

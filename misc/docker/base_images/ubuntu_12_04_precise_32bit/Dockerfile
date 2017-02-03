@@ -21,6 +21,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python \
     python-decorator \
     python-dev \
+    python-geographiclib \
     python-imaging \
     python-lxml \
     python-matplotlib \

@@ -106,5 +106,6 @@ class KnetReadingTestCase(unittest.TestCase):
 def suite():
     return unittest.makeSuite(KnetReadingTestCase, 'test')
 
+
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

@@ -20,9 +20,9 @@ from obspy import UTCDateTime
 from obspy.io.mseed.headers import clibmseed
 
 from .util import (
-    _decode_ascii, _parse_long_time, _16_tuple_ascii, _16_tuple_int, bcd,
-    bcd_hex, bcd_julian_day_string_to_seconds_of_year, bcd_16bit_int,
-    bcd_8bit_hex, _get_timestamp_for_start_of_year)
+    _decode_ascii, _parse_long_time, _16_tuple_ascii, _16_tuple_int,
+    _16_tuple_float, bcd, bcd_hex, bcd_julian_day_string_to_seconds_of_year,
+    bcd_16bit_int, bcd_8bit_hex, _get_timestamp_for_start_of_year)
 
 
 class Reftek130UnpackPacketError(ValueError):
@@ -56,8 +56,7 @@ PACKET = [
     ("flags", np.uint8, None, np.uint8),
     ("data_format", np.uint8, bcd_8bit_hex, native_str("S2")),
     # Temporarily store the payload here.
-    ("payload", (np.uint8, 1000), None, (np.uint8, 1000)),
-    ]
+    ("payload", (np.uint8, 1000), None, (np.uint8, 1000))]
 
 
 # name, offset, length (bytes) and converter routine for EH/ET packet payload
@@ -82,7 +81,7 @@ EH_PAYLOAD = {
     "channel_fsa_code": (424, 16, _16_tuple_ascii),
     "channel_code": (440, 64, _16_tuple_ascii),
     "channel_sensor_fsa_code": (504, 16, _16_tuple_ascii),
-    "channel_sensor_vpu": (520, 96, _16_tuple_int),
+    "channel_sensor_vpu": (520, 96, _16_tuple_float),
     "channel_sensor_units_code": (616, 16, _16_tuple_ascii),
     "station_channel_number": (632, 48, _16_tuple_int),
     "_reserved_3": (680, 156, _decode_ascii),
@@ -90,8 +89,7 @@ EH_PAYLOAD = {
     "station_comment": (838, 40, _decode_ascii),
     "digital_filter_list": (878, 16, _decode_ascii),
     "position": (894, 26, _decode_ascii),
-    "reftek_120": (920, 80, None),
-    }
+    "reftek_120": (920, 80, None)}
 
 
 class Packet(object):
@@ -137,10 +135,13 @@ class EHPacket(Packet):
 
     def __init__(self, data):
         self._data = data
-        # ndarray.tobytes() only exists since numpy 1.9.0, so use bytes(...)
-        payload = bytes(self._data["payload"])
+        try:
+            payload = self._data["payload"].tobytes()
+        except AttributeError:
+            # for numpy < 1.9.0, does not work for python 3.6
+            payload = bytes(self._data["payload"])
         for name, (start, length, converter) in EH_PAYLOAD.items():
-            data = payload[start:start+length]
+            data = payload[start:start + length]
             if converter is not None:
                 data = converter(data)
             setattr(self, name, data)
@@ -251,35 +252,49 @@ def _initial_unpack_packets(bytestring):
     return result
 
 
-def _unpack_C0_data(packets):  # noqa
+def _unpack_C0_C2_data(packets, encoding):  # noqa
     """
-    Unpacks sample data from a packet array that uses 'C0' data encoding.
+    Unpacks sample data from a packet array that uses 'C0' or 'C2' data
+    encoding.
 
     :type packets: :class:`numpy.ndarray` (dtype ``PACKET_FINAL_DTYPE``)
     :param packets: Array of data packets (``packet_type`` ``'DT'``) from which
-        to unpack the sample data (with data encoding 'C0').
+        to unpack the sample data (with data encoding 'C0' or 'C2').
+    :type encoding: str
+    :param encoding: Reftek data encoding as specified in event header (EH)
+        packet, either ``'C0'`` or ``'C2'``.
     """
-    if np.any(packets['data_format'] != b'C0'):
+    if encoding == 'C0':
+        encoding_bytes = b'C0'
+    elif encoding == 'C2':
+        encoding_bytes = b'C2'
+    else:
+        msg = "Unregonized encoding: '{}'".format(encoding)
+        raise ValueError(msg)
+    if np.any(packets['data_format'] != encoding_bytes):
         differing_formats = np.unique(
-            packets[packets['data_format'] != b'C0']['data_format']).tolist()
-        msg = ("Using 'C0' data format unpacking routine but some packet(s) "
-               "specify other data format(s): {}".format(differing_formats))
+            packets[packets['data_format'] !=
+                    encoding_bytes]['data_format']).tolist()
+        msg = ("Using '{}' data format unpacking routine but some packet(s) "
+               "specify other data format(s): {}".format(encoding,
+                                                         differing_formats))
         warnings.warn(msg)
     # if the packet array is contiguous in memory (which it generally should
     # be), we can work with the memory address of the first packed data byte
     # and advance it by a fixed offset when moving from one packet to the next
     if packets.flags['C_CONTIGUOUS'] and packets.flags['F_CONTIGUOUS']:
-        return _unpack_C0_data_fast(packets)
+        return _unpack_C0_C2_data_fast(packets, encoding)
     # if the packet array is *not* contiguous in memory, fall back to slightly
     # slower unpacking with looking up the memory position of the first packed
     # byte in each packet individually.
     else:
-        return _unpack_C0_data_safe(packets)
+        return _unpack_C0_C2_data_safe(packets, encoding)
 
 
-def _unpack_C0_data_fast(packets):  # noqa
+def _unpack_C0_C2_data_fast(packets, encoding):  # noqa
     """
-    Unpacks sample data from a packet array that uses 'C0' data encoding.
+    Unpacks sample data from a packet array that uses 'C0' or 'C2' data
+    encoding.
 
     Unfortunately the whole data cannot be unpacked with one call to
     libmseed as some payloads do not take the full 960 bytes. They are
@@ -297,8 +312,18 @@ def _unpack_C0_data_fast(packets):  # noqa
 
     :type packets: :class:`numpy.ndarray` (dtype ``PACKET_FINAL_DTYPE``)
     :param packets: Array of data packets (``packet_type`` ``'DT'``) from which
-        to unpack the sample data (with data encoding 'C0').
+        to unpack the sample data (with data encoding 'C0' or 'C2').
+    :type encoding: str
+    :param encoding: Reftek data encoding as specified in event header (EH)
+        packet, either ``'C0'`` or ``'C2'``.
     """
+    if encoding == 'C0':
+        decode_steim = clibmseed.msr_decode_steim1
+    elif encoding == 'C2':
+        decode_steim = clibmseed.msr_decode_steim2
+    else:
+        msg = "Unregonized encoding: '{}'".format(encoding)
+        raise ValueError(msg)
     npts = packets["number_of_samples"].sum()
     unpacked_data = np.empty(npts, dtype=np.int32)
     pos = 0
@@ -309,7 +334,7 @@ def _unpack_C0_data_fast(packets):  # noqa
     else:
         offset = 0
     for _npts in packets["number_of_samples"]:
-        clibmseed.msr_decode_steim1(
+        decode_steim(
             s, 960, _npts, unpacked_data[pos:], _npts, None,
             1)
         pos += _npts
@@ -317,9 +342,10 @@ def _unpack_C0_data_fast(packets):  # noqa
     return unpacked_data
 
 
-def _unpack_C0_data_safe(packets):  # noqa
+def _unpack_C0_C2_data_safe(packets, encoding):  # noqa
     """
-    Unpacks sample data from a packet array that uses 'C0' data encoding.
+    Unpacks sample data from a packet array that uses 'C0' or 'C2' data
+    encoding.
 
     If the packet array is *not* contiguous in memory, fall back to slightly
     slower unpacking with looking up the memory position of the first packed
@@ -327,8 +353,18 @@ def _unpack_C0_data_safe(packets):  # noqa
 
     :type packets: :class:`numpy.ndarray` (dtype ``PACKET_FINAL_DTYPE``)
     :param packets: Array of data packets (``packet_type`` ``'DT'``) from which
-        to unpack the sample data (with data encoding 'C0').
+        to unpack the sample data (with data encoding 'C0' or 'C2').
+    :type encoding: str
+    :param encoding: Reftek data encoding as specified in event header (EH)
+        packet, either ``'C0'`` or ``'C2'``.
     """
+    if encoding == 'C0':
+        decode_steim = clibmseed.msr_decode_steim1
+    elif encoding == 'C2':
+        decode_steim = clibmseed.msr_decode_steim2
+    else:
+        msg = "Unregonized encoding: '{}'".format(encoding)
+        raise ValueError(msg)
     npts = packets["number_of_samples"].sum()
     unpacked_data = np.empty(npts, dtype=np.int32)
     pos = 0
@@ -336,7 +372,7 @@ def _unpack_C0_data_safe(packets):  # noqa
     # payload.
     for p in packets:
         _npts = p["number_of_samples"]
-        clibmseed.msr_decode_steim1(
+        decode_steim(
             p["payload"][40:].ctypes.data, 960, _npts,
             unpacked_data[pos:], _npts, None, 1)
         pos += _npts

@@ -85,8 +85,8 @@ class QualityControlTestCase(unittest.TestCase):
 
             # Head and tail gaps.
             mseed_metadata = MSEEDMetadata(
-                    files=[tf.name], starttime=obspy.UTCDateTime(-10),
-                    endtime=obspy.UTCDateTime(80))
+                files=[tf.name], starttime=obspy.UTCDateTime(-10),
+                endtime=obspy.UTCDateTime(80))
             self.assertEqual(mseed_metadata.meta['num_gaps'], 4)
             self.assertEqual(mseed_metadata.meta['num_overlaps'], 1)
             self.assertEqual(mseed_metadata.meta['sum_overlaps'], 5.0)
@@ -124,13 +124,13 @@ class QualityControlTestCase(unittest.TestCase):
                         header={"starttime": obspy.UTCDateTime(0),
                                 "network": "NL", "station": "HGN",
                                 "location": "02", "channel": "BHZ"}).write(
-                    tf1.name, format="mseed", encoding="STEIM1", reclen=256)
+                tf1.name, format="mseed", encoding="STEIM1", reclen=256)
             obspy.Trace(data=np.arange(10, dtype=np.float32),
                         header={"starttime": obspy.UTCDateTime(100),
                                 "sampling_rate": 2.0, "network": "BW",
                                 "station": "ALTM", "location": "00",
                                 "channel": "EHE"}).write(
-                    tf2.name, format="mseed", encoding="FLOAT32", reclen=1024)
+                tf2.name, format="mseed", encoding="FLOAT32", reclen=1024)
 
             with self.assertRaises(ValueError) as e:
                 MSEEDMetadata([tf1.name, tf2.name])
@@ -152,7 +152,7 @@ class QualityControlTestCase(unittest.TestCase):
                 tf1.name, format="mseed")
             obspy.Trace(data=np.arange(10, dtype=np.int32),
                         header={"starttime": obspy.UTCDateTime(100)}).write(
-                    tf2.name, format="mseed")
+                tf2.name, format="mseed")
             # Don't calculate statistics on the single segments.
             mseed_metadata = MSEEDMetadata([tf1.name, tf2.name],
                                            add_c_segments=False)
@@ -166,7 +166,7 @@ class QualityControlTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf1:
             obspy.Trace(data=np.arange(10, dtype=np.int32),
                         header={"starttime": obspy.UTCDateTime(0)}).write(
-                    tf1.name, format="mseed")
+                tf1.name, format="mseed")
             mseed_metadata = MSEEDMetadata([tf1.name], add_flags=True)
             ref = mseed_metadata.meta['miniseed_header_percentages']
             self.assertEqual(ref['timing_quality_max'],
@@ -186,13 +186,13 @@ class QualityControlTestCase(unittest.TestCase):
                         header={"starttime": obspy.UTCDateTime(0),
                                 "network": "BW", "station": "ALTM",
                                 "location": "00", "channel": "EHE"}).write(
-                    tf1.name, format="mseed", encoding="STEIM1", reclen=256)
+                tf1.name, format="mseed", encoding="STEIM1", reclen=256)
             obspy.Trace(data=np.arange(10, dtype=np.float32),
                         header={"starttime": obspy.UTCDateTime(100),
                                 "sampling_rate": 2.0, "network": "BW",
                                 "station": "ALTM", "location": "00",
                                 "channel": "EHE"}).write(
-                    tf2.name, format="mseed", encoding="FLOAT32", reclen=1024)
+                tf2.name, format="mseed", encoding="FLOAT32", reclen=1024)
             md = MSEEDMetadata([tf1.name, tf2.name], add_flags=True)
             self.assertEqual(md.meta["network"], "BW")
             self.assertEqual(md.meta["station"], "ALTM")
@@ -246,18 +246,18 @@ class QualityControlTestCase(unittest.TestCase):
             _create_mseed_file(tf1.name, record_count=1,
                                starttime=obspy.UTCDateTime(0),
                                seed=12345, flags={
-                                'io_and_clock_flags': {
-                                    "clock_locked": 1}})
+                                   'io_and_clock_flags': {
+                                       "clock_locked": 1}})
             _create_mseed_file(tf2.name, record_count=1,
                                starttime=obspy.UTCDateTime(75),
                                seed=12345, flags={
-                                'io_and_clock_flags': {
-                                    "clock_locked": 0}})
+                                   'io_and_clock_flags': {
+                                       "clock_locked": 0}})
             _create_mseed_file(tf3.name, record_count=1,
                                starttime=obspy.UTCDateTime(100),
                                seed=12345, flags={
-                                'io_and_clock_flags': {
-                                    "clock_locked": 1}})
+                                   'io_and_clock_flags': {
+                                       "clock_locked": 1}})
 
             md = MSEEDMetadata([tf1.name, tf2.name, tf3.name],
                                starttime=obspy.UTCDateTime(25),
@@ -272,60 +272,60 @@ class QualityControlTestCase(unittest.TestCase):
             _create_mseed_file(tf1.name, record_count=35,
                                starttime=obspy.UTCDateTime(0),
                                seed=12345, flags={
-                                'data_quality_flags': {
-                                    "amplifier_saturation": 25,
-                                    "digitizer_clipping": 12,
-                                    "spikes": 30,
-                                    "glitches": 6,
-                                    "missing_padded_data": 15,
-                                    "telemetry_sync_error": 16,
-                                    "digital_filter_charging": 4,
-                                    "suspect_time_tag": 8},
-                                'activity_flags': {
-                                    "calibration_signal": 10,
-                                    "time_correction_applied": 20,
-                                    "event_begin": 33,
-                                    "event_end": 33,
-                                    "positive_leap": 0,
-                                    "negative_leap": 10,
-                                    "event_in_progress": 15},
-                                'io_and_clock_flags': {
-                                    "station_volume": 8,
-                                    "long_record_read": 33,
-                                    "short_record_read": 24,
-                                    "start_time_series": 31,
-                                    "end_time_series": 24,
-                                    "clock_locked": 32}})
+                                   'data_quality_flags': {
+                                       "amplifier_saturation": 25,
+                                       "digitizer_clipping": 12,
+                                       "spikes": 30,
+                                       "glitches": 6,
+                                       "missing_padded_data": 15,
+                                       "telemetry_sync_error": 16,
+                                       "digital_filter_charging": 4,
+                                       "suspect_time_tag": 8},
+                                   'activity_flags': {
+                                       "calibration_signal": 10,
+                                       "time_correction_applied": 20,
+                                       "event_begin": 33,
+                                       "event_end": 33,
+                                       "positive_leap": 0,
+                                       "negative_leap": 10,
+                                       "event_in_progress": 15},
+                                   'io_and_clock_flags': {
+                                       "station_volume": 8,
+                                       "long_record_read": 33,
+                                       "short_record_read": 24,
+                                       "start_time_series": 31,
+                                       "end_time_series": 24,
+                                       "clock_locked": 32}})
             # Previous file ends exactly on 1750, start new file
             # to prevent overlapping records. When records overlap
             # their contributions should NOT be summed
             _create_mseed_file(tf2.name, record_count=23,
                                starttime=obspy.UTCDateTime(1750),
                                seed=12345, flags={
-                                'data_quality_flags': {
-                                    "amplifier_saturation": 5,
-                                    "digitizer_clipping": 7,
-                                    "spikes": 5,
-                                    "glitches": 3,
-                                    "missing_padded_data": 5,
-                                    "telemetry_sync_error": 3,
-                                    "digital_filter_charging": 4,
-                                    "suspect_time_tag": 2},
-                                'activity_flags': {
-                                    "calibration_signal": 1,
-                                    "time_correction_applied": 0,
-                                    "event_begin": 3,
-                                    "event_end": 3,
-                                    "positive_leap": 0,
-                                    "negative_leap": 1,
-                                    "event_in_progress": 5},
-                                'io_and_clock_flags': {
-                                    "station_volume": 1,
-                                    "long_record_read": 3,
-                                    "short_record_read": 2,
-                                    "start_time_series": 3,
-                                    "end_time_series": 4,
-                                    "clock_locked": 2}})
+                                   'data_quality_flags': {
+                                       "amplifier_saturation": 5,
+                                       "digitizer_clipping": 7,
+                                       "spikes": 5,
+                                       "glitches": 3,
+                                       "missing_padded_data": 5,
+                                       "telemetry_sync_error": 3,
+                                       "digital_filter_charging": 4,
+                                       "suspect_time_tag": 2},
+                                   'activity_flags': {
+                                       "calibration_signal": 1,
+                                       "time_correction_applied": 0,
+                                       "event_begin": 3,
+                                       "event_end": 3,
+                                       "positive_leap": 0,
+                                       "negative_leap": 1,
+                                       "event_in_progress": 5},
+                                   'io_and_clock_flags': {
+                                       "station_volume": 1,
+                                       "long_record_read": 3,
+                                       "short_record_read": 2,
+                                       "start_time_series": 3,
+                                       "end_time_series": 4,
+                                       "clock_locked": 2}})
 
             md = MSEEDMetadata([tf1.name, tf2.name], add_flags=True)
 
@@ -365,29 +365,29 @@ class QualityControlTestCase(unittest.TestCase):
 
             meta = md.meta['miniseed_header_percentages']
             meta_dq = meta['data_quality_flags']
-            _assert_float_equal(meta_dq['glitches'], 9/0.58)
-            _assert_float_equal(meta_dq['amplifier_saturation'], 30/0.58)
-            _assert_float_equal(meta_dq['digital_filter_charging'], 8/0.58)
-            _assert_float_equal(meta_dq['digitizer_clipping'], 19/0.58)
-            _assert_float_equal(meta_dq['missing_padded_data'], 20/0.58)
-            _assert_float_equal(meta_dq['spikes'], 35/0.58)
-            _assert_float_equal(meta_dq['suspect_time_tag'], 10/0.58)
-            _assert_float_equal(meta_dq['telemetry_sync_error'], 19/0.58)
+            _assert_float_equal(meta_dq['glitches'], 9 / 0.58)
+            _assert_float_equal(meta_dq['amplifier_saturation'], 30 / 0.58)
+            _assert_float_equal(meta_dq['digital_filter_charging'], 8 / 0.58)
+            _assert_float_equal(meta_dq['digitizer_clipping'], 19 / 0.58)
+            _assert_float_equal(meta_dq['missing_padded_data'], 20 / 0.58)
+            _assert_float_equal(meta_dq['spikes'], 35 / 0.58)
+            _assert_float_equal(meta_dq['suspect_time_tag'], 10 / 0.58)
+            _assert_float_equal(meta_dq['telemetry_sync_error'], 19 / 0.58)
 
             meta_af = meta['activity_flags']
-            _assert_float_equal(meta_af['calibration_signal'], 11/0.58)
-            _assert_float_equal(meta_af['event_begin'], 36/0.58)
-            _assert_float_equal(meta_af['event_end'], 36/0.58)
-            _assert_float_equal(meta_af['event_in_progress'], 20/0.58)
-            _assert_float_equal(meta_af['time_correction_applied'], 20/0.58)
+            _assert_float_equal(meta_af['calibration_signal'], 11 / 0.58)
+            _assert_float_equal(meta_af['event_begin'], 36 / 0.58)
+            _assert_float_equal(meta_af['event_end'], 36 / 0.58)
+            _assert_float_equal(meta_af['event_in_progress'], 20 / 0.58)
+            _assert_float_equal(meta_af['time_correction_applied'], 20 / 0.58)
 
             meta_io = meta['io_and_clock_flags']
-            _assert_float_equal(meta_io['clock_locked'], 34/0.58)
-            _assert_float_equal(meta_io['station_volume'], 9/0.58)
-            _assert_float_equal(meta_io['long_record_read'], 36/0.58)
-            _assert_float_equal(meta_io['short_record_read'], 26/0.58)
-            _assert_float_equal(meta_io['start_time_series'], 34/0.58)
-            _assert_float_equal(meta_io['end_time_series'], 28/0.58)
+            _assert_float_equal(meta_io['clock_locked'], 34 / 0.58)
+            _assert_float_equal(meta_io['station_volume'], 9 / 0.58)
+            _assert_float_equal(meta_io['long_record_read'], 36 / 0.58)
+            _assert_float_equal(meta_io['short_record_read'], 26 / 0.58)
+            _assert_float_equal(meta_io['start_time_series'], 34 / 0.58)
+            _assert_float_equal(meta_io['end_time_series'], 28 / 0.58)
 
             ref = md.meta['miniseed_header_percentages']
             self.assertEqual(ref['timing_quality_mean'], None)
@@ -436,10 +436,10 @@ class QualityControlTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf1, NamedTemporaryFile() as tf2:
             obspy.Trace(data=d[:5],
                         header={"starttime": obspy.UTCDateTime(0)}).write(
-                    tf1.name, format="mseed")
+                tf1.name, format="mseed")
             obspy.Trace(data=d[5:],
                         header={"starttime": obspy.UTCDateTime(10)}).write(
-                    tf2.name, format="mseed")
+                tf2.name, format="mseed")
 
             md = MSEEDMetadata(files=[tf1.name, tf2.name])
 
@@ -462,7 +462,7 @@ class QualityControlTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf1:
             obspy.Trace(data=d,
                         header={"starttime": obspy.UTCDateTime(10)}).write(
-                    tf1.name, format="mseed")
+                tf1.name, format="mseed")
             md = MSEEDMetadata([tf1.name])
         self.assertTrue(np.fabs(md.meta["sample_rms"] - 1) < 1E-3)
         for c_segment in md.meta["c_segments"]:
@@ -479,7 +479,7 @@ class QualityControlTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf1:
             obspy.Trace(data=d,
                         header={"starttime": obspy.UTCDateTime(10)}).write(
-                    tf1.name, format="mseed")
+                tf1.name, format="mseed")
             md = MSEEDMetadata([tf1.name])
             self.assertTrue(md.meta["sample_rms"] == np.iinfo(np.int32).max)
 
@@ -693,7 +693,7 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertTrue(abs(sum(record_lengths) - (total_time)) < 1e-6)
 
         # Calculate the percentage of clock_locked seconds
-        percentage = 100*sum(record_lengths_flagged)/sum(record_lengths)
+        percentage = 100 * sum(record_lengths_flagged) / sum(record_lengths)
         meta = md.meta["miniseed_header_percentages"]
         meta_io = meta['io_and_clock_flags']
         self.assertTrue(abs(meta_io["clock_locked"] - percentage) < 1e-6)
@@ -790,13 +790,13 @@ class QualityControlTestCase(unittest.TestCase):
                 NamedTemporaryFile() as tf3:
             obspy.Trace(data=d[:5],
                         header={"starttime": obspy.UTCDateTime(0)}).write(
-                    tf1.name, format="mseed")
+                tf1.name, format="mseed")
             obspy.Trace(data=d[5:],
                         header={"starttime": obspy.UTCDateTime(10)}).write(
-                    tf2.name, format="mseed")
+                tf2.name, format="mseed")
             obspy.Trace(data=np.arange(10, dtype=np.int32),
                         header={"starttime": obspy.UTCDateTime(20)}).write(
-                    tf3.name, format="mseed")
+                tf3.name, format="mseed")
 
             md = MSEEDMetadata(files=[tf1.name, tf2.name, tf3.name])
 
@@ -882,6 +882,7 @@ class QualityControlTestCase(unittest.TestCase):
 
 def suite():
     return unittest.makeSuite(QualityControlTestCase, 'test')
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

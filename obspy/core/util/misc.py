@@ -74,7 +74,7 @@ def guess_delta(channel):
     """
     try:
         return 1. / BAND_CODE[channel[0]]
-    except:
+    except Exception:
         msg = "No or unknown channel id provided. Specifying a channel id " + \
               "could lead to better selection of first/last samples of " + \
               "fetched traces."
@@ -153,7 +153,7 @@ def flat_not_masked_contiguous(a):
         if not k:
             result.append(slice(i, i + n))
         i += n
-    return result or None
+    return result
 
 
 def complexify_string(line):
@@ -519,7 +519,7 @@ def limit_numpy_fft_cache(max_size_in_mb_per_cache=100):
         # try/except to guard against future numpy changes.
         try:
             total_size = sum([_j.nbytes for _i in cache.values() for _j in _i])
-        except:
+        except Exception:
             continue
         if total_size > max_size_in_mb_per_cache * 1024 * 1024:
             cache.clear()

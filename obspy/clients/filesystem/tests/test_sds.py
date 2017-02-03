@@ -110,32 +110,32 @@ class SDSTestCase(unittest.TestCase):
             with TemporarySDSDirectory(year=year, doy=doy) as temp_sds:
                 # normal test reading across the day break
                 client = Client(temp_sds.tempdir)
-                st = client.get_waveforms(net, sta, loc, cha, t-20, t+20)
+                st = client.get_waveforms(net, sta, loc, cha, t - 20, t + 20)
                 self.assertEqual(len(st), 1)
-                self.assertEqual(st[0].stats.starttime, t-20)
-                self.assertEqual(st[0].stats.endtime, t+20)
+                self.assertEqual(st[0].stats.starttime, t - 20)
+                self.assertEqual(st[0].stats.endtime, t + 20)
                 self.assertEqual(len(st[0]), 5)
                 # test merge option
-                st = client.get_waveforms(net, sta, loc, cha, t-200, t+200,
+                st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200,
                                           merge=False)
                 self.assertEqual(len(st), 2)
-                st = client.get_waveforms(net, sta, loc, cha, t-200, t+200,
+                st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200,
                                           merge=None)
                 self.assertEqual(len(st), 2)
-                st = client.get_waveforms(net, sta, loc, cha, t-200, t+200,
+                st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200,
                                           merge=0)
                 self.assertEqual(len(st), 1)
                 # test reading data from a single day file
                 # (data is in the file where it's expected)
-                st = client.get_waveforms(net, sta, loc, cha, t-80, t-30)
+                st = client.get_waveforms(net, sta, loc, cha, t - 80, t - 30)
                 self.assertEqual(len(st), 1)
                 # test reading data from a single day file
                 # (data is in the dayfile of the previous day)
-                st = client.get_waveforms(net, sta, loc, cha, t+20, t+40)
+                st = client.get_waveforms(net, sta, loc, cha, t + 20, t + 40)
                 self.assertEqual(len(st), 1)
                 # test that format autodetection with `format=None` works
                 client = Client(temp_sds.tempdir, format=None)
-                st = client.get_waveforms(net, sta, loc, cha, t-200, t+200)
+                st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200)
                 self.assertEqual(len(st), 1)
 
     def test_read_from_sds_with_wildcarded_seed_ids(self):
@@ -152,12 +152,12 @@ class SDSTestCase(unittest.TestCase):
                      "*.*.*.HHZ", "*.*.*.*"),
                     (3, 3, 4, 8, 48)):
                 net, sta, loc, cha = wildcarded_seed_id.split(".")
-                st = client.get_waveforms(net, sta, loc, cha, t-200, t+200)
+                st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200)
                 self.assertEqual(len(st), num_matching_ids)
             # test with SDS type wildcards
             for type_wildcard in ("*", "?"):
                 net, sta, loc, cha = wildcarded_seed_id.split(".")
-                st = client.get_waveforms(net, sta, loc, cha, t-200, t+200)
+                st = client.get_waveforms(net, sta, loc, cha, t - 200, t + 200)
                 self.assertEqual(len(st), num_matching_ids)
 
     def test_sds_report(self):
@@ -251,9 +251,9 @@ class SDSTestCase(unittest.TestCase):
             got_nslc = client.get_all_nslc(datetime=t)
             self.assertEqual(expected_nslc, got_nslc)
             # other dates that have no data should return empty list
-            got_nslc = client.get_all_nslc(datetime=t+2*24*3600)
+            got_nslc = client.get_all_nslc(datetime=t + 2 * 24 * 3600)
             self.assertEqual([], got_nslc)
-            got_nslc = client.get_all_nslc(datetime=t-2*24*3600)
+            got_nslc = client.get_all_nslc(datetime=t - 2 * 24 * 3600)
             self.assertEqual([], got_nslc)
 
 

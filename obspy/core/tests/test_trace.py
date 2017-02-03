@@ -1485,6 +1485,40 @@ class TraceTestCase(unittest.TestCase):
         self.assertFalse(isinstance(st[0].data, np.ma.masked_array))
         self.assertFalse(isinstance(st[1].data, np.ma.masked_array))
 
+    def test_split_empty_masked_array(self):
+        """
+        Test split method with a masked array without any data.
+        """
+        tr = Trace(data=np.ma.masked_all(100))
+
+        self.assertTrue(isinstance(tr.data, np.ma.masked_array))
+        self.assertTrue(isinstance(tr, Trace))
+
+        st = tr.split()
+
+        self.assertTrue(isinstance(st, Stream))
+        self.assertEqual(len(st), 0)
+
+    def test_split_masked_array_without_actually_masked_values(self):
+        """
+        Tests splitting a masked array without actually masked data.
+        """
+        # First non masked.
+        tr = Trace(data=np.arange(100))
+        st = tr.copy().split()
+        self.assertEqual(len(st), 1)
+        self.assertEqual(tr, st[0])
+        self.assertFalse(isinstance(st[0].data, np.ma.masked_array))
+
+        # Now the same thing but with an initially masked array but no
+        # masked values.
+        tr = Trace(data=np.ma.arange(100))
+        self.assertFalse(tr.data.mask)
+        st = tr.copy().split()
+        self.assertEqual(len(st), 1)
+        self.assertEqual(tr, st[0])
+        self.assertFalse(isinstance(st[0].data, np.ma.masked_array))
+
     def test_simulate_evalresp(self):
         """
         Tests that trace.simulate calls evalresp with the correct network,
@@ -1499,7 +1533,7 @@ class TraceTestCase(unittest.TestCase):
                 tr.simulate(seedresp={"filename": "RESP.dummy",
                                       "units": "VEL",
                                       "date": tr.stats.starttime})
-        except:
+        except Exception:
             pass
 
         self.assertEqual(patch.call_count, 1)
@@ -2023,7 +2057,7 @@ class TraceTestCase(unittest.TestCase):
         resolved.
         """
         starttime = UTCDateTime("1970-01-01T00:00:00.000000Z")
-        tr0 = Trace(np.sin(np.linspace(0, 2*np.pi, 10)),
+        tr0 = Trace(np.sin(np.linspace(0, 2 * np.pi, 10)),
                     {'sampling_rate': 1.0,
                      'starttime': starttime})
         # downsample
@@ -2038,7 +2072,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 5)
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
-                         starttime + tr.stats.delta * (tr.stats.npts-1))
+                         starttime + tr.stats.delta * (tr.stats.npts - 1))
 
         # upsample
         tr = tr0.copy()
@@ -2049,21 +2083,21 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 20)
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
-                         starttime + tr.stats.delta * (tr.stats.npts-1))
+                         starttime + tr.stats.delta * (tr.stats.npts - 1))
 
         # downsample with non integer ratio
         tr = tr0.copy()
         tr.resample(0.75, window='hanning', no_filter=True)
-        self.assertEqual(len(tr.data), int(10*.75))
+        self.assertEqual(len(tr.data), int(10 * .75))
         expected = np.array([0.15425413, 0.66991128, 0.74610418, 0.11960477,
                              -0.60644662, -0.77403839, -0.30938935])
         self.assertTrue(np.all(np.abs(tr.data - expected) < 1e-7))
         self.assertEqual(tr.stats.sampling_rate, 0.75)
-        self.assertEqual(tr.stats.delta, 1/0.75)
-        self.assertEqual(tr.stats.npts, int(10*.75))
+        self.assertEqual(tr.stats.delta, 1 / 0.75)
+        self.assertEqual(tr.stats.npts, int(10 * .75))
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
-                         starttime + tr.stats.delta * (tr.stats.npts-1))
+                         starttime + tr.stats.delta * (tr.stats.npts - 1))
 
         # downsample without window
         tr = tr0.copy()
@@ -2074,7 +2108,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 5)
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
-                         starttime + tr.stats.delta * (tr.stats.npts-1))
+                         starttime + tr.stats.delta * (tr.stats.npts - 1))
 
         # downsample with window and automatic filtering
         tr = tr0.copy()
@@ -2085,7 +2119,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 5)
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
-                         starttime + tr.stats.delta * (tr.stats.npts-1))
+                         starttime + tr.stats.delta * (tr.stats.npts - 1))
 
         # downsample with custom window
         tr = tr0.copy()

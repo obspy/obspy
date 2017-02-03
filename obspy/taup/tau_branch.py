@@ -454,10 +454,10 @@ class TauBranch(object):
                   (native_str('is_p_wave'), np.bool_),
                   (native_str('max_ray_param'), np.float_),
                   (native_str('min_ray_param'), np.float_),
-                  (native_str('min_turn_ray_param'),  np.float_),
+                  (native_str('min_turn_ray_param'), np.float_),
                   (native_str('tau'), np.float_, self.tau.shape),
                   (native_str('time'), np.float_, self.time.shape),
-                  (native_str('top_depth'),  np.float_)]
+                  (native_str('top_depth'), np.float_)]
         arr = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
             key = dtype[0]

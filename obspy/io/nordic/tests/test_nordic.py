@@ -456,8 +456,26 @@ class TestNordicMethods(unittest.TestCase):
             self.assertTrue(pick.time in pick_times)
         self.assertEqual(event_2.origins[0].time, event.origins[0].time)
 
+    def test_distance_conversion(self):
+        """
+        Check that distances are converted properly.
+        """
+        testing_path = os.path.join(self.testing_path, '01-0411-15L.S201309')
+        cat = read_events(testing_path)
+        event = cat[0]
+        self.assertAlmostEqual(
+            sorted(event.origins[0].arrivals,
+                   key=lambda x: x.distance)[0].distance, 0.035972864236749225)
+        pick_strings = nordpick(event)
+        self.assertEqual(
+            int([p for p in pick_strings if p.split()[0] == 'GCSZ' and
+                 p.split()[1] == 'SZ'][0].split()[-1]), 304)
+        self.assertEqual(
+            int([p for p in pick_strings if p.split()[0] == 'WZ11' and
+                 p.split()[1] == 'HZ'][0].split()[-1]), 30)
 
-def test_similarity(event_1, event_2):
+
+def test_similarity(event_1, event_2, verbose=False):
     """
     Check the similarity of the components of obspy events, discounting
     resource IDs, which are not maintained in nordic files.
@@ -466,6 +484,9 @@ def test_similarity(event_1, event_2):
     :param event_1: First event
     :type event_2: obspy.core.event.Event
     :param event_2: Comparison event
+    :type verbose: bool
+    :param verbose: If true and fails will output why it fails.
+
     :return: bool
     """
     # Check origins
@@ -478,50 +499,87 @@ def test_similarity(event_1, event_2):
                            "quality", "creation_info", "evaluation_mode",
                            "depth_errors", "time_errors"]:
                 if ori_1[key] != ori_2[key]:
+                    if verbose:
+                        print('%s is not the same as %s for key %s' %
+                              (ori_1[key], ori_2[key], key))
                     return False
             elif key == "arrivals":
                 if len(ori_1[key]) != len(ori_2[key]):
+                    print('%i is not the same as %i for key %s' %
+                          (len(ori_1[key]), len(ori_2[key]), key))
                     return False
                 for arr_1, arr_2 in zip(ori_1[key], ori_2[key]):
                     for arr_key in arr_1.keys():
-                        if arr_key not in ["resource_id", "pick_id"]:
+                        if arr_key not in ["resource_id", "pick_id",
+                                           "distance"]:
                             if arr_1[arr_key] != arr_2[arr_key]:
+                                if verbose:
+                                    print('%s does not match %s for key %s' %
+                                          (arr_1[arr_key], arr_2[arr_key],
+                                           arr_key))
                                 return False
+                    if arr_1["distance"] and round(
+                            arr_1["distance"]) != round(arr_2["distance"]):
+                            if verbose:
+                                print('%s does not match %s for key %s' %
+                                      (arr_1[arr_key], arr_2[arr_key],
+                                       arr_key))
+                            return False
     # Check picks
     if len(event_1.picks) != len(event_2.picks):
+        if verbose:
+            print('Number of picks is not equal')
         return False
     for pick_1, pick_2 in zip(event_1.picks, event_2.picks):
         # Assuming same ordering of picks...
         for key in pick_1.keys():
             if key not in ["resource_id", "waveform_id"]:
                 if pick_1[key] != pick_2[key]:
+                    if verbose:
+                        print('%s is not the same as %s for key %s' %
+                              (pick_1[key], pick_2[key], key))
                     return False
             elif key == "waveform_id":
                 if pick_1[key].station_code != pick_2[key].station_code:
+                    if verbose:
+                        print('Station codes do not match')
                     return False
                 if pick_1[key].channel_code[0] != pick_2[key].channel_code[0]:
+                    if verbose:
+                        print('Channel codes do not match')
                     return False
                 if pick_1[key].channel_code[-1] !=\
                    pick_2[key].channel_code[-1]:
+                    if verbose:
+                        print('Channel codes do not match')
                     return False
     # Check amplitudes
     if not len(event_1.amplitudes) == len(event_2.amplitudes):
-        print('amplitudes')
+        if verbose:
+            print('Not the same number of amplitudes')
         return False
     for amp_1, amp_2 in zip(event_1.amplitudes, event_2.amplitudes):
         # Assuming same ordering of amplitudes
         for key in amp_1.keys():
             if key not in ["resource_id", "pick_id", "waveform_id", "snr"]:
                 if not amp_1[key] == amp_2[key]:
-                    print(key)
+                    if verbose:
+                        print('%s is not the same as %s for key %s' %
+                              (amp_1[key], amp_2[key], key))
                     return False
             elif key == "waveform_id":
                 if pick_1[key].station_code != pick_2[key].station_code:
+                    if verbose:
+                        print('Station codes do not match')
                     return False
                 if pick_1[key].channel_code[0] != pick_2[key].channel_code[0]:
+                    if verbose:
+                        print('Channel codes do not match')
                     return False
                 if pick_1[key].channel_code[-1] !=\
                    pick_2[key].channel_code[-1]:
+                    if verbose:
+                        print('Channel codes do not match')
                     return False
     return True
 
@@ -612,6 +670,7 @@ def full_test_event():
 
 def suite():
     return unittest.makeSuite(TestNordicMethods, 'test')
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

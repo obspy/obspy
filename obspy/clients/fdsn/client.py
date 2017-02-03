@@ -45,7 +45,7 @@ from obspy import UTCDateTime, read_inventory
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
-                     FDSNRedirectException)
+                     FDSNRedirectException, FDSNNoDataException)
 from .wadl_parser import WADLParser
 
 
@@ -425,7 +425,7 @@ class Client(object):
         >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                        http://service.iris.edu/fdsnws/station/1/query...
+                        ...
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                     Networks (1):
@@ -466,7 +466,7 @@ class Client(object):
         >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                    http://service.iris.edu/fdsnws/station/1/query?...
+                        ...
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (1):
@@ -937,7 +937,7 @@ class Client(object):
         >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                     http://service.iris.edu/fdsnws/station/1/query?
+                        ...
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
@@ -967,7 +967,7 @@ class Client(object):
         >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                     http://service.iris.edu/fdsnws/station/1/query?
+                        ...
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
@@ -1145,7 +1145,7 @@ class Client(object):
 
             try:
                 value = this_type(value)
-            except:
+            except Exception:
                 msg = "'%s' could not be converted to type '%s'." % (
                     str(value), this_type.__name__)
                 raise TypeError(msg)
@@ -1270,7 +1270,7 @@ class Client(object):
                 printed_something = True
                 msg.append("The service offers the following "
                            "non-standard parameters:")
-                for name in additional_parameters:
+                for name in sorted(additional_parameters):
                     msg.append(_param_info_string(name))
 
             if missing_default_parameters:
@@ -1308,11 +1308,12 @@ class Client(object):
             try:
                 server_info = "\n".join([
                     line for line in data.read().splitlines() if line])
-            except:
+            except Exception:
                 server_info = None
         # No data.
         if code == 204:
-            raise FDSNException("No data available for request.", server_info)
+            raise FDSNNoDataException("No data available for request.",
+                                      server_info)
         elif code == 400:
             msg = ("Bad request. If you think your request was valid "
                    "please contact the developers.")
@@ -1618,7 +1619,7 @@ def build_url(base_url, service, major_version, resource_type,
         for key, value in parameters.items():
             try:
                 parameters[key] = value.strip()
-            except:
+            except Exception:
                 pass
         url = "?".join((url, urllib.parse.urlencode(parameters)))
     return url

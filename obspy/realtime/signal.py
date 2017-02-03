@@ -363,6 +363,7 @@ def tauc(trace, width, rtmemory_list=None):
 
     return new_sample
 
+
 # memory object indices for storing specific values
 _AMP_AT_PICK = 0
 _HAVE_USED_MEMORY = 1

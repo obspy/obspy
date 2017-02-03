@@ -70,13 +70,13 @@ def _xml_doc_from_anything(source):
     """
     try:
         xml_doc = etree.parse(source)
-    except:
+    except Exception:
         try:
             xml_doc = etree.fromstring(source)
-        except:
+        except Exception:
             try:
                 xml_doc = etree.fromstring(source.encode())
-            except:
+            except Exception:
                 raise ValueError("Could not parse '%s' to an etree element." %
                                  source)
     return xml_doc
@@ -105,7 +105,7 @@ def _is_quakeml(filename):
 
     try:
         xml_doc = _xml_doc_from_anything(filename)
-    except:
+    except Exception:
         return False
     finally:
         if file_like_object:
@@ -118,7 +118,7 @@ def _is_quakeml(filename):
         else:
             namespace = _get_first_child_namespace(xml_doc)
         xml_doc.xpath('q:eventParameters', namespaces={"q": namespace})[0]
-    except:
+    except Exception:
         return False
     return True
 
@@ -176,7 +176,7 @@ class Unpickler(object):
             return None
         try:
             return convert_to(text)
-        except:
+        except Exception:
             msg = "Could not convert %s to type %s. Returning None."
             warnings.warn(msg % (text, convert_to))
         return None
@@ -561,6 +561,7 @@ class Unpickler(object):
         obj.composite_times = self._composite_times(element)
         obj.quality = self._origin_quality(element)
         obj.origin_type = self._xpath2obj('type', element)
+        obj.region = self._xpath2obj('region', element)
         obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
         obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
         obj.creation_info = self._creation_info(element)
@@ -725,7 +726,7 @@ class Unpickler(object):
         # optional attribute
         try:
             obj.preferred_plane = int(sub_el.get('preferredPlane'))
-        except:
+        except Exception:
             obj.preferred_plane = None
         self._extra(sub_el, obj)
         return obj
@@ -1080,7 +1081,7 @@ class Pickler(object):
     def _id(self, obj):
         try:
             return obj.get_quakeml_uri()
-        except:
+        except Exception:
             return ResourceIdentifier().get_quakeml_uri()
 
     def _str(self, value, root, tag, always_create=False, attrib=None):
@@ -1156,14 +1157,10 @@ class Pickler(object):
     def _station_magnitude_contributions(self, stat_contrib, element):
         for contrib in stat_contrib:
             contrib_el = etree.Element('stationMagnitudeContribution')
-            etree.SubElement(contrib_el, 'stationMagnitudeID').text = \
-                contrib.station_magnitude_id.id
-            if contrib.weight:
-                etree.SubElement(contrib_el, 'weight').text = \
-                    str(contrib.weight)
-            if contrib.residual:
-                etree.SubElement(contrib_el, 'residual').text = \
-                    str(contrib.residual)
+            self._str(contrib.station_magnitude_id.id, contrib_el,
+                      'stationMagnitudeID')
+            self._str(contrib.weight, contrib_el, 'weight')
+            self._str(contrib.residual, contrib_el, 'residual')
             self._extra(contrib, contrib_el)
             element.append(contrib_el)
 
@@ -1406,6 +1403,7 @@ class Pickler(object):
             if len(qu_el) > 0:
                 element.append(qu_el)
         self._str(origin.origin_type, element, 'type')
+        self._str(origin.region, element, 'region')
         self._str(origin.evaluation_mode, element, 'evaluationMode')
         self._str(origin.evaluation_status, element, 'evaluationStatus')
         self._comments(origin.comments, element)
@@ -1810,7 +1808,7 @@ def _write_quakeml(catalog, filename, validate=False, nsmap=None,
         the :meth:`~obspy.core.event.Catalog.write` method of an
         ObsPy :class:`~obspy.core.event.Catalog` object, call this instead.
 
-    :type catalog: :class:`~obspy.core.stream.Catalog`
+    :type catalog: :class:`~obspy.core.event.catalog.Catalog`
     :param catalog: The ObsPy Catalog object to write.
     :type filename: str or file
     :param filename: Filename to write or open file-like object.
@@ -1839,11 +1837,12 @@ def _write_quakeml(catalog, filename, validate=False, nsmap=None,
         file_opened = False
         fh = filename
 
-    fh.write(xml_doc)
-
-    # Close if a file has been opened by this function.
-    if file_opened is True:
-        fh.close()
+    try:
+        fh.write(xml_doc)
+    finally:
+        # Close if a file has been opened by this function.
+        if file_opened is True:
+            fh.close()
 
 
 def _read_seishub_event_xml(filename):

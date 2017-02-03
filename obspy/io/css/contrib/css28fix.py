@@ -22,7 +22,7 @@ from datetime import datetime
 try:
     # only process first line
     head = list(map(str.strip, open(sys.argv[1]).readlines()[0].split()))
-except:
+except Exception:
     sys.exit("cannot read wfdisc file (arg)")
 
 input = head[15]  # input file name
@@ -62,5 +62,5 @@ try:
     pylab.plot([x * SH["DELTA"] for x in range(SH["LENGTH"])],
                [d * SH["CALIB"] for d in data])
     pylab.show()
-except:
+except Exception:
     sys.exit("cannot show plot!")

@@ -54,7 +54,7 @@ def _is_mseed(filename):
                 file_size = filename.getbuffer().nbytes
             try:
                 file_size = os.fstat(filename.fileno()).st_size
-            except:
+            except Exception:
                 _p = filename.tell()
                 filename.seek(0, 2)
                 file_size = filename.tell()
@@ -81,7 +81,7 @@ def __is_mseed(fp, file_size):  # NOQA
         fp.seek(-7, 1)
         try:
             _t = fp.read(128).decode().strip()
-        except:
+        except Exception:
             return False
         if not _t:
             return __is_mseed(fp=fp, file_size=file_size)
@@ -94,7 +94,7 @@ def __is_mseed(fp, file_size):  # NOQA
         # (min record size) and try again.
         try:
             _t = fp.read(128 - 7).decode().strip()
-        except:
+        except Exception:
             return False
         if not _t:
             return __is_mseed(fp=fp, file_size=file_size)
@@ -115,7 +115,7 @@ def __is_mseed(fp, file_size):  # NOQA
         # to the appropriate position
         try:
             fp.seek(int(fp.read(4)) - 7, 1)
-        except:
+        except Exception:
             return False
         _i += 1
         # break after 3 cycles
@@ -126,7 +126,7 @@ def __is_mseed(fp, file_size):  # NOQA
     fp.seek(8, 1)
     try:
         record_length = pow(2, int(fp.read(2)))
-    except:
+    except Exception:
         return False
 
     # Jump to the second record.
@@ -399,7 +399,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
 
     try:
         verbose = int(verbose)
-    except:
+    except Exception:
         verbose = 0
 
     lil = clibmseed.readMSEEDBuffer(
@@ -663,7 +663,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
         try:
             trace_attr['dataquality'] = \
                 trace.stats['mseed']['dataquality'].upper()
-        except:
+        except Exception:
             trace_attr['dataquality'] = 'D'
         # Sanity check for the dataquality to get a nice Python exception
         # instead of a C error.

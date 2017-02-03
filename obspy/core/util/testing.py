@@ -11,11 +11,10 @@ Testing utilities for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
+from future.utils import native_str
 
 import difflib
 import doctest
-import fnmatch
 import glob
 import inspect
 import io
@@ -24,14 +23,12 @@ import re
 import shutil
 import unittest
 import warnings
-from distutils.version import LooseVersion
 
 from lxml import etree
 import numpy as np
 
 from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
-from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git, \
-    MatplotlibBackend
+from obspy.core.util.misc import MatplotlibBackend
 
 
 MATPLOTLIB_VERSION = get_matplotlib_version()
@@ -43,19 +40,7 @@ MATPLOTLIB_VERSION = get_matplotlib_version()
 # tests of corresponding module will be skipped).
 MODULE_TEST_SKIP_CHECKS = {
     'clients.seishub':
-        'obspy.clients.seishub.tests.test_client._check_server_availability',
-    }
-# List of flake8 error codes to ignore. Keep it as small as possible - there
-# usually is little reason to fight flake8.
-FLAKE8_IGNORE_CODES = [
-    # E402 module level import not at top of file
-    # This is really annoying when using the standard library import hooks
-    # from the future package.
-    "E402"
-    ]
-FLAKE8_EXCLUDE_FILES = [
-    "*/__init__.py",
-    ]
+        'obspy.clients.seishub.tests.test_client._check_server_availability'}
 
 
 def add_unittests(testsuite, module_name):
@@ -353,11 +338,11 @@ class ImageComparison(NamedTemporaryFile):
 
         try:
             locale.setlocale(locale.LC_ALL, native_str('en_US.UTF-8'))
-        except:
+        except Exception:
             try:
                 locale.setlocale(locale.LC_ALL,
                                  native_str('English_United States.1252'))
-            except:
+            except Exception:
                 msg = "Could not set locale to English/United States. " + \
                       "Some date-related tests may fail"
                 warnings.warn(msg)
@@ -384,7 +369,7 @@ class ImageComparison(NamedTemporaryFile):
             import matplotlib.pyplot as plt
             try:
                 plt.close("all")
-            except:
+            except Exception:
                 pass
         return self
 
@@ -477,7 +462,7 @@ class ImageComparison(NamedTemporaryFile):
                 import matplotlib.pyplot as plt
                 try:
                     plt.close("all")
-                except:
+                except Exception:
                     pass
             if self.keep_output:
                 if failed or not self.keep_only_failed:
@@ -567,75 +552,6 @@ class ImageComparison(NamedTemporaryFile):
             return msg % (e.__class__.__name__, str(e))
         return links
 
-try:
-    import flake8
-except ImportError:
-    HAS_FLAKE8 = False
-else:
-    flake8_version = LooseVersion(flake8.__version__)
-    # Only accept flake8 version >= 2.0
-    HAS_FLAKE8 = flake8_version >= LooseVersion('2')
-
-
-def check_flake8():
-    if not HAS_FLAKE8:
-        raise Exception('flake8 is required to check code formatting')
-
-    # pyflakes autodetection of PY2 does not work with the future library.
-    # Therefore, overwrite the pyflakes autodetection manually
-    if PY2:
-        import pyflakes.checker  # @UnusedImport
-        pyflakes.checker.PY2 = True
-
-    test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
-    obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
-    untracked_files = get_untracked_files_from_git() or []
-    files = []
-    for dirpath, _, filenames in os.walk(obspy_dir):
-        filenames = [_i for _i in filenames if
-                     os.path.splitext(_i)[-1] == os.path.extsep + "py"]
-        if not filenames:
-            continue
-        for py_file in filenames:
-            py_file = os.path.join(dirpath, py_file)
-            # ignore untracked files
-            if os.path.abspath(py_file) in untracked_files:
-                continue
-
-            # exclude *.py files in obspy/lib
-            try:
-                tmp_dir, _ = os.path.split(py_file)
-                _, tmp_dir = os.path.split(tmp_dir)
-                if tmp_dir == "lib":
-                    continue
-            except:
-                pass
-            # Check files that do not match any exclusion pattern
-            for exclude_pattern in FLAKE8_EXCLUDE_FILES:
-                if fnmatch.fnmatch(py_file, exclude_pattern):
-                    break
-            else:
-                files.append(py_file)
-
-    if flake8_version >= LooseVersion('3.0.0'):
-        from flake8.api.legacy import get_style_guide
-    else:
-        from flake8.engine import get_style_guide
-    flake8_kwargs = {'parse_argv': False}
-    if flake8_version < LooseVersion('2.5.5'):
-        import flake8.main
-        flake8_kwargs['config_file'] = flake8.main.DEFAULT_CONFIG
-
-    flake8_style = get_style_guide(**flake8_kwargs)
-    flake8_style.options.ignore = tuple(set(
-        flake8_style.options.ignore).union(set(FLAKE8_IGNORE_CODES)))
-
-    with CatchOutput() as out:
-        files = [native_str(f) for f in files]
-        report = flake8_style.check_files(files)
-
-    return report, out.stdout
-
 
 def compare_xml_strings(doc1, doc2):
     """
@@ -648,7 +564,7 @@ def compare_xml_strings(doc1, doc2):
     try:
         doc1 = doc1.encode()
         doc2 = doc2.encode()
-    except:
+    except Exception:
         pass
     obj1 = etree.fromstring(doc1).getroottree()
     obj2 = etree.fromstring(doc2).getroottree()

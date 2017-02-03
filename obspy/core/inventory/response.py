@@ -248,8 +248,7 @@ class PolesZerosResponseStage(ResponseStage):
             norm_fact=self.normalization_factor,
             norm_freq=self.normalization_frequency,
             poles=", ".join(map(str, self.poles)),
-            zeros=", ".join(map(str, self.zeros)),
-            )
+            zeros=", ".join(map(str, self.zeros)))
         return ret
 
     def _repr_pretty_(self, p, cycle):
@@ -787,7 +786,7 @@ class Response(ComparingObject):
         def get_unit_mapping(key):
             try:
                 key = key.upper()
-            except:
+            except Exception:
                 pass
             units_mapping = {
                 "M": ew.ENUM_UNITS["DIS"],

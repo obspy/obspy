@@ -159,6 +159,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(
             origin.earth_model_id,
             ResourceIdentifier(id="smi:same/model/maeh"))
+        self.assertEqual(origin.region, 'Kalamazoo')
         self.assertEqual(origin.evaluation_mode, "manual")
         self.assertEqual(origin.evaluation_status, "preliminary")
         self.assertEqual(origin.origin_type, "hypocenter")
@@ -298,8 +299,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(
             stat_contrib.station_magnitude_id.id,
             "smi:ch.ethz.sed/magnitude/station/881334")
-        self.assertEqual(stat_contrib.weight, 0.55)
-        self.assertEqual(stat_contrib.residual, 0.11)
+        self.assertEqual(stat_contrib.weight, 0.)
+        self.assertEqual(stat_contrib.residual, 0.)
 
         # exporting back to XML should result in the same document
         with open(filename, "rt") as fp:
@@ -887,12 +888,12 @@ class QuakeMLTestCase(unittest.TestCase):
                           'attrib': {'attrib1': 'attrib_value1',
                                      'attrib2': 'attrib_value2'},
                           'value': {
-                             'my_nested_tag1': {
-                                 'namespace': 'http://some-page.de/xmlns/1.0',
-                                 'value': 1.23E10},
-                             'my_nested_tag2': {
-                                 'namespace': 'http://some-page.de/xmlns/1.0',
-                                 'value': False}}}})
+                              'my_nested_tag1': {
+                                  'namespace': 'http://some-page.de/xmlns/1.0',
+                                  'value': 1.23E10},
+                              'my_nested_tag2': {
+                                  'namespace': 'http://some-page.de/xmlns/1.0',
+                                  'value': False}}}})
         nsmap = {'ns0': 'http://test.org/xmlns/0.1',
                  'catalog': 'http://anss.org/xmlns/catalog/0.1'}
         cat[0].extra = my_extra.copy()

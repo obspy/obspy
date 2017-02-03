@@ -328,7 +328,7 @@ def _is_seg2(filename):
             endian = b'>'
         else:
             return False
-    except:
+    except Exception:
         return False
     # Check the revision number.
     revision_number = unpack(endian + b'H',

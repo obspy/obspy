@@ -71,7 +71,7 @@ def convert(parts):
     try:
         datafile.seek(parts[17])
         values = struct.unpack(fmt, datafile.read(size))
-    except:
+    except Exception:
         print("error reading binary packed data from \"%s\"" %
               os.path.split(parts[16])[1])
         return False
@@ -137,5 +137,5 @@ if __name__ == '__main__':
     # close file
     try:
         wfdisc.close()
-    except:
+    except Exception:
         pass

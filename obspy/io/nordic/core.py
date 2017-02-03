@@ -30,6 +30,7 @@ import os
 import io
 
 from obspy import UTCDateTime, read
+from obspy.geodetics import kilometers2degrees, degrees2kilometers
 from obspy.core.event import Event, Origin, Magnitude, Comment, Catalog
 from obspy.core.event import EventDescription, CreationInfo
 from obspy.core.event import Pick, WaveformStreamID, Arrival, Amplitude
@@ -63,7 +64,7 @@ def _is_sfile(sfile):
         try:
             with open(sfile, 'r') as f:
                 head_line = _get_headline(f)
-        except:
+        except Exception:
             return False
     else:
         head_line = _get_headline(sfile)
@@ -80,7 +81,7 @@ def _is_sfile(sfile):
                         int(head_line[13:15]), sfile_seconds,
                         int(head_line[19:20]) * 100000)
             return True
-        except:
+        except Exception:
             return False
     else:
         return False
@@ -109,7 +110,7 @@ def _int_conv(string):
     """
     try:
         intstring = int(string)
-    except:
+    except Exception:
         intstring = None
     return intstring
 
@@ -128,7 +129,7 @@ def _float_conv(string):
     """
     try:
         floatstring = float(string)
-    except:
+    except Exception:
         floatstring = None
     return floatstring
 
@@ -265,7 +266,7 @@ def _readheader(f):
                                                 int(topline[19:20]) *
                                                 100000)\
             + add_seconds
-    except:
+    except Exception:
         NordicParsingError("Couldn't read a date from sfile")
     # new_event.loc_mod_ind=topline[20]
     new_event.event_descriptions.append(EventDescription())
@@ -443,10 +444,10 @@ def read_nordic(select_file, return_wavnames=False):
     if not hasattr(select_file, "readline"):
         try:
             f = open(select_file, 'r')
-        except:
+        except Exception:
             try:
                 f = select_file.decode()
-            except:
+            except Exception:
                 f = str(select_file)
     else:
         f = select_file
@@ -611,7 +612,7 @@ def _read_picks(f, new_event):
             if _float_conv(line[63:68]) is not None:
                 arrival.time_residual = _float_conv(line[63:68])
             if _float_conv(line[70:75]) is not None:
-                arrival.distance = _float_conv(line[70:75])
+                arrival.distance = kilometers2degrees(_float_conv(line[70:75]))
             if _int_conv(line[76:79]) is not None:
                 arrival.azimuth = _int_conv(line[76:79])
             new_event.origins[0].arrivals.append(arrival)
@@ -675,7 +676,7 @@ def blanksfile(wavefile, evtype, userid, overwrite=False, evtime=None):
         try:
             st = read(wavefile)
             evtime = st[0].stats.starttime
-        except:
+        except Exception:
             raise NordicParsingError('Wavefile: ' + wavefile +
                                      ' is invalid, try again with real data.')
     # Check that user ID is the correct length
@@ -1051,7 +1052,7 @@ def nordpick(event):
                 timeres = ' '
             # Extract distance
             if arrival.distance is not None:
-                distance = arrival.distance
+                distance = degrees2kilometers(arrival.distance)
                 if distance >= 100.0:
                     distance = str(_int_conv(distance))
                 elif 10.0 < distance < 100.0:

@@ -85,7 +85,7 @@ def _is_asc(filename):
     try:
         with open(filename, 'rb') as f:
             temp = f.read(6)
-    except:
+    except Exception:
         return False
     if temp != b'DELTA:':
         return False
@@ -315,7 +315,7 @@ def _is_q(filename):
     try:
         with open(filename, 'rb') as f:
             temp = f.read(5)
-    except:
+    except Exception:
         return False
     if temp != b'43981':
         return False
@@ -512,7 +512,7 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
             trcs = _read_q(filename_header, headonly=True)
             mode = 'ab'
             count_offset = len(trcs)
-        except:
+        except Exception:
             raise Exception("Target filename '%s' not readable!" % filename)
     else:
         append = False
@@ -570,7 +570,7 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
             try:
                 line = "%02d|%s\n" % ((i + 1 + count_offset) % 100, temp[j])
                 fh.write(line.encode('ascii', 'strict'))
-            except:
+            except Exception:
                 line = "%02d|\n" % ((i + 1 + count_offset) % 100)
                 fh.write(line.encode('ascii', 'strict'))
         # write data in given byte order

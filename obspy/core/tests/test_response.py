@@ -178,8 +178,8 @@ class ResponseTestCase(unittest.TestCase):
         `ComplexWithUncertainties`.
         """
         # initializing poles / zeros from native types should work
-        poles = [1+1j, 1, 1j]
-        zeros = [2+3j, 2, 3j]
+        poles = [1 + 1j, 1, 1j]
+        zeros = [2 + 3j, 2, 3j]
         stage = PolesZerosResponseStage(
             1, 1, 1, "", "", "LAPLACE (HERTZ)", 1, zeros, poles)
         self.assertEqual(type(stage.zeros[0]), ComplexWithUncertainties)

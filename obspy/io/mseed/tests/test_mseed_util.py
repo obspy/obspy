@@ -8,6 +8,7 @@ import copy
 import io
 import os
 import random
+import shutil
 import sys
 import unittest
 import warnings
@@ -350,32 +351,32 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         with NamedTemporaryFile() as tf:
             _create_mseed_file(
-                    tf.name, record_count=112, seed=3412,
-                    starttime="2015-10-16T00:00:00", skiprecords=5, flags={
-                        'data_quality_flags': {
-                            "amplifier_saturation": 55,
-                            "digitizer_clipping": 72,
-                            "spikes": 55,
-                            "glitches": 63,
-                            "missing_padded_data": 55,
-                            "telemetry_sync_error": 63,
-                            "digital_filter_charging": 4,
-                            "suspect_time_tag": 8},
-                        'activity_flags': {
-                            "calibration_signal": 1,
-                            "time_correction_applied": 2,
-                            "event_begin": 3,
-                            "event_end": 53,
-                            "positive_leap": 4,
-                            "negative_leap": 11,
-                            "event_in_progress": 5},
-                        'io_and_clock_flags': {
-                            "station_volume": 1,
-                            "long_record_read": 33,
-                            "short_record_read": 2,
-                            "start_time_series": 3,
-                            "end_time_series": 4,
-                            "clock_locked": 32}})
+                tf.name, record_count=112, seed=3412,
+                starttime="2015-10-16T00:00:00", skiprecords=5, flags={
+                    'data_quality_flags': {
+                        "amplifier_saturation": 55,
+                        "digitizer_clipping": 72,
+                        "spikes": 55,
+                        "glitches": 63,
+                        "missing_padded_data": 55,
+                        "telemetry_sync_error": 63,
+                        "digital_filter_charging": 4,
+                        "suspect_time_tag": 8},
+                    'activity_flags': {
+                        "calibration_signal": 1,
+                        "time_correction_applied": 2,
+                        "event_begin": 3,
+                        "event_end": 53,
+                        "positive_leap": 4,
+                        "negative_leap": 11,
+                        "event_in_progress": 5},
+                    'io_and_clock_flags': {
+                        "station_volume": 1,
+                        "long_record_read": 33,
+                        "short_record_read": 2,
+                        "start_time_series": 3,
+                        "end_time_series": 4,
+                        "clock_locked": 32}})
 
             tf.seek(0, 0)
 
@@ -1085,6 +1086,29 @@ class MSEEDUtilTestCase(unittest.TestCase):
             self.assertRaises(ValueError, set_flags_in_fixed_headers,
                               file_name, wrong_trace)
 
+    def test_set_flags_in_fixed_header_with_blockette_100(self):
+        """
+        Test the set_flags_in_fixed_header function for a file with
+        blockette 100.
+        """
+        with NamedTemporaryFile() as tf:
+            tf.close()
+            shutil.copy(os.path.join(self.path, 'data', 'test.mseed'),
+                        tf.name)
+            # No flags set.
+            flags = util.get_timing_and_data_quality(tf.name)
+            self.assertEqual(flags["data_quality_flags"], [0] * 8)
+            # Set flags.
+            util.set_flags_in_fixed_headers(tf.name, {
+                "NL.HGN.00.BHZ": {"data_qual_flags": {
+                    'glitches_detected': True,
+                    'time_tag_questionable': True}}})
+            # Flags are set now.
+            flags = util.get_timing_and_data_quality(tf.name)
+            # 2 because file contains two records.
+            self.assertEqual(flags["data_quality_flags"],
+                             [0, 0, 0, 2, 0, 0, 0, 2])
+
     def _check_values(self, file_bfr, trace_id, record_numbers, expected_bytes,
                       reclen):
         """
@@ -1121,10 +1145,10 @@ class MSEEDUtilTestCase(unittest.TestCase):
         while file_bfr.tell() < filesize:
             file_bfr.seek(8, os.SEEK_CUR)
             # Read trace id
-            sta = file_bfr.read(5)
-            loc = file_bfr.read(2)
-            cha = file_bfr.read(3)
-            net = file_bfr.read(2)
+            sta = file_bfr.read(5).decode()
+            loc = file_bfr.read(2).decode()
+            cha = file_bfr.read(3).decode()
+            net = file_bfr.read(2).decode()
 
             # Check whether we want to check this trace
             expectedtrace = trace_id.split(".")

@@ -709,7 +709,7 @@ class Trace(object):
             elif method == 1 and interpolation_samples >= -1:
                 try:
                     ls = lt.data[-delta - 1]
-                except:
+                except Exception:
                     ls = lt.data[0]
                 if interpolation_samples == -1:
                     interpolation_samples = delta
@@ -1671,8 +1671,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             else:
                 large_w = np.fft.ifftshift(get_window(native_str(window),
                                                       self.stats.npts))
-            x_r *= large_w[:self.stats.npts//2+1]
-            x_i *= large_w[:self.stats.npts//2+1]
+            x_r *= large_w[:self.stats.npts // 2 + 1]
+            x_i *= large_w[:self.stats.npts // 2 + 1]
 
         # interpolate
         num = int(self.stats.npts / factor)
@@ -1681,7 +1681,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         f = df * np.arange(0, self.stats.npts // 2 + 1, dtype=np.int32)
         n_large_f = num // 2 + 1
         large_f = d_large_f * np.arange(0, n_large_f, dtype=np.int32)
-        large_y = np.zeros((2*n_large_f))
+        large_y = np.zeros((2 * n_large_f))
         large_y[::2] = np.interp(large_f, f, x_r)
         large_y[1::2] = np.interp(large_f, f, x_i)
 
@@ -1967,7 +1967,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :type type: str
         :param type: Type of taper to use for detrending. Defaults to
-            ``'cosine'``.  See the `Supported Methods`_ section below for
+            ``'hann'``.  See the `Supported Methods`_ section below for
             further details.
         :type max_percentage: None, float
         :param max_percentage: Decimal percentage of taper at one end (ranging
@@ -2219,9 +2219,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             still be returned as Stream with only one entry.
         """
         from obspy import Stream
+
+        # Not a masked array.
         if not isinstance(self.data, np.ma.masked_array):
             # no gaps
-            return Stream([self])
+            return Stream([self.copy()])
+        # Masked array but no actually masked values.
+        elif isinstance(self.data, np.ma.masked_array) and \
+                not np.ma.is_masked(self.data):
+            _tr = self.copy()
+            _tr.data = np.ma.getdata(_tr.data)
+            return Stream([_tr])
+
         slices = flat_not_masked_contiguous(self.data)
         trace_list = []
         for slice in slices:
@@ -2344,7 +2353,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         try:
             method = method.lower()
-        except:
+        except Exception:
             pass
 
         dt = float(sampling_rate)
@@ -2511,7 +2520,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             try:
                 responses.append(inv.get_response(self.id,
                                                   self.stats.starttime))
-            except:
+            except Exception:
                 pass
         if len(responses) > 1:
             msg = "Found more than one matching response. Using first."

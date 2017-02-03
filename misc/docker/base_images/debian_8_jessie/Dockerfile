@@ -21,8 +21,8 @@ RUN apt-get install -y python
 RUN apt-get install -y python python-dev python-setuptools python-support python-numpy lsb-release gcc
 RUN apt-get install -y vim git fakeroot equivs lintian help2man quilt git
 RUN apt-get install -y ttf-bitstream-vera
-RUN apt-get install -y python-matplotlib python-numpy python-scipy python-lxml python-sqlalchemy python-nose python-flake8 python-setuptools python-imaging python-mock python-decorator python-requests python-tornado
-RUN apt-get install -y python3 python3-dev python3-numpy python3-scipy python3-lxml python3-matplotlib python3-sqlalchemy python3-tornado python3-nose python3-mock python3-flake8 python3-decorator python3-requests python3-tornado python3-pip
+RUN apt-get install -y python-matplotlib python-numpy python-scipy python-lxml python-sqlalchemy python-nose python-flake8 python-setuptools python-imaging python-mock python-decorator python-requests python-tornado python-geographiclib
+RUN apt-get install -y python3 python3-dev python3-numpy python3-scipy python3-lxml python3-matplotlib python3-sqlalchemy python3-tornado python3-nose python3-mock python3-flake8 python3-decorator python3-requests python3-tornado python3-pip python3-geographiclib
 RUN apt-get install -y debhelper python-all python3-all devscripts
 RUN pip3 install future
 

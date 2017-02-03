@@ -37,7 +37,7 @@ def _is_pdas(filename):
             return True
         else:
             return False
-    except:
+    except Exception:
         return False
 
 

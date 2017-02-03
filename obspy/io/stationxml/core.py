@@ -34,7 +34,7 @@ from obspy.core.inventory import (CoefficientsTypeResponseStage,
                                   PolesZerosResponseStage,
                                   PolynomialResponseStage,
                                   ResponseListResponseStage, ResponseStage)
-from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip,  Distance,
+from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip, Distance,
                                   Frequency, Latitude, Longitude, SampleRate)
 
 
@@ -74,7 +74,7 @@ def _is_stationxml(path_or_file_object):
                 r'{http://www.fdsn.org/xml/station/[0-9]+}FDSNStationXML',
                 root.tag)
             assert match is not None
-        except:
+        except Exception:
             return False
         # Convert schema number to a float to have positive comparisons
         # between, e.g "1" and "1.0".
@@ -87,7 +87,7 @@ def _is_stationxml(path_or_file_object):
         # Make sure to reset file pointer position.
         try:
             path_or_file_object.seek(current_position, 0)
-        except:
+        except Exception:
             pass
 
 
@@ -249,7 +249,7 @@ def _read_floattype(parent, tag, cls, unit=False, datum=False,
     # Catch non convertible numbers.
     try:
         convert = float(elem.text)
-    except:
+    except Exception:
         warnings.warn(
             "'%s' could not be converted to a float. Will be skipped. Please "
             "contact to report this issue." % etree.tostring(elem),
@@ -1384,7 +1384,7 @@ def _tag2obj(element, tag, convert):
     # we use future.builtins.str and are sure we have unicode here
     try:
         return convert(element.find(tag).text)
-    except:
+    except Exception:
         None
 
 
@@ -1401,7 +1401,7 @@ def _attr2obj(element, attr, convert):
         return None
     try:
         return convert(attribute)
-    except:
+    except Exception:
         None
 
 
@@ -1482,6 +1482,7 @@ def _read_extra(element, obj):
         extra[name] = {'value': str(value),
                        'namespace': '%s' % ns,
                        'type': 'attribute'}
+
 
 if __name__ == '__main__':
     import doctest

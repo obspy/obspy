@@ -308,7 +308,7 @@ def _rgba_tuple_to_kml_color_code(rgba):
     """
     try:
         r, g, b, a = rgba
-    except:
+    except Exception:
         r, g, b = rgba
         a = 1.0
     return "".join(["%02x" % int(x * 255) for x in (a, b, g, r)])

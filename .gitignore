@@ -10,8 +10,8 @@
 *.pyo
 .cache
 .DS_Store
-/.project
-*/.pydevproject
+.project
+.pydevproject
 /.settings
 RELEASE-VERSION
 build/

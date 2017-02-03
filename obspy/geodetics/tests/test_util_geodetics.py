@@ -15,7 +15,7 @@ from obspy.geodetics.base import HAS_GEOGRAPHICLIB
 
 def dms2dec(degs, mins, secs):
     """Converts angle given in degrees, mins and secs to decimal degrees"""
-    return (degs + mins/60.0 + secs/3600.0)
+    return (degs + mins / 60.0 + secs / 3600.0)
 
 
 class UtilGeodeticsTestCase(unittest.TestCase):
@@ -134,7 +134,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         lat2 = dms2dec(-33.0, 26.0, 0.0)
         lon2 = dms2dec(108.0, 13.0, 0.0)
         a = 6377397.155
-        f = 1.0/299.1528128
+        f = 1.0 / 299.1528128
         calc_dist, calc_azi1, calc_bazi = calc_vincenty_inverse(
             lat1, 0.0, lat2, lon2, a, f)
         self.assertAlmostEqual(dist, calc_dist, 2)
@@ -150,7 +150,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         lat2 = dms2dec(26.0, 7.0, 42.83946)
         lon2 = dms2dec(41.0, 28.0, 35.50729)
         a = 6378388.000
-        f = 1.0/297.0
+        f = 1.0 / 297.0
         calc_dist, calc_azi1, calc_bazi = calc_vincenty_inverse(
             lat1, 0.0, lat2, lon2, a, f)
         self.assertAlmostEqual(dist, calc_dist, 2)
@@ -166,7 +166,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         lat2 = dms2dec(67.0, 22.0, 14.77638)
         lon2 = dms2dec(137.0, 47.0, 28.31435)
         a = 6378388.000
-        f = 1.0/297.0
+        f = 1.0 / 297.0
         calc_dist, calc_azi1, calc_bazi = calc_vincenty_inverse(
             lat1, 0.0, lat2, lon2, a, f)
         self.assertAlmostEqual(dist, calc_dist, 2)

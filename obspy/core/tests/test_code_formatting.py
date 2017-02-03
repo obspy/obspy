@@ -10,7 +10,32 @@ import re
 import unittest
 
 import obspy
-from obspy.core.util.testing import check_flake8, get_all_py_files
+from obspy.core.util.misc import get_untracked_files_from_git
+from obspy.core.util.testing import get_all_py_files
+
+try:
+    import flake8
+except ImportError:  # pragma: no cover
+    HAS_FLAKE8_AT_LEAST_VERSION_3 = False
+else:
+    if int(flake8.__version__.split(".")[0]) >= 3:
+        HAS_FLAKE8_AT_LEAST_VERSION_3 = True
+    else:  # pragma: no cover
+        HAS_FLAKE8_AT_LEAST_VERSION_3 = False
+
+
+# List of flake8 error codes to ignore. Keep it as small as possible - there
+# usually is little reason to fight flake8.
+FLAKE8_IGNORE_CODES = [
+    # E402 module level import not at top of file
+    # This is really annoying when using the standard library import hooks
+    # from the future package.
+    "E402"
+]
+FLAKE8_EXCLUDE_FILES = [
+    "*/__init__.py",
+]
+
 
 _pattern = re.compile(r"^\d+\.\d+\.\d+$")
 CLEAN_VERSION_NUMBER = bool(_pattern.match(obspy.__version__))
@@ -29,16 +54,32 @@ class CodeFormattingTestCase(unittest.TestCase):
     """
     @unittest.skipIf(CLEAN_VERSION_NUMBER,
                      "No code formatting tests for release builds")
+    @unittest.skipIf(not HAS_FLAKE8_AT_LEAST_VERSION_3,
+                     "Formatting tests require at least flake8 3.0.")
     @unittest.skipIf('OBSPY_NO_FLAKE8' in os.environ, 'flake8 check disabled')
     def test_flake8(self):
         """
         Test codebase for compliance with the flake8 tool.
         """
-        report, message = check_flake8()
-        file_count = report.counters["files"]
-        error_count = report.get_count()
-        self.assertGreater(file_count, 10)
-        self.assertEqual(error_count, 0, "\n" + message.decode())
+        # Import the legacy API as flake8 3.0 currently has not official
+        # public API - this has to be changed at some point.
+        from flake8.api import legacy as flake8
+        style_guide = flake8.get_style_guide(ignore=FLAKE8_IGNORE_CODES)
+
+        untracked_files = get_untracked_files_from_git() or []
+        files = []
+        for filename in get_all_py_files():
+            if filename in untracked_files:
+                continue
+            for pattern in FLAKE8_EXCLUDE_FILES:
+                if fnmatch.fnmatch(filename, pattern):
+                    break
+            else:
+                files.append(filename)
+        report = style_guide.check_files(files)
+
+        # Make sure no error occured.
+        assert report.total_errors == 0
 
     @unittest.skipIf(CLEAN_VERSION_NUMBER,
                      "No code formatting tests for release builds")
@@ -127,8 +168,7 @@ class MatplotlibBackendUsageTestCase(unittest.TestCase):
             r"(?<!# )from pylab\..*? import",
             r"(?<!# )import pylab",
             r"(?<!# )from matplotlib import (pyplot)|(backends)",
-            r"(?<!# )import matplotlib\.(pyplot)|(backends)",
-            )
+            r"(?<!# )import matplotlib\.(pyplot)|(backends)")
         msg = ("File '{}' (line {})\nmatches a forbidden matplotlib import "
                "statement outside of class/def statements\n(breaking "
                "matplotlib backend switching on some systems):\n    '{}'")

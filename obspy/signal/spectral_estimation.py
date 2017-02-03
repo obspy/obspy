@@ -191,15 +191,13 @@ class PPSD(object):
         '_times_data',
         '_times_gaps',
         '_times_processed',
-        '_binned_psds',
-        ]
+        '_binned_psds']
     NPZ_STORE_KEYS_VERSION_NUMBERS = [
         # version numbers
         'ppsd_version',
         'obspy_version',
         'numpy_version',
-        'matplotlib_version',
-        ]
+        'matplotlib_version']
     NPZ_STORE_KEYS_SIMPLE_TYPES = [
         # things related to Stats passed at __init__
         'id',
@@ -212,14 +210,12 @@ class PPSD(object):
         # attributes derived during __init__
         '_len',
         '_nlap',
-        '_nfft',
-        ]
+        '_nfft']
     NPZ_STORE_KEYS_ARRAY_TYPES = [
         # attributes derived during __init__
         '_db_bin_edges',
         '_psd_periods',
-        '_period_binning',
-        ]
+        '_period_binning']
     NPZ_STORE_KEYS = (
         NPZ_STORE_KEYS_ARRAY_TYPES +
         NPZ_STORE_KEYS_LIST_TYPES +

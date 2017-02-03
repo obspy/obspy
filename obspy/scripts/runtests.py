@@ -151,6 +151,7 @@ class _WritelnDecorator(object):
             self.write(arg)
         self.write('\n')  # text-mode streams translate to \r\n if needed
 
+
 unittest._WritelnDecorator = _WritelnDecorator
 # XXX: end of ugly monkey patch
 
@@ -220,7 +221,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
         try:
             data = codecs.open(log, 'r', encoding='UTF-8').read()
             result['install_log'] = escape(data)
-        except:
+        except Exception:
             print("Cannot open log file %s" % log)
     # get ObsPy module versions
     result['obspy'] = {}
@@ -230,7 +231,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     skipped = 0
     try:
         installed = get_git_version()
-    except:
+    except Exception:
         installed = ''
     result['obspy']['installed'] = installed
     for module in sorted(ALL_MODULES):
@@ -312,14 +313,14 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
             if isinstance(temp, tuple):
                 temp = temp[0]
             result['platform'][func] = temp
-        except:
+        except Exception:
             result['platform'][func] = ''
     # set node name to hostname if set
     result['platform']['node'] = hostname
     # post only the first part of the node name (only applies to MacOS X)
     try:
         result['platform']['node'] = result['platform']['node'].split('.')[0]
-    except:
+    except Exception:
         pass
     # test results
     result['tests'] = tests
@@ -336,7 +337,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
                         (module, skipped_test.__module__,
                          skipped_test.__class__.__name__,
                          skipped_test._testMethodName, skip_message))
-    except:
+    except Exception:
         exc_type, exc_value, exc_tb = sys.exc_info()
         print("\n".join(traceback.format_exception(exc_type, exc_value,
                                                    exc_tb)))
@@ -497,7 +498,7 @@ class _TextTestRunner:
                 num = test.countTestCases()
                 try:
                     avg = float(total) / num
-                except:
+                except Exception:
                     avg = 0
                 msg = '%d tests in %.3fs (average of %.4fs per test)'
                 self.stream.writeln(msg % (num, total, avg))
@@ -585,7 +586,7 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
                 filesuite = doctest.DocFileSuite(file, module_relative=False)
                 tut_suite.addTest(filesuite)
             suites['tutorial'] = tut_suite
-        except:
+        except Exception:
             msg = "Could not add tutorial files to tests."
             warnings.warn(msg)
     # run test suites

@@ -69,7 +69,7 @@ def _is_sc3ml(path_or_file_object):
                 r'{http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[-+]?'
                 '[0-9]*\.?[0-9]+}', root.tag)
             assert match is not None
-        except:
+        except Exception:
             return False
         # Convert schema number to a float to have positive comparisons
         # between, e.g "1" and "1.0".
@@ -82,7 +82,7 @@ def _is_sc3ml(path_or_file_object):
         # Make sure to reset file pointer position.
         try:
             path_or_file_object.seek(current_position, 0)
-        except:
+        except Exception:
             pass
 
 
@@ -178,7 +178,7 @@ def _tag2obj(element, tag, convert):
         if element.find(tag).text is None:
             return None
         return convert(element.find(tag).text)
-    except:
+    except Exception:
         None
 
 
@@ -424,7 +424,7 @@ def _read_channel(inventory_root, cha_element, _ns):
     numerator = _tag2obj(cha_element, _ns("sampleRateNumerator"), int)
     denominator = _tag2obj(cha_element, _ns("sampleRateDenominator"), int)
 
-    rate = numerator/denominator
+    rate = numerator / denominator
 
     channel.sample_rate_ratio_number_samples = numerator
     channel.sample_rate_ratio_number_seconds = denominator
@@ -438,7 +438,7 @@ def _read_channel(inventory_root, cha_element, _ns):
                                ClockDrift)
         if channel.sample_rate != 0.0:
             channel.clock_drift_in_seconds_per_sample = \
-                _read_float_var(temp/channel.sample_rate, ClockDrift)
+                _read_float_var(temp / channel.sample_rate, ClockDrift)
         else:
             msg = "Clock drift division by sample rate of 0: using sec/sample"
             warnings.warn(msg)
@@ -891,7 +891,7 @@ def _read_float_var(elem, cls, unit=False, datum=False, additional_mapping={}):
 
     try:
         convert = float(elem)
-    except:
+    except Exception:
         warnings.warn(
             "Encountered a value '%s' which could not be converted to a "
             "float. Will be skipped. Please contact to report this "

@@ -118,7 +118,7 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
         return counter
     try:
         stream = read(file, format=format, headonly=True)
-    except:
+    except Exception:
         if verbose or not quiet:
             print("Can not read %s" % (file))
         return counter
@@ -369,7 +369,7 @@ class Scanner(object):
         formatter = ObsPyAutoDateFormatter(ax.xaxis.get_major_locator())
         formatter.scaled[1 / 24.] = \
             FuncFormatter(decimal_seconds_format_date_first_tick)
-        formatter.scaled.pop(1/(24.*60.))
+        formatter.scaled.pop(1 / (24. * 60.))
         ax.xaxis.set_major_formatter(formatter)
         plt.subplots_adjust(left=0.2)
         # set x-axis limits according to given start/end time

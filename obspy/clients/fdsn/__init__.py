@@ -82,9 +82,8 @@ USP     http://sismo.iag.usp.br
     >>> cat = client.get_events(starttime=starttime, endtime=endtime,
     ...                         minmagnitude=6, catalog="ISC")
     >>> print(cat)  # doctest: +NORMALIZE_WHITESPACE
-    3 Event(s) in Catalog:
+    2 Event(s) in Catalog:
     2002-01-01T11:29:22.720000Z |  +6.282, +125.749 | 6.3 MW
-    2002-01-01T10:39:06.700000Z | -55.214, -129.036 | 6.0 MW
     2002-01-01T07:28:57.480000Z | +36.991,  +72.336 | 6.3 Mb
     >>> cat.plot()  # doctest: +SKIP
 
@@ -109,7 +108,7 @@ USP     http://sismo.iag.usp.br
     >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     Inventory created at ...
         Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                    http://service.iris.edu/fdsnws/station/1/query...
+                    ...
         Sending institution: IRIS-DMC (IRIS-DMC)
         Contains:
                 Networks (1):

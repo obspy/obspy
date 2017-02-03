@@ -322,7 +322,7 @@ class Inventory(ComparingObject):
                 continue
             try:
                 responses.append(net.get_response(seed_id, datetime))
-            except:
+            except Exception:
                 pass
         if len(responses) > 1:
             msg = "Found more than one matching response. Returning first."
@@ -352,7 +352,7 @@ class Inventory(ComparingObject):
                 continue
             try:
                 coordinates.append(net.get_coordinates(seed_id, datetime))
-            except:
+            except Exception:
                 pass
         if len(coordinates) > 1:
             msg = "Found more than one matching coordinates. Returning first."

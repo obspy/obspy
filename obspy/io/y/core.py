@@ -123,7 +123,7 @@ def _is_y(filename):
         # get first tag (16 bytes)
         with open(filename, 'rb') as fh:
             _, tag_type, _, _ = _parse_tag(fh)
-    except:
+    except Exception:
         return False
     # The first tag in a Y-file must be the TAG_Y_FILE tag (tag type 0)
     if tag_type != 0:

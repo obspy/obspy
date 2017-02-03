@@ -730,34 +730,33 @@ class StationXMLTestCase(unittest.TestCase):
         # manually add a new custom namespace tag and attribute to the
         # inventory
         network.extra['mynsNetworkTag'] = AttribDict({
-                                            'value': 'mynsNetworkTagValue',
-                                            'namespace': ns})
+            'value': 'mynsNetworkTagValue',
+            'namespace': ns})
         network.extra['mynsNetworkAttrib'] = AttribDict({
-                                            'value': 'mynsNetworkAttribValue',
-                                            'namespace': ns,
-                                            'type': 'attribute'})
+            'value': 'mynsNetworkAttribValue',
+            'namespace': ns,
+            'type': 'attribute'})
         station = inv[0][0]
         station.extra = {}
         station.extra['mynsStationTag'] = AttribDict({
-                                            'value': 'mynsStationTagValue',
-                                            'namespace': ns})
+            'value': 'mynsStationTagValue',
+            'namespace': ns})
         station.extra['mynsStationAttrib'] = AttribDict({
-                                            'value': 'mynsStationAttribValue',
-                                            'namespace': ns,
-                                            'type': 'attribute'})
+            'value': 'mynsStationAttribValue',
+            'namespace': ns,
+            'type': 'attribute'})
         channel = inv[0][0][0]
         # add data availability to inventory
         channel.data_availability = AttribDict({
-                    'start': obspy.UTCDateTime('1998-10-26T20:35:58+00:00'),
-                    'end': obspy.UTCDateTime('2014-07-21T12:00:00+00:00')})
+            'start': obspy.UTCDateTime('1998-10-26T20:35:58+00:00'),
+            'end': obspy.UTCDateTime('2014-07-21T12:00:00+00:00')})
         channel.extra = {}
         channel.extra['mynsChannelTag'] = AttribDict({
-                                        'value': 'mynsChannelTagValue',
-                                        'namespace': ns})
+            'value': 'mynsChannelTagValue', 'namespace': ns})
         channel.extra['mynsChannelAttrib'] = AttribDict({
-                                            'value': 'mynsChannelAttribValue',
-                                            'namespace': ns,
-                                            'type': 'attribute'})
+            'value': 'mynsChannelAttribValue',
+            'namespace': ns,
+            'type': 'attribute'})
         # add nested tags
         nested_tag = AttribDict()
         nested_tag.namespace = ns
