@@ -95,7 +95,7 @@ class Client(WaveformClient, HTTPClient):
 
         >>> from obspy.clients.syngine import Client
         >>> c = Client()
-        >>> db_info = c.get_model_info(model_name="ak135f_5s")
+        >>> db_info = c.get_model_info(model_name="ak135f_5s")  # doctest: +VCR
         >>> print(db_info.period)
         5.125
 
@@ -250,8 +250,8 @@ class Client(WaveformClient, HTTPClient):
         >>> from obspy.clients.syngine import Client
         >>> client = Client()
         >>> st = client.get_waveforms(model="ak135f_5s", network="IU",
-        ...                           station="ANMO",
-        ...                           eventid="GCMT:C201002270634A")
+        ...                           eventid="GCMT:C201002270634A",
+        ...                           station="ANMO")  # doctest: +VCR
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         IU.ANMO.SE.MXZ | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
@@ -445,7 +445,7 @@ class Client(WaveformClient, HTTPClient):
         ...     model="ak135f_5s", bulk=bulk, sourcelatitude=12.3,
         ...     sourcelongitude=75.3, sourcedepthinmeters=54321,
         ...     sourcemomenttensor=[1E19, 1E19, 1E19, 0, 0, 0],
-        ...     components="Z")
+        ...     components="Z")  # doctest: +VCR
         >>> print(st.sort())  # doctest: +ELLIPSIS
         5 Trace(s) in Stream:
         AA.BB.CC.MXZ    | 1900-01-01T00:00:00... - ... | 4.0 Hz, 15520 samples

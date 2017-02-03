@@ -76,7 +76,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.clients.earthworm import Client
+        >>> from obspy.clients.earthworm import Client  # doctest: +VCR
         >>> client = Client("pubavo1.wr.usgs.gov", 16022)
         >>> dt = UTCDateTime() - 2000  # now - 2000 seconds
         >>> st = client.get_waveforms('AV', 'ACH', '', 'EHE', dt, dt + 10)
@@ -190,7 +190,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.clients.earthworm import Client
+        >>> from obspy.clients.earthworm import Client  # doctest: +VCR
         >>> client = Client("pubavo1.wr.usgs.gov", 16022, timeout=5)
         >>> response = client.get_availability(
         ...     network="AV", station="ACH", channel="EH*")

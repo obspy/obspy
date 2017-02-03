@@ -273,7 +273,7 @@ class Client(object):
         """
         Query the event service of the client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("IRIS")  # doctest: +VCR
         >>> cat = client.get_events(eventid=609301)
         >>> print(cat)
         1 Event(s) in Catalog:
@@ -415,7 +415,7 @@ class Client(object):
         """
         Query the station service of the FDSN client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("IRIS")  # doctest: +VCR
         >>> starttime = UTCDateTime("2001-01-01")
         >>> endtime = UTCDateTime("2001-01-02")
         >>> inventory = client.get_stations(network="IU", station="A*",
@@ -609,7 +609,7 @@ class Client(object):
         """
         Query the dataselect service of the client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("IRIS")  # doctest: +VCR
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 5
         >>> st = client.get_waveforms("IU", "ANMO", "00", "LHZ", t1, t2)
@@ -774,7 +774,7 @@ class Client(object):
             - a string with the path to a local file with the request
             - an open file handle (or file-like object) with the request
 
-        >>> client = Client("IRIS")
+        >>> client = Client("IRIS")  # doctest: +VCR
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 1
         >>> t3 = t1 + 3
@@ -925,7 +925,7 @@ class Client(object):
             - a string with the path to a local file with the request
             - an open file handle (or file-like object) with the request
 
-        >>> client = Client("IRIS")
+        >>> client = Client("IRIS")  # doctest: +VCR
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 1
         >>> t3 = t1 + 3

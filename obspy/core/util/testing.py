@@ -24,11 +24,12 @@ import shutil
 import unittest
 import warnings
 
-from lxml import etree
 import numpy as np
+from lxml import etree
 
 from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
 from obspy.core.util.misc import MatplotlibBackend
+from obspy.core.util.vcr import vcr
 
 
 # this dictionary contains the locations of checker routines that determine
@@ -40,6 +41,19 @@ from obspy.core.util.misc import MatplotlibBackend
 MODULE_TEST_SKIP_CHECKS = {
     'clients.seishub':
         'obspy.clients.seishub.tests.test_client._check_server_availability'}
+
+
+# monkey patch DocTestCase
+def runTest(self):
+    if '+VCR' in self._dt_test.docstring:
+        return vcr(self._runTest)()
+    return self._runTest()
+
+doctest.DocTestCase._runTest = doctest.DocTestCase.runTest
+doctest.DocTestCase.runTest = runTest
+
+# register VCR option
+doctest.register_optionflag('VCR')
 
 
 def add_unittests(testsuite, module_name):

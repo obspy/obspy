@@ -39,9 +39,9 @@ class Client(object):
 
     .. rubric:: Example
 
-    >>> from obspy.clients.neic import Client
+    >>> from obspy.clients.neic import Client  # doctest: +VCR
     >>> client = Client()
-    >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
+    >>> t = UTCDateTime(2017, 2, 2, 22, 0, 0)
     >>> st = client.get_waveforms("IU", "ANMO", "00", "BH?", t, t + 10)
     >>> print(st)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
@@ -106,9 +106,9 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.clients.neic import Client
+        >>> from obspy.clients.neic import Client  # doctest: +VCR
         >>> client = Client()
-        >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
+        >>> t = UTCDateTime(2017, 2, 2, 22, 0, 0)
         >>> st = client.get_waveforms("IU", "ANMO", "0?", "BH?", t, t + 10)
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
@@ -156,10 +156,10 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.clients.neic import Client
+        >>> from obspy.clients.neic import Client  # doctest: +VCR
         >>> from obspy import UTCDateTime
         >>> client = Client()
-        >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
+        >>> t = UTCDateTime(2017, 2, 2, 22, 0, 0)
         >>> st = client.get_waveforms_nscl("IUANMO BH.00", t, 10)
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:

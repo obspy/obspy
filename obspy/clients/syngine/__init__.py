@@ -26,7 +26,7 @@ First initialize a client object.
 Then request some data.
 
 >>> st = client.get_waveforms(model="ak135f_5s", network="IU", station="ANMO",
-...                           eventid="GCMT:C201002270634A")
+...                           eventid="GCMT:C201002270634A")  # doctest: +VCR
 >>> print(st)  # doctest: +ELLIPSIS
 3 Trace(s) in Stream:
 IU.ANMO.SE.MXZ | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
@@ -39,7 +39,7 @@ IU.ANMO.SE.MXE | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
     from obspy.clients.syngine import Client
     client = Client()
     st = client.get_waveforms(model="ak135f_5s", network="IU", station="ANMO",
-                              eventid="GCMT:C201002270634A")
+                              eventid="GCMT:C201002270634A")  # doctest: +VCR
     st.plot()
 
 The available parameters are explained in detail in the
@@ -52,8 +52,8 @@ and only requests data around the P arrival. Please be a bit careful as one
 can potentially download a lot of data with a single request.
 
 >>> st = client.get_waveforms(model="ak135f_5s", network="IU", station="AN*",
-...                           eventid="GCMT:C201002270634A",
-...                           starttime="P-10", endtime="P+20")
+...                           eventid="GCMT:C201002270634A", starttime="P-10",
+...                           endtime="P+20")  # doctest: +VCR
 >>> st.plot()  # doctest: +SKIP
 
 .. plot::
@@ -78,7 +78,7 @@ requests seismograms for all of these.
 ...         {"latitude": 14.5, "longitude": 10.0, "stationcode": "BB"}]
 >>> st = client.get_waveforms_bulk(
 ...     model="ak135f_5s", eventid="GCMT:C201002270634A",
-...     bulk=bulk, starttime="P-10", endtime="P+20")
+...     bulk=bulk, starttime="P-10", endtime="P+20")  # doctest: +VCR
 >>> print(st)  # doctest: +ELLIPSIS
 6 Trace(s) in Stream:
 XX.AA.SE.MXZ | 2010-02-27T06:48:11... - ... | 4.0 Hz, 120 samples
@@ -95,17 +95,19 @@ Other Useful Methods
 Use the :meth:`~obspy.clients.syngine.client.Client.get_available_models()`
 method for a list of all available methods including some meta-information.
 
->>> client.get_available_models()  # doctest: +SKIP
-{'ak135f_1s': {'components': 'vertical only',
-  'default_components': 'Z',
-  'default_dt': '0.05',
+>>> from obspy.clients.syngine import Client
+>>> c = Client()
+>>> c.get_available_models()  # doctest: +VCR +ELLIPSIS +IGNORE_WHITESPACES
+{'ak135f_5s': {'components': 'vertical and horizontal',
   'description': 'ak135 with density & Q of Montagner & Kennet(1996)',
-  'length': 1815.00690721715,
+  'max_sampling_period': '1.278000',
+  'default_components': 'ZNE',
   'max_event_depth': 750000,
+  'length': 3904.29,
+  'min_period': 5.125,
   'max_period': '~100',
-  'max_sampling_period': '0.255383',
-  'min_period': 1.04999995231628},
- 'ak135f_2s': ...
+  'default_dt': '0.25'},
+ 'prem_a_2s': ...
  ...
  }
 
@@ -114,7 +116,7 @@ method should be used to retrieve information about a specific model.
 
 >>> from obspy.clients.syngine import Client
 >>> c = Client()
->>> db_info = c.get_model_info(model_name="ak135f_5s")
+>>> db_info = c.get_model_info(model_name="ak135f_5s")  # doctest: +VCR
 >>> print(db_info.period)
 5.125
 """

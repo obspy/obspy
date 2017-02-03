@@ -16,7 +16,7 @@ Basic Usage
 
 The first step is always to initialize a client object.
 
->>> from obspy.clients.fdsn import Client
+>>> from obspy.clients.fdsn import Client  # doctest: +VCR
 >>> client = Client("IRIS")
 
 A client object can be initialized either with the base URL of any FDSN web

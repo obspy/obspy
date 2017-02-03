@@ -338,7 +338,6 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(set(self.client.services["available_event_catalogs"]),
                          set(("GCMT", "ISC", "NEIC PDE")))
 
-    @vcr
     def test_iris_event_contributors_availability(self):
         """
         Tests the parsing of the available event contributors.

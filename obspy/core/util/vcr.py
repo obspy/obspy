@@ -125,12 +125,22 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
         socket.socket = VCRSocket
 
         # prepare VCR tape
-        source_filename = func.__code__.co_filename
-        file_name = os.path.splitext(os.path.basename(source_filename))[0]
-        path = os.path.join(os.path.dirname(source_filename), 'vcrtapes')
+        if func.__module__ == 'doctest':
+            source_filename = func.__self__._dt_test.filename
+            file_name = os.path.splitext(os.path.basename(source_filename))[0]
+            path = os.path.join(os.path.dirname(source_filename), 'tests',
+                                'vcrtapes')
+            func_name = func.__self__._dt_test.name.split('.')[-1]
+        else:
+            source_filename = func.__code__.co_filename
+            file_name = os.path.splitext(os.path.basename(source_filename))[0]
+            path = os.path.join(os.path.dirname(source_filename), 'vcrtapes')
+            func_name = func.__name__
+
+        # make sure vcrtapes directory exists
         if not os.path.isdir(path):
             os.makedirs(path)
-        tape = os.path.join(path, '%s.%s.vcr' % (file_name, func.__name__))
+        tape = os.path.join(path, '%s.%s.vcr' % (file_name, func_name))
 
         # check for tape file and determine mode
         if os.path.isfile(tape) is False or overwrite is True:
