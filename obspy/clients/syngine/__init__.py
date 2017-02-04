@@ -52,8 +52,8 @@ and only requests data around the P arrival. Please be a bit careful as one
 can potentially download a lot of data with a single request.
 
 >>> st = client.get_waveforms(model="ak135f_5s", network="IU", station="AN*",
-...                           eventid="GCMT:C201002270634A", starttime="P-10",
-...                           endtime="P+20")
+...                           eventid="GCMT:C201002270634A",
+...                           starttime="P-10", endtime="P+20")
 >>> st.plot()  # doctest: +SKIP
 
 .. plot::
@@ -95,19 +95,17 @@ Other Useful Methods
 Use the :meth:`~obspy.clients.syngine.client.Client.get_available_models()`
 method for a list of all available methods including some meta-information.
 
->>> from obspy.clients.syngine import Client
->>> c = Client()
->>> c.get_available_models()  # doctest: +ELLIPSIS +IGNORE_WHITESPACES
-{'ak135f_5s': {'components': 'vertical and horizontal',
+>>> client.get_available_models()  # doctest: +SKIP
+{'ak135f_1s': {'components': 'vertical only',
+  'default_components': 'Z',
+  'default_dt': '0.05',
   'description': 'ak135 with density & Q of Montagner & Kennet(1996)',
-  'max_sampling_period': '1.278000',
-  'default_components': 'ZNE',
+  'length': 1815.00690721715,
   'max_event_depth': 750000,
-  'length': 3904.29,
-  'min_period': 5.125,
   'max_period': '~100',
-  'default_dt': '0.25'},
- 'prem_a_2s': ...
+  'max_sampling_period': '0.255383',
+  'min_period': 1.04999995231628},
+ 'ak135f_2s': ...
  ...
  }
 
