@@ -15,7 +15,9 @@ from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import mock
 from obspy.core.stream import _is_pickle, _read_pickle, _write_pickle
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import NamedTemporaryFile, get_scipy_version
+from obspy.core.util.base import (
+    NamedTemporaryFile, get_scipy_version, get_example_file)
+from obspy.core.util.testing import MockResponse
 from obspy.io.xseed import Parser
 
 
@@ -1716,17 +1718,28 @@ class StreamTestCase(unittest.TestCase):
         self.assertFalse(tr.data)
 
         # 2 - via http
+        test_sac_url = 'https://examples.obspy.org/test.sac'
+        test_sac_data = open(get_example_file('test.sac'), 'rb').read()
         # dtype
-        tr = read('https://examples.obspy.org/test.sac', dtype=np.int32)[0]
+        with mock.patch('requests.get',
+                        new=MockResponse(test_sac_data)) as mock_:
+            tr = read(test_sac_url, dtype=np.int32)[0]
+            mock_.assert_called_once_with(test_sac_url, stream=True)
         self.assertEqual(tr.data.dtype, np.int32)
         # start/end time
-        tr2 = read('https://examples.obspy.org/test.sac',
-                   starttime=tr.stats.starttime + 1,
-                   endtime=tr.stats.endtime - 2)[0]
+        with mock.patch('requests.get',
+                        new=MockResponse(test_sac_data)) as mock_:
+            tr2 = read(test_sac_url,
+                       starttime=tr.stats.starttime + 1,
+                       endtime=tr.stats.endtime - 2)[0]
+            mock_.assert_called_once_with(test_sac_url, stream=True)
         self.assertEqual(tr2.stats.starttime, tr.stats.starttime + 1)
         self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 2)
         # headonly
-        tr = read('https://examples.obspy.org/test.sac', headonly=True)[0]
+        with mock.patch('requests.get',
+                        new=MockResponse(test_sac_data)) as mock_:
+            tr = read(test_sac_url, headonly=True)[0]
+            mock_.assert_called_once_with(test_sac_url, stream=True)
         self.assertFalse(tr.data)
 
         # 3 - some example within obspy

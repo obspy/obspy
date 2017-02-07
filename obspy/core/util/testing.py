@@ -27,6 +27,7 @@ import warnings
 from lxml import etree
 import numpy as np
 
+from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
 from obspy.core.util.misc import MatplotlibBackend
 
@@ -630,6 +631,26 @@ def get_all_py_files():
         py_files.update([os.path.abspath(os.path.join(dirpath, i)) for i in
                          filenames if i.endswith(".py")])
     return sorted(py_files)
+
+
+class MockResponse(mock.MagicMock):
+    """
+    Mimicks a `requests.Response` object resulting from a successful http
+    request, serving the specified data (usually bytes).
+    """
+    def __init__(self, data, stream=False):
+        super(MockResponse, self).__init__(return_value=self)
+        self.data = data
+        self.stream = stream
+
+    def raise_for_status(self):
+        pass
+
+    def iter_content(self, chunk_size=1, decode_unicode=False):
+        pos = 0
+        while pos < len(self.data):
+            yield self.data[pos:pos + chunk_size]
+            pos += chunk_size
 
 
 if __name__ == '__main__':
