@@ -24,7 +24,7 @@
    * ObsPy now always writes Blockette 100 if sampling rate accuracy is
      otherwise lost. (see #1550)
    * obspy.io.mseed.util.set_flags_in_fixed_header() now works with Python 3
-     and also for files with Blockette 100.
+     and also for files with Blockette 100 (see #1648).
  - obspy.io.quakeml:
    * write StationMagnitude.residual even when it is zero (see #1625)
    * read & write Event.region
