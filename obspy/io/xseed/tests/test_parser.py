@@ -533,6 +533,62 @@ class ParserTestCase(unittest.TestCase):
             # create RESP files
             sp2.get_resp()
 
+    def test_read_resp(self):
+        """
+        Tests reading a respfile by calling Parser(filename)
+        """
+        sts2_resp_file = os.path.join(self.path,
+                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        rt130_resp_file = os.path.join(self.path,
+                                       'RESP.XX.NR008..HHZ.130.1.100')
+        for filename in (sts2_resp_file, rt130_resp_file):
+            p = Parser(filename)
+            p.get_resp()
+
+    def test_read_resp_data(self):
+        """
+        Tests reading a resp string by calling Parser(string)
+        """
+        sts2_resp_file = os.path.join(self.path,
+                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        rt130_resp_file = os.path.join(self.path,
+                                       'RESP.XX.NR008..HHZ.130.1.100')
+        for filename in (sts2_resp_file, rt130_resp_file):
+            with open(filename, 'rt') as f:
+                data = f.read().encode('utf-8')
+            p = Parser(data)
+            p.get_resp()
+
+
+    def test_parse_resp(self):
+        """
+        Tests parsing a RESP file by calling Parser._parse_resp(string)
+        """
+        sts2_resp_file = os.path.join(self.path,
+                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        rt130_resp_file = os.path.join(self.path,
+                                       'RESP.XX.NR008..HHZ.130.1.100')
+        for filename in (sts2_resp_file, rt130_resp_file):
+            with open(filename, 'rt') as f:
+                data = f.read().encode('utf-8')
+            p = Parser()
+            p._parse_resp(data)
+            p.get_resp()
+
+    # def test_read_resp_with_b61(self):
+        # """
+        # XXX: Parser._parse_resp doesn't handle b61.
+
+        # Fails, _parse_resp should be fixed.
+        # """
+        # filename = os.path.join(self.path,
+                                       # 'RESP.BW.FURT..EHZ')
+        # with open(filename, 'rt') as f:
+            # data = f.read().encode()
+        # p = Parser()
+        # p._parse_resp(data)
+        # p.get_resp()
+
     def test_compare_blockettes(self):
         """
         Tests the comparison of two blockettes.

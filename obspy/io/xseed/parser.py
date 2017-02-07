@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Main module containing XML-SEED parser.
+Main module containing XML-SEED, dataless SEED and RESP parser.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -32,7 +32,8 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import download_to_file
 from obspy.core.util.decorator import map_example_filename
 from . import DEFAULT_XSEED_VERSION, blockette
-from .utils import IGNORE_ATTR, SEEDParserException, to_tag
+from .utils import IGNORE_ATTR, SEEDParserException, to_tag, is_resp
+from .fields import Loop, VariableString
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'
@@ -61,7 +62,7 @@ INDEX_FIELDS = {30: 'data_format_identifier_code',
 
 class Parser(object):
     """
-    The XML-SEED parser class parses dataless or full SEED volumes.
+    The XML-SEED parser class parses dataless, full SEED volumes, or RESP.
 
     .. seealso::
 
@@ -69,6 +70,10 @@ class Parser(object):
         https://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf .
 
         The XML-SEED format was proposed in [Tsuboi2004]_.
+
+        The IRIS RESP format can be found at
+        http://ds.iris.edu/ds/nodes/dmc/data/formats/resp/
+
     """
 
     def __init__(self, data=None, debug=False, strict=False,
@@ -77,7 +82,7 @@ class Parser(object):
         Initializes the SEED parser.
 
         :type data: str, bytes, io.BytesIO or file
-        :param data: Filename, URL, XSEED/SEED string, file pointer or
+        :param data: Filename, URL, XSEED/SEED/RESP string, file pointer or
             BytesIO.
         :type debug: bool
         :param debug: Enables a verbose debug log during parsing of SEED file.
@@ -146,7 +151,7 @@ class Parser(object):
     @map_example_filename("data")
     def read(self, data):
         """
-        General parser method for XML-SEED and Dataless SEED files.
+        General parser method for XML-SEED, Dataless SEED, and RESP files.
 
         :type data: str, bytes, io.BytesIO or file
         :param data: Filename, URL or XSEED/SEED string as file pointer or
@@ -163,10 +168,21 @@ class Parser(object):
                 download_to_file(url=url, filename_or_buffer=data)
                 data.seek(0, 0)
             elif os.path.isfile(data):
-                # looks like a file - read it
-                with open(data, 'rb') as f:
-                    data = f.read()
-                data = io.BytesIO(data)
+                if is_resp(data):
+                    # RESP filename
+                    with open(data, 'rb') as f:
+                        data = f.read().encode('utf-8')
+                    self._parse_resp(data)
+                    return
+                else:
+                    # looks like a file - read it
+                    with open(data, 'rb') as f:
+                        data = f.read()
+                    data = io.BytesIO(data)
+            elif data.startswith('#'):
+                # RESP data
+                self._parse_resp(data)
+                return
             else:
                 try:
                     data = data.encode()
@@ -181,6 +197,7 @@ class Parser(object):
             data = io.BytesIO(data)
         elif not hasattr(data, "read"):
             raise TypeError
+
         # check first byte of data BytesIO object
         first_byte = data.read(1)
         data.seek(0)
@@ -204,6 +221,7 @@ class Parser(object):
             self._format = 'XSEED'
         else:
             raise IOError("First byte of data must be in [0-9<]")
+
 
     def get_xseed(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
@@ -631,6 +649,135 @@ class Parser(object):
                 response[1].seek(0, 0)
                 zip_file.writestr(response[0], response[1].read())
             zip_file.close()
+
+    def _parse_resp(self, data):
+        """
+        Reads IRIS RESP formated data as produced with 'rdseed -f seed.test -R'
+        Populates self Parser object.
+
+        :type data: file or io.BytesIO
+        """
+        def record_type_from_blocketteid(bid):
+            for voltype in HEADER_INFO:
+                if bid in HEADER_INFO[voltype]['blockettes']:
+                    return voltype
+
+        # First parse the data into a list of Blockettes
+        blockettelist = list()
+        # List of fields
+        blockettefieldlist = list()
+        last_blockette_id = None
+        for line in data.splitlines():
+            m = re.match(r"^B(\d+)F(\d+)(?:-(\d+))?(.*)", line)
+            if m:
+                g = m.groups()
+                blockette_number = g[0]
+                if blockette_number != last_blockette_id:
+                    # A new blockette starting
+                    if len(blockettefieldlist) > 0:
+                        blockettelist.append(blockettefieldlist)
+                        blockettefieldlist = list()
+                    last_blockette_id = blockette_number
+                if not g[2]:
+                    # Single field per line
+                    value = re.search(r":\s*(\S*)", g[3]).groups()[0]
+                    blockettefieldlist.append((blockette_number, g[1], value))
+                else:
+                    # Multiple fields per line
+                    first_field = int(g[1])
+                    last_field = int(g[2])
+                    _fields = g[3].split()
+                    values = _fields[-(last_field - first_field + 1):]
+                    for i, value in enumerate(values):
+                        blockettefieldlist.append(
+                            (blockette_number, first_field + i, value))
+            elif re.match(r"^#.*\+", line):
+                # Comment line with a + in it means blockette is
+                # finished start a new one
+                if len(blockettefieldlist) > 0:
+                    blockettelist.append(blockettefieldlist)
+                    blockettefieldlist = list()
+        # Add last blockette
+        if len(blockettefieldlist) > 0:
+            blockettelist.append(blockettefieldlist)
+
+        # Second populate self from blockette list
+        self.temp = {'volume': [], 'abbreviations': [], 'stations': []}
+        # Make an empty blockette10
+        self.temp['volume'].append(blockette.Blockette010(
+            debug=self.debug, strict=False, compact=False, record_type='V'))
+        # Make unit lookup blockette34
+        b34s = ('034  44  4M/S~velocity in meters per second~',
+                '034  25  5V~emf in volts~',
+                '034  32  7COUNTS~digital counts~'
+                )
+        abbv_lookup = {'M/S': '4', 'V': '5', 'COUNTS': '7'}
+        for b34 in b34s:
+            data = io.BytesIO(b34.encode('utf-8'))
+            b34_obj = blockette.Blockette034(debug=self.debug,
+                                             record_type='A')
+            b34_obj.parse_seed(data, expected_length=len(b34))
+            self.temp['abbreviations'].append(b34_obj)
+        self.temp['stations'].append([])
+        root_attribute = self.temp['stations'][-1]
+        for RESPblockettefieldlist in blockettelist:
+            # Create a new blockette using the first field
+            RESPblockette_id, RESPfield, resp_value = RESPblockettefieldlist[0]
+            class_name = 'Blockette%03d' % int(RESPblockette_id)
+            blockette_class = getattr(blockette, class_name)
+            record_type = record_type_from_blocketteid(blockette_class.id)
+            blockette_obj = blockette_class(debug=self.debug,
+                                            strict=False,
+                                            compact=False,
+                                            record_type=record_type)
+            blockette_fields = (blockette_obj.default_fields +
+                                blockette_obj.get_fields())
+            unrolled_blockette_fields = list()
+            for bf in blockette_fields:
+                if isinstance(bf, Loop):
+                    for df in bf.data_fields:
+                        unrolled_blockette_fields.append(df)
+                else:
+                    unrolled_blockette_fields.append(bf)
+            blockette_fields = copy.deepcopy(unrolled_blockette_fields)
+            # List of fields with fields used removed,
+            # so unused can be set to default after
+            unused_fields = blockette_fields[:]
+
+            for (RESPblockette_id,
+                 RESPfield,
+                 resp_value) in RESPblockettefieldlist:
+                for bfield in blockette_fields:
+                    if bfield.id == int(RESPfield):
+                        if isinstance(bfield, VariableString):
+                            # Variable string needs terminator '~'
+                            resp_value += '~'
+                        # Lookup if abbv
+                        resp_value = abbv_lookup.get(resp_value, resp_value)
+                        resp_data = io.BytesIO(resp_value.encode('utf-8'))
+                        if (hasattr(bfield, 'length') and
+                                bfield.length < len(resp_value)):
+                            # RESP does not use the same length for floats
+                            # as SEED does
+                            bfield.length = len(resp_value)
+                        bfield.parse_seed(blockette_obj, resp_data)
+                        if bfield in unused_fields:
+                            unused_fields.remove(bfield)
+                        break
+            for bfield in unused_fields:
+                # Set unused fields to default
+                bfield.parse_seed(blockette_obj, None)
+            # This is not correct for more than rdseed -R, although it will parse
+            # Also will not separate stations blockettes by station
+            if record_type == 'S':
+                root_attribute.append(blockette_obj)
+            elif record_type == 'V':
+                self.temp['volume'].append(blockette_obj)
+            elif record_type == 'A':
+                self.temp['abbreviations'].append(blockette_obj)
+            self.blockettes.setdefault(blockette_obj.id,
+                                             []).append(blockette_obj)
+        self._update_internal_seed_structure()
 
     def _parse_seed(self, data):
         """
