@@ -15,6 +15,9 @@
    * Better end of stream detection. (see #1563)
  - obspy.clients.seedlink:
    * Better end of stream detection. (see #1605)
+ - obspy.clients.seishub:
+   * Fix wrong kwargs `first_pick` and `last_pick` in
+     `Client.event.get_list()`. (see #1661)
  - obspy.io.mseed:
    * ObsPy can now also read (Mini)SEED files with noise records. (see #1495)
    * ObsPy can now read records with a data-offset of zero. (see #1509, #1525)
