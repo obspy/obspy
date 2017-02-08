@@ -106,6 +106,10 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
                         return
                     # always work on first element in playlist list
                     data = vcr_playlist.pop(0)
+                    # XXX: arclink again - no idea why but works with this hack
+                    if vcr_arclink_hack and name == 'recv' and \
+                       data[0] == 'fileno':
+                        data = vcr_playlist.pop(0)
                     # XXX: py3 sometimes has two sendall calls ???
                     if PY2 and name == 'makefile' and data[0] == 'sendall':
                         data = vcr_playlist.pop(0)
