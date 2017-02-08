@@ -422,7 +422,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.clients.arclink import Client
+        >>> from obspy.clients.arclink import Client  # docstring: +VCR
         >>> from obspy import UTCDateTime
         >>> client = Client('test@obspy.org', 'webdc.eu', 18001)
         >>> t = UTCDateTime("2009-08-20 04:03:12")
@@ -531,7 +531,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.clients.arclink import Client
+        >>> from obspy.clients.arclink import Client  # docstring: +VCR
         >>> from obspy import UTCDateTime
         >>> client = Client('test@obspy.org', 'webdc.eu', 18001)
         >>> t = UTCDateTime(2009, 1, 1, 12, 0)
@@ -767,7 +767,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.clients.arclink import Client
+        >>> from obspy.clients.arclink import Client  # docstring: +VCR
         >>> from obspy import UTCDateTime
         >>> client = Client('test@obspy.org', 'webdc.eu', 18001)
         >>> t = UTCDateTime(2009, 1, 1)
@@ -910,7 +910,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.clients.arclink import Client
+        >>> from obspy.clients.arclink import Client  # docstring: +VCR
         >>> from obspy import UTCDateTime
         >>> client = Client('test@obspy.org', 'webdc.eu', 18001)
         >>> t = UTCDateTime(2009, 1, 1)
@@ -984,7 +984,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.clients.arclink import Client
+        >>> from obspy.clients.arclink import Client  # docstring: +VCR
         >>> from obspy import UTCDateTime
         >>> client = Client('test@obspy.org', 'webdc.eu', 18001)
         >>> t = UTCDateTime(2009, 1, 1)
@@ -1064,7 +1064,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.clients.arclink import Client
+        >>> from obspy.clients.arclink import Client  # docstring: +VCR
         >>> client = Client('test@obspy.org', 'webdc.eu', 18001)
         >>> inv = client.get_inventory('BW', 'M*', '*', 'EHZ',
         ...                            restricted=False,

@@ -14,7 +14,11 @@ import functools
 import io
 import os
 import pickle
+import select
+import selectors
 import socket
+import sys
+import time
 import warnings
 
 from future.utils import PY2
@@ -24,7 +28,8 @@ VCR_RECORD = 0
 VCR_PLAYBACK = 1
 
 
-def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
+def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
+                 disabled=False):
     """
     Wrapper around _vcr_inner allowing additional arguments on decorator
     """
@@ -33,8 +38,13 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
         """
         The actual decorator doing a lot of monkey patching and auto magic
         """
+        if disabled:
+            # execute decorated function without VCR
+            value = func(*args, **kwargs)
+
         vcr_playlist = []
         vcr_status = VCR_PLAYBACK
+        vcr_arclink_hack = False
 
         # monkey patch socket.socket
         _orig_socket = socket.socket
@@ -43,7 +53,10 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
             _skip_methods = ['setsockopt', 'settimeout', 'setblocking']
 
             def __init__(self, *args, **kwargs):
+                if debug:
+                    print('__init__', args, kwargs)
                 if vcr_status == VCR_RECORD:
+                    # record mode
                     self.__dict__['_socket'] = _orig_socket(*args, **kwargs)
 
             def _generic_method(self, name, *args, **kwargs):
@@ -53,8 +66,26 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
                     if debug:
                         print(name, args, kwargs, value)
                     # handle special objects which are not pickleable
-                    if isinstance(value, io.BufferedIOBase):
-                        temp = io.BytesIO(value.read())
+                    if isinstance(value, io.BufferedIOBase) and \
+                       not isinstance(value, io.BytesIO):
+                        temp = io.BytesIO()
+                        while True:
+                            try:
+                                peeked_bytes = value.peek()
+                                bytes = value.read(len(peeked_bytes))
+                                if not bytes:
+                                    # EOF
+                                    break
+                                temp.write(bytes)
+                                # ugly arclink hack to improve recording
+                                # speed - otherwise it takes 20s until timeout
+                                if vcr_arclink_hack and \
+                                   peeked_bytes.endswith(b'END\r\n'):
+                                    break
+                            except OSError:
+                                # timeout
+                                break
+                        temp.seek(0)
                         vcr_playlist.append((name, args, kwargs, temp))
                         # return new copy of BytesIO as it may get closed
                         return copy.copy(temp)
@@ -72,8 +103,15 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
                     if name in self._skip_methods:
                         # skip setters which do not return anything
                         return
-                    # always work on first element in playlist list
-                    data = vcr_playlist.pop(0)
+                    try:
+                        # always work on first element in playlist list
+                        data = vcr_playlist.pop(0)
+                    except IndexError:
+                        # XXX: arclink doctests raise IndexError for some close
+                        # calls - no idea yet why - but can be safely ignored
+                        if vcr_arclink_hack and name == 'close':
+                            return
+                        raise
                     # XXX: py3 sometimes has two sendall calls ???
                     if PY2 and name == 'makefile' and data[0] == 'sendall':
                         data = vcr_playlist.pop(0)
@@ -143,6 +181,27 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
 
         socket.getaddrinfo = vcr_getaddrinfo
 
+        # monkey patch selectors.SelectSelector._select in Windows systems
+        _orig_select = selectors.SelectSelector._select
+
+        if sys.platform == 'win32':
+            def vcr_select(self, r, w, _, timeout=None):
+                if vcr_status == VCR_PLAYBACK:
+                    return list(r), list(w), []
+                r, w, x = select.select(r, w, w, timeout)
+                return r, w + x, []
+            selectors.SelectSelector._select = vcr_select
+
+        # monkey patch time.sleep (prevents sleep calls during playback)
+        _orig_sleep = time.sleep
+
+        def vcr_sleep(*args, **kwargs):
+            if vcr_status == VCR_PLAYBACK:
+                return
+            return _orig_sleep(*args, **kwargs)
+
+        time.sleep = vcr_sleep
+
         # prepare VCR tape
         if func.__module__ == 'doctest':
             source_filename = func.__self__._dt_test.filename
@@ -161,45 +220,55 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
             os.makedirs(path)
         tape = os.path.join(path, '%s.%s.vcr' % (file_name, func_name))
 
+        # check for arclink module
+        if 'arclink' in source_filename:
+            vcr_arclink_hack = True
+        else:
+            vcr_arclink_hack = False
+
         # check for tape file and determine mode
         if os.path.isfile(tape) is False or overwrite is True:
+            # record mode
             if PY2:
-                msg = 'VCR will record only in PY3 to be backward ' + \
+                msg = 'VCR records only in PY3 to be backward ' + \
                     'compatible with PY2 - skipping VCR mechanics for %s'
                 warnings.warn(msg % (func.__name__))
                 # revert monkey patches
                 socket.socket = _orig_socket
                 socket.getaddrinfo = _orig_getaddrinfo
-                # return
+                selectors.SelectSelector._select = _orig_select
+                time.sleep = _orig_sleep
+                # execute decorated function without VCR
                 return func(*args, **kwargs)
             if debug:
                 print('VCR RECORDING ...')
-            # record mode
             vcr_status = VCR_RECORD
             vcr_playlist = []
-            # execute function
+            # execute decorated function
             value = func(*args, **kwargs)
             # write to file
             if len(vcr_playlist) == 0:
-                msg = 'no socket activity - vcr decorator not needed for %s'
+                msg = 'no socket activity - @vcr decorator not needed for %s'
                 warnings.warn(msg % (func.__name__))
             else:
                 with open(tape, 'wb') as fh:
                     pickle.dump(vcr_playlist, fh, protocol=2)
         else:
+            # playback mode
             if debug:
                 print('VCR PLAYBACK ...')
-            # playback mode
             vcr_status = VCR_PLAYBACK
             # load playlist
             with open(tape, 'rb') as fh:
                 vcr_playlist = pickle.load(fh)
-            # execute function
+            # execute decorated function
             value = func(*args, **kwargs)
 
         # revert monkey patches
         socket.socket = _orig_socket
         socket.getaddrinfo = _orig_getaddrinfo
+        selectors.SelectSelector._select = _orig_select
+        time.sleep = _orig_sleep
         return value
 
     return _vcr_inner

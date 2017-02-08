@@ -17,12 +17,14 @@ from obspy.clients.arclink import Client
 from obspy.clients.arclink.client import ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, NamedTemporaryFile
+from obspy.core.util.vcr import vcr
 
 
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.arclink.client.Client.
     """
+    @vcr
     def test_get_waveform(self):
         """
         Tests get_waveforms method.
@@ -58,6 +60,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(trace.stats.location, '')
         self.assertEqual(trace.stats.channel, 'BHE')
 
+    @vcr
     def test_get_waveform_no_routing(self):
         """
         Tests routing parameter of get_waveforms method.
@@ -83,6 +86,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(trace.stats.location, '')
             self.assertEqual(trace.stats.channel[0:2], 'EH')
 
+    @vcr
     def test_delayed_request(self):
         """
         """
@@ -98,6 +102,7 @@ class ClientTestCase(unittest.TestCase):
         results = client.get_routing('GR', 'FUR', start, end)
         self.assertIn('GR...', results)
 
+    @vcr
     def test_get_routing(self):
         """
         Tests get_routing method on various ArcLink nodes.
@@ -149,6 +154,7 @@ class ClientTestCase(unittest.TestCase):
         results = client.get_routing('00', '', dt, dt + 1)
         self.assertEqual(results, {})
 
+    @vcr
     def test_get_inventory(self):
         """
         Tests get_inventory method on various ArcLink nodes.
@@ -213,6 +219,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(channel[2].endtime, UTCDateTime(2011, 1, 15, 9, 56))
         self.assertEqual(channel[2].gain, 588000000.0)
 
+    @vcr
     def test_get_inventory_twice(self):
         """
         Requesting inventory data twice should not fail.
@@ -226,6 +233,7 @@ class ClientTestCase(unittest.TestCase):
         client.get_inventory('BW', starttime=dt, endtime=dt + 1)
         client.get_inventory('BW', starttime=dt, endtime=dt + 1)
 
+    @vcr
     def test_get_waveform_with_metadata(self):
         """
         """
@@ -320,6 +328,7 @@ class ClientTestCase(unittest.TestCase):
         results['processing'] = st[0].stats['processing']
         self.assertEqual(st[0].stats, results)
 
+    @vcr
     def test_get_not_existing_waveform(self):
         """
         """
@@ -336,6 +345,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.get_waveforms, 'BW', 'MANZ',
                           '', '*', start, end)
 
+    @vcr
     def test_get_waveform_wrong_pattern(self):
         """
         """
@@ -347,6 +357,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.get_waveforms, 'BW', 'MAN*',
                           '', '*', start, end)
 
+    @vcr
     def test_get_networks(self):
         """
         """
@@ -360,6 +371,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(result['BW']['code'], 'BW')
         self.assertEqual(result['BW']['description'], 'BayernNetz')
 
+    @vcr
     def test_get_stations(self):
         """
         """
@@ -379,6 +391,7 @@ class ClientTestCase(unittest.TestCase):
                         'country': ' BW-Net', 'latitude': 47.744171,
                         'end': None}) in result)
 
+    @vcr
     def test_save_waveform(self):
         """
         Default behavior is requesting data compressed and unpack on the fly.
@@ -421,6 +434,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(st[0].stats.location, '')
             self.assertEqual(st[0].stats.channel, 'EHZ')
 
+    @vcr
     def test_get_waveform_no_compression(self):
         """
         Disabling compression during waveform request.
@@ -436,6 +450,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(trace.stats.network, 'BW')
             self.assertEqual(trace.stats.station, 'MANZ')
 
+    @vcr
     def test_save_waveform_no_compression(self):
         """
         Explicitly disable compression during waveform request and save it
@@ -474,6 +489,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(st[0].stats.location, '')
             self.assertEqual(st[0].stats.channel, 'BHZ')
 
+    @vcr
     def test_save_waveform_compressed(self):
         """
         Tests saving compressed and not unpacked bzip2 files to disk.
@@ -503,6 +519,7 @@ class ClientTestCase(unittest.TestCase):
             # importing via read should work too
             read(fseedfile)
 
+    @vcr
     def test_get_paz(self):
         """
         Test for the Client.get_paz function.
@@ -532,6 +549,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.get_paz, 'BW', 'MANZ', '',
                           'EH*', dt)
 
+    @vcr
     def test_get_paz2(self):
         """
         Test for the Client.get_paz function for
@@ -546,6 +564,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(poles), 2)
         self.assertEqual(poles, paz['poles'][:2])
 
+    @vcr
     def test_save_response(self):
         """
         Fetches and stores response information as Dataless SEED volume.
@@ -570,6 +589,7 @@ class ClientTestCase(unittest.TestCase):
         file_object.seek(0, 0)
         self.assertEqual(file_object.read(8), b"000001V ")
 
+    @vcr
     def test_srl(self):
         """
         Tests if example in ObsPy paper submitted to the Electronic
@@ -607,6 +627,7 @@ class ClientTestCase(unittest.TestCase):
         np.testing.assert_array_equal(dat1, st[0].data[:10])
         np.testing.assert_array_equal(dat2, st[0].data[-10:])
 
+    @vcr
     def test_issue_311(self):
         """
         Testing issue #311.
@@ -631,6 +652,7 @@ class ClientTestCase(unittest.TestCase):
     # lots of gaps. It is most likely not worth the effort to reimplement this
     # test.
     @unittest.expectedFailure
+    @vcr
     def test_issue_372(self):
         """
         Test case for issue #372.
@@ -646,6 +668,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertIn('zeros', tr.stats.paz)
             self.assertIn('latitude', tr.stats.coordinates)
 
+    @vcr
     def test_get_inventory_instrument_change(self):
         """
         Check results of get_inventory if instrumentation has been changed.
@@ -669,6 +692,7 @@ class ClientTestCase(unittest.TestCase):
                                    instruments=True, route=False)
         self.assertTrue(len(inv['GE.SNAA..BHZ']), 1)
 
+    @vcr
     def test_get_waveform_instrument_change(self):
         """
         Check results of get_waveforms if instrumentation has been changed.
