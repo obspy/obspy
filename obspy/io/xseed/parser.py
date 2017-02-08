@@ -33,6 +33,7 @@ from obspy.core.util.base import download_to_file
 from obspy.core.util.decorator import map_example_filename, deprecated
 from . import DEFAULT_XSEED_VERSION, blockette
 from .utils import IGNORE_ATTR, SEEDParserException, to_tag
+from .fields import Loop, VariableString
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'
@@ -669,6 +670,155 @@ class Parser(object):
                 response[1].seek(0, 0)
                 zip_file.writestr(response[0], response[1].read())
             zip_file.close()
+
+    def _parse_resp(self, data):
+        """
+        Reads IRIS RESP formated data as produced with 'rdseed -f seed.test -R'
+        Populates self Parser object.
+
+        :type data: file or io.BytesIO
+        """
+
+        def record_type_from_blocketteid(bid):
+            for voltype in HEADER_INFO:
+                if bid in HEADER_INFO[voltype]['blockettes']:
+                    return voltype
+
+
+        # First parse the data into a list of Blockettes
+
+        # List of blockettes which is a list of fields
+        blockettelist = list()
+        # List of fields
+        blockettefieldlist = list()
+        last_blockette_id = None
+        for line in data.splitlines():
+            # print(line, end='')
+            m = re.match(r"^B(\d+)F(\d+)(?:-(\d+))?(.*)", line)
+            if m:
+                g = m.groups()
+                blockette_number = g[0]
+                if blockette_number != last_blockette_id:
+                    # A new blockette starting
+                    if len(blockettefieldlist) > 0:
+                        # print("new blockette")
+                        blockettelist.append(blockettefieldlist)
+                        blockettefieldlist = list()
+                    last_blockette_id = blockette_number
+                if not g[2]:
+                    # Single field per line
+                    value = re.search(r":\s*(\S*)", g[3]).groups()[0]
+                    # print( (blockette_number, g[1], value) )
+                    blockettefieldlist.append((blockette_number, g[1], value))
+                else:
+                    # Multiple fields per line
+                    first_field = int(g[1])
+                    last_field = int(g[2])
+                    _fields = g[3].split()
+                    values = _fields[-(last_field - first_field + 1):]
+                    for i, value in enumerate(values):
+                        # print( (blockette_number, first_field + i, value) )
+                        blockettefieldlist.append(
+                            (blockette_number, first_field + i, value))
+            elif re.match(r"^#.*\+", line):
+                # Comment line with a + in it means blockette is
+                # finished start a new one
+                if len(blockettefieldlist) > 0:
+                    # print("new blockette")
+                    blockettelist.append(blockettefieldlist)
+                    blockettefieldlist = list()
+                # print()
+        # Add last blockette
+        if len(blockettefieldlist) > 0:
+            blockettelist.append(blockettefieldlist)
+        # return blockettelist
+
+        # Second populate self from blockette list
+
+        # self = parser.Parser()
+        self.temp = {'volume': [], 'abbreviations': [], 'stations': []}
+        # Make an empty blockette10
+        self.temp['volume'].append(blockette.Blockette010(
+            debug=self.debug, strict=False, compact=False, record_type='V'))
+        # Make unit lookup blockette34
+        b34s = ('034  44  4M/S~velocity in meters per second~',
+                '034  25  5V~emf in volts~',
+                '034  32  7COUNTS~digital counts~'
+                )
+        abbv_lookup = {'M/S': '4', 'V': '5', 'COUNTS': '7'}
+
+        for b34 in b34s:
+            data = io.BytesIO(b34.encode('utf-8'))
+            b34_obj = blockette.Blockette034(debug=self.debug,
+                                             record_type='A')
+            b34_obj.parse_seed(data, expected_length=len(b34))
+            self.temp['abbreviations'].append(b34_obj)
+        self.temp['stations'].append([])
+        root_attribute = self.temp['stations'][-1]
+
+        for RESPblockettefieldlist in blockettelist:
+            # Create a new blockette using the first field
+            RESPblockette_id, RESPfield, resp_value = RESPblockettefieldlist[0]
+            class_name = 'Blockette%03d' % int(RESPblockette_id)
+            blockette_class = getattr(blockette, class_name)
+            record_type = record_type_from_blocketteid(blockette_class.id)
+            blockette_obj = blockette_class(debug=self.debug,
+                                            strict=False,
+                                            compact=False,
+                                            record_type=record_type)
+            blockette_fields = (blockette_obj.default_fields +
+                                blockette_obj.get_fields())
+            unrolled_blockette_fields = list()
+            for bf in blockette_fields:
+                if isinstance(bf, Loop):
+                    for df in bf.data_fields:
+                        unrolled_blockette_fields.append(df)
+                else:
+                    unrolled_blockette_fields.append(bf)
+            blockette_fields = unrolled_blockette_fields
+            # List of fields with fields used removed,
+            # so unused can be set to default after
+            unused_fields = blockette_fields[:]
+
+            for RESPblockette_id, RESPfield, resp_value in RESPblockettefieldlist:
+                for bfield in blockette_fields:
+                    if bfield.id == int(RESPfield):
+                        if isinstance(bfield, VariableString):
+                            # Variable string needs terminator '~'
+                            resp_value += '~'
+                        # print(RESPvalue)
+                        # Lookup if abbv
+                        resp_value = abbv_lookup.get(resp_value, resp_value)
+                        data_resp_value = io.BytesIO(resp_value.encode('utf-8'))
+                        if (hasattr(bfield, 'length') and
+                                bfield.length < len(resp_value)):
+                            # RESP does not use the same length for floats
+                            # as SEED does
+                            bfield.length = len(resp_value)
+                        bfield.parse_seed(blockette_obj, data_resp_value)
+                        if bfield in unused_fields:
+                            unused_fields.remove(bfield)
+                        break
+            for bfield in unused_fields:
+                # Set unused fields to default
+                bfield.parse_seed(blockette_obj, None)
+
+            # This is not correct for more than rdseed -R, although it will parse
+            # Also will not separate stations blockettes by station
+            if record_type == 'S':
+                root_attribute.append(blockette_obj)
+            elif record_type == 'V':
+                self.temp['volume'].append(blockette_obj)
+            elif record_type == 'A':
+                self.temp['abbreviations'].append(blockette_obj)
+
+            # This line breaks other tests: test_string and test_rotation_to_zne
+            self.blockettes.setdefault(blockette_obj.id,
+                                             []).append(blockette_obj)
+
+        self._update_internal_seed_structure()
+        # return self
+
 
     def _parse_seed(self, data):
         """
