@@ -33,28 +33,29 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
         """
         The actual decorator doing a lot of monkey patching and auto magic
         """
-        # monkey patches
+        vcr_playlist = []
+        vcr_status = VCR_PLAYBACK
+
+        # monkey patch socket.socket
         _orig_socket = socket.socket
 
         class VCRSocket:
             _skip_methods = ['setsockopt', 'settimeout', 'setblocking']
 
-            playlist = []
-            status = VCR_PLAYBACK
-
             def __init__(self, *args, **kwargs):
-                if self.status == VCR_RECORD:
+                if vcr_status == VCR_RECORD:
                     self.__dict__['_socket'] = _orig_socket(*args, **kwargs)
 
             def _generic_method(self, name, *args, **kwargs):
-                if self.status == VCR_RECORD:
+                if vcr_status == VCR_RECORD:
+                    # record mode
                     value = getattr(self._socket, name)(*args, **kwargs)
                     if debug:
                         print(name, args, kwargs, value)
                     # handle special objects which are not pickleable
                     if isinstance(value, io.BufferedIOBase):
                         temp = io.BytesIO(value.read())
-                        self.playlist.append((name, args, kwargs, temp))
+                        vcr_playlist.append((name, args, kwargs, temp))
                         # return new copy of BytesIO as it may get closed
                         return copy.copy(temp)
                     if debug:
@@ -63,18 +64,19 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
                     # skip setters
                     if name not in self._skip_methods:
                         # all other methods will be recorded
-                        self.playlist.append((name, args, kwargs,
-                                              copy.copy(value)))
+                        vcr_playlist.append(
+                            (name, args, kwargs, copy.copy(value)))
                     return value
                 else:
-                    # skip setters
+                    # playback mode
                     if name in self._skip_methods:
+                        # skip setters which do not return anything
                         return
                     # always work on first element in playlist list
-                    data = self.playlist.pop(0)
+                    data = vcr_playlist.pop(0)
                     # XXX: py3 sometimes has two sendall calls ???
                     if PY2 and name == 'makefile' and data[0] == 'sendall':
-                        data = self.playlist.pop(0)
+                        data = vcr_playlist.pop(0)
                     if debug:
                         print(name, args, kwargs, data)
                     if name != data[0] or force_check:
@@ -124,6 +126,23 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
 
         socket.socket = VCRSocket
 
+        # monkey patch socket.getaddrinfo
+        _orig_getaddrinfo = socket.getaddrinfo
+
+        def vcr_getaddrinfo(*args, **kwargs):
+            if vcr_status == VCR_RECORD:
+                # record mode
+                value = _orig_getaddrinfo(*args, **kwargs)
+                vcr_playlist.append(
+                    ('getaddrinfo', args, kwargs, copy.copy(value)))
+                return value
+            else:
+                # playback mode
+                data = vcr_playlist.pop(0)
+                return data[3]
+
+        socket.getaddrinfo = vcr_getaddrinfo
+
         # prepare VCR tape
         if func.__module__ == 'doctest':
             source_filename = func.__self__._dt_test.filename
@@ -137,7 +156,7 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
             path = os.path.join(os.path.dirname(source_filename), 'vcrtapes')
             func_name = func.__name__
 
-        # make sure vcrtapes directory exists
+        # make sure 'vcrtapes' directory exists
         if not os.path.isdir(path):
             os.makedirs(path)
         tape = os.path.join(path, '%s.%s.vcr' % (file_name, func_name))
@@ -148,37 +167,39 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False):
                 msg = 'VCR will record only in PY3 to be backward ' + \
                     'compatible with PY2 - skipping VCR mechanics for %s'
                 warnings.warn(msg % (func.__name__))
-                # restore original socket
+                # revert monkey patches
                 socket.socket = _orig_socket
+                socket.getaddrinfo = _orig_getaddrinfo
                 # return
                 return func(*args, **kwargs)
             if debug:
                 print('VCR RECORDING ...')
             # record mode
-            VCRSocket.status = VCR_RECORD
-            VCRSocket.playlist = []
+            vcr_status = VCR_RECORD
+            vcr_playlist = []
             # execute function
             value = func(*args, **kwargs)
             # write to file
-            if len(VCRSocket.playlist) == 0:
+            if len(vcr_playlist) == 0:
                 msg = 'no socket activity - vcr decorator not needed for %s'
                 warnings.warn(msg % (func.__name__))
             else:
                 with open(tape, 'wb') as fh:
-                    pickle.dump(VCRSocket.playlist, fh, protocol=2)
+                    pickle.dump(vcr_playlist, fh, protocol=2)
         else:
             if debug:
                 print('VCR PLAYBACK ...')
             # playback mode
-            VCRSocket.status = VCR_PLAYBACK
+            vcr_status = VCR_PLAYBACK
             # load playlist
             with open(tape, 'rb') as fh:
-                VCRSocket.playlist = pickle.load(fh)
+                vcr_playlist = pickle.load(fh)
             # execute function
             value = func(*args, **kwargs)
 
-        # restore original socket
+        # revert monkey patches
         socket.socket = _orig_socket
+        socket.getaddrinfo = _orig_getaddrinfo
         return value
 
     return _vcr_inner
