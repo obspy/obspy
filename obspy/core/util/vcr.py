@@ -15,7 +15,6 @@ import io
 import os
 import pickle
 import select
-import selectors
 import socket
 import sys
 import time
@@ -50,7 +49,8 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
         _orig_socket = socket.socket
 
         class VCRSocket:
-            _skip_methods = ['setsockopt', 'settimeout', 'setblocking']
+            _skip_methods = ['setsockopt', 'settimeout', 'setblocking',
+                             'close']
 
             def __init__(self, *args, **kwargs):
                 if debug:
@@ -77,8 +77,9 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
                                     # EOF
                                     break
                                 temp.write(bytes)
-                                # ugly arclink hack to improve recording
+                                # XXX: ugly arclink hack to improve recording
                                 # speed - otherwise it takes 20s until timeout
+                                # XXX: also check if this is os independend
                                 if vcr_arclink_hack and \
                                    peeked_bytes.endswith(b'END\r\n'):
                                     break
@@ -103,15 +104,8 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
                     if name in self._skip_methods:
                         # skip setters which do not return anything
                         return
-                    try:
-                        # always work on first element in playlist list
-                        data = vcr_playlist.pop(0)
-                    except IndexError:
-                        # XXX: arclink doctests raise IndexError for some close
-                        # calls - no idea yet why - but can be safely ignored
-                        if vcr_arclink_hack and name == 'close':
-                            return
-                        raise
+                    # always work on first element in playlist list
+                    data = vcr_playlist.pop(0)
                     # XXX: py3 sometimes has two sendall calls ???
                     if PY2 and name == 'makefile' and data[0] == 'sendall':
                         data = vcr_playlist.pop(0)
@@ -182,15 +176,14 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
         socket.getaddrinfo = vcr_getaddrinfo
 
         # monkey patch selectors.SelectSelector._select in Windows systems
-        _orig_select = selectors.SelectSelector._select
+        _orig_select = select.select
 
         if sys.platform == 'win32':
-            def vcr_select(self, r, w, _, timeout=None):
+            def vcr_select(r, w, x, timeout=None):
                 if vcr_status == VCR_PLAYBACK:
                     return list(r), list(w), []
-                r, w, x = select.select(r, w, w, timeout)
-                return r, w + x, []
-            selectors.SelectSelector._select = vcr_select
+                return _orig_select(r, w, x, timeout)
+            select.select = vcr_select
 
         # monkey patch time.sleep (prevents sleep calls during playback)
         _orig_sleep = time.sleep
@@ -236,7 +229,7 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
                 # revert monkey patches
                 socket.socket = _orig_socket
                 socket.getaddrinfo = _orig_getaddrinfo
-                selectors.SelectSelector._select = _orig_select
+                select.select = _orig_select
                 time.sleep = _orig_sleep
                 # execute decorated function without VCR
                 return func(*args, **kwargs)
@@ -267,7 +260,7 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
         # revert monkey patches
         socket.socket = _orig_socket
         socket.getaddrinfo = _orig_getaddrinfo
-        selectors.SelectSelector._select = _orig_select
+        select.select = _orig_select
         time.sleep = _orig_sleep
         return value
 
