@@ -8,6 +8,10 @@ VCR decorator capturing network socket communication
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import PY2
 
 import copy
 import functools
@@ -19,8 +23,6 @@ import socket
 import sys
 import time
 import warnings
-
-from future.utils import PY2
 
 
 VCR_RECORD = 0
