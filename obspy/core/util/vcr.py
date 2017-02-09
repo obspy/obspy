@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-VCR decorator capturing network socket communication
+VCR decorator for capturing and simulating network communication
+
+Any Python socket communication in unittests (decorated with the @vcr function)
+and/or doctests (containing a # doctest: +VCR) will be recorded on the first
+run and saved into a special 'vcrtapes' directory as single pickled file for
+each test case. Future test runs will reuse those recorded network session
+allowing for faster tests without any network connection. In order to create
+a new recording one just needs to remove/rename the pickled session file(s).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -181,7 +188,7 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
 
         socket.getaddrinfo = vcr_getaddrinfo
 
-        # monkey patch selectors.SelectSelector._select in Windows systems
+        # monkey patch select.select (Windows only)
         _orig_select = select.select
 
         if sys.platform == 'win32':
@@ -191,7 +198,7 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
                 return _orig_select(r, w, x, timeout)
             select.select = vcr_select
 
-        # monkey patch time.sleep (prevents sleep calls during playback)
+        # monkey patch time.sleep (skips arclink sleep calls during playback)
         _orig_sleep = time.sleep
 
         def vcr_sleep(*args, **kwargs):

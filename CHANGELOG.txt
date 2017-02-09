@@ -5,6 +5,8 @@ master: (doi: 10.5281/zenodo.165135)
    * Read support for Reftek 130 (rt130) waveform data,
      obspy.io.reftek (see #1433)
    * Add Nordic format (s-file) read/write (see #1517)
+   * VCR decorator for capturing and simulating network communication in
+     unittests and doctests
  - obspy.core:
    * UTCDateTime is now based on nanoseconds (long) instead of a unix
      timestamp in microseconds (float) - resulting in higher precision and
