@@ -103,9 +103,8 @@ def calculate_smoothing_matrix(frequencies, bandwidth=40.0, normalize=False):
     Ohmachi window for each frequency as the center frequency.
 
     Any spectrum with the same frequency bins as this matrix can later be
-    smoothed by a simple matrix multiplication with this matrix::
-
-        smoothed_spectrum = np.dot(spectrum, smoothing_matrix)
+    smoothed by using
+    :func:`~obspy.signal.konnoohmachismoothing.apply_smoothing_matrix`.
 
     This also works for many spectra stored in one large matrix and is even
     more efficient.
@@ -133,6 +132,28 @@ def calculate_smoothing_matrix(frequencies, bandwidth=40.0, normalize=False):
         sm_matrix[_i, :] = konno_ohmachi_smoothing_window(
             frequencies, freq, bandwidth, normalize=normalize)
     return sm_matrix
+
+
+def apply_smoothing_matrix(spectra, smoothing_matrix, count=1):
+    """
+    Smooths a matrix containing one spectra per row with the Konno-Ohmachi
+    smoothing window, using a smoothing matrix pre-computed through the
+    :func:`~obspy.signal.konnoohmachismoothing.calculate_smoothing_matrix`
+    function.
+    This function is useful if one needs to smooth the same type of spectrum
+    (same shape) through different function calls.
+
+    All spectra need to have frequency bins corresponding to the same
+    frequencies.
+    """
+    if spectra.dtype not in (np.float32, np.float64):
+        msg = '`spectra` needs to have a dtype of float32/64.'
+        raise ValueError(msg)
+    new_spec = np.dot(spectra, smoothing_matrix)
+    # Eventually apply more than once.
+    for _i in range(count - 1):
+        new_spec = np.dot(new_spec, smoothing_matrix)
+    return new_spec
 
 
 def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,

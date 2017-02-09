@@ -13,6 +13,7 @@ import warnings
 import numpy as np
 
 from obspy.signal.konnoohmachismoothing import (calculate_smoothing_matrix,
+                                                apply_smoothing_matrix,
                                                 konno_ohmachi_smoothing_window,
                                                 konno_ohmachi_smoothing)
 
@@ -130,19 +131,23 @@ class KonnoOhmachiTestCase(unittest.TestCase):
                                              max_memory_usage=0)
         # XXX: Why are the numerical inaccuracies quite large?
         np.testing.assert_almost_equal(smoothed_1, smoothed_2, 3)
+        # Test using a pre-computed smoothing matrix
+        smoothing_matrix = calculate_smoothing_matrix(frequencies)
+        smoothed_3 = apply_smoothing_matrix(spectra, smoothing_matrix, count=3)
+        np.testing.assert_almost_equal(smoothed_1, smoothed_3, 3)
         # Test the non-matrix mode for single spectra.
-        smoothed_3 = konno_ohmachi_smoothing(
+        smoothed_4 = konno_ohmachi_smoothing(
             np.require(spectra[0], dtype=np.float64),
             np.require(frequencies, dtype=np.float64))
-        smoothed_4 = konno_ohmachi_smoothing(
+        smoothed_5 = konno_ohmachi_smoothing(
             np.require(spectra[0], dtype=np.float64),
             np.require(frequencies, dtype=np.float64),
             normalize=True)
         # The normalized and not normalized should not be the same. That the
         # normalizing works has been tested before.
-        self.assertFalse(np.all(smoothed_3 == smoothed_4))
+        self.assertFalse(np.all(smoothed_4 == smoothed_5))
         # Input dtype should be output dtype.
-        self.assertEqual(smoothed_3.dtype, np.float64)
+        self.assertEqual(smoothed_4.dtype, np.float64)
 
 
 def suite():
