@@ -45,19 +45,11 @@ def konno_ohmachi_smoothing_window(frequencies, center_frequency,
     A small value will lead to a strong smoothing, while a large value of will
     lead to a low smoothing of the Fourier spectra.
     The default (and generally used) value for the bandwidth is 40. (From the
-    Geopsy documentation - www.geopsy.org)
+    `Geopsy documentation <http://www.geopsy.org>`_)
 
     All parameters need to be positive. This is not checked due to performance
     reasons and therefore any negative parameters might have unexpected
     results.
-
-    This function might raise some NumPy warnings due to divisions by zero and
-    logarithms of zero. This is intentional and faster than prefiltering the
-    special cases. You can disable NumPy warnings (they usually do not show up
-    anyways) with::
-
-        with np.errstate(all='ignore'):
-            ...code that raises NumPy warning due to division by zero...
 
     :type frequencies: :class:`numpy.ndarray` (float32 or float64)
     :param frequencies:
@@ -85,10 +77,13 @@ def konno_ohmachi_smoothing_window(frequencies, center_frequency,
         smoothing_window = np.zeros(len(frequencies), dtype=frequencies.dtype)
         smoothing_window[frequencies == 0.0] = 1.0
         return smoothing_window
-    # Calculate the bandwidth*log10(f/f_c)
-    smoothing_window = bandwidth * np.log10(frequencies / center_frequency)
-    # Just the Konno-Ohmachi formulae.
-    smoothing_window[...] = (np.sin(smoothing_window) / smoothing_window) ** 4
+    # Disable div by zero errors and return zero instead
+    with np.errstate(divide='ignore', invalid='ignore'):
+        # Calculate the bandwidth*log10(f/f_c)
+        smoothing_window = bandwidth * np.log10(frequencies / center_frequency)
+        # Just the Konno-Ohmachi formulae.
+        smoothing_window[...] =\
+            (np.sin(smoothing_window) / smoothing_window) ** 4
     # Check if the center frequency is exactly part of the provided
     # frequencies. This will result in a division by 0. The limit of f->f_c is
     # one.
@@ -185,15 +180,17 @@ def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
         scale. Set this parameter to True to normalize it on a normal scale.
         Default to False.
     """
-    if (frequencies.dtype != np.float32 and frequencies.dtype != np.float64) \
-       or (spectra.dtype != np.float32 and spectra.dtype != np.float64):
-        msg = 'frequencies and spectra need to have a dtype of float32/64.'
+    if spectra.dtype not in (np.float32, np.float64):
+        msg = '`spectra` needs to have a dtype of float32/64.'
+        raise ValueError(msg)
+    if frequencies.dtype not in (np.float32, np.float64):
+        msg = '`frequencies` needs to have a dtype of float32/64.'
         raise ValueError(msg)
     # Spectra and frequencies should have the same dtype.
     if frequencies.dtype != spectra.dtype:
         frequencies = np.require(frequencies, np.float64)
         spectra = np.require(spectra, np.float64)
-        msg = 'frequencies and spectra should have the same dtype. It ' + \
+        msg = '`frequencies` and `spectra` should have the same dtype. It ' + \
               'will be changed to np.float64 for both.'
         warnings.warn(msg)
     # Check the dtype to get the correct size.
@@ -210,11 +207,8 @@ def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
     # spectrum is to be smoothed.
     if enforce_no_matrix is False and (len(spectra.shape) > 1 or count > 1) \
        and approx_mem_usage < max_memory_usage:
-        # Disable NumPy warnings due to possible divisions by zero/logarithms
-        # of zero.
-        with np.errstate(all='ignore'):
-            smoothing_matrix = calculate_smoothing_matrix(
-                frequencies, bandwidth, normalize=normalize)
+        smoothing_matrix = calculate_smoothing_matrix(
+            frequencies, bandwidth, normalize=normalize)
         new_spec = np.dot(spectra, smoothing_matrix)
         # Eventually apply more than once.
         for _i in range(count - 1):
@@ -225,29 +219,22 @@ def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
         new_spec = np.empty(spectra.shape, spectra.dtype)
         # Separate case for just one spectrum.
         if len(new_spec.shape) == 1:
-            # Disable NumPy warnings due to possible divisions by
-            # zero/logarithms of zero.
-            with np.errstate(all='ignore'):
-                for _i in range(len(frequencies)):
-                    window = konno_ohmachi_smoothing_window(
-                        frequencies, frequencies[_i], bandwidth,
-                        normalize=normalize)
-                    new_spec[_i] = (window * spectra).sum()
+            for _i in range(len(frequencies)):
+                window = konno_ohmachi_smoothing_window(
+                    frequencies, frequencies[_i], bandwidth,
+                    normalize=normalize)
+                new_spec[_i] = (window * spectra).sum()
         # Reuse smoothing window if more than one spectrum.
         else:
-            # Disable NumPy warnings due to possible divisions by
-            # zero/logarithms of zero.
-            with np.errstate(all='ignore'):
-                for _i in range(len(frequencies)):
-                    window = konno_ohmachi_smoothing_window(
-                        frequencies, frequencies[_i], bandwidth,
-                        normalize=normalize)
-                    for _j, spec in enumerate(spectra):
-                        new_spec[_j, _i] = (window * spec).sum()
+            for _i in range(len(frequencies)):
+                window = konno_ohmachi_smoothing_window(
+                    frequencies, frequencies[_i], bandwidth,
+                    normalize=normalize)
+                for _j, spec in enumerate(spectra):
+                    new_spec[_j, _i] = (window * spec).sum()
         # Eventually apply more than once.
-        while count > 1:
+        for _i in range(count - 1):
             new_spec = konno_ohmachi_smoothing(
                 new_spec, frequencies, bandwidth, enforce_no_matrix=True,
                 normalize=normalize)
-            count -= 1
         return new_spec
