@@ -18,6 +18,7 @@ else:
 import numpy as np
 
 from obspy.core import AttribDict, UTCDateTime
+from obspy.core.util.vcr import vcr
 from obspy.clients.seishub import Client
 
 
@@ -107,6 +108,7 @@ class ClientTestCase(unittest.TestCase):
 #        self.assertEqual(st[0].stats.location, '')
 #        self.assertEqual(st[0].stats.channel, 'EHZ')
 
+    @vcr
     def test_get_event_list(self):
         c = self.client.event
         # UTCDateTimes
@@ -122,17 +124,20 @@ class ClientTestCase(unittest.TestCase):
                             max_datetime="2009-01-10 00:00:00")
         self.assertEqual(len(events), 4)
 
+    @vcr
     def test_get_network_ids(self):
         items = ['KT', 'BW', 'CZ', 'GR', 'NZ']
         data = self.client.waveform.get_network_ids()
         for item in items:
             self.assertIn(item, data)
 
+    @vcr
     def test_ping(self):
         # current server
         time = self.client.ping()
         self.assertTrue(isinstance(time, float))
 
+    @vcr
     def test_get_station_ids(self):
         # 1 - some selected stations
         stations = ['FUR', 'FURT', 'ROTZ', 'RTAK', 'MANZ', 'WET']
@@ -145,6 +150,7 @@ class ClientTestCase(unittest.TestCase):
         for station in stations:
             self.assertIn(station, data)
 
+    @vcr
     def test_get_location_ids(self):
         # 1 - all locations
         items = ['', '10']
@@ -163,6 +169,7 @@ class ClientTestCase(unittest.TestCase):
         for item in items:
             self.assertIn(item, data)
 
+    @vcr
     def test_get_channel_ids(self):
         # 1 - all channels
         items = ['AEX', 'AEY', 'BAN', 'BAZ', 'BHE', 'BHN', 'BHZ', 'EHE', 'EHN',
@@ -190,6 +197,7 @@ class ClientTestCase(unittest.TestCase):
         for item in items:
             self.assertIn(item, data)
 
+    @vcr
     def test_get_preview(self):
         # multiple channels / MiniSEED
         t1 = UTCDateTime('20080101')
@@ -209,6 +217,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(st[0]), 205642)
         self.assertEqual(st[0].stats.npts, 205642)
 
+    @vcr
     def test_get_preview_by_ids(self):
         # multiple channels / MiniSEED
         t1 = UTCDateTime('20080101')
@@ -228,6 +237,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(st[0].id, 'BW.MANZ..EHE')
         self.assertEqual(st[1].id, 'BW.ROTZ..EHE')
 
+    @vcr
     def test_get_paz(self):
         t = UTCDateTime('20090808')
         c = self.client
@@ -259,6 +269,7 @@ class ClientTestCase(unittest.TestCase):
         data = c.station.get_paz("BW.RLAS..BJZ", t)
         self.assertEqual(data, result)
 
+    @vcr
     def test_get_coordinates(self):
         t = UTCDateTime("2010-05-03T23:59:30")
         data = self.client.station.get_coordinates(network="BW", station="UH1",
@@ -267,6 +278,7 @@ class ClientTestCase(unittest.TestCase):
                   'longitude': 11.636093000000001}
         self.assertEqual(data, result)
 
+    @vcr
     def test_get_waveform_with_metadata(self):
         # metadata change during t1 -> t2 !
         t1 = UTCDateTime("2010-05-03T23:59:30")

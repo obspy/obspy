@@ -19,7 +19,8 @@ Basic Example
 
 >>> client = Client(timeout=20)
 >>> t = UTCDateTime('2010-01-01T10:00:00')
->>> st = client.waveform.get_waveforms("BW", "MANZ", "", "EH*", t, t+20)
+>>> st = client.waveform.get_waveforms(
+...     "BW", "MANZ", "", "EH*", t, t+20)  # doctest: +VCR
 >>> st.sort()  # doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at ...>
 >>> print(st)  # doctest: +ELLIPSIS
@@ -34,16 +35,18 @@ Advanced Examples
 >>> client.waveform.get_network_ids()     #doctest: +SKIP
 ['KT', 'BW', 'NZ', 'GR', ...]
 
->>> sta_ids = client.waveform.get_station_ids(network='BW')
+>>> sta_ids = client.waveform.get_station_ids(network='BW')  # doctest: +VCR
 >>> sorted(sta_ids)  # doctest: +SKIP
 ['ALTM', 'BGLD', 'BW01',..., 'WETR', 'ZUGS']
 
->>> cha_ids = client.waveform.get_channel_ids(network='BW', station='MANZ')
+>>> cha_ids = client.waveform.get_channel_ids(
+...     network='BW', station='MANZ')  # doctest: +VCR
 >>> sorted(cha_ids)  # doctest: +NORMALIZE_WHITESPACE
 ['AEX', 'AEY', 'BHE', 'BHN', 'BHZ', 'EHE', 'EHN', 'EHZ', 'HHE', 'HHN', 'HHZ',
  'LOG', 'SHE', 'SHN', 'SHZ']
 
->>> paz = client.station.get_paz('BW.MANZ..EHZ', UTCDateTime('20090808'))
+>>> paz = client.station.get_paz('BW.MANZ..EHZ',
+...                              UTCDateTime('20090808'))  # doctest: +VCR
 >>> paz = paz.items()
 >>> sorted(paz)  # doctest: +SKIP
 [('gain', 60077000.0),
