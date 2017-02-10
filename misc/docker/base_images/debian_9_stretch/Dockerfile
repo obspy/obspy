@@ -18,7 +18,7 @@ RUN pip install https://github.com/Damgaard/PyImgur/archive/9ebd8bed9b3d0ae27979
 RUN apt-get install -y locales
 RUN locale-gen en_US.UTF-8
 RUN apt-get install -y python
-RUN apt-get install -y python python-dev python-setuptools python-support python-numpy lsb-release gcc
+RUN apt-get install -y python python-dev python-setuptools python-numpy lsb-release gcc
 RUN apt-get install -y vim git fakeroot equivs lintian help2man quilt git
 RUN apt-get install -y ttf-bitstream-vera
 RUN apt-get install -y python-matplotlib python-numpy python-scipy python-lxml python-sqlalchemy python-nose python-flake8 python-setuptools python-imaging python-mock python-decorator python-requests python-tornado python-geographiclib
