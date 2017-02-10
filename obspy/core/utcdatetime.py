@@ -228,7 +228,12 @@ class UTCDateTime(object):
         elif len(args) == 1 and len(kwargs) == 0:
             value = args[0]
             if isinstance(value, UTCDateTime):
-                self._ns = value._ns
+                # ugly workaround to be able to unpickle UTCDateTime objects
+                # that were pickled on ObsPy <1.1
+                try:
+                    self._ns = value._ns
+                except AttributeError:
+                    self._from_timestamp(value.__dict__['timestamp'])
                 return
             # check types
             try:
