@@ -106,7 +106,7 @@ class TraceBuf2(object):
         ndat = len(self.data)
         if self.ndata != ndat:
             msg = 'data count in header (%d) != data count (%d)'
-            print(msg % (self.nsamp, ndat), file=sys.stderr)
+            print(msg % (self.ndata, ndat), file=sys.stderr)
             self.ndata = ndat
         return
 
