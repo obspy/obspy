@@ -365,13 +365,17 @@ class ImageComparison(NamedTemporaryFile):
         rcdefaults()
         if self.style is not None:
             self.style.__enter__()
-        rcParams['font.family'] = 'Bitstream Vera Sans'
+        if MATPLOTLIB_VERSION >= [2, 0, 0]:
+            default_font = 'DejaVu Sans'
+        else:
+            default_font = 'Bitstream Vera Sans'
+        rcParams['font.family'] = default_font
         with warnings.catch_warnings(record=True) as w:
             warnings.filterwarnings('always', 'findfont:.*')
-            font_manager.findfont('Bitstream Vera Sans')
-        if w:
-            warnings.warn('Unable to find the Bitstream Vera Sans font. '
-                          'Plotting tests will likely fail.')
+            font_manager.findfont(default_font)
+            if w:
+                warnings.warn('Unable to find the ' + default_font + ' font. '
+                              'Plotting tests will likely fail.')
         try:
             rcParams['text.hinting'] = False
         except KeyError:
