@@ -10,36 +10,14 @@ from future.builtins import *  # NOQA
 import sys
 import unittest
 
-if sys.version_info.major == 2:
-    from urllib2 import urlopen
-else:
-    from urllib.request import urlopen
-
-import numpy as np
-
 from obspy.core import AttribDict, UTCDateTime
 from obspy.core.util.vcr import vcr
 from obspy.clients.seishub import Client
 
 
 TESTSERVER = "http://teide.geophysik.uni-muenchen.de:8080"
-TESTSERVER_UNREACHABLE_MSG = "Seishub test server not reachable."
 
 
-def _check_server_availability():
-    """
-    Returns an empty string if server is reachable or failure message
-    otherwise.
-    """
-    try:
-        code = urlopen(TESTSERVER, timeout=3).getcode()
-        assert(code == 200)
-    except Exception:
-        return TESTSERVER_UNREACHABLE_MSG
-    return ""
-
-
-@unittest.skipIf(_check_server_availability(), TESTSERVER_UNREACHABLE_MSG)
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for the SeisHub client.
@@ -302,6 +280,7 @@ class ClientTestCase(unittest.TestCase):
                              'longitude': 11.636093000000001})
         self.assertEqual(st[0].stats.coordinates, result)
 
+    @vcr
     def test_localcache(self):
         """
         Tests local 'caching' of XML seed resources and station list coordinate
