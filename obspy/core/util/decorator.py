@@ -87,6 +87,10 @@ def deprecated_keywords(keywords):
                 if key in kwargs:
                     new_keyword_appearance_counts[new_key] += 1
             for key_ in keywords.values():
+                # ignore `None` as new value, it means that no mapping is
+                # happening..
+                if key_ is None:
+                    continue
                 if new_keyword_appearance_counts[key_] > 1:
                     conflicting_keys = ", ".join(
                         [old_key for old_key, new_key in keywords.items()
