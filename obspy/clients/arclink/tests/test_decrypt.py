@@ -131,8 +131,8 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        self.assertRaises(EVPError, client.get_waveforms, 'GE', 'APE', '',
-                          'BHZ', start, end)
+        self.assertRaises(Exception, client.get_waveforms,
+                          'GE', 'APE', '', 'BHZ', start, end)
 
     def test_get_waveform_no_password(self):
         """
@@ -143,8 +143,8 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        self.assertRaises(EVPError, client.get_waveforms, 'GE', 'APE', '',
-                          'BHZ', start, end)
+        self.assertRaises(Exception, client.get_waveforms,
+                          'GE', 'APE', '', 'BHZ', start, end)
 
 
 def suite():
