@@ -20,11 +20,11 @@ from obspy.core.util import NamedTemporaryFile
 HAS_CRYPTO = hasM2Crypto or hasPyCrypto
 
 
+@unittest.skipIf(not HAS_CRYPTO, 'm2crypto or pycrypto required')
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for L{obspy.clients.arclink.client.Client}.
     """
-    @unittest.skipIf(not HAS_CRYPTO, 'm2crypto or pycrypto required')
     def test_get_waveform_with_dcid_key(self):
         """
         """
@@ -42,7 +42,6 @@ class ClientTestCase(unittest.TestCase):
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
-    @unittest.skipIf(not HAS_CRYPTO, 'm2crypto or pycrypto required')
     def test_get_waveform_with_dcid_key_file(self):
         """
         Tests various DCID key file formats (with space or equal sign). Also
@@ -89,7 +88,6 @@ class ClientTestCase(unittest.TestCase):
 
     @unittest.skipIf(os.path.isfile(DCID_KEY_FILE),
                      '$HOME/dcidpasswords.txt already exists')
-    @unittest.skipIf(not HAS_CRYPTO, 'm2crypto or pycrypto required')
     def test_get_waveform_with_default_dcid_key_file(self):
         """
         Use $HOME/dcidpasswords.txt.
@@ -113,7 +111,6 @@ class ClientTestCase(unittest.TestCase):
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
-    @unittest.skipIf(not HAS_CRYPTO, 'm2crypto or pycrypto required')
     def test_get_waveform_unknown_user(self):
         """
         Unknown user raises an ArcLinkException: DENIED.
@@ -125,7 +122,6 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.get_waveforms, 'GE', 'APE',
                           '', 'BHZ', start, end)
 
-    @unittest.skipIf(not HAS_CRYPTO, 'm2crypto or pycrypto required')
     def test_get_waveform_wrong_password(self):
         """
         A wrong password password raises a "EVPError: bad decrypt".
@@ -138,7 +134,6 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(EVPError, client.get_waveforms, 'GE', 'APE', '',
                           'BHZ', start, end)
 
-    @unittest.skipIf(not HAS_CRYPTO, 'm2crypto or pycrypto required')
     def test_get_waveform_no_password(self):
         """
         No password raises a "EVPError: bad decrypt".
