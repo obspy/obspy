@@ -13,14 +13,12 @@ import numpy as np
 
 from obspy.clients.arclink import Client
 from obspy.clients.arclink.client import DCID_KEY_FILE, ArcLinkException
-from obspy.clients.arclink.decrypt import hasM2Crypto, hasPyCrypto
+from obspy.clients.arclink.decrypt import HAS_CRYPTOLIB, CRYPTOLIB_REQUIRED_MSG
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 
-HAS_CRYPTO = hasM2Crypto or hasPyCrypto
 
-
-@unittest.skipIf(not HAS_CRYPTO, 'm2crypto or pycrypto required')
+@unittest.skipIf(not HAS_CRYPTOLIB, CRYPTOLIB_REQUIRED_MSG)
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for L{obspy.clients.arclink.client.Client}.
@@ -124,7 +122,7 @@ class ClientTestCase(unittest.TestCase):
 
     def test_get_waveform_wrong_password(self):
         """
-        A wrong password password raises a "EVPError: bad decrypt".
+        A wrong password password raises exception.
         """
         client = Client(host="webdc.eu", port=36000, user="test@obspy.org",
                         dcid_keys={'BIA': 'WrongPassword'})
@@ -136,7 +134,7 @@ class ClientTestCase(unittest.TestCase):
 
     def test_get_waveform_no_password(self):
         """
-        No password raises a "EVPError: bad decrypt".
+        No password raises exception.
         """
         client = Client(host="webdc.eu", port=36000, user="test@obspy.org",
                         dcid_keys={'BIA': ''})
