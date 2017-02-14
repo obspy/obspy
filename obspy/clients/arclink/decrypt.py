@@ -42,7 +42,6 @@ except ImportError:
 
 
 HAS_CRYPTOLIB = HAS_M2CRYPTO or HAS_PYCRYPTO or HAS_CRYPTOGRAPHY
-CRYPTOLIB_REQUIRED_MSG = "Module M2Crypto, PyCrypto or cryptograpy is needed."
 
 
 class SSLWrapper:
@@ -50,7 +49,8 @@ class SSLWrapper:
     """
     def __init__(self, password):
         if not HAS_CRYPTOLIB:
-            raise ImportError(CRYPTOLIB_REQUIRED_MSG)
+            raise ImportError(
+                'M2Crypto, PyCrypto or cryptography is not installed')
         self._cipher = None
         self._password = None
         if password is None:
