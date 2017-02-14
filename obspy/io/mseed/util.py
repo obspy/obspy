@@ -9,7 +9,6 @@ from future.utils import native_str
 
 import collections
 import ctypes as C
-import math
 import os
 import sys
 import warnings
@@ -815,8 +814,8 @@ def _convert_datetime_to_mstime(dt):
 
     :param dt: obspy.util.UTCDateTime object.
     """
-    _fsec, _sec = math.modf(dt.timestamp)
-    return int(round(_fsec * HPTMODULUS)) + int(_sec * HPTMODULUS)
+    rest = (dt._ns % 10**3) >= 500 and 1 or 0
+    return dt._ns // 10**3 + rest
 
 
 def _convert_mstime_to_datetime(timestring):
@@ -825,7 +824,7 @@ def _convert_mstime_to_datetime(timestring):
 
     :param timestamp: MiniSEED timestring (Epoch time string in ms).
     """
-    return UTCDateTime(timestring / HPTMODULUS)
+    return UTCDateTime(ns=int(round(timestring * 10**3)))
 
 
 def _unpack_steim_1(data, npts, swapflag=0, verbose=0):

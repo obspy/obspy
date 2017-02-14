@@ -136,10 +136,27 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
     def test_convert_datetime2(self):
         """
-        Currently failing test in #1670
+        Some failing test discovered in #1670
         """
+        # 1
         dt = UTCDateTime(ns=1487021451935737333)
         self.assertEqual(str(dt), "2017-02-13T21:30:51.935737Z")
+        self.assertEqual(util._convert_datetime_to_mstime(dt),
+                         1487021451935737)
+        self.assertEqual(dt, util._convert_mstime_to_datetime(
+            util._convert_datetime_to_mstime(dt)))
+        # 2
+        dt = UTCDateTime(ns=1487021451935736449)
+        self.assertEqual(str(dt), "2017-02-13T21:30:51.935736Z")
+        self.assertEqual(util._convert_datetime_to_mstime(dt),
+                         1487021451935736)
+        self.assertEqual(dt, util._convert_mstime_to_datetime(
+            util._convert_datetime_to_mstime(dt)))
+        # 3
+        dt = UTCDateTime(ns=1487021451935736501)
+        self.assertEqual(str(dt), "2017-02-13T21:30:51.935737Z")
+        self.assertEqual(util._convert_datetime_to_mstime(dt),
+                         1487021451935737)
         self.assertEqual(dt, util._convert_mstime_to_datetime(
             util._convert_datetime_to_mstime(dt)))
 
