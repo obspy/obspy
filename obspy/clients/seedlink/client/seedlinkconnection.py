@@ -1406,15 +1406,17 @@ class SeedLinkConnection(object):
             if self.lastpkttime and self.check_version(2.93) >= 0 and \
                curstream.btime is not None:
                 # Increment sequence number by 1
-                send_str += b" " + hex(curstream.seqnum + 1) + b" " + \
-                    curstream.get_sl_time_stamp()
+                send_str += b" " + \
+                    hex(curstream.seqnum + 1).encode('ascii', 'strict') + \
+                    b" " + curstream.get_sl_time_stamp()
                 msg = "requesting resume data from 0x%s (decimal: %s) at %s"
                 logger.info(msg % (hex(curstream.seqnum + 1).upper(),
                             curstream.seqnum + 1),
                             curstream.get_sl_time_stamp())
             else:
                 # Increment sequence number by 1
-                send_str += b" " + hex(curstream.seqnum + 1)
+                send_str += b" " + \
+                    hex(curstream.seqnum + 1).encode('ascii', 'strict')
                 msg = "requesting resume data from 0x%s (decimal: %s)"
                 logger.info(msg % (hex(curstream.seqnum + 1).upper(),
                                    curstream.seqnum + 1))

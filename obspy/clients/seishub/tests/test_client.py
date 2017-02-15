@@ -13,6 +13,8 @@ import unittest
 with standard_library.hooks():
     import urllib.request
 
+import numpy as np
+
 from obspy.core import AttribDict, UTCDateTime
 from obspy.clients.seishub import Client
 
@@ -42,6 +44,45 @@ class ClientTestCase(unittest.TestCase):
 
     def setUp(self):
         self.client = Client(TESTSERVER)
+
+    def test_get_waveforms(self):
+        """
+        Test fetching waveforms from the server
+        """
+        t = UTCDateTime(2012, 1, 1, 12)
+        st = self.client.waveform.get_waveforms('GR', 'FUR', '', 'BH*', t, t+5)
+        self.assertEqual(len(st), 3)
+        for tr, cha in zip(st, ('BHZ', 'BHN', 'BHE')):
+            self.assertEqual(tr.stats.network, 'GR')
+            self.assertEqual(tr.stats.station, 'FUR')
+            self.assertEqual(tr.stats.location, '')
+            self.assertEqual(tr.stats.channel, cha)
+            self.assertEqual(tr.stats.sampling_rate, 20.0)
+            self.assertEqual(len(tr), 101)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2012-01-01T12:00:00.019999Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2012-01-01T12:00:00.020000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2012-01-01T12:00:00.019999Z'))
+        np.testing.assert_array_equal(
+            st[0].data[:5],
+            np.array([-804, -736, -839, -897, -953], dtype=np.int32))
+        np.testing.assert_array_equal(
+            st[0].data[-5:],
+            np.array([-401, -350, -400, -391, -402], dtype=np.int32))
+        np.testing.assert_array_equal(
+            st[1].data[:5],
+            np.array([-136, -163, -208, -117, -20], dtype=np.int32))
+        np.testing.assert_array_equal(
+            st[1].data[-5:],
+            np.array([-1233, -1254, -1227, -1213, -1288], dtype=np.int32))
+        np.testing.assert_array_equal(
+            st[2].data[:5],
+            np.array([56, -6, -30, -38, -20], dtype=np.int32))
+        np.testing.assert_array_equal(
+            st[2].data[-5:],
+            np.array([-1143, -1146, -1076, -998, -1050], dtype=np.int32))
 
 #    def test_getWaveformApplyFilter(self):
 #        t = UTCDateTime("2009-09-03 00:00:00")

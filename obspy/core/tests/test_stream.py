@@ -1716,18 +1716,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertFalse(tr.data)
 
         # 2 - via http
-        # dtype
-        tr = read('https://examples.obspy.org/test.sac', dtype=np.int32)[0]
-        self.assertEqual(tr.data.dtype, np.int32)
-        # start/end time
-        tr2 = read('https://examples.obspy.org/test.sac',
-                   starttime=tr.stats.starttime + 1,
-                   endtime=tr.stats.endtime - 2)[0]
-        self.assertEqual(tr2.stats.starttime, tr.stats.starttime + 1)
-        self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 2)
-        # headonly
-        tr = read('https://examples.obspy.org/test.sac', headonly=True)[0]
-        self.assertFalse(tr.data)
+        # now in separate test case "test_read_url_via_network"
 
         # 3 - some example within obspy
         # dtype
@@ -1762,6 +1751,24 @@ class StreamTestCase(unittest.TestCase):
             warnings.simplefilter('error', UserWarning)
             self.assertRaises(UserWarning, read, '/path/to/slist_float.ascii',
                               headonly=True, starttime=0, endtime=1)
+
+    def test_read_url_via_network(self):
+        """
+        Testing read function with an URL fetching data via network connection
+        """
+        # 2 - via http
+        # dtype
+        tr = read('https://examples.obspy.org/test.sac', dtype=np.int32)[0]
+        self.assertEqual(tr.data.dtype, np.int32)
+        # start/end time
+        tr2 = read('https://examples.obspy.org/test.sac',
+                   starttime=tr.stats.starttime + 1,
+                   endtime=tr.stats.endtime - 2)[0]
+        self.assertEqual(tr2.stats.starttime, tr.stats.starttime + 1)
+        self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 2)
+        # headonly
+        tr = read('https://examples.obspy.org/test.sac', headonly=True)[0]
+        self.assertFalse(tr.data)
 
     def test_copy(self):
         """

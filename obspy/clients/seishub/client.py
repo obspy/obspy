@@ -774,10 +774,13 @@ master/seishub/plugins/seismology/event.py
     package = 'seismology'
     resourcetype = 'event'
 
+    @deprecated_keywords({
+        "first_pick": None, "last_pick": None})
     def get_list(self, limit=50, offset=None, localisation_method=None,
                  author=None, min_datetime=None, max_datetime=None,
-                 first_pick=None, last_pick=None, min_latitude=None,
-                 max_latitude=None, min_longitude=None, max_longitude=None,
+                 min_first_pick=None, max_first_pick=None, min_last_pick=None,
+                 max_last_pick=None, min_latitude=None, max_latitude=None,
+                 min_longitude=None, max_longitude=None,
                  min_magnitude=None, max_magnitude=None, min_depth=None,
                  max_depth=None, used_p=None, min_used_p=None, max_used_p=None,
                  used_s=None, min_used_s=None, max_used_s=None,

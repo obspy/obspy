@@ -119,6 +119,9 @@ master: (doi: 10.5281/zenodo.165135)
    * Better end of stream detection. (see #1563)
  - obspy.clients.seedlink:
    * Better end of stream detection. (see #1605)
+ - obspy.clients.seishub:
+   * Fix wrong kwargs `first_pick` and `last_pick` in
+     `Client.event.get_list()`. (see #1661)
  - obspy.io.mseed:
    * ObsPy can now also read (Mini)SEED files with noise records. (see #1495)
    * ObsPy can now read records with a data-offset of zero. (see #1509, #1525)
@@ -128,7 +131,7 @@ master: (doi: 10.5281/zenodo.165135)
    * ObsPy now always writes Blockette 100 if sampling rate accuracy is
      otherwise lost. (see #1550)
    * obspy.io.mseed.util.set_flags_in_fixed_header() now works with Python 3
-     and also for files with Blockette 100.
+     and also for files with Blockette 100 (see #1648).
  - obspy.io.quakeml:
    * write StationMagnitude.residual even when it is zero (see #1625)
    * read & write Event.region
