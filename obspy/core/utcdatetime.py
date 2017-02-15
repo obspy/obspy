@@ -233,7 +233,8 @@ class UTCDateTime(object):
                 try:
                     self._ns = value._ns
                 except AttributeError:
-                    self._from_timestamp(value.__dict__['timestamp'])
+                    self._from_datetime(datetime.datetime.fromtimestamp(
+                        value.__dict__['timestamp']))
                 return
             # check types
             try:
