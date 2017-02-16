@@ -30,6 +30,7 @@ from lxml.etree import Element, SubElement, tostring
 
 from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guess_delta
+from obspy.core.util.decorator import deprecated_keywords
 from obspy.io.xseed import Parser
 
 
