@@ -158,17 +158,75 @@ class FutureUsageTestCase(unittest.TestCase):
 
 
 class MatplotlibBackendUsageTestCase(unittest.TestCase):
+    patterns = (
+        r" *from pylab import",
+        r" *from pylab\..*? import",
+        r" *import pylab",
+        r" *from matplotlib import (.*?, *)*(pyplot|backends)",
+        r" *import matplotlib\.(pyplot|backends)")
+
+    def forbidden_match(self, line):
+        for pattern in self.patterns:
+            if re.match(pattern, line):
+                return pattern
+        return False
+
+    def test_no_pyplot_regex(self):
+        """
+        Tests that the regex patterns to match forbidden lines works
+        as expected.
+        """
+        positives = (
+            'from pylab import something',
+            '    from pylab import something',
+            'from pylab.something import something',
+            'import pylab',
+            '    import pylab',
+            'from matplotlib import pyplot',
+            '  from matplotlib import pyplot',
+            'from matplotlib import backends',
+            '  from matplotlib import backends',
+            'from matplotlib import dates, backends',
+            'import matplotlib.pyplot as plt',
+            'import matplotlib.pyplot',
+            'import matplotlib.backends',
+            '   import matplotlib.backends',
+            )
+        negatives = (
+            '#from pylab import something',
+            '# from pylab import something',
+            '#    from pylab import something',
+            'import os  # from pylab import something',
+            '#import pylab',
+            '#    import pylab',
+            '  #from matplotlib import pyplot',
+            '#  from matplotlib import pyplot',
+            '#from matplotlib import backends',
+            '#  from matplotlib import backends',
+            '#from matplotlib import dates, backends',
+            ' # import matplotlib.pyplot as plt',
+            'import os   # import matplotlib.pyplot',
+            ' # import matplotlib.backends',
+            'from cryptography.hazmat.backends import default_backend',
+            )
+        for line in positives:
+            self.assertTrue(
+                self.forbidden_match(line),
+                msg="Line '{}' should be detected as forbidden but it was "
+                    "not.".format(line))
+        for line in negatives:
+            pattern = self.forbidden_match(line)
+            self.assertFalse(
+                pattern,
+                msg="Line '{}' should not be detected as forbidden but it "
+                    "was, by pattern '{}'.".format(line, pattern))
+
     def test_no_pyplot_import_in_any_file(self):
         """
         Tests that no Python file spoils matplotlib backend switching by
         importing e.g. `matplotlib.pyplot` (not enclosed in a def/class
         statement).
         """
-        patterns = (
-            r"(?<!# )from pylab\..*? import",
-            r"(?<!# )import pylab",
-            r"(?<!# )from matplotlib import (pyplot)|(backends)",
-            r"(?<!# )import matplotlib\.(pyplot)|(backends)")
         msg = ("File '{}' (line {})\nmatches a forbidden matplotlib import "
                "statement outside of class/def statements\n(breaking "
                "matplotlib backend switching on some systems):\n    '{}'")
@@ -196,10 +254,9 @@ class MatplotlibBackendUsageTestCase(unittest.TestCase):
                         # stop searching at first unindented class/def
                         if re.match(r"(class)|(def) ", line):
                             break
-                        for pattern in patterns:
-                            if re.search(pattern, line):
-                                failures.append(msg.format(
-                                    filename, line_number, line.rstrip()))
+                        if self.forbidden_match(line) is not False:
+                            failures.append(msg.format(
+                                filename, line_number, line.rstrip()))
                     line = fh.readline()
                     line_number += 1
         self.assertEqual(len(failures), 0, "\n" + "\n\n".join(failures))
