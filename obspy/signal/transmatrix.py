@@ -24,7 +24,7 @@ import numpy as np
 from obspy.core import Stream
 
 
-def transMatrix(res_stream, mon_stream, fmin=0.1, fmax=10):
+def transMatrix(res_stream, mon_stream, fmin=0.125, fmax=0.5):
     """
     Function calculating a transformation matrix between a stream of 3 \
     orthogonal traces (ouput of unknown seismometer, defined as res_stream) \
@@ -101,12 +101,14 @@ def transMatrix(res_stream, mon_stream, fmin=0.1, fmax=10):
             msg = "Traces does not have the same start time!"
             raise ValueError(msg)
 
+        # Sort stream in ENZ or 12Z
+        st.sort()
         # Detrend, taper and filter stream
         st.detrend('demean')
         st.detrend('linear')
         st.taper(0.2)
         st.filter('bandpass', freqmin=fmin, freqmax=fmax, zerophase=True,
-                  corners=4)
+                  corners=8)
 
     # Verify streams between them: same sampling rate?
     if mon_stream[0].stats.sampling_rate != res_stream[0].stats.sampling_rate:
