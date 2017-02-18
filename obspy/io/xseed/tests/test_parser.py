@@ -575,6 +575,24 @@ class ParserTestCase(unittest.TestCase):
             p._parse_resp(data)
             p.get_resp()
 
+    def test_join_sensor_dl_resps(self):
+        """
+        Test creation of response from sensor and datalogger.
+        """
+        sts2_resp_file = os.path.join(self.path,
+                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        rt130_resp_file = os.path.join(self.path,
+                                       'RESP.XX.NR008..HHZ.130.1.100')
+        sensor = Parser(sts2_resp_file)
+        dl = Parser(rt130_resp_file)
+        combined = Parser.combine_sensor_dl(sensor=sensor, datalogger=dl)
+        print(combined.get_resp()[0][1].read())
+        combined.write_resp('.')
+
+    def test_join_wrong_types(self):
+        with self.assertRaises(TypeError) as e:
+            Parser.combine_sensor_dl(None, None)
+
     # def test_read_resp_with_b61(self):
         # """
         # XXX: Parser._parse_resp doesn't handle b61.

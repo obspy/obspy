@@ -779,6 +779,54 @@ class Parser(object):
                                              []).append(blockette_obj)
         self._update_internal_seed_structure()
 
+    @classmethod
+    def combine_sensor_dl(cls, sensor, datalogger):
+        """
+        Returns a single response from a sensor and datalogger response.
+        Does NOT caculate stage0; Sensitivity; Overall gain.
+
+        :type sensor: :class:`~obspy.io.xseed.Parser`
+        :param sensor: Response of a sensor.
+        :type datalogger: :class:`~obspy.io.xseed.Parser`
+        :param datalogger: Response of a datalogger.
+        :rtype: :class: `~obspy.io.xseed.Parser`
+        :returns: Single response of sensor and datalogger together.
+        """
+        # Check both args are parsers
+        if not (isinstance(sensor, cls) and isinstance(datalogger, cls)):
+            raise TypeError( 'Sensor and datalogger not type {}'.format(cls))
+
+        # Combine: sesnor.stage1, dl.stage2, ..., dl.stageN
+
+        # Find all stage1 blockettes in sensor
+        stage1 = list()
+        for b_id, b_list in sensor.blockettes.iteritems():
+            for b in b_list:
+                try:
+                    if b.stage_sequence_number == 1:
+                        stage1.append((b_id, b))
+                        # Only 1 stage1 for a given blockette tyep
+                        break
+                except:
+                    # OK to pass here.
+                    pass
+
+        combined = copy.deepcopy(datalogger)
+
+        # Replace stage1 blockettes with sensors
+        for b_id, stage1_b in stage1:
+            for i, b in enumerate(combined.stations[0]):
+                if b.id != b_id:
+                    continue
+                try:
+                    if b.stage_sequence_number == 1:
+                        combined.stations[0][i] = stage1_b
+                except:
+                    # OK to pass, really
+                    pass
+        return combined
+
+
     def _parse_seed(self, data):
         """
         Parses through a whole SEED volume.
