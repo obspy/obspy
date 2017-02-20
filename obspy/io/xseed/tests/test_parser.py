@@ -559,7 +559,6 @@ class ParserTestCase(unittest.TestCase):
             p = Parser(data)
             p.get_resp()
 
-
     def test_parse_resp(self):
         """
         Tests parsing a RESP file by calling Parser._parse_resp(string)
@@ -585,13 +584,17 @@ class ParserTestCase(unittest.TestCase):
                                        'RESP.XX.NR008..HHZ.130.1.100')
         sensor = Parser(sts2_resp_file)
         dl = Parser(rt130_resp_file)
-        combined = Parser.combine_sensor_dl(sensor=sensor, datalogger=dl)
-        print(combined.get_resp()[0][1].read())
-        combined.write_resp('.')
+        combined = Parser.combine_sensor_dl_resps(sensor=sensor, datalogger=dl)
+
+        # Try to use a sensor and dl from bw seed files.
+        sensor = Parser(self.BW_SEED_files[0])
+        dl = Parser(self.BW_SEED_files[1])
+        combined = Parser.combine_sensor_dl_resps(sensor=sensor, datalogger=dl)
+        # combined.write_resp('.')
 
     def test_join_wrong_types(self):
         with self.assertRaises(TypeError) as e:
-            Parser.combine_sensor_dl(None, None)
+            Parser.combine_sensor_dl_resps(None, None)
 
     # def test_read_resp_with_b61(self):
         # """

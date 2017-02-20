@@ -780,10 +780,11 @@ class Parser(object):
         self._update_internal_seed_structure()
 
     @classmethod
-    def combine_sensor_dl(cls, sensor, datalogger):
+    def combine_sensor_dl_resps(cls, sensor, datalogger):
         """
         Returns a single response from a sensor and datalogger response.
         Does NOT caculate stage0; Sensitivity; Overall gain.
+        Not tested for Parser objects with more than 1 response.
 
         :type sensor: :class:`~obspy.io.xseed.Parser`
         :param sensor: Response of a sensor.
