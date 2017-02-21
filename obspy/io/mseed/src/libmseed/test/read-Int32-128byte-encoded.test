@@ -1,0 +1,2 @@
+#!/bin/sh
+./lmtestparse data/Int32-128byte.mseed -D

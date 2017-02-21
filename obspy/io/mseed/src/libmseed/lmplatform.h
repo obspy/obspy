@@ -1,24 +1,10 @@
 /***************************************************************************
  * lmplatform.h:
- * 
+ *
  * Platform specific headers.  This file provides a basic level of platform
  * portability.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License
- * as published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License (GNU-LGPL) for more details.  The
- * GNU-LGPL and further information can be found here:
- * https://www.gnu.org/
- *
- * Written by Chad Trabant, IRIS Data Management Center
- *
- * modified: 2015.134
+ * modified: 2016.275
  ***************************************************************************/
 
 #ifndef LMPLATFORM_H
@@ -79,8 +65,8 @@ extern "C" {
   #include <windows.h>
   #include <sys/types.h>
 
-  /* MSVC does not support inttypes.h */
-  #if defined(_MSC_VER)
+  /* For MSVC 2012 and earlier define standard int types, otherwise use inttypes.h */
+  #if defined(_MSC_VER) && _MSC_VER <= 1700
     typedef signed char int8_t;
     typedef unsigned char uint8_t;
     typedef signed short int int16_t;
@@ -111,6 +97,8 @@ extern "C" {
   #endif
 
   #if defined(__MINGW32__) || defined(__MINGW64__)
+    #include <fcntl.h>
+
     #define fstat _fstat
     #define stat _stat
   #endif
@@ -123,5 +111,5 @@ extern int lmp_fseeko (FILE *stream, off_t offset, int whence);
 #ifdef __cplusplus
 }
 #endif
- 
+
 #endif /* LMPLATFORM_H */

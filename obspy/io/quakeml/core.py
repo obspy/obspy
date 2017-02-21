@@ -27,9 +27,9 @@ from future.builtins import *  # NOQA
 import inspect
 import io
 import os
-import sys
 import warnings
 
+from collections import Mapping
 from lxml import etree
 
 from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
@@ -44,8 +44,6 @@ from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               WaveformStreamID)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
@@ -72,13 +70,13 @@ def _xml_doc_from_anything(source):
     """
     try:
         xml_doc = etree.parse(source)
-    except:
+    except Exception:
         try:
             xml_doc = etree.fromstring(source)
-        except:
+        except Exception:
             try:
                 xml_doc = etree.fromstring(source.encode())
-            except:
+            except Exception:
                 raise ValueError("Could not parse '%s' to an etree element." %
                                  source)
     return xml_doc
@@ -107,7 +105,7 @@ def _is_quakeml(filename):
 
     try:
         xml_doc = _xml_doc_from_anything(filename)
-    except:
+    except Exception:
         return False
     finally:
         if file_like_object:
@@ -120,7 +118,7 @@ def _is_quakeml(filename):
         else:
             namespace = _get_first_child_namespace(xml_doc)
         xml_doc.xpath('q:eventParameters', namespaces={"q": namespace})[0]
-    except:
+    except Exception:
         return False
     return True
 
@@ -178,7 +176,7 @@ class Unpickler(object):
             return None
         try:
             return convert_to(text)
-        except:
+        except Exception:
             msg = "Could not convert %s to type %s. Returning None."
             warnings.warn(msg % (text, convert_to))
         return None
@@ -728,7 +726,7 @@ class Unpickler(object):
         # optional attribute
         try:
             obj.preferred_plane = int(sub_el.get('preferredPlane'))
-        except:
+        except Exception:
             obj.preferred_plane = None
         self._extra(sub_el, obj)
         return obj
@@ -998,7 +996,13 @@ class Unpickler(object):
             for el in element.iterfind("{%s}*" % ns):
                 # remove namespace from tag name
                 _, name = el.tag.split("}")
-                value = el.text
+                # check if element has children (nested tags)
+                if len(el):
+                    sub_obj = AttribDict()
+                    self._extra(el, sub_obj)
+                    value = sub_obj.extra
+                else:
+                    value = el.text
                 try:
                     extra = obj.setdefault("extra", AttribDict())
                 # Catalog object is not based on AttribDict..
@@ -1077,7 +1081,7 @@ class Pickler(object):
     def _id(self, obj):
         try:
             return obj.get_quakeml_uri()
-        except:
+        except Exception:
             return ResourceIdentifier().get_quakeml_uri()
 
     def _str(self, value, root, tag, always_create=False, attrib=None):
@@ -1178,7 +1182,10 @@ class Pickler(object):
         """
         if not hasattr(obj, "extra"):
             return
-        for key, item in obj.extra.items():
+        self._custom(obj.extra, element)
+
+    def _custom(self, obj, element):
+        for key, item in obj.items():
             value = item["value"]
             ns = item["namespace"]
             attrib = item.get("attrib", {})
@@ -1189,7 +1196,11 @@ class Pickler(object):
             if type_.lower() in ("attribute", "attrib"):
                 element.attrib[tag] = str(value)
             elif type_.lower() == "element":
-                if isinstance(value, bool):
+                # check if value is dictionary-like
+                if isinstance(value, Mapping):
+                    subelement = etree.SubElement(element, tag, attrib=attrib)
+                    self._custom(value, subelement)
+                elif isinstance(value, bool):
                     self._bool(value, element, tag, attrib=attrib)
                 else:
                     self._str(value, element, tag, attrib=attrib)
@@ -1797,7 +1808,7 @@ def _write_quakeml(catalog, filename, validate=False, nsmap=None,
         the :meth:`~obspy.core.event.Catalog.write` method of an
         ObsPy :class:`~obspy.core.event.Catalog` object, call this instead.
 
-    :type catalog: :class:`~obspy.core.stream.Catalog`
+    :type catalog: :class:`~obspy.core.event.catalog.Catalog`
     :param catalog: The ObsPy Catalog object to write.
     :type filename: str or file
     :param filename: Filename to write or open file-like object.
@@ -1826,11 +1837,12 @@ def _write_quakeml(catalog, filename, validate=False, nsmap=None,
         file_opened = False
         fh = filename
 
-    fh.write(xml_doc)
-
-    # Close if a file has been opened by this function.
-    if file_opened is True:
-        fh.close()
+    try:
+        fh.write(xml_doc)
+    finally:
+        # Close if a file has been opened by this function.
+        if file_opened is True:
+            fh.close()
 
 
 def _read_seishub_event_xml(filename):
@@ -1879,18 +1891,6 @@ def _validate(xml_file, verbose=False):
         for entry in relaxng.error_log:
             print("\t%s" % entry)
     return valid
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isQuakeML': 'obspy.io.quakeml.core._is_quakeml',
-        'readQuakeML': 'obspy.io.quakeml.core._read_quakeml',
-        'readSeisHubEventXML': 'obspy.io.quakeml.core._read_seishub_event_xml',
-        'writeQuakeML': 'obspy.io.quakeml.core._write_quakeml'})
 
 
 if __name__ == '__main__':

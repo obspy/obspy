@@ -31,6 +31,10 @@ class FDSNRedirectException(FDSNException):
     pass
 
 
+class FDSNNoDataException(FDSNException):
+    pass
+
+
 # A curated list collecting some implementations:
 # https://www.fdsn.org/webservices/datacenters/
 # http://www.orfeus-eu.org/eida/eida_odc.html

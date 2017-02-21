@@ -221,7 +221,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
         try:
             data = codecs.open(log, 'r', encoding='UTF-8').read()
             result['install_log'] = escape(data)
-        except:
+        except Exception:
             print("Cannot open log file %s" % log)
     # get ObsPy module versions
     result['obspy'] = {}
@@ -231,7 +231,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     skipped = 0
     try:
         installed = get_git_version()
-    except:
+    except Exception:
         installed = ''
     result['obspy']['installed'] = installed
     for module in sorted(ALL_MODULES):
@@ -313,14 +313,14 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
             if isinstance(temp, tuple):
                 temp = temp[0]
             result['platform'][func] = temp
-        except:
+        except Exception:
             result['platform'][func] = ''
     # set node name to hostname if set
     result['platform']['node'] = hostname
     # post only the first part of the node name (only applies to MacOS X)
     try:
         result['platform']['node'] = result['platform']['node'].split('.')[0]
-    except:
+    except Exception:
         pass
     # test results
     result['tests'] = tests
@@ -337,7 +337,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
                         (module, skipped_test.__module__,
                          skipped_test.__class__.__name__,
                          skipped_test._testMethodName, skip_message))
-    except:
+    except Exception:
         exc_type, exc_value, exc_tb = sys.exc_info()
         print("\n".join(traceback.format_exception(exc_type, exc_value,
                                                    exc_tb)))
@@ -498,7 +498,7 @@ class _TextTestRunner:
                 num = test.countTestCases()
                 try:
                     avg = float(total) / num
-                except:
+                except Exception:
                     avg = 0
                 msg = '%d tests in %.3fs (average of %.4fs per test)'
                 self.stream.writeln(msg % (num, total, avg))
@@ -537,7 +537,7 @@ class _TextTestRunner:
         return results, time_taken, (faileds + erroreds)
 
 
-def run_tests(verbosity=1, tests=[], report=False, log=None,
+def run_tests(verbosity=1, tests=None, report=False, log=None,
               server="tests.obspy.org", all=False, timeit=False,
               interactive=False, slowest=0, exclude=[], tutorial=False,
               hostname=HOSTNAME, ci_url=None, pr_url=None):
@@ -547,10 +547,10 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
     :type verbosity: int, optional
     :param verbosity: Run tests in verbose mode (``0``=quiet, ``1``=normal,
         ``2``=verbose, default is ``1``).
-    :type tests: list of str, optional
-    :param tests: Test suites to run. If no suite is given all installed tests
-        suites will be started (default is a empty list).
-        Example ``['obspy.core.tests.suite']``.
+    :type tests: list of str
+    :param tests: List of submodules for which test suites should be run
+        (e.g. ``['io.mseed', 'io.sac']``).  If no suites are specified, all
+        non-networking submodules' test suites will be run.
     :type report: bool, optional
     :param report: Submits a test report if enabled (default is ``False``).
     :type log: str, optional
@@ -558,6 +558,8 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
     :type server: str, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
+    if tests is None:
+        tests = []
     print("Running {}, ObsPy version '{}'".format(__file__, obspy.__version__))
     if all:
         tests = copy.copy(ALL_MODULES)
@@ -584,7 +586,7 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
                 filesuite = doctest.DocFileSuite(file, module_relative=False)
                 tut_suite.addTest(filesuite)
             suites['tutorial'] = tut_suite
-        except:
+        except Exception:
             msg = "Could not add tutorial files to tests."
             warnings.warn(msg)
     # run test suites

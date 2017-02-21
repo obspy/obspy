@@ -6,13 +6,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
-
 import numpy as np
 
 from obspy import Stream, Trace
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from . import libgse1, libgse2
 
 
@@ -29,7 +25,7 @@ def _is_gse2(filename):
     try:
         with open(filename, 'rb') as f:
             libgse2.is_gse2(f)
-    except:
+    except Exception:
         return False
     return True
 
@@ -128,7 +124,7 @@ def _is_gse1(filename):
     with open(filename, 'rb') as f:
         try:
             data = f.readline()
-        except:
+        except Exception:
             return False
     if data.startswith(b'WID1') or data.startswith(b'XW01'):
         return True
@@ -176,16 +172,3 @@ def _read_gse1(filename, headonly=False, verify_chksum=True,
             except EOFError:
                 break
     return Stream(traces=traces)
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        "isGSE1": "obspy.io.gse2.core._is_gse1",
-        "isGSE2": "obspy.io.gse2.core._is_gse2",
-        "readGSE1": "obspy.io.gse2.core._read_gse1",
-        "readGSE2": "obspy.io.gse2.core._read_gse2",
-        "writeGSE2": "obspy.io.gse2.core._write_gse2"})

@@ -6,3 +6,5 @@ EXPORTS
    seg_free
    lil_free
    allocate_bytes
+   msr_decode_steim2
+   msr_decode_steim1

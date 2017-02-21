@@ -27,6 +27,7 @@ from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
+from obspy.core.inventory.util import _unified_content_strings
 
 
 MATPLOTLIB_VERSION = get_matplotlib_version()
@@ -334,6 +335,73 @@ class InventoryTestCase(unittest.TestCase):
         # Should only be empty if trying to select something that does not
         # exist.
         self.assertEqual(len(inv.select(network="RR")), 0)
+
+    def test_util_unified_content_string(self):
+        """
+        Tests helper routine that compresses inventory content lists.
+        """
+        contents = (
+            [u'IU.ULN (Ulaanbaatar, Mongolia)',
+             u'IU.ULN (Ulaanbaatar, Mongolia)',
+             u'IU.ULN (Ulaanbaatar, Mongolia)'],
+            [u'IU.ULN.00.BH1', u'IU.ULN.00.BH2', u'IU.ULN.00.BHE',
+             u'IU.ULN.00.BHE', u'IU.ULN.00.BHE', u'IU.ULN.00.BHE',
+             u'IU.ULN.00.BHN', u'IU.ULN.00.BHN', u'IU.ULN.00.BHN',
+             u'IU.ULN.00.BHN', u'IU.ULN.00.BHZ', u'IU.ULN.00.BHZ',
+             u'IU.ULN.00.BHZ', u'IU.ULN.00.BHZ', u'IU.ULN.00.BHZ',
+             u'IU.ULN.00.LH1', u'IU.ULN.00.LH2', u'IU.ULN.00.LHE',
+             u'IU.ULN.00.LHE', u'IU.ULN.00.LHE', u'IU.ULN.00.LHE',
+             u'IU.ULN.00.LHN', u'IU.ULN.00.LHN', u'IU.ULN.00.LHN',
+             u'IU.ULN.00.LHN', u'IU.ULN.00.LHZ', u'IU.ULN.00.LHZ',
+             u'IU.ULN.00.LHZ', u'IU.ULN.00.LHZ', u'IU.ULN.00.LHZ',
+             u'IU.ULN.00.UHE', u'IU.ULN.00.UHE', u'IU.ULN.00.UHN',
+             u'IU.ULN.00.UHN', u'IU.ULN.00.UHZ', u'IU.ULN.00.UHZ',
+             u'IU.ULN.00.VE1', u'IU.ULN.00.VE1', u'IU.ULN.00.VH1',
+             u'IU.ULN.00.VH2', u'IU.ULN.00.VHE', u'IU.ULN.00.VHE',
+             u'IU.ULN.00.VHE', u'IU.ULN.00.VHE', u'IU.ULN.00.VHN',
+             u'IU.ULN.00.VHN', u'IU.ULN.00.VHN', u'IU.ULN.00.VHN',
+             u'IU.ULN.00.VHZ', u'IU.ULN.00.VHZ', u'IU.ULN.00.VHZ',
+             u'IU.ULN.00.VHZ', u'IU.ULN.00.VHZ', u'IU.ULN.00.VK1',
+             u'IU.ULN.00.VK1', u'IU.ULN.00.VM1', u'IU.ULN.00.VM2',
+             u'IU.ULN.00.VME', u'IU.ULN.00.VME', u'IU.ULN.00.VMN',
+             u'IU.ULN.00.VMN', u'IU.ULN.00.VMZ', u'IU.ULN.00.VMZ',
+             u'IU.ULN.00.VMZ'])
+        expected = (
+            [u'IU.ULN (Ulaanbaatar, Mongolia) (3x)'],
+            [u'IU.ULN.00.BHZ (5x)', u'IU.ULN.00.BHN (4x)',
+             u'IU.ULN.00.BHE (4x)', u'IU.ULN.00.BH1', u'IU.ULN.00.BH2',
+             u'IU.ULN.00.LHZ (5x)', u'IU.ULN.00.LHN (4x)',
+             u'IU.ULN.00.LHE (4x)', u'IU.ULN.00.LH1', u'IU.ULN.00.LH2',
+             u'IU.ULN.00.UHZ (2x)', u'IU.ULN.00.UHN (2x)',
+             u'IU.ULN.00.UHE (2x)', u'IU.ULN.00.VE1 (2x)',
+             u'IU.ULN.00.VHZ (5x)', u'IU.ULN.00.VHN (4x)',
+             u'IU.ULN.00.VHE (4x)', u'IU.ULN.00.VH1', u'IU.ULN.00.VH2',
+             u'IU.ULN.00.VK1 (2x)', u'IU.ULN.00.VMZ (3x)',
+             u'IU.ULN.00.VMN (2x)', u'IU.ULN.00.VME (2x)', u'IU.ULN.00.VM1',
+             u'IU.ULN.00.VM2'])
+        for contents_, expected_ in zip(contents, expected):
+            self.assertEqual(expected_, _unified_content_strings(contents_))
+
+    def test_util_unified_content_string_with_dots_in_description(self):
+        """
+        The unified content string might have dots in the station description.
+
+        Make sure it still works.
+        """
+        contents = (
+            ['II.ABKT (Alibek, Turkmenistan)',
+             'II.ALE (Alert, N.W.T., Canada)'],
+            [u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)',
+             u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)',
+             u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)'],
+        )
+        expected = (
+            ['II.ABKT (Alibek, Turkmenistan)',
+             'II.ALE (Alert, N.W.T., Canada)'],
+            [u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia) (3x)'],
+        )
+        for contents_, expected_ in zip(contents, expected):
+            self.assertEqual(expected_, _unified_content_strings(contents_))
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')

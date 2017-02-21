@@ -17,8 +17,6 @@ import re
 import sys
 
 from obspy import UTCDateTime
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 # Ignore Attributes of Blockettes
@@ -63,7 +61,7 @@ def datetime_2_string(dt, compact=False):
     try:
         dt = UTCDateTime(dt)
         return dt.format_seed(compact)
-    except:
+    except Exception:
         raise Exception("Invalid datetime %s: %s" % (type(dt), str(dt)))
 
 
@@ -167,7 +165,7 @@ def blockette_34_lookup(abbr, lookup):
         l2 = lookup_code(abbr, 34, 'unit_description', 'unit_lookup_code',
                          lookup)
         return l1 + ' - ' + l2
-    except:
+    except Exception:
         msg = '\nWarning: Abbreviation reference not found.'
         sys.stdout.write(msg)
         return 'No Abbreviation Referenced'
@@ -179,7 +177,7 @@ def set_xpath(blockette, identifier):
     """
     try:
         identifier = int(identifier)
-    except:
+    except Exception:
         msg = 'X-Path identifier needs to be an integer.'
         raise TypeError(msg)
     abbr_path = '/xseed/abbreviation_dictionary_control_header/'
@@ -257,21 +255,3 @@ def is_resp(filename):
                 return False
     except IOError:
         return False
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'Blockette34Lookup': 'obspy.io.xseed.utils.blockette_34_lookup',
-        'DateTime2String': 'obspy.io.xseed.utils.datetime_2_string',
-        'LookupCode': 'obspy.io.xseed.utils.lookup_code',
-        'compareSEED': 'obspy.io.xseed.utils.compare_seed',
-        'formatRESP': 'obspy.io.xseed.utils.format_resp',
-        'getXPath': 'obspy.io.xseed.utils.get_xpath',
-        'setXPath': 'obspy.io.xseed.utils.set_xpath',
-        'toString': 'obspy.io.xseed.utils.to_string',
-        'toTag': 'obspy.io.xseed.utils.to_tag',
-        'uniqueList': 'obspy.io.xseed.utils.unique_list'})

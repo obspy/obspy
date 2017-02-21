@@ -78,7 +78,7 @@ def _is_slist(filename):
     try:
         with open(filename, 'rt') as f:
             temp = f.readline()
-    except:
+    except Exception:
         return False
     if not temp.startswith('TIMESERIES'):
         return False
@@ -104,7 +104,7 @@ def _is_tspair(filename):
     try:
         with open(filename, 'rt') as f:
             temp = f.readline()
-    except:
+    except Exception:
         return False
     if not temp.startswith('TIMESERIES'):
         return False
@@ -317,7 +317,7 @@ def _write_slist(stream, filename, **kwargs):  # @UnusedVariable
             # quality code
             try:
                 dataquality = stats.mseed.dataquality
-            except:
+            except Exception:
                 dataquality = ''
             # sample type
             if trace.data.dtype.name.startswith('int'):
@@ -331,7 +331,7 @@ def _write_slist(stream, filename, **kwargs):  # @UnusedVariable
             # unit
             try:
                 unit = stats.ascii.unit
-            except:
+            except Exception:
                 unit = ''
             # write trace header
             header = _format_header(stats, 'SLIST', dataquality, dtype, unit)
@@ -425,7 +425,7 @@ def _write_tspair(stream, filename, **kwargs):  # @UnusedVariable
             # quality code
             try:
                 dataquality = stats.mseed.dataquality
-            except:
+            except Exception:
                 dataquality = ''
             # sample type
             if trace.data.dtype.name.startswith('int'):
@@ -439,7 +439,7 @@ def _write_tspair(stream, filename, **kwargs):  # @UnusedVariable
             # unit
             try:
                 unit = stats.ascii.unit
-            except:
+            except Exception:
                 unit = ''
             # write trace header
             header = _format_header(stats, 'TSPAIR', dataquality, dtype, unit)

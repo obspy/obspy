@@ -20,13 +20,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from operator import itemgetter
-import sys
 
 import numpy as np
 from scipy import fftpack, signal, sparse
 
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.signal import util
 from obspy.signal.invsim import corn_freq_2_paz, simulate_seismometer
 
@@ -436,21 +433,3 @@ def peak_ground_motion(data, delta, freq, damp=0.1):
         pga = abs(min(data))
 
     return (pga, m_dis, m_vel, m_acc)
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        "bwith": "obspy.signal.freqattributes.bandwidth",
-        "cfrequency": "obspy.signal.freqattributes.central_frequency",
-        "cfrequency_unwindowed":
-            "obspy.signal.freqattributes.central_frequency_unwindowed",
-        "domperiod": "obspy.signal.freqattributes.dominant_period",
-        "logbankm":
-            "obspy.signal.freqattributes.log_spaced_filterbank_matrix",
-        "logcep": "obspy.signal.freqattributes.log_cepstrum",
-        "mper": "obspy.signal.freqattributes.spectrum",
-        "pgm": "obspy.signal.freqattributes.peak_ground_motion"})

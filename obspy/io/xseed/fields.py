@@ -18,7 +18,6 @@ import warnings
 from lxml.etree import Element, SubElement
 
 from obspy import UTCDateTime
-from obspy.core.util.decorator import deprecated
 from .utils import (datetime_2_string, SEEDParserException, get_xpath,
                     set_xpath, to_tag)
 
@@ -108,16 +107,6 @@ class Field(object):
             raise SEEDTypeException(msg)
         return sn
 
-    @deprecated(
-        "'parseSEED' has been renamed to "  # noqa
-        "'parse_seed'. Use that instead.")
-    def parseSEED(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'parseSEED' has been renamed to
-        'parse_seed'. Use that instead.
-        '''
-        return self.parse_seed(*args, **kwargs)
-
     def parse_seed(self, blockette, data):
         """
         """
@@ -141,23 +130,13 @@ class Field(object):
         if blockette.debug:
             print('  %s: %s' % (self, text))
 
-    @deprecated(
-        "'getSEED' has been renamed to "  # noqa
-        "'get_seed'. Use that instead.")
-    def getSEED(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getSEED' has been renamed to
-        'get_seed'. Use that instead.
-        '''
-        return self.get_seed(*args, **kwargs)
-
     def get_seed(self, blockette, pos=0):
         """
         """
         self.compact = blockette.compact
         try:
             result = getattr(blockette, self.attribute_name)
-        except:
+        except Exception:
             if blockette.strict:
                 msg = "Missing attribute %s in Blockette %s"
                 raise Exception(msg % (self.name, blockette))
@@ -170,16 +149,6 @@ class Field(object):
             print('  %s: %s' % (self, result))
         return self.write(result, strict=blockette.strict)
 
-    @deprecated(
-        "'getXML' has been renamed to "  # noqa
-        "'get_xml'. Use that instead.")
-    def getXML(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getXML' has been renamed to
-        'get_xml'. Use that instead.
-        '''
-        return self.get_xml(*args, **kwargs)
-
     def get_xml(self, blockette, pos=0):
         """
         """
@@ -190,7 +159,7 @@ class Field(object):
             return []
         try:
             result = getattr(blockette, self.attribute_name)
-        except:
+        except Exception:
             if blockette.strict:
                 msg = "Missing attribute %s in Blockette %s"
                 raise Exception(msg % (self.name, blockette))
@@ -202,7 +171,7 @@ class Field(object):
         if self.optional:
             try:
                 result = result.strip()
-            except:
+            except Exception:
                 pass
             if not result:
                 # debug
@@ -226,22 +195,12 @@ class Field(object):
             print('  %s: %s' % (self, [node]))
         return [node]
 
-    @deprecated(
-        "'parseXML' has been renamed to "  # noqa
-        "'parse_xml'. Use that instead.")
-    def parseXML(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'parseXML' has been renamed to
-        'parse_xml'. Use that instead.
-        '''
-        return self.parse_xml(*args, **kwargs)
-
     def parse_xml(self, blockette, xml_doc, pos=0):
         """
         """
         try:
             text = xml_doc.xpath(self.field_name + "/text()")[pos]
-        except:
+        except Exception:
             setattr(blockette, self.attribute_name, self.default_value)
             # debug
             if blockette.debug:
@@ -280,7 +239,7 @@ class Integer(Field):
                 return [int(_i) for _i in value]
             else:
                 return int(value)
-        except:
+        except Exception:
             if not self.strict:
                 return self.default_value
             msg = "No integer value found for %s." % self.attribute_name
@@ -294,7 +253,7 @@ class Integer(Field):
         format_str = "%%0%dd" % self.length
         try:
             temp = int(data)
-        except:
+        except Exception:
             msg = "No integer value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
         result = format_str % temp
@@ -323,7 +282,7 @@ class Float(Field):
                 return [float(_i) for _i in value]
             else:
                 return float(value)
-        except:
+        except Exception:
             if not self.strict:
                 return self.default_value
             msg = "No float value found for %s." % self.attribute_name
@@ -337,7 +296,7 @@ class Float(Field):
         format_str = "%%0%ds" % self.length
         try:
             temp = float(data)
-        except:
+        except Exception:
             msg = "No float value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
         # special format for exponential output
@@ -489,7 +448,7 @@ class Loop(Field):
         """
         try:
             self.length = int(getattr(blockette, self.index_field))
-        except:
+        except Exception:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         # loop over number of entries
@@ -515,7 +474,7 @@ class Loop(Field):
         """
         try:
             self.length = int(getattr(blockette, self.index_field))
-        except:
+        except Exception:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         # loop over number of entries
@@ -533,7 +492,7 @@ class Loop(Field):
             return []
         try:
             self.length = int(getattr(blockette, self.index_field))
-        except:
+        except Exception:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         if self.length == 0 and self.optional:
@@ -576,7 +535,7 @@ class Loop(Field):
         """
         try:
             self.length = int(getattr(blockette, self.index_field))
-        except:
+        except Exception:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         if self.length == 0:

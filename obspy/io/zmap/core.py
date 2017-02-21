@@ -16,14 +16,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import math
-import sys
 
 from obspy.core import UTCDateTime
 from obspy.core.event import (Catalog, Event, Magnitude, Origin,
                               OriginUncertainty)
 from obspy.core.util.decorator import map_example_filename
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 _STD_ZMAP_COLUMNS = ('lon', 'lat', 'year', 'month', 'day', 'mag', 'depth',
@@ -331,7 +328,7 @@ def _read_zmap(filename, **kwargs):
         try:
             with open(filename):
                 pass
-        except:
+        except Exception:
             # we assume it's a string now
             return Unpickler().loads(filename)
     return Unpickler().load(filename)
@@ -369,10 +366,10 @@ def _is_zmap(filename):
         try:
             with open(filename, 'rb') as f:
                 first_line = f.readline().decode()
-        except:
+        except Exception:
             try:
                 first_line = filename.decode()
-            except:
+            except Exception:
                 first_line = str(filename)
             line_ending = first_line.find("\n")
             if line_ending == -1:
@@ -390,17 +387,6 @@ def _is_zmap(filename):
         return True
     except ValueError:
         return False
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isZmap': 'obspy.io.zmap.core._is_zmap',
-        'readZmap': 'obspy.io.zmap.core._read_zmap',
-        'writeZmap': 'obspy.io.zmap.core._write_zmap'})
 
 
 if __name__ == '__main__':

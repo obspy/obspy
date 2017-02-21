@@ -12,11 +12,12 @@ import unittest
 
 import numpy as np
 
+import obspy
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.segy.header import (DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
                                   DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS)
 from obspy.io.segy.segy import (SEGYBinaryFileHeader, SEGYFile,
-                                SEGYTraceHeader, _read_segy)
+                                SEGYTraceHeader, _read_segy, iread_segy)
 from obspy.io.segy.tests.header import DTYPES, FILES
 
 
@@ -575,6 +576,25 @@ class SEGYTestCase(unittest.TestCase):
             data = f.read()
         st = _read_segy(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 512)
+
+    def test_iterative_reading(self):
+        """
+        Tests iterative reading.
+        """
+        # Read normally.
+        filename = os.path.join(self.path, 'example.y_first_trace')
+        st = obspy.read(filename, unpack_trace_headers=True)
+
+        # Read iterative.
+        ist = [_i for _i in iread_segy(filename, unpack_headers=True)]
+
+        del ist[0].stats.segy.textual_file_header
+        del ist[0].stats.segy.binary_file_header
+        del ist[0].stats.segy.textual_file_header_encoding
+        del ist[0].stats.segy.data_encoding
+        del ist[0].stats.segy.endian
+
+        self.assertEqual(st.traces, ist)
 
 
 def rms(x, y):

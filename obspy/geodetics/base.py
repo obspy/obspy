@@ -18,7 +18,6 @@ import warnings
 import numpy as np
 from scipy.stats import circmean
 
-from obspy.core.util.decorator import deprecated
 from obspy.core.util.misc import to_int_or_zero
 
 
@@ -39,12 +38,6 @@ except ImportError:
 
 WGS84_A = 6378137.0
 WGS84_F = 1 / 298.257223563
-
-
-@deprecated("'calcVincentyInverse' has been renamed to "
-            "'calc_vincenty_inverse'. Use that instead.")  # noqa
-def calcVincentyInverse(lat1, lon1, lat2, lon2):
-    return calc_vincenty_inverse(lat1, lon1, lat2, lon2)
 
 
 def calc_vincenty_inverse(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
@@ -209,12 +202,6 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
     return dist, alpha12, alpha21
 
 
-@deprecated("'gps2DistAzimuth' has been renamed to "
-            "'gps2dist_azimuth'. Use that instead.")  # noqa
-def gps2DistAzimuth(lat1, lon1, lat2, lon2):
-    return gps2dist_azimuth(lat1, lon1, lat2, lon2)
-
-
 def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
     """
     Computes the distance between two geographic points on the WGS84
@@ -274,7 +261,7 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
             raise e
 
 
-def kilometer2degrees(kilometer, radius=6371):
+def kilometers2degrees(kilometer, radius=6371):
     """
     Convenience function to convert kilometers to degrees assuming a perfectly
     spherical Earth.
@@ -288,11 +275,14 @@ def kilometer2degrees(kilometer, radius=6371):
 
     .. rubric:: Example
 
-    >>> from obspy.geodetics import kilometer2degrees
-    >>> kilometer2degrees(300)
+    >>> from obspy.geodetics import kilometers2degrees
+    >>> kilometers2degrees(300)
     2.6979648177561915
     """
     return kilometer / (2.0 * radius * math.pi / 360.0)
+
+
+kilometer2degrees = kilometers2degrees
 
 
 def degrees2kilometers(degrees, radius=6371):

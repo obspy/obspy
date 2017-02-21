@@ -17,7 +17,6 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from fnmatch import fnmatch
 
 from obspy import Stream, UTCDateTime
-from obspy.core.util.decorator import deprecated
 from .waveserver import get_menu, read_wave_server_v
 
 
@@ -46,11 +45,6 @@ class Client(object):
         self.port = port
         self.timeout = timeout
         self.debug = debug
-
-    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
-                "that instead.")  # noqa
-    def getWaveform(self, *args, **kwargs):
-        return self.get_waveforms(*args, **kwargs)
 
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime, cleanup=True):
@@ -125,11 +119,6 @@ class Client(object):
         st.trim(starttime, endtime)
         return st
 
-    @deprecated("'saveWaveform' has been renamed to 'save_waveforms'. Use "
-                "that instead.")  # noqa
-    def saveWaveform(self, *args, **kwargs):
-        return self.save_waveforms(*args, **kwargs)
-
     def save_waveforms(self, filename, network, station, location, channel,
                        starttime, endtime, format="MSEED", cleanup=True):
         """
@@ -175,11 +164,6 @@ class Client(object):
         st = self.get_waveforms(network, station, location, channel, starttime,
                                 endtime, cleanup=cleanup)
         st.write(filename, format=format)
-
-    @deprecated("'availability' has been renamed to 'get_availability'. Use "
-                "that instead.")
-    def availability(self, *args, **kwargs):
-        return self.get_availability(*args, **kwargs)
 
     def get_availability(self, network="*", station="*", location="*",
                          channel="*"):

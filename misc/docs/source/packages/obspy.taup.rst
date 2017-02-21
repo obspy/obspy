@@ -30,7 +30,6 @@
        taup_geo
        taup_path
        taup_pierce
-       taup
        taup_time
        tau
        utils

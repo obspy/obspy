@@ -6,8 +6,7 @@ environment:
     # /E:ON and /V:ON options are not enabled in the batch script intepreter
     # See: https://stackoverflow.com/a/13751649
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\misc\\appveyor\\run_with_env.cmd"
-    PYTHON: "C:\\conda"
-    MINICONDA_VERSION: "3.7.0"
+    PYTHON: "C:\\Miniconda-x64"
     CI_URL: "--ci-url https://ci.appveyor.com/project/%APPVEYOR_REPO_NAME%/build/1.0.%APPVEYOR_BUILD_NUMBER%-%APPVEYOR_REPO_BRANCH%"
     PR_URL: "--pr-url https://github.com/%APPVEYOR_REPO_NAME%/pull/%APPVEYOR_PULL_REQUEST_NUMBER%"
 
@@ -19,19 +18,18 @@ platform:
   - x64
 
 install:
-  # Install miniconda using a powershell script.
-  - "powershell ./misc/appveyor/install-miniconda.ps1"
+  # Add miniconda path.
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   # Check that we have the expected version and architecture for Python
   - "%CMD_IN_ENV% python --version"
   # Install the build and runtime dependencies of the project.
   - "conda update -q --yes conda"
-  # Create a conda environment using the astropy bonus packages
+  # Create a conda environment using the required ObsPy packages.
   - "conda create -q --yes -n test python=%PYTHON_VERSION%"
   - "activate test"
   # Install default dependencies
   #   for now fix requests version, can be changed when a new requests is released (see #1599)
-  - "conda install -q --yes pip numpy scipy matplotlib=1.3.1 lxml sqlalchemy mock nose gdal decorator \"requests<2.12\" basemap"
+  - "conda install -q --yes pip numpy scipy matplotlib=1.3.1 lxml sqlalchemy mock nose gdal decorator \"requests<2.12\" basemap jsonschema"
   # additional dependecies
   - "pip install flake8"
   - "pip install pyimgur"
@@ -39,7 +37,7 @@ install:
   # list package versions
   - "conda list"
 
-# Not a .NET project, we build SunPy in the install step instead
+# Not a .NET project, we build ObsPy in the install step instead
 build: false
 
 test_script:

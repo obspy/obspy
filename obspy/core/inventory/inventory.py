@@ -29,6 +29,7 @@ from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .network import Network
+from .util import _unified_content_strings, _textwrap
 
 # Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
@@ -55,6 +56,12 @@ def read_inventory(path_or_file_object=None, format=None):
         object will be returned.
     :type format: str, optional
     :param format: Format of the file to read (e.g. ``"STATIONXML"``).
+
+    .. note::
+
+        For handling additional information not covered by the
+        StationXML standard and how to output it to StationXML
+        see the :ref:`ObsPy Tutorial <stationxml-extra>`.
     """
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
@@ -99,6 +106,12 @@ class Inventory(ComparingObject):
         :param module_uri: This is the address of the query that generated the
             document, or, if applicable, the address of the software that
             generated this document, defaults to ObsPy related information.
+
+        .. note::
+
+            For handling additional information not covered by the
+            StationXML standard and how to output it to StationXML
+            see the :ref:`ObsPy Tutorial <stationxml-extra>`.
         """
         self.networks = networks
         self.source = source
@@ -203,6 +216,7 @@ class Inventory(ComparingObject):
                 content_dict.setdefault(key, [])
                 content_dict[key].extend(value)
                 content_dict[key].sort()
+        content_dict['networks'].sort()
         return content_dict
 
     def __str__(self):
@@ -219,15 +233,21 @@ class Inventory(ComparingObject):
         contents = self.get_contents()
         ret_str += "\tContains:\n"
         ret_str += "\t\tNetworks (%i):\n" % len(contents["networks"])
-        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["networks"]])
+        ret_str += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["networks"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         ret_str += "\n"
         ret_str += "\t\tStations (%i):\n" % len(contents["stations"])
-        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
+        ret_str += "\n".join([
+            "\t\t\t%s" % _i
+            for _i in _unified_content_strings(contents["stations"])])
         ret_str += "\n"
         ret_str += "\t\tChannels (%i):\n" % len(contents["channels"])
-        ret_str += "\n".join(textwrap.wrap(
-            ", ".join(contents["channels"]), initial_indent="\t\t\t",
-            subsequent_indent="\t\t\t", expand_tabs=False))
+        ret_str += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["channels"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         return ret_str
 
     def _repr_pretty_(self, p, cycle):
@@ -302,7 +322,7 @@ class Inventory(ComparingObject):
                 continue
             try:
                 responses.append(net.get_response(seed_id, datetime))
-            except:
+            except Exception:
                 pass
         if len(responses) > 1:
             msg = "Found more than one matching response. Returning first."
@@ -332,7 +352,7 @@ class Inventory(ComparingObject):
                 continue
             try:
                 coordinates.append(net.get_coordinates(seed_id, datetime))
-            except:
+            except Exception:
                 pass
         if len(coordinates) > 1:
             msg = "Found more than one matching coordinates. Returning first."
@@ -373,8 +393,7 @@ class Inventory(ComparingObject):
             Sending institution: Erdbebendienst Bayern
             Contains:
                 Networks (2):
-                    GR
-                    BW
+                    BW, GR
                 Stations (2):
                     BW.RJOB (Jochberg, Bavaria, BW-Net)
                     GR.WET (Wettzell, Bavaria, GR-Net)

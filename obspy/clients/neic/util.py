@@ -4,10 +4,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from datetime import datetime
-import sys
-
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 def asctime():
@@ -48,12 +44,3 @@ def get_property(filename, key):
             ans = line[len(key) + 1:]
             return ans
     return ""
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'getProperty': 'obspy.clients.neic.util.get_property'})

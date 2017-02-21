@@ -29,27 +29,33 @@ Hypocenter-Phase file into an ObsPy :class:`~obspy.core.event.Catalog` object:
 >>> print(event)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
 Event:	2006-07-15T17:21:20.195670Z | +51.658,   +7.737
 <BLANKLINE>
-       resource_id: ResourceIdentifier(id="smi:local/...")
-     creation_info: CreationInfo(creation_time=UTCDateTime(2013, 6, 21, ...),
-                                 version='NLLoc:v6.02.07')
-    ---------
-             picks: 5 Elements
-           origins: 1 Elements
+         resource_id: ResourceIdentifier(id="smi:local/...")
+       creation_info: CreationInfo(author='Claudio Satriano',
+                                   creation_time=UTCDateTime(2013, 6, 21, ...),
+                                   version='NLLoc:v6.02.07')
+ preferred_origin_id: ResourceIdentifier(id="smi:local/...")
+                ---------
+            comments: 1 Elements
+               picks: 5 Elements
+             origins: 1 Elements
 
 >>> origin = event.origins[0]
 >>> print(origin)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
 Origin
-       resource_id: ResourceIdentifier(id="smi:local/...")
-              time: UTCDateTime(2006, 7, 15, 17, 21, 20, 1956...)
-         longitude: 7.736781...
-          latitude: 51.657659...
-             depth: 1433.5... [confidence_level=68, uncertainty=...]
-                ...
-     creation_info: CreationInfo(creation_time=UTCDateTime(2013, 6, 21, ...),
-                                 version='NLLoc:v6.02.07')
-    ---------
-          comments: 1 Elements
-          arrivals: 5 Elements
+         resource_id: ResourceIdentifier(id="smi:local/...")
+                time: UTCDateTime(2006, 7, 15, 17, 21, 20, 1956...)
+           longitude: 7.736781...
+            latitude: 51.657659...
+               depth: 1433.5... [confidence_level=68, uncertainty=...]
+          depth_type: 'from location'
+             quality: OriginQuality(...)
+  origin_uncertainty: OriginUncertainty(...)
+       creation_info: CreationInfo(author='Claudio Satriano',
+                                   creation_time=UTCDateTime(2013, 6, 21, ...),
+                                   version='NLLoc:v6.02.07')
+                ---------
+            comments: 1 Elements
+            arrivals: 5 Elements
 
 
 If, instead, NonLinLoc location run was performed in some custom coordinate

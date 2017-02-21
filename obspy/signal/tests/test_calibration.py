@@ -89,6 +89,28 @@ class CalibrationTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(amp, amp2, decimal=4)
         np.testing.assert_array_almost_equal(phase, phase2, decimal=4)
 
+    def test_relcal_using_dict(self):
+        """
+        Tests using paz dictionary instead of a gse2 file.
+        """
+        st1 = read(os.path.join(self.path, 'ref_STS2'))
+        st2 = read(os.path.join(self.path, 'ref_unknown'))
+        calfile = os.path.join(self.path, 'STS2_simp.cal')
+        calpaz = dict()
+        calpaz['poles'] = [-0.03677 + 0.03703j, -0.03677 - 0.03703j]
+        calpaz['zeros'] = [0 + 0j, 0 - 0j]
+        calpaz['sensitivity'] = 1500
+
+        # stream
+        freq, amp, phase = rel_calib_stack(st1, st2, calfile, 20, smooth=10,
+                                           save_data=False)
+        # traces
+        freq2, amp2, phase2 = rel_calib_stack(st1, st2, calpaz, 20,
+                                              smooth=10, save_data=False)
+        np.testing.assert_array_almost_equal(freq, freq2, decimal=4)
+        np.testing.assert_array_almost_equal(amp, amp2, decimal=4)
+        np.testing.assert_array_almost_equal(phase, phase2, decimal=4)
+
 
 def suite():
     return unittest.makeSuite(CalibrationTestCase, 'test')

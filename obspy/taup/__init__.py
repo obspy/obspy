@@ -383,7 +383,6 @@ _DEFAULT_VALUES = {
 
 # Convenience imports.
 from .tau import TauPyModel  # NOQA
-from .taup import getTravelTimes, travelTimePlot  # NOQA
 
 
 if __name__ == '__main__':

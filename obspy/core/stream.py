@@ -18,6 +18,7 @@ import fnmatch
 import math
 import os
 import pickle
+import re
 import warnings
 from glob import glob, has_magic
 
@@ -30,7 +31,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
                                   _read_from_plugin, download_to_file)
-from obspy.core.util.decorator import (deprecated, map_example_filename,
+from obspy.core.util.decorator import (map_example_filename,
                                        raise_if_masked, uncompress_file)
 from obspy.core.util.misc import get_window_times
 
@@ -737,16 +738,6 @@ class Stream(object):
             raise TypeError(msg)
         return self
 
-    @deprecated(
-        "'getGaps' has been renamed to "  # noqa
-        "'get_gaps'. Use that instead.")
-    def getGaps(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getGaps' has been renamed to
-        'get_gaps'. Use that instead.
-        '''
-        return self.get_gaps(*args, **kwargs)
-
     def get_gaps(self, min_gap=None, max_gap=None):
         """
         Determine all trace gaps/overlaps of the Stream object.
@@ -1103,6 +1094,10 @@ class Stream(object):
         :type orientation: str, optional
         :param orientation: The orientation of the time axis, either
             ``'vertical'`` or ``'horizontal'``. Defaults to ``'vertical'``.
+        :type fillcolors: tuple, optional
+        :param fillcolors:  Fill the inside of the lines (wiggle plot),
+            for both the positive and negative sides; use ``None`` to omit
+            one of the sides. Defaults to ``(None,None)``.
 
         **Relative Parameters**
 
@@ -1200,16 +1195,6 @@ class Stream(object):
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         """
         return self.traces.pop(index)
-
-    @deprecated(
-        "'printGaps' has been renamed to "  # noqa
-        "'print_gaps'. Use that instead.")
-    def printGaps(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'printGaps' has been renamed to
-        'print_gaps'. Use that instead.
-        '''
-        return self.print_gaps(*args, **kwargs)
 
     def print_gaps(self, min_gap=None, max_gap=None):
         """
@@ -1386,16 +1371,17 @@ class Stream(object):
             self.traces.sort(key=lambda x: x.stats[_i], reverse=reverse)
         return self
 
-    def write(self, filename, format, **kwargs):
+    def write(self, filename, format=None, **kwargs):
         """
         Save stream into a file.
 
         :type filename: str
         :param filename: The name of the file to write.
-        :type format: str
+        :type format: str, optional
         :param format: The file format to use (e.g. ``"MSEED"``). See
             the `Supported Formats`_ section below for a list of supported
-            formats.
+            formats. If format is set to ``None`` it will be deduced from
+            file extension, whenever possible.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
@@ -1404,6 +1390,11 @@ class Stream(object):
         >>> from obspy import read
         >>> st = read()  # doctest: +SKIP
         >>> st.write("example.mseed", format="MSEED")  # doctest: +SKIP
+
+        The ``format`` argument can be omitted, and the file format will be
+        deduced from file extension, whenever possible.
+
+        >>> st.write("example.mseed")  # doctest: +SKIP
 
         Writing single traces into files with meaningful filenames can be done
         e.g. using trace.id
@@ -1429,6 +1420,10 @@ class Stream(object):
                       'np.array.filled() to convert the masked array to a ' + \
                       'normal array.'
                 raise NotImplementedError(msg)
+        if format is None:
+            # try to guess format from file extension
+            _, format = os.path.splitext(filename)
+            format = format[1:]
         format = format.upper()
         try:
             # get format specific entry point
@@ -2616,13 +2611,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if back_azimuth is None:
             try:
                 back_azimuth = self[0].stats.back_azimuth
-            except:
+            except Exception:
                 msg = "No back-azimuth specified."
                 raise TypeError(msg)
         if len(input_components) == 3 and inclination is None:
             try:
                 inclination = self[0].stats.inclination
-            except:
+            except Exception:
                 msg = "No inclination specified."
                 raise TypeError(msg)
         # Do one of the two-component rotations.
@@ -3060,20 +3055,51 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.remove_sensitivity(*args, **kwargs)
         return self
 
+    @staticmethod
+    def _dummy_stream_from_string(s):
+        """
+        Helper method to create a dummy Stream object (with data always equal
+        to one) from a string representation of the Stream, mostly for
+        debugging purposes.
 
-@deprecated("Renamed to '_is_pickle'. Use that instead.")
-def isPickle(*args, **kwargs):  # noqa
-    return _is_pickle(*args, **kwargs)
-
-
-@deprecated("Renamed to '_read_pickle'. Use that instead.")
-def readPickle(*args, **kwargs):  # noqa
-    return _read_pickle(*args, **kwargs)
-
-
-@deprecated("Renamed to '_write_pickle'. Use that instead.")
-def writePickle(*args, **kwargs):  # noqa
-    return _write_pickle(*args, **kwargs)
+        >>> s = ['', '', '3 Trace(s) in Stream:',
+        ...      'IU.GRFO..HH2 | 2016-01-07T00:00:00.008300Z - '
+        ...      '2016-01-07T00:00:30.098300Z | 10.0 Hz, 301 samples',
+        ...      'XX.GRFO..HH1 | 2016-01-07T00:00:02.668393Z - '
+        ...      '2016-01-07T00:00:09.518393Z | 100.0 Hz, 686 samples',
+        ...      'IU.ABCD..EH2 | 2016-01-07T00:00:09.528393Z - '
+        ...      '2016-01-07T00:00:50.378393Z | 100.0 Hz, 4086 samples',
+        ...      '', '']
+        >>> s = os.linesep.join(s)
+        >>> st = Stream._dummy_stream_from_string(s)
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        IU.GRFO..HH2 | 2016-01-07T00:00:00.008300Z ... | 10.0 Hz, 301 samples
+        XX.GRFO..HH1 | 2016-01-07T00:00:02.668393Z ... | 100.0 Hz, 686 samples
+        IU.ABCD..EH2 | 2016-01-07T00:00:09.528393Z ... | 100.0 Hz, 4086 samples
+        """
+        st = Stream()
+        for line in s.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            if re.match(r'[0-9]+ Trace\(s\) in Stream:', line):
+                continue
+            items = line.split()
+            net, sta, loc, cha = items[0].split(".")
+            starttime = UTCDateTime(items[2])
+            sampling_rate = float(items[6])
+            npts = int(items[8])
+            tr = Trace()
+            tr.data = np.ones(npts, dtype=np.float_)
+            tr.stats.station = sta
+            tr.stats.network = net
+            tr.stats.location = loc
+            tr.stats.channel = cha
+            tr.stats.starttime = starttime
+            tr.stats.sampling_rate = sampling_rate
+            st += tr
+        return st
 
 
 def _is_pickle(filename):  # @UnusedVariable
@@ -3094,12 +3120,12 @@ def _is_pickle(filename):  # @UnusedVariable
         try:
             with open(filename, 'rb') as fp:
                 st = pickle.load(fp)
-        except:
+        except Exception:
             return False
     else:
         try:
             st = pickle.load(filename)
-        except:
+        except Exception:
             return False
     return isinstance(st, Stream)
 

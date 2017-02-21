@@ -19,15 +19,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import sys
 import xdrlib
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 def _is_ah(filename):
@@ -79,7 +76,7 @@ def _get_ah_version(filename):
             data = xdrlib.Unpacker(fh.read(8))
             # check for magic version number
             magic = data.unpack_int()
-        except:
+        except Exception:
             return False
         if magic == 1100:
             try:
@@ -87,7 +84,7 @@ def _get_ah_version(filename):
                 length = data.unpack_uint()
                 # read first record
                 fh.read(length)
-            except:
+            except Exception:
                 return False
             # seems to be AH v2
             return '2.0'
@@ -107,7 +104,7 @@ def _get_ah_version(filename):
                 fh.seek(784)
                 if xdrlib.Unpacker(fh.read(4)).unpack_int() != 202:
                     return False
-            except:
+            except Exception:
                 return False
             return '1.0'
         else:
@@ -173,7 +170,7 @@ def _read_ah1(filename):
         ot_sec = data.unpack_float()
         try:
             ot = UTCDateTime(ot_year, ot_mon, ot_day, ot_hour, ot_min, ot_sec)
-        except:
+        except Exception:
             ot = None
         ah_stats.event.origin_time = ot
         ah_stats.event.comment = _unpack_string(data)
@@ -294,7 +291,7 @@ def _read_ah2(filename):
         ot_sec = data.unpack_float()
         try:
             ot = UTCDateTime(ot_year, ot_mon, ot_day, ot_hour, ot_min, ot_sec)
-        except:
+        except Exception:
             ot = None
         ah_stats.event.origin_time = ot
         data.unpack_int()  # and again?
@@ -372,16 +369,3 @@ def _read_ah2(filename):
             except EOFError:
                 break
         return st
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'is_AH': 'obspy.io.ah.core._is_ah',
-        'read_AH': 'obspy.io.ah.core._read_ah',
-        'read_AH1': 'obspy.io.ah.core._read_ah1',
-        'read_AH2': 'obspy.io.ah.core._read_ah2',
-        '_get_AH_version': 'obspy.io.ah.core._get_ah_version'})

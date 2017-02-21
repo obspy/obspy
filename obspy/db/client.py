@@ -14,7 +14,6 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import os
-import sys
 
 from sqlalchemy import and_, create_engine, func, or_
 from sqlalchemy.orm import sessionmaker
@@ -22,9 +21,6 @@ from sqlalchemy.orm import sessionmaker
 from obspy.core.preview import merge_previews
 from obspy.core.stream import Stream
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.decorator import deprecated
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.db.db import Base, WaveformChannel, WaveformFile, WaveformPath
 
 
@@ -57,11 +53,6 @@ class Client(object):
         else:
             self.session = session
 
-    @deprecated("'getNetworkIDs' has been renamed to 'get_network_ids'. Use "
-                "that instead.")  # noqa
-    def getNetworkIDs(self):
-        return self.get_network_ids()
-
     def get_network_ids(self):
         """
         Fetches all possible network id's.
@@ -72,11 +63,6 @@ class Client(object):
         results = query.all()
         session.close()
         return [r[0] for r in results if len(r) == 1]
-
-    @deprecated("'getStationIds' has been renamed to 'get_station_ids'. "
-                "Use that instead.")  # noqa
-    def getStationIds(self, *args, **kwargs):
-        return self.get_station_ids(*args, **kwargs)
 
     def get_station_ids(self, network=None):
         """
@@ -94,11 +80,6 @@ class Client(object):
         results = query.all()
         session.close()
         return [r[0] for r in results if len(r) == 1]
-
-    @deprecated("'getLocationIds' has been renamed to 'get_location_ids'. Use "
-                "that instead.")  # noqa
-    def getLocationIds(self, *args, **kwargs):
-        return self.get_location_ids(*args, **kwargs)
 
     def get_location_ids(self, network=None, station=None):
         """
@@ -121,11 +102,6 @@ class Client(object):
         results = query.all()
         session.close()
         return [r[0] for r in results if len(r) == 1]
-
-    @deprecated("'getChannelIds' has been renamed to 'get_channel_ids'. Use "
-                "that instead.")  # noqa
-    def getChannelIds(self, *args, **kwargs):
-        return self.get_channel_ids(*args, **kwargs)
 
     def get_channel_ids(self, network=None, station=None, location=None):
         """
@@ -153,11 +129,6 @@ class Client(object):
         results = query.all()
         session.close()
         return [r[0] for r in results if len(r) == 1]
-
-    @deprecated("'getEndtimes' has been renamed to 'get_endtimes'. Use "
-                "that instead.")  # noqa
-    def getEndtimes(self, *args, **kwargs):
-        return self.get_endtimes(*args, **kwargs)
 
     def get_endtimes(self, network=None, station=None, location=None,
                      channel=None):
@@ -196,11 +167,6 @@ class Client(object):
             adict[key] = UTCDateTime(result[4])
         return adict
 
-    @deprecated("'getWaveformPath' has been renamed to 'get_waveform_path'. "
-                "Use that instead.")  # noqa
-    def getWaveformPath(self, *args, **kwargs):
-        return self.get_waveform_path(*args, **kwargs)
-
     def get_waveform_path(self, network=None, station=None, location=None,
                           channel=None, starttime=None, endtime=None):
         """
@@ -232,13 +198,13 @@ class Client(object):
         # start and end time
         try:
             starttime = UTCDateTime(starttime)
-        except:
+        except Exception:
             starttime = UTCDateTime() - 60 * 20
         finally:
             query = query.filter(WaveformChannel.endtime > starttime.datetime)
         try:
             endtime = UTCDateTime(endtime)
-        except:
+        except Exception:
             # 10 minutes
             endtime = UTCDateTime()
         finally:
@@ -253,11 +219,6 @@ class Client(object):
             file_dict.setdefault(key, []).append(fname)
         return file_dict
 
-    @deprecated("'getPreview' has been renamed to 'get_preview'. Use "
-                "that instead.")  # noqa
-    def getPreview(self, *args, **kwargs):
-        return self.get_preview(*args, **kwargs)
-
     def get_preview(self, trace_ids=[], starttime=None, endtime=None,
                     network=None, station=None, location=None, channel=None,
                     pad=False):
@@ -270,13 +231,13 @@ class Client(object):
         # start and end time
         try:
             starttime = UTCDateTime(starttime)
-        except:
+        except Exception:
             starttime = UTCDateTime() - 60 * 20
         finally:
             query = query.filter(WaveformChannel.endtime > starttime.datetime)
         try:
             endtime = UTCDateTime(endtime)
-        except:
+        except Exception:
             # 10 minutes
             endtime = UTCDateTime()
         finally:
@@ -322,12 +283,3 @@ class Client(object):
         st = merge_previews(st)
         st.trim(starttime, endtime, pad=pad)
         return st
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'mergePreviews': 'obspy.db.client.merge_previews'})

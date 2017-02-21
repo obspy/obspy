@@ -1,0 +1,2 @@
+#!/bin/sh
+./lmtestparse data/unapplied-timecorrection.mseed -pp

@@ -39,11 +39,13 @@ The functionality is provided through the following packages:
    obspy.io.ascii
    obspy.io.css
    obspy.io.datamark
+   obspy.io.gcf
    obspy.io.gse2
    obspy.io.kinemetrics
    obspy.io.mseed
    obspy.io.nied.knet
    obspy.io.pdas
+   obspy.io.reftek
    obspy.io.sac
    obspy.io.seisan
    obspy.io.seg2
@@ -60,12 +62,15 @@ The functionality is provided through the following packages:
 
    obspy.io.cmtsolution
    obspy.io.cnv
+   obspy.io.gse2
    obspy.io.json
    obspy.io.kml
    obspy.io.ndk
    obspy.io.nied.fnetmt
    obspy.io.nlloc
+   obspy.io.nordic
    obspy.io.pde
+   obspy.io.seiscomp
    obspy.io.shapefile
    obspy.io.quakeml
    obspy.io.zmap

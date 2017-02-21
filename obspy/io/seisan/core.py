@@ -14,14 +14,11 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import numpy as np
-import sys
 import warnings
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.compatibility import from_buffer
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 def _is_seisan(filename):
@@ -41,7 +38,7 @@ def _is_seisan(filename):
     try:
         with open(filename, 'rb') as f:
             data = f.read(12 * 80)
-    except:
+    except Exception:
         return False
     # read some data - contains at least 12 lines a 80 characters
     if _get_version(data):
@@ -210,17 +207,6 @@ def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
             stream.append(Trace(data=data[1:-1], header=header))
     fh.close()
     return stream
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isSEISAN': 'obspy.io.seisan.core._is_seisan',
-        'readSEISAN': 'obspy.io.seisan.core._read_seisan',
-        '_getVersion': 'obspy.io.seisan.core._get_version'})
 
 
 if __name__ == '__main__':

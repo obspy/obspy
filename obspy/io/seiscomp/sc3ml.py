@@ -69,7 +69,7 @@ def _is_sc3ml(path_or_file_object):
                 r'{http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[-+]?'
                 r'[0-9]*\.?[0-9]+}', root.tag)
             assert match is not None
-        except:
+        except Exception:
             return False
         # Convert schema number to a float to have positive comparisons
         # between, e.g "1" and "1.0".
@@ -82,7 +82,7 @@ def _is_sc3ml(path_or_file_object):
         # Make sure to reset file pointer position.
         try:
             path_or_file_object.seek(current_position, 0)
-        except:
+        except Exception:
             pass
 
 
@@ -178,7 +178,7 @@ def _tag2obj(element, tag, convert):
         if element.find(tag).text is None:
             return None
         return convert(element.find(tag).text)
-    except:
+    except Exception:
         None
 
 
@@ -891,7 +891,7 @@ def _read_float_var(elem, cls, unit=False, datum=False, additional_mapping={}):
 
     try:
         convert = float(elem)
-    except:
+    except Exception:
         warnings.warn(
             "Encountered a value '%s' which could not be converted to a "
             "float. Will be skipped. Please contact to report this "

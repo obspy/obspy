@@ -482,16 +482,6 @@ class UDIFF(C.Union):
     ]
 
 
-class FRAME(C.Structure):
-    """
-    Frame in a seed data record.
-    """
-    _fields_ = [
-        ("ctrl", C.c_uint32),  # control word for frame.
-        ("w", UDIFF * 14),  # compressed data.
-    ]
-
-
 # Declare function of libmseed library, argument parsing
 clibmseed.mst_init.argtypes = [C.POINTER(MSTrace)]
 clibmseed.mst_init.restype = C.POINTER(MSTrace)
@@ -537,23 +527,23 @@ clibmseed.ms_detect.argtypes = [
     C.c_int]
 clibmseed.ms_detect.restype = C.c_int
 
-clibmseed.msr_unpack_steim2.argtypes = [
-    C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
+clibmseed.msr_decode_steim2.argtypes = [
+    C.c_void_p,
+    C.c_int,
+    C.c_int,
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
-    C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
-clibmseed.msr_unpack_steim2.restype = C.c_int
+    C.c_int, C.c_char_p, C.c_int]
+clibmseed.msr_decode_steim2.restype = C.c_int
 
-clibmseed.msr_unpack_steim1.argtypes = [
-    C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
+clibmseed.msr_decode_steim1.argtypes = [
+    C.c_void_p,
+    C.c_int,
+    C.c_int,
     np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
-    C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
-clibmseed.msr_unpack_steim2.restype = C.c_int
+    C.c_int, C.c_char_p, C.c_int]
+clibmseed.msr_decode_steim1.restype = C.c_int
 
 # tricky, C.POINTER(C.c_char) is a pointer to single character fields
 # this is completely different to C.c_char_p which is a string
@@ -569,9 +559,10 @@ clibmseed.msr_addblockette.argtypes = [C.POINTER(MSRecord),
                                        C.c_int, C.c_int, C.c_int]
 clibmseed.msr_addblockette.restype = C.POINTER(BlktLink)
 
-clibmseed.msr_parse.argtypes = [C.POINTER(C.c_char), C.c_int,
-                                C.POINTER(C.POINTER(MSRecord)),
-                                C.c_int, C.c_int, C.c_int]
+clibmseed.msr_parse.argtypes = [
+    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1), C.c_int,
+    C.POINTER(C.POINTER(MSRecord)),
+    C.c_int, C.c_int, C.c_int]
 clibmseed.msr_parse.restype = C.c_int
 
 #####################################

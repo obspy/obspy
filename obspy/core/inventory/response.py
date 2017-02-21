@@ -20,6 +20,7 @@ from copy import deepcopy
 from math import pi
 
 import numpy as np
+import scipy.interpolate
 
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import (ComplexWithUncertainties, CustomFloat,
@@ -734,16 +735,13 @@ class Response(ComparingObject):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
-    def get_evalresp_response(self, t_samp, nfft, output="VEL",
-                              start_stage=None, end_stage=None):
+    def get_evalresp_response_for_frequencies(
+            self, frequencies, output="VEL", start_stage=None, end_stage=None):
         """
-        Returns frequency response and corresponding frequencies using
-        evalresp.
+        Returns frequency response for given frequencies using evalresp.
 
-        :type t_samp: float
-        :param t_samp: time resolution (inverse frequency resolution)
-        :type nfft: int
-        :param nfft: Number of FFT points to use
+        :type frequencies: list of float
+        :param frequencies: Discrete frequencies to calculate response for.
         :type output: str
         :param output: Output units. One of:
 
@@ -760,8 +758,8 @@ class Response(ComparingObject):
         :type end_stage: int, optional
         :param end_stage: Stage sequence number of last stage that will be
             used (disregarding all later stages).
-        :rtype: tuple of two arrays
-        :returns: frequency response and corresponding frequencies
+        :rtype: :class:`numpy.ndarray`
+        :returns: frequency response at requested frequencies
         """
         if not self.response_stages:
             msg = ("Can not use evalresp on response with no response "
@@ -777,6 +775,8 @@ class Response(ComparingObject):
                    "or 'ACC'") % output
             raise ValueError(msg)
 
+        frequencies = np.asarray(frequencies)
+
         # Whacky. Evalresp uses a global variable and uses that to scale the
         # response if it encounters any unit that is not SI.
         scale_factor = [1.0]
@@ -784,7 +784,7 @@ class Response(ComparingObject):
         def get_unit_mapping(key):
             try:
                 key = key.upper()
-            except:
+            except Exception:
                 pass
             units_mapping = {
                 "M": ew.ENUM_UNITS["DIS"],
@@ -956,11 +956,70 @@ class Response(ComparingObject):
                     coeff.denom = C.cast(C.pointer(coeffs),
                                          C.POINTER(C.c_double))
             elif isinstance(blockette, ResponseListResponseStage):
-                msg = ("ResponseListResponseStage not yet implemented due to "
-                       "missing example data. Please contact the developers "
-                       "with a test data set (waveforms and StationXML "
-                       "metadata).")
-                raise NotImplementedError(msg)
+                blkt = ew.Blkt()
+                blkt.type = ew.ENUM_FILT_TYPES["LIST"]
+
+                # Get values as numpy arrays.
+                f = np.array([float(_i.frequency)
+                              for _i in blockette.response_list_elements],
+                             dtype=np.float64)
+                amp = np.array([float(_i.amplitude)
+                                for _i in blockette.response_list_elements],
+                               dtype=np.float64)
+                phase = np.array([
+                    float(_i.phase)
+                    for _i in blockette.response_list_elements],
+                    dtype=np.float64)
+
+                # Sanity check.
+                min_f = frequencies[frequencies > 0].min()
+                max_f = frequencies.max()
+
+                min_f_avail = min(f)
+                max_f_avail = max(f)
+
+                # Allow interpolation for at most two samples.
+                _d = np.abs(np.diff(f))
+                _d = _d[_d > 0].min() * 2
+                min_f_avail -= _d
+                max_f_avail += _d
+
+                if min_f < min_f_avail or max_f > max_f_avail:
+                    msg = (
+                        "Cannot calculate the response as it contains a "
+                        "response list stage with frequencies only from "
+                        "%.4f - %.4f Hz. You are requesting a response from "
+                        "%.4f - %.4f Hz.")
+                    raise ValueError(msg % (min_f_avail, max_f_avail, min_f,
+                                            max_f))
+
+                amp = scipy.interpolate.InterpolatedUnivariateSpline(
+                    f, amp, k=3)(frequencies)
+                phase = scipy.interpolate.InterpolatedUnivariateSpline(
+                    f, phase, k=3)(frequencies)
+
+                # Set static offset to zero.
+                amp[amp == 0] = 0
+                phase[phase == 0] = 0
+
+                rl = blkt.blkt_info.list
+                rl.nresp = len(frequencies)
+
+                _freq_c = (C.c_double * rl.nresp)()
+                _amp_c = (C.c_double * rl.nresp)()
+                _phase_c = (C.c_double * rl.nresp)()
+
+                _freq_c[:] = frequencies[:]
+                _amp_c[:] = amp[:]
+                _phase_c[:] = phase[:]
+
+                rl.freq = C.cast(C.pointer(_freq_c),
+                                 C.POINTER(C.c_double))
+                rl.amp = C.cast(C.pointer(_amp_c),
+                                C.POINTER(C.c_double))
+                rl.phase = C.cast(C.pointer(_phase_c),
+                                  C.POINTER(C.c_double))
+
             elif isinstance(blockette, FIRResponseStage):
                 blkt = ew.Blkt()
 
@@ -1078,11 +1137,7 @@ class Response(ComparingObject):
         chan.sensit = 0.0
         chan.sensfreq = 0.0
 
-        fy = 1 / (t_samp * 2.0)
-        # start at zero to get zero for offset/ DC of fft
-        freqs = np.linspace(0, fy, nfft // 2 + 1).astype(np.float64)
-
-        output = np.empty(len(freqs), dtype=np.complex128)
+        output = np.empty(len(frequencies), dtype=np.complex128)
         out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
 
         # Set global variables
@@ -1102,7 +1157,8 @@ class Response(ComparingObject):
                 e, m = ew.ENUM_ERROR_CODES[rc]
                 raise e('norm_resp: ' + m)
 
-            rc = clibevresp._obspy_calc_resp(C.byref(chan), freqs, len(freqs),
+            rc = clibevresp._obspy_calc_resp(C.byref(chan), frequencies,
+                                             len(frequencies),
                                              output, out_units, -1, 0, 0)
             if rc:
                 e, m = ew.ENUM_ERROR_CODES[rc]
@@ -1114,7 +1170,45 @@ class Response(ComparingObject):
         finally:
             clibevresp.curr_file.value = None
 
-        return output, freqs
+        return output
+
+    def get_evalresp_response(self, t_samp, nfft, output="VEL",
+                              start_stage=None, end_stage=None):
+        """
+        Returns frequency response and corresponding frequencies using
+        evalresp.
+
+        :type t_samp: float
+        :param t_samp: time resolution (inverse frequency resolution)
+        :type nfft: int
+        :param nfft: Number of FFT points to use
+        :type output: str
+        :param output: Output units. One of:
+
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :rtype: tuple of two arrays
+        :returns: frequency response and corresponding frequencies
+        """
+        # Calculate the output frequencies.
+        fy = 1 / (t_samp * 2.0)
+        # start at zero to get zero for offset/ DC of fft
+        freqs = np.linspace(0, fy, nfft // 2 + 1).astype(np.float64)
+
+        response = self.get_evalresp_response_for_frequencies(
+            freqs, output=output, start_stage=start_stage, end_stage=end_stage)
+        return response, freqs
 
     def __str__(self):
         i_s = self.instrument_sensitivity

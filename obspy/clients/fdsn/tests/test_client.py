@@ -30,7 +30,8 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
-                                       FDSNException, FDSNRedirectException)
+                                       FDSNException, FDSNRedirectException,
+                                       FDSNNoDataException)
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
 
@@ -249,14 +250,14 @@ class ClientTestCase(unittest.TestCase):
             with mock.patch("obspy.clients.fdsn.Client._download") as p:
                 try:
                     self.client.get_stations(0, 0, location=loc)
-                except:
+                except Exception:
                     pass
             self.assertEqual(p.call_count, 1)
             self.assertIn("location=--", p.call_args[0][0])
             with mock.patch("obspy.clients.fdsn.Client._download") as p:
                 try:
                     self.client.get_waveforms(1, 2, loc, 4, 0, 0)
-                except:
+                except Exception:
                     pass
             self.assertEqual(p.call_count, 1)
             self.assertIn("location=--", p.call_args[0][0])
@@ -983,7 +984,7 @@ class ClientTestCase(unittest.TestCase):
         try:
             c.get_waveforms("A", "B", "C", "D", UTCDateTime() - 100,
                             UTCDateTime())
-        except:
+        except Exception:
             pass
         self.assertTrue(
             base_url_ds in download_url_mock.call_args_list[0][0][0])
@@ -994,7 +995,7 @@ class ClientTestCase(unittest.TestCase):
         download_url_mock.return_value = 404, None
         try:
             c.get_stations()
-        except:
+        except Exception:
             pass
         self.assertTrue(
             base_url_station in download_url_mock.call_args_list[0][0][0])
@@ -1005,7 +1006,7 @@ class ClientTestCase(unittest.TestCase):
         download_url_mock.return_value = 404, None
         try:
             c.get_events()
-        except:
+        except Exception:
             pass
         self.assertTrue(
             base_url_event in download_url_mock.call_args_list[0][0][0])
@@ -1142,6 +1143,46 @@ class ClientTestCase(unittest.TestCase):
         inv = c_auth.get_stations_bulk(bulk, level="network")
         # Just make sure something is being downloaded.
         self.assertTrue(bool(len(inv.networks)))
+
+    def test_get_waveforms_empty_seed_codes(self):
+        """
+        Make sure that network, station, and channel codes specified as empty
+        strings are not omitted in `get_waveforms(...)` when building the url
+        (which results in default values '*' (wildcards) at the server,
+        see #1578).
+        """
+        t = UTCDateTime(2000, 1, 1)
+        url_base = "http://service.iris.edu/fdsnws/dataselect/1/query?"
+        kwargs = dict(network='IU', station='ANMO', location='00',
+                      channel='HHZ', starttime=t, endtime=t)
+
+        for key in ('network', 'station', 'channel'):
+            kwargs_ = kwargs.copy()
+            # set empty SEED code for given key
+            kwargs_.update(((key, ''),))
+
+            # use a mock object and check what URL would have been downloaded
+            with mock.patch.object(
+                    self.client, '_download') as m:
+                try:
+                    self.client.get_waveforms(**kwargs_)
+                except Exception:
+                    # Mocking returns something different.
+                    continue
+                # URL downloading comes before the error and can be checked now
+                url = m.call_args[0][0]
+            url_parts = url.replace(url_base, '').split("&")
+            self.assertIn('{}='.format(key), url_parts)
+
+    def test_no_data(self):
+        """
+        Verify that a request returning no data raises an identifiable
+        exception
+        """
+        self.assertRaises(FDSNNoDataException, self.client.get_events,
+                          starttime=UTCDateTime("2001-01-07T01:00:00"),
+                          endtime=UTCDateTime("2001-01-07T01:01:00"),
+                          minmagnitude=8)
 
 
 def suite():

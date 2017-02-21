@@ -45,7 +45,7 @@ from obspy import UTCDateTime, read_inventory
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
-                     FDSNRedirectException)
+                     FDSNRedirectException, FDSNNoDataException)
 from .wadl_parser import WADLParser
 
 
@@ -202,29 +202,6 @@ class Client(object):
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
         self.__version_cache = {}
-
-        # handle switch of SCEC to SCEDC, see #998
-        if base_url.upper() == "SCEC":
-            base_url = "SCEDC"
-            msg = ("FDSN short-URL 'SCEC' has been replaced by 'SCEDC'. "
-                   "Please change to 'Client('SCEDC')'. This re-routing will "
-                   "be removed in a future release.")
-            warnings.warn(msg)
-        # NIEP was misspelled for a while.
-        elif base_url.upper() == "NEIP":
-            base_url = "NIEP"
-            msg = ("FDSN short-URL 'NEIP' has been replaced by 'NIEP'. "
-                   "Please change to 'Client('NIEP')'. This re-routing will "
-                   "be removed in a future release.")
-            warnings.warn(msg)
-        # Deprecate FDSN URL-shortcut 'NERIES' in favour of 'EMSC', see #1146.
-        # TODO: remove in 0.12.x or 1.x release
-        elif base_url.upper() == "NERIES":
-            base_url = "EMSC"
-            msg = ("FDSN short-URL 'NERIES' has been replaced by 'EMSC'. "
-                   "Please change to 'Client('EMSC')'. This re-routing will "
-                   "be removed in a future release.")
-            warnings.warn(msg)
 
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
@@ -964,8 +941,7 @@ class Client(object):
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
-                    GR
-                    IU
+                    GR, IU
                 Stations (2):
                     GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
                     IU.ANMO (Albuquerque, New Mexico, USA)
@@ -995,13 +971,12 @@ class Client(object):
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
-                    GR
-                    IU
+                    GR, IU
                 Stations (2):
                     GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
                     IU.ANMO (Albuquerque, New Mexico, USA)
                 Channels (5):
-                    GR.GRA1..BHE, GR.GRA1..BHN, GR.GRA1..BHZ, IU.ANMO.00.BHZ,
+                    GR.GRA1..BHZ, GR.GRA1..BHN, GR.GRA1..BHE, IU.ANMO.00.BHZ,
                     IU.ANMO.10.BHZ
         >>> inv = client.get_stations_bulk("/tmp/request.txt") \
         ...     # doctest: +SKIP
@@ -1170,15 +1145,12 @@ class Client(object):
 
             try:
                 value = this_type(value)
-            except:
+            except Exception:
                 msg = "'%s' could not be converted to type '%s'." % (
                     str(value), this_type.__name__)
                 raise TypeError(msg)
             # Now convert to a string that is accepted by the webservice.
             value = convert_to_string(value)
-            if isinstance(value, (str, native_str)):
-                if not value and key != "location":
-                    continue
             final_parameter_set[key] = value
 
         return self._build_url(service, "query",
@@ -1336,11 +1308,12 @@ class Client(object):
             try:
                 server_info = "\n".join([
                     line for line in data.read().splitlines() if line])
-            except:
+            except Exception:
                 server_info = None
         # No data.
         if code == 204:
-            raise FDSNException("No data available for request.", server_info)
+            raise FDSNNoDataException("No data available for request.",
+                                      server_info)
         elif code == 400:
             msg = ("Bad request. If you think your request was valid "
                    "please contact the developers.")
@@ -1646,7 +1619,7 @@ def build_url(base_url, service, major_version, resource_type,
         for key, value in parameters.items():
             try:
                 parameters[key] = value.strip()
-            except:
+            except Exception:
                 pass
         url = "?".join((url, urllib.parse.urlencode(parameters)))
     return url

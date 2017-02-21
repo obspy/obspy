@@ -12,14 +12,11 @@ import io
 import os
 import warnings
 from struct import pack
-import sys
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
-from obspy.core.util.deprecation_helpers import (
-    DynamicAttributeImportRerouteModule, ObsPyDeprecationWarning)
 from . import util, InternalMSEEDReadingError, InternalMSEEDReadingWarning
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
@@ -57,7 +54,7 @@ def _is_mseed(filename):
                 file_size = filename.getbuffer().nbytes
             try:
                 file_size = os.fstat(filename.fileno()).st_size
-            except:
+            except Exception:
                 _p = filename.tell()
                 filename.seek(0, 2)
                 file_size = filename.tell()
@@ -84,7 +81,7 @@ def __is_mseed(fp, file_size):  # NOQA
         fp.seek(-7, 1)
         try:
             _t = fp.read(128).decode().strip()
-        except:
+        except Exception:
             return False
         if not _t:
             return __is_mseed(fp=fp, file_size=file_size)
@@ -97,7 +94,7 @@ def __is_mseed(fp, file_size):  # NOQA
         # (min record size) and try again.
         try:
             _t = fp.read(128 - 7).decode().strip()
-        except:
+        except Exception:
             return False
         if not _t:
             return __is_mseed(fp=fp, file_size=file_size)
@@ -118,7 +115,7 @@ def __is_mseed(fp, file_size):  # NOQA
         # to the appropriate position
         try:
             fp.seek(int(fp.read(4)) - 7, 1)
-        except:
+        except Exception:
             return False
         _i += 1
         # break after 3 cycles
@@ -129,7 +126,7 @@ def __is_mseed(fp, file_size):  # NOQA
     fp.seek(8, 1)
     try:
         record_length = pow(2, int(fp.read(2)))
-    except:
+    except Exception:
         return False
 
     # Jump to the second record.
@@ -251,13 +248,6 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         header_byteorder = 0
     elif header_byteorder in [1, "1", ">"]:
         header_byteorder = 1
-
-    # The quality flag is no more supported. Raise a warning.
-    if 'quality' in kwargs:
-        msg = 'The quality flag is no longer supported in this version of ' + \
-            'obspy.io.mseed. obspy.io.mseed.util has some functions with ' \
-            'similar behavior.'
-        warnings.warn(msg, category=ObsPyDeprecationWarning)
 
     # Parse some information about the file.
     if header_byteorder == 0:
@@ -409,7 +399,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
 
     try:
         verbose = int(verbose)
-    except:
+    except Exception:
         verbose = 0
 
     lil = clibmseed.readMSEEDBuffer(
@@ -673,7 +663,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
         try:
             trace_attr['dataquality'] = \
                 trace.stats['mseed']['dataquality'].upper()
-        except:
+        except Exception:
             trace_attr['dataquality'] = 'D'
         # Sanity check for the dataquality to get a nice Python exception
         # instead of a C error.
@@ -875,20 +865,19 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Determine if a blockette 100 will be needed to represent the input
         # sample rate or if the sample rate in the fixed section of the data
         # header will suffice (see ms_genfactmult in libmseed/genutils.c)
-        #
-        # It is definitely necessary for very large or small sampling rates (
-        # using libmseed for the test would result in an overflow).
-        if trace.stats.sampling_rate >= 32727.0 or \
-                trace.stats.sampling_rate <= (1.0 / 32727.0):
-            use_blkt_100 = True
-        else:
-            use_blkt_100 = False
+        use_blkt_100 = False
 
-            _factor = C.c_int16()
-            _multiplier = C.c_int16()
-            clibmseed.ms_genfactmult(
-                trace.stats.sampling_rate, C.pointer(_factor),
-                C.pointer(_multiplier))
+        _factor = C.c_int16()
+        _multiplier = C.c_int16()
+        _retval = clibmseed.ms_genfactmult(
+            trace.stats.sampling_rate, C.pointer(_factor),
+            C.pointer(_multiplier))
+        # Use blockette 100 if ms_genfactmult() failed.
+        if _retval != 0:
+            use_blkt_100 = True
+        # Otherwise figure out if ms_genfactmult() found exact factors.
+        # Otherwise write blockette 100.
+        else:
             ms_sr = clibmseed.ms_nomsamprate(_factor.value, _multiplier.value)
 
             # It is also necessary if the libmseed calculated sampling rate
@@ -991,17 +980,6 @@ class MST(object):
         # This also frees the data of the associated datasamples pointer.
         clibmseed.mst_free(C.pointer(self.mst))
         del self.mst
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isMSEED': 'obspy.io.mseed.core._is_mseed',
-        'readMSEED': 'obspy.io.mseed.core._read_mseed',
-        'writeMSEED': 'obspy.io.mseed.core._write_mseed'})
 
 
 if __name__ == '__main__':

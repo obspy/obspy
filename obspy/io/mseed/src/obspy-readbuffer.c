@@ -469,7 +469,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
 
         // Actually unpack the data if the flag is not set and if the data
         // offset is valid.
-        if ((unpack_data != 0) && (msr->fsdh->data_offset > 48) &&
+        if ((unpack_data != 0) && (msr->fsdh->data_offset >= 48) &&
             (msr->fsdh->data_offset < msr->reclen) &&
             (msr->samplecnt > 0)) {
             retval = msr_unpack_data (msr, swapflag, verbose);

@@ -22,13 +22,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
 import warnings
 
 import numpy as np
-
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 def konno_ohmachi_smoothing_window(frequencies, center_frequency,
@@ -60,10 +56,8 @@ def konno_ohmachi_smoothing_window(frequencies, center_frequency,
     special cases. You can disable NumPy warnings (they usually do not show up
     anyways) with::
 
-        temp = np.geterr()
-        np.seterr(all='ignore')
-        ...code that raises NumPy warning due to division by zero...
-        np.seterr(**temp)
+        with np.errstate(all='ignore'):
+            ...code that raises NumPy warning due to division by zero...
 
     :type frequencies: :class:`numpy.ndarray` (float32 or float64)
     :param frequencies:
@@ -218,11 +212,9 @@ def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
        and approx_mem_usage < max_memory_usage:
         # Disable NumPy warnings due to possible divisions by zero/logarithms
         # of zero.
-        temp = np.geterr()
-        np.seterr(all='ignore')
-        smoothing_matrix = calculate_smoothing_matrix(frequencies, bandwidth,
-                                                      normalize=normalize)
-        np.seterr(**temp)
+        with np.errstate(all='ignore'):
+            smoothing_matrix = calculate_smoothing_matrix(
+                frequencies, bandwidth, normalize=normalize)
         new_spec = np.dot(spectra, smoothing_matrix)
         # Eventually apply more than once.
         for _i in range(count - 1):
@@ -235,27 +227,23 @@ def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
         if len(new_spec.shape) == 1:
             # Disable NumPy warnings due to possible divisions by
             # zero/logarithms of zero.
-            temp = np.geterr()
-            np.seterr(all='ignore')
-            for _i in range(len(frequencies)):
-                window = konno_ohmachi_smoothing_window(
-                    frequencies, frequencies[_i], bandwidth,
-                    normalize=normalize)
-                new_spec[_i] = (window * spectra).sum()
-            np.seterr(**temp)
+            with np.errstate(all='ignore'):
+                for _i in range(len(frequencies)):
+                    window = konno_ohmachi_smoothing_window(
+                        frequencies, frequencies[_i], bandwidth,
+                        normalize=normalize)
+                    new_spec[_i] = (window * spectra).sum()
         # Reuse smoothing window if more than one spectrum.
         else:
             # Disable NumPy warnings due to possible divisions by
             # zero/logarithms of zero.
-            temp = np.geterr()
-            np.seterr(all='ignore')
-            for _i in range(len(frequencies)):
-                window = konno_ohmachi_smoothing_window(
-                    frequencies, frequencies[_i], bandwidth,
-                    normalize=normalize)
-                for _j, spec in enumerate(spectra):
-                    new_spec[_j, _i] = (window * spec).sum()
-            np.seterr(**temp)
+            with np.errstate(all='ignore'):
+                for _i in range(len(frequencies)):
+                    window = konno_ohmachi_smoothing_window(
+                        frequencies, frequencies[_i], bandwidth,
+                        normalize=normalize)
+                    for _j, spec in enumerate(spectra):
+                        new_spec[_j, _i] = (window * spec).sum()
         # Eventually apply more than once.
         while count > 1:
             new_spec = konno_ohmachi_smoothing(
@@ -263,20 +251,3 @@ def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
                 normalize=normalize)
             count -= 1
         return new_spec
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        "calculateSmoothingMatrix":
-            "obspy.signal.konnoohmachismoothing."
-            "calculate_smoothing_matrix",
-        "konnoOhmachiSmoothing":
-        "obspy.signal.konnoohmachismoothing."
-            "konno_ohmachi_smoothing",
-        "konnoOhmachiSmoothingWindow":
-        "obspy.signal.konnoohmachismoothing."
-            "konno_ohmachi_smoothing_window"})

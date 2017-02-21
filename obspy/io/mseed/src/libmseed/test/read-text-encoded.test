@@ -1,0 +1,2 @@
+#!/bin/sh
+./lmtestparse data/text-encoded.mseed -D

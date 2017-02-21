@@ -20,10 +20,13 @@ This class hierarchy is closely modelled after the de-facto standard format
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+import copy
 
 from obspy.core.event.header import (
     EventType, EventTypeCertainty, EventDescriptionType)
+from obspy.core.util.decorator import rlock
 from obspy.imaging.source import plot_radiation_pattern, _setup_figure_and_axes
+
 
 from .base import (_event_type_class_factory,
                    CreationInfo, ResourceIdentifier)
@@ -267,6 +270,21 @@ class Event(__Event):
                 plt.show()
 
         return fig
+
+    @rlock
+    def __deepcopy__(self, memodict=None):
+        """
+        reset resource_id's object_id after deep copy to allow the
+        object specific behavior of get_referred_object
+        """
+        memodict = memodict or {}
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memodict[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, copy.deepcopy(v, memodict))
+        result.resource_id.bind_resource_ids()  # bind all resource_ids
+        return result
 
     def write(self, filename, format, **kwargs):
         """
