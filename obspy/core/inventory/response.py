@@ -28,6 +28,7 @@ from obspy.core.util.obspy_types import (ComplexWithUncertainties, CustomFloat,
                                          FloatWithUncertaintiesAndUnit,
                                          ObsPyException,
                                          ZeroSamplingRate)
+from obspy.io.xseed import Parser
 
 from .util import Angle, Frequency
 
@@ -734,6 +735,23 @@ class Response(ComparingObject):
         else:
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
+
+    @classmethod
+    def from_resp(cls, resp, frequency=None, sr=None):
+        """
+        Converts response from XSEED, dataless SEED, or RESP to
+        Inventory.Response.
+
+        :type resp: :class:`~obspy.io.xseed.Parser`
+        :param resp: Parser object with a single response
+        :rtype: :class:`obspy.core.inventory.response.Response`
+        :returns: Inventory response object
+        """
+        if not isinstance(resp, Parser):
+            raise TypeError('Requires obspy.io.xseed.Parser object.')
+
+        inv_resp = cls()
+        return inv_resp
 
     def get_evalresp_response_for_frequencies(
             self, frequencies, output="VEL", start_stage=None, end_stage=None):
