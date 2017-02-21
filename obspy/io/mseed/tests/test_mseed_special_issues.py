@@ -276,9 +276,18 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         Specifying a wrong record length should raise an error.
         """
-        file = os.path.join(self.path, 'data', 'libmseed',
+        file = os.path.join(self.path, 'data', 'encoding',
                             'float32_Float32_bigEndian.mseed')
-        self.assertRaises(Exception, read, file, reclen=4096)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            # invalid reclen
+            read(file, reclen=111)
+            self.assertTrue('Invalid record length' in str(w[0].message))
+            self.assertEqual(w[0].category, UserWarning)
+            # wrong reclen - raises and also displays a warning
+            self.assertRaises(Exception, read, file, reclen=4096)
+            self.assertTrue('reclen exceeds buflen' in str(w[1].message))
+            self.assertEqual(w[1].category, InternalMSEEDReadingWarning)
 
     def test_read_with_missing_blockette010(self):
         """

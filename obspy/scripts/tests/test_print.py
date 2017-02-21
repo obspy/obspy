@@ -7,13 +7,15 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 
-from obspy.core.scripts.print import main as obspy_print
+from obspy.scripts.print import main as obspy_print
 from obspy.core.util.misc import CatchOutput
 
 
 class PrintTestCase(unittest.TestCase):
     def setUp(self):
-        self.all_files = [os.path.join(os.path.dirname(__file__), 'data', x)
+        self.all_files = [os.path.join(os.path.dirname(__file__), os.pardir,
+                                       os.pardir, 'io', 'ascii', 'tests',
+                                       'data', x)
                           for x in ['slist.ascii', 'tspair.ascii']]
 
     def test_print(self):
