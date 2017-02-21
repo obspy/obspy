@@ -11,6 +11,7 @@
    * Fix `farfield` if input `points` is a 2D array. (see #1499, #1553)
  - obspy.clients.earthworm:
    * Better end of stream detection. (see #1605)
+   * More efficient unpacking of server response. (see #1680)
  - obspy.clients.neic:
    * Better end of stream detection. (see #1563)
  - obspy.clients.seedlink:
