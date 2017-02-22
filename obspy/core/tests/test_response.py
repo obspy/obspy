@@ -25,7 +25,7 @@ from matplotlib import rcParams
 
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
-    _pitick2latex, PolesZerosResponseStage)
+    _pitick2latex, PolesZerosResponseStage, Response)
 from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
@@ -267,6 +267,15 @@ class ResponseTestCase(unittest.TestCase):
             "stage with frequencies only from -0.0096 - 20.0096 Hz. You are "
             "requesting a response from 0.4500 - 22.5000 Hz.")
 
+    def test_response_from_resp(self):
+        """
+        Test creating a inventory response from seed resp parser.
+        """
+        filename = "IRIS_single_channel_with_response"
+        seed_file = os.path.join(self.data_dir,
+                                 filename + os.path.extsep + 'seed')
+        p = Parser(seed_file)
+        inv_resp = Response.from_resp(p)
 
 def suite():
     return unittest.makeSuite(ResponseTestCase, 'test')
