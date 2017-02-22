@@ -559,6 +559,17 @@ class ParserTestCase(unittest.TestCase):
             p = Parser(data)
             p.get_resp()
 
+    def test_resp_round_trip(self):
+        single_seed = os.path.join(
+            self.path,
+            '../../../../',
+            'core/tests/data/IRIS_single_channel_with_response.seed')
+        seed_p = Parser(single_seed)
+        resp = seed_p.get_resp()
+        resp_p = Parser(resp)
+        print(resp)
+        print(resp_p.get_resp())
+
     def test_parse_resp(self):
         """
         Tests parsing a RESP file by calling Parser._parse_resp(string)
