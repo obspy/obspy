@@ -941,8 +941,17 @@ class Response(ComparingObject):
         inv_response.instrument_sensitivity.frequency = sensfreq
         return inv_response
 
-    def get_evalresp_response_for_frequencies(
-            self, frequencies, output="VEL", start_stage=None, end_stage=None):
+    def get_evalresp_norm_resp(self, output='VEL'):
+        output, chan = self._call_eval_resp_for_frequencies(
+            frequencies=np.ndarray(0),
+            output=output)
+        return chan.sensfreq, chan.calc_sensit
+
+    def _call_eval_resp_for_frequencies(self,
+                                        frequencies,
+                                        output="VEL",
+                                        start_stage=None,
+                                        end_stage=None):
         """
         Returns frequency response for given frequencies using evalresp.
 
@@ -1376,6 +1385,38 @@ class Response(ComparingObject):
         finally:
             clibevresp.curr_file.value = None
 
+        return output, chan
+
+    def get_evalresp_response_for_frequencies(
+            self, frequencies, output="VEL", start_stage=None, end_stage=None):
+        """
+        Returns frequency response for given frequencies using evalresp.
+sdfsdfasdf
+        :type frequencies: list of float
+        :param frequencies: Discrete frequencies to calculate response for.
+        :type output: str
+        :param output: Output units. One of:
+
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :rtype: :class:`numpy.ndarray`
+        :returns: frequency response at requested frequencies
+        """
+        output, chan =  self._call_eval_resp_for_frequencies(frequencies,
+                                                    output=output,
+                                                    start_stage=start_stage,
+                                                    end_stage=end_stage)
         return output
 
     def get_evalresp_response(self, t_samp, nfft, output="VEL",
