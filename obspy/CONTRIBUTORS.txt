@@ -48,6 +48,7 @@ Bernhard Morgenstern
 Nathaniel C. Miller
 Ran Novitsky Nof
 Mark P. Panning
+Tom Parker
 Giovanni Rapagnani
 Celso Reyes
 Adam Ringler
