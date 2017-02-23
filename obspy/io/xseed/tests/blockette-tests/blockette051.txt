@@ -9,3 +9,15 @@
   <end_effective_time>2000-07-05T07:03:20.000000Z</end_effective_time>
   <comment_code_key>/xseed/abbreviation_dictionary_control_header/comment_description/comment_code_key[text()="1"]/parent::*</comment_code_key>
 </station_comment>
+
+
+# empty optional endtime
+
+--02-SEED
+05100412000,187,06:36:04.0000~~0001000000
+
+--02-XSEED
+<station_comment blockette="051">
+  <beginning_effective_time>2000-07-05T06:36:04.000000Z</beginning_effective_time>
+  <comment_code_key>/xseed/abbreviation_dictionary_control_header/comment_description/comment_code_key[text()="1"]/parent::*</comment_code_key>
+</station_comment>

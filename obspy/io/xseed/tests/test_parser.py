@@ -41,29 +41,18 @@ class ParserTestCase(unittest.TestCase):
          - an unsupported response information somewhere in the metadata should
            not automatically raise an Error, if the desired information can
            still be retrieved
-
-        This test also tests if a warning is raised if no startime is given.
         """
-        parser = Parser()
+        parser = Parser(strict=True)
         file = os.path.join(self.path, "bug165.dataless")
         t = UTCDateTime("2010-01-01T00:00:00")
-        # raises UserWarning
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            # Trigger a warning.
-            parser.read(file)
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category, UserWarning))
-            self.assertTrue('date' and 'required' in
-                            str(w[-1].message).lower())
-            # Triggers a warning.
-            paz = parser.get_paz("NZ.DCZ.20.HNZ", t)
-            result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
-                      'poles': [(-981 + 1009j), (-981 - 1009j),
-                                (-3290 + 1263j), (-3290 - 1263j)],
-                      'seismometer_gain': 1.01885, 'sensitivity': 427336.0,
-                      'zeros': []}
-            self.assertEqual(paz, result)
+        parser.read(file)
+        paz = parser.get_paz("NZ.DCZ.20.HNZ", t)
+        result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
+                  'poles': [(-981 + 1009j), (-981 - 1009j),
+                            (-3290 + 1263j), (-3290 - 1263j)],
+                  'seismometer_gain': 1.01885, 'sensitivity': 427336.0,
+                  'zeros': []}
+        self.assertEqual(paz, result)
 
     def test_invalid_start_header(self):
         """
