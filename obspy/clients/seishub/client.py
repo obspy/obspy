@@ -11,19 +11,22 @@ SeisHub database client for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
 from future.utils import PY2, native_str
 
 import os
 import pickle
+import sys
 import time
 import warnings
 from datetime import datetime
 from math import log
 
-with standard_library.hooks():
-    import urllib.parse
-    import urllib.request
+if sys.version_info.major == 2:
+    from urllib import urlencode
+    import urllib2 as urllib_request
+else:
+    from urllib.parse import urlencode
+    import urllib.request as urllib_request
 
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
@@ -142,12 +145,12 @@ class Client(object):
         self.xml_seeds = {}
         self.station_list = {}
         # Create an OpenerDirector for Basic HTTP Authentication
-        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
-        auth_handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
-        opener = urllib.request.build_opener(auth_handler)
+        auth_handler = urllib_request.HTTPBasicAuthHandler(password_mgr)
+        opener = urllib_request.build_opener(auth_handler)
         # install globally
-        urllib.request.install_opener(opener)
+        urllib_request.install_opener(opener)
 
     def ping(self):
         """
@@ -155,7 +158,7 @@ class Client(object):
         """
         try:
             t1 = time.time()
-            urllib.request.urlopen(self.base_url, timeout=self.timeout).read()
+            urllib_request.urlopen(self.base_url, timeout=self.timeout).read()
             return (time.time() - t1) * 1000.0
         except:
             pass
@@ -207,14 +210,13 @@ class Client(object):
             else:
                 params[str(key)] = str(value)
         # replace special characters
-        remoteaddr = self.base_url + url + '?' + \
-            urllib.parse.urlencode(params)
+        remoteaddr = self.base_url + url + '?' + urlencode(params)
         if self.debug:
             print('\nRequesting %s' % (remoteaddr))
         # certain requests randomly fail on rare occasions, retry
         for _i in range(self.retries):
             try:
-                response = urllib.request.urlopen(remoteaddr,
+                response = urllib_request.urlopen(remoteaddr,
                                                   timeout=self.timeout)
                 doc = response.read()
                 return doc
@@ -223,7 +225,7 @@ class Client(object):
             # XXX this can be circumvented by issuing the same request again..
             except Exception:
                 continue
-        response = urllib.request.urlopen(remoteaddr, timeout=self.timeout)
+        response = urllib_request.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -254,9 +256,9 @@ class Client(object):
         # it seems the following always ends in a HTTPError even with
         # nice status codes...?!?
         try:
-            response = urllib.request.urlopen(req, timeout=self.timeout)
+            response = urllib_request.urlopen(req, timeout=self.timeout)
             return response.code, response.msg
-        except urllib.request.HTTPError as e:
+        except urllib_request.HTTPError as e:
             return e.code, e.msg
 
     def _objectify(self, url, *args, **kwargs):
@@ -1084,7 +1086,7 @@ master/seishub/plugins/seismology/event.py
         return
 
 
-class _RequestWithMethod(urllib.request.Request):
+class _RequestWithMethod(urllib_request.Request):
     """
     Improved urllib2.Request Class for which the HTTP Method can be set to
     values other than only GET and POST.
@@ -1096,7 +1098,7 @@ class _RequestWithMethod(urllib.request.Request):
             msg = "HTTP Method not supported. " + \
                   "Supported are: %s." % HTTP_ACCEPTED_METHODS
             raise ValueError(msg)
-        urllib.request.Request.__init__(self, *args, **kwargs)
+        urllib_request.Request.__init__(self, *args, **kwargs)
         self._method = method
 
     def get_method(self):

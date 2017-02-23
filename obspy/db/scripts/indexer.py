@@ -28,7 +28,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
-from future import standard_library
 
 import logging
 import multiprocessing
@@ -36,8 +35,10 @@ import select
 import sys
 from argparse import ArgumentParser
 
-with standard_library.hooks():
-    import http.server
+if sys.version_info.major == 2:
+    import BaseHTTPServer as http_server
+else:
+    import http.server as http_server
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
@@ -48,7 +49,7 @@ from obspy.db.indexer import WaveformFileCrawler, worker
 from obspy.db.util import parse_mapping_data
 
 
-class MyHandler(http.server.BaseHTTPRequestHandler):
+class MyHandler(http_server.BaseHTTPRequestHandler):
     def do_GET(self):  # noqa
         """
         Respond to a GET request.
@@ -93,7 +94,7 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(out)
 
 
-class WaveformIndexer(http.server.HTTPServer, WaveformFileCrawler):
+class WaveformIndexer(http_server.HTTPServer, WaveformFileCrawler):
     """
     A waveform indexer server.
     """

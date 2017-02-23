@@ -13,10 +13,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import native_str
-from future import standard_library
-with standard_library.hooks():
-    import collections
 
+import collections
 import csv
 import io
 import warnings

@@ -5,14 +5,16 @@ The obspy-mopad script test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
 
 import io
 import os
 import sys
 import unittest
 from itertools import product
-with standard_library.hooks():
+
+if sys.version_info.major == 2:
+    from itertools import izip_longest as zip_longest
+else:
     from itertools import zip_longest
 
 import numpy as np

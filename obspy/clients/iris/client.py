@@ -11,16 +11,19 @@ IRIS Web service client for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future import standard_library
 from future.utils import native_str
 
 import io
 import platform
+import sys
 from lxml import objectify
 
-with standard_library.hooks():
-    import urllib.parse
-    import urllib.request
+if sys.version_info.major == 2:
+    from urllib import urlencode
+    import urllib2 as urllib_request
+else:
+    from urllib.parse import urlencode
+    import urllib.request as urllib_request
 
 from obspy import Stream, UTCDateTime, __version__, read
 from obspy.core.util import NamedTemporaryFile, loadtxt
@@ -94,12 +97,12 @@ class Client(object):
         self.major_versions = DEFAULT_SERVICE_VERSIONS
         self.major_versions.update(major_versions)
         # Create an OpenerDirector for Basic HTTP Authentication
-        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
-        auth_handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
-        opener = urllib.request.build_opener(auth_handler)
+        auth_handler = urllib_request.HTTPBasicAuthHandler(password_mgr)
+        opener = urllib_request.build_opener(auth_handler)
         # install globally
-        urllib.request.install_opener(opener)
+        urllib_request.install_opener(opener)
 
     def _fetch(self, service, data=None, headers={}, param_list=[], **params):
         """
@@ -120,14 +123,14 @@ class Client(object):
         if params:
             if options:
                 options += '&'
-            options += urllib.parse.urlencode(params)
+            options += urlencode(params)
         if options:
             remoteaddr = "%s?%s" % (remoteaddr, options)
         if self.debug:
             print('\nRequesting %s' % (remoteaddr))
-        req = urllib.request.Request(url=remoteaddr, data=data,
+        req = urllib_request.Request(url=remoteaddr, data=data,
                                      headers=headers)
-        response = urllib.request.urlopen(req, timeout=self.timeout)
+        response = urllib_request.urlopen(req, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -335,7 +338,7 @@ class Client(object):
         # build up query
         try:
             data = self._fetch("timeseries", param_list=filter, **kwargs)
-        except urllib.request.HTTPError as e:
+        except urllib_request.HTTPError as e:
             msg = "No waveform data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -441,7 +444,7 @@ class Client(object):
         # build up query
         try:
             data = self._fetch("resp", **kwargs)
-        except urllib.request.HTTPError as e:
+        except urllib_request.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -607,7 +610,7 @@ class Client(object):
         try:
             data = self._fetch("distaz", stalat=stalat, stalon=stalon,
                                evtlat=evtlat, evtlon=evtlon)
-        except urllib.request.HTTPError as e:
+        except urllib_request.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -675,7 +678,7 @@ class Client(object):
                               "lon=%s" % lon]
                 region = self._fetch(service, param_list=param_list).strip()
                 return (code, region.decode())
-        except urllib.request.HTTPError as e:
+        except urllib_request.HTTPError as e:
             msg = "No Flinn-Engdahl data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -820,7 +823,7 @@ class Client(object):
         # build up query
         try:
             data = self._fetch("traveltime", **kwargs)
-        except urllib.request.HTTPError as e:
+        except urllib_request.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
