@@ -564,11 +564,29 @@ class ParserTestCase(unittest.TestCase):
             self.path,
             '../../../../',
             'core/tests/data/IRIS_single_channel_with_response.seed')
+        # Make parser and get resp from SEED
         seed_p = Parser(single_seed)
-        resp = seed_p.get_resp()
-        resp_p = Parser(resp)
-        print(resp)
-        print(resp_p.get_resp())
+        seed_p.write_resp('.')
+        resp_from_seed = seed_p.get_resp()[0][1]
+        resp_from_seed.seek(0)
+        resp_from_seed = resp_from_seed.read()
+
+        # make parser from resp made above and make a resp from it
+        resp_p = Parser(resp_from_seed)
+        resp_p.write_resp('../')
+        resp_from_resp = resp_p.get_resp()[0][1]
+        resp_from_resp.seek(0)
+        resp_from_resp = resp_from_resp.read()
+
+        # Strip out string constants that differ.
+        ignored_fields = ['B054F05', 'B054F06', 'B053F05', 'B053F06']
+        resp_from_resp = [line for line in resp_from_resp.split('\n')
+                          if line[:7] not in ignored_fields ]
+        resp_from_seed = [line for line in resp_from_seed.split('\n')
+                          if line[:7] not in ignored_fields ]
+        #compare
+        self.assertEqual(resp_from_resp, resp_from_seed)
+
 
     def test_parse_resp(self):
         """
