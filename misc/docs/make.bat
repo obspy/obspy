@@ -39,7 +39,6 @@ if "%1" == "help" (
 	echo.  doctest    to run all doctests embedded in the documentation if enabled
 	echo.  coverage   to make create coverage HTML files
 	echo.  coverager  to make create coverage HTML files and report test
-	echo.  pep8       to check PEP8 of tutorial
 	echo.  citations  to generate citations page
 	echo.  credits    to generate credits page
 	echo.  assets     to generate static assets for local browsing
@@ -50,7 +49,6 @@ if "%1" == "clean" (
 	for /d %%i in (%BUILDDIR%\*) do rmdir /q /s %%i
 	del /q /s %BUILDDIR%\*
 	del /q /s source\packages\autogen\obspy.*
-	del /q /s source\pep8\*
 	goto end
 )
 
@@ -63,12 +61,6 @@ if "%1" == "coverage" (
 if "%1" == "coverager" (
 	coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -r --all
 	coverage html --rcfile=.coveragerc -d %BUILDDIR%\html\coverage
-	goto end
-)
-
-if "%1" == "pep8" (
-	python make_pep8.py 1
-	pep8 --show-source source\tutorial
 	goto end
 )
 

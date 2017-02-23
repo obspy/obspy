@@ -8,8 +8,6 @@ sphinx-bootstrap-theme
 
 ## for 'make coverage' only:
 coverage==3.5
-## for 'make pep8' only:
-pep8==0.6.1
 ## for 'make citations' only:
 pybtex>=0.16
 ## for 'make docset' only:
