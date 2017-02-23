@@ -269,11 +269,21 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None):
     bytesread = 1
     p = 0
     while bytesread and p < len(dat):
-        bytesread = new.read_tb2(dat[p:])
-        if bytesread:
+        if len(dat) > p + 64:
+            head = dat[p:p + 64]
+            p += 64
+            new.parse_header(head)
+            nbytes = new.ndata * new.inputType.itemsize
+
+            if len(dat) < p + nbytes:
+                break   # not enough array to hold data specified in header
+
+            tbd = dat[p:p + nbytes]
+            p += nbytes
+            new.parse_data(tbd)
+
             tbl.append(new)
             new = TraceBuf2()  # empty..filled on next iteration
-            p += bytesread
     return tbl
 
 
