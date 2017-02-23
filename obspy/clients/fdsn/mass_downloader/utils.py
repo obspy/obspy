@@ -12,18 +12,21 @@ Utility functions required for the download helpers.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
-with standard_library.hooks():
-    import itertools
-    from urllib.error import HTTPError, URLError
 
 import collections
 import fnmatch
+import itertools
 import os
+import sys
 from lxml import etree
 import numpy as np
 from scipy.spatial import cKDTree
 from socket import timeout as socket_timeout
+
+if sys.version_info.major == 2:
+    from urllib2 import HTTPError, URLError
+else:
+    from urllib.error import HTTPError, URLError
 
 import obspy
 from obspy.core.util.base import NamedTemporaryFile

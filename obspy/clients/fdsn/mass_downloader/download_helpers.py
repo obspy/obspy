@@ -15,17 +15,21 @@ it understandable in the first place.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
-with standard_library.hooks():
-    import itertools
 
 import collections
 import copy
 import fnmatch
+import itertools
+import sys
 from multiprocessing.pool import ThreadPool
 import os
 import time
 import timeit
+
+if sys.version_info.major == 2:
+    from itertools import ifilterfalse as filterfalse
+else:
+    from itertools import filterfalse
 
 import numpy as np
 
@@ -558,8 +562,7 @@ class ClientDownloadHelper(object):
                 most_common = collections.Counter(
                     itertools.chain.from_iterable(nns)).most_common()[0][0]
                 indexes_to_remove.append(most_common)
-                nns = list(itertools.filterfalse(
-                    lambda x: most_common in x, nns))
+                nns = list(filterfalse(lambda x: most_common in x, nns))
 
             # Remove these indices this results in a set of stations we wish to
             # keep.
