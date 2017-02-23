@@ -566,14 +566,12 @@ class ParserTestCase(unittest.TestCase):
             'core/tests/data/IRIS_single_channel_with_response.seed')
         # Make parser and get resp from SEED
         seed_p = Parser(single_seed)
-        seed_p.write_resp('.')
         resp_from_seed = seed_p.get_resp()[0][1]
         resp_from_seed.seek(0)
         resp_from_seed = resp_from_seed.read()
 
         # make parser from resp made above and make a resp from it
         resp_p = Parser(resp_from_seed)
-        resp_p.write_resp('../')
         resp_from_resp = resp_p.get_resp()[0][1]
         resp_from_resp.seek(0)
         resp_from_resp = resp_from_resp.read()

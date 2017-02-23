@@ -270,12 +270,36 @@ class ResponseTestCase(unittest.TestCase):
     def test_response_from_resp(self):
         """
         Test creating a inventory response from seed resp parser.
+        Compare it to same from xml.
         """
         filename = "IRIS_single_channel_with_response"
+        datetime = UTCDateTime("2012-08-24T00:00:00")
+        seed_id = "IU.ANMO.10.BHZ"
+        # Get inventory resp from xml
+        xml_file = os.path.join(self.data_dir,
+                                 filename + os.path.extsep + 'xml')
+        inv_from_xml = read_inventory(xml_file)
+        xml_response = inv_from_xml.get_response(seed_id, datetime)
+
+        # Get inventory resp from RESP
         seed_file = os.path.join(self.data_dir,
                                  filename + os.path.extsep + 'seed')
         p = Parser(seed_file)
-        inv_resp = Response.from_resp(p)
+        resp_response = Response.from_resp(p)
+
+        # Compare
+        ignored_fields = ['input_units_description',
+                          'output_units_description',
+                          'resource_id' ]
+        for x_stage, r_stage in zip(xml_response.response_stages,
+                                    resp_response.response_stages):
+            for ((x_k, x_v), (r_k, r_v)) in zip(x_stage.__dict__.items(),
+                                                r_stage.__dict__.items()):
+                if x_k in ignored_fields:
+                    continue
+                self.assertEqual(x_v, r_v)
+
+        #for x_at, r_at in zip(xml_response.__dict__, resp_response.__
 
 def suite():
     return unittest.makeSuite(ResponseTestCase, 'test')
