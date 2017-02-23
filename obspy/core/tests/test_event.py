@@ -1105,6 +1105,22 @@ class BaseTestCase(unittest.TestCase):
             "On Origin object: Value '-inf' for 'latitude' is "
             "not a finite floating point value.")
 
+    def test_resource_ids_refer_to_newest_object(self):
+        """
+        Tests that resource ids which are assigned multiple times but point to
+        identical objects always point to the newest object. This prevents some
+        odd behaviour.
+        """
+        t1 = UTCDateTime(2010, 1, 1)
+        t2 = UTCDateTime(2010, 1, 1)
+
+        rid = ResourceIdentifier("a", referred_object=t1)
+        rid = ResourceIdentifier("a", referred_object=t2)
+
+        del t1
+
+        self.assertEqual(rid.get_referred_object(), t2)
+
 
 def suite():
     suite = unittest.TestSuite()
