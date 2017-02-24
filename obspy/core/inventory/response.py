@@ -953,7 +953,10 @@ class Response(ComparingObject):
                                         start_stage=None,
                                         end_stage=None):
         """
-        Returns frequency response for given frequencies using evalresp.
+        Returns frequency response for given frequencies using evalresp, and
+        frequency and sensitivity.
+
+        Lloyd thinks this code should live in evalresp wrapper.
 
         :type frequencies: list of float
         :param frequencies: Discrete frequencies to calculate response for.
@@ -973,7 +976,7 @@ class Response(ComparingObject):
         :type end_stage: int, optional
         :param end_stage: Stage sequence number of last stage that will be
             used (disregarding all later stages).
-        :rtype: :class:`numpy.ndarray`
+        :rtype: :tuple: ( :class:`numpy.ndarray`, chan )
         :returns: frequency response at requested frequencies
         """
         if not self.response_stages:
