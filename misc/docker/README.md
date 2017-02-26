@@ -188,18 +188,22 @@ used. To create an Ubuntu docker base image:
 ```bash
 $ cd /tmp
 $ sudo aptitude install ubuntu-archive-keyring
-$ sudo debootstrap --arch=i386 --variant=minbase --components=main,universe --keyring=/usr/share/keyrings/ubuntu-archive-keyring.gpg xenial ubuntu_16_04_xenial_32bit http://archive.ubuntu.com/ubuntu 2>&1 | tee ubuntu_16_04_xenial_32bit.debootstrap.log
-$ sudo tar -C ubuntu_16_04_xenial_32bit -c . | docker import - obspy/base-images:ubuntu_16_04_xenial_32bit
+$ DISTRO=xenial
+$ DISTRO_FULL=ubuntu_16_04_xenial_32bit
+$ sudo debootstrap --arch=i386 --variant=minbase --components=main,universe --keyring=/usr/share/keyrings/ubuntu-archive-keyring.gpg ${DISTRO} ${DISTRO_FULL} http://archive.ubuntu.com/ubuntu 2>&1 | tee ${DISTRO_FULL}.debootstrap.log
+$ sudo tar -C ${DISTRO_FULL} -c . | docker import - obspy/base-images:${DISTRO_FULL}
 $ docker login  # docker hub user needs write access to "obspy/base-images" of organization "obspy"
-$ docker push obspy/base-images:ubuntu_16_04_xenial_32bit
+$ docker push obspy/base-images:${DISTRO_FULL}
 ```
 
 To create a Debian docker base image:
 
 ```bash
 $ cd /tmp
-$ sudo debootstrap --arch=i386 --variant=minbase jessie debian_8_jessie_32bit http://httpredir.debian.org/debian/ 2>&1 | tee debian_8_jessie_32bit.debootstrap.log
-$ sudo tar -C debian_8_jessie_32bit -c . | docker import - obspy/base-images:debian_8_jessie_32bit
+$ DISTRO=jessie
+$ DISTRO_FULL=debian_8_jessie_32bit
+$ sudo debootstrap --arch=i386 --variant=minbase ${DISTRO} ${DISTRO_FULL} http://httpredir.debian.org/debian/ 2>&1 | tee ${DISTRO_FULL}.debootstrap.log
+$ sudo tar -C ${DISTRO_FULL} -c . | docker import - obspy/base-images:${DISTRO_FULL}
 $ docker login  # docker hub user needs write access to "obspy/base-images" of organization "obspy"
-$ docker push obspy/base-images:debian_8_jessie_32bit
+$ docker push obspy/base-images:${DISTRO_FULL}
 ```

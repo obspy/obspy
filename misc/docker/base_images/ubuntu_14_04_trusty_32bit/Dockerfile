@@ -37,7 +37,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-setuptools \
     python-sqlalchemy \
     python-tornado \
-    python-wheel \
     python3 \
     python3-decorator \
     python3-dev \
@@ -52,7 +51,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-scipy \
     python3-sqlalchemy \
     python3-tornado \
-    python3-wheel \
     quilt \
     ttf-bitstream-vera \
     vim \
