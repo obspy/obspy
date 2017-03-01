@@ -1,5 +1,8 @@
 # CircleCI is used exclusively to test code formatting.
 # Thus ObsPy does not even have to be installed.
+machine:
+  python:
+    version: 3.6
 dependencies:
   override:
     - pip install -U flake8
