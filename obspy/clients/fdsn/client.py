@@ -373,8 +373,8 @@ class Client(object):
         :param updatedafter: Limit to events updated after the specified time.
         :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
-            instead of being parse to an ObsPy object. Thus it will contain the
-            raw data from the webservices.
+            instead of being parsed to an ObsPy object. Thus it will contain
+            the raw data from the webservices.
 
 
         Any additional keyword arguments will be passed to the webservice as
@@ -565,8 +565,8 @@ class Client(object):
             series data is available.
         :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
-            instead of being parse to an ObsPy object. Thus it will contain the
-            raw data from the webservices.
+            instead of being parsed to an ObsPy object. Thus it will contain
+            the raw data from the webservices.
         :type format: str
         :param format: The format in which to request station information.
             ``"xml"`` (StationXML) or ``"text"`` (FDSN station test format).
@@ -679,8 +679,8 @@ class Client(object):
             channel.
         :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
-            instead of being parse to an ObsPy object. Thus it will contain the
-            raw data from the webservices.
+            instead of being parsed to an ObsPy object. Thus it will contain
+            the raw data from the webservices.
         :type attach_response: bool
         :param attach_response: Specify whether the station web service should
             be used to automatically attach response information to each trace
@@ -859,8 +859,8 @@ class Client(object):
             channel. Ignored when `bulk` is provided as a request string/file.
         :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
-            instead of being parse to an ObsPy object. Thus it will contain the
-            raw data from the webservices.
+            instead of being parsed to an ObsPy object. Thus it will contain
+            the raw data from the webservices.
         :type attach_response: bool
         :param attach_response: Specify whether the station web service should
             be used to automatically attach response information to each trace
@@ -998,27 +998,20 @@ class Client(object):
         :type bulk: str, file or list of lists
         :param bulk: Information about the requested data. See above for
             details.
-        :type quality: str, optional
-        :param quality: Select a specific SEED quality indicator, handling is
-            data center dependent. Ignored when `bulk` is provided as a
-            request string/file.
-        :type minimumlength: float, optional
-        :param minimumlength: Limit results to continuous data segments of a
-            minimum length specified in seconds. Ignored when `bulk` is
-            provided as a request string/file.
-        :type longestonly: bool, optional
-        :param longestonly: Limit results to the longest continuous segment per
-            channel. Ignored when `bulk` is provided as a request string/file.
+        :type level: str
+        :param level: Specify the level of detail for the results ("network",
+            "station", "channel", "response"), e.g. specify "response" to get
+            full information including instrument response for each channel.
+        :type includerestricted: bool
+        :param includerestricted: Specify if results should include information
+            for restricted stations.
+        :type includeavailability: bool
+        :param includeavailability: Specify if results should include
+            information about time series data availability.
         :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
-            instead of being parse to an ObsPy object. Thus it will contain the
-            raw data from the webservices.
-        :type attach_response: bool
-        :param attach_response: Specify whether the station web service should
-            be used to automatically attach response information to each trace
-            in the result set. A warning will be shown if a response can not be
-            found for a channel. Does nothing if output to a file was
-            specified.
+            instead of being parsed to an ObsPy object. Thus it will contain
+            the raw data from the webservices.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the
@@ -1026,8 +1019,8 @@ class Client(object):
         non-default parameters that the webservice does not support will raise
         an error.
         """
-        if "dataselect" not in self.services:
-            msg = "The current client does not have a dataselect service."
+        if "station" not in self.services:
+            msg = "The current client does not have a station service."
             raise ValueError(msg)
 
         arguments = OrderedDict(
