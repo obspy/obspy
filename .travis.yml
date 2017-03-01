@@ -136,10 +136,7 @@ install:
   - pip install geographiclib
   # current pyimgur stable release has a py3 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py3.zip
-  # Always install the latest flake8 to get up-to-date formatting checks.
-  - pip install flake8
   - pip freeze
-  - pip install pep8-naming
   - pip install https://github.com/obspy/obspy_github_api/archive/0.7.0.zip
   - conda list
   # done installing dependencies
