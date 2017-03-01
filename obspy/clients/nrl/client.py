@@ -51,8 +51,8 @@ class NRL(object):
             raise TypeError('NRL requires a path or URL.')
 
     def __init__(self):
-        self._sensors = self._parse_ini(self._join(self.root, 'sensors'))
-        self._dataloggers = self._parse_ini(self._join(self.root, 'dataloggers'))
+        self.sensors = self._parse_ini(self._join(self.root, 'sensors'))
+        self.dataloggers = self._parse_ini(self._join(self.root, 'dataloggers'))
 
     def _choose(self, choice, path):
         # Should return either a path or a resp
@@ -72,7 +72,6 @@ class NRL(object):
             path = self._join(path, self._index)
         print('parsing {}'.format(path))
         cp = self._get_cp_from_ini(path)
-        print(cp.__dict__)
 
         nrl_dict = NRLDict(self)
         cp = self._get_cp_from_ini(path)
@@ -112,12 +111,49 @@ class NRL(object):
         """
         return 'xseed parser'
 
-    def get_response(self):
+    def get_response(self, datalogger_keys, sensor_keys):
         """
-        Get and inventory response object from NRL
+        Get Response from NRL tree structure
+    
+        >>> nrl = NRL()  # doctest : +SKIP
+        >>> response = nrl.get_response(  # doctest : +SKIP
+        ...     sensor_keys=['Nanometrics', 'Trillium Compact', '120 s'],
+        ...     datalogger_keys=['REF TEK', 'RT 130 & 130-SMA', '1', '200'])
+        >>> print(response)  # doctest : +SKIP
+        Channel Response
+          From M/S () to COUNTS ()
+          Overall Sensitivity: 4.74576e+08 defined at 1.000 Hz
+          10 stages:
+            Stage 1: PolesZerosResponseStage from M/S to V, gain: 754.3
+            Stage 2: ResponseStage from V to V, gain: 1
+            Stage 3: CoefficientsTypeResponseStage from V to COUNTS
+            Stage 4: CoefficientsTypeResponseStage from COUNTS to COUNTS
+            Stage 5: CoefficientsTypeResponseStage from COUNTS to COUNTS
+            Stage 6: CoefficientsTypeResponseStage from COUNTS to COUNTS
+            Stage 7: CoefficientsTypeResponseStage from COUNTS to COUNTS
+            Stage 8: CoefficientsTypeResponseStage from COUNTS to COUNTS
+            Stage 9: CoefficientsTypeResponseStage from COUNTS to COUNTS
+            Stage 10: CoefficientsTypeResponseStage from COUNTS to COUNTS
+    
+        :type datalogger_keys: list of str
+        :type sensor_keys: list of str
+        :rtype: :class:`~obspy.core.inventory.response.Response`
         """
-        return 'inv response'
-
+        datalogger = self.dataloggers
+        while datalogger_keys:
+            datalogger = datalogger[datalogger_keys.pop(0)]
+        datalogger_resp = self._read_resp(datalogger[1])
+        dl_parser = Parser(datalogger_resp)
+    
+        sensor = self.sensors
+        while sensor_keys:
+            sensor = sensor[sensor_keys.pop(0)]
+        sensor_resp = self._read_resp(sensor[1])
+        sensor_parser = Parser(sensor_resp)
+    
+        resp_combined = Parser.combine_sensor_dl_resps(sensor_parser,
+                                                           dl_parser)
+        return Response.from_resp(resp_combined)
 
 class NRLDict(dict):
     def __init__(self, nrl):
@@ -143,7 +179,7 @@ class NRLDict(dict):
         value = super(NRLDict, self).__getitem__(name)
         # if encountering a not yet parsed NRL Path, expand it now
         if isinstance(value, NRLPath):
-            value = self._nrl._parse(value)
+            value = self._nrl._parse_ini(value)
             self[name] = value
         return value
 
