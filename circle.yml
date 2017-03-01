@@ -5,7 +5,8 @@ machine:
     version: 3.6
 dependencies:
   override:
-    - pip install -U flake8
+   # Install latest versions of flake8 and pep8-naming.
+    - pip install -U flake8 pep8-naming
 compile:
   override:
     - pwd
