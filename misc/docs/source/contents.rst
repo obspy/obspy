@@ -10,7 +10,6 @@ ObsPy Documentation Contents
    packages/index
    changelog
    credits
-   pep8/index
    coding_style
    gallery
    citations

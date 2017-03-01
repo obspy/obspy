@@ -115,7 +115,6 @@ python setup.py develop --verbose || exit 1
 # make docs
 cd $GITDIR/misc/docs
 make clean
-make pep8
 # make coverage
 # "make html" has to run twice
 # - before latexpdf (otherwise .hires.png images are not built)
