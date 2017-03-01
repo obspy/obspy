@@ -64,7 +64,12 @@ class CodeFormattingTestCase(unittest.TestCase):
         # Import the legacy API as flake8 3.0 currently has not official
         # public API - this has to be changed at some point.
         from flake8.api import legacy as flake8
-        style_guide = flake8.get_style_guide(ignore=FLAKE8_IGNORE_CODES)
+        # not sure if there's a better way to get a hold of default ignore
+        # codes..
+        default_ignore_codes = \
+            flake8.get_style_guide().options.__dict__['ignore']
+        ignore_codes = list(set(default_ignore_codes + FLAKE8_IGNORE_CODES))
+        style_guide = flake8.get_style_guide(ignore=ignore_codes)
 
         untracked_files = get_untracked_files_from_git() or []
         files = []
