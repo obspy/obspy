@@ -1,0 +1,11 @@
+# CircleCI is used exclusively to test code formatting.
+# Thus ObsPy does not even have to be installed.
+dependencies:
+  override:
+    - pip install -U flake8
+compile:
+  override:
+    - pwd
+test:
+  override:
+    - flake8 --ignore=E402 --exclude=__init__.py obspy
