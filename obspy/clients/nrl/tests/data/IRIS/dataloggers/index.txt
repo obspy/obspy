@@ -1,0 +1,41 @@
+[Main]
+question = "Select the datalogger manufacturer"
+
+[Agecodagis]
+path = "agecodagis/index.txt"
+
+[DAQ Systems (NetDAS)]
+path = "daq/index.txt"
+
+[Earth Data]
+path = "earthdata/index.txt"
+
+[Eentec]
+path = "eentec/index.txt"
+
+[Geodevice]
+path = "geodevice/index.txt"
+
+[Geotech]
+path = "geotech/index.txt"
+
+[Guralp]
+path = "guralp/index.txt"
+
+[Kinemetrics]
+path = "kinemetrics/index.txt"
+
+[Nanometrics]
+path = "nanometrics/index.txt"
+
+[Quanterra]
+path = "quanterra/index.txt"
+
+[REF TEK]
+path = "reftek/index.txt"
+
+[SolGeo]
+path = "solgeo/index.txt"
+
+[Generic]
+path = "generic/index.txt"

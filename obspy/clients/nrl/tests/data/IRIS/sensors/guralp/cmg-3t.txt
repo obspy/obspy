@@ -1,0 +1,17 @@
+[Mains]
+question = "Select the natural period in seconds for this sensor"
+
+[30s - 50 Hz]
+path = "cmg-3t.30.txt"
+
+[60s - 50 Hz]
+path = "cmg-3t.60.txt"
+
+[100s - 50 Hz]
+path = "cmg-3t.100.txt"
+
+[120s - 50 Hz]
+path = "cmg-3t.120.txt"
+
+[360s - 50 Hz]
+path = "cmg-3t.360.txt"
