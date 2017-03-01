@@ -192,9 +192,9 @@ script:
   - export IFS=" "
   # if not on a PR, i.e. running on a push to master or maintenance_XXX: test *all* modules
   - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
-      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --all -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}";
+      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 --all -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}";
     else
-      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-url="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}" $MODULELISTSPACES;
+      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-url="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}" $MODULELISTSPACES;
     fi;
 
 after_script:
