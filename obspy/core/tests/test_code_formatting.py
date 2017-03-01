@@ -221,6 +221,8 @@ class MatplotlibBackendUsageTestCase(unittest.TestCase):
                 msg="Line '{}' should not be detected as forbidden but it "
                     "was, by pattern '{}'.".format(line, pattern))
 
+    @unittest.skipIf(CLEAN_VERSION_NUMBER,
+                     "No code formatting tests for release builds")
     def test_no_pyplot_import_in_any_file(self):
         """
         Tests that no Python file spoils matplotlib backend switching by
