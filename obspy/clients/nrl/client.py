@@ -26,6 +26,7 @@ else:
     import configparser
 
 from obspy.core.inventory.response import Response
+from obspy.core.inventory.util import _textwrap
 from obspy.io.xseed import Parser
 
 
@@ -59,6 +60,35 @@ class NRL(object):
 
         datalogger_index = self._join(self.root, 'dataloggers', self._index)
         self.dataloggers = self._parse_ini(datalogger_index)
+
+    def __str__(self):
+        info = ['NRL library at ' + self.root]
+        if self.sensors is None:
+            info.append('  Sensors not parsed yet.')
+        else:
+            info.append(
+                '  Sensors: {} manufacturers'.format(len(self.sensors)))
+            if len(self.sensors):
+                keys = [key for key in sorted(self.sensors)]
+                lines = _textwrap("'" + "', '".join(keys) + "'",
+                                  initial_indent='    ',
+                                  subsequent_indent='    ')
+                info.extend(lines)
+        if self.dataloggers is None:
+            info.append('  Dataloggers not parsed yet.')
+        else:
+            info.append('  Dataloggers: {} manufacturers'.format(
+                len(self.dataloggers)))
+            if len(self.dataloggers):
+                keys = [key for key in sorted(self.dataloggers)]
+                lines = _textwrap("'" + "', '".join(keys) + "'",
+                                  initial_indent='    ',
+                                  subsequent_indent='    ')
+                info.extend(lines)
+        return '\n'.join(info)
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def _choose(self, choice, path):
         # Should return either a path or a resp
