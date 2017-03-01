@@ -31,7 +31,6 @@ install:
   #   for now fix requests version, can be changed when a new requests is released (see #1599)
   - "conda install -q --yes pip numpy scipy matplotlib=1.3.1 lxml sqlalchemy mock nose gdal decorator \"requests<2.12\" basemap jsonschema"
   # additional dependecies
-  - "pip install flake8"
   - "pip install pyimgur"
   - "pip install -U future"
   # list package versions
@@ -42,4 +41,4 @@ build: false
 
 test_script:
   - "%CMD_IN_ENV% python setup.py develop"
-  - "python -m obspy.scripts.runtests -n appveyor-ci -r %CI_URL% %PR_URL%"
+  - "python -m obspy.scripts.runtests --no-flake8 -n appveyor-ci -r %CI_URL% %PR_URL%"
