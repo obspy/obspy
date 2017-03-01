@@ -12,4 +12,4 @@ compile:
     - pwd
 test:
   override:
-    - flake8 --ignore=E402 --exclude=__init__.py obspy
+    - flake8 --ignore=E402,$(python -c 'import pycodestyle; print(pycodestyle.DEFAULT_IGNORE)') --exclude=__init__.py obspy
