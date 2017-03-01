@@ -25,6 +25,9 @@ if sys.version_info.major == 2:
 else:
     import configparser
 
+from obspy.core.inventory.response import Response
+from obspy.io.xseed import Parser
+
 
 class NRL(object):
     """
@@ -51,8 +54,11 @@ class NRL(object):
             raise TypeError('NRL requires a path or URL.')
 
     def __init__(self):
-        self.sensors = self._parse_ini(self._join(self.root, 'sensors'))
-        self.dataloggers = self._parse_ini(self._join(self.root, 'dataloggers'))
+        sensor_index = self._join(self.root, 'sensors', self._index)
+        self.sensors = self._parse_ini(sensor_index)
+
+        datalogger_index = self._join(self.root, 'dataloggers', self._index)
+        self.dataloggers = self._parse_ini(datalogger_index)
 
     def _choose(self, choice, path):
         # Should return either a path or a resp
@@ -63,16 +69,11 @@ class NRL(object):
         elif 'resp' in options:
             newpath = cp.get(choice, 'resp')
         # Strip quotes of new path
-        newpath = newpath.strip('"')
-        # path = os.path.dirname(path)
+        newpath = self._clean_str(newpath)
+        path = os.path.dirname(path)
         return self._join(path, newpath)
 
     def _parse_ini(self, path):
-        if not path.endswith(self._index):
-            path = self._join(path, self._index)
-        print('parsing {}'.format(path))
-        cp = self._get_cp_from_ini(path)
-
         nrl_dict = NRLDict(self)
         cp = self._get_cp_from_ini(path)
         for section in cp.sections():
@@ -81,7 +82,8 @@ class NRL(object):
                 if options not in (['question'], ['detail', 'question']):
                     msg = "Unexpected structure of NRL file '{}'".format(path)
                     raise NotImplementedError(msg)
-                nrl_dict._question = cp.get(section, 'question').strip('\'"')
+                nrl_dict._question = self._clean_str(cp.get(section,
+                                                            'question'))
                 continue
             else:
                 if options == ['path']:
@@ -97,13 +99,17 @@ class NRL(object):
                         descr = cp.get(section, 'description')
                     else:
                         descr = '<no description>'
-                    nrl_dict[section] = (descr.strip('\'"'), self._join(
-                        path, cp.get(section, 'resp').strip('\'"')))
+                    descr = self._clean_str(descr)
+                    resp_path = self._choose(section, path)
+                    nrl_dict[section] = (descr, resp_path)
                     continue
                 else:
                     msg = "Unexpected structure of NRL file '{}'".format(path)
                     raise NotImplementedError(msg)
         return nrl_dict
+
+    def _clean_str(self, string):
+        return string.strip('\'"')
 
     def get_parser(self, data):
         """
@@ -114,7 +120,7 @@ class NRL(object):
     def get_response(self, datalogger_keys, sensor_keys):
         """
         Get Response from NRL tree structure
-    
+
         >>> nrl = NRL()  # doctest : +SKIP
         >>> response = nrl.get_response(  # doctest : +SKIP
         ...     sensor_keys=['Nanometrics', 'Trillium Compact', '120 s'],
@@ -134,7 +140,7 @@ class NRL(object):
             Stage 8: CoefficientsTypeResponseStage from COUNTS to COUNTS
             Stage 9: CoefficientsTypeResponseStage from COUNTS to COUNTS
             Stage 10: CoefficientsTypeResponseStage from COUNTS to COUNTS
-    
+
         :type datalogger_keys: list of str
         :type sensor_keys: list of str
         :rtype: :class:`~obspy.core.inventory.response.Response`
@@ -144,13 +150,13 @@ class NRL(object):
             datalogger = datalogger[datalogger_keys.pop(0)]
         datalogger_resp = self._read_resp(datalogger[1])
         dl_parser = Parser(datalogger_resp)
-    
+
         sensor = self.sensors
         while sensor_keys:
             sensor = sensor[sensor_keys.pop(0)]
         sensor_resp = self._read_resp(sensor[1])
         sensor_parser = Parser(sensor_resp)
-    
+
         resp_combined = Parser.combine_sensor_dl_resps(sensor_parser,
                                                            dl_parser)
         return Response.from_resp(resp_combined)
@@ -209,6 +215,12 @@ class LocalNRL(NRL):
                 cp.read_file(f)
         return cp
 
+    def _read_resp(self, path):
+        # Returns Unicode string of RESP
+        with open(path, 'r') as f:
+            return f.read()
+
+
 class RemoteNRL(NRL):
     """
     Subclass of NRL for accessing remote copy of NRL.
@@ -235,6 +247,11 @@ class RemoteNRL(NRL):
         else:
             cp.read_file(string_io)
         return cp
+
+    def _read_resp(self, path):
+        response = requests.get(path)
+        return response.text
+
 
 if __name__ == "__main__":
     import doctest
