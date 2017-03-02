@@ -139,11 +139,41 @@ class NRL(object):
     def _clean_str(self, string):
         return string.strip('\'"')
 
-    def get_parser(self, data):
+    def get_datalogger_resp(self, datalogger_keys):
+        """
+        Get the RESP string of a datalogger by keys.
+
+        :type datalogger_keys: list of str
+        :rtype: str
+        """
+        datalogger = self.dataloggers
+        while datalogger_keys:
+            datalogger = datalogger[datalogger_keys.pop(0)]
+        return self._read_resp(datalogger[1])
+
+    def get_sensor_resp(self, sensor_keys):
+        """
+        Get the RESP string of a sensor by keys.
+
+        :type sensor_keys: list of str
+        :rtype: str
+        """
+        sensor = self.sensors
+        while sensor_keys:
+            sensor = sensor[sensor_keys.pop(0)]
+        return self._read_resp(sensor[1])
+
+    def get_parser(self, datalogger_keys, sensor_keys):
         """
         Get  io.xseed.Parser for RESP
+
+        :type datalogger_keys: list of str
+        :type sensor_keys: list of str
+        :rtype: :class:`~obspy.io.xseed.Parser`
         """
-        return 'xseed parser'
+        dl_parser = Parser(self.get_datalogger_resp(datalogger_keys))
+        sensor_parser = Parser(self.get_sensor_resp(sensor_keys))
+        return Parser.combine_sensor_dl_resps(sensor_parser, dl_parser)
 
     def get_response(self, datalogger_keys, sensor_keys):
         """
@@ -173,21 +203,8 @@ class NRL(object):
         :type sensor_keys: list of str
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
-        datalogger = self.dataloggers
-        while datalogger_keys:
-            datalogger = datalogger[datalogger_keys.pop(0)]
-        datalogger_resp = self._read_resp(datalogger[1])
-        dl_parser = Parser(datalogger_resp)
-
-        sensor = self.sensors
-        while sensor_keys:
-            sensor = sensor[sensor_keys.pop(0)]
-        sensor_resp = self._read_resp(sensor[1])
-        sensor_parser = Parser(sensor_resp)
-
-        resp_combined = Parser.combine_sensor_dl_resps(sensor_parser,
-                                                           dl_parser)
-        return Response.from_resp(resp_combined)
+        resp_parser = self.get_parser(datalogger_keys, sensor_keys)
+        return Response.from_resp(resp_parser)
 
 class NRLDict(dict):
     def __init__(self, nrl):
