@@ -40,11 +40,8 @@ class NRL(object):
     """
     _index = 'index.txt'
     def __new__(cls, root=None):
-        try:
+        if root is not None:
             o = requests.utils.urlparse(root)
-        except AttributeError as e:
-            # root is None
-            o = None
 
         if root is None or o.scheme == 'http':
             # Create RemoteNRL
