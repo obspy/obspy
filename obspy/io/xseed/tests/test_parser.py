@@ -559,6 +559,24 @@ class ParserTestCase(unittest.TestCase):
             p = Parser(data)
             p.get_resp()
 
+    def clean_unit_string(self, string):
+        """
+        Returns a list of cleaned strings
+        """
+        # Strip out string constants that differ.
+        # Unit descriptions, and case
+        dirty_fields = ['B054F05', 'B054F06', 'B053F05', 'B053F06']
+        ret = list()
+
+        for line in string.split('\n'):
+            if line[:7] not in dirty_fields:
+                ret.append(line)
+            else:
+                cleaned = line.split('-')[0].upper()
+                ret.append(cleaned)
+
+        return ret
+
     def test_resp_round_trip(self):
         single_seed = os.path.join(
             self.path,
@@ -569,21 +587,17 @@ class ParserTestCase(unittest.TestCase):
         resp_from_seed = seed_p.get_resp()[0][1]
         resp_from_seed.seek(0)
         resp_from_seed = resp_from_seed.read()
+        seed_list = self.clean_unit_string(resp_from_seed)
 
         # make parser from resp made above and make a resp from it
         resp_p = Parser(resp_from_seed)
         resp_from_resp = resp_p.get_resp()[0][1]
         resp_from_resp.seek(0)
         resp_from_resp = resp_from_resp.read()
+        resp_list = self.clean_unit_string(resp_from_resp)
 
-        # Strip out string constants that differ.
-        ignored_fields = ['B054F05', 'B054F06', 'B053F05', 'B053F06']
-        resp_from_resp = [line for line in resp_from_resp.split('\n')
-                          if line[:7] not in ignored_fields ]
-        resp_from_seed = [line for line in resp_from_seed.split('\n')
-                          if line[:7] not in ignored_fields ]
         #compare
-        self.assertEqual(resp_from_resp, resp_from_seed)
+        self.assertEqual(seed_list, resp_list)
 
 
     def test_parse_resp(self):
