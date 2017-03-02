@@ -9,7 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
-       nrl.NRL
+       client.NRL
 
     .. comment to end block
 
@@ -19,7 +19,7 @@
        :toctree: autogen
        :nosignatures:
 
-       nrl
+       client
 
     .. comment to end block
 
