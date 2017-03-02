@@ -17,13 +17,14 @@ from future.builtins import *  # NOQA
 import codecs
 import io
 import os
-import requests
 import sys
 
 if sys.version_info.major == 2:
     import ConfigParser as configparser
 else:
     import configparser
+
+import requests
 
 from obspy.core.inventory.response import Response
 from obspy.core.inventory.util import _textwrap
