@@ -43,7 +43,7 @@ URL_MAPPINGS = {
     "ETH": "http://eida.ethz.ch",
     "EMSC": "http://www.seismicportal.eu",
     "GEONET": "http://service.geonet.org.nz",
-    "GFZ": "http://geofon.gfz-potsdam.de",
+    "GFZ": "https://geofon.gfz-potsdam.de",
     "INGV": "http://webservices.rm.ingv.it",
     "IPGP": "http://eida.ipgp.fr",
     "IRIS": "http://service.iris.edu",
@@ -56,8 +56,8 @@ URL_MAPPINGS = {
     "ODC": "http://www.orfeus-eu.org",
     "ORFEUS": "http://www.orfeus-eu.org",
     "RESIF": "http://ws.resif.fr",
-    "SCEDC": "http://service.scedc.caltech.edu",
-    "USGS": "http://earthquake.usgs.gov",
+    "SCEDC": "https://service.scedc.caltech.edu",
+    "USGS": "https://earthquake.usgs.gov",
     "USP": "http://sismo.iag.usp.br"}
 
 FDSNWS = ("dataselect", "event", "station")
