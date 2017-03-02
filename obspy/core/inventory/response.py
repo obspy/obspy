@@ -942,6 +942,24 @@ class Response(ComparingObject):
         return inv_response
 
     def get_evalresp_norm_resp(self, output='VEL'):
+        """
+        Calculate the overall sensitivity or gain from stage1-n.
+        Returning the frequency and sensitvity, which can be used to create
+        stage0
+
+        :type output: str
+        :param output: Output units. One of:
+
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+
+        :rtype: :tuple: ( float, float )
+        :returns: frequency and gain at frequency.
+        """
         output, chan = self._call_eval_resp_for_frequencies(
             frequencies=np.ndarray(0),
             output=output)
