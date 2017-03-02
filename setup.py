@@ -124,8 +124,8 @@ KEYWORDS = [
     'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
     'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
-    'WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston', 'XML-SEED',
-    'XSEED']
+    'WaveServerV', 'WebDC', 'web service', 'WIN', 'WIN32', 'Winston',
+    'XML-SEED', 'XSEED']
 
 ENTRY_POINTS = {
     'console_scripts': [
@@ -165,6 +165,7 @@ ENTRY_POINTS = {
         'Q = obspy.io.sh.core',
         'SH_ASC = obspy.io.sh.core',
         'WAV = obspy.io.wav.core',
+        'WIN32 = obspy.io.win32.core',
         'AH = obspy.io.ah.core',
         'KNET = obspy.io.nied.knet',
         'GCF = obspy.io.gcf.core',
@@ -263,6 +264,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.wav.core:_is_wav',
         'readFormat = obspy.io.wav.core:_read_wav',
         'writeFormat = obspy.io.wav.core:_write_wav',
+        ],
+    'obspy.plugin.waveform.WIN32': [
+        'isFormat = obspy.io.win32.core:_is_win32',
+        'readFormat = obspy.io.win32.core:_read_win32',
         ],
     'obspy.plugin.waveform.Y': [
         'isFormat = obspy.io.y.core:_is_y',

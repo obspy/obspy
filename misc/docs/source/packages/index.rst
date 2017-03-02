@@ -105,6 +105,7 @@ categories.*
     obspy.io.sh
     obspy.io.wav
     obspy.io.win
+    obspy.io.win32
     obspy.io.y
 
 .. rubric:: Event Data Import/Export Plug-ins
