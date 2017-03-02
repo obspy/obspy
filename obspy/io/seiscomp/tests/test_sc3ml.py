@@ -47,15 +47,15 @@ class SC3MLTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        inv = read_inventory(os.path.join(self.data_dir, "version0.7"))
-        inv = read_inventory(os.path.join(self.data_dir, "version0.8"))
-        inv = read_inventory(os.path.join(self.data_dir, "version0.9"))
+        read_inventory(os.path.join(self.data_dir, "version0.7"))
+        read_inventory(os.path.join(self.data_dir, "version0.8"))
+        read_inventory(os.path.join(self.data_dir, "version0.9"))
 
         with self.assertRaises(ValueError) as e:
-            with warnings.catch_warnings() as w:
+            with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                inv = read_inventory(os.path.join(self.data_dir,
-                                                  "version0.10"))
+                read_inventory(os.path.join(self.data_dir,
+                                            "version0.10"))
 
         self.assertEqual(e.exception.args[0], "Schema version not supported.")
 
