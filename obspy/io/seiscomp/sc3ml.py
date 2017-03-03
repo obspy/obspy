@@ -128,16 +128,13 @@ def _read_sc3ml(path_or_file_object):
     """
     root = etree.parse(path_or_file_object).getroot()
 
-    # Fix the namespace as its not always the default namespace. Will need
-    # to be adjusted if the sc3ml format gets another revision!
-    namespace = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.7"
-
     # Code can be used for version 0.7, 0.8, and 0.9
-    if(root.find("{%s}%s" % (namespace, "Inventory"))) is None:
-        namespace = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.8"
-    if(root.find("{%s}%s" % (namespace, "Inventory"))) is None:
-        namespace = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9"
-    if(root.find("{%s}%s" % (namespace, "Inventory"))) is None:
+    basespace = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema"
+    for version in SCHEMA_VERSION:
+      namespace = "%s/%s" % (basespace, version)
+      if(root.find("{%s}%s" % (namespace, "Inventory"))) is not None:
+        break
+    else:
         raise ValueError("Schema version not supported.")
 
     def _ns(tagname):
