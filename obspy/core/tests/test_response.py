@@ -285,7 +285,7 @@ class ResponseTestCase(unittest.TestCase):
         seed_file = os.path.join(self.data_dir,
                                  filename + os.path.extsep + 'seed')
         p = Parser(seed_file)
-        resp_response = Response.from_resp(p)
+        resp_response = p.get_response()
 
         # Compare
         ignored_fields = ['input_units_description',

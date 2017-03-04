@@ -204,7 +204,7 @@ class NRL(object):
         :rtype: :class:`~obspy.core.inventory.response.Response`
         """
         resp_parser = self.get_parser(datalogger_keys, sensor_keys)
-        return Response.from_resp(resp_parser)
+        return resp_parser.get_response()
 
 class NRLDict(dict):
     def __init__(self, nrl):

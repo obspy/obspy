@@ -14,6 +14,7 @@ from lxml import etree
 
 from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
+from obspy.core.inventory import Response
 from obspy.io.xseed.blockette.blockette010 import Blockette010
 from obspy.io.xseed.blockette.blockette051 import Blockette051
 from obspy.io.xseed.blockette.blockette053 import Blockette053
@@ -544,6 +545,20 @@ class ParserTestCase(unittest.TestCase):
         for filename in (sts2_resp_file, rt130_resp_file):
             p = Parser(filename)
             p.get_resp()
+
+    def test_get_response(self):
+        """
+        Test creating and inventory response from 2 resp files
+        """
+        sts2_resp_file = os.path.join(self.path,
+                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        rt130_resp_file = os.path.join(self.path,
+                                       'RESP.XX.NR008..HHZ.130.1.100')
+        dp = Parser(rt130_resp_file)
+        sp = Parser(sts2_resp_file)
+        com_p = Parser.combine_sensor_dl_resps(sp, dp)
+        inv_resp = com_p.get_response()
+        self.assertIsInstance(inv_resp, Response)
 
     def test_read_resp_data(self):
         """
