@@ -58,7 +58,7 @@ install:
         export ARCH="_64"
       fi
   - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
     else
       wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
     fi
