@@ -136,7 +136,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                         temp_file = tf.name
                         _write_mseed(this_stream, temp_file, encoding=encoding,
                                      byteorder=byteorder, reclen=reclen)
-                        new_stream = _read_mseed(temp_file)
+                        # some files raise a UserWarning - ignoring for test
+                        with warnings.catch_warnings(record=True):
+                            warnings.simplefilter('ignore', UserWarning)
+                            new_stream = _read_mseed(temp_file)
                     # Assert the new stream still has the chosen attributes.
                     # This should mean that writing as well as reading them
                     # works.
@@ -1313,7 +1316,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         def assert_valid(filename, reference, test_type):
             if test_type == "data":
-                # some files wil raise a UserWarning - ignoring for test
+                # some files raise a UserWarning - ignoring for test
                 with warnings.catch_warnings(record=True):
                     warnings.simplefilter('ignore', UserWarning)
                     st = read(filename)
