@@ -1313,8 +1313,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         def assert_valid(filename, reference, test_type):
             if test_type == "data":
+                # some files wil raise a UserWarning - ignoring for test
+                with warnings.catch_warnings(record=True):
+                    warnings.simplefilter('ignore', UserWarning)
+                    st = read(filename)
 
-                st = read(filename)
                 self.assertEqual(len(st), 1, msg=filename)
                 tr = st[0]
 
