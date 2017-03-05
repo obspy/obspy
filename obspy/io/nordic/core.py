@@ -287,8 +287,12 @@ def _readheader(f):
     ksta = Comment(text='Number of stations=' + topline[49:51].strip())
     new_event.origins[0].comments.append(ksta)
     if _float_conv(topline[51:55]) is not None:
-        new_event.origins[0].time_errors['Time_Residual_RMS'] = \
-            _float_conv(topline[51:55])
+        # raises "UserWarning: Setting attribute "Time_Residual_RMS" which is
+        # not a default attribute"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            new_event.origins[0].time_errors['Time_Residual_RMS'] = \
+                _float_conv(topline[51:55])
     # Read in magnitudes if they are there.
     for index in [59, 67, 75]:
         if not topline[index].isspace():
@@ -488,11 +492,11 @@ def _read_picks(f, new_event):
     pickline = []
     # Set a default, ignored later unless overwritten
     snr = None
-    for lineno, line in enumerate(f):
+    for _lineno, line in enumerate(f):
         if line[79] == '7':
             header = line
             break
-    for lineno, line in enumerate(f):
+    for _lineno, line in enumerate(f):
         if len(line.rstrip('\n').rstrip('\r')) in [80, 79] and \
            line[79] in ' 4\n':
             pickline += [line]
@@ -756,7 +760,7 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
          way as the events in the catalog.
     """
     if not wavefiles:
-        wavefiles = ['DUMMY' for i in range(len(catalog))]
+        wavefiles = ['DUMMY' for _i in range(len(catalog))]
     with open(filename, 'w') as fout:
         for event, wavfile in zip(catalog, wavefiles):
             select = io.StringIO()
