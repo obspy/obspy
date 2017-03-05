@@ -733,7 +733,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         of the read method. Only the data part is verified.
         """
         file = os.path.join(self.path, "data",
-                            "BW.BGLD.__.EHE.D.2008.001.first_record")
+                            "BW.BGLD.__.EHE.D.2008.001.second_record")
         # Read the data and copy them
         st = read(file)
         data_copy = st[0].data.copy()
