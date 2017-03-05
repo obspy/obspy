@@ -10,6 +10,7 @@ import os
 import shutil
 import unittest
 from os.path import abspath, dirname, join, pardir
+import warnings
 
 from obspy import read
 from obspy.core.util.base import NamedTemporaryFile
@@ -111,7 +112,10 @@ class ScanTestCase(unittest.TestCase):
             scanner.parse(os.curdir)
             scanner.save_npz('scanner.npz')
             scanner = Scanner()
-            scanner.load_npz('scanner.npz')
+            # version string of '0.0.0+archive' raises UserWarning - ignore
+            with warnings.catch_warnings(record=True):
+                warnings.simplefilter('ignore', UserWarning)
+                scanner.load_npz('scanner.npz')
 
             with ImageComparison(self.path, 'scan.png') as ic:
                 obspy_scan(['--load', 'scan.npz', '--output', ic.name])
