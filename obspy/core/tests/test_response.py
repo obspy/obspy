@@ -195,7 +195,7 @@ class ResponseTestCase(unittest.TestCase):
 
         sampling_rate = 40.0
         t_samp = 1.0 / sampling_rate
-        nfft = 100.0
+        nfft = 100
 
         cpx_response, freq = inv[0][0][0].response.get_evalresp_response(
             t_samp=t_samp, nfft=nfft, output="VEL", start_stage=None,
@@ -236,7 +236,7 @@ class ResponseTestCase(unittest.TestCase):
         # list.
         sampling_rate = 45.0
         t_samp = 1.0 / sampling_rate
-        nfft = 100.0
+        nfft = 100
 
         with self.assertRaises(ValueError) as e:
             inv[0][0][0].response.get_evalresp_response(
