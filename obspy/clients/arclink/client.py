@@ -340,26 +340,9 @@ class Client(object):
             self._bye()
             msg = "Uncovered status message - contact a developer to fix this"
             raise ArcLinkException(msg)
-        self._write_ln('DOWNLOAD %d' % req_id)
-        try:
-            fd = self._client.get_socket().makefile('rb')
-            length = int(fd.readline(100).strip())
-            data = b''
-            while len(data) < length:
-                buf = fd.read(min(4096, length - len(data)))
-                data += buf
-            buf = fd.readline(100).strip()
-            if buf != b"END" or len(data) != length:
-                raise Exception('Wrong length!')
-            if self.debug:
-                if data.startswith(b'<?xml'):
-                    print(data)
-                else:
-                    print("%d bytes of data read" % len(data))
-        finally:
-            self._write_ln('PURGE %d' % req_id)
-            self._bye()
+
         # check for encryption
+        decryptor = None
         if b'encrypted="true"' in xml_doc:
             # extract dcid
             xml_doc = objectify.fromstring(xml_doc[:-3])
@@ -368,12 +351,39 @@ class Client(object):
             if dcid in self.dcid_keys:
                 # call decrypt routine
                 from obspy.clients.arclink.decrypt import SSLWrapper
-                decryptor = SSLWrapper(self.dcid_keys[dcid])
-                data = decryptor.update(data)
-                data += decryptor.final()
+                decryptor = SSLWrapper(password=self.dcid_keys[dcid])
             else:
                 msg = "Could not decrypt waveform data for dcid %s."
                 warnings.warn(msg % (dcid))
+
+        # download
+        self._write_ln('DOWNLOAD %d' % req_id)
+        try:
+            fd = self._client.get_socket().makefile('rb')
+            length = int(fd.readline(100).strip())
+            data = b''
+            bytes_read = 0
+            while bytes_read < length:
+                buf = fd.read(min(4096, length - bytes_read))
+                bytes_read += len(buf)
+                if decryptor is not None:
+                    # decrypt on the fly
+                    data += decryptor.update(buf)
+                else:
+                    data += buf
+            if decryptor is not None:
+                data += decryptor.final()
+            buf = fd.readline(100).strip()
+            if buf != b"END" or bytes_read != length:
+                raise Exception('Wrong length!')
+            if self.debug:
+                if data.startswith(b'<?xml'):
+                    print(data)
+                else:
+                    print("%d bytes of data read" % bytes_read)
+        finally:
+            self._write_ln('PURGE %d' % req_id)
+            self._bye()
         return data
 
     def get_waveforms(self, network, station, location, channel, starttime,
