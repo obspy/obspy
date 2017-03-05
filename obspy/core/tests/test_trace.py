@@ -1733,7 +1733,10 @@ class TraceTestCase(unittest.TestCase):
         filename = os.path.join(path, 'data', 'stationxml_BK.CMB.__.LKS.xml')
         inv = read_inventory(filename, format='StationXML')
         tr.attach_response(inv)
-        tr.remove_response()
+        # raises UserWarning: Stage gain not defined - ignoring
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore", UserWarning)
+            tr.remove_response()
 
     def test_processing_info_remove_response_and_sensitivity(self):
         """
