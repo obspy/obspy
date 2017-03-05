@@ -161,7 +161,7 @@ class ResponseTestCase(unittest.TestCase):
         As long as it does not segfault the test is doing alright.
         """
         filename = os.path.join(self.data_dir,
-                                "TM.SKLT..BHZ_faulty_response.xml")
+                                "TM.SKLT.__.BHZ_faulty_response.xml")
         inv = read_inventory(filename)
 
         t_samp = 0.05
