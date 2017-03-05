@@ -941,7 +941,7 @@ class UTCDateTime(object):
             dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
             ns[2:self.precision + 2])
 
-    def _repr_pretty_(self, p, cycle):
+    def _repr_pretty_(self, p, cycle):  # @UnusedVariable
         p.text(str(self))
 
     def __unicode__(self):
@@ -983,10 +983,13 @@ class UTCDateTime(object):
         >>> t1 == t2
         False
         """
-        try:
+        if isinstance(other, UTCDateTime):
+            return round((self._ns - other._ns) / 1e9, self.__precision) == 0
+        elif isinstance(other, float) or isinstance(other, int):
             return round(self.timestamp - float(other), self.__precision) == 0
-        except (TypeError, ValueError):
-            return False
+        elif isinstance(other, datetime.datetime):
+            return self.datetime == other
+        return False
 
     def __ne__(self, other):
         """
@@ -1040,10 +1043,13 @@ class UTCDateTime(object):
         >>> t1 < t2
         True
         """
-        try:
+        if isinstance(other, UTCDateTime):
+            return round((self._ns - other._ns) / 1e9, self.__precision) < 0
+        elif isinstance(other, float) or isinstance(other, int):
             return round(self.timestamp - float(other), self.__precision) < 0
-        except (TypeError, ValueError):
-            return False
+        elif isinstance(other, datetime.datetime):
+            return self.datetime < other
+        return False
 
     def __le__(self, other):
         """
@@ -1070,10 +1076,13 @@ class UTCDateTime(object):
         >>> t1 <= t2
         False
         """
-        try:
+        if isinstance(other, UTCDateTime):
+            return round((self._ns - other._ns) / 1e9, self.__precision) <= 0
+        elif isinstance(other, float) or isinstance(other, int):
             return round(self.timestamp - float(other), self.__precision) <= 0
-        except (TypeError, ValueError):
-            return False
+        elif isinstance(other, datetime.datetime):
+            return self.datetime <= other
+        return False
 
     def __gt__(self, other):
         """
@@ -1100,10 +1109,13 @@ class UTCDateTime(object):
         >>> t1 > t2
         True
         """
-        try:
+        if isinstance(other, UTCDateTime):
+            return round((self._ns - other._ns) / 1e9, self.__precision) > 0
+        elif isinstance(other, float) or isinstance(other, int):
             return round(self.timestamp - float(other), self.__precision) > 0
-        except (TypeError, ValueError):
-            return False
+        elif isinstance(other, datetime.datetime):
+            return self.datetime > other
+        return False
 
     def __ge__(self, other):
         """
@@ -1130,10 +1142,13 @@ class UTCDateTime(object):
         >>> t1 >= t2
         False
         """
-        try:
+        if isinstance(other, UTCDateTime):
+            return round((self._ns - other._ns) / 1e9, self.__precision) >= 0
+        elif isinstance(other, float) or isinstance(other, int):
             return round(self.timestamp - float(other), self.__precision) >= 0
-        except (TypeError, ValueError):
-            return False
+        elif isinstance(other, datetime.datetime):
+            return self.datetime >= other
+        return False
 
     def __repr__(self):
         """

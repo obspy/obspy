@@ -134,6 +134,32 @@ class MSEEDUtilTestCase(unittest.TestCase):
         self.assertEqual(timestring, util._convert_datetime_to_mstime(
             util._convert_mstime_to_datetime(timestring)))
 
+    def test_convert_datetime2(self):
+        """
+        Some failing test discovered in #1670
+        """
+        # 1
+        dt = UTCDateTime(ns=1487021451935737333)
+        self.assertEqual(str(dt), "2017-02-13T21:30:51.935737Z")
+        self.assertEqual(util._convert_datetime_to_mstime(dt),
+                         1487021451935737)
+        self.assertEqual(dt, util._convert_mstime_to_datetime(
+            util._convert_datetime_to_mstime(dt)))
+        # 2
+        dt = UTCDateTime(ns=1487021451935736449)
+        self.assertEqual(str(dt), "2017-02-13T21:30:51.935736Z")
+        self.assertEqual(util._convert_datetime_to_mstime(dt),
+                         1487021451935736)
+        self.assertEqual(dt, util._convert_mstime_to_datetime(
+            util._convert_datetime_to_mstime(dt)))
+        # 3
+        dt = UTCDateTime(ns=1487021451935736501)
+        self.assertEqual(str(dt), "2017-02-13T21:30:51.935737Z")
+        self.assertEqual(util._convert_datetime_to_mstime(dt),
+                         1487021451935737)
+        self.assertEqual(dt, util._convert_mstime_to_datetime(
+            util._convert_datetime_to_mstime(dt)))
+
     def test_get_record_information(self):
         """
         Tests the util._get_ms_file_info method with known values.

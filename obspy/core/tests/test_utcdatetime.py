@@ -1104,6 +1104,23 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(str(UTCDateTime("9999-12-31T23:59:59.999999")),
                          "9999-12-31T23:59:59.999999Z")
 
+    def test_1652(self):
+        """
+        Comparing UTCDateTime and datetime.datetime objects - see #1652
+        """
+        a = datetime.datetime(1990, 1, 1, 0, 0)
+        e = UTCDateTime(2000, 1, 2, 1, 39, 37)
+        self.assertTrue(a < e)
+        self.assertFalse(a > e)
+        self.assertTrue(a <= e)
+        self.assertFalse(e <= a)
+        self.assertFalse(a > e)
+        self.assertTrue(e > a)
+        self.assertFalse(a >= e)
+        self.assertTrue(e >= a)
+        self.assertFalse(a == e)
+        self.assertFalse(e == a)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
