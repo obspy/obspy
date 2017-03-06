@@ -792,7 +792,7 @@ class ResourceIdentifier(object):
                 "The id '%s' is not a valid QuakeML resource "
                 "identifier. ObsPy tried modifying it to '%s' but it is still "
                 "not valid. Please make sure all resource ids are either "
-                "valid or can be made valid by prefixing it with "
+                "valid or can be made valid by prefixing them with "
                 "'smi:<authority_id>/'. Valid ids are specified in the "
                 "QuakeML manual section 3.1 and in particular exclude colons "
                 "for the final part." % (self.id, id))
