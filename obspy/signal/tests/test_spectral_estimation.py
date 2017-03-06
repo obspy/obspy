@@ -175,7 +175,7 @@ class PsdTestCase(unittest.TestCase):
         file_mode_mean = os.path.join(
             self.path,
             'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mode_mean.npz')
-        tr, paz = _get_sample_data()
+        tr, _paz = _get_sample_data()
         st = Stream([tr])
         ppsd = _get_ppsd()
         # read results and compare
@@ -549,12 +549,26 @@ class PsdTestCase(unittest.TestCase):
         self.assertIsNotNone(ppsd.current_histogram)
         self.assertIsNotNone(ppsd._current_hist_stack)
         # Adding the same data again does not invalidate the internal stack
-        ppsd.add(st)
+        # but raises "UserWarning: Already covered time spans detected"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            ppsd.add(st)
+            self.assertEqual(len(w), 4)
+            for w_ in w:
+                self.assertTrue(str(w_.message).startswith(
+                    "Already covered time spans detected"))
         self.assertIsNotNone(ppsd._current_hist_stack)
         # Adding new data invalidates the internal stack
         tr.stats.starttime += 3600
         st2 = Stream([tr])
-        ppsd.add(st2)
+        # raises "UserWarning: Already covered time spans detected"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            ppsd.add(st2)
+            self.assertEqual(len(w), 2)
+            for w_ in w:
+                self.assertTrue(str(w_.message).startswith(
+                    "Already covered time spans detected"))
         self.assertIsNone(ppsd._current_hist_stack)
         # Accessing current_histogram again calculates the stack
         self.assertIsNotNone(ppsd.current_histogram)
@@ -565,7 +579,7 @@ class PsdTestCase(unittest.TestCase):
         Test that we get the expected warning message on waveform/metadata
         mismatch.
         """
-        tr, paz = _get_sample_data()
+        tr, _paz = _get_sample_data()
         inv = read_inventory(os.path.join(self.path, 'IUANMO.xml'))
         st = Stream([tr])
         ppsd = PPSD(tr.stats, inv)
