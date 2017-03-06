@@ -21,7 +21,6 @@ import re
 import unittest
 import warnings
 
-import obspy
 from obspy.core.util import AttribDict
 from obspy.core.inventory import Inventory, Network
 from obspy.core.util.base import NamedTemporaryFile
@@ -651,6 +650,19 @@ class StationXMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.data_dir, "no_default_namespace.xml")
         inv = obspy.read_inventory(filename)
+        # Very small file with almost no content.
+        self.assertEqual(len(inv.networks), 1)
+        self.assertEqual(inv[0].code, "XX")
+
+    def test_parse_file_with_schema_2(self):
+        """
+        Reading a StationXML file version 2.0
+        """
+        filename = os.path.join(self.data_dir, "version20.xml")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            inv = obspy.read_inventory(filename)
+        self.assertTrue('StationXML file has version 2.0' in str(w[0].message))
         # Very small file with almost no content.
         self.assertEqual(len(inv.networks), 1)
         self.assertEqual(inv[0].code, "XX")

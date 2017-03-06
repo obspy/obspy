@@ -577,9 +577,11 @@ class ParserTestCase(unittest.TestCase):
         self.assertRaises(SEEDParserException, blockette.parse_seed, b010)
         # non-strict
         blockette = Blockette010()
-        # The warning cannot be tested due to being issued only once.
-        # A similar case is tested in test_bug165.
-        blockette.parse_seed(b010)
+        # The warning cannot be tested due to being issued only once, but will
+        # be ignored - a similar case is tested in test_bug165.
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore", UserWarning)
+            blockette.parse_seed(b010)
         self.assertEqual(b010, blockette.get_seed())
 
     def test_issue_298a(self):

@@ -1121,19 +1121,20 @@ class MSEEDUtilTestCase(unittest.TestCase):
             tf.close()
             shutil.copy(os.path.join(self.path, 'data', 'test.mseed'),
                         tf.name)
-            # No flags set.
-            flags = util.get_timing_and_data_quality(tf.name)
-            self.assertEqual(flags["data_quality_flags"], [0] * 8)
-            # Set flags.
+            # No data quality flags set.
+            flags = util.get_flags(tf.name)['data_quality_flags_counts']
+            self.assertEqual(max(flags.values()), 0)
+            # Set  data quality flags.
             util.set_flags_in_fixed_headers(tf.name, {
                 "NL.HGN.00.BHZ": {"data_qual_flags": {
                     'glitches_detected': True,
                     'time_tag_questionable': True}}})
             # Flags are set now.
-            flags = util.get_timing_and_data_quality(tf.name)
+            flags = util.get_flags(tf.name)['data_quality_flags_counts']
             # 2 because file contains two records.
-            self.assertEqual(flags["data_quality_flags"],
-                             [0, 0, 0, 2, 0, 0, 0, 2])
+            self.assertEqual(sum(flags.values()), 4)
+            self.assertEqual(flags['glitches'], 2)
+            self.assertEqual(flags['suspect_time_tag'], 2)
 
     def _check_values(self, file_bfr, trace_id, record_numbers, expected_bytes,
                       reclen):

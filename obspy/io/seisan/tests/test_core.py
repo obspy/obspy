@@ -8,6 +8,7 @@ from future.builtins import *  # NOQA
 
 import os
 import unittest
+import warnings
 
 import numpy as np
 
@@ -113,7 +114,10 @@ class CoreTestCase(unittest.TestCase):
         st = read(_file, format='SEISAN')
         _file_ref = os.path.join(self.path, 'SEISAN_Bug',
                                  '2011-09-06-1311-36S.A1032_001BH_Z_MSEED')
-        st_ref = read(_file_ref, format='MSEED')
+        # raises "UserWarning: Record contains a fractional seconds" - ignore
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', UserWarning)
+            st_ref = read(_file_ref, format='MSEED')
         self.assertTrue(np.allclose(st[0].data, st_ref[0].data))
 
 

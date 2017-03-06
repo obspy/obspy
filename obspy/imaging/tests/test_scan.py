@@ -10,6 +10,7 @@ import os
 import shutil
 import unittest
 from os.path import abspath, dirname, join, pardir
+import warnings
 
 from obspy import read
 from obspy.core.util.base import NamedTemporaryFile
@@ -51,7 +52,7 @@ class ScanTestCase(unittest.TestCase):
                 shutil.copy(filename, os.curdir)
 
             with ImageComparison(self.path, 'scan.png') as ic:
-                obspy_scan([os.curdir] + ['--output', ic.name, '--quiet'])
+                obspy_scan([os.curdir] + ['--output', ic.name])
 
     def test_scan_function_and_scanner_class(self):
         """
@@ -107,15 +108,17 @@ class ScanTestCase(unittest.TestCase):
             for filename in self.all_files:
                 shutil.copy(filename, os.curdir)
 
-            obspy_scan([os.curdir, '--write', 'scan.npz', '--quiet'])
+            obspy_scan([os.curdir, '--write', 'scan.npz'])
             scanner.parse(os.curdir)
             scanner.save_npz('scanner.npz')
             scanner = Scanner()
-            scanner.load_npz('scanner.npz')
+            # version string of '0.0.0+archive' raises UserWarning - ignore
+            with warnings.catch_warnings(record=True):
+                warnings.simplefilter('ignore', UserWarning)
+                scanner.load_npz('scanner.npz')
 
             with ImageComparison(self.path, 'scan.png') as ic:
-                obspy_scan(['--load', 'scan.npz', '--output', ic.name,
-                            '--quiet'])
+                obspy_scan(['--load', 'scan.npz', '--output', ic.name])
         with ImageComparison(self.path, 'scan.png') as ic:
             scanner.plot(ic.name)
 
@@ -133,8 +136,7 @@ class ScanTestCase(unittest.TestCase):
                            ['--start-time', '2004-01-01'] +
                            ['--end-time', '2004-12-31'] +
                            ['--event-time', '2004-03-14T15:09:26'] +
-                           ['--event-time', '2004-02-07T18:28:18'] +
-                           ['--quiet'])
+                           ['--event-time', '2004-02-07T18:28:18'])
 
     def test_multiple_sampling_rates(self):
         """
