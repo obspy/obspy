@@ -1,54 +1,79 @@
-# See
-# http://docs.continuum.io/conda/build.html for
-# more information about meta.yaml
+{% set version = "1.0.3" %}
+{% set sha256 = "7170c7427471f978f7a7b0fe61c2bfb7094c59b3859cd8d5d5bbae6380cc20a5" %}
 
 package:
   name: obspy
-  version: "1.0.1"
+  version: {{ version }}
 
 source:
-  fn: obspy-master.zip
-  url: https://pypi.python.org/packages/source/o/obspy/obspy-1.0.1.zip
-  md5: be7ca359c2898038d2da2d8486276bfd
-  # alternatively we can use a local path, however this fails with
-  # shutil.Error: [('/path/to/obspy/misc/docs/source/tutorial/ObsPyTutorial.pdf',
-  # '/path/to/miniconda3/conda-bld/work/misc/docs/source/tutorial/ObsPyTutorial.pdf',
-  # "[Errno 2] No such file or directory: '/path/to/obspy/misc/docs/source/tutorial/ObsPyTutorial.pdf'")]
-  #path: ../../../..
+  fn: obspy-{{ version }}.zip
+  url: https://pypi.io/packages/source/o/obspy/obspy-1.0.3.zip
+  # url: https://github.com/obspy/obspy/files/796697/obspy-1.0.3rc1.zip
+  sha256: {{ sha256 }}
+
 
 build:
   number: 0
-  # Weird command line options but they somehow make sure that the
-  # dependencies are not needed for the building phase.
-  script: python setup.py install --single-version-externally-managed --record=/tmp/record.txt
-  # Needed as obspy uses entry points.
   preserve_egg_dir: yes
+  detect_binary_files_with_prefix: true
+  script: python setup.py install --single-version-externally-managed --record record.txt
 
 requirements:
   build:
     - python
-    - numpy
-  run:
-    - python
+    - setuptools
+    - future
     - numpy
     - scipy
-    - matplotlib
-    - future
-    - mock  # [py2k]
+    # the pinning of matplotlib for tests should be removed for later commits
+    # after merging obspy/obspy#1616
+    - matplotlib 1.5.*
     - lxml
     - sqlalchemy
-    - flake8
-    - decorator
     - requests
-    - pyproj # [not py33]
-    - nose
+    - decorator
+    # there's a packaging problem with icu, see obspy/obspy#1677
+    #- icu 58.*
+  run:
+    - python
+    - setuptools
+    - future
+    - numpy
+    - scipy
+    # the pinning of matplotlib for tests should be removed for later commits
+    # after merging obspy/obspy#1616
+    - matplotlib 1.5.*
+    - lxml
+    - sqlalchemy
+    - requests
+    - decorator
+    - mock  # [py2k]
+    # there's a packaging problem with icu, see obspy/obspy#1677
+    #- icu 58.*
+
 test:
+  requires:
+    - flake8
+    # the pinning of matplotlib for tests should be removed for later commits
+    # after merging obspy/obspy#1616
+    - matplotlib 1.5.*
+    # there's a packaging problem with icu, see obspy/obspy#1677
+    #- icu 58.*
   imports:
     - obspy
+    - obspy.io.mseed
   commands:
-    - obspy-runtests -r --node=conda-builder
+    - obspy-runtests -r
 
 about:
   home: https://obspy.org
   license: LGPLv3
   summary: "ObsPy: A Python Toolbox for seismology/seismological observatories."
+
+extra:
+  recipe-maintainers:
+    - megies
+    - krischer
+    - barsch
+    - QuLogic
+    - ThomasLecocq

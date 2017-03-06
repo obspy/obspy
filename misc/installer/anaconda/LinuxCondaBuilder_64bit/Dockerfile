@@ -22,3 +22,4 @@ RUN /miniconda/bin/conda build --py 27 /temporary/obspy
 RUN /miniconda/bin/conda build --py 33 /temporary/obspy
 RUN /miniconda/bin/conda build --py 34 /temporary/obspy
 RUN /miniconda/bin/conda build --py 35 /temporary/obspy
+RUN /miniconda/bin/conda build --py 36 /temporary/obspy
