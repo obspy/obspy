@@ -9,7 +9,7 @@ import unittest
 
 from obspy.scripts.flinnengdahl import main as obspy_flinnengdahl
 from obspy.geodetics import FlinnEngdahl
-from obspy.core.util.misc import CatchOutput
+from obspy.core.util.capture import PyCatchOutput
 
 
 class UtilFlinnEngdahlTestCase(unittest.TestCase):
@@ -46,7 +46,7 @@ class UtilFlinnEngdahlTestCase(unittest.TestCase):
             line = fh.readline()
             longitude, latitude, checked_region = line.strip().split('\t')
 
-            with CatchOutput() as out:
+            with PyCatchOutput() as out:
                 obspy_flinnengdahl([longitude, latitude])
             region = out.stdout.strip()
 

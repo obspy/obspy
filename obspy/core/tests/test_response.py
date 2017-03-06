@@ -26,7 +26,7 @@ from matplotlib import rcParams
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
     _pitick2latex, PolesZerosResponseStage)
-from obspy.core.util.misc import CatchOutput
+from obspy.core.util.capture import CCatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
 from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 from obspy.signal.invsim import evalresp
@@ -167,7 +167,7 @@ class ResponseTestCase(unittest.TestCase):
         t_samp = 0.05
         nfft = 256
 
-        with CatchOutput():
+        with CCatchOutput():
             self.assertRaises(ValueError,
                               inv[0][0][0].response.get_evalresp_response,
                               t_samp, nfft, output="DISP")

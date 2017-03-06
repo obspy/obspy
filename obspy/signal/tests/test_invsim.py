@@ -18,7 +18,7 @@ import numpy as np
 
 from obspy import Trace, UTCDateTime, read, read_inventory
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.misc import CatchOutput
+from obspy.core.util.capture import CCatchOutput
 from obspy.io.sac import attach_paz
 from obspy.signal.headers import clibevresp
 from obspy.signal.invsim import (
@@ -433,7 +433,7 @@ class InvSimTestCase(unittest.TestCase):
         filename = os.path.join(self.path, "segfaulting_RESPs",
                                 "RESP.IE.LLRI..EHZ")
         date = UTCDateTime(2003, 11, 1, 0, 0, 0)
-        with CatchOutput():
+        with CCatchOutput():
             self.assertRaises(ValueError, evalresp, t_samp=10.0, nfft=256,
                               filename=filename, date=date, station="LLRI",
                               channel="EHZ", network="IE", locid="*",
@@ -465,7 +465,7 @@ class InvSimTestCase(unittest.TestCase):
 
         # The RESP file only contains two channels.
         kwargs["channel"] = "BHZ"
-        with CatchOutput() as out:
+        with CCatchOutput() as out:
             self.assertRaises(ValueError, evalresp, **kwargs)
         self.assertIn(b"no response found for", out.stderr.lower())
 

@@ -19,7 +19,7 @@ else:
 
 import numpy as np
 
-from obspy.core.util.misc import CatchOutput
+from obspy.core.util.capture import PyCatchOutput
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 from obspy.imaging.scripts.mopad import main as obspy_mopad
 
@@ -39,7 +39,7 @@ class MopadTestCase(unittest.TestCase):
     #
 
     def test_script_convert_type_sdr(self):
-        with CatchOutput() as out:
+        with PyCatchOutput() as out:
             obspy_mopad(['convert', '--fancy', '-t', 'sdr',
                          ','.join(str(x) for x in self.mt)])
 
@@ -64,7 +64,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         self.assertEqual(expected, result)
 
     def test_script_convert_type_tensor(self):
-        with CatchOutput() as out:
+        with PyCatchOutput() as out:
             obspy_mopad(['convert', '--fancy', '-t', 't',
                          ','.join(str(x) for x in self.mt)])
 
@@ -81,7 +81,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                          out.stdout)
 
     def test_script_convert_type_tensor_large(self):
-        with CatchOutput() as out:
+        with PyCatchOutput() as out:
             obspy_mopad(['convert', '--fancy', '-t', 't',
                          ','.join(str(x * 100) for x in self.mt)])
 
@@ -121,7 +121,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                                         product(['NED', 'USE', 'XYZ', 'NWU'],
                                                 repeat=2)):
 
-            with CatchOutput() as out:
+            with PyCatchOutput() as out:
                 obspy_mopad(['convert', '-b', insys, outsys,
                              ','.join(str(x) for x in self.mt)])
 
@@ -133,7 +133,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                 self.assertAlmostEqual(e, a, msg=msg)
 
     def test_script_convert_vector(self):
-        with CatchOutput() as out:
+        with PyCatchOutput() as out:
             obspy_mopad(['convert', '-v', 'NED', 'NED',
                          ','.join(str(x) for x in self.mt)])
 
@@ -147,7 +147,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
     #
 
     def test_script_decompose(self):
-        with CatchOutput() as out:
+        with PyCatchOutput() as out:
             obspy_mopad(['decompose', '-y', ','.join(str(x) for x in self.mt)])
 
         expected = '''
@@ -183,7 +183,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         """
         Helper function that runs GMT and compares results.
         """
-        with CatchOutput() as out:
+        with PyCatchOutput() as out:
             obspy_mopad(['gmt'] + list(args) +
                         [','.join(str(x) for x in self.mt)])
 
@@ -286,7 +286,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         for mt, filename in zip(data, filenames):
             try:
                 with ImageComparison(self.path, filename) as ic:
-                    with CatchOutput() as out:
+                    with PyCatchOutput() as out:
                         obspy_mopad(['plot',
                                      '--output-file', ic.name,
                                      '--input-system', 'USE',

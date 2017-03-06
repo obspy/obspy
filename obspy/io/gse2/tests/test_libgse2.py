@@ -16,7 +16,7 @@ import warnings
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.util import CatchOutput, NamedTemporaryFile
+from obspy.core.util import CCatchOutput, NamedTemporaryFile
 from obspy.io.gse2 import libgse2
 from obspy.io.gse2.libgse2 import (ChksumError, GSEUtiError, compile_sta2,
                                    parse_sta2)
@@ -206,9 +206,9 @@ class LibGSE2TestCase(unittest.TestCase):
             fout.write(b"".join(lines))
         fout.seek(0)
         # with CatchOutput() as out:
-        with CatchOutput():
+        with CCatchOutput():
             self.assertRaises(GSEUtiError, libgse2.read, fout)
-        # XXX: CatchOutput does not work on Py3k, skipping for now
+        # XXX: CCatchOutput does not work on Py3k, skipping for now
         # self.assertEqual(out.stdout,
         #                 "decomp_6b: Neither DAT2 or DAT1 found!\n")
 

@@ -18,7 +18,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import AttribDict
-from obspy.core.util import CatchOutput, NamedTemporaryFile
+from obspy.core.util import PyCatchOutput, NamedTemporaryFile
 from obspy.io.mseed import (util, InternalMSEEDWarning,
                             InternalMSEEDError)
 from obspy.io.mseed.core import _is_mseed, _read_mseed, _write_mseed
@@ -1142,7 +1142,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Catch output. Will raise an internal mseed reading warning.
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            with CatchOutput() as out:
+            with PyCatchOutput() as out:
                 st = read(filename, verbose=2)
 
         self.assertEqual(len(w), 1)
