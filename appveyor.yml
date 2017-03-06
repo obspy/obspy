@@ -13,9 +13,22 @@ environment:
   matrix:
     - PYTHON_VERSION: "2.7"
       PYTHON_ARCH: "64"
+      platform: x64
+
+    - PYTHON_VERSION: "3.5"
+      PYTHON_ARCH: "64"
+      platform: x64
+
+    - PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "32"
+      platform: x32
+
+    - PYTHON_VERSION: "3.5"
+      PYTHON_ARCH: "32"
+      platform: x32
 
 platform:
-  - x64
+  - Any CPU
 
 install:
   # Add miniconda path.
