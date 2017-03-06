@@ -420,7 +420,10 @@ class TestNordicMethods(unittest.TestCase):
     def test_write_select(self):
         cat = read_events()
         with NamedTemporaryFile(suffix='.out') as tf:
-            write_select(cat, filename=tf.name)
+            # raises "UserWarning: mb is not convertible"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                write_select(cat, filename=tf.name)
             cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
                 self.assertTrue(test_similarity(event_1=event_1,
@@ -430,14 +433,17 @@ class TestNordicMethods(unittest.TestCase):
         cat = read_events()
         cat.append(full_test_event())
         with NamedTemporaryFile(suffix='.out') as tf:
-            cat.write(tf.name, format='nordic')
+            # raises UserWarning: mb is not convertible
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat.write(tf.name, format='nordic')
             # raises "UserWarning: AIN in header, currently unsupported"
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
-                for event_1, event_2 in zip(cat, cat_back):
-                    self.assertTrue(test_similarity(event_1=event_1,
-                                                    event_2=event_2))
+            for event_1, event_2 in zip(cat, cat_back):
+                self.assertTrue(test_similarity(event_1=event_1,
+                                                event_2=event_2))
 
     def test_inaccurate_picks(self):
         testing_path = os.path.join(self.testing_path, 'bad_picks.sfile')
@@ -750,6 +756,21 @@ def full_test_event():
                 backazimuth_residual=5, time_residual=0.2, distance=15,
                 azimuth=25))
     return test_event
+
+    def test_nortoevmag(self):
+        self.assertEqual(_nortoevmag('b'), 'mB')
+        # raises "UserWarning: bob is not convertible"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            self.assertEqual(_nortoevmag('bob'), '')
+
+    def test_evmagtonor(self):
+        self.assertEqual(_evmagtonor('mB'), 'B')
+        self.assertEqual(_evmagtonor('M'), 'W')
+        # raises "UserWarning: bob is not convertible"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            self.assertEqual(_evmagtonor('bob'), '')
 
 
 def suite():
