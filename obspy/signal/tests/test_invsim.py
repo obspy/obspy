@@ -18,7 +18,7 @@ import numpy as np
 
 from obspy import Trace, UTCDateTime, read, read_inventory
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.capture import CCatchOutput
+from obspy.core.util.capture import CCatchOutput, SuppressOutput
 from obspy.io.sac import attach_paz
 from obspy.signal.headers import clibevresp
 from obspy.signal.invsim import (
@@ -433,7 +433,7 @@ class InvSimTestCase(unittest.TestCase):
         filename = os.path.join(self.path, "segfaulting_RESPs",
                                 "RESP.IE.LLRI..EHZ")
         date = UTCDateTime(2003, 11, 1, 0, 0, 0)
-        with CCatchOutput():
+        with SuppressOutput():
             self.assertRaises(ValueError, evalresp, t_samp=10.0, nfft=256,
                               filename=filename, date=date, station="LLRI",
                               channel="EHZ", network="IE", locid="*",

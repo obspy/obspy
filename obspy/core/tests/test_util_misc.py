@@ -44,12 +44,6 @@ class UtilMiscTestCase(unittest.TestCase):
             os.system('echo "123" 1>&2')
             print("456", file=sys.stderr)
 
-        if platform.system() == "Windows":
-            self.assertEqual(out.stdout.splitlines(),
-                             ['"abc"', 'def', 'ghi', 'jkl'])
-            self.assertEqual(out.stderr.splitlines(),
-                             ['"123" ', '456'])
-        else:
             self.assertEqual(out.stdout, b"abc\ndef\nghi\njkl\n")
             self.assertEqual(out.stderr, b"123\n456\n")
 
