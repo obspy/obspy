@@ -11,6 +11,7 @@ import io
 import os
 import unittest
 from ctypes import ArgumentError
+import warnings
 
 import numpy as np
 
@@ -76,7 +77,10 @@ class LibGSE2TestCase(unittest.TestCase):
         with open(gse2file, 'rb') as f:
             header, data = libgse2.read(f)
         with NamedTemporaryFile() as f:
-            libgse2.write(header, data, f)
+            # raises "UserWarning: Bad value in GSE2 header field"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                libgse2.write(header, data, f)
             f.flush()
             with open(f.name, 'rb') as f2:
                 newheader, newdata = libgse2.read(f2)
@@ -95,7 +99,10 @@ class LibGSE2TestCase(unittest.TestCase):
         self.assertEqual(12000, header['npts'])
         self.assertEqual(1, data[-1])
         fout = io.BytesIO()
-        libgse2.write(header, data, fout)
+        # raises "UserWarning: Bad value in GSE2 header field"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            libgse2.write(header, data, fout)
         fout.seek(0)
         newheader, newdata = libgse2.read(fout)
         self.assertEqual(header, newheader)
@@ -249,7 +256,10 @@ class LibGSE2TestCase(unittest.TestCase):
             header = {}
             header['network'] = got.pop("network")
             header['gse2'] = got
-            got = compile_sta2(header)
+            # raises "UserWarning: Bad value in GSE2 header field"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                got = compile_sta2(header)
             self.assertEqual(got.decode(), line2)
 
 
