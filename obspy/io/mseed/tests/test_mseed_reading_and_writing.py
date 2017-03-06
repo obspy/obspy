@@ -1319,7 +1319,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             if test_type == "data":
                 # some files raise "UserWarning: Record contains a fractional
                 # seconds" - ignore
-                with warnings.catch_warnings(record=True):
+                with warnings.catch_warnings():
                     warnings.simplefilter('ignore', UserWarning)
                     st = read(filename)
 

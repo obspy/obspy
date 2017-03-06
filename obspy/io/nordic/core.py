@@ -492,11 +492,11 @@ def _read_picks(f, new_event):
     pickline = []
     # Set a default, ignored later unless overwritten
     snr = None
-    for _lineno, line in enumerate(f):
+    for line in f:
         if line[79] == '7':
             header = line
             break
-    for _lineno, line in enumerate(f):
+    for line in f:
         if len(line.rstrip('\n').rstrip('\r')) in [80, 79] and \
            line[79] in ' 4\n':
             pickline += [line]
