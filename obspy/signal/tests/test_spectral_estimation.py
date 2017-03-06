@@ -399,7 +399,7 @@ class PsdTestCase(unittest.TestCase):
             self.assertEqual(t_array.shape, (len(ppsd._times_processed),))
             self.assertEqual(t_array.dtype, np.float64)
             np.random.seed(1234)
-            res = np.random.random_integers(0, 1, len(t_array)).astype(np.bool)
+            res = np.random.randint(0, 2, len(t_array)).astype(np.bool)
             return res
 
         # test several different sets of stack criteria, should cover
