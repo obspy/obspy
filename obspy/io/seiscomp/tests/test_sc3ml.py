@@ -21,6 +21,7 @@ from future.builtins import *  # NOQA
 import inspect
 import io
 import os
+import warnings
 import unittest
 
 from obspy.core.inventory import read_inventory
@@ -41,6 +42,22 @@ class SC3MLTestCase(unittest.TestCase):
         self.stationxml_inventory = read_inventory(stationxml_path,
                                                    format="STATIONXML")
         self.sc3ml_inventory = read_inventory(sc3ml_path, format="SC3ML")
+
+    def test_sc3ml_versions(self):
+        """
+        Test multiple schema versions
+        """
+        read_inventory(os.path.join(self.data_dir, "version0.7"))
+        read_inventory(os.path.join(self.data_dir, "version0.8"))
+        read_inventory(os.path.join(self.data_dir, "version0.9"))
+
+        with self.assertRaises(ValueError) as e:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                read_inventory(os.path.join(self.data_dir,
+                                            "version0.10"))
+
+        self.assertEqual(e.exception.args[0], "Schema version not supported.")
 
     def test_compare_xml(self):
         """
