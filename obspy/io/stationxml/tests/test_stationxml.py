@@ -659,10 +659,13 @@ class StationXMLTestCase(unittest.TestCase):
         Reading a StationXML file version 2.0
         """
         filename = os.path.join(self.data_dir, "version20.xml")
+
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always', UserWarning)
             inv = obspy.read_inventory(filename)
+        self.assertEqual(len(w), 1)
         self.assertTrue('StationXML file has version 2.0' in str(w[0].message))
+
         # Very small file with almost no content.
         self.assertEqual(len(inv.networks), 1)
         self.assertEqual(inv[0].code, "XX")
