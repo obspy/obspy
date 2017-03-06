@@ -229,9 +229,15 @@ class TestNordicMethods(unittest.TestCase):
         # Check that it breaks when writing multiple versions
         sfiles = []
         for _i in range(10):
-            sfiles.append(blanksfile(testing_path, 'L', 'TEST'))
+            # raises UserWarning: Desired sfile exists, will not overwrite
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                sfiles.append(blanksfile(testing_path, 'L', 'TEST'))
         with self.assertRaises(NordicParsingError):
-            blanksfile(testing_path, 'L', 'TEST')
+            # raises UserWarning: Desired sfile exists, will not overwrite
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                blanksfile(testing_path, 'L', 'TEST')
         for sfile in sfiles:
             self.assertTrue(os.path.isfile(sfile))
             os.remove(sfile)
