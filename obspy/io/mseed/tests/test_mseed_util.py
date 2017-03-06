@@ -124,10 +124,10 @@ class MSEEDUtilTestCase(unittest.TestCase):
             self.assertEqual(
                 ts * 1000000, util._convert_datetime_to_mstime(dt))
         # Additional sanity tests.
-        # Today.
-        now = UTCDateTime()
-        self.assertEqual(now, util._convert_mstime_to_datetime(
-            util._convert_datetime_to_mstime(now)))
+        # Random date that previously failed.
+        dt = UTCDateTime(2017, 3, 6, 4, 12, 16, 260696)
+        self.assertEqual(dt, util._convert_mstime_to_datetime(
+            util._convert_datetime_to_mstime(dt)))
         # Some random date.
         random.seed(815)  # make test reproducible
         timestring = random.randint(0, 2000000) * 1e6
