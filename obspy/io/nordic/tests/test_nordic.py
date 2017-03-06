@@ -760,17 +760,21 @@ def full_test_event():
     def test_nortoevmag(self):
         self.assertEqual(_nortoevmag('b'), 'mB')
         # raises "UserWarning: bob is not convertible"
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', UserWarning)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
             self.assertEqual(_nortoevmag('bob'), '')
+        self.assertEquals(len(w), 1)
+        self.assertEquals('bob is not convertible', w[0].messages)
 
     def test_evmagtonor(self):
         self.assertEqual(_evmagtonor('mB'), 'B')
         self.assertEqual(_evmagtonor('M'), 'W')
         # raises "UserWarning: bob is not convertible"
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', UserWarning)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
             self.assertEqual(_evmagtonor('bob'), '')
+        self.assertEquals(len(w), 1)
+        self.assertEquals('bob is not convertible', w[0].messages)
 
 
 def suite():
