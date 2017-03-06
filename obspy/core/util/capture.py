@@ -22,7 +22,7 @@ from contextlib import contextmanager
 
 
 if PY2:
-    CaptureIO = io.StringIO
+    CaptureIO = io.BytesIO
 else:
     class CaptureIO(io.TextIOWrapper):
         def __init__(self):
