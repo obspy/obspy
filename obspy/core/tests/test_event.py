@@ -975,6 +975,25 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         self.assertEqual(rid, rid2)
         self.assertEqual(rid, rid3)
 
+    def test_error_message_for_failing_quakeml_id_conversion(self):
+        """
+        Converting an id to a QuakeML compatible id might fail. Test the
+        error message.
+        """
+        invalid_id = "http://example.org"
+        rid = ResourceIdentifier(invalid_id)
+        with self.assertRaises(ValueError) as e:
+            rid.get_quakeml_uri()
+        self.assertEqual(
+            e.exception.args[0],
+            "The id 'http://example.org' is not a valid QuakeML resource "
+            "identifier. ObsPy tried modifying it to "
+            "'smi:local/http://example.org' but it is still not valid. Please "
+            "make sure all resource ids are either valid or can be made valid "
+            "by prefixing it with 'smi:<authority_id>/'. Valid ids are "
+            "specified in the QuakeML manual section 3.1 and in particular "
+            "exclude colons for the final part.")
+
 
 class ResourceIDEventScopeTestCase(unittest.TestCase):
     """

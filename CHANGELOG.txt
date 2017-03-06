@@ -11,6 +11,8 @@ master: (doi: 10.5281/zenodo.165135)
      the get_referred_object method provided both are still in scope. If one
      of the objects gets garbage collected, however, a warning will be issued
      and the behavior will be the same as before (see #1644).
+   * Better error message when attempting to write invalid QuakeML resource
+     ids (see #1699).
    * Stream/Trace.write() can now autodetect file format from file extension
      (see #1321).
    * New convenience property `.matplotlib_date` for `UTCDateTime` objects to
