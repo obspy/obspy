@@ -4,6 +4,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import warnings
+
 from obspy import Catalog
 from obspy.core.event import Origin, Magnitude
 from obspy.core.inventory import Inventory
@@ -28,8 +30,17 @@ else:
         to_int_or_zero, __gdal_version__.split(".")))
     gdal.UseExceptions()
 
+# pyproj is needed when writing a shapefile with origin uncertainty ellipses,
+# this is a lazy optional dependency.
+try:
+    import pyproj
+except:
+    HAS_PYPROJ = False
+else:
+    HAS_PYPROJ = True
 
-def _write_shapefile(obj, filename, **kwargs):
+
+def _write_shapefile(obj, filename, error_ellipses=None, **kwargs):
     """
     Write :class:`~obspy.core.inventory.inventory.Inventory` or
     :class:`~obspy.core.event.Catalog` object to a ESRI shapefile.
@@ -43,6 +54,12 @@ def _write_shapefile(obj, filename, **kwargs):
         ".shp", ".shx", ".dbj", ".prj". If filename does not end with ".shp",
         it will be appended. Other files will be created with respective
         suffixes accordingly.
+    :type error_ellipses: dict
+    :param error_ellipses: To also write a separate shapefile for catalog data
+        with error ellipses, use this option providing kwargs for
+        :func:`_write_error_ellipses` as a dictionary (leaving out the initial
+        ``catalog`` arg, e.g. ``error_ellipses={'filename':
+        '/tmp/my_error_ellipses.shp', 'epsg': 31468}``.
     """
     if not HAS_GDAL:
         raise ImportError(IMPORTERROR_MSG)
@@ -60,6 +77,8 @@ def _write_shapefile(obj, filename, **kwargs):
         # create the layer
         if isinstance(obj, Catalog):
             _add_catalog_layer(data_source, obj)
+            if error_ellipses is not None:
+                _write_error_ellipses(catalog=obj, **error_ellipses)
         elif isinstance(obj, Inventory):
             _add_inventory_layer(data_source, obj)
         else:
@@ -71,12 +90,60 @@ def _write_shapefile(obj, filename, **kwargs):
         data_source.Destroy()
 
 
-def _add_catalog_layer(data_source, catalog):
+def _write_error_ellipses(catalog, filename, epsg, resolution_degrees=5):
+    """
+    Write origin error ellipses as Polygons to shapefile.
+
+    :type catalog: class:`~obspy.core.event.catalog.Catalog`
+    :param catalog: Event catalog with origins.
+    :type filename: str
+    :param filename: Shapefile filename, suffix '.shp' will be added if not
+        present already.
+    :type epsg: str
+    :param epsg: EPSG number of local projection to use. It is
+        assumed that the given projection has coordinates in meters (as for
+        e.g.  UTM zones and opposed to e.g. WGS84 which is in degrees).
+    :type resolution_degrees: float
+    :param resolution_degrees: Resolution of ellipse polygons in degrees.
+    """
+    if not HAS_PYPROJ:
+        msg = ("Package 'pyproj' is needed to write shapefiles with origin "
+               "uncertainty ellipses, but it could not be imported. Please "
+               "install 'pyproj' if you want to use this functionality.")
+        raise ImportError(msg)
+    if not HAS_GDAL:
+        raise ImportError(IMPORTERROR_MSG)
+    if not GDAL_VERSION_SUFFICIENT:
+        raise ImportError(GDAL_TOO_OLD_MSG)
+
+    driver = ogr.GetDriverByName(native_str("ESRI Shapefile"))
+    driver.DeleteDataSource(filename)
+    data_source = driver.CreateDataSource(filename)
+    try:
+        # create the layer
+        _add_catalog_layer(data_source, catalog=catalog, epsg=epsg,
+                           geometry='polygon',
+                           resolution_degrees=resolution_degrees)
+    finally:
+        # Destroy the data source to free resources
+        data_source.Destroy()
+
+
+def _add_catalog_layer(data_source, catalog, epsg=None, geometry='point',
+                       resolution_degrees=5):
     """
     :type data_source: :class:`osgeo.ogr.DataSource`.
     :param data_source: OGR data source the layer is added to.
     :type catalog: :class:`~obspy.core.event.Catalog`
     :param catalog: Event data to add as a new layer.
+    :type geometry: str
+    :param geometry: Geometry type to use, either ``'point'`` (to use
+        hypocenter, assuming WGS84 reference system) or ``'polygon'`` (to use
+        horizontal origin uncertainty, assuming a local refernce system in
+        meters).
+    :type resolution_degrees: float
+    :param resolution_degrees: Resolution of ellipse polygons in degrees. Only
+        used when ``geometry='polygon'``.
     """
     if not HAS_GDAL:
         raise ImportError(IMPORTERROR_MSG)
@@ -103,7 +170,8 @@ def _add_catalog_layer(data_source, catalog):
         ["Magnitude", ogr.OFTReal, 8, 3]
     ]
 
-    layer = _create_layer(data_source, "earthquakes", field_definitions)
+    layer = _create_layer(data_source, "earthquakes", field_definitions,
+                          epsg=epsg, geometry=geometry)
 
     layer_definition = layer.GetLayerDefn()
     for event in catalog:
@@ -158,10 +226,55 @@ def _add_catalog_layer(data_source, catalog):
                 feature.SetField(native_str("MagID"),
                                  native_str(magnitude.resource_id))
 
-            if origin.latitude is not None and origin.longitude is not None:
-                point = ogr.Geometry(ogr.wkbPoint)
-                point.AddPoint(origin.longitude, origin.latitude)
-                feature.SetGeometry(point)
+            if geometry == 'point':
+                if origin.latitude is None or origin.longitude is None:
+                    pass
+                else:
+                    point = ogr.Geometry(ogr.wkbPoint)
+                    point.AddPoint(origin.longitude, origin.latitude)
+                    feature.SetGeometry(point)
+            elif geometry == 'polygon':
+                uncertainty = origin.origin_uncertainty
+                if (origin.latitude is None or origin.longitude is None or
+                        uncertainty is None):
+                    # no origin or uncertainties: dont add feature geometry
+                    pass
+                else:
+                    if uncertainty.confidence_ellipsoid:
+                        msg = 'Confidence ellipsoid currently not supported.'
+                        warnings.warn(msg)
+                    proj_wgs84 = pyproj.Proj(init='epsg:4326')
+                    proj_local = pyproj.Proj(init='epsg:{:d}'.format(epsg))
+                    x, y = pyproj.transform(
+                        proj_wgs84, proj_local, origin.longitude,
+                        origin.latitude)
+                    if (uncertainty.min_horizontal_uncertainty and
+                            uncertainty.max_horizontal_uncertainty and
+                            uncertainty.azimuth_max_horizontal_uncertainty
+                            is not None):
+                        # we use min uncertainty / short radius as X and max
+                        # uncertainty / long radius as Y, so we can use
+                        # azimuth_max_horizontal_uncertainty as rotation angle
+                        # of ellipse in OGR, both is clockwise
+                        geom = ogr.ApproximateArcAngles(
+                            x, y, origin.depth,
+                            uncertainty.min_horizontal_uncertainty,
+                            uncertainty.max_horizontal_uncertainty,
+                            uncertainty.azimuth_max_horizontal_uncertainty, 0,
+                            360, resolution_degrees)
+                    elif uncertainty.horizontal_uncertainty:
+                        geom = ogr.ApproximateArcAngles(
+                            x, y, origin.depth,
+                            uncertainty.horizontal_uncertainty,
+                            uncertainty.horizontal_uncertainty, 0, 0, 360,
+                            resolution_degrees)
+                    else:
+                        geom = None
+                    if geom is not None:
+                        feature.SetGeometry(ogr.ForceToPolygon(geom))
+            else:
+                msg = 'Unknown option for `geometry`: {!s}'.format(geometry)
+                raise ValueError(msg)
 
             layer.CreateFeature(feature)
 
@@ -284,10 +397,30 @@ def _get_wgs84_spatial_reference():
     return sr
 
 
-def _create_layer(data_source, layer_name, field_definitions):
-    sr = _get_wgs84_spatial_reference()
+def _create_layer(data_source, layer_name, field_definitions, epsg=None,
+                  geometry='point'):
+    """
+    :type epsg: int
+    :param epsg: Spatial reference system EPSG code, defaults to WGS84.
+    :type geometry: str
+    :param geometry: Geometry type to use, either ``'point'`` or ``'polygon'``.
+    """
+    if epsg is None:
+        sr = _get_wgs84_spatial_reference()
+    else:
+        sr = osr.SpatialReference()
+        sr.ImportFromEPSG(epsg)
+
+    if geometry == 'point':
+        geometry = ogr.wkbPoint
+    elif geometry == 'polygon':
+        geometry = ogr.wkbPolygon
+    else:
+        msg = 'Unknown option for `geometry`: {!s}'.format(geometry)
+        raise ValueError(msg)
+
     layer = data_source.CreateLayer(native_str(layer_name), sr,
-                                    ogr.wkbPoint)
+                                    geometry)
     # Add the fields we're interested in
     for name, type_, width, precision in field_definitions:
         field = ogr.FieldDefn(native_str(name), type_)
