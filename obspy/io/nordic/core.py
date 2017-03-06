@@ -32,7 +32,7 @@ import io
 from obspy import UTCDateTime, read
 from obspy.geodetics import kilometers2degrees, degrees2kilometers
 from obspy.core.event import Event, Origin, Magnitude, Comment, Catalog
-from obspy.core.event import EventDescription, CreationInfo
+from obspy.core.event import EventDescription, CreationInfo, OriginQuality
 from obspy.core.event import Pick, WaveformStreamID, Arrival, Amplitude
 
 
@@ -287,12 +287,8 @@ def _readheader(f):
     ksta = Comment(text='Number of stations=' + topline[49:51].strip())
     new_event.origins[0].comments.append(ksta)
     if _float_conv(topline[51:55]) is not None:
-        # raises "UserWarning: Setting attribute "Time_Residual_RMS" which is
-        # not a default attribute"
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', UserWarning)
-            new_event.origins[0].time_errors['Time_Residual_RMS'] = \
-                _float_conv(topline[51:55])
+        new_event.origins[0].quality = OriginQuality(
+            standard_error=_float_conv(topline[51:55]))
     # Read in magnitudes if they are there.
     for index in [59, 67, 75]:
         if not topline[index].isspace():
@@ -896,12 +892,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     if len(agency) > 3:
         agency = agency[0:3]
     # Cope with differences in event uncertainty naming
-    if event.origins[0].time_errors:
-        try:
-            timerms = '{0:.1f}'.format(event.origins[0].
-                                       time_errors.Time_Residual_RMS)
-        except AttributeError:
-            timerms = '0.0'
+    if event.origins[0].quality and event.origins[0].quality['standard_error']:
+        timerms = '{0:.1f}'.format(event.origins[0].quality['standard_error'])
     else:
         timerms = '0.0'
     conv_mags = []

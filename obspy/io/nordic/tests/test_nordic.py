@@ -15,7 +15,7 @@ import warnings
 
 from obspy import read_events, Catalog, UTCDateTime, read
 from obspy.core.event import Pick, WaveformStreamID, Arrival, Amplitude
-from obspy.core.event import Event, Origin, Magnitude
+from obspy.core.event import Event, Origin, Magnitude, OriginQuality
 from obspy.core.event import EventDescription, CreationInfo
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.nordic.core import _is_sfile, read_spectral_info, read_nordic
@@ -168,11 +168,7 @@ class TestNordicMethods(unittest.TestCase):
                           evtype='L', outdir='albatross',
                           wavefiles='test', explosion=True,
                           overwrite=True)
-        # raises "UserWarning: Setting attribute "Time_Residual_RMS" which is
-        # not a default attribute"
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', UserWarning)
-            invalid_origin = test_ev.copy()
+        invalid_origin = test_ev.copy()
 
         invalid_origin.origins = []
         with self.assertRaises(NordicParsingError):
@@ -180,11 +176,7 @@ class TestNordicMethods(unittest.TestCase):
                           evtype='L', outdir='.',
                           wavefiles='test', explosion=True,
                           overwrite=True)
-        # raises "UserWarning: Setting attribute "Time_Residual_RMS" which is
-        # not a default attribute"
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', UserWarning)
-            invalid_origin = test_ev.copy()
+        invalid_origin = test_ev.copy()
         invalid_origin.origins[0].time = None
         with self.assertRaises(NordicParsingError):
             _write_nordic(invalid_origin, filename=None, userid='TEST',
@@ -192,11 +184,7 @@ class TestNordicMethods(unittest.TestCase):
                           wavefiles='test', explosion=True,
                           overwrite=True)
         # Write a near empty origin
-        # raises "UserWarning: Setting attribute "Time_Residual_RMS" which is
-        # not a default attribute"
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', UserWarning)
-            valid_origin = test_ev.copy()
+        valid_origin = test_ev.copy()
         valid_origin.origins[0].latitude = None
         valid_origin.origins[0].longitude = None
         valid_origin.origins[0].depth = None
@@ -683,11 +671,7 @@ def full_test_event():
     test_event.origins[0].longitude = 25.0
     test_event.origins[0].depth = 15000
     test_event.creation_info = CreationInfo(agency_id='TES')
-    # raises "UserWarning: Setting attribute "Time_Residual_RMS" which is not
-    # a default attribute"
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore', UserWarning)
-        test_event.origins[0].time_errors['Time_Residual_RMS'] = 0.01
+    test_event.origins[0].quality = OriginQuality(standard_error=0.01)
     test_event.magnitudes.append(Magnitude())
     test_event.magnitudes[0].mag = 0.1
     test_event.magnitudes[0].magnitude_type = 'ML'
