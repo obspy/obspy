@@ -35,4 +35,4 @@ from obspy.core.util.obspy_types import (ComplexWithUncertainties, Enum,
                                          FloatWithUncertainties)
 from obspy.core.util.testing import add_doctests, add_unittests
 from obspy.core.util.version import get_git_version as _get_version_string
-from obspy.core.util.capture import PyCatchOutput, CCatchOutput
+from obspy.core.util.capture import PyCatchOutput, CCatchOutput, SuppressOutput

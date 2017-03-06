@@ -138,3 +138,34 @@ def CCatchOutput():  # noqa
 
                 if raised:
                     raise SystemExit(out.stderr)
+
+
+@contextmanager
+def SuppressOutput():  # noqa
+    """
+    A context manager that suppresses outout to stdout/stderr.
+
+    Always use with "with" statement. Does nothing otherwise.
+
+    >>> with SuppressOutput():  # doctest: +SKIP
+    ...    os.system('echo "mystdout"')
+    ...    os.system('echo "mystderr" >&2')
+    """
+    stdout_fd = sys.stdout.fileno()
+    stderr_fd = sys.stderr.fileno()
+    with os.fdopen(os.dup(stdout_fd), 'wb') as tmp_stdout:
+        with os.fdopen(os.dup(stderr_fd), 'wb') as tmp_stderr:
+            sys.stdout.flush()
+            sys.stderr.flush()
+            with open(os.devnull, 'wb') as to_file:
+                os.dup2(to_file.fileno(), stdout_fd)
+                os.dup2(to_file.fileno(), stderr_fd)
+            try:
+                yield
+            finally:
+                sys.stdout.flush()
+                sys.stderr.flush()
+                os.dup2(tmp_stdout.fileno(), stdout_fd)
+                os.dup2(tmp_stderr.fileno(), stderr_fd)
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
