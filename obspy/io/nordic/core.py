@@ -181,11 +181,11 @@ def _evmagtonor(mag_type):
     """
     Switch from obspy event magnitude types to seisan syntax.
 
-    >>> print(_evmagtonor('mB'))
+    >>> print(_evmagtonor('mB'))  # doctest: +SKIP
     B
-    >>> print(_evmagtonor('M'))
+    >>> print(_evmagtonor('M'))  # doctest: +SKIP
     W
-    >>> print(_evmagtonor('bob'))
+    >>> print(_evmagtonor('bob'))  # doctest: +SKIP
     <BLANKLINE>
     """
     if mag_type == 'M':
@@ -204,9 +204,9 @@ def _nortoevmag(mag_type):
     """
     Switch from nordic type magnitude notation to obspy event magnitudes.
 
-    >>> print(_nortoevmag('b'))
+    >>> print(_nortoevmag('b'))  # doctest: +SKIP
     mB
-    >>> print(_nortoevmag('bob'))
+    >>> print(_nortoevmag('bob'))  # doctest: +SKIP
     <BLANKLINE>
     """
     if mag_type.upper() == "L":

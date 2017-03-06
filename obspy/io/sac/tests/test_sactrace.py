@@ -6,6 +6,7 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 import datetime
+import warnings
 
 import numpy as np
 
@@ -14,7 +15,7 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
 from ..sactrace import SACTrace
-from ..util import SacHeaderError
+from ..util import SacHeaderError, SacHeaderTimeError
 
 
 class SACTraceTestCase(unittest.TestCase):
@@ -227,6 +228,24 @@ class SACTraceTestCase(unittest.TestCase):
             tr.stats[statshdr] = modified_value
             sac = SACTrace.from_obspy_trace(tr)
             self.assertEqual(getattr(sac, sachdr), modified_value)
+
+    def test_reftime_incomplete(self):
+        """
+        Replacement for SACTrace._from_arrays doctest which raises UserWarning
+        """
+        sac = SACTrace._from_arrays()
+        self.assertTrue(sac.lcalda)
+        self.assertFalse(sac.leven)
+        self.assertFalse(sac.lovrok)
+        self.assertFalse(sac.lpspol)
+        self.assertEqual(sac.iztype, None)
+        self.assertRaises(SacHeaderTimeError, getattr, sac, 'reftime')
+        # raises "UserWarning: Reference time information incomplete"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            str(sac)
+            self.assertEqual(len(w), 1)
+            self.assertIn("Reference time information incomplete", str(w[0]))
 
 
 def suite():

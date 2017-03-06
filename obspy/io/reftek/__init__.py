@@ -34,10 +34,10 @@ automatically and optionally can be explicitly set if known
 beforehand to skip format detection.
 
 >>> from obspy import read
->>> st = read("/path/to/225051000_00008656")
->>> st  # doctest: +ELLIPSIS
+>>> st = read("/path/to/225051000_00008656")  # doctest: +SKIP
+>>> st  # doctest: +SKIP
 <obspy.core.stream.Stream object at 0x...>
->>> print(st)  #doctest: +ELLIPSIS
+>>> print(st)  # doctest: +SKIP
 8 Trace(s) in Stream:
 .KW1..EH0 | 2015-10-09T22:50:51.000000Z - ... | 200.0 Hz, 3165 samples
 .KW1..EH0 | 2015-10-09T22:51:06.215000Z - ... | 200.0 Hz, 892 samples
@@ -47,7 +47,7 @@ beforehand to skip format detection.
 .KW1..EH1 | 2015-10-09T22:51:10.765000Z - ... | 200.0 Hz, 2925 samples
 .KW1..EH2 | 2015-10-09T22:50:51.000000Z - ... | 200.0 Hz, 3405 samples
 .KW1..EH2 | 2015-10-09T22:51:08.415000Z - ... | 200.0 Hz, 3395 samples
->>> print(st[0].stats)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+>>> print(st[0].stats)  # doctest: +SKIP
          network:
          station: KW1
         location:
