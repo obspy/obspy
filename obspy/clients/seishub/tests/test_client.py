@@ -54,6 +54,7 @@ class ClientTestCase(unittest.TestCase):
         t = UTCDateTime(2012, 1, 1, 12)
         st = self.client.waveform.get_waveforms('GR', 'FUR', '', 'BH*',
                                                 t, t + 5)
+        st.sort(reverse=True)
         self.assertEqual(len(st), 3)
         for tr, cha in zip(st, ('BHZ', 'BHN', 'BHE')):
             self.assertEqual(tr.stats.network, 'GR')
