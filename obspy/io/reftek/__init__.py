@@ -34,10 +34,10 @@ automatically and optionally can be explicitly set if known
 beforehand to skip format detection.
 
 >>> from obspy import read
->>> st = read("/path/to/225051000_00008656")
->>> st  # doctest: +ELLIPSIS
+>>> st = read("/path/to/225051000_00008656")  # doctest: +SKIP
+>>> st  # doctest: +SKIP
 <obspy.core.stream.Stream object at 0x...>
->>> print(st)  #doctest: +ELLIPSIS
+>>> print(st)  # doctest: +SKIP
 8 Trace(s) in Stream:
 .KW1..EH0 | 2015-10-09T22:50:51.000000Z - ... | 200.0 Hz, 3165 samples
 .KW1..EH0 | 2015-10-09T22:51:06.215000Z - ... | 200.0 Hz, 892 samples
@@ -47,19 +47,6 @@ beforehand to skip format detection.
 .KW1..EH1 | 2015-10-09T22:51:10.765000Z - ... | 200.0 Hz, 2925 samples
 .KW1..EH2 | 2015-10-09T22:50:51.000000Z - ... | 200.0 Hz, 3405 samples
 .KW1..EH2 | 2015-10-09T22:51:08.415000Z - ... | 200.0 Hz, 3395 samples
->>> print(st[0].stats)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-         network:
-         station: KW1
-        location:
-         channel: EH0
-       starttime: 2015-10-09T22:50:51.000000Z
-         endtime: 2015-10-09T22:51:06.820000Z
-   sampling_rate: 200.0
-           delta: 0.005
-            npts: 3165
-           calib: 1.0
-         _format: REFTEK130
-       reftek130: ...
 
 Network, location and component codes can be specified during reading:
 
@@ -80,6 +67,20 @@ BW.KW1..EHE | 2015-10-09T22:51:08.415000Z - ... | 200.0 Hz, 3395 samples
 
 Reftek 130 specific metadata (from event header packet) is stored
 in ``stats.reftek130``.
+
+>>> print(st[0].stats)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+         network: BW
+         station: KW1
+        location:
+         channel: EHZ
+       starttime: 2015-10-09T22:50:51.000000Z
+         endtime: 2015-10-09T22:51:06.820000Z
+   sampling_rate: 200.0
+           delta: 0.005
+            npts: 3165
+           calib: 1.0
+         _format: REFTEK130
+       reftek130: ...
 
 Details on the individual packets can be retrieved with the low level
 :class:`~obspy.io.reftek.core.Reftek130` object:

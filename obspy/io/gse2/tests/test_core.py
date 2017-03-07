@@ -10,6 +10,7 @@ from future.builtins import *  # NOQA
 import copy
 import os
 import unittest
+import warnings
 
 import numpy as np
 
@@ -85,7 +86,10 @@ class CoreTestCase(unittest.TestCase):
             tr2 = st2[0]
             tr2.data = copy.deepcopy(tr1.data)
             tr2.stats = copy.deepcopy(tr1.stats)
-            st2.write(tempfile, format='GSE2')
+            # raises "UserWarning: Bad value in GSE2 header field"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                st2.write(tempfile, format='GSE2')
             # read comparison trace
             st3 = read(tempfile)
         st3.verify()
@@ -118,7 +122,10 @@ class CoreTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             for filename in files:
                 with open(filename, 'rb') as f1:
-                    tf.write(f1.read())
+                    # raises "UserWarning: Bad value in GSE2 header field"
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore', UserWarning)
+                        tf.write(f1.read())
             tf.flush()
             st1 = read(tf.name)
         st1.verify()
@@ -131,7 +138,10 @@ class CoreTestCase(unittest.TestCase):
         # write and read
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
-            st1.write(tmpfile, format='GSE2')
+            # raises "UserWarning: Bad value in GSE2 header field"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                st1.write(tmpfile, format='GSE2')
             st2 = read(tmpfile)
         st2.verify()
         self.assertEqual(len(st2), 2)

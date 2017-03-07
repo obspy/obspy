@@ -15,7 +15,7 @@ import warnings
 
 from obspy import read_events, Catalog, UTCDateTime, read
 from obspy.core.event import Pick, WaveformStreamID, Arrival, Amplitude
-from obspy.core.event import Event, Origin, Magnitude
+from obspy.core.event import Event, Origin, Magnitude, OriginQuality
 from obspy.core.event import EventDescription, CreationInfo
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.nordic.core import _is_sfile, read_spectral_info, read_nordic
@@ -168,11 +168,7 @@ class TestNordicMethods(unittest.TestCase):
                           evtype='L', outdir='albatross',
                           wavefiles='test', explosion=True,
                           overwrite=True)
-        # raises "UserWarning: Setting attribute "Time_Residual_RMS" which is
-        # not a default attribute"
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', UserWarning)
-            invalid_origin = test_ev.copy()
+        invalid_origin = test_ev.copy()
 
         invalid_origin.origins = []
         with self.assertRaises(NordicParsingError):
@@ -180,11 +176,7 @@ class TestNordicMethods(unittest.TestCase):
                           evtype='L', outdir='.',
                           wavefiles='test', explosion=True,
                           overwrite=True)
-        # raises "UserWarning: Setting attribute "Time_Residual_RMS" which is
-        # not a default attribute"
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', UserWarning)
-            invalid_origin = test_ev.copy()
+        invalid_origin = test_ev.copy()
         invalid_origin.origins[0].time = None
         with self.assertRaises(NordicParsingError):
             _write_nordic(invalid_origin, filename=None, userid='TEST',
@@ -192,11 +184,7 @@ class TestNordicMethods(unittest.TestCase):
                           wavefiles='test', explosion=True,
                           overwrite=True)
         # Write a near empty origin
-        # raises "UserWarning: Setting attribute "Time_Residual_RMS" which is
-        # not a default attribute"
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', UserWarning)
-            valid_origin = test_ev.copy()
+        valid_origin = test_ev.copy()
         valid_origin.origins[0].latitude = None
         valid_origin.origins[0].longitude = None
         valid_origin.origins[0].depth = None
@@ -229,9 +217,15 @@ class TestNordicMethods(unittest.TestCase):
         # Check that it breaks when writing multiple versions
         sfiles = []
         for _i in range(10):
-            sfiles.append(blanksfile(testing_path, 'L', 'TEST'))
+            # raises UserWarning: Desired sfile exists, will not overwrite
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                sfiles.append(blanksfile(testing_path, 'L', 'TEST'))
         with self.assertRaises(NordicParsingError):
-            blanksfile(testing_path, 'L', 'TEST')
+            # raises UserWarning: Desired sfile exists, will not overwrite
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                blanksfile(testing_path, 'L', 'TEST')
         for sfile in sfiles:
             self.assertTrue(os.path.isfile(sfile))
             os.remove(sfile)
@@ -414,7 +408,10 @@ class TestNordicMethods(unittest.TestCase):
     def test_write_select(self):
         cat = read_events()
         with NamedTemporaryFile(suffix='.out') as tf:
-            write_select(cat, filename=tf.name)
+            # raises "UserWarning: mb is not convertible"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                write_select(cat, filename=tf.name)
             cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
                 self.assertTrue(test_similarity(event_1=event_1,
@@ -424,14 +421,17 @@ class TestNordicMethods(unittest.TestCase):
         cat = read_events()
         cat.append(full_test_event())
         with NamedTemporaryFile(suffix='.out') as tf:
-            cat.write(tf.name, format='nordic')
+            # raises UserWarning: mb is not convertible
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat.write(tf.name, format='nordic')
             # raises "UserWarning: AIN in header, currently unsupported"
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
-                for event_1, event_2 in zip(cat, cat_back):
-                    self.assertTrue(test_similarity(event_1=event_1,
-                                                    event_2=event_2))
+            for event_1, event_2 in zip(cat, cat_back):
+                self.assertTrue(test_similarity(event_1=event_1,
+                                                event_2=event_2))
 
     def test_inaccurate_picks(self):
         testing_path = os.path.join(self.testing_path, 'bad_picks.sfile')
@@ -671,11 +671,7 @@ def full_test_event():
     test_event.origins[0].longitude = 25.0
     test_event.origins[0].depth = 15000
     test_event.creation_info = CreationInfo(agency_id='TES')
-    # raises "UserWarning: Setting attribute "Time_Residual_RMS" which is not
-    # a default attribute"
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore', UserWarning)
-        test_event.origins[0].time_errors['Time_Residual_RMS'] = 0.01
+    test_event.origins[0].quality = OriginQuality(standard_error=0.01)
     test_event.magnitudes.append(Magnitude())
     test_event.magnitudes[0].mag = 0.1
     test_event.magnitudes[0].magnitude_type = 'ML'
@@ -744,6 +740,25 @@ def full_test_event():
                 backazimuth_residual=5, time_residual=0.2, distance=15,
                 azimuth=25))
     return test_event
+
+    def test_nortoevmag(self):
+        self.assertEqual(_nortoevmag('b'), 'mB')
+        # raises "UserWarning: bob is not convertible"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            self.assertEqual(_nortoevmag('bob'), '')
+        self.assertEquals(len(w), 1)
+        self.assertEquals('bob is not convertible', w[0].messages)
+
+    def test_evmagtonor(self):
+        self.assertEqual(_evmagtonor('mB'), 'B')
+        self.assertEqual(_evmagtonor('M'), 'W')
+        # raises "UserWarning: bob is not convertible"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            self.assertEqual(_evmagtonor('bob'), '')
+        self.assertEquals(len(w), 1)
+        self.assertEquals('bob is not convertible', w[0].messages)
 
 
 def suite():

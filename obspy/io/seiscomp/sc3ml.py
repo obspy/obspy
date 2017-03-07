@@ -38,7 +38,7 @@ from obspy.io.stationxml.core import _read_floattype
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
-SCHEMA_VERSION = "0.7"
+SCHEMA_VERSION = ["0.7", "0.8", "0.9"]
 
 
 def _is_sc3ml(path_or_file_object):
@@ -71,11 +71,10 @@ def _is_sc3ml(path_or_file_object):
             assert match is not None
         except Exception:
             return False
-        # Convert schema number to a float to have positive comparisons
-        # between, e.g "1" and "1.0".
-        if float(root.attrib["version"]) != float(SCHEMA_VERSION):
+        # Check if schema version is supported
+        if root.attrib["version"] not in SCHEMA_VERSION:
             warnings.warn("The sc3ml file has version %s, ObsPy can "
-                          "deal with version %s. Proceed with caution." % (
+                          "deal with versions %s. Proceed with caution." % (
                               root.attrib["version"], SCHEMA_VERSION))
         return True
     finally:
@@ -128,9 +127,14 @@ def _read_sc3ml(path_or_file_object):
     """
     root = etree.parse(path_or_file_object).getroot()
 
-    # Fix the namespace as its not always the default namespace. Will need
-    # to be adjusted if the sc3ml format gets another revision!
-    namespace = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.7"
+    # Code can be used for version 0.7, 0.8, and 0.9
+    basespace = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema"
+    for version in SCHEMA_VERSION:
+        namespace = "%s/%s" % (basespace, version)
+        if root.find("{%s}%s" % (namespace, "Inventory")) is not None:
+            break
+    else:
+        raise ValueError("Schema version not supported.")
 
     def _ns(tagname):
         return "{%s}%s" % (namespace, tagname)

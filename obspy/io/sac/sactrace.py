@@ -1231,7 +1231,7 @@ class SACTrace(object):
         .. rubric:: Example
 
         >>> sac = SACTrace._from_arrays()
-        >>> print(sac)  # doctest: +NORMALIZE_WHITESPACE
+        >>> print(sac)  # doctest: +NORMALIZE_WHITESPACE +SKIP
         Reference Time = XX/XX/XX (XXX) XX:XX:XX.XXXXXX
             iztype not set
         lcalda     = True

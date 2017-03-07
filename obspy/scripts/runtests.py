@@ -736,6 +736,11 @@ def run(argv=None, interactive=True):
         os.environ['OBSPY_KEEP_ONLY_FAILED_IMAGES'] = ""
     if args.no_flake8:
         os.environ['OBSPY_NO_FLAKE8'] = ""
+
+    # All arguments are used by the test runner and should not interfere
+    # with any other module that might also parse them, e.g. flake8.
+    sys.argv = sys.argv[:1]
+
     return run_tests(verbosity, args.tests, report, args.log, args.server,
                      args.all, args.timeit, interactive, args.n,
                      exclude=args.exclude, tutorial=args.tutorial,
