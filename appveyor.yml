@@ -70,8 +70,7 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
   # Check that we have the expected version and architecture for Python
-  - "python --version"
-  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  - "python -c \"import sys; print(sys.version)\""
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
