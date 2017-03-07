@@ -207,3 +207,59 @@ $ sudo tar -C ${DISTRO_FULL} -c . | docker import - obspy/base-images:${DISTRO_F
 $ docker login  # docker hub user needs write access to "obspy/base-images" of organization "obspy"
 $ docker push obspy/base-images:${DISTRO_FULL}
 ```
+
+### Setting up `docker-testbot` to automatically test PRs and branches and send commit statuses
+
+##### Install docker
+
+Well.. install it: https://docs.docker.com/engine/installation/
+
+##### Set up a dedicated Python environment
+
+Set up a dedicated Anaconda Python environment and install
+[`obspy_github_api`](https://github.com/obspy/obspy_github_api). Activate that
+environment before running the docker testbot (in the last step of the
+instructions).
+
+##### Set up a dedicated ObsPy clone
+
+Set up a dedicated ObsPy git clone. This clone should not be used for anything
+else than running the docker testbot. `git clean -fdx` will be run, razing any
+local changes. Set the location to the dedicated obspy repository:
+
+```bash
+$ export OBSPY_DOCKER_BASE=/path/to/dedicated/obspy
+```
+
+Remote 'origin' should point to obspy/obspy (obspy main repository).
+
+##### Register an OAuth token on github
+
+Login to https://github.com and create a dedicated OAuth token. It should only
+have rights for "repo:status" on obspy/obspy. Set token as env variable:
+
+```bash
+$ export OBSPY_COMMIT_STATUS_TOKEN=abcdefgh123456789
+```
+
+##### Run docker testbot
+
+To run docker testbot, simply do:
+
+```bash
+$ bash cronjob_docker_tests.sh -t -d -b -p
+```
+
+This will run both..
+
+ - docker testing (-t)
+ - docker deb packaging/testing  (-d)
+
+..on both:
+
+ - main branches, like master and maintenance_1.0.x (-b)
+ - pull requests (-p)
+
+Since runtime is rather high, ideally these jobs should be distributed on
+separate docker testrunners (scripts might have to be adjusted, e.g. naming of
+docker temporary containers..)
