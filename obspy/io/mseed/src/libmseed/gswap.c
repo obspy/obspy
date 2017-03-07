@@ -21,7 +21,7 @@
  * Version: 2010.006
  ***************************************************************************/
 
-#include "lmplatform.h"
+#include "libmseed.h"
 
 /* Swap routines that work on any (aligned or not) quantities */
 

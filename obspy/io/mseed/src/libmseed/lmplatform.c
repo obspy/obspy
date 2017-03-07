@@ -9,7 +9,7 @@
 /* Define _LARGEFILE_SOURCE to get ftello/fseeko on some systems (Linux) */
 #define _LARGEFILE_SOURCE 1
 
-#include "lmplatform.h"
+#include "libmseed.h"
 
 /***************************************************************************
  * lmp_ftello:

@@ -1,3 +1,27 @@
+2017.061: 2.19.2
+	- Provide install target in Makefile thanks to by Pierre Duperray.
+	- Deprecate dynamic build target, the shared target will now build
+	shared or dynamic (Darwin) libraries depending on the system.
+	- Limit symbols exported in shared libraries to public interfaces
+	as defined in libmseed.map, thanks again to Pierre Duperray.
+	- Allow tests to work on Darwin with dynamic libraries.
+
+2017.060: 2.19.1
+	- Derive versioning of shared/dynamic library from canonical version
+	defined as LIBMSEED_VERSION in libmseed.h.
+	- Apply updates to more standardized use of NAME and typos in man pages,
+	submitted by Pierre Duperray.
+
+2017.053: 2.19
+	- Incorporate lmplatform.h details into libmseed.h for improved usage.
+	All that is needed is the static/shared/dynamic library and libmseed.h.
+	- Avoid undefined left shifts of signed values that would go out of
+	range and specify the types of some constants.
+
+2016.290:
+	- Remove dependency on ntwin32.mak for Windows nmake makefiles, now
+	building works in plain MSVC development environments.
+
 2016.286: 2.18
 	- Remove limitation on sample rate before calling ms_genfactmult()
 	in the normal path of packing records.  Previously generating the

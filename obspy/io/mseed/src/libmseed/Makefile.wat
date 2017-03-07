@@ -48,8 +48,8 @@ dll:	$(OBJS) .SYMBOLIC
 # Source dependencies:
 fileutils.obj:	fileutils.c libmseed.h
 genutils.obj:	genutils.c libmseed.h
-gswap.obj:	gswap.c lmplatform.h
-lmplatform.obj:	lmplatform.c libmseed.h lmplatform.h
+gswap.obj:	gswap.c libmseed.h
+lmplatform.obj:	lmplatform.c libmseed.h
 lookup.obj:	lookup.c libmseed.h
 msrutils.obj:	msrutils.c libmseed.h
 pack.obj:	pack.c libmseed.h packdata.h

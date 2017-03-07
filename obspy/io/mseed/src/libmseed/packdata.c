@@ -2,7 +2,7 @@
  * Routines for packing text/ASCII, INT_16, INT_32, FLOAT_32, FLOAT_64,
  * STEIM1 and STEIM2 data records.
  *
- * modified: 2016.277
+ * modified: 2017.053
  ************************************************************************/
 
 #include <memory.h>
@@ -344,7 +344,7 @@ msr_encode_steim1 (int32_t *input, int samplecount, int32_t *output,
         word->d8[3] = diffs[3];
 
         /* 2-bit nibble is 0b01 (0x1) */
-        frameptr[0] |= 0x1 << (30 - 2 * widx);
+        frameptr[0] |= 0x1ul << (30 - 2 * widx);
 
         packedsamples = 4;
       }
@@ -365,7 +365,7 @@ msr_encode_steim1 (int32_t *input, int samplecount, int32_t *output,
         }
 
         /* 2-bit nibble is 0b10 (0x2) */
-        frameptr[0] |= 0x2 << (30 - 2 * widx);
+        frameptr[0] |= 0x2ul << (30 - 2 * widx);
 
         packedsamples = 2;
       }
@@ -381,7 +381,7 @@ msr_encode_steim1 (int32_t *input, int samplecount, int32_t *output,
           ms_gswap4a (&frameptr[widx]);
 
         /* 2-bit nibble is 0b11 (0x3) */
-        frameptr[0] |= 0x3 << (30 - 2 * widx);
+        frameptr[0] |= 0x3ul << (30 - 2 * widx);
 
         packedsamples = 1;
       }
@@ -533,19 +533,19 @@ msr_encode_steim2 (int32_t *input, int samplecount, int32_t *output,
                   widx, diffs[0], diffs[1], diffs[2], diffs[3], diffs[4], diffs[5], diffs[6]);
 
         /* Mask the values, shift to proper location and set in word */
-        frameptr[widx] = ((uint32_t)diffs[6] & 0xF);
-        frameptr[widx] |= ((uint32_t)diffs[5] & 0xF) << 4;
-        frameptr[widx] |= ((uint32_t)diffs[4] & 0xF) << 8;
-        frameptr[widx] |= ((uint32_t)diffs[3] & 0xF) << 12;
-        frameptr[widx] |= ((uint32_t)diffs[2] & 0xF) << 16;
-        frameptr[widx] |= ((uint32_t)diffs[1] & 0xF) << 20;
-        frameptr[widx] |= ((uint32_t)diffs[0] & 0xF) << 24;
+        frameptr[widx] = ((uint32_t)diffs[6] & 0xFul);
+        frameptr[widx] |= ((uint32_t)diffs[5] & 0xFul) << 4;
+        frameptr[widx] |= ((uint32_t)diffs[4] & 0xFul) << 8;
+        frameptr[widx] |= ((uint32_t)diffs[3] & 0xFul) << 12;
+        frameptr[widx] |= ((uint32_t)diffs[2] & 0xFul) << 16;
+        frameptr[widx] |= ((uint32_t)diffs[1] & 0xFul) << 20;
+        frameptr[widx] |= ((uint32_t)diffs[0] & 0xFul) << 24;
 
         /* 2-bit decode nibble is 0b10 (0x2) */
-        frameptr[widx] |= 0x2 << 30;
+        frameptr[widx] |= 0x2ul << 30;
 
         /* 2-bit nibble is 0b11 (0x3) */
-        frameptr[0] |= 0x3 << (30 - 2 * widx);
+        frameptr[0] |= 0x3ul << (30 - 2 * widx);
 
         packedsamples = 7;
       }
@@ -559,18 +559,18 @@ msr_encode_steim2 (int32_t *input, int samplecount, int32_t *output,
                   widx, diffs[0], diffs[1], diffs[2], diffs[3], diffs[4], diffs[5]);
 
         /* Mask the values, shift to proper location and set in word */
-        frameptr[widx] = ((uint32_t)diffs[5] & 0x1F);
-        frameptr[widx] |= ((uint32_t)diffs[4] & 0x1F) << 5;
-        frameptr[widx] |= ((uint32_t)diffs[3] & 0x1F) << 10;
-        frameptr[widx] |= ((uint32_t)diffs[2] & 0x1F) << 15;
-        frameptr[widx] |= ((uint32_t)diffs[1] & 0x1F) << 20;
-        frameptr[widx] |= ((uint32_t)diffs[0] & 0x1F) << 25;
+        frameptr[widx] = ((uint32_t)diffs[5] & 0x1Ful);
+        frameptr[widx] |= ((uint32_t)diffs[4] & 0x1Ful) << 5;
+        frameptr[widx] |= ((uint32_t)diffs[3] & 0x1Ful) << 10;
+        frameptr[widx] |= ((uint32_t)diffs[2] & 0x1Ful) << 15;
+        frameptr[widx] |= ((uint32_t)diffs[1] & 0x1Ful) << 20;
+        frameptr[widx] |= ((uint32_t)diffs[0] & 0x1Ful) << 25;
 
         /* 2-bit decode nibble is 0b01 (0x1) */
-        frameptr[widx] |= 0x1 << 30;
+        frameptr[widx] |= 0x1ul << 30;
 
         /* 2-bit nibble is 0b11 (0x3) */
-        frameptr[0] |= 0x3 << (30 - 2 * widx);
+        frameptr[0] |= 0x3ul << (30 - 2 * widx);
 
         packedsamples = 6;
       }
@@ -584,16 +584,16 @@ msr_encode_steim2 (int32_t *input, int samplecount, int32_t *output,
                   widx, diffs[0], diffs[1], diffs[2], diffs[3], diffs[4]);
 
         /* Mask the values, shift to proper location and set in word */
-        frameptr[widx] = ((uint32_t)diffs[4] & 0x3F);
-        frameptr[widx] |= ((uint32_t)diffs[3] & 0x3F) << 6;
-        frameptr[widx] |= ((uint32_t)diffs[2] & 0x3F) << 12;
-        frameptr[widx] |= ((uint32_t)diffs[1] & 0x3F) << 18;
-        frameptr[widx] |= ((uint32_t)diffs[0] & 0x3F) << 24;
+        frameptr[widx] = ((uint32_t)diffs[4] & 0x3Ful);
+        frameptr[widx] |= ((uint32_t)diffs[3] & 0x3Ful) << 6;
+        frameptr[widx] |= ((uint32_t)diffs[2] & 0x3Ful) << 12;
+        frameptr[widx] |= ((uint32_t)diffs[1] & 0x3Ful) << 18;
+        frameptr[widx] |= ((uint32_t)diffs[0] & 0x3Ful) << 24;
 
         /* 2-bit decode nibble is 0b00, nothing to set */
 
         /* 2-bit nibble is 0b11 (0x3) */
-        frameptr[0] |= 0x3 << (30 - 2 * widx);
+        frameptr[0] |= 0x3ul << (30 - 2 * widx);
 
         packedsamples = 5;
       }
@@ -614,7 +614,7 @@ msr_encode_steim2 (int32_t *input, int samplecount, int32_t *output,
         word->d8[3] = diffs[3];
 
         /* 2-bit nibble is 0b01, only need to set 2nd bit */
-        frameptr[0] |= 0x1 << (30 - 2 * widx);
+        frameptr[0] |= 0x1ul << (30 - 2 * widx);
 
         packedsamples = 4;
       }
@@ -627,15 +627,15 @@ msr_encode_steim2 (int32_t *input, int samplecount, int32_t *output,
                   widx, diffs[0], diffs[1], diffs[2]);
 
         /* Mask the values, shift to proper location and set in word */
-        frameptr[widx] = ((uint32_t)diffs[2] & 0x3FF);
-        frameptr[widx] |= ((uint32_t)diffs[1] & 0x3FF) << 10;
-        frameptr[widx] |= ((uint32_t)diffs[0] & 0x3FF) << 20;
+        frameptr[widx] = ((uint32_t)diffs[2] & 0x3FFul);
+        frameptr[widx] |= ((uint32_t)diffs[1] & 0x3FFul) << 10;
+        frameptr[widx] |= ((uint32_t)diffs[0] & 0x3FFul) << 20;
 
         /* 2-bit decode nibble is 0b11 (0x3) */
-        frameptr[widx] |= 0x3 << 30;
+        frameptr[widx] |= 0x3ul << 30;
 
         /* 2-bit nibble is 0b10 (0x2) */
-        frameptr[0] |= 0x2 << (30 - 2 * widx);
+        frameptr[0] |= 0x2ul << (30 - 2 * widx);
 
         packedsamples = 3;
       }
@@ -648,14 +648,14 @@ msr_encode_steim2 (int32_t *input, int samplecount, int32_t *output,
                   widx, diffs[0], diffs[1]);
 
         /* Mask the values, shift to proper location and set in word */
-        frameptr[widx] = ((uint32_t)diffs[1] & 0x7FFF);
-        frameptr[widx] |= ((uint32_t)diffs[0] & 0x7FFF) << 15;
+        frameptr[widx] = ((uint32_t)diffs[1] & 0x7FFFul);
+        frameptr[widx] |= ((uint32_t)diffs[0] & 0x7FFFul) << 15;
 
         /* 2-bit decode nibble is 0b10 (0x2) */
-        frameptr[widx] |= 0x2 << 30;
+        frameptr[widx] |= 0x2ul << 30;
 
         /* 2-bit nibble is 0b10 (0x2) */
-        frameptr[0] |= 0x2 << (30 - 2 * widx);
+        frameptr[0] |= 0x2ul << (30 - 2 * widx);
 
         packedsamples = 2;
       }
@@ -668,13 +668,13 @@ msr_encode_steim2 (int32_t *input, int samplecount, int32_t *output,
                   widx, diffs[0]);
 
         /* Mask the value and set in word */
-        frameptr[widx] = ((uint32_t)diffs[0] & 0x3FFFFFFF);
+        frameptr[widx] = ((uint32_t)diffs[0] & 0x3FFFFFFFul);
 
         /* 2-bit decode nibble is 0b01 (0x1) */
-        frameptr[widx] |= 0x1 << 30;
+        frameptr[widx] |= 0x1ul << 30;
 
         /* 2-bit nibble is 0b10 (0x2) */
-        frameptr[0] |= 0x2 << (30 - 2 * widx);
+        frameptr[0] |= 0x2ul << (30 - 2 * widx);
 
         packedsamples = 1;
       }

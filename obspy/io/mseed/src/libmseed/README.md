@@ -1,24 +1,36 @@
 
-                   libmseed - The Mini-SEED library
+# libmseed - The Mini-SEED library
 
 The Mini-SEED library provides a framework for manipulation of SEED
 data records including the unpacking and packing of data records.
 Functionality is also included for managing waveform data as
-continuous traces.  All structures of SEED 2.4 data records are
-supported with the following exceptions: Blockette 2000 opaque data
-which has an unknown data structure by definition and Blockette 405
-which depends on full SEED (SEED including full ASCII headers) for a
-full data description.
+continuous traces.
+
+All structures of SEED 2.4 data records are supported with the
+following exceptions: Blockette 2000 opaque data which has an unknown
+data structure by definition and Blockette 405 which depends on full
+SEED (SEED including full ASCII headers) for a full data description.
 
 The library should work in Linux, BSD (and derivatives like macOS),
 Solaris and Win32 environments.
 
-For installation instructions see the INSTALL file.  For further
-information regarding the library interface see the documentation in
-the 'doc' directory.  For example uses of libmseed see the source code
-in the 'examples' directory.
+## Documentation
 
--- License --
+The [Wiki](https://github.com/iris-edu/libmseed/Wiki) provides an
+overview of using the library. For function level documentation,
+man pages are included in the [doc](doc) directory.
+
+## Downloading and installing
+
+The [releases](https://github.com/iris-edu/libmseed/releases) area
+contains release versions.
+
+For installation instructions see the [INSTALL](INSTALL.md) file.
+For further information regarding the library interface see the
+documentation in the 'doc' directory.  For example uses of libmseed
+see the source code in the 'examples' directory.
+
+## License
 
 Copyright (C) 2016 Chad Trabant, IRIS Data Management Center
 
@@ -36,7 +48,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with this software.
 If not, see <https://www.gnu.org/licenses/>.
 
--- Acknowlegements --
+## Acknowlegements
 
 Numerous improvements have been incorporated based on feedback and
 patches submitted by others.  Individual acknowlegements are included
