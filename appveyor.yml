@@ -23,21 +23,21 @@ environment:
       PYTHON_VERSION: "2.7"
       PYTHON_ARCH: "64"
 
-    - PYTHON: "C:\\Miniconda3"
-      PYTHON_VERSION: "3.4"
-      PYTHON_ARCH: "32"
+    # - PYTHON: "C:\\Miniconda3"
+    #   PYTHON_VERSION: "3.4"
+    #   PYTHON_ARCH: "32"
 
-    - PYTHON: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.4"
-      PYTHON_ARCH: "64"
+    # - PYTHON: "C:\\Miniconda3-x64"
+    #   PYTHON_VERSION: "3.4"
+    #   PYTHON_ARCH: "64"
 
-    - PYTHON: "C:\\Miniconda35"
-      PYTHON_VERSION: "3.5"
-      PYTHON_ARCH: "32"
+    # - PYTHON: "C:\\Miniconda35"
+    #   PYTHON_VERSION: "3.5"
+    #   PYTHON_ARCH: "32"
 
-    - PYTHON: "C:\\Miniconda35-x64"
-      PYTHON_VERSION: "3.5"
-      PYTHON_ARCH: "64"
+    # - PYTHON: "C:\\Miniconda35-x64"
+    #   PYTHON_VERSION: "3.5"
+    #   PYTHON_ARCH: "64"
 
     - PYTHON: "C:\\Miniconda36"
       PYTHON_VERSION: "3.6"
@@ -84,7 +84,7 @@ install:
   - "activate test"
   # Install default dependencies
   #   for now fix requests version, can be changed when a new requests is released (see #1599)
-  - "conda install -q --yes pip numpy scipy \"matplotlib<2\" lxml sqlalchemy mock nose gdal decorator \"requests<2.12\" basemap jsonschema basemap-data-hires"
+  - "conda install -q --yes pip numpy scipy \"matplotlib<2\" lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema basemap-data-hires"
   # additional dependecies
   - "pip install pyimgur"
   - "pip install -U future"
