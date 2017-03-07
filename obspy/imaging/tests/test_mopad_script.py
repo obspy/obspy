@@ -48,19 +48,10 @@ Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
 
-        result = out.stdout[:-1]
-        try:
-            if sys.stdout.encoding is not None:
-                expected = expected.encode(sys.stdout.encoding)
-            else:
-                expected = expected.encode()
-        except Exception:
+        result = out.stdout[:-1].decode('utf-8')
+        # depending on system encoding degree character gets replaced in script
+        if '°' not in result:
             expected = expected.replace('°', ' deg')
-            if sys.stdout.encoding is not None:
-                expected = expected.encode(sys.stdout.encoding)
-            else:
-                expected = expected.encode()
-
         self.assertEqual(expected, result)
 
     def test_script_convert_type_tensor(self):
@@ -160,19 +151,10 @@ Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
 
-        result = out.stdout[:-1]
-        try:
-            if sys.stdout.encoding is not None:
-                expected = expected.encode(sys.stdout.encoding)
-            else:
-                expected = expected.encode()
-        except Exception:
+        result = out.stdout[:-1].decode('utf-8')
+        # depending on system encoding degree character gets replaced in script
+        if '°' not in result:
             expected = expected.replace('°', ' deg')
-            if sys.stdout.encoding is not None:
-                expected = expected.encode(sys.stdout.encoding)
-            else:
-                expected = expected.encode()
-
         self.assertEqual(expected, result)
 
     #

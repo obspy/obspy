@@ -22,7 +22,8 @@ from contextlib import contextmanager
 
 
 if PY2:
-    CaptureIO = io.StringIO
+    from cStringIO import StringIO
+    CaptureIO = StringIO
 else:
     class CaptureIO(io.TextIOWrapper):
         def __init__(self):
@@ -143,7 +144,7 @@ def CCatchOutput():  # noqa
 @contextmanager
 def SuppressOutput():  # noqa
     """
-    A context manager that suppresses outout to stdout/stderr.
+    A context manager that suppresses output to stdout/stderr.
 
     Always use with "with" statement. Does nothing otherwise.
 
