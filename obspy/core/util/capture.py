@@ -13,12 +13,13 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import PY2
 
+import contextlib
+import ctypes
 import io
 import os
 import platform
 import sys
 import tempfile
-from contextlib import contextmanager
 
 
 if PY2:
@@ -36,7 +37,22 @@ else:
             return self.buffer.getvalue()
 
 
-@contextmanager
+if sys.platform == 'win32':
+    libc = ctypes.CDLL('msvcrt')
+else:
+    libc = ctypes.CDLL(ctypes.util.find_library("c"))
+
+
+def flush():
+    try:
+        sys.stdout.flush()
+        sys.stderr.flush()
+        libc.fflush(None)
+    except:
+        pass
+
+
+@contextlib.contextmanager
 def PyCatchOutput():  # noqa
     """
     A context manager that catches stdout/stderr/exit() for its scope.
@@ -75,7 +91,39 @@ def PyCatchOutput():  # noqa
         out.stderr = out.stderr.replace(b'\r', b'')
 
 
-@contextmanager
+@contextlib.contextmanager
+def PyCatchOutput2():  # noqa
+    """
+    A context manager that catches stdout/stderr/exit() for its scope.
+
+    Always use with "with" statement. Does nothing otherwise.
+
+    >>> with PyCatchOutput() as out:  # doctest: +SKIP
+    ...    os.system('echo "mystdout"')
+    ...    os.system('echo "mystderr" >&2')
+    >>> print(out.stdout)  # doctest: +SKIP
+    mystdout
+    >>> print(out.stderr)  # doctest: +SKIP
+    mystderr
+    """
+
+    # Dummy class to transport the output.
+    class Output():
+        pass
+    out = Output()
+    out.stdout = ''
+    out.stderr = ''
+
+    sys.stdout = CaptureIO()
+    sys.stderr = CaptureIO()
+
+    yield
+
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
+
+
+@contextlib.contextmanager
 def CCatchOutput():  # noqa
     """
     A context manager that catches stdout/stderr/exit() for its scope.
@@ -108,10 +156,8 @@ def CCatchOutput():  # noqa
             stderr_copy = os.dup(stderr_fd)
 
             try:
-                sys.stdout.flush()
+                flush()
                 os.dup2(tmp_stdout.fileno(), stdout_fd)
-
-                sys.stderr.flush()
                 os.dup2(tmp_stderr.fileno(), stderr_fd)
 
                 raised = False
@@ -121,13 +167,12 @@ def CCatchOutput():  # noqa
                 raised = True
 
             finally:
-                sys.stdout.flush()
+                flush()
                 os.dup2(stdout_copy, stdout_fd)
                 os.close(stdout_copy)
                 tmp_stdout.seek(0)
                 out.stdout = tmp_stdout.read()
 
-                sys.stderr.flush()
                 os.dup2(stderr_copy, stderr_fd)
                 os.close(stderr_copy)
                 tmp_stderr.seek(0)
@@ -141,7 +186,7 @@ def CCatchOutput():  # noqa
                     raise SystemExit(out.stderr)
 
 
-@contextmanager
+@contextlib.contextmanager
 def SuppressOutput():  # noqa
     """
     A context manager that suppresses output to stdout/stderr.
@@ -156,16 +201,14 @@ def SuppressOutput():  # noqa
     stderr_fd = sys.stderr.fileno()
     with os.fdopen(os.dup(stdout_fd), 'wb') as tmp_stdout:
         with os.fdopen(os.dup(stderr_fd), 'wb') as tmp_stderr:
-            sys.stdout.flush()
-            sys.stderr.flush()
+            flush()
             with open(os.devnull, 'wb') as to_file:
                 os.dup2(to_file.fileno(), stdout_fd)
                 os.dup2(to_file.fileno(), stderr_fd)
             try:
                 yield
             finally:
-                sys.stdout.flush()
-                sys.stderr.flush()
+                flush()
                 os.dup2(tmp_stdout.fileno(), stdout_fd)
                 os.dup2(tmp_stderr.fileno(), stderr_fd)
     sys.stdout = sys.__stdout__
