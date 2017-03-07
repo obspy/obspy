@@ -75,9 +75,11 @@ class UtilCaptureTestCase(unittest.TestCase):
             os.system('echo "test_SuppressOutput #1 failed"')
             libc.printf(b"test_SuppressOutput #2 failed")
             os.system('echo "test_SuppressOutput #3 failed" 1>&2')
-            print("test_SuppressOutput #4 failed")
-            print("test_SuppressOutput #5 failed", file=sys.__stdout__)
-            print("test_SuppressOutput #6 failed", file=sys.__stderr__)
+            sys.stderr.write("test_SuppressOutput #4 failed")
+            sys.stdout.write("test_SuppressOutput #5 failed")
+            print("test_SuppressOutput #6 failed")
+            print("test_SuppressOutput #7 failed", file=sys.__stdout__)
+            print("test_SuppressOutput #8 failed", file=sys.__stderr__)
 
 
 def suite():
