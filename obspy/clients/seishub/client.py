@@ -34,7 +34,6 @@ from lxml.etree import Element, SubElement, tostring
 from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guess_delta
 from obspy.core.util.decorator import deprecated_keywords
-from obspy.core.util.obspy_types import ObsPyException
 from obspy.io.xseed import Parser
 
 
@@ -486,14 +485,6 @@ master/seishub/plugins/seismology/waveform.py
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
 
-        if sys.version_info.major != 2:
-            msg = ('Requesting waveforms from a seishub client using Python 3 '
-                   'is not supported. The reason is that seishub servers run '
-                   'on Python 2 and use pickled stream objects in data '
-                   'transmission which can not be unpickled on client side '
-                   'using Python 3 (see #1664).')
-            raise ObsPyException(msg)
-
         # allow time strings in arguments
         for time_ in ["starttime", "endtime"]:
             if isinstance(kwargs[time_], (str, native_str)):
@@ -577,14 +568,6 @@ master/seishub/plugins/seismology/waveform.py
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
 
-        if sys.version_info.major != 2:
-            msg = ('Requesting previews from a seishub client using Python 3 '
-                   'is not supported. The reason is that seishub servers run '
-                   'on Python 2 and use pickled stream objects in data '
-                   'transmission which can not be unpickled on client side '
-                   'using Python 3 (see #1664).')
-            raise ObsPyException(msg)
-
         url = '/seismology/waveform/getPreview'
         data = self.client._fetch(url, **kwargs)
         if not data:
@@ -611,14 +594,6 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-
-        if sys.version_info.major != 2:
-            msg = ('Requesting previews from a seishub client using Python 3 '
-                   'is not supported. The reason is that seishub servers run '
-                   'on Python 2 and use pickled stream objects in data '
-                   'transmission which can not be unpickled on client side '
-                   'using Python 3 (see #1664).')
-            raise ObsPyException(msg)
 
         # concatenate list of IDs into string
         if 'trace_ids' in kwargs:

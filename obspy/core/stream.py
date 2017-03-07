@@ -11,7 +11,7 @@ Module for handling ObsPy Stream objects.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
+from future.utils import PY3, native_str
 
 import copy
 import fnmatch
@@ -3143,11 +3143,19 @@ def _read_pickle(filename, **kwargs):  # @UnusedVariable
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
+    kwargs = {}
+    if PY3:
+        # see seishub/client.py
+        # https://api.mongodb.org/python/current/\
+        # python3.html#why-can-t-i-share-pickled-objectids-\
+        # between-some-versions-of-python-2-and-3
+        kwargs['encoding'] = "latin-1"
+
     if isinstance(filename, (str, native_str)):
         with open(filename, 'rb') as fp:
-            return pickle.load(fp)
+            return pickle.load(fp, **kwargs)
     else:
-        return pickle.load(filename)
+        return pickle.load(filename, **kwargs)
 
 
 def _write_pickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
