@@ -37,6 +37,8 @@ install:
   - "%CMD_IN_ENV% python --version"
   # Install the build and runtime dependencies of the project.
   - "conda update -q --yes conda"
+  # add conda-forge
+  - "conda config --add channels conda-forge"
   # Create a conda environment using the required ObsPy packages.
   - "conda create -q --yes -n test python=%PYTHON_VERSION%"
   - "activate test"
