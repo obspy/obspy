@@ -1,43 +1,84 @@
 # AppVeyor.com is a Continuous Integration service to build and run tests under Windows
+# see https://github.com/ogrisel/python-appveyor-demo/blob/master/appveyor.yml
 
 environment:
   global:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
     # /E:ON and /V:ON options are not enabled in the batch script intepreter
-    # See: https://stackoverflow.com/a/13751649
-    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\misc\\appveyor\\run_with_env.cmd"
-    PYTHON: "C:\\Miniconda-x64"
+    # See: http://stackoverflow.com/a/13751649/163740
+    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_env.cmd"
     CI_URL: "--ci-url https://ci.appveyor.com/project/%APPVEYOR_REPO_NAME%/build/1.0.%APPVEYOR_BUILD_NUMBER%-%APPVEYOR_REPO_BRANCH%"
     PR_URL: "--pr-url https://github.com/%APPVEYOR_REPO_NAME%/pull/%APPVEYOR_PULL_REQUEST_NUMBER%"
 
   matrix:
-    - PYTHON_VERSION: "2.7"
-      PYTHON_ARCH: "64"
-      platform: x64
+    # Pre-installed Python versions, which Appveyor may upgrade to
+    # a later point release.
+    # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON_VERSION: "3.5"
-      PYTHON_ARCH: "64"
-      platform: x64
-
-    - PYTHON_VERSION: "2.7"
+    - PYTHON: "C:\\Miniconda" 
+      PYTHON_VERSION: "2.7"
       PYTHON_ARCH: "32"
-      platform: x32
 
-    - PYTHON_VERSION: "3.5"
+    - PYTHON: "C:\\Miniconda-x64"
+      PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Miniconda3"
+      PYTHON_VERSION: "3.4"
       PYTHON_ARCH: "32"
-      platform: x32
 
-platform:
-  - Any CPU
+    - PYTHON: "C:\\Miniconda3-x64"
+      PYTHON_VERSION: "3.4"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Miniconda35"
+      PYTHON_VERSION: "3.5"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Miniconda35-x64"
+      PYTHON_VERSION: "3.5"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Miniconda36"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Miniconda36-x64"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "64"
+
 
 install:
-  # Add miniconda path.
+  # If there is a newer build queued for the same PR, cancel this one.
+  # The AppVeyor 'rollout builds' option is supposed to serve the same
+  # purpose but it is problematic because it tends to cancel builds pushed
+  # directly to master instead of just PR builds (or the converse).
+  # credits: JuliaLang developers.
+  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
+        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
+        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
+          throw "There are newer queued builds for this pull request, failing early." }
+  - ECHO "Filesystem root:"
+  - ps: "ls \"C:/\""
+
+  - ECHO "Installed SDKs:"
+  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
+
+  # Prepend Python to the PATH of this build (this cannot be
+  # done from inside the powershell script as it would require to restart
+  # the parent CMD process).
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+
   # Check that we have the expected version and architecture for Python
-  - "%CMD_IN_ENV% python -c 'import sys; print(sys.version)'"
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+
+  # Upgrade to the latest version of pip to avoid it displaying warnings
+  # about it being out of date.
+  - "pip install --disable-pip-version-check --user --upgrade pip"
+
   # Install the build and runtime dependencies of the project.
   - "conda update -q --yes conda"
-  # add conda-forge
   - "conda config --add channels conda-forge"
   # Create a conda environment using the required ObsPy packages.
   - "conda create -q --yes -n test python=%PYTHON_VERSION%"
