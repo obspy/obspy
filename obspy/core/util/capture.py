@@ -28,10 +28,8 @@ if PY2:
 else:
     class CaptureIO(io.TextIOWrapper):
         def __init__(self):
-            super(CaptureIO, self).__init__(
-                io.BytesIO(),
-                encoding='UTF-8', newline='', write_through=True,
-            )
+            super(CaptureIO, self).__init__(io.BytesIO(), encoding='UTF-8',
+                                            newline='', write_through=True)
 
         def getvalue(self):
             return self.buffer.getvalue()
@@ -47,6 +45,9 @@ def flush():
     try:
         sys.stdout.flush()
         sys.stderr.flush()
+    except:
+        pass
+    try:
         libc.fflush(None)
     except:
         pass
@@ -201,15 +202,15 @@ def SuppressOutput():  # noqa
     stderr_fd = sys.stderr.fileno()
     with os.fdopen(os.dup(stdout_fd), 'wb') as tmp_stdout:
         with os.fdopen(os.dup(stderr_fd), 'wb') as tmp_stderr:
-            flush()
             with open(os.devnull, 'wb') as to_file:
+                flush()
                 os.dup2(to_file.fileno(), stdout_fd)
                 os.dup2(to_file.fileno(), stderr_fd)
-            try:
-                yield
-            finally:
-                flush()
-                os.dup2(tmp_stdout.fileno(), stdout_fd)
-                os.dup2(tmp_stderr.fileno(), stderr_fd)
+                try:
+                    yield
+                finally:
+                    flush()
+                    os.dup2(tmp_stdout.fileno(), stdout_fd)
+                    os.dup2(tmp_stderr.fileno(), stderr_fd)
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
