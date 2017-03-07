@@ -34,7 +34,7 @@ install:
   # Add miniconda path.
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   # Check that we have the expected version and architecture for Python
-  - "%CMD_IN_ENV% python --version"
+  - "%CMD_IN_ENV% python -c 'import sys; print(sys.version)'"
   # Install the build and runtime dependencies of the project.
   - "conda update -q --yes conda"
   # add conda-forge
