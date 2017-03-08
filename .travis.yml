@@ -93,6 +93,13 @@ install:
         # and hick-ups..
         mkdir -p $HOME/.matplotlib
         echo 'backend:AGG' > $HOME/.matplotlib/matplotlibrc
+      elif [[ "${PYTHON_VERSION}" == '3.6' ]]; then
+        # allow newest package versions on Python 3.6
+        NUMPY_VERSION='*'
+        SCIPY_VERSION='*'
+        MPL_VERSION=1.5
+        BASEMAP="basemap"
+        PYPROJ="pyproj"
       elif [[ "${PYTHON_VERSION}" == '3.3' ]]; then
         # newer package versions for 3.3 not available via anaconda
         NUMPY_VERSION=1.9.2
