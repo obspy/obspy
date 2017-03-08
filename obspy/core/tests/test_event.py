@@ -589,7 +589,7 @@ class CatalogBasemapTestCase(unittest.TestCase):
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(method='basemap', outfile=ic.name, projection='local',
-                     resolution='i', continent_fill_color='0.3',
+                     resolution='l', continent_fill_color='0.3',
                      color='date', colormap='gist_heat')
 
 

@@ -309,7 +309,7 @@ class NetworkBasemapTestCase(unittest.TestCase):
         with ImageComparison(self.image_dir, 'network_location-basemap3.png',
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
-            net.plot(method='basemap', projection='local', resolution='i',
+            net.plot(method='basemap', projection='local', resolution='l',
                      size=13**2, outfile=ic.name)
 
 
