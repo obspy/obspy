@@ -462,7 +462,7 @@ class InventoryBasemapTestCase(unittest.TestCase):
         with ImageComparison(self.image_dir, 'inventory_location-basemap3.png',
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
-            inv.plot(method='basemap', projection='local', resolution='i',
+            inv.plot(method='basemap', projection='local', resolution='l',
                      size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                      outfile=ic.name)
 
