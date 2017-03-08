@@ -119,8 +119,9 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
                     if vcr_arclink_hack and name == 'recv' and \
                        data[0] == 'fileno':
                         data = vcr_playlist.pop(0)
-                    # XXX: py3 sometimes has two sendall calls ???
-                    if PY2 and name == 'makefile' and data[0] == 'sendall':
+                    # XXX: py < 3.5 has sometimes two sendall calls ???
+                    if sys.version_info < (3, 5) and name == 'makefile' and \
+                       data[0] == 'sendall':
                         data = vcr_playlist.pop(0)
                     if debug:
                         print(name, args, kwargs, data)
