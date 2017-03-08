@@ -44,7 +44,7 @@ MODULE_TEST_SKIP_CHECKS = {
 
 
 # monkey patch DocTestCase
-def runTest(self):
+def runTest(self):  # NOQA
     if '+VCR' in self._dt_test.docstring:
         return vcr(self._runTest)()
     return self._runTest()
