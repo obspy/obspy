@@ -1339,7 +1339,7 @@ class Client(object):
         :param endtime: End date and time.
         :return: Dictionary of network data.
         :type route: bool, optional
-        :param route: Enables ArcLink routing (default is ``False``).
+        :param route: Enables ArcLink routing (default is ``True``).
         """
         return self.get_inventory(network='*', starttime=starttime,
                                   endtime=endtime, route=route)
