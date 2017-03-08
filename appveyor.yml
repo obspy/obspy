@@ -11,9 +11,6 @@ environment:
     PR_URL: "--pr-url https://github.com/%APPVEYOR_REPO_NAME%/pull/%APPVEYOR_PULL_REQUEST_NUMBER%"
 
   matrix:
-    # enable fast fail strategy
-    fast_finish: true
-
     # Pre-installed Python versions, which Appveyor may upgrade to
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
@@ -100,3 +97,7 @@ build: false
 test_script:
   - "%CMD_IN_ENV% python setup.py develop"
   - "python -m obspy.scripts.runtests --no-flake8 -n appveyor-ci -r %CI_URL% %PR_URL%"
+
+matrix:
+  # enable fast fail strategy
+  fast_finish: true
