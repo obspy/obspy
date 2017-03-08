@@ -177,7 +177,7 @@ class Stats(AttribDict):
             if self.npts == 0:
                 timediff = 0
             else:
-                timediff = (self.npts - 1) * delta
+                timediff = float(self.npts - 1) * delta
             self.__dict__['endtime'] = self.starttime + timediff
             return
         # prevent a calibration factor of 0
