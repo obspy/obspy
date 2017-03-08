@@ -101,3 +101,6 @@ test_script:
 matrix:
   # enable fast fail strategy
   fast_finish: true
+
+# Do not build feature branch with open Pull Requests
+skip_branch_with_pr: true
