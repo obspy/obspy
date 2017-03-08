@@ -366,7 +366,7 @@ class ClientTestCase(unittest.TestCase):
         # example 1
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
-        result = client.get_networks(start, end)
+        result = client.get_networks(start, end, route=False)
         self.assertIn('BW', result.keys())
         self.assertEqual(result['BW']['code'], 'BW')
         self.assertEqual(result['BW']['description'], 'BayernNetz')
@@ -647,15 +647,12 @@ class ClientTestCase(unittest.TestCase):
         self.assertIn('paz', st[0].stats)
         self.assertIn('coordinates', st[0].stats)
 
-    # Seems the data used to test this issue has disappeared from the server.
-    # To implement the test again we would need some example test data with
-    # lots of gaps. It is most likely not worth the effort to reimplement this
-    # test.
-    @unittest.expectedFailure
     @vcr
     def test_issue_372(self):
         """
         Test case for issue #372.
+
+        Test did not work for a while - now it seems to work again ...
         """
         dt = UTCDateTime("20120729070000")
         client = Client(user='test@obspy.org')
