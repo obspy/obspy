@@ -11,6 +11,9 @@ environment:
     PR_URL: "--pr-url https://github.com/%APPVEYOR_REPO_NAME%/pull/%APPVEYOR_PULL_REQUEST_NUMBER%"
 
   matrix:
+    # enable fast fail strategy
+    fast_finish: true
+
     # Pre-installed Python versions, which Appveyor may upgrade to
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
