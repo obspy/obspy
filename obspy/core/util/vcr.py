@@ -145,6 +145,9 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
             def makefile(self, *args, **kwargs):
                 return self._generic_method('makefile', *args, **kwargs)
 
+            def getsockopt(self, *args, **kwargs):
+                return self._generic_method('getsockopt', *args, **kwargs)
+
             def setsockopt(self, *args, **kwargs):
                 return self._generic_method('setsockopt', *args, **kwargs)
 
@@ -154,6 +157,9 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
             def close(self, *args, **kwargs):
                 return self._generic_method('close', *args, **kwargs)
 
+            def gettimeout(self, *args, **kwargs):
+                return self._generic_method('gettimeout', *args, **kwargs)
+
             def settimeout(self, *args, **kwargs):
                 return self._generic_method('settimeout', *args, **kwargs)
 
@@ -162,6 +168,24 @@ def _vcr_wrapper(func, overwrite=False, debug=False, force_check=False,
 
             def connect(self, *args, **kwargs):
                 return self._generic_method('connect', *args, **kwargs)
+
+            def detach(self, *args, **kwargs):
+                return self._generic_method('detach', *args, **kwargs)
+
+            @property
+            def family(self):
+                if vcr_status == VCR_RECORD:
+                    return self.__dict__['_socket'].family
+
+            @property
+            def type(self):
+                if vcr_status == VCR_RECORD:
+                    return self.__dict__['_socket'].type
+
+            @property
+            def proto(self):
+                if vcr_status == VCR_RECORD:
+                    return self.__dict__['_socket'].proto
 
             # raise for any method not overwritten yet
             def __getattr__(self, attr):

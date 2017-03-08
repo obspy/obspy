@@ -623,7 +623,6 @@ class ClientTestCase(unittest.TestCase):
         finally:
             sys.stdout = sys.__stdout__
 
-    @vcr
     def test_str_method(self):
         got = str(self.client)
         expected = (
@@ -1183,6 +1182,7 @@ class ClientTestCase(unittest.TestCase):
             url_parts = url.replace(url_base, '').split("&")
             self.assertIn('{}='.format(key), url_parts)
 
+    @vcr
     def test_no_data(self):
         """
         Verify that a request returning no data raises an identifiable

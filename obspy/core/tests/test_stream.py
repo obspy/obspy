@@ -16,6 +16,7 @@ from obspy.core.compatibility import mock
 from obspy.core.stream import _is_pickle, _read_pickle, _write_pickle
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.vcr import vcr
 from obspy.io.xseed import Parser
 
 
@@ -1803,6 +1804,7 @@ class StreamTestCase(unittest.TestCase):
             self.assertRaises(UserWarning, read, '/path/to/slist_float.ascii',
                               headonly=True, starttime=0, endtime=1)
 
+    @vcr
     def test_read_url_via_network(self):
         """
         Testing read function with an URL fetching data via network connection
