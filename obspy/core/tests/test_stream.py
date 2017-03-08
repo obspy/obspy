@@ -57,6 +57,7 @@ class StreamTestCase(unittest.TestCase):
             data=np.random.randint(0, 1000, 12000).astype(np.float64),
             header=header)
         self.gse2_stream = Stream(traces=[trace])
+        self.data_path = os.path.join(os.path.dirname(__file__), 'data')
 
     @staticmethod
     def __remove_processing(st):
@@ -1323,6 +1324,59 @@ class StreamTestCase(unittest.TestCase):
             st2 = read(tf.name)
             self.assertEqual(len(st2), 3)
             np.testing.assert_array_equal(st2[0].data, st[0].data)
+
+    def test_read_pickle(self):
+        """
+        Testing _read_pickle function.
+
+        Example pickles were written using obspy 1.0.3 on Py2 and Py3
+        respectively.
+        """
+        for filename in ('example_py2.pickle', 'example_py3.pickle'):
+            pickle_file = os.path.join(self.data_path, filename)
+            st = read(pickle_file, format='PICKLE')
+            self.assertEqual(len(st), 3)
+            self.assertEqual(len(st[0]), 114)
+            self.assertEqual(len(st[1]), 110)
+            self.assertEqual(len(st[2]), 105)
+            for tr, comp in zip(st, 'ZNE'):
+                self.assertEqual(tr.stats.network, 'BW')
+                self.assertEqual(tr.stats.station, 'RJOB')
+                self.assertEqual(tr.stats.location, '')
+                self.assertEqual(tr.stats.channel, 'EH' + comp)
+                self.assertEqual(tr.stats.sampling_rate, 100.0)
+            self.assertEqual(st[0].stats.starttime,
+                             UTCDateTime('2009-08-24T00:20:03.000000Z'))
+            self.assertEqual(st[1].stats.starttime,
+                             UTCDateTime('2009-08-24T00:20:03.040000Z'))
+            self.assertEqual(st[2].stats.starttime,
+                             UTCDateTime('2009-08-24T00:20:03.090000Z'))
+            self.assertEqual(st[0].stats.endtime,
+                             UTCDateTime('2009-08-24T00:20:04.130000Z'))
+            self.assertEqual(st[1].stats.endtime,
+                             UTCDateTime('2009-08-24T00:20:04.130000Z'))
+            self.assertEqual(st[2].stats.endtime,
+                             UTCDateTime('2009-08-24T00:20:04.130000Z'))
+            np.testing.assert_array_equal(
+                st[0].data[:10], [0, 6, 75, 262, 549, 943, 1442, 1785, 2147,
+                                  3029])
+            np.testing.assert_array_equal(
+                st[1].data[:10], [624, 1125, 1647, 2607, 3320, 4389, 5764,
+                                  7078, 8063, 9458])
+            np.testing.assert_array_equal(
+                st[2].data[:10], [-9573, -11576, -14450, -16754, -20348,
+                                  -23220, -28837, -30811, -36024, -40052])
+            np.testing.assert_array_equal(
+                st[0].data[-10:], [-283742, -305558, -302737, -317144, -310056,
+                                   -308462, -302752, -304243, -296202,
+                                   -313968])
+            np.testing.assert_array_equal(
+                st[1].data[-10:], [90493, 105062, 100721, 98631, 100355,
+                                   106287, 115356, 117989, 97907, 113225])
+            np.testing.assert_array_equal(
+                st[2].data[-10:], [-144765, -149205, -123622, -139548, -137160,
+                                   -154283, -103584, -138578, -128339,
+                                   -125707])
 
     def test_get_gaps_2(self):
         """
