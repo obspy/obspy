@@ -122,7 +122,11 @@ class Client(object):
             st.append(tb.get_obspy_trace())
         if cleanup:
             st._cleanup()
-        st.trim(starttime, endtime)
+
+        # only traces from the first and last tracebug need to be trimmed
+        st[0].trim(starttime, endtime)
+        st[len(st)-1].trim(starttime, endtime)
+
         return st
 
     @deprecated("'saveWaveform' has been renamed to 'save_waveforms'. Use "
