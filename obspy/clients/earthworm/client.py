@@ -123,7 +123,7 @@ class Client(object):
         if cleanup:
             st._cleanup()
 
-        # only traces from the first and last tracebug need to be trimmed
+        # only traces from the first and last tracebuf need to be trimmed
         st[0].trim(starttime, endtime)
         st[len(st)-1].trim(starttime, endtime)
 
