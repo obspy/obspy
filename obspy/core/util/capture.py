@@ -11,7 +11,7 @@ Context managers to catch output to stdout/stderr streams.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2
+from future.utils import PY2, native_str
 
 import contextlib
 import ctypes
@@ -36,9 +36,9 @@ else:
 
 
 if sys.platform == 'win32':
-    libc = ctypes.CDLL('msvcrt')
+    libc = ctypes.CDLL(native_str("msvcrt"))
 else:
-    libc = ctypes.CDLL(ctypes.util.find_library("c"))
+    libc = ctypes.CDLL(ctypes.util.find_library(native_str("c")))
 
 
 def flush():
