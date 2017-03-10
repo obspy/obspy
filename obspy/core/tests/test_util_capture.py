@@ -17,7 +17,7 @@ class UtilCaptureTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.capture
     """
-    def test_CCatchOutput(self):
+    def test_c_catch_output(self):
         """
         Tests for CatchOutput context manager.
         """
@@ -46,7 +46,7 @@ class UtilCaptureTestCase(unittest.TestCase):
         self.assertEqual(out.stdout, b'ghi\njkl\n')
         self.assertEqual(out.stderr, b'456\n')
 
-    def test_PyCatchOutput(self):
+    def test_py_catch_output(self):
         """
         Tests that PyCatchOutput context manager does not break I/O.
         """
@@ -61,7 +61,7 @@ class UtilCaptureTestCase(unittest.TestCase):
         except OSError as e:
             self.fail('PyCatchOutput has broken file I/O!\n' + str(e))
 
-    def test_SuppressOutput(self):
+    def test_suppress_output(self):
         """
         Tests for SuppressOutput context manager.
         """
