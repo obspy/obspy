@@ -85,7 +85,7 @@ install:
   # Install default dependencies
   #   for now fix requests version, can be changed when a new requests is released (see #1599)
   - "conda install -q --yes pip numpy scipy \"matplotlib<2\" lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema"
-  # additional dependecies
+  # additional dependencies
   - "pip install pyimgur"
   - "pip install -U future"
   # list package versions
