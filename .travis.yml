@@ -6,7 +6,11 @@ matrix:
   fast_finish: true
   include:
     - os: linux
+      env: PYTHON_VERSION=2.6
+    - os: linux
       env: PYTHON_VERSION=2.7
+    - os: linux
+      env: PYTHON_VERSION=3.3
     - os: linux
       env: PYTHON_VERSION=3.4
     - os: linux
@@ -21,14 +25,22 @@ matrix:
             - gcc-multilib
     - os: linux
       env: PYTHON_VERSION=3.6
+    - os: linux
+      env: PYTHON_VERSION=3.7
+    - os: osx
+      env: PYTHON_VERSION=2.6
     - os: osx
       env: PYTHON_VERSION=2.7
+    - os: osx
+      env: PYTHON_VERSION=3.3
     - os: osx
       env: PYTHON_VERSION=3.4
     - os: osx
       env: PYTHON_VERSION=3.5
     - os: osx
       env: PYTHON_VERSION=3.6
+    - os: osx
+      env: PYTHON_VERSION=3.7
 
 install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
