@@ -31,4 +31,21 @@ setup(
     test_suite='setup.vcr_test_suite',
     setup_requires=['future'],
     tests_require=['requests'],
+    license='GNU Lesser General Public License, Version 3 (LGPLv3)',
+    platforms='OS Independent',
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Console',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU Library or ' +
+            'Lesser General Public License (LGPL)',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6'],
 )
