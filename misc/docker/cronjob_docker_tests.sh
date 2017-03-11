@@ -54,7 +54,6 @@ DOCKER=`which docker.io || which docker`
 # start with a clean slate, remove all cached docker containers
 # The following is only useful/safe if the docker testbot is set up inside a virtual machine
 # XXX $DOCKER rm $($DOCKER ps -qa)
-$DOCKER rmi temp:temp
 # only remove images if older than 7 days. data for the images is over 20 GB so
 # we do not want to recreate them on a hourly basis.. ;-)
 DOCKER_IMAGE_AGE_THRESHOLD=`date -Ins --date='7 days ago'`

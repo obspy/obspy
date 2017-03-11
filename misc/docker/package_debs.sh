@@ -33,7 +33,7 @@ ls -tp $LOG_DIR_ROOT | tail -n +4 | xargs -I % rm -rf -- $LOG_DIR_ROOT/%
 OBSPY_PATH=$(dirname $(dirname $(pwd)))
 
 DOCKERFILE_FOLDER=base_images
-TEMP_PATH=temp/$RANDOM
+TEMP_PATH=temp/$RANDOM-$RANDOM-$RANDOM
 
 # Determine the docker binary name. The official debian packages use docker.io
 # for the binary's name due to some legacy docker package.
@@ -104,7 +104,7 @@ package_debs_on_image () {
     LOG_DIR=${LOG_DIR_BASE}/$image_name
     mkdir -p $LOG_DIR
     ID=$RANDOM-$RANDOM-$RANDOM
-    TAG=package_debs-$RANDOM
+    TAG=package_debs_$RANDOM-$RANDOM-$RANDOM
 
     $DOCKER build -t temp:$TAG $TEMP_PATH
 
