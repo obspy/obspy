@@ -26,6 +26,7 @@ setup(
     author='The ObsPy Development Team',
     author_email='devs@obspy.org',
     url='https://github.com/obspy/vcr',
+    download_url = 'https://github.com/obspy/vcr/archive/master.zip',
     license=license,
     packages=find_packages(exclude=('tests', 'docs')),
     test_suite='setup.vcr_test_suite',
