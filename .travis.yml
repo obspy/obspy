@@ -1,32 +1,86 @@
 # https://travis-ci.org/obspy/vcr
 
-language: python
+language: c
 
-os:
-  - linux
-  - osx
-
-python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "3.7-dev" # 3.7 development branch
-  - "pypi"
-  - "pypy3"
-
-before_install:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install python3; fi
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then virtualenv venv -p python3; fi
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source venv/bin/activate; fi
+matrix:
+  include:
+    - os: linux
+      env: PYTHON_VERSION=2.7
+    - os: linux
+      env: PYTHON_VERSION=3.4
+    - os: linux
+      env: PYTHON_VERSION=3.5
+    - os: linux
+      env: PYTHON_VERSION=3.5 ARCHITECTURE_32BIT="True"
+      addons:
+        apt:
+          packages:
+            # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
+            - libstdc++6:i386
+            - gcc-multilib
+    - os: linux
+      env: PYTHON_VERSION=3.6
+    - os: osx
+      env: PYTHON_VERSION=2.7
+    - os: osx
+      env: PYTHON_VERSION=3.4
+    - os: osx
+      env: PYTHON_VERSION=3.5
+    - os: osx
+      env: PYTHON_VERSION=3.6
 
 install:
-  - pip install -r requirements.txt
-  - pip install -r requirements_test.txt
-  - python setup.py install
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      export OS="MacOSX";
+    else
+      export OS="Linux";
+    fi
+  - |
+      if [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
+        export ARCH=""
+        # OPT is used by setuptools patches contained in newer numpy versions
+        # used by obspy when running pip install --no-deps .
+        export OPT="-m32"
+        # workaround for sudo dpkg --add-architecture i386
+        # be sure multiarch is the only file in this directory
+        ls /etc/dpkg/dpkg.cfg.d/
+        # multiarch must contain foreign-architecture i386. If not it will
+        # error later and you need to do the following and add sudo: true
+        #sudo sh -c "echo 'foreign-architecture i386' > /etc/dpkg/dpkg.cfg.d/multiarch"
+        cat /etc/dpkg/dpkg.cfg.d/multiarch
+      else
+        export ARCH="_64"
+      fi
+  - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda create -q -n test-environment python=$PYTHON_VERSION
+  - source activate test-environment
+  - git version
+  - git fetch origin --tags --unshallow
+  - git remote add obspy git://github.com/obspy/vcr.git
+  - git fetch vcr --tags
+  - git status
+  - git branch -vv
+  - git remote -vv
+  - pip install --no-deps .
+  - git status
 
 script:
+  # We change directories to make sure that python won't find the copy
+  # of vcr in the source directory, see
+  # https://github.com/numpy/numpy/blob/master/.travis.yml#L44
+  - mkdir empty
+  - cd empty
+  - pip install -r requirements.txt
+  - pip install -r requirements_test.txt
   - python setup.py test
 
 notifications:
