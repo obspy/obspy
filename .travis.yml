@@ -5,15 +5,7 @@ language: c
 matrix:
   include:
     - os: linux
-      env: PYTHON_VERSION=2.7 PYTHON_ARCH=32
-      addons:
-        apt:
-          packages:
-            # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
-            - libstdc++6:i386
-            - gcc-multilib
-    - os: linux
-      env: PYTHON_VERSION=2.7 PYTHON_ARCH=64
+      env: PYTHON_VERSION=2.7
     - os: linux
       env: PYTHON_VERSION=3.3
     - os: linux
