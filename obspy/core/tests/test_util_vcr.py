@@ -15,12 +15,12 @@ class VCRTestCase(unittest.TestCase):
     Test suite for obspy.core.util.vcr
     """
 
-    @vcr(debug=True)
+    @vcr
     def test_http(self):
         r = requests.get('http://tests.obspy.org/')
         self.assertEqual(r.status_code, 200)
 
-    @vcr(debug=True)
+    @vcr
     def test_https(self):
         r = requests.get('https://tests.obspy.org/')
         self.assertEqual(r.status_code, 200)

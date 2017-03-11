@@ -9,6 +9,11 @@ each test case. Future test runs will reuse those recorded network session
 allowing for faster tests without any network connection. In order to create
 a new recording one just needs to remove/rename the pickled session file(s).
 
+Inspired by:
+ * https://docs.python.org/3.6/howto/sockets.html
+ * https://github.com/gabrielfalcao/HTTPretty
+ * http://code.activestate.com/recipes/408859/
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
@@ -26,6 +31,7 @@ import os
 import pickle
 import select
 import socket
+import ssl
 import sys
 import tempfile
 import time
@@ -41,6 +47,7 @@ vcr_status = VCR_RECORD
 
 
 orig_socket = socket.socket
+orig_sslsocket = ssl.SSLSocket
 orig_select = select.select
 orig_getaddrinfo = socket.getaddrinfo
 orig_gethostbyname = socket.gethostbyname
@@ -116,25 +123,27 @@ class VCRSockFile(object):
 
 
 class VCRSocket(object):
-    _skip_methods = ['setsockopt', 'settimeout', 'setblocking', 'close']
-
-    def __init__(self, *args, **kwargs):
+    """
+    """
+    def __init__(self, family=socket.AF_INET, type=socket.SOCK_STREAM,
+                 proto=0, fileno=None, _sock=None):
         global vcr_debug, vcr_status
         if vcr_debug:
-            print('  __init__', args, kwargs)
-        self.recording = vcr_status == VCR_RECORD
-        self._orig_socket = orig_socket(*args, **kwargs)
+            print('  __init__', family, type, proto, fileno)
+        self._recording = vcr_status == VCR_RECORD
+        self._orig_socket = orig_socket(family, type, proto, fileno)
         self.fd = VCRSockFile()
-        self.fd.socket = self._orig_socket
+        self.fd.socket = _sock or self._orig_socket
+        self._sock = _sock or self._orig_socket
 
     def __del__(self):
         self.fd.close()
 
-    def _generic_method(self, name, *args, **kwargs):
+    def _exec(self, name, *args, **kwargs):
         global vcr_debug, vcr_playlist
         global vcr_recv_timeout, vcr_recv_endmarker, vcr_recv_size
 
-        if self.recording:
+        if self._recording:
             # record mode
             value = getattr(self._orig_socket, name)(*args, **kwargs)
             if vcr_debug:
@@ -156,7 +165,7 @@ class VCRSocket(object):
                 # usually a retry helps - otherwise set the timeout higher for
                 # this test case using the recv_timeout parameter
                 while True:
-                    # endless lopp - breaks by checking against recv_timeout
+                    # endless loop - breaks by checking against recv_timeout
                     if temp.tell() and time.time() - begin > vcr_recv_timeout:
                         # got some data -> break after vcr_recv_timeout
                         break
@@ -192,18 +201,12 @@ class VCRSocket(object):
             if vcr_debug:
                 # test if value is pickleable - will raise exception
                 pickle.dumps(value)
-            # skip setters
-            if name not in self._skip_methods:
-                # all other methods will be recorded
-                vcr_playlist.append(
-                    (name, args, kwargs, copy.copy(value)))
+            # add to playlist
+            vcr_playlist.append((name, args, kwargs, copy.copy(value)))
             return value
         else:
             # playback mode
-            if name in self._skip_methods:
-                # skip setters which do not return anything
-                return
-            # always work on first element in playlist list
+            # get first element in playlist
             data = vcr_playlist.pop(0)
             # XXX: arclink again - no idea why but works with this hack
             if name == 'recv' and data[0] == 'fileno':
@@ -223,58 +226,75 @@ class VCRSocket(object):
         return bool(self.__dict__.get('_orig_socket', True))
 
     def send(self, *args, **kwargs):
-        return self._generic_method('send', *args, **kwargs)
+        return self._exec('send', *args, **kwargs)
 
     def sendall(self, *args, **kwargs):
-        return self._generic_method('sendall', *args, **kwargs)
+        return self._exec('sendall', *args, **kwargs)
 
     def fileno(self, *args, **kwargs):
-        return self._generic_method('fileno', *args, **kwargs)
+        return self._exec('fileno', *args, **kwargs)
 
     def makefile(self, *args, **kwargs):
-        return self._generic_method('makefile', *args, **kwargs)
+        return self._exec('makefile', *args, **kwargs)
 
     def getsockopt(self, *args, **kwargs):
-        return self._generic_method('getsockopt', *args, **kwargs)
+        return self._exec('getsockopt', *args, **kwargs)
 
     def setsockopt(self, *args, **kwargs):
-        return self._generic_method('setsockopt', *args, **kwargs)
+        if self._recording:
+            return self._orig_socket.setsockopt(*args, **kwargs)
 
     def recv(self, *args, **kwargs):
-        return self._generic_method('recv', *args, **kwargs)
+        return self._exec('recv', *args, **kwargs)
 
     def close(self, *args, **kwargs):
-        return self._generic_method('close', *args, **kwargs)
+        if self._recording:
+            return self._orig_socket.close(*args, **kwargs)
 
     def gettimeout(self, *args, **kwargs):
-        return self._generic_method('gettimeout', *args, **kwargs)
+        return self._exec('gettimeout', *args, **kwargs)
 
     def settimeout(self, *args, **kwargs):
-        return self._generic_method('settimeout', *args, **kwargs)
+        if self._recording:
+            return self._orig_socket.settimeout(*args, **kwargs)
 
     def setblocking(self, *args, **kwargs):
-        return self._generic_method('setblocking', *args, **kwargs)
+        if self._recording:
+            return self._orig_socket.setblocking(*args, **kwargs)
 
     def connect(self, *args, **kwargs):
-        return self._generic_method('connect', *args, **kwargs)
+        return self._exec('connect', *args, **kwargs)
 
     def detach(self, *args, **kwargs):
-        return self._generic_method('detach', *args, **kwargs)
+        return self._exec('detach', *args, **kwargs)
 
     @property
     def family(self):
-        if self.recording:
-            return self._orig_socket.family
+        return self._orig_socket.family
 
     @property
     def type(self):
-        if self.recording:
-            return self._orig_socket.type
+        return self._orig_socket.type
 
     @property
     def proto(self):
-        if self.recording:
-            return self._orig_socket.proto
+        return self._orig_socket.proto
+
+
+class VCRSSLSocket(VCRSocket):
+    def __init__(self, sock=None, *args, **kwargs):
+        global vcr_debug, vcr_status
+        if vcr_debug:
+            print('  __init__', args, kwargs)
+        self._recording = vcr_status == VCR_RECORD
+        self._orig_socket = orig_sslsocket(sock=sock._orig_socket,
+                                           *args, **kwargs)
+
+    def __del__(self):
+        self._orig_socket.close()
+
+    def getpeercert(self, *args, **kwargs):
+        return self._exec('getpeercert', *args, **kwargs)
 
 
 class VCR(object):
@@ -286,9 +306,6 @@ class VCR(object):
         vcr_playlist = []
         vcr_status = VCR_RECORD
         vcr_debug = debug
-        vcr_recv_timeout = 2
-        vcr_recv_endmarker = None
-        vcr_recv_size = None
 
     @classmethod
     def start(cls, debug=False):
@@ -296,6 +313,7 @@ class VCR(object):
         cls.reset(debug)
         # monkey patching
         socket.socket = VCRSocket
+        ssl.SSLSocket = VCRSSLSocket
         socket.getaddrinfo = vcr_getaddrinfo
         socket.gethostbyname = vcr_gethostbyname
         socket.gethostname = vcr_gethostname
@@ -306,6 +324,7 @@ class VCR(object):
     def stop(cls):
         # revert monkey patches
         socket.socket = orig_socket
+        ssl.SSLSocket = orig_sslsocket
         socket.getaddrinfo = orig_getaddrinfo
         socket.gethostbyname = orig_gethostbyname
         socket.gethostname = orig_gethostname
@@ -316,7 +335,7 @@ class VCR(object):
 
 
 def vcr(decorated_func=None, overwrite=False, debug=False, disabled=False,
-        recv_timeout=2, recv_endmarker=None, recv_size=None):
+        recv_timeout=5, recv_endmarker=None, recv_size=None):
     """
     Wrapper around _vcr_inner allowing additional arguments on decorator
     """
@@ -331,7 +350,7 @@ def vcr(decorated_func=None, overwrite=False, debug=False, disabled=False,
             """
             The actual decorator doing a lot of monkey patching and auto magic
             """
-            global vcr_playlist, vcr_status, vcr_debug
+            global vcr_playlist, vcr_status, vcr_debug, vcr_recv_endmarker
 
             if disabled:
                 # execute decorated function without VCR
@@ -361,11 +380,9 @@ def vcr(decorated_func=None, overwrite=False, debug=False, disabled=False,
                 os.makedirs(path)
             tape = os.path.join(path, '%s.%s.vcr' % (file_name, func_name))
 
-            # check for arclink module
+            # set vcr_recv_endmarker for all arclink tests
             if 'arclink' in source_filename:
                 vcr_recv_endmarker = 'END\r\n'
-            else:
-                vcr_recv_endmarker = ''
 
             # check for tape file and determine mode
             if os.path.isfile(tape) is False or overwrite is True:
