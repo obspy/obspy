@@ -10,10 +10,14 @@ import requests
 from vcr import vcr
 
 
-class VCRTestCase(unittest.TestCase):
+class RequestsTestCase(unittest.TestCase):
     """
-    Test suite for obspy.core.util.vcr
+    Test suite using requests
     """
+    def test_connectivity(self):
+        # basic network connection test to exclude network issues
+        r = requests.get('https://www.python.org/')
+        self.assertEqual(r.status_code, 200)
 
     @vcr
     def test_captured_requests_http(self):
