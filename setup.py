@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import unittest
+
 from setuptools import setup, find_packages
 
 
@@ -8,6 +10,13 @@ with open('README.md') as f:
 
 with open('LICENSE.txt') as f:
     license = f.read()
+
+
+def vcr_test_suite():
+    test_loader = unittest.TestLoader()
+    test_suite = test_loader.discover('tests', pattern='test_*.py')
+    return test_suite
+
 
 setup(
     name='vcr',
@@ -18,6 +27,7 @@ setup(
     author_email='devs@obspy.org',
     url='https://github.com/obspy/vcr',
     license=license,
-    packages=find_packages(exclude=('tests', 'docs'))
+    packages=find_packages(exclude=('tests', 'docs')),
+    test_suite='setup.vcr_test_suite',
 )
 
