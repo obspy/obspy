@@ -146,14 +146,22 @@ class VCRSocket(object):
                 self._orig_socket.setblocking(0)
                 self._orig_socket.settimeout(vcr_recv_timeout)
                 begin = time.time()
-                # recording is slightly slower than disabled vcr due to
-                # waiting for socket timeouts
+                # recording is slightly slower than running without vcr
+                # decorator as we don't know which concept is used to listen
+                # on the socket (size, end marker) - we have to wait for a
+                # socket timeout - on default its already quite low - but still
+                # it introduces a few extra seconds per recv request
+                #
+                # Note: sometimes recording fails due to the small timeout
+                # usually a retry helps - otherwise set the timeout higher for
+                # this test case using the recv_timeout parameter
                 while True:
+                    # endless lopp - breaks by checking against recv_timeout
                     if temp.tell() and time.time() - begin > vcr_recv_timeout:
-                        # if you got some data, then break after wait sec
+                        # got some data -> break after vcr_recv_timeout
                         break
                     elif time.time() - begin > vcr_recv_timeout * 2:
-                        # if you got no data at all, wait a little longer
+                        # no data yet -> break after 2 * vcr_recv_timeout
                         break
 
                     try:
