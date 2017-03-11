@@ -1,0 +1,73 @@
+environment:
+  matrix:
+    # See: http://www.appveyor.com/docs/installed-software#python
+
+    - PYTHON: "C:\\Miniconda" 
+      PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Miniconda-x64"
+      PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Miniconda3"
+      PYTHON_VERSION: "3.4"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Miniconda3-x64"
+      PYTHON_VERSION: "3.4"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Miniconda35"
+      PYTHON_VERSION: "3.5"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Miniconda35-x64"
+      PYTHON_VERSION: "3.5"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Miniconda36"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Miniconda36-x64"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "64"
+
+
+install:
+  # Prepend Python to the PATH of this build (this cannot be
+  # done from inside the powershell script as it would require to restart
+  # the parent CMD process).
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+
+  # Check that we have the expected version and architecture for Python
+  - "python -c \"import sys; print(sys.version)\""
+
+  # Upgrade to the latest version of pip to avoid it displaying warnings
+  # about it being out of date.
+  - "pip install --disable-pip-version-check --user --upgrade pip"
+
+  # Install the build and runtime dependencies of the project.
+  - "conda update -q --yes conda"
+  # Create a conda environment using the required python version
+  - "conda create -q --yes -n test python=%PYTHON_VERSION%"
+  - "activate test"
+  # additional dependencies
+  - "pip install -U future"
+  # list package versions
+  - "conda list"
+
+# Not a .NET project, we build ObsPy in the install step instead
+build: false
+
+test_script:
+  - "python setup.py develop"
+  - "python setup.py tests"
+
+matrix:
+  # enable fast fail strategy
+  fast_finish: true
+
+# Do not build feature branch with open Pull Requests
+skip_branch_with_pr: true
