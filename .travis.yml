@@ -3,18 +3,9 @@
 language: c
 
 matrix:
-  fast_finish: true
   include:
     - os: linux
-      env: PYTHON_VERSION=2.7
-    - os: linux
-      env: PYTHON_VERSION=3.3
-    - os: linux
-      env: PYTHON_VERSION=3.4
-    - os: linux
-      env: PYTHON_VERSION=3.5
-    - os: linux
-      env: PYTHON_VERSION=3.5 ARCHITECTURE_32BIT="True"
+      env: PYTHON_VERSION=2.7 PYTHON_ARCH=32
       addons:
         apt:
           packages:
@@ -22,9 +13,23 @@ matrix:
             - libstdc++6:i386
             - gcc-multilib
     - os: linux
-      env: PYTHON_VERSION=3.6
+      env: PYTHON_VERSION=2.7 PYTHON_ARCH=64
     - os: linux
-      env: PYTHON_VERSION=3.7
+      env: PYTHON_VERSION=3.3
+    - os: linux
+      env: PYTHON_VERSION=3.4
+    - os: linux
+      env: PYTHON_VERSION=3.5 PYTHON_ARCH=32
+      addons:
+        apt:
+          packages:
+            # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
+            - libstdc++6:i386
+            - gcc-multilib
+    - os: linux
+      env: PYTHON_VERSION=3.5 PYTHON_ARCH=64
+    - os: linux
+      env: PYTHON_VERSION=3.6
     - os: osx
       env: PYTHON_VERSION=2.7
     - os: osx
@@ -35,8 +40,6 @@ matrix:
       env: PYTHON_VERSION=3.5
     - os: osx
       env: PYTHON_VERSION=3.6
-    - os: osx
-      env: PYTHON_VERSION=3.7
 
 install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
@@ -45,7 +48,7 @@ install:
       export OS="Linux";
     fi
   - |
-      if [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
+      if [[ "$PYTHON_ARCH" == 32 ]]; then
         export ARCH=""
         # OPT is used by setuptools patches contained in newer numpy versions
         # used by obspy when running pip install --no-deps .
