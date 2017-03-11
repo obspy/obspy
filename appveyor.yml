@@ -63,7 +63,7 @@ build: false
 
 test_script:
   - "python setup.py develop"
-  - "python setup.py tests"
+  - "python setup.py test"
 
 matrix:
   # enable fast fail strategy
