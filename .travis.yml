@@ -68,6 +68,7 @@ install:
 script:
   - pip install -r requirements.txt
   - pip install -r requirements_test.txt
+  - python -c "import sys; print(sys.version)"
   - python setup.py test
 
 notifications:
