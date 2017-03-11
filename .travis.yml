@@ -68,7 +68,9 @@ install:
 script:
   - pip install -r requirements.txt
   - pip install -r requirements_test.txt
-  - python -c "import sys; print(sys.version)"
+  # Check that we have the expected version and architecture for Python
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   - python setup.py test
 
 notifications:
