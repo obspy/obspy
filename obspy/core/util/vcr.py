@@ -33,7 +33,6 @@ import select
 import socket
 import ssl
 import sys
-import tempfile
 import time
 import warnings
 
@@ -50,8 +49,6 @@ orig_socket = socket.socket
 orig_sslsocket = ssl.SSLSocket
 orig_select = select.select
 orig_getaddrinfo = socket.getaddrinfo
-orig_gethostbyname = socket.gethostbyname
-orig_gethostname = socket.gethostname
 orig_sleep = time.sleep
 
 
@@ -69,22 +66,6 @@ def vcr_getaddrinfo(*args, **kwargs):
         return data[3]
 
 
-def vcr_gethostbyname(host):
-    global vcr_status
-    if vcr_status == VCR_RECORD:
-        return orig_gethostbyname(host)
-    else:
-        return '127.0.0.1'
-
-
-def vcr_gethostname():
-    global vcr_status
-    if vcr_status == VCR_RECORD:
-        return orig_getaddrinfo()
-    else:
-        return 'localhost'
-
-
 def vcr_select(r, w, x, timeout=None):
     global vcr_status
     # Windows only
@@ -100,28 +81,6 @@ def vcr_sleep(*args, **kwargs):
     return orig_sleep(*args, **kwargs)
 
 
-class VCRSockFile(object):
-    def __init__(self):
-        self.file = tempfile.TemporaryFile()
-        self._fileno = self.file.fileno()
-
-    def getvalue(self):
-        if hasattr(self.file, 'getvalue'):
-            return self.file.getvalue()
-        else:
-            return self.file.read()
-
-    def close(self):
-        self.socket.close()
-        self.file.close()
-
-    def fileno(self):
-        return self._fileno
-
-    def __getattr__(self, name):
-        return getattr(self.file, name)
-
-
 class VCRSocket(object):
     """
     """
@@ -132,12 +91,6 @@ class VCRSocket(object):
             print('  __init__', family, type, proto, fileno)
         self._recording = vcr_status == VCR_RECORD
         self._orig_socket = orig_socket(family, type, proto, fileno)
-        self.fd = VCRSockFile()
-        self.fd.socket = _sock or self._orig_socket
-        self._sock = _sock or self._orig_socket
-
-    def __del__(self):
-        self.fd.close()
 
     def _exec(self, name, *args, **kwargs):
         global vcr_debug, vcr_playlist
@@ -208,16 +161,11 @@ class VCRSocket(object):
             # playback mode
             # get first element in playlist
             data = vcr_playlist.pop(0)
-            # XXX: arclink again - no idea why but works with this hack
-            if name == 'recv' and data[0] == 'fileno':
-                data = vcr_playlist.pop(0)
             # XXX: py < 3.5 has sometimes two sendall calls ???
-            if sys.version_info < (3, 5) and name == 'makefile' and \
-               data[0] == 'sendall':
-                data = vcr_playlist.pop(0)
+            # if sys.version_info < (3, 5) and name == 'makefile' and \
+            #    data[0] == 'sendall':
+            #     data = vcr_playlist.pop(0)
             value = data[3]
-            if name in ['fileno']:
-                value = self.fd.fileno()
             if vcr_debug:
                 print('  ', name, args, kwargs, '|', data, '->', value)
             return value
@@ -232,7 +180,10 @@ class VCRSocket(object):
         return self._exec('sendall', *args, **kwargs)
 
     def fileno(self, *args, **kwargs):
-        return self._exec('fileno', *args, **kwargs)
+        if self._recording:
+            return self._orig_socket.fileno(*args, **kwargs)
+        else:
+            return 0
 
     def makefile(self, *args, **kwargs):
         return self._exec('makefile', *args, **kwargs)
@@ -248,8 +199,7 @@ class VCRSocket(object):
         return self._exec('recv', *args, **kwargs)
 
     def close(self, *args, **kwargs):
-        if self._recording:
-            return self._orig_socket.close(*args, **kwargs)
+        return self._orig_socket.close(*args, **kwargs)
 
     def gettimeout(self, *args, **kwargs):
         return self._exec('gettimeout', *args, **kwargs)
@@ -290,9 +240,6 @@ class VCRSSLSocket(VCRSocket):
         self._orig_socket = orig_sslsocket(sock=sock._orig_socket,
                                            *args, **kwargs)
 
-    def __del__(self):
-        self._orig_socket.close()
-
     def getpeercert(self, *args, **kwargs):
         return self._exec('getpeercert', *args, **kwargs)
 
@@ -315,8 +262,6 @@ class VCR(object):
         socket.socket = VCRSocket
         ssl.SSLSocket = VCRSSLSocket
         socket.getaddrinfo = vcr_getaddrinfo
-        socket.gethostbyname = vcr_gethostbyname
-        socket.gethostname = vcr_gethostname
         select.select = vcr_select
         time.sleep = vcr_sleep  # skips arclink sleep calls during playback
 
@@ -326,8 +271,6 @@ class VCR(object):
         socket.socket = orig_socket
         ssl.SSLSocket = orig_sslsocket
         socket.getaddrinfo = orig_getaddrinfo
-        socket.gethostbyname = orig_gethostbyname
-        socket.gethostname = orig_gethostname
         select.select = orig_select
         time.sleep = orig_sleep
         # reset
@@ -335,7 +278,7 @@ class VCR(object):
 
 
 def vcr(decorated_func=None, overwrite=False, debug=False, disabled=False,
-        recv_timeout=5, recv_endmarker=None, recv_size=None):
+        recv_timeout=3, recv_endmarker=None, recv_size=None):
     """
     Wrapper around _vcr_inner allowing additional arguments on decorator
     """
@@ -380,12 +323,17 @@ def vcr(decorated_func=None, overwrite=False, debug=False, disabled=False,
                 os.makedirs(path)
             tape = os.path.join(path, '%s.%s.vcr' % (file_name, func_name))
 
-            # set vcr_recv_endmarker for all arclink tests
+            # set vcr_recv_endmarker and higher timeout for arclink tests
             if 'arclink' in source_filename:
-                vcr_recv_endmarker = 'END\r\n'
+                vcr_recv_endmarker = b'END\r\n'
 
             # check for tape file and determine mode
             if os.path.isfile(tape) is False or overwrite is True:
+                # remove existing tape
+                try:
+                    os.remove(tape)
+                except OSError:
+                    pass
                 # record mode
                 if PY2:
                     msg = 'VCR records only in PY3 to be backward ' + \
@@ -419,11 +367,8 @@ def vcr(decorated_func=None, overwrite=False, debug=False, disabled=False,
                 try:
                     value = func(*args, **kwargs)
                 except Exception:
-                    if vcr_debug:
-                        raise
-                    value = None
-                    msg = '@vcr playback raised an exception for %s'
-                    warnings.warn(msg % (func_name))
+                    VCR.stop()
+                    raise
 
             # disable VCR
             VCR.stop()

@@ -91,14 +91,14 @@ class ClientTestCase(unittest.TestCase):
         """
         """
         # initialize client with 0.1 delay
-        client = Client(host='webdc.eu', port=18002, command_delay=0.1,
+        client = Client(host='webdc.eu', port=18002, command_delay=0.5,
                         user='test@obspy.org')
         start = UTCDateTime(2010, 1, 1)
         end = start + 100
-        # get_waveforms with 0.1 delay
+        # get_waveforms with 0.5 delay
         stream = client.get_waveforms('GR', 'FUR', '', 'HHE', start, end)
         self.assertEqual(len(stream), 1)
-        # get_routing with 0.1 delay
+        # get_routing with 0.5 delay
         results = client.get_routing('GR', 'FUR', start, end)
         self.assertIn('GR...', results)
 
@@ -364,12 +364,13 @@ class ClientTestCase(unittest.TestCase):
         # initialize client
         client = Client(user='test@obspy.org')
         # example 1
-        start = UTCDateTime(2008, 1, 1)
+        start = UTCDateTime(1981, 1, 1)
         end = start + 1
         result = client.get_networks(start, end, route=False)
-        self.assertIn('BW', result.keys())
-        self.assertEqual(result['BW']['code'], 'BW')
-        self.assertEqual(result['BW']['description'], 'BayernNetz')
+        self.assertIn('GR', result.keys())
+        self.assertEqual(result['GR']['code'], 'GR')
+        self.assertEqual(result['GR']['description'],
+                         'German Regional Seismic Network, BGR Hannover')
 
     @vcr
     def test_get_stations(self):
@@ -656,7 +657,7 @@ class ClientTestCase(unittest.TestCase):
         """
         dt = UTCDateTime("20120729070000")
         client = Client(user='test@obspy.org')
-        st = client.get_waveforms("BS", "JMB", "", "BH*", dt, dt + 7200,
+        st = client.get_waveforms("BS", "JMB", "", "BH*", dt, dt + 10,
                                   metadata=True)
         for tr in st:
             self.assertIn('paz', tr.stats)
