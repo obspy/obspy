@@ -263,3 +263,18 @@ This will run both..
 Since runtime is rather high, ideally these jobs should be distributed on
 separate docker testrunners (scripts might have to be adjusted, e.g. naming of
 docker temporary containers..)
+
+To run four workers embarassingly parallel (by separating the different build
+types), set up four dedicated obspy github repository clones and run the jobs
+in parallel:
+
+```bash
+$ git clone git://github.com/obspy/obspy /path/to/obspy/dockers/test-pr
+$ git clone git://github.com/obspy/obspy /path/to/obspy/dockers/test-branches
+$ git clone git://github.com/obspy/obspy /path/to/obspy/dockers/deb-pr
+$ git clone git://github.com/obspy/obspy /path/to/obspy/dockers/deb-branches
+$ OBSPY_DOCKER_BASE=/path/to/obspy/dockers/test-pr ./cronjob_docker_tests.sh -t -p &
+$ OBSPY_DOCKER_BASE=/path/to/obspy/dockers/test-branches ./cronjob_docker_tests.sh -t -b &
+$ OBSPY_DOCKER_BASE=/path/to/obspy/dockers/deb-pr ./cronjob_docker_tests.sh -d -p &
+$ OBSPY_DOCKER_BASE=/path/to/obspy/dockers/deb-branches ./cronjob_docker_tests.sh -d -b &
+```
