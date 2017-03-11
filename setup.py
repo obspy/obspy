@@ -29,5 +29,6 @@ setup(
     license=license,
     packages=find_packages(exclude=('tests', 'docs')),
     test_suite='setup.vcr_test_suite',
+    setup_requires=['future'],
+    tests_require=['requests'],
 )
-

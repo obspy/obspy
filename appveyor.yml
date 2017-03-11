@@ -54,7 +54,7 @@ install:
   - "conda create -q --yes -n test python=%PYTHON_VERSION%"
   - "activate test"
   # additional dependencies
-  - "pip install -U future"
+  - "pip install -U future requests"
   # list package versions
   - "conda list"
 
