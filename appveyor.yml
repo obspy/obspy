@@ -1,6 +1,7 @@
+# https://ci.appveyor.com/project/obspy/vcr/
+
 environment:
   matrix:
-    # See: http://www.appveyor.com/docs/installed-software#python
 
     - PYTHON: "C:\\Miniconda" 
       PYTHON_VERSION: "2.7"
@@ -41,28 +42,17 @@ install:
   # the parent CMD process).
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
-  # Check that we have the expected version and architecture for Python
-  - "python -c \"import sys; print(sys.version)\""
-
-  # Upgrade to the latest version of pip to avoid it displaying warnings
-  # about it being out of date.
-  - "pip install --disable-pip-version-check --user --upgrade pip"
-
-  # Install the build and runtime dependencies of the project.
-  - "conda update -q --yes conda"
   # Create a conda environment using the required python version
   - "conda create -q --yes -n test python=%PYTHON_VERSION%"
   - "activate test"
   # additional dependencies
-  - "pip install -U future requests"
-  # list package versions
-  - "conda list"
+  - pip install -r requirements.txt
+  - pip install -r requirements-test.txt
+  - python setup.py install
 
-# Not a .NET project, we build ObsPy in the install step instead
 build: false
 
 test_script:
-  - "python setup.py develop"
   - "python setup.py test"
 
 matrix:
