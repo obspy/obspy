@@ -15,6 +15,7 @@ Inspired by:
  * http://code.activestate.com/recipes/408859/
 
 :copyright:
+    Robert Barsch (barsch@egu.eu)
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
@@ -162,9 +163,9 @@ class VCRSocket(object):
             # get first element in playlist
             data = vcr_playlist.pop(0)
             # XXX: py < 3.5 has sometimes two sendall calls ???
-            # if sys.version_info < (3, 5) and name == 'makefile' and \
-            #    data[0] == 'sendall':
-            #     data = vcr_playlist.pop(0)
+            if sys.version_info < (3, 5) and name == 'makefile' and \
+               data[0] == 'sendall':
+                data = vcr_playlist.pop(0)
             value = data[3]
             if vcr_debug:
                 print('  ', name, args, kwargs, '|', data, '->', value)
