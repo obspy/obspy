@@ -14,7 +14,7 @@ Inspired by:
 
 Network tests tend to fail sporadically, need usually a very long time (compared to other tests) and (surprise!)  require a network connection (if not mocked).
 
-This PR tackles all three issues mentioned above. Here some performance tests (network connection had been disabled during tests of the vcr branch):
+This module tackles all three issues mentioned above. Here some performance tests (network connection had been disabled during tests of the vcr enabled branch):
 
 ```
 (Python36) d:\Workspace\obspy>git checkout master
