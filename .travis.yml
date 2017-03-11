@@ -3,6 +3,7 @@
 language: c
 
 matrix:
+  fast_finish: true
   include:
     - os: linux
       env: PYTHON_VERSION=2.7
