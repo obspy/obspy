@@ -63,22 +63,8 @@ install:
   - conda update -q conda
   - conda create -q -n test-environment python=$PYTHON_VERSION
   - source activate test-environment
-  - git version
-  - git fetch origin --tags --unshallow
-  - git remote add obspy git://github.com/obspy/vcr.git
-  - git fetch vcr --tags
-  - git status
-  - git branch -vv
-  - git remote -vv
-  - pip install --no-deps .
-  - git status
 
 script:
-  # We change directories to make sure that python won't find the copy
-  # of vcr in the source directory, see
-  # https://github.com/numpy/numpy/blob/master/.travis.yml#L44
-  - mkdir empty
-  - cd empty
   - pip install -r requirements.txt
   - pip install -r requirements_test.txt
   - python setup.py test
