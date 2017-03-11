@@ -32,7 +32,8 @@ BW.MANZ..EHZ | 2010-01-01T10:00:00.000000Z - ... | 200.0 Hz, 4001 samples
 Advanced Examples
 -----------------
 
->>> client.waveform.get_network_ids()     #doctest: +SKIP
+>>> net_ids = client.waveform.get_network_ids()  # doctest: +VCR
+>>> print(net_ids)  # doctest: +SKIP
 ['KT', 'BW', 'NZ', 'GR', ...]
 
 >>> sta_ids = client.waveform.get_station_ids(network='BW')  # doctest: +VCR
