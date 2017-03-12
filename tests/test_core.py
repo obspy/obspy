@@ -7,10 +7,10 @@ from future.utils import PY2
 
 import os
 import unittest
+from unittest import skipIf
 
 from vcr import vcr, VCRSystem
 from vcr.utils import catch_stdout
-from unittest.case import skipIf
 
 
 with hooks():
