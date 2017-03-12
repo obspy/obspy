@@ -17,7 +17,7 @@ class SocketTestCase(unittest.TestCase):
     def test_seedlink(self):
         s = socket.socket()
         s.connect(('geofon.gfz-potsdam.de', 18000))
-        s.send(b'HELLO\r')
+        s.send(b'HELLO\r\n')
         data = s.recv(1024)
         s.close()
         self.assertIn(b'SeedLink', data)
@@ -26,7 +26,7 @@ class SocketTestCase(unittest.TestCase):
     def test_arclink(self):
         s = socket.socket()
         s.connect(('webdc.eu', 18001))
-        s.send(b'HELLO\r')
+        s.send(b'HELLO\r\n')
         data = s.recv(1024)
         s.close()
         self.assertIn(b'ArcLink', data)
