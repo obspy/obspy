@@ -20,7 +20,7 @@ def vcr_test_suite():
 
 setup(
     name='vcr',
-    version='0.0.1',
+    version='0.0.2',
     description='Decorator for capturing and simulating network communication',
     long_description=readme,
     author='The ObsPy Development Team',
@@ -32,7 +32,6 @@ setup(
     test_suite='setup.vcr_test_suite',
     setup_requires=['future'],
     tests_require=['requests'],
-    license='GNU Lesser General Public License, Version 3 (LGPLv3)',
     platforms='OS Independent',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
