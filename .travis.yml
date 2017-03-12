@@ -153,6 +153,7 @@ install:
   # install packages not available via conda
   - pip install codecov
   - pip install geographiclib
+  - pip install -U vcr
   # current pyimgur stable release has a py3 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py3.zip
   - pip freeze
