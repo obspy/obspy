@@ -163,7 +163,7 @@ class VCRSocket(object):
     def __init__(self, family=socket.AF_INET, type=socket.SOCK_STREAM,
                  proto=0, fileno=None, _sock=None):
         if VCRSystem.debug:
-            print('  __init__', family, type, proto, fileno)
+            print('  ', '__init__', family, type, proto, fileno)
         self._recording = VCRSystem.is_recording
         self._orig_socket = orig_socket(family, type, proto, fileno)
 
@@ -253,6 +253,8 @@ class VCRSocket(object):
         return self._exec('sendall', *args, **kwargs)
 
     def fileno(self, *args, **kwargs):
+        if VCRSystem.debug:
+            print('  ', 'fileno', args, kwargs)
         if self._recording:
             return self._orig_socket.fileno(*args, **kwargs)
         else:
@@ -265,6 +267,8 @@ class VCRSocket(object):
         return self._exec('getsockopt', *args, **kwargs)
 
     def setsockopt(self, *args, **kwargs):
+        if VCRSystem.debug:
+            print('  ', 'setsockopt', args, kwargs)
         if self._recording:
             return self._orig_socket.setsockopt(*args, **kwargs)
 
@@ -278,10 +282,14 @@ class VCRSocket(object):
         return self._exec('gettimeout', *args, **kwargs)
 
     def settimeout(self, *args, **kwargs):
+        if VCRSystem.debug:
+            print('  ', 'settimeout', args, kwargs)
         if self._recording:
             return self._orig_socket.settimeout(*args, **kwargs)
 
     def setblocking(self, *args, **kwargs):
+        if VCRSystem.debug:
+            print('  ', 'setblocking', args, kwargs)
         if self._recording:
             return self._orig_socket.setblocking(*args, **kwargs)
 
@@ -307,7 +315,7 @@ class VCRSocket(object):
 class VCRSSLSocket(VCRSocket):
     def __init__(self, sock=None, *args, **kwargs):
         if VCRSystem.debug:
-            print('  __init__', args, kwargs)
+            print('  ', '__init__', args, kwargs)
         self._recording = VCRSystem.is_recording
         self._orig_socket = orig_sslsocket(sock=sock._orig_socket,
                                            *args, **kwargs)
