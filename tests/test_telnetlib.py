@@ -31,8 +31,10 @@ class TelnetlibTestCase(unittest.TestCase):
     def test_arclink(self):
         t = telnetlib.Telnet("webdc.eu", 18002, 20)
         t.write(b'HELLO\r\n')
+        # read until ")\r\n" - this fails in linux
         out = t.read_until(b')\r\n', timeout=1)
         self.assertIn(b'ArcLink', out)
+        self.assertIn(b')', out)
         out = t.read_until(b'\r\n', timeout=1)
         self.assertIn(b'GFZ', out)
         t.write(b'USER test@obspy.org\r\n')
@@ -40,6 +42,25 @@ class TelnetlibTestCase(unittest.TestCase):
         self.assertEqual(out, b'OK\r\n')
         t.write(b'INSTITUTION Anonymous\r\n')
         out = t.read_until(b'OK\r\n', timeout=1)
+        self.assertEqual(out, b'OK\r\n')
+        t.close()
+
+    @vcr
+    def test_read_until_only_linesep(self):
+        """
+        use Telnet.read_until only with line separator but no extra string
+        """
+        t = telnetlib.Telnet("webdc.eu", 18002, 20)
+        t.write(b'HELLO\r\n')
+        out = t.read_until(b'\r\n', timeout=1)
+        self.assertIn(b'ArcLink', out)
+        out = t.read_until(b'\r\n', timeout=1)
+        self.assertIn(b'GFZ', out)
+        t.write(b'USER test@obspy.org\r\n')
+        out = t.read_until(b'\r\n', timeout=1)
+        self.assertEqual(out, b'OK\r\n')
+        t.write(b'INSTITUTION Anonymous\r\n')
+        out = t.read_until(b'\r\n', timeout=1)
         self.assertEqual(out, b'OK\r\n')
         t.close()
 
