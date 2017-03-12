@@ -23,11 +23,11 @@ from difflib import Differ
 
 import lxml
 import requests
+from vcr import vcr
 
 from obspy import UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.vcr import vcr
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,

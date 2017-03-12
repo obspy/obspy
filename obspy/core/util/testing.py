@@ -26,10 +26,10 @@ import warnings
 
 import numpy as np
 from lxml import etree
+from vcr import vcr
 
 from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
 from obspy.core.util.misc import MatplotlibBackend
-from obspy.core.util.vcr import vcr
 
 
 # this dictionary contains the locations of checker routines that determine

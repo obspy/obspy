@@ -10,12 +10,12 @@ import os
 import unittest
 
 import numpy as np
+from vcr import vcr
 
 from obspy.clients.arclink import Client, decrypt
 from obspy.clients.arclink.client import DCID_KEY_FILE, ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.vcr import vcr
 
 
 @unittest.skipIf(not decrypt.HAS_CRYPTOLIB,

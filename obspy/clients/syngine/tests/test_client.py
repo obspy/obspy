@@ -11,11 +11,11 @@ import io
 import unittest
 
 import numpy as np
+from vcr import vcr
 
 import obspy
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.vcr import vcr
 from obspy.clients.syngine import Client
 from obspy.clients.base import DEFAULT_TESTING_USER_AGENT, ClientHTTPException
 

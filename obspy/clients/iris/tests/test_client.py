@@ -10,10 +10,10 @@ import os
 import unittest
 
 import numpy as np
+from vcr import vcr
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.vcr import vcr
 from obspy.clients.iris import Client
 
 

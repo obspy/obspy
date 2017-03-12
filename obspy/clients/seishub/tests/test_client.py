@@ -7,11 +7,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
 import unittest
 
+import numpy as np
+from vcr import vcr
+
 from obspy.core import AttribDict, UTCDateTime
-from obspy.core.util.vcr import vcr
 from obspy.clients.seishub import Client
 
 
