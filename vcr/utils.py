@@ -37,3 +37,11 @@ else:
 
 def catch_stdout():
     return redirect_stdout(CaptureIO())
+
+
+class classproperty(object):
+    def __init__(self, fget):
+        self.fget = fget
+
+    def __get__(self, _owner_self, owner_cls):
+        return self.fget(owner_cls)

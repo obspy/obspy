@@ -37,6 +37,8 @@ import sys
 import time
 import warnings
 
+from .utils import classproperty
+
 
 VCR_RECORD = 0
 VCR_PLAYBACK = 1
@@ -126,6 +128,14 @@ class VCRSystem(object):
     def stop_extras(cls):
         pass
 
+    @classproperty
+    def is_recording(cls):  # @NoSelf
+        return cls.status == VCR_RECORD
+
+    @classproperty
+    def is_playing(cls):  # @NoSelf
+        return cls.status == VCR_PLAYBACK
+
 
 def vcr_getaddrinfo(*args, **kwargs):
     if VCRSystem.status == VCR_RECORD:
@@ -154,7 +164,7 @@ class VCRSocket(object):
                  proto=0, fileno=None, _sock=None):
         if VCRSystem.debug:
             print('  __init__', family, type, proto, fileno)
-        self._recording = VCRSystem.status == VCR_RECORD
+        self._recording = VCRSystem.is_recording
         self._orig_socket = orig_socket(family, type, proto, fileno)
 
     def _exec(self, name, *args, **kwargs):
@@ -298,7 +308,7 @@ class VCRSSLSocket(VCRSocket):
     def __init__(self, sock=None, *args, **kwargs):
         if VCRSystem.debug:
             print('  __init__', args, kwargs)
-        self._recording = VCRSystem.status == VCR_RECORD
+        self._recording = VCRSystem.is_recording
         self._orig_socket = orig_sslsocket(sock=sock._orig_socket,
                                            *args, **kwargs)
 
