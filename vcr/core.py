@@ -46,7 +46,6 @@ orig_socket = socket.socket
 orig_sslsocket = ssl.SSLSocket
 orig_select = select.select
 orig_getaddrinfo = socket.getaddrinfo
-orig_sleep = time.sleep
 
 
 class VCRSystem(object):
@@ -103,7 +102,12 @@ class VCRSystem(object):
         ssl.SSLSocket = VCRSSLSocket
         socket.getaddrinfo = vcr_getaddrinfo
         select.select = vcr_select
-        time.sleep = vcr_sleep  # skips arclink sleep calls during playback
+        # extras
+        cls.start_extras()
+
+    @classmethod
+    def start_extras(cls):
+        pass
 
     @classmethod
     def stop(cls):
@@ -112,10 +116,15 @@ class VCRSystem(object):
         ssl.SSLSocket = orig_sslsocket
         socket.getaddrinfo = orig_getaddrinfo
         select.select = orig_select
-        time.sleep = orig_sleep
         # reset
         cls.playlist = []
         cls.status = VCR_RECORD
+        # extras
+        cls.stop_extras()
+
+    @classmethod
+    def stop_extras(cls):
+        pass
 
 
 def vcr_getaddrinfo(*args, **kwargs):
@@ -136,12 +145,6 @@ def vcr_select(r, w, x, timeout=None):
     if sys.platform == 'win32' and VCRSystem.status == VCR_PLAYBACK:
         return list(r), list(w), []
     return orig_select(r, w, x, timeout)
-
-
-def vcr_sleep(*args, **kwargs):
-    if VCRSystem.status == VCR_PLAYBACK:
-        return
-    return orig_sleep(*args, **kwargs)
 
 
 class VCRSocket(object):
@@ -197,8 +200,7 @@ class VCRSocket(object):
                             begin = time.time()
                         else:
                             time.sleep(0.1 * VCRSystem.recv_timeout)
-                        # speed up closing socket by checking for end marker
-                        # (e.g. arclink uses e.g. "END\r\n" as identifier) or
+                        # speed up closing socket by checking for end markers
                         # by a given recv length
                         if VCRSystem.recv_size:
                             break
@@ -353,10 +355,6 @@ def vcr(decorated_func=None, debug=False, overwrite=False, disabled=False):
             if not os.path.isdir(path):
                 os.makedirs(path)
             tape = os.path.join(path, '%s.%s.vcr' % (file_name, func_name))
-
-            # set vcr_recv_endmarker and higher timeout for arclink tests
-            if 'arclink' in source_filename:
-                VCRSystem.recv_endmarkers = [b'END\r\n']
 
             # check for tape file and determine mode
             if not os.path.isfile(tape) or overwrite or VCRSystem.overwrite:
