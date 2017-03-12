@@ -41,10 +41,6 @@ import warnings
 VCR_RECORD = 0
 VCR_PLAYBACK = 1
 
-vcr_debug = False
-vcr_playlist = []
-vcr_status = VCR_RECORD
-
 
 orig_socket = socket.socket
 orig_sslsocket = ssl.SSLSocket
@@ -53,31 +49,97 @@ orig_getaddrinfo = socket.getaddrinfo
 orig_sleep = time.sleep
 
 
+class VCRSystem(object):
+    """
+    Use this class to overwrite default settings on global scale
+
+    >>> from vcr import VCRSystem
+    >>> VCRSystem.debug = True
+    >>> run_my_tests()
+    >>> VCRSystem.reset()
+
+    ``debug`` : bool
+        Enables debug mode.
+    ``overwrite`` : bool
+        Will run vcr in recording mode - overwrites any existing vcrtapes.
+    ``disabled`` : bool
+        Completely disables vcr - same effect as removing the decorator.
+    ``recv_timeout`` : int
+        Timeout in seconds used to break socket recv calls (default is 3).
+    ``recv_endmarkers`` : list of bytes
+        List of end markers which is used to check if a socket recv call
+        is finished, e.g. [b'\r\n', b'END\r\n']. Will be ignored if its an
+        empty list (default).
+    ``recv_size`` : int
+        Will request given number of bytes in socket recv calls. Option is
+        ignored if not set (default).
+    """
+    debug = False
+    disabled = False
+    overwrite = False
+    recv_timeout = 3
+    recv_endmarkers = []
+    recv_size = None
+
+    @classmethod
+    def reset(cls):
+        """
+        Reset to default settings
+        """
+        cls.debug = False
+        cls.disabled = False
+        cls.overwrite = False
+        cls.recv_timeout = 3
+        cls.recv_endmarkers = []
+        cls.recv_size = None
+
+    @classmethod
+    def start(cls):
+        # reset
+        cls.playlist = []
+        cls.status = VCR_RECORD
+        # apply monkey patches
+        socket.socket = VCRSocket
+        ssl.SSLSocket = VCRSSLSocket
+        socket.getaddrinfo = vcr_getaddrinfo
+        select.select = vcr_select
+        time.sleep = vcr_sleep  # skips arclink sleep calls during playback
+
+    @classmethod
+    def stop(cls):
+        # revert monkey patches
+        socket.socket = orig_socket
+        ssl.SSLSocket = orig_sslsocket
+        socket.getaddrinfo = orig_getaddrinfo
+        select.select = orig_select
+        time.sleep = orig_sleep
+        # reset
+        cls.playlist = []
+        cls.status = VCR_RECORD
+
+
 def vcr_getaddrinfo(*args, **kwargs):
-    global vcr_status, vcr_playlist
-    if vcr_status == VCR_RECORD:
+    if VCRSystem.status == VCR_RECORD:
         # record mode
         value = orig_getaddrinfo(*args, **kwargs)
-        vcr_playlist.append(
+        VCRSystem.playlist.append(
             ('getaddrinfo', args, kwargs, copy.copy(value)))
         return value
     else:
         # playback mode
-        data = vcr_playlist.pop(0)
+        data = VCRSystem.playlist.pop(0)
         return data[3]
 
 
 def vcr_select(r, w, x, timeout=None):
-    global vcr_status
     # Windows only
-    if sys.platform == 'win32' and vcr_status == VCR_PLAYBACK:
+    if sys.platform == 'win32' and VCRSystem.status == VCR_PLAYBACK:
         return list(r), list(w), []
     return orig_select(r, w, x, timeout)
 
 
 def vcr_sleep(*args, **kwargs):
-    global vcr_status
-    if vcr_status == VCR_PLAYBACK:
+    if VCRSystem.status == VCR_PLAYBACK:
         return
     return orig_sleep(*args, **kwargs)
 
@@ -87,27 +149,23 @@ class VCRSocket(object):
     """
     def __init__(self, family=socket.AF_INET, type=socket.SOCK_STREAM,
                  proto=0, fileno=None, _sock=None):
-        global vcr_debug, vcr_status
-        if vcr_debug:
+        if VCRSystem.debug:
             print('  __init__', family, type, proto, fileno)
-        self._recording = vcr_status == VCR_RECORD
+        self._recording = VCRSystem.status == VCR_RECORD
         self._orig_socket = orig_socket(family, type, proto, fileno)
 
     def _exec(self, name, *args, **kwargs):
-        global vcr_debug, vcr_playlist
-        global vcr_recv_timeout, vcr_recv_endmarker, vcr_recv_size
-
         if self._recording:
             # record mode
             value = getattr(self._orig_socket, name)(*args, **kwargs)
-            if vcr_debug:
+            if VCRSystem.debug:
                 print('  ', name, args, kwargs, value)
             # handle special objects which are not pickleable
             if isinstance(value, io.BufferedIOBase) and \
                not isinstance(value, io.BytesIO):
                 temp = io.BytesIO()
                 self._orig_socket.setblocking(0)
-                self._orig_socket.settimeout(vcr_recv_timeout)
+                self._orig_socket.settimeout(VCRSystem.recv_timeout)
                 begin = time.time()
                 # recording is slightly slower than running without vcr
                 # decorator as we don't know which concept is used to listen
@@ -120,16 +178,17 @@ class VCRSocket(object):
                 # this test case using the recv_timeout parameter
                 while True:
                     # endless loop - breaks by checking against recv_timeout
-                    if temp.tell() and time.time() - begin > vcr_recv_timeout:
-                        # got some data -> break after vcr_recv_timeout
+                    if temp.tell() and \
+                       time.time() - begin > VCRSystem.recv_timeout:
+                        # got some data -> break after recv_timeout
                         break
-                    elif time.time() - begin > vcr_recv_timeout * 2:
-                        # no data yet -> break after 2 * vcr_recv_timeout
+                    elif time.time() - begin > VCRSystem.recv_timeout * 2:
+                        # no data yet -> break after 2 * recv_timeout
                         break
 
                     try:
-                        if vcr_recv_size:
-                            data = value.read(len(vcr_recv_size))
+                        if VCRSystem.recv_size:
+                            data = value.read(len(VCRSystem.recv_size))
                         else:
                             peeked_bytes = value.peek()
                             data = value.read(len(peeked_bytes))
@@ -137,37 +196,38 @@ class VCRSocket(object):
                             temp.write(data)
                             begin = time.time()
                         else:
-                            time.sleep(0.1 * vcr_recv_timeout)
+                            time.sleep(0.1 * VCRSystem.recv_timeout)
                         # speed up closing socket by checking for end marker
                         # (e.g. arclink uses e.g. "END\r\n" as identifier) or
                         # by a given recv length
-                        if vcr_recv_endmarker and \
-                           data.endswith(vcr_recv_endmarker):
+                        if VCRSystem.recv_size:
                             break
-                        elif vcr_recv_size:
-                            break
+                        elif VCRSystem.recv_endmarkers:
+                            for marker in VCRSystem.recv_endmarkers:
+                                if data.endswith(marker):
+                                    break
                     except socket.error:
                         break
                 temp.seek(0)
-                vcr_playlist.append((name, args, kwargs, temp))
+                VCRSystem.playlist.append((name, args, kwargs, temp))
                 # return new copy of BytesIO as it may get closed
                 return copy.copy(temp)
-            if vcr_debug:
+            if VCRSystem.debug:
                 # test if value is pickleable - will raise exception
                 pickle.dumps(value)
             # add to playlist
-            vcr_playlist.append((name, args, kwargs, copy.copy(value)))
+            VCRSystem.playlist.append((name, args, kwargs, copy.copy(value)))
             return value
         else:
             # playback mode
             # get first element in playlist
-            data = vcr_playlist.pop(0)
+            data = VCRSystem.playlist.pop(0)
             # XXX: py < 3.5 has sometimes two sendall calls ???
             if sys.version_info < (3, 5) and name == 'makefile' and \
                data[0] == 'sendall':
-                data = vcr_playlist.pop(0)
+                data = VCRSystem.playlist.pop(0)
             value = data[3]
-            if vcr_debug:
+            if VCRSystem.debug:
                 print('  ', name, args, kwargs, '|', data, '->', value)
             return value
 
@@ -234,10 +294,9 @@ class VCRSocket(object):
 
 class VCRSSLSocket(VCRSocket):
     def __init__(self, sock=None, *args, **kwargs):
-        global vcr_debug, vcr_status
-        if vcr_debug:
+        if VCRSystem.debug:
             print('  __init__', args, kwargs)
-        self._recording = vcr_status == VCR_RECORD
+        self._recording = VCRSystem.status == VCR_RECORD
         self._orig_socket = orig_sslsocket(sock=sock._orig_socket,
                                            *args, **kwargs)
 
@@ -245,63 +304,34 @@ class VCRSSLSocket(VCRSocket):
         return self._exec('getpeercert', *args, **kwargs)
 
 
-class VCR(object):
+def vcr(decorated_func=None, debug=False, overwrite=False, disabled=False):
     """
+    Decorator for capturing and simulating network communication
+
+    ``debug`` : bool, optional
+        Enables debug mode.
+    ``overwrite`` : bool, optional
+        Will run vcr in recording mode - overwrites any existing vcrtapes.
+    ``disabled`` : bool, optional
+        Completely disables vcr - same effect as removing the decorator.
     """
-    @classmethod
-    def reset(cls, debug=False):
-        global vcr_playlist, vcr_status, vcr_debug
-        vcr_playlist = []
-        vcr_status = VCR_RECORD
-        vcr_debug = debug
-
-    @classmethod
-    def start(cls, debug=False):
-        # reset
-        cls.reset(debug)
-        # monkey patching
-        socket.socket = VCRSocket
-        ssl.SSLSocket = VCRSSLSocket
-        socket.getaddrinfo = vcr_getaddrinfo
-        select.select = vcr_select
-        time.sleep = vcr_sleep  # skips arclink sleep calls during playback
-
-    @classmethod
-    def stop(cls):
-        # revert monkey patches
-        socket.socket = orig_socket
-        ssl.SSLSocket = orig_sslsocket
-        socket.getaddrinfo = orig_getaddrinfo
-        select.select = orig_select
-        time.sleep = orig_sleep
-        # reset
-        cls.reset()
-
-
-def vcr(decorated_func=None, overwrite=False, debug=False, disabled=False,
-        recv_timeout=3, recv_endmarker=None, recv_size=None):
-    """
-    Wrapper around _vcr_inner allowing additional arguments on decorator
-    """
-    global vcr_recv_timeout, vcr_recv_endmarker, vcr_recv_size
-
-    vcr_recv_timeout = recv_timeout
-    vcr_recv_endmarker = recv_endmarker
-    vcr_recv_size = recv_size
-
     def _vcr_outer(func):
+        """
+        Wrapper around _vcr_inner allowing optional arguments on decorator
+        """
         def _vcr_inner(*args, **kwargs):
             """
             The actual decorator doing a lot of monkey patching and auto magic
             """
-            global vcr_playlist, vcr_status, vcr_debug, vcr_recv_endmarker
-
-            if disabled:
+            if disabled or VCRSystem.disabled:
                 # execute decorated function without VCR
                 return func(*args, **kwargs)
 
             # enable VCR
-            VCR.start(debug)
+            if debug:
+                system_debug = VCRSystem.debug
+                VCRSystem.debug = True
+            VCRSystem.start()
 
             # prepare VCR tape
             if func.__module__ == 'doctest':
@@ -326,10 +356,10 @@ def vcr(decorated_func=None, overwrite=False, debug=False, disabled=False,
 
             # set vcr_recv_endmarker and higher timeout for arclink tests
             if 'arclink' in source_filename:
-                vcr_recv_endmarker = b'END\r\n'
+                VCRSystem.recv_endmarkers = [b'END\r\n']
 
             # check for tape file and determine mode
-            if os.path.isfile(tape) is False or overwrite is True:
+            if not os.path.isfile(tape) or overwrite or VCRSystem.overwrite:
                 # remove existing tape
                 try:
                     os.remove(tape)
@@ -341,38 +371,40 @@ def vcr(decorated_func=None, overwrite=False, debug=False, disabled=False,
                           'compatible with PY2 - skipping VCR mechanics for %s'
                     warnings.warn(msg % (func.__name__))
                     # disable VCR
-                    VCR.stop()
+                    VCRSystem.stop()
                     # execute decorated function without VCR
                     return func(*args, **kwargs)
-                if debug:
+                if VCRSystem.debug:
                     print('\nVCR RECORDING (%s) ...' % (func_name))
-                vcr_status = VCR_RECORD
+                VCRSystem.status = VCR_RECORD
                 # execute decorated function
                 value = func(*args, **kwargs)
                 # write to file
-                if len(vcr_playlist) == 0:
+                if len(VCRSystem.playlist) == 0:
                     msg = 'no socket activity - @vcr decorator unneeded for %s'
                     warnings.warn(msg % (func.__name__))
                 else:
                     with open(tape, 'wb') as fh:
-                        pickle.dump(vcr_playlist, fh, protocol=2)
+                        pickle.dump(VCRSystem.playlist, fh, protocol=2)
             else:
                 # playback mode
-                if debug:
+                if VCRSystem.debug:
                     print('\nVCR PLAYBACK (%s) ...' % (func_name))
-                vcr_status = VCR_PLAYBACK
+                VCRSystem.status = VCR_PLAYBACK
                 # load playlist
                 with open(tape, 'rb') as fh:
-                    vcr_playlist = pickle.load(fh)
+                    VCRSystem.playlist = pickle.load(fh)
                 # execute decorated function
                 try:
                     value = func(*args, **kwargs)
                 except Exception:
-                    VCR.stop()
+                    VCRSystem.stop()
                     raise
 
             # disable VCR
-            VCR.stop()
+            if debug:
+                VCRSystem.debug = system_debug
+            VCRSystem.stop()
 
             return value
 
