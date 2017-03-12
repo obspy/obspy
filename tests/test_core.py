@@ -166,8 +166,23 @@ class VCRSystemTestCase(unittest.TestCase):
     """
     Test suite for VCRSystem
     """
-    def test_playback(self):
-        # no debug mode
+    def setUp(self):
+        # Directory where the test files are located
+        self.path = os.path.join(os.path.dirname(__file__), 'vcrtapes')
+        self.temp_test_vcr = os.path.join(self.path, 'test_core.temp_test.vcr')
+        self.read_test_vcr = os.path.join(self.path, 'test_core.read_test.vcr')
+
+    def tearDown(self):
+        # cleanup temporary files
+        try:
+            os.remove(self.temp_test_vcr)
+        except OSError:
+            pass
+        # reset to default settings
+        VCRSystem.reset()
+
+    def test_debug(self):
+        # no debug mode on decorator level
         @vcr
         def read_test():
             r = urlopen('https://www.python.org/')
@@ -191,6 +206,67 @@ class VCRSystemTestCase(unittest.TestCase):
         with catch_stdout() as out:
             read_test()
             self.assertEqual(out.getvalue(), '')
+
+    @skipIf(PY2, 'recording in PY2 is not supported')
+    def test_overwrite(self):
+        # no overwrite setting in decorator level
+        @vcr
+        def temp_test():
+            r = urlopen('https://www.python.org/')
+            self.assertEqual(r.status, 200)
+
+        # run it once
+        temp_test()
+        # get creation date of tape
+        mtime = os.path.getmtime(self.temp_test_vcr)
+        # run it again
+        temp_test()
+        # mtime didn't change as the file has not been overwritten
+        self.assertEqual(os.path.getmtime(self.temp_test_vcr), mtime)
+
+        # now enable global overwrite mode
+        VCRSystem.overwrite = True
+        # get current mtime
+        mtime = os.path.getmtime(self.temp_test_vcr)
+        # re-run the test
+        temp_test()
+        # mtime did change this time
+        self.assertTrue(os.path.getmtime(self.temp_test_vcr) > mtime)
+
+        # reset
+        VCRSystem.reset()
+        # get current mtime
+        mtime = os.path.getmtime(self.temp_test_vcr)
+        # run it again
+        temp_test()
+        # mtime didn't change as the file has not been overwritten
+        self.assertEqual(os.path.getmtime(self.temp_test_vcr), mtime)
+
+    def test_disabled(self):
+        # no disabled but debug mode on decorator level
+        @vcr(debug=True)
+        def read_test():
+            r = urlopen('https://www.python.org/')
+            self.assertEqual(r.status, 200)
+
+        # run the test - there should be output due to debug
+        with catch_stdout() as out:
+            read_test()
+            self.assertIn('VCR PLAYBACK', out.getvalue())
+
+        # now enable disabled mode
+        VCRSystem.disabled = True
+        # re-run the test - there should be no output
+        with catch_stdout() as out:
+            read_test()
+            self.assertEqual(out.getvalue(), '')
+
+        # reset
+        VCRSystem.reset()
+        # re-run the test - again output due to debug mode on decorator level
+        with catch_stdout() as out:
+            read_test()
+            self.assertIn('VCR PLAYBACK', out.getvalue())
 
 
 if __name__ == '__main__':
