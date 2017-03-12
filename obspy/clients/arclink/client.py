@@ -183,20 +183,19 @@ class Client(object):
         if self.debug:
             print('>>> ' + buffer)
 
-    def _read_ln(self, value=b''):
-        line = self._client.read_until(value + b'\r\n', self.timeout)
+    def _read_ln(self):
+        line = self._client.read_until(b'\r\n', self.timeout)
         line = line.strip()
-        if value not in line:
-            msg = "Timeout waiting for expected %s, got %s"
-            raise ArcLinkException(msg % (value, line.decode()))
         if self.debug:
             print('... ' + line.decode())
         return line
 
     def _hello(self):
         self._reconnect()
+        # returns two <cr><lf>-terminated lines with the software version and
+        # the data centre name.
         self._write_ln('HELLO')
-        self.version = self._read_ln(b')')
+        self.version = self._read_ln()
         self.node = self._read_ln()
         if self.password:
             self._write_ln('USER %s %s' % (self.user, self.password))
