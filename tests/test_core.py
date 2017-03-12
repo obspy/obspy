@@ -8,7 +8,7 @@ from future.utils import PY2
 import os
 import unittest
 
-from vcr import vcr
+from vcr import vcr, VCRSystem
 from vcr.utils import catch_stdout
 from unittest.case import skipIf
 
@@ -160,6 +160,37 @@ class CoreTestCase(unittest.TestCase):
         temp_test()
         # mtime didn't change as the file has not been overwritten
         self.assertEqual(os.path.getmtime(self.temp_test_vcr), mtime)
+
+
+class VCRSystemTestCase(unittest.TestCase):
+    """
+    Test suite for VCRSystem
+    """
+    def test_playback(self):
+        # no debug mode
+        @vcr
+        def read_test():
+            r = urlopen('https://www.python.org/')
+            self.assertEqual(r.status, 200)
+
+        # run the test - there should be no output
+        with catch_stdout() as out:
+            read_test()
+            self.assertEqual(out.getvalue(), '')
+
+        # now enable global debug mode
+        VCRSystem.debug = True
+        # re-run the test
+        with catch_stdout() as out:
+            read_test()
+            self.assertIn('VCR PLAYBACK', out.getvalue())
+
+        # reset
+        VCRSystem.reset()
+        # re-run the test - again no output
+        with catch_stdout() as out:
+            read_test()
+            self.assertEqual(out.getvalue(), '')
 
 
 if __name__ == '__main__':
