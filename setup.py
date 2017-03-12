@@ -17,7 +17,7 @@ def vcr_test_suite():
 
 setup(
     name='vcr',
-    version='0.0.3',
+    version='0.0.4',
     description='Decorator for capturing and simulating network communication',
     long_description=readme,
     author='The ObsPy Development Team',
