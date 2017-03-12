@@ -5,11 +5,8 @@ import unittest
 from setuptools import setup, find_packages
 
 
-with open('README.md') as f:
+with open('README.txt') as f:
     readme = f.read()
-
-with open('LICENSE.txt') as f:
-    license = f.read()
 
 
 def vcr_test_suite():
@@ -20,14 +17,14 @@ def vcr_test_suite():
 
 setup(
     name='vcr',
-    version='0.0.2',
+    version='0.0.3',
     description='Decorator for capturing and simulating network communication',
     long_description=readme,
     author='The ObsPy Development Team',
     author_email='devs@obspy.org',
     url='https://github.com/obspy/vcr',
-    download_url = 'https://github.com/obspy/vcr/archive/master.zip',
-    license=license,
+    download_url='https://github.com/obspy/vcr/archive/master.zip',
+    license="GNU Lesser General Public License",
     packages=find_packages(exclude=('tests', 'docs')),
     test_suite='setup.vcr_test_suite',
     setup_requires=['future'],
