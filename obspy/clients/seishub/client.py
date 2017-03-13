@@ -102,12 +102,13 @@ class Client(object):
 
     .. rubric:: Example
 
-    >>> from obspy.clients.seishub import Client
+    >>> from obspy.clients.seishub import Client  # doctest: +VCR
     >>>
     >>> t = UTCDateTime("2009-09-03 00:00:00")
     >>> client = Client(timeout=20)
     >>>
-    >>> st = client.waveform.get_waveforms("BW", "RTBE", "", "EHZ", t, t + 20)
+    >>> st = client.waveform.get_waveforms(
+    ...     "BW", "RTBE", "", "EHZ", t, t + 20)
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
     BW.RTBE..EHZ | 2009-09-03T00:00:00.000000Z - ... | 200.0 Hz, 4001 samples
@@ -306,7 +307,7 @@ class _BaseRESTClient(object):
 
         .. rubric:: Example
 
-        >>> c = Client()
+        >>> c = Client()  # doctest: +VCR
         >>> xseed_file = "dataless.seed.BW_UH1.xml"
         >>> xml_str = open(xseed_file).read()  # doctest: +SKIP
         >>> c.station.put_resource(xseed_file, xml_str)  # doctest: +SKIP
@@ -717,8 +718,9 @@ master/seishub/plugins/seismology/waveform.py
 
         .. rubric:: Example
 
-        >>> c = Client(timeout=20)
-        >>> paz = c.station.get_paz('BW.MANZ..EHZ', '20090707')
+        >>> c = Client(timeout=20)  # doctest: +VCR
+        >>> paz = c.station.get_paz('BW.MANZ..EHZ',
+        ...                         '20090707')
         >>> paz['zeros']
         [0j, 0j]
         >>> len(paz['poles'])

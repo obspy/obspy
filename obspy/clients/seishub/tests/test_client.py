@@ -23,7 +23,7 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for the SeisHub client.
     """
-
+    @vcr
     def setUp(self):
         self.client = Client(TESTSERVER)
 

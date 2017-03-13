@@ -14,13 +14,12 @@ database SeisHub (http://www.seishub.org).
 Basic Example
 -------------
 
->>> from obspy.clients.seishub import Client
+>>> from obspy.clients.seishub import Client  # doctest: +VCR
 >>> from obspy import UTCDateTime
 
 >>> client = Client(timeout=20)
 >>> t = UTCDateTime('2010-01-01T10:00:00')
->>> st = client.waveform.get_waveforms(
-...     "BW", "MANZ", "", "EH*", t, t+20)  # doctest: +VCR
+>>> st = client.waveform.get_waveforms("BW", "MANZ", "", "EH*", t, t+20)
 >>> st.sort()  # doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at ...>
 >>> print(st)  # doctest: +ELLIPSIS
@@ -32,22 +31,22 @@ BW.MANZ..EHZ | 2010-01-01T10:00:00.000000Z - ... | 200.0 Hz, 4001 samples
 Advanced Examples
 -----------------
 
->>> net_ids = client.waveform.get_network_ids()  # doctest: +VCR
+>>> net_ids = client.waveform.get_network_ids()
 >>> print(net_ids)  # doctest: +SKIP
 ['KT', 'BW', 'NZ', 'GR', ...]
 
->>> sta_ids = client.waveform.get_station_ids(network='BW')  # doctest: +VCR
+>>> sta_ids = client.waveform.get_station_ids(network='BW')
 >>> sorted(sta_ids)  # doctest: +SKIP
 ['ALTM', 'BGLD', 'BW01',..., 'WETR', 'ZUGS']
 
 >>> cha_ids = client.waveform.get_channel_ids(
-...     network='BW', station='MANZ')  # doctest: +VCR
+...     network='BW', station='MANZ')
 >>> sorted(cha_ids)  # doctest: +NORMALIZE_WHITESPACE
 ['AEX', 'AEY', 'BHE', 'BHN', 'BHZ', 'EHE', 'EHN', 'EHZ', 'HHE', 'HHN', 'HHZ',
  'LOG', 'SHE', 'SHN', 'SHZ']
 
 >>> paz = client.station.get_paz('BW.MANZ..EHZ',
-...                              UTCDateTime('20090808'))  # doctest: +VCR
+...                              UTCDateTime('20090808'))
 >>> paz = paz.items()
 >>> sorted(paz)  # doctest: +SKIP
 [('gain', 60077000.0),
