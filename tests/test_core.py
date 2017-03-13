@@ -161,6 +161,18 @@ class CoreTestCase(unittest.TestCase):
         # mtime didn't change as the file has not been overwritten
         self.assertEqual(os.path.getmtime(self.temp_test_vcr), mtime)
 
+    @skipIf(PY2, 'recording in PY2 is not supported')
+    def test_tape_name(self):
+        @vcr(tape_name='test_core.temp_test.vcr')
+        def custom_test():
+            r = urlopen('https://www.python.org/')
+            self.assertEqual(r.status, 200)
+
+        # run it once - usually it should generate test_core.custom_test.vcr
+        custom_test()
+        # check if given tape file exists
+        self.assertTrue(os.path.exists(self.temp_test_vcr))
+
 
 class VCRSystemTestCase(unittest.TestCase):
     """

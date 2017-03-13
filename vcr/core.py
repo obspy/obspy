@@ -144,11 +144,17 @@ def vcr_getaddrinfo(*args, **kwargs):
         value = orig_getaddrinfo(*args, **kwargs)
         VCRSystem.playlist.append(
             ('getaddrinfo', args, kwargs, copy.copy(value)))
+        if VCRSystem.debug:
+            print('  ', 'vcr_getaddrinfo', args, kwargs, value)
         return value
     else:
         # playback mode
         data = VCRSystem.playlist.pop(0)
-        return data[3]
+        value = data[3]
+        if VCRSystem.debug:
+            print('  ', 'getaddrinfo', args, kwargs, ' | ', data[0:3],
+                  '->', value)
+        return value
 
 
 def vcr_select(r, w, x, timeout=None):
@@ -248,7 +254,7 @@ class VCRSocket(object):
                 data = VCRSystem.playlist.pop(0)
             value = data[3]
             if VCRSystem.debug:
-                print('  ', name, args, kwargs, '|', data, '->', value)
+                print('  ', name, args, kwargs, ' | ', data[0:3], '->', value)
             return value
 
     def __nonzero__(self):
@@ -261,12 +267,13 @@ class VCRSocket(object):
         return self._exec('sendall', *args, **kwargs)
 
     def fileno(self, *args, **kwargs):
-        if VCRSystem.debug:
-            print('  ', 'fileno', args, kwargs)
         if self._recording:
-            return self._orig_socket.fileno(*args, **kwargs)
+            value = self._orig_socket.fileno(*args, **kwargs)
         else:
-            return self.fd.fileno()
+            value = self.fd.fileno()
+        if VCRSystem.debug:
+            print('  ', 'fileno', args, kwargs, '->', value)
+        return value
 
     def makefile(self, *args, **kwargs):
         return self._exec('makefile', *args, **kwargs)
@@ -327,12 +334,16 @@ class VCRSSLSocket(VCRSocket):
         self._recording = VCRSystem.is_recording
         self._orig_socket = orig_sslsocket(sock=sock._orig_socket,
                                            *args, **kwargs)
+        # a working file descriptor is needed for telnetlib.Telnet.read_until
+        if not self._recording:
+            self.fd = tempfile.TemporaryFile()
 
     def getpeercert(self, *args, **kwargs):
         return self._exec('getpeercert', *args, **kwargs)
 
 
-def vcr(decorated_func=None, debug=False, overwrite=False, disabled=False):
+def vcr(decorated_func=None, debug=False, overwrite=False, disabled=False,
+        tape_name=None):
     """
     Decorator for capturing and simulating network communication
 
@@ -342,6 +353,9 @@ def vcr(decorated_func=None, debug=False, overwrite=False, disabled=False):
         Will run vcr in recording mode - overwrites any existing vcrtapes.
     ``disabled`` : bool, optional
         Completely disables vcr - same effect as removing the decorator.
+    ``tape_name`` : str, optional
+        Use given custom file name instead of an auto-generated name for the
+        tape file.
     """
     def _vcr_outer(func):
         """
@@ -377,10 +391,21 @@ def vcr(decorated_func=None, debug=False, overwrite=False, disabled=False):
                     os.path.dirname(source_filename), 'vcrtapes')
                 func_name = func.__name__
 
-            # make sure 'vcrtapes' directory exists
-            if not os.path.isdir(path):
-                os.makedirs(path)
-            tape = os.path.join(path, '%s.%s.vcr' % (file_name, func_name))
+            if tape_name:
+                # tape file name is given - either full path is given or use
+                # 'vcrtapes' directory
+                if os.sep in tape_name:
+                    temp = os.path.abspath(tape_name)
+                    path = os.path.dirname(temp)
+                    if not os.path.isdir(path):
+                        os.makedirs(path)
+                tape = os.path.join(path, '%s' % (tape_name))
+            else:
+                # make sure 'vcrtapes' directory exists
+                if not os.path.isdir(path):
+                    os.makedirs(path)
+                # auto-generated file name
+                tape = os.path.join(path, '%s.%s.vcr' % (file_name, func_name))
 
             # check for tape file and determine mode
             if not os.path.isfile(tape) or overwrite or VCRSystem.overwrite:

@@ -29,6 +29,13 @@ class RequestsTestCase(unittest.TestCase):
         r = requests.get('https://www.python.org/')
         self.assertEqual(r.status_code, 200)
 
+    @unittest.skip("currently fails")
+    @vcr(debug=True)
+    def test_redirect_to_https(self):
+        # http://obspy.org redirects to https://github.com/obspy/obspy/wiki
+        r = requests.get('http://obspy.org/')
+        self.assertEqual(r.status_code, 200)
+
 
 if __name__ == '__main__':
     unittest.main()
