@@ -3,17 +3,16 @@ vcr - decorator for capturing and simulating network communication
 
 |Build Status| |PyPI| |Gitter|
 
-Any Python socket communication in unittests (decorated with the ```@vcr```)
-and/or doctests (containing a ```# doctest: +VCR```) will be recorded
-on the first run and saved into a special 'vcrtapes' directory as single
-pickled file for each test case. Future test runs will reuse those recorded
-network session allowing for faster tests without any network connection. In
-order to create a new recording one just needs to remove/rename the pickled
-session file(s).
+Any Python socket communication in unittests (decorated with the ``@vcr``)
+and/or doctests (containing a ``+VCR``) will be recorded on the first run
+and saved into a special 'vcrtapes' directory as single pickled file for
+each test case. Future test runs will reuse those recorded network session
+allowing for faster tests without any network connection. In order to
+create a new recording one just needs to remove/rename the pickled session
+file(s).
 
-So pretty similar to VCRPy (https://github.com/kevin1024/vcrpy) but on socket
-level instead of HTTP/HTTPS level only - so therefore it should be more
-powerful ...
+So pretty similar to `VCR.py`_ but on socket level instead of HTTP/HTTPS
+level only - so therefore it should be more powerful ...
 
 Inspired by:
  * https://docs.python.org/3.6/howto/sockets.html
@@ -47,8 +46,9 @@ Just decorate your unit tests with ``@vcr``:
 .. code:: python
 
     import unittest
-    from vcr import vcr
+
     import requests
+    from vcr import vcr
 
     class MyTestCase(unittest.TestCase):
        @vcr
@@ -56,11 +56,13 @@ Just decorate your unit tests with ``@vcr``:
            response = requests.get('http://example.com')
 
 Doctests requires currently a monkey patch shown below and the ``+VCR`` keyword
-somewhere within the unittest.
+somewhere within the doctest:
 
 .. code:: python
 
     import doctest
+    
+    import requests
     from vcr import vcr
 
     def test_something(url):
@@ -96,3 +98,6 @@ License
 This library uses the LGPLv3 license. See `LICENSE.txt
 <https://github.com/obspy/vcr/blob/master/LICENSE.txt>`__ for more
 details.
+
+.. _PyPI: https://pypi.python.org/pypi/vcr
+.. _VCR.py: https://github.com/kevin1024/vcrpy
