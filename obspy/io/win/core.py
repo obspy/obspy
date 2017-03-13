@@ -14,14 +14,14 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime
 
 
-def _is_datamark(filename, century="20"):  # @UnusedVariable
+def _is_win(filename, century="20"):  # @UnusedVariable
     """
-    Checks whether a file is DATAMARK or not.
+    Checks whether a file is WIN or not.
 
     :type filename: str
-    :param filename: DATAMARK file to be checked.
+    :param filename: WIN file to be checked.
     :rtype: bool
-    :return: ``True`` if a DATAMARK file.
+    :return: ``True`` if a WIN file.
     """
     # as long we don't have full format description we just try to read the
     # file like _read_datamark and check for errors
@@ -52,17 +52,17 @@ def _is_datamark(filename, century="20"):  # @UnusedVariable
     return True
 
 
-def _read_datamark(filename, century="20", **kwargs):  # @UnusedVariable
+def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
     """
-    Reads a DATAMARK file and returns a Stream object.
+    Reads a WIN file and returns a Stream object.
 
     .. warning::
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :type filename: str
-    :param filename: DATAMARK file to be read.
-    :param century: DATAMARK stores year as 2 numbers, need century to
+    :param filename: WIN file to be read.
+    :param century: WIN stores year as 2 numbers, need century to
         construct proper datetime.
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream object containing header and data.
@@ -70,7 +70,7 @@ def _read_datamark(filename, century="20", **kwargs):  # @UnusedVariable
     output = {}
     srates = {}
 
-    # read datamark file
+    # read win file
     with open(filename, "rb") as fpin:
         fpin.seek(0, 2)
         sz = fpin.tell()
