@@ -25,7 +25,7 @@ class RegressionTestCase(unittest.TestCase):
         self.x = np.arange(n, dtype=float)
         self.y = np.arange(n, dtype=float) + np.random.random(n) + 5 + \
             np.random.random(n)
-        self.weights = np.linspace(1, 10, n, dtype=np.float)
+        self.weights = np.linspace(1.0, 10.0, n)
 
     def test_weight_intercept(self):
         """
