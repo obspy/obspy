@@ -171,6 +171,10 @@ class VCRSocket(object):
         if not self._recording:
             self.fd = tempfile.TemporaryFile()
 
+    def __del__(self):
+        if hasattr(self, 'fd'):
+            self.fd.close()
+
     def _exec(self, name, *args, **kwargs):
         if self._recording:
             # record mode
