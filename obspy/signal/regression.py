@@ -27,7 +27,7 @@ import numpy as np
 
 
 def linear_regression(xdata, ydata, weights=None, p0=None, intercept=False):
-    """ Use non-linear least squares to fit a function, f, to data. This method
+    """ Use linear least squares to fit a function, f, to data. This method
     is a generalized version of :meth:`scipy.optimize.minpack.curve_fit`;
     allowing for Ordinary Least Square and Weighted Least Square regressions:
 
