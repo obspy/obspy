@@ -34,6 +34,7 @@ import select
 import socket
 import ssl
 import sys
+import tempfile
 import time
 import warnings
 
@@ -166,6 +167,9 @@ class VCRSocket(object):
             print('  ', '__init__', family, type, proto, fileno)
         self._recording = VCRSystem.is_recording
         self._orig_socket = orig_socket(family, type, proto, fileno)
+        # a working file descriptor is needed for telnetlib.Telnet.read_until
+        if not self._recording:
+            self.fd = tempfile.TemporaryFile()
 
     def _exec(self, name, *args, **kwargs):
         if self._recording:
@@ -258,7 +262,7 @@ class VCRSocket(object):
         if self._recording:
             return self._orig_socket.fileno(*args, **kwargs)
         else:
-            return 0
+            return self.fd.fileno()
 
     def makefile(self, *args, **kwargs):
         return self._exec('makefile', *args, **kwargs)
