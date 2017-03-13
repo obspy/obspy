@@ -68,7 +68,6 @@ def linear_regression(xdata, ydata, weights=None, p0=None, intercept=False):
     if intercept:
         p, cov = scipy.optimize.curve_fit(lambda x, a, b: a * x + b,
                                           xdata, ydata, p0, sigma=sigma,
-                                          absolute_sigma=False,
                                           xtol=1e-20)
         slope, intercept = p
         std_slope = np.sqrt(cov[0, 0])
@@ -78,7 +77,6 @@ def linear_regression(xdata, ydata, weights=None, p0=None, intercept=False):
     else:
         p, cov = scipy.optimize.curve_fit(lambda x, a: a * x,
                                           xdata, ydata, p0, sigma=sigma,
-                                          absolute_sigma=False,
                                           xtol=1e-20)
         slope = p[0]
         std_slope = np.sqrt(cov[0, 0])
