@@ -35,7 +35,7 @@ def linear_regression(xdata, ydata, weights=None, p0=None, intercept=False):
     * OLS with intercept : ``linear_regression(xdata, ydata, intercept=True)``
     * WLS without intercept : ``linear_regression(xdata, ydata, weights)``
     * WLS with intercept : ``linear_regression(xdata, ydata, weights,
-     intercept=True)``
+      intercept=True)``
 
     If the expected values of slope (and intercept) are different from 0.0,
     provide the p0 value(s).
