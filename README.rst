@@ -51,11 +51,18 @@ Just decorate your unit tests with ``@vcr``:
     from vcr import vcr
 
     class MyTestCase(unittest.TestCase):
+
        @vcr
        def test_something(self):
            response = requests.get('http://example.com')
+           self.assertEqual(response.status_code, 200)
 
-VCR functionality within doctests require currently a monkey patch and the
+       @vcr(debug=True, overwrite=True, tape_file='python.vcr')
+       def test_something_else(self):
+           response = requests.get('http://python.org')
+           self.assertEqual(response.status_code, 200)
+
+VCR functionality within doctests requires currently a monkey patch and the
 ``+VCR`` keyword somewhere within the doctest as shown in
 `test_doctest.py
 <https://github.com/obspy/vcr/blob/master/tests/test_doctest.py>`__.
