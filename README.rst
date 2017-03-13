@@ -55,41 +55,10 @@ Just decorate your unit tests with ``@vcr``:
        def test_something(self):
            response = requests.get('http://example.com')
 
-Doctests requires currently a monkey patch shown below and the ``+VCR`` keyword
-somewhere within the doctest:
-
-.. code:: python
-
-    import doctest
-    
-    import requests
-    from vcr import vcr
-
-    def test_something(url):
-        """
-        My test function
-
-        Usage:
-        >>> test_something('https://www.python.org')  # doctests: +VCR
-        200
-        """
-        r = requests.get(url)
-        return r.status_code
-
-    if __name__ == "__main__":
-        import doctest
-
-        # monkey patch
-        def runTest(self):  # NOQA
-            if '+VCR' in self._dt_test.docstring:
-                return vcr(self._runTest)()
-            return self._runTest()
-        doctest.DocTestCase._runTest = doctest.DocTestCase.runTest
-        doctest.DocTestCase.runTest = runTest
-        doctest.register_optionflag('VCR')
-
-        # run doctests
-        doctest.testmod()
+VCR functionality within doctests require currently a monkey patch and the
+``+VCR`` keyword somewhere within the doctest as shown in
+`test_doctest.py
+<https://github.com/obspy/vcr/blob/master/tests/test_doctest.py>`__.
 
 
 License

@@ -380,8 +380,17 @@ def vcr(decorated_func=None, debug=False, overwrite=False, disabled=False,
                 source_filename = func.__self__._dt_test.filename
                 file_name = os.path.splitext(
                     os.path.basename(source_filename))[0]
-                path = os.path.join(os.path.dirname(source_filename), 'tests',
-                                    'vcrtapes')
+                # check if a tests directory exists
+                path = os.path.join(os.path.dirname(source_filename),
+                                    'tests')
+                if os.path.exists(path):
+                    # ./test/vcrtapes/tape_name.vcr
+                    path = os.path.join(os.path.dirname(source_filename),
+                                        'tests', 'vcrtapes')
+                else:
+                    # ./vcrtapes/tape_name.vcr
+                    path = os.path.join(os.path.dirname(source_filename),
+                                        'vcrtapes')
                 func_name = func.__self__._dt_test.name.split('.')[-1]
             else:
                 source_filename = func.__code__.co_filename
