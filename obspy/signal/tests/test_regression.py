@@ -33,7 +33,8 @@ class RegressionTestCase(unittest.TestCase):
         """
         ref_result = [1.103354807117634, 5.5337860049233898,
                       0.076215945728448836, 0.54474791667622224]
-        result = linear_regression(self.x, self.y, self.weights, intercept=True)
+        result = linear_regression(self.x, self.y, self.weights,
+                                   intercept=True)
         np.testing.assert_equal(len(result), 4)
         np.testing.assert_allclose(result, ref_result)
 
