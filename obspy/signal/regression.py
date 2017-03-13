@@ -22,7 +22,7 @@ import scipy.optimize
 import numpy as np
 
 
-def linear_regression(xdata, ydata, weights=None, p0 = None, intercept=False):
+def linear_regression(xdata, ydata, weights=None, p0=None, intercept=False):
     """ Use non-linear least squares to fit a function, f, to data. This method
     is a generalized version of :meth:`scipy.optimize.minpack.curve_fit`;
     allowing for:
@@ -38,9 +38,10 @@ def linear_regression(xdata, ydata, weights=None, p0 = None, intercept=False):
 
     :param xdata: The independent variable where the data is measured.
     :param ydata: The dependent data - nominally f(xdata, ...)
-    :param weights: If not None, the uncertainties in the ydata array. These are
-     used as weights in the least-squares problem. If None, the uncertainties
-     are assumed to be 1. In SciPy vocabulary, our weights are 1/sigma.
+    :param weights: If not None, the uncertainties in the ydata array. These
+     are used as weights in the least-squares problem. If None, the
+     uncertainties are assumed to be 1. In SciPy vocabulary, our weights are
+     1/sigma.
     :param p0: Initial guess for the parameters. If None, then the initial
      values will all be 0 (Different from SciPy where all are 1)
     :param intercept: If False: solves y=a*x ; if True: solves y=a*x+b.
