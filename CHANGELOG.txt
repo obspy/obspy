@@ -103,6 +103,8 @@ master: (doi: 10.5281/zenodo.165135)
  - obspy.signal:
    * New obspy.signal.quality_control module to compute quality metrics from
      MiniSEED files. (see #1141)
+   * New obspy.signal.regression module to compute linear regressions, with or
+     without weights, with or without allowing for an intercept. (see #1716)
  - obspy.taup:
    * Add obspy.taup.taup_geo.calc_dist_azi, a function to return the distance,
      azimuth and backazimuth for a source - receiver pair. (see #1538)
