@@ -350,7 +350,8 @@ def corn_freq_2_paz(fc, damp=0.707):
     return {'poles': poles, 'zeros': [0j, 0j], 'gain': 1, 'sensitivity': 1.0}
 
 
-def paz_to_freq_resp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
+def paz_to_freq_resp(poles, zeros, scale_fac, t_samp=None, nfft=None,
+                     frequencies=None, freq=False):
     """
     Convert Poles and Zeros (PAZ) to frequency response. The output
     contains the frequency zero which is the offset of the trace.
@@ -380,15 +381,20 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
         negative values in order to get a plot from [0, 2pi]:
         where(phi<0,phi+2*pi,phi); plot(f,phi)
     """
-    n = nfft // 2
     b, a = scipy.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
     # a has to be a list for the scipy.signal.freqs() call later but zpk2tf()
     # strangely returns it as an integer.
     if not isinstance(a, np.ndarray) and a == 1.0:
         a = [1.0]
-    fy = 1 / (t_samp * 2.0)
-    # start at zero to get zero for offset / DC of fft
-    f = np.linspace(0, fy, n + 1)
+
+    if frequencies is None:
+        n = nfft // 2
+        fy = 1 / (t_samp * 2.0)
+        # start at zero to get zero for offset / DC of fft
+        f = np.linspace(0, fy, n + 1)
+    else:
+        f = frequencies
+
     _w, h = scipy.signal.freqs(b, a, f * 2 * np.pi)
     if freq:
         return h, f

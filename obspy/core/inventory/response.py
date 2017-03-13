@@ -21,6 +21,7 @@ from math import pi
 
 import numpy as np
 import scipy.interpolate
+import scipy.signal
 
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import (ComplexWithUncertainties, CustomFloat,
@@ -313,6 +314,15 @@ class PolesZerosResponseStage(ResponseStage):
         else:
             raise ValueError(msg)
 
+    def get_response(self, frequencies):
+        # Has to be imported here for now to avoid circular imports.
+        from obspy.signal.invsim import paz_to_freq_resp
+        return paz_to_freq_resp(
+            poles=np.array(self.poles, dtype=np.complex128),
+            zeros=np.array(self.zeros, dtype=np.complex128),
+            scale_fac=self.normalization_factor,
+            frequencies=frequencies, freq=False) * self.stage_gain
+
 
 class CoefficientsTypeResponseStage(ResponseStage):
     """
@@ -438,6 +448,61 @@ class CoefficientsTypeResponseStage(ResponseStage):
             self._cf_transfer_function_type = "DIGITAL"
         else:
             raise ValueError(msg)
+
+    def get_response(self, frequencies):
+        # Decimation blockette, e.g. gain only!
+        if not len(self.numerator):
+            return np.ones_like(frequencies) * self.stage_gain
+
+        # This is effectively blockette 54. According to the SEED manual
+        # this should never have a denominator. Let's see if this is
+        # actually the case.
+        assert not self.denominator
+
+        sr = self.decimation_input_sample_rate
+        frequencies = frequencies / sr * np.pi * 2.0
+
+        if self.cf_transfer_function_type == "DIGITAL":
+            resp = scipy.signal.freqz(
+                b=self.numerator, a=[1.0], worN=frequencies)[1]
+            gain_freq_amp = np.abs(scipy.signal.freqz(
+                b=self.numerator, a=[1.0],
+                worN=[self.stage_gain_frequency])[1])
+        elif self.cf_transfer_function_type == "ANALOG (RADIANS/SECOND)":
+            # XXX: Untested so far!
+            resp = scipy.signal.freqs(
+                b=self.numerator, a=[1.0], worN=frequencies / (np.pi * 2.0))[1]
+            gain_freq_amp = np.abs(scipy.signal.freqs(
+                b=self.numerator, a=[1.0],
+                worN=[self.stage_gain_frequency / (np.pi * 2.0)])[1])
+        elif self.cf_transfer_function_type == "ANALOG (HERTZ)":
+            # XXX: Untested so far!
+            resp = scipy.signal.freqs(
+                b=self.numerator, a=[1.0], worN=frequencies)[1]
+            gain_freq_amp = np.abs(scipy.signal.freqs(
+                b=self.numerator, a=[1.0],
+                worN=[self.stage_gain_frequency])[1])
+        # Cannot happen as caught in the setter.
+        else:  # pragma: no cover
+            raise NotImplementedError
+
+        resp = resp.conjugate()
+        # evalresp is a bit funny in how it defines the phase. Here we make
+        # sure that the phase returned is equivalent to evalpres.
+        amp = np.abs(resp)
+        phase = np.radians(np.unwrap(np.angle(resp, deg=False))) / np.pi
+
+        # Normalize the amplitude with the given sensitivity value and
+        # frequency. I'm not sure this is entirely correct, as the digitizer
+        # will likely just apply the FIR filter and send the data along. But
+        # evalresp does this and thus so do we.
+        amp *= self.stage_gain / gain_freq_amp
+
+        final_resp = np.empty_like(resp)
+        final_resp.real = amp * np.cos(phase)
+        final_resp.imag = amp * np.sin(phase)
+
+        return final_resp
 
 
 class ResponseListResponseStage(ResponseStage):
@@ -734,6 +799,67 @@ class Response(ComparingObject):
         else:
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
+
+    def get_response(self, frequencies, output="velocity", start_stage=None,
+                     end_stage=None):
+        """
+        Returns the frequency response for given frequencies.
+
+        :type frequencies: list of float
+        :param frequencies: Discrete frequencies to calculate response for.
+        :type output: str
+        :param output: Output units. One of:
+
+            ``"displacement", "d", "DISP"``
+                displacement, output unit is meters
+            ``"velocity", "v", "VEL"``
+                velocity, output unit is meters/second
+            ``"acceleration", "a", "ACC"``
+                acceleration, output unit is meters/second**2
+
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :rtype: :class:`numpy.ndarray`
+        :returns: frequency response at requested frequencies
+        """
+        if output.lower() in ("d", "disp", "displacment"):
+            output= "displacement"
+        elif output.lower() in ("v", "vel", "velocity"):
+            output= "velocity"
+        elif output.lower() in ("a", "acc", "acceleration"):
+            output= "acceleration"
+        else:
+            raise ValueError("Unknown output '%s'." % output)
+
+        apply_sens = False
+        if start_stage is None and end_stage is None:
+            apply_sens = True
+        # Convert to 0-based indexing.
+        if start_stage is None:
+            start_stage = 0
+        else:
+            start_stage -= 1
+
+        stages = self.response_stages[slice(start_stage, end_stage)]
+        resp = stages.pop(0).get_response(frequencies=frequencies)
+        for stage in stages[1:]:
+            resp *= stage.get_response(frequencies=frequencies)
+
+        # For the scaling - run the whole chain once again with the
+        # reference frequency.
+        if start_stage == 0 and end_stage is None:
+            f = np.array([self.instrument_sensitivity.frequency])
+            stages = self.response_stages[slice(start_stage, end_stage)]
+            ref = stages.pop(0).get_response(frequencies=f)
+            for stage in stages[1:]:
+                ref *= stage.get_response(frequencies=f)
+            resp *= self.instrument_sensitivity.value / np.abs(ref[0])
+
+        return resp
 
     def get_evalresp_response_for_frequencies(
             self, frequencies, output="VEL", start_stage=None, end_stage=None):
@@ -1397,7 +1523,7 @@ class Response(ComparingObject):
 
         # only do adjustments if we initialized the figure in here
         if not axes:
-            _adjust_bode_plot_figure(fig, show=False)
+           _adjust_bode_plot_figure(fig, show=False)
 
         if outfile:
             fig.savefig(outfile)
