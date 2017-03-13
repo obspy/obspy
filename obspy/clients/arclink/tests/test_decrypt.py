@@ -7,15 +7,19 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import os
+import time
 import unittest
 
 import numpy as np
-from vcr import vcr
+from vcr import vcr, VCRSystem
 
 from obspy.clients.arclink import Client, decrypt
 from obspy.clients.arclink.client import DCID_KEY_FILE, ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
+
+
+orig_sleep = time.sleep
 
 
 @unittest.skipIf(not decrypt.HAS_CRYPTOLIB,
@@ -24,6 +28,18 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for L{obspy.clients.arclink.client.Client}.
     """
+    def setUp(self):
+        # monkey patch sleep calls in ArcLink client
+        def vcr_sleep(*args, **kwargs):
+            if VCRSystem.is_playing:
+                return
+            return orig_sleep(*args, **kwargs)
+        time.sleep = vcr_sleep
+
+    def tearDown(self):
+        # revert monkey patch
+        time.sleep = orig_sleep
+
     def _get_waveform_with_dcid_key(self):
         """
         Re-used in multiple tests ...

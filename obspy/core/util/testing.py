@@ -10,7 +10,7 @@ Testing utilities for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import difflib
@@ -21,12 +21,13 @@ import io
 import os
 import re
 import shutil
+import time
 import unittest
 import warnings
 
 import numpy as np
 from lxml import etree
-from vcr import vcr
+from vcr import vcr, VCRSystem
 
 from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
 from obspy.core.util.misc import MatplotlibBackend
@@ -41,10 +42,25 @@ from obspy.core.util.misc import MatplotlibBackend
 MODULE_TEST_SKIP_CHECKS = {}
 
 
+orig_sleep = time.sleep
+
+
 # monkey patch DocTestCase
 def runTest(self):  # NOQA
     if '+VCR' in self._dt_test.docstring:
-        return vcr(self._runTest)()
+        if 'arclink' in self._dt_test.name:
+            # monkey patch sleep calls in ArcLink client
+            def vcr_sleep(*args, **kwargs):
+                if VCRSystem.is_playing:
+                    return
+                return orig_sleep(*args, **kwargs)
+            time.sleep = vcr_sleep
+        # run decorated doc test
+        out = vcr(self._runTest)()
+        if 'arclink' in self._dt_test.name:
+            # revert arclink monkey patch
+            time.sleep = orig_sleep
+        return out
     return self._runTest()
 
 

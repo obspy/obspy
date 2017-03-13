@@ -8,10 +8,11 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import io
 import operator
+import time
 import unittest
 
 import numpy as np
-from vcr import vcr
+from vcr import vcr, VCRSystem
 
 from obspy import read
 from obspy.clients.arclink import Client
@@ -20,10 +21,25 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, NamedTemporaryFile
 
 
+orig_sleep = time.sleep
+
+
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.arclink.client.Client.
     """
+    def setUp(self):
+        # monkey patch sleep calls in ArcLink client
+        def vcr_sleep(*args, **kwargs):
+            if VCRSystem.is_playing:
+                return
+            return orig_sleep(*args, **kwargs)
+        time.sleep = vcr_sleep
+
+    def tearDown(self):
+        # revert monkey patch
+        time.sleep = orig_sleep
+
     @vcr
     def test_get_waveform(self):
         """
