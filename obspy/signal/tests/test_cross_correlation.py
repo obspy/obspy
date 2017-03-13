@@ -9,9 +9,10 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 
+import numpy as np
 from obspy import UTCDateTime, read
 from obspy.core.util.testing import ImageComparison
-from obspy.signal.cross_correlation import xcorr_pick_correction
+from obspy.signal.cross_correlation import xcorr_pick_correction, mwcs
 
 
 class CrossCorrelationTestCase(unittest.TestCase):
@@ -72,6 +73,19 @@ class CrossCorrelationTestCase(unittest.TestCase):
         with ImageComparison(self.path_images, 'xcorr_pick_corr.png') as ic:
             dt, coeff = xcorr_pick_correction(
                 t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True, filename=ic.name)
+
+    def test_mwcs(self):
+        """
+        Test Moving-Window Cross-Spectrum.
+        """
+        cur = read(os.path.join(self.path, 'mwcs_2016-08-29.mseed'))[0]
+        ref = read(os.path.join(self.path, 'mwcs_BE_MEM_BE_TMM1.mseed'))[0]
+        t1, d1, e1, c1 = np.load(os.path.join(self.path, 'mwcs_result.npy'))
+        t2, d2, e2, c2 = mwcs(cur, ref, 6.0, 8.0, 25., -120, 4, 2)
+        np.testing.assert_allclose(t1, t2)
+        np.testing.assert_allclose(d1, d2)
+        np.testing.assert_allclose(e1, e2)
+        np.testing.assert_allclose(c1, c2)
 
 
 def suite():
