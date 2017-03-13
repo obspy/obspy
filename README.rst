@@ -1,13 +1,7 @@
 vcr - decorator for capturing and simulating network communication
 ==================================================================
 
-[![TravisCI Status](https://travis-ci.org/obspy/vcr.svg?branch=master)](https://travis-ci.org/obspy/vcr)
-[![AppVeyor Status](https://ci.appveyor.com/api/projects/status/xqrbaj9phjm6l2vw/branch/master?svg=true)](https://ci.appveyor.com/project/obspy/vcr)
-[![PyPI Version](https://img.shields.io/pypi/v/vcr.svg)](https://pypi.python.org/pypi/vcr)
-[![Supported Python versions](https://img.shields.io/pypi/pyversions/vcr.svg)](https://pypi.python.org/pypi/vcr/)
-[![License](https://img.shields.io/pypi/l/vcr.svg)](https://pypi.python.org/pypi/vcr/)
-[![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/obspy/obspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![LGPLv3](https://www.gnu.org/graphics/lgplv3-88x31.png)](https://www.gnu.org/licenses/lgpl.html)
+|TravisCI Status| |AppVeyor Status| |PyPI| |License| |Gitter|
 
 Any Python socket communication in unittests (decorated with the ``@vcr``)
 and/or doctests (containing a ``+VCR``) will be recorded on the first run
@@ -107,3 +101,14 @@ details.
 
 .. _PyPI: https://pypi.python.org/pypi/vcr
 .. _VCR.py: https://github.com/kevin1024/vcrpy
+
+.. |TravisCI Status| image:: https://travis-ci.org/obspy/vcr.svg?branch=master
+   :target: https://travis-ci.org/obspy/vcr?branch=master
+.. |AppVeyor Status| image:: https://ci.appveyor.com/api/projects/status/xqrbaj9phjm6l2vw/branch/master?svg=true
+   :target: https://ci.appveyor.com/project/obspy/vcr
+.. |PyPI| image:: https://img.shields.io/pypi/v/vcr.svg
+   :target: https://pypi.python.org/pypi/vcr
+.. |Gitter| image:: https://badges.gitter.im/JoinChat.svg
+   :target: https://gitter.im/obspy/obspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |License| image:: https://img.shields.io/pypi/l/vcr.svg
+   :target: https://pypi.python.org/pypi/vcr/
