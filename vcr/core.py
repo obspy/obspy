@@ -290,8 +290,10 @@ class VCRSocket(object):
     def recv(self, *args, **kwargs):
         return self._exec('recv', *args, **kwargs)
 
-    def close(self, *args, **kwargs):
-        return self._orig_socket.close(*args, **kwargs)
+    def close(self):
+        if VCRSystem.debug:
+            print('  ', 'close')
+        return self._orig_socket.close()
 
     def gettimeout(self, *args, **kwargs):
         return self._exec('gettimeout', *args, **kwargs)
