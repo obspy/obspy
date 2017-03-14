@@ -1,6 +1,6 @@
 .TH MST_CONVERTSAMPLES 3 2013/10/01 "Libmseed API"
-.SH DESCRIPTION
-Convert data samples between numeric types
+.SH NAME
+mst_convertsamples - Convert data samples between numeric types
 
 .SH SYNOPSIS
 .nf
@@ -19,7 +19,7 @@ The routines can convert between 32-bit integers (type \fIi\fP),
 32-bit floats (type \fIf\fP) and 64-bit doubles (type \fId\fP).
 
 When converting float and double sample types to integer type a simple
-rouding is applied by adding 0.5 to the sample value before converting
+rounding is applied by adding 0.5 to the sample value before converting
 (truncating) to integer.  This compensates for common machine
 representations of floating point values (e.g. "40.0" represented by
 "39.99999999").

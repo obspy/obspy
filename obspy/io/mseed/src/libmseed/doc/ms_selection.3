@@ -1,6 +1,6 @@
 .TH MS_SELECTION 3 2012/12/28 "Libmseed API"
-.SH DESCRIPTION
-Routines to manage and use data selection lists.
+.SH NAME
+ms_selection - Routines to manage and use data selection lists.
 
 .SH SYNOPSIS
 .nf
@@ -112,7 +112,7 @@ IU   COLA 00   LHZ   *     2008,100,10,00,00 2008,100,10,30,00
 
 .SH SRCNAME MATCHING
 Entries in a Selections list include a "source name" (srcname) string
-to represent matching paramters for network, station, location,
+to represent matching parameters for network, station, location,
 channel and optionally the quality name components.  Each name
 component may contain globbing characters to match more than one
 unique srcname.
@@ -124,9 +124,9 @@ Valid glob patterns include:
    [set]   matches any character in the set
    [^set]  matches any character NOT in the set
            where a set is a group of characters or ranges. a range
-           is written as two characters seperated with a hyphen:
+           is written as two characters separated with a hyphen:
            a-z denotes all characters between a to z inclusive.
-   [-set]  set matches a literal hypen and any character in the set
+   [-set]  set matches a literal hyphen and any character in the set
    []set]  matches a literal close bracket and any character in the set
 
    char    matches itself except where char is '*' or '?' or '['
@@ -182,7 +182,7 @@ The following two calls are equivalent:
   ms_addselect_comp (&selections, "IU", "ANMO", "00", "LH?", "?", startime, endtime);
 .fi
 
-As a futher convienence usage of \fBms_readselectionsfile()\fP would
+As a further convienence usage of \fBms_readselectionsfile()\fP would
 allow the selections to be specified in a simple ASCII file and avoid
 the need to directly call \fBms_addselect()\fP.
 

@@ -1,11 +1,8 @@
 #
-#
-# Nmake File For libmseed - MS Visual C++ version
+# Nmake file For libmseed - MS Visual C/C++ version
 # Use 'nmake -f Makefile.win'
 
 NODEBUG=1
-
-!include <ntwin32.mak>
 
 INCS = -I.
 OPTS = -D_CRT_SECURE_NO_WARNINGS
@@ -37,8 +34,7 @@ dll: $(OBJS)
 	link.exe /dll /nologo /out:$(DLL) $(OBJS)
 
 .c.obj:
-	$(cc) /nologo $(cflags) $(cdebug) $(cvarsmt) $(tflags) $(INCS) $(OPTS) $<
-
+	$(CC) /nologo $(CFLAGS) $(INCS) $(OPTS) /c $<
 
 # Clean-up directives
 clean:
