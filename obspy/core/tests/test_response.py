@@ -121,6 +121,35 @@ class ResponseTestCase(unittest.TestCase):
             np.unwrap(np.angle(new_resp))[:800],
             rtol=1E-2, atol=2E-2)
 
+    def test_get_response_regression(self):
+        units = ["DISP", "VEL", "ACC"]
+        filenames = ["IRIS_single_channel_with_response", "XM.05", "AU.MEEK"]
+
+        for filename in filenames:
+            xml_filename = os.path.join(self.data_dir,
+                                        filename + os.path.extsep + "xml")
+            inv = read_inventory(xml_filename)
+            resp = inv[0][0][0].response
+
+            freqs = np.logspace(-2, 2, 1000)
+
+            for unit in units:
+                # Full response.
+                xml_resp = resp.get_evalresp_response_for_frequencies(
+                    frequencies=freqs, output=unit)
+                new_resp = resp.get_response(
+                    frequencies=freqs, output=unit)
+
+                np.testing.assert_allclose(np.abs(xml_resp),
+                                           np.abs(new_resp), rtol=1E-5)
+                # Phase starts to differ slightly before Nyquist and quite a
+                # bit after. Evalresp appears to have some Gibb's artifacts
+                # and scipy's solution does look better.
+                np.testing.assert_allclose(
+                    np.unwrap(np.angle(xml_resp))[:800],
+                    np.unwrap(np.angle(new_resp))[:800],
+                    rtol=1E-2, atol=2E-2)
+
     def test_get_response_disp_vel_acc(self):
         units = ["DISP", "VEL", "ACC"]
         filename = "IRIS_single_channel_with_response"
