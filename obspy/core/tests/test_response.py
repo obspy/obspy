@@ -149,25 +149,25 @@ class ResponseTestCase(unittest.TestCase):
                 np.unwrap(np.angle(new_resp))[:800],
                 rtol=1E-2, atol=2E-2)
 
-        # import matplotlib.pyplot as plt
-        # plt.subplot(411)
-        # plt.semilogx(freqs, np.abs(xml_resp), label="evalresp")
-        # plt.semilogx(freqs, np.abs(new_resp), label="scipy")
-        # plt.legend(loc=3)
-        # plt.subplot(412)
-        # plt.semilogx(freqs, np.abs(new_resp) - np.abs(xml_resp))
-        # plt.subplot(413)
-        #
-        # new_phase = np.angle(new_resp)
-        # xml_phase = np.angle(xml_resp)
-        #
-        # plt.semilogx(freqs, xml_phase, label="evalresp")
-        # plt.semilogx(freqs, new_phase, label="scipy")
-        # plt.legend(loc=3)
-        # plt.xlim(1E-2, 20.0)
-        # plt.subplot(414)
-        # plt.semilogx(freqs,xml_phase - new_phase)
-        # plt.show()
+            # import matplotlib.pyplot as plt
+            # plt.subplot(411)
+            # plt.semilogx(freqs, np.abs(xml_resp), label="evalresp")
+            # plt.semilogx(freqs, np.abs(new_resp), label="scipy")
+            # plt.legend(loc=3)
+            # plt.subplot(412)
+            # plt.semilogx(freqs, np.abs(new_resp) - np.abs(xml_resp))
+            # plt.subplot(413)
+            #
+            # new_phase = np.angle(new_resp)
+            # xml_phase = np.angle(xml_resp)
+            #
+            # plt.semilogx(freqs, xml_phase, label="evalresp")
+            # plt.semilogx(freqs, new_phase, label="scipy")
+            # plt.legend(loc=3)
+            # plt.xlim(1E-2, 20.0)
+            # plt.subplot(414)
+            # plt.semilogx(freqs,xml_phase - new_phase)
+            # plt.show()
 
     def test_evalresp_with_output_from_seed(self):
         """

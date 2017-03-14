@@ -28,7 +28,7 @@ from obspy.core.util.obspy_types import (ComplexWithUncertainties, CustomFloat,
                                          FloatWithUncertainties,
                                          FloatWithUncertaintiesAndUnit,
                                          ObsPyException,
-                                         ZeroSamplingRate)
+                                         ZeroSamplingRate, Enum)
 
 from .util import Angle, Frequency
 
@@ -763,6 +763,10 @@ class Response(ComparingObject):
     """
     The root response object.
     """
+    # The various types of units.
+    core_unit_enum = Enum(["displacement", "velocity", "acceleration",
+                           "volts", "counts", "tesla", "pressure"])
+
     def __init__(self, resource_id=None, instrument_sensitivity=None,
                  instrument_polynomial=None, response_stages=None):
         """
@@ -800,6 +804,54 @@ class Response(ComparingObject):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
+    def _get_scale_factor(self, unit):
+        """
+        Get the scale factor to go back to SI units.
+
+        :type unit: str
+        :param unit: The name of the unit.
+        """
+        unit = unit.upper()
+        if unit in ["CM/S**2", "CM/S", "CM/SEC", "CM"]:
+            return 1.0E2
+        elif unit in ["MM/S**2", "MM/S", "MM/SEC", "MM"]:
+            return 1.0E3
+        elif unit in ["NM/S**2", "NM/S", "NM/SEC", "NM"]:
+            return 1.0E9
+        else:
+            return 1.0
+
+    def _get_unit_type(self, unit):
+        """
+        Get the type of unit.
+
+        :type unit: str
+        :param unit: The name of the unit.
+        """
+        unit = unit.upper()
+        if unit in ("M", "NM", "CM", "MM"):
+            return self.core_unit_enum.displacement
+        elif unit in ("M/S", "M/SEC", "NM/S", "NM/SEC", "CM/S", "CM/SEC",
+                      "MM/S", "MM/SEC"):
+            return self.core_unit_enum.velocity
+        elif unit in ("M/S**2", "M/(S**2)", "M/SEC**2", "M/(SEC**2)",
+                      "NM/S**2", "NM/(S**2)", "NM/SEC**2", "NM/(SEC**2)",
+                      "CM/S**2", "CM/(S**2)", "CM/SEC**2", "CM/(SEC**2)",
+                      "MM/S**2", "MM/(S**2)", "MM/SEC**2", "MM/(SEC**2)"):
+            return self.core_unit_enum.acceleration
+        elif unit in ("V", "VOLT", "VOLTS",
+                      # This is weird, but evalresp appears to do the same.
+                      "V/M"):
+            return self.core_unit_enum.volts
+        elif unit in ("COUNT", "COUNTS"):
+            return self.core_unit_enum.counts
+        elif unit in ("T", "TESLA"):
+            return self.core_unit_enum.tesla
+        elif unit in ("PA", "MBAR"):
+            return self.core_unit_enum.pressure
+        else:
+            raise ValueError("Unknown unit '%s'." % unit)
+
     def get_response(self, frequencies, output="velocity", start_stage=None,
                      end_stage=None):
         """
@@ -826,12 +878,13 @@ class Response(ComparingObject):
         :rtype: :class:`numpy.ndarray`
         :returns: frequency response at requested frequencies
         """
+        # Map pretty unit strings to unit type enums.
         if output.lower() in ("d", "disp", "displacment"):
-            output= "displacement"
+            output= self.core_unit_enum.displacement
         elif output.lower() in ("v", "vel", "velocity"):
-            output= "velocity"
+            output= self.core_unit_enum.velocity
         elif output.lower() in ("a", "acc", "acceleration"):
-            output= "acceleration"
+            output= self.core_unit_enum.acceleration
         else:
             raise ValueError("Unknown output '%s'." % output)
 
@@ -858,6 +911,33 @@ class Response(ComparingObject):
             for stage in stages[1:]:
                 ref *= stage.get_response(frequencies=f)
             resp *= self.instrument_sensitivity.value / np.abs(ref[0])
+
+        # By now the response is in the input units of the first stage.
+        diff_and_int_map = {
+            self.core_unit_enum.displacement: 0,
+            self.core_unit_enum.velocity: 1,
+            self.core_unit_enum.acceleration: 2}
+        unit_type = self._get_unit_type(self.response_stages[0].input_units)
+        if unit_type not in diff_and_int_map:
+            raise ValueError("Cannot convert %s to %s." % (unit_type, output))
+
+        # Figure out required integration or differentiation.
+        w  = 2.0 * np.pi * frequencies * 1j
+        diff_or_int = diff_and_int_map[unit_type] - diff_and_int_map[output]
+        while diff_or_int:
+            if diff_or_int < 0:
+                resp /= w
+                diff_or_int += 1
+            elif diff_or_int > 0:
+                resp *= w
+                diff_or_int -= 1
+            else:  # pragma: no cover
+                raise NotImplementedError
+
+        scale_factor = self._get_scale_factor(
+            self.response_stages[0].input_units)
+        if scale_factor != 1.0:
+            resp *= scale_factor
 
         return resp
 
