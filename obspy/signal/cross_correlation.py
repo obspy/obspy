@@ -636,7 +636,7 @@ segment.
         :param half_win: number of past/future values to calculate moving window
         :return out: smoothed signal
         """
-        window_len = 2 * half_win + 1
+        window_len = int(2 * half_win + 1)
         # extending the data at beginning and at the end
         # to apply the window at the borders
         s = np.r_[spectrum[window_len - 1:0:-1], spectrum,
