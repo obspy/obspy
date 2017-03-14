@@ -20,33 +20,59 @@ class RequestsTestCase(unittest.TestCase):
     def test_connectivity(self):
         # basic network connection test to exclude network issues
         conn = http.client.HTTPSConnection("www.python.org")
-        conn.request("HEAD", "/")
+        conn.request("GET", "/")
         response = conn.getresponse()
         self.assertEqual(response.status, 200)
+        self.assertEqual(response.reason, 'OK')
         conn.close()
 
     @vcr
     def test_http_get(self):
         conn = http.client.HTTPConnection("www.python.org")
-        conn.request("HEAD", "/")
+        conn.request("GET", "/")
         response = conn.getresponse()
         self.assertEqual(response.status, 301)
+        self.assertEqual(response.reason, 'Moved Permanently')
+
+        conn.close()
+
+    @vcr
+    def test_http_get_invalid(self):
+        conn = http.client.HTTPConnection("httpstat.us")
+        conn.request("GET", "/404")
+        response = conn.getresponse()
+        self.assertEqual(response.status, 404)
+        self.assertEqual(response.reason, 'Not Found')
         conn.close()
 
     @vcr
     def test_https_get(self):
         conn = http.client.HTTPSConnection("www.python.org")
+        conn.request("GET", "/")
+        response = conn.getresponse()
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.reason, 'OK')
+        conn.close()
+
+    @vcr
+    def test_https_head(self):
+        conn = http.client.HTTPSConnection("www.python.org")
         conn.request("HEAD", "/")
         response = conn.getresponse()
         self.assertEqual(response.status, 200)
+        self.assertEqual(response.reason, 'OK')
+        data = response.read()
+        self.assertEqual(len(data), 0)
+        self.assertEqual(data, b'')
         conn.close()
 
     @vcr
     def test_redirect_to_https(self):
         conn = http.client.HTTPSConnection("obspy.org")
-        conn.request("HEAD", "/")
+        conn.request("GET", "/")
         response = conn.getresponse()
         self.assertEqual(response.status, 302)
+        self.assertEqual(response.reason, 'Moved Temporarily')
         conn.close()
 
     @vcr
@@ -59,6 +85,7 @@ class RequestsTestCase(unittest.TestCase):
         conn.request("POST", "", params, headers)
         response = conn.getresponse()
         self.assertEqual(response.status, 302)
+        self.assertEqual(response.reason, 'Found')
         data = response.read()
         self.assertIn(b'Redirecting', data)
         conn.close()
