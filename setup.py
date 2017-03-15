@@ -113,6 +113,7 @@ INSTALL_REQUIRES = [
     'requests']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur', 'pyproj', 'pep8-naming'],
+    # arclink decryption also works with: pycrypto, cryptography, pycryptodome
     'arclink': ['m2crypto'],
     'io.shapefile': ['gdal'],
     }
