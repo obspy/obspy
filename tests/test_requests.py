@@ -81,7 +81,6 @@ class RequestsTestCase(unittest.TestCase):
 
     @vcr
     def test_redirect(self):
-        # 1
         r = requests.get('http://github.com/')
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.url, 'https://github.com/')
@@ -95,6 +94,16 @@ class RequestsTestCase(unittest.TestCase):
         r = s.get('http://httpbin.org/cookies')
         out = json.loads(r.text)
         self.assertEqual(out['cookies'], {"sessioncookie": "123456789"})
+
+    @vcr
+    def test_sessions2(self):
+        s = requests.Session()
+        s.auth = ('user', 'pass')
+        s.headers.update({'x-test': 'true'})
+        r = s.get('http://httpbin.org/headers', headers={'x-test2': 'true'})
+        out = json.loads(r.text)
+        self.assertEqual(out['headers']['X-Test'], 'true')
+        self.assertEqual(out['headers']['X-Test2'], 'true')
 
     @unittest.skip("currently fails")
     @vcr(debug=True)

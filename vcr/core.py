@@ -50,6 +50,12 @@ orig_sslsocket = ssl.SSLSocket
 orig_select = select.select
 orig_getaddrinfo = socket.getaddrinfo
 
+try:
+    from requests.packages.urllib3.util import connection
+    orig_is_connection_dropped = connection.is_connection_dropped
+except ImportError:
+    pass
+
 
 class VCRSystem(object):
     """
@@ -105,6 +111,11 @@ class VCRSystem(object):
         ssl.SSLSocket = VCRSSLSocket
         socket.getaddrinfo = vcr_getaddrinfo
         select.select = vcr_select
+        try:
+            from requests.packages.urllib3.util import connection
+            connection.is_connection_dropped = lambda conn: False
+        except ImportError:
+            pass
         # extras
         cls.start_extras()
 
@@ -119,6 +130,11 @@ class VCRSystem(object):
         ssl.SSLSocket = orig_sslsocket
         socket.getaddrinfo = orig_getaddrinfo
         select.select = orig_select
+        try:
+            from requests.packages.urllib3.util import connection
+            connection.is_connection_dropped = orig_is_connection_dropped
+        except ImportError:
+            pass
         # reset
         cls.playlist = []
         cls.status = VCR_RECORD
@@ -180,6 +196,7 @@ class VCRSocket(object):
     def __del__(self):
         if hasattr(self, 'fd'):
             self.fd.close()
+        self._orig_socket.close()
 
     def _exec(self, name, *args, **kwargs):
         if self._recording:
