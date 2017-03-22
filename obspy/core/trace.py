@@ -667,16 +667,21 @@ class Trace(object):
                 raise TypeError
             #  check id
             if self.get_id() != trace.get_id():
-                raise TypeError("Trace ID differs")
+                raise TypeError("Trace ID differs: %s vs %s" %
+                                (self.get_id(), trace.get_id()))
             #  check sample rate
             if self.stats.sampling_rate != trace.stats.sampling_rate:
-                raise TypeError("Sampling rate differs")
+                raise TypeError("Sampling rate differs: %s vs %s" %
+                                (self.stats.sampling_rate,
+                                 trace.stats.sampling_rate))
             #  check calibration factor
             if self.stats.calib != trace.stats.calib:
-                raise TypeError("Calibration factor differs")
+                raise TypeError("Calibration factor differs: %s vs %s" %
+                                (self.stats.calib, trace.stats.calib))
             # check data type
             if self.data.dtype != trace.data.dtype:
-                raise TypeError("Data type differs")
+                raise TypeError("Data type differs: %s vs %s" %
+                                (self.data.dtype, trace.data.dtype))
         # check times
         if self.stats.starttime <= trace.stats.starttime:
             lt = self
