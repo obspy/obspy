@@ -88,6 +88,8 @@ master: (doi: 10.5281/zenodo.165135)
      get_timing_and_data_quality() function obsolete which is thus
      deprecated and will be removed with the next release. The get_flags()
      function is also much faster. (see #1141)
+   * Always hook up the libmseed logging to its Python counterpart to avoid
+     some rare segfaults. (see #1658)
    * Update to libmseed v2.19.2 (see #1703).
    * Correctly read MiniSEED files with a data offset of 48 bytes (see #1540).
  - obspy.io.nlloc:
