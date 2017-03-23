@@ -1052,6 +1052,19 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             st[0].data[:6],
             [337, 396, 454, 503, 547, 581])
 
+    def test_reading_truncated_miniseed_files(self):
+        """
+        Regression test to guard against a segfault.
+        """
+        filename = os.path.join(self.path, 'data',
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+
+        with io.open(filename, 'rb') as fh:
+            data = fh.read()
+
+        with io.BytesIO(data[:-257]) as buf:
+            _read_mseed(buf)
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
