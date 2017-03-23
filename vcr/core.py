@@ -34,6 +34,7 @@ import select
 import socket
 import ssl
 import sys
+import telnetlib
 import tempfile
 import time
 import warnings
@@ -49,12 +50,7 @@ orig_socket = socket.socket
 orig_sslsocket = ssl.SSLSocket
 orig_select = select.select
 orig_getaddrinfo = socket.getaddrinfo
-
-try:
-    from requests.packages.urllib3.util import connection
-    orig_is_connection_dropped = connection.is_connection_dropped
-except ImportError:
-    pass
+orig_read_until = telnetlib.Telnet.read_until
 
 
 class VCRSystem(object):
@@ -111,11 +107,7 @@ class VCRSystem(object):
         ssl.SSLSocket = VCRSSLSocket
         socket.getaddrinfo = vcr_getaddrinfo
         select.select = vcr_select
-        try:
-            from requests.packages.urllib3.util import connection
-            connection.is_connection_dropped = lambda conn: False
-        except ImportError:
-            pass
+        telnetlib.Telnet.read_until = vcr_read_until
         # extras
         cls.start_extras()
 
@@ -130,11 +122,7 @@ class VCRSystem(object):
         ssl.SSLSocket = orig_sslsocket
         socket.getaddrinfo = orig_getaddrinfo
         select.select = orig_select
-        try:
-            from requests.packages.urllib3.util import connection
-            connection.is_connection_dropped = orig_is_connection_dropped
-        except ImportError:
-            pass
+        telnetlib.Telnet.read_until = orig_read_until
         # reset
         cls.playlist = []
         cls.status = VCR_RECORD
@@ -174,16 +162,42 @@ def vcr_getaddrinfo(*args, **kwargs):
 
 
 def vcr_select(r, w, x, timeout=None):
-    # Windows only
-    if sys.platform == 'win32' and VCRSystem.status == VCR_PLAYBACK:
-        return list(r), list(w), []
-    return orig_select(r, w, x, timeout)
+    if VCRSystem.status == VCR_PLAYBACK:
+        return [], [], []
+    else:
+        return orig_select(r, w, x, timeout)
+
+
+def vcr_read_until(self, match, timeout=None):
+    if VCRSystem.status == VCR_PLAYBACK:
+        n = len(match)
+        self.process_rawq()
+        i = self.cookedq.find(match)
+        if i >= 0:
+            i = i + n
+            buf = self.cookedq[:i]
+            self.cookedq = self.cookedq[i:]
+            return buf
+        while not self.eof:
+            i = max(0, len(self.cookedq)-n)
+            self.fill_rawq()
+            self.process_rawq()
+            i = self.cookedq.find(match, i)
+            if i >= 0:
+                i = i+n
+                buf = self.cookedq[:i]
+                self.cookedq = self.cookedq[i:]
+                return buf
+        return self.read_very_lazy()
+    else:
+        return orig_read_until(self, match, timeout=timeout)
 
 
 class VCRSocket(object):
     """
     """
-    def __init__(self, family=socket.AF_INET, type=socket.SOCK_STREAM,
+    def __init__(self, family=socket.AF_INET,
+                 type=socket.SOCK_STREAM,  # @ReservedAssignment
                  proto=0, fileno=None, _sock=None):
         if VCRSystem.debug:
             print('  ', '__init__', family, type, proto, fileno)

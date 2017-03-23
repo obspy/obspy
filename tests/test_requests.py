@@ -86,7 +86,6 @@ class RequestsTestCase(unittest.TestCase):
         self.assertEqual(r.url, 'https://github.com/')
         self.assertEqual(len(r.history), 1)
 
-    @unittest.skip("currently fails")
     @vcr
     def test_sessions(self):
         s = requests.Session()
@@ -105,8 +104,7 @@ class RequestsTestCase(unittest.TestCase):
         self.assertEqual(out['headers']['X-Test'], 'true')
         self.assertEqual(out['headers']['X-Test2'], 'true')
 
-    @unittest.skip("currently fails")
-    @vcr(debug=True)
+    @vcr
     def test_redirect_twice(self):
         # http://obspy.org redirects to https://github.com/obspy/obspy/wiki
         r = requests.get('http://obspy.org/')
