@@ -11,7 +11,6 @@ import random
 import shutil
 import sys
 import unittest
-import warnings
 from datetime import datetime
 from struct import pack, unpack
 import warnings
