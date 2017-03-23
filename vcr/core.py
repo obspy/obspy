@@ -106,8 +106,9 @@ class VCRSystem(object):
         socket.socket = VCRSocket
         ssl.SSLSocket = VCRSSLSocket
         socket.getaddrinfo = vcr_getaddrinfo
-        select.select = vcr_select
-        telnetlib.Telnet.read_until = vcr_read_until
+        if sys.platform == 'win32':
+            select.select = vcr_select
+            telnetlib.Telnet.read_until = vcr_read_until
         # extras
         cls.start_extras()
 
@@ -121,8 +122,9 @@ class VCRSystem(object):
         socket.socket = orig_socket
         ssl.SSLSocket = orig_sslsocket
         socket.getaddrinfo = orig_getaddrinfo
-        select.select = orig_select
-        telnetlib.Telnet.read_until = orig_read_until
+        if sys.platform == 'win32':
+            select.select = orig_select
+            telnetlib.Telnet.read_until = orig_read_until
         # reset
         cls.playlist = []
         cls.status = VCR_RECORD
@@ -169,7 +171,7 @@ def vcr_select(r, w, x, timeout=None):
 
 
 def vcr_read_until(self, match, timeout=None):
-    if sys.platform == 'win32' and VCRSystem.status == VCR_PLAYBACK:
+    if VCRSystem.status == VCR_PLAYBACK:
         n = len(match)
         self.process_rawq()
         i = self.cookedq.find(match)
