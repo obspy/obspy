@@ -376,11 +376,12 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     except Exception:
         verbose = 0
 
+    clibmseed.verbose = bool(verbose)
     try:
         lil = clibmseed.readMSEEDBuffer(
             bfr_np, buflen, selections, C.c_int8(unpack_data),
             reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
-            alloc_data, verbose=bool(verbose))
+            alloc_data)
     except InternalMSEEDReadingError as e:
         msg = e.args[0]
         if offset and offset in str(e):
@@ -394,6 +395,9 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 raise InternalMSEEDReadingError(msg)
         else:
             raise
+    finally:
+        # Make sure to reset the verbosity.
+        clibmseed.verbose = True
 
     del selections
 

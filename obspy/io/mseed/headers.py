@@ -770,11 +770,12 @@ class _LibmseedWrapper(object):
     """
     def __init__(self, lib):
         self.lib = lib
+        self.verbose = True
 
     def __getattr__(self, item):
         func = getattr(self.lib, item)
 
-        def _wrapper(*args, verbose=True):
+        def _wrapper(*args):
             # Collect exceptions. They cannot be raised in the callback as
             # they could never be caught then. They are collected an raised
             # later on.
@@ -794,7 +795,7 @@ class _LibmseedWrapper(object):
                 C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_error_or_warning)
 
             def log_message(msg):
-                if verbose:
+                if self.verbose:
                     print(msg[6:].strip())
             log_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_message)
 
