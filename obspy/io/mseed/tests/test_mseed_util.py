@@ -1136,6 +1136,18 @@ class MSEEDUtilTestCase(unittest.TestCase):
             self.assertEqual(flags['glitches'], 2)
             self.assertEqual(flags['suspect_time_tag'], 2)
 
+    def test_regression_segfault_when_hooking_up_libmseeds_logging(self):
+        filename = os.path.join(self.path, 'data',
+                                'wrong_blockette_numbers_specified.mseed')
+        # Read it once - that hooks up the logging.
+        _read_mseed(filename)
+        # The hooks used to still be set up in libmseed but the
+        # corresponding Python function have been garbage collected which
+        # caused a segfault.
+        #
+        # This test passes if there is no seg-fault.
+        util.get_flags(filename)
+
     def _check_values(self, file_bfr, trace_id, record_numbers, expected_bytes,
                       reclen):
         """
