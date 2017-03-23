@@ -169,7 +169,7 @@ def vcr_select(r, w, x, timeout=None):
 
 
 def vcr_read_until(self, match, timeout=None):
-    if VCRSystem.status == VCR_PLAYBACK:
+    if sys.platform == 'win32' and VCRSystem.status == VCR_PLAYBACK:
         n = len(match)
         self.process_rawq()
         i = self.cookedq.find(match)
