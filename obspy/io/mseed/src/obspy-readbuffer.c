@@ -260,13 +260,20 @@ void log_error(int errcode, int offset) {
 }
 
 
+// Helper function to connect libmseed's logging and error messaging to Python
+// functions.
+void setupLogging(void (*diag_print) (char*),
+                  void (*log_print) (char*)) {
+    ms_loginit(log_print, "INFO: ", diag_print, "ERROR: ");
+}
+
+
 // Function that reads from a MiniSEED binary file from a char buffer and
 // returns a LinkedIDList.
 LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                  unpack_data, int reclen, flag verbose, flag details,
-                 int header_byteorder, long long (*allocData) (int, char),
-                 void (*diag_print) (char*), void (*log_print) (char*))
+                 int header_byteorder, long long (*allocData) (int, char))
 {
     int retcode = 0;
     int retval = 0;
@@ -300,14 +307,6 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     LinkedRecordList *recordCurrent = NULL;
     int datasize;
     int record_count = 0;
-
-    // A negative verbosity suppresses as much as possible.
-    if (verbose < 0) {
-        ms_loginit(&empty_print, NULL, &empty_print, NULL);
-    }
-    else {
-        ms_loginit(log_print, "INFO: ", diag_print, "ERROR: ");
-    }
 
     if (header_byteorder >= 0) {
         // Enforce little endian.

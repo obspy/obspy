@@ -1417,7 +1417,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 with io.open(reference, "rt") as fh:
                     err_msg = fh.readlines()[-1]
                 err_msg = re.sub("^Error:\s", "", err_msg).strip()
-                self.assertEqual(err_msg, e.exception.args[0])
+                self.assertEqual(err_msg, e.exception.args[0].splitlines()[1])
             elif test_type == "summary":
                 st = read(filename)
                 # This is mainly used for a test with chunks in arbitrary
