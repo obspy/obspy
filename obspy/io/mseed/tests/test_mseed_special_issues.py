@@ -1062,8 +1062,23 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         with io.open(filename, 'rb') as fh:
             data = fh.read()
 
-        with io.BytesIO(data[:-257]) as buf:
-            _read_mseed(buf)
+        data = data[:-257]
+        # This is the offset for the record that later has to be recorded in
+        # the warning.
+        self.assertEqual(len(data) - 255, 4608)
+
+        # The file now lacks information at the end. This will read the file
+        # until that point and raise a warning that some things are missing.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            with io.BytesIO(data) as buf:
+                st = _read_mseed(buf)
+        self.assertEqual(len(st), 1)
+        self.assertEqual(len(w), 1)
+        self.assertIs(w[0].category, InternalMSEEDReadingWarning)
+        self.assertEqual("readMSEEDBuffer(): Unexpected end of file when "
+                         "parsing record starting at offset 4608. The rest of "
+                         "the file will not be read.", w[0].message.args[0])
 
 
 def suite():
