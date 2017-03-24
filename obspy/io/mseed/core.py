@@ -17,7 +17,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
-from . import util, InternalMSEEDReadingError, InternalMSEEDReadingWarning
+from . import util, InternalMSEEDError
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
                       VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS, Selections,
@@ -371,48 +371,34 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     # it hopefully works on 32 and 64 bit systems.
     alloc_data = C.CFUNCTYPE(C.c_longlong, C.c_int, C.c_char)(allocate_data)
 
-    # Collect exceptions. They cannot be raised in the callback as they
-    # could never be caught then. They are collected an raised later on.
-    _errs_and_warnings = []
-
-    def log_error_or_warning(msg):
-        msg = msg.decode()
-        if msg.startswith("ERROR: "):
-            _errs_and_warnings.append(
-                InternalMSEEDReadingError(msg[7:].strip()))
-        if msg.startswith("INFO: "):
-            msg = msg[6:].strip()
-            # Append the offset of the full SEED header if necessary. That way
-            # the C code does not have to deal with it.
-            if offset and "offset" in msg:
-                msg = ("%s The file contains a %i byte dataless part at the "
-                       "beginning. Make sure to add that to the reported "
-                       "offset to get the actual location in the file." % (
-                           msg, offset))
-            _errs_and_warnings.append((msg, InternalMSEEDReadingWarning))
-
-    diag_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_error_or_warning)
-
-    def log_message(msg):
-        print(msg[6:].strip())
-    log_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_message)
-
     try:
         verbose = int(verbose)
     except Exception:
         verbose = 0
 
-    lil = clibmseed.readMSEEDBuffer(
-        bfr_np, buflen, selections, C.c_int8(unpack_data),
-        reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
-        alloc_data, diag_print, log_print)
+    clibmseed.verbose = bool(verbose)
+    try:
+        lil = clibmseed.readMSEEDBuffer(
+            bfr_np, buflen, selections, C.c_int8(unpack_data),
+            reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
+            alloc_data)
+    except InternalMSEEDError as e:
+        msg = e.args[0]
+        if offset and offset in str(e):
+            # Append the offset of the full SEED header if necessary. That way
+            # the C code does not have to deal with it.
+            if offset and "offset" in msg:
+                msg = ("%s\nThe file contains a %i byte dataless part at the "
+                       "beginning. Make sure to add that to the reported "
+                       "offset to get the actual location in the file." % (
+                           msg, offset))
+                raise InternalMSEEDError(msg)
+        else:
+            raise
+    finally:
+        # Make sure to reset the verbosity.
+        clibmseed.verbose = True
 
-    for _i in _errs_and_warnings:
-        if isinstance(_i, InternalMSEEDReadingError):
-            raise _i
-        warnings.warn(*_i)
-
-    # XXX: Check if the freeing works.
     del selections
 
     traces = []

@@ -21,8 +21,8 @@ from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
-from obspy.io.mseed import InternalMSEEDReadingError, \
-    InternalMSEEDReadingWarning
+from obspy.io.mseed import InternalMSEEDError, \
+    InternalMSEEDWarning
 from obspy.io.mseed import util
 from obspy.io.mseed.core import _read_mseed, _write_mseed
 from obspy.io.mseed.headers import clibmseed
@@ -45,7 +45,7 @@ def _test_function(filename):
         warnings.simplefilter("always")
         try:
             st = read(filename)  # noqa @UnusedVariable
-        except (ValueError, InternalMSEEDReadingError):
+        except (ValueError, InternalMSEEDError):
             # Should occur with broken files
             pass
 
@@ -143,7 +143,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             data_record = _read_mseed(file)[0].data
 
         self.assertEqual(len(w), 1)
-        self.assertEqual(w[0].category, InternalMSEEDReadingWarning)
+        self.assertEqual(w[0].category, InternalMSEEDWarning)
 
         # Test against reference data.
         self.assertEqual(len(data_record), 5980)
@@ -287,7 +287,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # wrong reclen - raises and also displays a warning
             self.assertRaises(Exception, read, file, reclen=4096)
             self.assertTrue('reclen exceeds buflen' in str(w[1].message))
-            self.assertEqual(w[1].category, InternalMSEEDReadingWarning)
+            self.assertEqual(w[1].category, InternalMSEEDWarning)
 
     def test_read_with_missing_blockette010(self):
         """
