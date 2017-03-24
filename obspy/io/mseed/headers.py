@@ -12,7 +12,7 @@ import warnings
 
 import numpy as np
 
-from . import InternalMSEEDReadingError, InternalMSEEDReadingWarning
+from . import InternalMSEEDError, InternalMSEEDWarning
 from obspy.core.util.libnames import _load_cdll
 
 
@@ -806,12 +806,12 @@ class _LibmseedWrapper(object):
                 return func(*args)
             finally:
                 for _w in _warns:
-                    warnings.warn(_w, InternalMSEEDReadingWarning)
+                    warnings.warn(_w, InternalMSEEDWarning)
                 if _errs:
                     msg = ("Encountered %i error(s) during a call to "
                            "%s():\n%s" % (
                             len(_errs), item, "\n".join(_errs)))
-                    raise InternalMSEEDReadingError(msg)
+                    raise InternalMSEEDError(msg)
         return _wrapper
 
 

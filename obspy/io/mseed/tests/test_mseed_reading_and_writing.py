@@ -19,8 +19,8 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import AttribDict
 from obspy.core.util import CatchOutput, NamedTemporaryFile
-from obspy.io.mseed import (util, InternalMSEEDReadingWarning,
-                            InternalMSEEDReadingError)
+from obspy.io.mseed import (util, InternalMSEEDWarning,
+                            InternalMSEEDError)
 from obspy.io.mseed.core import _is_mseed, _read_mseed, _write_mseed
 from obspy.io.mseed.headers import ENCODINGS, clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
@@ -1146,7 +1146,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 st = read(filename, verbose=2)
 
         self.assertEqual(len(w), 1)
-        self.assertEqual(w[0].category, InternalMSEEDReadingWarning)
+        self.assertEqual(w[0].category, InternalMSEEDWarning)
 
         self.assertIn(b"calling msr_parse with", out.stdout)
         self.assertIn(b"buflen=512, reclen=-1, dataflag=0, verbose=2",
@@ -1407,7 +1407,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 # There is only one file that uses this so far so special
                 # handling is okay I guess.
                 self.assertIn("invalid-blockette-offset", filename)
-                with self.assertRaises(InternalMSEEDReadingError,
+                with self.assertRaises(InternalMSEEDError,
                                        msg=filename) as e:
                     # The file has a couple other issues as well and the
                     # data cannot be unpacked. Unpacking it would raises an

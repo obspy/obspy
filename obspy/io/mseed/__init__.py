@@ -146,11 +146,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 
-class InternalMSEEDReadingError(Exception):
+class InternalMSEEDError(Exception):
     pass
 
 
-class InternalMSEEDReadingWarning(UserWarning):
+class InternalMSEEDWarning(UserWarning):
     pass
 
 

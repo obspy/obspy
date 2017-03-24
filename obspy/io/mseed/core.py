@@ -17,7 +17,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
-from . import util, InternalMSEEDReadingError
+from . import util, InternalMSEEDError
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
                       VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS, Selections,
@@ -382,7 +382,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
             bfr_np, buflen, selections, C.c_int8(unpack_data),
             reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
             alloc_data)
-    except InternalMSEEDReadingError as e:
+    except InternalMSEEDError as e:
         msg = e.args[0]
         if offset and offset in str(e):
             # Append the offset of the full SEED header if necessary. That way
@@ -392,7 +392,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                        "beginning. Make sure to add that to the reported "
                        "offset to get the actual location in the file." % (
                            msg, offset))
-                raise InternalMSEEDReadingError(msg)
+                raise InternalMSEEDError(msg)
         else:
             raise
     finally:
