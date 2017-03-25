@@ -63,201 +63,185 @@ passive-options 	::
 '''
 
 
-'''
-station tests:
+class DatacenterRequestDetails(object):
+    def __init__(self, ID):
+        self.ID = ID
+        self.url={}
+        self.request=[]
 
-https://service.iris.edu/irisws/fedcatalog/1/query?sta=A*&minlat=34&maxlat=38&cha=?HZ&starttime=2015-01-01&includeoverlaps=true
-gives:
+    def add_url(self, service, url):
+        self.url[service]=url
+
+    def add_request(self, request_line):
+        self.request.append(request_line) 
+        
+    def __str__(self):
+        ss = str(self.ID) + "\n"
+        for ur in self.url.keys():
+            ss += ur + " at " + self.url[ur] +'\n'
+        for r in self.request:
+            ss += str(r) + '\n'
+        return ss
 
 
-'''
-
-
-
-client = Client("iris")
-
-def get_station(parameter_list):
-    pass
-
-class ResponseManager(object):
-    ERROR, PREPARSE, PARAMLIST, EMPTY_LINE, DATACENTER, SERVICE, REQUEST, DONE = range(7)
-
-    # the parameters at the top of the request file
-    common_parameters = {}
-
-    # dict: datacenter_urls[DATACENTER_CODE]=base_url
-    datacenter_urls = {}
-    # dict: services[SERVICE_NAME]
-    services = {}
-    def isEmpty(self, line):
-        return line.isempty()
+class request_line(object):
+    def isEmpty(self):
+        return self.line == ""
     
-    def isDatacenter(self, line):
-        return self.current_line.startswith('DATACENTER=')
+    def isDatacenter(self):
+        return self.line.startswith('DATACENTER=')
 
     def isParam(self):
         # true for datacenter, services, and parameter_list
-        return self.current_line.has("=")
+        return '=' in self.line
 
     def isRequest(self):
-        return self.current_line.nfields()==6 # and test field values?
+        return len(self.line.split())==6 # and test field values?
 
     def isService(self):
         # parse param_name
-        return self.current_line.isParam(line) and allcapsParamName(param_name); 
+        return self.isParam() and self.line.split("=")[0].isupper() and not self.isDatacenter()
 
-    class State:
-        '''
-        parser states: PREPARSE, PARAMLIST, EMPTY_LINE, DATACENTER, SERVICE, REQUEST, DONE
-        PREPARSE -> [PARAMLIST | EMPTY_LINE | DATACENTER]
-        PARAMLIST -> [PARAMLIST | EMPTY_LINE]
-        EMPTY_LINE -> [EMPTY_LINE | DATACENTER | DONE]
-        DATACENTER -> [SERVICE]
-        SERVICE -> [SERVICE | REQUEST]
-        REQUEST -> [REQUEST | EMPTY_LINE | DONE ]
-        '''
+        
+    def __init__(self, line):
+        self.line = line.strip()
+    
+    def __repr__(self):
+        return self.line
+    
+    def __str__(self):
+        return self.line
 
-        def parse(self) :
-            assert 0, "undefined state"
-            pass
+class ResponseManager:
+    common_parameters=[]
+    datacenter_ids = [] #strings
+    datacenters={} # DatacenterRequestDetails
+    active_id=""
+    def __str__(self):
+        ss = str(ResponseManager.common_parameters)
+        ss += str(ResponseManager.datacenter_ids)
+        for id in ResponseManager.datacenter_ids:
+            ss += str(ResponseManager.datacenters[id])
+            ss +='\n'
+        return ss
 
-        def next(self, input):
-            pass
+    def parse(self, full_federator_response):
+        state = PreParse();
 
-    class PreParse(State):
-        def parse(self) :
-            pass
+        for line in full_federator_response.splitlines():
+            subject = request_line(line)
+            state = state.next(subject)
+            state.parse(subject)
 
-        def next(self, line):
-            if line.isEmpty():
-                return EmptyItem #EMPTY_LINE
-            elif line.isDatacenter():
-                return DatacenterItem #DATACENTER
-            elif line.isParam():
-                return ParameterItem #PARAMLIST
-            else:
-                return State
+        # now, we have:
+        #  datacenter_ids : list of datacenter codes, in order received
+        #  datacenters : dictionary of DatacenterRequestDetails, by id
+        FedResponses = [FederatorResponse(dc, common_parameters) for dc in datacenters]
 
-    class ParameterItem(State):
-        def parse(self) :
-            # add line to PARAMLIST dict
-            pass
+class State:
+    '''
+    parser states: PREPARSE, PARAMLIST, EMPTY_LINE, DATACENTER, SERVICE, REQUEST, DONE
+    PREPARSE -> [PARAMLIST | EMPTY_LINE | DATACENTER]
+    PARAMLIST -> [PARAMLIST | EMPTY_LINE]
+    EMPTY_LINE -> [EMPTY_LINE | DATACENTER | DONE]
+    DATACENTER -> [SERVICE]
+    SERVICE -> [SERVICE | REQUEST]
+    REQUEST -> [REQUEST | EMPTY_LINE | DONE ]
+    '''
 
-        def next(self, item):
-            if line.isEmpty():
-                return EmptyItem #EMPTY_LINE
-            elif line.isParam():
-                return self
-            else:
-                assert 0, "expected another paramter or an empty line"
-                return State
-
-    class EmptyItem(State):
-        def parse(self) :
-            pass
-
-        def next(self, item):
-            if line.isEmpty():
-                return self #no state change
-            elif line.isDatacenter():
-                return DatacenterItem #DATACENTER
-            else:
-                assert 0, "expected either a datacenter or an empty line"
-                return State
-
-    class DatacenterItem(State):
-        def parse(self) :
-            # set new datacenter in dictionary. Example:
-            '''DATACENTER=IRISDMC,http://ds.iris.edu'''
-            # current key becomes IRISDMC
-            # x[IRISDMC].url = http://ds.iris.edu
-            pass
-
-        def next(self, item):
-            if line.isService():
-                return ServiceItem
-            else:
-                assert 0, "expected a service" 
-                return State
-
-    class ServiceItem(State):
-        def parse(self) :
-            # add service to dictionary. example
-            '''DATASELECTSERVICE=http://service.iris.edu/fdsnws/dataselect/1/'''
-            # x[IRISDMC].DATASELECT = http://service.iris.edu/fdsnws/dataselect/1/
-            pass
-
-        def next(self, item):
-            if line.isService():
-                return self
-            elif line.isRequest():
-                return RequestItem
-            else:
-                assert 0, "expected either a request or another service"
-
-    class RequestItem(State):
-        def parse(self) :
-            # add request to this service's requests. example:
-            # x[IRISDMC].request.add('AR AJAR -- EHZ 2015-01-01T00:00:00 2016-01-02T00:00:00')
-            pass
-
-        def next(self, item):
-            if line.isRequest():
-                return self
-            elif line.isEmpty():
-                return EmptyItem
-            else:
-                assert 0, "expected either another request or an empty line"
-
-
-    def __init__(self, initial_state):
+    def parse(self, line) :
+        assert 0, "undefined state"
         pass
 
-    def parse(full_federator_response):
-        current_line = ""
-        next_line = ""
+    def next(self, line):
+        pass
+
+class PreParse(State):
+    def parse(self, line) :
+        pass
+
+    def next(self, line):
+        if line.isEmpty():
+            return EmptyItem() #EMPTY_LINE
+        elif line.isDatacenter():
+            return DatacenterItem() #DATACENTER
+        elif line.isParam():
+            return ParameterItem() #PARAMLIST
+        else:
+            return State
+
+class ParameterItem(State):
+    def parse(self, line) :
+        ResponseManager.common_parameters.append(line)
+
+    def next(self, line):
+        if line.isEmpty():
+            return EmptyItem() #EMPTY_LINE
+        elif line.isParam():
+            return self
+        else:
+            assert 0, "expected another paramter or an empty line"
+            return State()
+
+class EmptyItem(State):
+    def parse(self, line) :
+        pass
+
+    def next(self, line):
+        if line.isEmpty():
+            return self #no state change
+        elif line.isDatacenter():
+            return DatacenterItem() #DATACENTER
+        else:
+            assert 0, "expected either a datacenter or an empty line"
+            return State()
+
+class DatacenterItem(State):
+    def parse(self, line) :
+        _, rest =  str(line).split('=')
+        active_id, url = rest.split(',')
+        ResponseManager.active_id = active_id
+        ResponseManager.datacenter_ids.append(active_id)
+        ResponseManager.datacenters[active_id]=DatacenterRequestDetails(active_id)
+        ResponseManager.datacenters[active_id].add_url(active_id,url)
+
+    def next(self, line):
+        if line.isService():
+            return ServiceItem()
+        else:
+            assert 0, "expected a service" 
+            return State()
+
+class ServiceItem(State):
+    def parse(self, line) :
+        '''parsing something like: DATASELECTSERVICE=http://service.iris.edu/fdsnws/dataselect/1/'''
+        svc_name, url = str(line).split('=')
+        ResponseManager.datacenters[ResponseManager.active_id].add_url(svc_name, url)
+        pass
+
+    def next(self, line):
+        if line.isService():
+            return self
+        elif line.isRequest():
+            return RequestItem()
+        else:
+            assert 0, "expected either a request or another service"
+            
+class RequestItem(State):
+    def parse(self, line) :
+        # add request to this service's requests. example:
+        # x[IRISDMC].request.add('AR AJAR -- EHZ 2015-01-01T00:00:00 2016-01-02T00:00:00')
+        ResponseManager.datacenters[ResponseManager.active_id].add_request(line)
+
+    def next(self, line):
+        if line.isRequest():
+            return self
+        elif line.isEmpty():
+            return EmptyItem()
+        else:
+            assert 0, "expected either another request or an empty line"
 
 
-        '''
-        first line of each station will be DATACENTER=VAL,http://stuff.place
-        For example:
-
-        DATACENTER=IRISDMC,http://ds.iris.edu
-        DATASELECTSERVICE=http://service.iris.edu/fdsnws/dataselect/1/
-        STATIONSERVICE=http://service.iris.edu/fdsnws/station/1/
-        EVENTSERVICE=http://service.iris.edu/fdsnws/event/1/
-        SACPZSERVICE=http://service.iris.edu/irisws/sacpz/1/
-        RESPSERVICE=http://service.iris.edu/irisws/resp/1/
-        AR AJAR -- EHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-
-        File format:
-        [BLOCK WITH 1 OR MORE param=value PAIRS]
-        [blank line]
-        [LINE WITH DATACENTER= ]
-        [BLOCK WITH 1 OR MORE SERVICES  SVCNAME=http://something.../v/]
-        [BLOCK OF REQUESTS]
-        [blank line]
-        [LINE WITH DATACENTER= ]
-        [BLOCK WITH 1 OR MORE SERVICES  SVCNAME=http://something.../v/]
-        [BLOCK OF REQUESTS]
-
-        Interesting bits for parsing: 
-        1. first block may or may not exist [is it necessary?  some parts of it would be.]
-        2. each section starts with an empty line, even the first one of the list [meh-reliable]
-        3. every service ends in "/" [more reliable]
-        4. data lines always have 6 fields
-        5. spaces only exist between fields, and are confined to the data lines.
-        6. any number of blank lines might trail the file
-        '''
-
-
-
-        state = PreParse;
-        for line in file:
-            state = state.next(line)
-            state.run()
-
-        FedResponses = [FederatorResponse(s) for s in datacenter_dict]
 
 
 class FederatorResponse(object):
