@@ -1,0 +1,2 @@
+from obspy.clients.fdsn import Client
+print("ok")
