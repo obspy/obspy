@@ -1080,7 +1080,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                          "parsing record starting at offset 4608. The rest of "
                          "the file will not be read.", w[0].message.args[0])
 
-    def test_reading_truncated_miniseed_files_version_2(self):
+    def test_reading_truncated_miniseed_files_case_2(self):
         """
         Second test in the same vain as
         test_reading_truncated_miniseed_files. Previously forgot a `<=` test.
@@ -1108,6 +1108,40 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEqual("readMSEEDBuffer(): Unexpected end of file when "
                          "parsing record starting at offset 4608. The rest of "
                          "the file will not be read.", w[0].message.args[0])
+
+    def test_reading_less_than_128_bytes(self):
+        """
+        128 bytes is the smallest possible MiniSEED record.
+
+        Reading anything smaller should result in an error.
+        """
+        filename = os.path.join(self.path, 'data',
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+
+        with io.open(filename, 'rb') as fh:
+            data = fh.read()
+
+        # Reading at exactly 128 bytes offset will result in a truncation
+        # warning.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            with io.BytesIO(data[:128]) as buf:
+                st = _read_mseed(buf)
+        self.assertEqual(len(st), 0)  # nothing is read here.
+        self.assertGreaterEqual(len(w), 1)
+        self.assertIs(w[-1].category, InternalMSEEDReadingWarning)
+        self.assertEqual("readMSEEDBuffer(): Unexpected end of file when "
+                         "parsing record starting at offset 0. The rest of "
+                         "the file will not be read.", w[-1].message.args[0])
+
+        # Reading anything less result in an exception.
+        with self.assertRaises(ValueError) as e:
+            with io.BytesIO(data[:127]) as buf:
+                _read_mseed(buf)
+        self.assertEqual(
+            e.exception.args[0],
+            "The smallest possible mini-SEED record is made up of 128 bytes. "
+            "The passed buffer or file contains only 127.")
 
 
 def suite():
