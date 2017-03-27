@@ -513,12 +513,28 @@ Further functionality of this module is documented at a couple of other places:
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
+import warnings
+
+import scipy
+
+from obspy.core.util.base import get_scipy_version
 # Convenience imports.
 from .mass_downloader import MassDownloader  # NOQA
 from .restrictions import Restrictions  # NOQA
 from .domain import (Domain, RectangularDomain,  # NOQA
                      CircularDomain, GlobalDomain)  # NOQA
+
+
+__all__ = [native_str(i) for i in (
+    'MassDownloader', 'Restrictions', 'Domain', 'RectangularDomain',
+    'CircularDomain', 'GlobalDomain')]
+
+if get_scipy_version() < [0, 12]:
+    msg = ('At least some parts of FDSN Mass downloader might not '
+           'work with old scipy versions <0.12.0 (installed: {})')
+    warnings.warn(msg.format(scipy.__version__))
 
 
 if __name__ == '__main__':
