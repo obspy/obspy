@@ -1700,13 +1700,16 @@ class TraceTestCase(unittest.TestCase):
         StationXML against pure evalresp providing an external RESP file.
         """
         tr1 = read()[0]
-        tr2 = tr1.copy()
+        tr2 = read()[0]
+        #tr2 = tr1.copy()
         # deconvolve from dataless with simulate() via Parser from
         # dataless/RESP
         parser = Parser("/path/to/dataless.seed.BW_RJOB")
+        import pdb; pdb.set_trace()
         tr1.simulate(seedresp={"filename": parser, "units": "VEL"},
                      water_level=60, pre_filt=(0.1, 0.5, 30, 50), sacsim=True,
                      pitsasim=False)
+        print(tr1.data)
         # deconvolve from StationXML with remove_response()
         tr2.remove_response(pre_filt=(0.1, 0.5, 30, 50))
         np.testing.assert_array_almost_equal(tr1.data, tr2.data)
