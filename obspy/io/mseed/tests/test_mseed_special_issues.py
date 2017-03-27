@@ -1080,6 +1080,35 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                          "parsing record starting at offset 4608. The rest of "
                          "the file will not be read.", w[0].message.args[0])
 
+    def test_reading_truncated_miniseed_files_version_2(self):
+        """
+        Second test in the same vain as
+        test_reading_truncated_miniseed_files. Previously forgot a `<=` test.
+        """
+        filename = os.path.join(self.path, 'data',
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+
+        with io.open(filename, 'rb') as fh:
+            data = fh.read()
+
+        data = data[:-256]
+        # This is the offset for the record that later has to be recorded in
+        # the warning.
+        self.assertEqual(len(data) - 256, 4608)
+
+        # The file now lacks information at the end. This will read the file
+        # until that point and raise a warning that some things are missing.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            with io.BytesIO(data) as buf:
+                st = _read_mseed(buf)
+        self.assertEqual(len(st), 1)
+        self.assertEqual(len(w), 1)
+        self.assertIs(w[0].category, InternalMSEEDReadingWarning)
+        self.assertEqual("readMSEEDBuffer(): Unexpected end of file when "
+                         "parsing record starting at offset 4608. The rest of "
+                         "the file will not be read.", w[0].message.args[0])
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')

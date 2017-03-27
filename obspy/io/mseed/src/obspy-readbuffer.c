@@ -376,7 +376,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             break;
         }
         // Data missing at the end.
-        else if (retcode > 0 && retcode > (buflen - offset)) {
+        else if (retcode > 0 && retcode >= (buflen - offset)) {
             log_error(MS_ENDOFFILE, offset);
             msr_free(&msr);
             break;
