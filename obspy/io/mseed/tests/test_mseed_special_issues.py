@@ -1075,7 +1075,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 st = _read_mseed(buf)
         self.assertEqual(len(st), 1)
         self.assertEqual(len(w), 1)
-        self.assertIs(w[0].category, InternalMSEEDReadingWarning)
+        self.assertIs(w[0].category, InternalMSEEDWarning)
         self.assertEqual("readMSEEDBuffer(): Unexpected end of file when "
                          "parsing record starting at offset 4608. The rest of "
                          "the file will not be read.", w[0].message.args[0])
@@ -1104,7 +1104,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 st = _read_mseed(buf)
         self.assertEqual(len(st), 1)
         self.assertEqual(len(w), 1)
-        self.assertIs(w[0].category, InternalMSEEDReadingWarning)
+        self.assertIs(w[0].category, InternalMSEEDWarning)
         self.assertEqual("readMSEEDBuffer(): Unexpected end of file when "
                          "parsing record starting at offset 4608. The rest of "
                          "the file will not be read.", w[0].message.args[0])
@@ -1129,7 +1129,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 st = _read_mseed(buf)
         self.assertEqual(len(st), 0)  # nothing is read here.
         self.assertGreaterEqual(len(w), 1)
-        self.assertIs(w[-1].category, InternalMSEEDReadingWarning)
+        self.assertIs(w[-1].category, InternalMSEEDWarning)
         self.assertEqual("readMSEEDBuffer(): Unexpected end of file when "
                          "parsing record starting at offset 0. The rest of "
                          "the file will not be read.", w[-1].message.args[0])
