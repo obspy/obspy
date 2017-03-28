@@ -98,7 +98,7 @@ build: false
 
 test_script:
   - "%CMD_IN_ENV% python setup.py develop"
-  - "python -m obspy.scripts.runtests --no-flake8 -n appveyor-ci -r %CI_URL% %PR_URL%"
+  - "python -m obspy.scripts.runtests --all --no-flake8 -n appveyor-ci -r %CI_URL% %PR_URL%"
 
 matrix:
   # enable fast fail strategy

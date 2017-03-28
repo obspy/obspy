@@ -157,7 +157,6 @@ install:
   # current pyimgur stable release has a py3 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py3.zip
   - pip freeze
-  - pip install https://github.com/obspy/obspy_github_api/archive/0.7.0.zip
   - conda list
   # done installing dependencies
   - git version
@@ -197,24 +196,13 @@ script:
   # https://github.com/numpy/numpy/blob/master/.travis.yml#L44
   - mkdir empty
   - cd empty
-  # check if any additional modules should be tested (via github issue comments)
-  - |
-      if [ "$TRAVIS_PULL_REQUEST" != "false" ]
-        # we're building a pull request, so check what modules should be tested
-        then export MODULELIST=`python -c "from obspy_github_api import get_module_test_list; print('obspy.' + ',obspy.'.join(get_module_test_list($TRAVIS_PULL_REQUEST)))"`
-             export MODULELISTSPACES=`python -c "from obspy_github_api import get_module_test_list; print(' '.join(get_module_test_list($TRAVIS_PULL_REQUEST)))"`
-        # we're building a branch on the main repo, so test *all* modules
-        else export MODULELIST=`python -c "from obspy.core.util import ALL_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
-      fi
+  # since move to vcr: always test all modules
+  - MODULELIST=`python -c "from obspy.core.util import ALL_MODULES; print('obspy.' + ',obspy.'.join(ALL_MODULES))"`
   - echo $MODULELIST
-  - echo $MODULELISTSPACES
-  # need to set IFS so that space-separated MODULELISTSPACES list is interpreted correctly by run_tests()
-  - export IFS=" "
-  # if not on a PR, i.e. running on a push to master or maintenance_XXX: test *all* modules
   - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
       coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 --all -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}";
     else
-      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-url="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}" $MODULELISTSPACES;
+      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 --all -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-url="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}";
     fi;
 
 after_script:
