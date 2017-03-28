@@ -2,12 +2,10 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import PY2
 
 import os
 import telnetlib
 import unittest
-from unittest import skipIf
 
 from vcr import vcr
 
@@ -63,23 +61,6 @@ class TelnetlibTestCase(unittest.TestCase):
         self.assertEqual(out, b'OK\r\n')
         t.write(b'INSTITUTION Anonymous\r\n')
         out = t.read_until(b'\r\n', timeout=1)
-        self.assertEqual(out, b'OK\r\n')
-        t.close()
-
-    @skipIf(PY2, 'recording in PY2 is not supported')
-    @vcr(overwrite=True)
-    def test_arclink_recording(self):
-        t = telnetlib.Telnet("webdc.eu", 18002, 20)
-        t.write(b'HELLO\r\n')
-        out = t.read_until(b')\r\n', timeout=1)
-        self.assertIn(b'ArcLink', out)
-        out = t.read_until(b'\r\n', timeout=1)
-        self.assertIn(b'GFZ', out)
-        t.write(b'USER test@obspy.org\r\n')
-        out = t.read_until(b'\r\n', timeout=1)
-        self.assertEqual(out, b'OK\r\n')
-        t.write(b'INSTITUTION Anonymous\r\n')
-        out = t.read_until(b'OK\r\n', timeout=1)
         self.assertEqual(out, b'OK\r\n')
         t.close()
 
