@@ -50,7 +50,7 @@ import numpy as np
 from obspy import Stream, read, UTCDateTime
 from obspy.core.stream import _headonly_warning_msg
 from obspy.core.util.misc import BAND_CODE
-from obspy.io.mseed.headers import FILESIZE_TOO_SMALL_MSG
+from obspy.io.mseed import ObsPyMSEEDFilesizeTooSmallError
 
 
 SDS_FMTSTR = os.path.join(
@@ -174,15 +174,12 @@ class Client(object):
             try:
                 st += read(full_path, format=self.format, starttime=starttime,
                            endtime=endtime, sourcename=seed_pattern, **kwargs)
-            except Exception as e:
+            except ObsPyMSEEDFilesizeTooSmallError:
                 # just ignore small MSEED files, in use cases working with
                 # near-realtime data these are usually just being created right
                 # at request time, e.g. when fetching current data right after
                 # midnight
-                if (self.format in ('MSEED', None) and
-                        str(e).startswith(FILESIZE_TOO_SMALL_MSG)):
-                    continue
-                raise
+                continue
 
         # make sure we only have the desired data, just in case the file
         # contents do not match the expected SEED id
@@ -403,15 +400,12 @@ class Client(object):
                 try:
                     st = read(filename, format=self.format, headonly=True,
                               sourcename=seed_pattern)
-                except Exception as e:
+                except ObsPyMSEEDFilesizeTooSmallError:
                     # just ignore small MSEED files, in use cases working with
                     # near-realtime data these are usually just being created
                     # right at request time, e.g. when fetching current data
                     # right after midnight
-                    if (self.format in ('MSEED', None) and
-                            str(e).startswith(FILESIZE_TOO_SMALL_MSG)):
-                        st = None
-                    raise
+                    st = None
                 else:
                     st = st.select(network=network, station=station,
                                    location=location, channel=channel)

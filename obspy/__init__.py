@@ -43,10 +43,13 @@ from obspy.core.trace import Trace  # NOQA
 from obspy.core.stream import Stream, read
 from obspy.core.event import read_events, Catalog
 from obspy.core.inventory import read_inventory, Inventory  # NOQA
+from obspy.core.util.obspy_types import (
+    ObsPyException, ObsPyReadingError)  # NOQA
 
 
 __all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
-           "read_events", "Catalog", "read_inventory"]
+           "read_events", "Catalog", "read_inventory", "ObsPyException",
+           "ObsPyReadingError"]
 __all__ = [native_str(i) for i in __all__]
 
 

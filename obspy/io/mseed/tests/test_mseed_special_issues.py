@@ -22,7 +22,7 @@ from obspy.core.compatibility import from_buffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.io.mseed import InternalMSEEDError, \
-    InternalMSEEDWarning
+    InternalMSEEDWarning, ObsPyMSEEDFilesizeTooSmallError
 from obspy.io.mseed import util
 from obspy.io.mseed.core import _read_mseed, _write_mseed
 from obspy.io.mseed.headers import clibmseed
@@ -1135,13 +1135,13 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                          "the file will not be read.", w[-1].message.args[0])
 
         # Reading anything less result in an exception.
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ObsPyMSEEDFilesizeTooSmallError) as e:
             with io.BytesIO(data[:127]) as buf:
                 _read_mseed(buf)
         self.assertEqual(
             e.exception.args[0],
             "The smallest possible mini-SEED record is made up of 128 bytes. "
-            "The passed buffer or file contains only 127 bytes.")
+            "The passed buffer or file contains only 127.")
 
 
 def suite():
