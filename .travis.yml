@@ -149,6 +149,8 @@ install:
   # XXX for now don't try to install other optional dependencies so that at
   # least our builds work..
   # XXX - conda install --no-update-dependencies m2crypto || true
+  # XXX - conda install --no-update-dependencies pycrypto || true
+  # XXX - conda install --no-update-dependencies cryptography || true
   # XXX - conda install --no-update-dependencies cartopy || true
   # install packages not available via conda
   - pip install codecov
