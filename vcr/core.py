@@ -109,12 +109,6 @@ class VCRSystem(object):
         if sys.platform == 'win32':
             select.select = vcr_select
             telnetlib.Telnet.read_until = vcr_read_until
-        # extras
-        cls.start_extras()
-
-    @classmethod
-    def start_extras(cls):
-        pass
 
     @classmethod
     def stop(cls):
@@ -128,12 +122,6 @@ class VCRSystem(object):
         # reset
         cls.playlist = []
         cls.status = VCR_RECORD
-        # extras
-        cls.stop_extras()
-
-    @classmethod
-    def stop_extras(cls):
-        pass
 
     @classproperty
     def is_recording(cls):  # @NoSelf
