@@ -21,7 +21,8 @@ from . import util, InternalMSEEDError
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
                       VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS, Selections,
-                      SelectTime, Blkt100S, Blkt1001S, clibmseed)
+                      SelectTime, Blkt100S, Blkt1001S, clibmseed,
+                      FILESIZE_TOO_SMALL_MSG)
 
 
 def _is_mseed(filename):
@@ -268,8 +269,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         length = os.path.getsize(mseed_object)
 
     if length < 128:
-        msg = "The smallest possible mini-SEED record is made up of 128 " \
-              "bytes. The passed buffer or file contains only %i." % length
+        msg = '{} The passed buffer or file contains only {:d} bytes.'.format(
+            FILESIZE_TOO_SMALL_MSG, length)
         raise ValueError(msg)
 
     info = util.get_record_information(mseed_object, endian=bo)

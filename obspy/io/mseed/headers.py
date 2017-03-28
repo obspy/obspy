@@ -53,6 +53,9 @@ SAMPLESIZES = {'a': 1, 'i': 4, 'f': 4, 'd': 8}
 VALID_RECORD_LENGTHS = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,
                         131072, 262144, 524288, 1048576]
 
+FILESIZE_TOO_SMALL_MSG = (
+    'The smallest possible mini-SEED record is made up of 128 bytes.')
+
 # allowed encodings:
 # id: (name, sampletype a/i/f/d, default NumPy type, write support)
 ENCODINGS = {0: ("ASCII", "a", np.dtype(native_str("|S1")).type, True),

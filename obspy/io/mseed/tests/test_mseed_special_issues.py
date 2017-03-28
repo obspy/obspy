@@ -1141,7 +1141,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEqual(
             e.exception.args[0],
             "The smallest possible mini-SEED record is made up of 128 bytes. "
-            "The passed buffer or file contains only 127.")
+            "The passed buffer or file contains only 127 bytes.")
 
 
 def suite():
