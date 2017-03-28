@@ -257,6 +257,21 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     else:
         bo = None
 
+    # Determine total size. Either its a file-like object.
+    if hasattr(mseed_object, "tell") and hasattr(mseed_object, "seek"):
+        cur_pos = mseed_object.tell()
+        mseed_object.seek(0, 2)
+        length = mseed_object.tell() - cur_pos
+        mseed_object.seek(cur_pos, 0)
+    # Or a file name.
+    else:
+        length = os.path.getsize(mseed_object)
+
+    if length < 128:
+        msg = "The smallest possible mini-SEED record is made up of 128 " \
+              "bytes. The passed buffer or file contains only %i." % length
+        raise ValueError(msg)
+
     info = util.get_record_information(mseed_object, endian=bo)
 
     # Map the encoding to a readable string value.
