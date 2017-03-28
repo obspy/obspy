@@ -89,7 +89,9 @@ install:
   # optionally install some packages (if possible)
   - ps: conda install -q --yes --no-update-dependencies cryptography; if (-not $?) {echo 'could not install cryptography'}
   - ps: conda install -q --yes --no-update-dependencies pycrypto; if (-not $?) {echo 'could not install pycrypto'}
-  - ps: conda install -q --yes --no-update-dependencies m2crypto; if (-not $?) {echo 'could not install m2crypto'}
+  # m2crypto is packaged by conda-forge but somehow it breaks everything if we install it,
+  # see: https://ci.appveyor.com/project/obspy/obspy/build/1.0.4512-master/job/95u9bm6suh2b2va0
+  # - ps: conda install -q --yes --no-update-dependencies m2crypto; if (-not $?) {echo 'could not install m2crypto'}
   - ps: conda install -q --yes --no-update-dependencies geographiclib; if (-not $?) {echo 'could not install geographiclib'}
   - ps: conda install -q --yes --no-update-dependencies cartopy; if (-not $?) {echo 'could not install cartopy'}
   # additional dependencies
