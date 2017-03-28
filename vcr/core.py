@@ -48,9 +48,11 @@ VCR_PLAYBACK = 1
 
 orig_socket = socket.socket
 orig_sslsocket = ssl.SSLSocket
-orig_select = select.select
+orig_select_select = select.select
 orig_getaddrinfo = socket.getaddrinfo
 orig_read_until = telnetlib.Telnet.read_until
+if hasattr(select, 'epoll'):
+    orig_select_epoll = select.epoll
 
 
 class VCRSystem(object):
@@ -106,8 +108,10 @@ class VCRSystem(object):
         socket.socket = VCRSocket
         ssl.SSLSocket = VCRSSLSocket
         socket.getaddrinfo = vcr_getaddrinfo
+        if hasattr(select, 'epoll'):
+            select.epoll = vcr_select_epoll
         if sys.platform == 'win32':
-            select.select = vcr_select
+            select.select = vcr_select_select
             telnetlib.Telnet.read_until = vcr_read_until
 
     @classmethod
@@ -116,8 +120,10 @@ class VCRSystem(object):
         socket.socket = orig_socket
         ssl.SSLSocket = orig_sslsocket
         socket.getaddrinfo = orig_getaddrinfo
+        if hasattr(select, 'epoll'):
+            select.epoll = orig_select_epoll
         if sys.platform == 'win32':
-            select.select = orig_select
+            select.select = orig_select_select
             telnetlib.Telnet.read_until = orig_read_until
         # reset
         cls.playlist = []
@@ -151,11 +157,28 @@ def vcr_getaddrinfo(*args, **kwargs):
         return value
 
 
-def vcr_select(r, w, x, timeout=None):
+def vcr_select_epoll():
+    if VCRSystem.status == VCR_PLAYBACK:
+        class FakeEPoll(object):
+            def register(self, *args, **kwargs):
+                return True
+
+            def close(self):
+                return True
+
+            def poll(self, *args, **kwargs):
+                return []
+
+        return FakeEPoll()
+    else:
+        return orig_select_epoll()
+
+
+def vcr_select_select(r, w, x, timeout=None):
     if VCRSystem.status == VCR_PLAYBACK:
         return [], [], []
     else:
-        return orig_select(r, w, x, timeout)
+        return orig_select_select(r, w, x, timeout)
 
 
 def vcr_read_until(self, match, timeout=None):
