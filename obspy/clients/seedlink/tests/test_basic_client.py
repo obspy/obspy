@@ -14,12 +14,15 @@ from obspy.clients.seedlink.basic_client import Client
 
 class ClientTestCase(unittest.TestCase):
     def setUp(self):
-        self.client = Client("rtserver.ipgp.fr")
+        self.client = Client("rtserve.iris.washington.edu")
 
     def test_get_waveform(self):
-        t = UTCDateTime() - 3600
-        for request in [["G", "FDF", "00", "LHN", t, t + 20],
-                        ["G", "CLF", "00", "BHZ", t, t + 10]]:
+        # for vcr we will probably need to set a fixed time here??
+        t = UTCDateTime() - 10 * 60
+        # example stations taken from examples on:
+        # http://ds.iris.edu/ds/nodes/dmc/services/seedlink/
+        for request in [["IU", "ANMO", "00", "LHN", t, t + 20],
+                        ["II", "ADK", "00", "BHZ", t, t + 10]]:
             st = self.client.get_waveforms(*request)
             self.assertGreater(len(st), 0)
             for tr in st:
