@@ -62,6 +62,7 @@
        konnoohmachismoothing
        polarization
        quality_control
+       regression
        spectral_estimation
        rotate
        tf_misfit
