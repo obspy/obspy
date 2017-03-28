@@ -27,11 +27,10 @@ import warnings
 from lxml import etree
 import numpy as np
 
-from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
+from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
 from obspy.core.util.misc import MatplotlibBackend
 
 
-MATPLOTLIB_VERSION = get_matplotlib_version()
 # this dictionary contains the locations of checker routines that determine
 # whether the module's tests can be executed or not (e.g. because test server
 # is unreachable, necessary ports are blocked, etc.).

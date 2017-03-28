@@ -14,12 +14,10 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import mock
 from obspy.core.stream import _is_pickle, _read_pickle, _write_pickle
+from obspy.core.util import SCIPY_VERSION
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import NamedTemporaryFile, get_scipy_version
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.xseed import Parser
-
-
-SCIPY_VERSION = get_scipy_version()
 
 
 class StreamTestCase(unittest.TestCase):

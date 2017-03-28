@@ -21,10 +21,8 @@ import numpy as np
 from matplotlib import rcParams
 
 from obspy import read_inventory, UTCDateTime
-from obspy.core.util.testing import ImageComparison, get_matplotlib_version
-
-
-MATPLOTLIB_VERSION = get_matplotlib_version()
+from obspy.core.util import MATPLOTLIB_VERSION
+from obspy.core.util.testing import ImageComparison
 
 
 class StationTestCase(unittest.TestCase):
