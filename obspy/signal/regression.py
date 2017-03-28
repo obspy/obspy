@@ -86,3 +86,8 @@ def linear_regression(xdata, ydata, weights=None, p0=None,
         std_slope = np.sqrt(cov[0, 0])
         std_intercept = np.sqrt(cov[1, 1])
         return slope, intercept, std_slope, std_intercept
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
