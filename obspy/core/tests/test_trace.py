@@ -2674,6 +2674,26 @@ class TraceTestCase(unittest.TestCase):
             with self.assertRaises(ValueError):
                 tr.id = id_
 
+    def test_trace_contiguous(self):
+        """
+        Test that arbitrary operations on Trace.data will always result in
+        Trace.data being C- and F-contiguous, unless explicitly opted out.
+        """
+        tr_default = Trace(data=np.arange(5, dtype=np.int32))
+        tr_opt_out = Trace(data=np.arange(5, dtype=np.int32))
+        tr_opt_out._always_contiguous = False
+        # the following slicing operation only creates a view internally in
+        # numpy and thus leaves the array incontiguous
+        tr_default.data = tr_default.data[::2]
+        tr_opt_out.data = tr_opt_out.data[::2]
+        # by default it should have made contiguous, nevertheless
+        self.assertTrue(tr_default.data.flags['C_CONTIGUOUS'])
+        self.assertTrue(tr_default.data.flags['F_CONTIGUOUS'])
+        # if opted out explicitly, it should be incontiguous due to the slicing
+        # operation
+        self.assertFalse(tr_opt_out.data.flags['C_CONTIGUOUS'])
+        self.assertFalse(tr_opt_out.data.flags['F_CONTIGUOUS'])
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')

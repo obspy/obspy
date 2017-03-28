@@ -250,6 +250,17 @@ class Trace(object):
     :var data: Data samples in a :class:`~numpy.ndarray` or
         :class:`~numpy.ma.MaskedArray`
 
+    .. note::
+
+        The ``.data`` attribute containing the time series samples as a
+        :class:`numpy.ndarray` will always be made contiguous in memory. This
+        way it is always safe to use ``.data`` in routines that internally pass
+        the array to C code. On the other hand this might result in some
+        unwanted copying of data in memory. Experts can opt-out by setting
+        ``Trace._always_contiguous = False``, in this case the user has to make
+        sure themselves that no C operations are performed on potentially
+        incontiguous data.
+
     .. rubric:: Supported Operations
 
     ``trace = traceA + traceB``
@@ -263,6 +274,7 @@ class Trace(object):
         Returns basic information about the trace object.
         See also: :meth:`Trace.__str__`.
     """
+    _always_contiguous = True
 
     def __init__(self, data=np.array([]), header=None):
         # make sure Trace gets initialized with suitable ndarray as self.data
@@ -415,6 +427,8 @@ class Trace(object):
         # any change in Trace.data will dynamically set Trace.stats.npts
         if key == 'data':
             _data_sanity_checks(value)
+            if self._always_contiguous:
+                value = np.require(value, requirements=['C_CONTIGUOUS'])
             self.stats.npts = len(value)
         return super(Trace, self).__setattr__(key, value)
 
