@@ -50,6 +50,7 @@ Just decorate your unit tests with ``@vcr``:
     import requests
     from vcr import vcr
 
+
     class MyTestCase(unittest.TestCase):
 
        @vcr
