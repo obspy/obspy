@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The obspy.io.datamark.core test suite.
+The obspy.io.win.core test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -12,12 +12,12 @@ import unittest
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.io.datamark.core import _read_datamark
+from obspy.io.win.core import _read_win
 
 
 class CoreTestCase(unittest.TestCase):
     """
-    Test cases for datamark core interface
+    Test cases for win core interface
     """
     def setUp(self):
         # directory where the test files are located
@@ -45,11 +45,11 @@ class CoreTestCase(unittest.TestCase):
 
     def test_read_via_module(self):
         """
-        Read files via obspy.io.datamark.core._read_datamark function.
+        Read files via obspy.io.win.core._read_datamark function.
         """
         filename = os.path.join(self.path, '10030302.00')
         # 1
-        st = _read_datamark(filename)
+        st = _read_win(filename)
         st.verify()
         st.sort(keys=['channel'])
         self.assertEqual(len(st), 2)
