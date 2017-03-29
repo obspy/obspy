@@ -2,6 +2,7 @@ centos:centos7
 debian:jessie
 debian:wheezy
 fedora:24
+fedora:25
 obspy/base-images:debian_7_wheezy_32bit
 obspy/base-images:debian_8_jessie_32bit
 obspy/base-images:ubuntu_12_04_precise_32bit
@@ -14,7 +15,9 @@ obspy:debian_7_wheezy_32bit
 obspy:debian_8_jessie
 obspy:debian_8_jessie_32bit
 obspy:fedora_24
+obspy:fedora_25
 obspy:opensuse_leap_42_1
+obspy:opensuse_leap_42_2
 obspy:ubuntu_14_04_trusty
 obspy:ubuntu_14_04_trusty_32bit
 obspy:ubuntu_16_04_xenial
@@ -22,5 +25,6 @@ obspy:ubuntu_16_04_xenial_32bit
 obspy:ubuntu_16_10_yakkety
 obspy:ubuntu_16_10_yakkety_32bit
 opensuse:42.1
+opensuse:42.2
 ubuntu:14.04
 ubuntu:16.04
