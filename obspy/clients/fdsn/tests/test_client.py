@@ -944,8 +944,6 @@ class ClientTestCase(unittest.TestCase):
         """
         client = Client(base_url="IRIS", user_agent=USER_AGENT,
                         service_mappings={"event": None})
-        # XXX with VCR this test currently fails, because we skip service
-        # discovery and use the pickled service discovery cache..
         self.assertEqual(sorted(client.services.keys()),
                          ['dataselect', 'station'])
 
