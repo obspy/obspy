@@ -16,9 +16,7 @@ import inspect
 import itertools
 import math
 import os
-import platform
 import shutil
-import sys
 import tempfile
 import warnings
 from contextlib import contextmanager
@@ -260,72 +258,6 @@ def get_untracked_files_from_git():
     except (OSError, CalledProcessError):
         return None
     return files
-
-
-@contextmanager
-def CatchOutput():  # noqa -> this name is IMHO okay for a context manager.
-    """
-    A context manager that catches stdout/stderr/exit() for its scope.
-
-    Always use with "with" statement. Does nothing otherwise.
-
-    Based on: https://bugs.python.org/msg184312
-
-    >>> with CatchOutput() as out:  # doctest: +SKIP
-    ...    os.system('echo "mystdout"')
-    ...    os.system('echo "mystderr" >&2')
-    >>> print(out.stdout)  # doctest: +SKIP
-    mystdout
-    >>> print(out.stderr)  # doctest: +SKIP
-    mystderr
-    """
-
-    # Dummy class to transport the output.
-    class Output():
-        pass
-    out = Output()
-    out.stdout = ''
-    out.stderr = ''
-
-    stdout_fd = sys.stdout.fileno()
-    stderr_fd = sys.stderr.fileno()
-    with tempfile.TemporaryFile(prefix='obspy-') as tmp_stdout:
-        with tempfile.TemporaryFile(prefix='obspy-') as tmp_stderr:
-            stdout_copy = os.dup(stdout_fd)
-            stderr_copy = os.dup(stderr_fd)
-
-            try:
-                sys.stdout.flush()
-                os.dup2(tmp_stdout.fileno(), stdout_fd)
-
-                sys.stderr.flush()
-                os.dup2(tmp_stderr.fileno(), stderr_fd)
-
-                raised = False
-                yield out
-
-            except SystemExit:
-                raised = True
-
-            finally:
-                sys.stdout.flush()
-                os.dup2(stdout_copy, stdout_fd)
-                os.close(stdout_copy)
-                tmp_stdout.seek(0)
-                out.stdout = tmp_stdout.read()
-
-                sys.stderr.flush()
-                os.dup2(stderr_copy, stderr_fd)
-                os.close(stderr_copy)
-                tmp_stderr.seek(0)
-                out.stderr = tmp_stderr.read()
-
-                if platform.system() == "Windows":
-                    out.stdout = out.stdout.replace(b'\r', b'')
-                    out.stderr = out.stderr.replace(b'\r', b'')
-
-                if raised:
-                    raise SystemExit(out.stderr)
 
 
 @contextmanager

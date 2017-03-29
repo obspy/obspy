@@ -9,7 +9,8 @@ import unittest
 import zipfile
 
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.misc import CatchOutput, TemporaryWorkingDirectory
+from obspy.core.util.misc import TemporaryWorkingDirectory
+from obspy.core.util.capture import PyCatchOutput
 from obspy.io.xseed.parser import Parser
 from obspy.io.xseed.scripts.dataless2resp import main as obspy_dataless2resp
 from obspy.io.xseed.scripts.dataless2xseed import main as obspy_dataless2xseed
@@ -32,7 +33,7 @@ class ScriptTestCase(unittest.TestCase):
 
     def test_dataless2resp(self):
         with TemporaryWorkingDirectory():
-            with CatchOutput() as out:
+            with PyCatchOutput() as out:
                 obspy_dataless2resp([self.dataless_file])
 
             expected = '''Found 1 files.
@@ -49,7 +50,7 @@ Parsing file %s
 
     def test_dataless2resp_zipped(self):
         with TemporaryWorkingDirectory():
-            with CatchOutput() as out:
+            with PyCatchOutput() as out:
                 obspy_dataless2resp(['--zipped', self.dataless_file])
 
             expected = '''Found 1 files.
@@ -74,7 +75,7 @@ Parsing file %s
 
     def test_dataless2xseed(self):
         with TemporaryWorkingDirectory():
-            with CatchOutput() as out:
+            with PyCatchOutput() as out:
                 obspy_dataless2xseed([self.dataless_file])
 
             expected = '''Found 1 files.
@@ -96,7 +97,7 @@ Parsing file %s
         dataless_multi_file = os.path.join(self.data, 'CL.AIO.dataless')
 
         with TemporaryWorkingDirectory():
-            with CatchOutput() as out:
+            with PyCatchOutput() as out:
                 obspy_dataless2xseed(['--split-stations',
                                       dataless_multi_file])
 
@@ -120,7 +121,7 @@ Parsing file %s
 
     def test_xseed2dataless(self):
         with NamedTemporaryFile() as tf:
-            with CatchOutput() as out:
+            with PyCatchOutput() as out:
                 obspy_xseed2dataless(['--output', tf.name, self.xseed_file])
 
             expected = '''Found 1 files.

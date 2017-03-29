@@ -7,7 +7,7 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 
-from obspy.core.util.misc import CatchOutput
+from obspy.core.util.capture import PyCatchOutput
 from obspy.io.mseed.scripts.recordanalyzer import main as obspy_recordanalyzer
 
 
@@ -18,7 +18,7 @@ class RecordAnalyserTestCase(unittest.TestCase):
                                       'timingquality.mseed')
 
     def test_default_record(self):
-        with CatchOutput() as out:
+        with PyCatchOutput() as out:
             obspy_recordanalyzer([self.test_file])
 
         expected = '''FILE: %s
@@ -61,7 +61,7 @@ CALCULATED VALUES
                          out.stdout)
 
     def test_second_record(self):
-        with CatchOutput() as out:
+        with PyCatchOutput() as out:
             obspy_recordanalyzer(['-n', '1', self.test_file])
 
         expected = '''FILE: %s
@@ -111,7 +111,7 @@ CALCULATED VALUES
         filename = os.path.join(os.path.dirname(__file__), 'data', 'bizarre',
                                 'mseed_data_offset_0.mseed')
 
-        with CatchOutput() as out:
+        with PyCatchOutput() as out:
             obspy_recordanalyzer(['-n', '1', filename])
 
         expected = '''FILE: %s
@@ -151,7 +151,7 @@ CALCULATED VALUES
         self.assertEqual(expected.encode('utf-8'),  # noqa
                          out.stdout)
 
-        with CatchOutput() as out:
+        with PyCatchOutput() as out:
             obspy_recordanalyzer(['-n', '2', filename])
 
         expected = '''FILE: %s

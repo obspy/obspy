@@ -13,8 +13,8 @@ from os.path import abspath, dirname, join, pardir
 import warnings
 
 from obspy import read
-from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.misc import TemporaryWorkingDirectory, CatchOutput
+from obspy.core.util import NamedTemporaryFile, PyCatchOutput
+from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.scan import main as obspy_scan
 from obspy.imaging.scripts.scan import scan, Scanner
@@ -167,7 +167,7 @@ class ScanTestCase(unittest.TestCase):
                 files.append(fp.name)
             with ImageComparison(self.path, 'scan_mult_sampl.png')\
                     as ic:
-                with CatchOutput() as out:
+                with PyCatchOutput() as out:
                     obspy_scan(files + ['--output', ic.name, '--print-gaps'])
                 self.assertEqual(
                     expected_stdout_lines, out.stdout.decode().splitlines())

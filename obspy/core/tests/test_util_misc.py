@@ -4,69 +4,16 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import os
-import platform
-import sys
-import tempfile
 import unittest
-from ctypes import CDLL
-from ctypes.util import find_library
 
 from obspy import UTCDateTime
-from obspy.core.util.misc import CatchOutput, get_window_times
+from obspy.core.util.misc import get_window_times
 
 
 class UtilMiscTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.misc
     """
-    @unittest.skipIf(sys.platform in ("darwin", "win32") and
-                     platform.python_version_tuple()[0] == "3",
-                     "Does not work with Python 3 for some Windows and OSX "
-                     "versions")
-    def test_catch_output(self):
-        """
-        Tests for CatchOutput context manager.
-        """
-        libc = CDLL(find_library("c"))
-
-        with CatchOutput() as out:
-            os.system('echo "abc"')
-            libc.printf(b"def\n")
-            # This flush is necessary for Python 3, which uses different
-            # buffering modes. Fortunately, in practice, we do not mix Python
-            # and C writes to stdout. This can also be fixed by setting the
-            # PYTHONUNBUFFERED environment variable, but this must be done
-            # externally, and cannot be done by the script.
-            libc.fflush(None)
-            print("ghi")
-            print("jkl", file=sys.stdout)
-            os.system('echo "123" 1>&2')
-            print("456", file=sys.stderr)
-
-        if platform.system() == "Windows":
-            self.assertEqual(out.stdout.splitlines(),
-                             ['"abc"', 'def', 'ghi', 'jkl'])
-            self.assertEqual(out.stderr.splitlines(),
-                             ['"123" ', '456'])
-        else:
-            self.assertEqual(out.stdout, b"abc\ndef\nghi\njkl\n")
-            self.assertEqual(out.stderr, b"123\n456\n")
-
-    def test_catch_output_io(self):
-        """
-        Tests that CatchOutput context manager does not break I/O.
-        """
-        with CatchOutput():
-            fn = tempfile.TemporaryFile(prefix='obspy')
-
-        try:
-            fn.write(b'abc')
-            fn.seek(0)
-            fn.read(3)
-            fn.close()
-        except OSError as e:
-            self.fail('CatchOutput has broken file I/O!\n' + str(e))
-
     def test_no_obspy_imports(self):
         """
         Check files that are used at install time for obspy imports.
