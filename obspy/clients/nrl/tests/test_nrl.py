@@ -24,7 +24,7 @@ class NRLTestCase(unittest.TestCase):
                                            'IRIS',
                                            )
         self.nrl_local = NRL(root=self.local_nrl_root)
-        self.local_dl_key = [ 'REF TEK', 'RT 130 & 130-SMA', '1', '1']
+        self.local_dl_key = ['REF TEK', 'RT 130 & 130-SMA', '1', '1']
         self.local_sensor_key = ['Guralp', 'CMG-3T', '120s - 50Hz', '1500']
 
         self.nrl_online = NRL(root='http://ds.iris.edu/NRL')
@@ -33,8 +33,8 @@ class NRLTestCase(unittest.TestCase):
         # For Lloyd delete
         # remove
         self.nrl_full_local = NRL(root=os.path.join(os.path.dirname(__file__),
-                                           'data',
-                                           'IRIS_full' ))
+                                                    'data',
+                                                    'IRIS_full'))
 
         self.list_of_nrls = [self.nrl_local,
                              self.nrl_default,

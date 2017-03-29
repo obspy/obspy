@@ -233,7 +233,6 @@ class Parser(object):
         else:
             raise IOError("First byte of data must be in [0-9<]")
 
-
     def get_xseed(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
         Returns a XSEED representation of the current Parser object.
@@ -778,8 +777,8 @@ class Parser(object):
             for bfield in unused_fields:
                 # Set unused fields to default
                 bfield.parse_seed(blockette_obj, None)
-            # This is not correct for more than rdseed -R, although it will parse
-            # Also will not separate stations blockettes by station
+            # This is not correct for more than rdseed -R, although it will
+            # parse. Also will not separate stations blockettes by station.
             if record_type == 'S':
                 root_attribute.append(blockette_obj)
             elif record_type == 'V':
@@ -787,7 +786,7 @@ class Parser(object):
             elif record_type == 'A':
                 self.temp['abbreviations'].append(blockette_obj)
             self.blockettes.setdefault(blockette_obj.id,
-                                             []).append(blockette_obj)
+                                       []).append(blockette_obj)
         self._update_internal_seed_structure()
 
     @classmethod
@@ -806,7 +805,7 @@ class Parser(object):
         """
         # Check both args are parsers
         if not (isinstance(sensor, cls) and isinstance(datalogger, cls)):
-            raise TypeError( 'Sensor and datalogger not type {}'.format(cls))
+            raise TypeError('Sensor and datalogger not type {}'.format(cls))
 
         # Combine: sesnor.stage1, dl.stage2, ..., dl.stageN
 
@@ -858,10 +857,10 @@ class Parser(object):
 
         def lookup_unit(abbr, lookup):
             return lookup_code(abbr,
-                                     34,
-                                     'unit_name',
-                                     'unit_lookup_code',
-                                     lookup)
+                               34,
+                               'unit_name',
+                               'unit_lookup_code',
+                               lookup)
 
         resp_stages = list()
 
@@ -927,7 +926,9 @@ class Parser(object):
                                     b53.stage_signal_input_units),
             output_units=lookup_unit(self.abbreviations,
                                      b53.stage_signal_output_units),
-            pz_transfer_function_type=transform_map[b53.transfer_function_types],
+            pz_transfer_function_type=transform_map[
+                                                    b53.transfer_function_types
+                                                    ],
             normalization_frequency=FloatWithUncertainties(
                 b53.normalization_frequency),
             zeros=zeros,
@@ -943,7 +944,9 @@ class Parser(object):
         resp_blockettes = dict()
         for b in self.stations[0]:
             if b.id in (54, 57, 58) and b.stage_sequence_number >= 2:
-                resp_blockettes.setdefault(b.stage_sequence_number, {})[b.id] = b
+                resp_blockettes.setdefault(
+                                           b.stage_sequence_number, {}
+                                           )[b.id] = b
 
         for stage in resp_blockettes:
             if 54 in resp_blockettes[stage]:
@@ -996,7 +999,9 @@ class Parser(object):
                         b57.input_sample_rate),
                     decimation_factor=b57.decimation_factor,
                     decimation_offset=b57.decimation_offset,
-                    decimation_delay=FloatWithUncertainties(b57.estimated_delay),
+                    decimation_delay=FloatWithUncertainties(
+                                                            b57.estimated_delay
+                                                            ),
                     decimation_correction=FloatWithUncertainties(
                         b57.correction_applied)
                 )
@@ -1037,8 +1042,6 @@ class Parser(object):
         inv_response.instrument_sensitivity.value = calc_sensit
         inv_response.instrument_sensitivity.frequency = sensfreq
         return inv_response
-
-
 
     def _parse_seed(self, data):
         """

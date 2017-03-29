@@ -1228,7 +1228,8 @@ sdfsdfasdf
         :rtype: :class:`numpy.ndarray`
         :returns: frequency response at requested frequencies
         """
-        output, chan =  self._call_eval_resp_for_frequencies(frequencies,
+        output, chan = self._call_eval_resp_for_frequencies(
+                                                    frequencies,
                                                     output=output,
                                                     start_stage=start_stage,
                                                     end_stage=end_stage)

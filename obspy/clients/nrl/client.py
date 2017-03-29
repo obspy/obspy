@@ -18,17 +18,15 @@ import codecs
 import io
 import os
 import sys
+import requests
+
+from obspy.core.inventory.util import _textwrap
+from obspy.io.xseed import Parser
 
 if sys.version_info.major == 2:
     import ConfigParser as configparser
 else:
     import configparser
-
-import requests
-
-from obspy.core.inventory.response import Response
-from obspy.core.inventory.util import _textwrap
-from obspy.io.xseed import Parser
 
 
 class NRL(object):
@@ -38,7 +36,9 @@ class NRL(object):
 
     Created with a URL for remote access or filesystem accessing a local copy.
     """
+
     _index = 'index.txt'
+
     def __new__(cls, root=None):
         if root is not None:
             o = requests.utils.urlparse(root)
@@ -205,6 +205,7 @@ class NRL(object):
         """
         resp_parser = self.get_parser(datalogger_keys, sensor_keys)
         return resp_parser.get_response()
+
 
 class NRLDict(dict):
     def __init__(self, nrl):

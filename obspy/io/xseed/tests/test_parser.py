@@ -611,9 +611,8 @@ class ParserTestCase(unittest.TestCase):
         resp_from_resp = resp_from_resp.read()
         resp_list = self.clean_unit_string(resp_from_resp)
 
-        #compare
+        # compare
         self.assertEqual(seed_list, resp_list)
-
 
     def test_parse_resp(self):
         """
@@ -640,31 +639,17 @@ class ParserTestCase(unittest.TestCase):
                                        'RESP.XX.NR008..HHZ.130.1.100')
         sensor = Parser(sts2_resp_file)
         dl = Parser(rt130_resp_file)
-        combined = Parser.combine_sensor_dl_resps(sensor=sensor, datalogger=dl)
+        Parser.combine_sensor_dl_resps(sensor=sensor, datalogger=dl)
 
         # Try to use a sensor and dl from bw seed files.
         sensor = Parser(self.BW_SEED_files[0])
         dl = Parser(self.BW_SEED_files[1])
-        combined = Parser.combine_sensor_dl_resps(sensor=sensor, datalogger=dl)
+        Parser.combine_sensor_dl_resps(sensor=sensor, datalogger=dl)
         # combined.write_resp('.')
 
     def test_join_wrong_types(self):
-        with self.assertRaises(TypeError) as e:
+        with self.assertRaises(TypeError):
             Parser.combine_sensor_dl_resps(None, None)
-
-    # def test_read_resp_with_b61(self):
-        # """
-        # XXX: Parser._parse_resp doesn't handle b61.
-
-        # Fails, _parse_resp should be fixed.
-        # """
-        # filename = os.path.join(self.path,
-                                       # 'RESP.BW.FURT..EHZ')
-        # with open(filename, 'rt') as f:
-            # data = f.read().encode()
-        # p = Parser()
-        # p._parse_resp(data)
-        # p.get_resp()
 
     def test_compare_blockettes(self):
         """
