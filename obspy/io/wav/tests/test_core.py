@@ -15,11 +15,11 @@ import numpy as np
 
 from obspy import Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.base import NUMPY_VERSION
 from obspy.io.wav.core import WIDTH2DTYPE
 
 
-numpy_version = float(".".join(np.version.version.split('.')[:2]))
-if numpy_version <= 1.3:
+if NUMPY_VERSION <= [1, 3]:
     OLD_NUMPY = True
 else:
     OLD_NUMPY = False

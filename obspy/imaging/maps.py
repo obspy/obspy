@@ -26,10 +26,9 @@ from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
                                MaxNLocator)
 
 from obspy import UTCDateTime
-from obspy.core.util.base import get_basemap_version, get_cartopy_version
+from obspy.core.util import BASEMAP_VERSION, CARTOPY_VERSION
 from obspy.geodetics.base import mean_longitude
 
-BASEMAP_VERSION = get_basemap_version()
 if BASEMAP_VERSION:
     from mpl_toolkits.basemap import Basemap
     HAS_BASEMAP = True
@@ -41,7 +40,6 @@ if BASEMAP_VERSION:
 else:
     HAS_BASEMAP = False
 
-CARTOPY_VERSION = get_cartopy_version()
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
     import cartopy.crs as ccrs
     import cartopy.feature as cfeature

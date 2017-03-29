@@ -23,16 +23,12 @@ from matplotlib import rcParams
 import obspy
 from obspy import UTCDateTime, read_inventory, read_events
 from obspy.core.compatibility import mock
-from obspy.core.util.base import get_basemap_version, get_cartopy_version
-from obspy.core.util.testing import ImageComparison, get_matplotlib_version
+from obspy.core.util import (
+    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION)
+from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
 from obspy.core.inventory.util import _unified_content_strings
-
-
-MATPLOTLIB_VERSION = get_matplotlib_version()
-BASEMAP_VERSION = get_basemap_version()
-CARTOPY_VERSION = get_cartopy_version()
 
 
 class InventoryTestCase(unittest.TestCase):

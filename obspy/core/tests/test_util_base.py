@@ -8,15 +8,8 @@ import shutil
 import unittest
 
 from obspy.core.compatibility import mock
-from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
+from obspy.core.util.base import NamedTemporaryFile, get_dependency_version
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
-
-# checking for matplotlib
-try:
-    import matplotlib  # @UnusedImport
-    HAS_MATPLOTLIB = True
-except ImportError:
-    HAS_MATPLOTLIB = False
 
 
 def image_comparison_in_function(path, img_basename, img_to_compare):
@@ -31,39 +24,22 @@ class UtilBaseTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.base
     """
-    @unittest.skipIf(not HAS_MATPLOTLIB, 'matplotlib is not installed')
     def test_get_matplotlib_version(self):
         """
         Tests for the get_matplotlib_version() function as it continues to
         cause problems.
         """
-        original_version = matplotlib.__version__
+        versions = (("1.2.3", [1, 2, 3]), ("0.9.11", [0, 9, 11]),
+                    ("0.9.svn", [0, 9, 0]), ("1.1.1~rc1-1", [1, 1, 1]),
+                    ("1.2.x", [1, 2, 0]), ("1.3.1rc2", [1, 3, 1]))
 
-        matplotlib.__version__ = "1.2.3"
-        version = get_matplotlib_version()
-        self.assertEqual(version, [1, 2, 3])
-        matplotlib.__version__ = "0.9.11"
-        version = get_matplotlib_version()
-        self.assertEqual(version, [0, 9, 11])
-
-        matplotlib.__version__ = "0.9.svn"
-        version = get_matplotlib_version()
-        self.assertEqual(version, [0, 9, 0])
-
-        matplotlib.__version__ = "1.1.1~rc1-1"
-        version = get_matplotlib_version()
-        self.assertEqual(version, [1, 1, 1])
-
-        matplotlib.__version__ = "1.2.x"
-        version = get_matplotlib_version()
-        self.assertEqual(version, [1, 2, 0])
-
-        matplotlib.__version__ = "1.3.1rc2"
-        version = get_matplotlib_version()
-        self.assertEqual(version, [1, 3, 1])
-
-        # Set it to the original version str just in case.
-        matplotlib.__version__ = original_version
+        for version_string, expected in versions:
+            with mock.patch('pkg_resources.get_distribution') as p:
+                class _D(object):
+                    version = version_string
+                p.return_value = _D()
+                got = get_dependency_version('matplotlib')
+            self.assertEqual(expected, got)
 
     def test_named_temporay_file__context_manager(self):
         """
