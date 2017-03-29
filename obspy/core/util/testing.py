@@ -134,6 +134,10 @@ def add_unittests(testsuite, module_name):
 
 
 def _fdsn_doctest_setUp(doctest):  # NOQA
+    """
+    Helper method to load FDSN service discovery cache from pickled state used
+    in tests
+    """
     from obspy.clients import fdsn
     fdsn_tests_datapath = os.path.join(
         os.path.dirname(fdsn.__file__), 'tests', 'data')
@@ -144,6 +148,9 @@ def _fdsn_doctest_setUp(doctest):  # NOQA
 
 
 def _fdsn_doctest_tearDown(doctest):  # NOQA
+    """
+    Helper method to clear FDSN service discovery cache
+    """
     from obspy.clients import fdsn
     fdsn.Client._Client__service_discovery_cache = {}
 
@@ -195,6 +202,8 @@ def add_doctests(testsuite, module_name):
             try:
                 _module = __import__(_module_name,
                                      fromlist=[native_str("obspy")])
+                # vcr-based FDSN tests rely on service discovery cache being
+                # loaded before the test from a saved pickle
                 if _module.__name__.startswith('obspy.clients.fdsn'):
                     kwargs['setUp'] = _fdsn_doctest_setUp
                     kwargs['tearDown'] = _fdsn_doctest_tearDown
