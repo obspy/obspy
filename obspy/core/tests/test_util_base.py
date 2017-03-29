@@ -34,7 +34,10 @@ class UtilBaseTestCase(unittest.TestCase):
                     ("1.2.x", [1, 2, 0]), ("1.3.1rc2", [1, 3, 1]))
 
         for version_string, expected in versions:
-            with mock.patch('matplotlib.__version__', new=version_string):
+            with mock.patch('pkg_resources.get_distribution') as p:
+                class _D(object):
+                    version = version_string
+                p.return_value = _D()
                 got = get_dependency_version('matplotlib')
             self.assertEqual(expected, got)
 

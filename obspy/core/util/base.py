@@ -14,10 +14,10 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import doctest
-import importlib
 import inspect
 import io
 import os
+import pkg_resources
 import sys
 import tempfile
 from collections import OrderedDict
@@ -339,20 +339,18 @@ def get_dependency_version(package_name):
         0.
     """
     try:
-        module = importlib.import_module(package_name)
-    except ImportError:
-        version = None
-    else:
-        version = module.__version__
-        version = version.split("rc")[0].strip("~")
-        version = list(map(to_int_or_zero, version.split(".")))
+        version = pkg_resources.get_distribution(package_name).version
+    except pkg_resources.DistributionNotFound:
+        return None
+    version = version.split("rc")[0].strip("~")
+    version = list(map(to_int_or_zero, version.split(".")))
     return version
 
 
 NUMPY_VERSION = get_dependency_version('numpy')
 SCIPY_VERSION = get_dependency_version('scipy')
 MATPLOTLIB_VERSION = get_dependency_version('matplotlib')
-BASEMAP_VERSION = get_dependency_version('mpl_toolkits.basemap')
+BASEMAP_VERSION = get_dependency_version('basemap')
 CARTOPY_VERSION = get_dependency_version('cartopy')
 
 
