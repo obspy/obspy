@@ -142,7 +142,7 @@ class Client(object):
         """
         Initializes an FDSN Web Service client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("IRIS")  # doctest: +VCR
         >>> print(client)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         FDSN Webservice Client (base url: http://service.iris.edu)
         Available Services: 'dataselect' (v...), 'event' (v...),

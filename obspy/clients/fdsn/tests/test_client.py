@@ -345,13 +345,15 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(set(self.client.services["available_event_catalogs"]),
                          set(("GCMT", "ISC", "NEIC PDE")))
 
+    @vcr
     def test_iris_event_contributors_availability(self):
         """
         Tests the parsing of the available event contributors.
         """
-        response = requests.get(
-            'http://service.iris.edu/fdsnws/event/1/contributors')
-        xml = lxml.etree.fromstring(response.content)
+        expected_file = os.path.join(self.datapath,
+                                     'IRIS_event_contributors.txt')
+        with open(expected_file, 'rt') as fh:
+            xml = lxml.etree.fromstring(fh.read())
         expected = {
             elem.text for elem in xml.xpath('/Contributors/Contributor')}
         # check that we have some values in there
@@ -563,6 +565,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(FDSNException, self.client.get_stations,
                           network="IU", net="IU")
 
+    @vcr
     def test_help_function_with_iris(self):
         """
         Tests the help function with the IRIS example.
@@ -630,6 +633,7 @@ class ClientTestCase(unittest.TestCase):
         finally:
             sys.stdout = sys.__stdout__
 
+    @vcr
     def test_str_method(self):
         got = str(self.client)
         expected = (
@@ -935,12 +939,15 @@ class ClientTestCase(unittest.TestCase):
                            download_url_mock.call_args_list])
         self.assertEqual(expected_urls, got_urls)
 
+    @vcr
     def test_manually_deactivate_single_service(self):
         """
         Test manually deactivating a single service.
         """
         client = Client(base_url="IRIS", user_agent=USER_AGENT,
                         service_mappings={"event": None})
+        # XXX with VCR this test currently fails, because we skip service
+        # discovery and use the pickled service discovery cache..
         self.assertEqual(sorted(client.services.keys()),
                          ['dataselect', 'station'])
 
@@ -1026,6 +1033,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(
             base_url_event in download_url_mock.call_args_list[0][0][0])
 
+    @vcr
     def test_redirection(self):
         """
         Tests the redirection of GET and POST requests. We redirect
@@ -1086,12 +1094,15 @@ class ClientTestCase(unittest.TestCase):
         # Just make sure something is being downloaded.
         self.assertTrue(bool(len(inv.networks)))
 
+    @vcr
     def test_redirection_auth(self):
         """
         Tests the redirection of GET and POST requests using authentication.
 
         By default these should not redirect and an exception is raised.
         """
+        # XXX with VCR this test currently fails as it manually wipes the
+        # service discovery cache
         # Clear the cache.
         Client._Client__service_discovery_cache.clear()
 
