@@ -418,6 +418,9 @@ class floatheader(object):
         instance._hf[HD.FLOATHDRS.index(self.name)] = value
 
 
+# Descriptor for setting relative time headers with either a relative
+# time float or an absolute UTCDateTime
+# used for: b, o, a, f, t0-t9
 class relativetimeheader(floatheader):
     def __set__(self, instance, value):
         """
@@ -426,7 +429,7 @@ class relativetimeheader(floatheader):
 
         """
         if isinstance(value, UTCDateTime):
-            offset = value - self.reftime
+            offset = value - instance.reftime
         else:
             offset = value
         # reuse the normal floatheader setter.
@@ -584,23 +587,6 @@ def _make_data_func(func, hdr):
     return do_data_func
 
 # TODO: a data setter the requires a float32 array
-
-
-# Factory function for setting relative time headers with either a relative
-# time float or an absolute UTCDateTime
-# used for: b, o, a, f, t0-t9
-def _reltime_setter(hdr):
-    def set_reltime(self, value):
-        if isinstance(value, UTCDateTime):
-            # get the offset from reftime
-            offset = value - self.reftime
-        else:
-            # value is already a reftime offset.
-            offset = value
-        # make and use a _floatsetter to actually set it
-        floatsetter = _floatsetter(hdr)
-        floatsetter(self, offset)
-    return set_reltime
 
 
 # Factory function for setting geographic header values
@@ -889,22 +875,22 @@ class SACTrace(object):
     depmax = property(_make_data_func(max, 'depmax'), doc=HD.DOC['depmax'])
     scale = floatheader('scale')
     odelta = floatheader('odelta')
-    b = property(_floatgetter('b'), _reltime_setter('b'), doc=HD.DOC['b'])
+    b = relativetimeheader('b')
     e = property(_get_e, doc=HD.DOC['e'])
-    o = property(_floatgetter('o'), _reltime_setter('o'), doc=HD.DOC['o'])
-    a = property(_floatgetter('a'), _reltime_setter('a'), doc=HD.DOC['a'])
+    o = relativetimeheader('o')
+    a = relativetimeheader('a')
     internal0 = floatheader('internal0')
-    t0 = property(_floatgetter('t0'), _reltime_setter('t0'), doc=HD.DOC['t0'])
-    t1 = property(_floatgetter('t1'), _reltime_setter('t1'), doc=HD.DOC['t1'])
-    t2 = property(_floatgetter('t2'), _reltime_setter('t2'), doc=HD.DOC['t2'])
-    t3 = property(_floatgetter('t3'), _reltime_setter('t3'), doc=HD.DOC['t3'])
-    t4 = property(_floatgetter('t4'), _reltime_setter('t4'), doc=HD.DOC['t4'])
-    t5 = property(_floatgetter('t5'), _reltime_setter('t5'), doc=HD.DOC['t5'])
-    t6 = property(_floatgetter('t6'), _reltime_setter('t6'), doc=HD.DOC['t6'])
-    t7 = property(_floatgetter('t7'), _reltime_setter('t7'), doc=HD.DOC['t7'])
-    t8 = property(_floatgetter('t8'), _reltime_setter('t8'), doc=HD.DOC['t8'])
-    t9 = property(_floatgetter('t9'), _reltime_setter('t9'), doc=HD.DOC['t9'])
-    f = property(_floatgetter('f'), _reltime_setter('f'), doc=HD.DOC['f'])
+    t0 = relativetimeheader('t0')
+    t1 = relativetimeheader('t1')
+    t2 = relativetimeheader('t2')
+    t3 = relativetimeheader('t3')
+    t4 = relativetimeheader('t4')
+    t5 = relativetimeheader('t5')
+    t6 = relativetimeheader('t6')
+    t7 = relativetimeheader('t7')
+    t8 = relativetimeheader('t8')
+    t9 = relativetimeheader('t9')
+    f = relativetimeheader('f')
     stla = property(_floatgetter('stla'), _geosetter('stla'),
                     doc=HD.DOC['stla'])
     stlo = property(_floatgetter('stlo'), _geosetter('stlo'),
