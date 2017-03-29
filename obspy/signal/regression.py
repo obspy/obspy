@@ -1,15 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------------
-# Filename: regression.py
-#  Purpose: Python Module for (Weighted) Linear Regression
-#   Author: Thomas Lecocq
-#    Email: Thomas.Lecocq@seismology.be
-#
-# Copyright (C) 2017 Thomas Lecocq
-# --------------------------------------------------------------------
 """
 Python Module for (Weighted) Linear Regression.
+
+:authors:
+    Thomas Lecocq (thomas.lecocq@seismology.be)
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -22,13 +16,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import scipy.optimize
 import numpy as np
+import scipy.optimize
 
 
 def linear_regression(xdata, ydata, weights=None, p0=None,
                       intercept_origin=True):
-    """ Use linear least squares to fit a function, f, to data.
+    """
+    Use linear least squares to fit a function, f, to data.
     This method is a generalized version of
     :meth:`scipy.optimize.minpack.curve_fit`; allowing for Ordinary Least
     Square and Weighted Least Square regressions:
@@ -59,7 +54,7 @@ def linear_regression(xdata, ydata, weights=None, p0=None,
      (slope, intercept, std_slope, std_intercept) if `False`.
     """
     if weights is not None:
-        sigma = 1./weights
+        sigma = 1. / weights
     else:
         sigma = None
 
