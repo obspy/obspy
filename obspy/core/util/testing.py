@@ -19,6 +19,7 @@ import glob
 import inspect
 import io
 import os
+import pickle
 import re
 import shutil
 import time
@@ -101,6 +102,21 @@ def add_unittests(testsuite, module_name):
         testsuite.addTest(_module.suite())
 
 
+def _fdsn_doctest_setUp(doctest):  # NOQA
+    from obspy.clients import fdsn
+    fdsn_tests_datapath = os.path.join(
+        os.path.dirname(fdsn.__file__), 'tests', 'data')
+    discovery_cache_pickle = os.path.join(
+        fdsn_tests_datapath, 'service_discovery_cache.pickle')
+    with open(discovery_cache_pickle, 'rb') as fh:
+        fdsn.Client._Client__service_discovery_cache = pickle.load(fh)
+
+
+def _fdsn_doctest_tearDown(doctest):  # NOQA
+    from obspy.clients import fdsn
+    fdsn.Client._Client__service_discovery_cache = {}
+
+
 def add_doctests(testsuite, module_name):
     """
     Function to add all available doctests of the module with given name
@@ -144,10 +160,14 @@ def add_doctests(testsuite, module_name):
             # get module name
             parts = root[module_path_len:].split(os.sep)[1:]
             _module_name = ".".join([module_name] + parts + [file[:-3]])
+            kwargs = {}
             try:
                 _module = __import__(_module_name,
                                      fromlist=[native_str("obspy")])
-                testsuite.addTest(doctest.DocTestSuite(_module))
+                if _module.__name__.startswith('obspy.clients.fdsn'):
+                    kwargs['setUp'] = _fdsn_doctest_setUp
+                    kwargs['tearDown'] = _fdsn_doctest_tearDown
+                testsuite.addTest(doctest.DocTestSuite(_module, **kwargs))
             except ValueError:
                 pass
 
