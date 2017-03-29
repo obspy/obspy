@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 obspy.io.arclink - Arclink Inventory Files
-=============================================
+==========================================
 
 This module provides read support for Arclink inventory files.
 

@@ -19,13 +19,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import inspect
-import re
 import math
 import os
+import re
 import warnings
-import obspy
 
 from lxml import etree
+
+import obspy
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (Azimuth, ClockDrift, Dip,
@@ -201,7 +202,7 @@ def _read_network(inventory_root, net_element):
     """
     Reads the network structure
 
-    :param inventory_root: base inventory element of sc3ml
+    :param inventory_root: base inventory element of document
     :param net_element: network element to be read
     :param _ns: namespace
     """
@@ -251,7 +252,7 @@ def _read_station(inventory_root, sta_element):
     """
     Reads the station structure
 
-    :param inventory_root: base inventory element of sc3ml
+    :param inventory_root: base inventory element of document
     :param sta_element: station element to be read
     """
 
@@ -277,7 +278,7 @@ def _read_station(inventory_root, sta_element):
     # true is evaluated to 'open'; false to 'closed'
     station.restricted_status = _get_restricted_status(sta_element)
 
-    # Get all the channels, sc3ml keeps these in <sensorLocation> tags in the
+    # Get all the channels, format keeps these in <sensorLocation> tags in the
     # station element. Individual channels are contained within <stream> tags
     channels = []
     for sen_loc_element in sta_element.findall(_ns("sensorLocation")):
@@ -295,7 +296,7 @@ def _read_site(sta_element):
     Reads site information from the station element tags
     and region from network element
 
-    In sc3ml, site information are included as
+    In arclinkXML, site information are included as
     tags in the station_element
 
     :param sta_element: station element
@@ -368,7 +369,7 @@ def _read_sensor(equip_element):
 def _read_channel(inventory_root, cha_element):
 
     """
-    reads channel element from sc3ml format
+    reads channel element from arclinkXML format
 
     :param inventory_root: root of the XML document
     :param cha_element: channel element to be parsed
@@ -520,7 +521,7 @@ def _read_instrument_sensitivity(sen_element, cha_element):
 def _read_response(root, sen_element, resp_element, cha_element,
                    data_log_element, samp_rate, fir, analogue):
     """
-    reads response from sc3ml format
+    reads response from arclinkXML format
 
     :param root: XML document root element
     :param sen_element: sensor element to be used
@@ -568,7 +569,7 @@ def _read_response(root, sen_element, resp_element, cha_element,
     fir_stage_rates = fir_stage_rates[::-1]
 
     # Attempt to read stages in the proper order
-    # sc3ml does not group stages by an ID
+    # arclinkXML does not group stages by an ID
     # We are required to do stage counting ourselves
 
     stage = 1
@@ -755,7 +756,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
             pz_transfer_function_type = 'LAPLACE (RADIANS/SECOND)'
 
         # Parse string of poles and zeros
-        # paz are stored as a string in sc3ml
+        # paz are stored as a string in arclinkXML
         # e.g. (-0.01234,0.01234) (-0.01234,-0.01234)
         zeros_array = stage.find(_ns("zeros")).text
         poles_array = stage.find(_ns("poles")).text
@@ -863,8 +864,8 @@ def _read_response_stage(stage, rate, stage_number, input_units,
 def _tag2pole_or_zero(paz_element, count):
 
     """
-    Parses sc3ml paz format
-    Uncertainties on poles removed, not present in sc3ml.xsd?
+    Parses arclinkXML paz format
+    Uncertainties on poles removed, not present in fo
     Always put to None so no internal conflict
     The sanitization removes the first/last parenthesis
     and split by comma, real part is 1st, imaginary 2nd
@@ -896,7 +897,7 @@ def _read_float_var(elem, cls, unit=False, datum=False, additional_mapping={}):
     normally ObsPy would read this directly from a tag, but with different
     tag names this is no longer possible; instead we just pass the value
     and not the tag name. We always set the unit/datum/uncertainties to None
-    because they are not provided by sc3ml ?
+    because they are not provided.
 
     :param elem: float value to be converted
     :param cls: obspy.core.inventory class
