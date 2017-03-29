@@ -1,4 +1,4 @@
-FROM opensuse:leap
+FROM opensuse:42.1
 
 MAINTAINER Lion Krischer
 

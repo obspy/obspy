@@ -21,6 +21,6 @@ obspy:ubuntu_16_04_xenial
 obspy:ubuntu_16_04_xenial_32bit
 obspy:ubuntu_16_10_yakkety
 obspy:ubuntu_16_10_yakkety_32bit
-opensuse:leap
+opensuse:42.1
 ubuntu:14.04
 ubuntu:16.04
