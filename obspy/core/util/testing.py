@@ -22,6 +22,7 @@ import os
 import pickle
 import re
 import shutil
+import sys
 import time
 import unittest
 import warnings
@@ -63,6 +64,36 @@ def runTest(self):  # NOQA
             time.sleep = orig_sleep
         return out
     return self._runTest()
+
+
+def _fdsn_save_pickled_service_discovery():
+    """
+    This function can be used to update the pickled service discovery cache of
+    the FDSN Client, which is used during testing in combination with VCR
+    tapes.
+    """
+    if sys.version_info.major != 3:
+        msg = 'FDSN service discovery pickle should be saved on Python 3.'
+        raise Exception(msg)
+    from obspy.clients import fdsn
+    fdsn.Client._Client__service_discovery_cache = {}
+    # run service discovery
+    fdsn.Client('IRIS')
+    fdsn.Client('ORFEUS')
+    fdsn.Client('ETH')
+    fdsn.Client('IRIS', service_mappings={
+        "station": "http://ds.iris.edu/files/redirect/307/station/1",
+        "dataselect": "http://ds.iris.edu/files/redirect/307/dataselect/1",
+        "event": "http://ds.iris.edu/files/redirect/307/event/1"})
+    fdsn.Client('IRIS', service_mappings={"event": None})
+    # and save it to pickle file
+    fdsn_tests_datapath = os.path.join(
+        os.path.dirname(fdsn.__file__), 'tests', 'data')
+    discovery_cache_pickle = os.path.join(
+        fdsn_tests_datapath, 'service_discovery_cache.pickle')
+    with open(discovery_cache_pickle, 'wb') as fh:
+        pickle.dump(fdsn.Client._Client__service_discovery_cache, fh,
+                    protocol=2)
 
 
 doctest.DocTestCase._runTest = doctest.DocTestCase.runTest
