@@ -386,9 +386,14 @@ class floatheader(object):
         self.name = name
 
     def __get__(self, instance, owner):
-        value = float(instance._hf[HD.FLOATHDRS.index(self.name)])
-        if value == HD.FNULL:
-            value = None
+        if instance is None:
+            # a floatheader on the owner class was requested
+            value = self
+        else:
+            # a floatheader on an instance was requested
+            value = float(instance._hf[HD.FLOATHDRS.index(self.name)])
+            if value == HD.FNULL:
+                value = None
         return value
 
     def __set__(self, instance, value):
