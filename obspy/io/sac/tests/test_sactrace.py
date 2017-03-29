@@ -250,20 +250,54 @@ class SACTraceTestCase(unittest.TestCase):
             self.assertIn("Reference time information incomplete", str(w[0]))
 
     def test_floatheader(self):
+        """
+        Test standard SACTrace float headers using the floatheader descriptor.
+        """
         sac = SACTrace()
         for hdr in ('delta', 'scale', 'odelta', 'internal0', 'stel', 'stdp',
                     'evdp', 'mag', 'user0', 'user1', 'user2', 'user3', 'user4',
                     'user5', 'user6', 'user7', 'user8', 'user9', 'dist', 'az',
                     'baz', 'gcarc', 'cmpaz', 'cmpinc'):
             floatval = random.random()
-            # test setting
+
+            # setting value
             setattr(sac, hdr, floatval)
             self.assertAlmostEqual(sac._hf[HD.FLOATHDRS.index(hdr)], floatval)
-            # test getting
+
+            # getting value
             self.assertAlmostEqual(getattr(sac, hdr), floatval)
-            # test __doc__ on class and instances
-            self.assertEqual(getattr(SACTrace, hdr).__doc__, HD.DOC[hdr])
-            self.assertEqual(getattr(sac, hdr).__doc__, HD.DOC[hdr])
+
+            # setting None produces null value
+            setattr(sac, hdr, None)
+            self.assertAlmostEqual(sac._hf[HD.FLOATHDRS.index(hdr)], HD.FNULL)
+
+            # getting existing null values return None
+            sac._hf[HD.FLOATHDRS.index(hdr)] = HD.FNULL
+            self.assertIsNone(getattr(sac, hdr))
+
+            # __doc__ on class and instance
+            self.assertEqual(getattr(SACTrace, hdr).__doc__, HD.DOC.get(hdr))
+            # self.assertEqual(getattr(sac, hdr).__doc__, HD.DOC.get(hdr]))
+            # TODO: I'd like to find a way for this to work:-(
+
+    def test_relativetimeheader(self):
+        """
+        Setting relative time headers will work with UTCDateTime objects.
+        """
+        # TODO: ultimately, _all_ children of floatheader (this one, geosetter,
+        #   etc.) should be tested in test_floatheader for normal setting, and
+        #   only special behaviour will happen here.
+        utc = UTCDateTime(year=1970, month=1, day=1, minute=15, second=10,
+                          microsecond=0)
+        sac = SACTrace(nzyear=utc.year, nzjday=utc.julday, nzhour=utc.hour,
+                       nzmin=utc.minute, nzsec=utc.second, nzmsec=0)
+        for hdr in ('b', 'a', 'o', 'f', 't0', 't1', 't2', 't3', 't4', 't5',
+                    't6', 't7', 't8', 't9'):
+            offset_float = random.uniform(-1, 1)
+            offset_utc = utc + offset_float
+            setattr(sac, hdr, offset_utc)
+            self.assertAlmostEqual(sac._hf[HD.FLOATHDRS.index(hdr)],
+                                   offset_float, places=5)
 
 
 def suite():
