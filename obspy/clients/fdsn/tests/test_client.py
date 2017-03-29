@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import io
 import os
+import pickle
 import re
 import sys
 import unittest
@@ -80,10 +81,16 @@ class ClientTestCase(unittest.TestCase):
     Test cases for obspy.clients.fdsn.client.Client.
     """
     @classmethod
-    def setUpClass(cls):
+    def setUp(cls):
         # directory where the test files are located
         cls.path = os.path.dirname(__file__)
         cls.datapath = os.path.join(cls.path, "data")
+        # circumvent service discovery, fill service discovery cache
+        discovery_cache_pickle = os.path.join(
+            cls.datapath, 'service_discovery_cache.pickle')
+        with open(discovery_cache_pickle, 'rb') as fh:
+            Client._Client__service_discovery_cache = pickle.load(fh)
+        # connecting to IRIS is no running without network access
         cls.client = Client(base_url="IRIS", user_agent=USER_AGENT)
         cls.client_auth = \
             Client(base_url="IRIS", user_agent=USER_AGENT,
