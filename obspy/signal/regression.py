@@ -25,14 +25,14 @@ def linear_regression(xdata, ydata, weights=None, p0=None,
     """
     Use linear least squares to fit a function, f, to data.
     This method is a generalized version of
-    :meth:`scipy.optimize.minpack.curve_fit`; allowing for Ordinary Least
+    :func:`scipy.optimize.minpack.curve_fit`; allowing for Ordinary Least
     Square and Weighted Least Square regressions:
 
-    * OLS with origin intercept : ``linear_regression(xdata, ydata)``
-    * OLS with any intercept : ``linear_regression(xdata, ydata,
+    * OLS through origin: ``linear_regression(xdata, ydata)``
+    * OLS with any intercept: ``linear_regression(xdata, ydata,
       intercept_origin=False)``
-    * WLS with origin intercept : ``linear_regression(xdata, ydata, weights)``
-    * WLS with any intercept : ``linear_regression(xdata, ydata, weights,
+    * WLS through origin: ``linear_regression(xdata, ydata, weights)``
+    * WLS with any intercept: ``linear_regression(xdata, ydata, weights,
       intercept_origin=False)``
 
     If the expected values of slope (and intercept) are different from 0.0,
@@ -41,17 +41,17 @@ def linear_regression(xdata, ydata, weights=None, p0=None,
     :param xdata: The independent variable where the data is measured.
     :param ydata: The dependent data - nominally f(xdata, ...)
     :param weights: If not None, the uncertainties in the ydata array. These
-     are used as weights in the least-squares problem. If None, the
-     uncertainties are assumed to be 1. In SciPy vocabulary, our weights are
-     1/sigma.
-    :param p0: Initial guess for the parameters. If None, then the initial
-     values will all be 0 (Different from SciPy where all are 1)
-    :param intercept_origin: If True: solves y=a*x (default); if False:
-     solves y=a*x+b.
+        are used as weights in the least-squares problem. If ``None``, the
+        uncertainties are assumed to be 1. In SciPy vocabulary, our weights are
+        1/sigma.
+    :param p0: Initial guess for the parameters. If ``None``, then the initial
+        values will all be 0 (Different from SciPy where all are 1)
+    :param intercept_origin: If ``True``: solves ``y=a*x`` (default);
+        if ``False``: solves ``y=a*x+b``.
 
     :rtype: tuple
-    :returns: (slope, std_slope) if `intercept_origin` is `True`;
-     (slope, intercept, std_slope, std_intercept) if `False`.
+    :returns: (slope, std_slope) if ``intercept_origin`` is ``True``;
+        (slope, intercept, std_slope, std_intercept) if ``False``.
     """
     if weights is not None:
         sigma = 1. / weights
@@ -80,3 +80,8 @@ def linear_regression(xdata, ydata, weights=None, p0=None,
         std_slope = np.sqrt(cov[0, 0])
         std_intercept = np.sqrt(cov[1, 1])
         return slope, intercept, std_slope, std_intercept
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
