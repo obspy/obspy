@@ -436,22 +436,17 @@ class relativetimeheader(floatheader):
         super(relativetimeheader, self).__set__(instance, offset)
 
 
-def _floatgetter(hdr):
-    def get_float(self):
-        value = float(self._hf[HD.FLOATHDRS.index(hdr)])
-        if value == HD.FNULL:
-            value = None
-        return value
-    return get_float
-
-
-def _floatsetter(hdr):
-    def set_float(self, value):
-        if value is None:
-            value = HD.FNULL
-        self._hf[HD.FLOATHDRS.index(hdr)] = value
-    return set_float
-
+# Factory function for setting geographic header values
+#   (evlo, evla, stalo, stalat)
+# that will check lcalda and calculate and set dist, az, baz, gcarc
+class geographicheader(floatheader):
+    def __set__(self, instance, value):
+        super(geographicheader, self).__set__(instance, value)
+        if instance.lcalda:
+            try:
+                instance._set_distances()
+            except SacHeaderError:
+                pass
 
 # ints
 def _intgetter(hdr):
@@ -587,23 +582,6 @@ def _make_data_func(func, hdr):
     return do_data_func
 
 # TODO: a data setter the requires a float32 array
-
-
-# Factory function for setting geographic header values
-#   (evlo, evla, stalo, stalat)
-# that will check lcalda and calculate and set dist, az, baz, gcarc
-def _geosetter(hdr):
-    def set_geo(self, value):
-        # make and use a _floatsetter
-        set_geo_float = _floatsetter(hdr)
-        set_geo_float(self, value)
-        if self.lcalda:
-            # check and maybe set lcalda
-            try:
-                self._set_distances()
-            except SacHeaderError:
-                pass
-    return set_geo
 
 
 # OTHER GETTERS/SETTERS
@@ -891,16 +869,12 @@ class SACTrace(object):
     t8 = relativetimeheader('t8')
     t9 = relativetimeheader('t9')
     f = relativetimeheader('f')
-    stla = property(_floatgetter('stla'), _geosetter('stla'),
-                    doc=HD.DOC['stla'])
-    stlo = property(_floatgetter('stlo'), _geosetter('stlo'),
-                    doc=HD.DOC['stlo'])
+    stla = geographicheader('stla')
+    stlo = geographicheader('stlo')
     stel = floatheader('stel')
     stdp = floatheader('stdp')
-    evla = property(_floatgetter('evla'), _geosetter('evla'),
-                    doc=HD.DOC['evla'])
-    evlo = property(_floatgetter('evlo'), _geosetter('evlo'),
-                    doc=HD.DOC['evlo'])
+    evla = geographicheader('evla')
+    evlo = geographicheader('evlo')
     evdp = floatheader('evdp')
     mag = floatheader('mag')
     user0 = floatheader('user0')
