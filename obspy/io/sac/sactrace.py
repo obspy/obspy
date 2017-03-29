@@ -376,6 +376,27 @@ from . import arrayio as _io
 #   the instances.
 #
 # floats
+class floatheader(object):
+    def __init__(self, name):
+        try:
+            self.__doc__ = HD.DOC[name]
+        except KeyError:
+            # header may not have a docstring
+            pass
+        self.name = name
+
+    def __get__(self, instance, owner):
+        value = float(instance._hf[HD.FLOATHDRS.index(self.name)])
+        if value == HD.FNULL:
+            value = None
+        return value
+
+    def __set__(self, instance, value):
+        if value is None:
+            value = HD.FNULL
+        instance._hf[HD.FLOATHDRS.index(self.name)] = value
+
+
 def _floatgetter(hdr):
     def get_float(self):
         value = float(self._hf[HD.FLOATHDRS.index(hdr)])
@@ -827,19 +848,16 @@ class SACTrace(object):
     # NOTE: To make something read-only, omit second argument to "property".
 
     # FLOATS
-    delta = property(_floatgetter('delta'), _floatsetter('delta'),
-                     doc=HD.DOC['delta'])
+    delta = floatheader('delta')
     depmin = property(_make_data_func(min, 'depmin'), doc=HD.DOC['depmin'])
     depmax = property(_make_data_func(max, 'depmax'), doc=HD.DOC['depmax'])
-    scale = property(_floatgetter('scale'), _floatsetter('scale'),
-                     doc=HD.DOC['scale'])
-    odelta = property(_floatgetter('odelta'), _floatsetter('odelta'),
-                      doc=HD.DOC['odelta'])
+    scale = floatheader('scale')
+    odelta = floatheader('odelta')
     b = property(_floatgetter('b'), _reltime_setter('b'), doc=HD.DOC['b'])
     e = property(_get_e, doc=HD.DOC['e'])
     o = property(_floatgetter('o'), _reltime_setter('o'), doc=HD.DOC['o'])
     a = property(_floatgetter('a'), _reltime_setter('a'), doc=HD.DOC['a'])
-    internal0 = property(_floatgetter('internal0'), _floatsetter('internal0'))
+    internal0 = floatheader('internal0')
     t0 = property(_floatgetter('t0'), _reltime_setter('t0'), doc=HD.DOC['t0'])
     t1 = property(_floatgetter('t1'), _reltime_setter('t1'), doc=HD.DOC['t1'])
     t2 = property(_floatgetter('t2'), _reltime_setter('t2'), doc=HD.DOC['t2'])
@@ -855,48 +873,31 @@ class SACTrace(object):
                     doc=HD.DOC['stla'])
     stlo = property(_floatgetter('stlo'), _geosetter('stlo'),
                     doc=HD.DOC['stlo'])
-    stel = property(_floatgetter('stel'), _floatsetter('stel'),
-                    doc=HD.DOC['stel'])
-    stdp = property(_floatgetter('stdp'), _floatsetter('stdp'),
-                    doc=HD.DOC['stdp'])
+    stel = floatheader('stel')
+    stdp = floatheader('stdp')
     evla = property(_floatgetter('evla'), _geosetter('evla'),
                     doc=HD.DOC['evla'])
     evlo = property(_floatgetter('evlo'), _geosetter('evlo'),
                     doc=HD.DOC['evlo'])
-    evdp = property(_floatgetter('evdp'), _floatsetter('evdp'),
-                    doc=HD.DOC['evdp'])
-    mag = property(_floatgetter('mag'), _floatsetter('mag'), doc=HD.DOC['mag'])
-    user0 = property(_floatgetter('user0'), _floatsetter('user0'),
-                     doc=HD.DOC['user0'])
-    user1 = property(_floatgetter('user1'), _floatsetter('user1'),
-                     doc=HD.DOC['user1'])
-    user2 = property(_floatgetter('user2'), _floatsetter('user2'),
-                     doc=HD.DOC['user2'])
-    user3 = property(_floatgetter('user3'), _floatsetter('user3'),
-                     doc=HD.DOC['user3'])
-    user4 = property(_floatgetter('user4'), _floatsetter('user4'),
-                     doc=HD.DOC['user4'])
-    user5 = property(_floatgetter('user5'), _floatsetter('user5'),
-                     doc=HD.DOC['user5'])
-    user6 = property(_floatgetter('user6'), _floatsetter('user6'),
-                     doc=HD.DOC['user6'])
-    user7 = property(_floatgetter('user7'), _floatsetter('user7'),
-                     doc=HD.DOC['user7'])
-    user8 = property(_floatgetter('user8'), _floatsetter('user8'),
-                     doc=HD.DOC['user8'])
-    user9 = property(_floatgetter('user9'), _floatsetter('user9'),
-                     doc=HD.DOC['user9'])
-    dist = property(_floatgetter('dist'), _floatsetter('dist'),
-                    doc=HD.DOC['dist'])
-    az = property(_floatgetter('az'), _floatsetter('az'), doc=HD.DOC['az'])
-    baz = property(_floatgetter('baz'), _floatsetter('baz'), doc=HD.DOC['baz'])
-    gcarc = property(_floatgetter('gcarc'), _floatsetter('gcarc'),
-                     doc=HD.DOC['gcarc'])
+    evdp = floatheader('evdp')
+    mag = floatheader('mag')
+    user0 = floatheader('user0')
+    user1 = floatheader('user1')
+    user2 = floatheader('user2')
+    user3 = floatheader('user3')
+    user4 = floatheader('user4')
+    user5 = floatheader('user5')
+    user6 = floatheader('user6')
+    user7 = floatheader('user7')
+    user8 = floatheader('user8')
+    user9 = floatheader('user9')
+    dist = floatheader('dist')
+    az = floatheader('az')
+    baz = floatheader('baz')
+    gcarc = floatheader('gcarc')
     depmen = property(_make_data_func(np.mean, 'depmen'), doc=HD.DOC['depmen'])
-    cmpaz = property(_floatgetter('cmpaz'), _floatsetter('cmpaz'),
-                     doc=HD.DOC['cmpaz'])
-    cmpinc = property(_floatgetter('cmpinc'), _floatsetter('cmpinc'),
-                      doc=HD.DOC['cmpinc'])
+    cmpaz = floatheader('cmpaz')
+    cmpinc = floatheader('cmpinc')
     #
     # INTS
     nzyear = property(_intgetter('nzyear'), _intsetter('nzyear'),
