@@ -350,10 +350,9 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests the parsing of the available event contributors.
         """
-        expected_file = os.path.join(self.datapath,
-                                     'IRIS_event_contributors.txt')
-        with open(expected_file, 'rt') as fh:
-            xml = lxml.etree.fromstring(fh.read())
+        response = requests.get(
+            'http://service.iris.edu/fdsnws/event/1/contributors')
+        xml = lxml.etree.fromstring(response.content)
         expected = {
             elem.text for elem in xml.xpath('/Contributors/Contributor')}
         # check that we have some values in there
