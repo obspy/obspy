@@ -374,23 +374,39 @@ from . import arrayio as _io
 #       5758381/raw/descriptor_writeup.ipynb
 #   Also, don't forget to worry about access to __doc__ on both the class and
 #   the instances.
+
+# ------------- HEADER DESCRIPTORS --------------------------------------------
 #
+# A descriptor is a class that manages an object attribute, using the
+# descriptor protocol.  A single instance of a descriptor class (floatheader,
+# for example) will exist for both the host class and all instances of that
+# host class (i.e. SACTrace and all its instances).  As a result, we must
+# implement logic that can tell if the methods are being called on the host
+# class or on an instance.
+#
+# See:
+# https://docs.python.org/3.5/howto/descriptor.html
+# https://nbviewer.jupyter.org/urls/gist.github.com/ChrisBeaumont/
+#   5758381/raw/descriptor_writeup.ipynb
+
 # floats
 class floatheader(object):
     def __init__(self, name):
         try:
             self.__doc__ = HD.DOC[name]
         except KeyError:
-            # header may not have a docstring
+            # header doesn't have a docstring entry in HD.DOC
             pass
         self.name = name
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance, instance_type):
         if instance is None:
-            # a floatheader on the owner class was requested
+            # a floatheader on the owner class was requested.
+            # return the descriptor itself.
             value = self
         else:
-            # a floatheader on an instance was requested
+            # a floatheader on an instance was requested.
+            # return the descriptor value.
             value = float(instance._hf[HD.FLOATHDRS.index(self.name)])
             if value == HD.FNULL:
                 value = None
@@ -400,6 +416,21 @@ class floatheader(object):
         if value is None:
             value = HD.FNULL
         instance._hf[HD.FLOATHDRS.index(self.name)] = value
+
+
+class relativetimeheader(floatheader):
+    def __set__(self, instance, value):
+        """
+        Intercept the set value to make sure it is an offset from the SAC
+        reference time.
+
+        """
+        if isinstance(value, UTCDateTime):
+            offset = value - self.reftime
+        else:
+            offset = value
+        # reuse the normal floatheader setter.
+        super(relativetimeheader, self).__set__(instance, offset)
 
 
 def _floatgetter(hdr):
