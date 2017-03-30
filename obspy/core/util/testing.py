@@ -31,7 +31,9 @@ import numpy as np
 from lxml import etree
 from vcr import vcr, VCRSystem
 
-from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
+import obspy
+from obspy.core.util.base import (
+    NamedTemporaryFile, MATPLOTLIB_VERSION, has_internet_connection)
 from obspy.core.util.misc import MatplotlibBackend
 
 
@@ -50,19 +52,38 @@ orig_sleep = time.sleep
 # monkey patch DocTestCase
 def runTest(self):  # NOQA
     if '+VCR' in self._dt_test.docstring:
-        if 'arclink' in self._dt_test.name:
-            # monkey patch sleep calls in ArcLink client
-            def vcr_sleep(*args, **kwargs):
-                if VCRSystem.is_playing:
-                    return
-                return orig_sleep(*args, **kwargs)
-            time.sleep = vcr_sleep
+        no_vcr = getattr(obspy, '_no_vcr', False)
+        has_internet = getattr(obspy, '_has_internet', None)
+        if has_internet is None:
+            has_internet = has_internet_connection()
+            obspy._has_internet = has_internet
+        # skip test, because it's..
+        #  - a network test (marked by +VCR),
+        #  - VCR is disabled and
+        #  - we don't have internet connectivity
+        # (we really need to explictly check for "not True" as has_internet is
+        #  either ``False`` or an error message if we don't have internet)
+        if no_vcr and has_internet is not True:
+            if has_internet is False:
+                reason = 'No internet connection'
+            else:
+                reason = 'No internet connection ({})'.format(has_internet)
+            raise unittest.SkipTest(reason)
+        # otherwise, delegate to vcr, optionally disabled
         # run decorated doc test
-        out = vcr(self._runTest)()
-        if 'arclink' in self._dt_test.name:
-            # revert arclink monkey patch
-            time.sleep = orig_sleep
-        return out
+        else:
+            if 'arclink' in self._dt_test.name:
+                # monkey patch sleep calls in ArcLink client
+                def vcr_sleep(*args, **kwargs):
+                    if VCRSystem.is_playing:
+                        return
+                    return orig_sleep(*args, **kwargs)
+                time.sleep = vcr_sleep
+            out = vcr(self._runTest, disabled=no_vcr)()
+            if 'arclink' in self._dt_test.name:
+                # revert arclink monkey patch
+                time.sleep = orig_sleep
+            return out
     return self._runTest()
 
 

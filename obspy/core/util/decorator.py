@@ -27,8 +27,9 @@ import zipfile
 import numpy as np
 from decorator import decorator
 
+import obspy
 from obspy.core.util import get_example_file
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, has_internet_connection
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 
@@ -58,6 +59,64 @@ def deprecated(warning_msg=None):
         warnings.warn(msg, category=ObsPyDeprecationWarning, stacklevel=3)
         return func(*args, **kwargs)
     return _deprecated
+
+
+@decorator
+def vcr(func, *args, **kwargs):
+    """
+    This is a decorator to mark test cases as using vcr. This only wraps around
+    :func:`vcr.vcr` decorator and skips vcr if it is disabled for this test run
+    by option '--no-vcr' to :func:`obspy.scripts.runtests.main`.
+    """
+    no_vcr = getattr(obspy, '_no_vcr', None)
+    if no_vcr is None:
+        msg = ("obspy._no_vcr is not set, this means the test is not executed "
+               "via `obspy-runtests` on command line or "
+               "`obspy.scripts.runtests` programatically. This test will use "
+               "pre-recorded VCR tapes for network tests.")
+        warnings.warn(msg)
+        no_vcr = False
+
+    if no_vcr:
+        # run as network test
+        run_network_test(func, *args, **kwargs)
+    else:
+        # run using vcr, relying on vcr tapes
+        import vcr as vcr_module
+        vcr_module.vcr(decorated_func=func)(*args, **kwargs)
+
+
+def run_network_test(test_method, *args, **kwargs):
+    has_internet = getattr(obspy, '_has_internet', None)
+    if has_internet is None:
+        has_internet = has_internet_connection()
+        obspy._has_internet = has_internet
+    if has_internet is not True:
+        if has_internet is False:
+            reason = 'No internet connection'
+        else:
+            reason = 'No internet connection ({})'.format(has_internet)
+        raise unittest.SkipTest(reason)
+    return test_method(*args, **kwargs)
+
+
+@decorator
+def network_test(func, *args, **kwargs):
+    """
+    This is a decorator for unittest TestCase test methods to mark them as a
+    test that can only be executed when an internet connection is available.
+    """
+    has_internet = getattr(obspy, '_has_internet', None)
+    if has_internet is None:
+        has_internet = has_internet_connection()
+        obspy._has_internet = has_internet
+    if has_internet is not True:
+        if has_internet is False:
+            reason = 'No internet connection'
+        else:
+            reason = 'No internet connection ({})'.format(has_internet)
+        raise unittest.SkipTest(reason)
+    return func(*args, **kwargs)
 
 
 def deprecated_keywords(keywords):

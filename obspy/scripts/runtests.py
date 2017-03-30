@@ -105,7 +105,7 @@ from argparse import ArgumentParser
 import numpy as np
 
 import obspy
-from obspy.core.util import ALL_MODULES, DEFAULT_MODULES, NETWORK_MODULES
+from obspy.core.util import ALL_MODULES, NETWORK_MODULES
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from obspy.core.util.version import get_git_version
@@ -540,7 +540,7 @@ class _TextTestRunner:
 def run_tests(verbosity=1, tests=None, report=False, log=None,
               server="tests.obspy.org", all=False, timeit=False,
               interactive=False, slowest=0, exclude=[], tutorial=False,
-              hostname=HOSTNAME, ci_url=None, pr_url=None):
+              hostname=HOSTNAME, ci_url=None, pr_url=None, no_vcr=False):
     """
     This function executes ObsPy test suites.
 
@@ -557,14 +557,23 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
     :param log: Filename of install log file to append to report.
     :type server: str, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
+    :type no_vcr: bool
+    :param no_vcr: Whether to not use pre-recorded VCR tapes but run all
+        network tests via live internet connection.
     """
-    if tests is None:
-        tests = []
+    if not tests:
+        tests = copy.copy(ALL_MODULES)
     print("Running {}, ObsPy version '{}'".format(__file__, obspy.__version__))
     if all:
-        tests = copy.copy(ALL_MODULES)
-    elif not tests:
-        tests = copy.copy(DEFAULT_MODULES)
+        msg = ("run_tests option 'all' is deprecated. All modules' tests are "
+               "run by default now, using vcr to use pre-recorded network "
+               "interactions. See option 'no_vcr' (command line: '--no-vcr') "
+               "for testing all networked test methods not using pre-recorded "
+               "network interactions but rather using current internet "
+               "connection.")
+        warnings.warn(msg)
+    # set whether to use vcr with pre-recorded vcr tapes or not
+    obspy._no_vcr = no_vcr
     # remove any excluded module
     if exclude:
         for name in exclude:
@@ -682,6 +691,11 @@ def run(argv=None, interactive=True):
 
     # other options
     others = parser.add_argument_group('Additional Options')
+    others.add_argument('--no-vcr', action='store_true', dest='no_vcr',
+                        help='do not use pre-recorded vcr tapes with network '
+                             'interactions for network tests but try to use '
+                             'live internet connection and interact with live '
+                             'production servers')
     others.add_argument('--tutorial', action='store_true',
                         help='add doctests in tutorial')
     others.add_argument('--no-flake8', action='store_true',
@@ -745,7 +759,7 @@ def run(argv=None, interactive=True):
                      args.all, args.timeit, interactive, args.n,
                      exclude=args.exclude, tutorial=args.tutorial,
                      hostname=args.hostname, ci_url=args.ci_url,
-                     pr_url=args.pr_url)
+                     pr_url=args.pr_url, no_vcr=args.no_vcr)
 
 
 def main(argv=None, interactive=True):
