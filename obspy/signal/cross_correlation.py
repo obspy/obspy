@@ -142,8 +142,6 @@ def correlate(a, b, shift, demean=True, normalize=True, domain='freq'):
     1.0
 
     """
-    if domain not in ('freq', 'time'):
-        raise ValueError("domain keyword has to be one of ('freq', 'time')")
     # if we get Trace objects, use their data arrays
     if isinstance(a, Trace):
         a = a.data
@@ -163,7 +161,12 @@ def correlate(a, b, shift, demean=True, normalize=True, domain='freq'):
     else:
         stdev = 1
     # choose the usually faster xcorr method for each domain
-    _xcorr = _xcorr_slice if domain == 'freq' else _xcorr_padzeros
+    if domain == 'freq':
+        _xcorr = _xcorr_slice
+    elif domain == 'time':
+        _xcorr = _xcorr_padzeros
+    else:
+        raise ValueError("domain keyword has to be one of ('freq', 'time')")
     return _xcorr(a, b, shift, domain=domain) / stdev
 
 
