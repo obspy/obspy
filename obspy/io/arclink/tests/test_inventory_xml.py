@@ -39,6 +39,33 @@ class ArclinkInventoryTestCase(unittest.TestCase):
         self.station_xml_path = os.path.join(self.data_dir, "gols_station.xml")
         self.arclink_xml_poly = os.path.join(self.data_dir,
                                              "arclink_inventory_poly.xml")
+        self.arclink_afc_path = os.path.join(self.data_dir, "arclink_afc.xml")
+        self.station_afc_path = os.path.join(self.data_dir, "station_afc.xml")
+
+    def test_analogue_filter_chain(self):
+        """
+        Test analogue filter chain and compare to stationXML equivalent
+        """
+        arclink_inv = read_inventory(self.arclink_afc_path)
+        station_inv = read_inventory(self.station_afc_path)
+
+        arclink_resp = arclink_inv[0][0][0].response.response_stages
+        station_resp = station_inv[0][0][0].response.response_stages
+
+        for arclink_stage, station_stage in zip(arclink_resp, station_resp):
+
+            self.assertEqual(arclink_stage.stage_gain,
+                             station_stage.stage_gain)
+            self.assertEqual(arclink_stage.stage_sequence_number,
+                             station_stage.stage_sequence_number)
+
+            for arc_cs, sta_cs in zip(arclink_stage.__dict__.items(),
+                                      station_stage.__dict__.items()):
+
+                if arc_cs[0] in ['name', 'resource_id2']:
+                    continue
+
+                self.assertEqual(arc_cs, sta_cs)
 
     def test_validate_inventories_against_schema(self):
         self.assertTrue(validate_arclink_xml(self.arclink_xml_path)[0])
