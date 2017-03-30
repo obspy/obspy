@@ -224,6 +224,10 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     >>> round(b, 6)
     1.0
     """
+    from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+    msg = ('Call to deprecated function xcorr. Please use the correlate and '
+            'xcorr_max functions.')
+    warnings.warn(msg, ObsPyDeprecationWarning)
     x = correlate(tr1, tr2, shift_len, domain='time')
     a, b = xcorr_max(x)
     if full_xcorr:
