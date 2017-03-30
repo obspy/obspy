@@ -656,7 +656,7 @@ class LazyTraceHeaderAttribDict(AttribDict):
 
     This version is used for the SEGY/SU trace headers.
     """
-    readonly = []
+    readonly = ["unpacked_data", "endian"]
 
     def __init__(self, unpacked_header, unpacked_header_endian, data={}):
         dict.__init__(data)
@@ -667,9 +667,7 @@ class LazyTraceHeaderAttribDict(AttribDict):
     def __getitem__(self, name):
         # Return if already set.
         if name in self.__dict__:
-            if name in self.readonly:
-                return self.__dict__[name]
-            return super(AttribDict, self).__getitem__(name)
+            return self.__dict__[name]
         # Otherwise try to unpack them.
         try:
             index = TRACE_HEADER_KEYS.index(name)
