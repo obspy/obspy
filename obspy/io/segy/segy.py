@@ -17,6 +17,7 @@ from future.builtins import *  # NOQA
 import io
 import os
 from struct import pack, unpack
+import warnings
 
 import numpy as np
 
@@ -65,6 +66,20 @@ class SEGYTraceOnTheFlyDataUnpackingError(SEGYError):
 class SEGYWritingError(SEGYError):
     """
     Raised if the trace header is not the required 240 byte long.
+    """
+    pass
+
+
+class SEGYWarning(UserWarning):
+    """
+    SEG Y warnings base class.
+    """
+    pass
+
+
+class SEGYInvalidTextualHeaderWarning(SEGYWarning):
+    """
+    Warning that is raised if an invalid textual header is about to be written.
     """
     pass
 
@@ -297,6 +312,42 @@ class SEGYFile(object):
             msg = 'self.textual_file_header is not allowed to be longer ' + \
                   'than 3200 bytes'
             raise SEGYWritingError(msg)
+
+        # Make sure revision number and end header marker are present. If
+        # not: add them - if something else is already present, raise a
+        # warning but don't do anything.
+
+        # Make sure the textual header has the required fields.
+        revision_number = textual_header[3200-160:3200-146].decode()
+        end_header_mark = textual_header[3200-80:3200-58].decode()
+        if revision_number != "C39 SEG Y REV1":
+            if revision_number.strip() in ("", "C", "C39"):
+                textual_header = textual_header[:3200-160] + \
+                    b"C39 SEG Y REV1" + textual_header[3200-146:]
+            else:
+                # Raise warning but don't do anything.
+                msg = ("The revision number in the textual header should be "
+                       "set as 'C39 SEG Y REV1' for a fully valid SEG-Y "
+                       "file. It is set to '%s' which will be written to the "
+                       "file. Please change it if you want a fully valid file."
+                       % revision_number)
+                warnings.warn(msg, SEGYInvalidTextualHeaderWarning)
+        # First preferred, second is also allowed.
+        if end_header_mark not in ("C40 END TEXTUAL HEADER",
+                                   "C40 END EBCDIC        "):
+            if end_header_mark.strip() in ("", "C", "C40"):
+                textual_header = textual_header[:3200-80] + \
+                    b"C40 END TEXTUAL HEADER" + textual_header[3200-58:]
+            else:
+                # Raise warning but don't do anything.
+                msg = ("The end header mark in the textual header should be "
+                       "set as 'C40 END TEXTUAL HEADER' for a fully valid "
+                       "SEG-Y file. It is set to '%s' which will be written "
+                       "to the file. Please change it if you want a fully "
+                       "valid file."
+                       % end_header_mark)
+                warnings.warn(msg, SEGYInvalidTextualHeaderWarning)
+
         if self.textual_header_encoding.upper() == 'ASCII':
             pass
         elif self.textual_header_encoding.upper() == 'EBCDIC':
