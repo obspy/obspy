@@ -76,8 +76,7 @@ def _xcorr_slice(a, b, shift, domain='freq'):
     return c[mid - shift:mid + shift + len(c) % 2]
 
 
-def correlate(a, b, shift, type=None, demean=True, normalize=True,
-              domain='freq'):
+def correlate(a, b, shift, demean=True, normalize=True, domain='freq'):
     """
     Cross-correlation of signals a and b with specified maximal shift.
 
@@ -143,8 +142,6 @@ def correlate(a, b, shift, type=None, demean=True, normalize=True,
     1.0
 
     """
-    if type is not None:
-        raise ValueError("Do not use the type keyword, it has to be None.")
     if domain not in ('freq', 'time'):
         raise ValueError("domain keyword has to be one of ('freq', 'time')")
     # if we get Trace objects, use their data arrays
