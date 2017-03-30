@@ -261,7 +261,7 @@ class SEGYFile(object):
                 len(self.traces[0].data)
 
         # Always set the SEGY Revision number to 1.0 (hex-coded).
-        self.binary_file_header.seg_y_format_revision_number = 16
+        self.binary_file_header.seg_y_format_revision_number = 256
         # Set the fixed length flag to zero if all traces have NOT the same
         # length. Leave unchanged otherwise.
         if len(set([len(tr.data) for tr in self.traces])) != 1:
