@@ -79,13 +79,13 @@ def _xcorr_slice(a, b, shift, domain='freq'):
 def correlate(a, b, shift, type=None, demean=True, normalize=True,
               domain='freq'):
     """
-    Cross-correlation of signals a and b.
+    Cross-correlation of signals a and b with specified maximal shift.
 
     :type a: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
     :param a: first signal
     :type b: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
     :param b: second signal to correlate with first signal
-    :param int shift: Total length of samples to shift for cross correlation.
+    :param int shift: Number of samples to shift for cross correlation.
         The cross-correlation will consist of ``2*shift+1`` or
         ``2*shift`` samples. The sample with zero shift will be in the middle.
     :param type: Different cross-correlation functions might be introduced in
@@ -101,14 +101,14 @@ def correlate(a, b, shift, type=None, demean=True, normalize=True,
     :return: cross-correlation function.
 
     To calculate shift and value of the maximum of the returned
-    cross-correlation function use `xcorr_max`.
+    cross-correlation function use `~obspy.signal.cross_correlation.xcorr_max`.
 
     .. note::
 
         For most input parameters cross-correlation in frequency domain is much
         faster.
-        Only for small values of ``shift`` time domain cross-correlation
-        migth save some time (``shift⪅100``).
+        Only for small values of ``shift`` (``⪅100``) time domain
+        cross-correlation migth save some time.
 
     .. note::
 
@@ -384,12 +384,11 @@ def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
 
 def xcorr_max(fct, abs_max=True):
     """
-    Return shift and value of maximum xcorr function
+    Return shift and value of the maximum of the cross-correlation function.
 
     :type fct: :class:`~numpy.ndarray`
-    :param fct: xcorr function e.g. returned by correlate
-    :type abs_max: bool
-    :param abs_max: determines if the absolute maximum should be used.
+    :param fct: Cross-correlation function e.g. returned by correlate.
+    :param bool abs_max: Determines if the absolute maximum should be used.
     :return: **shift, value** - Shift and value of maximum of
         cross-correlation.
 
