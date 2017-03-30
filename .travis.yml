@@ -116,6 +116,8 @@ install:
   # already installed version (ideally we should handle package versions
   # through pinning or an environment file..)
   - conda config --add channels conda-forge
+  # add twice to make conda-forge highest priority
+  - conda config --add channels conda-forge
   # for now fix requests version, can be changed when a new requests is released (see #1599)
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
