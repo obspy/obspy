@@ -299,6 +299,36 @@ class SACTraceTestCase(unittest.TestCase):
             self.assertAlmostEqual(sac._hf[HD.FLOATHDRS.index(hdr)],
                                    offset_float, places=5)
 
+    def test_intheader(self):
+        """
+        Test standard SACTrace float headers using the floatheader descriptor.
+        """
+        sac = SACTrace()
+        for hdr in ('nzyear', 'nzjday', 'nzhour', 'nzmin', 'nzsec', 'nzmsec',
+                    'nvhdr', 'norid', 'nevid', 'nwfid', 'iinst', 'istreg',
+                    'ievreg', 'iqual', 'unused23'):
+
+            intval = random.randint(-10, 10)
+
+            # setting value
+            setattr(sac, hdr, intval)
+            self.assertEqual(sac._hi[HD.INTHDRS.index(hdr)], intval)
+
+            # getting value
+            self.assertEqual(getattr(sac, hdr), intval)
+
+            # setting None produces null value
+            setattr(sac, hdr, None)
+            self.assertEqual(sac._hi[HD.INTHDRS.index(hdr)], HD.INULL)
+
+            # getting existing null values return None
+            sac._hi[HD.INTHDRS.index(hdr)] = HD.INULL
+            self.assertIsNone(getattr(sac, hdr))
+
+            # __doc__ on class and instance
+            self.assertEqual(getattr(SACTrace, hdr).__doc__, HD.DOC.get(hdr))
+            # self.assertEqual(getattr(sac, hdr).__doc__, HD.DOC.get(hdr]))
+
 
 def suite():
     return unittest.makeSuite(SACTraceTestCase, 'test')

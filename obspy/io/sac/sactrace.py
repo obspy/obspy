@@ -389,8 +389,7 @@ from . import arrayio as _io
 # https://nbviewer.jupyter.org/urls/gist.github.com/ChrisBeaumont/
 #   5758381/raw/descriptor_writeup.ipynb
 
-# floats
-class floatheader(object):
+class sacheader(object):
     def __init__(self, name):
         try:
             self.__doc__ = HD.DOC[name]
@@ -399,6 +398,8 @@ class floatheader(object):
             pass
         self.name = name
 
+# floats
+class floatheader(sacheader):
     def __get__(self, instance, instance_type):
         if instance is None:
             # a floatheader on the owner class was requested.
@@ -449,14 +450,7 @@ class geographicheader(floatheader):
                 pass
 
 
-class intheader(object):
-    def __init__(self, name):
-        try:
-            self.__doc__ = HD.DOC[name]
-        except KeyError:
-            pass
-        self.name = name
-
+class intheader(sacheader):
     def __get__(self, instance, instance_type):
         if instance is None:
             value = self
