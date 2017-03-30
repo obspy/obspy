@@ -133,11 +133,11 @@ def correlate(a, b, shift, demean=True, normalize=True, domain='freq'):
     0
     >>> round(value, 5)
     1.0
-    >>> b = np.roll(a, 50)  # shift a by 50 samples
+    >>> b = np.roll(a, 20)  # shift a by 20 samples
     >>> cc = correlate(a, b, 1000)
     >>> shift, value = xcorr_max(cc)
     >>> shift
-    -50
+    -20
     >>> round(value, 2)
     1.0
 
