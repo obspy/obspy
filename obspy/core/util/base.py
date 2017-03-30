@@ -18,9 +18,11 @@ import inspect
 import io
 import os
 import pkg_resources
+import socket
 import sys
 import tempfile
 from collections import OrderedDict
+from contextlib import closing
 
 from pkg_resources import iter_entry_points, load_entry_point
 import numpy as np
@@ -557,6 +559,36 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
                 if not chunk:
                     continue
                 fh.write(chunk)
+
+
+def has_internet_connection(host="8.8.8.8", port=53, timeout=3):
+    """
+    Check internet connectivity
+
+    http://stackoverflow.com/a/33117579/3419472
+
+    This check only takes a split second, so it does not influence test
+    execution speed.
+
+    :type host: str
+    :param host: IP Address of host for lookup (default: "8.8.8.8" for
+        "google-public-dns-a.google.com")
+    :type port: int
+    :param port: Open port at server side to check (default: 53/tcp)
+    :type timeout: float
+
+    :returns: ``True`` if an internet connection is available, a string with
+        error message if connection fails, or ``False`` if connection fails
+        without an exception being raised.
+    """
+    try:
+        socket.setdefaulttimeout(timeout)
+        with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+            s.connect((host, port))
+        return True
+    except Exception as e:
+        return str(e)
+    return False
 
 
 if __name__ == '__main__':
