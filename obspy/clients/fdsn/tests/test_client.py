@@ -24,11 +24,11 @@ from difflib import Differ
 
 import lxml
 import requests
-from vcr import vcr
 
 from obspy import UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.decorator import network_test, vcr
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
@@ -286,14 +286,63 @@ class ClientTestCase(unittest.TestCase):
                     "queryauth?net=BW")
         self.assertEqual(got, expected)
 
+    def test_service_discovery_iris_preloaded_cache(self):
+        """
+        Tests the automatic discovery of services with the IRIS endpoint. The
+        test parameters are taken from IRIS' website.
+
+        This is checking the pre-loaded service discovery cache.
+
+        This will have to be adjusted once IRIS changes their implementation.
+        """
+        client = self.client
+        self.assertEqual(set(client.services.keys()),
+                         set(("dataselect", "event", "station",
+                              "available_event_contributors",
+                              "available_event_catalogs")))
+
+        # The test sets are copied from the IRIS webpage.
+        self.assertEqual(
+            set(client.services["dataselect"].keys()),
+            set(("starttime", "endtime", "network", "station", "location",
+                 "channel", "quality", "minimumlength", "longestonly")))
+        self.assertEqual(
+            set(client.services["station"].keys()),
+            set(("starttime", "endtime", "startbefore", "startafter",
+                 "endbefore", "endafter", "network", "station", "location",
+                 "channel", "minlatitude", "maxlatitude", "minlongitude",
+                 "maxlongitude", "latitude", "longitude", "minradius",
+                 "maxradius", "level", "includerestricted", "format",
+                 "includeavailability", "updatedafter", "matchtimeseries")))
+        self.assertEqual(
+            set(client.services["event"].keys()),
+            set(("starttime", "endtime", "minlatitude", "maxlatitude",
+                 "minlongitude", "maxlongitude", "latitude", "longitude",
+                 "maxradius", "minradius", "mindepth", "maxdepth",
+                 "minmagnitude", "maxmagnitude",
+                 "magnitudetype", "format",
+                 "catalog", "contributor", "limit", "offset", "orderby",
+                 "updatedafter", "includeallorigins", "includeallmagnitudes",
+                 "includearrivals", "eventid",
+                 "originid"  # XXX: This is currently just specified in the
+                             #      WADL.
+                 )))
+
+    @network_test
     def test_service_discovery_iris(self):
         """
         Tests the automatic discovery of services with the IRIS endpoint. The
         test parameters are taken from IRIS' website.
 
+        This is doing actual service discovery rather than using the pre-loaded
+        service discovery cache.
+
         This will have to be adjusted once IRIS changes their implementation.
         """
-        client = self.client
+        # Clear the pre-loaded cache
+        Client._Client__service_discovery_cache.clear()
+
+        client = Client('IRIS')
         self.assertEqual(set(client.services.keys()),
                          set(("dataselect", "event", "station",
                               "available_event_contributors",
@@ -1090,7 +1139,7 @@ class ClientTestCase(unittest.TestCase):
         # Just make sure something is being downloaded.
         self.assertTrue(bool(len(inv.networks)))
 
-    @vcr
+    @network_test
     def test_redirection_auth(self):
         """
         Tests the redirection of GET and POST requests using authentication.

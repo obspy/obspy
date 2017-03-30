@@ -12,13 +12,14 @@ import time
 import unittest
 
 import numpy as np
-from vcr import vcr, VCRSystem
+from vcr import VCRSystem
 
 from obspy import read
 from obspy.clients.arclink import Client
 from obspy.clients.arclink.client import ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, NamedTemporaryFile
+from obspy.core.util.decorator import vcr
 
 
 orig_sleep = time.sleep

@@ -8,11 +8,10 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import unittest
 
-from vcr import vcr
-
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.decorator import vcr
 from obspy.clients.earthworm import Client
 
 

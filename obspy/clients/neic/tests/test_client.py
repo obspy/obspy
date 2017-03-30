@@ -8,9 +8,9 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import unittest
 
-from vcr import vcr
 
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.decorator import vcr
 from obspy.clients.neic import Client
 
 

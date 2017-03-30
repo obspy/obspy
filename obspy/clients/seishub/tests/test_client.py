@@ -10,9 +10,9 @@ from future.builtins import *  # NOQA
 import unittest
 
 import numpy as np
-from vcr import vcr
 
 from obspy.core import AttribDict, UTCDateTime
+from obspy.core.util.decorator import vcr
 from obspy.clients.seishub import Client
 
 
