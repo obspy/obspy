@@ -517,9 +517,7 @@ from future.utils import native_str
 
 import warnings
 
-import scipy
-
-from obspy.core.util.base import get_scipy_version
+from obspy.core.util.base import SCIPY_VERSION
 # Convenience imports.
 from .mass_downloader import MassDownloader  # NOQA
 from .restrictions import Restrictions  # NOQA
@@ -531,10 +529,10 @@ __all__ = [native_str(i) for i in (
     'MassDownloader', 'Restrictions', 'Domain', 'RectangularDomain',
     'CircularDomain', 'GlobalDomain')]
 
-if get_scipy_version() < [0, 12]:
+if SCIPY_VERSION < [0, 12]:
     msg = ('At least some parts of FDSN Mass downloader might not '
            'work with old scipy versions <0.12.0 (installed: {})')
-    warnings.warn(msg.format(scipy.__version__))
+    warnings.warn(msg.format(SCIPY_VERSION))
 
 
 if __name__ == '__main__':

@@ -27,7 +27,7 @@ import numpy as np
 
 import obspy
 from obspy.core.compatibility import mock
-from obspy.core.util.base import NamedTemporaryFile, get_scipy_version
+from obspy.core.util.base import NamedTemporaryFile, SCIPY_VERSION
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.mass_downloader import (domain, Restrictions,
                                                 MassDownloader)
@@ -37,9 +37,6 @@ from obspy.clients.fdsn.mass_downloader.utils import (
     download_stationxml, download_and_split_mseed_bulk)
 from obspy.clients.fdsn.mass_downloader.download_helpers import (
     Channel, TimeInterval, Station, STATUS, ClientDownloadHelper)
-
-
-SCIPY_VERSION = get_scipy_version()
 
 
 class DomainTestCase(unittest.TestCase):
