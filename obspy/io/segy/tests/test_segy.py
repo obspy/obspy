@@ -22,6 +22,8 @@ from obspy.io.segy.segy import (SEGYBinaryFileHeader, SEGYFile,
                                 SEGYInvalidTextualHeaderWarning)
 from obspy.io.segy.tests.header import DTYPES, FILES
 
+from . import _patch_header
+
 
 class SEGYTestCase(unittest.TestCase):
     """
@@ -315,6 +317,10 @@ class SEGYTestCase(unittest.TestCase):
             new_header = new_header.read()
             # Assert the correct length.
             self.assertEqual(len(new_header), 3200)
+            # Patch both headers to not worry about the automatically set
+            # values.
+            org_header = _patch_header(org_header)
+            new_header = _patch_header(new_header)
             # Assert the actual header.
             self.assertEqual(org_header, new_header)
 
@@ -373,6 +379,9 @@ class SEGYTestCase(unittest.TestCase):
                 # Create strings again.
                 org_data = org_data.tostring()
                 new_data = new_data.tostring()
+            # Just patch both headers - this tests something different.
+            org_data = _patch_header(org_data)
+            new_data = _patch_header(new_data)
             # Always write the SEGY File revision number!
             # org_data[3500:3502] = new_data[3500:3502]
             # Test the identity without the SEGY revision number

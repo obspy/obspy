@@ -21,6 +21,8 @@ from obspy.io.segy.segy import _read_segy as _read_segy_internal
 from obspy.io.segy.segy import SEGYError
 from obspy.io.segy.tests.header import DTYPES, FILES
 
+from . import _patch_header
+
 
 class SEGYCoreTestCase(unittest.TestCase):
     """
@@ -231,6 +233,11 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Save the header to compare it later on.
         with open(file, 'rb') as f:
             header = f.read(3200)
+
+        # All newly written header will have the file revision number and
+        # the end header mark set - just also set them in the old header.
+        header = _patch_header(header, ebcdic=True)
+
         # First write should remain EBCDIC.
         with NamedTemporaryFile() as tf:
             out_file = tf.name
