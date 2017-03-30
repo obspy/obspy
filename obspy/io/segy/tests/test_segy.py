@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA
 import io
 import os
 import unittest
+import warnings
 
 import numpy as np
 
@@ -595,6 +596,28 @@ class SEGYTestCase(unittest.TestCase):
         del ist[0].stats.segy.endian
 
         self.assertEqual(st.traces, ist)
+
+    def test_revision_number_in_binary_file_header(self):
+        """
+        It is a bit awkward but it is encoded in a 16 bit number with the
+        dot assumed to be between the first and second byte. So the hex 16
+        representation is 0x0100.
+        """
+        tr = obspy.read()[0]
+        tr.data = np.float32(tr.data)
+        for endian in ("<", ">"):
+            _tr = tr.copy()
+            with io.BytesIO() as buf:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    _tr.write(buf, format="segy", byteorder=endian)
+                buf.seek(0, 0)
+                data = buf.read()
+            # Result differs depending on byte order.
+            if endian == "<":
+                self.assertEqual(data[3200:3600][-100:-98], b"\x00\x01")
+            else:
+                self.assertEqual(data[3200:3600][-100:-98], b"\x01\x00")
 
 
 def rms(x, y):
