@@ -207,3 +207,11 @@ $ sudo tar -C ${DISTRO_FULL} -c . | docker import - obspy/base-images:${DISTRO_F
 $ docker login  # docker hub user needs write access to "obspy/base-images" of organization "obspy"
 $ docker push obspy/base-images:${DISTRO_FULL}
 ```
+
+# Release Lifecycle Information
+
+ * Debian: https://wiki.debian.org/DebianReleases#Production_Releases
+ * Ubuntu: https://wiki.ubuntu.com/Releases#Current
+ * openSUSE: https://en.opensuse.org/Lifetime#Maintained_Regular_distributions
+ * CentOS: https://en.wikipedia.org/wiki/CentOS#End-of-support_schedule
+ * Fedora: https://fedoraproject.org/wiki/Releases#Current_Supported_Releases
