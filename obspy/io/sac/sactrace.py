@@ -448,25 +448,31 @@ class geographicheader(floatheader):
             except SacHeaderError:
                 pass
 
-# ints
-def _intgetter(hdr):
-    def get_int(self):
-        value = int(self._hi[HD.INTHDRS.index(hdr)])
-        if value == HD.INULL:
-            value = None
+
+class intheader(object):
+    def __init__(self, name):
+        try:
+            self.__doc__ = HD.DOC[name]
+        except KeyError:
+            pass
+        self.name = name
+
+    def __get__(self, instance, instance_type):
+        if instance is None:
+            value = self
+        else:
+            value = int(instance._hi[HD.INTHDRS.index(self.name)])
+            if value == HD.INULL:
+                value = None
         return value
-    return get_int
 
-
-def _intsetter(hdr):
-    def set_int(self, value):
+    def __set__(self, instance, value):
+        if value is None:
+            value = HD.INULL
         if value % 1:
             warnings.warn("Non-integers may be truncated. ({}: {})".format(
                 hdr, value))
-        if value is None:
-            value = HD.INULL
-        self._hi[HD.INTHDRS.index(hdr)] = value
-    return set_int
+        instance._hi[HD.INTHDRS.index(self.name)] = value
 
 
 # logicals/bools (subtype of ints)
@@ -896,42 +902,28 @@ class SACTrace(object):
     cmpinc = floatheader('cmpinc')
     #
     # INTS
-    nzyear = property(_intgetter('nzyear'), _intsetter('nzyear'),
-                      doc=HD.DOC['nzyear'])
-    nzjday = property(_intgetter('nzjday'), _intsetter('nzjday'),
-                      doc=HD.DOC['nzjday'])
-    nzhour = property(_intgetter('nzhour'), _intsetter('nzhour'),
-                      doc=HD.DOC['nzhour'])
-    nzmin = property(_intgetter('nzmin'), _intsetter('nzmin'),
-                     doc=HD.DOC['nzmin'])
-    nzsec = property(_intgetter('nzsec'), _intsetter('nzsec'),
-                     doc=HD.DOC['nzsec'])
-    nzmsec = property(_intgetter('nzmsec'), _intsetter('nzmsec'),
-                      doc=HD.DOC['nzmsec'])
-    nvhdr = property(_intgetter('nvhdr'), _intsetter('nvhdr'),
-                     doc=HD.DOC['nvhdr'])
-    norid = property(_intgetter('norid'), _intsetter('norid'),
-                     doc=HD.DOC['norid'])
-    nevid = property(_intgetter('nevid'), _intsetter('nevid'),
-                     doc=HD.DOC['nevid'])
+    nzyear = intheader('nzyear')
+    nzjday = intheader('nzjday')
+    nzhour = intheader('nzhour')
+    nzmin = intheader('nzmin')
+    nzsec = intheader('nzsec')
+    nzmsec = intheader('nzmsec')
+    nvhdr = intheader('nvhdr')
+    norid = intheader('norid')
+    nevid = intheader('nevid')
     npts = property(_make_data_func(len, 'npts'), doc=HD.DOC['npts'])
-    nwfid = property(_intgetter('nwfid'), _intsetter('nwfid'),
-                     doc=HD.DOC['nwfid'])
+    nwfid = intheader('nwfid')
     iftype = property(_enumgetter('iftype'), _enumsetter('iftype'),
                       doc=HD.DOC['iftype'])
     idep = property(_enumgetter('idep'), _enumsetter('idep'),
                     doc=HD.DOC['idep'])
     iztype = property(_enumgetter('iztype'), _set_iztype, doc=HD.DOC['iztype'])
-    iinst = property(_intgetter('iinst'), _intsetter('iinst'),
-                     doc=HD.DOC['iinst'])
-    istreg = property(_intgetter('istreg'), _intsetter('istreg'),
-                      doc=HD.DOC['istreg'])
-    ievreg = property(_intgetter('ievreg'), _intsetter('ievreg'),
-                      doc=HD.DOC['ievreg'])
+    iinst = intheader('iinst')
+    istreg = intheader('istreg')
+    ievreg = intheader('ievreg')
     ievtyp = property(_enumgetter('ievtyp'), _enumsetter('ievtyp'),
                       doc=HD.DOC['ievtyp'])
-    iqual = property(_intgetter('iqual'), _intsetter('iqual'),
-                     doc=HD.DOC['iqual'])
+    iqual = intheader('iqual')
     isynth = property(_enumgetter('isynth'), _enumsetter('isynth'),
                       doc=HD.DOC['isynth'])
     imagtyp = property(_enumgetter('imagtyp'), _enumsetter('imagtyp'),
@@ -945,7 +937,7 @@ class SACTrace(object):
     lovrok = property(_boolgetter('lovrok'), _boolsetter('lovrok'),
                       doc=HD.DOC['lovrok'])
     lcalda = property(_boolgetter('lcalda'), _set_lcalda, doc=HD.DOC['lcalda'])
-    unused23 = property(_intgetter('unused23'), _intsetter('unused23'))
+    unused23 = intheader('unused23')
     #
     # STRINGS
     kstnm = property(_strgetter('kstnm'), _strsetter('kstnm'),
