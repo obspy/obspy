@@ -136,6 +136,8 @@ install:
   # already installed version (ideally we should handle package versions
   # through pinning or an environment file..)
   - conda config --add channels conda-forge
+  # add channel twice to move it to the top of the channel priority list
+  - conda config --add channels conda-forge
   - conda install --no-update-dependencies m2crypto || true
   - conda install --no-update-dependencies cartopy || true
   # install packages not available via conda
