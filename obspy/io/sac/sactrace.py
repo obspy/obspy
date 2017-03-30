@@ -469,24 +469,25 @@ class intheader(sacheader):
         instance._hi[HD.INTHDRS.index(self.name)] = value
 
 
-# logicals/bools (subtype of ints)
-def _boolgetter(hdr):
-    def get_bool(self):
-        value = self._hi[HD.INTHDRS.index(hdr)]
-        return bool(value)
-    return get_bool
+class boolheader(intheader):
+    def __get__(self, instance, instance_type):
+        # value can be an int or None
+        value = super(boolheader, self).__get__(instance, instance_type)
+        return bool(value) if value in (0, 1) else value
 
-
-def _boolsetter(hdr):
-    def set_bool(self, value):
+    def __set__(self, instance, value):
         if value not in (True, False, 1, 0):
             msg = "Logical header values must be {True, False, 1, 0}"
             raise ValueError(msg)
         # booleans are subclasses of integers.  They will be set (cast)
         # directly into an integer array as 0 or 1.
-        self._hi[HD.INTHDRS.index(hdr)] = value
-    return set_bool
-
+        super(boolheader, self).__set__(instance, value)
+        if self.name == 'lcalda':
+            if value:
+                try:
+                    instance._set_distances()
+                except SacHeaderError:
+                    pass
 
 # enumerated values (stored as ints, represented by strings)
 def _enumgetter(hdr):
@@ -585,18 +586,6 @@ def _make_data_func(func, hdr):
 
 
 # OTHER GETTERS/SETTERS
-def _set_lcalda(self, value):
-    # make and use a bool setter for lcalda
-    lcalda_setter = _boolsetter('lcalda')
-    lcalda_setter(self, value)
-    # try to set set distances if "value" evaluates to True
-    if value:
-        try:
-            self._set_distances()
-        except SacHeaderError:
-            pass
-
-
 def _get_e(self):
     try:
         if self.npts:
@@ -924,13 +913,10 @@ class SACTrace(object):
                        doc=HD.DOC['imagtyp'])
     imagsrc = property(_enumgetter('imagsrc'), _enumsetter('imagsrc'),
                        doc=HD.DOC['imagsrc'])
-    leven = property(_boolgetter('leven'), _boolsetter('leven'),
-                     doc=HD.DOC['leven'])
-    lpspol = property(_boolgetter('lpspol'), _boolsetter('lpspol'),
-                      doc=HD.DOC['lpspol'])
-    lovrok = property(_boolgetter('lovrok'), _boolsetter('lovrok'),
-                      doc=HD.DOC['lovrok'])
-    lcalda = property(_boolgetter('lcalda'), _set_lcalda, doc=HD.DOC['lcalda'])
+    leven = boolheader('leven')
+    lpspol = boolheader('lpspol')
+    lovrok = boolheader('lovrok')
+    lcalda = boolheader('lcalda')
     unused23 = intheader('unused23')
     #
     # STRINGS
