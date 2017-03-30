@@ -111,6 +111,11 @@ install:
         BASEMAP="basemap=1.0.7"
         PYPROJ="pyproj"
       fi
+  # additional, optional packages that run some more tests but are not
+  # available for all archs. "--no-update-dependencies" keeps other packages at
+  # already installed version (ideally we should handle package versions
+  # through pinning or an environment file..)
+  - conda config --add channels conda-forge
   # for now fix requests version, can be changed when a new requests is released (see #1599)
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
@@ -131,13 +136,6 @@ install:
         'requests<2.12'
         jsonschema
   - source activate test-environment
-  # additional, optional packages that run some more tests but are not
-  # available for all archs. "--no-update-dependencies" keeps other packages at
-  # already installed version (ideally we should handle package versions
-  # through pinning or an environment file..)
-  - conda config --add channels conda-forge
-  # add channel twice to move it to the top of the channel priority list
-  - conda config --add channels conda-forge
   - conda install --no-update-dependencies m2crypto || true
   - conda install --no-update-dependencies cartopy || true
   # install packages not available via conda
