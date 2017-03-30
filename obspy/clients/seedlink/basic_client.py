@@ -64,7 +64,7 @@ class Client(object):
         Request waveform data from the seedlink server.
 
         >>> from obspy import UTCDateTime
-        >>> client = Client('rtserver.ipgp.fr')
+        >>> client = Client('rtserver.ipgp.fr')  # doctest: +NETWORK_TEST
         >>> t = UTCDateTime() - 3600
         >>> st = client.get_waveforms("G", "FDF", "00", "BHZ", t, t + 5)
         >>> print(st)  # doctest: +ELLIPSIS

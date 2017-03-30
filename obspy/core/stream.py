@@ -153,7 +153,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (3) Reading a remote file via HTTP protocol.
 
-        >>> from obspy import read
+        >>> from obspy import read  # doctest: +NETWORK_TEST
         >>> st = read("https://examples.obspy.org/loc_RJOB20050831023349.z")
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:

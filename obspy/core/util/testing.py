@@ -51,12 +51,21 @@ orig_sleep = time.sleep
 
 # monkey patch DocTestCase
 def runTest(self):  # NOQA
+    # check for internet connection
+    has_internet = getattr(obspy, '_has_internet', None)
+    if has_internet is None:
+        has_internet = has_internet_connection()
+        obspy._has_internet = has_internet
+    # skip if marked as network test but no internet available
+    network_test = '+NETWORK_TEST' in self._dt_test.docstring
+    if network_test and has_internet is not True:
+        if has_internet is False:
+            reason = 'No internet connection'
+        else:
+            reason = 'No internet connection ({})'.format(has_internet)
+        raise unittest.SkipTest(reason)
+    no_vcr = getattr(obspy, '_no_vcr', False)
     if '+VCR' in self._dt_test.docstring:
-        no_vcr = getattr(obspy, '_no_vcr', False)
-        has_internet = getattr(obspy, '_has_internet', None)
-        if has_internet is None:
-            has_internet = has_internet_connection()
-            obspy._has_internet = has_internet
         # skip test, because it's..
         #  - a network test (marked by +VCR),
         #  - VCR is disabled and
@@ -122,6 +131,7 @@ doctest.DocTestCase.runTest = runTest
 
 # register VCR option
 doctest.register_optionflag('VCR')
+doctest.register_optionflag('NETWORK_TEST')
 
 
 def add_unittests(testsuite, module_name):
