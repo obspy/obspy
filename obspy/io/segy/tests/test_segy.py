@@ -619,6 +619,25 @@ class SEGYTestCase(unittest.TestCase):
             else:
                 self.assertEqual(data[3200:3600][-100:-98], b"\x01\x00")
 
+    def test_textual_header_has_the_right_fields_at_the_end(self):
+        """
+        Needs to have the version number and a magical string at the end.
+        """
+        tr = obspy.read()[0]
+        tr.data = np.float32(tr.data)
+        # Write.
+        with io.BytesIO() as buf:
+            tr.write(buf, format="segy")
+            buf.seek(0, 0)
+            data = buf.read()
+
+        # Make sure the textual header has the required fields.
+        revision_number = data[:3200][-160:-146].decode()
+        end_header_mark = data[:3200][-80:-58].decode()
+
+        self.assertEqual(revision_number, "C39 SEG Y REV1")
+        self.assertEqual(end_header_mark, "C40 END TEXTUAL HEADER")
+
 
 def rms(x, y):
     """
