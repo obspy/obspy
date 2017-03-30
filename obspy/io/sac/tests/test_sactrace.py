@@ -279,6 +279,7 @@ class SACTraceTestCase(unittest.TestCase):
             self.assertEqual(getattr(SACTrace, hdr).__doc__, HD.DOC.get(hdr))
             # self.assertEqual(getattr(sac, hdr).__doc__, HD.DOC.get(hdr]))
             # TODO: I'd like to find a way for this to work:-(
+            # TODO: factor __doc__ tests out into one test for all headers
 
     def test_relativetimeheader(self):
         """
@@ -328,6 +329,18 @@ class SACTraceTestCase(unittest.TestCase):
             # __doc__ on class and instance
             self.assertEqual(getattr(SACTrace, hdr).__doc__, HD.DOC.get(hdr))
             # self.assertEqual(getattr(sac, hdr).__doc__, HD.DOC.get(hdr]))
+
+    def test_boolheader(self):
+        sac = SACTrace()
+        for hdr in ('leven', 'lpspol', 'lovrok', 'lcalda'):
+            # getting existing null values return None
+            sac._hi[HD.INTHDRS.index(hdr)] = HD.INULL
+            self.assertIsNone(getattr(sac, hdr))
+
+            for boolval in (True, False, 0, 1):
+                setattr(sac, hdr, boolval)
+                self.assertEqual(sac._hi[HD.INTHDRS.index(hdr)], int(boolval))
+                self.assertEqual(getattr(sac, hdr), bool(boolval))
 
 
 def suite():
