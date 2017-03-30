@@ -22,12 +22,12 @@ from obspy.signal.cross_correlation import (correlate, xcorr_pick_correction,
 # Define the xcorr function just for these tests, so that existing tests can
 # stay as in Obspy version 1.0 and xcorr function can be deprecated regardless.
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):
-	x = correlate(tr1, tr2, shift_len, domain='time')
-	a, b = xcorr_max(x)
-	if full_xcorr:
-		return a, b, x
-	else:
-		return a, b
+    x = correlate(tr1, tr2, shift_len, domain='time')
+    a, b = xcorr_max(x)
+    if full_xcorr:
+        return a, b, x
+    else:
+        return a, b
 
 
 class CrossCorrelationTestCase(unittest.TestCase):
