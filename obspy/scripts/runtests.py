@@ -540,7 +540,8 @@ class _TextTestRunner:
 def run_tests(verbosity=1, tests=None, report=False, log=None,
               server="tests.obspy.org", all=False, timeit=False,
               interactive=False, slowest=0, exclude=[], tutorial=False,
-              hostname=HOSTNAME, ci_url=None, pr_url=None, no_vcr=False):
+              hostname=HOSTNAME, ci_url=None, pr_url=None, no_vcr=False,
+              offline=False):
     """
     This function executes ObsPy test suites.
 
@@ -560,6 +561,10 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
     :type no_vcr: bool
     :param no_vcr: Whether to not use pre-recorded VCR tapes but run all
         network tests via live internet connection.
+    :type offline: bool
+    :param offline: Whether to forcedly not use internet connection, i.e. skip
+        all tests that would use the internet even if internet connection is
+        available.
     """
     if not tests:
         tests = copy.copy(ALL_MODULES)
@@ -574,6 +579,9 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
         warnings.warn(msg)
     # set whether to use vcr with pre-recorded vcr tapes or not
     obspy._no_vcr = no_vcr
+    if offline:
+        obspy._has_internet = (
+            "Not using internet connection (obspy-runtests flag '--offline')")
     # remove any excluded module
     if exclude:
         for name in exclude:
@@ -693,9 +701,14 @@ def run(argv=None, interactive=True):
     others = parser.add_argument_group('Additional Options')
     others.add_argument('--no-vcr', action='store_true', dest='no_vcr',
                         help='do not use pre-recorded vcr tapes with network '
-                             'interactions for network tests but try to use '
-                             'live internet connection and interact with live '
-                             'production servers')
+                             'interactions for network tests. using this '
+                             'option, tests that use vcr tapes will use '
+                             'internet connection if possible or they will be '
+                             'skipped if no internet connection is available.')
+    others.add_argument('--offline', action='store_true', dest='offline',
+                        help='do not use internet connection for network '
+                             'tests even if available, i.e. force-skip tests '
+                             'that would use an internet connection.')
     others.add_argument('--tutorial', action='store_true',
                         help='add doctests in tutorial')
     others.add_argument('--no-flake8', action='store_true',
@@ -759,7 +772,8 @@ def run(argv=None, interactive=True):
                      args.all, args.timeit, interactive, args.n,
                      exclude=args.exclude, tutorial=args.tutorial,
                      hostname=args.hostname, ci_url=args.ci_url,
-                     pr_url=args.pr_url, no_vcr=args.no_vcr)
+                     pr_url=args.pr_url, no_vcr=args.no_vcr,
+                     offline=args.offline)
 
 
 def main(argv=None, interactive=True):
