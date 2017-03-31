@@ -237,7 +237,13 @@ def add_doctests(testsuite, module_name):
             if _module.__name__.startswith('obspy.clients.fdsn'):
                 kwargs['setUp'] = _fdsn_doctest_setUp
                 kwargs['tearDown'] = _fdsn_doctest_tearDown
-            testsuite.addTest(doctest.DocTestSuite(_module, **kwargs))
+            try:
+                testsuite.addTest(doctest.DocTestSuite(_module, **kwargs))
+            except ValueError as e:
+                if 'has no docstrings' in str(e):
+                    pass
+                else:
+                    raise
 
 
 def write_png(arr, filename):
