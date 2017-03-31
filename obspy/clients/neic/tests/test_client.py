@@ -8,7 +8,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import unittest
 
-
+import obspy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import vcr
 from obspy.clients.neic import Client
@@ -17,6 +17,10 @@ from obspy.clients.neic import Client
 # unix timestamp where this test has been recorded via vcr - needs to be set
 # to newer timestamp if recorded later again or executing without vcr
 VCR_TIMESTAMP = 1485568123.7079487
+NO_VCR_TIMESTAMP = UTCDateTime()
+# determine which timestamp to use
+USE_VCR = not getattr(obspy, '_no_vcr', False)
+TIMESTAMP = USE_VCR and VCR_TIMESTAMP or NO_VCR_TIMESTAMP
 
 
 class ClientTestCase(unittest.TestCase):
@@ -30,7 +34,7 @@ class ClientTestCase(unittest.TestCase):
         """
         client = Client(host="137.227.224.97", port=2061)
         # now - 5 hours
-        t = UTCDateTime(VCR_TIMESTAMP) - 5 * 60 * 60
+        t = UTCDateTime(TIMESTAMP) - 5 * 60 * 60
         duration = 1.0
         st = client.get_waveforms_nscl("IUANMO BH.00", t, duration)
         # try a series of requests, compare against get_waveforms_nscl
@@ -51,7 +55,7 @@ class ClientTestCase(unittest.TestCase):
         """
         client = Client(host="137.227.224.97", port=2061)
         # now - 5 hours
-        t = UTCDateTime(VCR_TIMESTAMP) - 5 * 60 * 60
+        t = UTCDateTime(TIMESTAMP) - 5 * 60 * 60
         duration_long = 3600.0
         duration = 1.0
         components = ["1", "2", "Z"]
