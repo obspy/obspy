@@ -489,6 +489,7 @@ class boolheader(intheader):
                 except SacHeaderError:
                     pass
 
+# enumerated values (stored as ints, represented by strings)
 class enumheader(intheader):
     def __get__(self, instance, instance_type):
         value = super(enumheader, self).__get__(instance, instance_type)
@@ -514,36 +515,43 @@ class enumheader(intheader):
             raise ValueError(msg.format(value, self.name))
         super(enumheader, self).__set__(instance, value)
 
-
-# enumerated values (stored as ints, represented by strings)
-def _enumgetter(hdr):
-    def get_enum(self):
-        value = self._hi[HD.INTHDRS.index(hdr)]
-        if value == HD.INULL:
-            name = None
-        elif _ut.is_valid_enum_int(hdr, value):
-            name = HD.ENUM_NAMES[value]
+class stringheader(sacheader):
+    def __get__(self, instance, instance_type):
+        if instance is None:
+            value = self
         else:
-            msg = """Unrecognized enumerated value {} for header "{}".
-                     See .header for allowed values.""".format(value, hdr)
-            warnings.warn(msg)
-            name = None
-        return name
-    return get_enum
+            try:
+                # value is a bytes
+                value = native_str(
+                        self._hs[HD.STRHDR.index(self.name)].decode()
+                        )
+            except AttributeError:
+                # value is a str
+                value = native_str(self._hs[HD.STRHDRS.index(self.name)])
 
+            if value == HD.SNULL:
+                value = None
 
-def _enumsetter(hdr):
-    def set_enum(self, value):
+            try:
+                value = value.strip()
+            except AttributeError:
+                # it's None.  no .strip method
+                pass
+        return value
+
+    def __set__(self, instance, value):
         if value is None:
-            value = HD.INULL
-        elif _ut.is_valid_enum_str(hdr, value):
-            value = HD.ENUM_VALS[value]
-        else:
-            msg = 'Unrecognized enumerated value "{}" for header "{}"'
-            raise ValueError(msg.format(value, hdr))
-        self._hi[HD.INTHDRS.index(hdr)] = value
-    return set_enum
-
+            value = HD.SNULL
+        elif len(value) > 8:
+            msg = ("Alphanumeric headers longer than 8 characters are "
+                   "right-truncated.")
+            warnings.warn(msg)
+        # values will truncate themselves, since _hs is dtype '|S8'
+        try:
+            self._hs[HD.STRHDRS.index(self.name)] = value.encode('ascii',
+                                                                 'strict')
+        except AttributeError:
+            self._hs[HD.STRHDRS.index(self.name)] = value
 
 # strings
 def _strgetter(hdr):
