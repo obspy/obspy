@@ -43,7 +43,7 @@ rm -rf $OBSPY_PATH/obspy/imaging/tests/images/testrun
 
 
 DOCKERFILE_FOLDER=base_images
-TEMP_PATH=temp/$RANDOM
+TEMP_PATH=temp/$RANDOM-$RANDOM-$RANDOM
 NEW_OBSPY_PATH=$TEMP_PATH/obspy
 
 # Determine the docker binary name. The official debian packages use docker.io
@@ -148,7 +148,7 @@ run_tests_on_image () {
     LOG_DIR=${LOG_DIR_BASE}/$image_name
     mkdir -p $LOG_DIR
     ID=$RANDOM-$RANDOM-$RANDOM
-    TAG=run_obspy_tests-$RANDOM
+    TAG=run_obspy_tests_$RANDOM-$RANDOM-$RANDOM
 
     $DOCKER build -t temp:$TAG $TEMP_PATH
 

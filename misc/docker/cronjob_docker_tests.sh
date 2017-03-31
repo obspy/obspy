@@ -11,7 +11,11 @@
 # we run a lot of radical `git clean -fdx` in that repo, so any local changes
 # will be regularly lost
 # obspy main repo is expected to be registered as remote "origin"
-OBSPY_DOCKER_BASE=$HOME/obspy_docker_tests
+if [ -z "$OBSPY_DOCKER_BASE" ]
+then
+    echo "Env variable OBSPY_DOCKER_BASE must be set to the root directory of a dedicated ObsPy git clone (Warning: 'git clean -fdx' will be run!)."
+    exit 1
+fi
 OBSPY_DOCKER=$OBSPY_DOCKER_BASE/misc/docker
 
 DOCKER_TESTS=false
@@ -38,17 +42,18 @@ done
 
 echo "##### Start of obspy docker cronjob at $(date)"
 
-# sleep for some time, so that the cronjob can be killed if the VM is entered
-# for some manual tampering
-sleep 300
-# keep VM up to date
-sudo aptitude update && sudo aptitude upgrade -y
+# The following is only useful/safe if the docker testbot is set up inside a virtual machine
+# XXX # sleep for some time, so that the cronjob can be killed if the VM is entered
+# XXX # for some manual tampering
+# XXX sleep 300
+# XXX # keep VM up to date
+# XXX sudo aptitude update && sudo aptitude upgrade -y
 
 DOCKER=`which docker.io || which docker`
 
 # start with a clean slate, remove all cached docker containers
-$DOCKER rm $($DOCKER ps -qa)
-$DOCKER rmi temp:temp
+# The following is only useful/safe if the docker testbot is set up inside a virtual machine
+# XXX $DOCKER rm $($DOCKER ps -qa)
 # only remove images if older than 7 days. data for the images is over 20 GB so
 # we do not want to recreate them on a hourly basis.. ;-)
 DOCKER_IMAGE_AGE_THRESHOLD=`date -Ins --date='7 days ago'`
@@ -139,6 +144,7 @@ then
 fi
 
 
-# sleep for some time, so a login user has a chance to kill the cronjob before
-# it halts the VM
-(sleep 600; sudo halt -p)
+# The following is only useful/safe if the docker testbot is set up inside a virtual machine
+# XXX # sleep for some time, so a login user has a chance to kill the cronjob before
+# XXX # it halts the VM
+# XXX (sleep 600; sudo halt -p)

@@ -208,6 +208,77 @@ $ docker login  # docker hub user needs write access to "obspy/base-images" of o
 $ docker push obspy/base-images:${DISTRO_FULL}
 ```
 
+### Setting up `docker-testbot` to automatically test PRs and branches and send commit statuses
+
+##### Install docker
+
+Well.. install it: https://docs.docker.com/engine/installation/
+
+##### Set up a dedicated Python environment
+
+Set up a dedicated Anaconda Python environment and install
+[`obspy_github_api`](https://github.com/obspy/obspy_github_api). Activate that
+environment before running the docker testbot (in the last step of the
+instructions).
+
+##### Set up a dedicated ObsPy clone
+
+Set up a dedicated ObsPy git clone. This clone should not be used for anything
+else than running the docker testbot. `git clean -fdx` will be run, razing any
+local changes. Set the location to the dedicated obspy repository:
+
+```bash
+$ export OBSPY_DOCKER_BASE=/path/to/dedicated/obspy
+```
+
+Remote 'origin' should point to obspy/obspy (obspy main repository).
+
+##### Register an OAuth token on github
+
+Login to https://github.com and create a dedicated OAuth token. It should only
+have rights for "repo:status" on obspy/obspy. Set token as env variable:
+
+```bash
+$ export OBSPY_COMMIT_STATUS_TOKEN=abcdefgh123456789
+```
+
+##### Run docker testbot
+
+To run docker testbot, simply do:
+
+```bash
+$ bash cronjob_docker_tests.sh -t -d -b -p
+```
+
+This will run both..
+
+ - docker testing (-t)
+ - docker deb packaging/testing  (-d)
+
+..on both:
+
+ - main branches, like master and maintenance_1.0.x (-b)
+ - pull requests (-p)
+
+Since runtime is rather high, ideally these jobs should be distributed on
+separate docker testrunners (scripts might have to be adjusted, e.g. naming of
+docker temporary containers..)
+
+To run four workers embarassingly parallel (by separating the different build
+types), set up four dedicated obspy github repository clones and run the jobs
+in parallel:
+
+```bash
+$ git clone git://github.com/obspy/obspy /path/to/obspy/dockers/test-pr
+$ git clone git://github.com/obspy/obspy /path/to/obspy/dockers/test-branches
+$ git clone git://github.com/obspy/obspy /path/to/obspy/dockers/deb-pr
+$ git clone git://github.com/obspy/obspy /path/to/obspy/dockers/deb-branches
+$ OBSPY_DOCKER_BASE=/path/to/obspy/dockers/test-pr ./cronjob_docker_tests.sh -t -p &
+$ OBSPY_DOCKER_BASE=/path/to/obspy/dockers/test-branches ./cronjob_docker_tests.sh -t -b &
+$ OBSPY_DOCKER_BASE=/path/to/obspy/dockers/deb-pr ./cronjob_docker_tests.sh -d -p &
+$ OBSPY_DOCKER_BASE=/path/to/obspy/dockers/deb-branches ./cronjob_docker_tests.sh -d -b &
+```
+
 # Release Lifecycle Information
 
  * Debian: https://wiki.debian.org/DebianReleases#Production_Releases
