@@ -21,13 +21,10 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D  # NOQA
 from matplotlib.cm import get_cmap
 
-from obspy.core.util.base import get_matplotlib_version
+from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.event.source import farfield
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import beach
-
-
-MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0):

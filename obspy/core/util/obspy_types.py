@@ -455,6 +455,10 @@ class ObsPyException(Exception):
     pass
 
 
+class ObsPyReadingError(ObsPyException):
+    pass
+
+
 class ZeroSamplingRate(ObsPyException):
     pass
 

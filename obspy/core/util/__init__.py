@@ -28,7 +28,9 @@ from obspy.core.util.base import (ALL_MODULES, DEFAULT_MODULES,
                                   NATIVE_BYTEORDER, NETWORK_MODULES,
                                   NamedTemporaryFile, _read_from_plugin,
                                   create_empty_data_chunk, get_example_file,
-                                  get_matplotlib_version, get_script_dir_name)
+                                  get_script_dir_name, MATPLOTLIB_VERSION,
+                                  SCIPY_VERSION, NUMPY_VERSION,
+                                  BASEMAP_VERSION, CARTOPY_VERSION)
 from obspy.core.util.misc import (BAND_CODE, CatchOutput, complexify_string,
                                   guess_delta, loadtxt, score_at_percentile,
                                   to_int_or_zero)

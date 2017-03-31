@@ -278,3 +278,11 @@ $ OBSPY_DOCKER_BASE=/path/to/obspy/dockers/test-branches ./cronjob_docker_tests.
 $ OBSPY_DOCKER_BASE=/path/to/obspy/dockers/deb-pr ./cronjob_docker_tests.sh -d -p &
 $ OBSPY_DOCKER_BASE=/path/to/obspy/dockers/deb-branches ./cronjob_docker_tests.sh -d -b &
 ```
+
+# Release Lifecycle Information
+
+ * Debian: https://wiki.debian.org/DebianReleases#Production_Releases
+ * Ubuntu: https://wiki.ubuntu.com/Releases#Current
+ * openSUSE: https://en.opensuse.org/Lifetime#Maintained_Regular_distributions
+ * CentOS: https://en.wikipedia.org/wiki/CentOS#End-of-support_schedule
+ * Fedora: https://fedoraproject.org/wiki/Releases#Current_Supported_Releases

@@ -145,13 +145,31 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+from obspy import ObsPyException, ObsPyReadingError
 
-class InternalMSEEDReadingError(Exception):
+
+class ObsPyMSEEDError(ObsPyException):
     pass
 
 
-class InternalMSEEDReadingWarning(UserWarning):
+class ObsPyMSEEDReadingError(ObsPyMSEEDError, ObsPyReadingError):
     pass
+
+
+class InternalMSEEDError(ObsPyMSEEDError):
+    pass
+
+
+class InternalMSEEDWarning(UserWarning):
+    pass
+
+
+class ObsPyMSEEDFilesizeTooSmallError(ObsPyMSEEDReadingError):
+    pass
+
+
+__all__ = ['InternalMSEEDError', 'InternalMSEEDWarning', 'ObsPyMSEEDError',
+           'ObsPyMSEEDFilesizeTooSmallError']
 
 
 if __name__ == '__main__':

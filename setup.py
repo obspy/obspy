@@ -85,7 +85,7 @@ EXTERNAL_LIBS = False
 KEYWORDS = [
     'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'beamforming', 'cross correlation', 'database', 'dataless',
-    'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
+    'Dataless SEED', 'win', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
     'focal mechanism', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
     'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
@@ -113,6 +113,7 @@ INSTALL_REQUIRES = [
     'requests']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur', 'pyproj', 'pep8-naming'],
+    # arclink decryption also works with: pycrypto, cryptography, pycryptodome
     'arclink': ['m2crypto'],
     'io.shapefile': ['gdal'],
     }
@@ -142,7 +143,7 @@ ENTRY_POINTS = {
         'SLIST = obspy.io.ascii.core',
         'PICKLE = obspy.core.stream',
         'CSS = obspy.io.css.core',
-        'DATAMARK = obspy.io.datamark.core',
+        'WIN = obspy.io.win.core',
         'KINEMETRICS_EVT = obspy.io.kinemetrics.core',
         'GSE1 = obspy.io.gse2.core',
         'GSE2 = obspy.io.gse2.core',
@@ -187,9 +188,9 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.css.core:_is_nnsa_kb_core',
         'readFormat = obspy.io.css.core:_read_nnsa_kb_core',
         ],
-    'obspy.plugin.waveform.DATAMARK': [
-        'isFormat = obspy.io.datamark.core:_is_datamark',
-        'readFormat = obspy.io.datamark.core:_read_datamark',
+    'obspy.plugin.waveform.WIN': [
+        'isFormat = obspy.io.win.core:_is_win',
+        'readFormat = obspy.io.win.core:_read_win',
         ],
     'obspy.plugin.waveform.KINEMETRICS_EVT': [
         'isFormat = obspy.io.kinemetrics.core:is_evt',

@@ -50,6 +50,7 @@ import numpy as np
 from obspy import Stream, read, UTCDateTime
 from obspy.core.stream import _headonly_warning_msg
 from obspy.core.util.misc import BAND_CODE
+from obspy.io.mseed import ObsPyMSEEDFilesizeTooSmallError
 
 
 SDS_FMTSTR = os.path.join(
@@ -111,7 +112,7 @@ class Client(object):
             raise IOError(msg)
         self.sds_root = sds_root
         self.sds_type = sds_type
-        self.format = format
+        self.format = format and format.upper()
         self.fileborder_seconds = fileborder_seconds
         self.fileborder_samples = fileborder_samples
 
@@ -170,8 +171,15 @@ class Client(object):
             channel=channel, starttime=starttime, endtime=endtime,
             sds_type=sds_type)
         for full_path in full_paths:
-            st += read(full_path, format=self.format, starttime=starttime,
-                       endtime=endtime, sourcename=seed_pattern, **kwargs)
+            try:
+                st += read(full_path, format=self.format, starttime=starttime,
+                           endtime=endtime, sourcename=seed_pattern, **kwargs)
+            except ObsPyMSEEDFilesizeTooSmallError:
+                # just ignore small MSEED files, in use cases working with
+                # near-realtime data these are usually just being created right
+                # at request time, e.g. when fetching current data right after
+                # midnight
+                continue
 
         # make sure we only have the desired data, just in case the file
         # contents do not match the expected SEED id
@@ -389,10 +397,18 @@ class Client(object):
                 network=network, station=station, location=location,
                 channel=channel, time=time, sds_type=sds_type)
             if os.path.isfile(filename):
-                st = read(filename, format=self.format, headonly=True,
-                          sourcename=seed_pattern)
-                st = st.select(network=network, station=station,
-                               location=location, channel=channel)
+                try:
+                    st = read(filename, format=self.format, headonly=True,
+                              sourcename=seed_pattern)
+                except ObsPyMSEEDFilesizeTooSmallError:
+                    # just ignore small MSEED files, in use cases working with
+                    # near-realtime data these are usually just being created
+                    # right at request time, e.g. when fetching current data
+                    # right after midnight
+                    st = None
+                else:
+                    st = st.select(network=network, station=station,
+                                   location=location, channel=channel)
                 if st:
                     break
             time -= 24 * 3600

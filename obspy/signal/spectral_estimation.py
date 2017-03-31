@@ -38,15 +38,14 @@ from obspy import Stream, Trace, UTCDateTime, __version__
 from obspy.core import Stats
 from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory
-from obspy.core.util import get_matplotlib_version, AttribDict
+from obspy.core.util import AttribDict
+from obspy.core.util.base import MATPLOTLIB_VERSION
 from obspy.imaging.cm import obspy_sequential
 from obspy.io.xseed import Parser
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.util import prev_pow_2
 from obspy.signal.invsim import paz_to_freq_resp, evalresp
 
-
-MATPLOTLIB_VERSION = get_matplotlib_version()
 
 dtiny = np.finfo(0.0).tiny
 

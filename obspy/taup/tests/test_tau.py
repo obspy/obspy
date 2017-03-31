@@ -25,6 +25,10 @@ import obspy.geodetics.base as geodetics
 DATA = os.path.join(os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe()))), "data", "TauP_test_data")
 
+# checks every x. entry in _compare_against_ak135_tables_kennet - set to 1 in
+# order to check the full table - a factor > 20 does not improve speed much
+SPEEDUP_FACTOR = 20
+
 
 class TauPyModelTestCase(unittest.TestCase):
     """
@@ -682,7 +686,8 @@ class TauPyModelTestCase(unittest.TestCase):
         """
         values = self._read_ak135_test_files(filename)
         m = TauPyModel(model="ak135")
-        for value in values:
+        start = np.random.randint(SPEEDUP_FACTOR)
+        for value in values[start::SPEEDUP_FACTOR]:
             # Parameters are not strictly defined for a non-existent travel
             # time.
             if value["time"] == 0.0:

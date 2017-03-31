@@ -11,9 +11,9 @@ import random
 import shutil
 import sys
 import unittest
-import warnings
 from datetime import datetime
 from struct import pack, unpack
+import warnings
 
 import numpy as np
 
@@ -1135,6 +1135,32 @@ class MSEEDUtilTestCase(unittest.TestCase):
             self.assertEqual(sum(flags.values()), 4)
             self.assertEqual(flags['glitches'], 2)
             self.assertEqual(flags['suspect_time_tag'], 2)
+
+    def test_regression_segfault_when_hooking_up_libmseeds_logging(self):
+        filename = os.path.join(self.path, 'data',
+                                'wrong_blockette_numbers_specified.mseed')
+        # Read it once - that hooks up the logging.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            _read_mseed(filename)
+        self.assertTrue(len(w), 1)
+        self.assertEqual(
+            w[0].message.args[0],
+            "SK_MODS__HHZ_D: Warning: Number of blockettes in fixed header "
+            "(2) does not match the number parsed (1)")
+        # The hooks used to still be set up in libmseed but the
+        # corresponding Python function have been garbage collected which
+        # caused a segfault.
+        #
+        # This test passes if there is no seg-fault.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            util.get_flags(filename)
+        self.assertTrue(len(w), 1)
+        self.assertEqual(
+            w[0].message.args[0],
+            "SK_MODS__HHZ_D: Warning: Number of blockettes in fixed header "
+            "(2) does not match the number parsed (1)")
 
     def _check_values(self, file_bfr, trace_id, record_numbers, expected_bytes,
                       reclen):

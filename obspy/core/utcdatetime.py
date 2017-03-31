@@ -228,7 +228,26 @@ class UTCDateTime(object):
         elif len(args) == 1 and len(kwargs) == 0:
             value = args[0]
             if isinstance(value, UTCDateTime):
-                self._ns = value._ns
+                # ugly workaround to be able to unpickle UTCDateTime objects
+                # that were pickled on ObsPy <1.1
+                try:
+                    self._ns = value._ns
+                except AttributeError:
+                    # work around floating point accuracy/rounding issue on
+                    # Py3.3, see
+                    # https://travis-ci.org/obspy/obspy/jobs/208941376#L751
+                    # timestamp is 1251073203.0399999618 so when converting to
+                    # integer nanosecond based UTCDateTime this should be
+                    # rounded to 1251073203040000 nanoseconds.. but on Py3.3 it
+                    # ends up as 1251073203039999, so we manually set
+                    # microseconds with correct rounding without artifacts from
+                    # floating point precision. see #1664
+                    timestamp_seconds = int(value.__dict__['timestamp'])
+                    timestamp_microseconds = round(
+                        (value.__dict__['timestamp'] % 1.0) * 1e6)
+                    dt_ = datetime.datetime.utcfromtimestamp(timestamp_seconds)
+                    dt_ = dt_.replace(microsecond=timestamp_microseconds)
+                    self._from_datetime(dt_)
                 return
             # check types
             try:

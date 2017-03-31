@@ -26,14 +26,12 @@ from matplotlib import rcParams
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
     _pitick2latex, PolesZerosResponseStage)
+from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
-from obspy.core.util.testing import ImageComparison, get_matplotlib_version
+from obspy.core.util.testing import ImageComparison
 from obspy.signal.invsim import evalresp
 from obspy.io.xseed import Parser
-
-
-MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 class ResponseTestCase(unittest.TestCase):

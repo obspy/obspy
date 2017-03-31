@@ -260,13 +260,20 @@ void log_error(int errcode, int offset) {
 }
 
 
+// Helper function to connect libmseed's logging and error messaging to Python
+// functions.
+void setupLogging(void (*diag_print) (char*),
+                  void (*log_print) (char*)) {
+    ms_loginit(log_print, "INFO: ", diag_print, "ERROR: ");
+}
+
+
 // Function that reads from a MiniSEED binary file from a char buffer and
 // returns a LinkedIDList.
 LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                  unpack_data, int reclen, flag verbose, flag details,
-                 int header_byteorder, long long (*allocData) (int, char),
-                 void (*diag_print) (char*), void (*log_print) (char*))
+                 int header_byteorder, long long (*allocData) (int, char))
 {
     int retcode = 0;
     int retval = 0;
@@ -300,14 +307,6 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     LinkedRecordList *recordCurrent = NULL;
     int datasize;
     int record_count = 0;
-
-    // A negative verbosity suppresses as much as possible.
-    if (verbose < 0) {
-        ms_loginit(&empty_print, NULL, &empty_print, NULL);
-    }
-    else {
-        ms_loginit(log_print, "INFO: ", diag_print, "ERROR: ");
-    }
 
     if (header_byteorder >= 0) {
         // Enforce little endian.
@@ -376,12 +375,14 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             msr_free(&msr);
             break;
         }
-        // msr_parse() returns > 0 if a data record has been detected but the buffer either has not enough
-        // data (this cannot happen with ObsPy's logic) or the last record has no Blockette 1000 and it cannot
-        // determine the record length because there is no next record (this can happen in ObsPy) - handle that
-        // case by just calling msr_parse() with an explicit record length set.
+        // Data missing at the end.
+        else if (retcode > 0 && retcode >= (buflen - offset)) {
+            log_error(MS_ENDOFFILE, offset);
+            msr_free(&msr);
+            break;
+        }
+        // Lacking Blockette 1000.
         else if ( retcode > 0 && retcode < (buflen - offset)) {
-
             // Check if the remaining bytes can exactly make up a record length.
             int r_bytes = buflen - offset;
             float exp = log10((float)r_bytes) / log10(2.0);

@@ -19,13 +19,11 @@ from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               read_events, Magnitude, FocalMechanism, Arrival)
 from obspy.core.event.source import farfield
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import get_basemap_version, get_cartopy_version
+from obspy.core.util import BASEMAP_VERSION, CARTOPY_VERSION
 from obspy.core.util.testing import ImageComparison
 from obspy.core.event.base import QuantityError
 
-BASEMAP_VERSION = get_basemap_version()
 
-CARTOPY_VERSION = get_cartopy_version()
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
     HAS_CARTOPY = True
 else:
@@ -589,7 +587,7 @@ class CatalogBasemapTestCase(unittest.TestCase):
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(method='basemap', outfile=ic.name, projection='local',
-                     resolution='i', continent_fill_color='0.3',
+                     resolution='l', continent_fill_color='0.3',
                      color='date', colormap='gist_heat')
 
 

@@ -27,7 +27,7 @@ import numpy as np
 
 import obspy
 from obspy.core.compatibility import mock
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, SCIPY_VERSION
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.mass_downloader import (domain, Restrictions,
                                                 MassDownloader)
@@ -414,6 +414,8 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             channels, key="location", priorities=None)
         self.assertEqual(filtered_channels, channels)
 
+    @unittest.skipIf(SCIPY_VERSION < [0, 12],
+                     'scipy version 0.12 or higher needed.')
     def test_spherical_nearest_neighbour(self):
         """
         Tests the spherical kd-tree.
@@ -1812,6 +1814,8 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             "Station "
         ))
 
+    @unittest.skipIf(SCIPY_VERSION < [0, 12],
+                     'scipy version 0.12 or higher needed.')
     def test_station_list_nearest_neighbour_filter(self):
         """
         Test the filtering based on geographical distance.
@@ -2573,6 +2577,8 @@ class DownloadHelperTestCase(unittest.TestCase):
     @mock.patch("os.makedirs")
     @mock.patch("logging.Logger.info")
     @mock.patch("logging.Logger.warning")
+    @unittest.skipIf(SCIPY_VERSION < [0, 12],
+                     'scipy version 0.12 or higher needed.')
     def test_download_method(self, _log_w, _log_p, _patch_makedirs,
                              patch_dl_mseed, patch_dl_stationxml,
                              patch_get_avail, patch_discover):

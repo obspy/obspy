@@ -38,7 +38,7 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util import create_empty_data_chunk, get_matplotlib_version
+from obspy.core.util import create_empty_data_chunk, MATPLOTLIB_VERSION
 from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
 from obspy.imaging.util import (ObsPyAutoDateFormatter, _id_key, _timestring)
 
@@ -49,7 +49,6 @@ DATELOCATOR_WARNING_MSG = (
     "AutoDateLocator was unable to pick an appropriate interval for this date "
     "range. It may be necessary to add an interval value to the "
     "AutoDateLocator's intervald dictionary.")
-MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 class WaveformPlotting(object):

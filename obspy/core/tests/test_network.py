@@ -23,14 +23,10 @@ from matplotlib import rcParams
 import obspy
 from obspy import UTCDateTime, read_inventory
 from obspy.core.compatibility import mock
-from obspy.core.util.base import get_basemap_version, get_cartopy_version
-from obspy.core.util.testing import ImageComparison, get_matplotlib_version
+from obspy.core.util import (
+    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION)
+from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory import Channel, Network, Response, Station
-
-
-BASEMAP_VERSION = get_basemap_version()
-CARTOPY_VERSION = get_cartopy_version()
-MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 class NetworkTestCase(unittest.TestCase):
@@ -309,7 +305,7 @@ class NetworkBasemapTestCase(unittest.TestCase):
         with ImageComparison(self.image_dir, 'network_location-basemap3.png',
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
-            net.plot(method='basemap', projection='local', resolution='i',
+            net.plot(method='basemap', projection='local', resolution='l',
                      size=13**2, outfile=ic.name)
 
 

@@ -594,6 +594,7 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
+
         # concatenate list of IDs into string
         if 'trace_ids' in kwargs:
             if isinstance(kwargs['trace_ids'], list):
