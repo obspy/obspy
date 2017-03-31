@@ -489,6 +489,32 @@ class boolheader(intheader):
                 except SacHeaderError:
                     pass
 
+class enumheader(intheader):
+    def __get__(self, instance, instance_type):
+        value = super(enumheader, self).__get__(instance, instance_type)
+        # value is int or None
+        if value is None:
+            name = None
+        elif _ut.is_valid_enum_int(self.name, value):
+            name = HD.ENUM_NAMES[value]
+        else:
+            msg = """Unrecognized enumerated value {} for header "{}".
+                     See .header for allowed values.""".format(value, hdr)
+            warnings.warn(msg)
+            name = None
+        return name
+
+    def __set__(self, instance, value):
+        if value is None:
+            value = HD.INULL
+        elif _ut.is_valid_enum_str(self.name, value):
+            value = HD.ENUM_VALS[value]
+        else:
+            msg = 'Unrecognized enumerated value "{}" for header "{}"'
+            raise ValueError(msg.format(value, self.name))
+        super(enumheader, self).__set__(instance, value)
+
+
 # enumerated values (stored as ints, represented by strings)
 def _enumgetter(hdr):
     def get_enum(self):
@@ -896,23 +922,17 @@ class SACTrace(object):
     nevid = intheader('nevid')
     npts = property(_make_data_func(len, 'npts'), doc=HD.DOC['npts'])
     nwfid = intheader('nwfid')
-    iftype = property(_enumgetter('iftype'), _enumsetter('iftype'),
-                      doc=HD.DOC['iftype'])
-    idep = property(_enumgetter('idep'), _enumsetter('idep'),
-                    doc=HD.DOC['idep'])
-    iztype = property(_enumgetter('iztype'), _set_iztype, doc=HD.DOC['iztype'])
+    iftype = enumheader('iftype')
+    idep = enumheader('idep')
+    iztype = enumheader('iztype')
     iinst = intheader('iinst')
     istreg = intheader('istreg')
     ievreg = intheader('ievreg')
-    ievtyp = property(_enumgetter('ievtyp'), _enumsetter('ievtyp'),
-                      doc=HD.DOC['ievtyp'])
+    ievtyp = enumheader('ievtyp')
     iqual = intheader('iqual')
-    isynth = property(_enumgetter('isynth'), _enumsetter('isynth'),
-                      doc=HD.DOC['isynth'])
-    imagtyp = property(_enumgetter('imagtyp'), _enumsetter('imagtyp'),
-                       doc=HD.DOC['imagtyp'])
-    imagsrc = property(_enumgetter('imagsrc'), _enumsetter('imagsrc'),
-                       doc=HD.DOC['imagsrc'])
+    isynth = enumheader('isynth')
+    imagtyp = enumheader('imagtyp')
+    imagsrc = enumheader('imagsrc')
     leven = boolheader('leven')
     lpspol = boolheader('lpspol')
     lovrok = boolheader('lovrok')
