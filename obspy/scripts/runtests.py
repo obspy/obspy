@@ -541,7 +541,7 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
               server="tests.obspy.org", all=False, timeit=False,
               interactive=False, slowest=0, exclude=[], tutorial=False,
               hostname=HOSTNAME, ci_url=None, pr_url=None, no_vcr=False,
-              offline=False):
+              offline=False, vcr_record=False):
     """
     This function executes ObsPy test suites.
 
@@ -565,6 +565,10 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
     :param offline: Whether to forcedly not use internet connection, i.e. skip
         all tests that would use the internet even if internet connection is
         available.
+    :type vcr_record: bool
+    :param vcr_record: Whether to use vcr in recording mode, i.e. instead of
+        using existing vcr tapes record new ones, overwriting the existing vcr
+        tapes.
     """
     if not tests:
         tests = copy.copy(ALL_MODULES)
@@ -577,6 +581,19 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
                "network interactions but rather using current internet "
                "connection.")
         warnings.warn(msg)
+
+    # check if new vcr tapes should be recorded and set vcr flag accordingly
+    if vcr_record:
+        if sys.version_info.major != 3:
+            msg = "Can only record new VCR tapes on Python 3"
+            raise Exception(msg)
+        if no_vcr:
+            msg = ("Can not use option 'vcr_record' together with option "
+                   "'no_vcr'")
+            raise ValueError(msg)
+        import vcr
+        vcr.VCRSystem.overwrite = True
+
     # set whether to use vcr with pre-recorded vcr tapes or not
     obspy._no_vcr = no_vcr
     if offline:
@@ -705,6 +722,9 @@ def run(argv=None, interactive=True):
                              'option, tests that use vcr tapes will use '
                              'internet connection if possible or they will be '
                              'skipped if no internet connection is available.')
+    others.add_argument('--vcr-record', action='store_true', dest='vcr_record',
+                        help='do not use pre-recorded vcr tapes but instead '
+                             'record new vcr tapes.')
     others.add_argument('--offline', action='store_true', dest='offline',
                         help='do not use internet connection for network '
                              'tests even if available, i.e. force-skip tests '
@@ -723,6 +743,7 @@ def run(argv=None, interactive=True):
                              'corresponding test).')
 
     args = parser.parse_args(argv)
+
     # set correct verbosity level
     if args.verbose:
         verbosity = 2
@@ -773,7 +794,7 @@ def run(argv=None, interactive=True):
                      exclude=args.exclude, tutorial=args.tutorial,
                      hostname=args.hostname, ci_url=args.ci_url,
                      pr_url=args.pr_url, no_vcr=args.no_vcr,
-                     offline=args.offline)
+                     offline=args.offline, vcr_record=args.vcr_record)
 
 
 def main(argv=None, interactive=True):
