@@ -181,8 +181,8 @@ class Parser(object):
             elif os.path.isfile(data):
                 if is_resp(data):
                     # RESP filename
-                    with open(data, 'rb') as f:
-                        data = f.read().encode('utf-8')
+                    with open(data, 'r') as f:
+                        data = f.read()
                     self._parse_resp(data)
                     return
                 else:
@@ -811,7 +811,7 @@ class Parser(object):
 
         # Find all stage1 blockettes in sensor
         stage1 = list()
-        for b_id, b_list in sensor.blockettes.iteritems():
+        for b_id, b_list in sensor.blockettes.items():
             for b in b_list:
                 try:
                     if b.stage_sequence_number == 1:

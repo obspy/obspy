@@ -570,7 +570,7 @@ class ParserTestCase(unittest.TestCase):
                                        'RESP.XX.NR008..HHZ.130.1.100')
         for filename in (sts2_resp_file, rt130_resp_file):
             with open(filename, 'rt') as f:
-                data = f.read().encode('utf-8')
+                data = f.read()
             p = Parser(data)
             p.get_resp()
 
@@ -583,13 +583,13 @@ class ParserTestCase(unittest.TestCase):
         dirty_fields = ['B054F05', 'B054F06', 'B053F05', 'B053F06']
         ret = list()
 
-        for line in string.split('\n'):
+        for line in string.split(b'\n'):
+            line = line.decode('ascii')
             if line[:7] not in dirty_fields:
-                ret.append(line)
+                line = line.upper()
             else:
-                cleaned = line.split('-')[0].upper()
-                ret.append(cleaned)
-
+                line = line.split('-')[0].upper()
+            ret.append(line)
         return ret
 
     def test_resp_round_trip(self):
@@ -605,7 +605,7 @@ class ParserTestCase(unittest.TestCase):
         seed_list = self.clean_unit_string(resp_from_seed)
 
         # make parser from resp made above and make a resp from it
-        resp_p = Parser(resp_from_seed)
+        resp_p = Parser(resp_from_seed.decode('ascii'))
         resp_from_resp = resp_p.get_resp()[0][1]
         resp_from_resp.seek(0)
         resp_from_resp = resp_from_resp.read()
@@ -624,7 +624,7 @@ class ParserTestCase(unittest.TestCase):
                                        'RESP.XX.NR008..HHZ.130.1.100')
         for filename in (sts2_resp_file, rt130_resp_file):
             with open(filename, 'rt') as f:
-                data = f.read().encode('utf-8')
+                data = f.read()
             p = Parser()
             p._parse_resp(data)
             p.get_resp()
