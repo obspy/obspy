@@ -327,16 +327,18 @@ class ImageComparison(NamedTemporaryFile):
             import matplotlib.style as mstyle
             self.style = mstyle.context(style or 'classic')
 
-        # Higher tolerance for older matplotlib versions. This is pretty
-        # high but the pictures are at least guaranteed to be generated and
-        # look (roughly!) similar. Otherwise testing is just a pain and
-        # frankly not worth the effort!
+        # Adjust the tolerance based on the matplotlib version. This works
+        # well enough and otherwise testing is just a pain.
+        #
+        # The test images were generated with matplotlib tag 291091c6eb267
+        # which is after
         if adjust_tolerance:
+            # Really old versions.
             if MATPLOTLIB_VERSION < [1, 3, 0]:
                 self.tol *= 30
             # 1.3 + 1.4 have slightly different text positioning mostly.
             elif [1, 3, 0] <= MATPLOTLIB_VERSION < [1, 5, 0]:
-                self.tol *= 15 MATPLOTLIB_VERSION < [1, 5, 0]:
+                self.tol *= 15
             # 1.5 should be pretty much identical to >= 2.0.1. This case is
             # mostly to document this behaviour.
             elif [1, 5, 0] <= MATPLOTLIB_VERSION < [2, 0, 0]:
@@ -348,7 +350,6 @@ class ImageComparison(NamedTemporaryFile):
             # quite high.
             elif [2, 0, 0] <= MATPLOTLIB_VERSION < [2, 0, 1]:
                 self.tol *= 10
-
 
     def __enter__(self):
         """
