@@ -101,13 +101,13 @@ install:
       elif [[ "${PYTHON_VERSION:0:1}" == '3' ]]; then
         NUMPY_VERSION=1.10.4
         SCIPY_VERSION=0.17.0
-        MPL_VERSION=1.5.1
+        MPL_VERSION=2.0.0
         BASEMAP="basemap=1.0.7"
         PYPROJ="pyproj"
       else
         NUMPY_VERSION=1.10.4
         SCIPY_VERSION=0.17.0
-        MPL_VERSION=1.5.1
+        MPL_VERSION=2.0.0
         BASEMAP="basemap=1.0.7"
         PYPROJ="pyproj"
       fi
