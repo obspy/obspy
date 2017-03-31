@@ -263,25 +263,21 @@ class SACTraceTestCase(unittest.TestCase):
             # setting value
             setattr(sac, hdr, floatval)
             self.assertAlmostEqual(sac._hf[HD.FLOATHDRS.index(hdr)], floatval)
-
             # getting value
             self.assertAlmostEqual(getattr(sac, hdr), floatval)
-
             # setting None produces null value
             setattr(sac, hdr, None)
             self.assertAlmostEqual(sac._hf[HD.FLOATHDRS.index(hdr)], HD.FNULL)
-
             # getting existing null values return None
             sac._hf[HD.FLOATHDRS.index(hdr)] = HD.FNULL
             self.assertIsNone(getattr(sac, hdr))
-
             # __doc__ on class and instance
             self.assertEqual(getattr(SACTrace, hdr).__doc__, HD.DOC.get(hdr))
             # self.assertEqual(getattr(sac, hdr).__doc__, HD.DOC.get(hdr]))
             # TODO: I'd like to find a way for this to work:-(
             # TODO: factor __doc__ tests out into one test for all headers
 
-    def test_relativetimeheader(self):
+    def test_relative_time_headers(self):
         """
         Setting relative time headers will work with UTCDateTime objects.
         """
@@ -300,7 +296,7 @@ class SACTraceTestCase(unittest.TestCase):
             self.assertAlmostEqual(sac._hf[HD.FLOATHDRS.index(hdr)],
                                    offset_float, places=5)
 
-    def test_intheader(self):
+    def test_int_headers(self):
         """
         Test standard SACTrace float headers using the floatheader descriptor.
         """
@@ -314,23 +310,18 @@ class SACTraceTestCase(unittest.TestCase):
             # setting value
             setattr(sac, hdr, intval)
             self.assertEqual(sac._hi[HD.INTHDRS.index(hdr)], intval)
-
             # getting value
             self.assertEqual(getattr(sac, hdr), intval)
-
             # setting None produces null value
             setattr(sac, hdr, None)
             self.assertEqual(sac._hi[HD.INTHDRS.index(hdr)], HD.INULL)
-
             # getting existing null values return None
             sac._hi[HD.INTHDRS.index(hdr)] = HD.INULL
             self.assertIsNone(getattr(sac, hdr))
-
             # __doc__ on class and instance
             self.assertEqual(getattr(SACTrace, hdr).__doc__, HD.DOC.get(hdr))
-            # self.assertEqual(getattr(sac, hdr).__doc__, HD.DOC.get(hdr]))
 
-    def test_boolheader(self):
+    def test_bool_headers(self):
         sac = SACTrace._from_arrays()
         for hdr in ('leven', 'lpspol', 'lovrok', 'lcalda'):
             # getting existing null values return None
@@ -355,6 +346,45 @@ class SACTraceTestCase(unittest.TestCase):
                     setattr(sac, enumhdr, accepted_val)
                     self.assertEqual(sac._hi[HD.INTHDRS.index(enumhdr)],
                                      accepted_int)
+
+    def test_string_headers(self):
+        sac = SACTrace._from_arrays()
+        for idx, hdr in enumerate(('kstnm', 'khole', 'ko', 'ka', 'kt0', 'kt1',
+                                   'kt2', 'kt3', 'kt4', 'kt5', 'kt6', 'kt7',
+                                   'kt8', 'kt9', 'kf', 'kuser0', 'kuser1',
+                                   'kuser2', 'kcmpnm', 'knetwk', 'kdatrd',
+                                   'kinst')):
+
+            strval = "{:8d}".format(idx)
+
+            setattr(sac, hdr, strval)
+            self.assertEqual(sac._hs[HD.STRHDRS.index(hdr)], strval)
+
+            self.assertEqual(getattr(sac, hdr), strval)
+
+            sac._hs[HD.STRHDRS.index(hdr)] = HD.SNULL
+            self.assertIsNone(getattr(sac, hdr))
+
+            self.assertEqual(getattr(SACTrace, hdr).__doc__, HD.DOC.get(hdr))
+
+    def test_kevnm(self):
+        sac = SACTrace._from_arrays()
+        # test kevnm (kevnm + kevnm2)
+        kevnm = '12345678'
+        kevnm2 = '90123456'
+
+        setattr(sac, 'kevnm', kevnm + kevnm2)
+        self.assertEqual(sac._hs[HD.STRHDRS.index('kevnm')], kevnm)
+        self.assertEqual(sac._hs[HD.STRHDRS.index('kevnm2')], kevnm2)
+        self.assertEqual(getattr(sac, 'kevnm'), kevnm + kevnm2)
+
+        sac._hs[HD.STRHDRS.index('kevnm')] = HD.SNULL
+        sac._hs[HD.STRHDRS.index('kevnm2')] = HD.SNULL
+        self.assertIsNone(getattr(sac, 'kevnm'))
+
+        self.assertEqual(getattr(SACTrace, 'kevnm').__doc__,
+                         HD.DOC.get('kevnm'))
+
 
 def suite():
     return unittest.makeSuite(SACTraceTestCase, 'test')
