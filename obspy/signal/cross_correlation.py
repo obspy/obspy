@@ -421,6 +421,7 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
             ax2.set_xlabel("%.2f at %.3f seconds correction" % (coeff, -dt))
             ax2.set_ylabel("correlation coefficient")
             ax2.set_ylim(-1, 1)
+            ax2.set_xlim(cc_t[0], cc_t[-1])
             ax2.legend(loc="lower right", prop={'size': "x-small"})
             # plt.legend(loc="lower left")
             if filename:
