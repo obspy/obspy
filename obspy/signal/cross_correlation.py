@@ -87,8 +87,6 @@ def correlate(a, b, shift, demean=True, normalize=True, domain='freq'):
     :param int shift: Number of samples to shift for cross correlation.
         The cross-correlation will consist of ``2*shift+1`` or
         ``2*shift`` samples. The sample with zero shift will be in the middle.
-    :param type: Different cross-correlation functions might be introduced in
-         future with the help of the type keyword. Do not use it at the moment.
     :param bool demean: Demean data beforehand.
     :param bool normalize: Normalize cross-correlation. A perfect
         correlation will correspond to the value 1.
@@ -100,7 +98,8 @@ def correlate(a, b, shift, demean=True, normalize=True, domain='freq'):
     :return: cross-correlation function.
 
     To calculate shift and value of the maximum of the returned
-    cross-correlation function use `~obspy.signal.cross_correlation.xcorr_max`.
+    cross-correlation function use
+    :func:`~obspy.signal.cross_correlation.xcorr_max`.
 
     .. note::
 
@@ -197,7 +196,8 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         ``full_xcorr=True``.
 
     .. note::
-       Please use the `correlate` function for new code.
+       Please use the :func:`~obspy.signal.cross_correlation.correlate`
+       function for new code.
 
     .. note::
        As shift_len gets higher the window supporting the cross correlation
