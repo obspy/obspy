@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 import unittest
 
-from obspy.core.util import add_doctests, add_unittests
+from obspy.core.util.testing import add_doctests, add_unittests
 
 
 MODULE_NAME = "obspy.io.quakeml"

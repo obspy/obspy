@@ -36,5 +36,4 @@ from obspy.core.util.misc import (BAND_CODE, CatchOutput, complexify_string,
                                   to_int_or_zero)
 from obspy.core.util.obspy_types import (ComplexWithUncertainties, Enum,
                                          FloatWithUncertainties)
-from obspy.core.util.testing import add_doctests, add_unittests
 from obspy.core.util.version import get_git_version as _get_version_string

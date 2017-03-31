@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 import unittest
 
-from obspy.core.util import add_unittests, add_doctests
+from obspy.core.util.testing import add_unittests, add_doctests
 
 
 MODULE_NAME = "obspy.geodetics"

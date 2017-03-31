@@ -29,7 +29,6 @@ import warnings
 
 import numpy as np
 from lxml import etree
-from vcr import vcr, VCRSystem
 
 import obspy
 from obspy.core.util.base import (
@@ -51,6 +50,7 @@ orig_sleep = time.sleep
 
 # monkey patch DocTestCase
 def runTest(self):  # NOQA
+    from vcr import vcr, VCRSystem
     # check for internet connection
     has_internet = getattr(obspy, '_has_internet', None)
     if has_internet is None:
