@@ -23,7 +23,7 @@ targetservice=<station|dataselect>
 format=<request|text>
 includeoverlaps=<true|false>
 
-active-options 	 	::  
+active-options 	 	::
 [channel-options] [map-constraints] [time-constraints]
   channel-options 	::
   net=<network>
@@ -52,7 +52,7 @@ active-options 	 	::
     endafter=<date>
     updatedafter=<date>]
 
-passive-options 	::  
+passive-options 	::
     includerestricted=<true|false>
     includeavailability=<true|false>
     matchtimeseries=<true|false>
@@ -62,83 +62,34 @@ passive-options 	::
     minimumlength=<number>
 '''
 
-
-class DatacenterRequestDetails(object):
-    def __init__(self, ID):
-        self.ID = ID
-        self.url={}
-        self.request=[]
-
-    def add_url(self, service, url):
-        self.url[service]=url
-
-    def add_request(self, request_line):
-        self.request.append(request_line) 
-        
-    def __str__(self):
-        ss = str(self.ID) + "\n"
-        for ur in self.url.keys():
-            ss += ur + " at " + self.url[ur] +'\n'
-        for r in self.request:
-            ss += str(r) + '\n'
-        return ss
-
-
-class request_line(object):
-    def isEmpty(self):
+class RequestLine(object):
+    def is_empty(self):
         return self.line == ""
-    
-    def isDatacenter(self):
+
+    def is_datacenter(self):
         return self.line.startswith('DATACENTER=')
 
-    def isParam(self):
+    def is_param(self):
         # true for datacenter, services, and parameter_list
         return '=' in self.line
 
-    def isRequest(self):
-        return len(self.line.split())==6 # and test field values?
+    def is_request(self):
+        return len(self.line.split()) == 6 # and test field values?
 
-    def isService(self):
+    def is_service(self):
         # parse param_name
-        return self.isParam() and self.line.split("=")[0].isupper() and not self.isDatacenter()
+        return self.is_param() and self.line.split("=")[0].isupper() and not self.is_datacenter()
 
-        
     def __init__(self, line):
         self.line = line.strip()
-    
+
     def __repr__(self):
         return self.line
-    
+
     def __str__(self):
         return self.line
 
-class ResponseManager:
-    common_parameters=[]
-    datacenter_ids = [] #strings
-    datacenters={} # DatacenterRequestDetails
-    active_id=""
-    def __str__(self):
-        ss = str(ResponseManager.common_parameters)
-        ss += str(ResponseManager.datacenter_ids)
-        for id in ResponseManager.datacenter_ids:
-            ss += str(ResponseManager.datacenters[id])
-            ss +='\n'
-        return ss
-
-    def parse(self, full_federator_response):
-        state = PreParse();
-
-        for line in full_federator_response.splitlines():
-            subject = request_line(line)
-            state = state.next(subject)
-            state.parse(subject)
-
-        # now, we have:
-        #  datacenter_ids : list of datacenter codes, in order received
-        #  datacenters : dictionary of DatacenterRequestDetails, by id
-        FedResponses = [FederatorResponse(dc, common_parameters) for dc in datacenters]
-
-class State:
+class ParserState(object):
     '''
     parser states: PREPARSE, PARAMLIST, EMPTY_LINE, DATACENTER, SERVICE, REQUEST, DONE
     PREPARSE -> [PARAMLIST | EMPTY_LINE | DATACENTER]
@@ -149,122 +100,233 @@ class State:
     REQUEST -> [REQUEST | EMPTY_LINE | DONE ]
     '''
 
-    def parse(self, line) :
-        assert 0, "undefined state"
-        pass
+    @staticmethod
+    def parse(line, this_response):
+        '''abstract'''
+        raise NotImplementedError, "ParserState.parse()"
 
-    def next(self, line):
-        pass
+    @staticmethod
+    def next(line):
+        '''abstract'''
+        raise NotImplementedError, "ParserState.next()"
 
-class PreParse(State):
-    def parse(self, line) :
-        pass
+class PreParse(ParserState):
+    '''Initial ParserState'''
 
-    def next(self, line):
-        if line.isEmpty():
-            return EmptyItem() #EMPTY_LINE
-        elif line.isDatacenter():
-            return DatacenterItem() #DATACENTER
-        elif line.isParam():
-            return ParameterItem() #PARAMLIST
+    @staticmethod
+    def parse(line, this_response):
+        return this_response
+
+    @staticmethod
+    def next(line):
+        if line.is_empty():
+            return EmptyItem #EMPTY_LINE
+        elif line.is_datacenter():
+            return DatacenterItem #DATACENTER
+        elif line.is_param():
+            return ParameterItem #PARAMLIST
         else:
-            return State
+            return ParserState
 
-class ParameterItem(State):
-    def parse(self, line) :
-        ResponseManager.common_parameters.append(line)
+class ParameterItem(ParserState):
+    '''handle a parameter'''
+
+    @staticmethod
+    def parse(line, this_response):
+        '''Parse: param=value'''
+        this_response.add_common_parameters(line)
+        return this_response
 
     def next(self, line):
-        if line.isEmpty():
+        if line.is_empty():
             return EmptyItem() #EMPTY_LINE
-        elif line.isParam():
+        elif line.is_param():
             return self
         else:
-            assert 0, "expected another paramter or an empty line"
-            return State()
+            raise RuntimeError, "Parameter should be followed by another parameter or an empty line"
 
-class EmptyItem(State):
-    def parse(self, line) :
-        pass
+class EmptyItem(ParserState):
+    '''handle an empty line'''
 
-    def next(self, line):
-        if line.isEmpty():
-            return self #no state change
-        elif line.isDatacenter():
-            return DatacenterItem() #DATACENTER
+    @staticmethod
+    def parse(line, this_response):
+        return this_response
+    
+    @staticmethod
+    def next(line):
+        if line.is_empty():
+            return EmptyItem #no state change
+        elif line.is_datacenter():
+            return DatacenterItem #DATACENTER
         else:
-            assert 0, "expected either a datacenter or an empty line"
-            return State()
+            raise RuntimeError, "expected either a DATACENTER or another empty line"
 
-class DatacenterItem(State):
-    def parse(self, line) :
-        _, rest =  str(line).split('=')
+class DatacenterItem(ParserState):
+    '''handle data center'''
+
+    @staticmethod
+    def parse(line, this_response):
+        '''Parse: DATACENTER=id,http://url...'''
+        _, rest = str(line).split('=')
         active_id, url = rest.split(',')
-        ResponseManager.active_id = active_id
-        ResponseManager.datacenter_ids.append(active_id)
-        ResponseManager.datacenters[active_id]=DatacenterRequestDetails(active_id)
-        ResponseManager.datacenters[active_id].add_url(active_id,url)
+        this_response = FederatedResponseParser.new_federated_response(active_id)
+        print("new response", this_response)
+        this_response.add_service("DATACENTER", url)
+        return this_response
 
-    def next(self, line):
-        if line.isService():
-            return ServiceItem()
+    @staticmethod
+    def next(line):
+        if line.is_service():
+            return ServiceItem
         else:
-            assert 0, "expected a service" 
-            return State()
+            raise RuntimeError, "DATACENTER line should be followed by a service"
 
-class ServiceItem(State):
-    def parse(self, line) :
-        '''parsing something like: DATASELECTSERVICE=http://service.iris.edu/fdsnws/dataselect/1/'''
+class ServiceItem(ParserState):
+    '''handle service description'''
+
+    @staticmethod
+    def parse(line, this_response):
+        '''Parse: SERICENAME=http://service.url/'''
         svc_name, url = str(line).split('=')
-        ResponseManager.datacenters[ResponseManager.active_id].add_url(svc_name, url)
-        pass
+        this_response.add_service(svc_name, url)
+        return this_response
 
-    def next(self, line):
-        if line.isService():
-            return self
-        elif line.isRequest():
-            return RequestItem()
+    @staticmethod
+    def next(line):
+        if line.is_service():
+            return ServiceItem
+        elif line.is_request():
+            return RequestItem
         else:
-            assert 0, "expected either a request or another service"
+            raise RuntimeError, "Service desc. should be followed by a request or another service"
+
+class RequestItem(ParserState):
+    '''handle request lines'''
+
+    @staticmethod
+    def parse(line, this_response):
+        '''Parse: NT STA LC CHA YYYY-MM-DDThh:mm:ss YY-MM-DDThh:mm:ss'''
+        this_response.add_request_lines(line)
+        return this_response
+
+    @staticmethod
+    def next(line):
+        if line.is_request():
+            return RequestItem
+        elif line.is_empty():
+            return EmptyItem
+        else:
+            raise RuntimeError, "Requests should be followed by another request or an empty line"
+
+class FederatedResponseParser(object):
+    '''Iterate through stream, returning FederatedResponse objects for each datacenter'''
+    def __init__(self, stream_iterator):
+        self.stream_iterator = stream_iterator() # stream_iterator feeds us line by line
+        self.state = PreParse
+        self.n_datacenters = 0
+        self.fed_req = None
+        self.line = None
+
+    def __iter__(self):
+        return self
+        
+    def next(self):
+        request_was_processed = False
+        print("A Next...", self.state)
+        if self.line is not None:
+            print("returned to NEXT")
+            self.fed_req = self.state.parse(self.line, self.fed_req) #left before processing
+            self.line = None
+        print(self.state)
+        for self.line in self.stream_iterator:
+            self.line = RequestLine(self.line)
+            self.state = self.state.next(self.line)
+            print(self.state)
+            if request_was_processed and (self.state is not RequestItem):
+                return self.fed_req
+            self.fed_req = self.state.parse(self.line, self.fed_req)
+            if self.state == RequestItem:
+                request_was_processed = True
+        raise StopIteration
             
-class RequestItem(State):
-    def parse(self, line) :
-        # add request to this service's requests. example:
-        # x[IRISDMC].request.add('AR AJAR -- EHZ 2015-01-01T00:00:00 2016-01-02T00:00:00')
-        ResponseManager.datacenters[ResponseManager.active_id].add_request(line)
+    __next__ = next
 
-    def next(self, line):
-        if line.isRequest():
-            return self
-        elif line.isEmpty():
-            return EmptyItem()
+    @staticmethod
+    def new_federated_response(ds_id):
+        return FederatedResponse(ds_id)
+
+    @staticmethod
+    def new_federated_response(ds_id):
+        return FederatedResponse(ds_id)
+
+class FederatedResponse(object):
+    '''
+    >>> fed_resp = FederatedResponse("IRISDMC")
+    >>> fed_resp.add_common_parameters(["lat=50","lon=20","level=cha"])
+    >>> fed_resp.add_service("STATIONSERVICE","http://service.iris.edu/fdsnws/station/1/")
+    >>> fed_resp.add_request_line("AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
+    >>> fed_resp.add_request_line("AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
+    >>> print(fed_resp.request_text("STATIONSERVICE"))
+
+    level=cha
+    AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    '''
+
+    ok_parameters = {"DATASELECTSERVICE":["longestonly"],
+                        "STATIONSERVICE":["level"]}
+
+    def __init__(self, datacenter_id):
+        self.datacenter_id = datacenter_id
+        self.common_parameters = []
+        self.services = {}
+        self.request_lines = []
+
+    def add_service(self, service_name, service_url):
+        self.services[service_name] = service_url
+
+    def add_common_parameters(self, common_parameters):
+        if isinstance(common_parameters, str):
+            self.common_parameters.append(common_parameters)
+        elif isinstance(common_parameters, RequestLine):
+            self.request_lines.append(str(common_parameters))
         else:
-            assert 0, "expected either another request or an empty line"
+            self.common_parameters.extend(common_parameters)
 
+    def add_request_lines(self, request_lines):
+        if isinstance(request_lines, str):
+            self.request_lines.append(request_lines)
+        elif isinstance(request_lines, RequestLine):
+            self.request_lines.append(str(request_lines))
+        else:
+            self.request_lines.extend(request_lines)
 
+    def add_request_line(self, request_line):
+        self.request_lines.append(request_line)
 
+    def request_text(self, target_service):
+        reply = self.selected_common_parameters(target_service)
+        reply.extend(self.request_lines)
+        return "\n".join(reply)
 
-class FederatorResponse(object):
-    def __init__(code, url, params, service_dict, requests):
-        self.datacenter_code = code# IGNV, IRIS, etc
-        self.datacenter_url = url# http://ds.iris.edu
-        self.service_urls = service_dict
-        self.parameter_details = params
-        self.request_details = requests
-
-    def __str__(self):
-        return ( 'Datacenter: {datacenter_code}'
-
-        )
-    def request_text(self):
-        #put request lines into a good format
-        #maybe put subset of params
-        r  = "\n".join(str(i) for i in self.request_details)
-        p = "\n".join(str(i) for i in self.parameter_details)
-        return ('{r}\n{p}').format(r=r, p=p)
-
-
+    def selected_common_parameters(self, target_service):
+        reply = []
+        for good in FederatedResponse.ok_parameters[target_service]:
+            reply.extend([c for c in self.common_parameters if c.startswith(good + "=")])
+        return reply
+    
+    def __repr__(self):
+        return self.datacenter_id + "\n" + self.request_text("STATIONSERVICE")
+        
 # main function
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)
+    #import doctest
+    #doctest.testmod(exclude_empty=True)
+
+    import requests
+    url='https://service.iris.edu/irisws/fedcatalog/1/'
+    r=requests.get(url + "query", params={"net":"A*","sta":"OK*","cha":"*HZ"}, verify=False)
+
+    frp = FederatedResponseParser(r.iter_lines)
+    for n in frp:
+        print(n.request_text("STATIONSERVICE"))
