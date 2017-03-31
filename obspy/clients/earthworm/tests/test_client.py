@@ -17,7 +17,7 @@ from obspy.clients.earthworm import Client
 
 
 # unix timestamp where this test has been recorded via vcr - needs to be set
-# to newer timestamp if recorded later again or executing without vcr
+# to newer timestamp if recorded later again
 VCR_TIMESTAMP = 1485568123.7079487
 NO_VCR_TIMESTAMP = UTCDateTime()
 # determine which timestamp to use
