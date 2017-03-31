@@ -50,6 +50,9 @@ from .wadl_parser import WADLParser
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
 
 
+PARAMETER_TYPE_NAME_MAPPING = {'unicode': 'str', 'long': 'int'}
+
+
 class CustomRedirectHandler(urllib_request.HTTPRedirectHandler):
     """
     Custom redirection handler to also do it for POST requests which the
@@ -1227,8 +1230,10 @@ class Client(object):
 
             def _param_info_string(name):
                 param = self.services[service][name]
-                name = "%s (%s)" % (name, param["type"].__name__.replace(
-                    'new', ''))
+                param_type = param["type"].__name__.replace('new', '')
+                param_type = PARAMETER_TYPE_NAME_MAPPING.get(param_type,
+                                                             param_type)
+                name = "%s (%s)" % (name, param_type)
                 req_def = ""
                 if param["required"]:
                     req_def = "Required Parameter"
