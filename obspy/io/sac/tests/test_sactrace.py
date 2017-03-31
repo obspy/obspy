@@ -304,7 +304,7 @@ class SACTraceTestCase(unittest.TestCase):
         """
         Test standard SACTrace float headers using the floatheader descriptor.
         """
-        sac = SACTrace()
+        sac = SACTrace._from_arrays()
         for hdr in ('nzyear', 'nzjday', 'nzhour', 'nzmin', 'nzsec', 'nzmsec',
                     'nvhdr', 'norid', 'nevid', 'nwfid', 'iinst', 'istreg',
                     'ievreg', 'iqual', 'unused23'):
@@ -331,7 +331,7 @@ class SACTraceTestCase(unittest.TestCase):
             # self.assertEqual(getattr(sac, hdr).__doc__, HD.DOC.get(hdr]))
 
     def test_boolheader(self):
-        sac = SACTrace()
+        sac = SACTrace._from_arrays()
         for hdr in ('leven', 'lpspol', 'lovrok', 'lcalda'):
             # getting existing null values return None
             sac._hi[HD.INTHDRS.index(hdr)] = HD.INULL
@@ -342,6 +342,19 @@ class SACTraceTestCase(unittest.TestCase):
                 self.assertEqual(sac._hi[HD.INTHDRS.index(hdr)], int(boolval))
                 self.assertEqual(getattr(sac, hdr), bool(boolval))
 
+    def test_enumheader(self):
+        sac = SACTrace._from_arrays()
+        for enumhdr, accepted_vals in HD.ACCEPTED_VALS.items():
+            if enumhdr != 'iqual':
+                for accepted_val in accepted_vals:
+                    accepted_int = HD.ENUM_VALS[accepted_val]
+
+                    sac._hi[HD.INTHDRS.index(enumhdr)] = accepted_int
+                    self.assertEqual(getattr(sac, enumhdr), accepted_val)
+
+                    setattr(sac, enumhdr, accepted_val)
+                    self.assertEqual(sac._hi[HD.INTHDRS.index(enumhdr)],
+                                     accepted_int)
 
 def suite():
     return unittest.makeSuite(SACTraceTestCase, 'test')
