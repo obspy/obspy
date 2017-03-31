@@ -497,11 +497,11 @@ MSTraceSeg._fields_ = [
     ('samprate', C.c_double),         # Nominal sample rate (Hz)
     ('samplecnt', C.c_int64),         # Number of samples in trace coverage
     ('datasamples', C.c_void_p),      # Data samples, 'numsamples' of type
-    # 'sampletype'
+                                      # 'sampletype'
     ('numsamples', C.c_int64),        # Number of data samples in datasamples
     ('sampletype', C.c_char),         # Sample type code: a, i, f, d
     ('prvtptr', C.c_void_p),          # Private pointer for general use, unused
-    # by libmseed
+                                      # by libmseed
     ('prev', C.POINTER(MSTraceSeg)),  # Pointer to previous segment
     ('next', C.POINTER(MSTraceSeg))   # Pointer to next segment
 ]
@@ -519,12 +519,12 @@ MSTraceID._fields_ = [
     ('channel', C.c_char * 11),       # Channel designation, NULL terminated
     ('dataquality', C.c_char),        # Data quality indicator
     ('srcname', C.c_char * 45),       # Source name (Net_Sta_Loc_Chan_Qual),
-    # NULL terminated
+                                      # NULL terminated
     ('type', C.c_char),               # Trace type code
     ('earliest', C.c_longlong),       # Time of earliest sample
     ('latest', C.c_longlong),         # Time of latest sample
     ('prvtptr', C.c_void_p),          # Private pointer for general use, unused
-    # by libmseed
+                                      # by libmseed
     ('numsegments', C.c_int),         # Number of segments for this ID
     ('first',
      C.POINTER(MSTraceSeg)),          # Pointer to first of list of segments
@@ -626,13 +626,13 @@ __clibmseed.mst_init.argtypes = [C.POINTER(MSTrace)]
 __clibmseed.mst_init.restype = C.POINTER(MSTrace)
 
 __clibmseed.mst_free.argtypes = [C.POINTER(C.POINTER(MSTrace))]
-__clibmseed.mst_free.restype = C.c_void_p
+__clibmseed.mst_free.restype = None
 
 __clibmseed.mst_initgroup.argtypes = [C.POINTER(MSTraceGroup)]
 __clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
 
 __clibmseed.mst_freegroup.argtypes = [C.POINTER(C.POINTER(MSTraceGroup))]
-__clibmseed.mst_freegroup.restype = C.c_void_p
+__clibmseed.mst_freegroup.restype = None
 
 __clibmseed.msr_init.argtypes = [C.POINTER(MSRecord)]
 __clibmseed.msr_init.restype = C.POINTER(MSRecord)
@@ -688,8 +688,8 @@ __clibmseed.msr_decode_steim1.restype = C.c_int
 # this is completely different to C.c_char_p which is a string
 __clibmseed.mst_packgroup.argtypes = [
     C.POINTER(MSTraceGroup), C.CFUNCTYPE(
-        C.c_void_p, C.POINTER(C.c_char), C.c_int, C.c_void_p),
-    C.c_void_p, C.c_int, C.c_short, C.c_short, C.POINTER(C.c_int), C.c_short,
+        None, C.POINTER(C.c_char), C.c_int, C.c_void_p),
+    C.c_void_p, C.c_int, C.c_short, C.c_short, C.POINTER(C.c_int64), C.c_short,
     C.c_short, C.POINTER(MSRecord)]
 __clibmseed.mst_packgroup.restype = C.c_int
 
@@ -725,11 +725,11 @@ __clibmseed.setupLogging.argtpyes = [
     C.c_int8,
     C.CFUNCTYPE(C.c_void_p, C.c_char_p),
     C.CFUNCTYPE(C.c_void_p, C.c_char_p)]
-__clibmseed.setupLogging.restype = C.c_void_p
+__clibmseed.setupLogging.restype = None
 
 
 __clibmseed.msr_free.argtypes = [C.POINTER(C.POINTER(MSRecord))]
-__clibmseed.msr_free.restype = C.c_void_p
+__clibmseed.msr_free.restype = None
 
 
 __clibmseed.mstl_init.restype = C.POINTER(MSTraceList)
@@ -737,7 +737,7 @@ __clibmseed.mstl_free.argtypes = [C.POINTER(C.POINTER(MSTraceList)), C.c_int]
 
 
 __clibmseed.lil_free.argtypes = [C.POINTER(LinkedIDList)]
-__clibmseed.lil_free.restype = C.c_void_p
+__clibmseed.lil_free.restype = None
 
 
 __clibmseed.allocate_bytes.argtypes = (C.c_int,)
@@ -777,7 +777,7 @@ class _LibmseedWrapper(object):
 
         def _wrapper(*args):
             # Collect exceptions. They cannot be raised in the callback as
-            # they could never be caught then. They are collected an raised
+            # they could never be caught then. They are collected and raised
             # later on.
             _errs = []
             _warns = []
@@ -792,12 +792,12 @@ class _LibmseedWrapper(object):
                     _warns.append(msg)
 
             diag_print = \
-                C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_error_or_warning)
+                C.CFUNCTYPE(None, C.c_char_p)(log_error_or_warning)
 
             def log_message(msg):
                 if self.verbose:
                     print(msg[6:].strip())
-            log_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_message)
+            log_print = C.CFUNCTYPE(None, C.c_char_p)(log_message)
 
             # Hookup libmseed's logging facilities to it's Python callbacks.
             self.lib.setupLogging(diag_print, log_print)
