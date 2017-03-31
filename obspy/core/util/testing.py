@@ -331,7 +331,11 @@ class ImageComparison(NamedTemporaryFile):
         # well enough and otherwise testing is just a pain.
         #
         # The test images were generated with matplotlib tag 291091c6eb267
-        # which is after
+        # which is after https://github.com/matplotlib/matplotlib/issues/7905
+        # has been fixed.
+        #
+        # Thus test images should accurate for matplotlib >= 2.0.1 anf
+        # fairly accurate for matplotlib 1.5.x.
         if adjust_tolerance:
             # Really old versions.
             if MATPLOTLIB_VERSION < [1, 3, 0]:
@@ -339,10 +343,11 @@ class ImageComparison(NamedTemporaryFile):
             # 1.3 + 1.4 have slightly different text positioning mostly.
             elif [1, 3, 0] <= MATPLOTLIB_VERSION < [1, 5, 0]:
                 self.tol *= 15
-            # 1.5 should be pretty much identical to >= 2.0.1. This case is
-            # mostly to document this behaviour.
+            # A few plots with mpl 1.5 have ticks and axis slightl shifted.
+            # This is especially true for ticks with exponential numbers.
+            # Thus the tolerance also has to be a bit higher here.
             elif [1, 5, 0] <= MATPLOTLIB_VERSION < [2, 0, 0]:
-                self.tol *= 1
+                self.tol *= 4.5
             # Matplotlib 2.0.0 has a bug with the tick placement. This is
             # fixed in 2.0.1 but the tolerance for 2.0.0 has to be much
             # higher. 10 is an empiric value. The tick placement potentially
