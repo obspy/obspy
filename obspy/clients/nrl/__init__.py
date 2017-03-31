@@ -25,7 +25,7 @@ to access the always up-to-date NRL database hosted at IRIS.
 The sensor and datalogger tree structure can be interactively explored in an
 interactive Python shell:
 
->>> print(nrl)
+>>> print(nrl) # doctest: +SKIP
 NRL library at http://ds.iris.edu/NRL/
   Sensors: 24 manufacturers
     'CEA-DASE', 'CME', 'Chaparral Physics', 'Eentec', 'GEObit',
@@ -39,29 +39,29 @@ NRL library at http://ds.iris.edu/NRL/
     'Generic', 'GeoBIT', 'Geodevice', 'Geotech', 'Guralp',
     'Kinemetrics', 'Nanometrics', 'Omnirecs', 'Quanterra', 'REF TEK',
     'SolGeo'
->>> print(nrl.sensors)
+>>> print(nrl.sensors) # doctest: +SKIP
 Select the sensor manufacturer (24 items):
   'CEA-DASE', 'CME', 'Chaparral Physics', 'Eentec', 'GEObit', 'GEOsig'
   'Generic', 'Geo Space/OYO', 'Geodevice', 'Geotech', 'Guralp',
   'Hyperion', 'IESE', 'Kinemetrics', 'LaHusen', 'Lennartz', 'Metrozet'
   'Nanometrics', 'REF TEK', 'Sercel/Mark Products', 'Silicon Audio'
   'SolGeo', 'Sprengnether (now Eentec)', 'Streckeisen'
->>> print(nrl.sensors['Streckeisen'])
+>>> print(nrl.sensors['Streckeisen']) # doctest: +SKIP
 Select the Streckeisen sensor model (5 items):
   'STS-1', 'STS-2', 'STS-2.5', 'STS-3', 'STS-5A'
->>> print(nrl.sensors['Streckeisen']['STS-1'])
+>>> print(nrl.sensors['Streckeisen']['STS-1']) # doctest: +SKIP
 Select the corner period mode for this STS-1 (2 items):
   '20 seconds', '360 seconds'
->>> print(nrl.sensors['Streckeisen']['STS-1']['360 seconds'])
+>>> print(nrl.sensors['Streckeisen']['STS-1']['360 seconds']) # doctest: +SKIP
 (u'STS-1, 360 s mode, 2400 V/m/s',
  u'http://ds.iris.edu/NRL/sensors/streckeisen/RESP.XX.NS088..BHZ.STS1.360.2400')  # NOQA
 
 Response objects can be extracted by providing the datalogger and sensor keys:
 
->>> response = nrl.get_response(
+>>> response = nrl.get_response( # doctest: +SKIP
 ...     sensor_keys=['Streckeisen', 'STS-1', '360 seconds'],
 ...     datalogger_keys=['REF TEK', 'RT 130 & 130-SMA', '1', '200'])
->>> print(response)
+>>> print(response) # doctest: +SKIP
 Channel Response
     From M/S () to COUNTS ()
     Overall Sensitivity: 1.50991e+09 defined at 0.020 Hz
