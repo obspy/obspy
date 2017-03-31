@@ -334,12 +334,21 @@ class ImageComparison(NamedTemporaryFile):
         if adjust_tolerance:
             if MATPLOTLIB_VERSION < [1, 3, 0]:
                 self.tol *= 30
-            # Matplotlib 1.5 changes the text positioning a bit. This
-            # results in many tests failing. Instead of changing all baseline
-            # images (which we'll have to do for mpl 2.0 in any case) we
-            # just up the tolerance a bit.
-            elif MATPLOTLIB_VERSION[:2] == [1, 5]:
-                self.tol *= 17
+            # 1.3 + 1.4 have slightly different text positioning mostly.
+            elif [1, 3, 0] <= MATPLOTLIB_VERSION < [1, 5, 0]:
+                self.tol *= 15 MATPLOTLIB_VERSION < [1, 5, 0]:
+            # 1.5 should be pretty much identical to >= 2.0.1. This case is
+            # mostly to document this behaviour.
+            elif [1, 5, 0] <= MATPLOTLIB_VERSION < [2, 0, 0]:
+                self.tol *= 1
+            # Matplotlib 2.0.0 has a bug with the tick placement. This is
+            # fixed in 2.0.1 but the tolerance for 2.0.0 has to be much
+            # higher. 10 is an empiric value. The tick placement potentially
+            # influences the axis locations and then the misfit is really
+            # quite high.
+            elif [2, 0, 0] <= MATPLOTLIB_VERSION < [2, 0, 1]:
+                self.tol *= 10
+
 
     def __enter__(self):
         """
