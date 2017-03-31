@@ -104,6 +104,11 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
             AutoDateFormatter.__init__(self, *args, **kwargs)
         else:
             super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
+        # Reset the scale to make it reproducible across matplotlib versions.
+        self.scaled = {}
+        self.scaled[1.0] = '%b %d %Y'
+        self.scaled[30.0] = '%b %Y'
+        self.scaled[365.0] = '%Y'
         self.scaled[1. / 24.] = FuncFormatter(format_hour_minute)
         self.scaled[1. / (24. * 60.)] = \
             FuncFormatter(format_hour_minute_second)
