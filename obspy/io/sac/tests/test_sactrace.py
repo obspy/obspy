@@ -349,41 +349,48 @@ class SACTraceTestCase(unittest.TestCase):
 
     def test_string_headers(self):
         sac = SACTrace._from_arrays()
-        for idx, hdr in enumerate(('kstnm', 'khole', 'ko', 'ka', 'kt0', 'kt1',
-                                   'kt2', 'kt3', 'kt4', 'kt5', 'kt6', 'kt7',
-                                   'kt8', 'kt9', 'kf', 'kuser0', 'kuser1',
-                                   'kuser2', 'kcmpnm', 'knetwk', 'kdatrd',
-                                   'kinst')):
+        for hdr in ('kstnm', 'khole', 'ko', 'ka', 'kt0', 'kt1', 'kt2', 'kt3',
+                    'kt4', 'kt5', 'kt6', 'kt7', 'kt8', 'kt9', 'kf', 'kuser0',
+                    'kuser1', 'kuser2', 'kcmpnm', 'knetwk', 'kdatrd',
+                    'kinst'):
 
-            strval = "{:8d}".format(idx)
+            strval = hdr
 
+            # normal get/set
             setattr(sac, hdr, strval)
-            self.assertEqual(sac._hs[HD.STRHDRS.index(hdr)], strval)
-
+            self.assertEqual(sac._hs[HD.STRHDRS.index(hdr)].decode(), strval)
             self.assertEqual(getattr(sac, hdr), strval)
 
+            # null get/set
             sac._hs[HD.STRHDRS.index(hdr)] = HD.SNULL
             self.assertIsNone(getattr(sac, hdr))
 
+            # get/set value too long
+            too_long = "{}_1234567890".format(hdr)
+            setattr(sac, hdr, too_long)
+            self.assertEqual(sac._hs[HD.STRHDRS.index(hdr)].decode(),
+                             too_long[:8])
+            self.assertEqual(getattr(sac, hdr), too_long[:8].strip())
+
+            # docstring
             self.assertEqual(getattr(SACTrace, hdr).__doc__, HD.DOC.get(hdr))
 
     def test_kevnm(self):
         sac = SACTrace._from_arrays()
         # test kevnm (kevnm + kevnm2)
-        kevnm = '12345678'
-        kevnm2 = '90123456'
+        kevnm = '1234567890123456'
+        kevnm1, kevnm2 = kevnm[:8], kevnm[8:]
 
-        setattr(sac, 'kevnm', kevnm + kevnm2)
-        self.assertEqual(sac._hs[HD.STRHDRS.index('kevnm')], kevnm)
-        self.assertEqual(sac._hs[HD.STRHDRS.index('kevnm2')], kevnm2)
-        self.assertEqual(getattr(sac, 'kevnm'), kevnm + kevnm2)
+        sac.kevnm = kevnm
+        self.assertEqual(sac._hs[HD.STRHDRS.index('kevnm')].decode(), kevnm1)
+        self.assertEqual(sac._hs[HD.STRHDRS.index('kevnm2')].decode(), kevnm2)
+        self.assertEqual(sac.kevnm, kevnm)
 
         sac._hs[HD.STRHDRS.index('kevnm')] = HD.SNULL
         sac._hs[HD.STRHDRS.index('kevnm2')] = HD.SNULL
-        self.assertIsNone(getattr(sac, 'kevnm'))
+        self.assertIsNone(sac.kevnm)
 
-        self.assertEqual(getattr(SACTrace, 'kevnm').__doc__,
-                         HD.DOC.get('kevnm'))
+        self.assertEqual(SACTrace.kevnm.__doc__, HD.DOC.get('kevnm'))
 
 
 def suite():
