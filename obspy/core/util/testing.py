@@ -230,17 +230,14 @@ def add_doctests(testsuite, module_name):
             parts = root[module_path_len:].split(os.sep)[1:]
             _module_name = ".".join([module_name] + parts + [file[:-3]])
             kwargs = {}
-            try:
-                _module = __import__(_module_name,
-                                     fromlist=[native_str("obspy")])
-                # vcr-based FDSN tests rely on service discovery cache being
-                # loaded before the test from a saved pickle
-                if _module.__name__.startswith('obspy.clients.fdsn'):
-                    kwargs['setUp'] = _fdsn_doctest_setUp
-                    kwargs['tearDown'] = _fdsn_doctest_tearDown
-                testsuite.addTest(doctest.DocTestSuite(_module, **kwargs))
-            except ValueError:
-                pass
+            _module = __import__(_module_name,
+                                 fromlist=[native_str("obspy")])
+            # vcr-based FDSN tests rely on service discovery cache being
+            # loaded before the test from a saved pickle
+            if _module.__name__.startswith('obspy.clients.fdsn'):
+                kwargs['setUp'] = _fdsn_doctest_setUp
+                kwargs['tearDown'] = _fdsn_doctest_tearDown
+            testsuite.addTest(doctest.DocTestSuite(_module, **kwargs))
 
 
 def write_png(arr, filename):

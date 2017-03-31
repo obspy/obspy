@@ -38,7 +38,8 @@ Inventory created at 2013-12-07T18:00:42.878000Z
         Stations (1):
             BW.RJOB (Jochberg, Bavaria, BW-Net)
         Channels (3):
-            BW.RJOB..EHE, BW.RJOB..EHN, BW.RJOB..EHZ
+            BW.RJOB..EHZ, BW.RJOB..EHN, BW.RJOB..EHE
+
 
 The file format in principle is autodetected. However, the autodetection uses
 the official StationXML XSD schema and unfortunately many real world files
@@ -65,14 +66,13 @@ attached to the channels as an attribute.
 >>> print(net)  # doctest: +NORMALIZE_WHITESPACE
 Network BW (BayernNetz)
     Station Count: None/None (Selected/Total)
-    None -
-    Access: None
+    -- - --
+    Access: UNKNOWN
     Contains:
         Stations (1):
             BW.RJOB (Jochberg, Bavaria, BW-Net)
         Channels (3):
             BW.RJOB..EHZ, BW.RJOB..EHN, BW.RJOB..EHE
-
 
 >>> sta = net[0]
 >>> print(sta)  # doctest: +NORMALIZE_WHITESPACE
@@ -88,16 +88,16 @@ Station RJOB (Jochberg, Bavaria, BW-Net)
 >>> cha = sta[0]
 >>> print(cha)  # doctest: +NORMALIZE_WHITESPACE
 Channel 'EHZ', Location ''
-   Timerange: 2007-12-17T00:00:00.000000Z - --
+   Time range: 2007-12-17T00:00:00.000000Z - --
    Latitude: 47.74, Longitude: 12.80, Elevation: 860.0 m, Local Depth: 0.0 m
    Azimuth: 0.00 degrees from north, clockwise
    Dip: -90.00 degrees down from horizontal
    Channel types: TRIGGERED, GEOPHYSICAL
    Sampling Rate: 200.00 Hz
-   Sensor: Streckeisen STS-2/N seismometer
+   Sensor (Description): Streckeisen STS-2/N seismometer (None)
    Response information available
 
->>> print(cha.response)  # doctest: +NORMALIZE_WHITESPACE + ELLIPSIS
+>>> print(cha.response)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
 Channel Response
    From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
    Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
