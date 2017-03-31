@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Test suite for the sc3ml reader.
+Test suite for the arclink inventory reader.
 
 Modified after obspy.io.stationXML
     > obspy.obspy.io.stationxml.core.py
@@ -30,7 +30,7 @@ class ArclinkInventoryTestCase(unittest.TestCase):
 
     def setUp(self):
         """
-        Read example stationXML/sc3ml format to Inventory
+        Read example stationXML and arclink format to Inventory
         """
         self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
@@ -91,42 +91,42 @@ class ArclinkInventoryTestCase(unittest.TestCase):
         for channel in channels:
             arclink_cha = arclink_inv.select(channel=channel)
             station_cha = station_inv.select(channel=channel)
-            for arc, sc3ml in zip(arclink_cha[0][0], station_cha[0][0]):
-                self.assertEqual(arc.code, sc3ml.code)
-                self.assertEqual(arc.latitude, sc3ml.latitude)
-                self.assertEqual(arc.longitude, sc3ml.longitude)
-                self.assertEqual(arc.depth, sc3ml.depth)
-                self.assertEqual(arc.azimuth, sc3ml.azimuth)
-                self.assertEqual(arc.dip, sc3ml.dip)
-                self.assertEqual(arc.sample_rate, sc3ml.sample_rate)
-                self.assertEqual(arc.start_date, sc3ml.start_date)
-                self.assertEqual(arc.end_date, sc3ml.end_date)
-                self.assertEqual(arc.storage_format, sc3ml.storage_format)
+            for arc, st_xml in zip(arclink_cha[0][0], station_cha[0][0]):
+                self.assertEqual(arc.code, st_xml.code)
+                self.assertEqual(arc.latitude, st_xml.latitude)
+                self.assertEqual(arc.longitude, st_xml.longitude)
+                self.assertEqual(arc.depth, st_xml.depth)
+                self.assertEqual(arc.azimuth, st_xml.azimuth)
+                self.assertEqual(arc.dip, st_xml.dip)
+                self.assertEqual(arc.sample_rate, st_xml.sample_rate)
+                self.assertEqual(arc.start_date, st_xml.start_date)
+                self.assertEqual(arc.end_date, st_xml.end_date)
+                self.assertEqual(arc.storage_format, st_xml.storage_format)
 
                 cdisps = "clock_drift_in_seconds_per_sample"
-                self.assertEqual(getattr(arc, cdisps), getattr(sc3ml, cdisps))
+                self.assertEqual(getattr(arc, cdisps), getattr(st_xml, cdisps))
 
                 # Compare datalogger element
-                for arc_log, sc3ml_log in zip(arc.data_logger.__dict__.items(),
-                                              sc3ml.data_logger.__dict__
-                                              .items()):
-                    self.assertEqual(arc_log, sc3ml_log)
+                for arc_el, st_xml_el in zip(arc.data_logger.__dict__.items(),
+                                             st_xml.data_logger.__dict__
+                                             .items()):
+                    self.assertEqual(arc_el, st_xml_el)
 
                 # Compare sensor element
-                for arc_sen, sc3ml_sen in zip(arc.sensor.__dict__.items(),
-                                              sc3ml.sensor.__dict__.items()):
+                for arc_sen, st_xml_sen in zip(arc.sensor.__dict__.items(),
+                                               st_xml.sensor.__dict__.items()):
                     # Skip the type; set for stationXML not for ArclinkXML
                     if arc_sen[0] == 'type':
                         continue
-                    self.assertEqual(arc_sen, sc3ml_sen)
+                    self.assertEqual(arc_sen, st_xml_sen)
 
                 # Same number of response stages
                 self.assertEqual(len(arc.response.response_stages),
-                                 len(sc3ml.response.response_stages))
+                                 len(st_xml.response.response_stages))
 
                 # Check the response stages
                 for arc_resp, sta_resp in zip(arc.response.response_stages,
-                                              sc3ml.response.response_stages):
+                                              st_xml.response.response_stages):
 
                     self.assertEqual(arc_resp.stage_gain, sta_resp.stage_gain)
                     self.assertEqual(arc_resp.stage_sequence_number,

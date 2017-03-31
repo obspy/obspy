@@ -54,7 +54,6 @@ def _is_inventory_xml(path_or_file_object):
 
     :param path_or_file_object: File name or file like object.
     """
-
     if hasattr(path_or_file_object, "tell") and hasattr(path_or_file_object,
                                                         "seek"):
         current_position = path_or_file_object.tell()
@@ -161,7 +160,6 @@ def _read_inventory_xml(path_or_file_object):
 
 
 def _attr2obj(element, attribute, convert):
-
     """
     Reads text from attribute in element
 
@@ -169,7 +167,6 @@ def _attr2obj(element, attribute, convert):
     :param attribute: name of attribute to be read
     :param convert: intrinsic function (e.g. int, str, float)
     """
-
     try:
         if element.get(attribute) is None:
             return None
@@ -181,7 +178,6 @@ def _attr2obj(element, attribute, convert):
 
 
 def _tag2obj(element, tag, convert):
-
     """
     Reads text from tag in element
 
@@ -198,7 +194,6 @@ def _tag2obj(element, tag, convert):
 
 
 def _read_network(inventory_root, net_element):
-
     """
     Reads the network structure
 
@@ -206,7 +201,6 @@ def _read_network(inventory_root, net_element):
     :param net_element: network element to be read
     :param _ns: namespace
     """
-
     # Get the network code as attribute (e.g. <network code="GB">)
     network = obspy.core.inventory.Network(net_element.get("code"))
 
@@ -231,7 +225,6 @@ def _read_network(inventory_root, net_element):
 
 
 def _get_restricted_status(element):
-
     """
     get the restricted_status (boolean)
     true is evaluated to 'open' and false to 'closed'
@@ -239,7 +232,6 @@ def _get_restricted_status(element):
 
     :param element: xmltree element status is extracted from
     """
-
     restricted_status = _attr2obj(element, "restricted", str)
     if restricted_status == 'false':
         return 'open'
@@ -248,14 +240,12 @@ def _get_restricted_status(element):
 
 
 def _read_station(inventory_root, sta_element):
-
     """
     Reads the station structure
 
     :param inventory_root: base inventory element of document
     :param sta_element: station element to be read
     """
-
     # Read location tags
     longitude = _attr2obj(sta_element, "longitude", Longitude)
     latitude = _attr2obj(sta_element, "latitude", Latitude)
@@ -291,7 +281,6 @@ def _read_station(inventory_root, sta_element):
 
 
 def _read_site(sta_element):
-
     """
     Reads site information from the station element tags
     and region from network element
@@ -301,7 +290,6 @@ def _read_site(sta_element):
 
     :param sta_element: station element
     """
-
     # The region is defined in the parent network element
     net_element = sta_element.getparent()
     region = _attr2obj(net_element, "region", str)
@@ -321,14 +309,12 @@ def _read_site(sta_element):
 
 
 def _read_datalogger(equip_element):
-
     """
     Reads equipment information from datalogger
     Some information is not present > to None
 
     :param equip_element: element to be parsed
     """
-
     resource_id = equip_element.get("publicID")
     description = _attr2obj(equip_element, "description", str)
     manufacturer = _attr2obj(equip_element, "digitizerManufacturer", str)
@@ -343,14 +329,12 @@ def _read_datalogger(equip_element):
 
 
 def _read_sensor(equip_element):
-
     """
     Reads equipment information from element
     Some information is not present > to None
 
     :param equip_element: element to be parsed
     """
-
     # try to read some element tags, most are missing anyway
     resource_id = equip_element.get("publicID")
     equipment_type = _attr2obj(equip_element, "type", str)
@@ -367,14 +351,12 @@ def _read_sensor(equip_element):
 
 
 def _read_channel(inventory_root, cha_element):
-
     """
     reads channel element from arclinkXML format
 
     :param inventory_root: root of the XML document
     :param cha_element: channel element to be parsed
     """
-
     code = cha_element.get("code")
 
     # Information is also kept within the parent <sensorLocation> element
@@ -488,14 +470,12 @@ def _read_channel(inventory_root, cha_element):
 
 
 def _read_instrument_sensitivity(sen_element, cha_element):
-
     """
     reads the instrument sensitivity (gain) from the sensor and channel element
 
     :param sen_element: sensor element to be parsed
     :param cha_element: channel element to be parsed
     """
-
     # Read the gain and gain frequency from attributs
     gain = _attr2obj(cha_element, "gain", float)
     frequency = _attr2obj(cha_element, "gainFrequency", float)
@@ -862,7 +842,6 @@ def _read_response_stage(stage, rate, stage_number, input_units,
 
 
 def _tag2pole_or_zero(paz_element, count):
-
     """
     Parses arclinkXML paz format
     Uncertainties on poles removed, not present in fo
@@ -873,7 +852,6 @@ def _tag2pole_or_zero(paz_element, count):
     :param paz_element: string of poles or zeros e.g. (12320, 23020)
     :param count: sequential numbering of poles/zeros
     """
-
     paz_element = paz_element[1:-1]
     paz_element = paz_element.split(",")
 
@@ -902,7 +880,6 @@ def _read_float_var(elem, cls, unit=False, datum=False, additional_mapping={}):
     :param elem: float value to be converted
     :param cls: obspy.core.inventory class
     """
-
     try:
         convert = float(elem)
     except:
