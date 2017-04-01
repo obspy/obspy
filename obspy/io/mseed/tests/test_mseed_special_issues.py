@@ -1145,7 +1145,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             "The passed buffer or file contains only 127.")
 
     @mock.patch("os.path.getsize")
-    def test_reading_file_larger_than_2048_MiB(self, getsize_mock):
+    def test_reading_file_larger_than_2048_mib(self, getsize_mock):
         """
         ObsPy can currently not directly read files that are larger than
         2^31 bytes. This raises an exception with a description of how to
