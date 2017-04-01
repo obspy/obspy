@@ -115,6 +115,13 @@ install:
         MATPLOTLIB="matplotlib"
         BASEMAP="basemap"
         PYPROJ="pyproj"
+      elif [[ "${PYTHON_VERSION}" == '3.6' ]]; then
+        # No basemap for 3.6 yet.
+        NUMPY="numpy"
+        SCIPY="scipy"
+        MATPLOTLIB="matplotlib"
+        BASEMAP=""
+        PYPROJ=""
       # For anything else also let conda resolve, but force matplotlib 2.
       else
         NUMPY="numpy"
