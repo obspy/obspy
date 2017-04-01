@@ -122,8 +122,8 @@ master: (doi: 10.5281/zenodo.165135)
    * New correlate function for calculating the cross-correlation function
      (new implementation based on Scipy).
      To calculate the shift of the maximum of the cross correlation use
-     xcorr_max. The old xcorr function is now a wrapper around the new
-     implementation and backwards compatible. (see #1585)
+     xcorr_max. The old xcorr function is deprecated but currently still
+     exists (see #1585).
  - obspy.taup:
    * Add obspy.taup.taup_geo.calc_dist_azi, a function to return the distance,
      azimuth and backazimuth for a source - receiver pair. (see #1538)
