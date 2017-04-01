@@ -583,6 +583,7 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
         warnings.warn(msg)
 
     # check if new vcr tapes should be recorded and set vcr flag accordingly
+    import vcr as vcr_module
     if vcr_record:
         if sys.version_info.major != 3:
             msg = "Can only record new VCR tapes on Python 3"
@@ -591,8 +592,9 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
             msg = ("Can not use option 'vcr_record' together with option "
                    "'no_vcr'")
             raise ValueError(msg)
-        import vcr
-        vcr.VCRSystem.overwrite = True
+        vcr_module.VCRSystem.overwrite = True
+    else:
+        vcr_module.VCRSystem.playback_only = True
 
     # set whether to use vcr with pre-recorded vcr tapes or not
     obspy._no_vcr = no_vcr
