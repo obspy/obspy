@@ -18,11 +18,12 @@ import warnings
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
-from obspy.core.compatibility import from_buffer
+from obspy.core.compatibility import from_buffer, mock
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
-from obspy.io.mseed import InternalMSEEDError, \
-    InternalMSEEDWarning, ObsPyMSEEDFilesizeTooSmallError
+from obspy.io.mseed import (InternalMSEEDError, InternalMSEEDWarning,
+                            ObsPyMSEEDFilesizeTooSmallError,
+                            ObsPyMSEEDFilesizeTooLargeError)
 from obspy.io.mseed import util
 from obspy.io.mseed.core import _read_mseed, _write_mseed
 from obspy.io.mseed.headers import clibmseed
@@ -1142,6 +1143,25 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             e.exception.args[0],
             "The smallest possible mini-SEED record is made up of 128 bytes. "
             "The passed buffer or file contains only 127.")
+
+    @mock.patch("os.path.getsize")
+    def test_reading_file_larger_than_2048_MiB(self, getsize_mock):
+        """
+        ObsPy can currently not directly read files that are larger than
+        2^31 bytes. This raises an exception with a description of how to
+        get around it.
+        """
+        getsize_mock.return_value = 2 ** 31 + 1
+        filename = os.path.join(self.path, 'data',
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        with self.assertRaises(ObsPyMSEEDFilesizeTooLargeError) as e:
+            _read_mseed(filename)
+        self.assertEqual(
+            e.exception.args[0],
+            "ObsPy can currently not directly read mini-SEED files that are "
+            "larger than 2^31 bytes (2048 MiB). To still read it, please "
+            "read the file in chunks as documented here: "
+            "https://github.com/obspy/obspy/pull/1419#issuecomment-221582369")
 
 
 def suite():
