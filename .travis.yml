@@ -102,16 +102,15 @@ install:
         NUMPY_VERSION=1.12.1
         SCIPY_VERSION=0.19.0
         MPL_VERSION=2.0.0
-        BASEMAP="basemap=1.0.8.dev0"
+        BASEMAP="basemap"
         PYPROJ="pyproj"
       else
         NUMPY_VERSION=1.12.1
         SCIPY_VERSION=0.19.0
         MPL_VERSION=2.0.0
-        BASEMAP="basemap=1.0.8.dev0"
+        BASEMAP="basemap"
         PYPROJ="pyproj"
       fi
-  # for now fix requests version, can be changed when a new requests is released (see #1599)
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
         numpy=$NUMPY_VERSION
@@ -128,7 +127,7 @@ install:
         gdal
         docopt
         coverage
-        'requests<2.12'
+        requests
         jsonschema
   - source activate test-environment
   # additional, optional packages that run some more tests but are not
