@@ -15,19 +15,8 @@ from obspy import UTCDateTime, read
 from obspy.core.util.libnames import _load_cdll
 from obspy.core.util.testing import ImageComparison
 from obspy.signal.cross_correlation import (correlate, xcorr_pick_correction,
-                                            xcorr_3c, xcorr_max,
+                                            xcorr_3c, xcorr_max, xcorr,
                                             _xcorr_padzeros, _xcorr_slice)
-
-
-# Define the xcorr function just for these tests, so that existing tests can
-# stay as in Obspy version 1.0 and xcorr function can be deprecated regardless.
-def xcorr(tr1, tr2, shift_len, full_xcorr=False):
-    x = correlate(tr1, tr2, shift_len, domain='time')
-    a, b = xcorr_max(x)
-    if full_xcorr:
-        return a, b, x
-    else:
-        return a, b
 
 
 class CrossCorrelationTestCase(unittest.TestCase):
@@ -46,28 +35,28 @@ class CrossCorrelationTestCase(unittest.TestCase):
 
     def test_xcorr(self):
         """
+        This tests the old, deprecated xcorr() function.
         """
         # example 1 - all samples are equal
         np.random.seed(815)  # make test reproducible
         tr1 = np.random.randn(10000).astype(np.float32)
         tr2 = tr1.copy()
-        shift, corr, _ = xcorr(tr1, tr2, 100, full_xcorr=True)
+        shift, corr = xcorr(tr1, tr2, 100)
         self.assertEqual(shift, 0)
         self.assertAlmostEqual(corr, 1, 2)
         # example 2 - all samples are different
         tr1 = np.ones(10000, dtype=np.float32)
         tr2 = np.zeros(10000, dtype=np.float32)
-        shift, corr, _ = xcorr(tr1, tr2, 100, full_xcorr=True)
-        # comment next line, because shift is not unique
-        # self.assertEqual(shift, 0)
+        shift, corr = xcorr(tr1, tr2, 100)
+        self.assertEqual(shift, 0)
         self.assertAlmostEqual(corr, 0, 2)
         # example 3 - shift of 10 samples
         tr1 = np.random.randn(10000).astype(np.float32)
         tr2 = np.concatenate((np.zeros(10), tr1[0:-10]))
-        shift, corr, _ = xcorr(tr1, tr2, 100, full_xcorr=True)
+        shift, corr = xcorr(tr1, tr2, 100)
         self.assertEqual(shift, -10)
         self.assertAlmostEqual(corr, 1, 2)
-        shift, corr, _ = xcorr(tr2, tr1, 100, full_xcorr=True)
+        shift, corr = xcorr(tr2, tr1, 100)
         self.assertEqual(shift, 10)
         self.assertAlmostEqual(corr, 1, 2)
         # example 4 - shift of 10 samples + small sine disturbance
@@ -75,10 +64,10 @@ class CrossCorrelationTestCase(unittest.TestCase):
         var = np.sin(np.arange(10000, dtype=np.float32) * 0.1)
         tr2 = np.concatenate((np.zeros(10), tr1[0:-10])) * 0.9
         tr2 += var
-        shift, corr, _ = xcorr(tr1, tr2, 100, full_xcorr=True)
+        shift, corr = xcorr(tr1, tr2, 100)
         self.assertEqual(shift, -10)
         self.assertAlmostEqual(corr, 1, 2)
-        shift, corr, _ = xcorr(tr2, tr1, 100, full_xcorr=True)
+        shift, corr = xcorr(tr2, tr1, 100)
         self.assertEqual(shift, 10)
         self.assertAlmostEqual(corr, 1, 2)
 
