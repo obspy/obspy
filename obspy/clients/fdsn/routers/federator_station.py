@@ -137,7 +137,8 @@ class ParameterItem(ParserState):
         this_response.add_common_parameters(line)
         return this_response
 
-    def next(self, line):
+    @staticmethod
+    def next(line):
         if line.is_empty():
             return EmptyItem() #EMPTY_LINE
         elif line.is_param():
@@ -151,7 +152,6 @@ class EmptyItem(ParserState):
     @staticmethod
     def parse(line, this_response):
         return this_response
-    
     @staticmethod
     def next(line):
         if line.is_empty():
@@ -169,7 +169,7 @@ class DatacenterItem(ParserState):
         '''Parse: DATACENTER=id,http://url...'''
         _, rest = str(line).split('=')
         active_id, url = rest.split(',')
-        this_response = FederatedResponseParser.new_federated_response(active_id)
+        this_response = new_federated_response(active_id)
         print("new response", this_response)
         this_response.add_service("DATACENTER", url)
         return this_response
@@ -218,46 +218,65 @@ class RequestItem(ParserState):
         else:
             raise RuntimeError, "Requests should be followed by another request or an empty line"
 
-class FederatedResponseParser(object):
+def parse_federated_response(block_text):
+    '''create a list of FederatedResponse objects, one for each datacenter in response'''
+    fed_resp = []
+    current_datacenter = FederatedResponse("PRE_CENTER")
+    common_params = None
+    state = PreParse
+    for line in block_text.splitlines():
+        req_line = RequestLine(line)
+        #print(line)
+        state = state.next(req_line)
+        #print(state)
+        if state == DatacenterItem:
+            if current_datacenter.datacenter_id == "PRE_CENTER":
+                common_params = current_datacenter.common_parameters
+            current_datacenter = state.parse(req_line, current_datacenter)
+            current_datacenter.common_parameters = common_params
+            fed_resp.append(current_datacenter)
+        else:
+            state.parse(req_line, current_datacenter)
+    if not fed_resp[-1].request_lines:
+        del fed_resp[-1]
+    return fed_resp
+
+class StreamingFederatedResponseParser(object):
     '''Iterate through stream, returning FederatedResponse objects for each datacenter'''
     def __init__(self, stream_iterator):
-        self.stream_iterator = stream_iterator() # stream_iterator feeds us line by line
+        self.stream_iterator = stream_iterator() # stream_iterator feeds line by line
         self.state = PreParse
         self.n_datacenters = 0
-        self.fed_req = None
+        self.curr_datacenter = FederatedResponse("PRE_CENTER")
+        self.common_params = None
         self.line = None
 
     def __iter__(self):
         return self
-        
+
     def next(self):
         request_was_processed = False
-        print("A Next...", self.state)
         if self.line is not None:
-            print("returned to NEXT")
-            self.fed_req = self.state.parse(self.line, self.fed_req) #left before processing
+            self.curr_datacenter = self.state.parse(self.line, self.curr_datacenter)
             self.line = None
-        print(self.state)
+
         for self.line in self.stream_iterator:
             self.line = RequestLine(self.line)
             self.state = self.state.next(self.line)
-            print(self.state)
             if request_was_processed and (self.state is not RequestItem):
-                return self.fed_req
-            self.fed_req = self.state.parse(self.line, self.fed_req)
+                self.curr_datacenter.common_parameters = self.common_params
+                return self.curr_datacenter
+            if self.state == DatacenterItem and self.curr_datacenter.datacenter_id == "PRE_CENTER":
+                self.common_params = self.curr_datacenter.common_parameters
+            self.curr_datacenter = self.state.parse(self.line, self.curr_datacenter)
             if self.state == RequestItem:
                 request_was_processed = True
         raise StopIteration
-            
+
     __next__ = next
 
-    @staticmethod
-    def new_federated_response(ds_id):
-        return FederatedResponse(ds_id)
-
-    @staticmethod
-    def new_federated_response(ds_id):
-        return FederatedResponse(ds_id)
+def new_federated_response(ds_id):
+    return FederatedResponse(ds_id)
 
 class FederatedResponse(object):
     '''
@@ -273,8 +292,9 @@ class FederatedResponse(object):
     AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
     '''
 
-    ok_parameters = {"DATASELECTSERVICE":["longestonly"],
-                        "STATIONSERVICE":["level"]}
+    pass_through_params = {"DATASELECTSERVICE":["longestonly", "quality", "minimumlength"],
+                     "STATIONSERVICE":["level", "matchtimeseries", "includeavailability",
+                                       "includerestricted","format"]}
 
     def __init__(self, datacenter_id):
         self.datacenter_id = datacenter_id
@@ -289,11 +309,12 @@ class FederatedResponse(object):
         if isinstance(common_parameters, str):
             self.common_parameters.append(common_parameters)
         elif isinstance(common_parameters, RequestLine):
-            self.request_lines.append(str(common_parameters))
+            self.common_parameters.append(str(common_parameters))
         else:
             self.common_parameters.extend(common_parameters)
 
     def add_request_lines(self, request_lines):
+        '''append one or more requests to the request list'''
         if isinstance(request_lines, str):
             self.request_lines.append(request_lines)
         elif isinstance(request_lines, RequestLine):
@@ -302,31 +323,68 @@ class FederatedResponse(object):
             self.request_lines.extend(request_lines)
 
     def add_request_line(self, request_line):
+        '''append a single request to the list of requests'''
         self.request_lines.append(request_line)
 
     def request_text(self, target_service):
+        '''Return a string suitable for posting to a target service'''
         reply = self.selected_common_parameters(target_service)
         reply.extend(self.request_lines)
         return "\n".join(reply)
 
     def selected_common_parameters(self, target_service):
+        '''Return common parameters, targeted for a specific service
+        This effecively filters out parameters that don't belong in a request.
+        for example, STATIONSERVICE can accept level=xxx ,
+        while DATASELECTSERVICE can accept longestonly=xxx
+        '''
         reply = []
-        for good in FederatedResponse.ok_parameters[target_service]:
+        for good in FederatedResponse.pass_through_params[target_service]:
             reply.extend([c for c in self.common_parameters if c.startswith(good + "=")])
         return reply
-    
+
     def __repr__(self):
         return self.datacenter_id + "\n" + self.request_text("STATIONSERVICE")
-        
+
+def fed_get_stations(**kwarg):
+    '''This will be the request for the federated station service'''
+    remap = {"IRISDMC":"IRIS", "GEOFON":"GFZ", "SED":"ETH", "USPSC":"USP"}
+    # need to add to URL_MAPPINGS!
+    all_inv=[]
+    url='https://service.iris.edu/irisws/fedcatalog/1/'
+    r=requests.get(url + "query", params=kwarg, verify=False)
+    print "asking from..."
+    for p in r.iter_lines():
+        if p.startswith("DATACENTER"):
+            print(p)
+
+    sfrp = StreamingFederatedResponseParser(r.iter_lines)
+    for datac in sfrp:
+        dc_id = datac.datacenter_id
+        if dc_id in remap:
+            dc_id = remap[dc_id]
+        client = Client(dc_id)
+        #requests that are too large could be denied (#413) and need to be chunked.
+        print(datac.request_text("STATIONSERVICE").count('\n'))
+        try:
+            inv = client.get_stations_bulk(bulk=datac.request_text("STATIONSERVICE"))
+            if not all_inv:
+                all_inv = inv
+            else:
+                all_inv += inv
+        except:
+            print(dc_id, "error!")
+
+    return all_inv
 # main function
 if __name__ == '__main__':
     #import doctest
     #doctest.testmod(exclude_empty=True)
 
     import requests
-    url='https://service.iris.edu/irisws/fedcatalog/1/'
-    r=requests.get(url + "query", params={"net":"A*","sta":"OK*","cha":"*HZ"}, verify=False)
+    url = 'https://service.iris.edu/irisws/fedcatalog/1/'
+    r = requests.get(url + "query", params={"net":"A*", "sta":"OK*", "cha":"*HZ"}, verify=False)
 
-    frp = FederatedResponseParser(r.iter_lines)
+    frp = StreamingFederatedResponseParser(r.iter_lines)
     for n in frp:
         print(n.request_text("STATIONSERVICE"))
