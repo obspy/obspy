@@ -361,21 +361,33 @@ def fed_get_stations(**kwarg):
     sfrp = StreamingFederatedResponseParser(r.iter_lines)
     for datac in sfrp:
         dc_id = datac.datacenter_id
+        
+        extra = {'datacenter_id': {'value': datac.datacenter_id,
+                    'namespace': r"http://www.fdsn.org/xml/station/"},
+         'datacenter_url': {'value': datac.services["DATACENTER"],
+                             'namespace': r"http://www.fdsn.org/xml/station/"},
+         'service_url': {'value': datac.services["STATIONSERVICE"],
+                      'namespace': r"http://www.fdsn.org/xml/station/"}}
+        
         if dc_id in remap:
             dc_id = remap[dc_id]
         client = Client(dc_id)
-        #requests that are too large could be denied (#413) and need to be chunked.
+        #TODO:requests that are too large could be denied (#413) and will need to be chunked.
         print(datac.request_text("STATIONSERVICE").count('\n'))
         try:
             inv = client.get_stations_bulk(bulk=datac.request_text("STATIONSERVICE"))
+            inv.extra = extra #tags don't seem to work
+            for x in inv:
+                x.extra = extra
             if not all_inv:
                 all_inv = inv
             else:
                 all_inv += inv
         except:
             print(dc_id, "error!")
-
     return all_inv
+
+
 # main function
 if __name__ == '__main__':
     #import doctest
