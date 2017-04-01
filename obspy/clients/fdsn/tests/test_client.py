@@ -986,7 +986,6 @@ class ClientTestCase(unittest.TestCase):
                            download_url_mock.call_args_list])
         self.assertEqual(expected_urls, got_urls)
 
-    @vcr
     def test_manually_deactivate_single_service(self):
         """
         Test manually deactivating a single service.
