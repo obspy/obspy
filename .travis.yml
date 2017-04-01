@@ -143,7 +143,6 @@ install:
         sqlalchemy
         mock
         nose
-        gdal
         docopt
         coverage
         requests
