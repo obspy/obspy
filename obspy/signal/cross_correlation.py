@@ -221,7 +221,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     >>> a, b = xcorr(tr1, tr2, 1000)
     >>> a
     0
-    >>> round(b, 6)
+    >>> round(b, 7)
     1.0
     """
     from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
