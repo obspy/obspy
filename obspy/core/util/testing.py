@@ -347,7 +347,7 @@ class ImageComparison(NamedTemporaryFile):
             # This is especially true for ticks with exponential numbers.
             # Thus the tolerance also has to be a bit higher here.
             elif [1, 5, 0] <= MATPLOTLIB_VERSION < [2, 0, 0]:
-                self.tol *= 4.5
+                self.tol *= 5.0
             # Matplotlib 2.0.0 has a bug with the tick placement. This is
             # fixed in 2.0.1 but the tolerance for 2.0.0 has to be much
             # higher. 10 is an empiric value. The tick placement potentially
