@@ -98,25 +98,6 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.assertAlmostEqual(0.0, shift.value)
         self.assertAlmostEqual(1.0, coe_p.value)
 
-    def test_xcorr_vs_old_implementation(self):
-        """
-        Test against output of xcorr from ObsPy<1.1
-        """
-        # Results of xcorr(self.a, self.b, 15, full_xcorr=True)
-        # for ObsPy==1.0.2:
-        # -5, 0.9651607597888241
-        x = [0.53555336, 0.60748967, 0.67493495, 0.73707491, 0.79313226,
-             0.84237607, 0.88413089, 0.91778536, 0.94280034, 0.95871645,
-             0.96516076, 0.96363672, 0.95043933, 0.92590109, 0.89047807,
-             0.84474328, 0.78377236, 0.71629895, 0.64316805, 0.56526677,
-             0.48351386, 0.39884904, 0.31222231, 0.22458339, 0.13687123,
-             0.05000401, -0.03513057, -0.11768441, -0.19685756, -0.27190599,
-             -0.34214866]
-        shift, corr, corr_fun = xcorr(self.a, self.b, 15, full_xcorr=True)
-        np.testing.assert_allclose(corr_fun, x)
-        self.assertAlmostEqual(corr, 0.96516076)
-        self.assertEqual(shift, -5)
-
     def test_correlate_different_length_of_signals(self):
         # Signals are aligned around the middle
         cc = correlate(self.a, self.c, 50)
