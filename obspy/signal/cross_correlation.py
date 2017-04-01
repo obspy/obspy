@@ -173,6 +173,10 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     """
     Cross correlation of tr1 and tr2 in the time domain using window_len.
 
+    .. note::
+       Please use the :func:`~obspy.signal.cross_correlation.correlate`
+       function for new code.
+
     ::
 
                                     Mid Sample
@@ -194,10 +198,6 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     :return: **index, value[, fct]** - Index of maximum xcorr value and the
         value itself. The complete xcorr function is returned only if
         ``full_xcorr=True``.
-
-    .. note::
-       Please use the :func:`~obspy.signal.cross_correlation.correlate`
-       function for new code.
 
     .. note::
        As shift_len gets higher the window supporting the cross correlation
@@ -225,73 +225,10 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     1.0
     """
     from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
-    msg = ('Call to deprecated function xcorr. Please use the correlate and '
+    msg = ('Call to deprecated function xcorr(). Please use the correlate and '
            'xcorr_max functions.')
     warnings.warn(msg, ObsPyDeprecationWarning)
-    x = correlate(tr1, tr2, shift_len, domain='time')
-    a, b = xcorr_max(x)
-    if full_xcorr:
-        return a, b, x
-    else:
-        return a, b
 
-
-def _xcorr_old_implementation(tr1, tr2, shift_len, full_xcorr=False):
-    """
-    Cross correlation of tr1 and tr2 in the time domain using window_len.
-
-    ::
-
-                                    Mid Sample
-                                        |
-        |AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|
-        |BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|
-        |<-shift_len/2->|   <- region of support ->     |<-shift_len/2->|
-
-
-    :type tr1: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
-    :param tr1: Trace 1
-    :type tr2: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
-    :param tr2: Trace 2 to correlate with trace 1
-    :type shift_len: int
-    :param shift_len: Total length of samples to shift for cross correlation.
-    :type full_xcorr: bool
-    :param full_xcorr: If ``True``, the complete xcorr function will be
-        returned as :class:`~numpy.ndarray`
-    :return: **index, value[, fct]** - Index of maximum xcorr value and the
-        value itself. The complete xcorr function is returned only if
-        ``full_xcorr=True``.
-
-    .. note::
-       As shift_len gets higher the window supporting the cross correlation
-       actually gets smaller. So with shift_len=0 you get the correlation
-       coefficient of both traces as a whole without any shift applied. As the
-       xcorr function works in time domain and does not zero pad at all, with
-       higher shifts allowed the window of support gets smaller so that the
-       moving windows shifted against each other do not run out of the
-       timeseries bounds at high time shifts. Of course there are other
-       possibilities to do cross correlations e.g. in frequency domain.
-
-    .. seealso::
-       `ObsPy-users mailing list
-       <http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html>`_
-       and `issue #249 <https://github.com/obspy/obspy/issues/249>`_.
-
-    .. rubric:: Example
-
-    >>> tr1 = np.random.randn(10000).astype(np.float32)
-    >>> tr2 = tr1.copy()
-    >>> a, b = _xcorr_old_implementation(tr1, tr2, 1000)
-    >>> a
-    0
-    >>> round(b, 7)
-    1.0
-    """
-    from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
-    msg = ('_xcorr_old_implementation is the old implementation of xcorr '
-           'used in ObsPy versions<1.1. It is kept in Obspy v1.1 for reference'
-           ', but will be removed with the next major release.')
-    warnings.warn(msg, ObsPyDeprecationWarning)
     # if we get Trace objects, use their data arrays
     for tr in [tr1, tr2]:
         if isinstance(tr, Trace):
