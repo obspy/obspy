@@ -595,6 +595,8 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
         vcr_module.VCRSystem.overwrite = True
     else:
         vcr_module.VCRSystem.playback_only = True
+    # always raise if vcr decorator is used but not needed
+    vcr_module.VCRSystem.raise_if_not_needed = True
 
     # set whether to use vcr with pre-recorded vcr tapes or not
     obspy._no_vcr = no_vcr
