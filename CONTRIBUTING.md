@@ -12,6 +12,7 @@ community process works in practice.
  * Make sure you have a GitHub account
  * [Download](https://git-scm.com/downloads) and install git
  * Read the [git documentation](https://git-scm.com/book/en/Git-Basics)
+ * Install a [development version of ObsPy](https://github.com/obspy/obspy/wiki/Developer-Installation)
 
 ## Submitting a Pull Request
 
@@ -20,12 +21,12 @@ We love pull requests! Here's a quick guide:
 First, if the PR is directly related to an already existing issue (which is no PR yet), drop us a note in that issue before opening the PR. We can make existing issues into a PR, which avoids duplicated tickets. Otherwise, please follow the ObsPy [branching model](https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model).
 
  1. Fork the repo.
- 2. Make a new branch. For feature additions/changes base your new branch at "master", for pure bugfixes base your new branch at e.g. "maintenance_1.0.x" .
+ 2. Make a new branch. For feature additions/changes base your new branch at `master`, for pure bugfixes base your new branch at e.g. `maintenance_1.0.x` .
  3. Add a test for your change. Only refactoring and documentation changes require no new tests. If you are adding functionality or fixing a bug, we need a test!
  4. Make the test pass.
  5. Push to your fork and submit a pull request.
-    - for feature branches set base branch to "obspy:master"
-    - for bugfix branches set base branch to the latests maintenance branch, e.g. "obspy:maintenance_1.0.x"
+    - for feature branches set base branch to `obspy:master`
+    - for bugfix branches set base branch to the latests maintenance branch, e.g. `obspy:maintenance_1.0.x`
  6. Wait for our review. We may suggest some changes or improvements or alternatives. Keep in mind that PR checklist items can be met after the pull request has been opened by adding more commits to the branch.
 
 Please make sure to select the correct base branch (`master` vs. `maintenance_x.x.x`) for your PR.
