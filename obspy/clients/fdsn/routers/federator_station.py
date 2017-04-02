@@ -63,6 +63,7 @@ passive-options 	::
 '''
 
 class RequestLine(object):
+    '''line from federator source that provides additional tests'''
     def is_empty(self):
         return self.line == ""
 
@@ -91,7 +92,8 @@ class RequestLine(object):
 
 class ParserState(object):
     '''
-    parser states: PREPARSE, PARAMLIST, EMPTY_LINE, DATACENTER, SERVICE, REQUEST, DONE
+    Parsers leverage the known structure of Fedcatalog's response
+    
     PREPARSE -> [PARAMLIST | EMPTY_LINE | DATACENTER]
     PARAMLIST -> [PARAMLIST | EMPTY_LINE]
     EMPTY_LINE -> [EMPTY_LINE | DATACENTER | DONE]
@@ -103,12 +105,12 @@ class ParserState(object):
     @staticmethod
     def parse(line, this_response):
         '''abstract'''
-        raise NotImplementedError, "ParserState.parse()"
+        raise NotImplementedError("ParserState.parse()")
 
     @staticmethod
     def next(line):
         '''abstract'''
-        raise NotImplementedError, "ParserState.next()"
+        raise NotImplementedError("ParserState.next()")
 
 class PreParse(ParserState):
     '''Initial ParserState'''
@@ -120,11 +122,11 @@ class PreParse(ParserState):
     @staticmethod
     def next(line):
         if line.is_empty():
-            return EmptyItem #EMPTY_LINE
+            return EmptyItem
         elif line.is_datacenter():
-            return DatacenterItem #DATACENTER
+            return DatacenterItem
         elif line.is_param():
-            return ParameterItem #PARAMLIST
+            return ParameterItem
         else:
             return ParserState
 
@@ -140,11 +142,11 @@ class ParameterItem(ParserState):
     @staticmethod
     def next(line):
         if line.is_empty():
-            return EmptyItem() #EMPTY_LINE
+            return EmptyItem
         elif line.is_param():
-            return self
+            return ParameterItem
         else:
-            raise RuntimeError, "Parameter should be followed by another parameter or an empty line"
+            raise RuntimeError("Parameter should be followed by another parameter or an empty line")
 
 class EmptyItem(ParserState):
     '''handle an empty line'''
@@ -155,11 +157,11 @@ class EmptyItem(ParserState):
     @staticmethod
     def next(line):
         if line.is_empty():
-            return EmptyItem #no state change
+            return EmptyItem
         elif line.is_datacenter():
-            return DatacenterItem #DATACENTER
+            return DatacenterItem
         else:
-            raise RuntimeError, "expected either a DATACENTER or another empty line"
+            raise RuntimeError("expected either a DATACENTER or another empty line")
 
 class DatacenterItem(ParserState):
     '''handle data center'''
@@ -170,7 +172,6 @@ class DatacenterItem(ParserState):
         _, rest = str(line).split('=')
         active_id, url = rest.split(',')
         this_response = new_federated_response(active_id)
-        print("new response", this_response)
         this_response.add_service("DATACENTER", url)
         return this_response
 
@@ -179,7 +180,7 @@ class DatacenterItem(ParserState):
         if line.is_service():
             return ServiceItem
         else:
-            raise RuntimeError, "DATACENTER line should be followed by a service"
+            raise RuntimeError("DATACENTER line should be followed by a service")
 
 class ServiceItem(ParserState):
     '''handle service description'''
@@ -198,7 +199,7 @@ class ServiceItem(ParserState):
         elif line.is_request():
             return RequestItem
         else:
-            raise RuntimeError, "Service desc. should be followed by a request or another service"
+            raise RuntimeError("Service desc. should be followed by a request or another service")
 
 class RequestItem(ParserState):
     '''handle request lines'''
@@ -216,28 +217,27 @@ class RequestItem(ParserState):
         elif line.is_empty():
             return EmptyItem
         else:
-            raise RuntimeError, "Requests should be followed by another request or an empty line"
+            raise RuntimeError("Requests should be followed by another request or an empty line")
 
 def parse_federated_response(block_text):
     '''create a list of FederatedResponse objects, one for each datacenter in response'''
     fed_resp = []
-    current_datacenter = FederatedResponse("PRE_CENTER")
-    common_params = None
+    datacenter = FederatedResponse("PRE_CENTER")
+    parameters = None
     state = PreParse
-    for line in block_text.splitlines():
-        req_line = RequestLine(line)
-        #print(line)
-        state = state.next(req_line)
-        #print(state)
+
+    for raw_line in block_text.splitlines():
+        line = RequestLine(raw_line) #use a smarter, trimmed line
+        state = state.next(line)
         if state == DatacenterItem:
-            if current_datacenter.datacenter_id == "PRE_CENTER":
-                common_params = current_datacenter.common_parameters
-            current_datacenter = state.parse(req_line, current_datacenter)
-            current_datacenter.common_parameters = common_params
-            fed_resp.append(current_datacenter)
+            if datacenter.code == "PRE_CENTER":
+                parameters = datacenter.parameters
+            datacenter = state.parse(line, datacenter)
+            datacenter.parameters = parameters
+            fed_resp.append(datacenter)
         else:
-            state.parse(req_line, current_datacenter)
-    if not fed_resp[-1].request_lines:
+            state.parse(line, datacenter)
+    if len(fed_resp > 0) and (not fed_resp[-1].request_lines):
         del fed_resp[-1]
     return fed_resp
 
@@ -246,9 +246,8 @@ class StreamingFederatedResponseParser(object):
     def __init__(self, stream_iterator):
         self.stream_iterator = stream_iterator() # stream_iterator feeds line by line
         self.state = PreParse
-        self.n_datacenters = 0
-        self.curr_datacenter = FederatedResponse("PRE_CENTER")
-        self.common_params = None
+        self.datacenter = FederatedResponse("PRE_CENTER")
+        self.parameters = None
         self.line = None
 
     def __iter__(self):
@@ -257,18 +256,18 @@ class StreamingFederatedResponseParser(object):
     def next(self):
         request_was_processed = False
         if self.line is not None:
-            self.curr_datacenter = self.state.parse(self.line, self.curr_datacenter)
+            self.datacenter = self.state.parse(self.line, self.datacenter)
             self.line = None
 
         for self.line in self.stream_iterator:
             self.line = RequestLine(self.line)
             self.state = self.state.next(self.line)
             if request_was_processed and (self.state is not RequestItem):
-                self.curr_datacenter.common_parameters = self.common_params
-                return self.curr_datacenter
-            if self.state == DatacenterItem and self.curr_datacenter.datacenter_id == "PRE_CENTER":
-                self.common_params = self.curr_datacenter.common_parameters
-            self.curr_datacenter = self.state.parse(self.line, self.curr_datacenter)
+                self.datacenter.parameters = self.parameters
+                return self.datacenter
+            if self.state == DatacenterItem and self.datacenter.code == "PRE_CENTER":
+                self.parameters = self.datacenter.parameters
+            self.datacenter = self.state.parse(self.line, self.datacenter)
             if self.state == RequestItem:
                 request_was_processed = True
         raise StopIteration
@@ -297,22 +296,22 @@ class FederatedResponse(object):
         "STATIONSERVICE":["level", "matchtimeseries", "includeavailability",
                           "includerestricted", "format"]}
 
-    def __init__(self, datacenter_id):
-        self.datacenter_id = datacenter_id
-        self.common_parameters = []
+    def __init__(self, code):
+        self.code = code
+        self.parameters = []
         self.services = {}
         self.request_lines = []
 
     def add_service(self, service_name, service_url):
         self.services[service_name] = service_url
 
-    def add_common_parameters(self, common_parameters):
-        if isinstance(common_parameters, str):
-            self.common_parameters.append(common_parameters)
-        elif isinstance(common_parameters, RequestLine):
-            self.common_parameters.append(str(common_parameters))
+    def add_common_parameters(self, parameters):
+        if isinstance(parameters, str):
+            self.parameters.append(parameters)
+        elif isinstance(parameters, RequestLine):
+            self.parameters.append(str(parameters))
         else:
-            self.common_parameters.extend(common_parameters)
+            self.parameters.extend(parameters)
 
     def add_request_lines(self, request_lines):
         '''append one or more requests to the request list'''
@@ -341,11 +340,11 @@ class FederatedResponse(object):
         '''
         reply = []
         for good in FederatedResponse.pass_through_params[target_service]:
-            reply.extend([c for c in self.common_parameters if c.startswith(good + "=")])
+            reply.extend([c for c in self.parameters if c.startswith(good + "=")])
         return reply
 
     def __repr__(self):
-        return self.datacenter_id + "\n" + self.request_text("STATIONSERVICE")
+        return self.code + "\n" + self.request_text("STATIONSERVICE")
 
 ''' inv2x_set(inv) will be used to quickly decide what exists and what doesn't'''
 def inv2channel_set(inv):
@@ -391,11 +390,11 @@ def req2channel_set(req):
 req_converter = {"channel":req2channel_set, "station":req2station_set, "network":req2network_set}
 inv_converter = {"channel":inv2channel_set, "station":inv2station_set, "network":inv2network_set}
 
-def request_exists_in_inventory(inv, requests, verify_level):
+def request_exists_in_inventory(inv, requests, level):
     # does not account for timespans, only for existence net-sta-loc-cha matches
 
-    inv_set = inv_converter[verify_level](inv)
-    req_set = req_converter[verify_level](requests)
+    inv_set = inv_converter[level](inv)
+    req_set = req_converter[level](requests)
     members = req_set.intersection(inv_set)
     non_members = req_set.difference(inv_set)
     return members, non_members
@@ -403,13 +402,13 @@ def request_exists_in_inventory(inv, requests, verify_level):
 def fed_get_stations(**kwarg):
     '''This will be the request for the federated station service'''
 
-    def add_datacenter_reference(inventory_list, datacenter_id, service_urls):
+    def add_datacenter_reference(inventory_list, code, service_urls):
         '''Add a tag to each inventory item (what level?) attributing to a datacenter
         '''
         #TODO as per:https://docs.obspy.org/tutorial/code_snippets/quakeml_custom_tags.html
         # Tried, but this doesn't seem to appear in the final xml
         extra = {
-            'datacenter_id': {'value': datac.datacenter_id,
+            'code': {'value': code,
                               'namespace': r"http://www.fdsn.org/xml/station/"},
             'datacenter_url': {'value': service_urls["DATACENTER"],
                                'namespace': r"http://www.fdsn.org/xml/station/"},
@@ -437,7 +436,7 @@ def fed_get_stations(**kwarg):
 
     sfrp = StreamingFederatedResponseParser(r.iter_lines)
     for datac in sfrp:
-        dc_id = datac.datacenter_id
+        dc_id = datac.code
 
         if dc_id in remap:
             dc_id = remap[dc_id]
@@ -454,7 +453,7 @@ def fed_get_stations(**kwarg):
         else:
             successful, failed = request_exists_in_inventory(inv, datac.request_lines, LEVEL)
             successful_retrieves = datac.request_lines
-            add_datacenter_reference(inv, datac.datacenter_id, datac.services)
+            add_datacenter_reference(inv, datac.code, datac.services)
             if not all_inv:
                 all_inv = inv
                 all_inv_set = inv_converter[LEVEL](inv)
