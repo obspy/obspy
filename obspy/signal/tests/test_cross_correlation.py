@@ -116,7 +116,8 @@ class CrossCorrelationTestCase(unittest.TestCase):
              0.48351386, 0.39884904, 0.31222231, 0.22458339, 0.13687123,
              0.05000401, -0.03513057, -0.11768441, -0.19685756, -0.27190599,
              -0.34214866]
-        shift, corr, corr_fun = xcorr(self.a, self.b, 15, full_xcorr=True)
+        corr_fun = correlate(self.a, self.b, shift=15)
+        shift, corr = xcorr_max(corr_fun)
         np.testing.assert_allclose(corr_fun, x)
         self.assertAlmostEqual(corr, 0.96516076)
         self.assertEqual(shift, -5)
