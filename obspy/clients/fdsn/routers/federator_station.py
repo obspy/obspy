@@ -292,9 +292,10 @@ class FederatedResponse(object):
     AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
     '''
 
-    pass_through_params = {"DATASELECTSERVICE":["longestonly", "quality", "minimumlength"],
-                     "STATIONSERVICE":["level", "matchtimeseries", "includeavailability",
-                                       "includerestricted","format"]}
+    pass_through_params = {
+        "DATASELECTSERVICE":["longestonly", "quality", "minimumlength"],
+        "STATIONSERVICE":["level", "matchtimeseries", "includeavailability",
+                          "includerestricted", "format"]}
 
     def __init__(self, datacenter_id):
         self.datacenter_id = datacenter_id
@@ -346,13 +347,89 @@ class FederatedResponse(object):
     def __repr__(self):
         return self.datacenter_id + "\n" + self.request_text("STATIONSERVICE")
 
+''' inv2x_set(inv) will be used to quickly decide what exists and what doesn't'''
+def inv2channel_set(inv):
+    A = set()
+    for n in inv:
+        for s in n:
+            for c in s:
+                A.add(n.code + "." + s.code + "." + c.location_code + "." + c.code)
+    return A
+
+def inv2station_set(inv):
+    A = set()
+    for n in inv:
+        for s in n:
+            A.add(n.code + "." + s.code)
+    return A
+
+def inv2network_set(inv):
+    A = set()
+    for n in inv:
+        A.add(n.code)
+    return A
+
+def req2network_set(req):
+    A = set()
+    for line in req:
+        (net,sta,loc,cha,startt,endt) = r.split()
+        A.add(net)
+
+def req2station_set(req):
+    A = set()
+    for line in req:
+        (net,sta,loc,cha,startt,endt) = r.split()
+        A.add(net + "." + sta)
+
+def req2channel_set(req):
+    A = set()
+    for line in req:
+        (net,sta,loc,cha,startt,endt) = r.split()
+        A.add(net + "." + sta + "." + loc + "." + cha)
+
+''' converters used to make comparisons between inventory items and requests '''
+req_converter = {"channel":req2channel_set, "station":req2station_set, "network":req2network_set}
+inv_converter = {"channel":inv2channel_set, "station":inv2station_set, "network":inv2network_set}
+
+def request_exists_in_inventory(inv, requests, verify_level):
+    # does not account for timespans, only for existence net-sta-loc-cha matches
+
+    inv_set = inv_converter[verify_level](inv)
+    req_set = req_converter[verify_level](requests)
+    members = req_set.intersection(inv_set)
+    non_members = req_set.difference(inv_set)
+    return members, non_members
+
 def fed_get_stations(**kwarg):
     '''This will be the request for the federated station service'''
+
+    def add_datacenter_reference(inventory_list, datacenter_id, service_urls):
+        '''Add a tag to each inventory item (what level?) attributing to a datacenter
+        '''
+        #TODO as per:https://docs.obspy.org/tutorial/code_snippets/quakeml_custom_tags.html
+        # Tried, but this doesn't seem to appear in the final xml
+        extra = {
+            'datacenter_id': {'value': datac.datacenter_id,
+                              'namespace': r"http://www.fdsn.org/xml/station/"},
+            'datacenter_url': {'value': service_urls["DATACENTER"],
+                               'namespace': r"http://www.fdsn.org/xml/station/"},
+            'service_url': {'value': service_urls["STATIONSERVICE"],
+                            'namespace': r"http://www.fdsn.org/xml/station/"}}
+
+        inv.extra = extra #tags don't seem to work
+        for x in inv:
+            x.extra = extra
+
+    LEVEL = kwarg["level"]
     remap = {"IRISDMC":"IRIS", "GEOFON":"GFZ", "SED":"ETH", "USPSC":"USP"}
     # need to add to URL_MAPPINGS!
-    all_inv=[]
-    url='https://service.iris.edu/irisws/fedcatalog/1/'
-    r=requests.get(url + "query", params=kwarg, verify=False)
+    all_inv = []
+    lines_to_resubmit = []
+    succesful_retrieves = []
+
+    url = 'https://service.iris.edu/irisws/fedcatalog/1/'
+    kwarg["targetservice"]="STATION"
+    r = requests.get(url + "query", params=kwarg, verify=False)
     print "asking from..."
     for p in r.iter_lines():
         if p.startswith("DATACENTER"):
@@ -361,30 +438,29 @@ def fed_get_stations(**kwarg):
     sfrp = StreamingFederatedResponseParser(r.iter_lines)
     for datac in sfrp:
         dc_id = datac.datacenter_id
-        
-        extra = {'datacenter_id': {'value': datac.datacenter_id,
-                    'namespace': r"http://www.fdsn.org/xml/station/"},
-         'datacenter_url': {'value': datac.services["DATACENTER"],
-                             'namespace': r"http://www.fdsn.org/xml/station/"},
-         'service_url': {'value': datac.services["STATIONSERVICE"],
-                      'namespace': r"http://www.fdsn.org/xml/station/"}}
-        
+
         if dc_id in remap:
             dc_id = remap[dc_id]
         client = Client(dc_id)
-        #TODO:requests that are too large could be denied (#413) and will need to be chunked.
+
+        #TODO large requests could be denied (code #413) and will need to be chunked.
         print(datac.request_text("STATIONSERVICE").count('\n'))
+        #TODO datac.request_txt could be vetted ahead of time here by comparing to what we have. more likely during 2nd round
         try:
             inv = client.get_stations_bulk(bulk=datac.request_text("STATIONSERVICE"))
-            inv.extra = extra #tags don't seem to work
-            for x in inv:
-                x.extra = extra
+        except: #except expression as identifier:
+            lines_to_resubmit.extend(datac.request_lines)
+            print(dc_id, "error!")
+        else:
+            successful, failed = request_exists_in_inventory(inv, datac.request_lines, LEVEL)
+            successful_retrieves = datac.request_lines
+            add_datacenter_reference(inv, datac.datacenter_id, datac.services)
             if not all_inv:
                 all_inv = inv
+                all_inv_set = inv_converter[LEVEL](inv)
             else:
                 all_inv += inv
-        except:
-            print(dc_id, "error!")
+                all_inv_set= all_inv_set.union(inv_converter[LEVEL](inv)
     return all_inv
 
 
