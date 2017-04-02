@@ -307,7 +307,7 @@ class _BaseRESTClient(object):
 
         .. rubric:: Example
 
-        >>> c = Client()  # doctest: +VCR
+        >>> c = Client()
         >>> xseed_file = "dataless.seed.BW_UH1.xml"
         >>> xml_str = open(xseed_file).read()  # doctest: +SKIP
         >>> c.station.put_resource(xseed_file, xml_str)  # doctest: +SKIP

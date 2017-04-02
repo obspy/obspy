@@ -23,7 +23,6 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for the SeisHub client.
     """
-    @vcr
     def setUp(self):
         self.client = Client(TESTSERVER)
 
@@ -180,28 +179,48 @@ class ClientTestCase(unittest.TestCase):
     @vcr
     def test_get_preview(self):
         # multiple channels / MiniSEED
-        t1 = UTCDateTime('20080101')
-        t2 = UTCDateTime('20080201')
-        st = self.client.waveform.get_previews("BW", "M*", "", "EHZ", t1, t2)
-        self.assertEqual(len(st), 4)
-        self.assertEqual(st[0].stats.network, 'BW')
-        self.assertEqual(st[0].stats.channel, 'EHZ')
-        self.assertEqual(st[0].stats.delta, 30.0)
+        t1 = UTCDateTime('2008-01-01T16')
+        t2 = UTCDateTime('2008-01-02T09')
+        st = self.client.waveform.get_previews("BW", "RN*", "", "EHZ", t1, t2)
+        self.assertEqual(len(st), 2)
+        for tr in st:
+            self.assertEqual(tr.stats.network, 'BW')
+            self.assertEqual(tr.stats.channel, 'EHZ')
+            self.assertEqual(tr.stats.delta, 30.0)
+            self.assertEqual(len(tr), 2041)
+        self.assertEqual(st[0].stats.station, 'RNON')
+        self.assertEqual(st[1].stats.station, 'RNHA')
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2008-01-01T16:00:01.195000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2008-01-01T16:00:00.275000Z'))
+        self.assertEqual(st[0].stats.endtime,
+                         UTCDateTime('2008-01-02T09:00:01.195000Z'))
+        self.assertEqual(st[1].stats.endtime,
+                         UTCDateTime('2008-01-02T09:00:00.275000Z'))
         # single channel / GSE2
-        t1 = UTCDateTime('20090101')
-        t2 = UTCDateTime('20100101')
+        # station has data from 2009-05-27T09:46:42 to 2009-08-06T19:27:12
+        t1 = UTCDateTime('2009-01-01')
+        t2 = UTCDateTime('2009-05-27T12:12:12')
         st = self.client.waveform.get_previews("BW", "RTLI", "", "EHN", t1, t2)
         self.assertEqual(len(st), 1)
-        self.assertEqual(st[0].id, 'BW.RTLI..EHN')
-        self.assertEqual(st[0].stats.delta, 30.0)
-        self.assertEqual(len(st[0]), 205642)
-        self.assertEqual(st[0].stats.npts, 205642)
+        tr = st[0]
+        self.assertEqual(tr.id, 'BW.RTLI..EHN')
+        self.assertEqual(tr.stats.delta, 30.0)
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime('2009-05-27T09:46:42.000000Z'))
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime('2009-05-27T12:12:12.000000Z'))
+        self.assertEqual(len(tr), 292)
+        np.testing.assert_array_equal(
+            tr.data[:10].astype(np.int32),
+            [165408, 282265, 67481, 1944, 21212, 2007, 1966, 2043, 2045, 1781])
 
     @vcr
     def test_get_preview_by_ids(self):
         # multiple channels / MiniSEED
-        t1 = UTCDateTime('20080101')
-        t2 = UTCDateTime('20080201')
+        t1 = UTCDateTime('2008-01-01T22')
+        t2 = UTCDateTime('2008-01-02T02')
         # via list
         st = self.client.waveform.get_previews_by_ids(
             ['BW.MANZ..EHE', 'BW.ROTZ..EHE'], t1, t2)
