@@ -173,17 +173,19 @@ class Event(__Event):
         :param kind: A list of strings (for a 1-row plot) or a nested list of
             strings (one list of strings per row), with the following keywords
             to generate a matplotlib figure:
-                * 'ortho' (Orthographic plot of event location,
-                  see :meth:`~obspy.core.event.catalog.Catalog.plot`),
-                * 'global' (Global plot of event location,
-                  see :meth:`~obspy.core.event.catalog.Catalog.plot`),
-                * 'local' (Local plot of event location,
-                  see :meth:`~obspy.core.event.catalog.Catalog.plot`),
-                * 'beachball' (Beachball of preferred focal mechanism),
-                * 'p_quiver' (quiver plot of p wave farfield),
-                * 's_quiver' (quiver plot of s wave farfield),
-                * 'p_sphere' (surface plot of p wave farfield),
-                * 's_sphere' (surface plot of s wave farfield).
+
+            * ``'ortho'`` (Orthographic plot of event location
+              see :meth:`~obspy.core.event.catalog.Catalog.plot`)
+            * ``'global'`` (Global plot of event location
+              see :meth:`~obspy.core.event.catalog.Catalog.plot`)
+            * ``'local'`` (Local plot of event location
+              see :meth:`~obspy.core.event.catalog.Catalog.plot`)
+            * ``'beachball'`` (Beachball of preferred focal mechanism)
+            * ``'p_quiver'`` (quiver plot of p wave farfield)
+            * ``'s_quiver'`` (quiver plot of s wave farfield)
+            * ``'p_sphere'`` (surface plot of p wave farfield)
+            * ``'s_sphere'`` (surface plot of s wave farfield)
+
         :type subplot_size: float
         :param subplot_size: Width/height of one single subplot cell in inches.
         :type show: bool
