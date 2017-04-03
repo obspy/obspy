@@ -30,6 +30,7 @@
        ~invsim.paz_to_freq_resp
        ~trigger.pk_baer
        ~polarization.polarization_analysis
+       ~regression.linear_regression
        ~spectral_estimation.PPSD
        ~quality_control.MSEEDMetadata
        ~trigger.recursive_sta_lta
@@ -61,6 +62,7 @@
        konnoohmachismoothing
        polarization
        quality_control
+       regression
        spectral_estimation
        rotate
        tf_misfit
