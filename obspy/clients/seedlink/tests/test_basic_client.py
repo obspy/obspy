@@ -17,7 +17,7 @@ from obspy.core.util.decorator import vcr
 
 # unix timestamp where this test has been recorded via vcr - needs to be set
 # to newer timestamp if recorded later again
-VCR_TIMESTAMP = 1490968843.6751757
+VCR_TIMESTAMP = 1491226177.086988
 NO_VCR_TIMESTAMP = UTCDateTime()
 # determine which timestamp to use
 TIMESTAMP = VCRSystem.disabled and NO_VCR_TIMESTAMP or VCR_TIMESTAMP
