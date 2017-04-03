@@ -598,6 +598,7 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
         vcr_module.VCRSystem.playback_only = True
     # always raise if vcr decorator is used but not needed
     vcr_module.VCRSystem.raise_if_not_needed = True
+    vcr_module.VCRSystem.disabled = no_vcr
 
     # set up normalization functions for checks of outgoing traffic in vcr
     def normalize_user_agent(name, args, kwargs):
@@ -661,8 +662,6 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
         normalize_user_agent, normalize_http_header_order,
         normalize_fdsn_queryauth_http_headers]
 
-    # set whether to use vcr with pre-recorded vcr tapes or not
-    obspy._no_vcr = no_vcr
     if offline:
         obspy._has_internet = (
             "Not using internet connection (obspy-runtests flag '--offline')")

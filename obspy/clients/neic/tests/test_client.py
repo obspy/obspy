@@ -8,7 +8,8 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import unittest
 
-import obspy
+from vcr import VCRSystem
+
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import vcr
 from obspy.clients.neic import Client
@@ -19,8 +20,7 @@ from obspy.clients.neic import Client
 VCR_TIMESTAMP = 1485568123.7079487
 NO_VCR_TIMESTAMP = UTCDateTime()
 # determine which timestamp to use
-USE_VCR = not getattr(obspy, '_no_vcr', False)
-TIMESTAMP = USE_VCR and VCR_TIMESTAMP or NO_VCR_TIMESTAMP
+TIMESTAMP = VCRSystem.disabled and NO_VCR_TIMESTAMP or VCR_TIMESTAMP
 
 
 class ClientTestCase(unittest.TestCase):

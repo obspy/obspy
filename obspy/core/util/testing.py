@@ -64,7 +64,7 @@ def runTest(self):  # NOQA
         else:
             reason = 'No internet connection ({})'.format(has_internet)
         raise unittest.SkipTest(reason)
-    no_vcr = getattr(obspy, '_no_vcr', False)
+    no_vcr = VCRSystem.disabled
     if '+VCR' in self._dt_test.docstring:
         # skip test, because it's..
         #  - a network test (marked by +VCR),
@@ -72,8 +72,14 @@ def runTest(self):  # NOQA
         #  - we don't have internet connectivity
         # (we really need to explictly check for "not True" as has_internet is
         #  either ``False`` or an error message if we don't have internet)
-        if no_vcr and has_internet is not True:
-            if has_internet is False:
+        if no_vcr:
+            # vcr force disabled and internet available
+            #      -> just run doctest via internet
+            if has_internet is True:
+                return self._runTest()
+            # vcr force disabled and no internet available
+            #      -> skip test
+            elif has_internet is False:
                 reason = 'No internet connection'
             else:
                 reason = 'No internet connection ({})'.format(has_internet)
@@ -93,7 +99,9 @@ def runTest(self):  # NOQA
                 # revert arclink monkey patch
                 time.sleep = orig_sleep
             return out
-    return self._runTest()
+    # not a VCR doctest, just run it without VCR
+    else:
+        return self._runTest()
 
 
 def _fdsn_save_pickled_service_discovery():

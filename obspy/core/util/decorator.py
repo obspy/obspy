@@ -68,7 +68,8 @@ def vcr(func, *args, **kwargs):
     :func:`vcr.vcr` decorator and skips vcr if it is disabled for this test run
     by option '--no-vcr' to :func:`obspy.scripts.runtests.main`.
     """
-    no_vcr = getattr(obspy, '_no_vcr', None)
+    import vcr as vcr_module
+    no_vcr = vcr_module.VCRSystem.disabled
     if no_vcr is None:
         msg = ("obspy._no_vcr is not set, this means the test is not executed "
                "via `obspy-runtests` on command line or "
@@ -82,7 +83,6 @@ def vcr(func, *args, **kwargs):
         run_network_test(func, *args, **kwargs)
     else:
         # run using vcr, relying on vcr tapes
-        import vcr as vcr_module
         vcr_module.vcr(decorated_func=func)(*args, **kwargs)
 
 
