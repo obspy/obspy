@@ -740,7 +740,8 @@ class Client(object):
                 max(tr.stats.endtime, netids[tr.id][1]))
 
         inventories = []
-        for key, value in netids.items():
+        for key in sorted(netids.keys()):
+            value = netids[key]
             net, sta, loc, chan = key.split(".")
             starttime, endtime = value
             try:
