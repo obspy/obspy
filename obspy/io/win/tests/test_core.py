@@ -45,7 +45,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_read_via_module(self):
         """
-        Read files via obspy.io.win.core._read_datamark function.
+        Read files via obspy.io.win.core._read_win function.
         """
         filename = os.path.join(self.path, '10030302.00')
         # 1

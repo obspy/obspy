@@ -38,7 +38,6 @@ The functionality is provided through the following packages:
    obspy.io.ah
    obspy.io.ascii
    obspy.io.css
-   obspy.io.datamark
    obspy.io.gcf
    obspy.io.gse2
    obspy.io.kinemetrics
@@ -52,6 +51,7 @@ The functionality is provided through the following packages:
    obspy.io.segy
    obspy.io.sh
    obspy.io.wav
+   obspy.io.win
    obspy.io.y
 
 .. rubric:: Event Data Import/Export Plug-ins
