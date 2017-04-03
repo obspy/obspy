@@ -1053,8 +1053,9 @@ class Client(object):
         if isinstance(bulk, collections.Iterable) \
                 and not hasattr(bulk, "read") \
                 and not isinstance(bulk, (str, native_str)):
-            tmp = ["%s=%s" % (key, convert_to_string(value))
-                   for key, value in arguments.items() if value is not None]
+            tmp = sorted(["%s=%s" % (key, convert_to_string(value))
+                         for key, value in arguments.items()
+                         if value is not None])
             # empty location codes have to be represented by two dashes
             tmp += [" ".join((net, sta, loc or "--", cha,
                               convert_to_string(t1), convert_to_string(t2)))
