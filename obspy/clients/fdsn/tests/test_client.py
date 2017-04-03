@@ -399,7 +399,8 @@ class ClientTestCase(unittest.TestCase):
         Tests the parsing of the available event contributors.
         """
         response = requests.get(
-            'http://service.iris.edu/fdsnws/event/1/contributors')
+            'http://service.iris.edu/fdsnws/event/1/contributors',
+            headers={'User-Agent': 'ObsPy (test suite)'})
         xml = lxml.etree.fromstring(response.content)
         expected = {
             elem.text for elem in xml.xpath('/Contributors/Contributor')}
