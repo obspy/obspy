@@ -31,12 +31,13 @@ class ClientTestCase(unittest.TestCase):
     """
     def setUp(self):
         # Monkey patch: set lower default precision of all UTCDateTime objects
+        self._original_utcdatetime_precision = UTCDateTime.DEFAULT_PRECISION
         UTCDateTime.DEFAULT_PRECISION = 4
         self.client = Client("pubavo1.wr.usgs.gov", 16022, timeout=30.0)
 
     def tearDown(self):
         # restore default precision of all UTCDateTime objects
-        UTCDateTime.DEFAULT_PRECISION = 6
+        UTCDateTime.DEFAULT_PRECISION = self._original_utcdatetime_precision
 
     @vcr
     def test_get_waveform(self):
