@@ -1154,7 +1154,7 @@ class Client(object):
 
     def __str__(self):
         versions = dict([(s, self._get_webservice_versionstring(s))
-                         for s in self.services if s in FDSNWS])
+                         for s in FDSNWS if s in self.services])
         services_string = ["'%s' (v%s)" % (s, versions[s])
                            for s in FDSNWS if s in self.services]
         other_services = sorted([s for s in self.services if s not in FDSNWS])
