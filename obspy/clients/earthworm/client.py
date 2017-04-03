@@ -190,8 +190,9 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.clients.earthworm import Client  # doctest: +VCR
-        >>> client = Client("pubavo1.wr.usgs.gov", 16022, timeout=5)
+        >>> from obspy.clients.earthworm import Client
+        >>> client = Client("pubavo1.wr.usgs.gov",
+        ...                 16022, timeout=5)  # doctest: +NETWORK_TEST
         >>> response = client.get_availability(
         ...     network="AV", station="ACH", channel="EH*")
         >>> print(response)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE

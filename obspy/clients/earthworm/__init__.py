@@ -16,7 +16,7 @@ Basic Usage
     short period channels (``"EH*"``) of station ``"ACH"`` of the `Alaska
     Volcano Observatory <https://www.avo.alaska.edu/>`_ (``"AV"``).
 
-    >>> from obspy.clients.earthworm import Client  # doctest: +VCR
+    >>> from obspy.clients.earthworm import Client  # doctest: +NETWORK_TEST
     >>> client = Client("pubavo1.wr.usgs.gov", 16022)
     >>> response = client.get_availability('AV', 'ACH', channel='EHE')
     >>> print(response)  # doctest: +SKIP
