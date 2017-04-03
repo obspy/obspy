@@ -542,7 +542,7 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
               server="tests.obspy.org", all=False, timeit=False,
               interactive=False, slowest=0, exclude=[], tutorial=False,
               hostname=HOSTNAME, ci_url=None, pr_url=None, no_vcr=False,
-              offline=False, vcr_record=False):
+              offline=False, vcr_record=False, vcr_overwrite=False):
     """
     This function executes ObsPy test suites.
 
@@ -593,9 +593,8 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
             msg = ("Can not use option 'vcr_record' together with option "
                    "'no_vcr'")
             raise ValueError(msg)
-        vcr_module.VCRSystem.overwrite = True
-    else:
-        vcr_module.VCRSystem.playback_only = True
+    vcr_module.VCRSystem.playback_only = not vcr_record
+    vcr_module.VCRSystem.overwrite = vcr_overwrite
     # always raise if vcr decorator is used but not needed
     vcr_module.VCRSystem.raise_if_not_needed = True
     vcr_module.VCRSystem.disabled = no_vcr
@@ -780,21 +779,31 @@ def run(argv=None, interactive=True):
     report.add_argument('--pr-url', default=None,
                         dest="pr_url", help='Github (Pull Request) URL.')
 
+    # networking/vcr options
+    networking = parser.add_argument_group('Networking Options')
+    networking.add_argument(
+        '--no-vcr', action='store_true', dest='no_vcr',
+        help='do not use pre-recorded vcr tapes with network interactions for '
+             'network tests. using this option, tests that use vcr tapes will '
+             'use internet connection if possible or they will be skipped if '
+             'no internet connection is available.')
+    networking.add_argument(
+        '--vcr-record', action='store_true', dest='vcr_record',
+        help='record new vcr tapes. by default this will not overwrite '
+             'existing tapes but instead use existing tapes for playback. use '
+             'option "--vcr-overwrite" to overwrite existing tapes.')
+    networking.add_argument(
+        '--vcr-overwrite', action='store_true', dest='vcr_overwrite',
+        help='overwrite existing vcr tapes (has no effect without '
+             '"--vcr-record").')
+    networking.add_argument(
+        '--offline', action='store_true', dest='offline',
+        help='do not use internet connection for network tests even if '
+             'available, i.e. force-skip tests that would use an internet '
+             'connection.')
+
     # other options
     others = parser.add_argument_group('Additional Options')
-    others.add_argument('--no-vcr', action='store_true', dest='no_vcr',
-                        help='do not use pre-recorded vcr tapes with network '
-                             'interactions for network tests. using this '
-                             'option, tests that use vcr tapes will use '
-                             'internet connection if possible or they will be '
-                             'skipped if no internet connection is available.')
-    others.add_argument('--vcr-record', action='store_true', dest='vcr_record',
-                        help='do not use pre-recorded vcr tapes but instead '
-                             'record new vcr tapes.')
-    others.add_argument('--offline', action='store_true', dest='offline',
-                        help='do not use internet connection for network '
-                             'tests even if available, i.e. force-skip tests '
-                             'that would use an internet connection.')
     others.add_argument('--tutorial', action='store_true',
                         help='add doctests in tutorial')
     others.add_argument('--no-flake8', action='store_true',
@@ -860,7 +869,8 @@ def run(argv=None, interactive=True):
                      exclude=args.exclude, tutorial=args.tutorial,
                      hostname=args.hostname, ci_url=args.ci_url,
                      pr_url=args.pr_url, no_vcr=args.no_vcr,
-                     offline=args.offline, vcr_record=args.vcr_record)
+                     offline=args.offline, vcr_record=args.vcr_record,
+                     vcr_overwrite=args.vcr_overwrite)
 
 
 def main(argv=None, interactive=True):
