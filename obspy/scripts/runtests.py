@@ -94,6 +94,7 @@ import importlib
 import operator
 import os
 import platform
+import re
 import sys
 import time
 import traceback
@@ -597,6 +598,68 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
         vcr_module.VCRSystem.playback_only = True
     # always raise if vcr decorator is used but not needed
     vcr_module.VCRSystem.raise_if_not_needed = True
+
+    # set up normalization functions for checks of outgoing traffic in vcr
+    def normalize_user_agent(name, args, kwargs):
+        if name != 'sendall':
+            return name, args, kwargs
+        if len(args) != 1:
+            return name, args, kwargs
+        try:
+            b'User-Agent' in args[0]
+        except:
+            return name, args, kwargs
+        # we're using a couple of different user-agent version string patterns
+        # across our code base..
+        pattern = (
+            b'User-Agent: ObsPy.*? \\(.*?, Python [0-9\.]*\\)')
+        repl = b'User-Agent: ObsPy (test suite)'
+        args = tuple([re.sub(pattern, repl, args[0], count=1)])
+        return name, args, kwargs
+
+    def normalize_http_header_order(name, args, kwargs):
+        if name != 'sendall':
+            return name, args, kwargs
+        if len(args) != 1:
+            return name, args, kwargs
+        try:
+            assert b'HTTP' in args[0]
+        except:
+            return name, args, kwargs
+        # sort HTTP headers
+        # example:
+        # (b'GET /fdsnws/event/1/contributors HTTP/1.1\r\n'
+        #  b'Host: service.iris.edu\r\nAccept-Encoding: gzip, deflate\r\n'
+        #  b'User-Agent: python-requests/2.13.0\r\nConnection: keep-alive\r\n'
+        #  b'Accept: */*\r\n\r\n')
+        x = args[0]
+        x = x.split(b'\r\n')
+        # two empty items at the end
+        x = x[:1] + sorted(x[1:-2]) + x[-2:]
+        x = b'\r\n'.join(x)
+        args = tuple([x])
+        return name, args, kwargs
+
+    def normalize_fdsn_queryauth_http_headers(name, args, kwargs):
+        if name != 'sendall':
+            return name, args, kwargs
+        if len(args) != 1:
+            return name, args, kwargs
+        try:
+            assert b'/fdsnws/dataselect/1/queryauth' in args[0]
+        except:
+            return name, args, kwargs
+        # remove some changing hashes from HTTP headers
+        patterns = (
+            b'(response)=(["\'])[0-9a-fA-F]{32}\\2',
+            b'(cnonce)=(["\'])[0-9a-fA-F]{16}\\2')
+        repl = b'\\1=\\2xxx\\2'
+        for pattern in patterns:
+            args = tuple([re.sub(pattern, repl, args[0], count=1)])
+        return name, args, kwargs
+    vcr_module.VCRSystem.outgoing_check_normalizations = [
+        normalize_user_agent, normalize_http_header_order,
+        normalize_fdsn_queryauth_http_headers]
 
     # set whether to use vcr with pre-recorded vcr tapes or not
     obspy._no_vcr = no_vcr
