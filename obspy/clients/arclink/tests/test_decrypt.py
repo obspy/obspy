@@ -30,16 +30,20 @@ class ClientTestCase(unittest.TestCase):
     Test cases for L{obspy.clients.arclink.client.Client}.
     """
     def setUp(self):
-        # monkey patch sleep calls in ArcLink client
-        def vcr_sleep(*args, **kwargs):
-            if VCRSystem.is_playing:
-                return
-            return orig_sleep(*args, **kwargs)
-        time.sleep = vcr_sleep
+        # if we're using vcr..
+        if not VCRSystem.disabled:
+            # ..monkey patch sleep calls in ArcLink client
+            def vcr_sleep(*args, **kwargs):
+                if VCRSystem.is_playing:
+                    return
+                return orig_sleep(*args, **kwargs)
+            time.sleep = vcr_sleep
 
     def tearDown(self):
-        # revert monkey patch
-        time.sleep = orig_sleep
+        # if we're using vcr..
+        if not VCRSystem.disabled:
+            # ..need to revert monkey patch
+            time.sleep = orig_sleep
 
     def _get_waveform_with_dcid_key(self):
         """
