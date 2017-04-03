@@ -97,7 +97,7 @@ install:
   # additional dependencies
   - "pip install pyimgur"
   - "pip install -U future"
-  - "pip install -U vcr"
+  - "pip install -U https://github.com/obspy/vcr/archive/check_outgoing_traffic.zip"
   # list package versions
   - "conda list"
 
