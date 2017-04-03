@@ -672,7 +672,8 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
         if len(args) != 1:
             return name, args, kwargs
         try:
-            assert b'/fdsnws/dataselect/1/queryauth' in args[0]
+            assert b'/fdsnws/' in args[0]
+            assert b'/queryauth' in args[0]
         except:
             return name, args, kwargs
         # remove some changing hashes from HTTP headers
@@ -682,6 +683,18 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
         repl = b'\\1=\\2xxx\\2'
         for pattern in patterns:
             args = tuple([re.sub(pattern, repl, args[0], count=1)])
+        # sort REST parts in URLs that are included in Authorization header
+        pattern = (
+            b'(["\'])(/fdsnws/.*?/.*?/queryauth)(\\?.*?=.*?)((&.*?=.*?)+)\\1')
+
+        def repl(match):
+            rest_parts = [match.group(3)[1:]]
+            rest_parts += match.groups()[-2][1:].split(b'&')
+            rest = b'?' + b'&'.join(sorted(rest_parts))
+            rest_url_sorted = (
+                match.group(1) + match.group(2) + rest + match.group(1))
+            return rest_url_sorted
+        args = tuple([re.sub(pattern, repl, args[0])])
         return name, args, kwargs
     vcr_module.VCRSystem.outgoing_check_normalizations = [
         normalize_user_agent, normalize_http_header_order,
