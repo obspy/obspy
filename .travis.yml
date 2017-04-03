@@ -30,10 +30,14 @@ matrix:
             # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
             - libstdc++6:i386
             - gcc-multilib
+      env: PYTHON_VERSION=3.6
+
     - os: osx
       env: PYTHON_VERSION=2.7
     - os: osx
       env: PYTHON_VERSION=3.5
+    - os: osx
+      env: PYTHON_VERSION=3.6
 
 # mimick travis fast fail and rolling build setup from:
 # https://github.com/JuliaLang/julia/blob/master/.travis.yml
@@ -84,11 +88,21 @@ install:
         # no basemap version works with this old numpy, so leave out
         BASEMAP=""
         PYPROJ="pyproj"
+        GDAL="gdal"
         # ancient matplotlib needs to be turned to AGG before anything else,
         # otherwise it tries to import incompatible version of Qt as a backend
         # and hick-ups..
         mkdir -p $HOME/.matplotlib
         echo 'backend:AGG' > $HOME/.matplotlib/matplotlibrc
+      elif [[ "${PYTHON_VERSION}" == '3.6' ]]; then
+        # allow newest package versions on Python 3.6
+        NUMPY_VERSION='*'
+        SCIPY_VERSION='*'
+        MPL_VERSION=1.5
+        BASEMAP="basemap"
+        PYPROJ="pyproj"
+        # currently no gdal that matches our main dependencies on Py36
+        GDAL=""
       elif [[ "${PYTHON_VERSION}" == '3.3' ]]; then
         # newer package versions for 3.3 not available via anaconda
         NUMPY_VERSION=1.9.2
@@ -98,20 +112,22 @@ install:
         # no cartopy for py33 in conda-forge channel
         # anaconda doesn't provide pyproj for Python 3.3 anymore, looks like
         PYPROJ=""
+        GDAL="gdal"
       elif [[ "${PYTHON_VERSION:0:1}" == '3' ]]; then
         NUMPY_VERSION=1.10.4
         SCIPY_VERSION=0.17.0
         MPL_VERSION=1.5.1
         BASEMAP="basemap=1.0.7"
         PYPROJ="pyproj"
+        GDAL="gdal"
       else
         NUMPY_VERSION=1.10.4
         SCIPY_VERSION=0.17.0
         MPL_VERSION=1.5.1
         BASEMAP="basemap=1.0.7"
         PYPROJ="pyproj"
+        GDAL="gdal"
       fi
-  # for now fix requests version, can be changed when a new requests is released (see #1599)
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
         numpy=$NUMPY_VERSION
@@ -125,11 +141,12 @@ install:
         sqlalchemy
         mock
         nose
-        gdal
+        $GDAL
         docopt
         coverage
-        'requests<2.12'
+        requests
         jsonschema
+        'icu=58.*'
   - source activate test-environment
   # additional, optional packages that run some more tests but are not
   # available for all archs. "--no-update-dependencies" keeps other packages at
