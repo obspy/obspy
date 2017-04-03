@@ -640,6 +640,32 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
         args = tuple([x])
         return name, args, kwargs
 
+    def normalize_http_rest_order(name, args, kwargs):
+        if name != 'sendall':
+            return name, args, kwargs
+        if len(args) != 1:
+            return name, args, kwargs
+        try:
+            assert b'HTTP' in args[0]
+        except:
+            return name, args, kwargs
+        # sort HTTP headers
+        # example:
+        # (b'GET /irisws/syngine/1/query?model=ak135f_5s&network=IU'
+        #  b'&station=ANMO&eventid=GCMT%3AC201002270634A&components=ABC'
+        #  b'&format=miniseed HTTP/1.1\r\nAccept-Encoding: gzip, deflate\r\n'
+        #  b'Accept: */*\r\nConnection: keep-alive\r\nHost: service.iris.edu'
+        #  b'\r\nUser-Agent: ObsPy (test suite)\r\n\r\n')
+        command, url, headers = args[0].split(None, 2)
+        try:
+            assert b'?' in url and b'&' in url
+        except:
+            return name, args, kwargs
+        url, rest = url.split(b'?')
+        rest = b'&'.join(sorted(rest.split(b'&')))
+        args = tuple([b' '.join((command, b'?'.join((url, rest)), headers))])
+        return name, args, kwargs
+
     def normalize_fdsn_queryauth_http_headers(name, args, kwargs):
         if name != 'sendall':
             return name, args, kwargs
@@ -659,7 +685,8 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
         return name, args, kwargs
     vcr_module.VCRSystem.outgoing_check_normalizations = [
         normalize_user_agent, normalize_http_header_order,
-        normalize_fdsn_queryauth_http_headers]
+        normalize_fdsn_queryauth_http_headers,
+        normalize_http_rest_order]
 
     if offline:
         obspy._has_internet = (
