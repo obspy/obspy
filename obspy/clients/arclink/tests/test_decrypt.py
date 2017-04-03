@@ -17,7 +17,7 @@ from obspy.clients.arclink import Client, decrypt
 from obspy.clients.arclink.client import DCID_KEY_FILE, ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import vcr
+from obspy.core.util.decorator import vcr, network_test
 
 
 orig_sleep = time.sleep
@@ -214,10 +214,13 @@ class ClientTestCase(unittest.TestCase):
         decrypt.HAS_M2CRYPTO, decrypt.HAS_CRYPTOGRAPHY = backup
 
     @unittest.skipIf(not decrypt.HAS_M2CRYPTO, 'M2Crypto is not installed')
-    @vcr
+    @network_test
     def test_m2crypto(self):
         """
         Test M2Crypto by temporarly disabling all other crypto libs
+
+        M2Crypto is only available on Python 2 so we can not record a VCR tape
+        for it. Therefore it is not a VCR test but a network_test.
         """
         # monkey patch
         backup = decrypt.HAS_CRYPTOGRAPHY, decrypt.HAS_PYCRYPTO
