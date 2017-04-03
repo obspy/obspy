@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
+import copy
 import os
 import pickle
 import sys
@@ -152,6 +153,7 @@ class Client(object):
         opener = urllib_request.build_opener(auth_handler)
         # install globally
         urllib_request.install_opener(opener)
+        self.default_headers = {'User-Agent': 'ObsPy'}
 
     def ping(self):
         """
@@ -159,7 +161,9 @@ class Client(object):
         """
         try:
             t1 = time.time()
-            urllib_request.urlopen(self.base_url, timeout=self.timeout).read()
+            headers = copy.deepcopy(self.default_headers)
+            request = urllib_request.Request(self.base_url, headers=headers)
+            urllib_request.urlopen(request, timeout=self.timeout).read()
             return (time.time() - t1) * 1000.0
         except Exception:
             pass
@@ -207,8 +211,10 @@ class Client(object):
         # certain requests randomly fail on rare occasions, retry
         for _i in range(self.retries):
             try:
-                response = urllib_request.urlopen(remoteaddr,
-                                                  timeout=self.timeout)
+                headers = copy.deepcopy(self.default_headers)
+                request = urllib_request.Request(remoteaddr, headers=headers)
+                response = urllib_request.urlopen(
+                    request, timeout=self.timeout)
                 doc = response.read()
                 return doc
             # XXX currently there are random problems with SeisHub's internal
@@ -216,7 +222,9 @@ class Client(object):
             # XXX this can be circumvented by issuing the same request again..
             except Exception:
                 continue
-        response = urllib_request.urlopen(remoteaddr, timeout=self.timeout)
+        headers = copy.deepcopy(self.default_headers)
+        request = urllib_request.Request(remoteaddr, headers=headers)
+        response = urllib_request.urlopen(request, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -242,6 +250,7 @@ class Client(object):
         elif method in HTTP_ACCEPTED_NODATA_METHODS and xml_string:
             raise TypeError("Unexpected data for %s request." % method)
 
+        headers = headers or copy.deepcopy(self.default_headers)
         req = _RequestWithMethod(method=method, url=url, data=xml_string,
                                  headers=headers)
         # it seems the following always ends in a HTTPError even with
