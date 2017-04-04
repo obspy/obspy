@@ -696,10 +696,34 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
             return rest_url_sorted
         args = tuple([re.sub(pattern, repl, args[0])])
         return name, args, kwargs
+
+    # set up normalization functions for checks of outgoing traffic in vcr
+    def normalize_accept_encoding_http_header(name, args, kwargs):
+        if name != 'sendall':
+            return name, args, kwargs
+        if len(args) != 1:
+            return name, args, kwargs
+        try:
+            b'Accept-Encoding:' in args[0]
+        except:
+            return name, args, kwargs
+        # vcr tapes in general prompt server for either 'gzip' or 'deflate'..
+        # strip 'identity' (which is always allowed anyway) and 'compress' and
+        # sort.
+        # the only problematic scenario is when our client would not send
+        # 'gzip' but our recorded vccr tapes ship 'gzip'.. but that should fail
+        # during tests then.
+        pattern = (
+            b'(Accept-Encoding:) .*?(\\r\\n)')
+        repl = b'\\1 gzip, deflate (<- normalized by runtests!)\\2'
+        args = tuple([re.sub(pattern, repl, args[0], count=1)])
+        return name, args, kwargs
+
     vcr_module.VCRSystem.outgoing_check_normalizations = [
         normalize_user_agent, normalize_http_header_order,
         normalize_fdsn_queryauth_http_headers,
-        normalize_http_rest_order]
+        normalize_http_rest_order,
+        normalize_accept_encoding_http_header]
 
     if offline:
         obspy._has_internet = (
