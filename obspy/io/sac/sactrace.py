@@ -510,6 +510,10 @@ class EnumHeader(IntHeader):
         if value is None:
             value = HD.INULL
         elif _ut.is_valid_enum_str(self.name, value):
+            if self.name == 'iztype':
+                reftime = _iztype_reftime(instance, value)
+                instance.reftime = reftime
+                # this also shifts all non-null relative times (instance._allt)
             value = HD.ENUM_VALS[value]
         else:
             msg = 'Unrecognized enumerated value "{}" for header "{}"'
@@ -609,9 +613,9 @@ def _get_e(self):
     return e
 
 
-def _set_iztype(self, iztype):
+def _iztype_reftime(sactrace, iztype):
     """
-    Set the iztype, which describes what the reftime is.
+    Get the new reftime for a given iztype.
 
     Setting the iztype will shift the relative time headers, such that the
     header that iztype points to is (near) zero, and all others are shifted
@@ -619,6 +623,8 @@ def _set_iztype(self, iztype):
 
     Affected headers: b, o, a, f, t0-t9
 
+    :param sactrace:
+    :type sactrace: SACTrace
     :param iztype: One of the following strings:
         'iunkn'
         'ib', begin time
@@ -627,6 +633,8 @@ def _set_iztype(self, iztype):
         'ia', first arrival time
         'it0'-'it9', user defined pick t0-t9.
     :type iztype: str
+    :rtype reftime: UTCDateTime
+    :return: The new SAC reference time.
 
     """
     # The Plan:
@@ -641,27 +649,24 @@ def _set_iztype(self, iztype):
         ref_val = 0.0
     elif iztype == 'iday':
         # seconds since midnight of reference day
-        reftime = self.reftime
+        reftime = sactrace.reftime
         ref_val = reftime - UTCDateTime(year=reftime.year,
                                         julday=reftime.julday)
     else:
         # a relative time header.
         # remove the 'i' (first character) in the iztype to get the header name
-        ref_val = getattr(self, iztype[1:])
+        ref_val = getattr(sactrace, iztype[1:])
         if ref_val is None:
             msg = "Reference header for iztype '{}' is not set".format(iztype)
             raise SacError(msg)
 
     # 2. set a new reference time,
-    # 3. which also shifts all non-null relative times (self._allt).
+    # 3. which also shifts all non-null relative times (sactrace._allt).
     #    remainder microseconds may be in the reference header value, because
     #    nzmsec can't hold them.
-    self.reftime = self.reftime + ref_val
+    new_reftime = sactrace.reftime + ref_val
 
-    # 4. no exceptions yet. actually set the iztype
-    #    make an _enumsetter for iztype and use it, for its enum checking.
-    izsetter = _enumsetter('iztype')
-    izsetter(self, iztype)
+    return new_reftime
 
 
 # kevnm is 16 characters, split into two 8-character fields
