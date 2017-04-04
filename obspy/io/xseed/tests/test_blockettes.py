@@ -71,6 +71,12 @@ class BlocketteTestCase(unittest.TestCase):
         file.close()
         # Simplify and Validate the list.
         self.simplify_and_validate_and_create_dictionary(test_examples)
+        # Convert everything to bytes - a lot of the logic in this method
+        # here assumes strings to its easier to work with strings and
+        # convert to bytes after everything is done.
+        for _i in test_examples:
+            for key, value in _i.items():
+                _i[key] = value.encode()
         return test_examples
 
     def simplify_and_validate_and_create_dictionary(self, examples):
