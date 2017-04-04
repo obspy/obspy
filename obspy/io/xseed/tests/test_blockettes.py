@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import io
 import os
 import sys
 import unittest
@@ -40,7 +41,7 @@ class BlocketteTestCase(unittest.TestCase):
         # Create a new empty list to store all information of the test in it.
         test_examples = []
         # Now read the corresponding file and parse it.
-        file = open(blkt_file, 'rb')
+        file = io.open(blkt_file, 'rt')
         # Helper variable to parse the file. Might be a little bit slow but its
         # just for tests.
         cur_stat = None
