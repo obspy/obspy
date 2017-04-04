@@ -301,7 +301,7 @@ class SACTraceTestCase(unittest.TestCase):
         """
         Test standard SACTrace float headers using the floatheader descriptor.
         """
-        sac = SACTrace._from_arrays()
+        sac = SACTrace()
         for hdr in ('nzyear', 'nzjday', 'nzhour', 'nzmin', 'nzsec', 'nzmsec',
                     'nvhdr', 'norid', 'nevid', 'nwfid', 'iinst', 'istreg',
                     'ievreg', 'iqual', 'unused23'):
@@ -323,7 +323,7 @@ class SACTraceTestCase(unittest.TestCase):
             self.assertEqual(getattr(SACTrace, hdr).__doc__, _hd.DOC.get(hdr))
 
     def test_bool_headers(self):
-        sac = SACTrace._from_arrays()
+        sac = SACTrace()
         for hdr in ('leven', 'lpspol', 'lovrok', 'lcalda'):
             # getting existing null values return None
             sac._hi[_hd.INTHDRS.index(hdr)] = _hd.INULL
@@ -335,9 +335,14 @@ class SACTraceTestCase(unittest.TestCase):
                 self.assertEqual(getattr(sac, hdr), bool(boolval))
 
     def test_enumheader(self):
-        sac = SACTrace._from_arrays()
+        sac = SACTrace()
+        # set all the `iztype` reference headers, so that it won't fail
+        for idx, hdr in enumerate(['b', 'o', 'a', 'f'] +\
+                                  ['t' + str(i) for i in range(10)]):
+            setattr(sac, hdr, idx)
         for enumhdr, accepted_vals in _hd.ACCEPTED_VALS.items():
             if enumhdr != 'iqual':
+                # iqual is allowed to be integer, not an enumerated str
                 for accepted_val in accepted_vals:
                     accepted_int = _hd.ENUM_VALS[accepted_val]
 
@@ -349,7 +354,7 @@ class SACTraceTestCase(unittest.TestCase):
                                      accepted_int)
 
     def test_string_headers(self):
-        sac = SACTrace._from_arrays()
+        sac = SACTrace()
         for hdr in ('kstnm', 'khole', 'ko', 'ka', 'kt0', 'kt1', 'kt2', 'kt3',
                     'kt4', 'kt5', 'kt6', 'kt7', 'kt8', 'kt9', 'kf', 'kuser0',
                     'kuser1', 'kuser2', 'kcmpnm', 'knetwk', 'kdatrd',
@@ -377,7 +382,7 @@ class SACTraceTestCase(unittest.TestCase):
             self.assertEqual(getattr(SACTrace, hdr).__doc__, _hd.DOC.get(hdr))
 
     def test_kevnm(self):
-        sac = SACTrace._from_arrays()
+        sac = SACTrace()
         # test kevnm (kevnm + kevnm2)
         kevnm = '1234567890123456'
         kevnm1, kevnm2 = kevnm[:8], kevnm[8:]
