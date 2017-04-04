@@ -24,6 +24,7 @@ import logging
 import sys
 import traceback
 
+from obspy.core.util.misc import raise_if_vcr_exception
 from .client.seedlinkconnection import SeedLinkConnection
 from .seedlinkexception import SeedLinkException
 from .slpacket import SLPacket
@@ -353,6 +354,7 @@ class SLClient(object):
             sl_client.initialize()
             sl_client.run()
         except Exception as e:
+            raise_if_vcr_exception(e)
             logger.critical(e)
             traceback.print_exc()
 

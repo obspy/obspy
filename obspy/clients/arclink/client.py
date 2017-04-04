@@ -25,6 +25,7 @@ import numpy as np
 
 from obspy import UTCDateTime, read
 from obspy.core.util import AttribDict, complexify_string
+from obspy.core.util.misc import raise_if_vcr_exception
 
 
 DCID_KEY_FILE = os.path.join(os.getenv('HOME') or '', 'dcidpasswords.txt')
@@ -167,7 +168,8 @@ class Client(object):
             self._client.open(native_str(self._client.host),
                               self._client.port,
                               self._client.timeout)
-        except Exception:
+        except Exception as e:
+            raise_if_vcr_exception(e)
             # old Python 2.7: port needs to be native int or string -> not long
             self._client.open(native_str(self._client.host),
                               native_str(self._client.port),
@@ -258,12 +260,7 @@ class Client(object):
                 print('\nRequesting %s:%d' % (self._client.host,
                                               self._client.port))
             self._reconnect()
-            try:
-                return self._request(request_type, request_data)
-            except ArcLinkException:
-                raise
-            except Exception:
-                raise
+            return self._request(request_type, request_data)
         msg = 'Could not find route to %s.%s'
         raise ArcLinkException(msg % (request_data[2], request_data[3]))
 
@@ -555,7 +552,7 @@ class Client(object):
         if compressed:
             try:
                 import bz2
-            except Exception:
+            except ImportError:
                 compressed = False
             else:
                 rtype += " compression=bzip2"

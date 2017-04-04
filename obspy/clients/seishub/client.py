@@ -35,6 +35,7 @@ from lxml.etree import Element, SubElement, tostring
 from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guess_delta
 from obspy.core.util.decorator import deprecated_keywords
+from obspy.core.util.misc import raise_if_vcr_exception
 from obspy.clients.base import DEFAULT_USER_AGENT
 from obspy.io.xseed import Parser
 
@@ -166,8 +167,8 @@ class Client(object):
             request = urllib_request.Request(self.base_url, headers=headers)
             urllib_request.urlopen(request, timeout=self.timeout).read()
             return (time.time() - t1) * 1000.0
-        except Exception:
-            pass
+        except Exception as e:
+            raise_if_vcr_exception(e)
 
     def test_auth(self):
         """
@@ -221,8 +222,8 @@ class Client(object):
             # XXX currently there are random problems with SeisHub's internal
             # XXX SQL database access ("cannot operate on a closed database").
             # XXX this can be circumvented by issuing the same request again..
-            except Exception:
-                continue
+            except Exception as e:
+                raise_if_vcr_exception(e)
         headers = copy.deepcopy(self.default_headers)
         request = urllib_request.Request(remoteaddr, headers=headers)
         response = urllib_request.urlopen(request, timeout=self.timeout)
@@ -749,8 +750,8 @@ master/seishub/plugins/seismology/waveform.py
                 paz = parser.get_paz(seed_id=seed_id,
                                      datetime=UTCDateTime(datetime))
                 return paz
-            except Exception:
-                continue
+            except Exception as e:
+                raise_if_vcr_exception(e)
         network, station, location, channel = seed_id.split(".")
         # request station information
         station_list = self.get_list(network=network, station=station,

@@ -22,6 +22,7 @@ import socket
 import time
 
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.misc import raise_if_vcr_exception
 from .slnetstation import SLNetStation
 from .slstate import SLState
 from ..seedlinkexception import SeedLinkException
@@ -851,6 +852,7 @@ class SeedLinkConnection(object):
                             self.state.sendptr = 0
                             self.state.state = SLState.SL_DATA
                         except Exception as e:
+                            raise_if_vcr_exception(e)
                             msg = "negotiation with remote SeedLink failed: %s"
                             logger.error(msg % (e))
                             self.disconnect()
@@ -1057,8 +1059,8 @@ class SeedLinkConnection(object):
                 msg = "socket connect time-out %ss" % (timeout)
                 try:
                     self.socket.close()
-                except Exception:
-                    pass
+                except Exception as e:
+                    raise_if_vcr_exception(e)
                 self.socket = None
                 raise SeedLinkException(msg)
 
@@ -1067,6 +1069,7 @@ class SeedLinkConnection(object):
             self.socket.settimeout(self.netto)
 
         except Exception as e:
+            raise_if_vcr_exception(e)
             msg = "cannot connect to SeedLink server: %s"
             raise SeedLinkException(msg % (e))
 
@@ -1077,16 +1080,16 @@ class SeedLinkConnection(object):
             try:
                 self.socket.close()
                 self.socket = None
-            except Exception:
-                pass
+            except Exception as e:
+                raise_if_vcr_exception(e)
             raise sle
         except IOError as ioe:
             # traceback.print_exc()
             try:
                 self.socket.close()
                 self.socket = None
-            except Exception:
-                pass
+            except Exception as e:
+                raise_if_vcr_exception(e)
             raise ioe
 
     def disconnect(self):
@@ -1539,6 +1542,7 @@ class SeedLinkConnection(object):
                 logger.error(sle.value)
                 continue
             except Exception as e:
+                raise_if_vcr_exception(e)
                 logger.error(str(e))
                 continue
             acceptsta += 1

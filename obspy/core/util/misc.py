@@ -525,6 +525,19 @@ def limit_numpy_fft_cache(max_size_in_mb_per_cache=100):
             cache.clear()
 
 
+def raise_if_vcr_exception(e):
+    """
+    """
+    # don't catch vcr exceptions, which only occur during testing,
+    # otherwise this can lead to strange errors when running tests
+    try:
+        from vcr import VCRException
+    except:
+        return
+    if isinstance(e, VCRException):
+        raise e
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

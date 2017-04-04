@@ -40,6 +40,7 @@ from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
+from obspy.core.util.misc import raise_if_vcr_exception
 from obspy.clients.base import DEFAULT_USER_AGENT
 from .header import (DEFAULT_PARAMETERS, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
@@ -1663,6 +1664,7 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
             print(msg)
         return e.code, e
     except Exception as e:
+        raise_if_vcr_exception(e)
         if debug is True:
             print("Error while downloading: %s" % url)
         return None, e
