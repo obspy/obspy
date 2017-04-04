@@ -2,7 +2,9 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import native_bytes
 
+import importlib
 import io
 import os
 import sys
@@ -199,6 +201,38 @@ class BlocketteTestCase(unittest.TestCase):
             # SEED/XSEED for every example in every direction.
             self.seed_and_xseed_conversion(test_examples, blkt_number)
         self.assertGreater(test_example_count, 0)
+
+    def test_all_blockettes_get_resp(self):
+        """
+        Tests get_resp() for all blockettes that have that method.
+        """
+        tested_blockettes = 0
+        # Loop over all files in the blockette-tests directory.
+        path = os.path.join(self.path, 'blockette-tests', 'blockette*.txt')
+        for blkt_file in iglob(path):
+
+            # Import the corresponding blockette.
+            blkt_number = blkt_file[-7:-4]
+            blkt = importlib.import_module(
+                'obspy.io.xseed.blockette.blockette%s' % blkt_number)
+            blkt = getattr(blkt, "Blockette%s" % blkt_number)
+
+            # Skip if it has no get_resp() method.
+            if not hasattr(blkt, "get_resp"):
+                continue
+            tested_blockettes += 1
+
+            test_examples = self.parse_file(blkt_file)
+            for ex in test_examples:
+                b = blkt()
+                b.parse_seed(ex["SEED"])
+                r = b.get_resp("AA", "BB", [])
+                # For now only check that it contains something and that it
+                # returns bytes.
+                self.assertGreater(len(r), 0)
+                self.assertTrue(isinstance(r, native_bytes))
+
+        self.assertGreater(tested_blockettes, 0)
 
     def test_blockette60_has_blockette_id(self):
         """

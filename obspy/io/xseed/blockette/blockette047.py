@@ -52,4 +52,4 @@ class Blockette047(Blockette):
             'B047F09     Response correction:                   %s\n' \
             % format_resp(self.correction_applied, 6) + \
             '#\t\t\n'
-        return string
+        return string.encode()
