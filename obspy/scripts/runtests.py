@@ -612,7 +612,7 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
         # we're using a couple of different user-agent version string patterns
         # across our code base..
         pattern = (
-            b'User-Agent: ObsPy.*? \\(.*?, Python [0-9\.]*\\)')
+            b'User-Agent: ObsPy.*? \\(.*?, Python [0-9\.]*\\+?\\)')
         repl = b'User-Agent: ObsPy (test suite)'
         args = tuple([re.sub(pattern, repl, args[0], count=1)])
         return name, args, kwargs
