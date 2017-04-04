@@ -23,7 +23,6 @@ import warnings
 from difflib import Differ
 
 import lxml
-import requests
 
 from obspy import UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
@@ -391,15 +390,14 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(set(self.client.services["available_event_catalogs"]),
                          set(("GCMT", "ISC", "NEIC PDE")))
 
-    @vcr
     def test_iris_event_contributors_availability(self):
         """
         Tests the parsing of the available event contributors.
         """
-        response = requests.get(
-            'http://service.iris.edu/fdsnws/event/1/contributors',
-            headers={'User-Agent': USER_AGENT_TESTSUITE})
-        xml = lxml.etree.fromstring(response.content)
+        expected_file = os.path.join(self.datapath,
+                                     'IRIS_event_contributors.txt')
+        with open(expected_file, 'rt') as fh:
+            xml = lxml.etree.fromstring(fh.read())
         expected = {
             elem.text for elem in xml.xpath('/Contributors/Contributor')}
         # check that we have some values in there
