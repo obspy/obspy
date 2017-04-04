@@ -174,6 +174,7 @@ class BlocketteTestCase(unittest.TestCase):
         """
         # Loop over all files in the blockette-tests directory.
         path = os.path.join(self.path, 'blockette-tests', 'blockette*.txt')
+        test_example_count = 0
         for blkt_file in iglob(path):
             # Get blockette number.
             blkt_number = blkt_file[-7:-4]
@@ -185,9 +186,12 @@ class BlocketteTestCase(unittest.TestCase):
                 raise ImportError(msg)
             # Parse the file.
             test_examples = self.parse_file(blkt_file)
+            # Check how many examples were actually tested.
+            test_example_count += len(test_examples)
             # The last step is to actually test the conversions to and from
             # SEED/XSEED for every example in every direction.
             self.seed_and_xseed_conversion(test_examples, blkt_number)
+        self.assertGreater(test_example_count, 0)
 
     def test_blockette60_has_blockette_id(self):
         """
