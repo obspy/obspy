@@ -250,6 +250,15 @@ def add_doctests(testsuite, module_name):
             except ValueError as e:
                 if 'has no docstrings' in str(e):
                     pass
+                # http://tests.obspy.org/77048/#3:
+                # File "/usr/lib/python2.7/doctest.py", line 2384,
+                #                                           in DocTestSuite
+                # raise ValueError(module, "has no tests")
+                # ValueError: (<module 'obspy.clients.seedlink.client.__init__'
+                #    from '/obspy/obspy/clients/seedlink/client/__init__.pyc'>,
+                #    'has no tests')
+                elif 'has no tests' in str(e):
+                    pass
                 else:
                     raise
 
