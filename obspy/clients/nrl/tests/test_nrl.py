@@ -30,16 +30,9 @@ class NRLTestCase(unittest.TestCase):
         self.nrl_online = NRL(root='http://ds.iris.edu/NRL')
         self.nrl_default = NRL()
 
-        # For Lloyd delete
-        # remove
-        self.nrl_full_local = NRL(root=os.path.join(os.path.dirname(__file__),
-                                                    'data',
-                                                    'IRIS_full'))
-
         self.list_of_nrls = [self.nrl_local,
                              self.nrl_default,
                              self.nrl_online,
-                             self.nrl_full_local,  # remove
                              ]
 
     def test_nrl_types(self):
@@ -50,7 +43,7 @@ class NRLTestCase(unittest.TestCase):
         self.assertIsInstance(self.nrl_default, RemoteNRL)
 
     def test_get_response(self):
-        resp = self.nrl_full_local.get_response(
+        resp = self.nrl_local.get_response(
             datalogger_keys=self.local_dl_key,
             sensor_keys=self.local_sensor_key)
         self.assertIsInstance(resp, Response)
