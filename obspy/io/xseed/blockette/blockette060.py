@@ -116,7 +116,6 @@ class Blockette060(Blockette):
         data = header + data
         return data
 
-
     def get_xml(self, xseed_version, *args, **kwargs):  # @UnusedVariable
         """
         Write XML.
@@ -170,7 +169,7 @@ class Blockette060(Blockette):
         for _i in range(len(self.stages)):
             string += (
                 '#\t\t+            +----------------------------------'
-                '----------------+             +\n' 
+                '----------------+             +\n'
                 '#\t\t+            |   Response Reference Information,'
                 '%6s ch %s   |             +\n' % (station, channel) +
                 '#\t\t+            +----------------------------------'

@@ -62,11 +62,11 @@ class Blockette055(Blockette):
 
             'B055F05     Response out units lookup:             %s\n'
 
-            'B055F06     Number of responses:                   %s\n') % \
-                (station, channel, self.stage_sequence_number,
-                 blockette_34_lookup(abbreviations, self.stage_input_units),
-                 blockette_34_lookup(abbreviations, self.stage_output_units),
-                 self.number_of_responses_listed)
+            'B055F06     Number of responses:                   %s\n') % (
+                station, channel, self.stage_sequence_number,
+                blockette_34_lookup(abbreviations, self.stage_input_units),
+                blockette_34_lookup(abbreviations, self.stage_output_units),
+                self.number_of_responses_listed)
 
         if self.number_of_responses_listed:
             string += \
