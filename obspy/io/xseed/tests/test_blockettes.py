@@ -14,7 +14,8 @@ from glob import iglob
 
 from lxml import etree
 
-from obspy.io.xseed.blockette import Blockette050, Blockette054, Blockette060
+from obspy.io.xseed.blockette import (
+    Blockette041, Blockette043, Blockette050, Blockette054, Blockette060)
 from obspy.io.xseed.blockette.blockette import BlocketteLengthException
 from obspy.io.xseed.fields import SEEDTypeException
 
@@ -226,7 +227,19 @@ class BlocketteTestCase(unittest.TestCase):
             for ex in test_examples:
                 b = blkt()
                 b.parse_seed(ex["SEED"])
-                r = b.get_resp("AA", "BB", [])
+                if blkt_number != "060":
+                    r = b.get_resp("AA", "BB", [])
+                else:
+                    # Blockette 60 is special as it also needs access to
+                    # other blockettes. Create some dummy data here.
+                    b.stages = [[0]]
+                    blkt41 = Blockette041()
+                    blkt41.response_lookup_key = 0
+                    blkt41.symmetry_code = 0
+                    blkt41.signal_in_units = "m/s"
+                    blkt41.signal_out_units = "m/s"
+                    blkt41.number_of_factors = 0
+                    r = b.get_resp("AA", "BB", [blkt41])
                 # For now only check that it contains something and that it
                 # returns bytes.
                 self.assertGreater(len(r), 0)
