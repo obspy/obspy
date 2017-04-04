@@ -719,11 +719,29 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
         args = tuple([re.sub(pattern, repl, args[0], count=1)])
         return name, args, kwargs
 
+    # set up normalization functions for checks of outgoing traffic in vcr
+    def normalize_connection_keep_alive_http_header(name, args, kwargs):
+        if name != 'sendall':
+            return name, args, kwargs
+        if len(args) != 1:
+            return name, args, kwargs
+        try:
+            b'Connection:' in args[0]
+        except:
+            return name, args, kwargs
+        # 'Connection: keep-alive' HTTP header doesn't affect us a lot, most
+        # likely, just strip it..
+        pattern = b'(\\r\\n)Connection: keep-alive\\r\\n'
+        repl = b'\\1'
+        args = tuple([re.sub(pattern, repl, args[0], count=1)])
+        return name, args, kwargs
+
     vcr_module.VCRSystem.outgoing_check_normalizations = [
         normalize_user_agent, normalize_http_header_order,
         normalize_fdsn_queryauth_http_headers,
         normalize_http_rest_order,
-        normalize_accept_encoding_http_header]
+        normalize_accept_encoding_http_header,
+        normalize_connection_keep_alive_http_header]
 
     if offline:
         obspy._has_internet = (
