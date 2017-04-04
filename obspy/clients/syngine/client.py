@@ -23,9 +23,9 @@ import numpy as np
 
 import obspy
 from obspy.core import AttribDict
+from obspy.clients.base import DEFAULT_USER_AGENT
 
-from ..base import WaveformClient, HTTPClient, DEFAULT_USER_AGENT, \
-    ClientHTTPException
+from ..base import WaveformClient, HTTPClient, ClientHTTPException
 
 
 def get_json(r):

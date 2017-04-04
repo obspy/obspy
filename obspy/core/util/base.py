@@ -540,11 +540,14 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
     :param chunk_size: The chunk size in bytes.
     :type chunk_size: int
     """
+    # import here to avoid circular import
+    from obspy.clients.base import DEFAULT_USER_AGENT
     # Workaround for old request versions.
+    headers = {'User-Agent': DEFAULT_USER_AGENT}
     try:
-        r = requests.get(url, stream=True)
+        r = requests.get(url, stream=True, headers=headers)
     except TypeError:
-        r = requests.get(url)
+        r = requests.get(url, headers=headers)
 
     r.raise_for_status()
 

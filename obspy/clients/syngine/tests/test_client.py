@@ -17,7 +17,7 @@ from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import vcr
 from obspy.clients.syngine import Client
-from obspy.clients.base import DEFAULT_TESTING_USER_AGENT, ClientHTTPException
+from obspy.clients.base import USER_AGENT_TESTSUITE, ClientHTTPException
 
 
 BASE_URL = "http://service.iris.edu/irisws/syngine/1"
@@ -38,7 +38,7 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.iris.client.Client.
     """
-    c = Client(user_agent=DEFAULT_TESTING_USER_AGENT)
+    c = Client(user_agent=USER_AGENT_TESTSUITE)
 
     def test_get_model_info_mock(self):
         """
@@ -57,7 +57,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(p.call_args[1]["params"],
                          {'model': 'test_model'})
         self.assertEqual(p.call_args[1]["headers"],
-                         {'User-Agent': DEFAULT_TESTING_USER_AGENT})
+                         {'User-Agent': USER_AGENT_TESTSUITE})
 
     @vcr
     def test_get_model_info(self):
@@ -84,7 +84,7 @@ class ClientTestCase(unittest.TestCase):
                          'http://service.iris.edu/irisws/syngine/1/models')
         self.assertEqual(p.call_args[1]["params"], None)
         self.assertEqual(p.call_args[1]["headers"],
-                         {'User-Agent': DEFAULT_TESTING_USER_AGENT})
+                         {'User-Agent': USER_AGENT_TESTSUITE})
 
     @vcr
     def test_get_available_models(self):
@@ -109,7 +109,7 @@ class ClientTestCase(unittest.TestCase):
                          'http://service.iris.edu/irisws/syngine/1/version')
         self.assertEqual(p.call_args[1]["params"], None)
         self.assertEqual(p.call_args[1]["headers"],
-                         {'User-Agent': DEFAULT_TESTING_USER_AGENT})
+                         {'User-Agent': USER_AGENT_TESTSUITE})
 
     def test_get_waveforms_mock(self):
         """
@@ -144,7 +144,7 @@ class ClientTestCase(unittest.TestCase):
             "network": "IU",
             "station": "ANMO"})
         self.assertEqual(p.call_args[1]["headers"],
-                         {"User-Agent": DEFAULT_TESTING_USER_AGENT})
+                         {"User-Agent": USER_AGENT_TESTSUITE})
 
         # http://service.iris.edu/irisws/syngine/1/query?network=_GSN&
         # components=Z&eventid=GCMT:M110302J&endtime=1800
@@ -169,7 +169,7 @@ class ClientTestCase(unittest.TestCase):
             "model": native_str("ak135f_5s"),
             "network": native_str("_GSN")})
         self.assertEqual(p.call_args[1]["headers"],
-                         {"User-Agent": DEFAULT_TESTING_USER_AGENT})
+                         {"User-Agent": USER_AGENT_TESTSUITE})
 
         # http://service.iris.edu/irisws/syngine/1/query?network=_GSN&
         # components=Z&eventid=GCMT:M110302J&starttime=P-10&endtime=ScS%2B60
@@ -196,7 +196,7 @@ class ClientTestCase(unittest.TestCase):
             "model": native_str("ak135f_5s"),
             "network": native_str("_GSN")})
         self.assertEqual(p.call_args[1]["headers"],
-                         {"User-Agent": DEFAULT_TESTING_USER_AGENT})
+                         {"User-Agent": USER_AGENT_TESTSUITE})
 
     def test_error_handling_arguments(self):
         # Floating points value

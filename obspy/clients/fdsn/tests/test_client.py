@@ -31,14 +31,12 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import network_test, vcr
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
-from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
+from obspy.clients.fdsn.header import (URL_MAPPINGS,
                                        FDSNException, FDSNRedirectException,
                                        FDSNNoDataException)
 from obspy.core.inventory import Response
+from obspy.clients.base import USER_AGENT_TESTSUITE
 from obspy.geodetics import locations2degrees
-
-
-USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
 
 
 def failmsg(got, expected, ignore_lines=[]):
@@ -90,9 +88,9 @@ class ClientTestCase(unittest.TestCase):
         with open(discovery_cache_pickle, 'rb') as fh:
             Client._Client__service_discovery_cache = pickle.load(fh)
         # connecting to IRIS is no running without network access
-        self.client = Client(base_url="IRIS", user_agent=USER_AGENT)
+        self.client = Client(base_url="IRIS", user_agent=USER_AGENT_TESTSUITE)
         self.client_auth = \
-            Client(base_url="IRIS", user_agent=USER_AGENT,
+            Client(base_url="IRIS", user_agent=USER_AGENT_TESTSUITE,
                    user="nobody@iris.edu", password="anonymous")
 
     def test_validate_base_url(self):
@@ -400,7 +398,7 @@ class ClientTestCase(unittest.TestCase):
         """
         response = requests.get(
             'http://service.iris.edu/fdsnws/event/1/contributors',
-            headers={'User-Agent': 'ObsPy (test suite)'})
+            headers={'User-Agent': USER_AGENT_TESTSUITE})
         xml = lxml.etree.fromstring(response.content)
         expected = {
             elem.text for elem in xml.xpath('/Contributors/Contributor')}
@@ -991,7 +989,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Test manually deactivating a single service.
         """
-        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+        client = Client(base_url="IRIS", user_agent=USER_AGENT_TESTSUITE,
                         service_mappings={"event": None})
         self.assertEqual(sorted(client.services.keys()),
                          ['dataselect', 'station'])
@@ -1096,7 +1094,7 @@ class ClientTestCase(unittest.TestCase):
                 "http://ds.iris.edu/files/redirect/307/dataselect/1",
             "event":
                 "http://ds.iris.edu/files/redirect/307/event/1"},
-            user_agent=USER_AGENT)
+            user_agent=USER_AGENT_TESTSUITE)
 
         st = c.get_waveforms(
             network="IU", station="ANMO", location="00", channel="BHZ",
@@ -1161,7 +1159,7 @@ class ClientTestCase(unittest.TestCase):
                     "http://ds.iris.edu/files/redirect/307/dataselect/1",
                 "event": "http://ds.iris.edu/files/redirect/307/event/1"},
             user="nobody@iris.edu", password="anonymous",
-            user_agent=USER_AGENT)
+            user_agent=USER_AGENT_TESTSUITE)
 
         # The force_redirect flag overwrites that behaviour.
         c_auth = Client("IRIS", service_mappings={
@@ -1172,7 +1170,7 @@ class ClientTestCase(unittest.TestCase):
             "event":
                 "http://ds.iris.edu/files/redirect/307/event/1"},
             user="nobody@iris.edu", password="anonymous",
-            user_agent=USER_AGENT, force_redirect=True)
+            user_agent=USER_AGENT_TESTSUITE, force_redirect=True)
 
         st = c_auth.get_waveforms(
             network="IU", station="ANMO", location="00", channel="BHZ",

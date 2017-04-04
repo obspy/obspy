@@ -14,7 +14,6 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import io
-import platform
 import sys
 from lxml import objectify
 
@@ -25,13 +24,11 @@ else:
     from urllib.parse import urlencode
     import urllib.request as urllib_request
 
-from obspy import Stream, UTCDateTime, __version__, read
+from obspy import Stream, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile, loadtxt
+from obspy.clients.base import DEFAULT_USER_AGENT
 
 
-DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (__version__,
-                                                   platform.platform(),
-                                                   platform.python_version())
 DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
                   'Sdiff', 'PKP', 'SKS', 'PKiKP', 'SKiKS', 'PKIKP', 'SKIKS']
 DEFAULT_SERVICE_VERSIONS = {"timeseries": 1, "sacpz": 1, "resp": 1,

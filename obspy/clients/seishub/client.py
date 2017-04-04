@@ -35,6 +35,7 @@ from lxml.etree import Element, SubElement, tostring
 from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guess_delta
 from obspy.core.util.decorator import deprecated_keywords
+from obspy.clients.base import DEFAULT_USER_AGENT
 from obspy.io.xseed import Parser
 
 
@@ -153,7 +154,7 @@ class Client(object):
         opener = urllib_request.build_opener(auth_handler)
         # install globally
         urllib_request.install_opener(opener)
-        self.default_headers = {'User-Agent': 'ObsPy'}
+        self.default_headers = {'User-Agent': DEFAULT_USER_AGENT}
 
     def ping(self):
         """

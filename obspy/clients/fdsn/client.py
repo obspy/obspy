@@ -40,7 +40,8 @@ from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
-from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
+from obspy.clients.base import DEFAULT_USER_AGENT
+from .header import (DEFAULT_PARAMETERS, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
                      FDSNRedirectException, FDSNNoDataException)
