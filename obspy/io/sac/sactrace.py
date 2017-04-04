@@ -389,7 +389,7 @@ from . import arrayio as _io
 # https://nbviewer.jupyter.org/urls/gist.github.com/ChrisBeaumont/
 #   5758381/raw/descriptor_writeup.ipynb
 
-class sacheader(object):
+class SACHeader(object):
     def __init__(self, name):
         try:
             self.__doc__ = HD.DOC[name]
@@ -399,14 +399,14 @@ class sacheader(object):
         self.name = name
 
 
-class floatheader(sacheader):
+class FloatHeader(SACHeader):
     def __get__(self, instance, instance_type):
         if instance is None:
-            # a floatheader on the owner class was requested.
+            # a FloatHeader on the owner class was requested.
             # return the descriptor itself.
             value = self
         else:
-            # a floatheader on an instance was requested.
+            # a FloatHeader on an instance was requested.
             # return the descriptor value.
             value = float(instance._hf[HD.FLOATHDRS.index(self.name)])
             if value == HD.FNULL:
@@ -422,7 +422,7 @@ class floatheader(sacheader):
 # Descriptor for setting relative time headers with either a relative
 # time float or an absolute UTCDateTime
 # used for: b, o, a, f, t0-t9
-class relativetimeheader(floatheader):
+class RelativeTimeHeader(FloatHeader):
     def __set__(self, instance, value):
         """
         Intercept the set value to make sure it is an offset from the SAC
@@ -434,15 +434,15 @@ class relativetimeheader(floatheader):
         else:
             offset = value
         # reuse the normal floatheader setter.
-        super(relativetimeheader, self).__set__(instance, offset)
+        super(RelativeTimeHeader, self).__set__(instance, offset)
 
 
 # Factory function for setting geographic header values
 #   (evlo, evla, stalo, stalat)
 # that will check lcalda and calculate and set dist, az, baz, gcarc
-class geographicheader(floatheader):
+class GeographicHeader(FloatHeader):
     def __set__(self, instance, value):
-        super(geographicheader, self).__set__(instance, value)
+        super(GeographicHeader, self).__set__(instance, value)
         if instance.lcalda:
             try:
                 instance._set_distances()
@@ -450,7 +450,7 @@ class geographicheader(floatheader):
                 pass
 
 
-class intheader(sacheader):
+class IntHeader(SACHeader):
     def __get__(self, instance, instance_type):
         if instance is None:
             value = self
@@ -469,10 +469,10 @@ class intheader(sacheader):
         instance._hi[HD.INTHDRS.index(self.name)] = value
 
 
-class boolheader(intheader):
+class BoolHeader(IntHeader):
     def __get__(self, instance, instance_type):
         # value can be an int or None
-        value = super(boolheader, self).__get__(instance, instance_type)
+        value = super(BoolHeader, self).__get__(instance, instance_type)
         return bool(value) if value in (0, 1) else value
 
     def __set__(self, instance, value):
@@ -481,7 +481,7 @@ class boolheader(intheader):
             raise ValueError(msg)
         # booleans are subclasses of integers.  They will be set (cast)
         # directly into an integer array as 0 or 1.
-        super(boolheader, self).__set__(instance, value)
+        super(BoolHeader, self).__set__(instance, value)
         if self.name == 'lcalda':
             if value:
                 try:
@@ -490,9 +490,9 @@ class boolheader(intheader):
                     pass
 
 
-class enumheader(intheader):
+class EnumHeader(IntHeader):
     def __get__(self, instance, instance_type):
-        value = super(enumheader, self).__get__(instance, instance_type)
+        value = super(EnumHeader, self).__get__(instance, instance_type)
         # value is int or None
         if value is None:
             name = None
@@ -514,7 +514,7 @@ class enumheader(intheader):
         else:
             msg = 'Unrecognized enumerated value "{}" for header "{}"'
             raise ValueError(msg.format(value, self.name))
-        super(enumheader, self).__set__(instance, value)
+        super(EnumHeader, self).__set__(instance, value)
 
 
 def _enumsetter(hdr):
@@ -530,7 +530,7 @@ def _enumsetter(hdr):
     return set_enum
 
 
-class stringheader(sacheader):
+class StringHeader(SACHeader):
     def __get__(self, instance, instance_type):
         if instance is None:
             value = self
@@ -847,106 +847,106 @@ class SACTrace(object):
     # NOTE: To make something read-only, omit second argument to "property".
 
     # FLOATS
-    delta = floatheader('delta')
+    delta = FloatHeader('delta')
     depmin = property(_make_data_func(min, 'depmin'), doc=HD.DOC['depmin'])
     depmax = property(_make_data_func(max, 'depmax'), doc=HD.DOC['depmax'])
-    scale = floatheader('scale')
-    odelta = floatheader('odelta')
-    b = relativetimeheader('b')
+    scale = FloatHeader('scale')
+    odelta = FloatHeader('odelta')
+    b = RelativeTimeHeader('b')
     e = property(_get_e, doc=HD.DOC['e'])
-    o = relativetimeheader('o')
-    a = relativetimeheader('a')
-    internal0 = floatheader('internal0')
-    t0 = relativetimeheader('t0')
-    t1 = relativetimeheader('t1')
-    t2 = relativetimeheader('t2')
-    t3 = relativetimeheader('t3')
-    t4 = relativetimeheader('t4')
-    t5 = relativetimeheader('t5')
-    t6 = relativetimeheader('t6')
-    t7 = relativetimeheader('t7')
-    t8 = relativetimeheader('t8')
-    t9 = relativetimeheader('t9')
-    f = relativetimeheader('f')
-    stla = geographicheader('stla')
-    stlo = geographicheader('stlo')
-    stel = floatheader('stel')
-    stdp = floatheader('stdp')
-    evla = geographicheader('evla')
-    evlo = geographicheader('evlo')
-    evdp = floatheader('evdp')
-    mag = floatheader('mag')
-    user0 = floatheader('user0')
-    user1 = floatheader('user1')
-    user2 = floatheader('user2')
-    user3 = floatheader('user3')
-    user4 = floatheader('user4')
-    user5 = floatheader('user5')
-    user6 = floatheader('user6')
-    user7 = floatheader('user7')
-    user8 = floatheader('user8')
-    user9 = floatheader('user9')
-    dist = floatheader('dist')
-    az = floatheader('az')
-    baz = floatheader('baz')
-    gcarc = floatheader('gcarc')
+    o = RelativeTimeHeader('o')
+    a = RelativeTimeHeader('a')
+    internal0 = FloatHeader('internal0')
+    t0 = RelativeTimeHeader('t0')
+    t1 = RelativeTimeHeader('t1')
+    t2 = RelativeTimeHeader('t2')
+    t3 = RelativeTimeHeader('t3')
+    t4 = RelativeTimeHeader('t4')
+    t5 = RelativeTimeHeader('t5')
+    t6 = RelativeTimeHeader('t6')
+    t7 = RelativeTimeHeader('t7')
+    t8 = RelativeTimeHeader('t8')
+    t9 = RelativeTimeHeader('t9')
+    f = RelativeTimeHeader('f')
+    stla = GeographicHeader('stla')
+    stlo = GeographicHeader('stlo')
+    stel = FloatHeader('stel')
+    stdp = FloatHeader('stdp')
+    evla = GeographicHeader('evla')
+    evlo = GeographicHeader('evlo')
+    evdp = FloatHeader('evdp')
+    mag = FloatHeader('mag')
+    user0 = FloatHeader('user0')
+    user1 = FloatHeader('user1')
+    user2 = FloatHeader('user2')
+    user3 = FloatHeader('user3')
+    user4 = FloatHeader('user4')
+    user5 = FloatHeader('user5')
+    user6 = FloatHeader('user6')
+    user7 = FloatHeader('user7')
+    user8 = FloatHeader('user8')
+    user9 = FloatHeader('user9')
+    dist = FloatHeader('dist')
+    az = FloatHeader('az')
+    baz = FloatHeader('baz')
+    gcarc = FloatHeader('gcarc')
     depmen = property(_make_data_func(np.mean, 'depmen'), doc=HD.DOC['depmen'])
-    cmpaz = floatheader('cmpaz')
-    cmpinc = floatheader('cmpinc')
+    cmpaz = FloatHeader('cmpaz')
+    cmpinc = FloatHeader('cmpinc')
     #
     # INTS
-    nzyear = intheader('nzyear')
-    nzjday = intheader('nzjday')
-    nzhour = intheader('nzhour')
-    nzmin = intheader('nzmin')
-    nzsec = intheader('nzsec')
-    nzmsec = intheader('nzmsec')
-    nvhdr = intheader('nvhdr')
-    norid = intheader('norid')
-    nevid = intheader('nevid')
+    nzyear = IntHeader('nzyear')
+    nzjday = IntHeader('nzjday')
+    nzhour = IntHeader('nzhour')
+    nzmin = IntHeader('nzmin')
+    nzsec = IntHeader('nzsec')
+    nzmsec = IntHeader('nzmsec')
+    nvhdr = IntHeader('nvhdr')
+    norid = IntHeader('norid')
+    nevid = IntHeader('nevid')
     npts = property(_make_data_func(len, 'npts'), doc=HD.DOC['npts'])
-    nwfid = intheader('nwfid')
-    iftype = enumheader('iftype')
-    idep = enumheader('idep')
-    iztype = enumheader('iztype')
-    iinst = intheader('iinst')
-    istreg = intheader('istreg')
-    ievreg = intheader('ievreg')
-    ievtyp = enumheader('ievtyp')
-    iqual = intheader('iqual')
-    isynth = enumheader('isynth')
-    imagtyp = enumheader('imagtyp')
-    imagsrc = enumheader('imagsrc')
-    leven = boolheader('leven')
-    lpspol = boolheader('lpspol')
-    lovrok = boolheader('lovrok')
-    lcalda = boolheader('lcalda')
-    unused23 = intheader('unused23')
+    nwfid = IntHeader('nwfid')
+    iftype = EnumHeader('iftype')
+    idep = EnumHeader('idep')
+    iztype = EnumHeader('iztype')
+    iinst = IntHeader('iinst')
+    istreg = IntHeader('istreg')
+    ievreg = IntHeader('ievreg')
+    ievtyp = EnumHeader('ievtyp')
+    iqual = IntHeader('iqual')
+    isynth = EnumHeader('isynth')
+    imagtyp = EnumHeader('imagtyp')
+    imagsrc = EnumHeader('imagsrc')
+    leven = BoolHeader('leven')
+    lpspol = BoolHeader('lpspol')
+    lovrok = BoolHeader('lovrok')
+    lcalda = BoolHeader('lcalda')
+    unused23 = IntHeader('unused23')
     #
     # STRINGS
-    kstnm = stringheader('kstnm')
+    kstnm = StringHeader('kstnm')
     kevnm = property(_get_kevnm, _set_kevnm, doc=HD.DOC['kevnm'])
-    khole = stringheader('khole')
-    ko = stringheader('ko')
-    ka = stringheader('ka')
-    kt0 = stringheader('kt0')
-    kt1 = stringheader('kt1')
-    kt2 = stringheader('kt2')
-    kt3 = stringheader('kt3')
-    kt4 = stringheader('kt4')
-    kt5 = stringheader('kt5')
-    kt6 = stringheader('kt6')
-    kt7 = stringheader('kt7')
-    kt8 = stringheader('kt8')
-    kt9 = stringheader('kt9')
-    kf = stringheader('kf')
-    kuser0 = stringheader('kuser0')
-    kuser1 = stringheader('kuser1')
-    kuser2 = stringheader('kuser2')
-    kcmpnm = stringheader('kcmpnm')
-    knetwk = stringheader('knetwk')
-    kdatrd = stringheader('kdatrd')
-    kinst = stringheader('kinst')
+    khole = StringHeader('khole')
+    ko = StringHeader('ko')
+    ka = StringHeader('ka')
+    kt0 = StringHeader('kt0')
+    kt1 = StringHeader('kt1')
+    kt2 = StringHeader('kt2')
+    kt3 = StringHeader('kt3')
+    kt4 = StringHeader('kt4')
+    kt5 = StringHeader('kt5')
+    kt6 = StringHeader('kt6')
+    kt7 = StringHeader('kt7')
+    kt8 = StringHeader('kt8')
+    kt9 = StringHeader('kt9')
+    kf = StringHeader('kf')
+    kuser0 = StringHeader('kuser0')
+    kuser1 = StringHeader('kuser1')
+    kuser2 = StringHeader('kuser2')
+    kcmpnm = StringHeader('kcmpnm')
+    knetwk = StringHeader('knetwk')
+    kdatrd = StringHeader('kdatrd')
+    kinst = StringHeader('kinst')
 
     @property
     def _header(self):
