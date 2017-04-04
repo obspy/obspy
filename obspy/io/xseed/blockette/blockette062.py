@@ -125,4 +125,4 @@ class Blockette062(Blockette):
                     % (0, format_resp(self.polynomial_coefficient, 6),
                        format_resp(self.polynomial_coefficient_error, 6))
         string += '#\t\t\n'
-        return string
+        return string.encode()
