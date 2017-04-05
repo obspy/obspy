@@ -60,6 +60,9 @@ RUN pip install future; \
     pip3 install future
 RUN pip install https://github.com/Damgaard/PyImgur/archive/9ebd8bed9b3d0ae2797950876f5c1e64a560f7d8.zip; \
     pip3 install https://github.com/Damgaard/PyImgur/archive/9ebd8bed9b3d0ae2797950876f5c1e64a560f7d8.zip || true
+RUN pip install https://github.com/obspy/vcr/archive/master.zip; \
+    pip3 install https://github.com/obspy/vcr/archive/master.zip
+
 # make sure locale we use in tests is present
 RUN locale-gen en_US.UTF-8
 

@@ -26,6 +26,10 @@ RUN apt-get install -y python3 python3-dev python3-numpy python3-scipy python3-l
 RUN apt-get install -y debhelper python-all python3-all devscripts
 RUN pip3 install future
 
+# install vcr
+RUN pip install https://github.com/obspy/vcr/archive/master.zip; \
+    pip3 install https://github.com/obspy/vcr/archive/master.zip
+
 # install fake future packages, so that we can properly install built obspy deb
 # packages to test them (we install future via pip)
 RUN cd /tmp && echo "Package: python-future" > python-future.control && equivs-build python-future.control && dpkg -i python-future_*.deb

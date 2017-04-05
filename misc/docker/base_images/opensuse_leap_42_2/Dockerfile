@@ -9,3 +9,4 @@ RUN zypper --non-interactive install gcc python-devel python-numpy python-scipy 
 RUN pip install --index-url=http://pypi.python.org/simple/ --trusted-host pypi.python.org future
 RUN pip install https://github.com/Damgaard/PyImgur/archive/9ebd8bed9b3d0ae2797950876f5c1e64a560f7d8.zip
 RUN zypper --non-interactive install ca-certificates-mozilla
+RUN pip install https://github.com/obspy/vcr/archive/master.zip; \

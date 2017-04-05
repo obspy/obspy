@@ -66,6 +66,9 @@ RUN pip install https://github.com/Damgaard/PyImgur/archive/9ebd8bed9b3d0ae27979
 # make sure locale we use in tests is present
 RUN locale-gen en_US.UTF-8
 
+RUN pip install https://github.com/obspy/vcr/archive/master.zip; \
+    pip3 install https://github.com/obspy/vcr/archive/master.zip
+
 # install fake future packages, so that we can properly install built obspy deb
 # packages to test them (we install future via pip)
 RUN cd /tmp && \
