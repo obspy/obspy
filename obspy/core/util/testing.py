@@ -110,8 +110,8 @@ def _fdsn_save_pickled_service_discovery():
     the FDSN Client, which is used during testing in combination with VCR
     tapes.
     """
-    if sys.version_info.major != 3:
-        msg = 'FDSN service discovery pickle should be saved on Python 3.'
+    if (sys.version_info.major, sys.version_info.minor) != (3, 6):
+        msg = 'FDSN service discovery pickle should be saved on Python 3.6.'
         raise Exception(msg)
     from obspy.clients import fdsn
     fdsn.Client._Client__service_discovery_cache = {}
