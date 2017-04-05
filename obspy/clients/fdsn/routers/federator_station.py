@@ -448,7 +448,7 @@ def fed_get_stations(**kwarg):
         try:
             inv = client.get_stations_bulk(bulk=datac.request_text("STATIONSERVICE"))
         except: #except expression as identifier:
-            lines_to_resubmit.extend(datac.request_lines)
+            lines_to_resubmit.extend(datac.request_lines) #unsuccessful attempt. Add all requests into resubmit queue
             print(dc_id, "error!")
         else:
             successful, failed = request_exists_in_inventory(inv, datac.request_lines, LEVEL)
@@ -459,7 +459,19 @@ def fed_get_stations(**kwarg):
                 all_inv_set = inv_converter[LEVEL](inv)
             else:
                 all_inv += inv
-                all_inv_set= all_inv_set.union(inv_converter[LEVEL](inv)
+                all_inv_set = all_inv_set.union(inv_converter[LEVEL](inv))
+
+    # now, perhaps we got lucky, and have all the data we requested?
+    if not failed:
+        return all_inf
+    
+    # okey-dokey. Time for round 2. # # #
+    # resubmit the failed retrieves to the federator service
+    
+    # as data is retrieved, add to all_inv and remove it from the queue.
+
+
+
     return all_inv
 
 
