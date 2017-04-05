@@ -223,27 +223,32 @@ class BlocketteTestCase(unittest.TestCase):
                 continue
             tested_blockettes += 1
 
-            test_examples = self.parse_file(blkt_file)
-            for ex in test_examples:
-                b = blkt()
-                b.parse_seed(ex["SEED"])
-                if blkt_number != "060":
-                    r = b.get_resp("AA", "BB", [])
-                else:
-                    # Blockette 60 is special as it also needs access to
-                    # other blockettes. Create some dummy data here.
-                    b.stages = [[0]]
-                    blkt41 = Blockette041()
-                    blkt41.response_lookup_key = 0
-                    blkt41.symmetry_code = 0
-                    blkt41.signal_in_units = "m/s"
-                    blkt41.signal_out_units = "m/s"
-                    blkt41.number_of_factors = 0
-                    r = b.get_resp("AA", "BB", [blkt41])
-                # For now only check that it contains something and that it
-                # returns bytes.
-                self.assertGreater(len(r), 0)
-                self.assertTrue(isinstance(r, native_bytes))
+            # Some of the blockettes requires access to other blockettes.
+            # They don't have it for this simplistic test and thus raise
+            # warnings which therefore have to be caught.
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                test_examples = self.parse_file(blkt_file)
+                for ex in test_examples:
+                    b = blkt()
+                    b.parse_seed(ex["SEED"])
+                    if blkt_number != "060":
+                        r = b.get_resp("AA", "BB", [])
+                    else:
+                        # Blockette 60 is special as it also needs access to
+                        # other blockettes. Create some dummy data here.
+                        b.stages = [[0]]
+                        blkt41 = Blockette041()
+                        blkt41.response_lookup_key = 0
+                        blkt41.symmetry_code = 0
+                        blkt41.signal_in_units = "m/s"
+                        blkt41.signal_out_units = "m/s"
+                        blkt41.number_of_factors = 0
+                        r = b.get_resp("AA", "BB", [blkt41])
+                    # For now only check that it contains something and that it
+                    # returns bytes.
+                    self.assertGreater(len(r), 0)
+                    self.assertTrue(isinstance(r, native_bytes))
 
         self.assertGreater(tested_blockettes, 0)
 
