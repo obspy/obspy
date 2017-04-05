@@ -265,6 +265,13 @@ class ImageComparison(NamedTemporaryFile):
     :param plt_close_all_exit: Whether to call :func:`matplotlib.pyplot.close`
         with "all" as first argument (close all figures) or no arguments (close
         active figure). Has no effect if ``plt_close=False``.
+    :type style: str
+    :param style: The Matplotlib style to use to generate the figure. When
+        using matplotlib 1.5 or newer, the default will be ``'classic'`` to
+        ensure compatibility with older releases. On older releases, the
+        default will leave the style as is. You may wish to set it to
+        ``'default'`` to enable the new style from Matplotlib 2.0, or some
+        alternate style, which will work back to Matplotlib 1.4.0.
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing.
@@ -298,7 +305,7 @@ class ImageComparison(NamedTemporaryFile):
     """
     def __init__(self, image_path, image_name, reltol=1,
                  adjust_tolerance=True, plt_close_all_enter=True,
-                 plt_close_all_exit=True, *args, **kwargs):
+                 plt_close_all_exit=True, style=None, *args, **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
         super(ImageComparison, self).__init__(suffix=self.suffix, *args,
                                               **kwargs)
@@ -312,19 +319,42 @@ class ImageComparison(NamedTemporaryFile):
         self.plt_close_all_enter = plt_close_all_enter
         self.plt_close_all_exit = plt_close_all_exit
 
-        # Higher tolerance for older matplotlib versions. This is pretty
-        # high but the pictures are at least guaranteed to be generated and
-        # look (roughly!) similar. Otherwise testing is just a pain and
-        # frankly not worth the effort!
+        if (MATPLOTLIB_VERSION < [1, 4, 0] or
+                (MATPLOTLIB_VERSION[:2] == [1, 4] and style is None)):
+            # No good style support.
+            self.style = None
+        else:
+            import matplotlib.style as mstyle
+            self.style = mstyle.context(style or 'classic')
+
+        # Adjust the tolerance based on the matplotlib version. This works
+        # well enough and otherwise testing is just a pain.
+        #
+        # The test images were generated with matplotlib tag 291091c6eb267
+        # which is after https://github.com/matplotlib/matplotlib/issues/7905
+        # has been fixed.
+        #
+        # Thus test images should accurate for matplotlib >= 2.0.1 anf
+        # fairly accurate for matplotlib 1.5.x.
         if adjust_tolerance:
+            # Really old versions.
             if MATPLOTLIB_VERSION < [1, 3, 0]:
                 self.tol *= 30
-            # Matplotlib 1.5 changes the text positioning a bit. This
-            # results in many tests failing. Instead of changing all baseline
-            # images (which we'll have to do for mpl 2.0 in any case) we
-            # just up the tolerance a bit.
-            elif MATPLOTLIB_VERSION[:2] == [1, 5]:
-                self.tol *= 17
+            # 1.3 + 1.4 have slightly different text positioning mostly.
+            elif [1, 3, 0] <= MATPLOTLIB_VERSION < [1, 5, 0]:
+                self.tol *= 15
+            # A few plots with mpl 1.5 have ticks and axis slightl shifted.
+            # This is especially true for ticks with exponential numbers.
+            # Thus the tolerance also has to be a bit higher here.
+            elif [1, 5, 0] <= MATPLOTLIB_VERSION < [2, 0, 0]:
+                self.tol *= 5.0
+            # Matplotlib 2.0.0 has a bug with the tick placement. This is
+            # fixed in 2.0.1 but the tolerance for 2.0.0 has to be much
+            # higher. 10 is an empiric value. The tick placement potentially
+            # influences the axis locations and then the misfit is really
+            # quite high.
+            elif [2, 0, 0] <= MATPLOTLIB_VERSION < [2, 0, 1]:
+                self.tol *= 10
 
     def __enter__(self):
         """
@@ -348,13 +378,19 @@ class ImageComparison(NamedTemporaryFile):
 
         # set matplotlib builtin default settings for testing
         rcdefaults()
-        rcParams['font.family'] = 'Bitstream Vera Sans'
+        if self.style is not None:
+            self.style.__enter__()
+        if MATPLOTLIB_VERSION >= [2, 0, 0]:
+            default_font = 'DejaVu Sans'
+        else:
+            default_font = 'Bitstream Vera Sans'
+        rcParams['font.family'] = default_font
         with warnings.catch_warnings(record=True) as w:
             warnings.filterwarnings('always', 'findfont:.*')
-            font_manager.findfont('Bitstream Vera Sans')
-        if w:
-            warnings.warn('Unable to find the Bitstream Vera Sans font. '
-                          'Plotting tests will likely fail.')
+            font_manager.findfont(default_font)
+            if w:
+                warnings.warn('Unable to find the ' + default_font + ' font. '
+                              'Plotting tests will likely fail.')
         try:
             rcParams['text.hinting'] = False
         except KeyError:
@@ -372,7 +408,7 @@ class ImageComparison(NamedTemporaryFile):
                 pass
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+    def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
         environment variable is set.
@@ -463,6 +499,8 @@ class ImageComparison(NamedTemporaryFile):
                     plt.close("all")
                 except Exception:
                     pass
+            if self.style is not None:
+                self.style.__exit__(exc_type, exc_val, exc_tb)
             if self.keep_output:
                 if failed or not self.keep_only_failed:
                     self._copy_tempfiles()

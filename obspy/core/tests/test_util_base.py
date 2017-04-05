@@ -12,14 +12,6 @@ from obspy.core.util.base import NamedTemporaryFile, get_dependency_version
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 
 
-def image_comparison_in_function(path, img_basename, img_to_compare):
-    """
-    This is just used to wrap an image comparison to check if it raises or not.
-    """
-    with ImageComparison(path, img_basename, adjust_tolerance=False) as ic:
-        shutil.copy(img_to_compare, ic.name)
-
-
 class UtilBaseTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.base
@@ -90,9 +82,11 @@ class UtilBaseTestCase(unittest.TestCase):
         # (after an estimate of 10000 uploads of it.. ;-))
         with mock.patch.object(ImageComparison, '_upload_images',
                                new=mock.MagicMock(return_value='')):
-            self.assertRaises(ImageComparisonException,
-                              image_comparison_in_function, path, img_basename,
-                              img_fail)
+            with self.assertRaises(ImageComparisonException):
+                with ImageComparison(path, img_basename,
+                                     adjust_tolerance=False) as ic:
+                    shutil.copy(img_fail, ic.name)
+
         # check that temp file is deleted
         self.assertFalse(os.path.exists(ic.name))
 

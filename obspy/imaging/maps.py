@@ -26,8 +26,10 @@ from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
                                MaxNLocator)
 
 from obspy import UTCDateTime
-from obspy.core.util import BASEMAP_VERSION, CARTOPY_VERSION
+from obspy.core.util import (BASEMAP_VERSION, CARTOPY_VERSION,
+                             MATPLOTLIB_VERSION)
 from obspy.geodetics.base import mean_longitude
+
 
 if BASEMAP_VERSION:
     from mpl_toolkits.basemap import Basemap
@@ -397,7 +399,10 @@ def _plot_basemap_into_axes(
             raise ValueError(msg)
 
         # draw coast lines, country boundaries, fill continents.
-        ax.set_axis_bgcolor(water_fill_color)
+        if MATPLOTLIB_VERSION >= [2, 0, 0]:
+            ax.set_facecolor(water_fill_color)
+        else:
+            ax.set_axis_bgcolor(water_fill_color)
         bmap.drawcoastlines(color="0.4")
         bmap.drawcountries(color="0.75")
         bmap.fillcontinents(color=continent_fill_color,
@@ -674,7 +679,10 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         _CARTOPY_FEATURES[resolution] = (borders, land, ocean)
 
     # Draw coast lines, country boundaries, fill continents.
-    map_ax.set_axis_bgcolor(water_fill_color)
+    if MATPLOTLIB_VERSION >= [2, 0, 0]:
+        map_ax.set_facecolor(water_fill_color)
+    else:
+        map_ax.set_axis_bgcolor(water_fill_color)
     map_ax.add_feature(ocean, facecolor=water_fill_color)
     map_ax.add_feature(land, facecolor=continent_fill_color)
     map_ax.add_feature(borders, edgecolor='0.75')
