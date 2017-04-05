@@ -97,24 +97,24 @@ class Blockette060(Blockette):
         """
         Writes Blockette 60.
         """
-        data = b''
+        data = ''
         # Write number of stages.
-        data += b'%2d' % len(self.stages)
+        data += '%2d' % len(self.stages)
         # Loop over all items in self.stages.
         stage_number = 1
         for stage in self.stages:
             # Write stage sequence number.
-            data += b'%2d' % stage_number
+            data += '%2d' % stage_number
             stage_number += 1
             # Write number of items.
-            data += b'%2d' % len(stage)
+            data += '%2d' % len(stage)
             for number in stage:
-                data += b'%4d' % number
+                data += '%4d' % number
         # Add header.
         length = len(data) + 7
-        header = b'060%4d' % length
+        header = '060%4d' % length
         data = header + data
-        return data
+        return data.encode()
 
     def get_xml(self, xseed_version, *args, **kwargs):  # @UnusedVariable
         """
