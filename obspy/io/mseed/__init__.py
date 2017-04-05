@@ -168,6 +168,10 @@ class ObsPyMSEEDFilesizeTooSmallError(ObsPyMSEEDReadingError):
     pass
 
 
+class ObsPyMSEEDFilesizeTooLargeError(ObsPyMSEEDReadingError):
+    pass
+
+
 __all__ = ['InternalMSEEDError', 'InternalMSEEDWarning', 'ObsPyMSEEDError',
            'ObsPyMSEEDFilesizeTooSmallError']
 

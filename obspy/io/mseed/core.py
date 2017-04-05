@@ -17,7 +17,8 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
-from . import util, InternalMSEEDError, ObsPyMSEEDFilesizeTooSmallError
+from . import (util, InternalMSEEDError, ObsPyMSEEDFilesizeTooSmallError,
+               ObsPyMSEEDFilesizeTooLargeError)
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
                       VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS, Selections,
@@ -271,6 +272,13 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         msg = "The smallest possible mini-SEED record is made up of 128 " \
               "bytes. The passed buffer or file contains only %i." % length
         raise ObsPyMSEEDFilesizeTooSmallError(msg)
+    elif length > 2 ** 31:
+        msg = ("ObsPy can currently not directly read mini-SEED files that "
+               "are larger than 2^31 bytes (2048 MiB). To still read it, "
+               "please read the file in chunks as documented here: "
+               "https://github.com/obspy/obspy/pull/1419"
+               "#issuecomment-221582369")
+        raise ObsPyMSEEDFilesizeTooLargeError(msg)
 
     info = util.get_record_information(mseed_object, endian=bo)
 
