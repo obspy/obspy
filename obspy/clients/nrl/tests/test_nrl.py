@@ -18,6 +18,8 @@ class NRLTestCase(unittest.TestCase):
 
     """
     def setUp(self):
+        # Longer diffs in the test assertions.
+        self.maxDiff = None
         # Small subset of NRL included in tests/data
         self.local_nrl_root = os.path.join(
             os.path.dirname(__file__), 'data', 'IRIS')
@@ -41,6 +43,23 @@ class NRLTestCase(unittest.TestCase):
             datalogger_keys=self.local_dl_key,
             sensor_keys=self.local_sensor_key)
         self.assertIsInstance(resp, Response)
+
+    def test_str_methods(self):
+        out = str(self.nrl_local)
+        # The local NRL is not going to chance so it is fine to test this.
+        self.assertEqual(out.strip(), """
+NRL library at %s
+  Sensors: 20 manufacturers
+    'CEA-DASE', 'CME', 'Chaparral Physics', 'Eentec', 'Generic',
+    'Geo Space/OYO', 'Geodevice', 'Geotech', 'Guralp', 'Hyperion',
+    'IESE', 'Kinemetrics', 'Lennartz', 'Metrozet', 'Nanometrics',
+    'REF TEK', 'Sercel/Mark Products', 'SolGeo',
+    'Sprengnether (now Eentec)', 'Streckeisen'
+  Dataloggers: 13 manufacturers
+    'Agecodagis', 'DAQ Systems (NetDAS)', 'Earth Data', 'Eentec',
+    'Generic', 'Geodevice', 'Geotech', 'Guralp', 'Kinemetrics',
+    'Nanometrics', 'Quanterra', 'REF TEK', 'SolGeo'
+        """.strip() % self.local_nrl_root)
 
 
 def suite():  # pragma: no cover

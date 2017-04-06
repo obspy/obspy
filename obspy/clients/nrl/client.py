@@ -87,7 +87,7 @@ class NRL(object):
                                   initial_indent='    ',
                                   subsequent_indent='    ')
                 info.extend(lines)
-        return '\n'.join(info)
+        return '\n'.join(_i.rstrip() for _i in info)
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
