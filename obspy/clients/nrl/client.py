@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
-Class for navigating, and picking responses from the
-Nominal Response Library.
+"""
+Client for accessing the Nominal Response Library.
+
+http://ds.iris.edu/NRL/
 
 :copyright:
     Lloyd Carothers IRIS/PASSCAL, 2016
+    The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
-'''
+"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
@@ -20,18 +22,16 @@ import os
 import sys
 import requests
 
+from obspy.core.compatibility import configparser
 from obspy.core.inventory.util import _textwrap
 from obspy.io.xseed import Parser
 
-if sys.version_info.major == 2:
-    import ConfigParser as configparser
-else:
-    import configparser
 
 
 class NRL(object):
     """
-    NRL client base class for accessing the Nominal Response Library:
+    NRL client base class for accessing the Nominal Response Library.
+
     http://ds.iris.edu/NRL/
 
     Created with a URL for remote access or filesystem accessing a local copy.
@@ -273,7 +273,7 @@ class RemoteNRL(NRL):
     """
     Subclass of NRL for accessing remote copy of NRL.
     """
-    def __init__(self, root='http://ds.iris.edu/NRL/'):
+    def __init__(self, root='http://ds.iris.edu/NRL'):
         self.root = root
         super(self.__class__, self).__init__()
 

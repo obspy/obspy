@@ -19,21 +19,16 @@ class NRLTestCase(unittest.TestCase):
     """
     def setUp(self):
         # Small subset of NRL included in tests/data
-        self.local_nrl_root = os.path.join(os.path.dirname(__file__),
-                                           'data',
-                                           'IRIS',
-                                           )
+        self.local_nrl_root = os.path.join(
+            os.path.dirname(__file__), 'data', 'IRIS')
         self.nrl_local = NRL(root=self.local_nrl_root)
         self.local_dl_key = ['REF TEK', 'RT 130 & 130-SMA', '1', '1']
         self.local_sensor_key = ['Guralp', 'CMG-3T', '120s - 50Hz', '1500']
 
+        # This is also the default URL.
         self.nrl_online = NRL(root='http://ds.iris.edu/NRL')
-        self.nrl_default = NRL()
 
-        self.list_of_nrls = [self.nrl_local,
-                             self.nrl_default,
-                             self.nrl_online,
-                             ]
+        self.list_of_nrls = [self.nrl_local, self.nrl_online]
 
     def test_nrl_types(self):
         for nrl in self.list_of_nrls:
