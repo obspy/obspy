@@ -10,7 +10,7 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
-from vcr import vcr
+from obspy.core.util.decorator import vcr
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import mock
