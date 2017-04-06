@@ -27,7 +27,7 @@ class ClientTestCase(unittest.TestCase):
     def setUp(self):
         self.client = Client("rtserver.ipgp.fr")
 
-    @vcr
+    @vcr(debug=True)
     def test_get_waveform(self):
         # IPGP realtime server keeps 9 days in ring buffer it seems, so use
         # data 1 hour before realtime

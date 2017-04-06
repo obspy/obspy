@@ -1804,7 +1804,7 @@ class StreamTestCase(unittest.TestCase):
             self.assertRaises(UserWarning, read, '/path/to/slist_float.ascii',
                               headonly=True, starttime=0, endtime=1)
 
-    @vcr
+    @vcr(debug=True)
     def test_read_url_via_network(self):
         """
         Testing read function with an URL fetching data via network connection
