@@ -44,7 +44,7 @@ class NRLTestCase(unittest.TestCase):
             sensor_keys=self.local_sensor_key)
         self.assertIsInstance(resp, Response)
 
-    def test_str_methods(self):
+    def test_nrl_class_str_method(self):
         out = str(self.nrl_local)
         # The local NRL is not going to chance so it is fine to test this.
         self.assertEqual(out.strip(), """
@@ -60,6 +60,16 @@ NRL library at %s
     'Generic', 'Geodevice', 'Geotech', 'Guralp', 'Kinemetrics',
     'Nanometrics', 'Quanterra', 'REF TEK', 'SolGeo'
         """.strip() % self.local_nrl_root)
+
+    def test_nrl_dict_str_method(self):
+        out = str(self.nrl_local.sensors)
+        self.assertEqual(out.strip(), """
+Select the sensor manufacturer (20 items):
+  'CEA-DASE', 'CME', 'Chaparral Physics', 'Eentec', 'Generic',
+  'Geo Space/OYO', 'Geodevice', 'Geotech', 'Guralp', 'Hyperion',
+  'IESE', 'Kinemetrics', 'Lennartz', 'Metrozet', 'Nanometrics',
+  'REF TEK', 'Sercel/Mark Products', 'SolGeo',
+  'Sprengnether (now Eentec)', 'Streckeisen'""".strip())
 
 
 def suite():  # pragma: no cover

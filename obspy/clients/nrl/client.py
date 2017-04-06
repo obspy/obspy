@@ -226,7 +226,7 @@ class NRLDict(dict):
             texts = ["'{}'".format(k) for k in sorted(self.keys())]
             info.extend(_textwrap(", ".join(texts), initial_indent='  ',
                                   subsequent_indent='  '))
-            return '\n'.join(info)
+            return '\n'.join(_i.rstrip() for _i in info)
         else:
             return '0 items.'
 
