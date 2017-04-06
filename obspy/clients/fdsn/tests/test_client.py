@@ -1142,8 +1142,6 @@ class ClientTestCase(unittest.TestCase):
 
         By default these should not redirect and an exception is raised.
         """
-        # XXX with VCR this test currently fails as it manually wipes the
-        # service discovery cache
         # Clear the cache.
         Client._Client__service_discovery_cache.clear()
 
