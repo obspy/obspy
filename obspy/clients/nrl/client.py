@@ -179,29 +179,31 @@ class NRL(object):
         """
         Get Response from NRL tree structure
 
-        >>> nrl = NRL()  # doctest : +SKIP
-        >>> response = nrl.get_response(  # doctest : +SKIP
+        :param datalogger_keys: List of data-loggers.
+        :type datalogger_keys: list[str]
+        :param sensor_keys: List of sensors.
+        :type sensor_keys: list[str]
+        :rtype: :class:`~obspy.core.inventory.response.Response`
+
+        >>> nrl = NRL()
+        >>> response = nrl.get_response(
         ...     sensor_keys=['Nanometrics', 'Trillium Compact', '120 s'],
         ...     datalogger_keys=['REF TEK', 'RT 130 & 130-SMA', '1', '200'])
-        >>> print(response)  # doctest : +SKIP
+        >>> print(response)   # doctest: +NORMALIZE_WHITESPACE + ELLIPSIS
         Channel Response
           From M/S () to COUNTS ()
-          Overall Sensitivity: 4.74576e+08 defined at 1.000 Hz
+          Overall Sensitivity: 629129 defined at 0.050 Hz
           10 stages:
-            Stage 1: PolesZerosResponseStage from M/S to V, gain: 754.3
+            Stage 1: PolesZerosResponseStage from M/S to V, gain: 1
             Stage 2: ResponseStage from V to V, gain: 1
-            Stage 3: CoefficientsTypeResponseStage from V to COUNTS
-            Stage 4: CoefficientsTypeResponseStage from COUNTS to COUNTS
-            Stage 5: CoefficientsTypeResponseStage from COUNTS to COUNTS
-            Stage 6: CoefficientsTypeResponseStage from COUNTS to COUNTS
-            Stage 7: CoefficientsTypeResponseStage from COUNTS to COUNTS
-            Stage 8: CoefficientsTypeResponseStage from COUNTS to COUNTS
-            Stage 9: CoefficientsTypeResponseStage from COUNTS to COUNTS
-            Stage 10: CoefficientsTypeResponseStage from COUNTS to COUNTS
-
-        :type datalogger_keys: list of str
-        :type sensor_keys: list of str
-        :rtype: :class:`~obspy.core.inventory.response.Response`
+            Stage 3: Coefficients... from V to COUNTS, gain: 629129
+            Stage 4: Coefficients... from COUNTS to COUNTS, gain: 1
+            Stage 5: Coefficients... from COUNTS to COUNTS, gain: 1
+            Stage 6: Coefficients... from COUNTS to COUNTS, gain: 1
+            Stage 7: Coefficients... from COUNTS to COUNTS, gain: 1
+            Stage 8: Coefficients... from COUNTS to COUNTS, gain: 1
+            Stage 9: Coefficients... from COUNTS to COUNTS, gain: 1
+            Stage 10: Coefficients... from COUNTS to COUNTS, gain: 1
         """
         resp_parser = self.get_parser(datalogger_keys, sensor_keys)
         return resp_parser.get_response()
