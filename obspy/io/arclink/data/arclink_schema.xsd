@@ -1,0 +1,348 @@
+<?xml version="1.0"?>
+<!-- Generated from Seiscomp Schema, do not edit -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:inv="http://geofon.gfz-potsdam.de/ns/Inventory/1.0/" targetNamespace="http://geofon.gfz-potsdam.de/ns/Inventory/1.0/" elementFormDefault="qualified" attributeFormDefault="unqualified">
+  <xs:simpleType name="ResourceIdentifier">
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+  <xs:simpleType name="RealArray">
+    <xs:list itemType="xs:double"/>
+  </xs:simpleType>
+  <xs:simpleType name="ComplexArray">
+    <xs:restriction base="xs:string">
+      <!-- e.g. "(-0.01836,4.1e-05) (-0.01836,-4e-05) (-39.18,49.12) (-39.18,-49.12)" -->
+      <xs:pattern value="(\s*\(\s*[+\-]?[0-9]+(\.[0-9]+)?([Ee][+\-][0-9]+)?\s*,\s*[+\-]?[0-9]+(\.[0-9]+)?([Ee][+\-][0-9]+)?\s*\)\s*)*"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DateTime">
+    <xs:union>
+      <xs:simpleType>
+        <xs:restriction base='xs:dateTime'/>
+      </xs:simpleType>
+      <xs:simpleType>
+        <xs:restriction base='xs:string'>
+          <xs:length value="0"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+  <xs:simpleType name="Double">
+    <xs:union>
+      <xs:simpleType>
+        <xs:restriction base='xs:double'/>
+      </xs:simpleType>
+      <xs:simpleType>
+        <xs:restriction base='xs:string'>
+          <xs:length value="0"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+  <xs:simpleType name="Integer">
+    <xs:union>
+      <xs:simpleType>
+        <xs:restriction base='xs:integer'/>
+      </xs:simpleType>
+      <xs:simpleType>
+        <xs:restriction base='xs:string'>
+          <xs:length value="0"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+  <xs:complexType name="Blob">
+    <xs:simpleContent>
+      <xs:extension base="xs:string"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="StationReference">
+    <xs:attribute name="stationID" type="inv:ResourceIdentifier" use="required"/>
+  </xs:complexType>
+  <xs:simpleType name="StationGroupType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="DEPLOYMENT"/>
+      <xs:enumeration value="ARRAY"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="StationGroup">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="stationReference" type="inv:StationReference"/>
+    </xs:choice>
+    <xs:attribute name="publicID" type="inv:ResourceIdentifier" use="required"/>
+    <xs:attribute name="type" type="inv:StationGroupType"/>
+    <xs:attribute name="code" type="xs:string"/>
+    <xs:attribute name="start" type="inv:DateTime"/>
+    <xs:attribute name="end" type="inv:DateTime"/>
+    <xs:attribute name="description" type="xs:string"/>
+    <xs:attribute name="latitude" type="inv:Double"/>
+    <xs:attribute name="longitude" type="inv:Double"/>
+    <xs:attribute name="elevation" type="inv:Double"/>
+  </xs:complexType>
+  <xs:complexType name="AuxSource">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="remark" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="description" type="xs:string"/>
+    <xs:attribute name="unit" type="xs:string"/>
+    <xs:attribute name="conversion" type="xs:string"/>
+    <xs:attribute name="sampleRateNumerator" type="inv:Integer"/>
+    <xs:attribute name="sampleRateDenominator" type="inv:Integer"/>
+  </xs:complexType>
+  <xs:complexType name="AuxDevice">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="remark" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+      </xs:choice>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="source" type="inv:AuxSource"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="publicID" type="inv:ResourceIdentifier" use="required"/>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="description" type="xs:string"/>
+    <xs:attribute name="model" type="xs:string"/>
+    <xs:attribute name="manufacturer" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="SensorCalibration">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="remark" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+    <xs:attribute name="serialNumber" type="xs:string" use="required"/>
+    <xs:attribute name="channel" type="inv:Integer" use="required"/>
+    <xs:attribute name="start" type="inv:DateTime" use="required"/>
+    <xs:attribute name="end" type="inv:DateTime"/>
+    <xs:attribute name="gain" type="inv:Double"/>
+    <xs:attribute name="gainFrequency" type="inv:Double"/>
+  </xs:complexType>
+  <xs:complexType name="Sensor">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="remark" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+      </xs:choice>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="calibration" type="inv:SensorCalibration"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="publicID" type="inv:ResourceIdentifier" use="required"/>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="description" type="xs:string"/>
+    <xs:attribute name="model" type="xs:string"/>
+    <xs:attribute name="manufacturer" type="xs:string"/>
+    <xs:attribute name="type" type="xs:string"/>
+    <xs:attribute name="unit" type="xs:string"/>
+    <xs:attribute name="lowFrequency" type="inv:Double"/>
+    <xs:attribute name="highFrequency" type="inv:Double"/>
+    <xs:attribute name="response" type="inv:ResourceIdentifier"/>
+  </xs:complexType>
+  <xs:complexType name="ResponsePAZ">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="zeros" type="inv:ComplexArray" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="poles" type="inv:ComplexArray" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="remark" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+    <xs:attribute name="publicID" type="inv:ResourceIdentifier" use="required"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="type" type="xs:string"/>
+    <xs:attribute name="gain" type="inv:Double"/>
+    <xs:attribute name="gainFrequency" type="inv:Double"/>
+    <xs:attribute name="normalizationFactor" type="inv:Double"/>
+    <xs:attribute name="normalizationFrequency" type="inv:Double"/>
+    <xs:attribute name="numberOfZeros" type="inv:Integer"/>
+    <xs:attribute name="numberOfPoles" type="inv:Integer"/>
+  </xs:complexType>
+  <xs:complexType name="ResponsePolynomial">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="coefficients" type="inv:RealArray" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="remark" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+    <xs:attribute name="publicID" type="inv:ResourceIdentifier" use="required"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="gain" type="inv:Double"/>
+    <xs:attribute name="gainFrequency" type="inv:Double"/>
+    <xs:attribute name="frequencyUnit" type="xs:string"/>
+    <xs:attribute name="approximationType" type="xs:string"/>
+    <xs:attribute name="approximationLowerBound" type="inv:Double"/>
+    <xs:attribute name="approximationUpperBound" type="inv:Double"/>
+    <xs:attribute name="approximationError" type="inv:Double"/>
+    <xs:attribute name="numberOfCoefficients" type="inv:Integer"/>
+  </xs:complexType>
+  <xs:complexType name="ResponseFAP">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="tuples" type="inv:RealArray" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="remark" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+    <xs:attribute name="publicID" type="inv:ResourceIdentifier" use="required"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="gain" type="inv:Double"/>
+    <xs:attribute name="gainFrequency" type="inv:Double"/>
+    <xs:attribute name="numberOfTuples" type="inv:Integer"/>
+  </xs:complexType>
+  <xs:complexType name="DataloggerCalibration">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="remark" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+    <xs:attribute name="serialNumber" type="xs:string" use="required"/>
+    <xs:attribute name="channel" type="inv:Integer" use="required"/>
+    <xs:attribute name="start" type="inv:DateTime" use="required"/>
+    <xs:attribute name="end" type="inv:DateTime"/>
+    <xs:attribute name="gain" type="inv:Double"/>
+    <xs:attribute name="gainFrequency" type="inv:Double"/>
+  </xs:complexType>
+  <xs:complexType name="Decimation">
+    <xs:sequence>
+      <xs:element name="analogueFilterChain" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="digitalFilterChain" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+    <xs:attribute name="sampleRateNumerator" type="inv:Integer" use="required"/>
+    <xs:attribute name="sampleRateDenominator" type="inv:Integer" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="Datalogger">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="remark" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+      </xs:choice>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="calibration" type="inv:DataloggerCalibration"/>
+        <xs:element name="decimation" type="inv:Decimation"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="publicID" type="inv:ResourceIdentifier" use="required"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="description" type="xs:string"/>
+    <xs:attribute name="digitizerModel" type="xs:string"/>
+    <xs:attribute name="digitizerManufacturer" type="xs:string"/>
+    <xs:attribute name="recorderModel" type="xs:string"/>
+    <xs:attribute name="recorderManufacturer" type="xs:string"/>
+    <xs:attribute name="clockModel" type="xs:string"/>
+    <xs:attribute name="clockManufacturer" type="xs:string"/>
+    <xs:attribute name="clockType" type="xs:string"/>
+    <xs:attribute name="gain" type="inv:Double"/>
+    <xs:attribute name="maxClockDrift" type="inv:Double"/>
+  </xs:complexType>
+  <xs:complexType name="ResponseFIR">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="coefficients" type="inv:RealArray" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="remark" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+    <xs:attribute name="publicID" type="inv:ResourceIdentifier" use="required"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="gain" type="inv:Double"/>
+    <xs:attribute name="decimationFactor" type="inv:Integer"/>
+    <xs:attribute name="delay" type="inv:Double"/>
+    <xs:attribute name="correction" type="inv:Double"/>
+    <xs:attribute name="numberOfCoefficients" type="inv:Integer"/>
+    <xs:attribute name="symmetry" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="AuxStream">
+    <xs:attribute name="code" type="xs:string" use="required"/>
+    <xs:attribute name="start" type="inv:DateTime" use="required"/>
+    <xs:attribute name="end" type="inv:DateTime"/>
+    <xs:attribute name="device" type="inv:ResourceIdentifier"/>
+    <xs:attribute name="deviceSerialNumber" type="xs:string"/>
+    <xs:attribute name="source" type="xs:string"/>
+    <xs:attribute name="format" type="xs:string"/>
+    <xs:attribute name="flags" type="xs:string"/>
+    <xs:attribute name="restricted" type="xs:boolean"/>
+    <xs:attribute name="shared" type="xs:boolean"/>
+  </xs:complexType>
+  <xs:complexType name="Stream">
+    <xs:attribute name="code" type="xs:string" use="required"/>
+    <xs:attribute name="start" type="inv:DateTime" use="required"/>
+    <xs:attribute name="end" type="inv:DateTime"/>
+    <xs:attribute name="datalogger" type="inv:ResourceIdentifier"/>
+    <xs:attribute name="dataloggerSerialNumber" type="xs:string"/>
+    <xs:attribute name="dataloggerChannel" type="inv:Integer"/>
+    <xs:attribute name="sensor" type="inv:ResourceIdentifier"/>
+    <xs:attribute name="sensorSerialNumber" type="xs:string"/>
+    <xs:attribute name="sensorChannel" type="inv:Integer"/>
+    <xs:attribute name="clockSerialNumber" type="xs:string"/>
+    <xs:attribute name="sampleRateNumerator" type="inv:Integer"/>
+    <xs:attribute name="sampleRateDenominator" type="inv:Integer"/>
+    <xs:attribute name="depth" type="inv:Double"/>
+    <xs:attribute name="azimuth" type="inv:Double"/>
+    <xs:attribute name="dip" type="inv:Double"/>
+    <xs:attribute name="gain" type="inv:Double"/>
+    <xs:attribute name="gainFrequency" type="inv:Double"/>
+    <xs:attribute name="gainUnit" type="xs:string"/>
+    <xs:attribute name="format" type="xs:string"/>
+    <xs:attribute name="flags" type="xs:string"/>
+    <xs:attribute name="restricted" type="xs:boolean"/>
+    <xs:attribute name="shared" type="xs:boolean"/>
+  </xs:complexType>
+  <xs:complexType name="SensorLocation">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="auxStream" type="inv:AuxStream"/>
+      <xs:element name="stream" type="inv:Stream"/>
+    </xs:choice>
+    <xs:attribute name="publicID" type="inv:ResourceIdentifier" use="required"/>
+    <xs:attribute name="code" type="xs:string" use="required"/>
+    <xs:attribute name="start" type="inv:DateTime" use="required"/>
+    <xs:attribute name="end" type="inv:DateTime"/>
+    <xs:attribute name="latitude" type="inv:Double"/>
+    <xs:attribute name="longitude" type="inv:Double"/>
+    <xs:attribute name="elevation" type="inv:Double"/>
+  </xs:complexType>
+  <xs:complexType name="Station">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="remark" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+      </xs:choice>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="sensorLocation" type="inv:SensorLocation"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="publicID" type="inv:ResourceIdentifier" use="required"/>
+    <xs:attribute name="code" type="xs:string" use="required"/>
+    <xs:attribute name="start" type="inv:DateTime" use="required"/>
+    <xs:attribute name="end" type="inv:DateTime"/>
+    <xs:attribute name="description" type="xs:string"/>
+    <xs:attribute name="latitude" type="inv:Double"/>
+    <xs:attribute name="longitude" type="inv:Double"/>
+    <xs:attribute name="elevation" type="inv:Double"/>
+    <xs:attribute name="place" type="xs:string"/>
+    <xs:attribute name="country" type="xs:string"/>
+    <xs:attribute name="affiliation" type="xs:string"/>
+    <xs:attribute name="type" type="xs:string"/>
+    <xs:attribute name="archive" type="xs:string"/>
+    <xs:attribute name="archiveNetworkCode" type="xs:string"/>
+    <xs:attribute name="restricted" type="xs:boolean"/>
+    <xs:attribute name="shared" type="xs:boolean"/>
+  </xs:complexType>
+  <xs:complexType name="Network">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="remark" type="inv:Blob" minOccurs="0" maxOccurs="1"/>
+      </xs:choice>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="station" type="inv:Station"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="publicID" type="inv:ResourceIdentifier" use="required"/>
+    <xs:attribute name="code" type="xs:string" use="required"/>
+    <xs:attribute name="start" type="inv:DateTime" use="required"/>
+    <xs:attribute name="end" type="inv:DateTime"/>
+    <xs:attribute name="description" type="xs:string"/>
+    <xs:attribute name="institutions" type="xs:string"/>
+    <xs:attribute name="region" type="xs:string"/>
+    <xs:attribute name="type" type="xs:string"/>
+    <xs:attribute name="netClass" type="xs:string"/>
+    <xs:attribute name="archive" type="xs:string"/>
+    <xs:attribute name="restricted" type="xs:boolean"/>
+    <xs:attribute name="shared" type="xs:boolean"/>
+  </xs:complexType>
+  <xs:complexType name="Inventory">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="stationGroup" type="inv:StationGroup"/>
+      <xs:element name="auxDevice" type="inv:AuxDevice"/>
+      <xs:element name="sensor" type="inv:Sensor"/>
+      <xs:element name="datalogger" type="inv:Datalogger"/>
+      <xs:element name="responsePAZ" type="inv:ResponsePAZ"/>
+      <xs:element name="responseFIR" type="inv:ResponseFIR"/>
+      <xs:element name="responsePolynomial" type="inv:ResponsePolynomial"/>
+      <xs:element name="responseFAP" type="inv:ResponseFAP"/>
+      <xs:element name="network" type="inv:Network"/>
+    </xs:choice>
+    <xs:attribute name="publicID" type="inv:ResourceIdentifier"/>
+  </xs:complexType>
+  <xs:element name="inventory" type="inv:Inventory"/>
+</xs:schema>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0">
+   <Source>SeisComP3</Source>
+   <Sender>ODC</Sender>
+   <Created>2017-03-30T11:43:28</Created>
+   <Network code="BE" startDate="1980-01-01T00:00:00" restrictedStatus="open">
+      <Description>Belgian Seismic Network</Description>
+      <Station code="BEBN" startDate="2005-06-24T00:00:00" restrictedStatus="open">
+         <Latitude>50.797</Latitude>
+         <Longitude>5.6778</Longitude>
+         <Elevation>80</Elevation>
+         <Site>
+            <Name>Eben-Emael, Belgium</Name>
+            <Country>Belgium</Country>
+         </Site>
+         <CreationDate>2005-06-24T00:00:00</CreationDate>
+         <Channel code="HHZ" startDate="2005-06-24T00:00:00" restrictedStatus="open" locationCode="">
+            <Latitude>50.797</Latitude>
+            <Longitude>5.6778</Longitude>
+            <Elevation>80</Elevation>
+            <Depth>0</Depth>
+            <Azimuth>0</Azimuth>
+            <Dip>-90</Dip>
+            <SampleRate>125</SampleRate>
+            <SampleRateRatio>
+               <NumberSamples>125</NumberSamples>
+               <NumberSeconds>1</NumberSeconds>
+            </SampleRateRatio>
+            <StorageFormat>Steim2</StorageFormat>
+            <ClockDrift>0</ClockDrift>
+            <Sensor resourceId="Sensor#20151120131751.419499.13">
+               <Type>CMG40T</Type>
+               <Description>CMG40T</Description>
+               <Model>CMG40T</Model>
+            </Sensor>
+            <DataLogger resourceId="Datalogger#20151120131751.414.5">
+               <Description>BEBN.2005.175.H</Description>
+            </DataLogger>
+            <Response>
+               <InstrumentSensitivity>
+                  <Value>3193610000</Value>
+                  <Frequency>1</Frequency>
+                  <InputUnits>
+                     <Name>M/S</Name>
+                  </InputUnits>
+                  <OutputUnits>
+                     <Name>COUNTS</Name>
+                  </OutputUnits>
+               </InstrumentSensitivity>
+               <Stage number="1">
+                  <PolesZeros resourceId="ResponsePAZ#20151120131751.419624.14" name="BEBN.2005.175.HZ">
+                     <InputUnits>
+                        <Name>M/S</Name>
+                     </InputUnits>
+                     <OutputUnits>
+                        <Name>V</Name>
+                     </OutputUnits>
+                     <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
+                     <NormalizationFactor>571508000</NormalizationFactor>
+                     <NormalizationFrequency>1</NormalizationFrequency>
+                     <Zero number="5">
+                        <Real>0</Real>
+                        <Imaginary>0</Imaginary>
+                     </Zero>
+                     <Zero number="6">
+                        <Real>0</Real>
+                        <Imaginary>0</Imaginary>
+                     </Zero>
+                     <Pole number="0">
+                        <Real>-0.148032</Real>
+                        <Imaginary>-0.148032</Imaginary>
+                     </Pole>
+                     <Pole number="1">
+                        <Real>-0.148032</Real>
+                        <Imaginary>0.148032</Imaginary>
+                     </Pole>
+                     <Pole number="2">
+                        <Real>-1130.97</Real>
+                        <Imaginary>0</Imaginary>
+                     </Pole>
+                     <Pole number="3">
+                        <Real>-1005.31</Real>
+                        <Imaginary>-0</Imaginary>
+                     </Pole>
+                     <Pole number="4">
+                        <Real>-502.655</Real>
+                        <Imaginary>-0</Imaginary>
+                     </Pole>
+                  </PolesZeros>
+                  <StageGain>
+                     <Value>800</Value>
+                     <Frequency>1</Frequency>
+                  </StageGain>
+               </Stage>
+               <Stage number="2">
+                  <PolesZeros resourceId="ResponsePAZ#20151120131751.419251.12" name="BEBN..HHZ.2005.175.stage_2">
+                     <InputUnits>
+                        <Name>V</Name>
+                     </InputUnits>
+                     <OutputUnits>
+                        <Name>V</Name>
+                     </OutputUnits>
+                     <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
+                     <NormalizationFactor>45637</NormalizationFactor>
+                     <NormalizationFrequency>1</NormalizationFrequency>
+                     <Pole number="0">
+                        <Real>-151.058</Real>
+                        <Imaginary>151.058</Imaginary>
+                     </Pole>
+                     <Pole number="1">
+                        <Real>-151.058</Real>
+                        <Imaginary>-151.058</Imaginary>
+                     </Pole>
+                  </PolesZeros>
+                  <StageGain>
+                     <Value>10</Value>
+                     <Frequency>1</Frequency>
+                  </StageGain>
+               </Stage>
+               <Stage number="3">
+                  <Coefficients>
+                     <InputUnits>
+                        <Name>V</Name>
+                     </InputUnits>
+                     <OutputUnits>
+                        <Name>COUNTS</Name>
+                     </OutputUnits>
+                     <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+                  </Coefficients>
+                  <Decimation>
+                     <InputSampleRate>125</InputSampleRate>
+                     <Factor>1</Factor>
+                     <Offset>0</Offset>
+                     <Delay>0</Delay>
+                     <Correction>0</Correction>
+                  </Decimation>
+                  <StageGain>
+                     <Value>399201</Value>
+                     <Frequency>0</Frequency>
+                  </StageGain>
+               </Stage>
+            </Response>
+         </Channel>
+      </Station>
+   </Network>
+</FDSNStationXML>

@@ -81,6 +81,7 @@ The functionality is provided through the following packages:
    :toctree: .
    :nosignatures:
 
+   obspy.io.arclink
    obspy.io.css
    obspy.io.kml
    obspy.io.sac.sacpz
