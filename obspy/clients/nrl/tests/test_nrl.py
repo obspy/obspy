@@ -35,7 +35,6 @@ class NRLTestCase(unittest.TestCase):
             self.assertIsInstance(nrl, NRL)
         self.assertIsInstance(self.nrl_local, LocalNRL)
         self.assertIsInstance(self.nrl_online, RemoteNRL)
-        self.assertIsInstance(self.nrl_default, RemoteNRL)
 
     def test_get_response(self):
         resp = self.nrl_local.get_response(

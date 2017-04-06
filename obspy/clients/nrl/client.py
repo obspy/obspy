@@ -27,6 +27,10 @@ from obspy.core.inventory.util import _textwrap
 from obspy.io.xseed import Parser
 
 
+# Simple cache for remote NRL access. The total data amount will always be
+# fairly small so I don't think it needs any cache eviction for now.
+_remote_nrl_cache = {}
+
 
 class NRL(object):
     """
@@ -277,6 +281,15 @@ class RemoteNRL(NRL):
         self.root = root
         super(self.__class__, self).__init__()
 
+    def _download(self, url):
+        """
+        Download service with basic cache.
+        """
+        if url not in _remote_nrl_cache:
+            response = requests.get(url)
+            _remote_nrl_cache[url] = response.text
+        return _remote_nrl_cache[url]
+
     def _join(self, *paths):
         url = paths[0]
         for path in paths[1:]:
@@ -288,17 +301,15 @@ class RemoteNRL(NRL):
         Returns a configparser from a path to an index.txt
         '''
         cp = configparser.SafeConfigParser()
-        response = requests.get(path)
-        string_io = io.StringIO(response.text)
-        if sys.version_info.major == 2:
-            cp.readfp(string_io)
-        else:
-            cp.read_file(string_io)
+        with io.StringIO(self._download(path)) as buf:
+            if sys.version_info.major == 2:
+                cp.readfp(buf)
+            else:
+                cp.read_file(buf)
         return cp
 
     def _read_resp(self, path):
-        response = requests.get(path)
-        return response.text
+        return self._download(path)
 
 
 if __name__ == "__main__":
