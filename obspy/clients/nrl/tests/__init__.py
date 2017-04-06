@@ -11,12 +11,12 @@ from obspy.core.util import add_doctests, add_unittests
 MODULE_NAME = "obspy.clients.nrl"
 
 
-def suite():
+def suite():  # pragma: no cover
     suite = unittest.TestSuite()
     add_doctests(suite, MODULE_NAME)
     add_unittests(suite, MODULE_NAME)
     return suite
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main(defaultTest='suite')
