@@ -44,34 +44,33 @@ class BlocketteTestCase(unittest.TestCase):
         # Create a new empty list to store all information of the test in it.
         test_examples = []
         # Now read the corresponding file and parse it.
-        file = io.open(blkt_file, 'rt')
-        # Helper variable to parse the file. Might be a little bit slow but its
-        # just for tests.
-        cur_stat = None
-        for line in file:
-            # Skip unnecessary content.
-            if not cur_stat:
-                if line[0:2] != '--':
+        with io.open(blkt_file, 'rt') as fh:
+            # Helper variable to parse the file. Might be a little bit slow but
+            # its just for tests.
+            cur_stat = None
+            for line in fh:
+                # Skip unnecessary content.
+                if not cur_stat:
+                    if line[0:2] != '--':
+                        continue
+                    else:
+                        # If new example number append new list.
+                        if len(test_examples) != int(line[2:4]):
+                            test_examples.append([])
+                        # Append new list to the current example of the list.
+                        # The list contains the type of the example.
+                        test_examples[-1].append([line[5:].replace('\n', '')])
+                        cur_stat = 1
+                        continue
+                # Filter out any empty/commentary lines still remaining and
+                # also set cur_stat to None.
+                if line.strip() == '':
+                    cur_stat = None
                     continue
-                else:
-                    # If new example number append new list.
-                    if len(test_examples) != int(line[2:4]):
-                        test_examples.append([])
-                    # Append new list to the current example of the list. The
-                    # list contains the type of the example.
-                    test_examples[-1].append([line[5:].replace('\n', '')])
-                    cur_stat = 1
+                elif line.strip()[0] == '#':
+                    cur_stat = None
                     continue
-            # Filter out any empty/commentary lines still remaining and also
-            # set cur_stat to None.
-            if line.strip() == '':
-                cur_stat = None
-                continue
-            elif line.strip()[0] == '#':
-                cur_stat = None
-                continue
-            test_examples[-1][-1].append(line)
-        file.close()
+                test_examples[-1][-1].append(line)
         # Simplify and Validate the list.
         self.simplify_and_validate_and_create_dictionary(test_examples)
         # Convert everything to bytes - a lot of the logic in this method
