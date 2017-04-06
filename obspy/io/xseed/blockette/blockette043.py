@@ -124,4 +124,4 @@ class Blockette043(Blockette):
                     format_resp(self.real_pole_error, 6),
                     format_resp(self.imaginary_pole_error, 6))
         string += '#\t\t\n'
-        return string
+        return string.encode()

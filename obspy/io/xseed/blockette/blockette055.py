@@ -48,22 +48,26 @@ class Blockette055(Blockette):
         """
         Returns RESP string.
         """
-        string = \
-            '#\t\t+                     +---------------------------------+' +\
-            '                     +\n' + \
-            '#\t\t+                     |   Response List,%6s ch %s   |' + \
-            '                     +\n' % (station, channel) + \
-            '#\t\t+                     +---------------------------------+' +\
-            '                     +\n' + \
-            '#\t\t\n' + \
-            'B055F03     Stage sequence number:                 %s\n' \
-            % self.stage_sequence_number + \
-            'B055F04     Response in units lookup:              %s\n' \
-            % blockette_34_lookup(abbreviations, self.stage_input_units) + \
-            'B055F05     Response out units lookup:             %s\n' \
-            % blockette_34_lookup(abbreviations, self.stage_output_units) + \
-            'B055F06     Number of responses:                   %s\n' \
-            % self.number_of_responses_listed
+        string = (
+            '#\t\t+                     +---------------------------------+'
+            '                     +\n'
+            '#\t\t+                     |   Response List,%6s ch %s   |'
+            '                     +\n'
+            '#\t\t+                     +---------------------------------+'
+            '                     +\n'
+            '#\t\t\n'
+            'B055F03     Stage sequence number:                 %s\n'
+
+            'B055F04     Response in units lookup:              %s\n'
+
+            'B055F05     Response out units lookup:             %s\n'
+
+            'B055F06     Number of responses:                   %s\n') % (
+                station, channel, self.stage_sequence_number,
+                blockette_34_lookup(abbreviations, self.stage_input_units),
+                blockette_34_lookup(abbreviations, self.stage_output_units),
+                self.number_of_responses_listed)
+
         if self.number_of_responses_listed:
             string += \
                 '#\t\tResponses:\n' + \
@@ -85,4 +89,4 @@ class Blockette055(Blockette):
                      format_resp(self.phase_angle, 6),
                      format_resp(self.phase_error, 6))
         string += '#\t\t\n'
-        return string
+        return string.encode()
