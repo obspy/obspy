@@ -61,29 +61,38 @@ def deprecated(warning_msg=None):
     return _deprecated
 
 
-@decorator
-def vcr(func, *args, **kwargs):
+def vcr(decorated_func=None, **vcr_kwargs):
     """
     This is a decorator to mark test cases as using vcr. This only wraps around
     :func:`vcr.vcr` decorator and skips vcr if it is disabled for this test run
     by option '--no-vcr' to :func:`obspy.scripts.runtests.main`.
     """
     import vcr as vcr_module
-    no_vcr = vcr_module.VCRSystem.disabled
-    if no_vcr is None:
-        msg = ("obspy._no_vcr is not set, this means the test is not executed "
-               "via `obspy-runtests` on command line or "
-               "`obspy.scripts.runtests` programatically. This test will use "
-               "pre-recorded VCR tapes for network tests.")
-        warnings.warn(msg)
-        no_vcr = False
 
-    if no_vcr:
-        # run as network test
-        run_network_test(func, *args, **kwargs)
+    def _vcr_outer(func):
+        """
+        Wrapper around _vcr_inner allowing optional arguments on decorator
+        """
+        def _vcr_inner(*args, **kwargs):
+            """
+            The actual decorator, either using :func:`vcr.vcr` or
+            if VCR is disabled, running as network test.
+            """
+            if vcr_module.VCRSystem.disabled:
+                # run as network test
+                return run_network_test(decorated_func, *args, **kwargs)
+            else:
+                # run using vcr, relying on vcr tapes
+                vcr_module.vcr(
+                    decorated_func=func, **vcr_kwargs)(*args, **kwargs)
+        return _vcr_inner
+
+    if decorated_func is None:
+        # without arguments
+        return _vcr_outer
     else:
-        # run using vcr, relying on vcr tapes
-        vcr_module.vcr(decorated_func=func)(*args, **kwargs)
+        # with arguments
+        return _vcr_outer(decorated_func)
 
 
 def run_network_test(test_method, *args, **kwargs):
