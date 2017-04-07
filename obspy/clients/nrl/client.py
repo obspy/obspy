@@ -256,9 +256,9 @@ class LocalNRL(NRL):
         super(self.__class__, self).__init__()
 
     def _get_cp_from_ini(self, path):
-        '''
+        """
         Returns a configparser from a path to an index.txt
-        '''
+        """
         cp = configparser.SafeConfigParser()
         with codecs.open(path, mode='r', encoding='UTF-8') as f:
             if sys.version_info.major == 2:
