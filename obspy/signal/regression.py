@@ -21,7 +21,7 @@ import scipy.optimize
 
 
 def linear_regression(xdata, ydata, weights=None, p0=None,
-                      intercept_origin=True):
+                      intercept_origin=True, **kwargs):
     """
     Use linear least squares to fit a function, f, to data.
     This method is a generalized version of
@@ -48,7 +48,10 @@ def linear_regression(xdata, ydata, weights=None, p0=None,
         values will all be 0 (Different from SciPy where all are 1)
     :param intercept_origin: If ``True``: solves ``y=a*x`` (default);
         if ``False``: solves ``y=a*x+b``.
-
+    
+    Extra keword arguments will be passed to
+    :func:`scipy.optimize.minpack.curve_fit`.
+    
     :rtype: tuple
     :returns: (slope, std_slope) if ``intercept_origin`` is ``True``;
         (slope, intercept, std_slope, std_intercept) if ``False``.
@@ -66,14 +69,16 @@ def linear_regression(xdata, ydata, weights=None, p0=None,
 
     if intercept_origin:
         p, cov = scipy.optimize.curve_fit(lambda x, a: a * x,
-                                          xdata, ydata, p0, sigma=sigma)
+                                          xdata, ydata, p0, sigma=sigma,
+                                          **kwargs)
         slope = p[0]
         std_slope = np.sqrt(cov[0, 0])
         return slope, std_slope
 
     else:
         p, cov = scipy.optimize.curve_fit(lambda x, a, b: a * x + b,
-                                          xdata, ydata, p0, sigma=sigma)
+                                          xdata, ydata, p0, sigma=sigma,
+                                          **kwargs)
         slope, intercept = p
         std_slope = np.sqrt(cov[0, 0])
         std_intercept = np.sqrt(cov[1, 1])
