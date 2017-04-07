@@ -354,6 +354,7 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
+        'INVENTORYXML = obspy.io.arclink.inventory',
         'SC3ML = obspy.io.seiscomp.sc3ml',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
@@ -365,6 +366,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
         'readFormat = obspy.io.stationxml.core:_read_stationxml',
         'writeFormat = obspy.io.stationxml.core:_write_stationxml',
+        ],
+    'obspy.plugin.inventory.INVENTORYXML': [
+        'isFormat = obspy.io.arclink.inventory:_is_inventory_xml',
+        'readFormat = obspy.io.arclink.inventory:_read_inventory_xml',
         ],
     'obspy.plugin.inventory.SC3ML': [
         'isFormat = obspy.io.seiscomp.sc3ml:_is_sc3ml',
@@ -730,6 +735,7 @@ def setupPackage():
             'Programming Language :: Python :: 3.3',
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
+            'Programming Language :: Python :: 3.6',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,

@@ -72,4 +72,4 @@ class Blockette048(Blockette):
                     format_resp(self.frequency_of_calibration_sensitivity, 6),
                     self.time_of_above_calibration.format_seed())
         string += '#\t\t\n'
-        return string
+        return string.encode()

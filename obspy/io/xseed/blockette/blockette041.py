@@ -142,4 +142,4 @@ class Blockette041(Blockette):
             string += 'B041F09    %4s %13s\n' \
                 % (0, format_resp(self.FIR_coefficient, 6))
         string += '#\t\t\n'
-        return string
+        return string.encode()

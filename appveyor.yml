@@ -15,7 +15,7 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    # - PYTHON: "C:\\Miniconda" 
+    # - PYTHON: "C:\\Miniconda"
     #   PYTHON_VERSION: "2.7"
     #   PYTHON_ARCH: "32"
 
@@ -86,7 +86,7 @@ install:
   - "activate test"
   # Install default dependencies
   #   for now fix requests version, can be changed when a new requests is released (see #1599)
-  - "conda install -q --yes pip numpy scipy \"matplotlib<1.9\" lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema"
+  - "conda install -q --yes pip numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema"
   # additional dependencies
   - "pip install pyimgur"
   - "pip install -U future"

@@ -14,7 +14,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import re
-import sys
+import warnings
 
 from obspy import UTCDateTime
 
@@ -26,6 +26,10 @@ IGNORE_ATTR = ['blockette_id', 'blockette_name', 'compact', 'debug',
 
 
 class SEEDParserException(Exception):
+    pass
+
+
+class SEEDAbbreviationNotFoundWarning(UserWarning):
     pass
 
 
@@ -166,8 +170,8 @@ def blockette_34_lookup(abbr, lookup):
                          lookup)
         return l1 + ' - ' + l2
     except Exception:
-        msg = '\nWarning: Abbreviation reference not found.'
-        sys.stdout.write(msg)
+        msg = 'Warning: Abbreviation reference for "%i" not found.' % lookup
+        warnings.warn(msg, SEEDAbbreviationNotFoundWarning)
         return 'No Abbreviation Referenced'
 
 

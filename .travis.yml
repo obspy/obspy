@@ -23,6 +23,8 @@ matrix:
     - os: linux
       env: PYTHON_VERSION=3.5
     - os: linux
+      env: PYTHON_VERSION=3.6
+    - os: linux
       env: PYTHON_VERSION=3.5 ARCHITECTURE_32BIT="True"
       addons:
         apt:
@@ -33,7 +35,7 @@ matrix:
     - os: osx
       env: PYTHON_VERSION=2.7
     - os: osx
-      env: PYTHON_VERSION=3.5
+      env: PYTHON_VERSION=3.6
 
 # mimick travis fast fail and rolling build setup from:
 # https://github.com/JuliaLang/julia/blob/master/.travis.yml
@@ -78,9 +80,9 @@ install:
   - conda info -a
   - |
       if [[ "$MINIMUM_DEPENDENCIES" == 'True' ]]; then
-        NUMPY_VERSION=1.6.2
-        SCIPY_VERSION=0.11.0
-        MPL_VERSION=1.1.1
+        NUMPY="numpy=1.6.2"
+        SCIPY="scipy=0.11.0"
+        MATPLOTLIB="matplotlib=1.1.1"
         # no basemap version works with this old numpy, so leave out
         BASEMAP=""
         PYPROJ="pyproj"
@@ -90,33 +92,42 @@ install:
         mkdir -p $HOME/.matplotlib
         echo 'backend:AGG' > $HOME/.matplotlib/matplotlibrc
       elif [[ "${PYTHON_VERSION}" == '3.3' ]]; then
-        # newer package versions for 3.3 not available via anaconda
-        NUMPY_VERSION=1.9.2
-        SCIPY_VERSION=0.16.0
-        MPL_VERSION=1.4.3
-        BASEMAP="basemap=1.0.7"
-        # no cartopy for py33 in conda-forge channel
-        # anaconda doesn't provide pyproj for Python 3.3 anymore, looks like
+        # Let conda resolve to the latest versions.
+        NUMPY="numpy"
+        SCIPY="scipy"
+        MATPLOTLIB="matplotlib"
+        BASEMAP="basemap"
+        # anaconda doesn't provide pyproj for Python 3.3 anymore
         PYPROJ=""
-      elif [[ "${PYTHON_VERSION:0:1}" == '3' ]]; then
-        NUMPY_VERSION=1.10.4
-        SCIPY_VERSION=0.17.0
-        MPL_VERSION=1.5.1
-        BASEMAP="basemap=1.0.7"
+      elif [[ "${PYTHON_VERSION}" == '3.4' ]]; then
+        # 3.4 apparently no longer get's updated packages.
+        # Let conda resolve to the latest versions.
+        NUMPY="numpy"
+        SCIPY="scipy"
+        MATPLOTLIB="matplotlib"
+        BASEMAP="basemap"
         PYPROJ="pyproj"
+      elif [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
+        # Special packages for 32bit. Also let conda resolve to the latest
+        # versions.
+        NUMPY="numpy"
+        SCIPY="scipy"
+        MATPLOTLIB="matplotlib"
+        BASEMAP="basemap"
+        PYPROJ="pyproj"
+      # For anything else also let conda resolve, but force matplotlib 2.
       else
-        NUMPY_VERSION=1.10.4
-        SCIPY_VERSION=0.17.0
-        MPL_VERSION=1.5.1
-        BASEMAP="basemap=1.0.7"
+        NUMPY="numpy"
+        SCIPY="scipy"
+        MATPLOTLIB="matplotlib>=2.0.0"
+        BASEMAP="basemap"
         PYPROJ="pyproj"
       fi
-  # for now fix requests version, can be changed when a new requests is released (see #1599)
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
-        numpy=$NUMPY_VERSION
-        scipy=$SCIPY_VERSION
-        matplotlib=$MPL_VERSION
+        $NUMPY
+        $SCIPY
+        $MATPLOTLIB
         $BASEMAP
         $PYPROJ
         future
@@ -125,10 +136,9 @@ install:
         sqlalchemy
         mock
         nose
-        gdal
         docopt
         coverage
-        'requests<2.12'
+        requests
         jsonschema
   - source activate test-environment
   # additional, optional packages that run some more tests but are not

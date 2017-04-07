@@ -2,7 +2,10 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import native_bytes
 
+import importlib
+import io
 import os
 import sys
 import unittest
@@ -11,7 +14,8 @@ from glob import iglob
 
 from lxml import etree
 
-from obspy.io.xseed.blockette import Blockette050, Blockette054, Blockette060
+from obspy.io.xseed.blockette import (
+    Blockette041, Blockette050, Blockette054, Blockette060)
 from obspy.io.xseed.blockette.blockette import BlocketteLengthException
 from obspy.io.xseed.fields import SEEDTypeException
 
@@ -40,36 +44,41 @@ class BlocketteTestCase(unittest.TestCase):
         # Create a new empty list to store all information of the test in it.
         test_examples = []
         # Now read the corresponding file and parse it.
-        file = open(blkt_file, 'rb')
-        # Helper variable to parse the file. Might be a little bit slow but its
-        # just for tests.
-        cur_stat = None
-        for line in file:
-            # Skip unnecessary content.
-            if not cur_stat:
-                if line[0:2] != '--':
+        with io.open(blkt_file, 'rt') as fh:
+            # Helper variable to parse the file. Might be a little bit slow but
+            # its just for tests.
+            cur_stat = None
+            for line in fh:
+                # Skip unnecessary content.
+                if not cur_stat:
+                    if line[0:2] != '--':
+                        continue
+                    else:
+                        # If new example number append new list.
+                        if len(test_examples) != int(line[2:4]):
+                            test_examples.append([])
+                        # Append new list to the current example of the list.
+                        # The list contains the type of the example.
+                        test_examples[-1].append([line[5:].replace('\n', '')])
+                        cur_stat = 1
+                        continue
+                # Filter out any empty/commentary lines still remaining and
+                # also set cur_stat to None.
+                if line.strip() == '':
+                    cur_stat = None
                     continue
-                else:
-                    # If new example number append new list.
-                    if len(test_examples) != int(line[2:4]):
-                        test_examples.append([])
-                    # Append new list to the current example of the list. The
-                    # list contains the type of the example.
-                    test_examples[-1].append([line[5:].replace('\n', '')])
-                    cur_stat = 1
+                elif line.strip()[0] == '#':
+                    cur_stat = None
                     continue
-            # Filter out any empty/commentary lines still remaining and also
-            # set cur_stat to None.
-            if line.strip() == '':
-                cur_stat = None
-                continue
-            elif line.strip()[0] == '#':
-                cur_stat = None
-                continue
-            test_examples[-1][-1].append(line)
-        file.close()
+                test_examples[-1][-1].append(line)
         # Simplify and Validate the list.
         self.simplify_and_validate_and_create_dictionary(test_examples)
+        # Convert everything to bytes - a lot of the logic in this method
+        # here assumes strings to its easier to work with strings and
+        # convert to bytes after everything is done.
+        for _i in test_examples:
+            for key, value in _i.items():
+                _i[key] = value.encode()
         return test_examples
 
     def simplify_and_validate_and_create_dictionary(self, examples):
@@ -163,7 +172,7 @@ class BlocketteTestCase(unittest.TestCase):
                     if key2 == 'SEED':
                         continue
                     xseed = etree.tostring(blkt1['Blkt'].get_xml(
-                        xseed_version=blkt2['version'])).decode()
+                        xseed_version=blkt2['version']))
                     self.assertEqual(xseed, versions[key2]['data'],
                                      errmsg % (blkt_number, 'XSEED', key2,
                                                xseed, blkt2['data']))
@@ -174,6 +183,7 @@ class BlocketteTestCase(unittest.TestCase):
         """
         # Loop over all files in the blockette-tests directory.
         path = os.path.join(self.path, 'blockette-tests', 'blockette*.txt')
+        test_example_count = 0
         for blkt_file in iglob(path):
             # Get blockette number.
             blkt_number = blkt_file[-7:-4]
@@ -185,9 +195,61 @@ class BlocketteTestCase(unittest.TestCase):
                 raise ImportError(msg)
             # Parse the file.
             test_examples = self.parse_file(blkt_file)
+            # Check how many examples were actually tested.
+            test_example_count += len(test_examples)
             # The last step is to actually test the conversions to and from
             # SEED/XSEED for every example in every direction.
             self.seed_and_xseed_conversion(test_examples, blkt_number)
+        self.assertGreater(test_example_count, 0)
+
+    def test_all_blockettes_get_resp(self):
+        """
+        Tests get_resp() for all blockettes that have that method.
+        """
+        tested_blockettes = 0
+        # Loop over all files in the blockette-tests directory.
+        path = os.path.join(self.path, 'blockette-tests', 'blockette*.txt')
+        for blkt_file in iglob(path):
+
+            # Import the corresponding blockette.
+            blkt_number = blkt_file[-7:-4]
+            blkt = importlib.import_module(
+                'obspy.io.xseed.blockette.blockette%s' % blkt_number)
+            blkt = getattr(blkt, "Blockette%s" % blkt_number)
+
+            # Skip if it has no get_resp() method.
+            if not hasattr(blkt, "get_resp"):
+                continue
+            tested_blockettes += 1
+
+            # Some of the blockettes requires access to other blockettes.
+            # They don't have it for this simplistic test and thus raise
+            # warnings which therefore have to be caught.
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                test_examples = self.parse_file(blkt_file)
+                for ex in test_examples:
+                    b = blkt()
+                    b.parse_seed(ex["SEED"])
+                    if blkt_number != "060":
+                        r = b.get_resp("AA", "BB", [])
+                    else:
+                        # Blockette 60 is special as it also needs access to
+                        # other blockettes. Create some dummy data here.
+                        b.stages = [[0]]
+                        blkt41 = Blockette041()
+                        blkt41.response_lookup_key = 0
+                        blkt41.symmetry_code = 0
+                        blkt41.signal_in_units = "m/s"
+                        blkt41.signal_out_units = "m/s"
+                        blkt41.number_of_factors = 0
+                        r = b.get_resp("AA", "BB", [blkt41])
+                    # For now only check that it contains something and that it
+                    # returns bytes.
+                    self.assertGreater(len(r), 0)
+                    self.assertTrue(isinstance(r, native_bytes))
+
+        self.assertGreater(tested_blockettes, 0)
 
     def test_blockette60_has_blockette_id(self):
         """

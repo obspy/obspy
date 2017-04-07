@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-DATAMARK bindings to ObsPy core module.
+WIN/DATAMARK format bindings to ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -24,7 +24,7 @@ def _is_win(filename, century="20"):  # @UnusedVariable
     :return: ``True`` if a WIN file.
     """
     # as long we don't have full format description we just try to read the
-    # file like _read_datamark and check for errors
+    # file like _read_win and check for errors
     century = "20"  # hardcoded ;(
     try:
         with open(filename, "rb") as fpin:
