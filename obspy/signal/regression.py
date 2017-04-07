@@ -66,16 +66,14 @@ def linear_regression(xdata, ydata, weights=None, p0=None,
 
     if intercept_origin:
         p, cov = scipy.optimize.curve_fit(lambda x, a: a * x,
-                                          xdata, ydata, p0, sigma=sigma,
-                                          xtol=1e-20)
+                                          xdata, ydata, p0, sigma=sigma)
         slope = p[0]
         std_slope = np.sqrt(cov[0, 0])
         return slope, std_slope
 
     else:
         p, cov = scipy.optimize.curve_fit(lambda x, a, b: a * x + b,
-                                          xdata, ydata, p0, sigma=sigma,
-                                          xtol=1e-20)
+                                          xdata, ydata, p0, sigma=sigma)
         slope, intercept = p
         std_slope = np.sqrt(cov[0, 0])
         std_intercept = np.sqrt(cov[1, 1])
