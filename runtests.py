@@ -5,9 +5,7 @@ A command-line program that runs all ObsPy tests.
 
 For documentation see file obspy/scripts/runtests.py.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
+from __future__ import absolute_import, division, print_function
 
 import sys
 

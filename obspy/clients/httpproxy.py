@@ -10,11 +10,10 @@ License:
 J. MacCarthy, modified from https://gist.github.com/frxstrem/4487802
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 from future import standard_library
-from future.utils import native_str
+
+from obspy.core.compatibility import string_types
 
 from base64 import b64encode
 import socket
@@ -41,7 +40,7 @@ def valid_address(addr):
     """ Verify that an IP/port tuple is valid """
     is_valid = (isinstance(addr, (list, tuple)) and
                 len(addr) == 2 and
-                isinstance(addr[0], (str, native_str)) and
+                isinstance(addr[0], string_types) and
                 isinstance(addr[1], int))
     return is_valid
 

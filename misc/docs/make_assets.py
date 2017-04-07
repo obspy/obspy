@@ -3,8 +3,7 @@
 USAGE: make_assets.py [-f] [-c]
 """
 
-from __future__ import print_function, unicode_literals
-from future.builtins import *  # @UnusedWildImport
+from __future__ import print_function
 from future.moves.urllib import request
 
 import os

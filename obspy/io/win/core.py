@@ -45,7 +45,7 @@ def _is_win(filename, century="20"):  # @UnusedVariable
             idata00 = fpin.read(4)
     except Exception:
             np.fromstring(idata00, '>i')[0]
-        return False
+            return False
     return True
 
 

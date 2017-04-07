@@ -229,7 +229,7 @@ def get_flags(files, starttime=None, endtime=None,
     for file in files:
 
         # If it's a file name just read it.
-        if isinstance(file, (str, native_str)):
+        if isinstance(file, str):
             # Read to NumPy array which is used as a buffer.
             bfr_np = np.fromfile(file, dtype=np.int8)
         elif hasattr(file, 'read'):

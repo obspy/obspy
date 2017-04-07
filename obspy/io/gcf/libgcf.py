@@ -5,9 +5,7 @@
 # Based on Guralp's GCF reference (GCF-RFC-GCFR, Issue C, 2011-01-05)
 # more details available from: http://www.guralp.com/apps/ok?doc=GCF_Intro
 # last access: June, 2016
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
 

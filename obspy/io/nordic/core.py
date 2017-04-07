@@ -20,9 +20,7 @@ Nordic file format support for ObsPy
     information) with the pick.resource_id (where the pick contains only
     physical measured information).
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
+from __future__ import absolute_import, division, print_function
 
 import warnings
 import datetime
