@@ -14,14 +14,13 @@ from obspy import Stream, Trace, UTCDateTime
 def _is_win(filename, century="20"):  # @UnusedVariable
     """
     Checks whether a file is WIN or not.
-
     :type filename: str
     :param filename: WIN file to be checked.
     :rtype: bool
     :return: ``True`` if a WIN file.
     """
     # as long we don't have full format description we just try to read the
-    # file like _read_datamark and check for errors
+    # file like _read_win and check for errors
     century = "20"  # hardcoded ;(
     try:
         with open(filename, "rb") as fpin:
@@ -43,9 +42,9 @@ def _is_win(filename, century="20"):  # @UnusedVariable
             int('%x' % (ord(buff[2:3]) >> 4))
             ord(buff[3:4])
             idata00 = fpin.read(4)
+            np.fromstring(idata00, ('>i'))[0]
     except Exception:
-            np.fromstring(idata00, '>i')[0]
-            return False
+        return False
     return True
 
 

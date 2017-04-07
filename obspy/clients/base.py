@@ -48,6 +48,7 @@ class MyNewClient(WaveformClient, StationClient):
 
 """
 from __future__ import absolute_import, division, print_function
+from future.utils import PY2
 
 from abc import ABCMeta, abstractmethod
 import io
