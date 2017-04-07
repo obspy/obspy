@@ -51,6 +51,8 @@ orig_sleep = time.sleep
 # monkey patch DocTestCase
 def runTest(self):  # NOQA
     from vcr import vcr, VCRSystem
+    # set normalization functions for outgoing traffic checks
+    _vcr_set_outgoing_traffic_check_normalization_functions()
     # check for internet connection
     has_internet = getattr(obspy, '_has_internet', None)
     if has_internet is None:
@@ -102,6 +104,187 @@ def runTest(self):  # NOQA
     # not a VCR doctest, just run it without VCR
     else:
         return self._runTest()
+
+
+def _vcr_set_outgoing_traffic_check_normalization_functions():
+    """
+    Helper routine to set all normalization functions that are applied to
+    outgoing traffic before checking equality with pre-recorded traffic in VCR
+    tapes. This includes sorting HTTP headers alphabetically and normalizing
+    version number strings etc.
+    """
+    from vcr import VCRSystem
+    # set normalization functions for outgoing traffic checks
+    VCRSystem.outgoing_check_normalizations = [
+        _vcr_normalize_user_agent,
+        _vcr_normalize_http_header_order,
+        _vcr_normalize_fdsn_queryauth_http_headers,
+        _vcr_normalize_http_rest_order,
+        _vcr_normalize_accept_encoding_http_header,
+        _vcr_normalize_connection_keep_alive_http_header,
+        _vcr_normalize_content_type_http_header]
+
+
+# set up normalization functions for checks of outgoing traffic in vcr
+def _vcr_normalize_user_agent(name, args, kwargs):
+    if name != 'sendall':
+        return name, args, kwargs
+    if len(args) != 1:
+        return name, args, kwargs
+    try:
+        b'User-Agent' in args[0]
+    except:
+        return name, args, kwargs
+    # we're using a couple of different user-agent version string patterns
+    # across our code base..
+    pattern = (
+        b'User-Agent: ObsPy.*? \\(.*?, Python [0-9\.]*\\+?\\)')
+    repl = b'User-Agent: ObsPy (test suite)'
+    args = tuple([re.sub(pattern, repl, args[0], count=1)])
+    return name, args, kwargs
+
+
+def _vcr_normalize_http_header_order(name, args, kwargs):
+    if name != 'sendall':
+        return name, args, kwargs
+    if len(args) != 1:
+        return name, args, kwargs
+    try:
+        assert b'HTTP' in args[0]
+    except:
+        return name, args, kwargs
+    # sort HTTP headers
+    # example:
+    # (b'GET /fdsnws/event/1/contributors HTTP/1.1\r\n'
+    #  b'Host: service.iris.edu\r\nAccept-Encoding: gzip, deflate\r\n'
+    #  b'User-Agent: python-requests/2.13.0\r\nConnection: keep-alive\r\n'
+    #  b'Accept: */*\r\n\r\n')
+    x = args[0]
+    x = x.split(b'\r\n')
+    # two empty items at the end
+    x = x[:1] + sorted(x[1:-2]) + x[-2:]
+    x = b'\r\n'.join(x)
+    args = tuple([x])
+    return name, args, kwargs
+
+
+def _vcr_normalize_http_rest_order(name, args, kwargs):
+    if name != 'sendall':
+        return name, args, kwargs
+    if len(args) != 1:
+        return name, args, kwargs
+    try:
+        assert b'HTTP' in args[0]
+    except:
+        return name, args, kwargs
+    # sort HTTP headers
+    # example:
+    # (b'GET /irisws/syngine/1/query?model=ak135f_5s&network=IU'
+    #  b'&station=ANMO&eventid=GCMT%3AC201002270634A&components=ABC'
+    #  b'&format=miniseed HTTP/1.1\r\nAccept-Encoding: gzip, deflate\r\n'
+    #  b'Accept: */*\r\nConnection: keep-alive\r\nHost: service.iris.edu'
+    #  b'\r\nUser-Agent: ObsPy (test suite)\r\n\r\n')
+    command, url, headers = args[0].split(None, 2)
+    try:
+        assert b'?' in url and b'&' in url
+    except:
+        return name, args, kwargs
+    url, rest = url.split(b'?')
+    rest = b'&'.join(sorted(rest.split(b'&')))
+    args = tuple([b' '.join((command, b'?'.join((url, rest)), headers))])
+    return name, args, kwargs
+
+
+def _vcr_normalize_fdsn_queryauth_http_headers(name, args, kwargs):
+    if name != 'sendall':
+        return name, args, kwargs
+    if len(args) != 1:
+        return name, args, kwargs
+    try:
+        assert b'/fdsnws/' in args[0]
+        assert b'/queryauth' in args[0]
+    except:
+        return name, args, kwargs
+    # remove some changing hashes from HTTP headers
+    patterns = (
+        b'(response)=(["\'])[0-9a-fA-F]{32}\\2',
+        b'(cnonce)=(["\'])[0-9a-fA-F]{16}\\2')
+    repl = b'\\1=\\2xxx\\2'
+    for pattern in patterns:
+        args = tuple([re.sub(pattern, repl, args[0], count=1)])
+    # sort REST parts in URLs that are included in Authorization header
+    pattern = (
+        b'(["\'])(/fdsnws/.*?/.*?/queryauth)(\\?.*?=.*?)((&.*?=.*?)+)\\1')
+
+    def repl(match):
+        rest_parts = [match.group(3)[1:]]
+        rest_parts += match.groups()[-2][1:].split(b'&')
+        rest = b'?' + b'&'.join(sorted(rest_parts))
+        rest_url_sorted = (
+            match.group(1) + match.group(2) + rest + match.group(1))
+        return rest_url_sorted
+    args = tuple([re.sub(pattern, repl, args[0])])
+    return name, args, kwargs
+
+
+# set up normalization functions for checks of outgoing traffic in vcr
+def _vcr_normalize_accept_encoding_http_header(name, args, kwargs):
+    if name != 'sendall':
+        return name, args, kwargs
+    if len(args) != 1:
+        return name, args, kwargs
+    try:
+        b'Accept-Encoding:' in args[0]
+    except:
+        return name, args, kwargs
+    # vcr tapes in general prompt server for either 'gzip' or 'deflate'..
+    # strip 'identity' (which is always allowed anyway) and 'compress' and
+    # sort.
+    # the only problematic scenario is when our client would not send
+    # 'gzip' but our recorded vccr tapes ship 'gzip'.. but that should fail
+    # during tests then.
+    pattern = (
+        b'(Accept-Encoding:) .*?(\\r\\n)')
+    repl = b'\\1 gzip, deflate (<- normalized by runtests!)\\2'
+    args = tuple([re.sub(pattern, repl, args[0], count=1)])
+    return name, args, kwargs
+
+
+# set up normalization functions for checks of outgoing traffic in vcr
+def _vcr_normalize_connection_keep_alive_http_header(name, args, kwargs):
+    if name != 'sendall':
+        return name, args, kwargs
+    if len(args) != 1:
+        return name, args, kwargs
+    try:
+        b'Connection:' in args[0]
+    except:
+        return name, args, kwargs
+    # 'Connection: keep-alive' HTTP header doesn't affect us a lot, most
+    # likely, just strip it..
+    pattern = b'(\\r\\n)Connection: keep-alive\\r\\n'
+    repl = b'\\1'
+    args = tuple([re.sub(pattern, repl, args[0], count=1)])
+    return name, args, kwargs
+
+
+# set up normalization functions for checks of outgoing traffic in vcr
+def _vcr_normalize_content_type_http_header(name, args, kwargs):
+    if name != 'sendall':
+        return name, args, kwargs
+    if len(args) != 1:
+        return name, args, kwargs
+    try:
+        b'Content-Type:' in args[0]
+    except:
+        return name, args, kwargs
+    # 'Content-Type: application/x-www-form-urlencoded' HTTP header doesn't
+    # affect us a lot, most likely, just strip it..
+    pattern = (b'(\\r\\n)Content-Type: '
+               b'application/x-www-form-urlencoded\\r\\n')
+    repl = b'\\1'
+    args = tuple([re.sub(pattern, repl, args[0], count=1)])
+    return name, args, kwargs
 
 
 def _fdsn_save_pickled_service_discovery():

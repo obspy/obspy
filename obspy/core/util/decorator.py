@@ -31,6 +31,8 @@ import obspy
 from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile, has_internet_connection
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+from obspy.core.util.testing import (
+    _vcr_set_outgoing_traffic_check_normalization_functions)
 
 
 def deprecated(warning_msg=None):
@@ -68,6 +70,8 @@ def vcr(decorated_func=None, **vcr_kwargs):
     by option '--no-vcr' to :func:`obspy.scripts.runtests.main`.
     """
     import vcr as vcr_module
+    # set normalization functions for outgoing traffic checks
+    _vcr_set_outgoing_traffic_check_normalization_functions()
 
     def _vcr_outer(func):
         """
