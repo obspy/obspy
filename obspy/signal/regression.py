@@ -48,10 +48,10 @@ def linear_regression(xdata, ydata, weights=None, p0=None,
         values will all be 0 (Different from SciPy where all are 1)
     :param intercept_origin: If ``True``: solves ``y=a*x`` (default);
         if ``False``: solves ``y=a*x+b``.
-    
+
     Extra keword arguments will be passed to
     :func:`scipy.optimize.minpack.curve_fit`.
-    
+
     :rtype: tuple
     :returns: (slope, std_slope) if ``intercept_origin`` is ``True``;
         (slope, intercept, std_slope, std_intercept) if ``False``.
