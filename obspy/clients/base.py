@@ -48,7 +48,7 @@ class MyNewClient(WaveformClient, StationClient):
 
 """
 from __future__ import absolute_import, division, print_function
-from future.utils import PY2, with_metaclass
+from future.utils import with_metaclass
 
 from abc import ABCMeta, abstractmethod
 import io
@@ -58,10 +58,12 @@ import sys
 import requests
 
 import obspy
+from obspy.core import compatibility
+
 
 
 # Default user agents all HTTP clients should utilize.
-if PY2:
+if compatibility.PY2:
     platform_ = platform.platform().decode("ascii", "ignore")
 else:
     encoding = sys.getdefaultencoding() or "UTF-8"
