@@ -1,4 +1,3 @@
-from obspy.clients.fdsn import Client
 '''
 from obspy import UTCDateTime
 starttime = UTCDateTime("2001-01-01")
@@ -63,7 +62,30 @@ passive-options 	::
 '''
 
 class RequestLine(object):
-    '''line from federator source that provides additional tests'''
+    '''line from federator source that provides additional tests
+    
+    >>> fed_text = """minlat=34.0
+
+    DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
+    DATASELECTSERVICE=http://geofon.gfz-potsdam.de/fdsnws/dataselect/1/
+    CK ASHT -- HHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+
+    DATACENTER=INGV,http://www.ingv.it
+    STATIONSERVICE=http://webservices.rm.ingv.it/fdsnws/station/1/
+    HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00"""
+    >>> print("\n".join([str([x.is_empty(), x.is_datacenter(), x.is_param(), x.is_request(), x.is_service()]) for x in request_lines]))
+[False, False, True, False, False]
+[True, False, False, False, False]
+[False, True, True, False, False]
+[False, False, True, False, True]
+[False, False, False, True, False]
+[True, False, False, False, False]
+[False, True, True, False, False]
+[False, False, True, False, True]
+[False, False, False, True, False]
+[False, False, False, True, False]
+    '''
     def is_empty(self):
         return self.line == ""
 
@@ -220,7 +242,61 @@ class RequestItem(ParserState):
             raise RuntimeError("Requests should be followed by another request or an empty line")
 
 def parse_federated_response(block_text):
-    '''create a list of FederatedResponse objects, one for each datacenter in response'''
+    '''create a list of FederatedResponse objects, one for each datacenter in response
+    >>> fed_text = """minlat=34.0
+    level=network
+
+    DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
+    DATASELECTSERVICE=http://geofon.gfz-potsdam.de/fdsnws/dataselect/1/
+    CK ASHT -- HHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+
+    DATACENTER=INGV,http://www.ingv.it
+    STATIONSERVICE=http://webservices.rm.ingv.it/fdsnws/station/1/
+    HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00"""
+    >>> fr = parse_federated_response(fed_text)
+    >>> _ = [print(fr[n]) for n in range(len(fr))]
+    GEOFON
+    level=network
+    CK ASHT -- HHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    INGV
+    level=network
+    HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    
+    Here's an example parsing from the actual service:
+    >>> import requests
+
+    >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+    >>> url = 'https://service.iris.edu/irisws/fedcatalog/1/'
+    >>> r = requests.get(url + "query", params={"net":"IU", "sta":"ANTO", "cha":"BHZ","endafter":"2013-01-01","includeoverlaps":"true","level":"station"}, verify=False)
+    >>> frp = parse_federated_response(r.text)
+    >>> for n in frp:
+    >>>     print(n.services["STATIONSERVICE"])
+    >>>     print(n.request_text("STATIONSERVICE"))
+    level=station
+    DATACENTER=IRISDMC,http://ds.iris.edu
+    DATASELECTSERVICE=http://service.iris.edu/fdsnws/dataselect/1/
+    STATIONSERVICE=http://service.iris.edu/fdsnws/station/1/
+    EVENTSERVICE=http://service.iris.edu/fdsnws/event/1/
+    SACPZSERVICE=http://service.iris.edu/irisws/sacpz/1/
+    RESPSERVICE=http://service.iris.edu/irisws/resp/1/
+    DATACENTER=ORFEUS,http://www.orfeus-eu.org
+    DATASELECTSERVICE=http://www.orfeus-eu.org/fdsnws/dataselect/1/
+    STATIONSERVICE=http://www.orfeus-eu.org/fdsnws/station/1/
+    http://service.iris.edu/fdsnws/station/1/
+    level=station
+    IU ANTO 00 BHZ 2010-11-10T21:42:00 2016-06-22T00:00:00
+    IU ANTO 00 BHZ 2016-06-22T00:00:00 2599-12-31T23:59:59
+    IU ANTO 10 BHZ 2010-11-11T09:23:59 2599-12-31T23:59:59
+    http://www.orfeus-eu.org/fdsnws/station/1/
+    level=station
+    IU ANTO 00 BHZ 2010-11-10T21:42:00 2599-12-31T23:59:59
+    IU ANTO 10 BHZ 2010-11-11T09:23:59 2599-12-31T23:59:59
+
+    '''
     fed_resp = []
     datacenter = FederatedResponse("PRE_CENTER")
     parameters = None
@@ -237,42 +313,9 @@ def parse_federated_response(block_text):
             fed_resp.append(datacenter)
         else:
             state.parse(line, datacenter)
-    if len(fed_resp > 0) and (not fed_resp[-1].request_lines):
+    if len(fed_resp) > 0 and (not fed_resp[-1].request_lines):
         del fed_resp[-1]
     return fed_resp
-
-class StreamingFederatedResponseParser(object):
-    '''Iterate through stream, returning FederatedResponse objects for each datacenter'''
-    def __init__(self, stream_iterator):
-        self.stream_iterator = stream_iterator() # stream_iterator feeds line by line
-        self.state = PreParse
-        self.datacenter = FederatedResponse("PRE_CENTER")
-        self.parameters = None
-        self.line = None
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        request_was_processed = False
-        if self.line is not None:
-            self.datacenter = self.state.parse(self.line, self.datacenter)
-            self.line = None
-
-        for self.line in self.stream_iterator:
-            self.line = RequestLine(self.line)
-            self.state = self.state.next(self.line)
-            if request_was_processed and (self.state is not RequestItem):
-                self.datacenter.parameters = self.parameters
-                return self.datacenter
-            if self.state == DatacenterItem and self.datacenter.code == "PRE_CENTER":
-                self.parameters = self.datacenter.parameters
-            self.datacenter = self.state.parse(self.line, self.datacenter)
-            if self.state == RequestItem:
-                request_was_processed = True
-        raise StopIteration
-
-    __next__ = next
 
 class FederatedResponse(object):
     '''
@@ -282,7 +325,6 @@ class FederatedResponse(object):
     >>> fed_resp.add_request_line("AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
     >>> fed_resp.add_request_line("AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
     >>> print(fed_resp.request_text("STATIONSERVICE"))
-
     level=cha
     AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
     AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
@@ -347,8 +389,8 @@ class FederatedResponse(object):
 
 # main function
 if __name__ == '__main__':
-    #import doctest
-    #doctest.testmod(exclude_empty=True)
+    import doctest
+    doctest.testmod(exclude_empty=True)
 
     import requests
     url = 'https://service.iris.edu/irisws/fedcatalog/1/'

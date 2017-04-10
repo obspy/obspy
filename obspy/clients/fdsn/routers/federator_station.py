@@ -62,7 +62,7 @@ passive-options 	::
     minimumlength=<number>
 '''
 
-from obspy.clients.fdsn.routers import FederatedResponseParser, StreamingFederatedResponseParser, FederatedResponse
+from obspy.clients.fdsn.routers import parse_federated_response, FederatedResponse
 
 ''' inv2x_set(inv) will be used to quickly decide what exists and what doesn't'''
 def inv2channel_set(inv):
@@ -108,28 +108,14 @@ def request_exists_in_inventory(inv, requests, level):
     return members, non_members
 
 def fed_get_stations(**kwarg):
-    '''This will be the request for the federated station service'''
-
-    def add_datacenter_reference(inventory_list, code, service_urls):
-        '''Add a tag to each inventory item (what level?) attributing to a datacenter
-        '''
-        #TODO as per:https://docs.obspy.org/tutorial/code_snippets/quakeml_custom_tags.html
-        # Tried, but this doesn't seem to appear in the final xml
-        extra = {
-            'code': {'value': code,
-                              'namespace': r"http://www.fdsn.org/xml/station/"},
-            'datacenter_url': {'value': service_urls["DATACENTER"],
-                               'namespace': r"http://www.fdsn.org/xml/station/"},
-            'service_url': {'value': service_urls["STATIONSERVICE"],
-                            'namespace': r"http://www.fdsn.org/xml/station/"}}
-
-        inv.extra = extra #tags don't seem to work
-        for x in inv:
-            x.network.extra = extra
+    '''This will be the original request for the federated station service'''
 
     LEVEL = kwarg["level"]
+
+    #The datacenter name may not match th edatacenter name as implemented by the fdsn Client
     remap = {"IRISDMC":"IRIS", "GEOFON":"GFZ", "SED":"ETH", "USPSC":"USP"}
     # need to add to URL_MAPPINGS!
+
     all_inv = []
     lines_to_resubmit = []
     succesful_retrieves = []
@@ -140,7 +126,7 @@ def fed_get_stations(**kwarg):
     print "asking from..."
     print([p for p in r.iter_lines() if p.startswith("DATACENTER")])
 
-    sfrp = StreamingFederatedResponseParser(r.iter_lines)
+    sfrp = parse_federated_response(r.text)
     for datac in sfrp:
         dc_id = datac.code
 
