@@ -264,6 +264,7 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.AH': [
         'isFormat = obspy.io.ah.core:_is_ah',
         'readFormat = obspy.io.ah.core:_read_ah',
+        'writeFormat = obspy.io.ah.core:_write_ah1'
         ],
     'obspy.plugin.waveform.KNET': [
         'isFormat = obspy.io.nied.knet:_is_knet_ascii',

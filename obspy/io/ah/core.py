@@ -20,7 +20,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import xdrlib
-
+import os
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
@@ -237,6 +237,8 @@ def _write_ah1(stream, filename):
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream with Traces specified by given file.
     """
+    if filename.endswith('AH') or filename.endswith('ah'):
+        filename = os.path.splitext(filename)[0]
 
     CODESIZE  = 6
     CHANSIZE  = 6
@@ -434,8 +436,9 @@ def _write_ah1(stream, filename):
 
     packer = xdrlib.Packer()
 
+
     for tr in stream:
-        ofilename = filename + "." + tr.stats.channel + ".AH"
+        ofilename = filename + "." + tr.stats.station + "." +  tr.stats.channel + ".AH"
 
         packer.reset()
 
