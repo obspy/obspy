@@ -1,64 +1,64 @@
 '''
-from obspy import UTCDateTime
-starttime = UTCDateTime("2001-01-01")
+    from obspy import UTCDateTime
+    starttime = UTCDateTime("2001-01-01")
 
-# to access metadata via Client from a single data center's station service
-from obspy.clients.fdsn import Client
-client = Client("IRIS")
+    # to access metadata via Client from a single data center's station service
+    from obspy.clients.fdsn import Client
+    client = Client("IRIS")
 
-# or, access data via FederatorClient from multiple data centers
-from obspy.clients.fdsn import FederatorClient
-client = FederatorClient("IRIS")
+    # or, access data via FederatorClient from multiple data centers
+    from obspy.clients.fdsn import FederatorClient
+    client = FederatorClient("IRIS")
 
 
-# the requests are submited in exactly the same manner
-inv = client.get_stations(network="IU", station="A*", starttime=starttime)
+    # the requests are submited in exactly the same manner
+    inv = client.get_stations(network="IU", station="A*", starttime=starttime)
 '''
 
 
 '''
-service-options 	:: service specific options
-targetservice=<station|dataselect>
-format=<request|text>
-includeoverlaps=<true|false>
+    service-options 	:: service specific options
+    targetservice=<station|dataselect>
+    format=<request|text>
+    includeoverlaps=<true|false>
 
-active-options 	 	::
-[channel-options] [map-constraints] [time-constraints]
-  channel-options 	::
-  net=<network>
-  sta=<station>
-  loc=<location>
-  cha=<channel>
+    active-options 	 	::
+    [channel-options] [map-constraints] [time-constraints]
+    channel-options 	::
+    net=<network>
+    sta=<station>
+    loc=<location>
+    cha=<channel>
 
-  map-constraints 	::  ONE OF
-     boundaries-rect 	::
-        minlatitude=<degrees>
-        maxlatitude=<degrees>
-        minlongitude=<degrees>
-        maxlongitude=<degrees>
-     boundaries-circ 	::
-        latitude=<degrees>
-        longitude=<degrees>
-        maxradius=<number>
-        minradius=<number>
+    map-constraints 	::  ONE OF
+        boundaries-rect 	::
+            minlatitude=<degrees>
+            maxlatitude=<degrees>
+            minlongitude=<degrees>
+            maxlongitude=<degrees>
+        boundaries-circ 	::
+            latitude=<degrees>
+            longitude=<degrees>
+            maxradius=<number>
+            minradius=<number>
 
-  time-constraints 	::
-    starttime=<date>
-    endtime=<date>
-    startbefore=<date>
-    startafter=<date>
-    endbefore=<date>
-    endafter=<date>
-    updatedafter=<date>]
+    time-constraints 	::
+        starttime=<date>
+        endtime=<date>
+        startbefore=<date>
+        startafter=<date>
+        endbefore=<date>
+        endafter=<date>
+        updatedafter=<date>]
 
-passive-options 	::
-    includerestricted=<true|false>
-    includeavailability=<true|false>
-    matchtimeseries=<true|false>
-    longestonly=<true|false>
-    quality=<D|R|Q|M|B>
-    level=<net|sta|cha|resp>
-    minimumlength=<number>
+    passive-options 	::
+        includerestricted=<true|false>
+        includeavailability=<true|false>
+        matchtimeseries=<true|false>
+        longestonly=<true|false>
+        quality=<D|R|Q|M|B>
+        level=<net|sta|cha|resp>
+        minimumlength=<number>
 '''
 
 class RequestLine(object):
@@ -75,16 +75,16 @@ class RequestLine(object):
     HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
     HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00"""
     >>> print("\n".join([str([x.is_empty(), x.is_datacenter(), x.is_param(), x.is_request(), x.is_service()]) for x in request_lines]))
-[False, False, True, False, False]
-[True, False, False, False, False]
-[False, True, True, False, False]
-[False, False, True, False, True]
-[False, False, False, True, False]
-[True, False, False, False, False]
-[False, True, True, False, False]
-[False, False, True, False, True]
-[False, False, False, True, False]
-[False, False, False, True, False]
+    [False, False, True, False, False]
+    [True, False, False, False, False]
+    [False, True, True, False, False]
+    [False, False, True, False, True]
+    [False, False, False, True, False]
+    [True, False, False, False, False]
+    [False, True, True, False, False]
+    [False, False, True, False, True]
+    [False, False, False, True, False]
+    [False, False, False, True, False]
     '''
     def is_empty(self):
         return self.line == ""
