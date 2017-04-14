@@ -1,80 +1,83 @@
 '''
-    from obspy import UTCDateTime
-    starttime = UTCDateTime("2001-01-01")
+from obspy import UTCDateTime
+starttime = UTCDateTime("2001-01-01")
 
-    # to access metadata via Client from a single data center's station service
-    from obspy.clients.fdsn import Client
-    client = Client("IRIS")
+# to access metadata via Client from a single data center's station service
+from obspy.clients.fdsn import Client
+client = Client("IRIS")
 
-    # or, access data via FederatorClient from multiple data centers
-    from obspy.clients.fdsn import FederatorClient
-    client = FederatorClient("IRIS")
+# or, access data via FederatorClient from multiple data centers
+from obspy.clients.fdsn import FederatorClient
+client = FederatorClient("IRIS")
 
 
-    # the requests are submited in exactly the same manner
-    inv = client.get_stations(network="IU", station="A*", starttime=starttime)
+# the requests are submited in exactly the same manner
+inv = client.get_stations(network="IU", station="A*", starttime=starttime)
 '''
 
 
 '''
-    service-options 	:: service specific options
-    targetservice=<station|dataselect>
-    format=<request|text>
-    includeoverlaps=<true|false>
+service-options 	:: service specific options
+targetservice=<station|dataselect>
+format=<request|text>
+includeoverlaps=<true|false>
 
-    active-options 	 	::
-    [channel-options] [map-constraints] [time-constraints]
-    channel-options 	::
-    net=<network>
-    sta=<station>
-    loc=<location>
-    cha=<channel>
+active-options 	 	::
+[channel-options] [map-constraints] [time-constraints]
+channel-options 	::
+net=<network>
+sta=<station>
+loc=<location>
+cha=<channel>
 
-    map-constraints 	::  ONE OF
-        boundaries-rect 	::
-            minlatitude=<degrees>
-            maxlatitude=<degrees>
-            minlongitude=<degrees>
-            maxlongitude=<degrees>
-        boundaries-circ 	::
-            latitude=<degrees>
-            longitude=<degrees>
-            maxradius=<number>
-            minradius=<number>
+map-constraints 	::  ONE OF
+    boundaries-rect 	::
+        minlatitude=<degrees>
+        maxlatitude=<degrees>
+        minlongitude=<degrees>
+        maxlongitude=<degrees>
+    boundaries-circ 	::
+        latitude=<degrees>
+        longitude=<degrees>
+        maxradius=<number>
+        minradius=<number>
 
-    time-constraints 	::
-        starttime=<date>
-        endtime=<date>
-        startbefore=<date>
-        startafter=<date>
-        endbefore=<date>
-        endafter=<date>
-        updatedafter=<date>]
+time-constraints 	::
+    starttime=<date>
+    endtime=<date>
+    startbefore=<date>
+    startafter=<date>
+    endbefore=<date>
+    endafter=<date>
+    updatedafter=<date>]
 
-    passive-options 	::
-        includerestricted=<true|false>
-        includeavailability=<true|false>
-        matchtimeseries=<true|false>
-        longestonly=<true|false>
-        quality=<D|R|Q|M|B>
-        level=<net|sta|cha|resp>
-        minimumlength=<number>
+passive-options 	::
+    includerestricted=<true|false>
+    includeavailability=<true|false>
+    matchtimeseries=<true|false>
+    longestonly=<true|false>
+    quality=<D|R|Q|M|B>
+    level=<net|sta|cha|resp>
+    minimumlength=<number>
 '''
 
 class RequestLine(object):
-    '''line from federator source that provides additional tests
-    
-    >>> fed_text = """minlat=34.0
+    """line from federator source that provides additional tests
 
-    DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
-    DATASELECTSERVICE=http://geofon.gfz-potsdam.de/fdsnws/dataselect/1/
-    CK ASHT -- HHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    >>> fed_text = '''minlat=34.0
+    ...
+    ... DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
+    ... DATASELECTSERVICE=http://geofon.gfz-potsdam.de/fdsnws/dataselect/1/
+    ... CK ASHT -- HHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    ...
+    ... DATACENTER=INGV,http://www.ingv.it
+    ... STATIONSERVICE=http://webservices.rm.ingv.it/fdsnws/station/1/
+    ... HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    ... HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00'''
 
-    DATACENTER=INGV,http://www.ingv.it
-    STATIONSERVICE=http://webservices.rm.ingv.it/fdsnws/station/1/
-    HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-    HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00"""
-    >>> print("\n".join([str([x.is_empty(), x.is_datacenter(), x.is_param(), x.is_request(), x.is_service()]) for x in request_lines]))
+    >>> for y in fed_text.splitlines():
+    ...    x = RequestLine(y)
+    ...    print("\\n".join([str([x.is_empty(), x.is_datacenter(), x.is_param(), x.is_request(), x.is_service()])]))
     [False, False, True, False, False]
     [True, False, False, False, False]
     [False, True, True, False, False]
@@ -85,7 +88,7 @@ class RequestLine(object):
     [False, False, True, False, True]
     [False, False, False, True, False]
     [False, False, False, True, False]
-    '''
+    """
     def is_empty(self):
         return self.line == ""
 
@@ -183,7 +186,7 @@ class EmptyItem(ParserState):
         elif line.is_datacenter():
             return DatacenterItem
         else:
-            raise RuntimeError("expected either a DATACENTER or another empty line")
+            raise RuntimeError("expected either a DATACENTER or another empty line ["+ str(line)+"]")
 
 class DatacenterItem(ParserState):
     '''handle data center'''
@@ -244,16 +247,16 @@ class RequestItem(ParserState):
 def parse_federated_response(block_text):
     '''create a list of FederatedResponse objects, one for each datacenter in response
     >>> fed_text = """minlat=34.0
-    level=network
-
-    DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
-    DATASELECTSERVICE=http://geofon.gfz-potsdam.de/fdsnws/dataselect/1/
-    CK ASHT -- HHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-
-    DATACENTER=INGV,http://www.ingv.it
-    STATIONSERVICE=http://webservices.rm.ingv.it/fdsnws/station/1/
-    HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-    HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00"""
+    ... level=network
+    ...
+    ... DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
+    ... DATASELECTSERVICE=http://geofon.gfz-potsdam.de/fdsnws/dataselect/1/
+    ... CK ASHT -- HHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    ...
+    ... DATACENTER=INGV,http://www.ingv.it
+    ... STATIONSERVICE=http://webservices.rm.ingv.it/fdsnws/station/1/
+    ... HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    ... HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00"""
     >>> fr = parse_federated_response(fed_text)
     >>> _ = [print(fr[n]) for n in range(len(fr))]
     GEOFON
@@ -263,29 +266,19 @@ def parse_federated_response(block_text):
     level=network
     HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
     HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-    
+
     Here's an example parsing from the actual service:
     >>> import requests
-
     >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
     >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
     >>> url = 'https://service.iris.edu/irisws/fedcatalog/1/'
-    >>> r = requests.get(url + "query", params={"net":"IU", "sta":"ANTO", "cha":"BHZ","endafter":"2013-01-01","includeoverlaps":"true","level":"station"}, verify=False)
+    >>> r = requests.get(url + "query", params={"net":"IU", "sta":"ANTO", "cha":"BHZ",
+    ...                  "endafter":"2013-01-01","includeoverlaps":"true","level":"station"},
+    ...                  verify=False)
     >>> frp = parse_federated_response(r.text)
     >>> for n in frp:
-    >>>     print(n.services["STATIONSERVICE"])
-    >>>     print(n.request_text("STATIONSERVICE"))
-    level=station
-    DATACENTER=IRISDMC,http://ds.iris.edu
-    DATASELECTSERVICE=http://service.iris.edu/fdsnws/dataselect/1/
-    STATIONSERVICE=http://service.iris.edu/fdsnws/station/1/
-    EVENTSERVICE=http://service.iris.edu/fdsnws/event/1/
-    SACPZSERVICE=http://service.iris.edu/irisws/sacpz/1/
-    RESPSERVICE=http://service.iris.edu/irisws/resp/1/
-    DATACENTER=ORFEUS,http://www.orfeus-eu.org
-    DATASELECTSERVICE=http://www.orfeus-eu.org/fdsnws/dataselect/1/
-    STATIONSERVICE=http://www.orfeus-eu.org/fdsnws/station/1/
+    ...     print(n.services["STATIONSERVICE"])
+    ...     print(n.request_text("STATIONSERVICE"))
     http://service.iris.edu/fdsnws/station/1/
     level=station
     IU ANTO 00 BHZ 2010-11-10T21:42:00 2016-06-22T00:00:00
@@ -396,6 +389,6 @@ if __name__ == '__main__':
     url = 'https://service.iris.edu/irisws/fedcatalog/1/'
     r = requests.get(url + "query", params={"net":"A*", "sta":"OK*", "cha":"*HZ"}, verify=False)
 
-    frp = StreamingFederatedResponseParser(r.iter_lines)
+    frp = parse_federated_response(r.text)
     for n in frp:
         print(n.request_text("STATIONSERVICE"))
