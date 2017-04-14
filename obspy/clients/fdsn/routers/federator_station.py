@@ -1,4 +1,8 @@
+from __future__ import print_function
 from obspy.clients.fdsn import Client
+from obspy.clients.fdsn.header import FDSNNoDataException
+import requests
+import sys
 '''
     from obspy import UTCDateTime
     starttime = UTCDateTime("2001-01-01")
@@ -62,7 +66,8 @@ from obspy.clients.fdsn import Client
         minimumlength=<number>
 '''
 
-from obspy.clients.fdsn.routers import parse_federated_response, FederatedResponse
+from federator_response_parser import parse_federated_response, FederatedResponse, filter_requests
+#from obspy.clients.fdsn.routers import parse_federated_response, FederatedResponse
 
 # inv2x_set(inv) will be used to quickly decide what exists and what doesn't
 def inv2channel_set(inv):
@@ -83,7 +88,7 @@ def req2network_set(req):
     'return a set containing string representations of an request line'
     req_str = set()
     for line in req:
-        (net, sta, loc, cha, startt, endt) = r.split()
+        (net, sta, loc, cha, startt, endt) = line.split()
         req_str.add(net)
     return req_str
 
@@ -91,7 +96,7 @@ def req2station_set(req):
     'return a set containing string representations of an request line'
     req_str = set()
     for line in req:
-        (net, sta, loc, cha, startt, endt) = r.split()
+        (net, sta, loc, cha, startt, endt) = line.split()
         req_str.add(net + "." + sta)
     return req_str
 
@@ -99,7 +104,7 @@ def req2channel_set(req):
     'return a set containing string representations of an request line'
     req_str = set()
     for line in req:
-        (net, sta, loc, cha, startt, endt) = r.split()
+        (net, sta, loc, cha, startt, endt) = line.split()
         req_str.add(net + "." + sta + "." + loc + "." + cha)
     return req_str
 
@@ -116,39 +121,24 @@ def request_exists_in_inventory(inv, requests, level):
     non_members = req_set.difference(inv_set)
     return members, non_members
 
-def initial_station_request(datac, **kwarg):
-    '''request data from one datacenter. returns raw_data, success_lines, failed_lines'''
+REMAP = {"IRISDMC":"IRIS", "GEOFON":"GFZ", "SED":"ETH", "USPSC":"USP"}
 
-    #The datacenter name may not match the datacenter name as implemented by the fdsn Client
-    remap = {"IRISDMC":"IRIS", "GEOFON":"GFZ", "SED":"ETH", "USPSC":"USP"}
+def get_stations(exclude_datacenter=None, include_datacenter=None, includeoverlaps=False, **kwarg):
+    '''This will be the original request for the federated station service
+    :param exclude_datacenter: Avoids getting data from datacenters with the specified ID code(s)
+    :param include_datacenter: limit retrieved data to  datacenters with the specified ID code(s)
+    :param includeoverlaps: For now, simply leave this False. It will confuse the program.
+    other parameters as seen in Client.get_stations
+
+    Warning: If you specify "include_datacenter", you may miss data that the datacenter holds, but isn't the primary source
+    Warning: If you specify "exclude_datacenter", you may miss data for which that datacenter is the primary source
+
+    '''
+
+    # peel away arguments that are specific to the federator
+    # include/exclude works with the OBSPY set of codes (remapped) eg. IRIS vs IRISDMC
+
     level = kwarg["level"]
-
-    dc_id = datac.code
-
-    if dc_id in remap:
-        dc_id = remap[dc_id]
-    client = Client(dc_id)
-
-    #TODO large requests could be denied (code #413) and will need to be chunked.
-    print(datac.request_text("STATIONSERVICE").count('\n'))
-    #TODO vett datac.request_txt here by comparing to what we have. maybe do during 2nd round
-    try:
-        inv = client.get_stations_bulk(bulk=datac.request_text("STATIONSERVICE"))
-    except: #except expression as identifier:
-        lines_to_resubmit.extend(datac.request_lines) #unsuccessful attempt
-        print(dc_id, "error!")
-        return (None, lines_to_resubmit)
-    else:
-        successful, failed = request_exists_in_inventory(inv, datac.request_lines, level)
-        successful_retrieves = datac.request_lines
-        add_datacenter_reference(inv, datac.code, datac.services)
-        inv_set = inv_converter[level](inv)
-        return (inv, successful_retrieves, failed)
-
-
-def fed_get_stations(**kwarg):
-    '''This will be the original request for the federated station service'''
-    LEVEL = kwarg["level"]
 
     all_inv = []
     lines_to_resubmit = []
@@ -156,61 +146,86 @@ def fed_get_stations(**kwarg):
 
     # send request to the FedCatalog
     url = 'https://service.iris.edu/irisws/fedcatalog/1/'
-    kwarg["targetservice"] = "STATION"
-    r = requests.get(url + "query", params=kwarg, verify=False)
+    params = kwarg.copy()
+    params["targetservice"] = "STATION"
+    resp = requests.get(url + "query", params=params, verify=False)
 
-    print "asking from..."
-    print([p for p in r.iter_lines() if p.startswith("DATACENTER")])
+    sfrp = parse_federated_response(resp.text)
 
-    sfrp = parse_federated_response(r.text)
+    # remap datacenter codes because IRIS codes differ from OBSPY codes
+    for dc in sfrp:
+        if dc.code in REMAP:
+            dc.code = REMAP[dc.code]
 
+    sfrp = filter_requests(sfrp, include_datacenter=include_datacenter,
+                           exclude_datacenter=exclude_datacenter)
+
+    # get data from each datacenter
     for datac in sfrp:
-        dc_id = datac.code
-
-        if dc_id in remap:
-            dc_id = remap[dc_id]
-        client = Client(dc_id)
+        code = datac.code
+        print("requesting data from:" + code + " : " + datac.services["DATACENTER"])
+        try:
+            client = Client(code)
+        except Exception as ex:
+            print("Problem assigning client " + code, file=sys.stderr)
+            print (ex, __type__(ex), ex.__class__, file=sys.stderr)
+            lines_to_resubmit.extend(datac.request_lines)
+            raise
+            continue
 
         #TODO large requests could be denied (code #413) and will need to be chunked.
-        print(datac.request_text("STATIONSERVICE").count('\n'))
-        #TODO vett datac.request_txt here by comparing to what we have. maybe do during 2nd round
+        print("number of items:" + str(datac.request_text("STATIONSERVICE").count('\n')))
         try:
             inv = client.get_stations_bulk(bulk=datac.request_text("STATIONSERVICE"))
-        except: #except expression as identifier:
-            lines_to_resubmit.extend(datac.request_lines) #unsuccessful attempt. Add all to resubmit queue
-            print(dc_id, "error!")
+        except FDSNNoDataException as ex:
+            lines_to_resubmit.extend(datac.request_lines)
+            print("no data available")
+            print(ex, file=sys.stderr)
+        except Exception as ex: #except expression as identifier:
+            lines_to_resubmit.extend(datac.request_lines)
+            print(code + " error!", file=sys.stderr)
+            print(ex, file=sys.stderr)
+            raise
+            continue
+        # try to figure out if we got what we came for
+        successful, failed = request_exists_in_inventory(inv, datac.request_lines, level)
+
+        if not all_inv:
+            all_inv = inv
+            all_inv_set = INV_CONVERTER[level](inv)
         else:
-            successful, failed = request_exists_in_inventory(inv, datac.request_lines, LEVEL)
-            successful_retrieves = datac.request_lines
-            add_datacenter_reference(inv, datac.code, datac.services)
-            if not all_inv:
-                all_inv = inv
-                all_inv_set = inv_converter[LEVEL](inv)
-            else:
-                all_inv += inv
-                all_inv_set = all_inv_set.union(inv_converter[LEVEL](inv))
-
+            all_inv += inv
+            all_inv_set = all_inv_set.union(INV_CONVERTER[level](inv))
+        print("done with " + code)
     # now, perhaps we got lucky, and have all the data we requested?
-    if not failed:
-        return all_inf
-    
-    # okey-dokey. Time for round 2. # # #
-    # resubmit the failed retrieves to the federator service
+    if not lines_to_resubmit:
+        print("It appears we may have [possibly [maybe]] all requested data")
+        return all_inv
+    else:
+        print("The following requests were unfulfilled:")
+        print([dc.request_lines for dc in failed])
 
-    # as data is retrieved, add to all_inv and remove it from the queue.
-
+    print("Here is where we *would* resumit the following to federator service")
+    print("\n".join([line for line in lines_to_resubmit]))
     return all_inv
 
-
-# main function
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)
-
+    #import doctest
+    #doctest.testmod(exclude_empty=True)
+    INV = get_stations(network="A*", station="OK*", channel="*HZ", level="station")
+    print(INV)
+    INV = get_stations(network="*", station="AN*", level="station")
+    print(INV)
+    '''
     import requests
     URL = 'https://service.iris.edu/irisws/fedcatalog/1/'
-    R = requests.get(URL + "query", params={"net":"req_str*", "sta":"OK*", "cha":"*HZ"}, verify=False)
+    RQST = requests.get(URL + "query", params={"net":"A*", "sta":"OK*", "cha":"*HZ"}, verify=False)
 
-    FRP = StreamingFederatedResponseParser(R.iter_lines)
+    FRP = parse_federated_response(RQST.text)
     for n in FRP:
         print(n.request_text("STATIONSERVICE"))
+        direct_client = Client('iris')
+        direct_inv = direct_client.get_stations_bulk(n.request_text("STATIONSERVICE"))
+        print(direct_inv)
+        #fed_get_stations()
+        '''

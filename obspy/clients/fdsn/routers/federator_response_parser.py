@@ -1,66 +1,3 @@
-'''
-from obspy import UTCDateTime
-starttime = UTCDateTime("2001-01-01")
-
-# to access metadata via Client from a single data center's station service
-from obspy.clients.fdsn import Client
-client = Client("IRIS")
-
-# or, access data via FederatorClient from multiple data centers
-from obspy.clients.fdsn import FederatorClient
-client = FederatorClient("IRIS")
-
-
-# the requests are submited in exactly the same manner
-inv = client.get_stations(network="IU", station="A*", starttime=starttime)
-'''
-
-
-'''
-service-options 	:: service specific options
-targetservice=<station|dataselect>
-format=<request|text>
-includeoverlaps=<true|false>
-
-active-options 	 	::
-[channel-options] [map-constraints] [time-constraints]
-channel-options 	::
-net=<network>
-sta=<station>
-loc=<location>
-cha=<channel>
-
-map-constraints 	::  ONE OF
-    boundaries-rect 	::
-        minlatitude=<degrees>
-        maxlatitude=<degrees>
-        minlongitude=<degrees>
-        maxlongitude=<degrees>
-    boundaries-circ 	::
-        latitude=<degrees>
-        longitude=<degrees>
-        maxradius=<number>
-        minradius=<number>
-
-time-constraints 	::
-    starttime=<date>
-    endtime=<date>
-    startbefore=<date>
-    startafter=<date>
-    endbefore=<date>
-    endafter=<date>
-    updatedafter=<date>]
-
-passive-options 	::
-    includerestricted=<true|false>
-    includeavailability=<true|false>
-    matchtimeseries=<true|false>
-    longestonly=<true|false>
-    quality=<D|R|Q|M|B>
-    level=<net|sta|cha|resp>
-    minimumlength=<number>
-'''
-
 class RequestLine(object):
     """line from federator source that provides additional tests
 
@@ -380,11 +317,70 @@ class FederatedResponse(object):
     def __repr__(self):
         return self.code + "\n" + self.request_text("STATIONSERVICE")
 
+def get_datacenter_request(federated_responses, code, get_multiple=False):
+    '''retrieve the response for a particular datacenter, by code
+    if get_multiple is true, then a list will be returned with 0 or more
+    FederatedResponse objects that meet the criteria.  otherwise, the first
+    matching FederatedResponse will be returned
+
+    Set up sample data:
+    >>> fedresps = [FederatedResponse('IRIS'), FederatedResponse('SED'),
+    ...             FederatedResponse('RESIF'), FederatedResponse('SED')]
+
+    Test methods that return multiple FederatedResponse objects
+    >>> get_datacenter_request(fedresps, 'SED')
+    SED
+    <BLANKLINE>
+    >>> get_datacenter_request(fedresps, 'SED', get_multiple=True)
+    [SED
+    , SED
+    ]
+    '''
+    if get_multiple:
+        return [resp for resp in federated_responses if resp.code == code]
+    for resp in federated_responses:
+        if resp.code == code:
+            return resp
+    return None
+
+def filter_requests(federated_responses, include_datacenter=None, exclude_datacenter=None):
+    '''provide more flexibility by specifying which datacenters to include or exclude
+
+    Set up sample data:
+    >>> fedresps = [FederatedResponse('IRIS'), FederatedResponse('SED'), FederatedResponse('RESIF')]
+
+    >>> unch = filter_requests(fedresps)
+    >>> print(".".join([dc.code for dc in unch]))
+    IRIS.SED.RESIF
+
+    Test methods that return multiple FederatedResponse objects
+    >>> no_sed_v1 = filter_requests(fedresps, exclude_datacenter='SED')
+    >>> no_sed_v2 = filter_requests(fedresps, include_datacenter=['IRIS', 'RESIF'])
+    >>> print(".".join([dc.code for dc in no_sed_v1]))
+    IRIS.RESIF
+    >>> ".".join([x.code for x in no_sed_v1]) == ".".join([x.code for x in no_sed_v2])
+    True
+
+    Test methods that return single FederatedResponse (still in a container, though)
+    >>> only_sed_v1 = filter_requests(fedresps, exclude_datacenter=['IRIS', 'RESIF'])
+    >>> only_sed_v2 = filter_requests(fedresps, include_datacenter='SED')
+    >>> print(".".join([dc.code for dc in only_sed_v1]))
+    SED
+    >>> ".".join([x.code for x in only_sed_v1]) == ".".join([x.code for x in only_sed_v2])
+    True
+    '''
+    if include_datacenter:
+        return [resp for resp in federated_responses if resp.code in include_datacenter]
+    elif exclude_datacenter:
+        return [resp for resp in federated_responses if resp.code not in exclude_datacenter]
+    else:
+        return federated_responses
+
 # main function
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
-
+'''
     import requests
     url = 'https://service.iris.edu/irisws/fedcatalog/1/'
     r = requests.get(url + "query", params={"net":"A*", "sta":"OK*", "cha":"*HZ"}, verify=False)
@@ -392,3 +388,4 @@ if __name__ == '__main__':
     frp = parse_federated_response(r.text)
     for n in frp:
         print(n.request_text("STATIONSERVICE"))
+'''
