@@ -437,8 +437,11 @@ def _write_ah1(stream, filename):
     packer = xdrlib.Packer()
 
 
-    for tr in stream:
-        ofilename = filename + "." + tr.stats.station + "." +  tr.stats.channel + ".AH"
+    for num, tr in enumerate(stream):
+        if len(stream) == 1:
+            ofilename = filename + ".AH"
+        else:
+            ofilename = filename + "." +  num + ".AH"
 
         packer.reset()
 
