@@ -1,8 +1,5 @@
-from __future__ import print_function
-from obspy.clients.fdsn import Client
-from obspy.clients.fdsn.header import FDSNNoDataException
-import requests
-import sys
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 '''
     from obspy import UTCDateTime
     starttime = UTCDateTime("2001-01-01")
@@ -20,41 +17,19 @@ import sys
     inv = client.get_stations(network="IU", station="req_str*", starttime=starttime)
 '''
 
+from __future__ import print_function
+import sys
+from obspy.clients.fdsn import Client
+from obspy.clients.fdsn.header import FDSNNoDataException
+import requests
+from fedcatalog_response_parser import parse_federated_response, FederatedResponse, filter_requests
+#from obspy.clients.fdsn.routers import parse_federated_response, FederatedResponse
 
 '''
     service-options 	:: service specific options
     targetservice=<station|dataselect>
     format=<request|text>
     includeoverlaps=<true|false>
-
-    active-options 	 	::
-    [channel-options] [map-constraints] [time-constraints]
-    channel-options 	::
-    net=<network>
-    sta=<station>
-    loc=<location>
-    cha=<channel>
-
-    map-constraints 	::  ONE OF
-        boundaries-rect 	::
-            minlatitude=<degrees>
-            maxlatitude=<degrees>
-            minlongitude=<degrees>
-            maxlongitude=<degrees>
-        boundaries-circ 	::
-            latitude=<degrees>
-            longitude=<degrees>
-            maxradius=<number>
-            minradius=<number>
-
-    time-constraints 	::
-        starttime=<date>
-        endtime=<date>
-        startbefore=<date>
-        startafter=<date>
-        endbefore=<date>
-        endafter=<date>
-        updatedafter=<date>]
 
     passive-options 	::
         includerestricted=<true|false>
@@ -66,8 +41,6 @@ import sys
         minimumlength=<number>
 '''
 
-from federator_response_parser import parse_federated_response, FederatedResponse, filter_requests
-#from obspy.clients.fdsn.routers import parse_federated_response, FederatedResponse
 
 # inv2x_set(inv) will be used to quickly decide what exists and what doesn't
 def inv2channel_set(inv):
@@ -130,12 +103,18 @@ def get_stations(exclude_datacenter=None, include_datacenter=None, includeoverla
     :param includeoverlaps: For now, simply leave this False. It will confuse the program.
     other parameters as seen in Client.get_stations
 
-    Warning: If you specify "include_datacenter", you may miss data that the datacenter holds, but isn't the primary source
-    Warning: If you specify "exclude_datacenter", you may miss data for which that datacenter is the primary source
+    Warning: If you specify "include_datacenter", you may miss data that the datacenter holds,
+             but isn't the primary source
+    Warning: If you specify "exclude_datacenter", you may miss data for which that datacenter
+             is the primary source
 
+    >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+    >>> INV = get_stations(network="A?", station="OK*", channel="?HZ", level="station",
+    ...                    endtime="2016-12-31")
     '''
 
-    # peel away arguments that are specific to the federator
+    # peel away arguments that are specific to the federated catalog
     # include/exclude works with the OBSPY set of codes (remapped) eg. IRIS vs IRISDMC
 
     level = kwarg["level"]
@@ -205,16 +184,39 @@ def get_stations(exclude_datacenter=None, include_datacenter=None, includeoverla
         print("The following requests were unfulfilled:")
         print([dc.request_lines for dc in failed])
 
-    print("Here is where we *would* resumit the following to federator service")
+    print("Here is where we *would* resumit the following to federated catalog service")
     print("\n".join([line for line in lines_to_resubmit]))
     return all_inv
+
+def station_missing_example():
+    '''example showing a missing station OKCB from Fedcatalog response,
+    but present with direct request to IRIS'''
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+    inv = get_stations(network="AV", station="OKC*", channel="?HZ",
+                       level="station", endtime="2016-12-31", matchtimeseries=False)
+    irisclient = Client("IRIS")
+    print(inv)
+
+    inv2 = irisclient.get_stations(network="A?", station="OKC?",
+                                   channel="?HZ", level="station", endtime="2016-12-31")
+    print(inv2)
+    return inv == inv2
 
 if __name__ == '__main__':
     #import doctest
     #doctest.testmod(exclude_empty=True)
-    INV = get_stations(network="A*", station="OK*", channel="*HZ", level="station")
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+    ALL_OK = station_missing_from_federated_response()
+    INV = get_stations(network="*", station="AN*", level="station", channel="*Z",
+                       exclude_datacenter="IRIS")
     print(INV)
-    INV = get_stations(network="*", station="AN*", level="station")
+    INV = get_stations(network="*", station="AN*", level="station", channel="*Z",
+                       include_datacenter=["GFZ", "RESIF"])
     print(INV)
     '''
     import requests

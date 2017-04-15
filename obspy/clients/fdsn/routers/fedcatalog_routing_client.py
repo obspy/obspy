@@ -37,21 +37,21 @@ class FederatorClient(RoutingClient):
         """
 
         #send request to fedrator
-        if "federator" not in self.services:
+        if "federated catalog" not in self.services:
             msg = "The current client does not have a station service."
             raise ValueError(msg)
 
         locs = locals()
         setup_query_dict('station', locs, kwargs)
 
-        fedresp = get_federator_index(kwargs)
+        fedresp = get_fedcatalog_index(kwargs)
 
         for i in fedresp:
             #make request to appropriate service
             #work on response
             #if to be written to file, do some hocus-pocus
         url = self._create_url_from_parameters(
-            "federator", DEFAULT_PARAMETERS['station'], kwargs)
+            "fedcatalog", DEFAULT_PARAMETERS['station'], kwargs)
 
         if filename:
             # write to file
@@ -68,8 +68,8 @@ class FederatorClient(RoutingClient):
         For details see the :meth:`~obspy.clients.fdsn.client.Client.get_waveforms()`
         method.
         """
-        if "federator" not in self.services:
-            msg = "The current client does not have a federator service."
+        if "fedcatalog" not in self.services:
+            msg = "The current client does not have a federated catalog service."
             raise ValueError(msg)
 
         locs = locals()
@@ -80,7 +80,7 @@ class FederatorClient(RoutingClient):
             kwargs["location"] = "--"
 
         url = self._create_url_from_parameters(
-            "federator", DEFAULT_PARAMETERS['dataselect'], kwargs)
+            "fedcatalog", DEFAULT_PARAMETERS['dataselect'], kwargs)
 
         # Gzip not worth it for MiniSEED and most likely disabled for this
         # route in any case.
@@ -101,13 +101,13 @@ class FederatorClient(RoutingClient):
                            longestonly=None, filename=None,
                            attach_response=False, **kwargs):
         r"""
-        Query the federator service of the client for dataselect style data. Bulk request.
+        Query the federated catalog service of the client for dataselect style data. Bulk request.
 
         For details see the :meth:`~obspy.clients.fdsn.client.Client.get_waveforms_bulk()`
         method.
         """
-        if "federator" not in self.services:
-            msg = "The current client does not have a federator service."
+        if "fedcatalog" not in self.services:
+            msg = "The current client does not have a federated catalog service."
             raise ValueError(msg)
 
         arguments = OrderedDict(
@@ -117,7 +117,7 @@ class FederatorClient(RoutingClient):
         )
         bulk = self._get_bulk_string(bulk, arguments)
 
-        url = self._build_url("federator", "query")
+        url = self._build_url("fedcatalog", "query")
 
         data_stream = self._download(url,
                                      data=bulk.encode('ascii', 'strict'))
@@ -140,8 +140,8 @@ class FederatorClient(RoutingClient):
         For details see the :meth:`~obspy.clients.fdsn.client.Client.get_stations_bulk()`
         method.
         """
-        if "federator" not in self.services:
-            msg = "The current client does not have a federator service."
+        if "fedcatalog" not in self.services:
+            msg = "The current client does not have a federated catalog service."
             raise ValueError(msg)
 
         arguments = OrderedDict(

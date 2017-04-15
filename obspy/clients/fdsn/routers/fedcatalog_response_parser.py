@@ -1,5 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 class RequestLine(object):
-    """line from federator source that provides additional tests
+    """line from federated catalog source that provides additional tests
 
     >>> fed_text = '''minlat=34.0
     ...
