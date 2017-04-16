@@ -3,6 +3,131 @@
 from __future__ import print_function
 import sys
 from obspy.clients.fdsn import Client
+
+class FederatedResponse(object):
+    '''
+    >>> fed_resp = FederatedResponse("IRISDMC")
+    >>> fed_resp.add_common_parameters(["lat=50","lon=20","level=cha"])
+    >>> fed_resp.add_service("STATIONSERVICE","http://service.iris.edu/fdsnws/station/1/")
+    >>> fed_resp.add_request_line("AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
+    >>> fed_resp.add_request_line("AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
+    >>> print(fed_resp.text("STATIONSERVICE"))
+    level=cha
+    AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    '''
+
+    #TODO maybe see which parameters are supported by specific service (?)
+    # for example. at this exact moment in time, SoCal's dataselect won't accept quality
+    pass_through_params = {
+        "DATASELECTSERVICE":["longestonly", "quality", "minimumlength"],
+        "STATIONSERVICE":["level", "matchtimeseries", "includeavailability",
+                          "includerestricted", "format"]}
+
+    def __init__(self, code):
+        self.code = code
+        self.parameters = []
+        self.services = {}
+        self.request_lines = []
+
+    def __len__(self):
+        return len(self.request_lines)
+
+    def add_service(self, service_name, service_url):
+        self.services[service_name] = service_url
+
+    def add_common_parameters(self, parameters):
+        if isinstance(parameters, str):
+            self.parameters.append(parameters)
+        elif isinstance(parameters, RequestLine):
+            self.parameters.append(str(parameters))
+        else:
+            self.parameters.extend(parameters)
+
+    def add_request_lines(self, request_lines):
+        '''append one or more requests to the request list'''
+        if isinstance(request_lines, str):
+            self.request_lines.append(request_lines)
+        elif isinstance(request_lines, RequestLine):
+            self.request_lines.append(str(request_lines))
+        else:
+            self.request_lines.extend(request_lines)
+
+    def add_request_line(self, request_line):
+        '''append a single request to the list of requests'''
+        self.request_lines.append(request_line)
+
+    def text(self, target_service):
+        '''Return a string suitable for posting to a target service'''
+        reply = self.selected_common_parameters(target_service)
+        reply.extend(self.request_lines)
+        return "\n".join(reply)
+
+    def selected_common_parameters(self, target_service):
+        '''Return common parameters, targeted for a specific service
+        This effecively filters out parameters that don't belong in a request.
+        for example, STATIONSERVICE can accept level=xxx ,
+        while DATASELECTSERVICE can accept longestonly=xxx
+        '''
+        reply = []
+        for good in FederatedResponse.pass_through_params[target_service]:
+            reply.extend([c for c in self.parameters if c.startswith(good + "=")])
+        return reply
+
+    def __str__(self):
+        if len(self) != 1:
+            line_or_lines = " lines"
+        else:
+            line_or_lines = " line"
+        return self.code + ", with " + str(len(self)) + line_or_lines
+
+    def __repr__(self):
+        return self.code + "\n" + self.text("STATIONSERVICE")
+
+    def client(self, **kwargs):
+        '''returns appropriate obspy.clients.fdsn.clients.Client for request'''
+        try:
+            client = Client(self.code, **kwargs)
+        except Exception as ex:
+            print("Problem assigning client " + code, file=sys.stderr)
+            print (ex, __type__(ex), ex.__class__, file=sys.stderr)
+            raise
+
+    def submit_waveform_request(self, output, failed, **kwargs):
+        '''
+
+        :param output: place where retrieved data go
+        :param failed: place where list of unretrieved bulk request lines go
+        '''
+        try:
+            client = self.client(**kwargs)
+            print("requesting data from:" + self.code + " : " + self.services["DATACENTER"])
+            data = client.get_waveforms_bulk(bulk=self.text("DATASELECTSERVICE"), **kwargs)
+        except FDSNNoDataException as ex:
+            failed.put(self.request_lines)
+        else:
+            print(data)
+            output.put(data)
+
+    def submit_station_request(self, output, failed, **kwargs):
+        '''
+
+        :param self: FederatedResponse
+        :param output: place where retrieved data go
+        :param failed: place where list of unretrieved bulk request lines go
+        '''
+        try:
+            client = self.client(**kwargs)
+            print("requesting data from:" + self.code + " : " + self.services["DATACENTER"])
+            data = client.get_stations_bulk(bulk=self.text("STATIONSERVICE"), **kwargs)
+        except FDSNNoDataException as ex:
+            failed.put(self.request_lines)
+        else:
+            print(data)
+            output.put(data)
+
+
+
 class RequestLine(object):
     """line from federated catalog source that provides additional tests
 
@@ -39,7 +164,7 @@ class RequestLine(object):
         return self.line.startswith('DATACENTER=')
 
     def is_param(self):
-        # true for datacenter, services, and parameter_list
+        # true for provider, services, and parameter_list
         return '=' in self.line
 
     def is_request(self):
@@ -189,97 +314,6 @@ class RequestItem(ParserState):
 
 
 
-class FederatedResponse(object):
-    '''
-    >>> fed_resp = FederatedResponse("IRISDMC")
-    >>> fed_resp.add_common_parameters(["lat=50","lon=20","level=cha"])
-    >>> fed_resp.add_service("STATIONSERVICE","http://service.iris.edu/fdsnws/station/1/")
-    >>> fed_resp.add_request_line("AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
-    >>> fed_resp.add_request_line("AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
-    >>> print(fed_resp.text("STATIONSERVICE"))
-    level=cha
-    AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-    AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-    '''
-
-    #TODO maybe see which parameters are supported by specific service (?)
-    # for example. at this exact moment in time, SoCal's dataselect won't accept quality
-    pass_through_params = {
-        "DATASELECTSERVICE":["longestonly", "quality", "minimumlength"],
-        "STATIONSERVICE":["level", "matchtimeseries", "includeavailability",
-                          "includerestricted", "format"]}
-
-    def __init__(self, code):
-        self.code = code
-        self.parameters = []
-        self.services = {}
-        self.request_lines = []
-
-    def __len__(self):
-        return len(self.request_lines)
-
-    def add_service(self, service_name, service_url):
-        self.services[service_name] = service_url
-
-    def add_common_parameters(self, parameters):
-        if isinstance(parameters, str):
-            self.parameters.append(parameters)
-        elif isinstance(parameters, RequestLine):
-            self.parameters.append(str(parameters))
-        else:
-            self.parameters.extend(parameters)
-
-    def add_request_lines(self, request_lines):
-        '''append one or more requests to the request list'''
-        if isinstance(request_lines, str):
-            self.request_lines.append(request_lines)
-        elif isinstance(request_lines, RequestLine):
-            self.request_lines.append(str(request_lines))
-        else:
-            self.request_lines.extend(request_lines)
-
-    def add_request_line(self, request_line):
-        '''append a single request to the list of requests'''
-        self.request_lines.append(request_line)
-
-    def text(self, target_service):
-        '''Return a string suitable for posting to a target service'''
-        reply = self.selected_common_parameters(target_service)
-        reply.extend(self.request_lines)
-        return "\n".join(reply)
-
-    def selected_common_parameters(self, target_service):
-        '''Return common parameters, targeted for a specific service
-        This effecively filters out parameters that don't belong in a request.
-        for example, STATIONSERVICE can accept level=xxx ,
-        while DATASELECTSERVICE can accept longestonly=xxx
-        '''
-        reply = []
-        for good in FederatedResponse.pass_through_params[target_service]:
-            reply.extend([c for c in self.parameters if c.startswith(good + "=")])
-        return reply
-
-    def __str__(self):
-        if len(self) != 1:
-            line_or_lines = " lines"
-        else:
-            line_or_lines = " line"
-        return self.code + ", with " + str(len(self)) + line_or_lines
-
-    def __repr__(self):
-        return self.code + "\n" + self.text("STATIONSERVICE")
-
-    def client(self, **kwarg):
-        '''returns appropriate obspy.clients.fdsn.clients.Client for request'''
-        try:
-            client = Client(self.code, kwarg)
-        except Exception as ex:
-            print("Problem assigning client " + code, file=sys.stderr)
-            print (ex, __type__(ex), ex.__class__, file=sys.stderr)
-            raise
-
-
-
 # main function
 if __name__ == '__main__':
     import doctest
@@ -293,3 +327,7 @@ if __name__ == '__main__':
     for n in frp:
         print(n.request("STATIONSERVICE"))
 '''
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
