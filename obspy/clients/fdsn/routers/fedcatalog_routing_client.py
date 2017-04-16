@@ -13,7 +13,7 @@ from __future__ import print_function
 import sys
 import requests
 from requests.exceptions import HTTPError, Timeout, ConnectionError, TooManyRedirects
-from obspy.clients.fdsn.routers import RoutingClient
+from obspy.clients.fdsn.routers.routing_client import RoutingClient
 
 
 def query_fedcatalog(targetservice, params=None, bulk=None, argdict=None):
@@ -39,7 +39,7 @@ def inv2set(inv, level):
         "channel": channel_set,
         "response": channel_set,
         "station": station_set,
-        "network": inv2network_set
+        "network": network_set
     }
 
     def channel_set(inv):
