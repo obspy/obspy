@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
+import sys
+from obspy.clients.fdsn import Client
 class RequestLine(object):
     """line from federated catalog source that provides additional tests
 
@@ -16,7 +19,8 @@ class RequestLine(object):
 
     >>> for y in fed_text.splitlines():
     ...    x = RequestLine(y)
-    ...    print("\\n".join([str([x.is_empty(), x.is_datacenter(), x.is_param(), x.is_request(), x.is_service()])]))
+    ...    print("\\n".join([str([x.is_empty(), x.is_datacenter(), x.is_param(), x.is_request(),
+    ...                           x.is_service()])]))
     [False, False, True, False, False]
     [True, False, False, False, False]
     [False, True, True, False, False]
@@ -183,71 +187,7 @@ class RequestItem(ParserState):
         else:
             raise RuntimeError("Requests should be followed by another request or an empty line")
 
-def parse_federated_response(block_text):
-    '''create a list of FederatedResponse objects, one for each datacenter in response
-    >>> fed_text = """minlat=34.0
-    ... level=network
-    ...
-    ... DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
-    ... DATASELECTSERVICE=http://geofon.gfz-potsdam.de/fdsnws/dataselect/1/
-    ... CK ASHT -- HHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-    ...
-    ... DATACENTER=INGV,http://www.ingv.it
-    ... STATIONSERVICE=http://webservices.rm.ingv.it/fdsnws/station/1/
-    ... HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-    ... HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00"""
-    >>> fr = parse_federated_response(fed_text)
-    >>> _ = [print(fr[n]) for n in range(len(fr))]
-    GEOFON
-    level=network
-    CK ASHT -- HHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-    INGV
-    level=network
-    HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-    HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
 
-    Here's an example parsing from the actual service:
-    >>> import requests
-    >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
-    >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-    >>> url = 'https://service.iris.edu/irisws/fedcatalog/1/'
-    >>> r = requests.get(url + "query", params={"net":"IU", "sta":"ANTO", "cha":"BHZ",
-    ...                  "endafter":"2013-01-01","includeoverlaps":"true","level":"station"},
-    ...                  verify=False)
-    >>> frp = parse_federated_response(r.text)
-    >>> for n in frp:
-    ...     print(n.services["STATIONSERVICE"])
-    ...     print(n.request_text("STATIONSERVICE"))
-    http://service.iris.edu/fdsnws/station/1/
-    level=station
-    IU ANTO 00 BHZ 2010-11-10T21:42:00 2016-06-22T00:00:00
-    IU ANTO 00 BHZ 2016-06-22T00:00:00 2599-12-31T23:59:59
-    IU ANTO 10 BHZ 2010-11-11T09:23:59 2599-12-31T23:59:59
-    http://www.orfeus-eu.org/fdsnws/station/1/
-    level=station
-    IU ANTO 00 BHZ 2010-11-10T21:42:00 2599-12-31T23:59:59
-    IU ANTO 10 BHZ 2010-11-11T09:23:59 2599-12-31T23:59:59
-
-    '''
-    fed_resp = []
-    datacenter = FederatedResponse("PRE_CENTER")
-    parameters = None
-    state = PreParse
-
-    for raw_line in block_text.splitlines():
-        line = RequestLine(raw_line) #use a smarter, trimmed line
-        state = state.next(line)
-        if state == DatacenterItem:
-            if datacenter.code == "PRE_CENTER":
-                parameters = datacenter.parameters
-            datacenter = state.parse(line, datacenter)
-            datacenter.parameters = parameters
-            fed_resp.append(datacenter)
-        else:
-            state.parse(line, datacenter)
-    if len(fed_resp) > 0 and (not fed_resp[-1].request_lines):
-        del fed_resp[-1]
-    return fed_resp
 
 class FederatedResponse(object):
     '''
@@ -256,7 +196,7 @@ class FederatedResponse(object):
     >>> fed_resp.add_service("STATIONSERVICE","http://service.iris.edu/fdsnws/station/1/")
     >>> fed_resp.add_request_line("AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
     >>> fed_resp.add_request_line("AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
-    >>> print(fed_resp.request_text("STATIONSERVICE"))
+    >>> print(fed_resp.text("STATIONSERVICE"))
     level=cha
     AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
     AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
@@ -274,6 +214,9 @@ class FederatedResponse(object):
         self.parameters = []
         self.services = {}
         self.request_lines = []
+
+    def __len__(self):
+        return len(self.request_lines)
 
     def add_service(self, service_name, service_url):
         self.services[service_name] = service_url
@@ -299,7 +242,7 @@ class FederatedResponse(object):
         '''append a single request to the list of requests'''
         self.request_lines.append(request_line)
 
-    def request_text(self, target_service):
+    def text(self, target_service):
         '''Return a string suitable for posting to a target service'''
         reply = self.selected_common_parameters(target_service)
         reply.extend(self.request_lines)
@@ -316,67 +259,26 @@ class FederatedResponse(object):
             reply.extend([c for c in self.parameters if c.startswith(good + "=")])
         return reply
 
+    def __str__(self):
+        if len(self) != 1:
+            line_or_lines = " lines"
+        else:
+            line_or_lines = " line"
+        return self.code + ", with " + str(len(self)) + line_or_lines
+
     def __repr__(self):
-        return self.code + "\n" + self.request_text("STATIONSERVICE")
+        return self.code + "\n" + self.text("STATIONSERVICE")
 
-def get_datacenter_request(federated_responses, code, get_multiple=False):
-    '''retrieve the response for a particular datacenter, by code
-    if get_multiple is true, then a list will be returned with 0 or more
-    FederatedResponse objects that meet the criteria.  otherwise, the first
-    matching FederatedResponse will be returned
+    def client(self, **kwarg):
+        '''returns appropriate obspy.clients.fdsn.clients.Client for request'''
+        try:
+            client = Client(self.code, kwarg)
+        except Exception as ex:
+            print("Problem assigning client " + code, file=sys.stderr)
+            print (ex, __type__(ex), ex.__class__, file=sys.stderr)
+            raise
 
-    Set up sample data:
-    >>> fedresps = [FederatedResponse('IRIS'), FederatedResponse('SED'),
-    ...             FederatedResponse('RESIF'), FederatedResponse('SED')]
 
-    Test methods that return multiple FederatedResponse objects
-    >>> get_datacenter_request(fedresps, 'SED')
-    SED
-    <BLANKLINE>
-    >>> get_datacenter_request(fedresps, 'SED', get_multiple=True)
-    [SED
-    , SED
-    ]
-    '''
-    if get_multiple:
-        return [resp for resp in federated_responses if resp.code == code]
-    for resp in federated_responses:
-        if resp.code == code:
-            return resp
-    return None
-
-def filter_requests(federated_responses, include_datacenter=None, exclude_datacenter=None):
-    '''provide more flexibility by specifying which datacenters to include or exclude
-
-    Set up sample data:
-    >>> fedresps = [FederatedResponse('IRIS'), FederatedResponse('SED'), FederatedResponse('RESIF')]
-
-    >>> unch = filter_requests(fedresps)
-    >>> print(".".join([dc.code for dc in unch]))
-    IRIS.SED.RESIF
-
-    Test methods that return multiple FederatedResponse objects
-    >>> no_sed_v1 = filter_requests(fedresps, exclude_datacenter='SED')
-    >>> no_sed_v2 = filter_requests(fedresps, include_datacenter=['IRIS', 'RESIF'])
-    >>> print(".".join([dc.code for dc in no_sed_v1]))
-    IRIS.RESIF
-    >>> ".".join([x.code for x in no_sed_v1]) == ".".join([x.code for x in no_sed_v2])
-    True
-
-    Test methods that return single FederatedResponse (still in a container, though)
-    >>> only_sed_v1 = filter_requests(fedresps, exclude_datacenter=['IRIS', 'RESIF'])
-    >>> only_sed_v2 = filter_requests(fedresps, include_datacenter='SED')
-    >>> print(".".join([dc.code for dc in only_sed_v1]))
-    SED
-    >>> ".".join([x.code for x in only_sed_v1]) == ".".join([x.code for x in only_sed_v2])
-    True
-    '''
-    if include_datacenter:
-        return [resp for resp in federated_responses if resp.code in include_datacenter]
-    elif exclude_datacenter:
-        return [resp for resp in federated_responses if resp.code not in exclude_datacenter]
-    else:
-        return federated_responses
 
 # main function
 if __name__ == '__main__':
@@ -389,5 +291,5 @@ if __name__ == '__main__':
 
     frp = parse_federated_response(r.text)
     for n in frp:
-        print(n.request_text("STATIONSERVICE"))
+        print(n.request("STATIONSERVICE"))
 '''

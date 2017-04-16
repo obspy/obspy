@@ -9,10 +9,12 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from obspy.clients.routers import RoutingClient
-from .header import (DEFAULT_PARAMETERS)
+from __future__ import print_function
+import sys
+from obspy.clients.fdsn.routers import RoutingClient
+from requests.exceptions import HTTPError, Timeout, ConnectionError, TooManyRedirects
 
-class FederatorClient(RoutingClient):
+class FederatedClient(RoutingClient):
     """
     FDSN Web service request client.
 
@@ -20,147 +22,107 @@ class FederatorClient(RoutingClient):
     method.
     """
 
-    def get_stations(self, starttime=None, endtime=None, startbefore=None,
-                     startafter=None, endbefore=None, endafter=None,
-                     network=None, station=None, location=None, channel=None,
-                     minlatitude=None, maxlatitude=None, minlongitude=None,
-                     maxlongitude=None, latitude=None, longitude=None,
-                     minradius=None, maxradius=None, level=None,
-                     includerestricted=None, includeavailability=None,
-                     updatedafter=None, matchtimeseries=None, filename=None,
-                     format="xml", **kwargs):
-        """
-        Query the station service of the FDSN client.
+    def get_waveforms_bulk(self, exclude_datacenter=None, include_datacenter=None,
+                           includeoverlaps=False, bulk=None, **kwargs):
+        '''
+        :param exclude_datacenter: Avoids getting data from datacenters with specified ID code(s)
+        :param include_datacenter: limit retrieved data to  datacenters with specified ID code(s)
+        :param includeoverlaps: For now, simply leave this False. It will confuse the program.
+        other parameters as seen in Client.get_stations_bulk
+        '''
 
-        For details see the :meth:`~obspy.clients.fdsn.client.Client.get_stations()`
-        method.
-        """
+        assert bulk, "No bulk request povided"
+        # send request to the FedCatalog
+        try:
+            resp = query_fedcatalog("dataselect", bulk=bulk)
+        except ConnectionError:
+            pass
+        except HTTPError:
+            pass
+        except Timeout:
+            pass
 
-        #send request to fedrator
-        if "federated catalog" not in self.services:
-            msg = "The current client does not have a station service."
-            raise ValueError(msg)
+        # parse the reply into an iterable object
+        frm = FederatedResponseManager(resp.text, include_datacenter=include_datacenter,
+                                       exclude_datacenter=exclude_datacenter)
 
-        locs = locals()
-        setup_query_dict('station', locs, kwargs)
+        inv, retry = parallel_service_query(submit_waveform_request, frm, kwargs=kwargs)
+        return inv
 
-        fedresp = get_fedcatalog_index(kwargs)
+    def get_waveforms(self, exclude_datacenter=None, include_datacenter=None,
+                      includeoverlaps=False, **kwargs):
+        '''
+        :param exclude_datacenter: Avoids getting data from datacenters with specified ID code(s)
+        :param include_datacenter: limit retrieved data to  datacenters with specified ID code(s)
+        :param includeoverlaps: For now, simply leave this False. It will confuse the program.
+        other parameters as seen in Client.get_stations_bulk
+        '''
 
-        for i in fedresp:
-            #make request to appropriate service
-            #work on response
-            #if to be written to file, do some hocus-pocus
-        url = self._create_url_from_parameters(
-            "fedcatalog", DEFAULT_PARAMETERS['station'], kwargs)
+        # send request to the FedCatalog
+        resp = query_fedcatalog("dataselect", params=kwargs)
+        # parse the reply into an iterable object
+        frm = FederatedResponseManager(resp.text, include_datacenter=include_datacenter,
+                                       exclude_datacenter=exclude_datacenter)
 
-        if filename:
-            # write to file
-        else:
-            return inventory
+        inv, retry = parallel_service_query(submit_waveform_request, frm, kwargs=kwargs)
+        return inv
 
-    def get_waveforms(self, network, station, location, channel, starttime,
-                      endtime, quality=None, minimumlength=None,
-                      longestonly=None, filename=None, attach_response=False,
-                      **kwargs):
-        """
-        Query the dataselect service of the client.
+    def get_stations_bulk(self, exclude_datacenter=None, include_datacenter=None,
+                          includeoverlaps=False, bulk=None, **kwargs):
+        '''
+        :param exclude_datacenter: Avoids getting data from datacenters with specified ID code(s)
+        :param include_datacenter: limit retrieved data to  datacenters with specified ID code(s)
+        :param includeoverlaps: For now, simply leave this False. It will confuse the program.
+        other parameters as seen in Client.get_stations_bulk
+        '''
 
-        For details see the :meth:`~obspy.clients.fdsn.client.Client.get_waveforms()`
-        method.
-        """
-        if "fedcatalog" not in self.services:
-            msg = "The current client does not have a federated catalog service."
-            raise ValueError(msg)
+        assert bulk, "No bulk request provided"
+        # send request to the FedCatalog
+        resp = query_fedcatalog_bulk("station", bulk=bulk)
+        # parse the reply into an iterable object
+        frm = FederatedResponseManager(resp.text, include_datacenter=include_datacenter,
+                                       exclude_datacenter=exclude_datacenter)
 
-        locs = locals()
-        setup_query_dict('dataselect', locs, kwargs)
+        inv, retry = parallel_service_query(submit_station_request, frm, kwargs=kwargs)
+        return inv
 
-        # Special location handling. Convert empty strings to "--".
-        if "location" in kwargs and not kwargs["location"]:
-            kwargs["location"] = "--"
+    def get_stations(self, exclude_datacenter=None, include_datacenter=None,
+                     includeoverlaps=False, **kwargs):
+        '''
+        This will be the original request for the federated station service
+        :param exclude_datacenter: Avoids getting data from datacenters with specified ID code(s)
+        :param include_datacenter: limit retrieved data to  datacenters with specified ID code(s)
+        :param includeoverlaps: For now, simply leave this False. It will confuse the program.
+        other parameters as seen in Client.get_stations
 
-        url = self._create_url_from_parameters(
-            "fedcatalog", DEFAULT_PARAMETERS['dataselect'], kwargs)
+        Warning: If you specify "include_datacenter", you may miss data that the datacenter holds,
+                but isn't the primary source
+        Warning: If you specify "exclude_datacenter", you may miss data for which that datacenter
+                is the primary source
 
-        # Gzip not worth it for MiniSEED and most likely disabled for this
-        # route in any case.
-        data_stream = self._download(url, use_gzip=False)
-        data_stream.seek(0, 0)
-        if filename:
-            self._write_to_file_object(filename, data_stream)
-            data_stream.close()
-        else:
-            st = obspy.read(data_stream, format="MSEED")
-            data_stream.close()
-            if attach_response:
-                self._attach_responses(st)
-            return st
+        >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        >>> INV = get_stations(network="A?", station="OK*", channel="?HZ", level="station",
+        ...                    endtime="2016-12-31")
+        '''
 
+        try:
+            resp = query_fedcatalog("station", params=kwargs)
+        except ConnectionError:
+            print("Problem connecting to fedcatalog service", file=sys.stderr)
+        except HTTPError:
+            print("Error downloading data from fedcatalog service: " + str(resp.status_code), file=sys.stderr)
+        except Timeout:
+            print("Timeout while waiting for a response from the fedcatalog service")
+            pass
+        
+        frm = FederatedResponseManager(resp.text, include_datacenter=include_datacenter,
+                                       exclude_datacenter=exclude_datacenter)
 
-    def get_waveforms_bulk(self, bulk, quality=None, minimumlength=None,
-                           longestonly=None, filename=None,
-                           attach_response=False, **kwargs):
-        r"""
-        Query the federated catalog service of the client for dataselect style data. Bulk request.
+        inv, retry = parallel_service_query(submit_station_request, frm, kwargs=kwargs)
 
-        For details see the :meth:`~obspy.clients.fdsn.client.Client.get_waveforms_bulk()`
-        method.
-        """
-        if "fedcatalog" not in self.services:
-            msg = "The current client does not have a federated catalog service."
-            raise ValueError(msg)
-
-        arguments = OrderedDict(
-            quality=quality,
-            minimumlength=minimumlength,
-            longestonly=longestonly
-        )
-        bulk = self._get_bulk_string(bulk, arguments)
-
-        url = self._build_url("fedcatalog", "query")
-
-        data_stream = self._download(url,
-                                     data=bulk.encode('ascii', 'strict'))
-        data_stream.seek(0, 0)
-        if filename:
-            self._write_to_file_object(filename, data_stream)
-            data_stream.close()
-        else:
-            st = obspy.read(data_stream, format="MSEED")
-            data_stream.close()
-            if attach_response:
-                self._attach_responses(st)
-            return st
-
-    def get_stations_bulk(self, bulk, level=None, includerestricted=None,
-                          includeavailability=None, filename=None, **kwargs):
-        r"""
-        Query the station service of the client. Bulk request.
-
-        For details see the :meth:`~obspy.clients.fdsn.client.Client.get_stations_bulk()`
-        method.
-        """
-        if "fedcatalog" not in self.services:
-            msg = "The current client does not have a federated catalog service."
-            raise ValueError(msg)
-
-        arguments = OrderedDict(
-            level=level,
-            includerestriced=includerestricted,
-            includeavailability=includeavailability
-        )
-        bulk = self._get_bulk_string(bulk, arguments)
-
-        url = self._build_url("station", "query")
-
-        data_stream = self._download(url,
-                                     data=bulk.encode('ascii', 'strict'))
-        data_stream.seek(0, 0)
-        if filename:
-            self._write_to_file_object(filename, data_stream)
-            data_stream.close()
-            return
-        else:
-            inv = obspy.read_inventory(data_stream, format="stationxml")
-            data_stream.close()
-            return inv
+        # level = kwargs["level"]
+        # successful, failed = request_exists_in_inventory(inv, datac.request_lines, level)
+        # all_inv_set = INV_CONVERTER[level](inv) if not all_inv else all_inv_set.union(INV_CONVERTER[level](inv))
+        # resubmit unsuccessful requests to fedservice with includeoverlaps
+        return inv
