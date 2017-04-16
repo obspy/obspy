@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+'''fedcatalog_response_parser conatains the FederatedResponse class, with the supporting parsing
+routines'''
 from __future__ import print_function
 import sys
 from obspy.clients.fdsn import Client
+from obspy.clients.fdsn.header import FDSNException
 
 class FederatedResponse(object):
     '''
@@ -25,6 +28,10 @@ class FederatedResponse(object):
                           "includerestricted", "format"]}
 
     def __init__(self, code):
+        '''
+        initialize a FederatedResponse
+        :param code: code for the data provider
+        '''
         self.code = code
         self.parameters = []
         self.services = {}
@@ -34,31 +41,84 @@ class FederatedResponse(object):
         return len(self.request_lines)
 
     def add_service(self, service_name, service_url):
+        '''add a service url to this response
+        :param service_name: name such as STATIONSERVICE, DATASELECTSERVICE, or DATACENTER
+        :param service_url: url of service, like http://service.iris.edu/fdsnws/station/1/
+        '''
         self.services[service_name] = service_url
 
     def add_common_parameters(self, parameters):
+        '''
+        add parameters to list that may be prepended to a request
+        :param parameters: strings of the form "param=value"
+        >>> fedresp = FederatedResponse("ABC")
+        >>> fedresp.add_common_parameters(["level=station","quality=D"])
+        >>> fedresp.add_common_parameters("onceuponatime=now")
+        >>> fedresp.add_common_parameters(RequestLine("testing=true"))
+        >>> fedresp.add_common_parameters([RequestLine("black=white"),RequestLine("this=that")])
+        >>> print(",".join(fedresp.parameters))
+        level=station,quality=D,onceuponatime=now,testing=true,black=white,this=that
+        '''
         if isinstance(parameters, str):
             self.parameters.append(parameters)
         elif isinstance(parameters, RequestLine):
             self.parameters.append(str(parameters))
         else:
-            self.parameters.extend(parameters)
+            self.parameters.extend(str(p) for p in parameters)
 
     def add_request_lines(self, request_lines):
-        '''append one or more requests to the request list'''
-        if isinstance(request_lines, str):
-            self.request_lines.append(request_lines)
-        elif isinstance(request_lines, RequestLine):
+        '''append one or more requests to the request list
+        :param request_lines: string, RequestLine, or container of these. Each looks something like:
+        NET STA LOC CHA yyyy-mm-ddTHH:MM:SS yyyy-mm-ddTHH:MM:SS
+        '''
+        if isinstance(request_lines, str) or isinstance(request_lines, RequestLine):
             self.request_lines.append(str(request_lines))
         else:
-            self.request_lines.extend(request_lines)
+            self.request_lines.extend([str(r) for r in request_lines])
 
     def add_request_line(self, request_line):
-        '''append a single request to the list of requests'''
-        self.request_lines.append(request_line)
+        '''append a single request to the list of requests
+        :param request_lines: string or RequestLine that looks something like:
+        NET STA LOC CHA yyyy-mm-ddTHH:MM:SS yyyy-mm-ddTHH:MM:SS
+        '''
+        self.request_lines.append(str(request_line))
+
+    def matched_and_unmatched(self, templates, level):
+        '''
+        returns tuple of lines that (match, do_not_match) templates, to a level of detail specified
+        by the level
+        :param templates: containers containing strings NET.STA.LOC.CHA, NET.STA, or NET
+        :param level: one of 'channel', 'response', 'station', 'network'
+
+        >>> fedresp = FederatedResponse("ABC")
+        >>> fedresp.add_request_lines(["AB STA1 00 BHZ 2005-01-01 2005-03-24",
+        ...                            "AB STA2 00 BHZ 2005-01-01 2005-03-24",
+        ...                            "AB STA1 00 EHZ 2005-01-01 2005-03-24"])
+        >>> m, unm = fedresp.matched_and_unmatched(["AB.STA1"], "station")
+        >>> print(m)
+        ['AB STA1 00 BHZ 2005-01-01 2005-03-24', 'AB STA1 00 EHZ 2005-01-01 2005-03-24']
+        >>> print(unm)
+        ['AB STA2 00 BHZ 2005-01-01 2005-03-24']
+        >>> m, _ = fedresp.matched_and_unmatched(["AB.STA1.00.BHZ", "AB.STA2.00.BHZ"], "channel")
+        >>> print(m)
+        ['AB STA1 00 BHZ 2005-01-01 2005-03-24', 'AB STA2 00 BHZ 2005-01-01 2005-03-24']
+        '''
+        converter_choices = {
+            "channel": lambda x: ".".join(x[0:4]),
+            "response": lambda x: ".".join(x[0:4]),
+            "station": lambda x: ".".join(x[0:2]),
+            "network": lambda x: x[0]
+        }
+        converter = converter_choices[level]
+        matched = [line for line in self.request_lines if converter(line.split()) in templates]
+        unmatched = [line for line in self.request_lines if line not in matched]
+        return (matched, unmatched)
 
     def text(self, target_service):
-        '''Return a string suitable for posting to a target service'''
+        '''
+        Return a string suitable for posting to a target service
+        :param target_service: string name of target service, like 'DATASELECTSERVICE'
+        '''
         reply = self.selected_common_parameters(target_service)
         reply.extend(self.request_lines)
         return "\n".join(reply)
@@ -68,6 +128,7 @@ class FederatedResponse(object):
         This effecively filters out parameters that don't belong in a request.
         for example, STATIONSERVICE can accept level=xxx ,
         while DATASELECTSERVICE can accept longestonly=xxx
+        :param target_service: string containing either 'DATASELECTSERVICE' or 'STATIONSERVICE'
         '''
         reply = []
         for good in FederatedResponse.pass_through_params[target_service]:
@@ -89,13 +150,23 @@ class FederatedResponse(object):
         try:
             client = Client(self.code, **kwargs)
         except Exception as ex:
-            print("Problem assigning client " + code, file=sys.stderr)
-            print (ex, __type__(ex), ex.__class__, file=sys.stderr)
+            print("Problem assigning client " + self.code, file=sys.stderr)
+            print(ex, file=sys.stderr)
             raise
+        return client
+
+    def get_request_fn(self, target_service):
+        '''
+        get function used to query the service
+        :param target_service: string containing either 'DATASELECTSERVICE' or 'STATIONSERVICE'
+        '''
+        fun = {"waveform": self.submit_waveform_request,
+               "station": self.submit_station_request}
+        return fun.get(target_service)
 
     def submit_waveform_request(self, output, failed, **kwargs):
         '''
-
+        function used to query service
         :param output: place where retrieved data go
         :param failed: place where list of unretrieved bulk request lines go
         '''
@@ -103,15 +174,16 @@ class FederatedResponse(object):
             client = self.client(**kwargs)
             print("requesting data from:" + self.code + " : " + self.services["DATACENTER"])
             data = client.get_waveforms_bulk(bulk=self.text("DATASELECTSERVICE"), **kwargs)
-        except FDSNNoDataException as ex:
+        except FDSNException:
             failed.put(self.request_lines)
+            # raise
         else:
             print(data)
             output.put(data)
 
     def submit_station_request(self, output, failed, **kwargs):
         '''
-
+        function used to query service
         :param self: FederatedResponse
         :param output: place where retrieved data go
         :param failed: place where list of unretrieved bulk request lines go
@@ -120,7 +192,7 @@ class FederatedResponse(object):
             client = self.client(**kwargs)
             print("requesting data from:" + self.code + " : " + self.services["DATACENTER"])
             data = client.get_stations_bulk(bulk=self.text("STATIONSERVICE"), **kwargs)
-        except FDSNNoDataException as ex:
+        except FDSNException:# as ex:
             failed.put(self.request_lines)
         else:
             print(data)
@@ -158,20 +230,24 @@ class RequestLine(object):
     [False, False, False, True, False]
     """
     def is_empty(self):
+        'true if self is empty'
         return self.line == ""
 
     def is_datacenter(self):
+        'true if self contains datacenter details'
         return self.line.startswith('DATACENTER=')
 
     def is_param(self):
+        'true if self could be a param=value'
         # true for provider, services, and parameter_list
         return '=' in self.line
 
     def is_request(self):
+        'true if self might be in proper request format for posting to web services'
         return len(self.line.split()) == 6 # and test field values?
 
     def is_service(self):
-        # parse param_name
+        'true if a parameter that might be pointing to a service'
         return self.is_param() and self.line.split("=")[0].isupper() and not self.is_datacenter()
 
     def __init__(self, line):
@@ -186,7 +262,7 @@ class RequestLine(object):
 class ParserState(object):
     '''
     Parsers leverage the known structure of Fedcatalog's response
-    
+
     PREPARSE -> [PARAMLIST | EMPTY_LINE | DATACENTER]
     PARAMLIST -> [PARAMLIST | EMPTY_LINE]
     EMPTY_LINE -> [EMPTY_LINE | DATACENTER | DONE]
@@ -254,7 +330,8 @@ class EmptyItem(ParserState):
         elif line.is_datacenter():
             return DatacenterItem
         else:
-            raise RuntimeError("expected either a DATACENTER or another empty line ["+ str(line)+"]")
+            raise RuntimeError("expected either a DATACENTER or another empty line ["
+                               + str(line) + "]")
 
 class DatacenterItem(ParserState):
     '''handle data center'''
@@ -327,7 +404,3 @@ if __name__ == '__main__':
     for n in frp:
         print(n.request("STATIONSERVICE"))
 '''
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)

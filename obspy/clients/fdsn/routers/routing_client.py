@@ -6,7 +6,6 @@ FDSN Web service client for ObsPy.
 
 from __future__ import print_function
 import multiprocessing as mp
-import requests
 from obspy.clients.fdsn import Client
 
 class RoutingClient(Client):
@@ -129,7 +128,8 @@ class ResponseManager(object):
         output = mp.Queue()
         failed = mp.Queue()
         # Setup process for each provider
-        processes = [mp.Process(target=req.target_process, args=(req, output, failed, kwargs))
+        processes = [mp.Process(target=req.get_request_fn(target_process),
+                                args=(output, failed, kwargs))
                      for req in self]
 
         # run
