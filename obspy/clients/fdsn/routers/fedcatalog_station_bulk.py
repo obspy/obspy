@@ -1,8 +1,8 @@
-from obspy.clients.fdsn import FederatorClient, Client
+from obspy.clients.fdsn import FederatedClient, Client
 import requests
 def get_station_bulk(object):
     '''Retrieve station data via fedcatalog'''
-    client = FederatorClient("IRIS")
+    client = FederatedClient("IRIS")
     url = 'https://service.iris.edu/irisws/fedcatalog/1/'
     data = 'includeoverlaps=true\nA* OR* * BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00'
     resp = requests.post(url + "query", data=data, verify=False, stream=True)

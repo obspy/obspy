@@ -320,6 +320,21 @@ class FederatedclientTestCase(unittest.TestCase):
         for tr in st:
             self.assertTrue(isinstance(tr.stats.get("response"), Response))
 
+    def station_missing_example(self):
+        '''example showing a missing station OKCB from Fedcatalog response,
+        but present with direct request to IRIS'''
+        from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+        inv = get_stations(network="AV", station="OKC*", channel="?HZ",
+                        level="station", endtime="2016-12-31", matchtimeseries=False)
+        irisclient = Client("IRIS")
+        print(inv)
+
+        inv2 = irisclient.get_stations(network="A?", station="OKC?",
+                                    channel="?HZ", level="station", endtime="2016-12-31")
+        print(inv2)
+        return inv == inv2
 
 def suite():
     return unittest.makeSuite(FederatedClientTestCase, 'test')
