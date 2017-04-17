@@ -11,10 +11,82 @@ FDSN Web service client for ObsPy.
 """
 from __future__ import print_function
 import sys
+from collections import OrderedDict
+from threading import Lock
 import requests
-from requests.exceptions import HTTPError, Timeout, ConnectionError, TooManyRedirects
-from obspy.clients.fdsn.routers.routing_client import RoutingClient
+from requests.exceptions import (HTTPError, Timeout)
+from .routing_client import (RoutingClient, ResponseManager)
+from .fedcatalog_response_parser import(FederatedResponse, PreParse,
+                                        RequestLine, DatacenterItem)
 
+class FedcatalogProviderMetadata(object):
+    '''Class containing datacenter details retrieved from the fedcatalog service
+    keys: name, website, lastupdate, serviceURLs {servicename:url,...}, location, description
+
+    hopefully threadsafe
+    '''
+    def __init__(self):
+        self.provider_metadata = None
+        self.provider_index = None
+        self.lock = Lock()
+        self.failed_refreshes = 0
+
+    def get_names(self):
+        '''return list of provider names'''
+        with self.lock:
+            if not self.provider_metadata:
+                self.refresh()
+        if not self.provider_index:
+            return None
+        else:
+            return self.provider_index.keys()
+
+    def get(self, name, detail=None):
+        '''get a datacenter property
+        :type name: str
+        :param name: provider name. such as IRISDMC, ORFEUS, etc.
+        :type detail: str
+        :param detail: property of interest.  eg, one of ('name', 'website', 'lastupdate',
+        serviceURLs', 'location', 'description').  if no detail is provided, then the entire dict
+        for the requeted datacenter will be provided
+        '''
+        with self.lock:
+            if not self.provider_metadata:
+                self.refresh()
+        if not self.provider_metadata:
+            return None
+        else:
+            if detail:
+                return self.provider_metadata[self.provider_index[name]][detail]
+            else:
+                return self.provider_metadata[self.provider_index[name]]
+
+    def refresh(self, force=False):
+        '''retrieve provider profile from fedcatalog service
+        :type force: bool
+        :param force: attempt to retrieve data even if too many failed attempts
+        '''
+        if force or self.failed_refreshes < 4:
+            try:
+                req = requests.get('https://service.iris.edu/irisws/fedcatalog/1/datacenters',
+                                   verify=False)
+                self.provider_metadata = req.json()
+                self.provider_index = {v['name']:k for k, v in enumerate(self.provider_metadata)}
+                self.failed_refreshes = 0
+            except:
+                print("Unable to update provider profiles from fedcatalog service", file=sys.stderr)
+                self.failed_refreshes += 1
+        else:
+            print("Unable to retrieve provider profiles from fedcatalog service after {0} attempts",
+                  self.failed_refreshes, file=sys.stderr)
+            # problem updating
+
+    def pretty(self, name):
+        ''' return nice text representation of service without too much details'''
+        return '\n'.join(self.get(name, k) for k in ["name", "description", "location", "website",
+                                                     "lastUpdate"])
+
+PROVIDER_METADATA = FedcatalogProviderMetadata()
 
 def query_fedcatalog(targetservice, params=None, bulk=None, argdict=None):
     ''' send request to fedcatalog service, return ResponseManager object'''
@@ -59,42 +131,6 @@ def inv2set(inv, level):
 
     return converter[level](inv)
 
-
-def req2set(req, level):
-    converter = {
-        "channel": channel_set,
-        "response": channel_set,
-        "station": station_set,
-        "network": network_set
-    }
-
-    def network_set(req):
-        'return a set containing string representations of an request line'
-        req_str = set()
-        for line in req:
-            (net, sta, loc, cha, startt, endt) = line.split()
-            req_str.add(net)
-        return req_str
-
-    def station_set(req):
-        'return a set containing string representations of an request line'
-        req_str = set()
-        for line in req:
-            (net, sta, loc, cha, startt, endt) = line.split()
-            req_str.add(net + "." + sta)
-        return req_str
-
-    def channel_set(req):
-        'return a set containing string representations of an request line'
-        req_str = set()
-        for line in req:
-            (net, sta, loc, cha, startt, endt) = line.split()
-            req_str.add(net + "." + sta + "." + loc + "." + cha)
-        return req_str
-
-    return converter[level](req)
-
-
 #converters used to make comparisons between inventory items and requests
 
 
@@ -106,11 +142,13 @@ class FederatedClient(RoutingClient):
     method.
     """
 
-    def get_waveforms_bulk(self,
+    def get_waveforms_bulk(self, bulk, quality=None,
+                           minimumlength=None,
+                           longestonly=None,
+                           filename=None,
                            exclude_provider=None,
                            include_provider=None,
                            includeoverlaps=False,
-                           bulk=None,
                            **kwargs):
         '''
         :param exclude_provider: Avoids getting data from datacenters with specified ID code(s)
@@ -119,7 +157,18 @@ class FederatedClient(RoutingClient):
         other parameters as seen in Client.get_stations_bulk
         '''
 
-        assert bulk, "No bulk request povided"
+        
+        arguments = OrderedDict(
+            quality=quality,
+            minimumlength=minimumlength,
+            longestonly=longestonly,
+            includeoverlaps=includeoverlaps,
+            target_service="dataselect",
+            format="request"
+        )
+
+        bulk = self._get_bulk_string(bulk, arguments)
+
         # send request to the FedCatalog
         try:
             resp = query_fedcatalog("dataselect", bulk=bulk)
@@ -136,11 +185,13 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        inv, retry = parallel_service_query(
-            submit_waveform_request, frm, kwargs=kwargs)
+        inv, _ = frm.parallel_service_query("DATASELECTSERVICE", kwargs=kwargs)
         return inv
 
-    def get_waveforms(self,
+    def get_waveforms(self, quality=None,
+                      minimumlength=None,
+                      longestonly=None,
+                      filename=None,
                       exclude_provider=None,
                       include_provider=None,
                       includeoverlaps=False,
@@ -160,8 +211,7 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        inv, retry = parallel_service_query(
-            submit_waveform_request, frm, kwargs=kwargs)
+        inv, _ = frm.parallel_service_query("DATASELECTSERVICE", frm, kwargs=kwargs)
         return inv
 
     def get_stations_bulk(self,
@@ -179,15 +229,14 @@ class FederatedClient(RoutingClient):
 
         assert bulk, "No bulk request provided"
         # send request to the FedCatalog
-        resp = query_fedcatalog_bulk("station", bulk=bulk)
+        resp = query_fedcatalog("station", bulk=bulk)
         # parse the reply into an iterable object
         frm = FederatedResponseManager(
             resp.text,
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        inv, retry = parallel_service_query(
-            submit_station_request, frm, kwargs=kwargs)
+        inv, _ = frm.parallel_service_query("STATIONSERVICE", frm, kwargs=kwargs)
         return inv
 
     def get_stations(self,
@@ -232,8 +281,7 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        inv, retry = parallel_service_query(
-            submit_station_request, frm, kwargs=kwargs)
+        inv, _ = frm.parallel_service_query("STATIONSERVICE", frm, kwargs=kwargs)
 
         # level = kwargs["level"]
         # successful, failed = request_exists_in_inventory(inv, datac.request_lines, level)
@@ -292,8 +340,8 @@ class FederatedResponseManager(ResponseManager):
             >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
             >>> url = 'https://service.iris.edu/irisws/fedcatalog/1/'
             >>> r = requests.get(url + "query", params={"net":"IU", "sta":"ANTO", "cha":"BHZ",
-            ...                  "endafter":"2013-01-01","includeoverlaps":"true","level":"station"},
-            ...                  verify=False)
+            ...                  "endafter":"2013-01-01","includeoverlaps":"true",
+            ...                  "level":"station"}, verify=False)
             >>> frp = parse_federated_response(r.text)
             >>> for n in frp:
             ...     print(n.services["STATIONSERVICE"])

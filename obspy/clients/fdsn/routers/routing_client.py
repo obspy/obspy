@@ -10,7 +10,7 @@ from obspy.clients.fdsn import Client
 
 class RoutingClient(Client):
     """
-    This class serves as the user-facing layer for federated requests, and uses
+    This class serves as the user-facing layer for routing requests, and uses
     the Client's methods to communicate with each data center.  Where possible,
     it will also leverage the Client's methods to interact with the federated catalog service.
     The federated catalog's response is passed to the ResponseManager.
@@ -33,12 +33,17 @@ class ResponseManager(object):
     divide the response into parcels, each being an XYZResponse containing the information
     required for a single request.
     Input would be the response from the routing service, or a similar text file Output is a list
-    of FederatedResponse objects
+    of RoutingResponse objects
 
     """
     def __init__(self, textblock, include_provider=None, exclude_provider=None):
         '''
-        :param textblock: input is returned text from routing service
+        :type textblock: str
+        :param textblock: text retrieved from routing service
+        :type include_provider: str or list of str
+        :param include_provider:
+        :type exclude_provider: str or list of str
+        :param exclude_privider:
         '''
 
         self.responses = self.parse_response(textblock)
@@ -57,20 +62,17 @@ class ResponseManager(object):
         return towrite
 
     def parse_response(self, parameter_list):
-        '''create a list of FederatedResponse objects, one for each provider in response'''
+        '''create a list of RoutingResponse objects, one for each provider in response'''
         raise NotImplementedError()
 
     def get_request(self, code, get_multiple=False):
         '''retrieve the response for a particular provider, by code
-        if get_multiple is true, then a list will be returned with 0 or more
-        FederatedResponse objects that meet the criteria.  otherwise, the first
-        matching FederatedResponse will be returned
 
         Set up sample data:
-        >>> fedresps = [FederatedResponse('IRIS'), FederatedResponse('SED'),
-        ...             FederatedResponse('RESIF'), FederatedResponse('SED')]
+        >>> fedresps = [RoutingResponse('IRIS'), RoutingResponse('SED'),
+        ...             RoutingResponse('RESIF'), RoutingResponse('SED')]
 
-        Test methods that return multiple FederatedResponse objects
+        Test methods that return multiple RoutingResponse objects
         >>> get_datacenter_request(fedresps, 'SED')
         SED
         <BLANKLINE>
@@ -78,6 +80,13 @@ class ResponseManager(object):
         [SED
         , SED
         ]
+
+        :type code: str
+        :param code: recognized key string for recognized server. see 
+        obspy.clients.fdsn.client for a list
+        :type get_multiple: bool
+        :param get_multiple: determines whether to return a single (first matching) RoutingResponse 
+        or a list of all matching responses
         '''
         if get_multiple:
             return [resp for resp in self.responses if resp.code == code]
@@ -90,14 +99,14 @@ class ResponseManager(object):
         '''provide more flexibility by specifying which datacenters to include or exclude
 
         Set up sample data:
-        >>> fedresps = [FederatedResponse('IRIS'), FederatedResponse('SED'),
-        ...             FederatedResponse('RESIF')]
+        >>> fedresps = [RoutingResponse('IRIS'), RoutingResponse('SED'),
+        ...             RoutingResponse('RESIF')]
 
         >>> unch = subset_requests(fedresps)
         >>> print(".".join([dc.code for dc in unch]))
         IRIS.SED.RESIF
 
-        Test methods that return multiple FederatedResponse objects
+        Test methods that return multiple RoutingResponse objects
         >>> no_sed_v1 = subset_requests(fedresps, exclude_provider='SED')
         >>> no_sed_v2 = subset_requests(fedresps, include_provider=['IRIS', 'RESIF'])
         >>> print(".".join([dc.code for dc in no_sed_v1]))
@@ -105,13 +114,18 @@ class ResponseManager(object):
         >>> ".".join([x.code for x in no_sed_v1]) == ".".join([x.code for x in no_sed_v2])
         True
 
-        Test methods that return single FederatedResponse (still in a container, though)
+        Test methods that return single RoutingResponse (still in a container, though)
         >>> only_sed_v1 = subset_requests(fedresps, exclude_provider=['IRIS', 'RESIF'])
         >>> only_sed_v2 = subset_requests(fedresps, include_provider='SED')
         >>> print(".".join([dc.code for dc in only_sed_v1]))
         SED
         >>> ".".join([x.code for x in only_sed_v1]) == ".".join([x.code for x in only_sed_v2])
         True
+
+        :type include_provider: str or list of str
+        :param include_provider: codes for providers, whose data to retrieve
+        :type exclude_provider: str or list of str
+        :param exclude_provider: codes of providers which should not be queried
         '''
         if include_provider:
             return [resp for resp in self.responses if resp.code in include_provider]
@@ -122,7 +136,9 @@ class ResponseManager(object):
 
     def parallel_service_query(self, target_process, **kwargs):
         '''
-        :param target_process: submit_waveform_request or submit_station_request
+        query clients in parallel
+        :type target_process: str
+        :param target_process: see RoutingResponse.get_request_fn for details
         '''
 
         output = mp.Queue()

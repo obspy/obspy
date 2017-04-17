@@ -6,11 +6,12 @@ from __future__ import print_function
 import sys
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.header import FDSNException
+from .routing_response import RoutingResponse
 
-class FederatedResponse(object):
+class FederatedResponse(RoutingResponse):
     '''
     >>> fed_resp = FederatedResponse("IRISDMC")
-    >>> fed_resp.add_common_parameters(["lat=50","lon=20","level=cha"])
+    >>> fed_resp.add_query_param(["lat=50","lon=20","level=cha"])
     >>> fed_resp.add_service("STATIONSERVICE","http://service.iris.edu/fdsnws/station/1/")
     >>> fed_resp.add_request_line("AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
     >>> fed_resp.add_request_line("AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
@@ -47,15 +48,15 @@ class FederatedResponse(object):
         '''
         self.services[service_name] = service_url
 
-    def add_common_parameters(self, parameters):
+    def add_query_param(self, parameters):
         '''
         add parameters to list that may be prepended to a request
         :param parameters: strings of the form "param=value"
         >>> fedresp = FederatedResponse("ABC")
-        >>> fedresp.add_common_parameters(["level=station","quality=D"])
-        >>> fedresp.add_common_parameters("onceuponatime=now")
-        >>> fedresp.add_common_parameters(RequestLine("testing=true"))
-        >>> fedresp.add_common_parameters([RequestLine("black=white"),RequestLine("this=that")])
+        >>> fedresp.add_query_param(["level=station","quality=D"])
+        >>> fedresp.add_query_param("onceuponatime=now")
+        >>> fedresp.add_query_param(RequestLine("testing=true"))
+        >>> fedresp.add_query_param([RequestLine("black=white"),RequestLine("this=that")])
         >>> print(",".join(fedresp.parameters))
         level=station,quality=D,onceuponatime=now,testing=true,black=white,this=that
         '''
@@ -64,17 +65,7 @@ class FederatedResponse(object):
         elif isinstance(parameters, RequestLine):
             self.parameters.append(str(parameters))
         else:
-            self.parameters.extend(str(p) for p in parameters)
-
-    def add_request_lines(self, request_lines):
-        '''append one or more requests to the request list
-        :param request_lines: string, RequestLine, or container of these. Each looks something like:
-        NET STA LOC CHA yyyy-mm-ddTHH:MM:SS yyyy-mm-ddTHH:MM:SS
-        '''
-        if isinstance(request_lines, str) or isinstance(request_lines, RequestLine):
-            self.request_lines.append(str(request_lines))
-        else:
-            self.request_lines.extend([str(r) for r in request_lines])
+            self.parameters.extend([str(p) for p in parameters])
 
     def add_request_line(self, request_line):
         '''append a single request to the list of requests
@@ -305,7 +296,7 @@ class ParameterItem(ParserState):
     @staticmethod
     def parse(line, this_response):
         '''Parse: param=value'''
-        this_response.add_common_parameters(line)
+        this_response.add_query_param(line)
         return this_response
 
     @staticmethod
