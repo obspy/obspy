@@ -6,6 +6,7 @@ from __future__ import print_function
 import sys
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.header import FDSNException
+#from obspy.clients.fdsn.routers.fedcatalog_routing_client import FederatedResponseManager
 from .routing_response import RoutingResponse
 
 class FederatedResponse(RoutingResponse):
@@ -33,13 +34,9 @@ class FederatedResponse(RoutingResponse):
         initialize a FederatedResponse
         :param code: code for the data provider
         '''
-        self.code = code
+        super(FederatedResponse, self).__init__(code)
         self.parameters = []
         self.services = {}
-        self.request_lines = []
-
-    def __len__(self):
-        return len(self.request_lines)
 
     def add_service(self, service_name, service_url):
         '''add a service url to this response
@@ -82,7 +79,7 @@ class FederatedResponse(RoutingResponse):
         :param level: one of 'channel', 'response', 'station', 'network'
 
         >>> fedresp = FederatedResponse("ABC")
-        >>> fedresp.add_request_lines(["AB STA1 00 BHZ 2005-01-01 2005-03-24",
+        >>> fedresp.add_request_line(["AB STA1 00 BHZ 2005-01-01 2005-03-24",
         ...                            "AB STA2 00 BHZ 2005-01-01 2005-03-24",
         ...                            "AB STA1 00 EHZ 2005-01-01 2005-03-24"])
         >>> m, unm = fedresp.matched_and_unmatched(["AB.STA1"], "station")
@@ -132,9 +129,6 @@ class FederatedResponse(RoutingResponse):
         else:
             line_or_lines = " line"
         return self.code + ", with " + str(len(self)) + line_or_lines
-
-    def __repr__(self):
-        return self.code + "\n" + self.text("STATIONSERVICE")
 
     def client(self, **kwargs):
         '''returns appropriate obspy.clients.fdsn.clients.Client for request'''
@@ -368,7 +362,7 @@ class RequestItem(ParserState):
     @staticmethod
     def parse(line, this_response):
         '''Parse: NT STA LC CHA YYYY-MM-DDThh:mm:ss YY-MM-DDThh:mm:ss'''
-        this_response.add_request_lines(line)
+        this_response.add_request_line(line)
         return this_response
 
     @staticmethod
@@ -391,7 +385,7 @@ if __name__ == '__main__':
     url = 'https://service.iris.edu/irisws/fedcatalog/1/'
     r = requests.get(url + "query", params={"net":"A*", "sta":"OK*", "cha":"*HZ"}, verify=False)
 
-    frp = parse_federated_response(r.text)
+    frp = FederatedResponseManager(r.text)
     for n in frp:
         print(n.request("STATIONSERVICE"))
 '''

@@ -7,6 +7,7 @@ FDSN Web service client for ObsPy.
 from __future__ import print_function
 import multiprocessing as mp
 from obspy.clients.fdsn import Client
+from obspy.clients.fdsn.routers.routing_response import RoutingResponse
 
 class RoutingClient(Client):
     """
@@ -38,7 +39,7 @@ class ResponseManager(object):
     """
     def __init__(self, textblock, include_provider=None, exclude_provider=None):
         '''
-        :type textblock: str
+        :type textblock: str or container of RoutingResponse
         :param textblock: text retrieved from routing service
         :type include_provider: str or list of str
         :param include_provider:
@@ -46,7 +47,12 @@ class ResponseManager(object):
         :param exclude_privider:
         '''
 
-        self.responses = self.parse_response(textblock)
+        if isinstance(textblock, str):
+            self.responses = self.parse_response(textblock)
+        elif isinstance(textblock, RoutingResponse):
+            self.responses = [textblock]
+        elif isinstance(textblock, (tuple, list)):
+            self.responses = [v for v in textblock if isinstance(v, RoutingResponse)]
         if include_provider or exclude_provider:
             self.responses = self.subset_requests(self.responses)
 
@@ -57,6 +63,8 @@ class ResponseManager(object):
         return len(self.responses)
 
     def __str__(self):
+        if not self.responses:
+            return "Empty ResponseManager"
         responsestr = "\n  ".join([str(x) for x in self.responses])
         towrite = "ResponseManager with " + str(len(self)) + " items:\n" +responsestr
         return towrite
@@ -128,11 +136,9 @@ class ResponseManager(object):
         :param exclude_provider: codes of providers which should not be queried
         '''
         if include_provider:
-            return [resp for resp in self.responses if resp.code in include_provider]
+            self.responses = [resp for resp in self.responses if resp.code in include_provider]
         elif exclude_provider:
-            return [resp for resp in self.responses if resp.code not in exclude_provider]
-        else:
-            return self.responses
+            self.responses = [resp for resp in self.responses if resp.code not in exclude_provider]
 
     def parallel_service_query(self, target_process, **kwargs):
         '''
@@ -163,7 +169,9 @@ class ResponseManager(object):
         retry = failed.get() if not failed.empty() else None
         while not failed.empty():
             retry.extend(failed.get())
-        retry = '\n'.join(retry)
+        
+        if retry:
+            retry = '\n'.join(retry)
         return data, retry
 
 if __name__ == '__main__':

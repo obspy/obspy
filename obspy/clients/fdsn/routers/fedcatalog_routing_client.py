@@ -15,9 +15,9 @@ from collections import OrderedDict
 from threading import Lock
 import requests
 from requests.exceptions import (HTTPError, Timeout)
-from .routing_client import (RoutingClient, ResponseManager)
-from .fedcatalog_response_parser import(FederatedResponse, PreParse,
-                                        RequestLine, DatacenterItem)
+from obspy.clients.fdsn.routers.routing_client import (RoutingClient, ResponseManager)
+from obspy.clients.fdsn.routers.fedcatalog_response_parser import(FederatedResponse, PreParse,
+                                                                  RequestLine, DatacenterItem)
 
 class FedcatalogProviderMetadata(object):
     '''Class containing datacenter details retrieved from the fedcatalog service
@@ -102,8 +102,6 @@ def query_fedcatalog(targetservice, params=None, bulk=None, argdict=None):
     resp.raise_for_status()
     return resp
 
-
-#from obspy.clients.fdsn.routers import parse_federated_response, FederatedResponse
 def inv2set(inv, level):
     '''inv2x_set(inv) will be used to quickly decide what exists and what doesn't'''
 
@@ -140,6 +138,11 @@ class FederatedClient(RoutingClient):
 
     For details see the :meth:`~obspy.clients.fdsn.client.Client.__init__()`
     method.
+    >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+    >>> client = FederatedClient()
+    >>> inv = client.get_stations(network="I?", station="AN*", channel="*HZ")
+    >>> print(inv)
     """
 
     def get_waveforms_bulk(self, bulk, quality=None,
@@ -157,7 +160,6 @@ class FederatedClient(RoutingClient):
         other parameters as seen in Client.get_stations_bulk
         '''
 
-        
         arguments = OrderedDict(
             quality=quality,
             minimumlength=minimumlength,
@@ -167,7 +169,7 @@ class FederatedClient(RoutingClient):
             format="request"
         )
 
-        bulk = self._get_bulk_string(bulk, arguments)
+        #bulk = self._get_bulk_string(bulk, arguments)
 
         # send request to the FedCatalog
         try:
@@ -185,7 +187,7 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        inv, _ = frm.parallel_service_query("DATASELECTSERVICE", kwargs=kwargs)
+        inv, _ = frm.parallel_service_query("DATASELECTSERVICE", **kwargs)
         return inv
 
     def get_waveforms(self, quality=None,
@@ -211,7 +213,7 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        inv, _ = frm.parallel_service_query("DATASELECTSERVICE", frm, kwargs=kwargs)
+        inv, _ = frm.parallel_service_query("DATASELECTSERVICE", **kwargs)
         return inv
 
     def get_stations_bulk(self,
@@ -236,7 +238,7 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        inv, _ = frm.parallel_service_query("STATIONSERVICE", frm, kwargs=kwargs)
+        inv, _ = frm.parallel_service_query("STATIONSERVICE", **kwargs)
         return inv
 
     def get_stations(self,
@@ -258,7 +260,8 @@ class FederatedClient(RoutingClient):
 
         >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-        >>> INV = get_stations(network="A?", station="OK*", channel="?HZ", level="station",
+        >>> client = FederatedClient()
+        >>> INV = client.get_stations(network="A?", station="OK*", channel="?HZ", level="station",
         ...                    endtime="2016-12-31")
         '''
 
@@ -281,7 +284,8 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        inv, _ = frm.parallel_service_query("STATIONSERVICE", frm, kwargs=kwargs)
+        # prepare the file if one is specified
+        inv, _ = frm.parallel_service_query("STATIONSERVICE", **kwargs)
 
         # level = kwargs["level"]
         # successful, failed = request_exists_in_inventory(inv, datac.request_lines, level)
@@ -299,17 +303,19 @@ class FederatedResponseManager(ResponseManager):
     of FederatedResponse objects
 
     >>> from obspy.clients.fdsn import Client
+    >>> url = 'https://service.iris.edu/irisws/fedcatalog/1/'
     >>> r = requests.get(url + "query", params={"net":"A*", "sta":"OK*", "cha":"*HZ"}, verify=False)
-    >>> frm = FederatedResponseManager(r.text)
-    >>> frm = frm.subset_requests("IRIS")
-    >>> for req in frm:
-    ...     c = req.client()
-    ...     inv = c.get_stations_bulk(req.text)
-    ...     print(inv)
+    >>> frm = FederatedResponseManager(r.text, include_provider=["IRIS", "IRISDMC"])
+    >>> # frm = frm.subset_requests("IRIS")
+    >>> print(frm)
+    >>> data, retry = frm.parallel_service_query('STATIONSERVICE')
+    >>> print(data)
+    >>> print(retry)
     """
 
     def __init__(self, textblock, **kwargs):
-        ResponseManager.__init__(self, textblock, **kwargs)
+        
+        super(FederatedResponseManager, self).__init__(textblock, **kwargs)
 
     def parse_response(self, block_text):
         '''create a list of FederatedResponse objects, one for each provider in response
@@ -324,9 +330,10 @@ class FederatedResponseManager(ResponseManager):
             ... STATIONSERVICE=http://webservices.rm.ingv.it/fdsnws/station/1/
             ... HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
             ... HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00"""
-            >>> fr = parse_federated_response(fed_text)
-            >>> _ = [print(fr[n]) for n in range(len(fr))]
-            GEOFON
+            >>> fr = FederatedResponseManager(fed_text)
+            >>> for f in fr:
+            ...    print(f.code + "\\n" + f.text('STATIONSERVICE'))
+            GFZ
             level=network
             CK ASHT -- HHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
             INGV
@@ -342,7 +349,7 @@ class FederatedResponseManager(ResponseManager):
             >>> r = requests.get(url + "query", params={"net":"IU", "sta":"ANTO", "cha":"BHZ",
             ...                  "endafter":"2013-01-01","includeoverlaps":"true",
             ...                  "level":"station"}, verify=False)
-            >>> frp = parse_federated_response(r.text)
+            >>> frp = FederatedResponseManager(r.text)
             >>> for n in frp:
             ...     print(n.services["STATIONSERVICE"])
             ...     print(n.text("STATIONSERVICE"))
