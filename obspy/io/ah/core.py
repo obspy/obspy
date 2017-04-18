@@ -20,7 +20,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import xdrlib
-import os
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
@@ -252,7 +251,7 @@ def _write_ah1(stream, filename):
             packer.pack_fstring(6, tr.stats.ah.station.channel)
 
         packer.pack_int(8)
-        packer.pack_fstring(8,tr.stats.ah.station.type)
+        packer.pack_fstring(8, tr.stats.ah.station.type)
         packer.pack_float(tr.stats.ah.station.latitude)
         packer.pack_float(tr.stats.ah.station.longitude)
         packer.pack_float(tr.stats.ah.station.elevation)
@@ -262,13 +261,13 @@ def _write_ah1(stream, filename):
         poles = tr.stats.ah.station.poles
         zeros = tr.stats.ah.station.zeros
 
-        #Poles and Zeros
+        # Poles and Zeros
         packer.pack_float(len(poles))
         packer.pack_float(0)
         packer.pack_float(len(zeros))
         packer.pack_float(0)
 
-        for _i in range(1,30):
+        for _i in range(1, 30):
             try:
                 r, i = poles[_i].real, poles[_i].imag
             except IndexError:
@@ -281,7 +280,7 @@ def _write_ah1(stream, filename):
             except IndexError:
                 r, i = 0, 0
             packer.pack_float(r)
-            packer.pack_float(i)           
+            packer.pack_float(i)
 
         # event info
         packer.pack_float(tr.stats.ah.event.latitude)
@@ -322,7 +321,7 @@ def _write_ah1(stream, filename):
         packer.pack_int(80)
         packer.pack_fstring(80, tr.stats.ah.record.comment)
         packer.pack_int(202)
-        packer.pack_fstring(202,tr.stats.ah.record.log)
+        packer.pack_fstring(202, tr.stats.ah.record.log)
 
         # # extras
         packer.pack_array(tr.stats.ah.extras, packer.pack_float)
@@ -342,16 +341,17 @@ def _write_ah1(stream, filename):
         return packer
 
     def _pack_trace_wout_ah_dict(trace, packer):
-        # Entry are packed in the same order as shown in _pack_trace_with_ah_dict
-        # The missing information is replaced with zeros
+        # Entry are packed in the same order as shown in
+        # _pack_trace_with_ah_dict .The missing information
+        # is replaced with zeros
         # station info
         packer.pack_int(6)
         packer.pack_fstring(6, tr.stats.station)
         packer.pack_int(6)
         packer.pack_fstring(6, tr.stats.channel)
         packer.pack_int(8)
-        packer.pack_fstring(8,'null')
-        # There is no information about latitude, longitude, elevation, 
+        packer.pack_fstring(8, 'null')
+        # There is no information about latitude, longitude, elevation,
         # gain and normalization in the basic stream object,  are set to 0
         packer.pack_float(0)
         packer.pack_float(0)
@@ -359,12 +359,12 @@ def _write_ah1(stream, filename):
         packer.pack_float(0)
         packer.pack_float(0)
 
-        #Poles and Zeros are not provided by stream object, are set to 0
-        for _i in range(0,30):
+        # Poles and Zeros are not provided by stream object, are set to 0
+        for _i in range(0, 30):
             packer.pack_float(0)
             packer.pack_float(0)
             packer.pack_float(0)
-            packer.pack_float(0)           
+            packer.pack_float(0)
 
         # event info
         packer.pack_float(0)
@@ -398,7 +398,9 @@ def _write_ah1(stream, filename):
         packer.pack_int(tr.stats.starttime.hour)
         packer.pack_int(tr.stats.starttime.minute)
 
-        starttime_second = float(str(tr.stats.starttime.second) + '.' + str(tr.stats.starttime.microsecond))
+        sec = tr.stats.starttime.second
+        msec = tr.stats.starttime.microsecond
+        starttime_second = float(str(sec) + '.' + str(msec))
         packer.pack_float(starttime_second)
 
         packer.pack_float(0)
@@ -424,16 +426,13 @@ def _write_ah1(stream, filename):
 
         return packer
 
-
-
     packer = xdrlib.Packer()
-
 
     for num, tr in enumerate(stream):
         if len(stream) == 1:
             ofilename = filename + ".AH"
         else:
-            ofilename = filename + "." +  num + ".AH"
+            ofilename = filename + "." + num + ".AH"
 
         packer.reset()
 
@@ -444,7 +443,6 @@ def _write_ah1(stream, filename):
 
         with open(ofilename, 'wb') as fh:
             fh.write(packer.get_buffer())
-
 
 
 def _read_ah2(filename):

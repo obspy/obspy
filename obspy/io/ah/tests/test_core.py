@@ -14,7 +14,6 @@ from obspy.io.ah.core import _is_ah, _read_ah, _write_ah1, _read_ah1
 from obspy.core.util import NamedTemporaryFile
 
 
-
 class CoreTestCase(unittest.TestCase):
     """
     AH (Ad Hoc) file test suite.
@@ -265,21 +264,23 @@ class CoreTestCase(unittest.TestCase):
 
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name + '.AH'
-            #write testfile
+            # write testfile
             _write_ah1(stream_orig, tmpfile)
-            #read again
+            # read again
             st = _read_ah1(tmpfile)
             self.assertEqual(len(st), 1)
             tr = st[0]
             ah = tr.stats.ah
             stats = tr.stats
             # stream header
-            self.assertEqual(stats.network, '')       
-            self.assertEqual(stats.station, 'ALE')       
-            self.assertEqual(stats.location, '')       
+            self.assertEqual(stats.network, '')
+            self.assertEqual(stats.station, 'ALE')
+            self.assertEqual(stats.location, '')
             self.assertEqual(stats.channel, 'VHZ')
-            self.assertEqual(stats.starttime, UTCDateTime(1994,6,9,0,40,45))
-            self.assertEqual(stats.endtime, UTCDateTime(1994,6,12,8,55,4,724522))
+            starttime = UTCDateTime(1994, 6, 9, 0, 40, 45)
+            endtime = UTCDateTime(1994, 6, 12, 8, 55, 4, 724522)
+            self.assertEqual(stats.starttime, starttime)
+            self.assertEqual(stats.endtime, endtime)
             self.assertAlmostEqual(stats.sampling_rate, 0.100000, 6)
             self.assertAlmostEqual(stats.delta, 9.999990, 6)
             self.assertEqual(stats.npts, 28887)
@@ -301,7 +302,8 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(ah.event.latitude, -13.872200012207031)
             self.assertEqual(ah.event.longitude, -67.51249694824219)
             self.assertEqual(ah.event.depth, 640000.0)
-            self.assertEqual(ah.event.origin_time, UTCDateTime(1994,6,9,0,33,16))
+            origintime = UTCDateTime(1994, 6, 9, 0, 33, 16)
+            self.assertEqual(ah.event.origin_time, origintime)
             self.assertEqual(ah.event.comment, 'null')
             # record
             self.assertEqual(ah.record.type, 1)
@@ -309,14 +311,16 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(tr.data.dtype, np.float64)
             self.assertAlmostEqual(ah.record.delta, 9.999990, 6)
             self.assertEqual(ah.record.max_amplitude, 9.265750885009766)
-            self.assertEqual(ah.record.start_time, UTCDateTime(1994, 6, 9, 0, 40, 45))
-            self.assertEqual(ah.record.comment, 'Comp azm=0.0,inc=-90.0; Disp (m);')
+            rstarttime = UTCDateTime(1994, 6, 9, 0, 40, 45)
+            self.assertEqual(ah.record.start_time, rstarttime)
+            comment = 'Comp azm=0.0,inc=-90.0; Disp (m);'
+            self.assertEqual(ah.record.comment, comment)
             self.assertEqual(ah.record.log, 'null')
             # data
             np.testing.assert_array_almost_equal(tr.data[:4], np.array([
                 -236., -242., -252., -262.]))
             np.testing.assert_array_almost_equal(tr.data[-4:], np.array([
-                101.,  106.,  107.,  104.]))      
+                101.,  106.,  107.,  104.]))
 
 
 def suite():
