@@ -46,7 +46,8 @@ class ResponseManager(object):
         :type exclude_provider: str or list of str
         :param exclude_privider:
         '''
-
+        self.responses = []
+        # print("init responsemanager: incoming text is a " + type(textblock).__name__)
         if isinstance(textblock, str):
             self.responses = self.parse_response(textblock)
         elif isinstance(textblock, RoutingResponse):
@@ -54,7 +55,8 @@ class ResponseManager(object):
         elif isinstance(textblock, (tuple, list)):
             self.responses = [v for v in textblock if isinstance(v, RoutingResponse)]
         if include_provider or exclude_provider:
-            self.responses = self.subset_requests(self.responses)
+            self.subset_requests(include_provider=include_provider,
+                                 exclude_provider=exclude_provider)
 
     def __iter__(self):
         return self.responses.__iter__()
@@ -64,30 +66,31 @@ class ResponseManager(object):
 
     def __str__(self):
         if not self.responses:
-            return "Empty ResponseManager"
-        responsestr = "\n  ".join([str(x) for x in self.responses])
-        towrite = "ResponseManager with " + str(len(self)) + " items:\n" +responsestr
+            return "Empty " + type(self).__name__
+        responsestr = "\n".join([str(x) for x in self.responses])
+        towrite = type(self).__name__ + " with " + str(len(self)) + " items:\n" +responsestr
         return towrite
 
     def parse_response(self, parameter_list):
         '''create a list of RoutingResponse objects, one for each provider in response'''
         raise NotImplementedError()
 
-    def get_request(self, code, get_multiple=False):
+    def get_routing_response(self, code, get_multiple=False):
         '''retrieve the response for a particular provider, by code
 
         Set up sample data:
+        >>> sed2 = RoutingResponse('SED')
+        >>> sed2.add_request_line("some_request")
         >>> fedresps = [RoutingResponse('IRIS'), RoutingResponse('SED'),
-        ...             RoutingResponse('RESIF'), RoutingResponse('SED')]
+        ...             RoutingResponse('RESIF'), sed2]
+        >>> fedresps = ResponseManager(fedresps)
 
         Test methods that return multiple RoutingResponse objects
-        >>> get_datacenter_request(fedresps, 'SED')
-        SED
-        <BLANKLINE>
-        >>> get_request(fedresps, 'SED', get_multiple=True)
-        [SED
-        , SED
-        ]
+        >>> print(str(fedresps.get_routing_response('SED')))
+        SED, with 0 lines
+        >>> ml = fedresps.get_routing_response('SED', get_multiple=True)
+        >>> print ([str(x) for x in ml])
+        ['SED, with 0 lines', 'SED, with 1 line']
 
         :type code: str
         :param code: recognized key string for recognized server. see 
@@ -107,24 +110,27 @@ class ResponseManager(object):
         '''provide more flexibility by specifying which datacenters to include or exclude
 
         Set up sample data:
-        >>> fedresps = [RoutingResponse('IRIS'), RoutingResponse('SED'),
+        >>> rawdata = [RoutingResponse('IRIS'), RoutingResponse('SED'),
         ...             RoutingResponse('RESIF')]
-
-        >>> unch = subset_requests(fedresps)
-        >>> print(".".join([dc.code for dc in unch]))
+        >>> fedresps = ResponseManager(rawdata)
+        >>> print(".".join([dc.code for dc in fedresps]))
         IRIS.SED.RESIF
 
         Test methods that return multiple RoutingResponse objects
-        >>> no_sed_v1 = subset_requests(fedresps, exclude_provider='SED')
-        >>> no_sed_v2 = subset_requests(fedresps, include_provider=['IRIS', 'RESIF'])
+        >>> no_sed_v1 = ResponseManager(rawdata)
+        >>> no_sed_v1.subset_requests(exclude_provider='SED')
         >>> print(".".join([dc.code for dc in no_sed_v1]))
         IRIS.RESIF
+        >>> no_sed_v2 = ResponseManager(rawdata)
+        >>> no_sed_v2.subset_requests(include_provider=['IRIS', 'RESIF'])
         >>> ".".join([x.code for x in no_sed_v1]) == ".".join([x.code for x in no_sed_v2])
         True
 
         Test methods that return single RoutingResponse (still in a container, though)
-        >>> only_sed_v1 = subset_requests(fedresps, exclude_provider=['IRIS', 'RESIF'])
-        >>> only_sed_v2 = subset_requests(fedresps, include_provider='SED')
+        >>> only_sed_v1 = ResponseManager(rawdata)
+        >>> only_sed_v1.subset_requests(exclude_provider=['IRIS', 'RESIF'])
+        >>> only_sed_v2 = ResponseManager(rawdata)
+        >>> only_sed_v2.subset_requests(include_provider='SED')
         >>> print(".".join([dc.code for dc in only_sed_v1]))
         SED
         >>> ".".join([x.code for x in only_sed_v1]) == ".".join([x.code for x in only_sed_v2])
@@ -144,14 +150,14 @@ class ResponseManager(object):
         '''
         query clients in parallel
         :type target_process: str
-        :param target_process: see RoutingResponse.get_request_fn for details
+        :param target_process: see RoutingResponse.get_routing_response_fn for details
         '''
 
         output = mp.Queue()
         failed = mp.Queue()
         # Setup process for each provider
         processes = [mp.Process(target=req.get_request_fn(target_process),
-                                args=(output, failed, kwargs))
+                                name=req.code, args=(output, failed))
                      for req in self]
 
         # run
@@ -169,7 +175,7 @@ class ResponseManager(object):
         retry = failed.get() if not failed.empty() else None
         while not failed.empty():
             retry.extend(failed.get())
-        
+
         if retry:
             retry = '\n'.join(retry)
         return data, retry

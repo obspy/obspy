@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''fedcatalog_response_parser conatains the FederatedResponse class, with the supporting parsing
+'''
+fedcatalog_response_parser conatains the FederatedResponse class, with the supporting parsing
 routines'''
 from __future__ import print_function
 import sys
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.header import FDSNException
 #from obspy.clients.fdsn.routers.fedcatalog_routing_client import FederatedResponseManager
-from .routing_response import RoutingResponse
+from obspy.clients.fdsn.routers.routing_response import RoutingResponse
 
 class FederatedResponse(RoutingResponse):
     '''
@@ -69,7 +70,10 @@ class FederatedResponse(RoutingResponse):
         :param request_lines: string or RequestLine that looks something like:
         NET STA LOC CHA yyyy-mm-ddTHH:MM:SS yyyy-mm-ddTHH:MM:SS
         '''
-        self.request_lines.append(str(request_line))
+        if isinstance(request_line, (str, RequestLine)):
+            self.request_lines.append(str(request_line))  # no returns expected!
+        elif isinstance(request_line, (list, tuple)):
+            self.request_lines.extend([str(line) for line in request_line])
 
     def matched_and_unmatched(self, templates, level):
         '''
@@ -82,6 +86,10 @@ class FederatedResponse(RoutingResponse):
         >>> fedresp.add_request_line(["AB STA1 00 BHZ 2005-01-01 2005-03-24",
         ...                            "AB STA2 00 BHZ 2005-01-01 2005-03-24",
         ...                            "AB STA1 00 EHZ 2005-01-01 2005-03-24"])
+        >>> print(fedresp.text("STATIONSERVICE"))
+        AB STA1 00 BHZ 2005-01-01 2005-03-24
+        AB STA2 00 BHZ 2005-01-01 2005-03-24
+        AB STA1 00 EHZ 2005-01-01 2005-03-24
         >>> m, unm = fedresp.matched_and_unmatched(["AB.STA1"], "station")
         >>> print(m)
         ['AB STA1 00 BHZ 2005-01-01 2005-03-24', 'AB STA1 00 EHZ 2005-01-01 2005-03-24']
@@ -100,7 +108,7 @@ class FederatedResponse(RoutingResponse):
         converter = converter_choices[level]
         matched = [line for line in self.request_lines if converter(line.split()) in templates]
         unmatched = [line for line in self.request_lines if line not in matched]
-        return (matched, unmatched)
+        return matched, unmatched
 
     def text(self, target_service):
         '''
@@ -130,10 +138,10 @@ class FederatedResponse(RoutingResponse):
             line_or_lines = " line"
         return self.code + ", with " + str(len(self)) + line_or_lines
 
-    def client(self, **kwargs):
+    def client(self):
         '''returns appropriate obspy.clients.fdsn.clients.Client for request'''
         try:
-            client = Client(self.code, **kwargs)
+            client = Client(self.code)
         except Exception as ex:
             print("Problem assigning client " + self.code, file=sys.stderr)
             print(ex, file=sys.stderr)
@@ -145,20 +153,22 @@ class FederatedResponse(RoutingResponse):
         get function used to query the service
         :param target_service: string containing either 'DATASELECTSERVICE' or 'STATIONSERVICE'
         '''
-        fun = {"waveform": self.submit_waveform_request,
-               "station": self.submit_station_request}
+        fun = {"DATASELECTSERVICE": self.submit_waveform_request,
+               "STATIONSERVICE": self.submit_station_request}
+        if not(target_service == 'waveform' or target_service == 'STATIONSERVICE'):
+            raise ValueError("Expected either waveform or station, but got {0}", target_service)
         return fun.get(target_service)
 
-    def submit_waveform_request(self, output, failed, **kwargs):
+    def submit_waveform_request(self, output, failed):
         '''
         function used to query service
         :param output: place where retrieved data go
         :param failed: place where list of unretrieved bulk request lines go
         '''
         try:
-            client = self.client(**kwargs)
+            client = self.client()
             print("requesting data from:" + self.code + " : " + self.services["DATACENTER"])
-            data = client.get_waveforms_bulk(bulk=self.text("DATASELECTSERVICE"), **kwargs)
+            data = client.get_waveforms_bulk(bulk=self.text("DATASELECTSERVICE"))
         except FDSNException:
             failed.put(self.request_lines)
             # raise
@@ -166,7 +176,7 @@ class FederatedResponse(RoutingResponse):
             print(data)
             output.put(data)
 
-    def submit_station_request(self, output, failed, **kwargs):
+    def submit_station_request(self, output, failed):
         '''
         function used to query service
         :param self: FederatedResponse
@@ -174,9 +184,9 @@ class FederatedResponse(RoutingResponse):
         :param failed: place where list of unretrieved bulk request lines go
         '''
         try:
-            client = self.client(**kwargs)
+            client = self.client()
             print("requesting data from:" + self.code + " : " + self.services["DATACENTER"])
-            data = client.get_stations_bulk(bulk=self.text("STATIONSERVICE"), **kwargs)
+            data = client.get_stations_bulk(bulk=self.text("STATIONSERVICE"))
         except FDSNException:# as ex:
             failed.put(self.request_lines)
         else:

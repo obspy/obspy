@@ -1,5 +1,6 @@
 from obspy.clients.fdsn import FederatedClient, Client
 import requests
+# DO NOT USE THIS.. IT IS A TEMPORARY FILE HOLDING IDEAS ONLY
 def get_station_bulk(object):
     '''Retrieve station data via fedcatalog'''
     client = FederatedClient("IRIS")
