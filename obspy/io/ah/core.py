@@ -257,7 +257,10 @@ def _write_ah1(stream, filename):
         packer.pack_int(CODESIZE)
         packer.pack_fstring(CODESIZE, tr.stats.ah.station.code)
         packer.pack_int(CHANSIZE)
-        packer.pack_fstring(CHANSIZE, tr.stats.ah.station.channel)
+        try:
+            packer.pack_fstring(CHANSIZE, tr.stats.channel)
+        except:
+            packer.pack_fstring(CHANSIZE, tr.stats.ah.station.channel)
 
         packer.pack_int(STYPESIZE)
         packer.pack_fstring(STYPESIZE,tr.stats.ah.station.type)
