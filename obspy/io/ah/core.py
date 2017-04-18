@@ -240,30 +240,19 @@ def _write_ah1(stream, filename):
     if filename.endswith('AH') or filename.endswith('ah'):
         filename = os.path.splitext(filename)[0]
 
-    CODESIZE  = 6
-    CHANSIZE  = 6
-    STYPESIZE = 8
-    COMSIZE   = 80
-    TYPEMIN   = 1
-    TYPEMAX   = 6
-    LOGSIZE   = 202
-    LOGENT    = 10
-    NEXTRAS   = 21
-    NOCALPTS  = 30
-
     def _pack_trace_with_ah_dict(trace, packer):
 
         # station info
-        packer.pack_int(CODESIZE)
-        packer.pack_fstring(CODESIZE, tr.stats.ah.station.code)
-        packer.pack_int(CHANSIZE)
+        packer.pack_int(6)
+        packer.pack_fstring(6, tr.stats.ah.station.code)
+        packer.pack_int(6)
         try:
-            packer.pack_fstring(CHANSIZE, tr.stats.channel)
+            packer.pack_fstring(6, tr.stats.channel)
         except:
-            packer.pack_fstring(CHANSIZE, tr.stats.ah.station.channel)
+            packer.pack_fstring(6, tr.stats.ah.station.channel)
 
-        packer.pack_int(STYPESIZE)
-        packer.pack_fstring(STYPESIZE,tr.stats.ah.station.type)
+        packer.pack_int(8)
+        packer.pack_fstring(8,tr.stats.ah.station.type)
         packer.pack_float(tr.stats.ah.station.latitude)
         packer.pack_float(tr.stats.ah.station.longitude)
         packer.pack_float(tr.stats.ah.station.elevation)
@@ -313,8 +302,8 @@ def _write_ah1(stream, filename):
             packer.pack_int(0)
             packer.pack_float(0)
 
-        packer.pack_int(COMSIZE)
-        packer.pack_fstring(COMSIZE, tr.stats.ah.event.comment)
+        packer.pack_int(80)
+        packer.pack_fstring(80, tr.stats.ah.event.comment)
 
         # record info
         dtype = tr.stats.ah.record.type
@@ -330,10 +319,10 @@ def _write_ah1(stream, filename):
         packer.pack_int(tr.stats.ah.record.start_time.minute)
         packer.pack_float(tr.stats.ah.record.start_time.second)
         packer.pack_float(tr.stats.ah.record.abscissa_min)
-        packer.pack_int(COMSIZE)
-        packer.pack_fstring(COMSIZE, tr.stats.ah.record.comment)
-        packer.pack_int(LOGSIZE)
-        packer.pack_fstring(LOGSIZE,tr.stats.ah.record.log)
+        packer.pack_int(80)
+        packer.pack_fstring(80, tr.stats.ah.record.comment)
+        packer.pack_int(202)
+        packer.pack_fstring(202,tr.stats.ah.record.log)
 
         # # extras
         packer.pack_array(tr.stats.ah.extras, packer.pack_float)
@@ -356,12 +345,12 @@ def _write_ah1(stream, filename):
         # Entry are packed in the same order as shown in _pack_trace_with_ah_dict
         # The missing information is replaced with zeros
         # station info
-        packer.pack_int(CODESIZE)
-        packer.pack_fstring(CODESIZE, tr.stats.station)
-        packer.pack_int(CHANSIZE)
-        packer.pack_fstring(CHANSIZE, tr.stats.channel)
-        packer.pack_int(STYPESIZE)
-        packer.pack_fstring(STYPESIZE,'null')
+        packer.pack_int(6)
+        packer.pack_fstring(6, tr.stats.station)
+        packer.pack_int(6)
+        packer.pack_fstring(6, tr.stats.channel)
+        packer.pack_int(8)
+        packer.pack_fstring(8,'null')
         # There is no information about latitude, longitude, elevation, 
         # gain and normalization in the basic stream object,  are set to 0
         packer.pack_float(0)
@@ -388,8 +377,8 @@ def _write_ah1(stream, filename):
         packer.pack_int(0)
         packer.pack_float(0)
 
-        packer.pack_int(COMSIZE)
-        packer.pack_fstring(COMSIZE, 'null')
+        packer.pack_int(80)
+        packer.pack_fstring(80, 'null')
 
         # record info
         dtype = type(tr.data[0])
@@ -413,10 +402,10 @@ def _write_ah1(stream, filename):
         packer.pack_float(starttime_second)
 
         packer.pack_float(0)
-        packer.pack_int(COMSIZE)
-        packer.pack_fstring(COMSIZE, 'null')
-        packer.pack_int(LOGSIZE)
-        packer.pack_fstring(LOGSIZE, 'null')
+        packer.pack_int(80)
+        packer.pack_fstring(80, 'null')
+        packer.pack_int(202)
+        packer.pack_fstring(202, 'null')
 
         # # extras
         packer.pack_array(np.zeros(21).tolist(), packer.pack_float)
