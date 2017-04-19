@@ -746,102 +746,11 @@ class SACTrace(object):
 
     """ + HD.HEADER_DOCSTRING
 
-    def __init__(self, leven=True, delta=1.0, b=0.0, e=0.0, iztype='ib',
-                 nvhdr=6, npts=0, iftype='itime', nzyear=1970, nzjday=1,
-                 nzhour=0, nzmin=0, nzsec=0, nzmsec=0, lcalda=False,
-                 lpspol=True, lovrok=True, internal0=2.0, data=None, **kwargs):
-        """
-        Initialize a SACTrace object using header key-value pairs and a
-        numpy.ndarray for the data, both optional.
-
-        ..rubric:: Example
-
-        >>> sac = SACTrace(nzyear=1995, nzmsec=50, data=np.arange(100))
-        >>> print(sac)  # doctest: +NORMALIZE_WHITESPACE
-        Reference Time = 01/01/1995 (001) 00:00:00.050000
-           iztype IB: begin time
-        b          = 0.0
-        delta      = 1.0
-        e          = 99.0
-        iftype     = itime
-        internal0  = 2.0
-        iztype     = ib
-        lcalda     = False
-        leven      = True
-        lovrok     = True
-        lpspol     = True
-        npts       = 100
-        nvhdr      = 6
-        nzhour     = 0
-        nzjday     = 1
-        nzmin      = 0
-        nzmsec     = 50
-        nzsec      = 0
-        nzyear     = 1995
-
-        """
-        # The Plan:
-        # 1. Build the default header dictionary and update with provided
-        #    values.
-        # 2. Convert header dict to arrays (util.dict_to_header_arrays
-        #    initializes the arrays and fills in without checking.
-        # 3. set the _h[fis] and data arrays on self.
-
-        # 1.
-        # build the required header from provided or default values
-        header = {'leven': leven, 'npts': npts, 'delta': delta, 'b': b, 'e': e,
-                  'iztype': iztype, 'nvhdr': nvhdr, 'iftype': iftype,
-                  'nzyear': nzyear, 'nzjday': nzjday, 'nzhour': nzhour,
-                  'nzmin': nzmin, 'nzsec': nzsec, 'nzmsec': nzmsec,
-                  'lcalda': lcalda, 'lpspol': lpspol, 'lovrok': lovrok,
-                  'internal0': internal0}
-
-        # combine header with remaining non-required args.
-        # user can put non-SAC key:value pairs into the header, but they're
-        # ignored on write.
-        header.update(kwargs)
-
-        # -------------------------- DATA ARRAY -------------------------------
-        if data is None:
-            # this is like "headonly=True"
-            pass
-        else:
-            if not isinstance(data, np.ndarray):
-                raise TypeError("data needs to be a numpy.ndarray")
-            else:
-                # Only copy the data if they are not of the required type
-                # XXX: why require little endian instead of native byte order?
-                # data = np.require(data, native_str('<f4'))
-                pass
-
-        # --------------------------- HEADER ARRAYS ---------------------------
-        # 2.
-        # TODO: this is done even when we're reading a file.
-        #   if it's too much overhead, it may need to change
-
-        # swap enum names for integer values in the header dictionary
-        header = _ut.enum_string_to_int(header)
-
-        # XXX: will these always be little endian?
-        hf, hi, hs = _io.dict_to_header_arrays(header)
-
-        # we now have data and headers, either default or provided.
-
-        # 3.
-        # this completely sidesteps any checks provided by class properties
-        self._hf = hf
-        self._hi = hi
-        self._hs = hs
-        self.data = data
-
-        self._set_distances()
-
-    # ---------------------------- SET UP HEADERS -----------------------------
-    # SAC header values are set up as attributes, with getters and setters
-    # format: header = property(getter_function, setter_function)
+    # ----------------------------------- HEADERS -----------------------------
+    # SAC header values are defined as managed attributes, either as
+    # descriptors or as properties, with getters and setters.
     #
-    # Attributes are outside of __init__ b/c properties are just instructions
-    # about how to retrieve attributes (getters/setters), and therefore shared
+    # Managed attributes are defined at the class leval, and therefore shared
     # across all instances, not attribute data themselves.
     #
     # This section looks ugly, but it allows for the following:
@@ -849,9 +758,7 @@ class SACTrace(object):
     # 2. The underlying header array structure is retained, for quick writing.
     # 3. Header access looks like simple attribute-access syntax.
     #    Looks funny to read here, but natural to use.
-
-    # NOTE: To make something read-only, omit second argument to "property".
-
+    #
     # FLOATS
     delta = FloatHeader('delta')
     depmin = DataHeader('depmin', min)
@@ -953,6 +860,97 @@ class SACTrace(object):
     knetwk = StringHeader('knetwk')
     kdatrd = StringHeader('kdatrd')
     kinst = StringHeader('kinst')
+
+    def __init__(self, leven=True, delta=1.0, b=0.0, e=0.0, iztype='ib',
+                 nvhdr=6, npts=0, iftype='itime', nzyear=1970, nzjday=1,
+                 nzhour=0, nzmin=0, nzsec=0, nzmsec=0, lcalda=False,
+                 lpspol=True, lovrok=True, internal0=2.0, data=None, **kwargs):
+        """
+        Initialize a SACTrace object using header key-value pairs and a
+        numpy.ndarray for the data, both optional.
+
+        ..rubric:: Example
+
+        >>> sac = SACTrace(nzyear=1995, nzmsec=50, data=np.arange(100))
+        >>> print(sac)  # doctest: +NORMALIZE_WHITESPACE
+        Reference Time = 01/01/1995 (001) 00:00:00.050000
+           iztype IB: begin time
+        b          = 0.0
+        delta      = 1.0
+        e          = 99.0
+        iftype     = itime
+        internal0  = 2.0
+        iztype     = ib
+        lcalda     = False
+        leven      = True
+        lovrok     = True
+        lpspol     = True
+        npts       = 100
+        nvhdr      = 6
+        nzhour     = 0
+        nzjday     = 1
+        nzmin      = 0
+        nzmsec     = 50
+        nzsec      = 0
+        nzyear     = 1995
+
+        """
+        # The Plan:
+        # 1. Build the default header dictionary and update with provided
+        #    values.
+        # 2. Convert header dict to arrays (util.dict_to_header_arrays
+        #    initializes the arrays and fills in without checking.
+        # 3. set the _h[fis] and data arrays on self.
+
+        # 1.
+        # build the required header from provided or default values
+        header = {'leven': leven, 'npts': npts, 'delta': delta, 'b': b, 'e': e,
+                  'iztype': iztype, 'nvhdr': nvhdr, 'iftype': iftype,
+                  'nzyear': nzyear, 'nzjday': nzjday, 'nzhour': nzhour,
+                  'nzmin': nzmin, 'nzsec': nzsec, 'nzmsec': nzmsec,
+                  'lcalda': lcalda, 'lpspol': lpspol, 'lovrok': lovrok,
+                  'internal0': internal0}
+
+        # combine header with remaining non-required args.
+        # user can put non-SAC key:value pairs into the header, but they're
+        # ignored on write.
+        header.update(kwargs)
+
+        # -------------------------- DATA ARRAY -------------------------------
+        if data is None:
+            # this is like "headonly=True"
+            pass
+        else:
+            if not isinstance(data, np.ndarray):
+                raise TypeError("data needs to be a numpy.ndarray")
+            else:
+                # Only copy the data if they are not of the required type
+                # XXX: why require little endian instead of native byte order?
+                # data = np.require(data, native_str('<f4'))
+                pass
+
+        # --------------------------- HEADER ARRAYS ---------------------------
+        # 2.
+        # TODO: this is done even when we're reading a file.
+        #   if it's too much overhead, it may need to change
+
+        # swap enum names for integer values in the header dictionary
+        header = _ut.enum_string_to_int(header)
+
+        # XXX: will these always be little endian?
+        hf, hi, hs = _io.dict_to_header_arrays(header)
+
+        # we now have data and headers, either default or provided.
+
+        # 3.
+        # this completely sidesteps any checks provided by class properties
+        self._hf = hf
+        self._hi = hi
+        self._hs = hs
+        self.data = data
+
+        self._set_distances()
+
 
     @property
     def _header(self):
