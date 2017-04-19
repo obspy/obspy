@@ -5,10 +5,112 @@ fedcatalog_response_parser conatains the FederatedResponse class, with the suppo
 routines'''
 from __future__ import print_function
 import sys
+from threading import Lock
+import requests
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.header import FDSNException
-#from obspy.clients.fdsn.routers.fedcatalog_routing_client import FederatedResponseManager
 from obspy.clients.fdsn.routers.routing_response import RoutingResponse
+
+class FedcatalogProviderMetadata(object):
+    '''
+    Class containing datacenter details retrieved from the fedcatalog service
+    keys: name, website, lastupdate, serviceURLs {servicename:url,...}, location, description
+
+    hopefully threadsafe
+    '''
+    def __init__(self):
+        self.provider_metadata = None
+        self.provider_index = None
+        self.lock = Lock()
+        self.failed_refreshes = 0
+
+    def get_names(self):
+        '''
+        return list of provider names
+        '''
+        with self.lock:
+            if not self.provider_metadata:
+                self.refresh()
+        if not self.provider_index:
+            return None
+        else:
+            return self.provider_index.keys()
+
+    def get(self, name, detail=None):
+        '''
+        get a datacenter property
+
+        :type name: str
+        :param name: provider name. such as IRISDMC, ORFEUS, etc.
+        :type detail: str
+        :param detail: property of interest.  eg, one of ('name', 'website', 'lastupdate',
+        serviceURLs', 'location', 'description').  if no detail is provided, then the entire dict
+        for the requeted datacenter will be provided
+        '''
+        with self.lock:
+            if not self.provider_metadata:
+                self.refresh()
+        if not self.provider_metadata:
+            return None
+        else:
+            if detail:
+                return self.provider_metadata[self.provider_index[name]][detail]
+            else:
+                return self.provider_metadata[self.provider_index[name]]
+
+    def refresh(self, force=False):
+        '''
+        retrieve provider profile from fedcatalog service
+
+        >>> fpm = FedcatalogProviderMetadata()
+        >>> # fpm.refresh(force=True)
+        >>> fpm.get_names() #doctest: +ELLIPSIS
+        dict_keys(['...'])
+
+        :type force: bool
+        :param force: attempt to retrieve data even if too many failed attempts
+        '''
+        if force or self.failed_refreshes < 4:
+            try:
+                req = requests.get('https://service.iris.edu/irisws/fedcatalog/1/datacenters',
+                                   verify=False)
+                self.provider_metadata = req.json()
+                self.provider_index = {v['name']:k for k, v in enumerate(self.provider_metadata)}
+                self.failed_refreshes = 0
+            except:
+                print("Unable to update provider profiles from fedcatalog service", file=sys.stderr)
+                self.failed_refreshes += 1
+        else:
+            print("Unable to retrieve provider profiles from fedcatalog service after {0} attempts",
+                  self.failed_refreshes, file=sys.stderr)
+            # problem updating
+
+        #yuck. manually account for differences between IRIS output and OBSPY expected
+        self.provider_index["IRIS"] =self.provider_index["IRISDMC"]
+        self.provider_index["GFZ"] =self.provider_index["GEOFON"]
+        self.provider_index["ETH"] =self.provider_index["SED"]
+        self.provider_index["USP"] =self.provider_index["USPSC"]
+
+    def pretty(self, name):
+        '''
+        return nice text representation of service without too much details
+        >>> fpm = FedcatalogProviderMetadata()
+        >>> print(fpm.pretty("ORFEUS"))
+        ORFEUS
+        The ORFEUS Data Center
+        de Bilt, the Netherlands
+        http://www.orfeus-eu.org
+        Apr 19, 2017 5:06:20 AM
+        >>> print(fpm.pretty("IRIS") == fpm.pretty("IRISDMC"))
+        True
+        '''
+        self.refresh()
+        return '\n'.join(self.get(name, k) for k in ["name", "description", "location", "website",
+                                                     "lastUpdate"])
+
+
+PROVIDER_METADATA = FedcatalogProviderMetadata()
+#PROVIDER_METADATA.refresh(force=True)
 
 class FederatedResponse(RoutingResponse):
     '''
@@ -167,7 +269,8 @@ class FederatedResponse(RoutingResponse):
         '''
         try:
             client = self.client()
-            print("requesting data from:" + self.code + " : " + self.services["DATACENTER"])
+            print("requesting data from:" + self.code)
+            #print("requesting data from:" + self.code + " : " + self.services["DATACENTER"])
             data = client.get_waveforms_bulk(bulk=self.text("DATASELECTSERVICE"))
         except FDSNException:
             failed.put(self.request_lines)
@@ -185,12 +288,13 @@ class FederatedResponse(RoutingResponse):
         '''
         try:
             client = self.client()
+            print(PROVIDER_METADATA.get(self.code,'description'))
             print("requesting data from:" + self.code + " : " + self.services["DATACENTER"])
+            print(PROVIDER_METADATA.pretty(self.code))
             data = client.get_stations_bulk(bulk=self.text("STATIONSERVICE"))
         except FDSNException:# as ex:
             failed.put(self.request_lines)
         else:
-            print(data)
             output.put(data)
 
 

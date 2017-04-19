@@ -12,90 +12,12 @@ FDSN Web service client for ObsPy.
 from __future__ import print_function
 import sys
 from collections import OrderedDict
-from threading import Lock
 import requests
 from requests.exceptions import (HTTPError, Timeout)
 from obspy.clients.fdsn.routers.routing_client import (RoutingClient, ResponseManager)
 from obspy.clients.fdsn.routers.fedcatalog_response_parser import(FederatedResponse, PreParse,
                                                                   RequestLine, DatacenterItem)
 
-class FedcatalogProviderMetadata(object):
-    '''
-    Class containing datacenter details retrieved from the fedcatalog service
-    keys: name, website, lastupdate, serviceURLs {servicename:url,...}, location, description
-
-    hopefully threadsafe
-    '''
-    def __init__(self):
-        self.provider_metadata = None
-        self.provider_index = None
-        self.lock = Lock()
-        self.failed_refreshes = 0
-
-    def get_names(self):
-        '''
-        return list of provider names
-        '''
-        with self.lock:
-            if not self.provider_metadata:
-                self.refresh()
-        if not self.provider_index:
-            return None
-        else:
-            return self.provider_index.keys()
-
-    def get(self, name, detail=None):
-        '''
-        get a datacenter property
-
-        :type name: str
-        :param name: provider name. such as IRISDMC, ORFEUS, etc.
-        :type detail: str
-        :param detail: property of interest.  eg, one of ('name', 'website', 'lastupdate',
-        serviceURLs', 'location', 'description').  if no detail is provided, then the entire dict
-        for the requeted datacenter will be provided
-        '''
-        with self.lock:
-            if not self.provider_metadata:
-                self.refresh()
-        if not self.provider_metadata:
-            return None
-        else:
-            if detail:
-                return self.provider_metadata[self.provider_index[name]][detail]
-            else:
-                return self.provider_metadata[self.provider_index[name]]
-
-    def refresh(self, force=False):
-        '''
-        retrieve provider profile from fedcatalog service
-
-        :type force: bool
-        :param force: attempt to retrieve data even if too many failed attempts
-        '''
-        if force or self.failed_refreshes < 4:
-            try:
-                req = requests.get('https://service.iris.edu/irisws/fedcatalog/1/datacenters',
-                                   verify=False)
-                self.provider_metadata = req.json()
-                self.provider_index = {v['name']:k for k, v in enumerate(self.provider_metadata)}
-                self.failed_refreshes = 0
-            except:
-                print("Unable to update provider profiles from fedcatalog service", file=sys.stderr)
-                self.failed_refreshes += 1
-        else:
-            print("Unable to retrieve provider profiles from fedcatalog service after {0} attempts",
-                  self.failed_refreshes, file=sys.stderr)
-            # problem updating
-
-    def pretty(self, name):
-        '''
-        return nice text representation of service without too much details
-        '''
-        return '\n'.join(self.get(name, k) for k in ["name", "description", "location", "website",
-                                                     "lastUpdate"])
-
-PROVIDER_METADATA = FedcatalogProviderMetadata()
 
 def query_fedcatalog(targetservice, params=None, bulk=None, argdict=None):
     '''
@@ -285,7 +207,12 @@ class FederatedClient(RoutingClient):
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> client = FederatedClient()
         >>> INV = client.get_stations(network="A?", station="OK*", channel="?HZ", level="station",
-        ...                    endtime="2016-12-31")
+        ...                    endtime="2016-12-31")  #doctest: +ELLIPSIS
+        requesting data from:IRIS
+        IRISDMC
+        The IRIS Data Management Center
+        Seattle, WA, USA
+        http://ds.iris.edu...
         '''
 
         try:
@@ -308,7 +235,8 @@ class FederatedClient(RoutingClient):
             exclude_provider=exclude_provider)
 
         # prepare the file if one is specified
-        inv, _ = frm.parallel_service_query("STATIONSERVICE", **kwargs)
+        inv, _ = frm.serial_service_query("STATIONSERVICE")
+        #inv, _ = frm.parallel_service_query("STATIONSERVICE")
 
         # level = kwargs["level"]
         # successful, failed = request_exists_in_inventory(inv, datac.request_lines, level)

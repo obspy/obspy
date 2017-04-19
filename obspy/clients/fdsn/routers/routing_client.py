@@ -5,6 +5,8 @@ FDSN Web service client for ObsPy.
 """
 
 from __future__ import print_function
+import sys
+import queue
 import multiprocessing as mp
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.routers.routing_response import RoutingResponse
@@ -146,6 +148,28 @@ class ResponseManager(object):
         elif exclude_provider:
             self.responses = [resp for resp in self.responses if resp.code not in exclude_provider]
 
+    def serial_service_query(self, target_process, **kwargs):
+        output = queue.Queue(maxsize=len(self))
+        failed = queue.Queue(maxsize=len(self))
+        for req in self:
+            fn = req.get_request_fn(target_process)
+            fn(output, failed)
+
+        data = None
+        while not output.empty():
+            if not data:
+                data = output.get()
+            else:
+                data += output.get()
+
+        retry = []
+        while not failed.empty():
+            retry.extend(failed.get())
+
+        if retry:
+            retry = '\n'.join(retry)
+        return data, retry
+
     def parallel_service_query(self, target_process, **kwargs):
         '''
         query clients in parallel
@@ -153,8 +177,8 @@ class ResponseManager(object):
         :param target_process: see RoutingResponse.get_routing_response_fn for details
         '''
 
-        output = mp.Queue()
-        failed = mp.Queue()
+        output = mp.Queue(maxsize=len(self))
+        failed = mp.Queue(maxsize=len(self))
         # Setup process for each provider
         processes = [mp.Process(target=req.get_request_fn(target_process),
                                 name=req.code, args=(output, failed))
@@ -168,11 +192,14 @@ class ResponseManager(object):
         for p in processes:
             p.join()
 
-        data = output.get() if not output.empty() else None
+        data = None
         while not output.empty():
-            data += output.get()
+            if not data:
+                data = output.get()
+            else:
+                data += output.get()
 
-        retry = failed.get() if not failed.empty() else None
+        retry = []
         while not failed.empty():
             retry.extend(failed.get())
 
