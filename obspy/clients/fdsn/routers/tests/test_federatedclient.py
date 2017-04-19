@@ -28,7 +28,7 @@ import requests
 from obspy import UTCDateTime, read, read_inventory
 #from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.clients.fdsn.routers import Federatedclient
+from obspy.clients.fdsn.routers import FederatedClient
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT,
                                        FDSNException, FDSNRedirectException,
                                        FDSNNoDataException)
