@@ -572,31 +572,32 @@ class StringHeader(SACHeader):
             instance._hs[HD.STRHDRS.index(self.name)] = value
 
 
-# Factory for functions of .data (min, max, mean, len)
-def _make_data_func(func, hdr):
-    # returns a method that returns the value of func(self.data), or the
-    # corresponding array header value, if data is None
-    def do_data_func(self):
-        try:
-            value = func(self.data)
-            if not isinstance(value, int):
-                value = float(value)
-        except TypeError:
-            # data is None, get the value from header
-            try:
-                value = float(self._hf[HD.FLOATHDRS.index(hdr)])
-                null = HD.FNULL
-            except ValueError:
-                # hdr is 'npts', the only integer
-                # XXX: this also trip if a data-centric header is misspelled?
-                value = int(self._hi[HD.INTHDRS.index(hdr)])
-                null = HD.INULL
-            if value == null:
-                value = None
-        return value
-    return do_data_func
+# Headers for functions of .data (min, max, mean, len)
+class DataHeader(SACHeader):
+    def __init__(self, name, func):
+        self.func = func
+        super(DataHeader, self).__init__(name)
 
-# TODO: a data setter the requires a float32 array
+    def __get__(self, instance, instance_type):
+        if instance is None:
+            value = self
+        else:
+            try:
+                value = self.func(instance.data)
+                # convert to native Python types
+                if self.name in HD.FLOATHDRS:
+                    value = float(value)
+                elif self.name in HD.INTHDRS:
+                    value = int(value)
+            except TypeError:
+                # instance.data is None, get value from header
+                if self.name in HD.FLOATHDRS:
+                    value = instance._hf[HD.FLOATHDRS.index(self.name)].item()
+                    value = None if value == HD.FNULL else value
+                elif self.name in HD.INTHDRS:
+                    value = instance._hi[HD.INTHDRS.index(self.name)].item()
+                    value = None if value == HD.INULL else value
+        return value
 
 
 # OTHER GETTERS/SETTERS
@@ -853,8 +854,8 @@ class SACTrace(object):
 
     # FLOATS
     delta = FloatHeader('delta')
-    depmin = property(_make_data_func(min, 'depmin'), doc=HD.DOC['depmin'])
-    depmax = property(_make_data_func(max, 'depmax'), doc=HD.DOC['depmax'])
+    depmin = DataHeader('depmin', min)
+    depmax = DataHeader('depmax', max)
     scale = FloatHeader('scale')
     odelta = FloatHeader('odelta')
     b = RelativeTimeHeader('b')
@@ -895,7 +896,7 @@ class SACTrace(object):
     az = FloatHeader('az')
     baz = FloatHeader('baz')
     gcarc = FloatHeader('gcarc')
-    depmen = property(_make_data_func(np.mean, 'depmen'), doc=HD.DOC['depmen'])
+    depmen = DataHeader('depmen', np.mean)
     cmpaz = FloatHeader('cmpaz')
     cmpinc = FloatHeader('cmpinc')
     #
@@ -909,7 +910,7 @@ class SACTrace(object):
     nvhdr = IntHeader('nvhdr')
     norid = IntHeader('norid')
     nevid = IntHeader('nevid')
-    npts = property(_make_data_func(len, 'npts'), doc=HD.DOC['npts'])
+    npts =  DataHeader('npts', len)
     nwfid = IntHeader('nwfid')
     iftype = EnumHeader('iftype')
     idep = EnumHeader('idep')
