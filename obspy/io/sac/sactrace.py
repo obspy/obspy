@@ -521,19 +521,6 @@ class EnumHeader(IntHeader):
         super(EnumHeader, self).__set__(instance, value)
 
 
-def _enumsetter(hdr):
-    def set_enum(self, value):
-        if value is None:
-            value = HD.INULL
-        elif _ut.is_valid_enum_str(hdr, value):
-            value = HD.ENUM_VALS[value]
-        else:
-            msg = 'Unrecognized enumerated value "{}" for header "{}"'
-            raise ValueError(msg.format(value, hdr))
-        self._hi[HD.INTHDRS.index(hdr)] = value
-    return set_enum
-
-
 class StringHeader(SACHeader):
     def __get__(self, instance, instance_type):
         if instance is None:
@@ -817,7 +804,7 @@ class SACTrace(object):
     nvhdr = IntHeader('nvhdr')
     norid = IntHeader('norid')
     nevid = IntHeader('nevid')
-    npts =  DataHeader('npts', len)
+    npts = DataHeader('npts', len)
     nwfid = IntHeader('nwfid')
     iftype = EnumHeader('iftype')
     idep = EnumHeader('idep')
@@ -950,7 +937,6 @@ class SACTrace(object):
         self.data = data
 
         self._set_distances()
-
 
     @property
     def _header(self):

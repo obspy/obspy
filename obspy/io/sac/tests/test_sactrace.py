@@ -404,7 +404,12 @@ class SACTraceTestCase(unittest.TestCase):
         on the data, or fall back to stored header values if data is absent.
         """
         data = np.random.ranf(10).astype(dtype=np.float32)
-        sac = SACTrace(data=data)
+        npts=4
+        depmax=3.0
+        depmen=2.0
+        depmin=1.0
+        sac = SACTrace(depmin=depmin, depmen=depmen, depmax=depmax, npts=npts,
+                       data=data)
 
         for hdr, func in zip(('depmin', 'depmen', 'depmax', 'npts'),
                              (min, np.mean, max, len)):
@@ -414,6 +419,13 @@ class SACTraceTestCase(unittest.TestCase):
             with self.assertRaises(AttributeError):
                 # can't set value on write-only attribute
                 setattr(sac, hdr, func(data))
+
+        # headers fall back to stored value when data is None
+        sac.data = None
+        for hdr, value in zip(('depmin', 'depmen', 'depmax', 'npts'),
+                              (depmin, depmen, depmax, npts)):
+            self.assertEqual(getattr(sac, hdr), value)
+
 
 def suite():
     return unittest.makeSuite(SACTraceTestCase, 'test')
