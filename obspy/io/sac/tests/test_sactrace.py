@@ -299,7 +299,7 @@ class SACTraceTestCase(unittest.TestCase):
 
     def test_int_headers(self):
         """
-        Test standard SACTrace float headers using the floatheader descriptor.
+        Test standard SACTrace int headers using the intheader descriptor.
         """
         sac = SACTrace()
         for hdr in ('nzyear', 'nzjday', 'nzhour', 'nzmin', 'nzsec', 'nzmsec',
@@ -337,7 +337,7 @@ class SACTraceTestCase(unittest.TestCase):
     def test_enumheader(self):
         sac = SACTrace()
         # set all the `iztype` reference headers, so that it won't fail
-        for idx, hdr in enumerate(['b', 'o', 'a', 'f'] +\
+        for idx, hdr in enumerate(['b', 'o', 'a', 'f'] +
                                   ['t' + str(i) for i in range(10)]):
             setattr(sac, hdr, idx)
         for enumhdr, accepted_vals in _hd.ACCEPTED_VALS.items():
@@ -398,6 +398,22 @@ class SACTraceTestCase(unittest.TestCase):
 
         self.assertEqual(SACTrace.kevnm.__doc__, _hd.DOC.get('kevnm'))
 
+    def test_data_headers(self):
+        """
+        Headers that depend on the data vector should return values operating
+        on the data, or fall back to stored header values if data is absent.
+        """
+        data = np.random.ranf(10).astype(dtype=np.float32)
+        sac = SACTrace(data=data)
+
+        for hdr, func in zip(('depmin', 'depmen', 'depmax', 'npts'),
+                             (min, np.mean, max, len)):
+            # getting value
+            self.assertEqual(getattr(sac, hdr), func(data))
+
+            with self.assertRaises(AttributeError):
+                # can't set value on write-only attribute
+                setattr(sac, hdr, func(data))
 
 def suite():
     return unittest.makeSuite(SACTraceTestCase, 'test')
