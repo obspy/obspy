@@ -14,15 +14,18 @@ import sys
 from collections import OrderedDict
 import requests
 from requests.exceptions import (HTTPError, Timeout)
-from obspy.clients.fdsn.routers.routing_client import (RoutingClient, ResponseManager)
-from obspy.clients.fdsn.routers.fedcatalog_response_parser import(FederatedResponse, PreParse,
-                                                                  RequestLine, DatacenterItem)
+from obspy.clients.fdsn.routers.routing_client import (RoutingClient,
+                                                       ResponseManager)
+from obspy.clients.fdsn.routers import (FederatedResponse,)
+from obspy.clients.fdsn.routers.fedcatalog_parser import (PreParse,
+                                                          RequestLine,
+                                                          DatacenterItem)
 
 
 def query_fedcatalog(targetservice, params=None, bulk=None, argdict=None):
-    '''
+    """
     send request to fedcatalog service, return ResponseManager object
-    '''
+    """
     # send request to the FedCatalog
     url = 'https://service.iris.edu/irisws/fedcatalog/1/'
     params["targetservice"] = targetservice
@@ -35,8 +38,11 @@ def query_fedcatalog(targetservice, params=None, bulk=None, argdict=None):
     resp.raise_for_status()
     return resp
 
+
 def inv2set(inv, level):
-    '''inv2x_set(inv) will be used to quickly decide what exists and what doesn't'''
+    """
+    used to quickly decide what exists and what doesn't
+    """
 
     converter = {
         "channel": channel_set,
@@ -46,23 +52,30 @@ def inv2set(inv, level):
     }
 
     def channel_set(inv):
-        'return a set containing string representations of an inv object'
+        """
+        return a set containing string representations of an inv object
+        """
         return {
             n.code + "." + s.code + "." + c.location_code + "." + c.code
             for n in inv for s in n for c in s
         }
 
     def station_set(inv):
-        'return a set containing string representations of an inv object'
+        """
+        return a set containing string representations of an inv object
+        """
         return {n.code + "." + s.code for n in inv for s in n}
 
     def network_set(inv):
-        'return a set containing string representations of an inv object'
+        """
+        return a set containing string representations of an inv object
+        """
         return {n.code for n in inv}
 
     return converter[level](inv)
 
-#converters used to make comparisons between inventory items and requests
+
+# converters used to make comparisons between inventory items and requests
 
 
 class FederatedClient(RoutingClient):
@@ -90,7 +103,9 @@ class FederatedClient(RoutingClient):
     <BLANKLINE>
     """
 
-    def get_waveforms_bulk(self, bulk, quality=None,
+    def get_waveforms_bulk(self,
+                           bulk,
+                           quality=None,
                            minimumlength=None,
                            longestonly=None,
                            filename=None,
@@ -98,12 +113,16 @@ class FederatedClient(RoutingClient):
                            include_provider=None,
                            includeoverlaps=False,
                            **kwargs):
-        '''
-        :param exclude_provider: Avoids getting data from datacenters with specified ID code(s)
-        :param include_provider: limit retrieved data to  datacenters with specified ID code(s)
-        :param includeoverlaps: For now, simply leave this False. It will confuse the program.
+        """
+        :type exclude_provider: str or list of str
+        :param exclude_provider: Get no data from these datacenters
+        :type include_provider: str or list of str
+        :param include_provider: Get data only from these providers
+        :type includeoverlaps: boolean
+        :param includeoverlaps: retrieve same information from multiple sources
+        (not recommended)
         other parameters as seen in Client.get_stations_bulk
-        '''
+        """
 
         arguments = OrderedDict(
             quality=quality,
@@ -111,10 +130,9 @@ class FederatedClient(RoutingClient):
             longestonly=longestonly,
             includeoverlaps=includeoverlaps,
             target_service="dataselect",
-            format="request"
-        )
+            format="request")
 
-        #bulk = self._get_bulk_string(bulk, arguments)
+        # bulk = self._get_bulk_string(bulk, arguments)
 
         # send request to the FedCatalog
         try:
@@ -135,7 +153,8 @@ class FederatedClient(RoutingClient):
         inv, _ = frm.parallel_service_query("DATASELECTSERVICE", **kwargs)
         return inv
 
-    def get_waveforms(self, quality=None,
+    def get_waveforms(self,
+                      quality=None,
                       minimumlength=None,
                       longestonly=None,
                       filename=None,
@@ -143,12 +162,16 @@ class FederatedClient(RoutingClient):
                       include_provider=None,
                       includeoverlaps=False,
                       **kwargs):
-        '''
-        :param exclude_provider: Avoids getting data from datacenters with specified ID code(s)
-        :param include_provider: limit retrieved data to  datacenters with specified ID code(s)
-        :param includeoverlaps: For now, simply leave this False. It will confuse the program.
+        """
+        :type exclude_provider: str or list of str
+        :param exclude_provider: Get no data from these datacenters
+        :type include_provider: str or list of str
+        :param include_provider: Get data only from these providers
+        :type includeoverlaps: boolean
+        :param includeoverlaps: retrieve same information from multiple sources
+        (not recommended)
         other parameters as seen in Client.get_stations_bulk
-        '''
+        """
 
         # send request to the FedCatalog
         resp = query_fedcatalog("DATASELECTSERVICE", params=kwargs)
@@ -167,12 +190,16 @@ class FederatedClient(RoutingClient):
                           includeoverlaps=False,
                           bulk=None,
                           **kwargs):
-        '''
-        :param exclude_provider: Avoids getting data from datacenters with specified ID code(s)
-        :param include_provider: limit retrieved data to  datacenters with specified ID code(s)
-        :param includeoverlaps: For now, simply leave this False. It will confuse the program.
+        """
+        :type exclude_provider: str or list of str
+        :param exclude_provider: Get no data from these datacenters
+        :type include_provider: str or list of str
+        :param include_provider: Get data only from these providers
+        :type includeoverlaps: boolean
+        :param includeoverlaps: retrieve same information from multiple sources
+        (not recommended)
         other parameters as seen in Client.get_stations_bulk
-        '''
+        """
 
         assert bulk, "No bulk request provided"
         # send request to the FedCatalog
@@ -191,29 +218,30 @@ class FederatedClient(RoutingClient):
                      include_provider=None,
                      includeoverlaps=False,
                      **kwargs):
-        '''
+        """
         This will be the original request for the federated station service
-        :param exclude_provider: Avoids getting data from datacenters with specified ID code(s)
-        :param include_provider: limit retrieved data to  datacenters with specified ID code(s)
-        :param includeoverlaps: For now, simply leave this False. It will confuse the program.
+        :type exclude_provider: str or list of str
+        :param exclude_provider: Get no data from these datacenters
+        :type include_provider: str or list of str
+        :param include_provider: Get data only from these providers.
+        :type includeoverlaps: boolean
+        :param includeoverlaps: retrieve same information from multiple sources
+        (not recommended)
         other parameters as seen in Client.get_stations
 
-        Warning: If you specify "include_provider", you may miss data that the provider holds,
-                but isn't the primary source
-        Warning: If you specify "exclude_provider", you may miss data for which that provider
-                is the primary source
 
         >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> client = FederatedClient()
-        >>> INV = client.get_stations(network="A?", station="OK*", channel="?HZ", level="station",
-        ...                    endtime="2016-12-31")  #doctest: +ELLIPSIS
+        >>> INV = client.get_stations(network="A?", station="OK*",
+        ...                           channel="?HZ", level="station",
+        ...                           endtime="2016-12-31")  #doctest: +ELLIPSIS
         requesting data from:IRIS
         IRISDMC
         The IRIS Data Management Center
         Seattle, WA, USA
         http://ds.iris.edu...
-        '''
+        """
 
         try:
             resp = query_fedcatalog("station", params=kwargs)
@@ -236,7 +264,7 @@ class FederatedClient(RoutingClient):
 
         # prepare the file if one is specified
         inv, _ = frm.serial_service_query("STATIONSERVICE")
-        #inv, _ = frm.parallel_service_query("STATIONSERVICE")
+        # inv, _ = frm.parallel_service_query("STATIONSERVICE")
 
         # level = kwargs["level"]
         # successful, failed = request_exists_in_inventory(inv, datac.request_lines, level)
@@ -247,15 +275,17 @@ class FederatedClient(RoutingClient):
 
 class FederatedResponseManager(ResponseManager):
     """
-    This class wraps the response given by the federated catalog.  Its primary purpose is to
-    divide the response into parcels, each being a FederatedResponse containing the information
-    required for a single request.
-    Input would be the response from the federated catalog, or a similar text file. Output is a list
-    of FederatedResponse objects
+    This class wraps the response given by the federated catalog.  Its primary
+    purpose is to divide the response into parcels, each being a
+    FederatedResponse containing the information required for a single request.
+
+    Input would be the response from the federated catalog, or a similar text
+    file. Output is a list of FederatedResponse objects
 
     >>> from obspy.clients.fdsn import Client
     >>> url = 'https://service.iris.edu/irisws/fedcatalog/1/'
-    >>> r = requests.get(url + "query", params={"net":"A*", "sta":"OK*", "cha":"*HZ"}, verify=False)
+    >>> params = {"net":"A*", "sta":"OK*", "cha":"*HZ"}
+    >>> r = requests.get(url + "query", params=params, verify=False)
     >>> frm = FederatedResponseManager(r.text, include_provider=["IRIS", "IRISDMC"])
     >>> print(frm)
     FederatedResponseManager with 1 items:
@@ -291,11 +321,12 @@ class FederatedResponseManager(ResponseManager):
     """
 
     def __init__(self, textblock, **kwargs):
-        super(FederatedResponseManager, self).__init__(textblock, **kwargs)
+        ResponseManager.__init__(self, textblock, **kwargs)
 
     def parse_response(self, block_text):
-        '''create a list of FederatedResponse objects, one for each provider in response
-            >>> fed_text = """minlat=34.0
+        """
+        create a list of FederatedResponse objects, one for each provider in response
+            >>> fed_text = '''minlat=34.0
             ... level=network
             ...
             ... DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
@@ -305,7 +336,7 @@ class FederatedResponseManager(ResponseManager):
             ... DATACENTER=INGV,http://www.ingv.it
             ... STATIONSERVICE=http://webservices.rm.ingv.it/fdsnws/station/1/
             ... HL ARG -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-            ... HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00"""
+            ... HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00'''
             >>> fr = FederatedResponseManager(fed_text)
             >>> for f in fr:
             ...    print(f.code + "\\n" + f.text('STATIONSERVICE'))
@@ -339,14 +370,15 @@ class FederatedResponseManager(ResponseManager):
             IU ANTO 00 BHZ 2010-11-10T21:42:00 2599-12-31T23:59:59
             IU ANTO 10 BHZ 2010-11-11T09:23:59 2599-12-31T23:59:59
 
-        '''
+        """
+
         fed_resp = []
         provider = FederatedResponse("EMPTY_EMPTY_EMPTY")
         parameters = None
         state = PreParse
 
         for raw_line in block_text.splitlines():
-            line = RequestLine(raw_line)  #use a smarter, trimmed line
+            line = RequestLine(raw_line)  # use a smarter, trimmed line
             state = state.next(line)
             if state == DatacenterItem:
                 if provider.code == "EMPTY_EMPTY_EMPTY":
@@ -370,6 +402,7 @@ class FederatedResponseManager(ResponseManager):
             if dc.code in remap:
                 dc.code = remap[dc.code]
         return fed_resp
+
 
 if __name__ == '__main__':
     import doctest

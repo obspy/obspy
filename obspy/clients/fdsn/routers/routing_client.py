@@ -9,45 +9,49 @@ import sys
 import queue
 import multiprocessing as mp
 from obspy.clients.fdsn import Client
-from obspy.clients.fdsn.routers.routing_response import RoutingResponse
+from obspy.clients.fdsn.routers.fedcatalog_parser import RoutingResponse
 
 class RoutingClient(Client):
     """
     This class serves as the user-facing layer for routing requests, and uses
     the Client's methods to communicate with each data center.  Where possible,
-    it will also leverage the Client's methods to interact with the federated catalog service.
-    The federated catalog's response is passed to the ResponseManager.
-    The ResponseManager is then repeatedly queried for provider/url/bulk-request parcels,
-    which are each routed to the appropriate provider using either Client.get_stations_bulk
-    or Client.get_waveforms_bulk.  As each parcel of data is requested, the provider
-    is displayed to console. As each request is fulfilled, then a summary of retrieved data
-     is displayed.
-    Upon completion, all the waveforms or inventory (station) data are returned in a
-    single list /structure as though they were all requested from the same source. It
-    appears that the existing obspy.core.inventory module will appropriately attribute
-    each station to a provider as it is downloaded, but once they are merged into the
-    same inventory object, individual station:provider identity is lost.
+    it will also leverage the Client's methods to interact with the federated
+    catalog service. The federated catalog's response is passed to the
+    ResponseManager.
+
+    The ResponseManager is then repeatedly queried for provider/url/bulk-request
+    parcels, which are each routed to the appropriate provider using either
+    Client.get_stations_bulk or Client.get_waveforms_bulk.  As each parcel of
+    data is requested, the provider is displayed to console. As each request is
+    fulfilled, then a summary of retrieved data is displayed.
+
+    Upon completion, all the waveforms or inventory (station) data are returned
+    in a single list /structure as though they were all requested from the same
+    source. It appears that the existing obspy.core.inventory module will
+    appropriately attribute each station to a provider as it is downloaded, but
+    once they are merged into the same inventory object, individual
+    station:provider identity is lost.
     """
     pass
 
 class ResponseManager(object):
     """
-    This class will wrap the response given by routers.  Its primary purpose is to
-    divide the response into parcels, each being an XYZResponse containing the information
-    required for a single request.
-    Input would be the response from the routing service, or a similar text file Output is a list
-    of RoutingResponse objects
+    This class will wrap the response given by routers.  Its primary purpose is
+    to divide the response into parcels, each being an XYZResponse containing
+    the information required for a single request.
 
+    Input would be the response from the routing service, or a similar text file
+    Output is a list of RoutingResponse objects
     """
     def __init__(self, textblock, include_provider=None, exclude_provider=None):
-        '''
+        """
         :type textblock: str or container of RoutingResponse
         :param textblock: text retrieved from routing service
         :type include_provider: str or list of str
         :param include_provider:
         :type exclude_provider: str or list of str
         :param exclude_privider:
-        '''
+        """
         self.responses = []
         # print("init responsemanager: incoming text is a " + type(textblock).__name__)
         if isinstance(textblock, str):
@@ -74,15 +78,17 @@ class ResponseManager(object):
         return towrite
 
     def parse_response(self, parameter_list):
-        '''create a list of RoutingResponse objects, one for each provider in response'''
+        """
+        create a list of RoutingResponse objects, one for each provider in response
+        """
         raise NotImplementedError()
 
     def get_routing_response(self, code, get_multiple=False):
-        '''retrieve the response for a particular provider, by code
+        """
+        retrieve the response for a particular provider, by code
 
         Set up sample data:
-        >>> sed2 = RoutingResponse('SED')
-        >>> sed2.add_request_line("some_request")
+        >>> sed2 = RoutingResponse('SED', raw_requests = ["some_request"])
         >>> fedresps = [RoutingResponse('IRIS'), RoutingResponse('SED'),
         ...             RoutingResponse('RESIF'), sed2]
         >>> fedresps = ResponseManager(fedresps)
@@ -95,12 +101,12 @@ class ResponseManager(object):
         ['SED, with 0 lines', 'SED, with 1 line']
 
         :type code: str
-        :param code: recognized key string for recognized server. see 
+        :param code: recognized key string for recognized server. see
         obspy.clients.fdsn.client for a list
         :type get_multiple: bool
-        :param get_multiple: determines whether to return a single (first matching) RoutingResponse 
-        or a list of all matching responses
-        '''
+        :param get_multiple: determines whether to return a single (first
+        matching) RoutingResponse or a list of all matching responses
+        """
         if get_multiple:
             return [resp for resp in self.responses if resp.code == code]
         for resp in self.responses:
@@ -109,23 +115,26 @@ class ResponseManager(object):
         return None
 
     def subset_requests(self, include_provider=None, exclude_provider=None):
-        '''provide more flexibility by specifying which datacenters to include or exclude
+        """
+        provide more flexibility by specifying which datacenters to include or exclude
 
         Set up sample data:
         >>> rawdata = [RoutingResponse('IRIS'), RoutingResponse('SED'),
         ...             RoutingResponse('RESIF')]
         >>> fedresps = ResponseManager(rawdata)
-        >>> print(".".join([dc.code for dc in fedresps]))
+
+        >>> all_codes = lambda resps: ".".join([p.code for p in resps])
+        >>> print(all_codes(fedresps))
         IRIS.SED.RESIF
 
         Test methods that return multiple RoutingResponse objects
         >>> no_sed_v1 = ResponseManager(rawdata)
         >>> no_sed_v1.subset_requests(exclude_provider='SED')
-        >>> print(".".join([dc.code for dc in no_sed_v1]))
+        >>> print(all_codes(no_sed_v1))
         IRIS.RESIF
         >>> no_sed_v2 = ResponseManager(rawdata)
         >>> no_sed_v2.subset_requests(include_provider=['IRIS', 'RESIF'])
-        >>> ".".join([x.code for x in no_sed_v1]) == ".".join([x.code for x in no_sed_v2])
+        >>> all_codes(no_sed_v1) == all_codes(no_sed_v2)
         True
 
         Test methods that return single RoutingResponse (still in a container, though)
@@ -133,16 +142,16 @@ class ResponseManager(object):
         >>> only_sed_v1.subset_requests(exclude_provider=['IRIS', 'RESIF'])
         >>> only_sed_v2 = ResponseManager(rawdata)
         >>> only_sed_v2.subset_requests(include_provider='SED')
-        >>> print(".".join([dc.code for dc in only_sed_v1]))
+        >>> print(all_codes(only_sed_v1))
         SED
-        >>> ".".join([x.code for x in only_sed_v1]) == ".".join([x.code for x in only_sed_v2])
+        >>> all_codes(only_sed_v1) == all_codes(only_sed_v2)
         True
 
         :type include_provider: str or list of str
         :param include_provider: codes for providers, whose data to retrieve
         :type exclude_provider: str or list of str
         :param exclude_provider: codes of providers which should not be queried
-        '''
+        """
         if include_provider:
             self.responses = [resp for resp in self.responses if resp.code in include_provider]
         elif exclude_provider:
@@ -171,11 +180,11 @@ class ResponseManager(object):
         return data, retry
 
     def parallel_service_query(self, target_process, **kwargs):
-        '''
+        """
         query clients in parallel
         :type target_process: str
         :param target_process: see RoutingResponse.get_routing_response_fn for details
-        '''
+        """
 
         output = mp.Queue(maxsize=len(self))
         failed = mp.Queue(maxsize=len(self))
