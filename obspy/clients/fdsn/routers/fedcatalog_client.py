@@ -25,17 +25,19 @@ from obspy.clients.fdsn.routers.fedcatalog_parser import (PreParse,
                                                           DatacenterItem)
 
 
+
 def query_fedcatalog(targetservice, params=None, bulk=None, argdict=None):
     """
     send request to fedcatalog service, return ResponseManager object
     """
     # send request to the FedCatalog
     url = 'https://service.iris.edu/irisws/fedcatalog/1/'
-    params["targetservice"] = targetservice
     if params:
+        params["targetservice"] = targetservice
         resp = requests.get(url + "query", params=params, verify=False)
     elif bulk:
-        resp = requests.get(url + "query", data=bulk, verify=False)
+        bulky = "\n".join(["targetservice=" + targetservice + "\n", bulk])
+        resp = requests.post(url + "query", data=bulky, verify=False)
     else:
         raise RuntimeError("Either params or bulk must be specified")
     resp.raise_for_status()
@@ -258,17 +260,17 @@ class FederatedClient(RoutingClient):
         """
         print(PROVIDER_METADATA.pretty(req.code))
         # print (kwargs)
+        # print(req.text("STATIONSERVICE"))
         try:
             data = client.get_stations_bulk(bulk=req.text("STATIONSERVICE"), **kwargs)
-        except FDSNException:  # as ex:
-            raise
+        except FDSNException as ex:
             failed.put(req.request_lines)
+            print("Failed to retrieve data from: {0}", req.code)
+            print(ex)
         else:
-            # print("it worked")
-            # print(data)
             output.put(data)
 
-    def submit_waveform_request(self, client, req, output, failed):
+    def submit_waveform_request(self, client, req, output, failed, **kwargs):
         """
         function used to query service
         :param output: place where retrieved data go
@@ -280,7 +282,7 @@ class FederatedClient(RoutingClient):
 
         except FDSNException:
             failed.put(req.request_lines)
-            # raise
+            raise
         else:
             # print(data)
             output.put(data)
@@ -296,6 +298,11 @@ class FederatedClient(RoutingClient):
                            includeoverlaps=False,
                            **kwargs):
         """
+        
+        >>> client = FederatedClient()
+        >>> w, _ = client.get_waveforms_bulk(bulk="IU ANMO * ?HZ 2010-02-27T06:30:00) 2010-02-27T06:33:00")
+        >>> print(w)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        
         :type exclude_provider: str or list of str
         :param exclude_provider: Get no data from these datacenters
         :type include_provider: str or list of str
@@ -314,18 +321,21 @@ class FederatedClient(RoutingClient):
             target_service="dataselect",
             format="request")
 
-        # bulk = self._get_bulk_string(bulk, arguments)
 
-        # send request to the FedCatalog
-        
+        fed_kwargs, svc_kwargs = self.assign_kwargs(kwargs)
         try:
-            resp = query_fedcatalog("DATASELECTSERVICE", bulk=bulk)
+            resp = query_fedcatalog("DATASELECTSERVICE", params=fed_kwargs)
         except ConnectionError:
-            pass
+            print("Problem connecting to fedcatalog service", file=sys.stderr)
         except HTTPError:
-            pass
+            print(
+                "Error downloading data from fedcatalog service: " +
+                str(resp.status_code),
+                file=sys.stderr)
         except Timeout:
-            pass
+            print(
+                "Timeout while waiting for a response from the fedcatalog service"
+            )
 
         # parse the reply into an iterable object
         frm = FederatedResponseManager(
@@ -333,12 +343,11 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        query_service = self.get_query_machine() # based on use_parallel
-        inv, _ = query_service("DATASELECTSERVICE", **kwargs)
+        query_service = self.get_query_machine()
+        data, _ = query_service(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         # reprocess failed?
-
-        return inv
+        return data
 
     def get_waveforms(self,
                       quality=None,
@@ -358,10 +367,42 @@ class FederatedClient(RoutingClient):
         :param includeoverlaps: retrieve same information from multiple sources
         (not recommended)
         other parameters as seen in Client.get_stations_bulk
+        
+        >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        >>> client = FederatedClient()
+        >>> from obspy.core import  UTCDateTime
+        >>> t_st = UTCDateTime("2010-02-27T06:30:00")
+        >>> t_ed = UTCDateTime("2010-02-27T06:33:00")
+        >>> w, _ = client.get_waveforms(network="IU", station="ANMO", channel="BHZ",
+        ...                             starttime=t_st, endtime=t_ed)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        IRISDMC
+        The IRIS Data Management Center
+        Seattle, WA, USA
+        http://ds.iris.edu
+        Apr 20, 2017 5:05:58 AM
+        <BLANKLINE>
+        >>> print(w)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        IU.ANMO.00.BHZ | 2010-02-27T06:30:00...Z - 2010-02-27T06:32:59...Z | 20.0 Hz, 3600 samples
         """
 
-        # send request to the FedCatalog
-        resp = query_fedcatalog("DATASELECTSERVICE", params=kwargs)
+        fed_kwargs, svc_kwargs = self.assign_kwargs(kwargs)
+        fed_kwargs["includeoverlaps"] = includeoverlaps
+        try:
+            resp = query_fedcatalog("DATASELECTSERVICE", params=fed_kwargs)
+        except ConnectionError:
+            print("Problem connecting to fedcatalog service", file=sys.stderr)
+        except HTTPError:
+            print(
+                "Error downloading data from fedcatalog service: " +
+                str(resp.status_code),
+                file=sys.stderr)
+        except Timeout:
+            print(
+                "Timeout while waiting for a response from the fedcatalog service"
+            )
+        
+
         # parse the reply into an iterable object
         frm = FederatedResponseManager(
             resp.text,
@@ -369,17 +410,15 @@ class FederatedClient(RoutingClient):
             exclude_provider=exclude_provider)
 
         query_service = self.get_query_machine()
-        inv, _ = query_service("DATASELECTSERVICE", **kwargs)
+        data, _ = query_service(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         # reprocess failed?
+        return data
 
-        return inv
-
-    def get_stations_bulk(self,
+    def get_stations_bulk(self, bulk,
                           exclude_provider=None,
                           include_provider=None,
                           includeoverlaps=False,
-                          bulk=None,
                           **kwargs):
         """
         :type exclude_provider: str or list of str
@@ -390,18 +429,44 @@ class FederatedClient(RoutingClient):
         :param includeoverlaps: retrieve same information from multiple sources
         (not recommended)
         other parameters as seen in Client.get_stations_bulk
+
+        >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        >>> client = FederatedClient()
+        >>> bulktxt = "level=channel\\nA? OKS? * ?HZ * *"
+        >>> INV = client.get_stations_bulk(
+        ...                     bulktxt)  #doctest: +ELLIPSIS
+        IRISDMC
+        The IRIS Data Management Center
+        Seattle, WA, USA
+        http://ds.iris.edu...
+        <BLANKLINE>
+        >>> print(INV)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Inventory created at 2...Z
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: 1...
+                    http://service.iris.edu/fdsnws/station/1/query
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (1):
+                    AV
+                Stations (2):
+                    AV.OKSO (South, Okmok Caldera, Alaska)
+                    AV.OKSP (Steeple Point, Okmok Caldera, Alaska)
+                Channels (5):
+                    AV.OKSO..BHZ, AV.OKSP..EHZ (4x)
         """
 
-        assert bulk, "No bulk request provided"
+        fed_kwargs, svc_kwargs = self.assign_kwargs(kwargs)
+        fed_kwargs["includeoverlaps"] = includeoverlaps
         # send request to the FedCatalog
         resp = query_fedcatalog("station", bulk=bulk)
         # parse the reply into an iterable object
-        frm = FederatedResponseManager( resp.text,
-                                        include_provider=include_provider,
-                                        exclude_provider=exclude_provider)
+        frm = FederatedResponseManager(resp.text,
+                                       include_provider=include_provider,
+                                       exclude_provider=exclude_provider)
 
         query_service = self.get_query_machine()
-        inv, _ = query_service("STATIONSERVICE", **kwargs)
+        inv, _ = query_service(frm, "STATIONSERVICE", **kwargs)
 
         # reprocess failed?
 
@@ -460,28 +525,67 @@ class FederatedClient(RoutingClient):
                     AV.OKWR (West Rim, Okmok Caldera, Alaska)
                 Channels (0):
         <BLANKLINE>
+        
+        >>> INV2 = client.get_stations(network="I?", station="A*",
+        ...                           level="network", exclude_provider=["IRISDMC","IRIS","IRIS-DMC"])  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        GEOFON
+        The GEOFON Program
+        Potsdam, Germany
+        http://geofon.gfz-potsdam.de
+        ...M
+        <BLANKLINE>
+        INGV
+        The Italian National Institute of Geophysics and Volcanology
+        Rome, Italy
+        http://www.ingv.it
+        ...M
+        <BLANKLINE>
+        ORFEUS
+        The ORFEUS Data Center
+        de Bilt, the Netherlands
+        http://www.orfeus-eu.org
+        ...AM
+        <BLANKLINE>
+        >>> print(INV2)  #doctest: +ELLIPSIS
+        Inventory created at ...Z
+            Created by: ObsPy ...
+                    https://www.obspy.org
+            Sending institution: SeisComP3,SeisNet-mysql (GFZ,INGV-CNT,ODC)
+            Contains:
+                Networks (6):
+                    IA, IB, II, IQ, IS, IV
+                Stations (0):
+        <BLANKLINE>
+                Channels (0):
+        <BLANKLINE>
         """
 
         fed_kwargs, svc_kwargs = self.assign_kwargs(kwargs)
+        fed_kwargs["includeoverlaps"] = includeoverlaps
+
         try:
             resp = query_fedcatalog("station", params=fed_kwargs)
         except ConnectionError:
             print("Problem connecting to fedcatalog service", file=sys.stderr)
+            raise
         except HTTPError:
             print(
                 "Error downloading data from fedcatalog service: " +
                 str(resp.status_code),
                 file=sys.stderr)
+            raise
         except Timeout:
             print(
                 "Timeout while waiting for a response from the fedcatalog service"
             )
+            raise
 
-        frm = FederatedResponseManager(resp.text, 
+        frm = FederatedResponseManager(resp.text,
                                        include_provider=include_provider,
                                        exclude_provider=exclude_provider)
 
-        query_service = self.get_query_machine() # based on use_parallel
+        query_service = self.get_query_machine() 
+        # TODO check to make sure svc_kwargs actually are passed along from fedcatalog
         inv, _ = query_service(frm, "STATIONSERVICE", **svc_kwargs)
 
         # reprocess failed ?
@@ -577,6 +681,7 @@ class FederatedResponseManager(ResponseManager):
                 state.parse(line, provider)
         if len(fed_resp) > 0 and (not fed_resp[-1].request_lines):
             del fed_resp[-1]
+        # TODO see if remap belongs in the FederatedClient instead
         remap = {
             "IRISDMC": "IRIS",
             "GEOFON": "GFZ",
@@ -592,5 +697,9 @@ class FederatedResponseManager(ResponseManager):
 
 
 if __name__ == '__main__':
+    
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
     import doctest
     doctest.testmod(exclude_empty=True)
