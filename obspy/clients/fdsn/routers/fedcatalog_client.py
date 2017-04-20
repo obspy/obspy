@@ -12,8 +12,11 @@ FDSN Web service client for ObsPy.
 from __future__ import print_function
 import sys
 from collections import OrderedDict
+from threading import Lock
 import requests
 from requests.exceptions import (HTTPError, Timeout)
+#from obspy.clients.fdsn import Client
+from obspy.clients.fdsn.header import FDSNException
 from obspy.clients.fdsn.routers.routing_client import (RoutingClient,
                                                        ResponseManager)
 from obspy.clients.fdsn.routers import (FederatedResponse,)
@@ -77,6 +80,120 @@ def inv2set(inv, level):
 
 # converters used to make comparisons between inventory items and requests
 
+class FedcatalogProviderMetadata(object):
+    """
+    Class containing datacenter details retrieved from the fedcatalog service
+
+    keys: name, website, lastupdate, serviceURLs {servicename:url,...},
+    location, description
+
+    hopefully threadsafe
+    """
+
+    def __init__(self):
+        self.provider_metadata = None
+        self.provider_index = None
+        self.lock = Lock()
+        self.failed_refreshes = 0
+
+    def get_names(self):
+        """
+        return list of provider names
+        """
+        with self.lock:
+            if not self.provider_metadata:
+                self.refresh()
+        if not self.provider_index:
+            return None
+        else:
+            return self.provider_index.keys()
+
+    def get(self, name, detail=None):
+        """
+        get a datacenter property
+
+        :type name: str
+        :param name: provider name. such as IRISDMC, ORFEUS, etc.
+        :type detail: str
+        :param detail: property of interest.  eg, one of ('name', 'website',
+        'lastupdate', 'serviceURLs', 'location', 'description').
+        if no detail is provided, then the entire dict for the requested provider
+        will be returned
+        """
+        with self.lock:
+            if not self.provider_metadata:
+                self.refresh()
+        if not self.provider_metadata:
+            return None
+        else:
+            if detail:
+                return self.provider_metadata[self.provider_index[name]][
+                    detail]
+            else:
+                return self.provider_metadata[self.provider_index[name]]
+
+    def refresh(self, force=False):
+        """
+        retrieve provider profile from fedcatalog service
+
+        >>> fpm = FedcatalogProviderMetadata()
+        >>> # fpm.refresh(force=True)
+        >>> fpm.get_names() #doctest: +ELLIPSIS
+        dict_keys(['...'])
+
+        :type force: bool
+        :param force: attempt to retrieve data even if too many failed attempts
+        """
+        if force or self.failed_refreshes < 4:
+            try:
+                url = 'https://service.iris.edu/irisws/fedcatalog/1/datacenters'
+                req = requests.get(url, verify=False)
+                self.provider_metadata = req.json()
+                self.provider_index = {
+                    v['name']: k
+                    for k, v in enumerate(self.provider_metadata)
+                }
+                self.failed_refreshes = 0
+            except:
+                print(
+                    "Unable to update provider profiles from fedcatalog service",
+                    file=sys.stderr)
+                self.failed_refreshes += 1
+        else:
+            print(
+                "Unable to retrieve provider profiles from fedcatalog service after {0} attempts",
+                self.failed_refreshes,
+                file=sys.stderr)
+            # problem updating
+
+        # yuck. manually account for differences between IRIS output and OBSPY expected
+        self.provider_index["IRIS"] = self.provider_index["IRISDMC"]
+        self.provider_index["GFZ"] = self.provider_index["GEOFON"]
+        self.provider_index["ETH"] = self.provider_index["SED"]
+        self.provider_index["USP"] = self.provider_index["USPSC"]
+
+    def pretty(self, name):
+        """
+        return nice text representation of service without too much details
+        >>> fpm = FedcatalogProviderMetadata()
+        >>> print(fpm.pretty("ORFEUS"))  #doctest: +ELLIPSIS
+        ORFEUS
+        The ORFEUS Data Center
+        de Bilt, the Netherlands
+        http://www.orfeus-eu.org
+        ...M
+        <BLANKLINE>
+        >>> print(fpm.pretty("IRIS") == fpm.pretty("IRISDMC"))
+        True
+        """
+        self.refresh()
+        return '\n'.join(
+            self.get(name, k)
+            for k in
+            ["name", "description", "location", "website", "lastUpdate"]) + '\n'
+
+
+PROVIDER_METADATA = FedcatalogProviderMetadata()
 
 class FederatedClient(RoutingClient):
     """
@@ -87,7 +204,13 @@ class FederatedClient(RoutingClient):
     >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
     >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     >>> client = FederatedClient()
-    >>> inv = client.get_stations(network="I?", station="AN*", channel="*HZ")
+    >>> inv = client.get_stations(network="I?", station="AN*", channel="*HZ") #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    IRISDMC
+    The IRIS Data Management Center
+    Seattle, WA, USA
+    http://ds.iris.edu
+    ...M
+    <BLANKLINE>
     >>> print(inv)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     Inventory created at ...Z
     	Created by: IRIS WEB SERVICE: fdsnws-station | version: 1...
@@ -102,6 +225,65 @@ class FederatedClient(RoutingClient):
     		Channels (0):
     <BLANKLINE>
     """
+
+    # no __init__ function.  Values are passed through to super.
+
+    def assign_kwargs(self, argdict):
+        #TODO figure out where each of the arguments belongs
+        #  to the fedrequest?  to the final service?
+        fed_argdict = argdict.copy()
+        service_argdict = argdict.copy()
+        return fed_argdict, service_argdict
+
+    def get_request_fn(self, target_service):
+        """
+        get function used to query the service
+        :param target_service: string containing either 'DATASELECTSERVICE' or 'STATIONSERVICE'
+        """
+        fun = {"DATASELECTSERVICE": self.submit_waveform_request,
+               "STATIONSERVICE": self.submit_station_request}
+        try:
+            return fun.get(target_service)
+        except ValueError:
+            valid_funs = '"' + ', '.join(fun.keys)
+            raise ValueError("Expected one of " + valid_funs + " but got {0}",
+                             target_service)
+
+    def submit_station_request(self, client, req, output, failed, **kwargs):
+        """
+        function used to query service
+        :param self: FederatedResponse
+        :param output: place where retrieved data go
+        :param failed: place where list of unretrieved bulk request lines go
+        """
+        print(PROVIDER_METADATA.pretty(req.code))
+        # print (kwargs)
+        try:
+            data = client.get_stations_bulk(bulk=req.text("STATIONSERVICE"), **kwargs)
+        except FDSNException:  # as ex:
+            raise
+            failed.put(req.request_lines)
+        else:
+            # print("it worked")
+            # print(data)
+            output.put(data)
+
+    def submit_waveform_request(self, client, req, output, failed):
+        """
+        function used to query service
+        :param output: place where retrieved data go
+        :param failed: place where list of unretrieved bulk request lines go
+        """
+        print(PROVIDER_METADATA.pretty(req.code))
+        try:
+            data = client.get_waveforms_bulk( bulk=req.text("DATASELECTSERVICE"), **kwargs)
+
+        except FDSNException:
+            failed.put(req.request_lines)
+            # raise
+        else:
+            # print(data)
+            output.put(data)
 
     def get_waveforms_bulk(self,
                            bulk,
@@ -135,6 +317,7 @@ class FederatedClient(RoutingClient):
         # bulk = self._get_bulk_string(bulk, arguments)
 
         # send request to the FedCatalog
+        
         try:
             resp = query_fedcatalog("DATASELECTSERVICE", bulk=bulk)
         except ConnectionError:
@@ -150,7 +333,11 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        inv, _ = frm.parallel_service_query("DATASELECTSERVICE", **kwargs)
+        query_service = self.get_query_machine() # based on use_parallel
+        inv, _ = query_service("DATASELECTSERVICE", **kwargs)
+
+        # reprocess failed?
+
         return inv
 
     def get_waveforms(self,
@@ -181,7 +368,11 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        inv, _ = frm.parallel_service_query("DATASELECTSERVICE", **kwargs)
+        query_service = self.get_query_machine()
+        inv, _ = query_service("DATASELECTSERVICE", **kwargs)
+
+        # reprocess failed?
+
         return inv
 
     def get_stations_bulk(self,
@@ -205,12 +396,15 @@ class FederatedClient(RoutingClient):
         # send request to the FedCatalog
         resp = query_fedcatalog("station", bulk=bulk)
         # parse the reply into an iterable object
-        frm = FederatedResponseManager(
-            resp.text,
-            include_provider=include_provider,
-            exclude_provider=exclude_provider)
+        frm = FederatedResponseManager( resp.text,
+                                        include_provider=include_provider,
+                                        exclude_provider=exclude_provider)
 
-        inv, _ = frm.parallel_service_query("STATIONSERVICE", **kwargs)
+        query_service = self.get_query_machine()
+        inv, _ = query_service("STATIONSERVICE", **kwargs)
+
+        # reprocess failed?
+
         return inv
 
     def get_stations(self,
@@ -236,15 +430,41 @@ class FederatedClient(RoutingClient):
         >>> INV = client.get_stations(network="A?", station="OK*",
         ...                           channel="?HZ", level="station",
         ...                           endtime="2016-12-31")  #doctest: +ELLIPSIS
-        requesting data from:IRIS
         IRISDMC
         The IRIS Data Management Center
         Seattle, WA, USA
         http://ds.iris.edu...
+        <BLANKLINE>
+        >>> print(INV)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Inventory created at 2...Z
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: 1...
+                    http://service.iris.edu/fdsnws/station/1/query
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (1):
+                    AV
+                Stations (14):
+                    AV.OKAK (Cape Aslik 2, Okmok Caldera, Alaska)
+                    AV.OKCD (Cone D, Okmok Caldera, Alaska)
+                    AV.OKCE (Cone E, Okmok Caldera, Alaska)
+                    AV.OKCF (Cone F, Okmok Caldera, Alaska)
+                    AV.OKER (East Rim, Okmok Caldera, Alaska)
+                    AV.OKFG (Fort Glenn, Okmok Caldera, Alaska)
+                    AV.OKID (Mount Idak, Okmok Caldera, Alaska)
+                    AV.OKNC (New Cone D, Okmok Caldera, Alaska)
+                    AV.OKRE (Reindeer Point, Okmok Caldera, Alaska)
+                    AV.OKSO (South, Okmok Caldera, Alaska)
+                    AV.OKSP (Steeple Point, Okmok Caldera, Alaska)
+                    AV.OKTU (Mount Tulik, Okmok Caldera, Alaska)
+                    AV.OKWE (Weeping Wall, Okmok Caldera, Alaska)
+                    AV.OKWR (West Rim, Okmok Caldera, Alaska)
+                Channels (0):
+        <BLANKLINE>
         """
 
+        fed_kwargs, svc_kwargs = self.assign_kwargs(kwargs)
         try:
-            resp = query_fedcatalog("station", params=kwargs)
+            resp = query_fedcatalog("station", params=fed_kwargs)
         except ConnectionError:
             print("Problem connecting to fedcatalog service", file=sys.stderr)
         except HTTPError:
@@ -257,19 +477,14 @@ class FederatedClient(RoutingClient):
                 "Timeout while waiting for a response from the fedcatalog service"
             )
 
-        frm = FederatedResponseManager(
-            resp.text,
-            include_provider=include_provider,
-            exclude_provider=exclude_provider)
+        frm = FederatedResponseManager(resp.text, 
+                                       include_provider=include_provider,
+                                       exclude_provider=exclude_provider)
 
-        # prepare the file if one is specified
-        inv, _ = frm.serial_service_query("STATIONSERVICE")
-        # inv, _ = frm.parallel_service_query("STATIONSERVICE")
+        query_service = self.get_query_machine() # based on use_parallel
+        inv, _ = query_service(frm, "STATIONSERVICE", **svc_kwargs)
 
-        # level = kwargs["level"]
-        # successful, failed = request_exists_in_inventory(inv, datac.request_lines, level)
-        # all_inv_set = inv2set(inv, level) if not all_inv else all_inv_set.union(inv2set(inv, level))
-        # resubmit unsuccessful requests to fedservice with includeoverlaps
+        # reprocess failed ?
         return inv
 
 
@@ -290,34 +505,6 @@ class FederatedResponseManager(ResponseManager):
     >>> print(frm)
     FederatedResponseManager with 1 items:
     IRIS, with 26 lines
-    >>> data, retry = frm.parallel_service_query('STATIONSERVICE')
-    >>> print(data)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    Inventory created at ...Z
-    	Created by: IRIS WEB SERVICE: fdsnws-station | version: 1...
-    		    http://service.iris.edu/fdsnws/station/1/query
-    	Sending institution: IRIS-DMC (IRIS-DMC)
-        Contains:
-    		Networks (1):
-    			AV
-    		Stations (14):
-    			AV.OKAK (Cape Aslik 2, Okmok Caldera, Alaska)
-    			AV.OKCD (Cone D, Okmok Caldera, Alaska)
-    			AV.OKCE (Cone E, Okmok Caldera, Alaska)
-    			AV.OKCF (Cone F, Okmok Caldera, Alaska)
-    			AV.OKER (East Rim, Okmok Caldera, Alaska)
-    			AV.OKFG (Fort Glenn, Okmok Caldera, Alaska)
-    			AV.OKID (Mount Idak, Okmok Caldera, Alaska)
-    			AV.OKNC (New Cone D, Okmok Caldera, Alaska)
-    			AV.OKRE (Reindeer Point, Okmok Caldera, Alaska)
-    			AV.OKSO (South, Okmok Caldera, Alaska)
-    			AV.OKSP (Steeple Point, Okmok Caldera, Alaska)
-    			AV.OKTU (Mount Tulik, Okmok Caldera, Alaska)
-    			AV.OKWE (Weeping Wall, Okmok Caldera, Alaska)
-    			AV.OKWR (West Rim, Okmok Caldera, Alaska)
-    		Channels (0):
-    <BLANKLINE>
-    >>> print(retry)
-    None
     """
 
     def __init__(self, textblock, **kwargs):
