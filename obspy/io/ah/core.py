@@ -428,21 +428,15 @@ def _write_ah1(stream, filename):
 
     packer = xdrlib.Packer()
 
-    for num, tr in enumerate(stream):
-        if len(stream) == 1:
-            ofilename = filename + ".AH"
-        else:
-            ofilename = filename + "." + num + ".AH"
-
-        packer.reset()
-
+    for tr in stream:
         if hasattr(tr.stats, 'ah'):
             packer = _pack_trace_with_ah_dict(tr, packer)
         else:
             packer = _pack_trace_wout_ah_dict(tr, packer)
 
-        with open(ofilename, 'wb') as fh:
-            fh.write(packer.get_buffer())
+    ofilename = filename + ".AH"
+    with open(ofilename, 'wb') as fh:
+        fh.write(packer.get_buffer())
 
 
 def _read_ah2(filename):
