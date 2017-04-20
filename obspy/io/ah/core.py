@@ -229,12 +229,13 @@ def _read_ah1(filename):
 
 def _write_ah1(stream, filename):
     """
-    Reads an AH v1 waveform file and returns a Stream object.
+    Writes a Stream object to an AH v1 waveform file.
 
+    :type stream:
+    :param stream: The ObsPy Stream object to write.
     :type filename: str
-    :param filename: AH v1 file to be read.
-    :rtype: :class:`~obspy.core.stream.Stream`
-    :returns: Stream with Traces specified by given file.
+    :param filename: open file, or file-like object
+
     """
     if filename.endswith('AH') or filename.endswith('ah'):
         filename = os.path.splitext(filename)[0]
@@ -341,10 +342,12 @@ def _write_ah1(stream, filename):
         return packer
 
     def _pack_trace_wout_ah_dict(trace, packer):
-        # Entry are packed in the same order as shown in
-        # _pack_trace_with_ah_dict .The missing information
-        # is replaced with zeros
-        # station info
+        """
+        Entry are packed in the same order as shown in
+        _pack_trace_with_ah_dict .The missing information
+        is replaced with zeros
+        station info
+        """
         packer.pack_int(6)
         packer.pack_fstring(6, tr.stats.station)
         packer.pack_int(6)
