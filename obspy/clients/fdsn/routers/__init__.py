@@ -67,8 +67,39 @@ caveats
 
 # convenience imports
 from .routing_client import (RoutingClient, ResponseManager)  # NOQA
-from .fedcatalog_parser import (FederatedResponse, FedcatalogProviderMetadata)  # NOQA
-from .fedcatalog_client import (FederatedClient,FederatedResponseManager)  # NOQA
+from .fedcatalog_parser import (FederatedResponse)  # NOQA
+from .fedcatalog_client import (FederatedClient, FederatedResponseManager, FedcatalogProviderMetadata)  # NOQA
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
+
+'''
+client = FederatedClient([**individualClientArgs])
+      -> FederatedClient [no init function] 
+      -> RoutingClient.__init__(use_parallel, **kwargs)
+
+inv = client.get_stations([argsToFederator][argsForEachRequest])
+      -> FederatedClient.get_stations(exclude, include, includeoverlaps, **kwargs)
+      -> query_fedcatalog(SERVICE, params, bulk) ... returns Response
+      -> FederatedResponseManager.__init__(resp.txt, include, exclude)
+      ->   ResponseManager.__init(text, include, exclude)
+               FRM.parse_response(text) OR save into .responses
+               .subset_requests(include, exclude)
+               [now, FRM.Responses filled with FederatedResponse items]
+
+      -> querysvc = RoutingClient.get_query_machine()
+            [returns either RoutingClient.serial_service_query or RoutingClient.parallel_service_query]
+
+      -> data,retry = querysvc(FRM, SERVICE, [**kwargs]) 
+         [eg. RoutingClient.serial_service_query(FRM, SERVICE,[argsForEachRequest])]
+              -> set up output, failed queues
+              -> FOR EACH REQ in FRM
+                -> client = fdsn.client.Client(REQ.code, FedClient.individualClientArgs)
+                -> fn = FederatedClient.get_request_fn(targetservice)
+                        [either FC.submit_waveform_request or FC.submit_station_request]
+                -> fn(client, request, output, failed, [argsForEachRequest])
+                    [FC.submit_station/waveform_request(client,req,out,fai,**kwarg)]
+                    -> client.get_stations/waveforms_bulk(bulk=req.text(SERVICE), **kwargs)
+                       [all or nothing... either data goes to output.put or requestlines go to failed.put]
+         [returns data, retry]
+'''
