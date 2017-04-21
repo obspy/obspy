@@ -5,8 +5,6 @@ fedcatalog_response_parser conatains the FederatedResponse class, with the
 supporting parsing routines
 """
 from __future__ import print_function
-import sys
-import requests
 
 class RoutingResponse(object):
     """base for all routed responses"""
@@ -194,8 +192,9 @@ class RequestLine(object):
 
     >>> for y in fed_text.splitlines():
     ...    x = RequestLine(y)
-    ...    print("\\n".join([str([x.is_empty(), x.is_datacenter(), x.is_param(),
-    ...                           x.is_request(), x.is_service()])]))
+    ...    edprs = [x.is_empty(), x.is_datacenter(), x.is_param(),
+    ...             x.is_request(), x.is_service()]
+    ...    print("\\n".join([str(edprs)]))
     [False, False, True, False, False]
     [True, False, False, False, False]
     [False, True, True, False, False]

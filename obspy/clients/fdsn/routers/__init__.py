@@ -68,7 +68,8 @@ caveats
 # convenience imports
 from .routing_client import (RoutingClient, ResponseManager)  # NOQA
 from .fedcatalog_parser import (FederatedResponse)  # NOQA
-from .fedcatalog_client import (FederatedClient, FederatedResponseManager, FedcatalogProviderMetadata)  # NOQA
+from .fedcatalog_client import (FederatedClient, FederatedResponseManager, 
+                                FedcatalogProviders)  # NOQA
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

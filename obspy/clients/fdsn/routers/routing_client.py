@@ -48,16 +48,16 @@ class RoutingClient(Client):
         self.use_parallel = use_parallel
         self.args_to_clients = kwargs  # passed to clients as they are initialized
 
-    def get_query_machine(self):
+    @property
+    def query(self):
         """
         return query based on use_parallel preference
         """
         if self.use_parallel:
-            return self.parallel_service_query
-        else:
-            return self.serial_service_query
+            return self.parallel_query_machine
+        return self.serial_query_machine
 
-    def serial_service_query(self, request_mgr, target_process, **kwargs):
+    def serial_query_machine(self, request_mgr, target_process, **kwargs):
         """
         query clients in series
         """
@@ -86,7 +86,7 @@ class RoutingClient(Client):
             retry = '\n'.join(retry)
         return data, retry
 
-    def parallel_service_query(self, request_mgr, target_process, **kwargs):
+    def parallel_query_machine(self, request_mgr, target_process, **kwargs):
         """
         query clients in parallel
         :type target_process: str
@@ -107,7 +107,6 @@ class RoutingClient(Client):
                 args = (client, req, output, failed)
                 processes.append(mp.Process(target=target, name=req.code,
                                             args=args, kwargs=kwargs))
-
 
         # run
         for p in processes:

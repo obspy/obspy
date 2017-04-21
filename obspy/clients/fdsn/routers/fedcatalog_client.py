@@ -15,7 +15,6 @@ from collections import OrderedDict
 from threading import Lock
 import requests
 from requests.exceptions import (HTTPError, Timeout)
-#from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.header import FDSNException
 from obspy.clients.fdsn.routers.routing_client import (RoutingClient,
                                                        ResponseManager)
@@ -26,20 +25,19 @@ from obspy.clients.fdsn.routers.fedcatalog_parser import (PreParse,
 
 
 
-def query_fedcatalog(targetservice, params=None, bulk=None, argdict=None):
+def query_fedcatalog(targetservice, params=None, bulk=None):
     """
     send request to fedcatalog service, return ResponseManager object
     """
     # send request to the FedCatalog
     url = 'https://service.iris.edu/irisws/fedcatalog/1/'
+    assert (bool(params) ^ bool(bulk)), "Use params OR bulk, but not both"
     if params:
         params["targetservice"] = targetservice
         resp = requests.get(url + "query", params=params, verify=False)
-    elif bulk:
-        bulky = "\n".join(["targetservice=" + targetservice + "\n", bulk])
-        resp = requests.post(url + "query", data=bulky, verify=False)
     else:
-        raise RuntimeError("Either params or bulk must be specified")
+        bulky = "\n".join(("targetservice=" + targetservice + "\n", bulk))
+        resp = requests.post(url + "query", data=bulky, verify=False)
     resp.raise_for_status()
     return resp
 
@@ -82,7 +80,7 @@ def inv2set(inv, level):
 
 # converters used to make comparisons between inventory items and requests
 
-class FedcatalogProviderMetadata(object):
+class FedcatalogProviders(object):
     """
     Class containing datacenter details retrieved from the fedcatalog service
 
@@ -93,22 +91,26 @@ class FedcatalogProviderMetadata(object):
     """
 
     def __init__(self):
-        self.provider_metadata = None
-        self.provider_index = None
-        self.lock = Lock()
-        self.failed_refreshes = 0
+        self._providers = dict()
+        self._lock = Lock()
+        self._failed_refreshes = 0
 
-    def get_names(self):
+    def __iter__(self):
         """
-        return list of provider names
+        iterate through each provider, getting dictionary for each
         """
-        with self.lock:
-            if not self.provider_metadata:
-                self.refresh()
-        if not self.provider_index:
-            return None
-        else:
-            return self.provider_index.keys()
+        if not self._providers:
+            self.refresh()
+        return self._providers.__iter__()
+
+    @property
+    def names(self):
+        """
+        get names of datacenters
+        """
+        if not self._providers:
+            self.refresh()
+        return self._providers.keys()
 
     def get(self, name, detail=None):
         """
@@ -122,80 +124,80 @@ class FedcatalogProviderMetadata(object):
         if no detail is provided, then the entire dict for the requested provider
         will be returned
         """
-        with self.lock:
-            if not self.provider_metadata:
-                self.refresh()
-        if not self.provider_metadata:
-            return None
+        if not self._providers:
+            self.refresh()
+        if not name in self._providers:
+            return ""
         else:
             if detail:
-                return self.provider_metadata[self.provider_index[name]][
-                    detail]
+                return self._providers[name][detail]
             else:
-                return self.provider_metadata[self.provider_index[name]]
+                return self._providers[name]
 
     def refresh(self, force=False):
         """
         retrieve provider profile from fedcatalog service
 
-        >>> fpm = FedcatalogProviderMetadata()
-        >>> # fpm.refresh(force=True)
-        >>> fpm.get_names() #doctest: +ELLIPSIS
+        >>> providers = FedcatalogProviders()
+        >>> # providers.refresh(force=True)
+        >>> providers.names #doctest: +ELLIPSIS
         dict_keys(['...'])
 
         :type force: bool
         :param force: attempt to retrieve data even if too many failed attempts
         """
-        if force or self.failed_refreshes < 4:
+        with self._lock:
+            if self._failed_refreshes > 3 and not force:
+                print(
+                    "Unable to retrieve provider profiles from"
+                    " fedcatalog service after {0} attempts",
+                    self._failed_refreshes,
+                    file=sys.stderr)
+
             try:
                 url = 'https://service.iris.edu/irisws/fedcatalog/1/datacenters'
                 req = requests.get(url, verify=False)
-                self.provider_metadata = req.json()
-                self.provider_index = {
-                    v['name']: k
-                    for k, v in enumerate(self.provider_metadata)
-                }
-                self.failed_refreshes = 0
+                self._providers = {v['name']: v for v in req.json()}
+                self._failed_refreshes = 0
             except:
                 print(
                     "Unable to update provider profiles from fedcatalog service",
                     file=sys.stderr)
-                self.failed_refreshes += 1
-        else:
-            print(
-                "Unable to retrieve provider profiles from fedcatalog service after {0} attempts",
-                self.failed_refreshes,
-                file=sys.stderr)
-            # problem updating
-
-        # yuck. manually account for differences between IRIS output and OBSPY expected
-        self.provider_index["IRIS"] = self.provider_index["IRISDMC"]
-        self.provider_index["GFZ"] = self.provider_index["GEOFON"]
-        self.provider_index["ETH"] = self.provider_index["SED"]
-        self.provider_index["USP"] = self.provider_index["USPSC"]
+                self._failed_refreshes += 1
+            else:
+                # IRIS uses different codes for datacenters than obspy.
+                #         (iris_name , obspy_name)
+                remaps = (("IRISDMC", "IRIS"),
+                          ("GEOFON", "GFZ"),
+                          ("SED", "ETH"),
+                          ("USPC", "USP"))
+                for iris_name, obspy_name in remaps:
+                    if iris_name in self._providers:
+                        self._providers[obspy_name] = self._providers[iris_name]
 
     def pretty(self, name):
         """
         return nice text representation of service without too much details
-        >>> fpm = FedcatalogProviderMetadata()
-        >>> print(fpm.pretty("ORFEUS"))  #doctest: +ELLIPSIS
+        >>> providers = FedcatalogProviders()
+        >>> print(providers.pretty("ORFEUS"))  #doctest: +ELLIPSIS
         ORFEUS
         The ORFEUS Data Center
         de Bilt, the Netherlands
         http://www.orfeus-eu.org
         ...M
         <BLANKLINE>
-        >>> print(fpm.pretty("IRIS") == fpm.pretty("IRISDMC"))
+        >>> print(providers.pretty("IRIS") == providers.pretty("IRISDMC"))
         True
         """
-        self.refresh()
-        return '\n'.join(
-            self.get(name, k)
-            for k in
-            ["name", "description", "location", "website", "lastUpdate"]) + '\n'
+        if not self._providers:
+            self.refresh()
+        if not name in self._providers:
+            return ""
+        fields = ("name", "description", "location", "website", "lastUpdate")
+        return '\n'.join(self._providers[name][k] for k in fields) + '\n'
 
 
-PROVIDER_METADATA = FedcatalogProviderMetadata()
+PROVIDERS = FedcatalogProviders()
 
 class FederatedClient(RoutingClient):
     """
@@ -206,7 +208,8 @@ class FederatedClient(RoutingClient):
     >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
     >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     >>> client = FederatedClient()
-    >>> inv = client.get_stations(network="I?", station="AN*", channel="*HZ") #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> inv = client.get_stations(network="I?", station="AN*", channel="*HZ")
+    ...                           #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     IRISDMC
     The IRIS Data Management Center
     Seattle, WA, USA
@@ -240,10 +243,12 @@ class FederatedClient(RoutingClient):
     def get_request_fn(self, target_service):
         """
         get function used to query the service
-        :param target_service: string containing either 'DATASELECTSERVICE' or 'STATIONSERVICE'
+
+        :type target_service: str
+        :param target_service: either 'DATASELECTSERVICE' or 'STATIONSERVICE'
         """
-        fun = {"DATASELECTSERVICE": self.submit_waveform_request,
-               "STATIONSERVICE": self.submit_station_request}
+        fun = {"DATASELECTSERVICE": self.request_waveforms,
+               "STATIONSERVICE": self.request_stations}
         try:
             return fun.get(target_service)
         except ValueError:
@@ -251,16 +256,15 @@ class FederatedClient(RoutingClient):
             raise ValueError("Expected one of " + valid_funs + " but got {0}",
                              target_service)
 
-    def submit_station_request(self, client, req, output, failed, **kwargs):
+    def request_stations(self, client, req, output, failed, **kwargs):
         """
         function used to query service
+
         :param self: FederatedResponse
         :param output: place where retrieved data go
         :param failed: place where list of unretrieved bulk request lines go
         """
-        print(PROVIDER_METADATA.pretty(req.code))
-        # print (kwargs)
-        # print(req.text("STATIONSERVICE"))
+        print(PROVIDERS.pretty(req.code))
         try:
             data = client.get_stations_bulk(bulk=req.text("STATIONSERVICE"), **kwargs)
         except FDSNException as ex:
@@ -270,13 +274,16 @@ class FederatedClient(RoutingClient):
         else:
             output.put(data)
 
-    def submit_waveform_request(self, client, req, output, failed, **kwargs):
+    def request_waveforms(self, client, req, output, failed, **kwargs):
         """
         function used to query service
+
+        :type output: container accepting "put"
         :param output: place where retrieved data go
+        :type failed: contdainer accepting "put"
         :param failed: place where list of unretrieved bulk request lines go
         """
-        print(PROVIDER_METADATA.pretty(req.code))
+        print(PROVIDERS.pretty(req.code))
         try:
             data = client.get_waveforms_bulk( bulk=req.text("DATASELECTSERVICE"), **kwargs)
 
@@ -343,8 +350,8 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        query_service = self.get_query_machine()
-        data, _ = query_service(frm, "DATASELECTSERVICE", **svc_kwargs)
+        #query_service = self.get_query_machine()
+        data, _ = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         # reprocess failed?
         return data
@@ -380,7 +387,7 @@ class FederatedClient(RoutingClient):
         The IRIS Data Management Center
         Seattle, WA, USA
         http://ds.iris.edu
-        Apr 20, 2017 5:05:58 AM
+        ...M
         <BLANKLINE>
         >>> print(w)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00...Z - 2010-02-27T06:32:59...Z | 20.0 Hz, 3600 samples
@@ -409,8 +416,8 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        query_service = self.get_query_machine()
-        data, _ = query_service(frm, "DATASELECTSERVICE", **svc_kwargs)
+        #query_service = self.get_query_machine()
+        data, _ = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         # reprocess failed?
         return data
@@ -465,8 +472,7 @@ class FederatedClient(RoutingClient):
                                        include_provider=include_provider,
                                        exclude_provider=exclude_provider)
 
-        query_service = self.get_query_machine()
-        inv, _ = query_service(frm, "STATIONSERVICE", **kwargs)
+        inv, _ = self.query(frm, "STATIONSERVICE", **kwargs)
 
         # reprocess failed?
 
@@ -584,9 +590,8 @@ class FederatedClient(RoutingClient):
                                        include_provider=include_provider,
                                        exclude_provider=exclude_provider)
 
-        query_service = self.get_query_machine() 
         # TODO check to make sure svc_kwargs actually are passed along from fedcatalog
-        inv, _ = query_service(frm, "STATIONSERVICE", **svc_kwargs)
+        inv, _ = self.query(frm, "STATIONSERVICE", **svc_kwargs)
 
         # reprocess failed ?
         return inv
