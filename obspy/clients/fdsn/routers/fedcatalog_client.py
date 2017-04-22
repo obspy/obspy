@@ -33,8 +33,6 @@ REMAPS = (("IRISDMC", "IRIS"),
 
 FEDCATALOG_URL = 'https://service.iris.edu/irisws/fedcatalog/1/'
 
-
-
 def inv2set(inv, level):
     """
     used to quickly decide what exists and what doesn't
@@ -241,6 +239,9 @@ class FederatedClient(RoutingClient):
     >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
     >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     >>> client = FederatedClient()
+    >>> print(client)  #doctest: +ELLIPSIS
+    Federated Catalog Routing Client
+
     >>> inv = client.get_stations(network="I?", station="AN*", channel="*HZ")
     ...                           #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
     IRISDMC
@@ -266,8 +267,12 @@ class FederatedClient(RoutingClient):
                 status will not be checked beyond gross failures (no data, no response, timeout)
     """
 
-    # no __init__ function.  Values are passed through to super.
+    def __str__(self):
+        ret = "Federated Catalog Routing Client"
+        return ret
 
+    def __repr__(self):
+        return "Federated Catalog Routing Client v{0}".format(self.version)
 
     def query_fedcatalog(self, params=None, bulk=None):
         """
@@ -323,6 +328,7 @@ class FederatedClient(RoutingClient):
         :type **kwargs:
         :param **kwargs:
         """
+        
         print(PROVIDERS.pretty(req.code))
 
         bulk_services = {"DATASELECTSERVICE": client.get_waveforms_bulk,
@@ -337,9 +343,11 @@ class FederatedClient(RoutingClient):
         try:
             if isinstance(filename, str):
                 with open(filename, 'ab+') as f:
+                    raise ValueError('not expected to be here')
                     get_bulk(bulk=req.text(service), filename=f, **kwargs)
             elif filename:
                 # likely a pointer to somewhere. just let it go through without collecting the data
+                raise ValueError('not expected to be here either')
                 get_bulk(bulk=req.text(service), filename=filename, **kwargs)
             else:
                 data = get_bulk(bulk=req.text(service), filename=filename, **kwargs)
@@ -347,6 +355,7 @@ class FederatedClient(RoutingClient):
             failed.put(req.request_lines)
             print("Failed to retrieve data from: {0}", req.code)
             print(ex)
+            raise
         else:
             output.put(data)
 
@@ -555,6 +564,28 @@ class FederatedClient(RoutingClient):
                     IA, IB, II, IQ, IS, IV
                 Stations (0):
         <BLANKLINE>
+                Channels (0):
+        <BLANKLINE>
+        
+        >>> fclient = FederatedClient(use_parallel=True)
+        >>> INV = fclient.get_stations(network="A?", station="OK*",
+        ...                           channel="?HZ", level="station",
+        ...                           endtime="2016-12-31")  #doctest: +ELLIPSIS
+        IRISDMC
+        The IRIS Data Management Center
+        ...
+        >>> print(INV)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+        Inventory created at 2...Z
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: 1...
+                    http://service.iris.edu/fdsnws/station/1/query
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (1):
+                    AV
+                Stations (14):
+                    AV.OKAK (Cape Aslik 2, Okmok Caldera, Alaska)
+                    ...
+                    AV.OKWR (West Rim, Okmok Caldera, Alaska)
                 Channels (0):
         <BLANKLINE>
         """
