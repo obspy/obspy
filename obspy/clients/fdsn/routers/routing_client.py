@@ -5,7 +5,6 @@ FDSN Web service client for ObsPy.
 """
 
 from __future__ import print_function
-import sys
 import queue
 import multiprocessing as mp
 from obspy.clients.fdsn import Client
@@ -32,12 +31,17 @@ class RoutingClient(Client):
     once they are merged into the same inventory object, individual
     station:provider identity is lost.
     """
-    def __init__(self, use_parallel=False, **kwargs):
+    def __init__(self, use_parallel=False, include_provider=None,
+                 exclude_provider=None, **kwargs):
         """
         :type use_parallel: boolean
         :param use_parallel: determines whether clients will be polled in in
         parallel or in series.  If the Client appears to hang during a request,
         set this to False.
+        :type exclude_provider: str or list of str
+        :param exclude_provider: Get no data from these providers
+        :type include_provider: str or list of str
+        :param include_provider: Get data only from these providers
         :param **kwargs: additional arguments are passed along to each instance
         of the new client
         """
@@ -47,6 +51,8 @@ class RoutingClient(Client):
 
         self.use_parallel = use_parallel
         self.args_to_clients = kwargs  # passed to clients as they are initialized
+        self.include_provider = include_provider
+        self.exclude_provider = exclude_provider
 
     @property
     def query(self):
@@ -60,10 +66,22 @@ class RoutingClient(Client):
     def serial_query_machine(self, request_mgr, service, **kwargs):
         """
         query clients in series
+
+        :type request_mgr: :class:`~obspy.clients.fdsn.routers.ResponseManager`
+        :param request_mgr:
+        :type service: str
+        :param service:
+        :rtype: tuple (data, list of failed queries)
+        :return:
         """
         output = queue.Queue()
         failed = queue.Queue()
+
         for req in request_mgr:  #each FederatedResponse() / RoutingResponse()
+            if self.exclude_provider and req.code in self.exclude_provider:
+                continue
+            if self.include_provider and req.code not in self.include_provider:
+                continue
             try:
                 client = Client(req.code, self.args_to_clients)
                 self.request_something(client, service, req, output, failed, **kwargs)
@@ -89,10 +107,12 @@ class RoutingClient(Client):
         """
         query clients in parallel
 
-        :type request_mgr:
+        :type request_mgr: :class:`~obspy.clients.fdsn.routers.ResponseManager`
         :param request_mgr:
         :type service: str
         :param service:
+        :rtype: tuple (data, list of failed queries)
+        :return:
         """
 
         output = mp.Queue()
@@ -100,6 +120,10 @@ class RoutingClient(Client):
         # Setup process for each provider
         processes = []
         for req in request_mgr:
+            if self.exclude_provider and req.code in self.exclude_provider:
+                continue
+            if self.include_provider and req.code not in self.include_provider:
+                continue
             try:
                 client = Client(req.code, self.args_to_clients)
             except:
@@ -144,14 +168,12 @@ class ResponseManager(object):
     Input would be the response from the routing service, or a similar text file
     Output is a list of RoutingResponse objects
     """
-    def __init__(self, textblock, include_provider=None, exclude_provider=None):
+    def __init__(self, textblock):
         """
+        initialize a ResponseManager object
+
         :type textblock: str or container of RoutingResponse
         :param textblock: text retrieved from routing service
-        :type include_provider: str or list of str
-        :param include_provider:
-        :type exclude_provider: str or list of str
-        :param exclude_provider:
         """
         self.responses = []
         # print("init responsemanager: incoming text is a " + type(textblock).__name__)
@@ -161,9 +183,6 @@ class ResponseManager(object):
             self.responses = [textblock]
         elif isinstance(textblock, (tuple, list)):
             self.responses = [v for v in textblock if isinstance(v, RoutingResponse)]
-        if include_provider or exclude_provider:
-            self.subset_requests(include_provider=include_provider,
-                                 exclude_provider=exclude_provider)
 
     def __iter__(self):
         return self.responses.__iter__()
@@ -181,6 +200,11 @@ class ResponseManager(object):
     def parse_response(self, parameter_list):
         """
         create a list of RoutingResponse objects, one for each provider in response
+
+        :type parameter_list:
+        :param parameter_list:
+        :rtype:
+        :return:
         """
         raise NotImplementedError()
 
@@ -203,10 +227,12 @@ class ResponseManager(object):
 
         :type code: str
         :param code: recognized key string for recognized server. see
-        obspy.clients.fdsn.client for a list
+        :mod:`~obspy.clients.fdsn.client` for a list
         :type get_multiple: bool
         :param get_multiple: determines whether to return a single (first
         matching) RoutingResponse or a list of all matching responses
+        :rtype: :class:`~obspy.clients.fdsn.routers.RoutingResponse` or list
+        :return:
         """
         if get_multiple:
             return [resp for resp in self.responses if resp.code == code]
@@ -214,51 +240,6 @@ class ResponseManager(object):
             if resp.code == code:
                 return resp
         return None
-
-    def subset_requests(self, include_provider=None, exclude_provider=None):
-        """
-        provide more flexibility by specifying which datacenters to include or exclude
-
-        Set up sample data:
-        >>> rawdata = [RoutingResponse('IRIS'), RoutingResponse('SED'),
-        ...             RoutingResponse('RESIF')]
-        >>> fedresps = ResponseManager(rawdata)
-
-        >>> all_codes = lambda resps: ".".join([p.code for p in resps])
-        >>> print(all_codes(fedresps))
-        IRIS.SED.RESIF
-
-        Test methods that return multiple RoutingResponse objects
-        >>> no_sed_v1 = ResponseManager(rawdata)
-        >>> no_sed_v1.subset_requests(exclude_provider='SED')
-        >>> print(all_codes(no_sed_v1))
-        IRIS.RESIF
-        >>> no_sed_v2 = ResponseManager(rawdata)
-        >>> no_sed_v2.subset_requests(include_provider=['IRIS', 'RESIF'])
-        >>> all_codes(no_sed_v1) == all_codes(no_sed_v2)
-        True
-
-        Test methods that return single RoutingResponse (still in a container, though)
-        >>> only_sed_v1 = ResponseManager(rawdata)
-        >>> only_sed_v1.subset_requests(exclude_provider=['IRIS', 'RESIF'])
-        >>> only_sed_v2 = ResponseManager(rawdata)
-        >>> only_sed_v2.subset_requests(include_provider='SED')
-        >>> print(all_codes(only_sed_v1))
-        SED
-        >>> all_codes(only_sed_v1) == all_codes(only_sed_v2)
-        True
-
-        :type include_provider: str or list of str
-        :param include_provider: codes for providers, whose data to retrieve
-        :type exclude_provider: str or list of str
-        :param exclude_provider: codes of providers which should not be queried
-        """
-        if include_provider:
-            self.responses = [resp for resp in self.responses if resp.code in include_provider]
-        elif exclude_provider:
-            self.responses = [resp for resp in self.responses if resp.code not in exclude_provider]
-
-
 
 if __name__ == '__main__':
     import doctest
