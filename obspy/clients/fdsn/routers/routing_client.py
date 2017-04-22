@@ -32,7 +32,7 @@ class RoutingClient(Client):
     station:provider identity is lost.
     """
     def __init__(self, use_parallel=False, include_provider=None,
-                 exclude_provider=None, **kwargs):
+                 exclude_provider=None, service_mappings=None, **kwargs):
         """
         :type use_parallel: boolean
         :param use_parallel: determines whether clients will be polled in in
@@ -45,6 +45,7 @@ class RoutingClient(Client):
         :param **kwargs: additional arguments are passed along to each instance
         of the new client
         """
+        # super(RoutingClient, self).__init__(self)
         # do not pass initialization on to the Client. its series of checks
         # do this service no good, since this is a non-standard service, and
         # furthermore it is technically an IRIS service, not an FDSN service
@@ -53,6 +54,10 @@ class RoutingClient(Client):
         self.args_to_clients = kwargs  # passed to clients as they are initialized
         self.include_provider = include_provider
         self.exclude_provider = exclude_provider
+        self._service_mappings = service_mappings
+
+    def __str__(self):
+        return "RoutingClient object"
 
     @property
     def query(self):
@@ -79,8 +84,10 @@ class RoutingClient(Client):
 
         for req in request_mgr:  #each FederatedResponse() / RoutingResponse()
             if self.exclude_provider and req.code in self.exclude_provider:
+                print("skipping: " + req.code)
                 continue
             if self.include_provider and req.code not in self.include_provider:
+                print("skipping: " + req.code)
                 continue
             try:
                 client = Client(req.code, self.args_to_clients)
@@ -121,8 +128,10 @@ class RoutingClient(Client):
         processes = []
         for req in request_mgr:
             if self.exclude_provider and req.code in self.exclude_provider:
+                print("skipping: " + req.code)
                 continue
             if self.include_provider and req.code not in self.include_provider:
+                print("skipping: " + req.code)
                 continue
             try:
                 client = Client(req.code, self.args_to_clients)
@@ -133,7 +142,7 @@ class RoutingClient(Client):
                 args = (client, service, req, output, failed)
                 processes.append(mp.Process(target=self.request_something,
                                             name=req.code,
-                                            args=args, 
+                                            args=args,
                                             kwargs=kwargs))
 
         # run
