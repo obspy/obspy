@@ -57,17 +57,16 @@ class RoutingClient(Client):
             return self.parallel_query_machine
         return self.serial_query_machine
 
-    def serial_query_machine(self, request_mgr, target_process, **kwargs):
+    def serial_query_machine(self, request_mgr, service, **kwargs):
         """
         query clients in series
         """
         output = queue.Queue()
         failed = queue.Queue()
-        fn = self.get_request_fn(target_process)
         for req in request_mgr:  #each FederatedResponse() / RoutingResponse()
             try:
                 client = Client(req.code, self.args_to_clients)
-                fn(client, req, output, failed, **kwargs)
+                self.request_something(client, service, req, output, failed, **kwargs)
             except:
                 failed.put(req.request_lines)
                 raise
@@ -86,27 +85,32 @@ class RoutingClient(Client):
             retry = '\n'.join(retry)
         return data, retry
 
-    def parallel_query_machine(self, request_mgr, target_process, **kwargs):
+    def parallel_query_machine(self, request_mgr, service, **kwargs):
         """
         query clients in parallel
-        :type target_process: str
-        :param target_process: see RoutingResponse.get_routing_response_fn for details
+
+        :type request_mgr:
+        :param request_mgr:
+        :type service: str
+        :param service:
         """
 
         output = mp.Queue()
         failed = mp.Queue()
         # Setup process for each provider
         processes = []
-        target = self.get_request_fn(target_process)
         for req in request_mgr:
             try:
                 client = Client(req.code, self.args_to_clients)
             except:
                 failed.put(req.request_lines)
+                raise
             else:
-                args = (client, req, output, failed)
-                processes.append(mp.Process(target=target, name=req.code,
-                                            args=args, kwargs=kwargs))
+                args = (client, service, req, output, failed)
+                processes.append(mp.Process(target=self.request_something,
+                                            name=req.code,
+                                            args=args, 
+                                            kwargs=kwargs))
 
         # run
         for p in processes:

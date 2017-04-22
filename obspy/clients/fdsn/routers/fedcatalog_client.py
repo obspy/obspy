@@ -25,19 +25,20 @@ from obspy.clients.fdsn.routers.fedcatalog_parser import (PreParse,
 
 
 
-def query_fedcatalog(targetservice, params=None, bulk=None):
+def query_fedcatalog(params=None, bulk=None):
     """
     send request to fedcatalog service, return ResponseManager object
     """
     # send request to the FedCatalog
     url = 'https://service.iris.edu/irisws/fedcatalog/1/'
-    assert (bool(params) ^ bool(bulk)), "Use params OR bulk, but not both"
+    if params is None and bulk is None:
+        raise ValueError("Both params and bulk are empty")
+    elif bool(params) and bool(bulk):
+        raise ValueError("Use params OR bulk, but not both")
     if params:
-        params["targetservice"] = targetservice
         resp = requests.get(url + "query", params=params, verify=False)
     else:
-        bulky = "\n".join(("targetservice=" + targetservice + "\n", bulk))
-        resp = requests.post(url + "query", data=bulky, verify=False)
+        resp = requests.post(url + "query", data=bulk, verify=False)
     resp.raise_for_status()
     return resp
 
@@ -209,14 +210,13 @@ class FederatedClient(RoutingClient):
     >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     >>> client = FederatedClient()
     >>> inv = client.get_stations(network="I?", station="AN*", channel="*HZ")
-    ...                           #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    ...                           #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
     IRISDMC
     The IRIS Data Management Center
     Seattle, WA, USA
     http://ds.iris.edu
-    ...M
-    <BLANKLINE>
-    >>> print(inv)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    ...
+    >>> print(inv)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
     Inventory created at ...Z
     	Created by: IRIS WEB SERVICE: fdsnws-station | version: 1...
     		    http://service.iris.edu/fdsnws/station/1/query
@@ -240,58 +240,41 @@ class FederatedClient(RoutingClient):
         service_argdict = argdict.copy()
         return fed_argdict, service_argdict
 
-    def get_request_fn(self, target_service):
-        """
-        get function used to query the service
-
-        :type target_service: str
-        :param target_service: either 'DATASELECTSERVICE' or 'STATIONSERVICE'
-        """
-        fun = {"DATASELECTSERVICE": self.request_waveforms,
-               "STATIONSERVICE": self.request_stations}
-        try:
-            return fun.get(target_service)
-        except ValueError:
-            valid_funs = '"' + ', '.join(fun.keys)
-            raise ValueError("Expected one of " + valid_funs + " but got {0}",
-                             target_service)
-
-    def request_stations(self, client, req, output, failed, **kwargs):
+    def request_something(self, client, service, req, output, failed, **kwargs):
         """
         function used to query service
 
-        :param self: FederatedResponse
+        :type client:
+        :param client:
+        :type service:
+        :param service:
+        :type req:
+        :param req:
+        :type output: container accepting "put"
         :param output: place where retrieved data go
+        :type failed: contdainer accepting "put"
         :param failed: place where list of unretrieved bulk request lines go
+        :type **kwargs:
+        :param **kwargs:
         """
         print(PROVIDERS.pretty(req.code))
+
+        bulk_services = {"DATASELECTSERVICE": client.get_waveforms_bulk,
+                              "STATIONSERVICE": client.get_stations_bulk}
         try:
-            data = client.get_stations_bulk(bulk=req.text("STATIONSERVICE"), **kwargs)
+            get_bulk = bulk_services.get(service)
+        except ValueError:
+            valid_services = '"' + ', '.join(bulk_services.keys)
+            raise ValueError("Expected one of " + valid_services + " but got {0}",
+                             service)
+
+        try:
+            data = get_bulk(bulk=req.text(service), **kwargs)
         except FDSNException as ex:
             failed.put(req.request_lines)
             print("Failed to retrieve data from: {0}", req.code)
             print(ex)
         else:
-            output.put(data)
-
-    def request_waveforms(self, client, req, output, failed, **kwargs):
-        """
-        function used to query service
-
-        :type output: container accepting "put"
-        :param output: place where retrieved data go
-        :type failed: contdainer accepting "put"
-        :param failed: place where list of unretrieved bulk request lines go
-        """
-        print(PROVIDERS.pretty(req.code))
-        try:
-            data = client.get_waveforms_bulk( bulk=req.text("DATASELECTSERVICE"), **kwargs)
-
-        except FDSNException:
-            failed.put(req.request_lines)
-            raise
-        else:
-            # print(data)
             output.put(data)
 
     def get_waveforms_bulk(self,
@@ -305,10 +288,19 @@ class FederatedClient(RoutingClient):
                            includeoverlaps=False,
                            **kwargs):
         """
-        
+
         >>> client = FederatedClient()
-        >>> w, _ = client.get_waveforms_bulk(bulk="IU ANMO * ?HZ 2010-02-27T06:30:00) 2010-02-27T06:33:00")
-        >>> print(w)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> tr = client.get_waveforms_bulk(bulk="IU ANMO * ?HZ 2010-02-27T06:30:00 2010-02-27T06:33:00")
+        ...        #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+        IRISDMC
+        The IRIS Data Management Center
+        ...
+        >>> print(tr)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+        6 Trace(s) in Stream:
+        IU.ANMO.00.BHZ | 2010-02-27T06:30... | 20.0 Hz, 3600 samples
+        IU.ANMO.00.LHZ | 2010-02-27T06:30... | 1.0 Hz, 180 samples
+        ...
+        IU.ANMO.10.VHZ | 2010-02-27T06:30... | 0.1 Hz, 18 samples
         
         :type exclude_provider: str or list of str
         :param exclude_provider: Get no data from these datacenters
@@ -331,7 +323,7 @@ class FederatedClient(RoutingClient):
 
         fed_kwargs, svc_kwargs = self.assign_kwargs(kwargs)
         try:
-            resp = query_fedcatalog("DATASELECTSERVICE", params=fed_kwargs)
+            resp = query_fedcatalog(bulk=bulk)
         except ConnectionError:
             print("Problem connecting to fedcatalog service", file=sys.stderr)
         except HTTPError:
@@ -350,7 +342,6 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        #query_service = self.get_query_machine()
         data, _ = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         # reprocess failed?
@@ -374,29 +365,28 @@ class FederatedClient(RoutingClient):
         :param includeoverlaps: retrieve same information from multiple sources
         (not recommended)
         other parameters as seen in Client.get_stations_bulk
-        
+
         >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> client = FederatedClient()
         >>> from obspy.core import  UTCDateTime
         >>> t_st = UTCDateTime("2010-02-27T06:30:00")
         >>> t_ed = UTCDateTime("2010-02-27T06:33:00")
-        >>> w, _ = client.get_waveforms(network="IU", station="ANMO", channel="BHZ",
-        ...                             starttime=t_st, endtime=t_ed)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> tr = client.get_waveforms(network="IU", station="ANMO", channel="BHZ",
+        ...                             starttime=t_st, endtime=t_ed)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         IRISDMC
         The IRIS Data Management Center
-        Seattle, WA, USA
-        http://ds.iris.edu
-        ...M
-        <BLANKLINE>
-        >>> print(w)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-        IU.ANMO.00.BHZ | 2010-02-27T06:30:00...Z - 2010-02-27T06:32:59...Z | 20.0 Hz, 3600 samples
+        ...
+        >>> print(tr)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+        2 Trace(s) in Stream:
+        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... 20.0 Hz, 3600 samples
+        IU.ANMO.10.BHZ | 2010-02-27T06:30:00... 40.0 Hz, 7200 samples
         """
 
         fed_kwargs, svc_kwargs = self.assign_kwargs(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
         try:
-            resp = query_fedcatalog("DATASELECTSERVICE", params=fed_kwargs)
+            resp = query_fedcatalog(params=fed_kwargs)
         except ConnectionError:
             print("Problem connecting to fedcatalog service", file=sys.stderr)
         except HTTPError:
@@ -416,7 +406,6 @@ class FederatedClient(RoutingClient):
             include_provider=include_provider,
             exclude_provider=exclude_provider)
 
-        #query_service = self.get_query_machine()
         data, _ = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         # reprocess failed?
@@ -445,10 +434,8 @@ class FederatedClient(RoutingClient):
         ...                     bulktxt)  #doctest: +ELLIPSIS
         IRISDMC
         The IRIS Data Management Center
-        Seattle, WA, USA
-        http://ds.iris.edu...
-        <BLANKLINE>
-        >>> print(INV)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        ...
+        >>> print(INV)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         Inventory created at 2...Z
             Created by: IRIS WEB SERVICE: fdsnws-station | version: 1...
                     http://service.iris.edu/fdsnws/station/1/query
@@ -466,13 +453,13 @@ class FederatedClient(RoutingClient):
         fed_kwargs, svc_kwargs = self.assign_kwargs(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
         # send request to the FedCatalog
-        resp = query_fedcatalog("station", bulk=bulk)
+        resp = query_fedcatalog(bulk=bulk)
         # parse the reply into an iterable object
         frm = FederatedResponseManager(resp.text,
                                        include_provider=include_provider,
                                        exclude_provider=exclude_provider)
 
-        inv, _ = self.query(frm, "STATIONSERVICE", **kwargs)
+        inv, _ = self.query(frm, "STATIONSERVICE", **svc_kwargs)
 
         # reprocess failed?
 
@@ -503,10 +490,8 @@ class FederatedClient(RoutingClient):
         ...                           endtime="2016-12-31")  #doctest: +ELLIPSIS
         IRISDMC
         The IRIS Data Management Center
-        Seattle, WA, USA
-        http://ds.iris.edu...
-        <BLANKLINE>
-        >>> print(INV)  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        ...
+        >>> print(INV)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         Inventory created at 2...Z
             Created by: IRIS WEB SERVICE: fdsnws-station | version: 1...
                     http://service.iris.edu/fdsnws/station/1/query
@@ -516,43 +501,27 @@ class FederatedClient(RoutingClient):
                     AV
                 Stations (14):
                     AV.OKAK (Cape Aslik 2, Okmok Caldera, Alaska)
-                    AV.OKCD (Cone D, Okmok Caldera, Alaska)
-                    AV.OKCE (Cone E, Okmok Caldera, Alaska)
-                    AV.OKCF (Cone F, Okmok Caldera, Alaska)
-                    AV.OKER (East Rim, Okmok Caldera, Alaska)
-                    AV.OKFG (Fort Glenn, Okmok Caldera, Alaska)
-                    AV.OKID (Mount Idak, Okmok Caldera, Alaska)
-                    AV.OKNC (New Cone D, Okmok Caldera, Alaska)
-                    AV.OKRE (Reindeer Point, Okmok Caldera, Alaska)
-                    AV.OKSO (South, Okmok Caldera, Alaska)
-                    AV.OKSP (Steeple Point, Okmok Caldera, Alaska)
-                    AV.OKTU (Mount Tulik, Okmok Caldera, Alaska)
-                    AV.OKWE (Weeping Wall, Okmok Caldera, Alaska)
+                    ...
                     AV.OKWR (West Rim, Okmok Caldera, Alaska)
                 Channels (0):
         <BLANKLINE>
-        
+        >>> keep_out = ["IRISDMC","IRIS","IRIS-DMC"]
         >>> INV2 = client.get_stations(network="I?", station="A*",
-        ...                           level="network", exclude_provider=["IRISDMC","IRIS","IRIS-DMC"])  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        ...                           level="network", exclude_provider=keep_out)
+        ...                           #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         GEOFON
         The GEOFON Program
         Potsdam, Germany
-        http://geofon.gfz-potsdam.de
-        ...M
-        <BLANKLINE>
+        ...
         INGV
         The Italian National Institute of Geophysics and Volcanology
         Rome, Italy
-        http://www.ingv.it
-        ...M
-        <BLANKLINE>
+        ...
         ORFEUS
         The ORFEUS Data Center
         de Bilt, the Netherlands
-        http://www.orfeus-eu.org
-        ...AM
-        <BLANKLINE>
-        >>> print(INV2)  #doctest: +ELLIPSIS
+        ...
+        >>> print(INV2)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         Inventory created at ...Z
             Created by: ObsPy ...
                     https://www.obspy.org
@@ -570,7 +539,7 @@ class FederatedClient(RoutingClient):
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
         try:
-            resp = query_fedcatalog("station", params=fed_kwargs)
+            resp = query_fedcatalog(params=fed_kwargs)
         except ConnectionError:
             print("Problem connecting to fedcatalog service", file=sys.stderr)
             raise
@@ -707,4 +676,4 @@ if __name__ == '__main__':
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
     import doctest
-    doctest.testmod(exclude_empty=True)
+    doctest.testmod(exclude_empty=True, verbose=True)
