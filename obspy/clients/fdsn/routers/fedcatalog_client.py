@@ -261,6 +261,9 @@ class FederatedClient(RoutingClient):
     			IU.ANTO (Ankara, Turkey) (4x)
     		Channels (0):
     <BLANKLINE>
+
+    .. Warning: if output is sent directly to a file, then the success
+                status will not be checked beyond gross failures (no data, no response, timeout)
     """
 
     # no __init__ function.  Values are passed through to super.
@@ -300,9 +303,11 @@ class FederatedClient(RoutingClient):
         frm = FederatedResponseManager(resp.text)
         return frm
 
-    def request_something(self, client, service, req, output, failed, **kwargs):
+    def request_something(self, client, service, req, output, failed, filename=None, **kwargs):
         """
-        function used to query service
+        function used to query FDSN webservice using 
+        :meth:`~obspy.clients.fdsn.client.Client.get_waveforms_bulk` or
+        :meth:`~obspy.clients.fdsn.client.Client.get_stations_bulk`
 
         :type client:
         :param client:
@@ -314,6 +319,7 @@ class FederatedClient(RoutingClient):
         :param output: place where retrieved data go
         :type failed: contdainer accepting "put"
         :param failed: place where list of unretrieved bulk request lines go
+        :param filename:
         :type **kwargs:
         :param **kwargs:
         """
@@ -329,7 +335,14 @@ class FederatedClient(RoutingClient):
                              service)
 
         try:
-            data = get_bulk(bulk=req.text(service), **kwargs)
+            if isinstance(filename, str):
+                with open(filename, 'ab+') as f:
+                    get_bulk(bulk=req.text(service), filename=f, **kwargs)
+            elif filename:
+                # likely a pointer to somewhere. just let it go through without collecting the data
+                get_bulk(bulk=req.text(service), filename=filename, **kwargs)
+            else:
+                data = get_bulk(bulk=req.text(service), filename=filename, **kwargs)
         except FDSNException as ex:
             failed.put(req.request_lines)
             print("Failed to retrieve data from: {0}", req.code)
