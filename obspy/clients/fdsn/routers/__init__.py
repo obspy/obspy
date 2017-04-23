@@ -9,7 +9,7 @@ The holdings of many of these services are indexed by the FedCatalog service
  (https://service.iris.edu/irisws/fedcatalog/1/). Users looking for waveforms or
  metadata can then query the FedCatalog service to learn which provider holds
  which data.  Furthermore, the results from a FedCatalog query are easily turned
- into post requests for each service.
+ into POST requests for each service.
 
  This FederatedClient first queries the FedCatalog service to determine where
  the data of interest reside.  It then queries the individual web services from
@@ -27,12 +27,12 @@ Basic Usage
 The first step is always to initialize a client object.
 
 >>> from obspy.clients.fdsn import FederatedClient
->>> client = Client()
+>>> client = FederatedClient()
 
 Retrieving Station Metadata
 ---------------------------
 
-Submitting a GET request to the federated catalog service. The service recognizes and accepts 
+Submitting a GET request to the federated catalog service. The service recognizes
 parameters that are normally accepted by the station web service.
 
 >>> inv = client.get_stations(station="A*", channel="BHZ", level="station")
@@ -40,10 +40,10 @@ parameters that are normally accepted by the station web service.
 
 Retrieving Waveform Metadata
 ---------------------------
-Submitting a GET request to the federated catalog service.  The service recognizes and accepts not
-only the paramters normally accepted by the bulkdataselect web service, but also the parameters
-accepted by the station service.  This includes geographic parameters. For more details, see the
-help for obspy.clients.fdsn
+Submitting a GET request to the federated catalog service.  The service recognizes
+not only the paramters normally accepted by the bulkdataselect web service, but 
+also the parameters accepted by the station service.  This includes geographic 
+parameters. For more details, see the help for obspy.clients.fdsn
 
     >>> from obspy import UTCDateTime
     >>> t = UTCDateTime("2010-02-27T06:45:00.000")
@@ -60,15 +60,14 @@ help for obspy.clients.fdsn
         st.plot()
 
 caveats
--------
-1. duplicated metadata remains duplicated.
-
+----
+* duplicated metadata remains duplicated.
 """
 
 # convenience imports
-from .routing_client import (RoutingClient, ResponseManager)  # NOQA
-from .fedcatalog_parser import (FederatedResponse)  # NOQA
-from .fedcatalog_client import (FederatedClient, FederatedResponseManager, 
+from .routing_client import (RoutingClient, RoutingManager)
+from .fedcatalog_parser import (FederatedRoute)  # NOQA
+from .fedcatalog_client import (FederatedClient, FederatedRoutingManager,
                                 FedcatalogProviders)  # NOQA
 if __name__ == '__main__':
     import doctest
@@ -81,12 +80,11 @@ client = FederatedClient([**individualClientArgs])
 
 inv = client.get_stations([argsToFederator][argsForEachRequest])
       -> FederatedClient.get_stations(exclude, include, includeoverlaps, **kwargs)
-      -> query_fedcatalog(SERVICE, params, bulk) ... returns Response
-      -> FederatedResponseManager.__init__(resp.txt, include, exclude)
-      ->   ResponseManager.__init(text, include, exclude)
-               FRM.parse_response(text) OR save into .responses
-               .subset_requests(include, exclude)
-               [now, FRM.Responses filled with FederatedResponse items]
+      -> get_routing(SERVICE, params, bulk) ... returns Response
+      -> FederatedRoutingManager.__init__(resp.txt, include, exclude)
+      ->   RoutingManager.__init(text, include, exclude)
+               FRM.parse_routing(text) OR save into .routes
+               [now, FRM.Responses filled with FederatedRoute items]
 
       -> querysvc = RoutingClient.get_query_machine()
             [returns either RoutingClient.serial_service_query or RoutingClient.parallel_service_query]
@@ -95,12 +93,12 @@ inv = client.get_stations([argsToFederator][argsForEachRequest])
          [eg. RoutingClient.serial_service_query(FRM, SERVICE,[argsForEachRequest])]
               -> set up output, failed queues
               -> FOR EACH REQ in FRM
-                -> client = fdsn.client.Client(REQ.code, FedClient.individualClientArgs)
+                -> client = fdsn.client.Client(REQ.provider_id, FedClient.individualClientArgs)
                 -> fn = FederatedClient.get_request_fn(targetservice)
                         [either FC.submit_waveform_request or FC.submit_station_request]
                 -> fn(client, request, output, failed, [argsForEachRequest])
-                    [FC.submit_station/waveform_request(client,req,out,fai,**kwarg)]
-                    -> client.get_stations/waveforms_bulk(bulk=req.text(SERVICE), **kwargs)
+                    [FC.submit_station/waveform_request(client,route,out,fai,**kwarg)]
+                    -> client.get_stations/waveforms_bulk(bulk=route.text(SERVICE), **kwargs)
                        [all or nothing... either data goes to output.put or requestlines go to failed.put]
          [returns data, retry]
 '''

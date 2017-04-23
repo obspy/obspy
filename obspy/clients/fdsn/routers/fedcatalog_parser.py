@@ -1,22 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-fedcatalog_response_parser conatains the FederatedResponse class, with the
+fedcatalog_response_parser conatains the FederatedRoute class, with the
 supporting parsing routines
 """
 from __future__ import print_function
 
 class RoutingResponse(object):
-    """base for all routed responses"""
+    """base for all routed routes"""
 
-    def __init__(self, code, raw_requests=None):
+    def __init__(self, provider_id, raw_requests=None):
         """
-        :type code: str
-        :param code: code for the data provider
+        :type provider_id: str
+        :param provider_id: provider_id for the data provider
         :type raw_requests: iterable
         :param raw_requests: requests to be interpreted and passed to provider
         """
-        self.code = code
+        self.provider_id = provider_id
         self.request_lines = raw_requests
 
     def __len__(self):
@@ -29,7 +29,7 @@ class RoutingResponse(object):
             line_or_lines = " lines"
         else:
             line_or_lines = " line"
-        return self.code + ", with " + str(len(self)) + line_or_lines
+        return self.provider_id + ", with " + str(len(self)) + line_or_lines
 
     def add_request(self, line):
         """
@@ -38,14 +38,14 @@ class RoutingResponse(object):
         raise NotImplementedError("RoutingResponse.add_request()")
 
 
-class FederatedResponse(RoutingResponse):
+class FederatedRoute(RoutingResponse):
     """
-    >>> fed_resp = FederatedResponse("IRISDMC")
+    >>> fed_resp = FederatedRoute("IRISDMC")
     >>> fed_resp.add_query_param(["lat=50","lon=20","level=cha"])
     >>> fed_resp.add_service("STATIONSERVICE","http://service.iris.edu/fdsnws/station/1/")
     >>> fed_resp.add_request("AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
     >>> fed_resp.add_request("AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
-    >>> print(fed_resp.text("STATIONSERVICE"))
+    >>> print(fed_resp("STATIONSERVICE"))
     level=cha
     AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
     AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
@@ -61,13 +61,13 @@ class FederatedResponse(RoutingResponse):
         ]
     }
 
-    def __init__(self, code):
+    def __init__(self, provider_id):
         """
-        initialize a FederatedResponse
-        :type code: str
-        :param code: code for the data provider
+        initialize a FederatedRoute
+        :type provider_id: str
+        :param provider_id: provider_id for the data provider
         """
-        RoutingResponse.__init__(self, code, raw_requests=[])
+        RoutingResponse.__init__(self, provider_id, raw_requests=[])
         self.parameters = []
         self.services = {}
 
@@ -82,7 +82,7 @@ class FederatedResponse(RoutingResponse):
         """
         add parameters to list that may be prepended to a request
         :param parameters: strings of the form "param=value"
-        >>> fedresp = FederatedResponse("ABC")
+        >>> fedresp = FederatedRoute("ABC")
         >>> fedresp.add_query_param(["level=station","quality=D"])
         >>> fedresp.add_query_param("onceuponatime=now")
         >>> fedresp.add_query_param(RequestLine("testing=true"))
@@ -114,7 +114,7 @@ class FederatedResponse(RoutingResponse):
         :param templates: containers containing strings NET.STA.LOC.CHA, NET.STA, or NET
         :param level: one of 'channel', 'response', 'station', 'network'
 
-        >>> fedresp = FederatedResponse("ABC")
+        >>> fedresp = FederatedRoute("ABC")
         >>> fedresp.add_request(["AB STA1 00 BHZ 2005-01-01 2005-03-24",
         ...                      "AB STA2 00 BHZ 2005-01-01 2005-03-24",
         ...                      "AB STA1 00 EHZ 2005-01-01 2005-03-24"])
@@ -164,7 +164,7 @@ class FederatedResponse(RoutingResponse):
         :param target_service: string containing either 'DATASELECTSERVICE' or 'STATIONSERVICE'
         """
         reply = []
-        for good in FederatedResponse.pass_through_params[target_service]:
+        for good in FederatedRoute.pass_through_params[target_service]:
             reply.extend(
                 [c for c in self.parameters if c.startswith(good + "=")])
         return reply
@@ -174,7 +174,7 @@ class FederatedResponse(RoutingResponse):
             line_or_lines = " lines"
         else:
             line_or_lines = " line"
-        return self.code + ", with " + str(len(self)) + line_or_lines
+        return self.provider_id + ", with " + str(len(self)) + line_or_lines
 
 class RequestLine(object):
     """line from federated catalog source that provides additional tests
@@ -329,7 +329,7 @@ class DatacenterItem(ParserState):
         """Parse: DATACENTER=id,http://url..."""
         _, rest = str(line).split('=')
         active_id, url = rest.split(',')
-        this_response = FederatedResponse(active_id)
+        this_response = FederatedRoute(active_id)
         this_response.add_service("DATACENTER", url)
         return this_response
 
@@ -395,7 +395,7 @@ if __name__ == '__main__':
     params = {"net":"A*", "sta":"OK*", "cha":"*HZ"}
     r = requests.get(url + "query", params=params, verify=False)
 
-    frp = FederatedResponseManager(r.text)
+    frp = FederatedRoutingManager(r.text)
     for n in frp:
         print(n.request("STATIONSERVICE"))
 """

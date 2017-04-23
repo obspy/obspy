@@ -6,19 +6,36 @@ FDSN Web service client for ObsPy.
 
 from __future__ import print_function
 import queue
+import sys
+import logging
 import multiprocessing as mp
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.routers.fedcatalog_parser import RoutingResponse
 
-class RoutingClient(Client):
+# logging facilities swiped from mass_downloader.py
+# Setup the logger.
+logger = logging.getLogger("obspy.clients.fdsn.routing_client")
+logger.setLevel(logging.DEBUG)
+# Prevent propagating to higher loggers.
+logger.propagate = 0
+# Console log handler.
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+# Add formatter
+FORMAT = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
+formatter = logging.Formatter(FORMAT)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
+class RoutingClient(object): #no longer inherits from Client.
     """
     This class serves as the user-facing layer for routing requests, and uses
     the Client's methods to communicate with each data center.  Where possible,
     it will also leverage the Client's methods to interact with the federated
     catalog service. The federated catalog's response is passed to the
-    ResponseManager.
+    RoutingManager.
 
-    The ResponseManager is then repeatedly queried for provider/url/bulk-request
+    The RoutingManager is then repeatedly queried for provider/url/bulk-request
     parcels, which are each routed to the appropriate provider using either
     Client.get_stations_bulk or Client.get_waveforms_bulk.  As each parcel of
     data is requested, the provider is displayed to console. As each request is
@@ -59,6 +76,22 @@ class RoutingClient(Client):
     def __str__(self):
         return "RoutingClient object"
 
+    def _request(self, client, service, route, output, failed, **kwarg):
+        """
+        :type client: :class:`~obspy.clients.fdsn.Client` or similar
+        :param client:
+        :type service:
+        :param service:
+        :type route: 
+        :param route:
+        :type output: container accepting "put"
+        :param output: place where retrieved data go
+        :type failed: contdainer accepting "put"
+        :param failed: place where list of unretrieved bulk request lines go
+        :param filename:
+        """
+        raise NotImplementedError("define _request() in subclass")
+
     @property
     def query(self):
         """
@@ -68,12 +101,12 @@ class RoutingClient(Client):
             return self.parallel_query_machine
         return self.serial_query_machine
 
-    def serial_query_machine(self, request_mgr, service, **kwargs):
+    def serial_query_machine(self, routing_mgr, service, **kwargs):
         """
         query clients in series
 
-        :type request_mgr: :class:`~obspy.clients.fdsn.routers.ResponseManager`
-        :param request_mgr:
+        :type routing_mgr: :class:`~obspy.clients.fdsn.routers.RoutingManager`
+        :param routing_mgr:
         :type service: str
         :param service:
         :rtype: tuple (data, list of failed queries)
@@ -82,20 +115,27 @@ class RoutingClient(Client):
         output = queue.Queue()
         failed = queue.Queue()
 
-        for req in request_mgr:  #each FederatedResponse() / RoutingResponse()
-            if self.exclude_provider and req.code in self.exclude_provider:
-                print("skipping: " + req.code)
+        for route in routing_mgr:
+            if self.exclude_provider and route.provider_id in self.exclude_provider:
+                logger.info("skipping: " + route.provider_id)
                 continue
-            if self.include_provider and req.code not in self.include_provider:
-                print("skipping: " + req.code)
+            if self.include_provider and route.provider_id not in self.include_provider:
+                logger.info("skipping: " + route.provider_id)
                 continue
             try:
-                client = Client(req.code, self.args_to_clients)
-                self.request_something(client, service, req, output, failed, **kwargs)
+                client = Client(route.provider_id, self.args_to_clients)
+                msg = "request to: {0}: {1} items.\n{2}".format(
+                    route.provider_id, len(route),
+                    routing_mgr.str_details(route.provider_id))
+                logger.info("starting " + msg)
+                self._request(client=client, service=service,
+                                       route=route, output=output, failed=failed, **kwargs)
             except:
-                failed.put(req.request_lines)
+                failed.put(route.request_lines)
                 raise
-
+            
+            # TODO add description of request here.
+        logger.info("all requests completed")
         data = None
         while not output.empty():
             if not data:
@@ -110,55 +150,70 @@ class RoutingClient(Client):
             retry = '\n'.join(retry)
         return data, retry
 
-    def parallel_query_machine(self, request_mgr, service, **kwargs):
+    def parallel_query_machine(self, routing_mgr, service, **kwargs):
         """
         query clients in parallel
 
-        :type request_mgr: :class:`~obspy.clients.fdsn.routers.ResponseManager`
-        :param request_mgr:
+        :type routing_mgr: :class:`~obspy.clients.fdsn.routers.RoutingManager`
+        :param routing_mgr:
         :type service: str
         :param service:
         :rtype: tuple (data, list of failed queries)
         :return:
-        """
 
+        >>def echoer(**kwargs):
+        """
+        logging.warn("Parallel query requested, but will perform serial request anyway.")
+        return self.serial_query_machine(routing_mgr=routing_mgr, service=service, **kwargs)
         output = mp.Queue()
         failed = mp.Queue()
         # Setup process for each provider
         processes = []
-        for req in request_mgr:
-            if self.exclude_provider and req.code in self.exclude_provider:
-                print("skipping: " + req.code)
+        msgs = []
+        for route in routing_mgr:
+            if self.exclude_provider and route.provider_id in self.exclude_provider:
+                logger.info("skipping: " + route.provider_id)
                 continue
-            if self.include_provider and req.code not in self.include_provider:
-                print("skipping: " + req.code)
+            if self.include_provider and route.provider_id not in self.include_provider:
+                logger.info("skipping: " + route.provider_id)
                 continue
             try:
-                client = Client(req.code, self.args_to_clients)
+                client = Client(route.provider_id, self.args_to_clients)
             except:
-                failed.put(req.request_lines)
+                failed.put(route.request_lines)
                 raise
             else:
-                args = (client, service, req, output, failed)
-                processes.append(mp.Process(target=self.request_something,
-                                            name=req.code,
-                                            args=args,
-                                            kwargs=kwargs))
+                p_kwargs = kwargs.copy()
+                p_kwargs.update({'client':client, 'service':service,
+                                'output':output, 'failed':failed, 
+                                'route':route})
+                processes.append(mp.Process(target=self._request,
+                                            name=route.provider_id,
+                                            kwargs=p_kwargs))
+                msgs.append("request to: {0}: {1} items.\n{2}".format(
+                     route.provider_id, len(route), 
+                     routing_mgr.str_details(route.provider_id)))
 
         # run
-        for p in processes:
+        for p, msg in zip(processes, msgs):
+            logger.info("starting " + msg)
+
             p.start()
 
+        logger.info("processing in parallel, with {0} concurrentish requests".format(len(processes)))
         # exit completed processes
-        for p in processes:
+        for p, msg in zip(processes, msgs):
+            logger.info("waiting on " + msg)
             p.join()
+        logger.info("all processes completed.")
 
         data = None
         while not output.empty():
+            tmp = output.get()
             if not data:
-                data = output.get()
+                data = tmp
             else:
-                data += output.get()
+                data += tmp
 
         retry = []
         while not failed.empty():
@@ -168,7 +223,7 @@ class RoutingClient(Client):
             retry = '\n'.join(retry)
         return data, retry
 
-class ResponseManager(object):
+class RoutingManager(object):
     """
     This class will wrap the response given by routers.  Its primary purpose is
     to divide the response into parcels, each being an XYZResponse containing
@@ -177,36 +232,49 @@ class ResponseManager(object):
     Input would be the response from the routing service, or a similar text file
     Output is a list of RoutingResponse objects
     """
-    def __init__(self, textblock):
+    def __init__(self, textblock, provider_details=None):
         """
-        initialize a ResponseManager object
+        initialize a RoutingManager object
 
         :type textblock: str or container of RoutingResponse
         :param textblock: text retrieved from routing service
+        # :type provider_details: must have member .names, .__str__, and .pretty
+        # :param provider_details:
         """
-        self.responses = []
-        # print("init responsemanager: incoming text is a " + type(textblock).__name__)
+        self.routes = []
+        self.provider_details = provider_details
         if isinstance(textblock, str):
-            self.responses = self.parse_response(textblock)
+            self.routes = self.parse_routing(textblock)
         elif isinstance(textblock, RoutingResponse):
-            self.responses = [textblock]
+            self.routes = [textblock]
         elif isinstance(textblock, (tuple, list)):
-            self.responses = [v for v in textblock if isinstance(v, RoutingResponse)]
+            self.routes = [v for v in textblock if isinstance(v, RoutingResponse)]
 
     def __iter__(self):
-        return self.responses.__iter__()
+        return self.routes.__iter__()
 
     def __len__(self):
-        return len(self.responses)
+        return len(self.routes)
 
     def __str__(self):
-        if not self.responses:
+        if not self.routes:
             return "Empty " + type(self).__name__
-        responsestr = "\n".join([str(x) for x in self.responses])
+        responsestr = "\n".join([str(x) for x in self.routes])
         towrite = type(self).__name__ + " with " + str(len(self)) + " items:\n" +responsestr
         return towrite
 
-    def parse_response(self, parameter_list):
+    def provider_ids(self):
+        """
+        return the provider id's for all retrieved routes
+        """
+        return [route.provider_id for route in self.routes]
+
+    def str_details(self, provider_id):
+        if self.provider_details:
+            return self.provider_details.pretty(provider_id)
+        return ""
+
+    def parse_routing(self, parameter_list):
         """
         create a list of RoutingResponse objects, one for each provider in response
 
@@ -217,39 +285,39 @@ class ResponseManager(object):
         """
         raise NotImplementedError()
 
-    def get_routing_response(self, code, get_multiple=False):
+    def get_route(self, provider_id, get_multiple=False):
         """
-        retrieve the response for a particular provider, by code
+        retrieve the response for a particular provider, by provider_id
 
         Set up sample data:
         >>> sed2 = RoutingResponse('SED', raw_requests = ["some_request"])
         >>> fedresps = [RoutingResponse('IRIS'), RoutingResponse('SED'),
         ...             RoutingResponse('RESIF'), sed2]
-        >>> fedresps = ResponseManager(fedresps)
+        >>> fedresps = RoutingManager(fedresps)
 
         Test methods that return multiple RoutingResponse objects
-        >>> print(str(fedresps.get_routing_response('SED')))
+        >>> print(str(fedresps.get_route('SED')))
         SED, with 0 lines
-        >>> ml = fedresps.get_routing_response('SED', get_multiple=True)
+        >>> ml = fedresps.get_route('SED', get_multiple=True)
         >>> print ([str(x) for x in ml])
         ['SED, with 0 lines', 'SED, with 1 line']
 
-        :type code: str
-        :param code: recognized key string for recognized server. see
+        :type provider_id: str
+        :param provider_id: recognized key string for recognized server. see
         :mod:`~obspy.clients.fdsn.client` for a list
         :type get_multiple: bool
         :param get_multiple: determines whether to return a single (first
-        matching) RoutingResponse or a list of all matching responses
+        matching) RoutingResponse or a list of all matching routes
         :rtype: :class:`~obspy.clients.fdsn.routers.RoutingResponse` or list
         :return:
         """
         if get_multiple:
-            return [resp for resp in self.responses if resp.code == code]
-        for resp in self.responses:
-            if resp.code == code:
-                return resp
+            return [route for route in self.routes if route.provider_id == provider_id]
+        for route in self.routes:
+            if route.provider_id == provider_id:
+                return route
         return None
 
 if __name__ == '__main__':
     import doctest
-    doctest.testmod(exclude_empty=True)
+    doctest.testmod(exclude_empty=True, verbose=True)
