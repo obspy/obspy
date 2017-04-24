@@ -169,11 +169,15 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
 
     lines = dict([line.split(None, 1) for line in lines[:-1]])
     line = lines["SIGNATURE"]
-
     line = line.rstrip().split('"')[1]
-    signature, version, date, time = line.rsplit(" ", 3)
+    if "NLLoc:v6" in line:
+        signature=line.rsplit("obs:",1)[0].strip()
+        version=line.rsplit("NLLoc:",1)[1].split(" ")[0].strip()
+        date,time=line.rsplit("run:",1)[1].split(" ")
+    else:
+        signature, version, date, time = line.rsplit(" ", 3)
     creation_time = UTCDateTime().strptime(date + time, str("%d%b%Y%Hh%Mm%S"))
-
+    
     if coordinate_converter:
         # maximum likelihood origin location in km info line
         line = lines["HYPOCENTER"]
