@@ -250,7 +250,8 @@ def get_menu(server, port, scnl=None, timeout=None):
     return []
 
 
-def read_wave_server_v(server, port, scnl, start, end, timeout=None, cleanup=False): 
+def read_wave_server_v(server, port, scnl, start, end, timeout=None, 
+                       cleanup=False):
     """
     Reads data for specified time interval and scnl on specified waveserverV.
 
@@ -282,7 +283,7 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None, cleanup=Fal
 
     while bytesread and p < dat_len:
         if not dat_len > p + 64:
-            break # no tracebufs left
+            break  # no tracebufs left
 
         new_tb = TraceBuf2()
         new_tb.parse_header(dat[p:p + 64])
