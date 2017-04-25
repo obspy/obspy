@@ -250,7 +250,8 @@ def get_menu(server, port, scnl=None, timeout=None):
     return []
 
 
-def read_wave_server_v(server, port, scnl, start, end, timeout=None, cleanup=False): """
+def read_wave_server_v(server, port, scnl, start, end, timeout=None, cleanup=False): 
+    """
     Reads data for specified time interval and scnl on specified waveserverV.
 
     Returns list of TraceBuf2 objects
@@ -293,7 +294,8 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None, cleanup=Fal
 
         if current_tb is not None:
             if cleanup and new_tb.start - current_tb.end == period:
-                bufs.append(np.fromstring(dat[p:p + nbytes], current_tb.inputType))
+                buf = dat[p:p + nbytes]
+                bufs.append(np.fromstring(buf, current_tb.inputType))
                 current_tb.end = new_tb.end
 
             else:
@@ -301,7 +303,7 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None, cleanup=Fal
                     current_tb.data = np.concatenate(bufs)
                 else:
                     current_tb.data = bufs[0]
-                #current_tb.data = np.concatenate(bufs)
+
                 current_tb.ndata = len(current_tb.data)
                 current_tb = None
 
@@ -334,4 +336,3 @@ def trace_bufs2obspy_stream(tbuflist):
         tlist.append(tb.get_obspy_trace())
     strm = Stream(tlist)
     return strm
-
