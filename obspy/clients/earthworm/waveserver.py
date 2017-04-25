@@ -137,10 +137,19 @@ def send_sock_req(server, port, req_str, timeout=None):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(timeout)
     s.connect((server, port))
-    if req_str[-1:] == b'\n':
-        s.send(req_str)
-    else:
-        s.send(req_str + b'\n')
+
+    full_req = req_str
+    if not full_req.endswith(b'\n'):
+        full_req += b'\n'
+
+    req_len = len(full_req)
+    totalsent = 0
+
+    while totalsent < req_len:
+        sent = s.send(full_req[totalsent:])
+        if sent == 0:
+            raise RuntimeError("socket connection broken")
+        totalsent = totalsent + sent
     return s
 
 
