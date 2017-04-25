@@ -16,8 +16,10 @@ import warnings
 
 import numpy as np
 
+from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.taup import TauPyModel
 from obspy.taup.tau import Arrivals
+from obspy.taup.taup_create import build_taup_model
 import obspy.geodetics.base as geodetics
 
 
@@ -978,6 +980,26 @@ class TauPyModelTestCase(unittest.TestCase):
             arrivals * [2, ]
         with self.assertRaises(TypeError):
             arrivals *= [2, ]
+
+    def test_small_regional_model(self):
+        """
+        Tests a small regional model as this used to not work..
+        """
+        with TemporaryWorkingDirectory():
+            folder = os.path.abspath(os.curdir)
+            model_name = "regional_model"
+            build_taup_model(
+                filename=os.path.join(DATA, os.path.pardir,
+                                      model_name + ".tvel"),
+                output_folder=folder, verbose=False)
+            m = TauPyModel(os.path.join(folder, model_name + ".npz"))
+        arr = m.get_ray_paths(source_depth_in_km=18.0, distance_in_degree=1.0)
+        self.assertEqual(len(arr), 9)
+        for a, d in zip(arr, [("p", 18.143), ("Pn", 19.202), ("PcP", 19.884),
+                              ("sP", 22.054), ("ScP", 23.029), ("PcS", 26.410),
+                              ("s", 31.509), ("Sn", 33.395), ("ScS", 34.533)]):
+            self.assertEqual(a.name, d[0])
+            self.assertAlmostEqual(a.time, d[1], 3)
 
 
 def suite():
