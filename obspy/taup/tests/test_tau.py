@@ -983,7 +983,7 @@ class TauPyModelTestCase(unittest.TestCase):
 
     def test_small_regional_model(self):
         """
-        Tests a small regional model as this used to not work..
+        Tests a small regional model as this used to not work.
         """
         with TemporaryWorkingDirectory():
             folder = os.path.abspath(os.curdir)
