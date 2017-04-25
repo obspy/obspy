@@ -10,11 +10,17 @@ FDSN Web service client for ObsPy.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import print_function
-import sys
-from collections import OrderedDict
+# import sys
+import collections
+# from collections import OrderedDict
 from threading import Lock
+import warnings
+import os
 import requests
+from future.utils import native_str
 # from requests.exceptions import (HTTPError, Timeout)
+#from obspy.core import UTCDateTime
+from obspy.clients.fdsn.client import convert_to_string
 from obspy.clients.fdsn.header import FDSNException
 from obspy.clients.fdsn.routers.routing_client import (RoutingClient,
                                                        RoutingManager, logger)
@@ -78,7 +84,7 @@ def inv2set(inv, level):
 
 # converters used to make comparisons between inventory items and requests
 
-def assign_kwargs(argdict):
+def distribute_args(argdict):
     """
     divide a dictionary's keys between fedcatalog and fdsnservice
 
@@ -90,16 +96,65 @@ def assign_kwargs(argdict):
     #TODO figure out where each of the arguments belongs
     #  to the fedrequest?  to the final service?
 
-    fedcatalog_params= ('')
-    service_params= ('')
-    # fedrequest gets almost all arguments
+    fedcatalog_params = ('')
+    fedcatalog_prohibited_params = ('filename', 'attach_response', 'user', 'password')
+    service_params = ('user', 'password', 'attach_response')
+
+    # fedrequest gets almost all arguments, except for some
     fed_argdict = argdict.copy()
-    try:
-        del fed_argdict['filename']
-    except:
-        pass
-    service_argdict = argdict.copy()
-    return fed_argdict, service_argdict
+    for key in fedcatalog_prohibited_params:
+        if key in fed_argdict:
+            del fed_argdict[key]
+
+    # services get practically no arguments, since they're provided by the bulk request
+    service_args = dict()
+    for key in service_params:
+        if key in argdict:
+            service_args[key] = argdict[key]
+    return fed_argdict, service_args
+
+
+# the following is ripped out of fdsn.client.Client because it doesn't need to be
+# be associated with the client class. TODO: pull out of client class, and then
+# just import it
+def _get_bulk_string(bulk, arguments):
+    # If its an iterable, we build up the query string from it
+    # StringIO objects also have __iter__ so check for 'read' as well
+
+    args = ["%s=%s" % (key, convert_to_string(value))
+            for key, value in arguments.items() if value is not None]
+
+    if isinstance(bulk, collections.Iterable) \
+            and not hasattr(bulk, "read") \
+            and not isinstance(bulk, (str, native_str)):
+        # empty location codes have to be represented by two dashes
+        tmp = [" ".join((net, sta, loc or "--", cha,
+                         convert_to_string(t1), convert_to_string(t2)))
+               for net, sta, loc, cha, t1, t2 in bulk]
+    else:
+        # if it has a read method, read data from there
+        if hasattr(bulk, "read"):
+            tmp = bulk.read()
+        elif isinstance(bulk, (str, native_str)):
+            # check if bulk is a local file
+            if "\n" not in bulk and os.path.isfile(bulk):
+                with open(bulk, 'r') as fh:
+                    tmp = fh.read()
+            # just use bulk as input data
+            else:
+                tmp = bulk
+                pass
+        else:
+            msg = ("Unrecognized input for 'bulk' argument. Please "
+                    "contact developers if you think this is a bug.")
+            raise NotImplementedError(msg)
+    if args:
+        args = '\n'.join(args)
+        bulk = '\n'.join((args, tmp))
+    else:
+        bulk = tmp
+    logger.info(bulk)
+    return bulk
 
 class FedcatalogProviders(object):
     """
@@ -110,12 +165,7 @@ class FedcatalogProviders(object):
 
     >>> prov = FedcatalogProviders()
     >>> print(prov.pretty('IRISDMC'))  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-    IRISDMC
-    The IRIS Data Management Center
-    Seattle, WA, USA
-    http://ds.iris.edu
-    ...M
-    <BLANKLINE>
+    IRISDMC:The IRIS Data Management Center, Seattle, WA, USA WEB:http://ds.iris.edu  LastUpdate:...M
 
     """
 
@@ -123,6 +173,7 @@ class FedcatalogProviders(object):
         self._providers = dict()
         self._lock = Lock()
         self._failed_refreshes = 0
+        self.refresh()
 
     def __iter__(self):
         """
@@ -217,12 +268,7 @@ class FedcatalogProviders(object):
         return nice text representation of service without too much details
         >>> providers = FedcatalogProviders()
         >>> print(providers.pretty("ORFEUS"))  #doctest: +ELLIPSIS
-        ORFEUS
-        The ORFEUS Data Center
-        de Bilt, the Netherlands
-        http://www.orfeus-eu.org
-        ...M
-        <BLANKLINE>
+        ORFEUS:The ORFEUS Data Center, de Bilt, the Netherlands WEB:http://www.orfeus-eu.org  LastUpdate:...M
         >>> print(providers.pretty("IRIS") == providers.pretty("IRISDMC"))
         True
         """
@@ -230,8 +276,9 @@ class FedcatalogProviders(object):
             self.refresh()
         if not name in self._providers:
             return ""
-        fields = ("name", "description", "location", "website", "lastUpdate")
-        return '\n'.join(self._providers[name][k] for k in fields) + '\n'
+        return "{name}:{description}, {location} WEB:{website}  LastUpdate:{lastUpdate}".format(**self._providers[name])
+        #fields = ("name", "description", "location", "website", "lastUpdate")
+        #return '\n'.join(self._providers[name][k] for k in fields) + '\n'
 
 
 PROVIDERS = FedcatalogProviders()
@@ -250,12 +297,6 @@ class FederatedClient(RoutingClient):
 
     >>> inv = client.get_stations(network="I?", station="AN*", channel="*HZ")
     ...                           #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-    starting request to: IRIS: ... items.
-    IRISDMC
-    The IRIS Data Management Center
-    Seattle, WA, USA
-    http://ds.iris.edu
-    ...
     >>> print(inv)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
     Inventory created at ...Z
     	Created by: IRIS WEB SERVICE: fdsnws-station | version: 1...
@@ -285,13 +326,14 @@ class FederatedClient(RoutingClient):
     def __repr__(self):
         return "Federated Catalog Routing Client"
 
-    def get_routing(self, params=None, bulk=None):
+
+    def get_routing(self, routing_file=None, **kwargs):
         """
         send query to the fedcatalog service
 
         >>> client = FederatedClient()
         >>> params={"station":"ANTO","includeoverlaps":"true"}
-        >>> frm = client.get_routing(params=params)
+        >>> frm = client.get_routing(**params)
         >>> for f in frm:
         ...   print(f)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         IRIS, with 1... lines
@@ -299,23 +341,41 @@ class FederatedClient(RoutingClient):
 
         :type params:
         :param params:
+        :rtype: :class:`~obspy.clients.fdsn.routers.FederatedRoutingManager`
+        :return: parsed response from the FedCatalog service
+        """
+        assert not 'bulk' in kwargs
+        resp = requests.get(FEDCATALOG_URL + "query", params=kwargs, verify=False)
+        resp.raise_for_status()
+        if routing_file:
+            pass #write out to file
+
+        frm = FederatedRoutingManager(resp.text)
+        return frm
+
+    def get_routing_bulk(self, bulk=None, routing_file=None, **kwargs):
+        """
+        send query to the fedcatalog service as a POST.
+
+        >>> client = FederatedClient()
+        >>> params={"includeoverlaps":"true"}
+        >>> frm = client.get_routing_bulk(bulk="* ANTO * * * *", **params)
+        >>> for f in frm:
+        ...   print(f)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+        IRIS, with 1... lines
+        ORFEUS, with ... lines
+
         :type bulk:
         :param bulk:
         :rtype: :class:`~obspy.clients.fdsn.routers.FederatedRoutingManager`
         :return: parsed response from the FedCatalog service
         """
-        if params is None and bulk is None:
-            raise ValueError("Both params and bulk are empty")
-        elif bool(params) and bool(bulk):
-            raise ValueError("Use params OR bulk, but not both")
-        if params:
-            resp = requests.get(FEDCATALOG_URL + "query", params=params, verify=False)
-        else:
-            resp = requests.post(FEDCATALOG_URL + "query", data=bulk, verify=False)
-
+        if isinstance(bulk, collections.Iterable):
+             bulk = _get_bulk_string(bulk, kwargs)
+        # print(bulk)
+        resp = requests.post(FEDCATALOG_URL + "query", data=bulk, verify=False)
         resp.raise_for_status()
-
-
+        logger.info(resp.text)
         frm = FederatedRoutingManager(resp.text)
         return frm
 
@@ -367,13 +427,12 @@ class FederatedClient(RoutingClient):
                 get_bulk(bulk=route.text(service), filename=filename, **kwargs)
             else:
                 data = get_bulk(bulk=route.text(service), filename=filename, **kwargs)
+                output.put(data)
         except FDSNException as ex:
             failed.put(route.request_lines)
             print("Failed to retrieve data from: {0}", route.provider_id)
             print(ex)
             raise
-        else:
-            output.put(data)
 
     def get_waveforms_bulk(self,
                            bulk,
@@ -390,10 +449,6 @@ class FederatedClient(RoutingClient):
         >>> bulkreq = "IU ANMO * ?HZ 2010-02-27T06:30:00 2010-02-27T06:33:00"
         >>> tr = client.get_waveforms_bulk(bulk=bulkreq)
         ...        #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-        starting request to: IRIS: ... items.
-        IRISDMC
-        The IRIS Data Management Center
-        ...
         >>> print(tr)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         6 Trace(s) in Stream:
         IU.ANMO.00.BHZ | 2010-02-27T06:30... | 20.0 Hz, 3600 samples
@@ -410,30 +465,18 @@ class FederatedClient(RoutingClient):
         :return:
         """
 
-        arguments = OrderedDict(
-            quality=quality,
-            minimumlength=minimumlength,
-            longestonly=longestonly,
-            includeoverlaps=includeoverlaps,
-            target_service="dataselect",
-            format="request")
+        fed_kwargs, svc_kwargs = distribute_args(kwargs)
+        fed_kwargs["includeoverlaps"] = includeoverlaps
 
-
-        fed_kwargs, svc_kwargs = assign_kwargs(kwargs)
-        frm = self.get_routing(bulk=bulk)
-
+        # bulk = _get_bulk_string(bulk, fed_kwargs)
+        frm = self.get_routing_bulk(bulk) #, fed_kwargs)
         data, _ = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         # reprocess failed?
         return data
 
-    def get_waveforms(self,
-                      quality=None,
-                      minimumlength=None,
-                      longestonly=None,
-                      filename=None,
-                      includeoverlaps=False,
-                      **kwargs):
+    def get_waveforms(self, network, station, location, channel, starttime, endtime,
+                      includeoverlaps=False, **kwargs):
         """
         retrieve waveforms from data providers via GET request to the Fedcatalog service
 
@@ -450,21 +493,19 @@ class FederatedClient(RoutingClient):
         >>> from obspy.core import  UTCDateTime
         >>> t_st = UTCDateTime("2010-02-27T06:30:00")
         >>> t_ed = UTCDateTime("2010-02-27T06:33:00")
-        >>> tr = client.get_waveforms(network="IU", station="ANMO", channel="BHZ",
-        ...                             starttime=t_st, endtime=t_ed)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-        starting request to: IRIS: 2 items.
-        IRISDMC
-        The IRIS Data Management Center
-        ...
+        >>> tr = client.get_waveforms('IU', 'ANMO', '*', 'BHZ', t_st, t_ed)
+        ...                           #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         >>> print(tr)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         2 Trace(s) in Stream:
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00... 20.0 Hz, 3600 samples
         IU.ANMO.10.BHZ | 2010-02-27T06:30:00... 40.0 Hz, 7200 samples
         """
 
-        fed_kwargs, svc_kwargs = assign_kwargs(kwargs)
+        fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
-        frm = self.get_routing(params=fed_kwargs)
+        frm = self.get_routing(network=network, station=station,
+                               location=location, channel=channel,
+                               starttime=starttime, endtime=endtime, **fed_kwargs)
 
         data, _ = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
@@ -488,12 +529,7 @@ class FederatedClient(RoutingClient):
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> client = FederatedClient()
         >>> bulktxt = "level=channel\\nA? OKS? * ?HZ * *"
-        >>> INV = client.get_stations_bulk(
-        ...                     bulktxt)  #doctest: +ELLIPSIS
-        starting request to: IRIS: 4 items.
-        IRISDMC
-        The IRIS Data Management Center
-        ...
+        >>> INV = client.get_stations_bulk(bulktxt)  #doctest: +ELLIPSIS
         >>> print(INV)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         Inventory created at 2...Z
             Created by: IRIS WEB SERVICE: fdsnws-station | version: 1...
@@ -509,11 +545,12 @@ class FederatedClient(RoutingClient):
                     AV.OKSO..BHZ, AV.OKSP..EHZ (4x)
         """
 
-        fed_kwargs, svc_kwargs = assign_kwargs(kwargs)
-        fed_kwargs["includeoverlaps"] = includeoverlaps
-        # send request to the FedCatalog
-        frm = self.get_routing(bulk=bulk)
 
+        fed_kwargs, svc_kwargs = distribute_args(kwargs)
+        fed_kwargs["includeoverlaps"] = includeoverlaps
+
+        #bulk = _get_bulk_string(bulk, fed_kwargs)
+        frm = self.get_routing_bulk(bulk) #, fed_kwargs)
         inv, _ = self.query(frm, "STATIONSERVICE", **svc_kwargs)
 
         # reprocess failed?
@@ -539,10 +576,6 @@ class FederatedClient(RoutingClient):
         >>> INV = fclient.get_stations(network="A?", station="OK*",
         ...                           channel="?HZ", level="station",
         ...                           endtime="2016-12-31")  #doctest: +ELLIPSIS
-        starting request to: IRIS: 26 items.
-        IRISDMC
-        The IRIS Data Management Center
-        ...
         >>> print(INV)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         Inventory created at 2...Z
             Created by: IRIS WEB SERVICE: fdsnws-station | version: 1...
@@ -565,10 +598,6 @@ class FederatedClient(RoutingClient):
         >>> INV2 = fclient.get_stations(network="I?", station="A*",
         ...                           level="network")
         ...                           #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-        starting request to: GFZ: ... items.
-        ...  INGV ...
-        ... ORFEUS ...
-        <BLANKLINE>
         >>> print(INV2)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         Inventory created at ...Z
             Created by: ObsPy ...
@@ -589,11 +618,6 @@ class FederatedClient(RoutingClient):
         >>> INV = fclient.get_stations(network="A?", station="OK*",
         ...                           channel="?HZ", level="station",
         ...                           endtime="2016-12-31")  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-        starting request to: IRIS: ... items.
-        IRISDMC
-        The IRIS Data Management Center
-        Seattle, WA, USA
-        ...
         >>> print(INV)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         Inventory created at 2...Z
             Created by: IRIS WEB SERVICE: fdsnws-station | version: 1...
@@ -618,13 +642,14 @@ class FederatedClient(RoutingClient):
 
         """
 
-        fed_kwargs, svc_kwargs = assign_kwargs(kwargs)
+        fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
-        frm = self.get_routing(params=fed_kwargs)
-
-
-        # TODO check to make sure svc_kwargs actually are passed along from fedcatalog
+        if "bulk" in fed_kwargs:
+            #bulk = _get_bulk_string(fed_kwargs['bulk'], fed_kwargs)
+            frm = self.get_routing_bulk(fed_kwargs['bulk']) #, fed_kwargs)
+        else:
+            frm = self.get_routing(**fed_kwargs)
         inv, _ = self.query(frm, "STATIONSERVICE", **svc_kwargs)
 
         # reprocess failed ?
@@ -741,4 +766,4 @@ if __name__ == '__main__':
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
     import doctest
-    doctest.testmod(exclude_empty=True, verbose=True)
+    doctest.testmod(exclude_empty=True, verbose=False)

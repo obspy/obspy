@@ -15,7 +15,6 @@ The obspy.clients.fdsn.client test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-
 import io
 import os
 #import re
@@ -28,16 +27,17 @@ import requests
 from obspy import UTCDateTime, read, read_inventory
 #from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.clients.fdsn.routers import FederatedClient
+from obspy.clients.fdsn import (FederatedClient, Client)
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT,
                                        FDSNException, FDSNRedirectException,
                                        FDSNNoDataException)
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
+from obspy.clients.fdsn.tests.test_client import failmsg
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
-class FederatedclientTestCase(unittest.TestCase):
+class FederatedClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.fdsn.client.routers.Federatedclient.
     """
@@ -46,13 +46,14 @@ class FederatedclientTestCase(unittest.TestCase):
     def setUpClass(cls):
         # directory where the test files are located
         cls.path = os.path.dirname(__file__)
-        cls.datapath = os.path.join(cls.path, "data")
-        cls.client = Federatedclient(user_agent=USER_AGENT)
+        cls.datapath = os.path.join(cls.path,"..","..","tests", "data")
+        #cls.client = FederatedClient(user_agent=USER_AGENT, include_provider='IRIS')
+        cls.client = FederatedClient(user_agent=USER_AGENT, include_provider='IRIS')
         cls.client_auth = \
-            Federatedclient(base_url="IRIS", user_agent=USER_AGENT,
-                   user="nobody@iris.edu", password="anonymous")
+            FederatedClient(base_url="IRIS", user_agent=USER_AGENT,
+                   user="nobody@iris.edu", password="anonymous", include_provider='IRIS')
 
-    def test_iris_example_queries_station(self):
+    def test__example_queries_station(self):
             """
             Tests the (sometimes modified) example queries given on IRIS webpage.
 
@@ -64,7 +65,7 @@ class FederatedclientTestCase(unittest.TestCase):
 
             # Radial query.
             inv = client.get_stations(latitude=-56.1, longitude=-26.7,
-                                    maxradius=15)
+                                    maxradius=15, station="*")
             self.assertGreater(len(inv.networks), 0)  # at least one network
             for net in inv:
                 self.assertGreater(len(net.stations), 0)  # at least one station
@@ -176,12 +177,6 @@ class FederatedclientTestCase(unittest.TestCase):
         file_ = os.path.join(self.datapath, filename)
         expected = read(file_)
         self.assertEqual(got, expected, failmsg(got, expected))
-
-    def test_conflicting_params(self):
-        """
-        """
-        self.assertRaises(FDSNException, self.client.get_stations,
-                          network="IU", net="IU")
 
     def test_dataselect_bulk(self):
         """
@@ -320,24 +315,8 @@ class FederatedclientTestCase(unittest.TestCase):
         for tr in st:
             self.assertTrue(isinstance(tr.stats.get("response"), Response))
 
-    def station_missing_example(self):
-        '''example showing a missing station OKCB from Fedcatalog response,
-        but present with direct request to IRIS'''
-        from requests.packages.urllib3.exceptions import InsecureRequestWarning
-        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
-        inv = get_stations(network="AV", station="OKC*", channel="?HZ",
-                        level="station", endtime="2016-12-31", matchtimeseries=False)
-        irisclient = Client("IRIS")
-        print(inv)
-
-        inv2 = irisclient.get_stations(network="A?", station="OKC?",
-                                    channel="?HZ", level="station", endtime="2016-12-31")
-        print(inv2)
-        return inv == inv2
-
 def suite():
     return unittest.makeSuite(FederatedClientTestCase, 'test')
 
 if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+    unittest.main(defaultTest='suite', verbosity=3)
