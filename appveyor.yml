@@ -56,6 +56,8 @@ matrix:
     allow_failures:
       - PYTHON_VERSION: "3.5"
       - PYTHON_VERSION: "3.4"
+    # enable fast fail strategy
+    fast_finish: true
 
 install:
   # If there is a newer build queued for the same PR, cancel this one.
@@ -113,9 +115,6 @@ test_script:
   - "%CMD_IN_ENV% python setup.py develop"
   - "python -m obspy.scripts.runtests --no-flake8 -n appveyor-ci -r %CI_URL% %PR_URL%"
 
-matrix:
-  # enable fast fail strategy
-  fast_finish: true
 
 on_success:
   - ps: |
