@@ -250,8 +250,7 @@ def get_menu(server, port, scnl=None, timeout=None):
     return []
 
 
-def read_wave_server_v(server, port, scnl, start, end, timeout=None):
-    """
+def read_wave_server_v(server, port, scnl, start, end, timeout=None, cleanup=False): """
     Reads data for specified time interval and scnl on specified waveserverV.
 
     Returns list of TraceBuf2 objects
@@ -273,26 +272,54 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None):
     nbytes = int(tokens[-1])
     dat = get_sock_bytes(sock, nbytes, timeout=timeout)
     sock.close()
+
     tbl = []
-    new = TraceBuf2()  # empty..filled below
     bytesread = 1
     p = 0
-    while bytesread and p < len(dat):
-        if len(dat) > p + 64:
-            head = dat[p:p + 64]
-            p += 64
-            new.parse_header(head)
-            nbytes = new.ndata * new.inputType.itemsize
+    dat_len = len(dat)
+    current_tb = None
 
-            if len(dat) < p + nbytes:
-                break   # not enough array to hold data specified in header
+    while bytesread and p < dat_len:
+        if not dat_len > p + 64:
+            break # no tracebufs left
 
-            tbd = dat[p:p + nbytes]
-            p += nbytes
-            new.parse_data(tbd)
+        new_tb = TraceBuf2()
+        new_tb.parse_header(dat[p:p + 64])
+        p += 64
+        nbytes = new_tb.ndata * new_tb.inputType.itemsize
 
-            tbl.append(new)
-            new = TraceBuf2()  # empty..filled on next iteration
+        if dat_len < p + nbytes:
+            break   # not enough array to hold data specified in header
+
+        if current_tb is not None:
+            if cleanup and new_tb.start - current_tb.end == period:
+                bufs.append(np.fromstring(dat[p:p + nbytes], current_tb.inputType))
+                current_tb.end = new_tb.end
+
+            else:
+                if len(bufs) > 1:
+                    current_tb.data = np.concatenate(bufs)
+                else:
+                    current_tb.data = bufs[0]
+                #current_tb.data = np.concatenate(bufs)
+                current_tb.ndata = len(current_tb.data)
+                current_tb = None
+
+        if current_tb is None:
+            current_tb = new_tb
+            tbl.append(current_tb)
+            period = 1 / current_tb.rate
+            bufs = [np.fromstring(dat[p:p + nbytes], current_tb.inputType)]
+
+        p += nbytes
+
+    if len(bufs) > 1:
+        current_tb.data = np.concatenate(bufs)
+    else:
+        current_tb.data = bufs[0]
+
+    current_tb.ndata = len(current_tb.data)
+
     return tbl
 
 
@@ -307,3 +334,4 @@ def trace_bufs2obspy_stream(tbuflist):
         tlist.append(tb.get_obspy_trace())
     strm = Stream(tlist)
     return strm
+
