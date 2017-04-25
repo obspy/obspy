@@ -16,9 +16,6 @@ environment:
 
 
   matrix:
-    allow_failures:
-      - PYTHON_VERSION: "3.5"
-      - PYTHON_VERSION: "3.4"
     # Pre-installed Python versions, which Appveyor may upgrade to
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
@@ -55,6 +52,10 @@ environment:
       PYTHON_VERSION: "3.6"
       PYTHON_ARCH: "64"
 
+matrix:
+    allow_failures:
+      - PYTHON_VERSION: "3.5"
+      - PYTHON_VERSION: "3.4"
 
 install:
   # If there is a newer build queued for the same PR, cancel this one.
