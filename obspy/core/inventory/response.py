@@ -1726,7 +1726,6 @@ def _adjust_bode_plot_figure(fig, deg=False, grid=True, show=True):
         leg_ = ax1.legend(loc="lower center", ncol=3)
         leg_.prop.set_size("small")
     plt.setp(ax1.get_xticklabels(), visible=False)
-    plt.setp(ax2.get_yticklabels()[-1], visible=False)
     ax1.set_ylabel('Amplitude')
     minmax1 = ax1.get_ylim()
     ax1.set_ylim(top=minmax1[1] * 5)
@@ -1738,16 +1737,17 @@ def _adjust_bode_plot_figure(fig, deg=False, grid=True, show=True):
         ax2.set_yticks(np.arange(-180, 210, 30))
         ax2.set_yticklabels(np.arange(-180, 210, 30))
         ax2.set_ylim(-180, 180)
-        ax2.grid(True)
     else:
         # radian bode plot
+        plt.setp(ax2.get_yticklabels()[-1], visible=False)
         ax2.set_ylabel('Phase [rad]')
         minmax2 = ax2.yaxis.get_data_interval()
         yticks2 = np.arange(minmax2[0] - minmax2[0] % (pi / 2),
                             minmax2[1] - minmax2[1] % (pi / 2) + pi, pi / 2)
         ax2.set_yticks(yticks2)
         ax2.set_yticklabels([_pitick2latex(x) for x in yticks2])
-        ax2.grid(True)
+    ax2.grid(True)
+
     if show:
         plt.show()
 
