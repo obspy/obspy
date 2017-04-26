@@ -680,8 +680,8 @@ class Inventory(ComparingObject):
 
     def plot_response(self, min_freq, output="VEL", network="*", station="*",
                       location="*", channel="*", time=None, starttime=None,
-                      endtime=None, axes=None, unwrap_phase=False, show=True,
-                      outfile=None):
+                      endtime=None, axes=None, unwrap_phase=False, deg=False,
+                      show=True, outfile=None):
         """
         Show bode plot of instrument response of all (or a subset of) the
         inventory's channels.
@@ -728,6 +728,8 @@ class Inventory(ComparingObject):
             opened.
         :type unwrap_phase: bool
         :param unwrap_phase: Set optional phase unwrapping using NumPy.
+        :type deg: bool
+        :param deg: if True plot bode in degrees
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.
@@ -773,8 +775,8 @@ class Inventory(ComparingObject):
                                  axes=(ax1, ax2),
                                  label=".".join((net.code, sta.code,
                                                  cha.location_code, cha.code)),
-                                 unwrap_phase=unwrap_phase, show=False,
-                                 outfile=None)
+                                 unwrap_phase=unwrap_phase, deg=deg,
+                                 show=False, outfile=None)
                     except ZeroSamplingRate:
                         msg = ("Skipping plot of channel with zero "
                                "sampling rate:\n%s")
@@ -782,12 +784,10 @@ class Inventory(ComparingObject):
                     except ObsPyException as e:
                         msg = "Skipping plot of channel (%s):\n%s"
                         warnings.warn(msg % (str(e), str(cha)), UserWarning)
-
         # final adjustments to plot if we created the figure in here
         if not axes:
             from obspy.core.inventory.response import _adjust_bode_plot_figure
-            _adjust_bode_plot_figure(fig, show=False)
-
+            _adjust_bode_plot_figure(fig, deg, show=False)
         if outfile:
             fig.savefig(outfile)
         else:
