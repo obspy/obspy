@@ -185,8 +185,9 @@ class SlownessModel(object):
         min_s_so_far = 1.1e300
         # First remove any critical points previously stored
         # so these are effectively re-initialised... it's probably silly
-        self.critical_depths = np.empty(len(self.v_mod.layers),
-                                        dtype=CriticalDepth)
+        self.critical_depths = np.empty(
+            max(len(self.v_mod.layers), 3),
+            dtype=CriticalDepth)
         cd_count = 0
         self.high_slowness_layer_depths_p = []  # lists of DepthRange
         self.high_slowness_layer_depths_s = []

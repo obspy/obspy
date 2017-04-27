@@ -135,6 +135,7 @@ master: (doi: 10.5281/zenodo.165135)
  - obspy.taup:
    * Add obspy.taup.taup_geo.calc_dist_azi, a function to return the distance,
      azimuth and backazimuth for a source - receiver pair. (see #1538)
+   * Fixing calculations through very small regional models. (see #1761)
 
 1.0.3: (doi: 10.5281/zenodo.165134)
  - obspy.core:
