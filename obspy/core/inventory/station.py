@@ -400,7 +400,7 @@ class Station(BaseNode):
 
     def plot(self, min_freq, output="VEL", location="*", channel="*",
              time=None, starttime=None, endtime=None, axes=None,
-             unwrap_phase=False, show=True, outfile=None):
+             unwrap_phase=False, deg=False, show=True, outfile=None):
         """
         Show bode plot of instrument response of all (or a subset of) the
         station's channels.
@@ -438,6 +438,8 @@ class Station(BaseNode):
             opened.
         :type unwrap_phase: bool
         :param unwrap_phase: Set optional phase unwrapping using NumPy.
+        :type deg: bool
+        :param deg: if True plot bode in degrees
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.
@@ -479,7 +481,8 @@ class Station(BaseNode):
                 cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
                          label=".".join((self.code, cha.location_code,
                                          cha.code)),
-                         unwrap_phase=unwrap_phase, show=False, outfile=None)
+                         unwrap_phase=unwrap_phase, deg=deg, show=False,
+                         outfile=None)
             except ZeroSamplingRate:
                 msg = ("Skipping plot of channel with zero "
                        "sampling rate:\n%s")
@@ -491,7 +494,7 @@ class Station(BaseNode):
         # final adjustments to plot if we created the figure in here
         if not axes:
             from obspy.core.inventory.response import _adjust_bode_plot_figure
-            _adjust_bode_plot_figure(fig, show=False)
+            _adjust_bode_plot_figure(fig, deg=deg, show=False)
 
         if outfile:
             fig.savefig(outfile)

@@ -145,6 +145,26 @@ class ResponseTestCase(unittest.TestCase):
                 resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
                           outfile=ic.name)
 
+    def test_response_plot_degrees(self):
+        """
+        Tests the response plot in degrees.
+        """
+        # Bug in matplotlib 1.4.0 - 1.4.x:
+        # See https://github.com/matplotlib/matplotlib/issues/4012
+        reltol = 1.0
+        if [1, 4, 0] <= MATPLOTLIB_VERSION <= [1, 5, 0]:
+            reltol = 2.0
+
+        resp = read_inventory()[0][0][0].response
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            with ImageComparison(self.image_dir,
+                                 "response_response_degrees.png",
+                                 reltol=reltol) as ic:
+                rcParams['savefig.dpi'] = 72
+                resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
+                          deg=True, outfile=ic.name)
+
     def test_segfault_after_error_handling(self):
         """
         Many functions in evalresp call `error_return()` which uses longjmp()

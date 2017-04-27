@@ -1734,8 +1734,8 @@ def _adjust_bode_plot_figure(fig, deg=False, grid=True, show=True):
     if deg:
         # degrees bode plot
         ax2.set_ylabel('Phase [degrees]')
-        ax2.set_yticks(np.arange(-180, 210, 30))
-        ax2.set_yticklabels(np.arange(-180, 210, 30))
+        ax2.set_yticks(np.arange(-180, 180, 30))
+        ax2.set_yticklabels(np.arange(-180, 180, 30))
         ax2.set_ylim(-180, 180)
     else:
         # radian bode plot
