@@ -15,6 +15,7 @@ from future.utils import native_str
 
 import datetime
 import math
+import operator
 import time
 
 
@@ -934,7 +935,7 @@ class UTCDateTime(object):
         86400.0
         """
         if isinstance(value, UTCDateTime):
-            return round((self._ns - value._ns) / 1e9, self.__precision)
+            return self._operate(value, operator.sub)
         elif isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
@@ -977,6 +978,20 @@ class UTCDateTime(object):
         """
         return str(self.__str__())
 
+    def _operate(self, other, op_func):
+        if isinstance(other, UTCDateTime):
+            a = round(self._ns / 1e9, self.__precision)
+            b = round(other._ns / 1e9, self.__precision)
+        elif isinstance(other, float) or isinstance(other, int):
+            a = round(self.timestamp, self.__precision)
+            b = round(float(other), self.__precision)
+        elif isinstance(other, datetime.datetime):
+            a = self.datetime
+            b = other
+        else:
+            return False
+        return op_func(a, b)
+
     def __eq__(self, other):
         """
         Rich comparison operator '=='.
@@ -1002,13 +1017,7 @@ class UTCDateTime(object):
         >>> t1 == t2
         False
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) == 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) == 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime == other
-        return False
+        return self._operate(other, operator.eq)
 
     def __ne__(self, other):
         """
@@ -1062,13 +1071,7 @@ class UTCDateTime(object):
         >>> t1 < t2
         True
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) < 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) < 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime < other
-        return False
+        return self._operate(other, operator.lt)
 
     def __le__(self, other):
         """
@@ -1095,13 +1098,7 @@ class UTCDateTime(object):
         >>> t1 <= t2
         False
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) <= 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) <= 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime <= other
-        return False
+        return self._operate(other, operator.le)
 
     def __gt__(self, other):
         """
@@ -1128,13 +1125,7 @@ class UTCDateTime(object):
         >>> t1 > t2
         True
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) > 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) > 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime > other
-        return False
+        return self._operate(other, operator.gt)
 
     def __ge__(self, other):
         """
@@ -1161,13 +1152,7 @@ class UTCDateTime(object):
         >>> t1 >= t2
         False
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) >= 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) >= 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime >= other
-        return False
+        return self._operate(other, operator.ge)
 
     def __repr__(self):
         """
