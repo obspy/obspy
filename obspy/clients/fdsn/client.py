@@ -1298,10 +1298,14 @@ class Client(object):
         # get detailed server response message
         if code != 200:
             try:
-                server_info = "\n".join([
-                    line for line in data.read().splitlines() if line])
+                server_info = data.read()
             except Exception:
                 server_info = None
+            else:
+                server_info = server_info.decode('ASCII', errors='ignore')
+            if server_info:
+                server_info = "\n".join(
+                    line for line in server_info.splitlines() if line)
         # No data.
         if code == 204:
             raise FDSNNoDataException("No data available for request.",
