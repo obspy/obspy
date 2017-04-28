@@ -5,9 +5,297 @@ fedcatalog_response_parser conatains the FederatedRoute class, with the
 supporting parsing routines
 """
 from __future__ import print_function
+import sys
+import collections
+from obspy.core import UTCDateTime
+
+
+class FDSNBulkRequestItem(object):
+    """
+    representation of the request strings that make it easier to do comparisons
+
+    >>> line = "IU ANMO 00 BHZ 2012-05-06T12:00:00 2012-05-06T13:00:00"
+    >>> FDSNBulkRequestItem(line=line)
+    IU ANMO 00 BHZ 2012-05-06T12:00:00.000 2012-05-06T13:00:00.000
+
+    >>> A = FDSNBulkRequestItem(line=line)
+    >>> B = FDSNBulkRequestItem(network="IU", station="ANTO", channel="BHZ")
+    >>> B
+    IU ANTO * BHZ * *
+    >>> A < B
+    True
+    >>> C = FDSNBulkRequestItem(network="IU", station="ANTO", channel="*")
+    >>> A.contains(C), B.contains(C), C.contains(B)
+    (False, False, True)
+    >>> (A < B, B < C)
+    (True, False)
+    >>> A == FDSNBulkRequestItem(line=line)
+    True
+    """
+    def __init__(self, line=None, network=None, station=None, location=None,
+                 channel=None, starttime=None, endtime=None, **kwargs):
+        """
+        Smart way to handle bulk request lines, for easy comparisons
+        specifying a whole line overrides any individual choices
+        >>> l1 = 'AB CDE 01 BHZ 2015-04-25T02:45:32 2015-04-25T02:47:00'
+        >>> l2 = '* * * * * *'
+        >>> l3 = 'AB CDE 01 BHZ 2015-04-25T00:00:00 2015-04-25T02:47:00'
+        >>> l4 = 'AB CDE 01 BHZ 2015-04-25T02:45:32 2015-04-25T03:00:00'
+        >>> FDSNBulkRequestItem(line=l1)
+        AB CDE 01 BHZ 2015-04-25T02:45:32.000 2015-04-25T02:47:00.000
+        >>> FDSNBulkRequestItem(line=l2)
+        * * * * * *
+        >>> A = FDSNBulkRequestItem(line=l3) #   [-------]
+        >>> B = FDSNBulkRequestItem(line=l4) #        [-------]
+        >>> C = FDSNBulkRequestItem(line=l1) #        [--]
+        >>> D = FDSNBulkRequestItem(line=l2) # <---------------->
+        >>> A.contains(l1) and B.contains(C) and C.contains(C) and D.contains(C)
+        True
+        >>> C.contains(A) or C.contains(B) or C.contains(D)
+        False
+
+        >>> FDSNBulkRequestItem(network='IU', station='ANMO', location='  ',
+        ...                     channel='BHZ', starttime='2012-04-25',
+        ...                     endtime='2012-06-12T10:10:10')
+        IU ANMO -- BHZ 2012-04-25T00:00:00.000 2012-06-12T10:10:10.000
+        """
+        # kwargs is ignored & discarded.
+        if line:
+            if len(line.splitlines()) > 1:
+                raise ValueError("Attempting to add multiple lines to a FDSNBulkRequestItem.")
+            try:
+                network, station, location, channel, starttime, endtime = line.split()
+            except:
+                print(line, file=sys.stderr)
+                print("PROBLEM! count {0}, but parsed into 6 items".format(len(line.split())))
+                raise
+
+        if network == '*':
+            network = None
+        self.network = network
+
+        if station == '*':
+            station = None
+        self.station = station
+
+        if location == '  ':
+            location = '--'
+        elif location is '*':
+            location = None
+        self.location = location
+
+        if channel == '*':
+            channel = None
+        self.channel = channel
+
+        self.starttime = None
+        if starttime is None:
+            pass
+        elif isinstance(starttime, str):
+            if starttime != '*':
+                self.starttime = UTCDateTime(starttime)
+        elif isinstance(starttime, UTCDateTime):
+            self.starttime = starttime
+        else:
+            raise ValueError("unknown class for starttime")
+
+        self.endtime = None
+        if endtime is None:
+            pass
+        elif isinstance(endtime, str):
+            if endtime != '*':
+                self.endtime = UTCDateTime(endtime)
+        elif isinstance(endtime, UTCDateTime):
+            self.endtime = endtime
+        else:
+            raise ValueError("unknown class for endtime")
+
+    def __str__(self):
+        return (" ".join((self.network or '*', self.station or '*',
+                          self.location or '*', self.channel or '*',
+                          (self.starttime and self.starttime.format_iris_web_service()) or '*',
+                          (self.endtime and self.endtime.format_iris_web_service()) or '*')))
+
+    def __repr__(self):
+        return str(self)
+
+    def __hash__(self):
+        return hash(repr(self))
+
+    def __eq__(self, other):
+        """
+        Equals behavior when exact match
+        """
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        raise NotImplementedError()
+
+    def __lt__(self, other):
+        """
+        less than comparison.  skips fields that contain wildcards
+        compares (in order) network, station, location, channel, starttime
+
+        note: does NOT compare endtime
+        """
+        if (self.network or "") != (other.network or ""):
+            return (self.network or "") < (other.network or "")
+        if (self.station or "") != (other.station or ""):
+            return (self.station or "") < (other.station or "")
+        if (self.location or "") != (other.location or ""):
+            return (self.location or "") < (other.location or "")
+        if (self.channel or "") != (other.channel or ""):
+            return (self.channel or "") < (other.channel or "")
+        if self.starttime is None and other.starttime is None:
+            return False
+        if self.starttime is None:
+            return True
+        if other.starttime is None:
+            return False
+        return self.starttime < other.starttime
+        # do not compare endtime.
+
+    def contains(self, other):
+        """
+        comparison that accounts for simple * wildcard and time
+
+
+        Note: wildcards such as B?Z or B* will not work. only solo '*' works
+        """
+        if isinstance(other, str):
+            # recommend converting before comparing...
+            other = FDSNBulkRequestItem(line=other)
+
+        if isinstance(other, self.__class__):
+            return ((self.network is None or self.network == other.network) and
+                    (self.station is None or self.station == other.station) and
+                    (self.location is None or self.location == other.location) and
+                    (self.channel is None or self.channel == other.channel) and
+                    (self.starttime is None or self.starttime <= other.starttime) and
+                    (self.endtime is None or self.endtime >= other.endtime))
+        else:
+            raise NotImplementedError()
+
+class FDSNBulkRequests(object):
+    """
+    Contains set of FDSNBulkRequestItem
+
+    >>> samp1 = "* * * * * *\\nAB CD -- EHZ 2015-04-23 2016-04-23T13:04:00"
+    >>> text2 = "AB CD -- EHZ 2015-04-23T00:00:00 2016-04-23T13:04:00"
+    >>> samp2 = FDSNBulkRequestItem(line=text2)
+    >>> print(FDSNBulkRequests(samp1))
+    * * * * * *
+    AB CD -- EHZ 2015-04-23T00:00:00.000 2016-04-23T13:04:00.000
+    >>> a = FDSNBulkRequests(samp1)
+    >>> print(str(a))
+    * * * * * *
+    AB CD -- EHZ 2015-04-23T00:00:00.000 2016-04-23T13:04:00.000
+    >>> a.add(text2)
+    >>> print(str(a))
+    * * * * * *
+    AB CD -- EHZ 2015-04-23T00:00:00.000 2016-04-23T13:04:00.000
+    """
+    def __init__(self, items):
+        if not items:
+            self.items = set()
+        elif isinstance(items, str):
+            self.items = {FDSNBulkRequestItem(line=item) for item in items.splitlines()}
+        elif isinstance(items, collections.Iterable):
+            self.items = {item if isinstance(item, FDSNBulkRequestItem)
+                          else FDSNBulkRequestItem(item) for item in items}
+
+        else:
+            self.items = set()
+
+    def __iter__(self):
+        return self.items.__iter__()
+
+    def __str__(self):
+        """
+        get a sorted string representation
+        """
+        ordered_items = sorted(self.items)
+        assert not (ordered_items[-1] < ordered_items[0]) , "sorting didn't stick"
+        return "\n".join([str(item) for item in ordered_items])
+
+    def __len__(self):
+        return len(self.items)
+
+    def add(self, val):
+        if not isinstance(val, FDSNBulkRequestItem):
+            #print("adding : [" + val +"]", file=sys.stderr)
+            self.items.add(FDSNBulkRequestItem(line=val))
+        else:
+            #print("adding unchanged", file=sys.stderr)
+            self.items.add(val)
+    def update(self, val):
+        """
+        update this with the union between it and another FDSNBulkRequests object
+        """
+        if not val:
+            return
+        if isinstance(val, FDSNBulkRequests):
+            self.items.update(val.items)
+        else:
+            self.items.update((FDSNBulkRequests(val)))
+    def difference_update(self, val):
+        """
+        remove all requests that are found in another FDSNBulkRequests object
+        """
+        if not val:
+            return
+        if isinstance(val, FDSNBulkRequests):
+            self.items.difference_update(val.items)
+        else:
+            self.items.difference_update((FDSNBulkRequests(val)))
+
+def inventory_to_bulkrequests(inv):
+    """
+    convert from Inventory to FDSNBulkRequests
+
+    :type inv: `~obspy.core.inventory.inventory.Inventory`
+    :param inv: obspy Stream data (aka, station metadata)
+    :rtype: `~obspy.clients.fdsn.routers.FDSNBulkRequests`
+    :return: flat representation of inventory tree with duplicates removed
+    """
+    bulk = FDSNBulkRequests(None)
+    for network in inv.networks:
+        net = network.code
+        if not network.stations:
+            bulk.add(FDSNBulkRequestItem(network=net,
+                                         starttime=network.start_date,
+                                         endtime=network.end_date))
+            continue
+        for station in network.stations:
+            sta = station.code
+            if not station.channels:
+                bulk.add(FDSNBulkRequestItem(network=net, station=sta,
+                                             starttime=station.start_date,
+                                             endtime=station.end_date))
+                continue
+            for channel in station.channels:
+                loc = channel.location_code or '  '
+                cha = channel.code
+                bulk.add(FDSNBulkRequestItem(network=net, station=sta,
+                                             location=loc, channel=cha,
+                                             starttime=channel.start_date,
+                                             endtime=channel.end_date))
+    return bulk
+
+def stream_to_bulkrequests(data):
+    """
+    convert waveforms to FDSNBulkRequests
+
+    :type data: `~obspy.core.stream.Stream`
+    :param data: obspy Stream data (aka, waveforms)
+    :rtype: `~obspy.clients.fdsn.routers.FDSNBulkRequests`
+    :return: flat representation of inventory tree with duplicates removed
+    """
+    return FDSNBulkRequests({FDSNBulkRequestItem(**d.stats) for d in data})
 
 class RoutingResponse(object):
-    """base for all routed routes"""
+    """
+    base for all routed routes
+    """
 
     def __init__(self, provider_id, raw_requests=None):
         """
@@ -17,19 +305,19 @@ class RoutingResponse(object):
         :param raw_requests: requests to be interpreted and passed to provider
         """
         self.provider_id = provider_id
-        self.request_lines = raw_requests
+        self.request_items = raw_requests
 
     def __len__(self):
-        if self.request_lines:
-            return len(self.request_lines)
+        if self.request_items:
+            return len(self.request_items)
         return 0
 
     def __str__(self):
         if len(self) != 1:
-            line_or_lines = " lines"
+            item_or_items = " items"
         else:
-            line_or_lines = " line"
-        return self.provider_id + ", with " + str(len(self)) + line_or_lines
+            item_or_items = " item"
+        return self.provider_id + ", with " + str(len(self)) + item_or_items
 
     def add_request(self, line):
         """
@@ -45,10 +333,10 @@ class FederatedRoute(RoutingResponse):
     >>> fed_resp.add_service("STATIONSERVICE","http://service.iris.edu/fdsnws/station/1/")
     >>> fed_resp.add_request("AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
     >>> fed_resp.add_request("AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
-    >>> print(fed_resp("STATIONSERVICE"))
+    >>> print(fed_resp.text("STATIONSERVICE"))
     level=cha
-    AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
-    AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00
+    AI ORCD -- BHZ 2015-01-01T00:00:00.000 2016-01-02T00:00:00.000
+    AI ORCD 04 BHZ 2015-01-01T00:00:00.000 2016-01-02T00:00:00.000
     """
 
     # TODO maybe see which parameters are supported by specific service (?)
@@ -67,7 +355,7 @@ class FederatedRoute(RoutingResponse):
         :type provider_id: str
         :param provider_id: provider_id for the data provider
         """
-        RoutingResponse.__init__(self, provider_id, raw_requests=[])
+        RoutingResponse.__init__(self, provider_id, raw_requests=FDSNBulkRequests(None))
         self.parameters = []
         self.services = {}
 
@@ -85,98 +373,51 @@ class FederatedRoute(RoutingResponse):
         >>> fedresp = FederatedRoute("ABC")
         >>> fedresp.add_query_param(["level=station","quality=D"])
         >>> fedresp.add_query_param("onceuponatime=now")
-        >>> fedresp.add_query_param(RequestLine("testing=true"))
-        >>> fedresp.add_query_param([RequestLine("black=white"),RequestLine("this=that")])
+        >>> fedresp.add_query_param(FedcatResponseLine("testing=true"))
+        >>> fedresp.add_query_param([FedcatResponseLine("black=white"),FedcatResponseLine("this=that")])
         >>> print(",".join(fedresp.parameters))
         level=station,quality=D,onceuponatime=now,testing=true,black=white,this=that
         """
         if isinstance(parameters, str):
             self.parameters.append(parameters)
-        elif isinstance(parameters, RequestLine):
+        elif isinstance(parameters, FedcatResponseLine):
             self.parameters.append(str(parameters))
         else:
             self.parameters.extend([str(p) for p in parameters])
 
     def add_request(self, lines):
-        """append a single request to the list of requests
-        :param request_lines: string or RequestLine that looks something like:
+        """append request(s) to the list of requests
+        :param request_items: string or FedcatResponseLine that looks something like:
         NET STA LOC CHA yyyy-mm-ddTHH:MM:SS yyyy-mm-ddTHH:MM:SS
         """
-        if isinstance(lines, (str, RequestLine)):
-            self.request_lines.append(str(lines))  # no returns expected!
-        elif isinstance(lines, (list, tuple)):
-            self.request_lines.extend([str(line) for line in lines])
+        if isinstance(lines, (str, FedcatResponseLine)):
+            self.request_items.update(str(lines))  # no returns expected!
+        elif isinstance(lines, collections.Iterable):
+            self.request_items.add([str(line) for line in lines])
 
-    def matched_and_unmatched(self, templates, level):
-        """
-        returns tuple of lines that (match, do_not_match) templates, to a level of detail specified
-        by the level
-        :param templates: containers containing strings NET.STA.LOC.CHA, NET.STA, or NET
-        :param level: one of 'channel', 'response', 'station', 'network'
 
-        >>> fedresp = FederatedRoute("ABC")
-        >>> fedresp.add_request(["AB STA1 00 BHZ 2005-01-01 2005-03-24",
-        ...                      "AB STA2 00 BHZ 2005-01-01 2005-03-24",
-        ...                      "AB STA1 00 EHZ 2005-01-01 2005-03-24"])
-        >>> print(fedresp.text("STATIONSERVICE"))
-        AB STA1 00 BHZ 2005-01-01 2005-03-24
-        AB STA2 00 BHZ 2005-01-01 2005-03-24
-        AB STA1 00 EHZ 2005-01-01 2005-03-24
-        >>> m, unm = fedresp.matched_and_unmatched(["AB.STA1"], "station")
-        >>> print(m)
-        ['AB STA1 00 BHZ 2005-01-01 2005-03-24', 'AB STA1 00 EHZ 2005-01-01 2005-03-24']
-        >>> print(unm)
-        ['AB STA2 00 BHZ 2005-01-01 2005-03-24']
-        >>> m, _ = fedresp.matched_and_unmatched(["AB.STA1.00.BHZ", "AB.STA2.00.BHZ"], "channel")
-        >>> print(m)
-        ['AB STA1 00 BHZ 2005-01-01 2005-03-24', 'AB STA2 00 BHZ 2005-01-01 2005-03-24']
-        """
-        converter_choices = {
-            "channel": lambda x: ".".join(x[0:4]),
-            "response": lambda x: ".".join(x[0:4]),
-            "station": lambda x: ".".join(x[0:2]),
-            "network": lambda x: x[0]
-        }
-        converter = converter_choices[level]
-        matched = [
-            line for line in self.request_lines
-            if converter(line.split()) in templates
-        ]
-        unmatched = [
-            line for line in self.request_lines if line not in matched
-        ]
-        return matched, unmatched
 
     def text(self, target_service):
         """
         Return a string suitable for posting to a target service
         :param target_service: string name of target service, like 'DATASELECTSERVICE'
         """
-        reply = self.selected_common_parameters(target_service)
-        reply.extend(self.request_lines)
-        return "\n".join(reply)
-
-    def selected_common_parameters(self, target_service):
-        """Return common parameters, targeted for a specific service
-        This effecively filters out parameters that don't belong in a request.
-        for example, STATIONSERVICE can accept level=xxx ,
-        while DATASELECTSERVICE can accept longestonly=xxx
-        :param target_service: string containing either 'DATASELECTSERVICE' or 'STATIONSERVICE'
-        """
         reply = []
         for good in FederatedRoute.pass_through_params[target_service]:
             reply.extend(
                 [c for c in self.parameters if c.startswith(good + "=")])
-        return reply
+        if reply:
+            params_str = "\n".join(reply)
+            return "\n".join((params_str, str(self.request_items)))
+        else:
+            return str(self.request_items)
 
     def __str__(self):
-        if len(self) != 1:
-            line_or_lines = " lines"
-        else:
-            line_or_lines = " line"
-        return self.provider_id + ", with " + str(len(self)) + line_or_lines
+        out = "FederatedRoute for {id} containing {pcount} query parameters and {rcount} request items".format(id=self.provider_id,
+               pcount=len(self.parameters), rcount=len(self.request_items))
+        return out
 
-class RequestLine(object):
+class FedcatResponseLine(object):
     """line from federated catalog source that provides additional tests
 
     >>> fed_text = '''minlat=34.0
@@ -191,7 +432,7 @@ class RequestLine(object):
     ... HL ARG -- VHZ 2015-01-01T00:00:00 2016-01-02T00:00:00'''
 
     >>> for y in fed_text.splitlines():
-    ...    x = RequestLine(y)
+    ...    x = FedcatResponseLine(y)
     ...    edprs = [x.is_empty(), x.is_datacenter(), x.is_param(),
     ...             x.is_request(), x.is_service()]
     ...    print("\\n".join([str(edprs)]))
@@ -263,7 +504,7 @@ class ParserState(object):
 
 
 class PreParse(ParserState):
-    """Initial ParserState"""
+    """Initial ParserState for federated response"""
 
     @staticmethod
     def parse(line, this_response):
@@ -282,7 +523,7 @@ class PreParse(ParserState):
 
 
 class ParameterItem(ParserState):
-    """handle a parameter"""
+    """handle a parameter from federated response"""
 
     @staticmethod
     def parse(line, this_response):
@@ -303,7 +544,7 @@ class ParameterItem(ParserState):
 
 
 class EmptyItem(ParserState):
-    """handle an empty line"""
+    """handle an empty line from federated response"""
 
     @staticmethod
     def parse(line, this_response):
@@ -322,7 +563,7 @@ class EmptyItem(ParserState):
 
 
 class DatacenterItem(ParserState):
-    """handle data center"""
+    """handle data center from federated response"""
 
     @staticmethod
     def parse(line, this_response):
@@ -343,7 +584,7 @@ class DatacenterItem(ParserState):
 
 
 class ServiceItem(ParserState):
-    """handle service description"""
+    """handle service description from federated response"""
 
     @staticmethod
     def parse(line, this_response):
@@ -365,7 +606,7 @@ class ServiceItem(ParserState):
 
 
 class RequestItem(ParserState):
-    """handle request lines"""
+    """handle request lines from federated response"""
 
     @staticmethod
     def parse(line, this_response):

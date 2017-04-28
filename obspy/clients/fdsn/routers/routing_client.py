@@ -10,7 +10,7 @@ import sys
 import logging
 import multiprocessing as mp
 from obspy.clients.fdsn import Client
-from obspy.clients.fdsn.routers.fedcatalog_parser import RoutingResponse
+from obspy.clients.fdsn.routers.fedcatalog_parser import (RoutingResponse, FDSNBulkRequests)
 
 # logging facilities swiped from mass_downloader.py
 # Setup the logger.
@@ -76,7 +76,7 @@ class RoutingClient(object): #no longer inherits from Client.
     def __str__(self):
         return "RoutingClient object"
 
-    def _request(self, client, service, route, output, failed, **kwarg):
+    def _request(self, client, service, route, output, passed, failed, **kwarg):
         """
         :type client: :class:`~obspy.clients.fdsn.Client` or similar
         :param client:
@@ -96,6 +96,10 @@ class RoutingClient(object): #no longer inherits from Client.
     def query(self):
         """
         return query based on use_parallel preference
+        :rtype: function
+        :return: serial_query_machine or parallel_query_machine, with signatures:
+                 self.xxxx_query_machine(routing_mgr, service, **kwargs)
+                 and return a tuple (data,  FDSNBulkRequests of failed queries)
         """
         if self.use_parallel:
             return self.parallel_query_machine
@@ -109,31 +113,51 @@ class RoutingClient(object): #no longer inherits from Client.
         :param routing_mgr:
         :type service: str
         :param service:
-        :rtype: tuple (data, list of failed queries)
+        :type keep_unique: bool
+        :param keep_unique: once an item of interest is retrieved, remove it
+            from all subsequent requests
+        :rtype: tuple (data, FDSNBulkRequests of failed queries)
         :return:
         """
         output = queue.Queue()
+        passed = queue.Queue()
         failed = queue.Queue()
+        all_retrieved = FDSNBulkRequests(None)
 
         for route in routing_mgr:
+            if "keep_unique" in kwargs and kwargs["keep_unique"]:
+                route.request_items.difference_update(all_retrieved)
+
             if self.exclude_provider and route.provider_id in self.exclude_provider:
-                logger.info("skipping: " + route.provider_id)
+                logger.info("skipping: " + route.provider_id +
+                            " because it is in the exclude_provider list")
                 continue
             if self.include_provider and route.provider_id not in self.include_provider:
-                logger.info("skipping: " + route.provider_id)
+                logger.info("skipping: " + route.provider_id +
+                            " because it isn't in the include_provider list")
                 continue
+            if not route.request_items:
+                logger.info("skipping: " + route.provider_id +
+                            " because the retrieval list is empty.")
+                continue
+
             try:
                 client = Client(route.provider_id, self.args_to_clients)
                 msg = "request to: {0}: {1} items.\n{2}".format(
                     route.provider_id, len(route),
                     routing_mgr.str_details(route.provider_id))
                 logger.info("starting " + msg)
+
+                # _request will put data into output and failed queues
                 self._request(client=client, service=service,
-                                       route=route, output=output, failed=failed, **kwargs)
+                              route=route, output=output, passed=passed, failed=failed, **kwargs)
             except:
-                failed.put(route.request_lines)
+                failed.put(route.request_items) # FDSNBulkRequests
                 raise
-            
+
+            # tricky part here: if anything has passed, we need to remove it
+            # from the rest of the requests in the routing manager
+
             # TODO add description of request here.
         logger.info("all requests completed")
         data = None
@@ -142,13 +166,19 @@ class RoutingClient(object): #no longer inherits from Client.
                 data = output.get()
             else:
                 data += output.get()
+        
+        while not passed.empty():
+            # passed = routing_mgr.data_to_request(data)
+            all_retrieved.update(passed.get())
 
-        retry = []
+        retry = None
+        if not failed.empty():
+            retry = failed.get()
+
         while not failed.empty():
-            retry.extend(failed.get())
-        if retry:
-            retry = '\n'.join(retry)
-        return data, retry
+            retry.update(failed.get()) # working with a set
+
+        return data, all_retrieved, retry
 
     def parallel_query_machine(self, routing_mgr, service, **kwargs):
         """
@@ -158,7 +188,7 @@ class RoutingClient(object): #no longer inherits from Client.
         :param routing_mgr:
         :type service: str
         :param service:
-        :rtype: tuple (data, list of failed queries)
+        :rtype: tuple tuple (data, FDSNBulkRequests of failed queries)
         :return:
 
         >>def echoer(**kwargs):
@@ -166,6 +196,7 @@ class RoutingClient(object): #no longer inherits from Client.
         logging.warn("Parallel query requested, but will perform serial request anyway.")
         return self.serial_query_machine(routing_mgr=routing_mgr, service=service, **kwargs)
         output = mp.Queue()
+        passed = mp.Queue()
         failed = mp.Queue()
         # Setup process for each provider
         processes = []
@@ -180,12 +211,12 @@ class RoutingClient(object): #no longer inherits from Client.
             try:
                 client = Client(route.provider_id, self.args_to_clients)
             except:
-                failed.put(route.request_lines)
+                failed.put(route.request_items)
                 raise
             else:
                 p_kwargs = kwargs.copy()
                 p_kwargs.update({'client':client, 'service':service,
-                                'output':output, 'failed':failed, 
+                                'output':output, 'passed':passed, 'failed':failed,
                                 'route':route})
                 processes.append(mp.Process(target=self._request,
                                             name=route.provider_id,
@@ -215,13 +246,15 @@ class RoutingClient(object): #no longer inherits from Client.
             else:
                 data += tmp
 
-        retry = []
-        while not failed.empty():
-            retry.extend(failed.get())
+        passed = routing_mgr.data_to_request(data)
 
-        if retry:
-            retry = '\n'.join(retry)
-        return data, retry
+        if not failed.empty():
+            retry = failed.get()
+
+        while not failed.empty():
+            retry.update(failed.get()) # working with a set
+
+        return data, passed, retry
 
 class RoutingManager(object):
     """
@@ -263,6 +296,9 @@ class RoutingManager(object):
         towrite = type(self).__name__ + " with " + str(len(self)) + " items:\n" +responsestr
         return towrite
 
+    def data_to_request(self, data):
+        raise NotImplementedError
+
     def provider_ids(self):
         """
         return the provider id's for all retrieved routes
@@ -297,10 +333,10 @@ class RoutingManager(object):
 
         Test methods that return multiple RoutingResponse objects
         >>> print(str(fedresps.get_route('SED')))
-        SED, with 0 lines
+        SED, with 0 items
         >>> ml = fedresps.get_route('SED', get_multiple=True)
         >>> print ([str(x) for x in ml])
-        ['SED, with 0 lines', 'SED, with 1 line']
+        ['SED, with 0 items', 'SED, with 1 item']
 
         :type provider_id: str
         :param provider_id: recognized key string for recognized server. see
