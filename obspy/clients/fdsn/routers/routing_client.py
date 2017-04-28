@@ -147,7 +147,6 @@ class RoutingClient(object): #no longer inherits from Client.
                     route.provider_id, len(route),
                     routing_mgr.str_details(route.provider_id))
                 logger.info("starting " + msg)
-
                 # _request will put data into output and failed queues
                 self._request(client=client, service=service,
                               route=route, output=output, passed=passed, failed=failed, **kwargs)
