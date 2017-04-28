@@ -57,7 +57,7 @@ def distribute_args(argdict):
 
     fedcatalog_params = ('')
     fedcatalog_prohibited_params = ('filename', 'attach_response', 'user', 'password')
-    service_params = ('user', 'password', 'attach_response')
+    service_params = ('user', 'password', 'attach_response', 'filename')
 
     # fedrequest gets almost all arguments, except for some
     fed_argdict = argdict.copy()
@@ -392,7 +392,7 @@ class FederatedClient(RoutingClient):
                 path_name = os.path.dirname(filename)
                 base_name = '-'.join((route.provider_id, base_name))
                 filename = os.path.join(path_name, base_name)
-                logger.warning("sending file to :" + filename)
+                logger.info("sending file to :" + filename)
             if filename:
                 get_bulk(bulk=route.text(service), filename=filename, **kwargs)
             else:

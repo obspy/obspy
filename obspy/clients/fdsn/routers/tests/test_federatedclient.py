@@ -18,7 +18,7 @@ from future.builtins import *  # NOQA
 import io
 import os
 #import re
-#import sys
+import sys
 import unittest
 #import warnings
 
@@ -149,6 +149,13 @@ class FederatedClientTestCase(unittest.TestCase):
         self.assertTrue(hasLevel(inv, "station") and not hasLevel(inv, "channel"))
         self.assertEqual(len(inv.networks[0].stations), 1)
         self.assertEqual(inv.networks[0].stations[0].code, 'ANMO')
+
+    def test_fedstations_bulk_simple_many(self):
+        bulktext = "* A* 00 BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00"
+        inv = self.fed_client.get_stations_bulk(bulktext)
+        #default level of station
+        self.assertTrue(hasLevel(inv, "station") and not hasLevel(inv, "channel"))
+        self.assertGreater(len(inv.networks), 5)
 
     def test_fedstations_bulk_stringio(self):
         # ensure service works at all
@@ -314,21 +321,24 @@ class FederatedClientTestCase(unittest.TestCase):
                         ]
         for query, filename in zip(queries, result_files):
             # test output to stream
-            got = client.get_waveforms(*query, include_provider="IRIS")
-            file_ = os.path.join(self.datapath, filename)
+            got = client.get_waveforms(*query)
+            file_ = os.path.join(self.datapath, filename) # provider already limited to iris
             expected = read(file_)
             self.assertEqual(got, expected, "Dataselect failed for query %s" %
                              repr(query))
             # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_waveforms(*query, filename=tf.name, include_provider="IRIS")
-
-                
+            with NamedTemporaryFile(prefix="IRIS-") as tf:
                 base_name = os.path.basename(tf.name)
+                base_name = base_name[5:]
                 path_name = os.path.dirname(tf.name)
-                base_name = '-'.join(('IRIS', base_name))
-                tf.name = os.path.join(path_name, base_name)
-
+                providerless_name = os.path.join(path_name, base_name)
+                print("filename: " + tf.name + " using [" + providerless_name + "]", file=sys.stderr)
+                client.get_waveforms(*query, filename=providerless_name)
+                
+                # base_name = os.path.basename(tf.name)
+                # path_name = os.path.dirname(tf.name)
+                # base_name = '-'.join(('IRIS', base_name))
+                # tf.name = os.path.join(path_name, base_name)
 
                 with open(tf.name, 'rb') as fh:
                     got = fh.read()
@@ -337,7 +347,7 @@ class FederatedClientTestCase(unittest.TestCase):
             self.assertEqual(got, expected, "Dataselect failed for query %s" %
                              repr(query))
 
-    def xtest_authentication(self):
+    def test_authentication(self):
         """
         Test dataselect with authentication.
         """
@@ -351,125 +361,6 @@ class FederatedClientTestCase(unittest.TestCase):
         file_ = os.path.join(self.datapath, filename)
         expected = read(file_)
         self.assertEqual(got, expected, failmsg(got, expected))
-
-    def xtest_dataselect_bulk(self):
-        """
-        Test bulk dataselect requests, POSTing data to server. Also tests
-        authenticated bulk request.
-        """
-        clients = [self.client, self.client_auth]
-        file = os.path.join(self.datapath, "bulk.mseed")
-        expected = read(file)
-        # test cases for providing lists of lists
-        bulk = (("TA", "A25A", "", "BHZ",
-                 UTCDateTime("2010-03-25T00:00:00"),
-                 UTCDateTime("2010-03-25T00:00:04")),
-                ("TA", "A25A", "", "BHE",
-                 UTCDateTime("2010-03-25T00:00:00"),
-                 UTCDateTime("2010-03-25T00:00:06")),
-                ("IU", "ANMO", "*", "HHZ",
-                 UTCDateTime("2010-03-25T00:00:00"),
-                 UTCDateTime("2010-03-25T00:00:08")))
-        params = dict(quality="B", longestonly=False, minimumlength=5)
-        for client in clients:
-            # test output to stream
-            got = client.get_waveforms_bulk(bulk, **params)
-            self.assertEqual(got, expected, failmsg(got, expected))
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_waveforms_bulk(bulk, filename=tf.name, **params)
-                got = read(tf.name)
-            self.assertEqual(got, expected, failmsg(got, expected))
-        # test cases for providing a request string
-        bulk = ("quality=B\n"
-                "longestonly=false\n"
-                "minimumlength=5\n"
-                "TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
-                "TA A25A -- BHE 2010-03-25T00:00:00 2010-03-25T00:00:06\n"
-                "IU ANMO * HHZ 2010-03-25T00:00:00 2010-03-25T00:00:08\n")
-        for client in clients:
-            # test output to stream
-            got = client.get_waveforms_bulk(bulk)
-            self.assertEqual(got, expected, failmsg(got, expected))
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_waveforms_bulk(bulk, filename=tf.name)
-                got = read(tf.name)
-            self.assertEqual(got, expected, failmsg(got, expected))
-        # test cases for providing a file name
-        for client in clients:
-            with NamedTemporaryFile() as tf:
-                with open(tf.name, "wt") as fh:
-                    fh.write(bulk)
-                got = client.get_waveforms_bulk(bulk)
-            self.assertEqual(got, expected, failmsg(got, expected))
-        # test cases for providing a file-like object
-        for client in clients:
-            got = client.get_waveforms_bulk(io.StringIO(bulk))
-            self.assertEqual(got, expected, failmsg(got, expected))
-
-    def xtest_station_bulk(self):
-        """
-        Test bulk station requests, POSTing data to server. Also tests
-        authenticated bulk request.
-
-        Does currently only test reading from a list of list. The other
-        input types are tested with the waveform bulk downloader and thus
-        should work just fine.
-        """
-        clients = [self.client, self.client_auth]
-        # test cases for providing lists of lists
-        starttime = UTCDateTime(1990, 1, 1)
-        endtime = UTCDateTime(1990, 1, 1) + 10
-        bulk = [
-            ["IU", "ANMO", "", "BHE", starttime, endtime],
-            ["IU", "CCM", "", "BHZ", starttime, endtime],
-            ["IU", "COR", "", "UHZ", starttime, endtime],
-            ["IU", "HRV", "", "LHN", starttime, endtime],
-        ]
-        for client in clients:
-            # Test with station level.
-            inv = client.get_stations_bulk(bulk, level="station")
-            # Test with output to file.
-            with NamedTemporaryFile() as tf:
-                client.get_stations_bulk(
-                    bulk, filename=tf.name, level="station")
-                inv2 = read_inventory(tf.name, format="stationxml")
-
-            self.assertEqual(inv.networks, inv2.networks)
-            self.assertEqual(len(inv.networks), 1)
-            self.assertEqual(inv[0].code, "IU")
-            self.assertEqual(len(inv.networks[0].stations), 4)
-            self.assertEqual(
-                sorted([_i.code for _i in inv.networks[0].stations]),
-                sorted(["ANMO", "CCM", "COR", "HRV"]))
-
-            # Test with channel level.
-            inv = client.get_stations_bulk(bulk, level="channel")
-            # Test with output to file.
-            with NamedTemporaryFile() as tf:
-                client.get_stations_bulk(
-                    bulk, filename=tf.name, level="channel")
-                inv2 = read_inventory(tf.name, format="stationxml")
-
-            self.assertEqual(inv.networks, inv2.networks)
-            self.assertEqual(len(inv.networks), 1)
-            self.assertEqual(inv[0].code, "IU")
-            self.assertEqual(len(inv.networks[0].stations), 4)
-            self.assertEqual(
-                sorted([_i.code for _i in inv.networks[0].stations]),
-                sorted(["ANMO", "CCM", "COR", "HRV"]))
-            channels = []
-            for station in inv[0]:
-                for channel in station:
-                    channels.append("IU.%s.%s.%s" % (
-                        station.code, channel.location_code,
-                        channel.code))
-            self.assertEqual(
-                sorted(channels),
-                sorted(["IU.ANMO..BHE", "IU.CCM..BHZ", "IU.COR..UHZ",
-                        "IU.HRV..LHN"]))
-        return
 
     def xtest_get_waveform_attach_response(self):
         """
@@ -492,9 +383,9 @@ class FederatedClientTestCase(unittest.TestCase):
 def test_suite():
     from unittest import (TestSuite, makeSuite)
     suite = TestSuite()
-    suite.addTest(makeSuite(BulkConversionTestCase, 'test'))
+    # suite.addTest(makeSuite(BulkConversionTestCase, 'test'))
     suite.addTest(makeSuite(FederatedClientTestCase, 'test'))
-    suite.addTest(makeSuite(FDSNBulkRequestItemClientTestCase, 'test'))
+    # suite.addTest(makeSuite(FDSNBulkRequestItemClientTestCase, 'test'))
     return suite
 
 if __name__ == '__main__':
