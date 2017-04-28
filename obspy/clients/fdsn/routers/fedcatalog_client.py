@@ -10,7 +10,7 @@ FDSN Web service client for ObsPy.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import print_function
-# import sys
+import sys
 import collections
 # from collections import OrderedDict
 from threading import Lock
@@ -42,51 +42,6 @@ REMAPS = (("IRISDMC", "IRIS"),
           ("USPC", "USP"))
 
 FEDCATALOG_URL = 'https://service.iris.edu/irisws/fedcatalog/1/'
-
-def inv2set(inv, level):
-    """
-    used to quickly decide what exists and what doesn't
-
-    :type inv:
-    :param inv:
-    :type level:
-    :param level:
-    :rtype:
-    :return:
-    """
-
-    converter = {
-        "channel": channel_set,
-        "response": channel_set,
-        "station": station_set,
-        "network": network_set
-    }
-
-    def channel_set(inv):
-        """
-        return a set containing string representations of an inv object
-        """
-        return {
-            n.code + "." + s.code + "." + c.location_code + "." + c.code
-            for n in inv for s in n for c in s
-        }
-
-    def station_set(inv):
-        """
-        return a set containing string representations of an inv object
-        """
-        return {n.code + "." + s.code for n in inv for s in n}
-
-    def network_set(inv):
-        """
-        return a set containing string representations of an inv object
-        """
-        return {n.code for n in inv}
-
-    return converter[level](inv)
-
-
-# converters used to make comparisons between inventory items and requests
 
 def distribute_args(argdict):
     """
@@ -121,21 +76,26 @@ def distribute_args(argdict):
 # the following is ripped out of fdsn.client.Client because it doesn't need to be
 # be associated with the client class. TODO: pull out of client class, and then
 # just import it
-def _get_bulk_string(bulk, arguments):
+def get_bulk_string(bulk, arguments):
+    """
+    simplified version of get_bulk_string used for bulk requests
+    """
     # If its an iterable, we build up the query string from it
     # StringIO objects also have __iter__ so check for 'read' as well
 
-    args = ["%s=%s" % (key, convert_to_string(value))
-            for key, value in arguments.items() if value is not None]
+    if arguments is not None:
+        args = ["%s=%s" % (key, convert_to_string(value))
+                for key, value in arguments.items() if value is not None]
+    else:
+        args = None
 
-    if isinstance(bulk, collections.Iterable) \
-            and not hasattr(bulk, "read") \
-            and not isinstance(bulk, (str, native_str)):
-        # empty location codes have to be represented by two dashes
-        tmp = [" ".join((net, sta, loc or "--", cha,
-                         convert_to_string(t1), convert_to_string(t2)))
-               for net, sta, loc, cha, t1, t2 in bulk]
-        tmp = "\n".join(tmp)
+    # logger.info(str(bulk.__class__))
+    # bulk might be tuple of strings...
+    if isinstance(bulk, (str, native_str)):
+        tmp = bulk
+    elif isinstance(bulk, collections.Iterable) \
+        and not hasattr(bulk, "read"):
+        raise NotImplementedError("fedcatalog's get_bulk_string cannot handle vectors.")
     else:
         # if it has a read method, read data from there
         if hasattr(bulk, "read"):
@@ -157,7 +117,7 @@ def _get_bulk_string(bulk, arguments):
         bulk = '\n'.join((args, tmp))
     else:
         bulk = tmp
-    logger.info(bulk)
+    # logger.info(bulk)
     assert isinstance(bulk, (str, native_str))
     return bulk
 
@@ -370,14 +330,23 @@ class FederatedClient(RoutingClient):
 
         :type bulk:
         :param bulk:
+        :type **kwargs: other paramsters
+        :param **kwargs: only kwargs that should go to fedcatlaog
         :rtype: :class:`~obspy.clients.fdsn.routers.FederatedRoutingManager`
         :return: parsed response from the FedCatalog service
         """
-        if isinstance(bulk, collections.Iterable):
-             bulk = _get_bulk_string(bulk, kwargs)
+        assert bulk, "bulk is a required parameter"
+        if not isinstance(bulk, (str, native_str)) and isinstance(bulk, collections.Iterable):
+            print(bulk, file=sys.stderr)
+            bulk = get_bulk_string(bulk=bulk, arguments=kwargs)
+        elif isinstance(bulk, (str, native_str)) and kwargs:
+            bulk = get_bulk_string(bulk=bulk, arguments=kwargs)
+
+        assert bulk, "Bulk is empty after get_bulk_string"
+        assert isinstance(bulk, (str, native_str)), "Bulk is something other than a string"
+
         resp = requests.post(FEDCATALOG_URL + "query", data=bulk, verify=False)
         resp.raise_for_status()
-        logger.info(resp.text)
         frm = FederatedRoutingManager(resp.text)
         return frm
 
@@ -418,8 +387,12 @@ class FederatedClient(RoutingClient):
                              service)
 
         try:
-            if isinstance(filename, str):
-                filename = route.provider_id + "-" + filename
+            if isinstance(filename, (str, native_str)):
+                base_name = os.path.basename(filename)
+                path_name = os.path.dirname(filename)
+                base_name = '-'.join((route.provider_id, base_name))
+                filename = os.path.join(path_name, base_name)
+                logger.warning("sending file to :" + filename)
             if filename:
                 get_bulk(bulk=route.text(service), filename=filename, **kwargs)
             else:
@@ -473,16 +446,16 @@ class FederatedClient(RoutingClient):
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
-        # bulk = _get_bulk_string(bulk, fed_kwargs)
-        frm = self.get_routing_bulk(bulk) #, fed_kwargs)
-        data, passed, failed  = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
+        frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)
+        data, passed, failed = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         if reroute and failed:
             logger.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
-            more_data, passed, failed = self.query(frm, "DATASELECTSERVICE", keep_unique=True, **svc_kwargs)
+            more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
+                                                   keep_unique=True, **svc_kwargs)
             logger.info("Retrieved {0} additional items".format(len(passed)))
             logger.info("Unable to retrieve {0} items:".format(len(failed)))
             logger.info(str(failed))
@@ -520,18 +493,21 @@ class FederatedClient(RoutingClient):
 
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
+        assert "bulk" not in fed_kwargs, \
+               "Bulk request should be sent to get_waveforms_bulk, not get_waveforms"
         frm = self.get_routing(network=network, station=station,
                                location=location, channel=channel,
                                starttime=starttime, endtime=endtime, **fed_kwargs)
 
-        data, passed, failed  = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
+        data, passed, failed = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         if reroute and failed:
             logger.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
-            more_data, passed, failed = self.query(frm, "DATASELECTSERVICE", keep_unique=True, **svc_kwargs)
+            more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
+                                                   keep_unique=True, **svc_kwargs)
             logger.info("Retrieved {0} additional items".format(len(passed)))
             logger.info("Unable to retrieve {0} items:".format(len(failed)))
             logger.info('\n'+ str(failed))
@@ -577,8 +553,8 @@ class FederatedClient(RoutingClient):
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
-        #bulk = _get_bulk_string(bulk, fed_kwargs)
-        frm = self.get_routing_bulk(bulk) #, fed_kwargs)
+
+        frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)
         inv, passed, failed  = self.query(frm, "STATIONSERVICE", **svc_kwargs)
 
         if reroute and failed:
@@ -693,11 +669,9 @@ class FederatedClient(RoutingClient):
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
-        if "bulk" in fed_kwargs:
-            #bulk = _get_bulk_string(fed_kwargs['bulk'], fed_kwargs)
-            frm = self.get_routing_bulk(fed_kwargs['bulk']) #, fed_kwargs)
-        else:
-            frm = self.get_routing(**fed_kwargs)
+        assert "bulk" not in fed_kwargs, \
+               "Bulk request should be sent to get_stations_bulk, not get_stations"
+        frm = self.get_routing(**fed_kwargs)
 
         # query queries all providers
         inv, passed, failed = self.query(frm, "STATIONSERVICE", **svc_kwargs)
@@ -707,7 +681,8 @@ class FederatedClient(RoutingClient):
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
-            more_inv, passed, failed = self.query(frm, "STATIONSERVICE", keep_unique=True, **svc_kwargs)
+            more_inv, passed, failed = self.query(frm, "STATIONSERVICE",
+                                                  keep_unique=True, **svc_kwargs)
             logger.info("Retrieved {0} additional items".format(len(passed)))
             logger.info("Unable to retrieve {0} items:".format(len(failed)))
             logger.info('\n'+ str(failed))
