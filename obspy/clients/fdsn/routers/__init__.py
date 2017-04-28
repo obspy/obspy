@@ -41,8 +41,8 @@ parameters that are normally accepted by the station web service.
 Retrieving Waveform Metadata
 ---------------------------
 Submitting a GET request to the federated catalog service.  The service recognizes
-not only the paramters normally accepted by the bulkdataselect web service, but 
-also the parameters accepted by the station service.  This includes geographic 
+not only the paramters normally accepted by the bulkdataselect web service, but
+also the parameters accepted by the station service.  This includes geographic
 parameters. For more details, see the help for obspy.clients.fdsn
 
     >>> from obspy import UTCDateTime
@@ -62,6 +62,18 @@ parameters. For more details, see the help for obspy.clients.fdsn
 caveats
 ----
 * duplicated metadata remains duplicated.
+
+suggestions for future
+----------------------
+* bulk requests for a certain level of metadata, eg. network, station
+  will return an egregious amount of data that is very likely duplicated
+  Perhaps the fedcatalog web service could recognize it and return pared
+  down data or the fdsn.client.Client  class could recognize and reduce
+  the duplications. example:
+    >>> INV2 = fclient.get_stations(network="I?", station="AN*",
+    ...                           level="network", includeoverlaps="true")
+    ...                           #doctest: +SKIP
+
 """
 
 # convenience imports
@@ -96,7 +108,7 @@ inv = client.get_stations([argsToFederator][argsForEachRequest])
                 -> client = fdsn.client.Client(REQ.provider_id, FedClient.individualClientArgs)
                 -> fn = FederatedClient.get_request_fn(targetservice)
                         [either FC.submit_waveform_request or FC.submit_station_request]
-                -> fn(client, request, output, failed, [argsForEachRequest])
+                -> fn(client, request, output, passed, failed, [argsForEachRequest])
                     [FC.submit_station/waveform_request(client,route,out,fai,**kwarg)]
                     -> client.get_stations/waveforms_bulk(bulk=route.text(SERVICE), **kwargs)
                        [all or nothing... either data goes to output.put or requestlines go to failed.put]
