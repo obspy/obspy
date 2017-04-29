@@ -13,7 +13,7 @@ The holdings of many of these services are indexed by the FedCatalog service
 
  This FederatedClient first queries the FedCatalog service to determine where
  the data of interest reside.  It then queries the individual web services from
- each provider using the fdsn Client routines to retrieve the resulting data.
+ each provider using the FDSN Client routines to retrieve the resulting data.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -43,7 +43,7 @@ parameters that are normally accepted by the station web service.
 Retrieving Waveform Metadata
 ---------------------------
 Submitting a GET request to the federated catalog service.  The service recognizes
-not only the paramters normally accepted by the bulkdataselect web service, but
+not only the parameters normally accepted by the bulkdataselect web service, but
 also the parameters accepted by the station service.  This includes geographic
 parameters. For more details, see the help for obspy.clients.fdsn
 
