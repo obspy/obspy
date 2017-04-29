@@ -18,7 +18,7 @@ data from the provider.
 :Note: Although it was originally intended that RoutingClient inherited from
 :class:`~obspy.clients.fdsn.Client`, the Fedcatalog service is technically not
 a federated service (yet).  It is running on a different path (../irisws/..),
-and fails the many asumptions built into the Client class.
+and fails the many assumptions built into the Client class.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -76,6 +76,8 @@ class RoutingClient(object): #no longer inherits from Client.
     def __init__(self, use_parallel=False, include_provider=None,
                  exclude_provider=None, **kwargs):
         """
+        Initialize a RoutingClient
+
         :type use_parallel: boolean
         :param use_parallel: determines whether clients will be polled in in
         parallel or in series.  If the Client appears to hang during a request,
@@ -87,10 +89,6 @@ class RoutingClient(object): #no longer inherits from Client.
         :param **kwargs: additional arguments are passed along to each instance
         of the new client
         """
-        # super(RoutingClient, self).__init__(self)
-        # do not pass initialization on to the Client. its series of checks
-        # do this service no good, since this is a non-standard service, and
-        # furthermore it is technically an IRIS service, not an FDSN service
 
         self.use_parallel = use_parallel
         self.args_to_clients = kwargs  # passed to clients as they are initialized
@@ -110,7 +108,7 @@ class RoutingClient(object): #no longer inherits from Client.
         :param route:
         :type output: container accepting "put"
         :param output: place where retrieved data go
-        :type failed: contdainer accepting "put"
+        :type failed: container accepting "put"
         :param failed: place where list of unretrieved bulk request lines go
         :param filename:
         """

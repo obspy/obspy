@@ -421,7 +421,7 @@ class FederatedClient(RoutingClient):
         :param route:
         :type output: container accepting "put"
         :param output: place where retrieved data go
-        :type failed: contdainer accepting "put"
+        :type failed: container accepting "put"
         :param failed: place where list of unretrieved bulk request lines go
         :param filename:
         :type **kwargs:
