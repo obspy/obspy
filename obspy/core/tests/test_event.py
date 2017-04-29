@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
 import copy
 import os
@@ -11,7 +11,6 @@ import warnings
 import tempfile
 
 from matplotlib import rcParams
-
 import numpy as np
 
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
@@ -514,7 +513,10 @@ class CatalogTestCase(unittest.TestCase):
         rid = ResourceIdentifier(new_id)
         self.assertIs(rid.get_referred_object(), cat3[0])
         del cat3
-        self.assertIs(rid.get_referred_object(), cat2[0])
+        # raises UserWarning
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            self.assertIs(rid.get_referred_object(), cat2[0])
         del cat2
         self.assertIs(rid.get_referred_object(), None)
 
@@ -773,7 +775,10 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         # reference will result in a dict that contains None, but that will
         # get removed when the resource_id goes out of scope
         _r2 = ResourceIdentifier(referred_object=UTCDateTime())  # NOQA
-        self.assertEqual(_r2.get_referred_object(), None)
+        # raises UserWarning
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            self.assertEqual(_r2.get_referred_object(), None)
         del _r2  # delete rid to get its id out of r_dict keys
         # Give it a reference and it will stick around.
         obj = UTCDateTime()
@@ -811,7 +816,10 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         rid1 = ResourceIdentifier(referred_object=obj1)
         # delete obj1, make sure rid1 return None
         del obj1
-        self.assertIs(rid1.get_referred_object(), None)
+        # raises UserWarning
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            self.assertIs(rid1.get_referred_object(), None)
 
     def test_getting_gc_with_shared_resource_id(self):
         """
@@ -853,8 +861,11 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         rdict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
         self.assertEqual(len(list(rdict.keys())), 2)
         del obj_a, obj_b
-        self.assertIs(res1.get_referred_object(), None)
-        self.assertIs(res2.get_referred_object(), None)
+        # raises UserWarnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            self.assertIs(res1.get_referred_object(), None)
+            self.assertIs(res2.get_referred_object(), None)
 
     def test_quakeml_regex(self):
         """
@@ -1131,7 +1142,7 @@ class BaseTestCase(unittest.TestCase):
         t1 = UTCDateTime(2010, 1, 1)
         t2 = UTCDateTime(2010, 1, 1)
 
-        rid = ResourceIdentifier("a", referred_object=t1)
+        rid = ResourceIdentifier("a", referred_object=t1)  # @UnusedVariable
         rid = ResourceIdentifier("a", referred_object=t2)
 
         del t1

@@ -1411,8 +1411,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                        msg=filename) as e:
                     # The file has a couple other issues as well and the
                     # data cannot be unpacked. Unpacking it would raises an
-                    # earlier error than the one we are testing here.
-                    read(filename, headonly=True)
+                    # earlier error than the one we are testing here
+                    # raises InternalMSEEDWarning
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore', InternalMSEEDWarning)
+                        read(filename, headonly=True)
 
                 with io.open(reference, "rt") as fh:
                     err_msg = fh.readlines()[-1]
