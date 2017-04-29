@@ -328,7 +328,8 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             reftime = None
 
         relhdrs = [hdr for hdr in HD.RELHDRS
-                   if header.get(hdr) not in (None, HD.SNULL)]
+                   if header.get(hdr) is not None
+                   and header.get(hdr) is not HD.SNULL]
 
         if reftime:
             # Set current 'b' relative to the old reftime.
