@@ -3,8 +3,32 @@
 """
 FDSN Web service client for ObsPy.
 
+:class:`~obspy.clients.fdsn.routers.FedcatalogProviders` contains data center
+(provider) details retrieved from the fedcatalog service
+
+:class:`~obspy.clients.fdsn.routers.FederatedClient` is the FDSN Web service request 
+client. The end user will work almost exclusively with this class, which
+has methods similar to :class:`~obspy.clients.fdsn.Client`
+
+:class:`~obspy.clients.fdsn.routers.FederatedRoutingManager` provides parsing
+capabilities, and helps the FederatedClient make requests to each individual
+provider's service
+
+:func:`distribute_args()` helps determine what parameters belong to the routing
+service and which belong to the data provider's client service
+
+:func:`get_bulk_string()` helps turn text and parameters into a valid bulk
+request text block.
+
+:func:`data_to_request()` helper function to convert
+:class:`~obspy.core.inventory.inventory.Inventory` or :class:`~obpsy.core.Stream`
+into FDSNBulkRequests. Useful for comparing what has been retrieved with what was
+requested.
+
 :copyright:
-    ?
+    The ObsPy Development Team (devs@obspy.org)
+    Celso G Reyes, 2017
+    IRIS-DMC
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
@@ -25,7 +49,7 @@ from obspy.core import Stream
 from obspy.clients.fdsn.client import convert_to_string
 from obspy.clients.fdsn.header import FDSNException
 from obspy.clients.fdsn.routers.routing_client import (RoutingClient,
-                                                       RoutingManager, logger)
+                                                       RoutingManager, LOGGER)
 from obspy.clients.fdsn.routers import (FederatedRoute,)
 from obspy.clients.fdsn.routers.fedcatalog_parser import (PreParse,
                                                           FedcatResponseLine,
@@ -206,9 +230,9 @@ class FedcatalogProviders(object):
         if self._lock.locked():
             return
         with self._lock:
-            logger.debug("Refreshing Provider List")
+            LOGGER.debug("Refreshing Provider List")
             if self._failed_refreshes > 3 and not force:
-                logger.error(
+                LOGGER.error(
                     "Unable to retrieve provider profiles from fedcatalog service after {0} attempts"
                     % (self._failed_refreshes))
 
@@ -218,7 +242,7 @@ class FedcatalogProviders(object):
                 self._providers = {v['name']: v for v in r.json()}
                 self._failed_refreshes = 0
             except:
-                logger.error(
+                LOGGER.error(
                     "Unable to update provider profiles from fedcatalog service")
                 self._failed_refreshes += 1
             else:
@@ -390,14 +414,14 @@ class FederatedClient(RoutingClient):
                 path_name = os.path.dirname(filename)
                 base_name = '-'.join((route.provider_id, base_name))
                 filename = os.path.join(path_name, base_name)
-                logger.info("sending file to :" + filename)
+                LOGGER.info("sending file to :" + filename)
             if filename:
                 get_bulk(bulk=route.text(service), filename=filename, **kwargs)
             else:
                 data = get_bulk(bulk=route.text(service), filename=filename, **kwargs)
                 passed = data_to_request(data)
-                logger.info("Retrieved {0} items from {1}".format(len(passed), route.provider_id))
-                logger.info('\n'+ str(passed))
+                LOGGER.info("Retrieved {0} items from {1}".format(len(passed), route.provider_id))
+                LOGGER.info('\n'+ str(passed))
                 output.put(data)
         except FDSNException as ex:
             failed.put(route.request_items)
@@ -448,15 +472,15 @@ class FederatedClient(RoutingClient):
         data, passed, failed = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         if reroute and failed:
-            logger.info(str(len(failed)) + " items were not retrieved, trying again," +
+            LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
             more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
                                                    keep_unique=True, **svc_kwargs)
-            logger.info("Retrieved {0} additional items".format(len(passed)))
-            logger.info("Unable to retrieve {0} items:".format(len(failed)))
-            logger.info(str(failed))
+            LOGGER.info("Retrieved {0} additional items".format(len(passed)))
+            LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
+            LOGGER.info(str(failed))
             data += more_data
 
         return data
@@ -500,15 +524,15 @@ class FederatedClient(RoutingClient):
         data, passed, failed = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         if reroute and failed:
-            logger.info(str(len(failed)) + " items were not retrieved, trying again," +
+            LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
             more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
                                                    keep_unique=True, **svc_kwargs)
-            logger.info("Retrieved {0} additional items".format(len(passed)))
-            logger.info("Unable to retrieve {0} items:".format(len(failed)))
-            logger.info('\n'+ str(failed))
+            LOGGER.info("Retrieved {0} additional items".format(len(passed)))
+            LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
+            LOGGER.info('\n'+ str(failed))
             data += more_data
 
         return data
@@ -556,14 +580,14 @@ class FederatedClient(RoutingClient):
         inv, passed, failed  = self.query(frm, "STATIONSERVICE", **svc_kwargs)
 
         if reroute and failed:
-            logger.info(str(len(failed)) + " items were not retrieved, trying again," +
+            LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
             more_inv, passed, failed = self.query(frm, "STATIONSERVICE", keep_unique=True, **svc_kwargs)
-            logger.info("Retrieved {0} additional items".format(len(passed)))
-            logger.info("Unable to retrieve {0} items:".format(len(failed)))
-            logger.info('\n'+ str(failed))
+            LOGGER.info("Retrieved {0} additional items".format(len(passed)))
+            LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
+            LOGGER.info('\n'+ str(failed))
             inv += more_inv
 
         return inv
@@ -675,15 +699,15 @@ class FederatedClient(RoutingClient):
         inv, passed, failed = self.query(frm, "STATIONSERVICE", **svc_kwargs)
 
         if reroute and failed:
-            logger.info(str(len(failed)) + " items were not retrieved, trying again," +
+            LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
             more_inv, passed, failed = self.query(frm, "STATIONSERVICE",
                                                   keep_unique=True, **svc_kwargs)
-            logger.info("Retrieved {0} additional items".format(len(passed)))
-            logger.info("Unable to retrieve {0} items:".format(len(failed)))
-            logger.info('\n'+ str(failed))
+            LOGGER.info("Retrieved {0} additional items".format(len(passed)))
+            LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
+            LOGGER.info('\n'+ str(failed))
             inv += more_inv
 
         # reprocess failed ?

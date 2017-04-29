@@ -16,7 +16,9 @@ The holdings of many of these services are indexed by the FedCatalog service
  each provider using the fdsn Client routines to retrieve the resulting data.
 
 :copyright:
+    The ObsPy Development Team (devs@obspy.org)
     Celso G Reyes, 2017
+    IRIS-DMC
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
