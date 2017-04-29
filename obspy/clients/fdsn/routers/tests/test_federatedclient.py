@@ -6,6 +6,7 @@ The obspy.clients.fdsn.client test suite.
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
     Celso G Reyes, 2017
+    IRIS-DMC
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)

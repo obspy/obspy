@@ -1,7 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-FDSN Web service client for ObsPy.
+This module contains the Routing client and manager for ObsPy.  These classes
+are intended to be subclassed.
+
+:class:`~obspy.clients.fdsn.routers.RoutingClient`
+This class contains the genericized methods used to query for information.
+In general, it will first query the routing service, and depending upon
+the response, query the specific services from each data provider.
+
+:class:`~obspy.clients.fdsn.routers.RoutingManager`
+This class will wrap the response given by routers in order to provide
+an iterabler interface to the response parcels. Each parcel is a subclass of
+:class:`~obspy.clients.fdsn.routers.RoutingResponse` and is usable to request
+data from the provider.
+
+:Note: Although it was originally intended that RoutingClient inherited from
+:class:`~obspy.clients.fdsn.Client`, the Fedcatalog service is technically not
+a federated service (yet).  It is running on a different path (../irisws/..),
+and fails the many asumptions built into the Client class.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+    Celso G Reyes, 2017
+    IRIS-DMC
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 
 from __future__ import print_function
@@ -13,11 +38,11 @@ from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.routers.fedcatalog_parser import (RoutingResponse, FDSNBulkRequests)
 
 # logging facilities swiped from mass_downloader.py
-# Setup the logger.
-logger = logging.getLogger("obspy.clients.fdsn.routing_client")
-logger.setLevel(logging.DEBUG)
+# Setup the LOGGER.
+LOGGER = logging.getLogger("obspy.clients.fdsn.routing_client")
+LOGGER.setLevel(logging.DEBUG)
 # Prevent propagating to higher loggers.
-logger.propagate = 0
+LOGGER.propagate = 0
 # Console log handler.
 ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
@@ -25,7 +50,7 @@ ch.setLevel(logging.INFO)
 FORMAT = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
 formatter = logging.Formatter(FORMAT)
 ch.setFormatter(formatter)
-logger.addHandler(ch)
+LOGGER.addHandler(ch)
 
 class RoutingClient(object): #no longer inherits from Client.
     """
@@ -128,15 +153,15 @@ class RoutingClient(object): #no longer inherits from Client.
                 route.request_items.difference_update(all_retrieved)
 
             if self.exclude_provider and route.provider_id in self.exclude_provider:
-                logger.info("skipping: " + route.provider_id +
+                LOGGER.info("skipping: " + route.provider_id +
                             " because it is in the exclude_provider list")
                 continue
             if self.include_provider and route.provider_id not in self.include_provider:
-                logger.info("skipping: " + route.provider_id +
+                LOGGER.info("skipping: " + route.provider_id +
                             " because it isn't in the include_provider list")
                 continue
             if not route.request_items:
-                logger.info("skipping: " + route.provider_id +
+                LOGGER.info("skipping: " + route.provider_id +
                             " because the retrieval list is empty.")
                 continue
 
@@ -145,7 +170,7 @@ class RoutingClient(object): #no longer inherits from Client.
                 msg = "request to: {0}: {1} items.\n{2}".format(
                     route.provider_id, len(route),
                     routing_mgr.str_details(route.provider_id))
-                logger.info("starting " + msg)
+                LOGGER.info("starting " + msg)
                 # _request will put data into output and failed queues
                 self._request(client=client, service=service,
                               route=route, output=output, passed=passed, failed=failed, **kwargs)
@@ -157,7 +182,7 @@ class RoutingClient(object): #no longer inherits from Client.
             # from the rest of the requests in the routing manager
 
             # TODO add description of request here.
-        logger.info("all requests completed")
+        LOGGER.info("all requests completed")
         data = None
         while not output.empty():
             if not data:
@@ -201,10 +226,10 @@ class RoutingClient(object): #no longer inherits from Client.
         msgs = []
         for route in routing_mgr:
             if self.exclude_provider and route.provider_id in self.exclude_provider:
-                logger.info("skipping: " + route.provider_id)
+                LOGGER.info("skipping: " + route.provider_id)
                 continue
             if self.include_provider and route.provider_id not in self.include_provider:
-                logger.info("skipping: " + route.provider_id)
+                LOGGER.info("skipping: " + route.provider_id)
                 continue
             try:
                 client = Client(route.provider_id, self.args_to_clients)
@@ -225,16 +250,16 @@ class RoutingClient(object): #no longer inherits from Client.
 
         # run
         for p, msg in zip(processes, msgs):
-            logger.info("starting " + msg)
+            LOGGER.info("starting " + msg)
 
             p.start()
 
-        logger.info("processing in parallel, with {0} concurrentish requests".format(len(processes)))
+        LOGGER.info("processing in parallel, with {0} concurrentish requests".format(len(processes)))
         # exit completed processes
         for p, msg in zip(processes, msgs):
-            logger.info("waiting on " + msg)
+            LOGGER.info("waiting on " + msg)
             p.join()
-        logger.info("all processes completed.")
+        LOGGER.info("all processes completed.")
 
         data = None
         while not output.empty():

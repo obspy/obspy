@@ -1,8 +1,60 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-fedcatalog_response_parser conatains the FederatedRoute class, with the
-supporting parsing routines
+This module contains request-related classes, with supporting parsing routines
+
+Request-related classes
+-----------------------
+:class:`~obspy.clients.fdsn.routers.FDSNBulkRequestItem`
+Contains one request's details.  The format is STA NET LOC CHA STARTTIME ENDTIME
+It contains basic functionality that allows it to be hashed, compared, and printed
+
+:class:`~obspy.clients.fdsn.routers.FDSNBulkRequests`
+Handles a set of :class:`~obspy.clients.fdsn.routers.FDSNBulkRequestItem`, allowing
+them to be retrieved as a big text string, and providing the ability to do set
+comparisons.
+
+:class:`~obspy.clients.fdsn.routers.RoutingResponse`
+Serves as an abstract base for routes.  A route is the combinition of a data
+provider along with multiple specific requests.
+
+:class:`~obspy.clients.fdsn.routers.FederatedRoute`
+Route devoted to an FDSN provider.  It contains the who, what, and where
+needed to send requests to a service, and provides the facilities for
+adding service endpoints, request items, and additional query parameters.
+Requests are stored as :class:`~obspy.clients.fdsn.routers.FDSNBulkRequests`
+
+Parsing-related classes
+-----------------------
+Classes related to the parsing of the Fedcatalog response:
+The base class is :class:`~obspy.clients.fdsn.routers.ParserState`
+The other classes inherit from the base class, and are specialized to handle
+one particular line from the response.  These classes are:
+:class:`~obspy.clients.fdsn.routers.PreParse`
+:class:`~obspy.clients.fdsn.routers.ParameterItem`
+:class:`~obspy.clients.fdsn.routers.EmptyItem`
+:class:`~obspy.clients.fdsn.routers.DataCenterItem`
+:class:`~obspy.clients.fdsn.routers.ServiceItem`
+:class:`~obspy.clients.fdsn.routers.RequestItem`
+
+parsing is assisted by :class:`~obspy.clients.fdsn.routers.FedcatResponseLine`
+
+Misc. Functions
+---------------
+Additional functions in this file provide mechanisms to represent items from
+:class:`~obspy.core.Stream` and :class`~obspy.core.inventory.inventory.Inventory`
+as FDSNBulkRequests
+
+:func:`inventory_to_bulkrequests()`
+:func:`stream_to_bulkrequests()`
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+    Celso G Reyes, 2017
+    IRIS-DMC
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import print_function
 import sys
@@ -12,7 +64,8 @@ from obspy.core import UTCDateTime
 
 class FDSNBulkRequestItem(object):
     """
-    representation of the request strings that make it easier to do comparisons
+    representation of the bulk request strings that make it easier to do comparisons
+    
 
     >>> line = "IU ANMO 00 BHZ 2012-05-06T12:00:00 2012-05-06T13:00:00"
     >>> FDSNBulkRequestItem(line=line)
@@ -222,10 +275,8 @@ class FDSNBulkRequests(object):
 
     def add(self, val):
         if not isinstance(val, FDSNBulkRequestItem):
-            #print("adding : [" + val +"]", file=sys.stderr)
             self.items.add(FDSNBulkRequestItem(line=val))
         else:
-            #print("adding unchanged", file=sys.stderr)
             self.items.add(val)
     def update(self, val):
         """
