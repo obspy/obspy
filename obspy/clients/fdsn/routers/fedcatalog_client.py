@@ -89,7 +89,6 @@ def get_bulk_string(bulk, arguments):
     else:
         args = None
 
-    # logger.info(str(bulk.__class__))
     # bulk might be tuple of strings...
     if isinstance(bulk, (str, native_str)):
         tmp = bulk
@@ -117,7 +116,6 @@ def get_bulk_string(bulk, arguments):
         bulk = '\n'.join((args, tmp))
     else:
         bulk = tmp
-    # logger.info(bulk)
     assert isinstance(bulk, (str, native_str))
     return bulk
 

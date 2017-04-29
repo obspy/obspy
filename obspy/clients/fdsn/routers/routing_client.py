@@ -49,7 +49,7 @@ class RoutingClient(object): #no longer inherits from Client.
     station:provider identity is lost.
     """
     def __init__(self, use_parallel=False, include_provider=None,
-                 exclude_provider=None, service_mappings=None, **kwargs):
+                 exclude_provider=None, **kwargs):
         """
         :type use_parallel: boolean
         :param use_parallel: determines whether clients will be polled in in
@@ -71,7 +71,6 @@ class RoutingClient(object): #no longer inherits from Client.
         self.args_to_clients = kwargs  # passed to clients as they are initialized
         self.include_provider = include_provider
         self.exclude_provider = exclude_provider
-        self._service_mappings = service_mappings
 
     def __str__(self):
         return "RoutingClient object"
