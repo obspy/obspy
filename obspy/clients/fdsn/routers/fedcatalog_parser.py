@@ -15,7 +15,7 @@ them to be retrieved as a big text string, and providing the ability to do set
 comparisons.
 
 :class:`~obspy.clients.fdsn.routers.RoutingResponse`
-Serves as an abstract base for routes.  A route is the combinition of a data
+Serves as an abstract base for routes.  A route is the combination of a data
 provider along with multiple specific requests.
 
 :class:`~obspy.clients.fdsn.routers.FederatedRoute`
@@ -64,8 +64,10 @@ from obspy.core import UTCDateTime
 
 class FDSNBulkRequestItem(object):
     """
-    representation of the bulk request strings that make it easier to do comparisons
-    
+    representation of the bulk request strings
+
+    Contains one request's details.  The format is STA NET LOC CHA STARTTIME ENDTIME
+    It contains basic functionality that allows it to be hashed, compared, and printed
 
     >>> line = "IU ANMO 00 BHZ 2012-05-06T12:00:00 2012-05-06T13:00:00"
     >>> FDSNBulkRequestItem(line=line)
@@ -90,6 +92,18 @@ class FDSNBulkRequestItem(object):
         """
         Smart way to handle bulk request lines, for easy comparisons
         specifying a whole line overrides any individual choices
+
+        :type: str
+        :param:
+        :type: str
+        :param:
+        :type: str
+        :param:
+        :type: str
+        :param:
+        :type: str
+        :param:
+
         >>> l1 = 'AB CDE 01 BHZ 2015-04-25T02:45:32 2015-04-25T02:47:00'
         >>> l2 = '* * * * * *'
         >>> l3 = 'AB CDE 01 BHZ 2015-04-25T00:00:00 2015-04-25T02:47:00'
@@ -178,6 +192,11 @@ class FDSNBulkRequestItem(object):
     def __eq__(self, other):
         """
         Equals behavior when exact match
+        
+        :type other:
+        :param other:
+        :rtype: bool
+        :returns: 
         """
         if isinstance(other, self.__class__):
             return self.__dict__ == other.__dict__
@@ -189,6 +208,11 @@ class FDSNBulkRequestItem(object):
         compares (in order) network, station, location, channel, starttime
 
         note: does NOT compare endtime
+        
+        :type other:
+        :param other:
+        :rtype: bool
+        :returns: 
         """
         if (self.network or "") != (other.network or ""):
             return (self.network or "") < (other.network or "")
@@ -211,7 +235,10 @@ class FDSNBulkRequestItem(object):
         """
         comparison that accounts for simple * wildcard and time
 
-
+        :type other:
+        :param other:
+        :rtype: bool
+        :returns: 
         Note: wildcards such as B?Z or B* will not work. only solo '*' works
         """
         if isinstance(other, str):
@@ -230,7 +257,9 @@ class FDSNBulkRequestItem(object):
 
 class FDSNBulkRequests(object):
     """
-    Contains set of FDSNBulkRequestItem
+    Handles a set of :class:`~obspy.clients.fdsn.routers.FDSNBulkRequestItem`, allowing
+    them to be retrieved as a big text string, and providing the ability to do set
+    comparisons.
 
     >>> samp1 = "* * * * * *\\nAB CD -- EHZ 2015-04-23 2016-04-23T13:04:00"
     >>> text2 = "AB CD -- EHZ 2015-04-23T00:00:00 2016-04-23T13:04:00"
@@ -247,7 +276,14 @@ class FDSNBulkRequests(object):
     * * * * * *
     AB CD -- EHZ 2015-04-23T00:00:00.000 2016-04-23T13:04:00.000
     """
+
     def __init__(self, items):
+        """
+        Initializer for FDSNBulkRequests
+
+        :type items: str or collection of FDSNBulkRequestItem
+        :param items:
+        """
         if not items:
             self.items = set()
         elif isinstance(items, str):
@@ -274,6 +310,13 @@ class FDSNBulkRequests(object):
         return len(self.items)
 
     def add(self, val):
+        """
+        add an FDSNBulkRequestItem to this FDSNBulkRequests object
+
+        :type val: :class:`~obspy.clients.fdsn.routers.FDSNBulkRequestItem`
+        :param val: item to be added. If not FDSNBulkRequestsItem, an attempt
+        will be made to convert it
+        """
         if not isinstance(val, FDSNBulkRequestItem):
             self.items.add(FDSNBulkRequestItem(line=val))
         else:
@@ -281,6 +324,9 @@ class FDSNBulkRequests(object):
     def update(self, val):
         """
         update this with the union between it and another FDSNBulkRequests object
+
+        :type val:
+        :param val:
         """
         if not val:
             return
@@ -291,6 +337,9 @@ class FDSNBulkRequests(object):
     def difference_update(self, val):
         """
         remove all requests that are found in another FDSNBulkRequests object
+
+        :type val:
+        :param val:
         """
         if not val:
             return
@@ -306,7 +355,7 @@ def inventory_to_bulkrequests(inv):
     :type inv: `~obspy.core.inventory.inventory.Inventory`
     :param inv: obspy Stream data (aka, station metadata)
     :rtype: `~obspy.clients.fdsn.routers.FDSNBulkRequests`
-    :return: flat representation of inventory tree with duplicates removed
+    :returns: flat representation of inventory tree with duplicates removed
     """
     bulk = FDSNBulkRequests(None)
     for network in inv.networks:
@@ -339,17 +388,21 @@ def stream_to_bulkrequests(data):
     :type data: `~obspy.core.stream.Stream`
     :param data: obspy Stream data (aka, waveforms)
     :rtype: `~obspy.clients.fdsn.routers.FDSNBulkRequests`
-    :return: flat representation of inventory tree with duplicates removed
+    :returns: flat representation of inventory tree with duplicates removed
     """
     return FDSNBulkRequests({FDSNBulkRequestItem(**d.stats) for d in data})
 
 class RoutingResponse(object):
     """
-    base for all routed routes
+    Serves as an abstract base for routes.  A route is the combination of a data
+    provider along with multiple specific requests.
+
     """
 
     def __init__(self, provider_id, raw_requests=None):
         """
+        initializer for RoutingRespones
+
         :type provider_id: str
         :param provider_id: provider_id for the data provider
         :type raw_requests: iterable
@@ -379,6 +432,11 @@ class RoutingResponse(object):
 
 class FederatedRoute(RoutingResponse):
     """
+    Route devoted to an FDSN provider.  It contains the who, what, and where
+    needed to send requests to a service, and provides the facilities for
+    adding service endpoints, request items, and additional query parameters.
+    Requests are stored as :class:`~obspy.clients.fdsn.routers.FDSNBulkRequests`
+
     >>> fed_resp = FederatedRoute("IRISDMC")
     >>> fed_resp.add_query_param(["lat=50","lon=20","level=cha"])
     >>> fed_resp.add_service("STATIONSERVICE","http://service.iris.edu/fdsnws/station/1/")
@@ -403,6 +461,7 @@ class FederatedRoute(RoutingResponse):
     def __init__(self, provider_id):
         """
         initialize a FederatedRoute
+
         :type provider_id: str
         :param provider_id: provider_id for the data provider
         """
@@ -411,8 +470,12 @@ class FederatedRoute(RoutingResponse):
         self.services = {}
 
     def add_service(self, service_name, service_url):
-        """add a service url to this response
+        """
+        add a service url to this response
+
+        :type service_name: str
         :param service_name: name such as STATIONSERVICE, DATASELECTSERVICE, or DATACENTER
+        :param service_url: str
         :param service_url: url of service, like http://service.iris.edu/fdsnws/station/1/
         """
         self.services[service_name] = service_url
@@ -420,7 +483,10 @@ class FederatedRoute(RoutingResponse):
     def add_query_param(self, parameters):
         """
         add parameters to list that may be prepended to a request
+
+        :type parameters: str or FedcatResponseLine or iterable of str
         :param parameters: strings of the form "param=value"
+
         >>> fedresp = FederatedRoute("ABC")
         >>> fedresp.add_query_param(["level=station","quality=D"])
         >>> fedresp.add_query_param("onceuponatime=now")
@@ -438,7 +504,9 @@ class FederatedRoute(RoutingResponse):
 
     def add_request(self, lines):
         """append request(s) to the list of requests
-        :param request_items: string or FedcatResponseLine that looks something like:
+
+        :type lines:
+        :param lines: string or FedcatResponseLine that looks something like:
         NET STA LOC CHA yyyy-mm-ddTHH:MM:SS yyyy-mm-ddTHH:MM:SS
         """
         if isinstance(lines, (str, FedcatResponseLine)):
@@ -451,7 +519,11 @@ class FederatedRoute(RoutingResponse):
     def text(self, target_service):
         """
         Return a string suitable for posting to a target service
-        :param target_service: string name of target service, like 'DATASELECTSERVICE'
+
+        :type target_service: str
+        :param target_service: name of target service, like 'DATASELECTSERVICE'
+        :rtype: str
+        :returns: bulk request text
         """
         reply = []
         for good in FederatedRoute.pass_through_params[target_service]:
