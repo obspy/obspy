@@ -20,6 +20,9 @@ data from the provider.
 a federated service (yet).  It is running on a different path (../irisws/..),
 and fails the many assumptions built into the Client class.
 
+:var ROUTING_LOGGER: logger associated with the :mod:`obspy.clients.fdsn.router`
+:type ROUTING_LOGGER: logging.getLogger()
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
     Celso G Reyes, 2017
@@ -37,22 +40,29 @@ import multiprocessing as mp
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.routers.fedcatalog_parser import (RoutingResponse, FDSNBulkRequests)
 
-# logging facilities swiped from mass_downloader.py
-# Setup the LOGGER.
-LOGGER = logging.getLogger("obspy.clients.fdsn.routing_client")
-LOGGER.setLevel(logging.DEBUG)
-# Prevent propagating to higher loggers.
-LOGGER.propagate = 0
-# Console log handler.
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-# Add formatter
-FORMAT = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
-formatter = logging.Formatter(FORMAT)
-ch.setFormatter(formatter)
-LOGGER.addHandler(ch)
+def set_up_logger():
+    """
+    set up a logger associated with the `obspy.clients.fdsn.routers`
+    """
+    # logging facilities swiped from mass_downloader.py
+    # Setup the logger.
+    logger = logging.getLogger("obspy.clients.fdsn.routing_client")
+    logger.setLevel(logging.DEBUG)
+    # Prevent propagating to higher loggers.
+    logger.propagate = 0
+    # Console log handler.
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    # Add formatter
+    FORMAT = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
+    formatter = logging.Formatter(FORMAT)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    return logger
 
-class RoutingClient(object): #no longer inherits from Client.
+ROUTING_LOGGER = set_up_logger()
+
+class RoutingClient(object): 
     """
     This class serves as the user-facing layer for routing requests, and uses
     the Client's methods to communicate with each data center.  Where possible,
@@ -68,10 +78,7 @@ class RoutingClient(object): #no longer inherits from Client.
 
     Upon completion, all the waveforms or inventory (station) data are returned
     in a single list /structure as though they were all requested from the same
-    source. It appears that the existing obspy.core.inventory module will
-    appropriately attribute each station to a provider as it is downloaded, but
-    once they are merged into the same inventory object, individual
-    station:provider identity is lost.
+    source.
     """
     def __init__(self, use_parallel=False, include_provider=None,
                  exclude_provider=None, **kwargs):
@@ -100,26 +107,40 @@ class RoutingClient(object): #no longer inherits from Client.
 
     def _request(self, client, service, route, output, passed, failed, **kwarg):
         """
+        ABSTRACT retrieve data from one service endpoint
+
         :type client: :class:`~obspy.clients.fdsn.Client` or similar
-        :param client:
-        :type service:
-        :param service:
-        :type route: 
-        :param route:
-        :type output: container accepting "put"
+        :param client: The client where this specific request will be routed
+        :type service: str
+        :param service: name of service to use. This is defined by the subclass
+        :type route: something like :class:`~obspy.clients.fdsn.routers.FederatedRoute`
+        :param route: contains details used to route one set of requests.
+        :type output: container accepting "put", like a Queue
         :param output: place where retrieved data go
-        :type failed: container accepting "put"
+        :type failed: container accepting "put", like a Queue
         :param failed: place where list of unretrieved bulk request lines go
-        :param filename:
+        :type filename: str or open file handle
+        :param filename: filename, or file-like object for writing data out.
+        It is possible/probable that the routing routines will prepend some
+        provider code to any file name
         """
         raise NotImplementedError("define _request() in subclass")
 
     @property
     def query(self):
         """
-        return query based on use_parallel preference
+        return query method based on use_parallel preference
+
+        Two query methods currently exist:
+        :func:`serial_query_machine`
+        :func:`parallel_query_machine`
+
+        These contain the logic that performs the full query, from
+        getting a response from the router through requesting data from each
+        provider, to re-requesting as necessary.
+
         :rtype: function
-        :return: serial_query_machine or parallel_query_machine, with signatures:
+        :returns: serial_query_machine or parallel_query_machine, with signatures:
                  self.xxxx_query_machine(routing_mgr, service, **kwargs)
                  and return a tuple (data,  FDSNBulkRequests of failed queries)
         """
@@ -139,7 +160,7 @@ class RoutingClient(object): #no longer inherits from Client.
         :param keep_unique: once an item of interest is retrieved, remove it
             from all subsequent requests
         :rtype: tuple (data, FDSNBulkRequests of failed queries)
-        :return:
+        :returns:
         """
         output = queue.Queue()
         passed = queue.Queue()
@@ -151,15 +172,15 @@ class RoutingClient(object): #no longer inherits from Client.
                 route.request_items.difference_update(all_retrieved)
 
             if self.exclude_provider and route.provider_id in self.exclude_provider:
-                LOGGER.info("skipping: " + route.provider_id +
+                ROUTING_LOGGER.info("skipping: " + route.provider_id +
                             " because it is in the exclude_provider list")
                 continue
             if self.include_provider and route.provider_id not in self.include_provider:
-                LOGGER.info("skipping: " + route.provider_id +
+                ROUTING_LOGGER.info("skipping: " + route.provider_id +
                             " because it isn't in the include_provider list")
                 continue
             if not route.request_items:
-                LOGGER.info("skipping: " + route.provider_id +
+                ROUTING_LOGGER.info("skipping: " + route.provider_id +
                             " because the retrieval list is empty.")
                 continue
 
@@ -168,7 +189,7 @@ class RoutingClient(object): #no longer inherits from Client.
                 msg = "request to: {0}: {1} items.\n{2}".format(
                     route.provider_id, len(route),
                     routing_mgr.str_details(route.provider_id))
-                LOGGER.info("starting " + msg)
+                ROUTING_LOGGER.info("starting " + msg)
                 # _request will put data into output and failed queues
                 self._request(client=client, service=service,
                               route=route, output=output, passed=passed, failed=failed, **kwargs)
@@ -180,7 +201,7 @@ class RoutingClient(object): #no longer inherits from Client.
             # from the rest of the requests in the routing manager
 
             # TODO add description of request here.
-        LOGGER.info("all requests completed")
+        ROUTING_LOGGER.info("all requests completed")
         data = None
         while not output.empty():
             if not data:
@@ -210,11 +231,11 @@ class RoutingClient(object): #no longer inherits from Client.
         :type service: str
         :param service:
         :rtype: tuple tuple (data, FDSNBulkRequests of failed queries)
-        :return:
+        :returns:
 
         >>def echoer(**kwargs):
         """
-        logging.warn("Parallel query requested, but will perform serial request anyway.")
+        logging.warning("Parallel query requested, but will perform serial request anyway.")
         return self.serial_query_machine(routing_mgr=routing_mgr, service=service, **kwargs)
         output = mp.Queue()
         passed = mp.Queue()
@@ -224,10 +245,10 @@ class RoutingClient(object): #no longer inherits from Client.
         msgs = []
         for route in routing_mgr:
             if self.exclude_provider and route.provider_id in self.exclude_provider:
-                LOGGER.info("skipping: " + route.provider_id)
+                ROUTING_LOGGER.info("skipping: " + route.provider_id)
                 continue
             if self.include_provider and route.provider_id not in self.include_provider:
-                LOGGER.info("skipping: " + route.provider_id)
+                ROUTING_LOGGER.info("skipping: " + route.provider_id)
                 continue
             try:
                 client = Client(route.provider_id, self.args_to_clients)
@@ -248,16 +269,16 @@ class RoutingClient(object): #no longer inherits from Client.
 
         # run
         for p, msg in zip(processes, msgs):
-            LOGGER.info("starting " + msg)
+            ROUTING_LOGGER.info("starting " + msg)
 
             p.start()
 
-        LOGGER.info("processing in parallel, with {0} concurrentish requests".format(len(processes)))
+        ROUTING_LOGGER.info("processing in parallel, with {0} concurrentish requests".format(len(processes)))
         # exit completed processes
         for p, msg in zip(processes, msgs):
-            LOGGER.info("waiting on " + msg)
+            ROUTING_LOGGER.info("waiting on " + msg)
             p.join()
-        LOGGER.info("all processes completed.")
+        ROUTING_LOGGER.info("all processes completed.")
 
         data = None
         while not output.empty():
@@ -338,7 +359,7 @@ class RoutingManager(object):
         :type parameter_list:
         :param parameter_list:
         :rtype:
-        :return:
+        :returns:
         """
         raise NotImplementedError()
 
@@ -366,7 +387,7 @@ class RoutingManager(object):
         :param get_multiple: determines whether to return a single (first
         matching) RoutingResponse or a list of all matching routes
         :rtype: :class:`~obspy.clients.fdsn.routers.RoutingResponse` or list
-        :return:
+        :returns:
         """
         if get_multiple:
             return [route for route in self.routes if route.provider_id == provider_id]

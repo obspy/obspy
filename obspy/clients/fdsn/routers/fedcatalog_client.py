@@ -49,7 +49,7 @@ from obspy.core import Stream
 from obspy.clients.fdsn.client import convert_to_string
 from obspy.clients.fdsn.header import FDSNException
 from obspy.clients.fdsn.routers.routing_client import (RoutingClient,
-                                                       RoutingManager, LOGGER)
+                                                       RoutingManager, ROUTING_LOGGER)
 from obspy.clients.fdsn.routers import (FederatedRoute,)
 from obspy.clients.fdsn.routers.fedcatalog_parser import (PreParse,
                                                           FedcatResponseLine,
@@ -74,7 +74,7 @@ def distribute_args(argdict):
     :type argdict: dict
     :param argdict:
     :rtype:
-    :return: tuple of dictionaries fedcat_kwargs, fdsn_kwargs
+    :returns: tuple of dictionaries fedcat_kwargs, fdsn_kwargs
     """
     # TODO figure out where each of the arguments belongs
     #  to the fedrequest?  to the final service?
@@ -109,7 +109,7 @@ def get_bulk_string(bulk, arguments):
     :type arguments:
     :param arguments:
     :rtype:
-    :return: 
+    :returns: 
     """
     # If its an iterable, we build up the query string from it
     # StringIO objects also have __iter__ so check for 'read' as well
@@ -194,7 +194,7 @@ class FedcatalogProviders(object):
         ['BGR',..., 'USPSC']
 
         :rtype:
-        :return: 
+        :returns: 
         """
         if not self._providers:
             self.refresh()
@@ -214,7 +214,7 @@ class FedcatalogProviders(object):
         :param detail: property of interest.  eg, one of ('name', 'website',
         'lastupdate', 'serviceURLs', 'location', 'description').
         :rtype: str or dict()
-        :return: if no detail is provided, then the entire dict for the requested provider
+        :returns: if no detail is provided, then the entire dict for the requested provider
         will be returned
         """
         if not self._providers:
@@ -244,9 +244,9 @@ class FedcatalogProviders(object):
         if self._lock.locked():
             return
         with self._lock:
-            LOGGER.debug("Refreshing Provider List")
+            ROUTING_LOGGER.debug("Refreshing Provider List")
             if self._failed_refreshes > 3 and not force:
-                LOGGER.error(
+                ROUTING_LOGGER.error(
                     "Unable to retrieve provider profiles from fedcatalog service after {0} attempts"
                     % (self._failed_refreshes))
 
@@ -256,7 +256,7 @@ class FedcatalogProviders(object):
                 self._providers = {v['name']: v for v in r.json()}
                 self._failed_refreshes = 0
             except:
-                LOGGER.error(
+                ROUTING_LOGGER.error(
                     "Unable to update provider profiles from fedcatalog service")
                 self._failed_refreshes += 1
             else:
@@ -275,7 +275,7 @@ class FedcatalogProviders(object):
         :type name: str
         :param name: name of provider (provider_id)
         :rtype: str
-        :return: formatted details about this provider
+        :returns: formatted details about this provider
         """
         if not self._providers:
             self.refresh()
@@ -333,7 +333,7 @@ class FederatedClient(RoutingClient):
         """
         String representation for FederatedClient
         :rtype: str
-        :return: 
+        :returns: 
         """
         # TODO: Make this more specific
         ret = "Federated Catalog Routing Client"
@@ -348,7 +348,7 @@ class FederatedClient(RoutingClient):
         :type **kwargs:
         :param **kwargs:
         :rtype: :class:`~obspy.clients.fdsn.routers.FederatedRoutingManager`
-        :return: parsed response from the FedCatalog service
+        :returns: parsed response from the FedCatalog service
 
         >>> client = FederatedClient()
         >>> params={"station":"ANTO","includeoverlaps":"true"}
@@ -379,7 +379,7 @@ class FederatedClient(RoutingClient):
         :type **kwargs: other parameters
         :param **kwargs: only kwargs that should go to fedcatalog
         :rtype: :class:`~obspy.clients.fdsn.routers.FederatedRoutingManager`
-        :return: parsed response from the FedCatalog service
+        :returns: parsed response from the FedCatalog service
 
         >>> client = FederatedClient()
         >>> params={"includeoverlaps":"true"}
@@ -448,14 +448,14 @@ class FederatedClient(RoutingClient):
                 path_name = os.path.dirname(filename)
                 base_name = '-'.join((route.provider_id, base_name))
                 filename = os.path.join(path_name, base_name)
-                LOGGER.info("sending file to :" + filename)
+                ROUTING_LOGGER.info("sending file to :" + filename)
             if filename:
                 get_bulk(bulk=route.text(service), filename=filename, **kwargs)
             else:
                 data = get_bulk(bulk=route.text(service), filename=filename, **kwargs)
                 passed = data_to_request(data)
-                LOGGER.info("Retrieved {0} items from {1}".format(len(passed), route.provider_id))
-                LOGGER.info('\n'+ str(passed))
+                ROUTING_LOGGER.info("Retrieved {0} items from {1}".format(len(passed), route.provider_id))
+                ROUTING_LOGGER.info('\n'+ str(passed))
                 output.put(data)
         except FDSNException as ex:
             failed.put(route.request_items)
@@ -483,7 +483,7 @@ class FederatedClient(RoutingClient):
         other parameters as seen in :meth:`~obspy.fdsn.clients.Client.get_waveforms_bulk`
         and :meth:`~obspy.fdsn.clients.Client.get_stations_bulk`
         :rtype: :class:`~obspy.core.stream.Stream`
-        :return: one or more traces in a stream
+        :returns: one or more traces in a stream
 
         >>> client = FederatedClient()
         >>> bulkreq = "IU ANMO * ?HZ 2010-02-27T06:30:00 2010-02-27T06:33:00"
@@ -505,15 +505,15 @@ class FederatedClient(RoutingClient):
         data, passed, failed = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         if reroute and failed:
-            LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
+            ROUTING_LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
             more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
                                                    keep_unique=True, **svc_kwargs)
-            LOGGER.info("Retrieved {0} additional items".format(len(passed)))
-            LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
-            LOGGER.info(str(failed))
+            ROUTING_LOGGER.info("Retrieved {0} additional items".format(len(passed)))
+            ROUTING_LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
+            ROUTING_LOGGER.info(str(failed))
             data += more_data
 
         return data
@@ -530,7 +530,7 @@ class FederatedClient(RoutingClient):
         :param reroute: if data doesn't arrive from provider , see if it is available elsewhere
         other parameters as seen in :meth:`~obspy.fdsn.clients.Client.get_waveforms`
         :rtype: :class:`~obspy.core.stream.Stream`
-        :return: one or more traces in a stream
+        :returns: one or more traces in a stream
 
         >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -557,15 +557,15 @@ class FederatedClient(RoutingClient):
         data, passed, failed = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         if reroute and failed:
-            LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
+            ROUTING_LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
             more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
                                                    keep_unique=True, **svc_kwargs)
-            LOGGER.info("Retrieved {0} additional items".format(len(passed)))
-            LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
-            LOGGER.info('\n'+ str(failed))
+            ROUTING_LOGGER.info("Retrieved {0} additional items".format(len(passed)))
+            ROUTING_LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
+            ROUTING_LOGGER.info('\n'+ str(failed))
             data += more_data
 
         return data
@@ -581,7 +581,7 @@ class FederatedClient(RoutingClient):
         :type reroute: boolean
         :param reroute: if data doesn't arrive from provider , see if it is available elsewhere
         :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
-        :return: an inventory tree containing network/station/channel metadata
+        :returns: an inventory tree containing network/station/channel metadata
 
         other parameters as seen in :meth:`~obspy.fdsn.clients.Client.get_stations_bulk`
 
@@ -614,14 +614,14 @@ class FederatedClient(RoutingClient):
         inv, passed, failed  = self.query(frm, "STATIONSERVICE", **svc_kwargs)
 
         if reroute and failed:
-            LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
+            ROUTING_LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
             more_inv, passed, failed = self.query(frm, "STATIONSERVICE", keep_unique=True, **svc_kwargs)
-            LOGGER.info("Retrieved {0} additional items".format(len(passed)))
-            LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
-            LOGGER.info('\n'+ str(failed))
+            ROUTING_LOGGER.info("Retrieved {0} additional items".format(len(passed)))
+            ROUTING_LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
+            ROUTING_LOGGER.info('\n'+ str(failed))
             inv += more_inv
 
         return inv
@@ -639,7 +639,7 @@ class FederatedClient(RoutingClient):
         :param reroute: if data doesn't arrive from provider , see if it is available elsewhere
         other parameters as seen in :meth:`~obspy.fdsn.clients.Client.get_stations`
         :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
-        :return: an inventory tree containing network/station/channel metadata
+        :returns: an inventory tree containing network/station/channel metadata
 
         >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -733,15 +733,15 @@ class FederatedClient(RoutingClient):
         inv, passed, failed = self.query(frm, "STATIONSERVICE", **svc_kwargs)
 
         if reroute and failed:
-            LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
+            ROUTING_LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
             more_inv, passed, failed = self.query(frm, "STATIONSERVICE",
                                                   keep_unique=True, **svc_kwargs)
-            LOGGER.info("Retrieved {0} additional items".format(len(passed)))
-            LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
-            LOGGER.info('\n'+ str(failed))
+            ROUTING_LOGGER.info("Retrieved {0} additional items".format(len(passed)))
+            ROUTING_LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
+            ROUTING_LOGGER.info('\n'+ str(failed))
             inv += more_inv
 
         # reprocess failed ?
@@ -780,7 +780,7 @@ class FederatedRoutingManager(RoutingManager):
         :type block_text:
         :param block_text:
         :rtype:
-        :return:
+        :returns:
 
         >>> fed_text = '''minlat=34.0
         ... level=network
