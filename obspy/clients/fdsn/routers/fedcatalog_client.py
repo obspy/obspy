@@ -80,7 +80,7 @@ def distribute_args(argdict):
     #  to the fedrequest?  to the final service?
 
     fedcatalog_params = ('')
-    fedcatalog_prohibited_params = ('filename', 'attach_response', 'user', 'password')
+    fedcatalog_prohibited_params = ('filename', 'attach_response', 'user', 'password', 'base_url')
     service_params = ('user', 'password', 'attach_response', 'filename')
 
     # fedrequest gets almost all arguments, except for some
@@ -272,6 +272,7 @@ class FedcatalogProviders(object):
         ORFEUS:The ORFEUS Data Center, de Bilt, the Netherlands WEB:http://www.orfeus-eu.org  LastUpdate:...M
         >>> print(providers.pretty("IRIS") == providers.pretty("IRISDMC"))
         True
+
         :type name: str
         :param name: name of provider (provider_id)
         :rtype: str

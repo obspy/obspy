@@ -603,7 +603,7 @@ class FedcatResponseLine(object):
         :rtype: bool
         :returns: true if self is empty
 
-        >>> line = '\n'
+        >>> line = '\\n'
         >>> fcr = FedcatResponseLine(line)
         >>> fcr.is_empty()
         True

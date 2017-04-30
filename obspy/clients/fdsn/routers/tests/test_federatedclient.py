@@ -44,6 +44,14 @@ USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
 
 def hasLevel(inv, level):
     """
+    Check to see if the inventory structure has details down to specific level
+
+    :type level: str
+    :param level: 'network', 'station', 'location', 'channel'
+    :rtype: bool
+    :returns: true if an Inventory structure has any fields of that level
+    
+    :note: only checks the first item of each category
     """
     if not inv or not inv.networks:
         return level is None
@@ -140,8 +148,8 @@ class FederatedClientTestCase(unittest.TestCase):
         cls.iris_client = Client("IRIS", user_agent=USER_AGENT)
         cls.client = FederatedClient(user_agent=USER_AGENT, include_provider='IRIS')
         cls.client_auth = \
-            FederatedClient(base_url="IRIS", user_agent=USER_AGENT,
-                   user="nobody@iris.edu", password="anonymous", include_provider='IRIS')
+            FederatedClient(user_agent=USER_AGENT, user="nobody@iris.edu",
+                            password="anonymous", include_provider='IRIS')
 
     def test_fedstations_bulk_simple(self):
         bulktext = "IU ANMO 00 BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00"
@@ -384,9 +392,9 @@ class FederatedClientTestCase(unittest.TestCase):
 def test_suite():
     from unittest import (TestSuite, makeSuite)
     suite = TestSuite()
-    # suite.addTest(makeSuite(BulkConversionTestCase, 'test'))
+    suite.addTest(makeSuite(BulkConversionTestCase, 'test'))
     suite.addTest(makeSuite(FederatedClientTestCase, 'test'))
-    # suite.addTest(makeSuite(FDSNBulkRequestItemClientTestCase, 'test'))
+    suite.addTest(makeSuite(FDSNBulkRequestItemClientTestCase, 'test'))
     return suite
 
 if __name__ == '__main__':

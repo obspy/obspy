@@ -54,15 +54,15 @@ def set_up_logger():
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
     # Add formatter
-    FORMAT = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
-    formatter = logging.Formatter(FORMAT)
+    _format = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
+    formatter = logging.Formatter(_format)
     ch.setFormatter(formatter)
     logger.addHandler(ch)
     return logger
 
 ROUTING_LOGGER = set_up_logger()
 
-class RoutingClient(object): 
+class RoutingClient(object):
     """
     This class serves as the user-facing layer for routing requests, and uses
     the Client's methods to communicate with each data center.  Where possible,
@@ -126,10 +126,35 @@ class RoutingClient(object):
         """
         raise NotImplementedError("define _request() in subclass")
 
+    def _skip_provider_for_route(self, route):
+        """
+        helper function
+
+        :type route: route to particular provider
+        :param route:
+        :rtype: bool
+        :return: whether this provider should be skipped
+        """
+        if self.exclude_provider and route.provider_id in self.exclude_provider:
+            ROUTING_LOGGER.info("skipping: " + route.provider_id +
+                                " because it is in the exclude_provider list")
+            return True
+
+        if self.include_provider and route.provider_id not in self.include_provider:
+            ROUTING_LOGGER.info("skipping: " + route.provider_id +
+                                " because it isn't in the include_provider list")
+            return True
+
+        if not route.request_items:
+            ROUTING_LOGGER.info("skipping: " + route.provider_id +
+                                " because the retrieval list is empty.")
+            return True
+        return False
+            
     @property
     def query(self):
         """
-        return query method based on use_parallel preference
+        return query method based on user preference (either parallel or serial)
 
         Two query methods currently exist:
         :func:`serial_query_machine`
@@ -142,59 +167,63 @@ class RoutingClient(object):
         :rtype: function
         :returns: serial_query_machine or parallel_query_machine, with signatures:
                  self.xxxx_query_machine(routing_mgr, service, **kwargs)
-                 and return a tuple (data,  FDSNBulkRequests of failed queries)
+                 and return a tuple (data, successful_requests, failed_requests)
         """
         if self.use_parallel:
             return self.parallel_query_machine
         return self.serial_query_machine
 
-    def serial_query_machine(self, routing_mgr, service, **kwargs):
+    def serial_query_machine(self, routing_mgr, service, keep_unique=False, **kwargs):
         """
-        query clients in series
+        retrieve data from clients, one after the other, based on routes held
+        by the routing manager
+
+        Each route held by the routing manager would contain the details needed
+        to create a connection to a data provider, along with the request details.
+
+        This routine loops through each route held by the manager, opens a
+        connection to the clients of interest, requests data from the selected
+        service, and then aggregates the resulting data.
 
         :type routing_mgr: :class:`~obspy.clients.fdsn.routers.RoutingManager`
-        :param routing_mgr:
+        :param routing_mgr: contains a collection of Routes
         :type service: str
         :param service:
         :type keep_unique: bool
         :param keep_unique: once an item of interest is retrieved, remove it
             from all subsequent requests
-        :rtype: tuple (data, FDSNBulkRequests of failed queries)
-        :returns:
+        :rtype: tuple (Inventory or Stream, FDSNBulkRequests, FDSNBulkRequests)
+        :returns: (data, successful_requests, failed_requests)
+
+        :Note: This cannot track data requests that are streamed to a file,
+        only those that remain in memory.
         """
-        output = queue.Queue()
-        passed = queue.Queue()
-        failed = queue.Queue()
-        all_retrieved = FDSNBulkRequests(None)
+
+        output_q = queue.Queue()
+        passed_q = queue.Queue()
+        failed_q = queue.Queue()
+        successful_requests = FDSNBulkRequests(None) # TODO make generic
 
         for route in routing_mgr:
-            if "keep_unique" in kwargs and kwargs["keep_unique"]:
-                route.request_items.difference_update(all_retrieved)
+            if self._skip_provider_for_route(route):
+                continue
 
-            if self.exclude_provider and route.provider_id in self.exclude_provider:
-                ROUTING_LOGGER.info("skipping: " + route.provider_id +
-                            " because it is in the exclude_provider list")
-                continue
-            if self.include_provider and route.provider_id not in self.include_provider:
-                ROUTING_LOGGER.info("skipping: " + route.provider_id +
-                            " because it isn't in the include_provider list")
-                continue
-            if not route.request_items:
-                ROUTING_LOGGER.info("skipping: " + route.provider_id +
-                            " because the retrieval list is empty.")
-                continue
+            if keep_unique and successful_requests:
+                route.request_items.difference_update(successful_requests)
 
             try:
-                client = Client(route.provider_id, self.args_to_clients)
+                client = Client(route.provider_id, **self.args_to_clients)
+
                 msg = "request to: {0}: {1} items.\n{2}".format(
                     route.provider_id, len(route),
                     routing_mgr.str_details(route.provider_id))
                 ROUTING_LOGGER.info("starting " + msg)
-                # _request will put data into output and failed queues
+                # _request will put data into output_q, passed_q, failed_q
                 self._request(client=client, service=service,
-                              route=route, output=output, passed=passed, failed=failed, **kwargs)
+                              route=route, output=output_q, passed=passed_q,
+                              failed=failed_q, **kwargs)
             except:
-                failed.put(route.request_items) # FDSNBulkRequests
+                failed_q.put(route.request_items) # FDSNBulkRequests
                 raise
 
             # tricky part here: if anything has passed, we need to remove it
@@ -202,25 +231,25 @@ class RoutingClient(object):
 
             # TODO add description of request here.
         ROUTING_LOGGER.info("all requests completed")
+
         data = None
-        while not output.empty():
+        while not output_q.empty():
             if not data:
-                data = output.get()
+                data = output_q.get()
             else:
-                data += output.get()
-        
-        while not passed.empty():
-            # passed = routing_mgr.data_to_request(data)
-            all_retrieved.update(passed.get())
+                data += output_q.get()
 
-        retry = None
-        if not failed.empty():
-            retry = failed.get()
+        while not passed_q.empty():
+            successful_requests.update(passed_q.get())
 
-        while not failed.empty():
-            retry.update(failed.get()) # working with a set
+        failed_requests = None
+        if not failed_q.empty():
+            failed_requests = failed_q.get()
 
-        return data, all_retrieved, retry
+        while not failed_q.empty():
+            failed_requests.update(failed_q.get()) # working with a set
+
+        return data, successful_requests, failed_requests
 
     def parallel_query_machine(self, routing_mgr, service, **kwargs):
         """
@@ -230,42 +259,38 @@ class RoutingClient(object):
         :param routing_mgr:
         :type service: str
         :param service:
-        :rtype: tuple tuple (data, FDSNBulkRequests of failed queries)
-        :returns:
+        :rtype: tuple (Inventory or Stream, FDSNBulkRequests, FDSNBulkRequests)
+        :returns: (data, successful_requests, failed_requests)
 
-        >>def echoer(**kwargs):
         """
         logging.warning("Parallel query requested, but will perform serial request anyway.")
         return self.serial_query_machine(routing_mgr=routing_mgr, service=service, **kwargs)
-        output = mp.Queue()
-        passed = mp.Queue()
-        failed = mp.Queue()
+        output_q = mp.Queue()
+        passed_q = mp.Queue()
+        failed_q = mp.Queue()
         # Setup process for each provider
         processes = []
         msgs = []
         for route in routing_mgr:
-            if self.exclude_provider and route.provider_id in self.exclude_provider:
-                ROUTING_LOGGER.info("skipping: " + route.provider_id)
+            if self._skip_provider_for_route(route):
                 continue
-            if self.include_provider and route.provider_id not in self.include_provider:
-                ROUTING_LOGGER.info("skipping: " + route.provider_id)
-                continue
+
             try:
                 client = Client(route.provider_id, self.args_to_clients)
             except:
-                failed.put(route.request_items)
+                failed_q.put(route.request_items)
                 raise
             else:
                 p_kwargs = kwargs.copy()
                 p_kwargs.update({'client':client, 'service':service,
-                                'output':output, 'passed':passed, 'failed':failed,
-                                'route':route})
+                                 'output':output_q, 'passed':passed_q, 'failed':failed_q,
+                                 'route':route})
                 processes.append(mp.Process(target=self._request,
                                             name=route.provider_id,
                                             kwargs=p_kwargs))
                 msgs.append("request to: {0}: {1} items.\n{2}".format(
-                     route.provider_id, len(route), 
-                     routing_mgr.str_details(route.provider_id)))
+                    route.provider_id, len(route),
+                    routing_mgr.str_details(route.provider_id)))
 
         # run
         for p, msg in zip(processes, msgs):
@@ -281,22 +306,22 @@ class RoutingClient(object):
         ROUTING_LOGGER.info("all processes completed.")
 
         data = None
-        while not output.empty():
-            tmp = output.get()
+        while not output_q.empty():
+            tmp = output_q.get()
             if not data:
                 data = tmp
             else:
                 data += tmp
 
-        passed = routing_mgr.data_to_request(data)
+        successful_requests = routing_mgr.data_to_request(data)
 
-        if not failed.empty():
-            retry = failed.get()
+        if not failed_q.empty():
+            failed_requests = failed_q.get()
 
-        while not failed.empty():
-            retry.update(failed.get()) # working with a set
+        while not failed_q.empty():
+            failed_requests.update(failed_q.get()) # working with a set
 
-        return data, passed, retry
+        return data, successful_requests, failed_requests
 
 class RoutingManager(object):
     """
@@ -339,6 +364,9 @@ class RoutingManager(object):
         return towrite
 
     def data_to_request(self, data):
+        """
+        Abstract : convert data to a request
+        """
         raise NotImplementedError
 
     def provider_ids(self):
@@ -354,12 +382,12 @@ class RoutingManager(object):
 
     def parse_routing(self, parameter_list):
         """
-        create a list of RoutingResponse objects, one for each provider in response
+        ABSTRACT create a list of RoutingResponse objects, one for each provider in response
 
         :type parameter_list:
         :param parameter_list:
         :rtype:
-        :returns:
+        :returns: list of RoutingResponse objects
         """
         raise NotImplementedError()
 
