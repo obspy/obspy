@@ -549,6 +549,7 @@ class FederatedClient(RoutingClient):
                            filename=None,
                            includeoverlaps=False,
                            reroute=False,
+                           existing_routes=None,
                            **kwargs):
         """
         retrieve waveforms from data providers via POST request to the Fedcatalog service
@@ -558,6 +559,9 @@ class FederatedClient(RoutingClient):
         (not recommended)
         :type reroute: boolean
         :param reroute: if data doesn't arrive from provider , see if it is available elsewhere
+        :type existing_routes: str
+        :param existing_routes: will skip initial query to fedcatalog service, instead
+        using the information from here to make the queries.
         other parameters as seen in :meth:`~obspy.fdsn.clients.Client.get_waveforms_bulk`
         and :meth:`~obspy.fdsn.clients.Client.get_stations_bulk`
         :rtype: :class:`~obspy.core.stream.Stream`
@@ -579,25 +583,32 @@ class FederatedClient(RoutingClient):
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
-        frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)
+        frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)\
+                  if not existing_routes else get_existing_route(existing_routes)
         data, passed, failed = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
         if reroute and failed:
             ROUTING_LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
-            frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
+            frm = self.get_routing_bulk(bulk=str(failed), **fed_kwargs)
             more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
-                                                   keep_unique=True, **svc_kwargs)
-            ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
-            ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
-            ROUTING_LOGGER.info(str(failed))
-            data += more_data
+                                                  keep_unique=True, **svc_kwargs)
+            if more_data:
+                ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
+                if data:
+                    data += more_data
+                else:
+                    data = more_data
+            if failed:
+                ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
+                ROUTING_LOGGER.info('\n'+ str(failed))
 
         return data
 
     def get_waveforms(self, network, station, location, channel, starttime, endtime,
-                      includeoverlaps=False, reroute=False, **kwargs):
+                      includeoverlaps=False, reroute=False, existing_routes=None,
+                      **kwargs):
         """
         retrieve waveforms from data providers via GET request to the Fedcatalog service
 
@@ -606,6 +617,8 @@ class FederatedClient(RoutingClient):
         (not recommended)
         :type reroute: boolean
         :param reroute: if data doesn't arrive from provider , see if it is available elsewhere
+        :type existing_routes: str
+        :param existing_routes: will skip initial query to fedcatalog service, instead
         other parameters as seen in :meth:`~obspy.fdsn.clients.Client.get_waveforms`
         :rtype: :class:`~obspy.core.stream.Stream`
         :returns: one or more traces in a stream
@@ -628,9 +641,12 @@ class FederatedClient(RoutingClient):
         fed_kwargs["includeoverlaps"] = includeoverlaps
         assert "bulk" not in fed_kwargs, \
                "Bulk request should be sent to get_waveforms_bulk, not get_waveforms"
+
         frm = self.get_routing(network=network, station=station,
                                location=location, channel=channel,
-                               starttime=starttime, endtime=endtime, **fed_kwargs)
+                               starttime=starttime, endtime=endtime,
+                               **fed_kwargs) if not existing_routes \
+                                             else get_existing_route(existing_routes)
 
         data, passed, failed = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
 
@@ -638,14 +654,18 @@ class FederatedClient(RoutingClient):
             ROUTING_LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
-            frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
+            frm = self.get_routing_bulk(bulk=str(failed), **fed_kwargs)
             more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
-                                                   keep_unique=True, **svc_kwargs)
-            ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
-            ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
-            ROUTING_LOGGER.info('\n'+ str(failed))
-            data += more_data
-
+                                                  keep_unique=True, **svc_kwargs)
+            if more_data:
+                ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
+                if data:
+                    data += more_data
+                else:
+                    data = more_data
+            if failed:
+                ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
+                ROUTING_LOGGER.info('\n'+ str(failed))
         return data
 
     def get_stations_bulk(self, bulk, includeoverlaps=False, reroute=False, existing_routes=None,
@@ -692,7 +712,7 @@ class FederatedClient(RoutingClient):
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
-        frm = self.get_routing(bulk=bulk, **fed_kwargs) if not existing_routes \
+        frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs) if not existing_routes \
                                                         else get_existing_route(existing_routes)
 
         # frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)
@@ -845,7 +865,6 @@ class FederatedClient(RoutingClient):
                 ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
                 ROUTING_LOGGER.info('\n'+ str(failed))
 
-        # reprocess failed ?
         return inv
 
 

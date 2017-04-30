@@ -249,7 +249,7 @@ class FederatedClientTestCase(unittest.TestCase):
         # find out what the ETH (SED) has on hand
         client = FederatedClient(include_provider='ETH')
         frm = client.get_routing(station="BALST", network="CH", level="channel")
-        self.assertEqual(frm.routes[0].provider_id,'ETH')
+        self.assertEqual(frm.routes[0].provider_id,'ETH', msg="Expected provider to be ETH")
         eth_route = frm.get_route('ETH')
         # get some data from IRIS, too
         client = FederatedClient()
@@ -271,8 +271,39 @@ class FederatedClientTestCase(unittest.TestCase):
         inv = client.get_stations_bulk(None, existing_routes=nodata_route, reroute=True)
         self.assertTrue(inv, msg="Rerouting for get_stations_bulk failed")
 
-    def test_fedwaveforms_retry(self):
-        pass
+    def test_fedwaveforms_reroute(self):
+
+        # find out what the ETH (SED) has on hand
+        client = FederatedClient(include_provider='ETH')
+        frm = client.get_routing(station="BALST", network="CH",
+                                 starttime=UTCDateTime(2015, 5, 1, 10, 0, 0),
+                                 endtime=UTCDateTime(2015, 5, 1, 10, 2, 0))
+        self.assertEqual(frm.routes[0].provider_id, 'ETH')
+        eth_route = frm.get_route('ETH')
+        # get some data from IRIS, too
+        client = FederatedClient()
+        frm = client.get_routing(station="ANTO",
+                                 starttime=UTCDateTime(2015, 5, 1, 10, 0, 0),
+                                 endtime=UTCDateTime(2015, 5, 1, 10, 2, 0))
+        iris_route = frm.get_route('IRIS')
+
+        #now, confuse things.
+        nodata_route = iris_route
+        nodata_route.request_items = eth_route.request_items
+
+        # should come up empty
+        data = client.get_waveforms(None, None, None, None, None, None,
+                                    existing_routes=nodata_route)
+        self.assertFalse(data)
+
+        #should work!
+        data = client.get_waveforms(None, None, None, None, None, None,
+                                    existing_routes=nodata_route, reroute=True)
+        self.assertTrue(data, msg="Rerouting for get_waveforms failed")
+
+        data = client.get_waveforms_bulk(None, existing_routes=nodata_route, reroute=True)
+        self.assertTrue(data, msg="Rerouting for get_waveforms_bulk failed")
+
 
     def test_example_queries_station(self):
         """
