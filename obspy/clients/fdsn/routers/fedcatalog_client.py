@@ -47,7 +47,7 @@ from future.utils import native_str
 from obspy.core.inventory import Inventory
 from obspy.core import Stream
 from obspy.clients.fdsn.client import convert_to_string
-from obspy.clients.fdsn.header import FDSNException
+from obspy.clients.fdsn.header import (FDSNException, FDSNNoDataException)
 from obspy.clients.fdsn.routers.routing_client import (RoutingClient,
                                                        RoutingManager, ROUTING_LOGGER)
 from obspy.clients.fdsn.routers import (FederatedRoute,)
@@ -69,17 +69,25 @@ FEDCATALOG_URL = 'https://service.iris.edu/irisws/fedcatalog/1/'
 
 def distribute_args(argdict):
     """
-    divide a dictionary's keys between fedcatalog and fdsnservice
+    divide a dictionary's keys between fedcatalog and provider's service
+
+    When the FederatedClient is called with a bunch of keyword arguments,
+    it should call the Fedcatalog service with a large subset of these.
+    Most will be incorporated into the bulk data requests that will be
+    sent to the client's service. However a few of these are not allowed
+    to be passed in this way.  These are prohibited, and will be removed
+    from the fedcat_kwargs.
+
+    The client's service will not need most of these keywords, since
+    they are included in the bulk request.  However, some keywords are
+    required by the Client class, so they are allowed through.
 
     :type argdict: dict
-    :param argdict:
-    :rtype:
+    :param argdict: keyword arugments that were passed to the FederatedClient
+    :rtype: tuple(dict() , dict())
     :returns: tuple of dictionaries fedcat_kwargs, fdsn_kwargs
     """
-    # TODO figure out where each of the arguments belongs
-    #  to the fedrequest?  to the final service?
 
-    fedcatalog_params = ('')
     fedcatalog_prohibited_params = ('filename', 'attach_response', 'user', 'password', 'base_url')
     service_params = ('user', 'password', 'attach_response', 'filename')
 
@@ -97,19 +105,19 @@ def distribute_args(argdict):
     return fed_argdict, service_args
 
 
-# the following is ripped out of fdsn.client.Client because it doesn't need to be
-# be associated with the client class. TODO: pull out of client class, and then
-# just import it
 def get_bulk_string(bulk, arguments):
     """
     simplified version of get_bulk_string used for bulk requests
 
-    :type bulk:
+    This was mostly pulled from the :class:`~obspy.clients.fdsn.Client`,
+    because it does not need to be associated with the client class.
+
+    :type bulk: string, file
     :param bulk:
-    :type arguments:
-    :param arguments:
-    :rtype:
-    :returns: 
+    :type arguments: dict
+    :param arguments: key-value pairs to be added to the bulk request
+    :rtype: str
+    :returns: bulk request string suitable for sending to a client's get... service
     """
     # If its an iterable, we build up the query string from it
     # StringIO objects also have __iter__ so check for 'read' as well
@@ -150,6 +158,14 @@ def get_bulk_string(bulk, arguments):
     assert isinstance(bulk, (str, native_str))
     return bulk
 
+def get_existing_route(existing_routes):
+    if isinstance(existing_routes, FederatedRoutingManager):
+        frm = existing_routes
+    elif isinstance(existing_routes, (str, native_str, FederatedRoute)):
+        frm = FederatedRoutingManager(existing_routes)
+    else:
+        NotImplementedError("usure how to convert {} into FederatedRoutingManager")
+    return frm
 class FedcatalogProviders(object):
     """
     Class containing datacenter details retrieved from the fedcatalog service
@@ -237,7 +253,8 @@ class FedcatalogProviders(object):
         dict_keys(['...'])
 
         :type force: bool
-        :param force: attempt to retrieve data even if too many failed attempts
+        :param force: attempt to retrieve data even if it already exists
+        or if too many attempts have failed
         """
         if  self._providers and not force:
             return
@@ -267,6 +284,7 @@ class FedcatalogProviders(object):
     def pretty(self, name):
         """
         return nice text representation of service without too much details
+
         >>> providers = FedcatalogProviders()
         >>> print(providers.pretty("ORFEUS"))  #doctest: +ELLIPSIS
         ORFEUS:The ORFEUS Data Center, de Bilt, the Netherlands WEB:http://www.orfeus-eu.org  LastUpdate:...M
@@ -274,7 +292,7 @@ class FedcatalogProviders(object):
         True
 
         :type name: str
-        :param name: name of provider (provider_id)
+        :param name: identifier provider (provider_id)
         :rtype: str
         :returns: formatted details about this provider
         """
@@ -295,6 +313,7 @@ class FederatedClient(RoutingClient):
 
     For details see the :meth:`~obspy.clients.fdsn.client.Client.__init__()`
     method.
+
     >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
     >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     >>> client = FederatedClient()
@@ -319,40 +338,58 @@ class FederatedClient(RoutingClient):
 
     >>> inv = client.get_stations(network="I?", station="AN*", channel="*HZ", filename=sys.stderr)
     ...                           #doctest: +SKIP
+
     .. Warning: if output is sent directly to a file, then the success
-                status will not be checked beyond gross failures (no data, no response, timeout)
+                status will not be checked beyond gross failures, such as
+                no data, no response, or a timeout
     """
+
+    # TODO read back from a file containing the fedcatalog's raw response
+
     def __init__(self, **kwargs):
         """
         initializer for FederatedClient
-        :type **kwargs:
-        :param **kwargs:
+
+        :type **kwargs: keyword arguments
+        :param **kwargs: arguments destined for either Fedcatalog or Client
         """
         RoutingClient.__init__(self, **kwargs)
         PROVIDERS.refresh()
+
     def __str__(self):
         """
         String representation for FederatedClient
+
         :rtype: str
-        :returns: 
+        :returns: string represention of the FederatedClient
         """
         # TODO: Make this more specific
         ret = "Federated Catalog Routing Client"
         return ret
 
+    # -------------------------------------------------
+    # FederatedClient.get_routing() and FederatedClient.get_routing_bulk()
+    #
+    # communicate directly with the fedcatalog service
+    # -------------------------------------------------
     def get_routing(self, routing_file=None, **kwargs):
         """
-        send query to the fedcatalog service
+        send query to the fedcatalog service as param=value pairs (GET)
 
-        :type routing_file:
-        :param routing_file: file to write out raw fedcatalog response
-        :type **kwargs:
-        :param **kwargs:
+        Retrieves and parses routing details from the fedcatalog service,
+        which takes a query, determines which datacenters/providers hold
+        the appropriate data, and then sends back information about the holdings
+
+        :type routing_file: str
+        :param routing_file: filename used to write out raw fedcatalog response
+        :type **kwargs: various
+        :param **kwargs: arguments that will be passed to the fedcatalog service
+        as GET parameters.  eg ... http://..../query?param1=val1&param2=val2&...
         :rtype: :class:`~obspy.clients.fdsn.routers.FederatedRoutingManager`
         :returns: parsed response from the FedCatalog service
 
         >>> client = FederatedClient()
-        >>> params={"station":"ANTO","includeoverlaps":"true"}
+        >>> params = {"station":"ANTO", "includeoverlaps":"true"}
         >>> frm = client.get_routing(**params)
         >>> for f in frm:
         ...   print(f)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
@@ -360,18 +397,23 @@ class FederatedClient(RoutingClient):
         FederatedRoute for ORFEUS containing 0 query parameters and ... request items
 
         """
-        assert not 'bulk' in kwargs
+        assert 'bulk' not in kwargs, "To post a bulk request, use get_routing_bulk"
         resp = requests.get(FEDCATALOG_URL + "query", params=kwargs, verify=False)
         resp.raise_for_status()
         if routing_file:
+            # TODO: implement the writing raw response data out to a file
             pass #write out to file
 
         frm = FederatedRoutingManager(resp.text)
         return frm
 
-    def get_routing_bulk(self, bulk=None, routing_file=None, **kwargs):
+    def get_routing_bulk(self, bulk, routing_file=None, **kwargs):
         """
         send query to the fedcatalog service as a POST.
+
+        Retrieves and parses routing details from the fedcatalog service,
+        which takes a bulk request, determines which datacenters/providers hold
+        the appropriate data, and then sends back information about the holdings
 
         :type bulk:
         :param bulk:
@@ -392,51 +434,80 @@ class FederatedClient(RoutingClient):
 
 
         """
-        assert bulk, "bulk is a required parameter"
         if not isinstance(bulk, (str, native_str)) and isinstance(bulk, collections.Iterable):
             print(bulk, file=sys.stderr)
             bulk = get_bulk_string(bulk=bulk, arguments=kwargs)
         elif isinstance(bulk, (str, native_str)) and kwargs:
             bulk = get_bulk_string(bulk=bulk, arguments=kwargs)
 
-        assert bulk, "Bulk is empty after get_bulk_string"
-        assert isinstance(bulk, (str, native_str)), "Bulk is something other than a string"
+        assert bulk, "Bulk is empty after homogenizing it via get_bulk_string"
+        assert isinstance(bulk, (str, native_str)), \
+            "Bulk should be a string, but is a " + bulk.__class__.__name__
 
         resp = requests.post(FEDCATALOG_URL + "query", data=bulk, verify=False)
         resp.raise_for_status()
         frm = FederatedRoutingManager(resp.text)
         return frm
 
-    def _request(self, client=None, service=None, route=None, output=None, passed=None, failed=None, filename=None, **kwargs):
+    # -------------------------------------------------
+    # The next routines will interface with the "regular" client
+    # FederatedClient._request() : overloads the RoutingClient, called by
+    #                              the query method 
+    # FederatedClient.get_stations_bulk(): user facing method
+    # FederatedClient.get_stations(): user facing method
+    # FederatedClient.get_waveforms_bulk(): user facing method
+    # FederatedClient.get_waveforms(): user facing method
+    #
+    #
+    # communicate directly with the obspy.fdsn.Client's service: eg. dataselect, station
+    # -------------------------------------------------
+
+    def _request(self, client=None, service=None, route=None, output=None,
+                 passed=None, failed=None, filename=None, **kwargs):
         """
-        function used to query FDSN webservice using
+        function used to query FDSN webservice
+
+        This is being called from one of the "...query_machine" methods
+        of the RoutingClient.  
+
 
         :meth:`~obspy.clients.fdsn.client.Client.get_waveforms_bulk` or
         :meth:`~obspy.clients.fdsn.client.Client.get_stations_bulk`
 
-        :type client:
-        :param client:
-        :type service:
-        :param service:
+        :type client: :class:`~obspy.clients.fdsn.Client`
+        :param client: client, associated with a datacenter
+        :type service: str
+        :param service: name of service, "DATASELECTSERVICE", "STATIONSERVICE"
         :type route: :class:`~obspy.clients.fdsn.route.FederatedRoute`
-        :param route:
+        :param route: used to provide
         :type output: container accepting "put"
-        :param output: place where retrieved data go
+        :param output: place where retrieved data go. Unused if data is sent to file
         :type failed: container accepting "put"
         :param failed: place where list of unretrieved bulk request lines go
-        :param filename:
-        :type **kwargs:
-        :param **kwargs:
+        :type filename: str or open file handle
+        :param filename: filename for streaming data from service
+        :type **kwargs: various
+        :param **kwargs: keyword arguments passed directly to the client's
+        get_waveform_bulk() or get_stations_bulk() method.
         """
-        assert isinstance is not None
-        assert service in ("DATASELECTSERVICE", "STATIONSERVICE"), "couldn't find {0}\n".format(service)
-        assert route is not None
-        assert output is not None
-        assert failed is not None
 
         bulk_services = {"DATASELECTSERVICE": client.get_waveforms_bulk,
                          "STATIONSERVICE": client.get_stations_bulk}
+
+        # communicate via queues or similar. Therefore, make containers exist,
+        # and have the 'put' routine
+        assert service in bulk_services, "couldn't find {0}\n".format(service)
+        assert route is not None, "missing route"
+        assert filename or output is not None, "missing container for storing output [output]"
+        assert filename or hasattr(output, 'put'), "'output' does not have a 'put' routine"
+        assert passed is not None, "missing container for storing successful requests [passed]"
+        assert hasattr(passed, 'put'), "'passed' does not have a 'put' routine"
+        assert failed is not None, "missing container for storing failed requests [failed]"
+        assert hasattr(failed, 'put'), "'failed' does not have a 'put' routine"
+
+
         try:
+            # get_bulk is the client's "get_xxx_bulk" function.
             get_bulk = bulk_services.get(service)
         except ValueError:
             valid_services = '"' + ', '.join(bulk_services.keys)
@@ -454,10 +525,16 @@ class FederatedClient(RoutingClient):
                 get_bulk(bulk=route.text(service), filename=filename, **kwargs)
             else:
                 data = get_bulk(bulk=route.text(service), filename=filename, **kwargs)
-                passed = data_to_request(data)
-                ROUTING_LOGGER.info("Retrieved {0} items from {1}".format(len(passed), route.provider_id))
-                ROUTING_LOGGER.info('\n'+ str(passed))
+                req_details = data_to_request(data)
+                ROUTING_LOGGER.info("Retrieved {0} items from {1}".format(len(req_details), route.provider_id))
+                ROUTING_LOGGER.info('\n'+ str(req_details))
                 output.put(data)
+                passed.put(req_details)
+
+        except FDSNNoDataException:
+            failed.put(route.request_items)
+            ROUTING_LOGGER.info("The provider {0}  could provide no data".format(route.provider_id))
+
         except FDSNException as ex:
             failed.put(route.request_items)
             print("Failed to retrieve data from: {0}", route.provider_id)
@@ -512,8 +589,8 @@ class FederatedClient(RoutingClient):
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
             more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
                                                    keep_unique=True, **svc_kwargs)
-            ROUTING_LOGGER.info("Retrieved {0} additional items".format(len(passed)))
-            ROUTING_LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
+            ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
+            ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
             ROUTING_LOGGER.info(str(failed))
             data += more_data
 
@@ -564,23 +641,28 @@ class FederatedClient(RoutingClient):
             frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
             more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
                                                    keep_unique=True, **svc_kwargs)
-            ROUTING_LOGGER.info("Retrieved {0} additional items".format(len(passed)))
-            ROUTING_LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
+            ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
+            ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
             ROUTING_LOGGER.info('\n'+ str(failed))
             data += more_data
 
         return data
 
-    def get_stations_bulk(self, bulk, includeoverlaps=False, reroute=False,
+    def get_stations_bulk(self, bulk, includeoverlaps=False, reroute=False, existing_routes=None,
                           **kwargs):
         """
         retrieve station metadata from data providers via POST request to the Fedcatalog service
 
+        :type bulk: text (bulk request formatted)
+        :param bulk: text containing request to send to router
         :type includeoverlaps: boolean
         :param includeoverlaps: retrieve same information from multiple sources
         (not recommended)
         :type reroute: boolean
         :param reroute: if data doesn't arrive from provider , see if it is available elsewhere
+        :type existing_routes: str
+        :param existing_routes: will skip initial query to fedcatalog service, instead
+        To use an existing route, set bulk to "none"
         :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
         :returns: an inventory tree containing network/station/channel metadata
 
@@ -610,25 +692,33 @@ class FederatedClient(RoutingClient):
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
+        frm = self.get_routing(bulk=bulk, **fed_kwargs) if not existing_routes \
+                                                        else get_existing_route(existing_routes)
 
-        frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)
-        inv, passed, failed  = self.query(frm, "STATIONSERVICE", **svc_kwargs)
+        # frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)
+        inv, passed, failed = self.query(frm, "STATIONSERVICE", **svc_kwargs)
 
         if reroute and failed:
             ROUTING_LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
-            frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
-            more_inv, passed, failed = self.query(frm, "STATIONSERVICE", keep_unique=True, **svc_kwargs)
-            ROUTING_LOGGER.info("Retrieved {0} additional items".format(len(passed)))
-            ROUTING_LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
-            ROUTING_LOGGER.info('\n'+ str(failed))
-            inv += more_inv
+            frm = self.get_routing_bulk(bulk=str(failed), **fed_kwargs)
+            more_inv, passed, failed = self.query(frm, "STATIONSERVICE",
+                                                  keep_unique=True, **svc_kwargs)
+            if more_inv:
+                ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
+                if inv:
+                    inv += more_inv
+                else:
+                    inv = more_inv
+            if failed:
+                ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
+                ROUTING_LOGGER.info('\n'+ str(failed))
 
         return inv
 
     def get_stations(self,
-                     includeoverlaps=False, reroute=False,
+                     includeoverlaps=False, reroute=False, existing_routes=None,
                      **kwargs):
         """
         retrieve station metadata from data providers via GET request to the Fedcatalog service
@@ -639,6 +729,9 @@ class FederatedClient(RoutingClient):
         :type reroute: boolean
         :param reroute: if data doesn't arrive from provider , see if it is available elsewhere
         other parameters as seen in :meth:`~obspy.fdsn.clients.Client.get_stations`
+        :type existing_routes: str
+        :param existing_routes: will skip initial query to fedcatalog service, instead
+        using the information from here to make the queries.
         :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
         :returns: an inventory tree containing network/station/channel metadata
 
@@ -728,7 +821,9 @@ class FederatedClient(RoutingClient):
 
         assert "bulk" not in fed_kwargs, \
                "Bulk request should be sent to get_stations_bulk, not get_stations"
-        frm = self.get_routing(**fed_kwargs)
+
+        frm = self.get_routing(**fed_kwargs) if not existing_routes \
+                                             else get_existing_route(existing_routes)
 
         # query queries all providers
         inv, passed, failed = self.query(frm, "STATIONSERVICE", **svc_kwargs)
@@ -737,13 +832,18 @@ class FederatedClient(RoutingClient):
             ROUTING_LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
                         " but from any provider (while still honoring include/exclude)")
             fed_kwargs["includeoverlaps"] = True
-            frm = self.get_routing_bulk(bulk=failed.text(), **fed_kwargs)
+            frm = self.get_routing_bulk(bulk=str(failed), **fed_kwargs)
             more_inv, passed, failed = self.query(frm, "STATIONSERVICE",
                                                   keep_unique=True, **svc_kwargs)
-            ROUTING_LOGGER.info("Retrieved {0} additional items".format(len(passed)))
-            ROUTING_LOGGER.info("Unable to retrieve {0} items:".format(len(failed)))
-            ROUTING_LOGGER.info('\n'+ str(failed))
-            inv += more_inv
+            if more_inv:
+                ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
+                if inv:
+                    inv += more_inv
+                else:
+                    inv = more_inv
+            if failed:
+                ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
+                ROUTING_LOGGER.info('\n'+ str(failed))
 
         # reprocess failed ?
         return inv
@@ -768,11 +868,14 @@ class FederatedRoutingManager(RoutingManager):
     FederatedRoute for IRIS containing 0 query parameters and 26 request items
     """
 
-    def __init__(self, textblock):
+    def __init__(self, data):
         """
         initialize a FederatedRoutingManager object
+        :type data: str
+        :param data: text block
+        :
         """
-        RoutingManager.__init__(self, textblock, provider_details=PROVIDERS)  # removed kwargs
+        RoutingManager.__init__(self, data, provider_details=PROVIDERS)  # removed kwargs
 
     def parse_routing(self, block_text):
         """
