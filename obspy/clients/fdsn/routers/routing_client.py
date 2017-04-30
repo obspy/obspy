@@ -34,7 +34,7 @@ and fails the many assumptions built into the Client class.
 
 from __future__ import print_function
 import queue
-import sys
+# import sys
 import logging
 import multiprocessing as mp
 from obspy.clients.fdsn import Client
@@ -51,13 +51,13 @@ def set_up_logger():
     # Prevent propagating to higher loggers.
     logger.propagate = 0
     # Console log handler.
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
+    clh = logging.StreamHandler()
+    clh.setLevel(logging.INFO)
     # Add formatter
     _format = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
     formatter = logging.Formatter(_format)
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    clh.setFormatter(formatter)
+    logger.addHandler(clh)
     return logger
 
 ROUTING_LOGGER = set_up_logger()
@@ -150,7 +150,7 @@ class RoutingClient(object):
                                 " because the retrieval list is empty.")
             return True
         return False
-            
+
     @property
     def query(self):
         """
@@ -198,7 +198,6 @@ class RoutingClient(object):
         :Note: This cannot track data requests that are streamed to a file,
         only those that remain in memory.
         """
-
         output_q = queue.Queue()
         passed_q = queue.Queue()
         failed_q = queue.Queue()
@@ -226,14 +225,11 @@ class RoutingClient(object):
                 failed_q.put(route.request_items) # FDSNBulkRequests
                 raise
 
-            # tricky part here: if anything has passed, we need to remove it
-            # from the rest of the requests in the routing manager
-
-            # TODO add description of request here.
         ROUTING_LOGGER.info("all requests completed")
 
         data = None
         while not output_q.empty():
+            
             if not data:
                 data = output_q.get()
             else:
@@ -251,26 +247,30 @@ class RoutingClient(object):
 
         return data, successful_requests, failed_requests
 
-    def parallel_query_machine(self, routing_mgr, service, **kwargs):
+    def parallel_query_machine(self, routing_mgr, service, keep_unique=False, **kwargs):
         """
         query clients in parallel
 
         :type routing_mgr: :class:`~obspy.clients.fdsn.routers.RoutingManager`
-        :param routing_mgr:
+        :param routing_mgr: contains a collection of Routes
         :type service: str
         :param service:
+        :type keep_unique: bool
+        :param keep_unique: once an item of interest is retrieved, remove it
+            from all subsequent requests
         :rtype: tuple (Inventory or Stream, FDSNBulkRequests, FDSNBulkRequests)
         :returns: (data, successful_requests, failed_requests)
 
+        :Note: This cannot track data requests that are streamed to a file,
+        only those that remain in memory.
         """
 
-        # TODO: Revisit this. Rewrite, Document. Serial_query_machine has been updated, but this hasn't
-
-        logging.warning("Parallel query requested, but will perform serial request anyway.")
-        return self.serial_query_machine(routing_mgr=routing_mgr, service=service, **kwargs)
+        timeout = 120  # seconds
         output_q = mp.Queue()
         passed_q = mp.Queue()
         failed_q = mp.Queue()
+        successful_requests = FDSNBulkRequests(None) # TODO make generic
+
         # Setup process for each provider
         processes = []
         msgs = []
@@ -279,11 +279,7 @@ class RoutingClient(object):
                 continue
 
             try:
-                client = Client(route.provider_id, self.args_to_clients)
-            except:
-                failed_q.put(route.request_items)
-                raise
-            else:
+                client = Client(route.provider_id, **self.args_to_clients)
                 p_kwargs = kwargs.copy()
                 p_kwargs.update({'client':client, 'service':service,
                                  'output':output_q, 'passed':passed_q, 'failed':failed_q,
@@ -294,30 +290,39 @@ class RoutingClient(object):
                 msgs.append("request to: {0}: {1} items.\n{2}".format(
                     route.provider_id, len(route),
                     routing_mgr.str_details(route.provider_id)))
+            except Exception as err:
+                failed_q.put(route.request_items)
+                ROUTING_LOGGER.exception("error: %s",err)
 
         # run
-        for p, msg in zip(processes, msgs):
+        for proc, msg in zip(processes, msgs):
             ROUTING_LOGGER.info("starting " + msg)
+            proc.start()
 
-            p.start()
-
-        ROUTING_LOGGER.info("processing in parallel, with {0} concurrentish requests".format(len(processes)))
+        ROUTING_LOGGER.info("processing in parallel, with %d concurrentish requests",
+                            len(processes))
         # exit completed processes
-        for p, msg in zip(processes, msgs):
-            ROUTING_LOGGER.info("waiting on " + msg)
-            p.join()
+        for proc, msg in zip(processes, msgs):
+            ROUTING_LOGGER.info("waiting on %s", msg)
+            proc.join(timeout)
+            ROUTING_LOGGER.info("finished with %s, still have %d to go", msg,
+                                sum(x.exitcode is not None for x in processes))
         ROUTING_LOGGER.info("all processes completed.")
 
         data = None
         while not output_q.empty():
-            tmp = output_q.get()
+            
+            ROUTING_LOGGER.info("getting 'output' queue")
             if not data:
-                data = tmp
+                data = output_q.get()
             else:
-                data += tmp
+                data += output_q.get()
 
-        successful_requests = routing_mgr.data_to_request(data)
+        while not passed_q.empty():
+            ROUTING_LOGGER.info("getting 'passed' queue")
+            successful_requests.update(passed_q.get())
 
+        failed_requests = None
         if not failed_q.empty():
             failed_requests = failed_q.get()
 
@@ -342,7 +347,7 @@ class RoutingManager(object):
         :type textblock: str, RoutingResponse, or container of RoutingResponse
         :param textblock: text retrieved from routing service
         :type provider_details: must have member .names, .__str__, and .pretty
-        :param provider_details: 
+        :param provider_details:
         """
         self.routes = []
         self.provider_details = provider_details
