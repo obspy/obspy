@@ -11,7 +11,7 @@ The obspy.clients.fdsn.client test suite.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-#TODO clean this module up. it's merely swiped from the Client test suite. 
+#TODO clean this module up. it's merely swiped from the Client test suite.
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -105,7 +105,7 @@ class FDSNBulkRequestItemClientTestCase(unittest.TestCase):
         text = "IU ANMO -- BHZ 2012-04-25T00:00:00 2012-06-12T10:10:10"
         l2 = '* * * * * *'
         self.assertEqual(str(FDSNBulkRequestItem(line=text)),
-                          "IU ANMO -- BHZ 2012-04-25T00:00:00.000 2012-06-12T10:10:10.000")
+                         "IU ANMO -- BHZ 2012-04-25T00:00:00.000 2012-06-12T10:10:10.000")
         self.assertEqual(str(FDSNBulkRequestItem(line=l2)), "* * * * * *")
         self.assertEqual(str(FDSNBulkRequestItem()), "* * * * * *")
 
@@ -113,7 +113,7 @@ class FDSNBulkRequestItemClientTestCase(unittest.TestCase):
                                        channel='BHZ', starttime='2012-04-25',
                                        endtime='2012-06-12T10:10:10')
         self.assertEqual(str(byparams),
-                          "IU ANMO -- BHZ 2012-04-25T00:00:00.000 2012-06-12T10:10:10.000")
+                         "IU ANMO -- BHZ 2012-04-25T00:00:00.000 2012-06-12T10:10:10.000")
 
         byparams = FDSNBulkRequestItem(station='ANMO', location='  ', starttime='2012-04-25')
         self.assertEqual(str(byparams), "* ANMO -- * 2012-04-25T00:00:00.000 *")
@@ -160,6 +160,23 @@ class FederatedClientTestCase(unittest.TestCase):
         self.assertTrue(hasLevel(inv, "station") and not hasLevel(inv, "channel"))
         self.assertEqual(len(inv.networks[0].stations), 1)
         self.assertEqual(inv.networks[0].stations[0].code, 'ANMO')
+
+    def test_fedstations_parallel(self):
+        bulktext = "* B* -- BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00"
+        fed_client = FederatedClient(use_parallel=True)
+        inv = fed_client.get_stations_bulk(bulktext)
+        #default level of station
+        self.assertTrue(hasLevel(inv, "station") and not hasLevel(inv, "channel"))
+        self.assertGreater(len(inv.networks[0].stations), 4)
+        self.assertEqual(inv.networks[0].stations[0].code, 'ANMO')
+        endt = UTCDateTime(2015, 5, 31, 0, 0, 0)
+        params = {"station":"B*", "channel":"BHZ",
+                  "starttime":"2015-01-01T00:00:00",
+                  "endtime": endt,
+                  "level":"channel"}
+
+        inv = fed_client.get_stations(**params)
+        self.assertTrue(hasLevel(inv, "channel") and not hasLevel(inv, "response"))
 
     def test_fedstations_bulk_simple_many(self):
         bulktext = "* A* 00 BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00"
@@ -240,6 +257,7 @@ class FederatedClientTestCase(unittest.TestCase):
         # if this worked, then data will be retrieved from ORFEUS, otherwise
         # it will come from IRIS
         inv = client.get_stations(existing_routes=orf_frm, level="station")
+        self.assertTrue(hasLevel(inv,'station'))
 
     def test_fedstations_reroute(self):
         """

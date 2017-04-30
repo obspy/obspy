@@ -6,7 +6,7 @@ FDSN Web service client for ObsPy.
 :class:`~obspy.clients.fdsn.routers.FedcatalogProviders` contains data center
 (provider) details retrieved from the fedcatalog service
 
-:class:`~obspy.clients.fdsn.routers.FederatedClient` is the FDSN Web service request 
+:class:`~obspy.clients.fdsn.routers.FederatedClient` is the FDSN Web service request
 client. The end user will work almost exclusively with this class, which
 has methods similar to :class:`~obspy.clients.fdsn.Client`
 
@@ -175,7 +175,7 @@ class FedcatalogProviders(object):
 
     >>> prov = FedcatalogProviders()
     >>> print(prov.pretty('IRISDMC'))  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-    IRISDMC:The IRIS Data Management Center, Seattle, WA, USA WEB:http://ds.iris.edu  LastUpdate:...M
+    IRISDMC:The IRIS Data Management Center, Seattle, WA, USA WEB:http://ds.iris.edu  LastUpdate...M
 
     """
 
@@ -369,7 +369,6 @@ class FederatedClient(RoutingClient):
 
     # -------------------------------------------------
     # FederatedClient.get_routing() and FederatedClient.get_routing_bulk()
-    #
     # communicate directly with the fedcatalog service
     # -------------------------------------------------
     def get_routing(self, routing_file=None, **kwargs):
@@ -432,7 +431,6 @@ class FederatedClient(RoutingClient):
         FederatedRoute for IRIS containing 0 query parameters and ... request items
         FederatedRoute for ORFEUS containing 0 query parameters and ... request items
 
-
         """
         if not isinstance(bulk, (str, native_str)) and isinstance(bulk, collections.Iterable):
             print(bulk, file=sys.stderr)
@@ -458,7 +456,6 @@ class FederatedClient(RoutingClient):
     # FederatedClient.get_waveforms_bulk(): user facing method
     # FederatedClient.get_waveforms(): user facing method
     #
-    #
     # communicate directly with the obspy.fdsn.Client's service: eg. dataselect, station
     # -------------------------------------------------
 
@@ -468,8 +465,7 @@ class FederatedClient(RoutingClient):
         function used to query FDSN webservice
 
         This is being called from one of the "...query_machine" methods
-        of the RoutingClient.  
-
+        of the RoutingClient.
 
         :meth:`~obspy.clients.fdsn.client.Client.get_waveforms_bulk` or
         :meth:`~obspy.clients.fdsn.client.Client.get_stations_bulk`
@@ -526,14 +522,15 @@ class FederatedClient(RoutingClient):
             else:
                 data = get_bulk(bulk=route.text(service), filename=filename, **kwargs)
                 req_details = data_to_request(data)
-                ROUTING_LOGGER.info("Retrieved {0} items from {1}".format(len(req_details), route.provider_id))
+                ROUTING_LOGGER.info("Retrieved %d items from %s",
+                                    len(req_details), route.provider_id)
                 ROUTING_LOGGER.info('\n'+ str(req_details))
                 output.put(data)
                 passed.put(req_details)
 
         except FDSNNoDataException:
             failed.put(route.request_items)
-            ROUTING_LOGGER.info("The provider {0}  could provide no data".format(route.provider_id))
+            ROUTING_LOGGER.info("The provider %s could provide no data", route.provider_id)
 
         except FDSNException as ex:
             failed.put(route.request_items)
@@ -541,16 +538,9 @@ class FederatedClient(RoutingClient):
             print(ex)
             raise
 
-    def get_waveforms_bulk(self,
-                           bulk,
-                           quality=None,
-                           minimumlength=None,
-                           longestonly=None,
-                           filename=None,
-                           includeoverlaps=False,
-                           reroute=False,
-                           existing_routes=None,
-                           **kwargs):
+    def get_waveforms_bulk(self, bulk, quality=None, minimumlength=None,
+                           longestonly=None, filename=None, includeoverlaps=False,
+                           reroute=False, existing_routes=None, **kwargs):
         """
         retrieve waveforms from data providers via POST request to the Fedcatalog service
 
@@ -593,15 +583,15 @@ class FederatedClient(RoutingClient):
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=str(failed), **fed_kwargs)
             more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
-                                                  keep_unique=True, **svc_kwargs)
+                                                   keep_unique=True, **svc_kwargs)
             if more_data:
-                ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
+                ROUTING_LOGGER.info("Retrieved %d additional items", len(passed))
                 if data:
                     data += more_data
                 else:
                     data = more_data
             if failed:
-                ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
+                ROUTING_LOGGER.info("Unable to retrieve %d items:", len(failed))
                 ROUTING_LOGGER.info('\n'+ str(failed))
 
         return data
@@ -656,7 +646,7 @@ class FederatedClient(RoutingClient):
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=str(failed), **fed_kwargs)
             more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
-                                                  keep_unique=True, **svc_kwargs)
+                                                   keep_unique=True, **svc_kwargs)
             if more_data:
                 ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
                 if data:
@@ -719,14 +709,15 @@ class FederatedClient(RoutingClient):
         inv, passed, failed = self.query(frm, "STATIONSERVICE", **svc_kwargs)
 
         if reroute and failed:
-            ROUTING_LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
-                        " but from any provider (while still honoring include/exclude)")
+            ROUTING_LOGGER.info("%d items were not retrieved, trying again," +
+                                " but from any provider (while still honoring include/exclude)",
+                                len(failed))
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=str(failed), **fed_kwargs)
             more_inv, passed, failed = self.query(frm, "STATIONSERVICE",
                                                   keep_unique=True, **svc_kwargs)
             if more_inv:
-                ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
+                ROUTING_LOGGER.info("Retrieved %d additional items", len(passed))
                 if inv:
                     inv += more_inv
                 else:
@@ -849,8 +840,9 @@ class FederatedClient(RoutingClient):
         inv, passed, failed = self.query(frm, "STATIONSERVICE", **svc_kwargs)
 
         if reroute and failed:
-            ROUTING_LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
-                        " but from any provider (while still honoring include/exclude)")
+            ROUTING_LOGGER.info("%d items were not retrieved, trying again,"\
+                                 + " but from any provider (while still honoring include/exclude)",
+                                len(failed))
             fed_kwargs["includeoverlaps"] = True
             frm = self.get_routing_bulk(bulk=str(failed), **fed_kwargs)
             more_inv, passed, failed = self.query(frm, "STATIONSERVICE",
@@ -998,7 +990,7 @@ def data_to_request(data):
 
 if __name__ == '__main__':
     from requests.packages.urllib3.exceptions import InsecureRequestWarning
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
     import doctest
+
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     doctest.testmod(exclude_empty=True, verbose=False)

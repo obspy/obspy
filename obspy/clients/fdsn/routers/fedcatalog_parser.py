@@ -468,8 +468,6 @@ class FederatedRoute(RoutingResponse):
     AI ORCD 04 BHZ 2015-01-01T00:00:00.000 2016-01-02T00:00:00.000
     """
 
-    # TODO maybe see which parameters are supported by specific service (?)
-    # for example. at this exact moment in time, SoCal's dataselect won't accept quality
     pass_through_params = {
         "DATASELECTSERVICE": ["longestonly", "quality", "minimumlength"],
         "STATIONSERVICE": [
@@ -514,7 +512,8 @@ class FederatedRoute(RoutingResponse):
         >>> fedresp.add_query_param(["level=station","quality=D"])
         >>> fedresp.add_query_param("onceuponatime=now")
         >>> fedresp.add_query_param(FedcatResponseLine("testing=true"))
-        >>> fedresp.add_query_param([FedcatResponseLine("black=white"),FedcatResponseLine("this=that")])
+        >>> fedresp.add_query_param([FedcatResponseLine("black=white"),
+        ...                          FedcatResponseLine("this=that")])
         >>> print(",".join(fedresp.parameters))
         level=station,quality=D,onceuponatime=now,testing=true,black=white,this=that
         """
@@ -562,8 +561,10 @@ class FederatedRoute(RoutingResponse):
         """
         return a summary representation of this item
         """
-        out = "FederatedRoute for {id} containing {pcount} query parameters and {rcount} request items".format(id=self.provider_id,
-               pcount=len(self.parameters), rcount=len(self.request_items))
+        out = "FederatedRoute for {id} containing {pcount} "\
+              "query parameters and {rcount} request items".\
+              format(id=self.provider_id, pcount=len(self.parameters),
+                     rcount=len(self.request_items))
         return out
 
 class FedcatResponseLine(object):
