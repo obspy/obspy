@@ -35,7 +35,9 @@ from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT,
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
 from obspy.clients.fdsn.tests.test_client import failmsg
-from obspy.clients.fdsn.routers.fedcatalog_client import (data_to_request, get_bulk_string)
+from obspy.clients.fdsn.routers.fedcatalog_client import (data_to_request,
+                                                          get_bulk_string,
+                                                          FederatedRoutingManager)
 from obspy.clients.fdsn.routers.fedcatalog_parser import (FDSNBulkRequestItem,
                                                           FDSNBulkRequests)
 
@@ -227,13 +229,52 @@ class FederatedClientTestCase(unittest.TestCase):
                          msg="retrieved incorrect waveform {0}".format(data[0].id))
         # don't forget to test the attach_response
 
+    def test_fedstations_use_existing(self):
+        client = FederatedClient()
+        frm = client.get_routing(station="ANTO", starttime=UTCDateTime(2015,1,1),
+                                 includeoverlaps=True)
+        self.assertEqual(len(frm),2, msg="Expected to retrieve 2 routes")
 
-    def test_fedstations_retry(self):
-        pass
+        orf_frm = FederatedRoutingManager(frm.get_route('ORFEUS'))
+
+        # if this worked, then data will be retrieved from ORFEUS, otherwise
+        # it will come from IRIS
+        inv = client.get_stations(existing_routes=orf_frm, level="station")
+
+    def test_fedstations_reroute(self):
+        """
+        test the retry capability of the FederatedClient.get_stations() by
+        giving it a bad route (knowing that the data exists somewhere else)
+        """
+        # find out what the ETH (SED) has on hand
+        client = FederatedClient(include_provider='ETH')
+        frm = client.get_routing(station="BALST", network="CH", level="channel")
+        self.assertEqual(frm.routes[0].provider_id,'ETH')
+        eth_route = frm.get_route('ETH')
+        # get some data from IRIS, too
+        client = FederatedClient()
+        frm = client.get_routing(station="ANTO", starttime=UTCDateTime(2015, 1, 1))
+        iris_route = frm.get_route('IRIS')
+
+        #now, confuse things.
+        nodata_route = iris_route
+        nodata_route.request_items = eth_route.request_items
+
+        # should come up empty
+        inv = client.get_stations(existing_routes=nodata_route)
+        self.assertFalse(inv)
+
+        #should work!
+        inv = client.get_stations(existing_routes=nodata_route, reroute=True)
+        self.assertTrue(inv, msg="Rerouting for get_stations failed")
+
+        inv = client.get_stations_bulk(None, existing_routes=nodata_route, reroute=True)
+        self.assertTrue(inv, msg="Rerouting for get_stations_bulk failed")
+
     def test_fedwaveforms_retry(self):
         pass
 
-    def test__example_queries_station(self):
+    def test_example_queries_station(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
 
@@ -371,7 +412,7 @@ class FederatedClientTestCase(unittest.TestCase):
         expected = read(file_)
         self.assertEqual(got, expected, failmsg(got, expected))
 
-    def xtest_get_waveform_attach_response(self):
+    def test_get_waveform_attach_response(self):
         """
         minimal test for automatic attaching of metadata
         """

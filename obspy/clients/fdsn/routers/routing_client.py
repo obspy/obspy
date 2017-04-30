@@ -263,6 +263,9 @@ class RoutingClient(object):
         :returns: (data, successful_requests, failed_requests)
 
         """
+
+        # TODO: Revisit this. Rewrite, Document. Serial_query_machine has been updated, but this hasn't
+
         logging.warning("Parallel query requested, but will perform serial request anyway.")
         return self.serial_query_machine(routing_mgr=routing_mgr, service=service, **kwargs)
         output_q = mp.Queue()
@@ -325,8 +328,8 @@ class RoutingClient(object):
 
 class RoutingManager(object):
     """
-    This class will wrap the response given by routers.  Its primary purpose is
-    to divide the response into parcels, each being an XYZResponse containing
+    This class will wrap the response given by a router.  Its primary purpose is
+    to divide the response into parcels, each being a route that contains
     the information required for a single request.
 
     Input would be the response from the routing service, or a similar text file
@@ -334,12 +337,12 @@ class RoutingManager(object):
     """
     def __init__(self, textblock, provider_details=None):
         """
-        initialize a RoutingManager object
+        initializer for RoutingManager
 
-        :type textblock: str or container of RoutingResponse
+        :type textblock: str, RoutingResponse, or container of RoutingResponse
         :param textblock: text retrieved from routing service
-        # :type provider_details: must have member .names, .__str__, and .pretty
-        # :param provider_details:
+        :type provider_details: must have member .names, .__str__, and .pretty
+        :param provider_details: 
         """
         self.routes = []
         self.provider_details = provider_details
@@ -362,6 +365,18 @@ class RoutingManager(object):
         responsestr = "\n".join([str(x) for x in self.routes])
         towrite = type(self).__name__ + " with " + str(len(self)) + " items:\n" +responsestr
         return towrite
+
+    def add_routes(self, route):
+        if isinstance(route, RoutingResponse):
+            self.routes.append(route)
+        elif isinstance(route, (tuple, list)) and len(route)\
+                                              and isinstance(route[0].RoutingResponse):
+            self.routes.extend(route)
+        elif isinstance(route, RoutingManager):
+            self.routes.extend(route.routes)
+        else:
+            NotImplementedError("Do not know how to add {} to RoutingManager".\
+                                format(route.__class__.__name__))
 
     def data_to_request(self, data):
         """
@@ -426,4 +441,4 @@ class RoutingManager(object):
 
 if __name__ == '__main__':
     import doctest
-    doctest.testmod(exclude_empty=True, verbose=True)
+    doctest.testmod(exclude_empty=True)
