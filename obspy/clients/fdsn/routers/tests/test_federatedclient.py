@@ -52,7 +52,7 @@ def hasLevel(inv, level):
     :param level: 'network', 'station', 'location', 'channel'
     :rtype: bool
     :returns: true if an Inventory structure has any fields of that level
-    
+
     :note: only checks the first item of each category
     """
     if not inv or not inv.networks:
@@ -162,13 +162,17 @@ class FederatedClientTestCase(unittest.TestCase):
         self.assertEqual(inv.networks[0].stations[0].code, 'ANMO')
 
     def test_fedstations_parallel(self):
-        bulktext = "* B* -- BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00"
         fed_client = FederatedClient(use_parallel=True)
+        bulktext = "IU ANTO * BHZ 2015-01-01T00:00:00 2015-02-01T00:00:00"
+        inv = fed_client.get_stations_bulk(bulktext, includeoverlaps=True)
+        print(inv)
+
+        # test something against the SED/ETH
+        bulktext = "* B* -- BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00"
         inv = fed_client.get_stations_bulk(bulktext)
         #default level of station
         self.assertTrue(hasLevel(inv, "station") and not hasLevel(inv, "channel"))
         self.assertGreater(len(inv.networks[0].stations), 4)
-        self.assertEqual(inv.networks[0].stations[0].code, 'ANMO')
         endt = UTCDateTime(2015, 5, 31, 0, 0, 0)
         params = {"station":"B*", "channel":"BHZ",
                   "starttime":"2015-01-01T00:00:00",
@@ -262,7 +266,7 @@ class FederatedClientTestCase(unittest.TestCase):
     def test_fedstations_reroute(self):
         """
         test the retry capability of the FederatedClient.get_stations() by
-        giving it a bad route (knowing that the data exists somewhere else)
+        giving it a bad route (knowing that the data exists elsewhere)
         """
         # find out what the ETH (SED) has on hand
         client = FederatedClient(include_provider='ETH')
@@ -488,4 +492,5 @@ def test_suite():
     return suite
 
 if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite', verbosity=100)
+    # unittest.main()
+    unittest.TextTestRunner().run(test_suite())
