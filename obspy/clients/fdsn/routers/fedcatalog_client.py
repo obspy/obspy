@@ -36,14 +36,10 @@ requested.
 from __future__ import print_function
 import sys
 import collections
-# from collections import OrderedDict
 from threading import Lock
-#import warnings
 import os
 import requests
 from future.utils import native_str
-# from requests.exceptions import (HTTPError, Timeout)
-#from obspy.core import UTCDateTime
 from obspy.core.inventory import Inventory
 from obspy.core import Stream
 from obspy.clients.fdsn.client import convert_to_string
@@ -88,18 +84,18 @@ def distribute_args(argdict):
     :returns: tuple of dictionaries fedcat_kwargs, fdsn_kwargs
     """
 
-    fedcatalog_prohibited_params = ('filename', 'attach_response', 'user', 'password', 'base_url')
-    service_params = ('user', 'password', 'attach_response', 'filename')
+    fedcatalog_prohibited = ('filename', 'attach_response', 'user', 'password', 'base_url')
+    service_allowed = ('user', 'password', 'attach_response', 'filename')
 
     # fedrequest gets almost all arguments, except for some
     fed_argdict = argdict.copy()
-    for key in fedcatalog_prohibited_params:
+    for key in fedcatalog_prohibited:
         if key in fed_argdict:
             del fed_argdict[key]
 
     # services get practically no arguments, since they're provided by the bulk request
     service_args = dict()
-    for key in service_params:
+    for key in service_allowed:
         if key in argdict:
             service_args[key] = argdict[key]
     return fed_argdict, service_args
@@ -131,9 +127,9 @@ def get_bulk_string(bulk, arguments):
     # bulk might be tuple of strings...
     if isinstance(bulk, (str, native_str)):
         tmp = bulk
-    elif isinstance(bulk, collections.Iterable) \
-        and not hasattr(bulk, "read"):
-        raise NotImplementedError("fedcatalog's get_bulk_string cannot handle vectors.")
+    elif isinstance(bulk, collections.Iterable) and not hasattr(bulk, "read"):
+        msg = "fedcatalog's get_bulk_string cannot handle vectors."
+        raise NotImplementedError(msg)
     else:
         # if it has a read method, read data from there
         if hasattr(bulk, "read"):
@@ -164,7 +160,8 @@ def get_existing_route(existing_routes):
     elif isinstance(existing_routes, (str, native_str, FederatedRoute)):
         frm = FederatedRoutingManager(existing_routes)
     else:
-        NotImplementedError("usure how to convert {} into FederatedRoutingManager")
+        msg = "unsure how to convert %s into FederatedRoutingManager"
+        NotImplementedError(msg % existing_routes.__class__)
     return frm
 class FedcatalogProviders(object):
     """
@@ -199,6 +196,9 @@ class FedcatalogProviders(object):
         if not self._providers:
             self.refresh()
         return self._providers.__iter__()
+
+    def __getitem__(self, key):
+        return self._providers[key]
 
     @property
     def names(self):
@@ -263,18 +263,17 @@ class FedcatalogProviders(object):
         with self._lock:
             ROUTING_LOGGER.debug("Refreshing Provider List")
             if self._failed_refreshes > 3 and not force:
-                ROUTING_LOGGER.error(
-                    "Unable to retrieve provider profiles from fedcatalog service after {0} attempts"
-                    % (self._failed_refreshes))
+                msg = "Unable to retrieve provider profiles from fedcatalog after %d attempts"
+                ROUTING_LOGGER.error(msg, self._failed_refreshes)
 
             try:
                 url = 'https://service.iris.edu/irisws/fedcatalog/1/datacenters'
                 r = requests.get(url, verify=False)
                 self._providers = {v['name']: v for v in r.json()}
                 self._failed_refreshes = 0
-            except:
-                ROUTING_LOGGER.error(
-                    "Unable to update provider profiles from fedcatalog service")
+            except Exception as err:
+                msg = "Unable to update provider profiles from fedcatalog service: %s"
+                ROUTING_LOGGER.error(msg, err)
                 self._failed_refreshes += 1
             else:
                 for iris_name, obspy_name in REMAPS:
@@ -414,7 +413,7 @@ class FederatedClient(RoutingClient):
         which takes a bulk request, determines which datacenters/providers hold
         the appropriate data, and then sends back information about the holdings
 
-        :type bulk:
+        :type bulk: str, iterable of str
         :param bulk:
         :type routing_file:
         :param routing_file: file to write out raw fedcatalog response
@@ -570,29 +569,16 @@ class FederatedClient(RoutingClient):
 
         """
 
+        svc_name = 'DATASELECTSERVICE'
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
         frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)\
                   if not existing_routes else get_existing_route(existing_routes)
-        data, passed, failed = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
+        data, passed, failed = self.query(frm, svc_name, **svc_kwargs)
 
         if reroute and failed:
-            ROUTING_LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
-                        " but from any provider (while still honoring include/exclude)")
-            fed_kwargs["includeoverlaps"] = True
-            frm = self.get_routing_bulk(bulk=str(failed), **fed_kwargs)
-            more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
-                                                   keep_unique=True, **svc_kwargs)
-            if more_data:
-                ROUTING_LOGGER.info("Retrieved %d additional items", len(passed))
-                if data:
-                    data += more_data
-                else:
-                    data = more_data
-            if failed:
-                ROUTING_LOGGER.info("Unable to retrieve %d items:", len(failed))
-                ROUTING_LOGGER.info('\n'+ str(failed))
+            data = self.attempt_reroute(failed, svc_name, fed_kwargs, svc_kwargs, data)
 
         return data
 
@@ -627,6 +613,7 @@ class FederatedClient(RoutingClient):
         IU.ANMO.10.BHZ | 2010-02-27T06:30:00... 40.0 Hz, 7200 samples
         """
 
+        svc_name = 'DATASELECTSERVICE'
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
         assert "bulk" not in fed_kwargs, \
@@ -638,24 +625,11 @@ class FederatedClient(RoutingClient):
                                **fed_kwargs) if not existing_routes \
                                              else get_existing_route(existing_routes)
 
-        data, passed, failed = self.query(frm, "DATASELECTSERVICE", **svc_kwargs)
+        data, passed, failed = self.query(frm, svc_name, **svc_kwargs)
 
         if reroute and failed:
-            ROUTING_LOGGER.info(str(len(failed)) + " items were not retrieved, trying again," +
-                        " but from any provider (while still honoring include/exclude)")
-            fed_kwargs["includeoverlaps"] = True
-            frm = self.get_routing_bulk(bulk=str(failed), **fed_kwargs)
-            more_data, passed, failed = self.query(frm, "DATASELECTSERVICE",
-                                                   keep_unique=True, **svc_kwargs)
-            if more_data:
-                ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
-                if data:
-                    data += more_data
-                else:
-                    data = more_data
-            if failed:
-                ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
-                ROUTING_LOGGER.info('\n'+ str(failed))
+            data = self.attempt_reroute(failed, svc_name, fed_kwargs, svc_kwargs, data)
+
         return data
 
     def get_stations_bulk(self, bulk, includeoverlaps=False, reroute=False, existing_routes=None,
@@ -696,41 +670,37 @@ class FederatedClient(RoutingClient):
                     AV.OKSP (Steeple Point, Okmok Caldera, Alaska)
                 Channels (5):
                     AV.OKSO..BHZ, AV.OKSP..EHZ (4x)
+        >>> fed_client = FederatedClient(use_parallel=True)
+        >>> bulktext = "IU ANTO * BHZ 2015-01-01T00:00:00 2015-02-01T00:00:00"
+        >>> inv = fed_client.get_stations_bulk(bulktext, includeoverlaps=True)
+        >>> print(inv)
+        Inventory created at ...
+            Sending institution: IRIS-DMC,SeisComP3 (IRIS-DMC,ODC)
+            Contains:
+                Networks (2):
+                    IU (2x)
+                Stations (2):
+                    IU.ANTO (Ankara, Turkey) (2x)
+                Channels (0):
+        <BLANKLINE>
         """
 
-
+        svc_name = 'STATIONSERVICE'
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
-        frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs) if not existing_routes \
-                                                        else get_existing_route(existing_routes)
+        frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)\
+            if not existing_routes  else get_existing_route(existing_routes)
 
         # frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)
-        inv, passed, failed = self.query(frm, "STATIONSERVICE", **svc_kwargs)
+        inv, passed, failed = self.query(frm, svc_name, **svc_kwargs)
 
         if reroute and failed:
-            ROUTING_LOGGER.info("%d items were not retrieved, trying again," +
-                                " but from any provider (while still honoring include/exclude)",
-                                len(failed))
-            fed_kwargs["includeoverlaps"] = True
-            frm = self.get_routing_bulk(bulk=str(failed), **fed_kwargs)
-            more_inv, passed, failed = self.query(frm, "STATIONSERVICE",
-                                                  keep_unique=True, **svc_kwargs)
-            if more_inv:
-                ROUTING_LOGGER.info("Retrieved %d additional items", len(passed))
-                if inv:
-                    inv += more_inv
-                else:
-                    inv = more_inv
-            if failed:
-                ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
-                ROUTING_LOGGER.info('\n'+ str(failed))
+            inv = self.attempt_reroute(failed, svc_name, fed_kwargs, svc_kwargs, inv)
 
         return inv
 
-    def get_stations(self,
-                     includeoverlaps=False, reroute=False, existing_routes=None,
-                     **kwargs):
+    def get_stations(self, includeoverlaps=False, reroute=False, existing_routes=None, **kwargs):
         """
         retrieve station metadata from data providers via GET request to the Fedcatalog service
 
@@ -782,10 +752,8 @@ class FederatedClient(RoutingClient):
             Contains:
                 Networks (6):
                     IA, IB, II, IQ, IS, IV
-                Stations (0):
-        <BLANKLINE>
-                Channels (0):
-        <BLANKLINE>
+                Stations (0):...
+                Channels (0):...
 
         >>> fclient = FederatedClient(use_parallel=True)
 
@@ -821,12 +789,11 @@ class FederatedClient(RoutingClient):
             Contains:
                 Networks (...):
                     IU (...)
-                Stations (0):
-        <BLANKLINE>
-                Channels (0):
-        <BLANKLINE>
+                Stations (0):...
+                Channels (0):...
         """
 
+        svc_name = "STATIONSERVICE"
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
@@ -837,28 +804,53 @@ class FederatedClient(RoutingClient):
                                              else get_existing_route(existing_routes)
 
         # query queries all providers
-        inv, passed, failed = self.query(frm, "STATIONSERVICE", **svc_kwargs)
+        inv, passed, failed = self.query(frm, svc_name, **svc_kwargs)
 
         if reroute and failed:
-            ROUTING_LOGGER.info("%d items were not retrieved, trying again,"\
-                                 + " but from any provider (while still honoring include/exclude)",
-                                len(failed))
-            fed_kwargs["includeoverlaps"] = True
-            frm = self.get_routing_bulk(bulk=str(failed), **fed_kwargs)
-            more_inv, passed, failed = self.query(frm, "STATIONSERVICE",
-                                                  keep_unique=True, **svc_kwargs)
-            if more_inv:
-                ROUTING_LOGGER.info("Retrieved {} additional items".format(len(passed)))
-                if inv:
-                    inv += more_inv
-                else:
-                    inv = more_inv
-            if failed:
-                ROUTING_LOGGER.info("Unable to retrieve {} items:".format(len(failed)))
-                ROUTING_LOGGER.info('\n'+ str(failed))
+            inv = self.attempt_reroute(failed, svc_name, fed_kwargs, svc_kwargs, inv)
 
         return inv
 
+    def attempt_reroute(self, bulk, svc_name, fed_kwargs, svc_kwargs, existing_data):
+        """
+        request missing data from any provider that might have it
+
+        :type bulk: FDSNBulkRequests
+        :param bulk: items that require re-requesting
+        :type svc_name: str
+        :param svc_name: 'STATIONSERVICE' or 'DATASELECTSERVICE', as per service
+        name included in the Fedcatalog response
+        :type fed_kwargs: dict
+        :param fed_kwargs: keyword arguments to be passed to the Fedcatallog service
+        :type svc_kwargs: dict
+        :param svc_kwargs: keyword arguments to be passed to service endpoint
+        :type existing_data: :class:`~obspy.core.inventory.inventory.Inventory` or
+        :class:`~obspy.core.Stream`
+        :param existing_data: data that had been previously successfully retrieved
+        :rtype: same as existing_data
+        :return: additional data (if any) added to existing_data
+
+        This cannot be used in conjunction with filename
+        The simple appending/extending of data will not rearrange the original data,
+        that is, inventory trees will not be merged.
+        """
+        assert "filename" not in svc_kwargs, "Rerouting doesn't work for items sent to file"
+        # what about if svc_kwargs has filename (?)
+        ROUTING_LOGGER.info("%d items were not retrieved, trying again, but from any provider" +
+                            " (while honoring include/exclude)", len(bulk))
+        fed_kwargs["includeoverlaps"] = True
+        frm = self.get_routing_bulk(bulk=str(bulk), **fed_kwargs)
+        more_data, passed, failed = self.query(frm, svc_name, keep_unique=True, **svc_kwargs)
+
+        if more_data:
+            ROUTING_LOGGER.info("Retrieved %d additional items:\n%s", len(passed), passed)
+            if existing_data:
+                existing_data += more_data
+            else:
+                existing_data = more_data
+        if failed:
+            ROUTING_LOGGER.info("Unable to retrieve %d items:\n%s", len(failed), failed)
+        return existing_data
 
 class FederatedRoutingManager(RoutingManager):
     """
