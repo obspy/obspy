@@ -347,42 +347,14 @@ from . import util as _ut
 from . import arrayio as _io
 
 
-# ------------- HEADER GETTER/SETTERS -----------------------------------------
-#
-# These are functions used to set up header properties on the SACTrace class.
-# Properties are accessed like class attributes, but use getter and/or setter
-# functions.  They're defined here, outside the class, b/c there are lots of
-# properties and we want to keep the class clean.
-#
-# getter/setter factories:
-# Property getters/setters must be defined for _each_ header, even if they work
-# the exact same way for similar headers, so we define function factories here
-# for groups of headers that will be gotten and set in a similar fashion.
-#
-# Usage: delta_getter = _floatgetter('delta')
-#        delta_setter = _floatsetter('delta')
-# These factories produce functions that simply index into their array to get
-# or set.  Use them for header values in hf, hi, and hs that need no special
-# handling. Values that depend on other values will need their own
-# getters/setters.
-#
-# See:
-# https://stackoverflow.com/q/2123585
-#
-# TODO: Replace all these factories and properties with Python Descriptors.
-#   http://nbviewer.jupyter.org/urls/gist.github.com/ChrisBeaumont/
-#       5758381/raw/descriptor_writeup.ipynb
-#   Also, don't forget to worry about access to __doc__ on both the class and
-#   the instances.
-
 # ------------- HEADER DESCRIPTORS --------------------------------------------
 #
 # A descriptor is a class that manages an object attribute, using the
-# descriptor protocol.  A single instance of a descriptor class (floatheader,
+# descriptor protocol.  A single instance of a descriptor class (FloatHeader,
 # for example) will exist for both the host class and all instances of that
 # host class (i.e. SACTrace and all its instances).  As a result, we must
 # implement logic that can tell if the methods are being called on the host
-# class or on an instance.
+# class or on an instance.  This looks like "if instance is None" on methods.
 #
 # See:
 # https://docs.python.org/3.5/howto/descriptor.html
@@ -586,6 +558,10 @@ class DataHeader(SACHeader):
                     value = None if value == HD.INULL else value
         return value
 
+    def __set__(self, instance, value):
+        msg = "{} is read-only".format(self.name)
+        raise AttributeError(msg)
+
 
 # OTHER GETTERS/SETTERS
 def _get_e(self):
@@ -733,7 +709,7 @@ class SACTrace(object):
 
     """ + HD.HEADER_DOCSTRING
 
-    # ----------------------------------- HEADERS -----------------------------
+    # ------------------------------- SAC HEADERS -----------------------------
     # SAC header values are defined as managed attributes, either as
     # descriptors or as properties, with getters and setters.
     #

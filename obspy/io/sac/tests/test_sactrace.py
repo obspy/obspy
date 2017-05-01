@@ -403,16 +403,16 @@ class SACTraceTestCase(unittest.TestCase):
         Headers that depend on the data vector should return values operating
         on the data, or fall back to stored header values if data is absent.
         """
-        data = np.random.ranf(10).astype(dtype=np.float32)
-        npts=4
-        depmax=3.0
-        depmen=2.0
-        depmin=1.0
+        data = np.random.ranf(10).astype(np.float32)
+        npts = 4
+        depmax = 3.0
+        depmen = 2.0
+        depmin = 1.0
         sac = SACTrace(depmin=depmin, depmen=depmen, depmax=depmax, npts=npts,
                        data=data)
 
-        for hdr, func in zip(('depmin', 'depmen', 'depmax', 'npts'),
-                             (min, np.mean, max, len)):
+        for hdr, func in [('depmin', min), ('depmen', np.mean),
+                          ('depmax', max), ('npts', len)]:
             # getting value
             self.assertEqual(getattr(sac, hdr), func(data))
 
@@ -422,8 +422,8 @@ class SACTraceTestCase(unittest.TestCase):
 
         # headers fall back to stored value when data is None
         sac.data = None
-        for hdr, value in zip(('depmin', 'depmen', 'depmax', 'npts'),
-                              (depmin, depmen, depmax, npts)):
+        for hdr, value in [('depmin', depmin), ('depmen', depmen),
+                           ('depmax', depmax), ('npts', npts)]:
             self.assertEqual(getattr(sac, hdr), value)
 
 
