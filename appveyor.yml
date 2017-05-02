@@ -125,7 +125,7 @@ test_script:
 on_success:
   - ps: |
       If ($env:APPVEYOR_REPO_TAG -eq "true") {
-          python setup.py sdist bdist_wheel
+          python setup.py sdist bdist_wheel bdist_wininst bdist_egg
           Invoke-Expression -erroraction 'silentlycontinue' "twine upload -u $env:PYPI_USERNAME -p $env:PYPI_PASSWORD --repository-url https://upload.pypi.org/legacy/ --skip-existing dist/*" 
       }
 
