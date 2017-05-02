@@ -213,16 +213,6 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
        `ObsPy-users mailing list
        <http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html>`_
        and `issue #249 <https://github.com/obspy/obspy/issues/249>`_.
-
-    .. rubric:: Example
-
-    >>> tr1 = np.random.randn(10000).astype(np.float32)
-    >>> tr2 = tr1.copy()
-    >>> a, b = xcorr(tr1, tr2, 1000)
-    >>> a
-    0
-    >>> round(b, 7)
-    1.0
     """
     from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
     msg = ('Call to deprecated function xcorr(). Please use the correlate and '

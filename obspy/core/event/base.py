@@ -74,18 +74,19 @@ class QuantityError(AttribDict):
         Boolean testing for QuantityError.
 
         QuantityError evaluates ``True`` if any of the default fields is not
-        ``None``.
+        ``None``. Setting non default fields raises also an UserWarning which
+        is the reason we have to skip those lines in the doctest below.
 
         >>> err = QuantityError()
         >>> bool(err)
         False
-        >>> err.custom_field = "spam"
+        >>> err.custom_field = "spam"  # doctest: +SKIP
         >>> bool(err)
         False
         >>> err.uncertainty = 0.05
         >>> bool(err)
         True
-        >>> del err.custom_field
+        >>> del err.custom_field  # doctest: +SKIP
         >>> bool(err)
         True
         """
@@ -502,7 +503,7 @@ class ResourceIdentifier(object):
     >>> # Deleting it, or letting the garbage collector handle the object will
     >>> # invalidate the reference.
     >>> del event
-    >>> print(res_id.get_referred_object())
+    >>> print(res_id.get_referred_object())  # doctest: +SKIP
     None
 
     The most powerful ability (and reason why one would want to use a resource
@@ -548,9 +549,9 @@ class ResourceIdentifier(object):
     >>> assert ref_a.get_referred_object() is obj_a
     >>> assert ref_b.get_referred_object() is obj_b
     >>> del obj_b  # if obj_b gets garbage collected
-    >>> assert ref_b.get_referred_object() is obj_a
+    >>> assert ref_b.get_referred_object() is obj_a  # doctest: +SKIP
     >>> del obj_a  # now no object with res_id exists
-    >>> assert ref_b.get_referred_object() is None
+    >>> assert ref_b.get_referred_object() is None  # doctest: +SKIP
 
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convert_id_to_quakeml_uri() method. The resulting id will be of the
@@ -560,7 +561,7 @@ class ResourceIdentifier(object):
 
     >>> res_id = ResourceIdentifier(prefix='origin')
     >>> res_id.convert_id_to_quakeml_uri(authority_id="obspy.org")
-    >>> res_id # doctest:+ELLIPSIS
+    >>> res_id  # doctest: +ELLIPSIS
     ResourceIdentifier(id="smi:obspy.org/origin/...")
     >>> res_id = ResourceIdentifier(id='foo')
     >>> res_id.convert_id_to_quakeml_uri()
@@ -570,7 +571,7 @@ class ResourceIdentifier(object):
     >>> # scratch is
     >>> res_id = ResourceIdentifier(prefix='pick')
     >>> res_id.convert_id_to_quakeml_uri(authority_id='obspy.org')
-    >>> res_id  # doctest:+ELLIPSIS
+    >>> res_id  # doctest: +ELLIPSIS
     ResourceIdentifier(id="smi:obspy.org/pick/...")
     >>> # If the given ID is already a valid QuakeML
     >>> # ResourceIdentifier, nothing will happen.
