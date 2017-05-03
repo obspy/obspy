@@ -163,7 +163,7 @@ class ResponseTestCase(unittest.TestCase):
                                  reltol=reltol) as ic:
                 rcParams['savefig.dpi'] = 72
                 resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
-                          deg=True, outfile=ic.name)
+                          plot_degrees=True, outfile=ic.name)
 
     def test_segfault_after_error_handling(self):
         """

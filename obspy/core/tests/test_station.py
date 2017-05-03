@@ -72,7 +72,8 @@ class StationTestCase(unittest.TestCase):
                                  "station_response_degrees.png",
                                  reltol=reltol) as ic:
                 rcParams['savefig.dpi'] = 72
-                sta.plot(0.05, channel="*[NE]", deg=True, outfile=ic.name)
+                sta.plot(0.05, channel="*[NE]", plot_degrees=True,
+                         outfile=ic.name)
 
     def test_len(self):
         """

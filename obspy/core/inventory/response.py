@@ -1258,7 +1258,7 @@ class Response(ComparingObject):
 
     def plot(self, min_freq, output="VEL", start_stage=None,
              end_stage=None, label=None, axes=None, sampling_rate=None,
-             unwrap_phase=False, deg=False, show=True, outfile=None):
+             unwrap_phase=False, plot_degrees=False, show=True, outfile=None):
         """
         Show bode plot of instrument response.
 
@@ -1294,8 +1294,8 @@ class Response(ComparingObject):
             that should be plotted times two.
         :type unwrap_phase: bool
         :param unwrap_phase: Set optional phase unwrapping using NumPy.
-        :type deg: bool
-        :param deg: if True plot bode in degrees
+        :type plot_degrees: bool
+        :param plot_degrees: if ``True`` plot bode in degrees
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.
@@ -1388,8 +1388,8 @@ class Response(ComparingObject):
                              arrowprops=arrowprops, bbox=bbox)
 
         # plot phase response
-        phase = np.angle(cpx_response, deg=deg)
-        if unwrap_phase and not deg:
+        phase = np.angle(cpx_response, deg=plot_degrees)
+        if unwrap_phase and not plot_degrees:
             phase = np.unwrap(phase)
         ax2.semilogx(freq, phase, color=color, lw=lw)
 
@@ -1399,7 +1399,8 @@ class Response(ComparingObject):
 
         # only do adjustments if we initialized the figure in here
         if not axes:
-            _adjust_bode_plot_figure(fig, show=False, deg=deg)
+            _adjust_bode_plot_figure(fig, show=False,
+                                     plot_degrees=plot_degrees)
 
         if outfile:
             fig.savefig(outfile)
@@ -1711,7 +1712,7 @@ class CoefficientWithUncertainties(FloatWithUncertainties):
         self._number = value
 
 
-def _adjust_bode_plot_figure(fig, deg=False, grid=True, show=True):
+def _adjust_bode_plot_figure(fig, plot_degrees=False, grid=True, show=True):
     """
     Helper function to do final adjustments to Bode plot figure.
     """
@@ -1731,7 +1732,7 @@ def _adjust_bode_plot_figure(fig, deg=False, grid=True, show=True):
     ax1.set_ylim(top=minmax1[1] * 5)
     ax1.grid(True)
     ax2.set_xlabel('Frequency [Hz]')
-    if deg:
+    if plot_degrees:
         # degrees bode plot
         ax2.set_ylabel('Phase [degrees]')
         ax2.set_yticks(np.arange(-180, 180, 30))
