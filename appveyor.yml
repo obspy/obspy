@@ -65,7 +65,7 @@ matrix:
     # enable fast fail strategy
     fast_finish: true
 
-install:
+init:
   # If there is a newer build queued for the same PR, cancel this one.
   # The AppVeyor 'rollout builds' option is supposed to serve the same
   # purpose but it is problematic because it tends to cancel builds pushed
@@ -79,6 +79,8 @@ install:
       If (($env:SKIP_NOTAG -eq "true") -and ($env:APPVEYOR_REPO_TAG -ne "true")) {
           throw "Skipping Python version, not a tag."
       }
+
+install:
   # - ECHO "Filesystem root:"
   # - ps: "ls \"C:/\""
 
@@ -125,8 +127,10 @@ test_script:
 on_success:
   - ps: |
       If ($env:APPVEYOR_REPO_TAG -eq "true") {
+          git fetch --all
+          pip install twine
           python setup.py sdist bdist_wheel bdist_wininst bdist_egg
-          Invoke-Expression -erroraction 'silentlycontinue' "twine upload -u $env:PYPI_USERNAME -p $env:PYPI_PASSWORD --repository-url https://upload.pypi.org/legacy/ --skip-existing dist/*" 
+          Invoke-Expression "twine upload -u $env:PYPI_USERNAME -p $env:PYPI_PASSWORD --repository-url https://upload.pypi.org/legacy/ --skip-existing dist/*" 2>&1 | Out-Null
       }
 
 # Do not build feature branch with open Pull Requests
