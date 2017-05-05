@@ -266,7 +266,7 @@ class NetworkBasemapTestCase(unittest.TestCase):
         Basemap.
         """
         net = read_inventory()[0]
-        reltol = 1.0
+        reltol = 1.3
         # Coordinate lines might be slightly off, depending on the basemap
         # version.
         if BASEMAP_VERSION < [1, 0, 7]:
