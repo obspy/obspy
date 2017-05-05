@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-obspy.clients.fdsn.routers - FDSN Web Federated catalog service client for ObsPy
+obspy.clients.fdsn.routers - FDSN Federated catalog webservice client for ObsPy
 ======================================================
 The obspy.clients.fdsn package contains a client to access web servers that
 implement the FDSN web service definitions (https://www.fdsn.org/webservices/).
 The holdings of many of these services are indexed by the FedCatalog service
- (https://service.iris.edu/irisws/fedcatalog/1/). Users looking for waveforms or
- metadata can then query the FedCatalog service to learn which provider holds
- which data. Furthermore, the results from a FedCatalog query are easily turned
- into POST requests for each service.
+ (https://service.iris.edu/irisws/fedcatalog/1/). Users searching for waveforms
+ or metadata can then query the FedCatalog service to learn which provider
+ holds which data. Furthermore, the results from a FedCatalog query are easily
+ turned into POST requests for each service.
 
  This FederatedClient first queries the FedCatalog service to determine where
  the data of interest reside. It then queries the individual web services from
@@ -34,18 +34,19 @@ The first step is always to initialize a client object.
 Retrieving Station Metadata
 ---------------------------
 
-Submitting a GET request to the federated catalog service. The service recognizes
-parameters that are normally accepted by the station web service.
+Submitting a GET request to the federated catalog service. The service
+recognizes parameters that are normally accepted by the station web service.
 
 >>> inv = client.get_stations(station="A*", channel="BHZ", level="station")
 
 
 Retrieving Waveform Metadata
 ---------------------------
-Submitting a GET request to the federated catalog service. The service recognizes
-not only the parameters normally accepted by the bulkdataselect web service, but
-also the parameters accepted by the station service. This includes geographic
-parameters. For more details, see the help for obspy.clients.fdsn
+Submitting a GET request to the federated catalog service. The service
+recognizes not only the parameters normally accepted by the bulkdataselect web
+service, but also the parameters accepted by the station service. This
+includes geographic parameters. For more details, see the help for
+obspy.clients.fdsn
 
     >>> from obspy import UTCDateTime
     >>> t = UTCDateTime("2010-02-27T06:45:00.000")
@@ -82,7 +83,8 @@ The simplest unit of a request is the FDSNBulkRequestItem.
 
 FDSNBulkRequestItem
 ------------------------------------------------------
-The FDSNBulkRequestItem represents one bulk request line, containing the following information:
+The FDSNBulkRequestItem represents one bulk request line, containing the
+following information:
 
   network station location channel starttime endtime
 
@@ -101,46 +103,53 @@ And, item B, with wildcards could be created similarly.
 >>> itemB = FDSNBulkRequestItem('IU ANMO * * 2015-05-24T12:00:00 *')
 
   or, with parameters...
->>> itemB = FDSNBulkRequestItem(network='IU', station='ANMO', starttime='2015-05-24T12:00:00')
+>>> itemB = FDSNBulkRequestItem(network='IU', station='ANMO',
+...                             starttime='2015-05-24T12:00:00')
 
   or, using obspy.core.UTCDateTime ...
 >>> t1 = UTCDateTime(2015,05,24,12,0,0)
 >>> itemB = FDSNBulkRequestItem(network='IU', station='ANMO', starttime=t1)
 
 Basic comparisons can be made between these items.
-A < B : alphabetically compares net, stations, locations, then chans. and then starttime by date.
-A contains B : This takes wildcards and time ranges into account to denote whether a request for A
-would include B's data too.
+A < B : alphabetically compares net, stations, locations, then chans,
+        and then starttime by date.
+A contains B : This takes wildcards and time ranges into account to denote
+               whether a request for A would include B's data too.
 A == B : all fields are the same (wildcards only match wildcards, for example)
 
 FDSNBulkRequestItems are grouped into FDSNBulkRequests
 ----------------------------------------------------
-Typically, though, several lines are sent together in a bulk request. These are handled by
-FDSNBulkRequests. Here is an example of a few ways to create these...
+Typically, though, several lines are sent together in a bulk request. These are
+handled by FDSNBulkRequests. Here is an example of a few ways to create these:
 
 >>> txt= '''
   IU ANMO 00 BHZ 2015-05-24T12:00:00 2015-05-24T12:05:00
   IU ANMO 10 BHZ 2015-05-24T12:00:00 2015-05-24T12:05:00
   IU ANTO 00 BHZ 2015-05-24T12:00:00 2015-05-24T12:05:00
   '''
->>> brq = FDSNBulkRequests(txt) # Each line of txt is converted to an FDSNBulkRequestItem
+Each line of txt is converted to an FDSNBulkRequestItem
+>>> brq = FDSNBulkRequests(txt)
 
->>> brq = FDSNBulkRequests([itemA, itemB])  # remember, these are FDSNBulkRequestItems
+remember, these are FDSNBulkRequestItems
+>>> brq = FDSNBulkRequests([itemA, itemB])
 
 A couple properties of FDSNBulkRequests:
 1. FDSNBulkRequests store items in a set, which means:
    A. duplicate items are ignored
    B. they can be combined with another set (via `update()`
    C. swaths of requests can be removed via `difference_update()`
-2. string representations are in sorted order (Net, Sta, Loc, Cha, start time). End time is ignored.
+2. string representations are in sorted order (Net, Sta, Loc, Cha, start time).
+   End time is ignored.
 
-FDSNBulkRequests can ALSO be created from obspy data, via a conversion routine `data_to_request()`
-which can convert Inventory and Stream items.
-- Stream items will be converted directly, 1:1 to FDSNBulkRequestItems within the FDSNBulkRequest.
-- Inventory items are converted according to their level. So, an inventory tree that contains only
-  network and station data would have wildcards for the location and channel. Additionally,
-  the start and end-time will be those for the station, which might not reflect channel, data, or
-  network start and end times.
+FDSNBulkRequests can ALSO be created from obspy data, via a conversion routine
+ `data_to_request()` which can convert Inventory and Stream items.
+- Stream items will be converted directly, 1:1 to FDSNBulkRequestItems
+  within the FDSNBulkRequest.
+- Inventory items are converted according to their level. So, an inventory tree
+  that contains only network and station data would have wildcards for the
+  location and channel. Additionally, the start and end-time will be those for
+  the station, which might not reflect channel, data, or network start and end
+  times.
 
 ASKING FOR DATA
 ===============
@@ -160,8 +169,8 @@ to be sent to that provider. Included at the top of this file, one will find
 the param=value pairs that help specify this particular request. For example,
 a station request might have level=channel at the top.
 
-These are parsed, and each one is converted to a RoutingResponse. Each series of
-bulk requests are turned into a FDSNBulkRequests object.
+These are parsed, and each one is converted to a RoutingResponse. Each series
+of bulk requests are turned into a FDSNBulkRequests object.
 
 The entire reply from the routing service is encapsulated into a RoutingManager
 (really, a FederatedRoutingManager). That is, the RoutingManager contains and
@@ -180,11 +189,10 @@ was added to the retrieved data.
 """
 
 # convenience imports
-from .routing_client import (RoutingClient, RoutingManager)
+from .routing_client import (RoutingClient, RoutingManager)  # NOQA
 from .fedcatalog_parser import (FederatedRoute)  # NOQA
-from .fedcatalog_client import (FederatedClient, FederatedRoutingManager,
+from .fedcatalog_client import (FederatedClient, FederatedRoutingManager,  # NOQA
                                 FedcatalogProviders)  # NOQA
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
-    

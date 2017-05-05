@@ -110,11 +110,27 @@ class RoutingClient(object):
 
         self.use_parallel = use_parallel and not _DISABLE_PARALLEL_REQESTS
         self.args_to_clients = kwargs  # passed to clients during intialization
-        self.include_provider = include_provider
-        self.exclude_provider = exclude_provider
+        if isinstance(include_provider, string_types):
+            self.include_provider = (include_provider,)
+        else:
+            self.include_provider = include_provider
+
+        if isinstance(exclude_provider, string_types):
+            self.exclude_provider = (exclude_provider,)
+        else:
+            self.exclude_provider = exclude_provider
 
     def __str__(self):
-        return "RoutingClient object"
+        part1 = "RoutingClient\n"
+        part2 = "  request-method: %s\n" % \
+                ("parallel" if self.use_parallel else "serial")
+        if self.include_provider:
+            return part1 + part2 + "  include: %s" % \
+                (",".join(self.include_provider))
+        if self.exclude_provider:
+            return part1 + part2 + "  exclude: %s" %\
+                (",".join(self.exclude_provider))
+        return part1 + part2
 
     def _request(self, client, service, route, output, passed,
                  failed, **kwarg):
@@ -225,7 +241,7 @@ class RoutingClient(object):
         output_q = queue.Queue()
         passed_q = queue.Queue()
         failed_q = queue.Queue()
-        successful_requests = FDSNBulkRequests(None)  # TODO make generic
+        successful_requests = FDSNBulkRequests(None)  # Note, no generic vers
 
         for route in routing_mgr:
             if self._skip_provider_for_route(route):
@@ -293,7 +309,7 @@ class RoutingClient(object):
         output_q = mp.Queue()
         passed_q = mp.Queue()
         failed_q = mp.Queue()
-        successful_requests = FDSNBulkRequests(None)  # TODO make generic
+        successful_requests = FDSNBulkRequests(None)  # Note, no generic vers
 
         # Setup process for each provider
         processes = []
@@ -330,8 +346,9 @@ class RoutingClient(object):
         for proc, msg in zip(processes, msgs):
             ROUTING_LOGGER.info("waiting on %s", msg)
             proc.join(timeout)
-            ROUTING_LOGGER.debug("finished with %s, still have %d to go", msg,
-                                sum(x.exitcode is not None for x in processes))
+            ROUTING_LOGGER.debug(
+                "finished with %s, still have %d to go", msg,
+                sum(x.exitcode is not None for x in processes))
         ROUTING_LOGGER.info("all processes completed.")
 
         data = None
