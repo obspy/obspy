@@ -11,40 +11,41 @@ The obspy.clients.fdsn.client test suite.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-#TODO clean this module up. it's merely swiped from the Client test suite.
+# TODO clean this module up. it's merely swiped from the Client test suite.
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
 import io
 import os
-#import re
+# import re
 import sys
 import unittest
-#import warnings
+from future.builtins import *  # NOQA
+# from future.utils import string_types
+# import warnings
 
-import requests
+# import requests
 
-from obspy import UTCDateTime, read, read_inventory
-#from obspy.core.compatibility import mock
+from obspy import UTCDateTime, read
+# from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import (FederatedClient, Client)
-from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT,
-                                       FDSNException, FDSNRedirectException,
-                                       FDSNNoDataException)
+from obspy.clients.fdsn.header import (
+    DEFAULT_USER_AGENT, FDSNException, FDSNRedirectException,
+    FDSNNoDataException)
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
 from obspy.clients.fdsn.tests.test_client import failmsg
-from obspy.clients.fdsn.routers.fedcatalog_client import (data_to_request,
-                                                          get_bulk_string,
-                                                          FederatedRoutingManager)
-from obspy.clients.fdsn.routers.fedcatalog_parser import (FDSNBulkRequestItem,
-                                                          FDSNBulkRequests)
+from obspy.clients.fdsn.routers.fedcatalog_client import (
+    get_bulk_string, FederatedRoutingManager)
+from obspy.clients.fdsn.routers.fedcatalog_parser import (
+    FDSNBulkRequestItem, FDSNBulkRequests)
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
 
-def hasLevel(inv, level):
+
+def has_level(inv, level):
     """
     Check to see if the inventory structure has details down to specific level
 
@@ -58,12 +59,13 @@ def hasLevel(inv, level):
     if not inv or not inv.networks:
         return level is None
     if not inv.networks[0].stations:
-        return level is "network"
+        return level == "network"
     if not inv.networks[0].stations[0].channels:
-        return level is "station"
+        return level == "station"
     if not inv.networks[0].stations[0].channels[0].response.response_stages:
-        return level is "channel"
+        return level == "channel"
     return level is "response"
+
 
 class BulkConversionTestCase(unittest.TestCase):
     def test_simple(self):
@@ -88,7 +90,7 @@ class BulkConversionTestCase(unittest.TestCase):
     def test_with_args(self):
         bulk1 = "AB STA 00 ABC 2015-12-23-01:00:00.000 2015-12-23-02:00:00.000"
         bulk2 = "AB STA 10 BBB 2015-12-23-01:00:00.000 2015-12-23-02:00:00.000"
-        args = {"first":1, "second":'two', "third":False}
+        args = {"first": 1, "second": 'two', "third": False}
         bulk = "\n".join((bulk1, bulk2))
         ans = get_bulk_string(bulk, args)
         self.assertTrue(isinstance(ans, str))
@@ -96,45 +98,52 @@ class BulkConversionTestCase(unittest.TestCase):
 
 
 class FDSNBulkRequestItemClientTestCase(unittest.TestCase):
-    
+
     @classmethod
     def setUpClass(cls):
         pass
 
-    def test_inits(self):        
+    def test_inits(self):
         text = "IU ANMO -- BHZ 2012-04-25T00:00:00 2012-06-12T10:10:10"
         l2 = '* * * * * *'
-        self.assertEqual(str(FDSNBulkRequestItem(line=text)),
-                         "IU ANMO -- BHZ 2012-04-25T00:00:00.000 2012-06-12T10:10:10.000")
+        self.assertEqual(
+            str(FDSNBulkRequestItem(line=text)),
+            "IU ANMO -- BHZ 2012-04-25T00:00:00.000 2012-06-12T10:10:10.000")
         self.assertEqual(str(FDSNBulkRequestItem(line=l2)), "* * * * * *")
         self.assertEqual(str(FDSNBulkRequestItem()), "* * * * * *")
 
-        byparams = FDSNBulkRequestItem(network='IU', station='ANMO', location='  ',
-                                       channel='BHZ', starttime='2012-04-25',
+        byparams = FDSNBulkRequestItem(
+            network='IU', station='ANMO', location='  ', channel='BHZ',
+            starttime='2012-04-25', endtime='2012-06-12T10:10:10')
+        self.assertEqual(
+            str(byparams),
+            "IU ANMO -- BHZ 2012-04-25T00:00:00.000 2012-06-12T10:10:10.000")
+
+        byparams = FDSNBulkRequestItem(station='ANMO', location='  ',
+                                       starttime='2012-04-25')
+        self.assertEqual(str(byparams),
+                         "* ANMO -- * 2012-04-25T00:00:00.000 *")
+
+        byparams = FDSNBulkRequestItem(network='IU', channel='BHZ',
                                        endtime='2012-06-12T10:10:10')
         self.assertEqual(str(byparams),
-                         "IU ANMO -- BHZ 2012-04-25T00:00:00.000 2012-06-12T10:10:10.000")
-
-        byparams = FDSNBulkRequestItem(station='ANMO', location='  ', starttime='2012-04-25')
-        self.assertEqual(str(byparams), "* ANMO -- * 2012-04-25T00:00:00.000 *")
-
-        byparams = FDSNBulkRequestItem(network='IU', channel='BHZ', endtime='2012-06-12T10:10:10')
-        self.assertEqual(str(byparams), "IU * * BHZ * 2012-06-12T10:10:10.000")
+                         "IU * * BHZ * 2012-06-12T10:10:10.000")
 
     def test_comparisons(self):
         l1 = 'AB CDE 01 BHZ 2015-04-25T02:45:32 2015-04-25T02:47:00'
         l2 = '* * * * * *'
         l3 = 'AB CDE 01 BHZ 2015-04-25T00:00:00 2015-04-25T02:47:00'
         l4 = 'AB CDE 01 BHZ 2015-04-25T02:45:32 2015-04-25T03:00:00'
-        A = FDSNBulkRequestItem(line=l3) #   [-------]
-        B = FDSNBulkRequestItem(line=l4) #        [-------]
-        C = FDSNBulkRequestItem(line=l1) #        [--]
-        D = FDSNBulkRequestItem(line=l2) # <---------------->
+        A = FDSNBulkRequestItem(line=l3)  # .   [-------]
+        B = FDSNBulkRequestItem(line=l4)  # .        [-------]
+        C = FDSNBulkRequestItem(line=l1)  # .        [--]
+        D = FDSNBulkRequestItem(line=l2)  # .<---------------->
         self.assertTrue(A.contains(l1) and B.contains(C))
         self.assertTrue(C.contains(C) and D.contains(C))
         self.assertFalse(C.contains(A) or C.contains(B) or C.contains(D))
         self.assertTrue(A == A)
         self.assertTrue(A == FDSNBulkRequestItem(line=l3))
+
 
 class FederatedClientTestCase(unittest.TestCase):
     """
@@ -145,10 +154,11 @@ class FederatedClientTestCase(unittest.TestCase):
     def setUpClass(cls):
         # directory where the test files are located
         cls.path = os.path.dirname(__file__)
-        cls.datapath = os.path.join(cls.path,"..","..","tests", "data")
+        cls.datapath = os.path.join(cls.path, "..", "..", "tests", "data")
         cls.fed_client = FederatedClient(user_agent=USER_AGENT)
         cls.iris_client = Client("IRIS", user_agent=USER_AGENT)
-        cls.client = FederatedClient(user_agent=USER_AGENT, include_provider='IRIS')
+        cls.client = FederatedClient(user_agent=USER_AGENT,
+                                     include_provider='IRIS')
         cls.client_auth = \
             FederatedClient(user_agent=USER_AGENT, user="nobody@iris.edu",
                             password="anonymous", include_provider='IRIS')
@@ -156,8 +166,9 @@ class FederatedClientTestCase(unittest.TestCase):
     def test_fedstations_bulk_simple(self):
         bulktext = "IU ANMO 00 BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00"
         inv = self.fed_client.get_stations_bulk(bulktext)
-        #default level of station
-        self.assertTrue(hasLevel(inv, "station") and not hasLevel(inv, "channel"))
+        # default level of station
+        self.assertTrue(has_level(inv, "station"))
+        self.assertFalse(has_level(inv, "channel"))
         self.assertEqual(len(inv.networks[0].stations), 1)
         self.assertEqual(inv.networks[0].stations[0].code, 'ANMO')
 
@@ -170,28 +181,32 @@ class FederatedClientTestCase(unittest.TestCase):
         # test something against the SED/ETH
         bulktext = "* B* -- BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00"
         inv = fed_client.get_stations_bulk(bulktext)
-        #default level of station
-        self.assertTrue(hasLevel(inv, "station") and not hasLevel(inv, "channel"))
+        # default level of station
+        self.assertTrue(has_level(inv, "station"))
+        self.assertFalse(has_level(inv, "channel"))
         self.assertGreater(len(inv.networks[0].stations), 4)
         endt = UTCDateTime(2015, 5, 31, 0, 0, 0)
-        params = {"station":"B*", "channel":"BHZ",
-                  "starttime":"2015-01-01T00:00:00",
+        params = {"station": "B*", "channel": "BHZ",
+                  "starttime": "2015-01-01T00:00:00",
                   "endtime": endt,
-                  "level":"channel"}
+                  "level": "channel"}
 
         inv = fed_client.get_stations(**params)
-        self.assertTrue(hasLevel(inv, "channel") and not hasLevel(inv, "response"))
+        self.assertTrue(has_level(inv, "channel"))
+        self.assertFalse(has_level(inv, "response"))
 
     def test_fedstations_bulk_simple_many(self):
         bulktext = "* A* 00 BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00"
         inv = self.fed_client.get_stations_bulk(bulktext)
-        #default level of station
-        self.assertTrue(hasLevel(inv, "station") and not hasLevel(inv, "channel"))
+        # default level of station
+        self.assertTrue(has_level(inv, "station"))
+        self.assertFalse(has_level(inv, "channel"))
         self.assertGreater(len(inv.networks), 5)
 
     def test_fedstations_bulk_stringio(self):
         # ensure service works at all
-        bulktext = "level=channel\nIU ANMO 00 BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00"
+        bulktext = '''level=channel
+        IU ANMO 00 BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00'''
         file_thing = io.StringIO(bulktext)
 
         # send bulk as a file-type-object
@@ -224,44 +239,49 @@ class FederatedClientTestCase(unittest.TestCase):
 
     def test_fedstations_param(self):
         endt = UTCDateTime(2010, 2, 27, 6, 45, 0)
-        params = {"network":"IU", "station":"ANMO", "location":"00",
-                  "channel":"BHZ", "starttime":"2010-02-27T06:30:00",
+        params = {"network": "IU", "station": "ANMO", "location": "00",
+                  "channel": "BHZ", "starttime": "2010-02-27T06:30:00",
                   "endtime": endt,
-                  "level":"channel"}
+                  "level": "channel"}
         inv = self.fed_client.get_stations(**params)
-        self.assertTrue(hasLevel(inv, "channel") and not hasLevel(inv, "response"))
+        self.assertTrue(has_level(inv, "channel"))
+        self.assertFalse(has_level(inv, "response"))
 
     def test_fedwaveforms_bulk(self):
         bulktext = "IU ANMO 00 BHZ 2010-02-27T06:30:00 2010-02-27T06:45:00"
         data = self.fed_client.get_waveforms_bulk(bulktext)
         self.assertEqual(len(data), 1, msg="expected one waveform in stream")
-        self.assertEqual(data[0].id, 'IU.ANMO.00.BHZ',
-                         msg="retrieved incorrect waveform {0}".format(data[0].id))
+        self.assertEqual(
+            data[0].id, 'IU.ANMO.00.BHZ',
+            msg="retrieved incorrect waveform {0}".format(data[0].id))
 
     def test_fedwaveforms(self):
         endt = UTCDateTime(2010, 2, 27, 6, 45, 0)
-        params = {"network":"IU", "station":"ANMO", "location":"00",
-                  "channel":"BHZ", "starttime":"2010-02-27T06:30:00",
+        params = {"network": "IU", "station": "ANMO", "location": "00",
+                  "channel": "BHZ", "starttime": "2010-02-27T06:30:00",
                   "endtime": endt,
-                  "level":"channel"}
+                  "level": "channel"}
         data = self.fed_client.get_waveforms(**params)
         self.assertEqual(len(data), 1, msg="expected one waveform in stream")
-        self.assertEqual(data[0].id, 'IU.ANMO.00.BHZ',
-                         msg="retrieved incorrect waveform {0}".format(data[0].id))
+        self.assertEqual(
+            data[0].id, 'IU.ANMO.00.BHZ',
+            msg="retrieved incorrect waveform {0}".format(data[0].id))
         # don't forget to test the attach_response
 
     def test_fedstations_use_existing(self):
         client = FederatedClient()
-        frm = client.get_routing(station="ANTO", starttime=UTCDateTime(2015,1,1),
+        frm = client.get_routing(station="ANTO",
+                                 starttime=UTCDateTime(2015, 1, 1),
                                  includeoverlaps=True)
-        self.assertEqual(len(frm),2, msg="Expected to retrieve 2 routes")
+        self.assertEqual(len(frm), 2, msg="Expected to retrieve 2 routes")
 
         orf_frm = FederatedRoutingManager(frm.get_route('ORFEUS'))
 
         # if this worked, then data will be retrieved from ORFEUS, otherwise
         # it will come from IRIS
         inv = client.get_stations(existing_routes=orf_frm, level="station")
-        self.assertTrue(hasLevel(inv,'station'))
+        self.assertTrue(has_level(inv, 'station'),
+                        "Should contain station details, but doesn't")
 
     def test_fedstations_reroute(self):
         """
@@ -270,15 +290,18 @@ class FederatedClientTestCase(unittest.TestCase):
         """
         # find out what the ETH (SED) has on hand
         client = FederatedClient(include_provider='ETH')
-        frm = client.get_routing(station="BALST", network="CH", level="channel")
-        self.assertEqual(frm.routes[0].provider_id,'ETH', msg="Expected provider to be ETH")
+        frm = client.get_routing(station="BALST", network="CH",
+                                 level="channel")
+        self.assertEqual(frm.routes[0].provider_id, 'ETH',
+                         msg="Expected provider to be ETH")
         eth_route = frm.get_route('ETH')
         # get some data from IRIS, too
         client = FederatedClient()
-        frm = client.get_routing(station="ANTO", starttime=UTCDateTime(2015, 1, 1))
+        frm = client.get_routing(station="ANTO",
+                                 starttime=UTCDateTime(2015, 1, 1))
         iris_route = frm.get_route('IRIS')
 
-        #now, confuse things.
+        # now, confuse things.
         nodata_route = iris_route
         nodata_route.request_items = eth_route.request_items
 
@@ -286,11 +309,13 @@ class FederatedClientTestCase(unittest.TestCase):
         inv = client.get_stations(existing_routes=nodata_route)
         self.assertFalse(inv)
 
-        #should work!
-        inv = client.get_stations(existing_routes=nodata_route, reroute=True)
+        # should work!
+        inv = client.get_stations(existing_routes=nodata_route,
+                                  reroute=True)
         self.assertTrue(inv, msg="Rerouting for get_stations failed")
 
-        inv = client.get_stations_bulk(None, existing_routes=nodata_route, reroute=True)
+        inv = client.get_stations_bulk(None, existing_routes=nodata_route,
+                                       reroute=True)
         self.assertTrue(inv, msg="Rerouting for get_stations_bulk failed")
 
     def test_fedwaveforms_reroute(self):
@@ -309,7 +334,7 @@ class FederatedClientTestCase(unittest.TestCase):
                                  endtime=UTCDateTime(2015, 5, 1, 10, 2, 0))
         iris_route = frm.get_route('IRIS')
 
-        #now, confuse things.
+        # now, confuse things.
         nodata_route = iris_route
         nodata_route.request_items = eth_route.request_items
 
@@ -318,14 +343,14 @@ class FederatedClientTestCase(unittest.TestCase):
                                     existing_routes=nodata_route)
         self.assertFalse(data)
 
-        #should work!
+        # should work!
         data = client.get_waveforms(None, None, None, None, None, None,
                                     existing_routes=nodata_route, reroute=True)
         self.assertTrue(data, msg="Rerouting for get_waveforms failed")
 
-        data = client.get_waveforms_bulk(None, existing_routes=nodata_route, reroute=True)
+        data = client.get_waveforms_bulk(None, existing_routes=nodata_route,
+                                         reroute=True)
         self.assertTrue(data, msg="Rerouting for get_waveforms_bulk failed")
-
 
     def test_example_queries_station(self):
         """
@@ -339,18 +364,18 @@ class FederatedClientTestCase(unittest.TestCase):
 
         # Radial query.
         inv = client.get_stations(latitude=-56.1, longitude=-26.7,
-                                maxradius=15, station="*")
+                                  maxradius=15, station="*")
         self.assertGreater(len(inv.networks), 0)  # at least one network
         for net in inv:
             self.assertGreater(len(net.stations), 0)  # at least one station
             for sta in net:
                 dist = locations2degrees(sta.latitude, sta.longitude,
-                                        -56.1, -26.7)
+                                         -56.1, -26.7)
                 # small tolerance for WGS84.
                 self.assertGreater(15.1, dist, "%s.%s" % (net.code,
-                                                        sta.code))
+                                                          sta.code))
 
-        '''XXX Commented out because service itself cannot support maxlon<minlon
+        '''XXX Because service itself cannot support maxlon<minlon
                 should be fixed soon by IRIS
         # Misc query.
         inv = client.get_stations(
@@ -423,9 +448,9 @@ class FederatedClientTestCase(unittest.TestCase):
                         "dataselect_example_mixed_wildcards.mseed",
                         ]
         for query, filename in zip(queries, result_files):
-            # test output to stream
+            # test output to stream, with provider already limited to IRIS
             got = client.get_waveforms(*query)
-            file_ = os.path.join(self.datapath, filename) # provider already limited to iris
+            file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
             self.assertEqual(got, expected, "Dataselect failed for query %s" %
                              repr(query))
@@ -435,13 +460,9 @@ class FederatedClientTestCase(unittest.TestCase):
                 base_name = base_name[5:]
                 path_name = os.path.dirname(tf.name)
                 providerless_name = os.path.join(path_name, base_name)
-                print("filename: " + tf.name + " using [" + providerless_name + "]", file=sys.stderr)
+                print("filename: " + tf.name + " using [" +
+                      providerless_name + "]", file=sys.stderr)
                 client.get_waveforms(*query, filename=providerless_name)
-                
-                # base_name = os.path.basename(tf.name)
-                # path_name = os.path.dirname(tf.name)
-                # base_name = '-'.join(('IRIS', base_name))
-                # tf.name = os.path.join(path_name, base_name)
 
                 with open(tf.name, 'rb') as fh:
                     got = fh.read()
@@ -483,6 +504,7 @@ class FederatedClientTestCase(unittest.TestCase):
         for tr in st:
             self.assertTrue(isinstance(tr.stats.get("response"), Response))
 
+
 def test_suite():
     from unittest import (TestSuite, makeSuite)
     suite = TestSuite()
@@ -490,6 +512,7 @@ def test_suite():
     suite.addTest(makeSuite(FederatedClientTestCase, 'test'))
     suite.addTest(makeSuite(FDSNBulkRequestItemClientTestCase, 'test'))
     return suite
+
 
 if __name__ == '__main__':
     # unittest.main()
