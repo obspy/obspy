@@ -149,22 +149,12 @@ class RoutingClient(object):
         :return: whether this provider should be skipped
         """
         if self.exclude_provider:
-            if route.provider_id in self.exclude_provider:
-                ROUTING_LOGGER.info(
-                    "skipping: " + route.provider_id +
-                    " because it is in the exclude_provider list")
             return True
 
         if self.include_provider:
-            if route.provider_id not in self.include_provider:
-                ROUTING_LOGGER.info(
-                    "skipping: " + route.provider_id +
-                    " because it isn't in the include_provider list")
             return True
 
         if not route.request_items:
-            ROUTING_LOGGER.info("skipping: " + route.provider_id +
-                                " because the retrieval list is empty.")
             return True
         return False
 
@@ -324,20 +314,20 @@ class RoutingClient(object):
         for proc, msg in zip(processes, msgs):
             ROUTING_LOGGER.info("waiting on %s", msg)
             proc.join(timeout)
-            ROUTING_LOGGER.info("finished with %s, still have %d to go", msg,
+            ROUTING_LOGGER.debug("finished with %s, still have %d to go", msg,
                                 sum(x.exitcode is not None for x in processes))
         ROUTING_LOGGER.info("all processes completed.")
 
         data = None
         while not output_q.empty():
-            ROUTING_LOGGER.info("getting 'output' queue")
+            ROUTING_LOGGER.debug("getting 'output' queue")
             if not data:
                 data = output_q.get()
             else:
                 data += output_q.get()
 
         while not passed_q.empty():
-            ROUTING_LOGGER.info("getting 'passed' queue")
+            ROUTING_LOGGER.debug("getting 'passed' queue")
             successful_requests.update(passed_q.get())
 
         failed_requests = None
