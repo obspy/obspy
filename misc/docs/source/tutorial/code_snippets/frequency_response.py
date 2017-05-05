@@ -17,8 +17,7 @@ plt.xlabel('Frequency [Hz]')
 plt.ylabel('Amplitude')
 
 plt.subplot(122)
-# take negative of imaginary part
-phase = np.unwrap(np.arctan2(-h.imag, h.real))
+phase = 2 * np.pi + np.unwrap(np.angle(h))
 plt.semilogx(f, phase)
 plt.xlabel('Frequency [Hz]')
 plt.ylabel('Phase [radian]')
