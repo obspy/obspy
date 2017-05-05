@@ -109,7 +109,8 @@ class Client(object):
         scnl = (station, channel, network, location)
         # fetch waveform
         tbl = read_wave_server_v(self.host, self.port, scnl, starttime,
-                                 endtime, timeout=self.timeout)
+                                 endtime, timeout=self.timeout,
+                                 cleanup=cleanup)
         # create new stream
         st = Stream()
         for tb in tbl:
