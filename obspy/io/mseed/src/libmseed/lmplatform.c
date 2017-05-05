@@ -3,13 +3,16 @@
  *
  * Platform portability routines.
  *
- * modified: 2010.304
+ * modified: 2017.118
  ***************************************************************************/
 
 /* Define _LARGEFILE_SOURCE to get ftello/fseeko on some systems (Linux) */
 #define _LARGEFILE_SOURCE 1
 
 #include "libmseed.h"
+
+/* Size of off_t data type as determined at build time */
+int LM_SIZEOF_OFF_T = sizeof(off_t);
 
 /***************************************************************************
  * lmp_ftello:

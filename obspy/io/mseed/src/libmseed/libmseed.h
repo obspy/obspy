@@ -28,8 +28,8 @@
 extern "C" {
 #endif
 
-#define LIBMSEED_VERSION "2.19.2"
-#define LIBMSEED_RELEASE "2017.061"
+#define LIBMSEED_VERSION "2.19.4"
+#define LIBMSEED_RELEASE "2017.118"
 
 /* C99 standard headers */
 #include <stdlib.h>
@@ -117,6 +117,8 @@ extern "C" {
 #else
   #include <inttypes.h>
 #endif
+
+extern int LM_SIZEOF_OFF_T;  /* Size of off_t data type determined at build time */
 
 #define MINRECLEN   128      /* Minimum Mini-SEED record length, 2^7 bytes */
                              /* Note: the SEED specification minimum is 256 */
