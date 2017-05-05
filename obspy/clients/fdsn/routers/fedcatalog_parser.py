@@ -6,13 +6,13 @@ This module contains request-related classes, with supporting parsing routines
 Request-related classes
 -----------------------
 :class:`~obspy.clients.fdsn.routers.FDSNBulkRequestItem`
-Contains one request's details.  The format is STA NET LOC CHA STARTTIME ENDTIME
-It contains basic functionality that allows it to be hashed, compared, and printed
+Contains one request's details. The format is STA NET LOC CHA STARTTIME ENDTIME
+It contains basic functionality allowing it to be hashed, compared, and printed
 
 :class:`~obspy.clients.fdsn.routers.FDSNBulkRequests`
-Handles a set of :class:`~obspy.clients.fdsn.routers.FDSNBulkRequestItem`, allowing
-them to be retrieved as a big text string, and providing the ability to do set
-comparisons.
+Handles a set of :class:`~obspy.clients.fdsn.routers.FDSNBulkRequestItem`,
+allowing them to be retrieved as a big text string, and providing the ability
+to do set comparisons.
 
 :class:`~obspy.clients.fdsn.routers.RoutingResponse`
 Serves as an abstract base for routes.  A route is the combination of a data
@@ -42,7 +42,7 @@ parsing is assisted by :class:`~obspy.clients.fdsn.routers.FedcatResponseLine`
 Misc. Functions
 ---------------
 Additional functions in this file provide mechanisms to represent items from
-:class:`~obspy.core.Stream` and :class`~obspy.core.inventory.inventory.Inventory`
+:class:`~obspy.core.Stream` and :class:`~obspy.core.inventory.Inventory`
 as FDSNBulkRequests
 
 :func:`inventory_to_bulkrequests()`
@@ -56,18 +56,19 @@ as FDSNBulkRequests
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 import sys
 import collections
+from future.utils import string_types
 from obspy.core import UTCDateTime
 
 
 class FDSNBulkRequestItem(object):
     """
-    representation of a bulk request line
+    representation of a bulk request line containing a single request's details
 
-    Contains one request's details.  The format is STA NET LOC CHA STARTTIME ENDTIME
-    It contains basic functionality that allows it to be hashed, compared, and printed
+    The format is STA NET LOC CHA STARTTIME ENDTIME
+    It contains functionality allowing it to be hashed, compared, and printed
 
     >>> line = "IU ANMO 00 BHZ 2012-05-06T12:00:00 2012-05-06T13:00:00"
     >>> FDSNBulkRequestItem(line=line)
@@ -95,24 +96,26 @@ class FDSNBulkRequestItem(object):
 
         :type line: str
         :param line: space-delimited, 6-field long bulk request line with the
-        following format:   "network station location channel starttime endtime"
+        following format:  "network station location channel starttime endtime"
         where each field conforms to SEED conventions.  Ex:
             'IU ANMO 00 BHZ 2010-02-27T06:30:00.000 2010-02-27-T10:30:00.000'
         simple wildcards are accepted: '?', '*'
-        For more details, see: https://service.iris.edu/fdsnws/dataselect/docs/1/help/
+        See also: https://service.iris.edu/fdsnws/dataselect/docs/1/help/
         :type network: str
         :param network: network code, usually 2 letters.
         :type station: str
         :param station: station code
         :type location: str
-        :param location: two letter/digit location code. Use '--' for blank (ie, '  ')
+        :param location: two letter/digit location code.
+            Use '--' for blank (ie, '  ')
         :type channel: str
         :param channel: SEED channel code
         :type starttime: str or UTCDateTime
-        :param starttime: start time of miniSEED data or limit to metadata listed on or after
-         this date
+        :param starttime: start time of miniSEED data or limit to metadata
+            listed on or after this date
         :type: str or UTCDateTime
-        :param endtime: end time of miniSEED data or limit to metadata listed on or before this date
+        :param endtime: end time of miniSEED data or limit to metadata listed
+            on or before this date
 
         Any parameters that are omitted will be assumed to be '*' wildcards.
 
@@ -128,7 +131,9 @@ class FDSNBulkRequestItem(object):
         >>> B = FDSNBulkRequestItem(line=l4) #        [-------]
         >>> C = FDSNBulkRequestItem(line=l1) #        [--]
         >>> D = FDSNBulkRequestItem(line=l2) # <---------------->
-        >>> A.contains(l1) and B.contains(C) and C.contains(C) and D.contains(C)
+        >>> A.contains(l1)
+        True
+        >>> V.contains(C) and C.contains(C) and D.contains(C)
         True
         >>> C.contains(A) or C.contains(B) or C.contains(D)
         False
@@ -145,7 +150,7 @@ class FDSNBulkRequestItem(object):
             """
             if in_time is None:
                 return None
-            elif isinstance(in_time, str):
+            elif isinstance(in_time, string_types):
                 if in_time != '*':
                     return UTCDateTime(in_time)
             elif isinstance(in_time, UTCDateTime):
@@ -156,12 +161,15 @@ class FDSNBulkRequestItem(object):
         # kwargs is ignored & discarded.
         if line:
             if len(line.splitlines()) > 1:
-                raise ValueError("Attempting to add multiple lines to a FDSNBulkRequestItem.")
+                raise ValueError(
+                    "FDSNBulkRequestItem can only accept individual lines.")
             try:
-                network, station, location, channel, starttime, endtime = line.split()
+                network, station, location, channel, starttime, endtime =\
+                    line.split()
             except:
                 print(line, file=sys.stderr)
-                print("PROBLEM! count {0}, but parsed into 6 items".format(len(line.split())))
+                print("PROBLEM! count %d, but parsed into 6 items"
+                      % len(line.split()))
                 raise
 
         if location == '  ':
@@ -177,12 +185,15 @@ class FDSNBulkRequestItem(object):
 
     def __str__(self):
         """
-        Return string representation suitable for a bulk request, with times to milliseconds
+        String representation suitable for a bulk request, with times to ms
         """
-        return (" ".join((self.network or '*', self.station or '*',
-                          self.location or '*', self.channel or '*',
-                          (self.starttime and self.starttime.format_iris_web_service()) or '*',
-                          (self.endtime and self.endtime.format_iris_web_service()) or '*')))
+        net = self.network or '*'
+        sta = self.station or '*'
+        loc = self.location or '*'
+        cha = self.channel or '*'
+        startt = self.starttime and self.starttime.format_iris_web_service()
+        endt = self.endtime and self.endtime.format_iris_web_service()
+        return (" ".join((net, sta, loc, cha, startt or '*', endt or '*')))
 
     def __repr__(self):
         return str(self)
@@ -207,8 +218,11 @@ class FDSNBulkRequestItem(object):
         """
         less-than comparison for FDSNBulkRequestItem
 
-        compares (in order) network, station, location, channel, [alphabetically], then
-        starttime (numerically). Fields with wildcards are skipped
+        compares (in order):
+            network, station, location, channel, [alphabetically]
+        then
+            starttime [numerically].
+        Fields with wildcards are skipped
 
         :note: does NOT compare endtime
 
@@ -238,7 +252,7 @@ class FDSNBulkRequestItem(object):
         """
         comparison that accounts for simple * wildcard and time
 
-        :type other: :class:`~obspy.clients.fdsn.routers.FDSNBulkRequestItem` or str
+        :type other: obspy.clients.fdsn.routers.FDSNBulkRequestItem or str
         :param other: another FDSNBulkRequestItem to compare to
         :rtype: bool
         :returns: true if this item can "contain" the other.
@@ -257,25 +271,27 @@ class FDSNBulkRequestItem(object):
 
         Note: wildcards such as B?Z or B* will not work. only solo '*' works
         """
-        if isinstance(other, str):
+        if isinstance(other, string_types):
             # recommend converting before comparing...
             other = FDSNBulkRequestItem(line=other)
 
         if isinstance(other, self.__class__):
-            return ((self.network is None or self.network == other.network) and
-                    (self.station is None or self.station == other.station) and
-                    (self.location is None or self.location == other.location) and
-                    (self.channel is None or self.channel == other.channel) and
-                    (self.starttime is None or self.starttime <= other.starttime) and
-                    (self.endtime is None or self.endtime >= other.endtime))
+            return (
+                (self.network is None or self.network == other.network) and
+                (self.station is None or self.station == other.station) and
+                (self.location is None or self.location == other.location) and
+                (self.channel is None or self.channel == other.channel) and
+                (self.starttime is None or self.starttime <= other.starttime) and
+                (self.endtime is None or self.endtime >= other.endtime))
         else:
             raise NotImplementedError()
 
+
 class FDSNBulkRequests(object):
     """
-    Handles a set of :class:`~obspy.clients.fdsn.routers.FDSNBulkRequestItem`, allowing
-    them to be retrieved as a big text string, and providing the ability to do set
-    comparisons.
+    Handles a set of :class:`~obspy.clients.fdsn.routers.FDSNBulkRequestItem`,
+    allowing them to be retrieved as a big text string, and providing the
+    ability to do set comparisons.
 
     >>> samp1 = "* * * * * *\\nAB CD -- EHZ 2015-04-23 2016-04-23T13:04:00"
     >>> text2 = "AB CD -- EHZ 2015-04-23T00:00:00 2016-04-23T13:04:00"
@@ -302,8 +318,9 @@ class FDSNBulkRequests(object):
         """
         if not items:
             self.items = set()
-        elif isinstance(items, str):
-            self.items = {FDSNBulkRequestItem(line=item) for item in items.splitlines()}
+        elif isinstance(items, string_types):
+            self.items = {FDSNBulkRequestItem(line=item)
+                          for item in items.splitlines()}
         elif isinstance(items, collections.Iterable):
             self.items = {item if isinstance(item, FDSNBulkRequestItem)
                           else FDSNBulkRequestItem(item) for item in items}
@@ -338,10 +355,10 @@ class FDSNBulkRequests(object):
 
     def update(self, val):
         """
-        update this with the union between it and another FDSNBulkRequests object
+        update with the union between it and another FDSNBulkRequests object
 
-        :type val: :class:`~obspy.clients.fdsn.routers.FDSNBulkRequests` or something convertable
-        to FDSNBulkRequests
+        :type val: :class:`~obspy.clients.fdsn.routers.FDSNBulkRequests` or
+        something convertable to FDSNBulkRequests
         :param val: set of requests that will be merged into this
         """
         if not val:
@@ -355,7 +372,8 @@ class FDSNBulkRequests(object):
         """
         remove all requests that are found in another FDSNBulkRequests object
 
-        :type val: :class:`~obspy.clients.fdsn.routers.FDSNBulkRequests` or something convertable
+        :type val: :class:`~obspy.clients.fdsn.routers.FDSNBulkRequests` or
+        something convertable to FDSNBulkRequests
         :param val: set of requests that will be removed from this
         """
         if not val:
@@ -364,6 +382,7 @@ class FDSNBulkRequests(object):
             self.items.difference_update(val.items)
         else:
             self.items.difference_update((FDSNBulkRequests(val)))
+
 
 def inventory_to_bulkrequests(inv):
     """
@@ -398,6 +417,7 @@ def inventory_to_bulkrequests(inv):
                                              endtime=channel.end_date))
     return bulk
 
+
 def stream_to_bulkrequests(data):
     """
     convert waveforms to FDSNBulkRequests
@@ -409,9 +429,10 @@ def stream_to_bulkrequests(data):
     """
     return FDSNBulkRequests({FDSNBulkRequestItem(**d.stats) for d in data})
 
+
 class RoutingResponse(object):
     """
-    Serves as an abstract base for routes.  A route is the combination of a data
+    Serves as an abstract base for routes.  A route is the combination of a
     provider along with multiple specific requests.
 
     """
@@ -451,11 +472,11 @@ class RoutingResponse(object):
 
 
 class FederatedRoute(RoutingResponse):
-    """
+    """ #pylint ignore
     Route devoted to an FDSN provider.  It contains the who, what, and where
     needed to send requests to a service, and provides the facilities for
     adding service endpoints, request items, and additional query parameters.
-    Requests are stored as :class:`~obspy.clients.fdsn.routers.FDSNBulkRequests`
+    Requests are stored as FDSNBulkRequests
 
     >>> fed_resp = FederatedRoute("IRISDMC")
     >>> fed_resp.add_query_param(["lat=50","lon=20","level=cha"])
@@ -483,10 +504,11 @@ class FederatedRoute(RoutingResponse):
         :type provider_id: str
         :param provider_id: short code used to identify the provider
 
-        :note: The codes provided by the Fedcatalog do not necessarily match those
-        used by ObsPy
+        :note: The codes provided by the Fedcatalog do not necessarily match
+        those used by ObsPy
         """
-        RoutingResponse.__init__(self, provider_id, raw_requests=FDSNBulkRequests(None))
+        RoutingResponse.__init__(self, provider_id,
+                                 raw_requests=FDSNBulkRequests(None))
         self.parameters = []
         self.services = {}
 
@@ -495,9 +517,11 @@ class FederatedRoute(RoutingResponse):
         add a service url to this response
 
         :type service_name: str
-        :param service_name: name such as STATIONSERVICE, DATASELECTSERVICE, or DATACENTER
+        :param service_name: name such as STATIONSERVICE, DATASELECTSERVICE,
+        or DATACENTER
         :param service_url: str
-        :param service_url: url of service, like http://service.iris.edu/fdsnws/station/1/
+        :param service_url: url of service, like
+        http://service.iris.edu/fdsnws/station/1/
         """
         self.services[service_name] = service_url
 
@@ -517,7 +541,7 @@ class FederatedRoute(RoutingResponse):
         >>> print(",".join(fedresp.parameters))
         level=station,quality=D,onceuponatime=now,testing=true,black=white,this=that
         """
-        if isinstance(parameters, str):
+        if isinstance(parameters, string_types):
             self.parameters.append(parameters)
         elif isinstance(parameters, FedcatResponseLine):
             self.parameters.append(str(parameters))
@@ -531,12 +555,10 @@ class FederatedRoute(RoutingResponse):
         :param lines: string or FedcatResponseLine that looks something like:
         NET STA LOC CHA yyyy-mm-ddTHH:MM:SS yyyy-mm-ddTHH:MM:SS
         """
-        if isinstance(lines, (str, FedcatResponseLine)):
+        if isinstance(lines, (string_types, FedcatResponseLine)):
             self.request_items.update(str(lines))  # no returns expected!
         elif isinstance(lines, collections.Iterable):
             self.request_items.add([str(line) for line in lines])
-
-
 
     def text(self, target_service):
         """
@@ -566,6 +588,7 @@ class FederatedRoute(RoutingResponse):
               format(id=self.provider_id, pcount=len(self.parameters),
                      rcount=len(self.request_items))
         return out
+
 
 class FedcatResponseLine(object):
     """
@@ -639,7 +662,7 @@ class FedcatResponseLine(object):
     def is_request(self):
         """
         :rtype: bool
-        :returns: true if self might be in proper request format for posting to web services
+        :returns: true if self might be interpreted as a request line
 
         >>> line = 'CK ASHT -- HHZ 2015-01-01T00:00:00 2016-01-02T00:00:00'
         >>> fcr = FedcatResponseLine(line)
@@ -730,7 +753,7 @@ class ParameterItem(ParserState):
             return ParameterItem
         else:
             raise RuntimeError(
-                "Parameter should be followed by another parameter or an empty line"
+                "Expect parameter to be followed by another, or an empty line"
             )
 
 
@@ -792,7 +815,7 @@ class ServiceItem(ParserState):
             return RequestItem
         else:
             raise RuntimeError(
-                "Service desc. should be followed by a request or another service"
+                "Expeted Service to be followed by request or more services"
             )
 
 
@@ -813,7 +836,7 @@ class RequestItem(ParserState):
             return EmptyItem
         else:
             raise RuntimeError(
-                "Requests should be followed by another request or an empty line"
+                "Requests should be followed by another request or empty line"
             )
 
 

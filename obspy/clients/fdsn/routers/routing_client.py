@@ -20,7 +20,7 @@ data from the provider.
 a federated service (yet).  It is running on a different path (../irisws/..),
 and fails the many assumptions built into the Client class.
 
-:var ROUTING_LOGGER: logger associated with the :mod:`obspy.clients.fdsn.router`
+:var ROUTING_LOGGER: logger associated with :mod:`obspy.clients.fdsn.router`
 :type ROUTING_LOGGER: logging.getLogger()
 
 :copyright:
@@ -32,13 +32,21 @@ and fails the many assumptions built into the Client class.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 
-from __future__ import print_function
-import queue
+from __future__ import print_function, unicode_literals
+try:
+    import Queue as queue
+except ImportError:
+    import queue
 # import sys
 import logging
 import multiprocessing as mp
+from future.utils import string_types
 from obspy.clients.fdsn import Client
-from obspy.clients.fdsn.routers.fedcatalog_parser import (RoutingResponse, FDSNBulkRequests)
+from obspy.clients.fdsn.routers.fedcatalog_parser import (RoutingResponse,
+                                                          FDSNBulkRequests)
+
+_DISABLE_PARALLEL_REQESTS = True
+
 
 def set_up_logger():
     """
@@ -60,7 +68,9 @@ def set_up_logger():
     logger.addHandler(clh)
     return logger
 
+
 ROUTING_LOGGER = set_up_logger()
+
 
 class RoutingClient(object):
     """
@@ -80,6 +90,7 @@ class RoutingClient(object):
     in a single list /structure as though they were all requested from the same
     source.
     """
+
     def __init__(self, use_parallel=False, include_provider=None,
                  exclude_provider=None, **kwargs):
         """
@@ -97,15 +108,16 @@ class RoutingClient(object):
         of the new client
         """
 
-        self.use_parallel = use_parallel
-        self.args_to_clients = kwargs  # passed to clients as they are initialized
+        self.use_parallel = use_parallel and not _DISABLE_PARALLEL_REQESTS
+        self.args_to_clients = kwargs  # passed to clients during intialization
         self.include_provider = include_provider
         self.exclude_provider = exclude_provider
 
     def __str__(self):
         return "RoutingClient object"
 
-    def _request(self, client, service, route, output, passed, failed, **kwarg):
+    def _request(self, client, service, route, output, passed,
+                 failed, **kwarg):
         """
         ABSTRACT retrieve data from one service endpoint
 
@@ -113,7 +125,8 @@ class RoutingClient(object):
         :param client: The client where this specific request will be routed
         :type service: str
         :param service: name of service to use. This is defined by the subclass
-        :type route: something like :class:`~obspy.clients.fdsn.routers.FederatedRoute`
+        :type route: something like
+            :class:`~obspy.clients.fdsn.routers.FederatedRoute`
         :param route: contains details used to route one set of requests.
         :type output: container accepting "put", like a Queue
         :param output: place where retrieved data go
@@ -135,14 +148,18 @@ class RoutingClient(object):
         :rtype: bool
         :return: whether this provider should be skipped
         """
-        if self.exclude_provider and route.provider_id in self.exclude_provider:
-            ROUTING_LOGGER.info("skipping: " + route.provider_id +
-                                " because it is in the exclude_provider list")
+        if self.exclude_provider:
+            if route.provider_id in self.exclude_provider:
+                ROUTING_LOGGER.info(
+                    "skipping: " + route.provider_id +
+                    " because it is in the exclude_provider list")
             return True
 
-        if self.include_provider and route.provider_id not in self.include_provider:
-            ROUTING_LOGGER.info("skipping: " + route.provider_id +
-                                " because it isn't in the include_provider list")
+        if self.include_provider:
+            if route.provider_id not in self.include_provider:
+                ROUTING_LOGGER.info(
+                    "skipping: " + route.provider_id +
+                    " because it isn't in the include_provider list")
             return True
 
         if not route.request_items:
@@ -154,7 +171,7 @@ class RoutingClient(object):
     @property
     def query(self):
         """
-        return query method based on user preference (either parallel or serial)
+        return query method based on user preference (parallel or serial)
 
         Two query methods currently exist:
         :func:`serial_query_machine`
@@ -165,21 +182,22 @@ class RoutingClient(object):
         provider, to re-requesting as necessary.
 
         :rtype: function
-        :returns: serial_query_machine or parallel_query_machine, with signatures:
-                 self.xxxx_query_machine(routing_mgr, service, **kwargs)
-                 and return a tuple (data, successful_requests, failed_requests)
+        :returns: serial_ or parallel_ query_machine, with signatures:
+                 self.xxxx_query_machine(routing_mgr, service, **kwargs) and
+                 return a tuple (data, successful_requests, failed_requests)
         """
         if self.use_parallel:
             return self.parallel_query_machine
         return self.serial_query_machine
 
-    def serial_query_machine(self, routing_mgr, service, keep_unique=False, **kwargs):
+    def serial_query_machine(self, routing_mgr, service, keep_unique=False,
+                             **kwargs):
         """
         retrieve data from clients, one after the other, based on routes held
         by the routing manager
 
         Each route held by the routing manager would contain the details needed
-        to create a connection to a data provider, along with the request details.
+        to create a connection to a data provider, along with request details.
 
         This routine loops through each route held by the manager, opens a
         connection to the clients of interest, requests data from the selected
@@ -201,7 +219,7 @@ class RoutingClient(object):
         output_q = queue.Queue()
         passed_q = queue.Queue()
         failed_q = queue.Queue()
-        successful_requests = FDSNBulkRequests(None) # TODO make generic
+        successful_requests = FDSNBulkRequests(None)  # TODO make generic
 
         for route in routing_mgr:
             if self._skip_provider_for_route(route):
@@ -222,14 +240,13 @@ class RoutingClient(object):
                               route=route, output=output_q, passed=passed_q,
                               failed=failed_q, **kwargs)
             except:
-                failed_q.put(route.request_items) # FDSNBulkRequests
+                failed_q.put(route.request_items)  # FDSNBulkRequests
                 raise
 
         ROUTING_LOGGER.info("all requests completed")
 
         data = None
         while not output_q.empty():
-            
             if not data:
                 data = output_q.get()
             else:
@@ -243,11 +260,12 @@ class RoutingClient(object):
             failed_requests = failed_q.get()
 
         while not failed_q.empty():
-            failed_requests.update(failed_q.get()) # working with a set
+            failed_requests.update(failed_q.get())  # working with a set
 
         return data, successful_requests, failed_requests
 
-    def parallel_query_machine(self, routing_mgr, service, keep_unique=False, **kwargs):
+    def parallel_query_machine(self, routing_mgr, service, keep_unique=False,
+                               **kwargs):
         """
         query clients in parallel
 
@@ -269,7 +287,7 @@ class RoutingClient(object):
         output_q = mp.Queue()
         passed_q = mp.Queue()
         failed_q = mp.Queue()
-        successful_requests = FDSNBulkRequests(None) # TODO make generic
+        successful_requests = FDSNBulkRequests(None)  # TODO make generic
 
         # Setup process for each provider
         processes = []
@@ -281,9 +299,9 @@ class RoutingClient(object):
             try:
                 client = Client(route.provider_id, **self.args_to_clients)
                 p_kwargs = kwargs.copy()
-                p_kwargs.update({'client':client, 'service':service,
-                                 'output':output_q, 'passed':passed_q, 'failed':failed_q,
-                                 'route':route})
+                p_kwargs.update({'client': client, 'service': service,
+                                 'output': output_q, 'passed': passed_q,
+                                 'failed': failed_q, 'route': route})
                 processes.append(mp.Process(target=self._request,
                                             name=route.provider_id,
                                             kwargs=p_kwargs))
@@ -292,15 +310,16 @@ class RoutingClient(object):
                     routing_mgr.str_details(route.provider_id)))
             except Exception as err:
                 failed_q.put(route.request_items)
-                ROUTING_LOGGER.exception("error: %s",err)
+                ROUTING_LOGGER.exception("error: %s", err)
 
         # run
         for proc, msg in zip(processes, msgs):
             ROUTING_LOGGER.info("starting " + msg)
             proc.start()
 
-        ROUTING_LOGGER.info("processing in parallel, with %d concurrentish requests",
-                            len(processes))
+        ROUTING_LOGGER.info(
+            "processing in parallel, with %d concurrentish requests",
+            len(processes))
         # exit completed processes
         for proc, msg in zip(processes, msgs):
             ROUTING_LOGGER.info("waiting on %s", msg)
@@ -311,7 +330,6 @@ class RoutingClient(object):
 
         data = None
         while not output_q.empty():
-            
             ROUTING_LOGGER.info("getting 'output' queue")
             if not data:
                 data = output_q.get()
@@ -327,17 +345,18 @@ class RoutingClient(object):
             failed_requests = failed_q.get()
 
         while not failed_q.empty():
-            failed_requests.update(failed_q.get()) # working with a set
+            failed_requests.update(failed_q.get())  # working with a set
 
         return data, successful_requests, failed_requests
 
+
 class RoutingManager(object):
     """
-    This class will wrap the response given by a router.  Its primary purpose is
-    to divide the response into parcels, each being a route that contains
+    This class will wrap the response given by a router.  Its primary purpose
+    is to divide the response into parcels, each being a route that contains
     the information required for a single request.
 
-    Input would be the response from the routing service, or a similar text file
+    Input would be the response from the routing service, or a similar file
     Output is a list of RoutingResponse objects
     """
     def __init__(self, textblock, provider_details=None):
@@ -351,12 +370,13 @@ class RoutingManager(object):
         """
         self.routes = []
         self.provider_details = provider_details
-        if isinstance(textblock, str):
+        if isinstance(textblock, string_types):
             self.routes = self.parse_routing(textblock)
         elif isinstance(textblock, RoutingResponse):
             self.routes = [textblock]
         elif isinstance(textblock, (tuple, list)):
-            self.routes = [v for v in textblock if isinstance(v, RoutingResponse)]
+            self.routes = [
+                v for v in textblock if isinstance(v, RoutingResponse)]
 
     def __iter__(self):
         return self.routes.__iter__()
@@ -368,20 +388,25 @@ class RoutingManager(object):
         if not self.routes:
             return "Empty " + type(self).__name__
         responsestr = "\n".join([str(x) for x in self.routes])
-        towrite = type(self).__name__ + " with " + str(len(self)) + " items:\n" +responsestr
+        towrite = type(self).__name__ + " with " + str(len(self)) +\
+            " items:\n" + responsestr
         return towrite
 
     def add_routes(self, route):
+        """
+        Add a route (RoutingResponse) to the routing manger
+        """
         if isinstance(route, RoutingResponse):
             self.routes.append(route)
         elif isinstance(route, (tuple, list)) and len(route)\
-                                              and isinstance(route[0].RoutingResponse):
+                and isinstance(route[0].RoutingResponse):
             self.routes.extend(route)
         elif isinstance(route, RoutingManager):
             self.routes.extend(route.routes)
         else:
-            NotImplementedError("Do not know how to add {} to RoutingManager".\
-                                format(route.__class__.__name__))
+            NotImplementedError(
+                "Do not know how to add {} to RoutingManager".
+                format(route.__class__.__name__))
 
     def data_to_request(self, data):
         """
@@ -396,13 +421,16 @@ class RoutingManager(object):
         return [route.provider_id for route in self.routes]
 
     def str_details(self, provider_id):
+        """
+        provide formatted details for one provider
+        """
         if self.provider_details:
             return self.provider_details.pretty(provider_id)
         return ""
 
     def parse_routing(self, parameter_list):
         """
-        ABSTRACT create a list of RoutingResponse objects, one for each provider in response
+        ABSTRACT create RoutingResponses, one for each provider in response
 
         :type parameter_list:
         :param parameter_list:
@@ -438,11 +466,13 @@ class RoutingManager(object):
         :returns:
         """
         if get_multiple:
-            return [route for route in self.routes if route.provider_id == provider_id]
+            return [route for route in self.routes
+                    if route.provider_id == provider_id]
         for route in self.routes:
             if route.provider_id == provider_id:
                 return route
         return None
+
 
 if __name__ == '__main__':
     import doctest
