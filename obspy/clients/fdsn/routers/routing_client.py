@@ -147,12 +147,28 @@ class RoutingClient(object):
         :param route:
         :rtype: bool
         :return: whether this provider should be skipped
+
+        >>> item = ["* * * * * *"]
+        >>> irisRoute = RoutingResponse("IRIS", item)
+        >>> sedRoute = RoutingResponse("SED", item)
+        >>> rc = RoutingClient(include_provider="IRIS")
+        >>> rc._skip_provider_for_route(irisRoute)
+        False
+        >>> rc._skip_provider_for_route(sedRoute)
+        True
+        >>> rc = RoutingClient(exclude_provider="IRIS")
+        >>> rc._skip_provider_for_route(irisRoute)
+        True
+        >>> rc._skip_provider_for_route(sedRoute)
+        False
         """
         if self.exclude_provider:
-            return True
+            if route.provider_id in self.exclude_provider:
+                return True
 
         if self.include_provider:
-            return True
+            if route.provider_id not in self.include_provider:
+                return True
 
         if not route.request_items:
             return True
