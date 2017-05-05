@@ -21,6 +21,10 @@ phase = 2 * np.pi + np.unwrap(np.angle(h))
 plt.semilogx(f, phase)
 plt.xlabel('Frequency [Hz]')
 plt.ylabel('Phase [radian]')
+# ticks and tick labels at multiples of pi
+plt.yticks(
+    [0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi],
+    ['$0$', r'$\frac{\pi}{2}$', r'$\pi$', r'$\frac{3\pi}{2}$', r'$2\pi$'])
 # title, centered above both subplots
 plt.suptitle('Frequency Response of LE-3D/1s Seismometer')
 # make more room in between subplots for the ylabel of right plot
