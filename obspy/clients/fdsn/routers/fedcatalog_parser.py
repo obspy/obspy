@@ -133,7 +133,7 @@ class FDSNBulkRequestItem(object):
         >>> D = FDSNBulkRequestItem(line=l2) # <---------------->
         >>> A.contains(l1)
         True
-        >>> V.contains(C) and C.contains(C) and D.contains(C)
+        >>> B.contains(C) and C.contains(C) and D.contains(C)
         True
         >>> C.contains(A) or C.contains(B) or C.contains(D)
         False

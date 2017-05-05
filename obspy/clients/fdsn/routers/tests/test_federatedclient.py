@@ -306,8 +306,13 @@ class FederatedClientTestCase(unittest.TestCase):
         nodata_route.request_items = eth_route.request_items
 
         # should come up empty
-        inv = client.get_stations(existing_routes=nodata_route)
-        self.assertFalse(inv)
+        try:
+            inv = client.get_stations(existing_routes=nodata_route)
+            self.assertFalse(inv)
+        except FDSNNoDataException:
+            pass
+        else:
+            self.assertTrue(1 == 0, "Expected FDSNNoDataException")
 
         # should work!
         inv = client.get_stations(existing_routes=nodata_route,
@@ -339,9 +344,13 @@ class FederatedClientTestCase(unittest.TestCase):
         nodata_route.request_items = eth_route.request_items
 
         # should come up empty
-        data = client.get_waveforms(None, None, None, None, None, None,
-                                    existing_routes=nodata_route)
-        self.assertFalse(data)
+        try:
+            data = client.get_waveforms(None, None, None, None, None, None,
+                                        existing_routes=nodata_route)
+        except FDSNNoDataException:
+            pass
+        else:
+            self.assertTrue(1 == 0, "Expected FDSNNoDataException")
 
         # should work!
         data = client.get_waveforms(None, None, None, None, None, None,

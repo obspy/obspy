@@ -177,7 +177,7 @@ class FedcatalogProviders(object):
 
     >>> prov = FedcatalogProviders()
     >>> print(prov.pretty('IRISDMC'))  #doctest: +ELLIPSIS
-    IRISDMC:The IRIS ..., Seattle,... WEB:http://ds.iris.edu  LastUpdate...M
+    IRISDMC:The IRIS Data Management Center...M
 
     """
 
@@ -212,7 +212,7 @@ class FedcatalogProviders(object):
         :returns: identifiers for fedcatalog providers
 
         >>> fcp=FedcatalogProviders()
-        >>> print(', '.join(sorted(fcp.names))  #doctest: +ELLIPSIS
+        >>> print(', '.join(sorted(fcp.names)))  #doctest: +ELLIPSIS
         BGR,..., USPSC
         """
         return self._providers.keys()
@@ -232,7 +232,7 @@ class FedcatalogProviders(object):
 
         >>> fcp = FedcatalogProviders()
         >>> print(fcp.get('ORFEUS','description'))
-        'The ORFEUS Data Center'
+        The ORFEUS Data Center
         """
         if name not in self._providers:
             return ""
@@ -287,7 +287,7 @@ class FedcatalogProviders(object):
 
         >>> providers = FedcatalogProviders()
         >>> print(providers.pretty("ORFEUS"))  #doctest: +ELLIPSIS
-        ...The ORFEUS Data Center...Netherlands WEB:http:...org  LastUpdate:...
+        ORFEUS:The ORFEUS Data Center, de Bilt, the Netherlands ...M
         >>> print(providers.pretty("IRIS") == providers.pretty("IRISDMC"))
         True
 
@@ -335,7 +335,7 @@ class FederatedClient(RoutingClient):
     <BLANKLINE>
 
     >>> inv = client.get_stations(network="I?", station="AN*", channel="*HZ",
-                                  filename=sys.stderr) #doctest: +SKIP
+    ...                           filename=sys.stderr) #doctest: +SKIP
 
     .. Warning: if output is sent directly to a file, then the success
                 status will not be checked beyond gross failures, such as
@@ -607,7 +607,7 @@ class FederatedClient(RoutingClient):
                                         svc_kwargs, data)
 
         if not data:
-            raise FDSNNoDataException
+            raise FDSNNoDataException("No data available for request.")
         return data
 
     def get_waveforms(self, network, station, location, channel, starttime,
@@ -629,8 +629,7 @@ class FederatedClient(RoutingClient):
         other parameters as seen in
             :meth:`~obspy.fdsn.clients.Client.get_waveforms`
 
-        >>> from requests.packages.urllib3.exceptions import\
-        ...     InsecureRequestWarning
+        >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> client = FederatedClient()
         >>> from obspy.core import  UTCDateTime
@@ -662,7 +661,7 @@ class FederatedClient(RoutingClient):
                                         svc_kwargs, data)
 
         if not data:
-            raise FDSNNoDataException
+            raise FDSNNoDataException("No data available for request.")
         return data
 
     def get_stations_bulk(self, bulk, includeoverlaps=False, reroute=False,
@@ -688,8 +687,7 @@ class FederatedClient(RoutingClient):
         other parameters as seen in
             :meth:`~obspy.fdsn.clients.Client.get_stations_bulk`
 
-        >>> from requests.packages.urllib3.exceptions import\
-        ...     InsecureRequestWarning
+        >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> client = FederatedClient()
         >>> bulktxt = "level=channel\\nA? OKS? * ?HZ * *"
@@ -710,7 +708,7 @@ class FederatedClient(RoutingClient):
         >>> fed_client = FederatedClient(use_parallel=True)
         >>> bulktext = "IU ANTO * BHZ 2015-01-01T00:00:00 2015-02-01T00:00:00"
         >>> inv = fed_client.get_stations_bulk(bulktext, includeoverlaps=True)
-        >>> print(inv)
+        >>> print(inv)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         Inventory created at ...
             Sending institution: IRIS-DMC,SeisComP3 (IRIS-DMC,ODC)
             Contains:
@@ -737,7 +735,7 @@ class FederatedClient(RoutingClient):
                                        svc_kwargs, inv)
 
         if not inv:
-            raise FDSNNoDataException
+            raise FDSNNoDataException("No data available for request.")
         return inv
 
     def get_stations(self, includeoverlaps=False, reroute=False,
@@ -759,8 +757,7 @@ class FederatedClient(RoutingClient):
         other parameters as seen in
             :meth:`~obspy.fdsn.clients.Client.get_stations`
 
-        >>> from requests.packages.urllib3.exceptions import \
-                InsecureRequestWarning
+        >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> fclient = FederatedClient()
         >>> INV = fclient.get_stations(network="A?", station="OK*",
@@ -793,8 +790,8 @@ class FederatedClient(RoutingClient):
                     https://www.obspy.org
             Sending institution: SeisComP3,SeisNet-mysql (GFZ,INGV-CNT,ODC)
             Contains:
-                Networks (6):
-                    IA, IB, II, IQ, IS, IV
+                Networks (5):
+                    IA, II, IQ, IS, IV
                 Stations (0):...
                 Channels (0):...
 
@@ -855,7 +852,7 @@ class FederatedClient(RoutingClient):
                                        svc_kwargs, inv)
 
         if not inv:
-            raise FDSNNoDataException
+            raise FDSNNoDataException("No data available for request.")
         return inv
 
     def attempt_reroute(self, bulk, svc_name, fed_kwargs, svc_kwargs,
@@ -967,14 +964,13 @@ class FederatedRoutingManager(RoutingManager):
 
         Here's an example parsing from the actual service:
         >>> import requests
-        >>> from requests.packages.urllib3.exceptions import \
-                InsecureRequestWarning
+        >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> url = 'https://service.iris.edu/irisws/fedcatalog/1/query'
         >>> r = requests.get(url, params={"net":"IU", "sta":"ANTO",
-                             "cha":"BHZ", "endafter":"2013-01-01",
-                             "includeoverlaps":"true", "level":"station"},
-                             verify=False)
+        ...                  "cha":"BHZ", "endafter":"2013-01-01",
+        ...                  "includeoverlaps":"true", "level":"station"},
+        ...                  verify=False)
         >>> frp = FederatedRoutingManager(r.text)
         >>> for n in frp:
         ...     print(n.services["STATIONSERVICE"])
@@ -1042,4 +1038,4 @@ if __name__ == '__main__':
     import doctest
 
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-    doctest.testmod(exclude_empty=True, verbose=True)
+    doctest.testmod(exclude_empty=True)
