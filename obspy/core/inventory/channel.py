@@ -303,8 +303,8 @@ class Channel(BaseNode):
             self._clock_drift_in_seconds_per_sample = ClockDrift(value)
 
     def plot(self, min_freq, output="VEL", start_stage=None, end_stage=None,
-             label=None, axes=None, unwrap_phase=False, show=True,
-             outfile=None):
+             label=None, axes=None, unwrap_phase=False, plot_degrees=False,
+             show=True, outfile=None):
         """
         Show bode plot of the channel's instrument response.
 
@@ -333,6 +333,8 @@ class Channel(BaseNode):
             amplitude/phase spectrum. If not specified, a new figure is opened.
         :type unwrap_phase: bool
         :param unwrap_phase: Set optional phase unwrapping using NumPy.
+        :type plot_degrees: bool
+        :param plot_degrees: if ``True`` plot bode in degrees
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.
@@ -360,7 +362,8 @@ class Channel(BaseNode):
             min_freq=min_freq, output=output,
             start_stage=start_stage, end_stage=end_stage, label=label,
             axes=axes, sampling_rate=self.sample_rate,
-            unwrap_phase=unwrap_phase, show=show, outfile=outfile)
+            unwrap_phase=unwrap_phase, plot_degrees=plot_degrees, show=show,
+            outfile=outfile)
 
 
 if __name__ == '__main__':
