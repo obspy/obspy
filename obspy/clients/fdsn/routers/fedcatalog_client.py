@@ -606,6 +606,8 @@ class FederatedClient(RoutingClient):
             data = self.attempt_reroute(failed, svc_name, fed_kwargs,
                                         svc_kwargs, data)
 
+        if not data:
+            raise FDSNNoDataException
         return data
 
     def get_waveforms(self, network, station, location, channel, starttime,
@@ -659,6 +661,8 @@ class FederatedClient(RoutingClient):
             data = self.attempt_reroute(failed, svc_name, fed_kwargs,
                                         svc_kwargs, data)
 
+        if not data:
+            raise FDSNNoDataException
         return data
 
     def get_stations_bulk(self, bulk, includeoverlaps=False, reroute=False,
@@ -732,6 +736,8 @@ class FederatedClient(RoutingClient):
             inv = self.attempt_reroute(failed, svc_name, fed_kwargs,
                                        svc_kwargs, inv)
 
+        if not inv:
+            raise FDSNNoDataException
         return inv
 
     def get_stations(self, includeoverlaps=False, reroute=False,
@@ -848,6 +854,8 @@ class FederatedClient(RoutingClient):
             inv = self.attempt_reroute(failed, svc_name, fed_kwargs,
                                        svc_kwargs, inv)
 
+        if not inv:
+            raise FDSNNoDataException
         return inv
 
     def attempt_reroute(self, bulk, svc_name, fed_kwargs, svc_kwargs,
