@@ -554,7 +554,8 @@ class CatalogBasemapTestCase(unittest.TestCase):
         parameters, using Basemap.
         """
         cat = read_events()
-        with ImageComparison(self.image_dir, 'catalog-basemap2.png') as ic:
+        with ImageComparison(self.image_dir, 'catalog-basemap2.png',
+                             reltol=1.3) as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(method='basemap', outfile=ic.name, projection='ortho',
                      resolution='c', water_fill_color='#98b7e2', label=None,
@@ -567,8 +568,8 @@ class CatalogBasemapTestCase(unittest.TestCase):
         computed in a circular fashion.
         """
         cat = read_events('/path/to/events_longitude_wrap.zmap', format='ZMAP')
-        with ImageComparison(self.image_dir,
-                             'catalog-basemap_long-wrap.png') as ic:
+        with ImageComparison(self.image_dir, 'catalog-basemap_long-wrap.png',
+                             reltol=1.1) as ic:
             rcParams['savefig.dpi'] = 40
             cat.plot(method='basemap', outfile=ic.name, projection='ortho',
                      resolution='c', label=None, title='', colorbar=False,
