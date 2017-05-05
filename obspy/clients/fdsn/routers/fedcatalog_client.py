@@ -261,7 +261,7 @@ class FedcatalogProviders(object):
         if self._lock.locked():
             return
         with self._lock:
-            ROUTING_LOGGER.debug("Refreshing Provider List")
+            # ROUTING_LOGGER.debug("Refreshing Provider List")
             if self._failed_refreshes > 3 and not force:
                 msg = "Unable to retrieve provider profiles from"\
                       " fedcatalog after %d attempts"
@@ -543,7 +543,7 @@ class FederatedClient(RoutingClient):
             req_details = data_to_request(data)
             ROUTING_LOGGER.info("Retrieved %d items from %s",
                                 len(req_details), route.provider_id)
-            ROUTING_LOGGER.info('\n' + str(req_details))
+            # ROUTING_LOGGER.info('\n' + str(req_details))
             output.put(data)
             passed.put(req_details)
 
