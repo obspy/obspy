@@ -359,9 +359,16 @@ class FederatedClient(RoutingClient):
         :rtype: str
         :returns: string represention of the FederatedClient
         """
-        # TODO: Make this more specific
-        ret = "Federated Catalog Routing Client"
-        return ret
+        part1 = "Federated Catalog Routing Client\n"
+        part2 = "  request-method: %s\n" % \
+                ("parallel" if self.use_parallel else "serial")
+        if self.include_provider:
+            return part1 + part2 + "  include: %s" % \
+                (",".join(self.include_provider))
+        if self.exclude_provider:
+            return part1 + part2 + "  exclude: %s" %\
+                (",".join(self.exclude_provider))
+        return part1 + part2
 
     # -------------------------------------------------
     # FederatedClient.get_routing() and FederatedClient.get_routing_bulk()
@@ -1005,7 +1012,7 @@ class FederatedRoutingManager(RoutingManager):
                 state.parse(line, provider)
         if len(fed_resp) > 0 and (not fed_resp[-1].request_items):
             del fed_resp[-1]
-        # TODO see if remap belongs in the FederatedClient instead
+
         remap = {
             "IRISDMC": "IRIS",
             "GEOFON": "GFZ",
