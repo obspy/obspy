@@ -102,3 +102,4 @@ EXPORTS
    ms_gswap2a
    ms_gswap4a
    ms_gswap8a
+   LM_SIZEOF_OFF_T
