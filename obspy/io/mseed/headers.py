@@ -28,7 +28,7 @@ for _c in [C.c_long, C.c_longlong, C.c_int]:
     if C.sizeof(_c) == sizeoff_off_t:
         off_t_type = _c
         break
-else:
+else:  # pragma: no cover
     raise InternalMSEEDError("Could not determine corresponding ctypes "
                              "datatype for off_t.")
 
