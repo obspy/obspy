@@ -11,28 +11,21 @@ The obspy.clients.fdsn.client test suite.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-# TODO clean this module up. it's merely swiped from the Client test suite.
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import io
 import os
-# import re
 import sys
 import unittest
 from future.builtins import *  # NOQA
-# from future.utils import string_types
-# import warnings
 
-# import requests
 
 from obspy import UTCDateTime, read
 # from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import (FederatedClient, Client)
-from obspy.clients.fdsn.header import (
-    DEFAULT_USER_AGENT, FDSNException, FDSNRedirectException,
-    FDSNNoDataException)
+from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, FDSNNoDataException)
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
 from obspy.clients.fdsn.tests.test_client import failmsg
@@ -68,6 +61,9 @@ def has_level(inv, level):
 
 
 class BulkConversionTestCase(unittest.TestCase):
+    """
+    Test bulk conversion
+    """
     def test_simple(self):
         bulk = "AB STA 00 ABC 2015-12-23-01:00:00 2015-12-23-02:00:00"
         ans = get_bulk_string(bulk, None)
@@ -470,7 +466,7 @@ class FederatedClientTestCase(unittest.TestCase):
                 path_name = os.path.dirname(tf.name)
                 providerless_name = os.path.join(path_name, base_name)
                 print("filename: " + tf.name + " using [" +
-                      providerless_name + "]", file=sys.stderr)
+                      providerless_name + "]\n\n", file=sys.stderr)
                 client.get_waveforms(*query, filename=providerless_name)
 
                 with open(tf.name, 'rb') as fh:

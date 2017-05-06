@@ -33,11 +33,13 @@ has been retrieved with what was requested.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function, unicode_literals
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
 import sys
 import collections
 from threading import Lock
 import os
+from future.builtins import *  # NOQA
 from future.utils import string_types
 import requests
 from obspy.core.inventory import Inventory
@@ -48,8 +50,8 @@ from obspy.clients.fdsn.routers.routing_client import (
     RoutingClient, RoutingManager, ROUTING_LOGGER)
 from obspy.clients.fdsn.routers import (FederatedRoute,)
 from obspy.clients.fdsn.routers.fedcatalog_parser import (
-    PreParse, FedcatResponseLine, DatacenterItem, inventory_to_bulkrequests,
-    stream_to_bulkrequests)
+    PreParse, FedcatResponseLine, DatacenterItem,
+    inventory_to_bulkrequests, stream_to_bulkrequests)
 
 
 # IRIS uses different codes for datacenters than obspy.
@@ -613,6 +615,9 @@ class FederatedClient(RoutingClient):
             data = self.attempt_reroute(failed, svc_name, fed_kwargs,
                                         svc_kwargs, data)
 
+        if 'filename' in kwargs and kwargs['filename']:
+            return
+
         if not data:
             raise FDSNNoDataException("No data available for request.")
         return data
@@ -666,6 +671,9 @@ class FederatedClient(RoutingClient):
         if reroute and failed:
             data = self.attempt_reroute(failed, svc_name, fed_kwargs,
                                         svc_kwargs, data)
+
+        if 'filename' in kwargs and kwargs['filename']:
+            return
 
         if not data:
             raise FDSNNoDataException("No data available for request.")
@@ -741,6 +749,8 @@ class FederatedClient(RoutingClient):
             inv = self.attempt_reroute(failed, svc_name, fed_kwargs,
                                        svc_kwargs, inv)
 
+        if 'filename' in kwargs and kwargs['filename']:
+            return
         if not inv:
             raise FDSNNoDataException("No data available for request.")
         return inv
@@ -858,6 +868,8 @@ class FederatedClient(RoutingClient):
             inv = self.attempt_reroute(failed, svc_name, fed_kwargs,
                                        svc_kwargs, inv)
 
+        if 'filename' in kwargs and kwargs['filename']:
+            return
         if not inv:
             raise FDSNNoDataException("No data available for request.")
         return inv

@@ -31,8 +31,7 @@ and fails the many assumptions built into the Client class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-
-from __future__ import print_function, unicode_literals
+from __future__ import (absolute_import, division, print_function, unicode_literals)
 try:
     import Queue as queue
 except ImportError:
@@ -40,6 +39,7 @@ except ImportError:
 # import sys
 import logging
 import multiprocessing as mp
+from future.builtins import *  # NOQA
 from future.utils import string_types
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.routers.fedcatalog_parser import (RoutingResponse,
