@@ -56,7 +56,8 @@ as FDSNBulkRequests
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
 import sys
 import collections
@@ -277,16 +278,16 @@ class FDSNBulkRequestItem(object):
             # recommend converting before comparing...
             other = FDSNBulkRequestItem(line=other)
 
-        if isinstance(other, self.__class__):
-            return (
-                (self.network is None or self.network == other.network) and
-                (self.station is None or self.station == other.station) and
-                (self.location is None or self.location == other.location) and
-                (self.channel is None or self.channel == other.channel) and
-                (self.starttime is None or self.starttime <= other.starttime) and
-                (self.endtime is None or self.endtime >= other.endtime))
-        else:
+        if not isinstance(other, self.__class__):
             raise NotImplementedError()
+
+        return (
+            (self.network is None or self.network == other.network) and
+            (self.station is None or self.station == other.station) and
+            (self.location is None or self.location == other.location) and
+            (self.channel is None or self.channel == other.channel) and
+            (self.starttime is None or self.starttime <= other.starttime) and
+            (self.endtime is None or self.endtime >= other.endtime))
 
 
 class FDSNBulkRequests(object):
@@ -482,9 +483,12 @@ class FederatedRoute(RoutingResponse):
 
     >>> fed_resp = FederatedRoute("IRISDMC")
     >>> fed_resp.add_query_param(["lat=50","lon=20","level=cha"])
-    >>> fed_resp.add_service("STATIONSERVICE","http://service.iris.edu/fdsnws/station/1/")
-    >>> fed_resp.add_request("AI ORCD -- BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
-    >>> fed_resp.add_request("AI ORCD 04 BHZ 2015-01-01T00:00:00 2016-01-02T00:00:00")
+    >>> svc_url = "http://service.iris.edu/fdsnws/station/1/"
+    >>> fed_resp.add_service("STATIONSERVICE", svc_url)
+    >>> fed_resp.add_request("AI ORCD -- BHZ 2015-01-01T00:00:00 "
+    ...                      "2016-01-02T00:00:00")
+    >>> fed_resp.add_request("AI ORCD 04 BHZ 2015-01-01T00:00:00 "
+    ...                      "2016-01-02T00:00:00")
     >>> print(fed_resp.text("STATIONSERVICE"))
     level=cha
     AI ORCD -- BHZ 2015-01-01T00:00:00.000 2016-01-02T00:00:00.000

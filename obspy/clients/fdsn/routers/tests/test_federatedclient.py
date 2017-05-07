@@ -31,8 +31,7 @@ from obspy.geodetics import locations2degrees
 from obspy.clients.fdsn.tests.test_client import failmsg
 from obspy.clients.fdsn.routers.fedcatalog_client import (
     get_bulk_string, FederatedRoutingManager)
-from obspy.clients.fdsn.routers.fedcatalog_parser import (
-    FDSNBulkRequestItem, FDSNBulkRequests)
+from obspy.clients.fdsn.routers.fedcatalog_parser import FDSNBulkRequestItem
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
@@ -130,15 +129,15 @@ class FDSNBulkRequestItemClientTestCase(unittest.TestCase):
         l2 = '* * * * * *'
         l3 = 'AB CDE 01 BHZ 2015-04-25T00:00:00 2015-04-25T02:47:00'
         l4 = 'AB CDE 01 BHZ 2015-04-25T02:45:32 2015-04-25T03:00:00'
-        A = FDSNBulkRequestItem(line=l3)  # .   [-------]
-        B = FDSNBulkRequestItem(line=l4)  # .        [-------]
-        C = FDSNBulkRequestItem(line=l1)  # .        [--]
-        D = FDSNBulkRequestItem(line=l2)  # .<---------------->
-        self.assertTrue(A.contains(l1) and B.contains(C))
-        self.assertTrue(C.contains(C) and D.contains(C))
-        self.assertFalse(C.contains(A) or C.contains(B) or C.contains(D))
-        self.assertTrue(A == A)
-        self.assertTrue(A == FDSNBulkRequestItem(line=l3))
+        a = FDSNBulkRequestItem(line=l3)  # .   [-------]
+        b = FDSNBulkRequestItem(line=l4)  # .        [-------]
+        c = FDSNBulkRequestItem(line=l1)  # .        [--]
+        d = FDSNBulkRequestItem(line=l2)  # .<---------------->
+        self.assertTrue(a.contains(l1) and B.contains(c))
+        self.assertTrue(c.contains(c) and d.contains(c))
+        self.assertFalse(c.contains(a) or c.contains(b) or c.contains(d))
+        self.assertTrue(a == a)
+        self.assertTrue(a == FDSNBulkRequestItem(line=l3))
 
 
 class FederatedClientTestCase(unittest.TestCase):
