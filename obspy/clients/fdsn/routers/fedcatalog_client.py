@@ -641,7 +641,8 @@ class FederatedClient(RoutingClient):
         other parameters as seen in
             :meth:`~obspy.fdsn.clients.Client.get_waveforms`
 
-        >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        >>> from requests.packages.urllib3.exceptions import \
+        ...     InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> client = FederatedClient()
         >>> from obspy.core import  UTCDateTime
@@ -702,7 +703,8 @@ class FederatedClient(RoutingClient):
         other parameters as seen in
             :meth:`~obspy.fdsn.clients.Client.get_stations_bulk`
 
-        >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        >>> from requests.packages.urllib3.exceptions import \
+        ...     InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> client = FederatedClient()
         >>> bulktxt = "level=channel\\nA? OKS? * ?HZ * *"
@@ -774,7 +776,8 @@ class FederatedClient(RoutingClient):
         other parameters as seen in
             :meth:`~obspy.fdsn.clients.Client.get_stations`
 
-        >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        >>> from requests.packages.urllib3.exceptions import \
+        ...     InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> fclient = FederatedClient()
         >>> INV = fclient.get_stations(network="A?", station="OK*",
@@ -983,7 +986,8 @@ class FederatedRoutingManager(RoutingManager):
 
         Here's an example parsing from the actual service:
         >>> import requests
-        >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        >>> from requests.packages.urllib3.exceptions import \
+        ...     InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> url = 'https://service.iris.edu/irisws/fedcatalog/1/query'
         >>> r = requests.get(url, params={"net":"IU", "sta":"ANTO",
