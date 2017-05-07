@@ -133,7 +133,7 @@ class FDSNBulkRequestItemClientTestCase(unittest.TestCase):
         b = FDSNBulkRequestItem(line=l4)  # .        [-------]
         c = FDSNBulkRequestItem(line=l1)  # .        [--]
         d = FDSNBulkRequestItem(line=l2)  # .<---------------->
-        self.assertTrue(a.contains(l1) and B.contains(c))
+        self.assertTrue(a.contains(l1) and b.contains(c))
         self.assertTrue(c.contains(c) and d.contains(c))
         self.assertFalse(c.contains(a) or c.contains(b) or c.contains(d))
         self.assertTrue(a == a)
