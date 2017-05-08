@@ -110,7 +110,7 @@ def _is_segy(filename):
     # Test the version number. The only really support version number of
     # ObsPy is 1.0 which is encoded has 0100_16. Many file have version
     # number zero which is used to indicate "traditional SEG-Y" conforming
-    # to the1975 standard.
+    # to the 1975 standard.
     # Also allow 0010_16 and 0001_16 as the definition is honestly awkward
     # and I image many writers get it wrong.
     if _format_number not in (0x0000, 0x0100, 0x0010, 0x0001):
