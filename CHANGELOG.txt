@@ -8,6 +8,7 @@ master: (doi: 10.5281/zenodo.165135)
    * Read and write support for events in the SCARDEC catlogue format
      (see #1391).
    * Write support for AH (Ad Hoc version 1) format (see #1754)
+   * Client to access the Nominal Response Library (NRL) (see #1185).
  - obspy.core:
    * UTCDateTime is now based on nanoseconds (long) instead of a unix
      timestamp in microseconds (float) - resulting in higher precision and
@@ -143,6 +144,9 @@ master: (doi: 10.5281/zenodo.165135)
  - obspy.io.xseed:
    * Added azimuth and dip to the get_coordinates() function. (see #1315)
    * Fixing some issues with the get_resp() output on Python 3 (see #1748).
+   * Can now also parse RESP files (see #1185).
+   * Can transform responses in the Parser object to ObsPy Inventory objects
+     (see #1185).
  - obspy.scripts:
    * obspy-scan command line script now also plots and prints overlaps
      alongside gaps (see #1366)
