@@ -195,8 +195,12 @@ class SEGYFile(object):
         # character always is mostly 'C' and therefore used to check the
         # encoding. Sometimes is it not C but also cannot be decoded from
         # EBCDIC so it is treated as ASCII and all empty symbols are removed.
+        #
+        # Also check the revision number and textual header end markers for
+        # the "C" as they might be set when the first byte is not.
         if not self.textual_header_encoding:
-            if textual_header[0:1] != b'C':
+            if not (b'C' in (textual_header[0:1], textual_header[3040:3041],
+                             textual_header[3120:3120])):
                 try:
                     textual_header = \
                         textual_header.decode('EBCDIC-CP-BE').encode('ascii')
