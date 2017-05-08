@@ -299,12 +299,10 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
             info['encoding']
         raise ValueError(msg)
 
+    record_length = info["record_length"]
+
     # Only keep information relevant for the whole file.
-    info = {'encoding': info['encoding'],
-            'filesize': info['filesize'],
-            'record_length': info['record_length'],
-            'byteorder': info['byteorder'],
-            'number_of_records': info['number_of_records']}
+    info = {'filesize': info['filesize']}
 
     # If it's a file name just read it.
     if isinstance(mseed_object, (str, native_str)):
@@ -312,9 +310,6 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         bfr_np = np.fromfile(mseed_object, dtype=np.int8)
     elif hasattr(mseed_object, 'read'):
         bfr_np = np.fromstring(mseed_object.read(), dtype=np.int8)
-
-    # Get the record length
-    record_length = info["record_length"]
 
     # Search for data records and pass only the data part to the underlying C
     # routine.
@@ -449,6 +444,12 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
             header['sampling_rate'] = current_segment.samprate
             header['starttime'] = \
                 util._convert_mstime_to_datetime(current_segment.starttime)
+            header['mseed']['number_of_records'] = current_segment.recordcnt
+            header['mseed']['encoding'] = \
+                ENCODINGS[current_segment.encoding][0]
+            header['mseed']['byteorder'] = \
+                "<" if current_segment.byteorder == 0 else ">"
+            header['mseed']['record_length'] = current_segment.reclen
             if details:
                 timing_quality = current_segment.timing_quality
                 if timing_quality == 0xFF:  # 0xFF is mask for not known timing
@@ -474,7 +475,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
             header = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
                           for k, v in header.items())
             trace = Trace(header=header, data=data)
-            # Append information.
+            # Append global information.
             for key, value in info.items():
                 setattr(trace.stats.mseed, key, value)
             traces.append(trace)
