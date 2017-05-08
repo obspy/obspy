@@ -82,7 +82,7 @@ class NRL(object):
                 info.extend(lines)
         return '\n'.join(_i.rstrip() for _i in info)
 
-    def _repr_pretty_(self, p, cycle):
+    def _repr_pretty_(self, p, cycle):  # pragma: no cover
         p.text(str(self))
 
     def _choose(self, choice, path):
@@ -104,7 +104,8 @@ class NRL(object):
         for section in cp.sections():
             options = sorted(cp.options(section))
             if section.lower() == 'main':
-                if options not in (['question'], ['detail', 'question']):
+                if options not in (['question'],
+                                   ['detail', 'question']):  # pragma: no cover
                     msg = "Unexpected structure of NRL file '{}'".format(path)
                     raise NotImplementedError(msg)
                 nrl_dict._question = self._clean_str(cp.get(section,
@@ -128,7 +129,7 @@ class NRL(object):
                     resp_path = self._choose(section, path)
                     nrl_dict[section] = (descr, resp_path)
                     continue
-                else:
+                else:  # pragma: no cover
                     msg = "Unexpected structure of NRL file '{}'".format(path)
                     raise NotImplementedError(msg)
         return nrl_dict
@@ -223,7 +224,7 @@ class NRLDict(dict):
         else:
             return '0 items.'
 
-    def _repr_pretty_(self, p, cycle):
+    def _repr_pretty_(self, p, cycle):  # pragma: no cover
         p.text(str(self))
 
     def __getitem__(self, name):
@@ -254,9 +255,9 @@ class LocalNRL(NRL):
         """
         cp = configparser.SafeConfigParser()
         with codecs.open(path, mode='r', encoding='UTF-8') as f:
-            if sys.version_info.major == 2:
+            if sys.version_info.major == 2:  # pragma: no cover
                 cp.readfp(f)
-            else:
+            else:  # pragma: no cover
                 cp.read_file(f)
         return cp
 
@@ -295,9 +296,9 @@ class RemoteNRL(NRL):
         '''
         cp = configparser.SafeConfigParser()
         with io.StringIO(self._download(path)) as buf:
-            if sys.version_info.major == 2:
+            if sys.version_info.major == 2:  # pragma: no cover
                 cp.readfp(buf)
-            else:
+            else:  # pragma: no cover
                 cp.read_file(buf)
         return cp
 
