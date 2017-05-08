@@ -107,8 +107,8 @@ def _is_segy(filename):
                                          _number_of_auxiliary_traces)[0]
 
     _format_number = unpack(fmt, _format_number)[0]
-    # Test the version number. The only really support version number of
-    # ObsPy is 1.0 which is encoded has 0100_16. Many file have version
+    # Test the version number. The only really supported version number in
+    # ObsPy is 1.0 which is encoded as 0100_16. Many file have version
     # number zero which is used to indicate "traditional SEG-Y" conforming
     # to the 1975 standard.
     # Also allow 0010_16 and 0001_16 as the definition is honestly awkward
