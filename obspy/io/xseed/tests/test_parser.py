@@ -540,11 +540,15 @@ class ParserTestCase(unittest.TestCase):
         """
         sts2_resp_file = os.path.join(self.path,
                                       'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        p = Parser(sts2_resp_file)
+        # Weak but at least tests that something has been read.
+        assert set(p.blockettes.keys()) == {50, 52, 53, 54, 57, 58}
+
         rt130_resp_file = os.path.join(self.path,
                                        'RESP.XX.NR008..HHZ.130.1.100')
-        for filename in (sts2_resp_file, rt130_resp_file):
-            p = Parser(filename)
-            p.get_resp()
+        p = Parser(rt130_resp_file)
+        # Weak but at least tests that something has been read.
+        assert set(p.blockettes.keys()) == {50, 52, 53, 54, 57, 58}
 
     def test_get_response(self):
         """
@@ -566,13 +570,15 @@ class ParserTestCase(unittest.TestCase):
         """
         sts2_resp_file = os.path.join(self.path,
                                       'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        p = Parser(open(sts2_resp_file, "rt").read())
+        # Weak but at least tests that something has been read.
+        assert set(p.blockettes.keys()) == {50, 52, 53, 54, 57, 58}
+
         rt130_resp_file = os.path.join(self.path,
                                        'RESP.XX.NR008..HHZ.130.1.100')
-        for filename in (sts2_resp_file, rt130_resp_file):
-            with open(filename, 'rt') as f:
-                data = f.read()
-            p = Parser(data)
-            p.get_resp()
+        p = Parser(open(rt130_resp_file, "rt").read())
+        # Weak but at least tests that something has been read.
+        assert set(p.blockettes.keys()) == {50, 52, 53, 54, 57, 58}
 
     def clean_unit_string(self, string):
         """
@@ -614,21 +620,6 @@ class ParserTestCase(unittest.TestCase):
         # compare
         self.assertEqual(seed_list, resp_list)
 
-    def test_parse_resp(self):
-        """
-        Tests parsing a RESP file by calling Parser._parse_resp(string)
-        """
-        sts2_resp_file = os.path.join(self.path,
-                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
-        rt130_resp_file = os.path.join(self.path,
-                                       'RESP.XX.NR008..HHZ.130.1.100')
-        for filename in (sts2_resp_file, rt130_resp_file):
-            with open(filename, 'rt') as f:
-                data = f.read()
-            p = Parser()
-            p._parse_resp(data)
-            p.get_resp()
-
     def test_join_sensor_dl_resps(self):
         """
         Test creation of response from sensor and datalogger.
@@ -645,7 +636,6 @@ class ParserTestCase(unittest.TestCase):
         sensor = Parser(self.BW_SEED_files[0])
         dl = Parser(self.BW_SEED_files[1])
         Parser.combine_sensor_dl_resps(sensor=sensor, datalogger=dl)
-        # combined.write_resp('.')
 
     def test_join_wrong_types(self):
         with self.assertRaises(TypeError):

@@ -32,15 +32,13 @@ from obspy.core.inventory import (Response,
                                   PolesZerosResponseStage,
                                   CoefficientsTypeResponseStage,
                                   InstrumentSensitivity,
-                                  ResponseStage,
-                                  )
+                                  ResponseStage)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import download_to_file
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertainties,
-                                         FloatWithUncertaintiesAndUnit,
-                                         )
+                                         FloatWithUncertaintiesAndUnit)
 from . import DEFAULT_XSEED_VERSION, blockette
 from .utils import (IGNORE_ATTR, SEEDParserException, to_tag, is_resp,
                     lookup_code)
@@ -73,7 +71,7 @@ INDEX_FIELDS = {30: 'data_format_identifier_code',
 
 class Parser(object):
     """
-    The XML-SEED parser class parses dataless, full SEED volumes, or RESP.
+    Class parsing dataless and full SEED, X-SEED, and RESP files.
 
     .. seealso::
 
@@ -86,9 +84,7 @@ class Parser(object):
         http://ds.iris.edu/ds/nodes/dmc/data/formats/resp/
 
     """
-
-    def __init__(self, data=None, debug=False, strict=False,
-                 compact=False):
+    def __init__(self, data=None, debug=False, strict=False, compact=False):
         """
         Initializes the SEED parser.
 
@@ -186,7 +182,6 @@ class Parser(object):
                     self._parse_resp(data)
                     return
                 else:
-                    # looks like a file - read it
                     with open(data, 'rb') as f:
                         data = f.read()
                     data = io.BytesIO(data)
@@ -662,8 +657,10 @@ class Parser(object):
 
     def _parse_resp(self, data):
         """
-        Reads IRIS RESP formated data as produced with 'rdseed -f seed.test -R'
-        Populates self Parser object.
+        Reads RESP files.
+
+        Reads IRIS RESP formatted data as produced with
+        'rdseed -f seed.test -R'.
 
         :type data: file or io.BytesIO
         """
@@ -674,11 +671,18 @@ class Parser(object):
 
         # First parse the data into a list of Blockettes
         blockettelist = list()
+
         # List of fields
         blockettefieldlist = list()
         last_blockette_id = None
+
+        # Pre-compile as called a lot.
+        pattern = re.compile(r"^B(\d+)F(\d+)(?:-(\d+))?(.*)")
+        field_pattern = re.compile(r":\s*(\S*)")
+        comment_pattern = re.compile(r"^#.*\+")
+
         for line in data.splitlines():
-            m = re.match(r"^B(\d+)F(\d+)(?:-(\d+))?(.*)", line)
+            m = re.match(pattern, line)
             if m:
                 g = m.groups()
                 blockette_number = g[0]
@@ -690,7 +694,7 @@ class Parser(object):
                     last_blockette_id = blockette_number
                 if not g[2]:
                     # Single field per line
-                    value = re.search(r":\s*(\S*)", g[3]).groups()[0]
+                    value = re.search(field_pattern, g[3]).groups()[0]
                     blockettefieldlist.append((blockette_number, g[1], value))
                 else:
                     # Multiple fields per line
@@ -701,7 +705,7 @@ class Parser(object):
                     for i, value in enumerate(values):
                         blockettefieldlist.append(
                             (blockette_number, first_field + i, value))
-            elif re.match(r"^#.*\+", line):
+            elif re.match(comment_pattern, line):
                 # Comment line with a + in it means blockette is
                 # finished start a new one
                 if len(blockettefieldlist) > 0:
@@ -713,23 +717,27 @@ class Parser(object):
 
         # Second populate self from blockette list
         self.temp = {'volume': [], 'abbreviations': [], 'stations': []}
-        # Make an empty blockette10
+        # Make an empty blockette 10
         self.temp['volume'].append(blockette.Blockette010(
             debug=self.debug, strict=False, compact=False, record_type='V'))
-        # Make unit lookup blockette34
+
+        # Make unit lookup blockette 34
         b34s = ('034  44  4M/S~velocity in meters per second~',
                 '034  25  5V~emf in volts~',
                 '034  32  7COUNTS~digital counts~'
                 )
         abbv_lookup = {'M/S': '4', 'V': '5', 'COUNTS': '7'}
+
         for b34 in b34s:
             data = io.BytesIO(b34.encode('utf-8'))
             b34_obj = blockette.Blockette034(debug=self.debug,
                                              record_type='A')
             b34_obj.parse_seed(data, expected_length=len(b34))
             self.temp['abbreviations'].append(b34_obj)
+
         self.temp['stations'].append([])
         root_attribute = self.temp['stations'][-1]
+
         for RESPblockettefieldlist in blockettelist:
             # Create a new blockette using the first field
             RESPblockette_id, RESPfield, resp_value = RESPblockettefieldlist[0]
@@ -742,7 +750,8 @@ class Parser(object):
                                             record_type=record_type)
             blockette_fields = (blockette_obj.default_fields +
                                 blockette_obj.get_fields())
-            unrolled_blockette_fields = list()
+            unrolled_blockette_fields = []
+
             for bf in blockette_fields:
                 if isinstance(bf, Loop):
                     for df in bf.data_fields:
@@ -793,7 +802,9 @@ class Parser(object):
     def combine_sensor_dl_resps(cls, sensor, datalogger):
         """
         Returns a single response from a sensor and datalogger response.
-        Does NOT caculate stage0; Sensitivity; Overall gain.
+
+        Does NOT calculate stage 0: the sensitivity or overall gain.
+
         Not tested for Parser objects with more than 1 response.
 
         :type sensor: :class:`~obspy.io.xseed.Parser`
@@ -807,20 +818,17 @@ class Parser(object):
         if not (isinstance(sensor, cls) and isinstance(datalogger, cls)):
             raise TypeError('Sensor and datalogger not type {}'.format(cls))
 
-        # Combine: sesnor.stage1, dl.stage2, ..., dl.stageN
+        # Combine: sensor.stage1, dl.stage2, ..., dl.stageN
 
-        # Find all stage1 blockettes in sensor
-        stage1 = list()
+        # Find all stage 1 blockettes in sensor
+        stage1 = []
         for b_id, b_list in sensor.blockettes.items():
             for b in b_list:
-                try:
-                    if b.stage_sequence_number == 1:
-                        stage1.append((b_id, b))
-                        # Only 1 stage1 for a given blockette tyep
-                        break
-                except:
-                    # OK to pass here.
-                    pass
+                if hasattr(b, "stage_sequence_number") and \
+                        b.stage_sequence_number == 1:
+                    stage1.append((b_id, b))
+                    # Only 1 stage 1 for a given blockette type
+                    break
 
         combined = copy.deepcopy(datalogger)
 
@@ -829,12 +837,9 @@ class Parser(object):
             for i, b in enumerate(combined.stations[0]):
                 if b.id != b_id:
                     continue
-                try:
-                    if b.stage_sequence_number == 1:
-                        combined.stations[0][i] = stage1_b
-                except:
-                    # OK to pass, really
-                    pass
+                if hasattr(b, "stage_sequence_number") and \
+                                b.stage_sequence_number == 1:
+                    combined.stations[0][i] = stage1_b
         return combined
 
     def get_response(self, frequency=None, sr=None):
@@ -856,10 +861,7 @@ class Parser(object):
                         }
 
         def lookup_unit(abbr, lookup):
-            return lookup_code(abbr,
-                               34,
-                               'unit_name',
-                               'unit_lookup_code',
+            return lookup_code(abbr, 34, 'unit_name', 'unit_lookup_code',
                                lookup)
 
         resp_stages = list()
@@ -868,7 +870,6 @@ class Parser(object):
         b53 = self.blockettes[53][0]
         b58 = next((b for b in self.blockettes[58]
                     if b.stage_sequence_number == 1), None)
-        self._get_abbreviation
 
         # Make a list of zeros
         zeros = list()
@@ -927,14 +928,13 @@ class Parser(object):
             output_units=lookup_unit(self.abbreviations,
                                      b53.stage_signal_output_units),
             pz_transfer_function_type=transform_map[
-                                                    b53.transfer_function_types
-                                                    ],
+                b53.transfer_function_types],
             normalization_frequency=FloatWithUncertainties(
                 b53.normalization_frequency),
             zeros=zeros,
             poles=poles,
             normalization_factor=b53.A0_normalization_factor,
-            resource_id='GENERATOR:obspy_from_RESP',   # XXX what should id be?
+            resource_id='GENERATOR:obspy_from_RESP'
         )
 
         resp_stages.append(stage1)
@@ -945,8 +945,7 @@ class Parser(object):
         for b in self.stations[0]:
             if b.id in (54, 57, 58) and b.stage_sequence_number >= 2:
                 resp_blockettes.setdefault(
-                                           b.stage_sequence_number, {}
-                                           )[b.id] = b
+                    b.stage_sequence_number, {})[b.id] = b
 
         for stage in resp_blockettes:
             if 54 in resp_blockettes[stage]:
@@ -1000,20 +999,19 @@ class Parser(object):
                     decimation_factor=b57.decimation_factor,
                     decimation_offset=b57.decimation_offset,
                     decimation_delay=FloatWithUncertainties(
-                                                            b57.estimated_delay
-                                                            ),
+                        b57.estimated_delay),
                     decimation_correction=FloatWithUncertainties(
                         b57.correction_applied)
                 )
             else:
-                # Basic responsestage
+                # Basic response stage
                 # just a b58
                 b58 = resp_blockettes[stage][58]
                 response_stage = ResponseStage(
                     stage_sequence_number=stage,
                     stage_gain=b58.sensitivity_gain,
                     stage_gain_frequency=b58.frequency,
-                    # XXX Assume this is stage2 V to V
+                    # XXX Assume this is stage 2 V to V
                     input_units='V',
                     output_units='V'
                 )
@@ -1024,10 +1022,10 @@ class Parser(object):
         if frequency is None:
             sensitivity_frequency = stage1.stage_gain_frequency
             if sr is not None:
-                sensitivity_frequency = min(sensitivity_frequency, sr*.4)
+                sensitivity_frequency = min(sensitivity_frequency, sr * 0.4)
         else:
             sensitivity_frequency = frequency
-        # dummy stage0
+        # dummy stage 0
         stage0 = InstrumentSensitivity(value=1.0,
                                        frequency=sensitivity_frequency,
                                        input_units='M/S',
@@ -1040,8 +1038,10 @@ class Parser(object):
         # calculate overal response; stage 0
         sensfreq, calc_sensit = \
             inv_response._get_overall_sensitivity_and_gain('VEL')
+
         inv_response.instrument_sensitivity.value = calc_sensit
         inv_response.instrument_sensitivity.frequency = sensfreq
+
         return inv_response
 
     def _parse_seed(self, data):
