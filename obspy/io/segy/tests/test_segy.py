@@ -14,12 +14,15 @@ import warnings
 import numpy as np
 
 import obspy
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, AttribDict
 from obspy.io.segy.header import (DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
                                   DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS)
 from obspy.io.segy.segy import (SEGYBinaryFileHeader, SEGYFile,
-                                SEGYTraceHeader, _read_segy, iread_segy)
+                                SEGYTraceHeader, _read_segy, iread_segy,
+                                SEGYInvalidTextualHeaderWarning)
 from obspy.io.segy.tests.header import DTYPES, FILES
+
+from . import _patch_header
 
 
 class SEGYTestCase(unittest.TestCase):
@@ -309,11 +312,16 @@ class SEGYTestCase(unittest.TestCase):
                 self.assertEqual(segy.textual_header_encoding, header_enc)
             # The header writes to a file like object.
             new_header = io.BytesIO()
-            segy._write_textual_header(new_header)
+            with warnings.catch_warnings(record=True):
+                segy._write_textual_header(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
             # Assert the correct length.
             self.assertEqual(len(new_header), 3200)
+            # Patch both headers to not worry about the automatically set
+            # values.
+            org_header = _patch_header(org_header)
+            new_header = _patch_header(new_header)
             # Assert the actual header.
             self.assertEqual(org_header, new_header)
 
@@ -352,7 +360,8 @@ class SEGYTestCase(unittest.TestCase):
             segy_file = _read_segy(file, headonly=headonly)
             with NamedTemporaryFile() as tf:
                 out_file = tf.name
-                segy_file.write(out_file)
+                with warnings.catch_warnings(record=True):
+                    segy_file.write(out_file)
                 # Read the new file again.
                 with open(out_file, 'rb') as f:
                     new_data = f.read()
@@ -372,6 +381,9 @@ class SEGYTestCase(unittest.TestCase):
                 # Create strings again.
                 org_data = org_data.tostring()
                 new_data = new_data.tostring()
+            # Just patch both headers - this tests something different.
+            org_data = _patch_header(org_data)
+            new_data = _patch_header(new_data)
             # Always write the SEGY File revision number!
             # org_data[3500:3502] = new_data[3500:3502]
             # Test the identity without the SEGY revision number
@@ -618,6 +630,136 @@ class SEGYTestCase(unittest.TestCase):
                 self.assertEqual(data[3200:3600][-100:-98], b"\x00\x01")
             else:
                 self.assertEqual(data[3200:3600][-100:-98], b"\x01\x00")
+
+    def test_textual_header_has_the_right_fields_at_the_end(self):
+        """
+        Needs to have the version number and a magical string at the end.
+        """
+        tr = obspy.read()[0]
+        tr.data = np.float32(tr.data)
+
+        # If both are missing they will be replaced.
+        with io.BytesIO() as buf:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                tr.write(buf, format="segy")
+            self.assertEqual(
+                len([_i for _i in w
+                     if _i.category is SEGYInvalidTextualHeaderWarning]), 0)
+            buf.seek(0, 0)
+            data = buf.read()
+
+        # Make sure the textual header has the required fields.
+        revision_number = data[:3200][-160:-146].decode()
+        end_header_mark = data[:3200][-80:-58].decode()
+        self.assertEqual(revision_number, "C39 SEG Y REV1")
+        self.assertEqual(end_header_mark, "C40 END TEXTUAL HEADER")
+
+        # An alternate end marker is accepted - no warning will be raised in
+        # this case.
+        # If both are missing they will be replaced.
+        st = obspy.Stream(traces=[tr.copy()])
+        st.stats = AttribDict()
+        # Write the alternate file header.
+        st.stats.textual_file_header = \
+            b" " * (3200 - 80) + b"C40 END EBCDIC        " + b" " * 58
+        with io.BytesIO() as buf:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                st.write(buf, format="segy", textual_header_encoding="EBCDIC")
+            self.assertEqual(
+                len([_i for _i in w
+                     if _i.category is SEGYInvalidTextualHeaderWarning]), 0)
+            buf.seek(0, 0)
+            data = buf.read()
+
+        # Make sure the textual header has the required fields.
+        revision_number = data[:3200][-160:-146].decode("EBCDIC-CP-BE")
+        end_header_mark = data[:3200][-80:-58].decode("EBCDIC-CP-BE")
+        self.assertEqual(revision_number, "C39 SEG Y REV1")
+        self.assertEqual(end_header_mark, "C40 END EBCDIC        ")
+
+        # Putting the correct values will raise no warning and leave the
+        # values.
+        st = obspy.Stream(traces=[tr.copy()])
+        st.stats = AttribDict()
+        # Write the alternate file header.
+        st.stats.textual_file_header =  \
+            b" " * (3200 - 160) + b"C39 SEG Y REV1" + b" " * 66 + \
+            b"C40 END TEXTUAL HEADER" + b" " * 58
+        with io.BytesIO() as buf:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                st.write(buf, format="segy")
+            self.assertEqual(
+                len([_i for _i in w
+                     if _i.category is SEGYInvalidTextualHeaderWarning]), 0)
+            buf.seek(0, 0)
+            data = buf.read()
+
+        # Make sure the textual header has the required fields.
+        revision_number = data[:3200][-160:-146].decode()
+        end_header_mark = data[:3200][-80:-58].decode()
+        self.assertEqual(revision_number, "C39 SEG Y REV1")
+        self.assertEqual(end_header_mark, "C40 END TEXTUAL HEADER")
+
+        # Putting a wrong revision number will raise a warning, but it will
+        # still be written.
+        st = obspy.Stream(traces=[tr.copy()])
+        st.stats = AttribDict()
+        # Write the alternate file header.
+        st.stats.textual_file_header = \
+            b" " * (3200 - 160) + b"ABCDEFGHIJKLMN" + b" " * 146
+        with io.BytesIO() as buf:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                st.write(buf, format="segy")
+            w = [_i for _i in w
+                 if _i.category is SEGYInvalidTextualHeaderWarning]
+            self.assertEqual(len(w), 1)
+            self.assertEqual(
+                w[0].message.args[0],
+                "The revision number in the textual header should be set as "
+                "'C39 SEG Y REV1' for a fully valid SEG-Y file. It is set to "
+                "'ABCDEFGHIJKLMN' which will be written to the file. Please "
+                "change it if you want a fully valid file.")
+            buf.seek(0, 0)
+            data = buf.read()
+
+        revision_number = data[:3200][-160:-146].decode()
+        end_header_mark = data[:3200][-80:-58].decode()
+        # The field is still written.
+        self.assertEqual(revision_number, "ABCDEFGHIJKLMN")
+        self.assertEqual(end_header_mark, "C40 END TEXTUAL HEADER")
+
+        # Same with the end header mark.
+        st = obspy.Stream(traces=[tr.copy()])
+        st.stats = AttribDict()
+        # Write the alternate file header.
+        st.stats.textual_file_header = \
+            b" " * (3200 - 80) + b"ABCDEFGHIJKLMNOPQRSTUV" + b" " * 58
+        with io.BytesIO() as buf:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                st.write(buf, format="segy")
+            w = [_i for _i in w
+                 if _i.category is SEGYInvalidTextualHeaderWarning]
+            self.assertEqual(len(w), 1)
+            self.assertEqual(
+                w[0].message.args[0],
+                "The end header mark in the textual header should be set as "
+                "'C40 END TEXTUAL HEADER' or as 'C40 END EBCDIC        ' for "
+                "a fully valid SEG-Y file. It is "
+                "set to 'ABCDEFGHIJKLMNOPQRSTUV' which will be written to the "
+                "file. Please change it if you want a fully valid file.")
+            buf.seek(0, 0)
+            data = buf.read()
+
+        revision_number = data[:3200][-160:-146].decode()
+        end_header_mark = data[:3200][-80:-58].decode()
+        # The field is still written.
+        self.assertEqual(revision_number, "C39 SEG Y REV1")
+        self.assertEqual(end_header_mark, "ABCDEFGHIJKLMNOPQRSTUV")
 
 
 def rms(x, y):

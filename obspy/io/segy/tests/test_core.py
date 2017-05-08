@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 from struct import unpack
+import warnings
 
 import numpy as np
 
@@ -20,6 +21,8 @@ from obspy.io.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
 from obspy.io.segy.segy import _read_segy as _read_segy_internal
 from obspy.io.segy.segy import SEGYError
 from obspy.io.segy.tests.header import DTYPES, FILES
+
+from . import _patch_header
 
 
 class SEGYCoreTestCase(unittest.TestCase):
@@ -231,6 +234,11 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Save the header to compare it later on.
         with open(file, 'rb') as f:
             header = f.read(3200)
+
+        # All newly written header will have the file revision number and
+        # the end header mark set - just also set them in the old header.
+        header = _patch_header(header, ebcdic=True)
+
         # First write should remain EBCDIC.
         with NamedTemporaryFile() as tf:
             out_file = tf.name
@@ -239,7 +247,10 @@ class SEGYCoreTestCase(unittest.TestCase):
             # Compare header.
             with open(out_file, 'rb') as f:
                 new_header = f.read(3200)
-        self.assertEqual(header, new_header)
+        # re-encode both to ASCII to easily compare them.
+        self.assertEqual(
+            header.decode("EBCDIC-CP-BE").encode("ASCII"),
+            new_header.decode("EBCDIC-CP-BE").encode("ASCII"))
         self.assertEqual(st2.stats.textual_file_header_encoding,
                          'EBCDIC')
         # Do once again to enforce EBCDIC.
@@ -341,9 +352,10 @@ class SEGYCoreTestCase(unittest.TestCase):
                 out_file1 = tf1.name
                 with NamedTemporaryFile() as tf2:
                     out_file2 = tf2.name
-                    # Write twice.
-                    segy_file.write(out_file1)
-                    _write_segy(st, out_file2)
+                    # Write twice and catch header warnings
+                    with warnings.catch_warnings(record=True):
+                        segy_file.write(out_file1)
+                        _write_segy(st, out_file2)
                     # Read and delete files.
                     with open(out_file1, 'rb') as f1:
                         data1 = f1.read()
@@ -381,6 +393,8 @@ class SEGYCoreTestCase(unittest.TestCase):
         """
         file = os.path.join(self.path, '1.sgy_first_trace')
         segy = _read_segy(file)
+        segy.stats.textual_file_header = \
+            _patch_header(segy.stats.textual_file_header)
         segy[0].stats.sampling_rate = 20
         with NamedTemporaryFile() as tf:
             outfile = tf.name
@@ -418,6 +432,8 @@ class SEGYCoreTestCase(unittest.TestCase):
             # Test for SEG Y.
             file = os.path.join(self.path, '1.sgy_first_trace')
             segy = _read_segy(file)
+            segy.stats.textual_file_header = \
+                _patch_header(segy.stats.textual_file_header)
             # Set the largest possible delta value which should just work.
             segy[0].stats.delta = 0.065535
             _write_segy(segy, outfile)
@@ -507,6 +523,8 @@ class SEGYCoreTestCase(unittest.TestCase):
                           second == 54], 5 * [True])
         # Read and set zero time.
         segy = _read_segy(file)
+        segy.stats.textual_file_header = \
+            _patch_header(segy.stats.textual_file_header)
         segy[0].stats.starttime = UTCDateTime(0)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
@@ -577,6 +595,8 @@ class SEGYCoreTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'one_trace_year_11.sgy')
         st = _read_segy(filename)
         st[0].stats.segy.trace_header['source_coordinate_x'] = -1
+        st.stats.textual_file_header = \
+            _patch_header(st.stats.textual_file_header)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
             st.write(outfile, format='SEGY')
