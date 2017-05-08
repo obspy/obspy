@@ -664,7 +664,7 @@ class SEGYTestCase(unittest.TestCase):
         with io.BytesIO() as buf:
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
-                st.write(buf, format="segy")
+                st.write(buf, format="segy", textual_header_encoding="EBCDIC")
             self.assertEqual(
                 len([_i for _i in w
                      if _i.category is SEGYInvalidTextualHeaderWarning]), 0)
@@ -672,8 +672,8 @@ class SEGYTestCase(unittest.TestCase):
             data = buf.read()
 
         # Make sure the textual header has the required fields.
-        revision_number = data[:3200][-160:-146].decode()
-        end_header_mark = data[:3200][-80:-58].decode()
+        revision_number = data[:3200][-160:-146].decode("EBCDIC-CP-BE")
+        end_header_mark = data[:3200][-80:-58].decode("EBCDIC-CP-BE")
         self.assertEqual(revision_number, "C39 SEG Y REV1")
         self.assertEqual(end_header_mark, "C40 END EBCDIC        ")
 
@@ -746,7 +746,8 @@ class SEGYTestCase(unittest.TestCase):
             self.assertEqual(
                 w[0].message.args[0],
                 "The end header mark in the textual header should be set as "
-                "'C40 END TEXTUAL HEADER' for a fully valid SEG-Y file. It is "
+                "'C40 END TEXTUAL HEADER' or as 'C40 END EBCDIC        ' for "
+                "a fully valid SEG-Y file. It is "
                 "set to 'ABCDEFGHIJKLMNOPQRSTUV' which will be written to the "
                 "file. Please change it if you want a fully valid file.")
             buf.seek(0, 0)

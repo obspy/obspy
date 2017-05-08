@@ -17,14 +17,13 @@ def _patch_header(header, ebcdic=False):
     number and the end header mark.
     """
     revnum = "C39 SEG Y REV1"
-    end_header = "C40 END TEXTUAL HEADER"
 
     if ebcdic:
         revnum = revnum.encode("EBCDIC-CP-BE")
-        end_header = end_header.encode("EBCDIC-CP-BE")
+        end_header = "C40 END EBCDIC        ".encode("EBCDIC-CP-BE")
     else:
         revnum = revnum.encode("ascii")
-        end_header = end_header.encode("ascii")
+        end_header = "C40 END TEXTUAL HEADER".encode("ascii")
 
     header = header[:3200-160] + revnum + header[3200-146:]
     header = header[:3200-80] + end_header + header[3200-58:]

@@ -313,13 +313,16 @@ class SEGYFile(object):
                   'than 3200 bytes'
             raise SEGYWritingError(msg)
 
+        # Assert the encoding.
+        enc = self.textual_header_encoding.upper()
+
         # Make sure revision number and end header marker are present. If
         # not: add them - if something else is already present, raise a
         # warning but don't do anything.
 
         # Make sure the textual header has the required fields.
         revision_number = textual_header[3200-160:3200-146].decode()
-        end_header_mark = textual_header[3200-80:3200-58].decode()
+        end_header_mark = textual_header[3200-80:3200-58]
         if revision_number != "C39 SEG Y REV1":
             if revision_number.strip() in ("", "C", "C39"):
                 textual_header = textual_header[:3200-160] + \
@@ -332,25 +335,29 @@ class SEGYFile(object):
                        "file. Please change it if you want a fully valid file."
                        % revision_number)
                 warnings.warn(msg, SEGYInvalidTextualHeaderWarning)
-        # First preferred, second is also allowed.
-        if end_header_mark not in ("C40 END TEXTUAL HEADER",
-                                   "C40 END EBCDIC        "):
-            if end_header_mark.strip() in ("", "C", "C40"):
+
+        desired_end_header_mark = b"C40 END TEXTUAL HEADER" if enc == "ASCII" \
+            else b"C40 END EBCDIC        "
+
+        if end_header_mark != desired_end_header_mark:
+            if end_header_mark.strip() in (b"", b"C", b"C40"):
                 textual_header = textual_header[:3200-80] + \
-                    b"C40 END TEXTUAL HEADER" + textual_header[3200-58:]
+                    desired_end_header_mark + textual_header[3200-58:]
             else:
                 # Raise warning but don't do anything.
                 msg = ("The end header mark in the textual header should be "
-                       "set as 'C40 END TEXTUAL HEADER' for a fully valid "
+                       "set as 'C40 END TEXTUAL HEADER' or as "
+                       "'C40 END EBCDIC        ' for a fully valid "
                        "SEG-Y file. It is set to '%s' which will be written "
                        "to the file. Please change it if you want a fully "
                        "valid file."
-                       % end_header_mark)
+                       % end_header_mark.decode())
                 warnings.warn(msg, SEGYInvalidTextualHeaderWarning)
 
-        if self.textual_header_encoding.upper() == 'ASCII':
+        # Finally encode the header if necessary.
+        if enc == 'ASCII':
             pass
-        elif self.textual_header_encoding.upper() == 'EBCDIC':
+        elif enc == 'EBCDIC':
             textual_header = \
                 textual_header.decode('ascii').encode('EBCDIC-CP-BE')
         # Should not happen.
@@ -358,6 +365,7 @@ class SEGYFile(object):
             msg = 'self.textual_header_encoding has to be either ASCII or ' + \
                   'EBCDIC.'
             raise SEGYWritingError(msg)
+
         file.write(textual_header)
 
     def _read_traces(self, unpack_headers=False, headonly=False,

@@ -246,7 +246,10 @@ class SEGYCoreTestCase(unittest.TestCase):
             # Compare header.
             with open(out_file, 'rb') as f:
                 new_header = f.read(3200)
-        self.assertEqual(header, new_header)
+        # re-encode both to ASCII to easily compare them.
+        self.assertEqual(
+            header.decode("EBCDIC-CP-BE").encode("ASCII"),
+            new_header.decode("EBCDIC-CP-BE").encode("ASCII"))
         self.assertEqual(st2.stats.textual_file_header_encoding,
                          'EBCDIC')
         # Do once again to enforce EBCDIC.
