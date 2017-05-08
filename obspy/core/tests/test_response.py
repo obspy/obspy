@@ -271,6 +271,11 @@ class ResponseTestCase(unittest.TestCase):
         """
         Test creating a inventory response from seed resp parser.
         Compare it to same from xml.
+
+        XXX: This tests should really be moved somewhere else long-term. It
+        mixes StationXML parsing with RESP file parsing and response
+        calculation. We don't have a super good place for this currently
+        thus it is here.
         """
         filename = "IRIS_single_channel_with_response"
         datetime = UTCDateTime("2012-08-24T00:00:00")

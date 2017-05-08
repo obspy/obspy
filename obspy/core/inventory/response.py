@@ -735,11 +735,12 @@ class Response(ComparingObject):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
-    def get_evalresp_norm_resp(self, output='VEL'):
+    def _get_overall_sensitivity_and_gain(self, output='VEL'):
         """
-        Calculate the overall sensitivity or gain from stage1-n.
-        Returning the frequency and sensitvity, which can be used to create
-        stage0
+        Get the overall sensitivity and gain from stages 1 to N.
+
+        Returns the overall sensitivity frequency and gain, which can be
+        used to create stage 0.
 
         :type output: str
         :param output: Output units. One of:
@@ -754,21 +755,16 @@ class Response(ComparingObject):
         :rtype: :tuple: ( float, float )
         :returns: frequency and gain at frequency.
         """
-        output, chan = self._call_eval_resp_for_frequencies(
-            frequencies=np.ndarray(0),
-            output=output)
+        chan = self._call_eval_resp_for_frequencies(frequencies=np.zeros(1),
+                                                    output=output)[1]
         return chan.sensfreq, chan.calc_sensit
 
-    def _call_eval_resp_for_frequencies(self,
-                                        frequencies,
-                                        output="VEL",
-                                        start_stage=None,
-                                        end_stage=None):
+    def _call_eval_resp_for_frequencies(
+            self, frequencies, output="VEL", start_stage=None, end_stage=None):
         """
-        Returns frequency response for given frequencies using evalresp, and
-        frequency and sensitivity.
+        Returns frequency response for given frequencies using evalresp.
 
-        Lloyd thinks this code should live in evalresp wrapper.
+        Also returns the overall sensitivity frequency and its gain.
 
         :type frequencies: list of float
         :param frequencies: Discrete frequencies to calculate response for.
@@ -1206,7 +1202,7 @@ class Response(ComparingObject):
             self, frequencies, output="VEL", start_stage=None, end_stage=None):
         """
         Returns frequency response for given frequencies using evalresp.
-sdfsdfasdf
+
         :type frequencies: list of float
         :param frequencies: Discrete frequencies to calculate response for.
         :type output: str
@@ -1229,10 +1225,8 @@ sdfsdfasdf
         :returns: frequency response at requested frequencies
         """
         output, chan = self._call_eval_resp_for_frequencies(
-                                                    frequencies,
-                                                    output=output,
-                                                    start_stage=start_stage,
-                                                    end_stage=end_stage)
+            frequencies, output=output, start_stage=start_stage,
+            end_stage=end_stage)
         return output
 
     def get_evalresp_response(self, t_samp, nfft, output="VEL",

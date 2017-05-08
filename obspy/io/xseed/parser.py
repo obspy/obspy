@@ -1037,8 +1037,9 @@ class Parser(object):
                                 instrument_sensitivity=stage0,
                                 instrument_polynomial=None,
                                 response_stages=resp_stages)
-        # calculate overal response; stage0
-        sensfreq, calc_sensit = inv_response.get_evalresp_norm_resp('VEL')
+        # calculate overal response; stage 0
+        sensfreq, calc_sensit = \
+            inv_response._get_overall_sensitivity_and_gain('VEL')
         inv_response.instrument_sensitivity.value = calc_sensit
         inv_response.instrument_sensitivity.frequency = sensfreq
         return inv_response
