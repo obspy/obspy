@@ -221,7 +221,7 @@ class SEGYFile(object):
         # If bytes 3506-3506 are not zero, an extended textual header follows
         # which is not supported so far.
         if bfh.number_of_3200_byte_ext_file_header_records_following != 0:
-            msg = 'Extended textual headers are supported yet. ' + \
+            msg = 'Extended textual headers are not yet supported. ' + \
                 'Please contact the developers.'
             raise NotImplementedError(msg)
 
