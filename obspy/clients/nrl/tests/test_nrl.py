@@ -3,12 +3,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
 import unittest
 
-import os
 
 from obspy.core.inventory import Response
-
 from obspy.clients.nrl.client import NRL, LocalNRL, RemoteNRL
 
 

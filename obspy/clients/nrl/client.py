@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Client for accessing the Nominal Response Library.
-
-http://ds.iris.edu/NRL/
+Client for accessing the Nominal Response Library (http://ds.iris.edu/NRL/).
 
 :copyright:
     Lloyd Carothers IRIS/PASSCAL, 2016
@@ -20,6 +18,7 @@ import codecs
 import io
 import os
 import sys
+
 import requests
 
 from obspy.core.compatibility import configparser
@@ -40,21 +39,15 @@ class NRL(object):
 
     Created with a URL for remote access or filesystem accessing a local copy.
     """
-
     _index = 'index.txt'
 
     def __new__(cls, root=None):
-        if root is not None:
-            o = requests.utils.urlparse(root)
-
-        if root is None or o.scheme == 'http':
-            # Create RemoteNRL
-            return super(NRL, cls).__new__(RemoteNRL)
-        elif os.path.isdir(o.path):
-            # Create LocalNRL
+        # Check if its a folder on the file-system.
+        if root and os.path.isdir(root):
             return super(NRL, cls).__new__(LocalNRL)
-        else:
-            raise TypeError('NRL requires a path or URL.')
+        # Otherwise delegate to the remote NRL client to deal with all kinds
+        # of remote resources (currently only HTTP).
+        return super(NRL, cls).__new__(RemoteNRL)
 
     def __init__(self):
         sensor_index = self._join(self.root, 'sensors', self._index)
