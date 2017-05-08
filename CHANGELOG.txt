@@ -93,6 +93,8 @@ master: (doi: 10.5281/zenodo.165135)
       `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
       (see #1400).
     * Write correct revision number (see #1737).
+    * The SEG-Y format detection now also checks the format version number
+      (see #1781).
  - obspy.io.css:
    * Read support for NNSA KB Core format waveform data. (see #1332)
  - obspy.io.mseed:
