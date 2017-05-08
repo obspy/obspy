@@ -65,12 +65,16 @@ LinkedRecordList;
 
 // Container for a continuous linked list of records.
 typedef struct ContinuousSegment_s {
-    hptime_t starttime;                     // Time of the first sample
-    hptime_t endtime;                       // Time of the last sample
-    double samprate;                        // Sample rate
-    char sampletype;                        // Sampletype
-    hptime_t hpdelta;                       // High precission sample period
-    int64_t samplecnt;                         // Total sample count
+    hptime_t starttime;           // Time of the first sample
+    hptime_t endtime;             // Time of the last sample
+    double samprate;              // Sample rate
+    char sampletype;              // Sampletype
+    hptime_t hpdelta;             // High precission sample period
+    int64_t recordcnt;            // Record count for segment.
+    int64_t samplecnt;            // Total sample count
+    int8_t encoding;              // Encoding of the first record.
+    int8_t byteorder;             // Byteorder of the first record.
+    int32_t reclen;               // Record length of the first record.
     /* Timing quality is a vendor specific value from 0 to 100% of maximum
      * accuracy, taking into account both clock quality and data flags. */
     uint8_t timing_qual;
@@ -601,6 +605,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
              segmentCurrent->calibration_type == calibration_type) {
             recordCurrent->previous = segmentCurrent->lastRecord;
             segmentCurrent->lastRecord = segmentCurrent->lastRecord->next = recordCurrent;
+            segmentCurrent->recordcnt += 1;
             segmentCurrent->samplecnt += recordCurrent->record->samplecnt;
             segmentCurrent->endtime = msr_endtime(recordCurrent->record);
         }
@@ -616,10 +621,17 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             }
             idListCurrent->lastSegment = segmentCurrent;
 
+            // These will be set to the value of the first record. They are
+            // not used anywhere but just serve informational purposes.
+            segmentCurrent->encoding = recordCurrent->record->encoding;
+            segmentCurrent->byteorder = recordCurrent->record->byteorder;
+            segmentCurrent->reclen = recordCurrent->record->reclen;
+
             segmentCurrent->starttime = recordCurrent->record->starttime;
             segmentCurrent->endtime = msr_endtime(recordCurrent->record);
             segmentCurrent->samprate = recordCurrent->record->samprate;
             segmentCurrent->sampletype = recordCurrent->record->sampletype;
+            segmentCurrent->recordcnt = 1;
             segmentCurrent->samplecnt = recordCurrent->record->samplecnt;
             // Calculate high-precision sample period
             segmentCurrent->hpdelta = (hptime_t) (( recordCurrent->record->samprate ) ?
