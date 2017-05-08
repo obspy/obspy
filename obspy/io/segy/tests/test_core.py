@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 from struct import unpack
+import warnings
 
 import numpy as np
 
@@ -351,9 +352,10 @@ class SEGYCoreTestCase(unittest.TestCase):
                 out_file1 = tf1.name
                 with NamedTemporaryFile() as tf2:
                     out_file2 = tf2.name
-                    # Write twice.
-                    segy_file.write(out_file1)
-                    _write_segy(st, out_file2)
+                    # Write twice and catch header warnings
+                    with warnings.catch_warnings(record=True):
+                        segy_file.write(out_file1)
+                        _write_segy(st, out_file2)
                     # Read and delete files.
                     with open(out_file1, 'rb') as f1:
                         data1 = f1.read()
@@ -391,6 +393,8 @@ class SEGYCoreTestCase(unittest.TestCase):
         """
         file = os.path.join(self.path, '1.sgy_first_trace')
         segy = _read_segy(file)
+        segy.stats.textual_file_header = \
+            _patch_header(segy.stats.textual_file_header)
         segy[0].stats.sampling_rate = 20
         with NamedTemporaryFile() as tf:
             outfile = tf.name
@@ -428,6 +432,8 @@ class SEGYCoreTestCase(unittest.TestCase):
             # Test for SEG Y.
             file = os.path.join(self.path, '1.sgy_first_trace')
             segy = _read_segy(file)
+            segy.stats.textual_file_header = \
+                _patch_header(segy.stats.textual_file_header)
             # Set the largest possible delta value which should just work.
             segy[0].stats.delta = 0.065535
             _write_segy(segy, outfile)
@@ -517,6 +523,8 @@ class SEGYCoreTestCase(unittest.TestCase):
                           second == 54], 5 * [True])
         # Read and set zero time.
         segy = _read_segy(file)
+        segy.stats.textual_file_header = \
+            _patch_header(segy.stats.textual_file_header)
         segy[0].stats.starttime = UTCDateTime(0)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
@@ -587,6 +595,8 @@ class SEGYCoreTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'one_trace_year_11.sgy')
         st = _read_segy(filename)
         st[0].stats.segy.trace_header['source_coordinate_x'] = -1
+        st.stats.textual_file_header = \
+            _patch_header(st.stats.textual_file_header)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
             st.write(outfile, format='SEGY')
