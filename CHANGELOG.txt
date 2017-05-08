@@ -111,6 +111,8 @@ master: (doi: 10.5281/zenodo.165135)
    * Should no-longer segfault with arbitrarily truncated files (see #1728).
    * Will now raise an exception when attempting to directly read mini-SEED
      files larger than 2048 MiB (#1746).
+   * `.stats.mseed` attributes are no longer per-file but per-trace where
+     applicable (see #1782).
  - obspy.io.nlloc:
    * Set preferred origin of event (see #1570)
  - obspy.io.nordic:
