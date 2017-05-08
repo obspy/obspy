@@ -838,7 +838,7 @@ class Parser(object):
                 if b.id != b_id:
                     continue
                 if hasattr(b, "stage_sequence_number") and \
-                                b.stage_sequence_number == 1:
+                        b.stage_sequence_number == 1:
                     combined.stations[0][i] = stage1_b
         return combined
 

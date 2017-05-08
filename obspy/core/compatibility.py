@@ -34,11 +34,11 @@ if PY2:
             return np.frombuffer(data, dtype=dtype).copy()
         else:
             return np.array([], dtype=dtype)
-    import ConfigParser as configparser
+    import ConfigParser as configparser  # NOQA
 else:
     def from_buffer(data, dtype):
         return np.array(memoryview(data)).view(dtype).copy()  # NOQA
-    import configparser
+    import configparser  # NOQA
 
 
 def is_text_buffer(obj):
