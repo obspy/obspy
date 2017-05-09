@@ -237,9 +237,6 @@ def _write_ah1(stream, filename):
     :param filename: open file, or file-like object
 
     """
-    if filename.endswith('AH') or filename.endswith('ah'):
-        filename = os.path.splitext(filename)[0]
-
     def _pack_trace_with_ah_dict(trace, packer):
 
         # station info
@@ -437,8 +434,7 @@ def _write_ah1(stream, filename):
         else:
             packer = _pack_trace_wout_ah_dict(tr, packer)
 
-    ofilename = filename + ".AH"
-    with open(ofilename, 'wb') as fh:
+    with open(filename, 'wb') as fh:
         fh.write(packer.get_buffer())
 
 
