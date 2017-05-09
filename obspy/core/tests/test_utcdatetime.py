@@ -31,8 +31,8 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(dt, UTCDateTime(2009, 7, 1, 12, 12, 12))
         dt = UTCDateTime("19700101")
         self.assertEqual(dt, UTCDateTime(1970, 1, 1, 0, 0))
-        dt = UTCDateTime("1970/01/01 12:23:34")
-        self.assertEqual(dt, UTCDateTime(1970, 1, 1, 12, 23, 34))
+        dt = UTCDateTime("1970/01/17 12:23:34")
+        self.assertEqual(dt, UTCDateTime(1970, 1, 17, 12, 23, 34))
         # other non ISO8601 strings should raise an exception
         self.assertRaises(Exception, UTCDateTime, "1970,001,12:23:34",
                           iso8601=True)

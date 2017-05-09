@@ -136,8 +136,8 @@ class UTCDateTime(object):
         >>> UTCDateTime("20110818_03:00:00")
         UTCDateTime(2011, 8, 18, 3, 0)
 
-        >>> UTCDateTime("1970/01/01 12:23:34")
-        UTCDateTime(1970, 1, 1, 12, 23, 34)
+        >>> UTCDateTime("1970/01/17 12:23:34")
+        UTCDateTime(1970, 1, 17, 12, 23, 34)
 
     (4) Using multiple arguments in the following order: `year, month,
         day[, hour[, minute[, second[, microsecond]]]`. The year, month and day
