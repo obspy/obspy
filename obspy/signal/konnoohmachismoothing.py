@@ -82,8 +82,8 @@ def konno_ohmachi_smoothing_window(frequencies, center_frequency,
         # Calculate the bandwidth*log10(f/f_c)
         smoothing_window = bandwidth * np.log10(frequencies / center_frequency)
         # Just the Konno-Ohmachi formulae.
-        smoothing_window[...] =\
-            (np.sin(smoothing_window) / smoothing_window) ** 4
+        smoothing_window[:] = (
+            np.sin(smoothing_window) / smoothing_window) ** 4
     # Check if the center frequency is exactly part of the provided
     # frequencies. This will result in a division by 0. The limit of f->f_c is
     # one.
@@ -227,14 +227,10 @@ def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
     # matrix and apply to each spectrum. Also only use when more then one
     # spectrum is to be smoothed.
     if enforce_no_matrix is False and (len(spectra.shape) > 1 or count > 1) \
-       and approx_mem_usage < max_memory_usage:
+            and approx_mem_usage < max_memory_usage:
         smoothing_matrix = calculate_smoothing_matrix(
             frequencies, bandwidth, normalize=normalize)
-        new_spec = np.dot(spectra, smoothing_matrix)
-        # Eventually apply more than once.
-        for _i in range(count - 1):
-            new_spec = np.dot(new_spec, smoothing_matrix)
-        return new_spec
+        return apply_smoothing_matrix(spectra, smoothing_matrix, count=count)
     # Otherwise just calculate the smoothing window every time and apply it.
     else:
         new_spec = np.empty(spectra.shape, spectra.dtype)
