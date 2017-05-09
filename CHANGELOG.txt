@@ -103,6 +103,8 @@ master: (doi: 10.5281/zenodo.165135)
       end header mark if nothing else exists at these positions (see #1738).
     * The SEG-Y format detection now also checks the format version number
       (see #1781).
+    * Enable reading SEG-Y files that have day of year 0 in trace header
+      (see #1722).
  - obspy.io.css:
    * Read support for NNSA KB Core format waveform data. (see #1332)
  - obspy.io.mseed:
