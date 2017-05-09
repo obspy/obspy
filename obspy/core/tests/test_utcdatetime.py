@@ -20,7 +20,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         Tests initialization from a given time string not ISO8601 compatible.
         """
-        # some strange patterns
+        # some supported non ISO8601 patterns
         dt = UTCDateTime("1970-01-01 12:23:34")
         self.assertEqual(dt, UTCDateTime(1970, 1, 1, 12, 23, 34))
         dt = UTCDateTime("1970,01,01,12:23:34")
@@ -31,7 +31,9 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(dt, UTCDateTime(2009, 7, 1, 12, 12, 12))
         dt = UTCDateTime("19700101")
         self.assertEqual(dt, UTCDateTime(1970, 1, 1, 0, 0))
-        # non ISO8601 strings should raise an exception
+        dt = UTCDateTime("1970/01/01 12:23:34")
+        self.assertEqual(dt, UTCDateTime(1970, 1, 1, 12, 23, 34))
+        # other non ISO8601 strings should raise an exception
         self.assertRaises(Exception, UTCDateTime, "1970,001,12:23:34",
                           iso8601=True)
 
@@ -78,7 +80,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime(1240561632)
         self.assertEqual(dt, UTCDateTime(2009, 4, 24, 8, 27, 12))
 
-    def test_from_iso_8601_calendar_date_string(self):
+    def test_from_iso8601_calendar_date_string(self):
         """
         Tests initialization from a given ISO8601 calendar date representation.
         """
@@ -154,7 +156,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime("2009-12-31T12:23:34.000005+01:15")
         self.assertEqual(dt, UTCDateTime(2009, 12, 31, 11, 8, 34, 5))
 
-    def test_from_iso_8601_ordinal_date_string(self):
+    def test_from_iso8601_ordinal_date_string(self):
         """
         Tests initialization from a given ISO8601 ordinal date representation.
         """
@@ -205,7 +207,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime("2009001T12Z")
         self.assertEqual(dt, UTCDateTime(2009, 1, 1, 12))
 
-    def test_from__iso_8601_week_date_string(self):
+    def test_from_iso8601_week_date_string(self):
         """
         Tests initialization from a given ISO8601 week date representation.
         """
@@ -365,7 +367,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertAlmostEqual(dt.timestamp, -43199.123456, 6)
         self.assertEqual(str(dt), "1969-12-31T12:00:00.876544Z")
 
-    def test_big_negative_utc_date_time(self):
+    def test_big_negative_utcdatetime(self):
         # 1
         dt = UTCDateTime("1969-12-31T23:43:19.900000Z")
         self.assertEqual(dt.timestamp, -1000.1)
@@ -375,7 +377,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(dt.timestamp, -2051177785.876544)
         self.assertEqual(str(dt), "1905-01-01T12:23:34.123456Z")
 
-    def test_init_utc_date_time(self):
+    def test_init_utcdatetime(self):
         dt = UTCDateTime(year=2008, month=1, day=1)
         self.assertEqual(str(dt), "2008-01-01T00:00:00.000000Z")
         dt = UTCDateTime(year=2008, julday=1, hour=12, microsecond=5000)
@@ -383,7 +385,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         # without parameters returns current date time
         UTCDateTime()
 
-    def test_init_utc_date_time_mixing_keyworks_with_arguments(self):
+    def test_init_utcdatetime_mixing_keyworks_with_arguments(self):
         # times
         dt = UTCDateTime(2008, 1, 1, hour=12)
         self.assertEqual(dt, UTCDateTime(2008, 1, 1, 12))
@@ -971,7 +973,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
             t = UTCDateTime(2011, 1, 25, 15, 32, 12 + microns / 1e6)
             self.assertEqual(microns, t.microsecond)
 
-    def test_issue1215(self):
+    def test_issue_1215(self):
         """
         Tests some non-ISO8601 strings which should be also properly parsed.
 
@@ -1095,7 +1097,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(UTCDateTime(a)._ns, a._ns)
         self.assertEqual(str(UTCDateTime(a)), str(a))
 
-    def test_1008(self):
+    def test_issue_1008(self):
         """
         see #1008
         """
@@ -1104,7 +1106,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(str(UTCDateTime("9999-12-31T23:59:59.999999")),
                          "9999-12-31T23:59:59.999999Z")
 
-    def test_1652(self):
+    def test_issue_1652(self):
         """
         Comparing UTCDateTime and datetime.datetime objects - see #1652
         """
