@@ -261,6 +261,22 @@ class NLLOCTestCase(unittest.TestCase):
             self.assertEqual(event.comments[0].text,
                              "Central Vanuatu (3D tomo 2016)")
 
+    def test_read_nlloc_6_beta_signature(self):
+        """
+        SIGNATURE field of nlloc hypocenter output file was somehow changed at
+        some point after version 6.0 (it appears in 6.0.3 beta release for
+        example).
+        Date is now seemingly always prepended with 'run:' without a space
+        afterwards.
+        """
+        filename = os.path.join(self.datapath, 'nlloc_post_version_6.hyp')
+        cat = read_nlloc_hyp(filename)
+        # check that signature time-of-run part is correctly read
+        # (actually before the fix the above reading already fails..)
+        self.assertEqual(
+            cat[0].creation_info.creation_time,
+            UTCDateTime(2017, 5, 9, 11, 0, 22))
+
 
 def suite():
     return unittest.makeSuite(NLLOCTestCase, "test")

@@ -172,6 +172,9 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
 
     line = line.rstrip().split('"')[1]
     signature, version, date, time = line.rsplit(" ", 3)
+    # new NLLoc > 6.0 seems to add prefix 'run:' before date
+    if date.startswith('run:'):
+        date = date[4:]
     signature = signature.strip()
     creation_time = UTCDateTime.strptime(date + time, str("%d%b%Y%Hh%Mm%S"))
 
