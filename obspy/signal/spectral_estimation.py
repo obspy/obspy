@@ -403,6 +403,14 @@ class PPSD(object):
         return self._len
 
     @property
+    def step(self):
+        """
+        Time step between start times of adjacent psd segments in seconds
+        (assuming gap-less data).
+        """
+        return self.ppsd_length * (1.0 - self.overlap)
+
+    @property
     def nfft(self):
         return self._nfft
 
@@ -1291,6 +1299,33 @@ class PPSD(object):
             msg = msg % (duplicates, len(_times_processed), filename)
             warnings.warn(msg)
 
+    def _split_lists(self, times, psds):
+        """
+        """
+        t_diff_gapless = self.step
+        gap_indices = np.argwhere(np.diff(times) - t_diff_gapless)
+        gap_indices = (gap_indices.flatten() + 1).tolist()
+
+        if not len(gap_indices):
+            return [(times, psds)]
+
+        gapless = []
+        indices_start = [0] + gap_indices
+        indices_end = gap_indices + [len(times)]
+        for start, end in zip(indices_start, indices_end):
+            gapless.append((times[start:end], psds[start:end]))
+        return gapless
+
+    def _get_gapless_psd(self):
+        """
+        Helper routine to get a list of 2-tuples with gapless portions of
+        processed PPSD time ranges.
+        This means that PSD time history is split whenever to adjacent PSD
+        timestamps are not separated by exactly
+        ``self.ppsd_length * (1 - self.overlap)``.
+        """
+        return self._split_lists(self.times_processed, self.psd_values)
+
     def plot_spectrogram(self, cmap=obspy_sequential, clim=None, grid=True,
                          filename=None, show=True):
         """
@@ -1316,18 +1351,29 @@ class PPSD(object):
         """
         import matplotlib.pyplot as plt
 
-        xedges = [t.matplotlib_date for t in self.times_processed] + \
-            [(self.times_processed[-1] + self.ppsd_length).matplotlib_date]
-        yedges = self.period_xedges
-        meshgrid_x, meshgrid_y = np.meshgrid(xedges, yedges)
-        data = np.array(self.psd_values).T
-
         fig, ax = plt.subplots()
 
-        quadmesh = ax.pcolormesh(meshgrid_x, meshgrid_y, data, cmap=cmap,
-                                 zorder=-1)
-        if clim is not None:
+        quadmeshes = []
+        yedges = self.period_xedges
+
+        for times, psds in self._get_gapless_psd():
+            xedges = [t.matplotlib_date for t in times] + \
+                [(times[-1] + self.step).matplotlib_date]
+            meshgrid_x, meshgrid_y = np.meshgrid(xedges, yedges)
+            data = np.array(psds).T
+
+            quadmesh = ax.pcolormesh(meshgrid_x, meshgrid_y, data, cmap=cmap,
+                                     zorder=-1)
+            quadmeshes.append(quadmesh)
+
+        if clim is None:
+            cmin = min(qm.get_clim()[0] for qm in quadmeshes)
+            cmax = max(qm.get_clim()[1] for qm in quadmeshes)
+            clim = (cmin, cmax)
+
+        for quadmesh in quadmeshes:
             quadmesh.set_clim(*clim)
+
         cb = plt.colorbar(quadmesh, ax=ax)
 
         if grid:
@@ -1343,8 +1389,12 @@ class PPSD(object):
         _set_xaxis_obspy_dates(ax)
 
         ax.set_yscale("log")
-        ax.set_xlim(xedges[0], xedges[-1])
+        ax.set_xlim(self.times_processed[0].matplotlib_date,
+                    (self.times_processed[-1] + self.step).matplotlib_date)
         ax.set_ylim(yedges[0], yedges[-1])
+        ax.set_facecolor('0.8')
+
+        fig.tight_layout()
 
         if filename is not None:
             plt.savefig(filename)
@@ -1436,19 +1486,24 @@ class PPSD(object):
             else:
                 colors = color
 
-        times = [t.matplotlib_date for t in self.times_processed]
+        times = self._times_processed
 
         if temporal_restrictions:
             mask = ~self._stack_selection(**temporal_restrictions)
+            times = [x for i, x in enumerate(times) if not mask[i]]
         else:
             mask = None
 
         fig, ax = plt.subplots()
 
         for period, color in zip(periods, colors):
+            cur_color = color
             # extract psd values for given period
             psd_values, period_min, _, period_max = \
                 self.extract_psd_values(period)
+            if mask is not None:
+                psd_values = [x for i, x in enumerate(psd_values)
+                              if not mask[i]]
             # if right edge of period range is less than one second we label
             # the line in Hertz
             if period_max < 1:
@@ -1456,15 +1511,27 @@ class PPSD(object):
                     1.0 / period_max, 1.0 / period_min)
             else:
                 label = "{:.2g}-{:.2g} [s]".format(period_min, period_max)
-            if mask is not None:
-                psd_values = np.ma.masked_array(psd_values, mask=mask)
-            # older matplotlib raises when passing in `color=None`
-            if color is None:
-                color = {}
-            else:
-                color = {'color': color}
-            ax.plot(times, psd_values, label=label, ls=linestyle,
-                    marker=marker, **color)
+
+            for i, (times_, psd_values) in enumerate(
+                    self._split_lists(times, psd_values)):
+                # only label first line plotted for each period
+                if i:
+                    label = None
+                # older matplotlib raises when passing in `color=None`
+                if color is None:
+                    if cur_color is None:
+                        color_kwargs = {}
+                    else:
+                        color_kwargs = {'color': cur_color}
+                else:
+                    color_kwargs = {'color': color}
+                times_ = [UTCDateTime(t).matplotlib_date for t in times_]
+                line = ax.plot(times_, psd_values, label=label, ls=linestyle,
+                               marker=marker, **color_kwargs)[0]
+                # plot the next lines with the same color (we can't easily
+                # determine the color beforehand if we rely on the color cycle,
+                # i.e. when user doesn't specify colors explictly)
+                cur_color = line.get_color()
 
         if legend:
             ax.legend()

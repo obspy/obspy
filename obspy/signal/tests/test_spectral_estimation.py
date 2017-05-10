@@ -623,6 +623,11 @@ class PsdTestCase(unittest.TestCase):
                         'year': [2011],
                         'time_of_weekday': [(-1, 2, 23)]}
 
+        # add some gaps in the middle
+        for i in sorted(list(range(30, 40)) + list(range(8, 18)) + [4])[::-1]:
+            ppsd._times_processed.pop(i)
+            ppsd._binned_psds.pop(i)
+
         with ImageComparison(self.path_images, 'ppsd_temporal.png',
                              reltol=1.5) as ic:
             fig = ppsd.plot_temporal([0.1, 1, 10], filename=None, show=False,
@@ -638,6 +643,11 @@ class PsdTestCase(unittest.TestCase):
         Test spectrogram type plot of PPSD
         """
         ppsd = PPSD.load_npz(self.example_ppsd_npz)
+
+        # add some gaps in the middle
+        for i in sorted(list(range(30, 40)) + list(range(8, 18)) + [4])[::-1]:
+            ppsd._times_processed.pop(i)
+            ppsd._binned_psds.pop(i)
 
         with ImageComparison(self.path_images, 'ppsd_spectrogram.png',
                              reltol=1.5) as ic:
