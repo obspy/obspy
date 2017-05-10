@@ -6,7 +6,7 @@ MAINTAINER Tobias Megies
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NOWARNINGS=yes
 
 # install packages to install obspy and build deb packages
-RUN apt-get update && apt-get upgrade -y || true
+RUN apt-get update && apt-get upgrade -y
 RUN apt-get update && apt-get -y --no-install-recommends install \
     debhelper \
     devscripts \
@@ -70,7 +70,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
 RUN pip install future; \
     pip3 install future
 RUN pip install https://github.com/Damgaard/PyImgur/archive/9ebd8bed9b3d0ae2797950876f5c1e64a560f7d8.zip; \
-    pip3 install https://github.com/Damgaard/PyImgur/archive/9ebd8bed9b3d0ae2797950876f5c1e64a560f7d8.zip || true
+    pip3 install https://github.com/Damgaard/PyImgur/archive/9ebd8bed9b3d0ae2797950876f5c1e64a560f7d8.zip
 # make sure locale we use in tests is present
 RUN locale-gen en_US.UTF-8
 
