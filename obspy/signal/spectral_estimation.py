@@ -1357,6 +1357,29 @@ class PPSD(object):
             plt.draw()
             return fig
 
+    def extract_psd_values(self, period):
+        """
+        Extract PSD values for given period in seconds.
+
+        Selects the period bin whose center period is closest to the specified
+        period. Also returns the minimum, center and maximum period of the
+        selected bin. The respective times of the PSD values can be accessed as
+        :attr:`PPSD.times_processed`.
+
+        :type period: float
+        :param period: Period to extract PSD values for in seconds.
+        :rtype: four-tuple of (list, float, float, float)
+        :returns: PSD values for requested period (at times)
+        """
+        # evaluate which period bin to extract
+        period_diff = np.abs(self.period_bin_centers - period)
+        index = np.argmin(period_diff)
+        period_min = self.period_bin_left_edges[index]
+        period_max = self.period_bin_right_edges[index]
+        period_center = self.period_bin_centers[index]
+        psd_values = [psd[index] for psd in self.psd_values]
+        return psd_values, period_min, period_center, period_max
+
     def plot_temporal(self, period, color=None, legend=True, grid=True,
                       linestyle="-", marker=None, filename=None, show=True,
                       **temporal_restrictions):
@@ -1414,7 +1437,6 @@ class PPSD(object):
             else:
                 colors = color
 
-        period_bin_centers = self.period_bin_centers
         times = [t.matplotlib_date for t in self.times_processed]
 
         if temporal_restrictions:
@@ -1426,11 +1448,9 @@ class PPSD(object):
         ax = fig.add_subplot(1, 1, 1)
 
         for period, color in zip(periods, colors):
-            # evaluate which period bin to extract
-            period_diff = np.abs(period_bin_centers - period)
-            index = np.argmin(period_diff)
-            period_min = self.period_bin_left_edges[index]
-            period_max = self.period_bin_right_edges[index]
+            # extract psd values for given period
+            psd_values, period_min, _, period_max = \
+                self.extract_psd_values(period)
             # if right edge of period range is less than one second we label
             # the line in Hertz
             if period_max < 1:
@@ -1438,7 +1458,6 @@ class PPSD(object):
                     1.0 / period_max, 1.0 / period_min)
             else:
                 label = "{:.2g}-{:.2g} [s]".format(period_min, period_max)
-            psd_values = [psd[index] for psd in self.psd_values]
             if mask is not None:
                 psd_values = np.ma.masked_array(psd_values, mask=mask)
             # older matplotlib raises when passing in `color=None`
