@@ -22,8 +22,10 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-cryptography \
     python-decorator \
     python-dev \
+    python-gdal \
     python-geographiclib \
     python-imaging \
+    python-jsonschema \
     python-lxml \
     python-m2crypto \
     python-matplotlib \
@@ -33,6 +35,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-nose \
     python-numpy \
     python-pip \
+    python-pyproj \
     python-requests \
     python-scipy \
     python-setuptools \
@@ -44,6 +47,9 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-decorator \
     python3-dev \
     python3-flake8 \
+    python3-gdal \
+    python3-geographiclib \
+    python3-jsonschema \
     python3-lxml \
     python3-matplotlib \
     python3-mock \
@@ -51,6 +57,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-nose \
     python3-numpy \
     python3-pip \
+    python3-pyproj \
     python3-requests \
     python3-scipy \
     python3-setuptools \

@@ -1,36 +1,81 @@
 FROM ubuntu:16.04
 
-MAINTAINER Lion Krischer
+MAINTAINER Tobias Megies
 
 # Set the env variables to non-interactive
-ENV DEBIAN_FRONTEND noninteractive
-ENV DEBIAN_PRIORITY critical
-ENV DEBCONF_NOWARNINGS yes
+ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NOWARNINGS=yes
 
-# installation for running tests in docker image
-# Can fail on occasion.
+# install packages to install obspy and build deb packages
 RUN apt-get update && apt-get upgrade -y || true
-RUN apt-get -y install python-numpy python-scipy python-matplotlib python-sqlalchemy python-lxml python-mock python-mpltoolkits.basemap python-mpltoolkits.basemap-data python-pip python-tornado ttf-bitstream-vera
-RUN pip install future
-RUN pip install https://github.com/Damgaard/PyImgur/archive/9ebd8bed9b3d0ae2797950876f5c1e64a560f7d8.zip
-
-# additional installation for building deb packages in docker image
-RUN apt-get install -y locales
+RUN apt-get update && apt-get -y --no-install-recommends install \
+    debhelper \
+    devscripts \
+    equivs \
+    fakeroot \
+    gcc \
+    git \
+    help2man \
+    lintian \
+    locales \
+    lsb-release \
+    python \
+    python-cryptography \
+    python-decorator \
+    python-dev \
+    python-gdal \
+    python-geographiclib \
+    python-imaging \
+    python-jsonschema \
+    python-lxml \
+    python-m2crypto \
+    python-matplotlib \
+    python-mock \
+    python-mpltoolkits.basemap \
+    python-mpltoolkits.basemap-data \
+    python-nose \
+    python-numpy \
+    python-pip \
+    python-pyproj \
+    python-requests \
+    python-scipy \
+    python-setuptools \
+    python-sqlalchemy \
+    python-tornado \
+    python-wheel \
+    python3 \
+    python3-cryptography \
+    python3-decorator \
+    python3-dev \
+    python3-flake8 \
+    python3-gdal \
+    python3-jsonschema \
+    python3-lxml \
+    python3-matplotlib \
+    python3-mock \
+    python3-mpltoolkits.basemap \
+    python3-nose \
+    python3-numpy \
+    python3-pip \
+    python3-pyproj \
+    python3-requests \
+    python3-scipy \
+    python3-sqlalchemy \
+    python3-tornado \
+    python3-wheel \
+    quilt \
+    ttf-bitstream-vera \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+# install some additional packages via pip
+RUN pip install future; \
+    pip3 install future
+RUN pip install https://github.com/Damgaard/PyImgur/archive/9ebd8bed9b3d0ae2797950876f5c1e64a560f7d8.zip; \
+    pip3 install https://github.com/Damgaard/PyImgur/archive/9ebd8bed9b3d0ae2797950876f5c1e64a560f7d8.zip || true
+# make sure locale we use in tests is present
 RUN locale-gen en_US.UTF-8
-RUN apt-get install -y python
-RUN apt-get install -y python python-dev python-setuptools python-numpy lsb-release gcc
-RUN apt-get install -y vim git fakeroot equivs lintian help2man quilt git
-RUN apt-get install -y ttf-bitstream-vera
-RUN apt-get install -y python-matplotlib python-numpy python-scipy python-lxml python-sqlalchemy python-nose python-flake8 python-setuptools python-imaging python-mock python-decorator python-requests python-tornado python-geographiclib python-cryptography python-m2crypto
-RUN apt-get install -y python3 python3-dev python3-numpy python3-scipy python3-lxml python3-matplotlib python3-sqlalchemy python3-tornado python3-nose python3-mock python3-flake8 python3-decorator python3-requests python3-tornado python3-pip python3-geographiclib python3-cryptography
-RUN apt-get install -y debhelper python-all python3-all devscripts
-RUN pip3 install future
 
 # install fake future packages, so that we can properly install built obspy deb
 # packages to test them (we install future via pip)
-RUN cd /tmp && echo "Package: python-future" > python-future.control && equivs-build python-future.control && dpkg -i python-future_*.deb
-RUN cd /tmp && echo "Package: python3-future" > python3-future.control && equivs-build python3-future.control && dpkg -i python3-future_*.deb
-# debian package for obspy 1.0.2 still have suds listed as dependency
-# for now mock install it, can be removed when 1.0.3 is released
-RUN cd /tmp && echo "Package: python-suds" > python-suds.control && equivs-build python-suds.control && dpkg -i python-suds_*.deb
-RUN cd /tmp && echo "Package: python3-suds" > python3-suds.control && equivs-build python3-suds.control && dpkg -i python3-suds_*.deb
+RUN cd /tmp && \
+    (echo "Package: python-future" > python-future.control && equivs-build python-future.control && dpkg -i python-future_*.deb); \
+    (echo "Package: python3-future" > python3-future.control && equivs-build python3-future.control && dpkg -i python3-future_*.deb)
