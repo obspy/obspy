@@ -31,7 +31,6 @@ import warnings
 import numpy as np
 from matplotlib import mlab
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.dates import date2num
 from matplotlib.ticker import FormatStrFormatter
 
 from obspy import Stream, Trace, UTCDateTime, __version__
@@ -1316,11 +1315,9 @@ class PPSD(object):
         :param show: Enable/disable immediately showing the plot.
         """
         import matplotlib.pyplot as plt
-        from matplotlib.dates import date2num
 
-        xedges = date2num(
-            [t.datetime for t in self.times_processed] +
-            [(self.times_processed[-1] + self.ppsd_length).datetime])
+        xedges = [t.matplotlib_date for t in self.times_processed] + \
+            [(self.times_processed[-1] + self.ppsd_length).matplotlib_date]
         yedges = self.period_xedges
         meshgrid_x, meshgrid_y = np.meshgrid(xedges, yedges)
         data = np.array(self.psd_values).T
@@ -1401,7 +1398,6 @@ class PPSD(object):
         :param show: Enable/disable immediately showing the plot.
         """
         import matplotlib.pyplot as plt
-        from matplotlib.dates import date2num
 
         try:
             len(period)
@@ -1419,7 +1415,7 @@ class PPSD(object):
                 colors = color
 
         period_bin_centers = self.period_bin_centers
-        times = date2num([t.datetime for t in self.times_processed])
+        times = [t.matplotlib_date for t in self.times_processed]
 
         if temporal_restrictions:
             mask = ~self._stack_selection(**temporal_restrictions)
@@ -1772,9 +1768,8 @@ class PPSD(object):
             # skip on empty lists (i.e. all data used, or none used in stack)
             if not times:
                 continue
-            starts = [date2num(t.datetime) for t in times]
-            ends = [date2num((t + self.ppsd_length).datetime)
-                    for t in times]
+            starts = [t.matplotlib_date for t in times]
+            ends = [(t + self.ppsd_length).matplotlib_date for t in times]
             startends = np.array([starts, ends])
             startends = compress_start_end(startends.T, 20,
                                            merge_overlaps=True)
@@ -1783,13 +1778,13 @@ class PPSD(object):
                 ax.axvspan(start, end, 0, 0.6, fc=color, lw=0)
         # plot data that was fed to PPSD
         for start, end in self.times_data:
-            start = date2num(start.datetime)
-            end = date2num(end.datetime)
+            start = start.matplotlib_date
+            end = end.matplotlib_date
             ax.axvspan(start, end, 0.6, 1, facecolor="g", lw=0)
         # plot gaps in data fed to PPSD
         for start, end in self.times_gaps:
-            start = date2num(start.datetime)
-            end = date2num(end.datetime)
+            start = start.matplotlib_date
+            end = end.matplotlib_date
             ax.axvspan(start, end, 0.6, 1, facecolor="r", lw=0)
 
         ax.autoscale_view()
