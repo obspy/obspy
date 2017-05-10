@@ -24,6 +24,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-dev \
     python-geographiclib \
     python-imaging \
+    python-jsonschema \
     python-lxml \
     python-m2crypto \
     python-matplotlib \
@@ -33,6 +34,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-nose \
     python-numpy \
     python-pip \
+    python-pyproj \
     python-requests \
     python-scipy \
     python-setuptools \
@@ -44,12 +46,14 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-decorator \
     python3-dev \
     python3-flake8 \
+    python3-jsonschema \
     python3-lxml \
     python3-matplotlib \
     python3-mock \
     python3-nose \
     python3-numpy \
     python3-pip \
+    python3-pyproj \
     python3-requests \
     python3-scipy \
     python3-sqlalchemy \
@@ -71,7 +75,3 @@ RUN locale-gen en_US.UTF-8
 RUN cd /tmp && \
     (echo "Package: python-future" > python-future.control && equivs-build python-future.control && dpkg -i python-future_*.deb); \
     (echo "Package: python3-future" > python3-future.control && equivs-build python3-future.control && dpkg -i python3-future_*.deb)
-# debian package for obspy 1.0.2 still have suds listed as dependency
-# for now mock install it, can be removed when 1.0.3 is released
-RUN cd /tmp && echo "Package: python-suds" > python-suds.control && equivs-build python-suds.control && dpkg -i python-suds_*.deb
-RUN cd /tmp && echo "Package: python3-suds" > python3-suds.control && equivs-build python3-suds.control && dpkg -i python3-suds_*.deb
