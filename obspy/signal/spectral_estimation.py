@@ -1322,8 +1322,7 @@ class PPSD(object):
         meshgrid_x, meshgrid_y = np.meshgrid(xedges, yedges)
         data = np.array(self.psd_values).T
 
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
+        fig, ax = plt.subplots()
 
         quadmesh = ax.pcolormesh(meshgrid_x, meshgrid_y, data, cmap=cmap,
                                  zorder=-1)
@@ -1444,8 +1443,7 @@ class PPSD(object):
         else:
             mask = None
 
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
+        fig, ax = plt.subplots()
 
         for period, color in zip(periods, colors):
             # extract psd values for given period
@@ -1755,8 +1753,7 @@ class PPSD(object):
         :param filename: Name of output file
         """
         import matplotlib.pyplot as plt
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        fig, ax = plt.subplots()
 
         self.__plot_coverage(ax)
         fig.autofmt_xdate()
