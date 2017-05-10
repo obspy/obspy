@@ -25,6 +25,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-geographiclib \
     python-imaging \
     python-lxml \
+    python-m2crypto \
     python-matplotlib \
     python-mock \
     python-mpltoolkits.basemap \

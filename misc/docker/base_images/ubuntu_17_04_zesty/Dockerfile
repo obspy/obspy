@@ -21,6 +21,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     locales \
     lsb-release \
     python \
+    python-cryptography \
     python-decorator \
     python-dev \
     python-flake8 \
@@ -29,6 +30,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-imaging \
     python-jsonschema \
     python-lxml \
+    python-m2crypto \
     python-matplotlib \
     python-mock \
     python-mpltoolkits.basemap \
@@ -44,6 +46,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-tornado \
     python-wheel \
     python3 \
+    python3-cryptography \
     python3-decorator \
     python3-dev \
     python3-flake8 \

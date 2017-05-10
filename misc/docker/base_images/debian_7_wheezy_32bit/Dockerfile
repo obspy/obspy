@@ -25,6 +25,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-imaging \
     python-lxml \
     python-matplotlib \
+    python-m2crypto \
     python-mock \
     python-mpltoolkits.basemap \
     python-mpltoolkits.basemap-data \
