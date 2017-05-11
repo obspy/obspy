@@ -1,9 +1,11 @@
-FROM obspy/base-images:ubuntu_16_04_xenial_32bit
+FROM obspy/base-images:ubuntu_17_04_zesty_32bit
 
 MAINTAINER Tobias Megies
 
 # Set the env variables to non-interactive
-ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NOWARNINGS=yes
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_PRIORITY=critical
+ENV DEBCONF_NOWARNINGS=yes
 
 # install packages to install obspy and build deb packages
 RUN apt-get update && apt-get upgrade -y
@@ -22,6 +24,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-cryptography \
     python-decorator \
     python-dev \
+    python-flake8 \
     python-gdal \
     python-geographiclib \
     python-imaging \
@@ -48,6 +51,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-dev \
     python3-flake8 \
     python3-gdal \
+    python3-geographiclib \
     python3-jsonschema \
     python3-lxml \
     python3-matplotlib \
@@ -59,6 +63,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-pyproj \
     python3-requests \
     python3-scipy \
+    python3-setuptools \
     python3-sqlalchemy \
     python3-tornado \
     python3-wheel \
