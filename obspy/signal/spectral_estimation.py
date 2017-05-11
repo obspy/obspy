@@ -1392,7 +1392,11 @@ class PPSD(object):
         ax.set_xlim(self.times_processed[0].matplotlib_date,
                     (self.times_processed[-1] + self.step).matplotlib_date)
         ax.set_ylim(yedges[0], yedges[-1])
-        ax.set_facecolor('0.8')
+        try:
+            ax.set_facecolor('0.8')
+        # mpl <2 has different API for setting Axes background color
+        except AttributeError:
+            ax.set_axis_bgcolor('0.8')
 
         fig.tight_layout()
 
