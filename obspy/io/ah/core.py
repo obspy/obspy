@@ -241,15 +241,15 @@ def _write_ah1(stream, filename):
 
         # station info
         packer.pack_int(6)
-        packer.pack_fstring(6, tr.stats.ah.station.code)
+        packer.pack_fstring(6, tr.stats.ah.station.code.encode('utf-8'))
         packer.pack_int(6)
         try:
-            packer.pack_fstring(6, tr.stats.channel)
+            packer.pack_fstring(6, tr.stats.channel.encode('utf-8'))
         except:
-            packer.pack_fstring(6, tr.stats.ah.station.channel)
+            packer.pack_fstring(6, tr.stats.ah.station.channel.encode('utf-8'))
 
         packer.pack_int(8)
-        packer.pack_fstring(8, tr.stats.ah.station.type)
+        packer.pack_fstring(8, tr.stats.ah.station.type.encode('utf-8'))
         packer.pack_float(tr.stats.ah.station.latitude)
         packer.pack_float(tr.stats.ah.station.longitude)
         packer.pack_float(tr.stats.ah.station.elevation)
@@ -300,7 +300,7 @@ def _write_ah1(stream, filename):
             packer.pack_float(0)
 
         packer.pack_int(80)
-        packer.pack_fstring(80, tr.stats.ah.event.comment)
+        packer.pack_fstring(80, tr.stats.ah.event.comment.encode('utf-8'))
 
         # record info
         dtype = tr.stats.ah.record.type
@@ -317,9 +317,9 @@ def _write_ah1(stream, filename):
         packer.pack_float(tr.stats.ah.record.start_time.second)
         packer.pack_float(tr.stats.ah.record.abscissa_min)
         packer.pack_int(80)
-        packer.pack_fstring(80, tr.stats.ah.record.comment)
+        packer.pack_fstring(80, tr.stats.ah.record.comment.encode('utf-8'))
         packer.pack_int(202)
-        packer.pack_fstring(202, tr.stats.ah.record.log)
+        packer.pack_fstring(202, tr.stats.ah.record.log.encode('utf-8'))
 
         # # extras
         packer.pack_array(tr.stats.ah.extras, packer.pack_float)
@@ -346,11 +346,11 @@ def _write_ah1(stream, filename):
         station info
         """
         packer.pack_int(6)
-        packer.pack_fstring(6, tr.stats.station)
+        packer.pack_fstring(6, tr.stats.station.encode('utf-8'))
         packer.pack_int(6)
-        packer.pack_fstring(6, tr.stats.channel)
+        packer.pack_fstring(6, tr.stats.channel.encode('utf-8'))
         packer.pack_int(8)
-        packer.pack_fstring(8, 'null')
+        packer.pack_fstring(8, 'null'.encode('utf-8'))
         # There is no information about latitude, longitude, elevation,
         # gain and normalization in the basic stream object,  are set to 0
         packer.pack_float(0)
@@ -378,7 +378,7 @@ def _write_ah1(stream, filename):
         packer.pack_float(0)
 
         packer.pack_int(80)
-        packer.pack_fstring(80, 'null')
+        packer.pack_fstring(80, 'null'.encode('utf-8'))
 
         # record info
         dtype = type(tr.data[0])
@@ -405,9 +405,9 @@ def _write_ah1(stream, filename):
 
         packer.pack_float(0)
         packer.pack_int(80)
-        packer.pack_fstring(80, 'null')
+        packer.pack_fstring(80, 'null'.encode('utf-8'))
         packer.pack_int(202)
-        packer.pack_fstring(202, 'null')
+        packer.pack_fstring(202, 'null'.encode('utf-8'))
 
         # # extras
         packer.pack_array(np.zeros(21).tolist(), packer.pack_float)
