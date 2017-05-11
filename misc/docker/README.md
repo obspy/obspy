@@ -208,6 +208,18 @@ $ docker login  # docker hub user needs write access to "obspy/base-images" of o
 $ docker push obspy/base-images:${DISTRO_FULL}
 ```
 
+To create a Raspbian (Debian ``armhf`` for Raspberry Pi) docker base image (using ``qemu``, https://wiki.debian.org/ArmHardFloatChroot):
+
+```bash
+$ cd /tmp
+$ DISTRO=jessie
+$ DISTRO_FULL=debian_8_jessie_armhf
+$ sudo qemu-debootstrap --arch=armhf ${DISTRO} ${DISTRO_FULL} ftp://ftp.debian.org/debian/ 2>&1 | tee ${DISTRO_FULL}.debootstrap.log
+$ sudo tar -C ${DISTRO_FULL} -c . | docker import - obspy/base-images:${DISTRO_FULL}
+$ docker login  # docker hub user needs write access to "obspy/base-images" of organization "obspy"
+$ docker push obspy/base-images:${DISTRO_FULL}
+```
+
 ### Setting up `docker-testbot` to automatically test PRs and branches and send commit statuses
 
 ##### Install docker
