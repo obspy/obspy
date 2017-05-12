@@ -109,15 +109,8 @@ from obspy.core.util import ALL_MODULES, DEFAULT_MODULES, NETWORK_MODULES
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from obspy.core.util.version import get_git_version
+from obspy.core.util.headers import DEPENDENCIES
 
-
-HARD_DEPENDENCIES = [
-    "future", "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
-    "sqlalchemy", "decorator", "requests"]
-OPTIONAL_DEPENDENCIES = [
-    "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "osgeo.gdal",
-    "mpl_toolkits.basemap", "mock", "pyflakes", "geographiclib", "cartopy"]
-DEPENDENCIES = HARD_DEPENDENCIES + OPTIONAL_DEPENDENCIES
 
 PSTATS_HELP = """
 Call "python -m pstats obspy.pstats" for an interactive profiling session.
