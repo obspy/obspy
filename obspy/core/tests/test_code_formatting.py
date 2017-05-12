@@ -126,6 +126,7 @@ class FutureUsageTestCase(unittest.TestCase):
         exceptions = [
             os.path.join('core', 'util', 'libnames.py'),
             os.path.join('core', 'util', 'version.py'),
+            os.path.join('core', 'util', 'headers.py'),
             os.path.join('core', 'compatibility.py'),
             os.path.join('lib', '*'),
         ]
