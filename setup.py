@@ -92,8 +92,8 @@ KEYWORDS = [
     'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
     'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'observatory', 'ORFEUS', 'PDAS',
     'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
-    'REFTEK130', 'RT-130', 'RESP', 'response file', 'RT', 'SAC', 'sc3ml',
-    'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub',
+    'REFTEK130', 'RT-130', 'RESP', 'response file', 'RT', 'SAC', 'scardec',
+    'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub',
     'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
     'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
@@ -289,6 +289,7 @@ ENTRY_POINTS = {
         'NORDIC = obspy.io.nordic.core',
         'CNV = obspy.io.cnv.core',
         'CMTSOLUTION = obspy.io.cmtsolution.core',
+        'SCARDEC = obspy.io.scardec.core',
         'SHAPEFILE = obspy.io.shapefile.core',
         'KML = obspy.io.kml.core',
         'FNETMT = obspy.io.nied.fnetmt',
@@ -337,6 +338,11 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.cmtsolution.core:_is_cmtsolution',
         'readFormat = obspy.io.cmtsolution.core:_read_cmtsolution',
         'writeFormat = obspy.io.cmtsolution.core:_write_cmtsolution'
+        ],
+    'obspy.plugin.event.SCARDEC': [
+        'isFormat = obspy.io.scardec.core:_is_scardec',
+        'readFormat = obspy.io.scardec.core:_read_scardec',
+        'writeFormat = obspy.io.scardec.core:_write_scardec'
         ],
     'obspy.plugin.event.FNETMT': [
         'isFormat = obspy.io.nied.fnetmt:_is_fnetmt_catalog',
