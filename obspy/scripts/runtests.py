@@ -102,6 +102,7 @@ import unittest
 import warnings
 from argparse import ArgumentParser
 
+import pkg_resources
 import numpy as np
 
 import obspy
@@ -280,21 +281,12 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     # get dependencies
     result['dependencies'] = {}
     for module in DEPENDENCIES:
-        if module == "pep8-naming":
-            module_ = "pep8ext_naming"
-        else:
-            module_ = module
-        temp = module_.split('.')
         try:
-            mod = __import__(module_,
-                             fromlist=[native_str(temp[1:])])
-        except ImportError:
+            version_ = pkg_resources.get_distribution(module).version
+        except pkg_resources.DistributionNotFound:
             version_ = '---'
-        else:
-            try:
-                version_ = mod.__version__
-            except AttributeError:
-                version_ = '???'
+        except:
+            version_ = '???'
         result['dependencies'][module] = version_
     # get system / environment settings
     result['platform'] = {}
