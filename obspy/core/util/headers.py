@@ -36,6 +36,8 @@ OPTIONAL_DEPENDENCIES = {
     'imaging': {
         "basemap": "",
         "cartopy": ""},
+    'mseed': {
+        "jsonschema": ""},
     'shapefile': {
         "gdal": ""},
     'tests': {
