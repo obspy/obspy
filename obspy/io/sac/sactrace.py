@@ -1092,7 +1092,7 @@ class SACTrace(object):
                 val = _ut._clean_str(val, strip_whitespace=False)
                 if val.startswith(native_str('-12345')):
                     val = HD.SNULL
-                hs[i] = val
+                hs[i] = val.encode('ASCII', 'replace')
 
         sac = cls._from_arrays(hf, hi, hs, data)
         if sac.dist is None:
