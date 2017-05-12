@@ -31,6 +31,28 @@ OPTIONAL_DEPENDENCIES = {
         "cryptography": "",
         "m2crypto": "",
         "pycrypto": ""},
+    # for docs, also see conda environment file under
+    # misc/docs/py3-docs-master.yml
+    # other versions might work as well but these are currently used in our
+    # docs buildbot and therefore confirmed to work
+    'docs': {
+        "sphinx": "==1.2.2",
+        "sphinx-bootstrap-theme": "==0.4.8",
+        # for 'make coverage'
+        "coverage": "==4.0",
+        # for 'make citations'
+        "pybtex": "==0.19",
+        # for 'make docset'
+        "doc2dash": "==2.0.2",
+        # for tutorial
+        # https://github.com/obspy/wheelhouse/raw/master/
+        #      basemap-1.0.7-cp27-none-linux_x86_64.whl
+        # https://github.com/obspy/wheelhouse/raw/master/
+        #      mlpy-3.5.0-cp27-none-linux_x86_64.whl
+        "basemap": "",
+        "mlpy": "3.5.0",
+        # for doctests
+        "pyproj": ""},
     'geodetics': {
         "geographiclib": ""},
     'imaging': {
