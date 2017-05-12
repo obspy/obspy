@@ -222,13 +222,13 @@ class Network(BaseNode):
             raise Exception(msg)
         return responses[0]
 
-    def _get_channel_metadata(self, seed_id, datetime=None):
+    def get_channel_metadata(self, seed_id, datetime=None):
         """
         Return basic metadata for a given channel.
 
         :type seed_id: str
         :param seed_id: SEED ID string of channel to get metadata for.
-        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param datetime: Time to get metadata for.
         :rtype: dict
         :return: Dictionary containing coordinates and orientation (latitude,
@@ -272,10 +272,13 @@ class Network(BaseNode):
                             continue
                     # prepare coordinates
                     data = {}
-                    # if channel latitude or longitude is not given use station
-                    data['latitude'] = cha.latitude or sta.latitude
-                    data['longitude'] = cha.longitude or sta.longitude
-                    data['elevation'] = cha.elevation or sta.elevation
+                    for key in ('latitude', 'longitude', 'elevation'):
+                        value = getattr(cha, key, None)
+                        # if channel latitude/longitude/elevation is not given
+                        # use station information
+                        if value is None:
+                            value = getattr(sta, key, None)
+                        data[key] = value
                     data['local_depth'] = cha.depth
                     data['azimuth'] = cha.azimuth
                     data['dip'] = cha.dip
@@ -296,13 +299,13 @@ class Network(BaseNode):
         :type seed_id: str
         :param seed_id: SEED ID string of channel to get coordinates and
             orientation for.
-        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param datetime: Time to get coordinates for.
         :rtype: dict
         :return: Dictionary containing coordinates (latitude, longitude,
             elevation, local_depth)
         """
-        metadata = self._get_channel_metadata(seed_id, datetime)
+        metadata = self.get_channel_metadata(seed_id, datetime)
         coordinates = {}
         for key in ['latitude', 'longitude', 'elevation', 'local_depth']:
             coordinates[key] = metadata[key]
@@ -314,12 +317,12 @@ class Network(BaseNode):
 
         :type seed_id: str
         :param seed_id: SEED ID string of channel to get orientation for.
-        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param datetime: Time to get orientation for.
         :rtype: dict
         :return: Dictionary containing orientation (azimuth, dip).
         """
-        metadata = self._get_channel_metadata(seed_id, datetime)
+        metadata = self.get_channel_metadata(seed_id, datetime)
         orientation = {}
         for key in ['azimuth', 'dip']:
             orientation[key] = metadata[key]

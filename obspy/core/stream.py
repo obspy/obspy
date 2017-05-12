@@ -2568,16 +2568,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Rotate stream objects.
 
-        Example to rotate unaligned borehole instrument data based on station
-        inventory (a dataless SEED :class:`~obspy.io.xseed.parser.Parser` can
-        also be provided, see details for option ``inventory``):
-
-        >>> from obspy import read, read_inventory
-        >>> st = read("/path/to/ffbx_unrotated_gaps.mseed")
-        >>> inv = read_inventory("/path/to/ffbx.stationxml")
-        >>> st.rotate(method="->ZNE", inventory=inv)  # doctest: +ELLIPSIS
-        <obspy.core.stream.Stream object at 0x...>
-
         :type method: str
         :param method: Determines the rotation method.
 
@@ -2615,6 +2605,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type inventory: :class:`~obspy.core.inventory.inventory.Inventory` or
             :class:`~obspy.io.xseed.parser.Parser`
         :param inventory: Inventory or SEED Parser with metadata of channels.
+
+        Example to rotate unaligned borehole instrument data based on station
+        inventory (a dataless SEED :class:`~obspy.io.xseed.parser.Parser` can
+        also be provided, see details for option ``inventory``):
+
+        >>> from obspy import read, read_inventory
+        >>> st = read("/path/to/ffbx_unrotated_gaps.mseed")
+        >>> inv = read_inventory("/path/to/ffbx.stationxml")
+        >>> st.rotate(method="->ZNE", inventory=inv)  # doctest: +ELLIPSIS
+        <obspy.core.stream.Stream object at 0x...>
         """
         if method == "->ZNE":
             if inventory is None:
