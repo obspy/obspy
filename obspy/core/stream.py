@@ -3275,6 +3275,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param inventory: Inventory or Parser with metadata of channels.
         """
         from obspy.signal.rotate import rotate2zne
+        from obspy.core.inventory import Inventory, Network
+        from obspy.io.xseed import Parser
+
+        if isinstance(inventory, (Inventory, Network)):
+            metadata_getter = inventory.get_channel_metadata
+        elif isinstance(inventory, Parser):
+            # xseed Parser has everything in get_coordinates method due to
+            # historic reasons..
+            metadata_getter = inventory.get_coordinates
+        else:
+            msg = 'Wrong type for "inventory": {}'.format(str(type(inventory)))
+            raise TypeError(msg)
         # build temporary stream that has only those traces that are supposed
         # to be used in rotation
         st = self.select(network=network, station=station, location=location)
@@ -3307,7 +3319,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                        "report on github.")
                 raise NotImplementedError(msg)
             # `.get_orientation()` works the same for Inventory and Parser
-            orientation = [inventory.get_orientation(tr.id, tr.stats.starttime)
+            orientation = [metadata_getter(tr.id, tr.stats.starttime)
                            for tr in traces]
             zne = rotate2zne(
                 traces[0], orientation[0]["azimuth"], orientation[0]["dip"],
