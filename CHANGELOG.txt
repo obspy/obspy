@@ -93,6 +93,8 @@ master: (doi: 10.5281/zenodo.165135)
     * No longer add the (unused) time zone field to StationXML datetimes to
       follow the example of big data centers. (see #1572)
  - obspy.io.segy:
+    * Fixing an issue when comparing two still packed SEG-Y trace headers
+      (see #1735).
     * Iterative reading of large SEG-Y and SU files with
       `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
       (see #1400).

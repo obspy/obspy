@@ -601,6 +601,19 @@ class SEGYCoreTestCase(unittest.TestCase):
             outfile = tf.name
             st.write(outfile, format='SEGY')
 
+    def test_comparing_still_packed_trace_headers(self):
+        """
+        Regression test to guard against an issue that caused an exception
+        to be raised when attempting to compare two still packed trace headers.
+
+        The exception only occured when reading the `obspy.read()`.
+        """
+        file = os.path.join(self.path, '1.sgy_first_trace')
+        # The exception was
+        header_a = read(file)[0].stats.segy.trace_header
+        header_b = read(file)[0].stats.segy.trace_header
+        self.assertEqual(header_a, header_b)
+
 
 def suite():
     return unittest.makeSuite(SEGYCoreTestCase, 'test')
