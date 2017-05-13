@@ -6,6 +6,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 import os
 import unittest
 from struct import unpack
@@ -19,7 +20,8 @@ from obspy.io.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
                                 _is_segy, _is_su, _read_segy, _read_su,
                                 _write_segy, _write_su)
 from obspy.io.segy.segy import _read_segy as _read_segy_internal
-from obspy.io.segy.segy import SEGYError
+from obspy.io.segy.segy import SEGYError, SEGYFile, SEGYTrace, \
+    SEGYBinaryFileHeader
 from obspy.io.segy.tests.header import DTYPES, FILES
 
 from . import _patch_header
@@ -613,6 +615,38 @@ class SEGYCoreTestCase(unittest.TestCase):
         header_a = read(file)[0].stats.segy.trace_header
         header_b = read(file)[0].stats.segy.trace_header
         self.assertEqual(header_a, header_b)
+
+    def test_reading_and_writing_with_unset_dates(self):
+        f = SEGYFile()
+        f.binary_file_header = SEGYBinaryFileHeader()
+        s = SEGYTrace()
+        f.traces = [s]
+        s.data = np.ones(10, dtype=np.float32)
+
+        # Create a dummy file with only the year set.
+        s.header.year_data_recorded = 2015
+        with io.BytesIO() as buf:
+            f.write(buf, data_encoding=5)
+            buf.seek(0, 0)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                st = read(buf, format="segy")
+        # Should result in the correct year.
+        self.assertEqual(st[0].stats.starttime, UTCDateTime(2015, 1, 1))
+        self.assertEqual(len(w), 1)
+        self.assertEqual(
+            w[0].message.args[0],
+            "Trace starttime does not store a proper date (day of year is "
+            "zero). Using January 1st 00:00 as trace start time.")
+
+        # No date set at all.
+        s.header.year_data_recorded = 0
+        with io.BytesIO() as buf:
+            f.write(buf, data_encoding=5)
+            buf.seek(0, 0)
+            st = read(buf, format="segy")
+        # Results in 1970, 1, 1
+        self.assertEqual(st[0].stats.starttime, UTCDateTime(0))
 
 
 def suite():
