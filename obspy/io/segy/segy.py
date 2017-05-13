@@ -761,6 +761,14 @@ class SEGYTrace(object):
             hour = tr_header.hour_of_day
             minute = tr_header.minute_of_hour
             second = tr_header.second_of_minute
+            # work around some strange SEGY files that don't store proper
+            # start date/time but only a year (see #1722)
+            if julday == 0 and hour == 0 and minute == 0 and second == 0:
+                msg = ('Trace starttime does not store a proper date (day '
+                       'of year is zero). Using January 1st 00:00 as '
+                       'trace start time.')
+                warnings.warn(msg)
+                julday = 1
             trace.stats.starttime = UTCDateTime(
                 year=year, julday=julday, hour=hour, minute=minute,
                 second=second)
