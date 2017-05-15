@@ -14,3 +14,12 @@ file based waveform archive and storing in into a standard SQL database.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+
+__all__ = []
+
+try:
+    import sqlalchemy  # NOQA
+except ImportError:
+    msg = ("The 'sqlalchemy' module needs to be installed in order to use the "
+           "'obspy.db' module.")
+    raise ImportError(msg)

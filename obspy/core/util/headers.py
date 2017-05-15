@@ -22,7 +22,6 @@ HARD_DEPENDENCIES = {
     "matplotlib": ">=1.1.0",
     "lxml": "",
     "setuptools": "",
-    "sqlalchemy": "",
     "decorator": "",
     "requests": ""
     }
@@ -31,6 +30,8 @@ OPTIONAL_DEPENDENCIES = {
         "cryptography": "",
         "m2crypto": "",
         "pycrypto": ""},
+    'db': {
+        "sqlalchemy": ""},
     # for docs, also see conda environment file under
     # misc/docs/py3-docs-master.yml
     # other versions might work as well but these are currently used in our
