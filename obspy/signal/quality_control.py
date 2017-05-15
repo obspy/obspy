@@ -604,7 +604,7 @@ class MSEEDMetadata(object):
         if _v < [1, 0, 0]:  # pragma: no cover
             msg = ("Validating the QC metrics requires jsonschema >= 1.0.0 "
                    "You have %s. Please update." %
-                   ".".join(str(_i) for _i in _v))
+                   get_dependency_version("jsonschema", raw_string=True))
             raise ValueError(msg)
 
         schema_path = os.path.join(os.path.dirname(__file__), "data",
