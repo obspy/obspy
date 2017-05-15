@@ -253,12 +253,9 @@ def _pack_trace_with_ah_dict(tr, packer):
 
     # station info
     packer.pack_int(6)
-    packer.pack_fstring(6, tr.stats.ah.station.code.encode('utf-8'))
+    packer.pack_fstring(6, tr.stats.station.encode('utf-8'))
     packer.pack_int(6)
-    try:
-        packer.pack_fstring(6, tr.stats.channel.encode('utf-8'))
-    except:
-        packer.pack_fstring(6, tr.stats.ah.station.channel.encode('utf-8'))
+    packer.pack_fstring(6, tr.stats.channel.encode('utf-8'))
 
     packer.pack_int(8)
     packer.pack_fstring(8, tr.stats.ah.station.type.encode('utf-8'))
