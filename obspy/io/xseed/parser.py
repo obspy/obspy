@@ -40,8 +40,7 @@ from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from . import DEFAULT_XSEED_VERSION, blockette
-from .utils import (IGNORE_ATTR, SEEDParserException, to_tag, is_resp,
-                    lookup_code)
+from .utils import (IGNORE_ATTR, SEEDParserException, to_tag, lookup_code)
 from .fields import Loop, VariableString
 
 
@@ -164,6 +163,9 @@ class Parser(object):
         :param data: Filename, URL or XSEED/SEED/RESP string as file pointer or
             BytesIO.
         """
+        # Import here to avoid circular imports.
+        from .core import _is_resp
+
         if getattr(self, "_format", None):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
@@ -175,7 +177,7 @@ class Parser(object):
                 download_to_file(url=url, filename_or_buffer=data)
                 data.seek(0, 0)
             elif os.path.isfile(data):
-                if is_resp(data):
+                if _is_resp(data):
                     # RESP filename
                     with open(data, 'r') as f:
                         data = f.read()

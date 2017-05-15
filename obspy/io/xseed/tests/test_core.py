@@ -7,7 +7,7 @@ import itertools
 import os
 import unittest
 
-from obspy.io.xseed.core import _is_xseed
+from obspy.io.xseed.core import _is_resp, _is_xseed, _is_seed
 
 
 class CoreTestCase(unittest.TestCase):
@@ -56,18 +56,44 @@ class CoreTestCase(unittest.TestCase):
                 self.other_files]):
             assert os.path.exists(_i), _i
 
-    def test_is_xseed(self):
+    def test_is_seed(self):
         for filename in self.seed_files:
-            self.assertFalse(_is_xseed(filename))
+            self.assertTrue(_is_seed(filename), filename)
 
         for filename in self.xseed_files:
-            self.assertTrue(_is_xseed(filename))
+            self.assertFalse(_is_seed(filename), filename)
 
         for filename in self.resp_files:
-            self.assertFalse(_is_xseed(filename))
+            self.assertFalse(_is_seed(filename), filename)
 
         for filename in self.other_files:
-            self.assertFalse(_is_xseed(filename))
+            self.assertFalse(_is_seed(filename), filename)
+
+    def test_is_xseed(self):
+        for filename in self.seed_files:
+            self.assertFalse(_is_xseed(filename), filename)
+
+        for filename in self.xseed_files:
+            self.assertTrue(_is_xseed(filename), filename)
+
+        for filename in self.resp_files:
+            self.assertFalse(_is_xseed(filename), filename)
+
+        for filename in self.other_files:
+            self.assertFalse(_is_xseed(filename), filename)
+
+    def test_is_resp(self):
+        for filename in self.seed_files:
+            self.assertFalse(_is_resp(filename), filename)
+
+        for filename in self.xseed_files:
+            self.assertFalse(_is_resp(filename), filename)
+
+        for filename in self.resp_files:
+            self.assertTrue(_is_resp(filename), filename)
+
+        for filename in self.other_files:
+            self.assertFalse(_is_resp(filename), filename)
 
 
 def suite():
