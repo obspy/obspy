@@ -293,14 +293,14 @@ def _pack_trace_with_ah_dict(tr, packer):
     packer.pack_float(tr.stats.ah.event.latitude)
     packer.pack_float(tr.stats.ah.event.longitude)
     packer.pack_float(tr.stats.ah.event.depth)
-    try:
+    if tr.stats.ah.event.origin_time is not None:
         packer.pack_int(tr.stats.ah.event.origin_time.year)
         packer.pack_int(tr.stats.ah.event.origin_time.month)
         packer.pack_int(tr.stats.ah.event.origin_time.day)
         packer.pack_int(tr.stats.ah.event.origin_time.hour)
         packer.pack_int(tr.stats.ah.event.origin_time.minute)
         packer.pack_float(tr.stats.ah.event.origin_time.second)
-    except:
+    else:
         packer.pack_int(0)
         packer.pack_int(0)
         packer.pack_int(0)
