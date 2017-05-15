@@ -23,7 +23,7 @@ HARD_DEPENDENCIES = {
     "lxml": "",
     "setuptools": "",
     "decorator": "",
-    "requests": ""
+    "requests": "",
     }
 OPTIONAL_DEPENDENCIES = {
     'arclink': {
@@ -37,21 +37,21 @@ OPTIONAL_DEPENDENCIES = {
     # other versions might work as well but these are currently used in our
     # docs buildbot and therefore confirmed to work
     'docs': {
-        "sphinx": "==1.2.2",
-        "sphinx-bootstrap-theme": "==0.4.8",
+        "sphinx": ">=1.1",
+        "sphinx-bootstrap-theme": "",
         # for 'make coverage'
-        "coverage": "==4.0",
+        "coverage": ">=3.5",
         # for 'make citations'
-        "pybtex": "==0.19",
+        "pybtex": ">=0.16",
         # for 'make docset'
-        "doc2dash": "==2.0.2",
+        "doc2dash": "",
         # for tutorial
         # https://github.com/obspy/wheelhouse/raw/master/
         #      basemap-1.0.7-cp27-none-linux_x86_64.whl
         # https://github.com/obspy/wheelhouse/raw/master/
         #      mlpy-3.5.0-cp27-none-linux_x86_64.whl
         "basemap": "",
-        "mlpy": "3.5.0",
+        "mlpy": "",
         # for doctests
         "pyproj": ""},
     'geodetics': {
@@ -59,20 +59,20 @@ OPTIONAL_DEPENDENCIES = {
     'imaging': {
         "basemap": "",
         "cartopy": ""},
-    'mseed': {
-        "jsonschema": ""},
+    'signal': {
+        "jsonschema": ">=1.0.0"},
+    'nlloc-tests': {
+        "pyproj": ""},
     'shapefile': {
-        "gdal": ""},
+        "gdal": ">=1.7.3"},
     'tests': {
         "flake8": ">=3.0",
-        "mock": "",  # Py2 only
         "pep8-naming": "",
-        "pyflakes": "",
-        "pyimgur": "",
-        "pyproj": ""},
+        "pyimgur": ""},
     }
-if sys.version_info.major == 3:
-    OPTIONAL_DEPENDENCIES['tests'].pop('mock')
+# add mock as optional dependency for running tests on Python 2
+if sys.version_info.major == 2:
+    OPTIONAL_DEPENDENCIES['tests']['mock'] = ""
 
 DEPENDENCIES = {}
 # XXX currently the case of one module being specified in different dependency
@@ -82,7 +82,7 @@ for _section, _dependencies in OPTIONAL_DEPENDENCIES.items():
     DEPENDENCIES.update(_dependencies)
 DEPENDENCIES.update(HARD_DEPENDENCIES)
 
-INSTALL_REQUIRES = list(''.join(spec) for spec in HARD_DEPENDENCIES.items())
+INSTALL_REQUIRES = [''.join(spec) for spec in HARD_DEPENDENCIES.items()]
 EXTRAS_REQUIRE = {
     section: list(''.join(spec) for spec in deps)
     for section, deps in OPTIONAL_DEPENDENCIES.items()}
