@@ -31,6 +31,7 @@ from uuid import uuid4
 import numpy as np
 
 from obspy import Stream, UTCDateTime, read, __version__
+from obspy.core.util.base import get_dependency_version
 from obspy.io.mseed.util import get_flags
 
 
@@ -596,6 +597,15 @@ class MSEEDMetadata(object):
         :type qc_metrics: dict, str, or file-like object
         """
         import jsonschema
+
+        # Judging from the changelog 1.0.0 appears to be the first version
+        # to have fully working support for references.
+        _v = get_dependency_version("jsonschema")
+        if _v < [1, 0, 0]:  # pragma: no cover
+            msg = ("Validating the QC metrics requires jsonschema >= 1.0.0 "
+                   "You have %s. Please update." %
+                   get_dependency_version("jsonschema", raw_string=True))
+            raise ValueError(msg)
 
         schema_path = os.path.join(os.path.dirname(__file__), "data",
                                    "wf_metadata_schema.json")

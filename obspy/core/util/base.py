@@ -325,14 +325,15 @@ def _get_function_from_entry_point(group, type):
     return func
 
 
-def get_dependency_version(package_name):
+def get_dependency_version(package_name, raw_string=False):
     """
     Get version information of a dependency package.
 
     :type package_name: str
     :param package_name: Name of package to return version info for
     :returns: Package version as a list of three integers or ``None`` if
-        import fails.
+        import fails. With option ``raw_string=True`` returns raw version
+        string instead (or ``None`` if import fails).
         The last version number can indicate different things like it being a
         version from the old svn trunk, the latest git repo, some release
         candidate version, ...
@@ -340,12 +341,14 @@ def get_dependency_version(package_name):
         0.
     """
     try:
-        version = pkg_resources.get_distribution(package_name).version
+        version_string = pkg_resources.get_distribution(package_name).version
     except pkg_resources.DistributionNotFound:
         return None
-    version = version.split("rc")[0].strip("~")
-    version = list(map(to_int_or_zero, version.split(".")))
-    return version
+    if raw_string:
+        return version_string
+    version_list = version_string.split("rc")[0].strip("~")
+    version_list = list(map(to_int_or_zero, version_list.split(".")))
+    return version_list
 
 
 NUMPY_VERSION = get_dependency_version('numpy')

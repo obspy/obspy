@@ -12,14 +12,18 @@ import unittest
 import numpy as np
 
 import obspy
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, get_dependency_version
 # A bit wild to import a utility function from another test suite ...
 from obspy.io.mseed.tests.test_mseed_util import _create_mseed_file
 from obspy.signal.quality_control import MSEEDMetadata
 
 try:
     import jsonschema  # NOQA
-    HAS_JSONSCHEMA = True
+    # 1.0.0 is the first version with full $ref support.
+    if get_dependency_version("jsonschema") < [1, 0, 0]:
+        HAS_JSONSCHEMA = False
+    else:
+        HAS_JSONSCHEMA = True
 except ImportError:
     HAS_JSONSCHEMA = False
 
