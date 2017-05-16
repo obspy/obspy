@@ -7,7 +7,8 @@ import itertools
 import os
 import unittest
 
-from obspy.io.xseed.core import _is_resp, _is_xseed, _is_seed
+from obspy.io.xseed.core import _is_resp, _is_xseed, _is_seed, _read_resp, \
+    _read_seed
 
 
 class CoreTestCase(unittest.TestCase):
@@ -94,6 +95,14 @@ class CoreTestCase(unittest.TestCase):
 
         for filename in self.other_files:
             self.assertFalse(_is_resp(filename), filename)
+
+    def test_read_resp(self):
+        f = self.resp_files[1]
+        _read_resp(f)
+
+    def test_read_seed(self):
+        f = self.seed_files[3]
+        _read_seed(f)
 
 
 def suite():

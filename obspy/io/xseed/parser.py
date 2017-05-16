@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
+import collections
 import copy
 import datetime
 import io
@@ -32,13 +33,12 @@ from obspy.core.inventory import (Response,
                                   PolesZerosResponseStage,
                                   CoefficientsTypeResponseStage,
                                   InstrumentSensitivity,
-                                  ResponseStage)
+                                  ResponseStage,
+                                  FIRResponseStage)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import download_to_file
 from obspy.core.util.decorator import map_example_filename
-from obspy.core.util.obspy_types import (ComplexWithUncertainties,
-                                         FloatWithUncertainties,
-                                         FloatWithUncertaintiesAndUnit)
+from obspy.core.util.obspy_types import ComplexWithUncertainties
 from . import DEFAULT_XSEED_VERSION, blockette
 from .utils import (IGNORE_ATTR, SEEDParserException, to_tag, lookup_code)
 from .fields import Loop, VariableString
@@ -844,12 +844,48 @@ class Parser(object):
                     combined.stations[0][i] = stage1_b
         return combined
 
-    def get_response(self, frequency=None, sr=None):
-        """
-        Creates an Inventory.Response from self
+    def resolve_abbreviation(self, abbreviation_blockette_number, lookup_code):
+        if abbreviation_blockette_number not in self.blockettes or \
+                not self.blockettes[abbreviation_blockette_number]:
+            raise ValueError("No blockettes %i available." %
+                             abbreviation_blockette_number)
 
-        :type resp: :class:`~obspy.io.xseed.Parser`
-        :param resp: Parser object with a single response
+        if abbreviation_blockette_number == 33:
+            key = "abbreviation_lookup_code"
+        elif abbreviation_blockette_number == 34:
+            key = "unit_lookup_code"
+        else:
+            raise NotImplementedError(str(abbreviation_blockette_number))
+
+        blkts = [b for b in self.blockettes[abbreviation_blockette_number]
+                 if getattr(b, key) == lookup_code]
+        if len(blkts) > 1:
+            msg = ("Found multiple blockettes %i with lookup code %i. Will "
+                   "use the first one." % (abbreviation_blockette_number,
+                                           lookup_code))
+            warnings.warn(msg)
+            blkts = blkts[:1]
+        if not blkts:
+            raise ValueError("Could not find a blockette %i with lookup code "
+                             "%i." % (abbreviation_blockette_number,
+                                      lookup_code))
+        return blkts[0]
+
+    def get_response_for_channel(self, blockettes_for_channel, frequency=None,
+                                 sr=None):
+        """
+        Create an ObsPy response object from all blockettes of a channel.
+
+        This is a method instead of function as it needs to access the 
+        abbreviation dictionary.
+
+        :param blockettes_for_channel: The blockettes for the channel to
+            calculate the response for.
+        :type blockettes_for_channel: List[Blockette]
+        :param frequency:
+        :type frequency: float
+        :param sr:
+        :type sr: float
         :rtype: :class:`obspy.core.inventory.response.Response`
         :returns: Inventory response object.
         """
@@ -866,185 +902,193 @@ class Parser(object):
             return lookup_code(abbr, 34, 'unit_name', 'unit_lookup_code',
                                lookup)
 
-        resp_stages = list()
+        # Get blockette 52.
+        blkt52 = [_i for _i in blockettes_for_channel if _i.id == 52]
+        if len(blkt52) != 1:
+            raise ValueError("Must have a blockette 52.")
+        blkt52 = blkt52[0]
 
-        # Stage 1 from sensor
-        b53 = self.blockettes[53][0]
-        b58 = next((b for b in self.blockettes[58]
-                    if b.stage_sequence_number == 1), None)
+        # Sort the rest into stages.
+        stages = collections.defaultdict(list)
+        for b in blockettes_for_channel:
+            # Blockette 52 does not matter for the response.
+            if b.id == 52:
+                continue
+            stages[b.stage_sequence_number].append(b)
 
-        # Make a list of zeros
-        zeros = list()
-        if b53.number_of_complex_zeros == 1:
-            zeros.append(ComplexWithUncertainties(
-                FloatWithUncertainties(
-                    b53.real_zero,
-                    lower_uncertainty=b53.real_zero_error,
-                    upper_uncertainty=b53.real_zero_error),
-                FloatWithUncertainties(
-                    b53.imaginary_zero,
-                    lower_uncertainty=b53.imaginary_zero_error,
-                    upper_uncertainty=b53.imaginary_zero_error)))
-        else:
-            for i in range(b53.number_of_complex_zeros):
-                zeros.append(ComplexWithUncertainties(
-                    FloatWithUncertainties(
-                        b53.real_zero[i],
-                        lower_uncertainty=b53.real_zero_error[i],
-                        upper_uncertainty=b53.real_zero_error[i]),
-                    FloatWithUncertainties(
-                        b53.imaginary_zero[i],
-                        lower_uncertainty=b53.imaginary_zero_error[i],
-                        upper_uncertainty=b53.imaginary_zero_error[i])))
+        # Get units.
+        input_units = self.resolve_abbreviation(
+            34, blkt52.units_of_signal_response)
+        # They should be identical with the output units of the first stage.
+        stage_1_input = self.resolve_abbreviation(
+            34, stages[1][0].stage_signal_input_units)
+        if input_units.unit_name != stage_1_input.unit_name:
+            raise ValueError("Units of the signal response should be "
+                             "identical to the units of the input of stage 1.")
+        # Output units are the outputs of the final stage.
+        output_units = self.resolve_abbreviation(
+            34, stages[max(stages.keys())][0].signal_out_units)
 
-        # Make a list of poles
-        poles = list()
-        if b53.number_of_complex_poles == 1:
-            poles.append(ComplexWithUncertainties(
-                FloatWithUncertainties(
-                    b53.real_pole,
-                    lower_uncertainty=b53.real_pole_error,
-                    upper_uncertainty=b53.real_pole_error),
-                FloatWithUncertainties(
-                    b53.imaginary_pole,
-                    lower_uncertainty=b53.imaginary_pole_error,
-                    upper_uncertainty=b53.imaginary_pole_error)))
-        else:
-            for i in range(b53.number_of_complex_poles):
-                poles.append(ComplexWithUncertainties(
-                    FloatWithUncertainties(
-                        b53.real_pole[i],
-                        lower_uncertainty=b53.real_pole_error[i],
-                        upper_uncertainty=b53.real_pole_error[i]),
-                    FloatWithUncertainties(
-                        b53.imaginary_pole[i],
-                        lower_uncertainty=b53.imaginary_pole_error[i],
-                        upper_uncertainty=b53.imaginary_pole_error[i])))
+        if 0 not in stages or len(stages[0]) != 1:
+            msg = "Channel must a have exactly one stage 0 blockette."
+            raise ValueError(msg)
 
-        stage1 = PolesZerosResponseStage(
-            stage_sequence_number=b53.stage_sequence_number,
-            stage_gain=b58.sensitivity_gain,
-            stage_gain_frequency=b58.frequency,
-            input_units=lookup_unit(self.abbreviations,
-                                    b53.stage_signal_input_units),
-            output_units=lookup_unit(self.abbreviations,
-                                     b53.stage_signal_output_units),
-            pz_transfer_function_type=transform_map[
-                b53.transfer_function_types],
-            normalization_frequency=FloatWithUncertainties(
-                b53.normalization_frequency),
-            zeros=zeros,
-            poles=poles,
-            normalization_factor=b53.A0_normalization_factor,
-            resource_id='GENERATOR:obspy_from_RESP'
-        )
+        # Assemble the instrument sensitvity.
+        instrument_sensitivity = InstrumentSensitivity(
+            value=stages[0][0].sensitivity_gain,
+            frequency=stages[0][0].frequency,
+            input_units=input_units.unit_name,
+            output_units=output_units.unit_name,
+            input_units_description=input_units.unit_description,
+            output_units_description=output_units.unit_description)
 
-        resp_stages.append(stage1)
+        # Afterwards loop over all other stages and assemble them in one list.
+        response_stages = []
+        for _i in range(1, max(stages.keys()) + 1):
+            blkts = stages[_i]
+            # Make sure it ends with blockette 58. I'm not sure if its
+            # otherwise valid in any case.
+            if blkts[-1].id != 58:
+                raise NotImplementedError("All response stages must "
+                                          "currently end with blockette 58.")
+            b58 = blkts[-1]
 
-        # Stage2-N
-        # Get all blockettes for given stage
-        resp_blockettes = dict()
-        for b in self.stations[0]:
-            if b.id in (54, 57, 58) and b.stage_sequence_number >= 2:
-                resp_blockettes.setdefault(
-                    b.stage_sequence_number, {})[b.id] = b
+            resource_id = 'GENERATOR:ObsPy v %s' % __version__
 
-        for stage in resp_blockettes:
-            if 54 in resp_blockettes[stage]:
-                # Coefficient type response
-                # b54, b57, b58 should be present
-                b54 = resp_blockettes[stage][54]
-                b57 = resp_blockettes[stage][57]
-                b58 = resp_blockettes[stage][58]
+            # Poles and Zeros stage.
+            if blkts[0].id == 53:
+                # Must be 53 and 58.
+                assert [b.id for b in blkts] == [53, 58]
+                b53 = blkts[0]
+                zeros = []
+                for r, i, r_err, i_err in zip(
+                        b53.real_zero, b53.imaginary_zero,
+                        b53.real_zero_error, b53.imaginary_zero_error):
+                    z = ComplexWithUncertainties(r, i)
+                    err = ComplexWithUncertainties(r_err, i_err)
+                    z.lower_uncertainty = z - err
+                    z.upper_uncertainty = z + err
+                    zeros.append(z)
+                poles = []
+                for r, i, r_err, i_err in zip(
+                        b53.real_pole, b53.imaginary_pole,
+                        b53.real_pole_error, b53.imaginary_pole_error):
+                    p = ComplexWithUncertainties(r, i)
+                    err = ComplexWithUncertainties(r_err, i_err)
+                    p.lower_uncertainty = p - err
+                    p.upper_uncertainty = p + err
+                    poles.append(p)
 
-                # Make list of numerators
-                numerators = list()
-                if b54.number_of_numerators == 1:
-                    numerators.append(FloatWithUncertaintiesAndUnit(
-                        b54.numerator_coefficient,
-                        lower_uncertainty=b54.numerator_error,
-                        upper_uncertainty=b54.numerator_error))
-                else:
-                    for i in range(b54.number_of_numerators):
-                        numerators.append(FloatWithUncertaintiesAndUnit(
-                            b54.numerator_coefficient[i],
-                            lower_uncertainty=b54.numerator_error[i],
-                            upper_uncertainty=b54.numerator_error[i]))
+                i_u = self.resolve_abbreviation(
+                    34, b53.stage_signal_input_units)
+                o_u = self.resolve_abbreviation(
+                    34, b53.stage_signal_output_units)
 
-                # Make list of denominators
-                denominators = list()
-                if b54.number_of_denominators == 1:
-                    denominators.append(FloatWithUncertaintiesAndUnit(
-                        b54.denominator_coefficient,
-                        lower_uncertainty=b54.denominator_error,
-                        upper_uncertainty=b54.denominator_error))
-                else:
-                    for i in range(b54.number_of_denominators):
-                        denominators.append(FloatWithUncertaintiesAndUnit(
-                            b54.denominator_coefficient[i],
-                            lower_uncertainty=b54.denominator_error[i],
-                            upper_uncertainty=b54.denominator_error[i]))
-
-                response_stage = CoefficientsTypeResponseStage(
-                    stage_sequence_number=stage,
+                response_stages.append(PolesZerosResponseStage(
+                    stage_sequence_number=b53.stage_sequence_number,
                     stage_gain=b58.sensitivity_gain,
                     stage_gain_frequency=b58.frequency,
-                    input_units=lookup_unit(self.abbreviations,
-                                            b54.signal_input_units),
-                    output_units=lookup_unit(self.abbreviations,
-                                             b54.signal_output_units),
+                    input_units=i_u.unit_name,
+                    output_units=o_u.unit_name,
+                    input_units_description=i_u.unit_description,
+                    output_units_description=o_u.unit_description,
+                    pz_transfer_function_type=transform_map[
+                        b53.transfer_function_types],
+                    normalization_frequency=b53.normalization_frequency,
+                    zeros=zeros,
+                    poles=poles,
+                    normalization_factor=b53.A0_normalization_factor,
+                    resource_id=resource_id))
+            # Response coefficients stage.
+            elif blkts[0].id == 54:
+                assert [b.id for b in blkts] == [54, 57, 58]
+                b54 = blkts[0]
+                b57 = blkts[1]
+                b58 = blkts[2]
+
+                i_u = self.resolve_abbreviation(
+                    34, b54.signal_input_units)
+                o_u = self.resolve_abbreviation(
+                    34, b54.signal_output_units)
+
+                response_stages.append(CoefficientsTypeResponseStage(
+                    stage_sequence_number=b54.stage_sequence_number,
+                    stage_gain=b58.sensitivity_gain,
+                    stage_gain_frequency=b58.frequency,
+                    input_units=i_u.unit_name,
+                    output_units=o_u.unit_name,
+                    input_units_description=i_u.unit_description,
+                    output_units_description=o_u.unit_description,
                     cf_transfer_function_type=transfer_map[b54.response_type],
-                    numerator=numerators,
-                    denominator=denominators,
-                    decimation_input_sample_rate=FloatWithUncertainties(
-                        b57.input_sample_rate),
+                    numerator=b54.numerator_coefficient
+                    if hasattr(b54, "numerator_coefficient") else [],
+                    denominator=b54.denominator_coefficient
+                    if hasattr(b54, "denominator_coefficient") else [],
+                    decimation_input_sample_rate=b57.input_sample_rate,
                     decimation_factor=b57.decimation_factor,
                     decimation_offset=b57.decimation_offset,
-                    decimation_delay=FloatWithUncertainties(
-                        b57.estimated_delay),
-                    decimation_correction=FloatWithUncertainties(
-                        b57.correction_applied)
-                )
-            else:
-                # Basic response stage
-                # just a b58
-                b58 = resp_blockettes[stage][58]
-                response_stage = ResponseStage(
-                    stage_sequence_number=stage,
+                    decimation_delay=b57.estimated_delay,
+                    decimation_correction=b57.correction_applied,
+                    resource_id=resource_id))
+            # Gain only stage.
+            elif blkts[0].id == 58:
+                assert [b.id for b in blkts] == [58]
+                # Cannot assign units yet - will be added at the end in a
+                # final pass by infering it from the units of previous and
+                # subsequent stages.
+                response_stages.append(ResponseStage(
+                    stage_sequence_number=b58.stage_sequence_number,
                     stage_gain=b58.sensitivity_gain,
                     stage_gain_frequency=b58.frequency,
-                    # XXX Assume this is stage 2 V to V
-                    input_units='V',
-                    output_units='V'
-                )
-            resp_stages.append(response_stage)
+                    input_units="",
+                    output_units="",
+                    resource_id=resource_id))
+            # FIR stage.
+            elif blkts[0].id == 61:
+                assert [b.id for b in blkts] == [61, 57, 58]
+                b61 = blkts[0]
+                b57 = blkts[1]
+                b58 = blkts[2]
 
-        # XXX Pick 'correct' frequency for Instrument sensitivity
-        # for now we will use the sensor stage1 if not provided as arg.
-        if frequency is None:
-            sensitivity_frequency = stage1.stage_gain_frequency
-            if sr is not None:
-                sensitivity_frequency = min(sensitivity_frequency, sr * 0.4)
-        else:
-            sensitivity_frequency = frequency
-        # dummy stage 0
-        stage0 = InstrumentSensitivity(value=1.0,
-                                       frequency=sensitivity_frequency,
-                                       input_units='M/S',
-                                       output_units='COUNTS')
-        # Create Inventory.Response object
-        inv_response = Response(resource_id='Resource_ID',
-                                instrument_sensitivity=stage0,
-                                instrument_polynomial=None,
-                                response_stages=resp_stages)
-        # calculate overal response; stage 0
-        sensfreq, calc_sensit = \
-            inv_response._get_overall_sensitivity_and_gain('VEL')
+                i_u = self.resolve_abbreviation(
+                    34, b61.signal_in_units)
+                o_u = self.resolve_abbreviation(
+                    34, b61.signal_out_units)
 
-        inv_response.instrument_sensitivity.value = calc_sensit
-        inv_response.instrument_sensitivity.frequency = sensfreq
+                symmetry_map = {"A": "NONE", "B": "ODD", "C": "EVEN"}
 
-        return inv_response
+                response_stages.append(FIRResponseStage(
+                    stage_sequence_number=b61.stage_sequence_number,
+                    stage_gain=b58.sensitivity_gain,
+                    stage_gain_frequency=b58.frequency,
+                    input_units=i_u.unit_name,
+                    output_units=o_u.unit_name,
+                    input_units_description=i_u.unit_description,
+                    output_units_description=o_u.unit_description,
+                    symmetry=symmetry_map[b61.symmetry_code],
+                    coefficients=b61.FIR_coefficient,
+                    decimation_input_sample_rate=b57.input_sample_rate,
+                    decimation_factor=b57.decimation_factor,
+                    decimation_offset=b57.decimation_offset,
+                    decimation_delay=b57.estimated_delay,
+                    decimation_correction=b57.correction_applied,
+                    resource_id=resource_id))
+            else:
+                import pdb; pdb.set_trace()
+
+        # Do one last pass over the response stages to fill in missing units.
+        for _i in range(len(response_stages)):
+            s = response_stages[_i]
+            if not s.input_units and _i != 0:
+                s.input_units = response_stages[_i - 1].output_units
+            if not s.output_units and (_i + 1) <= len(response_stages):
+                s.output_units = response_stages[_i + 1].input_units
+
+        # Create response object.
+        return Response(resource_id=resource_id,
+                        instrument_sensitivity=instrument_sensitivity,
+                        instrument_polynomial=None,
+                        response_stages=response_stages)
 
     def _parse_seed(self, data):
         """

@@ -12,10 +12,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import collections
 import io
 import re
 
-from .parser import is_xseed
+import obspy
+import obspy.core.inventory
+
+from .parser import Parser, is_xseed
 
 
 def _is_seed(filename):
@@ -104,6 +108,147 @@ def _is_resp(filename):
                 return False
     except IOError:
         return False
+
+
+def _read_seed(filename, *args, **kwargs):
+    """
+    Read dataless SEED files to an ObsPy inventory object
+
+    :param filename: File with a SEED file.
+    :type filename: str or file-like object.
+    """
+    p = Parser(filename)
+
+    # Parse to an inventory object.
+    return _parse_to_inventory_object(p)
+
+
+def _read_resp(filename, *args, **kwargs):
+    """
+    Read resp files to an ObsPy inventory object
+
+    RESP does not save vital information like the station coordinates so 
+    this information will be missing from the inventory objects.
+
+    :param filename: File with a RESP file.
+    :type filename: str or file-like object.
+    """
+    if hasattr(filename, "read"):
+        data = filename.read()
+    else:
+        with io.open(filename, "rb") as fh:
+            data = fh.read()
+    if hasattr(data, "decode"):
+        data = data.decode()
+    p = Parser()
+    p._parse_resp(data)
+
+    # Parse to an inventory object.
+    return _parse_to_inventory_object(p)
+
+
+def _parse_to_inventory_object(p):
+    n = collections.defaultdict(list)
+
+    for station in p.stations:
+        if station[0].id != 50:
+            raise ValueError("Each station must start with blockette 50")
+        # Blockette 50.
+        b = station[0]
+        s = obspy.core.inventory.Station(
+            code=b.station_call_letters,
+            latitude=b.latitude,
+            longitude=b.longitude,
+            elevation=b.elevation,
+            channels=None,
+            site=obspy.core.inventory.Site(name=b.site_name),
+            vault=None,
+            geology=None,
+            equipments=None,
+            operators=None,
+            creation_date=None,
+            termination_date=None,
+            total_number_of_channels=None,
+            selected_number_of_channels=None,
+            description=None,
+            comments=None,
+            start_date=b.start_effective_date,
+            end_date=b.start_effective_date,
+            restricted_status=None,
+            alternate_code=None,
+            historical_code=None,
+            data_availability=None)
+
+        comments = [b for b in station if b.id == 51]
+        if comments:
+            raise NotImplementedError("Blockette 51 cannot yet be converted "
+                                      "to an Inventory object.")
+
+        # Split the rest into channels
+        channels = []
+        for b in station[1:]:
+            if b.id == 51:
+                continue
+            elif b.id == 52:
+                channels.append([b])
+                continue
+            channels[-1].append(b)
+
+        for channel in channels:
+            if channel[0].id != 52:
+                raise ValueError("Each station must start with blockette 52")
+            # Blockette 50.
+            b = channel[0]
+            c = obspy.core.inventory.Channel(
+                code=b.channel_identifier,
+                location_code=b.location_identifier,
+                latitude=b.latitude,
+                longitude=b.longitude,
+                elevation=b.elevation,
+                depth=b.local_depth,
+                azimuth=b.azimuth,
+                dip=b.dip,
+                types=None,
+                external_references=None,
+                sample_rate=b.sample_rate,
+                sample_rate_ratio_number_samples=None,
+                sample_rate_ratio_number_seconds=None,
+                storage_format=None,
+                clock_drift_in_seconds_per_sample=None,
+                calibration_units=None,
+                calibration_units_description=None,
+                sensor=None,
+                pre_amplifier=None,
+                data_logger=None,
+                equipment=None,
+                response=None,
+                description=None,
+                comments=None,
+                start_date=b.start_date,
+                end_date=b.end_date,
+                restricted_status=None,
+                alternate_code=None,
+                historical_code=None,
+                data_availability=None)
+            resp = p.get_response_for_channel(blockettes_for_channel=channel)
+            c.response = resp
+
+            s.channels.append(c)
+            break
+
+        n[s.code].append(s)
+        break
+
+    networks = []
+    for code, stations in n.items():
+        networks.append(obspy.core.inventory.Network(
+            code=code, stations=stations))
+
+    inv = obspy.core.inventory.Inventory(
+        networks=networks,
+        source="ObsPy's obspy.io.xseed version %s" % obspy.__version__)
+
+    inv.plot_response(0.001)
 
 
 if __name__ == '__main__':
