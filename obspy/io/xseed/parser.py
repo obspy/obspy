@@ -673,34 +673,45 @@ class Parser(object):
                     return voltype
 
         # First parse the data into a list of Blockettes
-        blockettelist = list()
-
+        blockettelist = []
         # List of fields
-        blockettefieldlist = list()
-        last_blockette_id = None
+        blockettefieldlist = []
 
         # Pre-compile as called a lot.
         pattern = re.compile(r"^B(\d+)F(\d+)(?:-(\d+))?(.*)")
         field_pattern = re.compile(r":\s*(\S*)")
         comment_pattern = re.compile(r"^#.*\+")
 
+        last_blockette_id = None
         for line in data.splitlines():
             m = re.match(pattern, line)
             if m:
+                # g contains the following:
+                #
+                # g[0]: Blockette number as a string with leading 0.
+                # g[1]: Field number as a string
+                # g[2]: End field number for two multi field lines,
+                #       e.g. B053F15-18
+                # g[3]: Everything afterwards.
                 g = m.groups()
                 blockette_number = g[0]
+                # A new blockette is starting.
                 if blockette_number != last_blockette_id:
-                    # A new blockette starting
                     if len(blockettefieldlist) > 0:
                         blockettelist.append(blockettefieldlist)
                         blockettefieldlist = list()
                     last_blockette_id = blockette_number
+                # Single field lines.
                 if not g[2]:
-                    # Single field per line
-                    value = re.search(field_pattern, g[3]).groups()[0]
+                    if blockette_number != "061":
+                        value = re.search(field_pattern, g[3]).groups()[0]
+                    # Blockette 61 has the FIR coefficients which are a bit
+                    # different.
+                    else:
+                        value = g[3].strip().split()[-1]
                     blockettefieldlist.append((blockette_number, g[1], value))
+                # Multiple field liens.
                 else:
-                    # Multiple fields per line
                     first_field = int(g[1])
                     last_field = int(g[2])
                     _fields = g[3].split()
@@ -718,33 +729,23 @@ class Parser(object):
         if len(blockettefieldlist) > 0:
             blockettelist.append(blockettefieldlist)
 
-        # Second populate self from blockette list
+        # Now popule the parser object from the list.
         self.temp = {'volume': [], 'abbreviations': [], 'stations': []}
         # Make an empty blockette 10
         self.temp['volume'].append(blockette.Blockette010(
             debug=self.debug, strict=False, compact=False, record_type='V'))
 
-        # Make unit lookup blockette 34
-        b34s = ('034  44  4M/S~velocity in meters per second~',
-                '034  25  5V~emf in volts~',
-                '034  32  7COUNTS~digital counts~'
-                )
-        abbv_lookup = {'M/S': '4', 'V': '5', 'COUNTS': '7'}
+        # Collect all required lookups here so they can later be written to
+        # blockettes 34.
+        unit_lookups = {}
 
-        for b34 in b34s:
-            data = io.BytesIO(b34.encode('utf-8'))
-            b34_obj = blockette.Blockette034(debug=self.debug,
-                                             record_type='A')
-            b34_obj.parse_seed(data, expected_length=len(b34))
-            self.temp['abbreviations'].append(b34_obj)
+        # Each loop will have all the fields for a single blockette.
+        for blkt in blockettelist:
+            # Split on new station.
+            if blkt[0][0] == "050":
+                self.temp["stations"].append([])
 
-        self.temp['stations'].append([])
-        root_attribute = self.temp['stations'][-1]
-
-        for RESPblockettefieldlist in blockettelist:
-            # Create a new blockette using the first field
-            RESPblockette_id, RESPfield, resp_value = RESPblockettefieldlist[0]
-            class_name = 'Blockette%03d' % int(RESPblockette_id)
+            class_name = 'Blockette%s' % blkt[0][0]
             blockette_class = getattr(blockette, class_name)
             record_type = record_type_from_blocketteid(blockette_class.id)
             blockette_obj = blockette_class(debug=self.debug,
@@ -762,43 +763,107 @@ class Parser(object):
                 else:
                     unrolled_blockette_fields.append(bf)
             blockette_fields = copy.deepcopy(unrolled_blockette_fields)
+
             # List of fields with fields used removed,
             # so unused can be set to default after
             unused_fields = blockette_fields[:]
 
-            for (RESPblockette_id,
-                 RESPfield,
-                 resp_value) in RESPblockettefieldlist:
+            for (_, field_number, resp_value) in blkt:
                 for bfield in blockette_fields:
-                    if bfield.id == int(RESPfield):
-                        if isinstance(bfield, VariableString):
-                            # Variable string needs terminator '~'
-                            resp_value += '~'
-                        # Lookup if abbv
-                        resp_value = abbv_lookup.get(resp_value, resp_value)
-                        resp_data = io.BytesIO(resp_value.encode('utf-8'))
-                        if (hasattr(bfield, 'length') and
-                                bfield.length < len(resp_value)):
-                            # RESP does not use the same length for floats
-                            # as SEED does
-                            bfield.length = len(resp_value)
-                        bfield.parse_seed(blockette_obj, resp_data)
-                        if bfield in unused_fields:
-                            unused_fields.remove(bfield)
-                        break
+                    if bfield.id != int(field_number):
+                        continue
+                    if isinstance(bfield, VariableString):
+                        # Variable string needs terminator '~'
+                        resp_value += '~'
+
+                    # Units need to be put into the abbreviations. Luckily
+                    # they all have "unit" in their field names.
+                    if "unit" in bfield.field_name:
+                        resp_value = resp_value.upper()
+                        if resp_value not in unit_lookups:
+                            unit_lookups[resp_value] = \
+                                str(len(unit_lookups) + 1)
+                        resp_value = unit_lookups[resp_value]
+                    resp_data = io.BytesIO(resp_value.encode('utf-8'))
+
+                    if (hasattr(bfield, 'length') and
+                            bfield.length < len(resp_value)):
+                        # RESP does not use the same length for floats
+                        # as SEED does
+                        bfield.length = len(resp_value)
+                    bfield.parse_seed(blockette_obj, resp_data)
+                    if bfield in unused_fields:
+                        unused_fields.remove(bfield)
+                    break
+
+            default_field_names = [_i.field_name
+                                   for _i in blockette_obj.default_fields]
             for bfield in unused_fields:
-                # Set unused fields to default
+                # Only set the unused fields to default values that are part
+                # of the default fields. Anything else is potentially wrong.
+                if bfield.field_name not in default_field_names:
+                    continue
                 bfield.parse_seed(blockette_obj, None)
-            # This is not correct for more than rdseed -R, although it will
-            # parse. Also will not separate stations blockettes by station.
-            if record_type == 'S':
-                root_attribute.append(blockette_obj)
-            elif record_type == 'V':
-                self.temp['volume'].append(blockette_obj)
-            elif record_type == 'A':
-                self.temp['abbreviations'].append(blockette_obj)
+
+            # Collect all blockettes.
+            self.temp["stations"][-1].append(blockette_obj)
+            # Also collect all blockettes here.
             self.blockettes.setdefault(blockette_obj.id,
                                        []).append(blockette_obj)
+
+        self.stations = self.temp["stations"]
+        self.volume = self.temp["volume"]
+
+        # We have to do another pass - Blockette 52 has the output unit of
+        # the signal response which should be the same as the input unit of
+        # the first filter stage. An awkward loop will follow!
+        for station in self.stations:
+            blkt52 = None
+            for blkt in station:
+                if blkt.id == 52:
+                    blkt52 = blkt
+                elif blkt52 and hasattr(blkt, "stage_sequence_number") and \
+                        blkt.stage_sequence_number == 1:
+                    if hasattr(blkt, "stage_signal_input_units"):
+                        key = "stage_signal_input_units"
+                    elif hasattr(blkt, "signal_input_units"):
+                        key = "signal_input_units"
+                    else:
+                        raise NotImplementedError
+                    blkt52.units_of_signal_response = getattr(blkt, key)
+                    # Reset so each channel only gets the first.
+                    blkt52 = None
+
+        # One more to try to find the sampling rate of the last digitizer in
+        # the chain.
+        for station in self.stations:
+            blkt52 = None
+            for blkt in station:
+                if blkt.id == 52:
+                    blkt52 = blkt
+                elif blkt.id == 57:
+                    # Set it all the time - the last one will stick.
+                    blkt52.sample_rate = \
+                        int(round(blkt.input_sample_rate /
+                                  blkt.decimation_factor))
+
+        # Write all the abbreviations.
+        mappings = {
+            "COUNTS": "Digitial Counts",
+            "M/S": "Velocity in Meters per Second",
+            "M": "Displacement in Meters",
+            "V": "Volts"}
+        for unit_name, lookup_key in unit_lookups.items():
+            blkt = blockette.Blockette034()
+            blkt.blockette_type = 34
+            blkt.unit_lookup_code = lookup_key
+            blkt.unit_name = unit_name
+            if unit_name in mappings:
+                blkt.unit_description =  mappings[unit_name]
+            self.temp['abbreviations'].append(blkt)
+            self.blockettes.setdefault(34, []).append(blkt)
+        self.abbreviations = self.temp["abbreviations"]
+
         self._update_internal_seed_structure()
 
     @classmethod
@@ -864,7 +929,7 @@ class Parser(object):
             raise NotImplementedError(str(abbreviation_blockette_number))
 
         blkts = [b for b in self.blockettes[abbreviation_blockette_number]
-                 if getattr(b, key) == lookup_code]
+                 if int(getattr(b, key)) == int(lookup_code)]
         if len(blkts) > 1:
             msg = ("Found multiple blockettes %i with lookup code %i. Will "
                    "use the first one." % (abbreviation_blockette_number,

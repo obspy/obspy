@@ -167,11 +167,13 @@ def _parse_to_inventory_object(p):
         b = station[0]
         s = obspy.core.inventory.Station(
             code=b.station_call_letters,
-            latitude=b.latitude,
-            longitude=b.longitude,
-            elevation=b.elevation,
+            # Set to bogus values if not set.
+            latitude=getattr(b, "latitude", 0.0),
+            longitude=getattr(b, "longitude", 0.0),
+            elevation=getattr(b, "elevation", 123456.0),
             channels=None,
-            site=obspy.core.inventory.Site(name=b.site_name),
+            site=obspy.core.inventory.Site(
+                name=getattr(b, "site_name", None)),
             vault=None,
             geology=None,
             equipments=None,
@@ -182,8 +184,8 @@ def _parse_to_inventory_object(p):
             selected_number_of_channels=None,
             description=None,
             comments=None,
-            start_date=b.start_effective_date,
-            end_date=b.start_effective_date,
+            start_date=getattr(b, "start_effective_date", None),
+            end_date=getattr(b, "end_effective_date", None),
             restricted_status=None,
             alternate_code=None,
             historical_code=None,
@@ -227,12 +229,13 @@ def _parse_to_inventory_object(p):
             c = obspy.core.inventory.Channel(
                 code=b.channel_identifier,
                 location_code=b.location_identifier,
-                latitude=b.latitude,
-                longitude=b.longitude,
-                elevation=b.elevation,
-                depth=b.local_depth,
-                azimuth=b.azimuth,
-                dip=b.dip,
+                # Set to bogus values if not set.
+                latitude=getattr(b, "latitude", 0.0),
+                longitude=getattr(b, "longitude", 0.0),
+                elevation=getattr(b, "elevation", 123456.0),
+                depth=getattr(b, "local_depth", 123456.0),
+                azimuth=getattr(b, "azimuth", None),
+                dip=getattr(b, "dip", None),
                 types=None,
                 external_references=None,
                 sample_rate=b.sample_rate,

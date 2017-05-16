@@ -15,7 +15,7 @@ from future.builtins import *  # NOQA
 
 import ctypes as C
 import warnings
-from collections import defaultdict
+from collections import defaultdict, Iterable
 from copy import deepcopy
 from math import pi
 
@@ -390,7 +390,10 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
     @numerator.setter
     def numerator(self, value):
-        value = list(value)
+        if value == []:
+            self._numerator = []
+            return
+        value = list(value) if isinstance(value, Iterable) else [value]
         for _i, x in enumerate(value):
             if not isinstance(x, FloatWithUncertaintiesAndUnit):
                 value[_i] = FloatWithUncertaintiesAndUnit(x)
@@ -402,7 +405,10 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
     @denominator.setter
     def denominator(self, value):
-        value = list(value)
+        if value == []:
+            self._denominator = []
+            return
+        value = list(value) if isinstance(value, Iterable) else [value]
         for _i, x in enumerate(value):
             if not isinstance(x, FloatWithUncertaintiesAndUnit):
                 value[_i] = FloatWithUncertaintiesAndUnit(x)

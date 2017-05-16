@@ -97,8 +97,8 @@ class CoreTestCase(unittest.TestCase):
             self.assertFalse(_is_resp(filename), filename)
 
     def test_read_resp(self):
-        f = self.resp_files[1]
-        _read_resp(f)
+        for f in self.resp_files:
+            _read_resp(f)
 
     def test_read_seed(self):
         for f in self.seed_files:
