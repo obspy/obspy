@@ -123,6 +123,16 @@ def _read_seed(filename, *args, **kwargs):
     return _parse_to_inventory_object(p)
 
 
+def _read_xseed(filename, *args, **kwargs):
+    """
+    Read XML-SEED files to an ObsPy inventory object
+
+    :param filename: File with a XML-SEED file.
+    :type filename: str or file-like object.
+    """
+    return _read_seed(filename=filename, *args, **kwargs)
+
+
 def _read_resp(filename, *args, **kwargs):
     """
     Read resp files to an ObsPy inventory object

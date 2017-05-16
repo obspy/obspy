@@ -367,7 +367,10 @@ ENTRY_POINTS = {
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
         'STATIONTXT = obspy.io.stationtxt.core',
-        'KML = obspy.io.kml.core'
+        'KML = obspy.io.kml.core',
+        'SEED = obspy.io.xseed.core',
+        'XSEED = obspy.io.xseed.core',
+        'RESP = obspy.io.xseed.core',
         ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
@@ -400,6 +403,18 @@ ENTRY_POINTS = {
     'obspy.plugin.inventory.KML': [
         'writeFormat = obspy.io.kml.core:_write_kml',
         ],
+    'obspy.plugin.inventory.SEED': [
+        'isFormat = obspy.io.xseed.core:_is_seed',
+        'readFormat = obspy.io.xseed.core:_read_seed',
+    ],
+    'obspy.plugin.inventory.XSEED': [
+        'isFormat = obspy.io.xseed.core:_is_xseed',
+        'readFormat = obspy.io.xseed.core:_read_xseed',
+    ],
+    'obspy.plugin.inventory.RESP': [
+        'isFormat = obspy.io.xseed.core:_is_resp',
+        'readFormat = obspy.io.xseed.core:_read_resp',
+    ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
         'constant = scipy.signal:detrend',
