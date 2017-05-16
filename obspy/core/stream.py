@@ -3308,7 +3308,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             msg = ("Unexpected behavior in rotation. Please file a bug "
                    "report on github.")
             raise NotImplementedError(msg)
-        num_pieces = len(st) / 3
+        num_pieces = int(len(st) / 3)
         for i in range(num_pieces):
             # three consecutive traces are always the ones that combine for one
             # rotation run
