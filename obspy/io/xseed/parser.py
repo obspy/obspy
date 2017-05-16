@@ -854,6 +854,9 @@ class Parser(object):
             key = "abbreviation_lookup_code"
         elif abbreviation_blockette_number == 34:
             key = "unit_lookup_code"
+        elif abbreviation_blockette_number in (41, 42, 43, 44, 45, 46, 47, 48,
+                                               49):
+            key = "response_lookup_key"
         else:
             raise NotImplementedError(str(abbreviation_blockette_number))
 
@@ -889,6 +892,9 @@ class Parser(object):
         :rtype: :class:`obspy.core.inventory.response.Response`
         :returns: Inventory response object.
         """
+        from .blockette import Blockette053, Blockette054, \
+            Blockette057, Blockette058, Blockette061
+
         transform_map = {'A': 'LAPLACE (RADIANS/SECOND)',
                          'B': 'LAPLACE (HERTZ)',
                          'D': 'DIGITAL (Z-TRANSFORM)'
@@ -897,6 +903,103 @@ class Parser(object):
                         'B': 'ANALOG (HERTZ)',
                         'D': 'DIGITAL'
                         }
+
+        # Parse blockette 60 and convert all the dictionary to their real
+        # blockette counterparts. Who ever thought blockette 60 was a good
+        # idea???
+        _blockettes = []
+
+        # Define the mappings for blockette 60. The key is the dictionary
+        # blockette, the value a tuple of the corresponding blockette class and
+        # another dictionary with the key being the name of the field in the
+        # actual blockette mapped to the one in the dictionary. If a key is not
+        # present, the same name is assumed.
+        mappings = {
+            41: (Blockette061, {
+                "mappings": {
+                    "number_of_coefficients": "number_of_factors"},
+                "might_be_empty": ["FIR_coefficient"]
+            }),
+            43: (Blockette053, {
+                "mappings": {
+                    "transfer_function_types": "response_type"},
+                "might_be_empty": []
+            }),
+            44: (Blockette054, {
+                "mappings": {},
+                "might_be_empty": ["numerator_coefficient", "numerator_error",
+                                   "denominator_coefficient",
+                                   "denominator_error"]
+            }),
+            47: (Blockette057, {
+                "mappings": {},
+                "might_be_empty": []
+            }),
+            48: (Blockette058, {
+                "mappings": {},
+                "might_be_empty": ["sensitivity_for_calibration",
+                                   "frequency_of_calibration_sensitivity",
+                                   "time_of_above_calibration"]
+            })
+        }
+        ignore_fields = ["stage_sequence_number"]
+
+        for b in blockettes_for_channel:
+            if b.id != 60:
+                _blockettes.append(b)
+                continue
+            for _i, lookup_codes in enumerate(b.stages):
+                stage_sequence_number = _i + 1
+                for code in lookup_codes:
+                    possible_dicts = []
+                    for _j in (41, 42, 43, 44, 45, 46, 47, 48, 49):
+                        try:
+                            possible_dicts.append(
+                                self.resolve_abbreviation(_j, code))
+                        except ValueError:
+                            continue
+                    if not possible_dicts:
+                        raise ValueError("Failed to find dictionary response "
+                                         "for key %i." % code)
+                    elif len(possible_dicts) > 1:
+                        raise ValueError("Found multiple dictionary responses "
+                                         "for key %i." % code)
+                    _d = possible_dicts[0]
+                    # Now it starts to get really ugly...
+                    _m = mappings[_d.id]
+                    _b = _m[0]()
+                    _m = _m[1]
+
+                    # Parse out the loop fields.
+                    fields = []
+                    for f in _b.get_fields():
+                        if not isinstance(f, Loop):
+                            fields.append(f)
+                            continue
+                        fields.extend(f.data_fields)
+
+                    for field in fields:
+                        if field.attribute_name in ignore_fields:
+                            continue
+                        elif field.attribute_name in _m["mappings"]:
+                            key = _m["mappings"][field.attribute_name]
+                        else:
+                            key = field.attribute_name
+
+                        # Some keys might not be set.
+                        has_it = hasattr(_d, key)
+                        if not has_it and key in _m["might_be_empty"]:
+                            continue
+
+                        try:
+                            setattr(_b, field.attribute_name, getattr(_d, key))
+                        except Exception as e:
+                            print(e)
+                            import pdb; pdb.set_trace()
+                    _b.stage_sequence_number = stage_sequence_number
+                    _blockettes.append(_b)
+
+        blockettes_for_channel = _blockettes
 
         # Get blockette 52.
         blkt52 = [_i for _i in blockettes_for_channel if _i.id == 52]
@@ -921,9 +1024,18 @@ class Parser(object):
         if input_units.unit_name != stage_1_input.unit_name:
             raise ValueError("Units of the signal response should be "
                              "identical to the units of the input of stage 1.")
+
+        # Handling inconsistencies of the SEED specification and in
+        # consequence the Parser object.
+        _s = stages[max(stages.keys())][0]
+        if hasattr(_s, "signal_out_units"):
+            key = "signal_out_units"
+        elif hasattr(_s, "signal_output_units"):
+            key = "signal_output_units"
+        else:
+            raise NotImplementedError
         # Output units are the outputs of the final stage.
-        output_units = self.resolve_abbreviation(
-            34, stages[max(stages.keys())][0].signal_out_units)
+        output_units = self.resolve_abbreviation(34, getattr(_s, key))
 
         if 0 not in stages or len(stages[0]) != 1:
             msg = "Channel must a have exactly one stage 0 blockette."
@@ -957,14 +1069,16 @@ class Parser(object):
                 assert [b.id for b in blkts] == [53, 58]
                 b53 = blkts[0]
                 zeros = []
-                for r, i, r_err, i_err in zip(
-                        b53.real_zero, b53.imaginary_zero,
-                        b53.real_zero_error, b53.imaginary_zero_error):
-                    z = ComplexWithUncertainties(r, i)
-                    err = ComplexWithUncertainties(r_err, i_err)
-                    z.lower_uncertainty = z - err
-                    z.upper_uncertainty = z + err
-                    zeros.append(z)
+                # Might not have zeros.
+                if hasattr(b53, "real_zero"):
+                    for r, i, r_err, i_err in zip(
+                            b53.real_zero, b53.imaginary_zero,
+                            b53.real_zero_error, b53.imaginary_zero_error):
+                        z = ComplexWithUncertainties(r, i)
+                        err = ComplexWithUncertainties(r_err, i_err)
+                        z.lower_uncertainty = z - err
+                        z.upper_uncertainty = z + err
+                        zeros.append(z)
                 poles = []
                 for r, i, r_err, i_err in zip(
                         b53.real_pole, b53.imaginary_pole,
@@ -1062,7 +1176,8 @@ class Parser(object):
                     input_units_description=i_u.unit_description,
                     output_units_description=o_u.unit_description,
                     symmetry=symmetry_map[b61.symmetry_code],
-                    coefficients=b61.FIR_coefficient,
+                    coefficients=b61.FIR_coefficient
+                    if hasattr(b61, "FIR_coefficient") else [],
                     decimation_input_sample_rate=b57.input_sample_rate,
                     decimation_factor=b57.decimation_factor,
                     decimation_offset=b57.decimation_offset,

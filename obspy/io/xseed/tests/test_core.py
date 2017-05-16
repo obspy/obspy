@@ -101,8 +101,9 @@ class CoreTestCase(unittest.TestCase):
         _read_resp(f)
 
     def test_read_seed(self):
-        f = self.seed_files[3]
-        _read_seed(f)
+        for f in self.seed_files:
+            print("FILENAME:", f)
+            _read_seed(f)
 
 
 def suite():
