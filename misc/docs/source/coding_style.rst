@@ -7,6 +7,16 @@ Like most Python projects, we try to adhere to :pep:`8` (Style Guide for Python
 Code) and :pep:`257` (Docstring Conventions) with the modifications documented
 here. Be sure to read all documents if you intend to contribute code to ObsPy.
 
+We rely on flake8_ for code style checks, it can be installed using ``conda
+install`` or ``pip install`` and can also be used to `set up git pre-commit
+hooks <http://flake8.pycqa.org/en/latest/user/using-hooks.html>`_.
+That way, ``flake8`` will immediately complain about problems with the coding
+style and the changes staged for committing can be adapted accordingly
+(even with git commit hooks installed, they can be ignored on a per-commit
+basis using ``git commit -n``).
+
+.. _flake8: http://flake8.pycqa.org
+
 Import Conventions
 ------------------
 
