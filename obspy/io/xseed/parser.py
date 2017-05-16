@@ -40,7 +40,7 @@ from obspy.core.util.base import download_to_file
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.obspy_types import ComplexWithUncertainties
 from . import DEFAULT_XSEED_VERSION, blockette
-from .utils import (IGNORE_ATTR, SEEDParserException, to_tag, lookup_code)
+from .utils import (IGNORE_ATTR, SEEDParserException, to_tag)
 from .fields import Loop, VariableString
 
 
@@ -897,10 +897,6 @@ class Parser(object):
                         'B': 'ANALOG (HERTZ)',
                         'D': 'DIGITAL'
                         }
-
-        def lookup_unit(abbr, lookup):
-            return lookup_code(abbr, 34, 'unit_name', 'unit_lookup_code',
-                               lookup)
 
         # Get blockette 52.
         blkt52 = [_i for _i in blockettes_for_channel if _i.id == 52]

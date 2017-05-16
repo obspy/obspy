@@ -134,23 +134,6 @@ def compare_seed(seed1, seed2):
             #  -56.996398  +31.0
             continue
 
-
-def lookup_code(blockettes, blkt_number, field_name, lookup_code,
-                lookup_code_number):
-    """
-    Loops over a list of blockettes until it finds the blockette with the
-    right number and lookup code.
-    """
-    # List of all possible names for lookup
-    for blockette in blockettes:
-        if blockette.id != blkt_number:
-            continue
-        if getattr(blockette, lookup_code) != lookup_code_number:
-            continue
-        return getattr(blockette, field_name)
-    return None
-
-
 def format_resp(number, digits=4):
     """
     Formats a number according to the RESP format.
