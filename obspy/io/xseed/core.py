@@ -189,10 +189,25 @@ def _parse_to_inventory_object(p):
             historical_code=None,
             data_availability=None)
 
-        comments = [b for b in station if b.id == 51]
-        if comments:
-            raise NotImplementedError("Blockette 51 cannot yet be converted "
-                                      "to an Inventory object.")
+        _c = [b for b in station if b.id == 51]
+        if _c:
+            for c in _c:
+                # Parse times.
+                _start = c.beginning_effective_time \
+                    if hasattr(c, "beginning_effective_time") else None
+                if not _start:
+                    _start = None
+                _end = c.end_effective_time \
+                    if hasattr(c, "end_effective_time") else None
+                if not _end:
+                    _end = None
+
+                comment = p.resolve_abbreviation(31, c.comment_code_key)
+
+                s.comments.append(obspy.core.inventory.Comment(
+                    value=comment.description_of_comment,
+                    begin_effective_time=_start,
+                    end_effective_time=_end))
 
         # Split the rest into channels
         channels = []
@@ -240,6 +255,27 @@ def _parse_to_inventory_object(p):
                 alternate_code=None,
                 historical_code=None,
                 data_availability=None)
+
+            # Parse the comments if any.
+            comments = [b for b in channel if b.id == 59]
+            if comments:
+                for _c in comments:
+                    # Parse times.
+                    _start = _c.beginning_effective_time \
+                        if hasattr(_c, "beginning_effective_time") else None
+                    if not _start:
+                        _start = None
+                    _end = _c.end_effective_time \
+                        if hasattr(_c, "end_effective_time") else None
+                    if not _end:
+                        _end = None
+
+                    comment = p.resolve_abbreviation(31, _c.comment_code_key)
+                    c.comments.append(obspy.core.inventory.Comment(
+                        value=comment.description_of_comment,
+                        begin_effective_time=_start,
+                        end_effective_time=_end))
+
             resp = p.get_response_for_channel(blockettes_for_channel=channel)
             c.response = resp
 
@@ -258,6 +294,7 @@ def _parse_to_inventory_object(p):
         networks=networks,
         source="ObsPy's obspy.io.xseed version %s" % obspy.__version__)
 
+    print(inv)
     inv.plot_response(0.001)
 
 

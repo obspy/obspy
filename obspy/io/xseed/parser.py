@@ -850,7 +850,9 @@ class Parser(object):
             raise ValueError("No blockettes %i available." %
                              abbreviation_blockette_number)
 
-        if abbreviation_blockette_number == 33:
+        if abbreviation_blockette_number == 31:
+            key = "comment_code_key"
+        elif abbreviation_blockette_number == 33:
             key = "abbreviation_lookup_code"
         elif abbreviation_blockette_number == 34:
             key = "unit_lookup_code"
@@ -946,6 +948,9 @@ class Parser(object):
 
         for b in blockettes_for_channel:
             if b.id != 60:
+                # Comments are irrelevant for the response.
+                if b.id == 59:
+                    continue
                 _blockettes.append(b)
                 continue
             for _i, lookup_codes in enumerate(b.stages):
@@ -991,11 +996,7 @@ class Parser(object):
                         if not has_it and key in _m["might_be_empty"]:
                             continue
 
-                        try:
-                            setattr(_b, field.attribute_name, getattr(_d, key))
-                        except Exception as e:
-                            print(e)
-                            import pdb; pdb.set_trace()
+                        setattr(_b, field.attribute_name, getattr(_d, key))
                     _b.stage_sequence_number = stage_sequence_number
                     _blockettes.append(_b)
 
@@ -1080,14 +1081,16 @@ class Parser(object):
                         z.upper_uncertainty = z + err
                         zeros.append(z)
                 poles = []
-                for r, i, r_err, i_err in zip(
-                        b53.real_pole, b53.imaginary_pole,
-                        b53.real_pole_error, b53.imaginary_pole_error):
-                    p = ComplexWithUncertainties(r, i)
-                    err = ComplexWithUncertainties(r_err, i_err)
-                    p.lower_uncertainty = p - err
-                    p.upper_uncertainty = p + err
-                    poles.append(p)
+                # Might somehow also not have zeros.
+                if hasattr(b53, "real_pole"):
+                    for r, i, r_err, i_err in zip(
+                            b53.real_pole, b53.imaginary_pole,
+                            b53.real_pole_error, b53.imaginary_pole_error):
+                        p = ComplexWithUncertainties(r, i)
+                        err = ComplexWithUncertainties(r_err, i_err)
+                        p.lower_uncertainty = p - err
+                        p.upper_uncertainty = p + err
+                        poles.append(p)
 
                 i_u = self.resolve_abbreviation(
                     34, b53.stage_signal_input_units)

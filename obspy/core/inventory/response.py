@@ -390,11 +390,10 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
     @numerator.setter
     def numerator(self, value):
-        for x in value:
+        value = list(value)
+        for _i, x in enumerate(value):
             if not isinstance(x, FloatWithUncertaintiesAndUnit):
-                msg = ("Numerator elements must be of "
-                       "FloatWithUncertaintiesAndUnit type.")
-                raise TypeError(msg)
+                value[_i] = FloatWithUncertaintiesAndUnit(x)
         self._numerator = value
 
     @property
@@ -403,11 +402,10 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
     @denominator.setter
     def denominator(self, value):
-        for x in value:
+        value = list(value)
+        for _i, x in enumerate(value):
             if not isinstance(x, FloatWithUncertaintiesAndUnit):
-                msg = ("Denominator elements must be of "
-                       "FloatWithUncertaintiesAndUnit type.")
-                raise TypeError(msg)
+                value[_i] = FloatWithUncertaintiesAndUnit(x)
         self._denominator = value
 
     @property
