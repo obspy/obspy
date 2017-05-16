@@ -294,8 +294,7 @@ def _parse_to_inventory_object(p):
         networks=networks,
         source="ObsPy's obspy.io.xseed version %s" % obspy.__version__)
 
-    print(inv)
-    inv.plot_response(0.001)
+    return inv
 
 
 if __name__ == '__main__':

@@ -17,6 +17,7 @@ import collections
 import copy
 import datetime
 import io
+import itertools
 import math
 import os
 import re
@@ -1373,6 +1374,10 @@ class Parser(object):
                     self._parse_xml_blockette(blkt, 'S', xseed_version))
         # Update internal values.
         self._update_internal_seed_structure()
+        # Write the self.blockettes dictionary.
+        for b in itertools.chain.from_iterable(self.stations +
+                                               [self.abbreviations]):
+            self.blockettes.setdefault(b.id, []).append(b)
 
     def _get_resp_string(self, resp, blockettes, station):
         """
