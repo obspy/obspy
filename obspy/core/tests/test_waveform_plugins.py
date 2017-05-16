@@ -81,7 +81,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     tr.stats.location = "00"
                     tr.stats.channel = "EHE"
                     tr.stats.calib = 0.199999
-                    tr.stats.delta = 0.005
+                    tr.stats.delta = 0.25
                     tr.stats.starttime = start
                     # create waveform file with given format and byte order
                     with NamedTemporaryFile() as tf:
@@ -140,17 +140,18 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         self.assertEqual(st[0].data.dtype.byteorder, '=')
                     # check meta data
                     # some formats do not contain a calibration factor
-                    if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST']:
+                    if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST', 'AH']:
                         self.assertAlmostEqual(st[0].stats.calib, 0.199999, 5)
                     else:
                         self.assertEqual(st[0].stats.calib, 1.0)
                     if format not in ['WAV']:
                         self.assertEqual(st[0].stats.starttime, start)
-                        self.assertEqual(st[0].stats.endtime, start + 9.995)
-                        self.assertEqual(st[0].stats.delta, 0.005)
-                        self.assertEqual(st[0].stats.sampling_rate, 200.0)
+                        self.assertEqual(st[0].stats.delta, 0.25)
+                        self.assertEqual(st[0].stats.endtime, start + 499.75)
+                        self.assertEqual(st[0].stats.sampling_rate, 4.0)
+
                     # network/station/location/channel codes
-                    if format in ['Q', 'SH_ASC']:
+                    if format in ['Q', 'SH_ASC', 'AH']:
                         # no network or location code in Q, SH_ASC
                         self.assertEqual(st[0].id, ".MANZ1..EHE")
                     elif format == "GSE2":
