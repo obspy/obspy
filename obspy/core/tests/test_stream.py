@@ -2524,7 +2524,8 @@ class StreamTestCase(unittest.TestCase):
         inv = read_inventory("/path/to/ffbx.stationxml", format="STATIONXML")
         parser = Parser("/path/to/ffbx.dataless")
         expected_data = np.load(
-            os.path.join(self.data_path, "ffbx_rotated.npz")).items()[0][1]
+            os.path.join(self.data_path, "ffbx_rotated.npz"),
+            encoding='bytes').items()[0][1]
         # compare stats
         expected_stats = [
             {'channel': 'HHZ', 'location': '', 'network': 'BW', 'npts': 401,
