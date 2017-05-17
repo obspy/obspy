@@ -26,9 +26,11 @@ import bisect
 import glob
 import math
 import os
+import platform
 import warnings
 
 import numpy as np
+import matplotlib
 from matplotlib import mlab
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.ticker import FormatStrFormatter
@@ -1380,6 +1382,19 @@ class PPSD(object):
             ax.grid()
 
         if self.special_handling is None:
+            # TODO can be removed once Ubuntu 16.10 is dropped (July 2017)
+            if (platform.system() == 'Linux' and
+                    platform.linux_distribution() ==
+                    ('Ubuntu', '16.10', 'yakkety') and
+                    matplotlib.__file__.startswith('/usr/lib')):
+                msg = ('Matplotlib rendering on Ubuntu 16.10 Yakkety has a '
+                       'bug, see https://github.com/matplotlib/matplotlib/'
+                       'issues/6976. Trying to work around it by setting'
+                       'matplotlib.rcParams["mathtext.fontset"] = "stix", see '
+                       'https://github.com/matplotlib/matplotlib/issues/6976#'
+                       'issuecomment-248855463')
+                warnings.warn(msg)
+                matplotlib.rcParams["mathtext.fontset"] = "stix"
             cb.ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
         else:
             cb.ax.set_ylabel('Amplitude [dB]')
