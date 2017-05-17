@@ -2528,15 +2528,6 @@ class StreamTestCase(unittest.TestCase):
             encoding='bytes').items()[0][1]
         # compare stats
         expected_stats = [
-            {'channel': 'HHZ', 'location': '', 'network': 'BW', 'npts': 401,
-             'sampling_rate': 200.0, 'starttime':
-             "2016-03-11T11:34:44.015000Z", 'station': 'FFB1'},
-            {'channel': 'HHN', 'location': '', 'network': 'BW', 'npts': 401,
-             'sampling_rate': 200.0, 'starttime':
-             "2016-03-11T11:34:44.015000Z", 'station': 'FFB1'},
-            {'channel': 'HHE', 'location': '', 'network': 'BW', 'npts': 401,
-             'sampling_rate': 200.0, 'starttime':
-             "2016-03-11T11:34:44.015000Z", 'station': 'FFB1'},
             {'channel': 'BHZ', 'location': '', 'network': 'BW', 'npts': 13,
              'sampling_rate': 40.0, 'starttime':
              "2016-03-11T11:34:45.725000Z", 'station': 'FFB1'},
@@ -2566,13 +2557,13 @@ class StreamTestCase(unittest.TestCase):
              "2016-03-11T11:34:44.025000Z", 'station': 'FFB1'},
             {'channel': 'HHZ', 'location': '', 'network': 'BW', 'npts': 401,
              'sampling_rate': 200.0, 'starttime':
-             "2016-03-11T11:34:44.015000Z", 'station': 'FFB2'},
+             "2016-03-11T11:34:44.015000Z", 'station': 'FFB1'},
             {'channel': 'HHN', 'location': '', 'network': 'BW', 'npts': 401,
              'sampling_rate': 200.0, 'starttime':
-             "2016-03-11T11:34:44.015000Z", 'station': 'FFB2'},
+             "2016-03-11T11:34:44.015000Z", 'station': 'FFB1'},
             {'channel': 'HHE', 'location': '', 'network': 'BW', 'npts': 401,
              'sampling_rate': 200.0, 'starttime':
-             "2016-03-11T11:34:44.015000Z", 'station': 'FFB2'},
+             "2016-03-11T11:34:44.015000Z", 'station': 'FFB1'},
             {'channel': 'BHZ', 'location': '', 'network': 'BW', 'npts': 61,
              'sampling_rate': 40.0, 'starttime':
              "2016-03-11T11:34:44.525000Z", 'station': 'FFB2'},
@@ -2593,13 +2584,13 @@ class StreamTestCase(unittest.TestCase):
              "2016-03-11T11:34:44.425000Z", 'station': 'FFB2'},
             {'channel': 'HHZ', 'location': '', 'network': 'BW', 'npts': 401,
              'sampling_rate': 200.0, 'starttime':
-             "2016-03-11T11:34:44.015000Z", 'station': 'FFB3'},
+             "2016-03-11T11:34:44.015000Z", 'station': 'FFB2'},
             {'channel': 'HHN', 'location': '', 'network': 'BW', 'npts': 401,
              'sampling_rate': 200.0, 'starttime':
-             "2016-03-11T11:34:44.015000Z", 'station': 'FFB3'},
+             "2016-03-11T11:34:44.015000Z", 'station': 'FFB2'},
             {'channel': 'HHE', 'location': '', 'network': 'BW', 'npts': 401,
              'sampling_rate': 200.0, 'starttime':
-             "2016-03-11T11:34:44.015000Z", 'station': 'FFB3'},
+             "2016-03-11T11:34:44.015000Z", 'station': 'FFB2'},
             {'channel': 'BHZ', 'location': '', 'network': 'BW', 'npts': 62,
              'sampling_rate': 40.0, 'starttime':
              "2016-03-11T11:34:44.475000Z", 'station': 'FFB3'},
@@ -2617,7 +2608,16 @@ class StreamTestCase(unittest.TestCase):
              "2016-03-11T11:34:44.025000Z", 'station': 'FFB3'},
             {'channel': 'BHE', 'location': '', 'network': 'BW', 'npts': 17,
              'sampling_rate': 40.0, 'starttime':
-             "2016-03-11T11:34:44.025000Z", 'station': 'FFB3'}]
+             "2016-03-11T11:34:44.025000Z", 'station': 'FFB3'},
+            {'channel': 'HHZ', 'location': '', 'network': 'BW', 'npts': 401,
+             'sampling_rate': 200.0, 'starttime':
+             "2016-03-11T11:34:44.015000Z", 'station': 'FFB3'},
+            {'channel': 'HHN', 'location': '', 'network': 'BW', 'npts': 401,
+             'sampling_rate': 200.0, 'starttime':
+             "2016-03-11T11:34:44.015000Z", 'station': 'FFB3'},
+            {'channel': 'HHE', 'location': '', 'network': 'BW', 'npts': 401,
+             'sampling_rate': 200.0, 'starttime':
+             "2016-03-11T11:34:44.015000Z", 'station': 'FFB3'}]
         # check rotation using both Inventory and Parser as metadata input
         for metadata in (inv, parser):
             st = read("/path/to/ffbx_unrotated_gaps.mseed", format="MSEED")

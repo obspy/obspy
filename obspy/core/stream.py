@@ -3224,9 +3224,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         for component_pair in component_pairs:
             st = self.select(component="[{}]".format(component_pair))
-            netstaloc = set(
+            netstaloc = sorted(set(
                 [(tr.stats.network, tr.stats.station, tr.stats.location)
-                 for tr in st])
+                 for tr in st]))
             for net, sta, loc in netstaloc:
                 channels = set(
                     [tr.stats.channel
@@ -3240,7 +3240,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     component = channel[-1]
                     common_channels.setdefault(
                         cha_without_comp, set()).add(component)
-                for cha_without_comp, components in common_channels.items():
+                for cha_without_comp, components in sorted(
+                        common_channels.items()):
                     if components == set(component_pair):
                         channels_ = [cha_without_comp + comp
                                      for comp in component_pair]
