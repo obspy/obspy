@@ -144,9 +144,9 @@ class Stats(AttribDict):
         'location': '',
         'channel': '',
     }
-    _priorized_keys = ['network', 'station', 'location', 'channel',
+    _priorized_keys = ('network', 'station', 'location', 'channel',
                        'starttime', 'endtime', 'sampling_rate', 'delta',
-                       'npts', 'calib']
+                       'npts', 'calib')
 
     def __init__(self, header={}):
         """
@@ -206,7 +206,7 @@ class Stats(AttribDict):
             p.text(str(self))
         else:
             # two {{ is escape sequence for literal {
-            keys = self._priorized_keys
+            keys = list(self._priorized_keys)
             for key in sorted(self.keys()):
                 if key not in keys:
                     keys.append(key)

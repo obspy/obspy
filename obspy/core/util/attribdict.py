@@ -174,7 +174,7 @@ class AttribDict(collections.MutableMapping):
         # check if keys exist
         other_keys = [k for k in keys if k not in priorized_keys]
         # priorized keys first + all other keys
-        keys = priorized_keys + sorted(other_keys)
+        keys = copy.deepcopy(list(priorized_keys)) + sorted(other_keys)
         head = []
         for key in keys:
             value = self.__dict__[key]
