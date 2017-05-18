@@ -8,8 +8,23 @@ import pickle
 import unittest
 import warnings
 
+try:
+    import IPython  # NOQA
+except ImportError:
+    HAS_IPYTHON_PRETTY = False
+    IPYTHON_IMPORT_MSG = 'IPython not installed'
+else:
+    try:
+        from IPython.lib.pretty import pretty
+    except ImportError:
+        HAS_IPYTHON_PRETTY = False
+        IPYTHON_IMPORT_MSG = 'Could not import IPython.lib.pretty.pretty'
+    else:
+        HAS_IPYTHON_PRETTY = True
+        IPYTHON_IMPORT_MSG = ''
+
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core import Stats
+from obspy.core import Stats, read
 from obspy.core.util import AttribDict
 
 
@@ -227,6 +242,78 @@ class StatsTestCase(unittest.TestCase):
         ad = Stats(adict)
         self.assertEqual(ad, adict)
         self.assertEqual(adict, ad)
+
+    @unittest.skipIf(not HAS_IPYTHON_PRETTY, IPYTHON_IMPORT_MSG)
+    def test_repr_pretty(self):
+        """
+        Test _repr_pretty_ method of Stats and underlying AttribDict.
+        """
+        st = read('/path/to/test.sac', format='SAC')
+        expected_stats = [
+            "        network: ''",
+            "        station: 'STA'",
+            "       location: ''",
+            "        channel: 'Q'",
+            '      starttime: 1978-07-18T08:00:10.000000Z',
+            '        endtime: 1978-07-18T08:01:49.000000Z',
+            '  sampling_rate: 1.0',
+            '          delta: 1.0',
+            '           npts: 100',
+            '          calib: 1.0',
+            "        _format: 'SAC'",
+            "            sac: AttribDict({'b': 10.0,",
+            "                             'delta': 1.0,",
+            "                             'depmax': 1.0,",
+            "                             'depmen': 8.3446501e-08,",
+            "                             'depmin': -1.0,",
+            "                             'e': 109.0,",
+            "                             'iftype': 1,",
+            "                             'kcmpnm': 'Q       ',",
+            "                             'kevnm': 'FUNCGEN: SINE   ',",
+            "                             'kstnm': 'STA     ',",
+            "                             'lcalda': 1,",
+            "                             'leven': 1,",
+            "                             'lovrok': 1,",
+            "                             'lpspol': 0,",
+            "                             'npts': 100,",
+            "                             'nvhdr': 6,",
+            "                             'nzhour': 8,",
+            "                             'nzjday': 199,",
+            "                             'nzmin': 0,",
+            "                             'nzmsec': 0,",
+            "                             'nzsec': 0,",
+            "                             'nzyear': 1978,",
+            "                             'unused23': 0})",
+            ]
+        expected_attribdict = [
+            "AttribDict({'b': 10.0,",
+            "            'delta': 1.0,",
+            "            'depmax': 1.0,",
+            "            'depmen': 8.3446501e-08,",
+            "            'depmin': -1.0,",
+            "            'e': 109.0,",
+            "            'iftype': 1,",
+            "            'kcmpnm': 'Q       ',",
+            "            'kevnm': 'FUNCGEN: SINE   ',",
+            "            'kstnm': 'STA     ',",
+            "            'lcalda': 1,",
+            "            'leven': 1,",
+            "            'lovrok': 1,",
+            "            'lpspol': 0,",
+            "            'npts': 100,",
+            "            'nvhdr': 6,",
+            "            'nzhour': 8,",
+            "            'nzjday': 199,",
+            "            'nzmin': 0,",
+            "            'nzmsec': 0,",
+            "            'nzsec': 0,",
+            "            'nzyear': 1978,",
+            "            'unused23': 0})",
+            ]
+        actual_stats = pretty(st[0].stats).splitlines()
+        self.assertEqual(expected_stats, actual_stats)
+        actual_attribdict = pretty(st[0].stats['sac']).splitlines()
+        self.assertEqual(expected_attribdict, actual_attribdict)
 
 
 def suite():
