@@ -24,6 +24,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-dev \
     python-geographiclib \
     python-imaging \
+    python-ipython \
     python-jsonschema \
     python-lxml \
     python-m2crypto \
@@ -46,6 +47,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-decorator \
     python3-dev \
     python3-flake8 \
+    python3-ipython \
     python3-jsonschema \
     python3-lxml \
     python3-matplotlib \

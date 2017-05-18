@@ -140,6 +140,7 @@ install:
         coverage
         requests
         jsonschema
+        ipython
   - source activate test-environment
   # additional, optional packages that run some more tests but are not
   # available for all archs. "--no-update-dependencies" keeps other packages at

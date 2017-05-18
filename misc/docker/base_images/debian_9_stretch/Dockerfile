@@ -28,6 +28,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-gdal \
     python-geographiclib \
     python-imaging \
+    python-ipython \
     python-jsonschema \
     python-lxml \
     python-m2crypto \
@@ -52,6 +53,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-flake8 \
     python3-gdal \
     python3-geographiclib \
+    python3-ipython \
     python3-jsonschema \
     python3-lxml \
     python3-matplotlib \

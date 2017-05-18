@@ -109,7 +109,7 @@ install:
   - "activate test"
   # Install default dependencies
   #   for now fix requests version, can be changed when a new requests is released (see #1599)
-  - "conda install -q --yes pip numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema"
+  - "conda install -q --yes pip numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema ipython"
   # additional dependencies
   - "pip install pyimgur"
   - "pip install -U future"

@@ -24,6 +24,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-gdal \
     python-geographiclib \
     python-imaging \
+    python-ipython \
     python-jsonschema \
     python-lxml \
     python-matplotlib \
