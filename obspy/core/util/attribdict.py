@@ -192,20 +192,20 @@ class AttribDict(collections.MutableMapping):
         else:
             # two {{ is escape sequence for literal {
             # another 2 indents for the '({'
-            with p.group(len(cls_name) + 2, '{}({{'.format(cls_name), '})'):
+            pretty_indent = len(cls_name) + 2
+            with p.group(pretty_indent, '{}({{'.format(cls_name), '})'):
                 for idx, (key, value) in enumerate(
                         sorted(self.__dict__.items())):
                     if idx:
                         p.text(',')
                         p.breakable()
                     if isinstance(key, (str, native_str)):
-                        p.pretty(native_str(key))
-                    else:
-                        p.pretty(key)
+                        key = native_str(key)
+                    p.pretty(key)
                     p.text(': ')
                     if isinstance(value, (str, native_str)):
-                        p.pretty(native_str(value))
-                    else:
+                        value = native_str(value)
+                    with p.group(len(key) + 2, '', ''):
                         p.pretty(value)
 
     def __iter__(self):

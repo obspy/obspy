@@ -248,6 +248,72 @@ class StatsTestCase(unittest.TestCase):
         """
         Test _repr_pretty_ method of Stats and underlying AttribDict.
         """
+        # we test two different stats/attribdict objects to make sure it works
+        # when supplying objects with different keys in them (as a regression
+        # test for previous commit d55c7221fe4b4a983ed3551bd18589f23c0b22c4)
+        st = read()
+        expected_stats = [
+            "        network: 'BW'",
+            "        station: 'RJOB'",
+            "       location: ''",
+            "        channel: 'EHZ'",
+            '      starttime: 2009-08-24T00:20:03.000000Z',
+            '        endtime: 2009-08-24T00:20:32.990000Z',
+            '  sampling_rate: 100.0',
+            '          delta: 0.01',
+            '           npts: 3000',
+            '          calib: 1.0',
+            '   back_azimuth: 100.0',
+            '    inclination: 30.0',
+            '       response: Channel Response',
+            '                 \tFrom M/S (Velocity in Meters Per Second) to '
+            'COUNTS (Digital Counts)',
+            '                 \tOverall Sensitivity: 2.5168e+09 defined at '
+            '0.020 Hz',
+            '                 \t4 stages:',
+            '                 \t\tStage 1: PolesZerosResponseStage from M/S '
+            'to V, gain: 1500',
+            '                 \t\tStage 2: CoefficientsTypeResponseStage from '
+            'V to COUNTS, gain: 1.67785e+06',
+            '                 \t\tStage 3: FIRResponseStage from COUNTS to '
+            'COUNTS, gain: 1',
+            '                 \t\tStage 4: FIRResponseStage from COUNTS to '
+            'COUNTS, gain: 1',
+            ]
+        expected_attribdict = [
+            "AttribDict({'back_azimuth': 100.0,",
+            "            'calib': 1.0,",
+            "            'channel': 'EHZ',",
+            "            'delta': 0.01,",
+            "            'endtime': 2009-08-24T00:20:32.990000Z,",
+            "            'inclination': 30.0,",
+            "            'location': '',",
+            "            'network': 'BW',",
+            "            'npts': 3000,",
+            "            'response': Channel Response",
+            '                      \tFrom M/S (Velocity in Meters Per Second) '
+            'to COUNTS (Digital Counts)',
+            '                      \tOverall Sensitivity: 2.5168e+09 defined '
+            'at 0.020 Hz',
+            '                      \t4 stages:',
+            '                      \t\tStage 1: PolesZerosResponseStage from '
+            'M/S to V, gain: 1500',
+            '                      \t\tStage 2: CoefficientsTypeResponseStage '
+            'from V to COUNTS, gain: 1.67785e+06',
+            '                      \t\tStage 3: FIRResponseStage from COUNTS '
+            'to COUNTS, gain: 1',
+            '                      \t\tStage 4: FIRResponseStage from COUNTS '
+            'to COUNTS, gain: 1,',
+            "            'sampling_rate': 100.0,",
+            "            'starttime': 2009-08-24T00:20:03.000000Z,",
+            "            'station': 'RJOB'})",
+            ]
+        actual_stats = pretty(st[0].stats).splitlines()
+        self.assertEqual(expected_stats, actual_stats)
+        actual_attribdict = pretty(
+            AttribDict(st[0].stats.__dict__)).splitlines()
+        self.assertEqual(expected_attribdict, actual_attribdict)
+        # OK, now for Stats/AttribDict with different keys in it
         st = read('/path/to/test.sac', format='SAC')
         expected_stats = [
             "        network: ''",

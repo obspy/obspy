@@ -166,9 +166,6 @@ class ResponseStage(ComparingObject):
                 if self.decimation_input_sample_rate is not None else ""))
         return ret.strip()
 
-    def _repr_pretty_(self, p, cycle):
-        p.text(str(self))
-
 
 class PolesZerosResponseStage(ResponseStage):
     """
@@ -248,9 +245,6 @@ class PolesZerosResponseStage(ResponseStage):
             poles=", ".join(map(str, self.poles)),
             zeros=", ".join(map(str, self.zeros)))
         return ret
-
-    def _repr_pretty_(self, p, cycle):
-        p.text(str(self))
 
     @property
     def zeros(self):
@@ -380,9 +374,6 @@ class CoefficientsTypeResponseStage(ResponseStage):
                 transfer_fct_type=self.cf_transfer_function_type,
                 num_count=len(self.numerator), den_count=len(self.denominator))
         return ret
-
-    def _repr_pretty_(self, p, cycle):
-        p.text(str(self))
 
     @property
     def numerator(self):
@@ -1253,9 +1244,6 @@ class Response(ComparingObject):
                  for i in self.response_stages]))
         return ret
 
-    def _repr_pretty_(self, p, cycle):
-        p.text(str(self))
-
     def plot(self, min_freq, output="VEL", start_stage=None,
              end_stage=None, label=None, axes=None, sampling_rate=None,
              unwrap_phase=False, plot_degrees=False, show=True, outfile=None):
@@ -1552,9 +1540,6 @@ class InstrumentSensitivity(ComparingObject):
                "\tOutput units description: {output_units_description}\n")
         ret = ret.format(**self.__dict__)
         return ret
-
-    def _repr_pretty_(self, p, cycle):
-        p.text(str(self))
 
 
 # XXX duplicated code, PolynomialResponseStage could probably be implemented by
