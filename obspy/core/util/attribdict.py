@@ -169,6 +169,23 @@ class AttribDict(collections.MutableMapping):
         head = [pattern % (k, self.__dict__[k]) for k in keys]
         return "\n".join(head)
 
+    def _repr_pretty_(self, p, cycle):
+        cls_name = self.__class__.__name__
+        if cycle:
+            p.text('{}({!s})'.format(cls_name, self.__dict__))
+        else:
+            # two {{ is escape sequence for literal {
+            # another 2 indents for the '({'
+            with p.group(len(cls_name) + 2, '{}({{'.format(cls_name), '})'):
+                for idx, (key, value) in enumerate(
+                        sorted(self.__dict__.items())):
+                    if idx:
+                        p.text(',')
+                        p.breakable()
+                    p.pretty(key)
+                    p.text(': ')
+                    p.pretty(value)
+
     def __iter__(self):
         return iter(self.__dict__)
 
