@@ -7,8 +7,12 @@ import itertools
 import os
 import unittest
 
+import numpy as np
+
+import obspy
 from obspy.io.xseed.core import _is_resp, _is_xseed, _is_seed, _read_resp, \
     _read_seed, _read_xseed
+from obspy.signal.invsim import evalresp_for_frequencies
 
 
 class CoreTestCase(unittest.TestCase):
@@ -97,16 +101,57 @@ class CoreTestCase(unittest.TestCase):
             self.assertFalse(_is_resp(filename), filename)
 
     def test_read_resp(self):
+        """
+        Currently just tests that all test RESP files can be read without an 
+        error.
+        """
         for f in self.resp_files:
             _read_resp(f)
 
     def test_read_seed(self):
+        """
+        Currently just tests that all test SEED files can be read without an 
+        error.
+        """
         for f in self.seed_files:
             _read_seed(f)
 
     def test_read_xseed(self):
+        """
+        Currently just tests that all test X(SEED) files can be read without 
+        an error.
+        """
         for f in self.xseed_files:
             _read_xseed(f)
+
+    def test_response_calculation(self):
+        """
+        Test the response calculations with the obspy.core interface.
+
+        It does it by converting whatever it gets to RESP files and then
+        uses evalreps to get the response. This is compared to using the
+        ObsPy Response object - this also uses evalresp but the actual flow
+        of the data is very different.
+        """
+        # Very broad range but the responses should be exactly identical as
+        # they use the same code under the hood so it should proove no issue.
+        frequencies = np.logspace(-3, 3, 100)
+
+        filename = os.path.join(self.data_path, "RESP.BW.FURT..EHZ")
+
+        for unit in ("DISP", "VEL", "ACC"):
+            r = obspy.read_inventory(filename)[0][0][0].response
+            e_r = evalresp_for_frequencies(
+                t_samp=None, frequencies=frequencies, filename=filename,
+                date=obspy.UTCDateTime(2002, 1, 1), units=unit)
+            i_r = r.get_evalresp_response_for_frequencies(
+                frequencies=frequencies, output=unit)
+            # This is in general very dangerous for floating point numbers but
+            # they use exactly the same code under the hood here so it is
+            # okay - if we ever have our own response calculation code this
+            # will have to be changed.
+            np.testing.assert_equal(e_r, i_r)
+
 
 
 def suite():
