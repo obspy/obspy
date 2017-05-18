@@ -849,7 +849,7 @@ class Parser(object):
 
         # Write all the abbreviations.
         mappings = {
-            "COUNTS": "Digitial Counts",
+            "COUNTS": "Digital Counts",
             "M/S": "Velocity in Meters per Second",
             "M": "Displacement in Meters",
             "V": "Volts"}

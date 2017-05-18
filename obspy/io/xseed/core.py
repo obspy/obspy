@@ -165,6 +165,7 @@ def _parse_to_inventory_object(p):
             raise ValueError("Each station must start with blockette 50")
         # Blockette 50.
         b = station[0]
+        network_code = b.network_code
         s = obspy.core.inventory.Station(
             code=b.station_call_letters,
             # Set to bogus values if not set.
@@ -191,7 +192,7 @@ def _parse_to_inventory_object(p):
             historical_code=None,
             data_availability=None)
 
-        _c = [b for b in station if b.id == 51]
+        _c = [_b for _b in station if _b.id == 51]
         if _c:
             for c in _c:
                 # Parse times.
@@ -213,13 +214,13 @@ def _parse_to_inventory_object(p):
 
         # Split the rest into channels
         channels = []
-        for b in station[1:]:
-            if b.id == 51:
+        for _b in station[1:]:
+            if _b.id == 51:
                 continue
-            elif b.id == 52:
-                channels.append([b])
+            elif _b.id == 52:
+                channels.append([_b])
                 continue
-            channels[-1].append(b)
+            channels[-1].append(_b)
 
         for channel in channels:
             if channel[0].id != 52:
@@ -252,8 +253,8 @@ def _parse_to_inventory_object(p):
                 response=None,
                 description=None,
                 comments=None,
-                start_date=b.start_date,
-                end_date=b.end_date,
+                start_date=b.start_date if b.start_date else None,
+                end_date=b.end_date if b.end_date else None,
                 restricted_status=None,
                 alternate_code=None,
                 historical_code=None,
@@ -285,7 +286,7 @@ def _parse_to_inventory_object(p):
             s.channels.append(c)
             break
 
-        n[s.code].append(s)
+        n[network_code].append(s)
         break
 
     networks = []

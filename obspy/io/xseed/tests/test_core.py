@@ -124,6 +124,100 @@ class CoreTestCase(unittest.TestCase):
         for f in self.xseed_files:
             _read_xseed(f)
 
+    def test_read_resp_metadata(self):
+        """
+        Manually assert that the meta-data is read correctly for all the
+        RESP files.
+        """
+        # File A
+        filename = os.path.join(self.data_path,
+                                "RESP.BW.FURT..EHZ")
+        inv = obspy.read_inventory(filename)
+        self.assertEqual(len(inv), 1)
+        self.assertEqual(len(inv[0]), 1)
+        self.assertEqual(len(inv[0][0]), 1)
+
+        network = inv[0]
+        station = inv[0][0]
+        channel = inv[0][0][0]
+        resp = inv[0][0][0].response
+
+        self.assertEqual(network.code, "BW")
+        self.assertEqual(station.code, "FURT")
+        self.assertEqual(station.start_date, None)
+        self.assertEqual(station.end_date, None)
+        self.assertEqual(channel.location_code, "")
+        self.assertEqual(channel.code, "EHZ")
+        self.assertEqual(channel.start_date, obspy.UTCDateTime(2001, 1, 1))
+        self.assertEqual(channel.end_date, None)
+        # Also check the input and output units.
+        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
+        self.assertEqual(resp.instrument_sensitivity.input_units_description,
+                         "Velocity in Meters per Second")
+        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
+        self.assertEqual(resp.instrument_sensitivity.output_units_description,
+                         "Digital Counts")
+
+        # File B
+        filename = os.path.join(self.data_path,
+                                "RESP.XX.NR008..HHZ.130.1.100")
+        inv = obspy.read_inventory(filename)
+        self.assertEqual(len(inv), 1)
+        self.assertEqual(len(inv[0]), 1)
+        self.assertEqual(len(inv[0][0]), 1)
+
+        network = inv[0]
+        station = inv[0][0]
+        channel = inv[0][0][0]
+        resp = inv[0][0][0].response
+
+        self.assertEqual(network.code, "XX")
+        self.assertEqual(station.code, "NR008")
+        self.assertEqual(station.start_date, None)
+        self.assertEqual(station.end_date, None)
+        self.assertEqual(channel.location_code, "")
+        self.assertEqual(channel.code, "HHZ")
+        self.assertEqual(channel.start_date, obspy.UTCDateTime(2006, 1, 1))
+        self.assertEqual(channel.end_date,
+                         obspy.UTCDateTime(3000, 1, 1) - 1)
+        # Also check the input and output units.
+        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
+        self.assertEqual(resp.instrument_sensitivity.input_units_description,
+                         "Velocity in Meters per Second")
+        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
+        self.assertEqual(resp.instrument_sensitivity.output_units_description,
+                         "Digital Counts")
+
+        # File C
+        filename = os.path.join(self.data_path,
+                                "RESP.XX.NS085..BHZ.STS2_gen3.120.1500")
+        inv = obspy.read_inventory(filename)
+        self.assertEqual(len(inv), 1)
+        self.assertEqual(len(inv[0]), 1)
+        self.assertEqual(len(inv[0][0]), 1)
+
+        network = inv[0]
+        station = inv[0][0]
+        channel = inv[0][0][0]
+        resp = inv[0][0][0].response
+
+        self.assertEqual(network.code, "XX")
+        self.assertEqual(station.code, "NS085")
+        self.assertEqual(station.start_date, None)
+        self.assertEqual(station.end_date, None)
+        self.assertEqual(channel.location_code, "")
+        self.assertEqual(channel.code, "BHZ")
+        self.assertEqual(channel.start_date, obspy.UTCDateTime(2006, 1, 1))
+        self.assertEqual(channel.end_date, None)
+        # Also check the input and output units.
+        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
+        self.assertEqual(resp.instrument_sensitivity.input_units_description,
+                         "Velocity in Meters per Second")
+        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
+        self.assertEqual(resp.instrument_sensitivity.output_units_description,
+                         "Digital Counts")
+
+
     def test_response_calculation(self):
         """
         Test the response calculations with the obspy.core interface.
