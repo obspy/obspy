@@ -216,7 +216,11 @@ class Stats(AttribDict):
                 p.text(': ')
                 # another 2 indents for the ': '
                 with p.group(key_width + 2, '', ''):
-                    p.pretty(getattr(self, key))
+                    value = getattr(self, key)
+                    if isinstance(value, (str, native_str)):
+                        p.pretty(native_str(value))
+                    else:
+                        p.pretty(value)
                 p.break_()
 
 
