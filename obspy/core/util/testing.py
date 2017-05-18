@@ -669,5 +669,42 @@ def get_all_py_files():
     return sorted(py_files)
 
 
+class ObsPyTestCase(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super(ObsPyTestCase, self).__init__(*args, **kwargs)
+        # imports need to be hidden in here to avoid circular import
+        from obspy.core import Stats
+        from obspy.core.util import AttribDict
+        self.addTypeEqualityFunc(Stats, self.assertAttribDictEqual)
+        self.addTypeEqualityFunc(AttribDict, self.assertAttribDictEqual)
+
+    # breach of function name style follows unittest.TestCase code style
+    def assertAttribDictEqual(self, expected, actual, msg=None):  # NOQA
+        try:
+            self.assertDictEqual(expected.__dict__, actual.__dict__)
+        except AssertionError as e:
+            missing = [key for key in expected.keys() if key not in actual]
+            extra = [key for key in actual.keys() if key not in expected]
+            differing = [key for key in actual.keys()
+                         if actual[key] != expected[key]]
+            msg = [str(e)]
+            if missing:
+                msg.append('  Expected items missing in actual results:')
+                for key in missing:
+                    msg.append('    {!s}: {!s}'.format(key, expected[key]))
+            if extra:
+                msg.append('  Unexpected extra items:')
+                for key in extra:
+                    msg.append('    {!s}: {!s}'.format(key, actual[key]))
+            if differing:
+                msg.append('  Differing items:')
+                for key in differing:
+                    msg.append('    Expected:  {!s}: {!s}'.format(
+                        key, expected[key]))
+                    msg.append('    Actual  :  {!s}: {!s}'.format(
+                        key, actual[key]))
+            raise AssertionError('\n'.join(msg))
+
+
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)
