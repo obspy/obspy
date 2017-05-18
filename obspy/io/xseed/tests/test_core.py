@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 import itertools
 import os
 import unittest
@@ -10,6 +11,7 @@ import unittest
 import numpy as np
 
 import obspy
+from obspy.core.util.testing import NamedTemporaryFile
 from obspy.io.xseed.core import _is_resp, _is_xseed, _is_seed, _read_resp, \
     _read_seed, _read_xseed
 from obspy.signal.invsim import evalresp_for_frequencies
@@ -130,9 +132,9 @@ class CoreTestCase(unittest.TestCase):
         RESP files.
         """
         # File A
-        filename = os.path.join(self.data_path,
-                                "RESP.BW.FURT..EHZ")
-        inv = obspy.read_inventory(filename)
+        filename_a = os.path.join(self.data_path,
+                                  "RESP.BW.FURT..EHZ")
+        inv = obspy.read_inventory(filename_a)
         self.assertEqual(len(inv), 1)
         self.assertEqual(len(inv[0]), 1)
         self.assertEqual(len(inv[0][0]), 1)
@@ -159,9 +161,9 @@ class CoreTestCase(unittest.TestCase):
                          "Digital Counts")
 
         # File B
-        filename = os.path.join(self.data_path,
-                                "RESP.XX.NR008..HHZ.130.1.100")
-        inv = obspy.read_inventory(filename)
+        filename_b = os.path.join(self.data_path,
+                                  "RESP.XX.NR008..HHZ.130.1.100")
+        inv = obspy.read_inventory(filename_b)
         self.assertEqual(len(inv), 1)
         self.assertEqual(len(inv[0]), 1)
         self.assertEqual(len(inv[0][0]), 1)
@@ -189,9 +191,9 @@ class CoreTestCase(unittest.TestCase):
                          "Digital Counts")
 
         # File C
-        filename = os.path.join(self.data_path,
-                                "RESP.XX.NS085..BHZ.STS2_gen3.120.1500")
-        inv = obspy.read_inventory(filename)
+        filename_c = os.path.join(self.data_path,
+                                  "RESP.XX.NS085..BHZ.STS2_gen3.120.1500")
+        inv = obspy.read_inventory(filename_c)
         self.assertEqual(len(inv), 1)
         self.assertEqual(len(inv[0]), 1)
         self.assertEqual(len(inv[0][0]), 1)
@@ -217,6 +219,63 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(resp.instrument_sensitivity.output_units_description,
                          "Digital Counts")
 
+        # Merge A + B to get a multi-response file.
+        with NamedTemporaryFile() as tf:
+            with io.open(filename_a, "rb") as fh:
+                tf.write(fh.read())
+            tf.write(b"\n")
+            with io.open(filename_b, "rb") as fh:
+                tf.write(fh.read())
+            tf.seek(0, 0)
+            inv = obspy.read_inventory(tf.name)
+        self.assertEqual(len(inv), 2)
+        self.assertEqual(len(inv[0]), 1)
+        self.assertEqual(len(inv[0][0]), 1)
+        self.assertEqual(len(inv[1]), 1)
+        self.assertEqual(len(inv[1][0]), 1)
+
+        network = inv[0]
+        station = inv[0][0]
+        channel = inv[0][0][0]
+        resp = inv[0][0][0].response
+
+        self.assertEqual(network.code, "BW")
+        self.assertEqual(station.code, "FURT")
+        self.assertEqual(station.start_date, None)
+        self.assertEqual(station.end_date, None)
+        self.assertEqual(channel.location_code, "")
+        self.assertEqual(channel.code, "EHZ")
+        self.assertEqual(channel.start_date, obspy.UTCDateTime(2001, 1, 1))
+        self.assertEqual(channel.end_date, None)
+        # Also check the input and output units.
+        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
+        self.assertEqual(resp.instrument_sensitivity.input_units_description,
+                         "Velocity in Meters per Second")
+        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
+        self.assertEqual(resp.instrument_sensitivity.output_units_description,
+                         "Digital Counts")
+
+        network = inv[1]
+        station = inv[1][0]
+        channel = inv[1][0][0]
+        resp = inv[1][0][0].response
+
+        self.assertEqual(network.code, "XX")
+        self.assertEqual(station.code, "NR008")
+        self.assertEqual(station.start_date, None)
+        self.assertEqual(station.end_date, None)
+        self.assertEqual(channel.location_code, "")
+        self.assertEqual(channel.code, "HHZ")
+        self.assertEqual(channel.start_date, obspy.UTCDateTime(2006, 1, 1))
+        self.assertEqual(channel.end_date,
+                         obspy.UTCDateTime(3000, 1, 1) - 1)
+        # Also check the input and output units.
+        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
+        self.assertEqual(resp.instrument_sensitivity.input_units_description,
+                         "Velocity in Meters per Second")
+        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
+        self.assertEqual(resp.instrument_sensitivity.output_units_description,
+                         "Digital Counts")
 
     def test_response_calculation(self):
         """

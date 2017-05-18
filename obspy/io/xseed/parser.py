@@ -864,8 +864,6 @@ class Parser(object):
             self.blockettes.setdefault(34, []).append(blkt)
         self.abbreviations = self.temp["abbreviations"]
 
-        self._update_internal_seed_structure()
-
     @classmethod
     def combine_sensor_dl_resps(cls, sensor, datalogger):
         """

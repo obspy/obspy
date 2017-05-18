@@ -158,6 +158,7 @@ def _read_resp(filename, *args, **kwargs):
 
 
 def _parse_to_inventory_object(p):
+
     n = collections.defaultdict(list)
 
     for station in p.stations:
@@ -284,10 +285,8 @@ def _parse_to_inventory_object(p):
             c.response = resp
 
             s.channels.append(c)
-            break
 
         n[network_code].append(s)
-        break
 
     networks = []
     for code, stations in n.items():
