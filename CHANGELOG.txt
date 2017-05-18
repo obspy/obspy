@@ -150,6 +150,9 @@ master: (doi: 10.5281/zenodo.165135)
    * New obspy.signal.regression module to compute linear regressions, with or
      without weights, with or without allowing for an intercept. (see #1716,
      #1747)
+   * add new plotting capabilities to PPSD (temporal variations per frequency
+     and spectrogram-like plot) and also make underlying processed PSDs
+     available via `PPSD.psd_values` property (see #1327)
  - obspy.taup:
    * Add obspy.taup.taup_geo.calc_dist_azi, a function to return the distance,
      azimuth and backazimuth for a source - receiver pair. (see #1538)

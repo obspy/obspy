@@ -14,8 +14,10 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import re
+from dateutil.rrule import MINUTELY, SECONDLY
 
-from matplotlib.dates import AutoDateFormatter, DateFormatter, num2date
+from matplotlib.dates import (
+    AutoDateLocator, AutoDateFormatter, DateFormatter, num2date)
 from matplotlib.ticker import FuncFormatter
 
 from obspy import UTCDateTime
@@ -246,6 +248,31 @@ def _timestring(t):
     2012-04-05T12:12:00.12
     """
     return str(t).rstrip("Z0").rstrip(".")
+
+
+def _set_xaxis_obspy_dates(ax, ticklabels_small=True):
+    """
+    Set Formatter/Locator of x-Axis to use ObsPyAutoDateFormatter and do some
+    other tweaking.
+
+    In contrast to normal matplotlib ``AutoDateFormatter`` e.g. shows full
+    timestamp on first tick when zoomed in so far that matplotlib would only
+    show hours or minutes on all ticks (making it impossible to tell the date
+    from the axis labels) and also shows full timestamp in matplotlib figures
+    info line (mouse-over info of current cursor position).
+
+    :type ax: :class:`matplotlib.axes.Axes`
+    :rtype: None
+    """
+    ax.xaxis_date()
+    locator = AutoDateLocator(minticks=3, maxticks=6)
+    locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
+    locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
+    ax.xaxis.set_major_formatter(ObsPyAutoDateFormatter(locator))
+    ax.xaxis.set_major_locator(locator)
+    if ticklabels_small:
+        import matplotlib.pyplot as plt
+        plt.setp(ax.get_xticklabels(), fontsize='small')
 
 
 if __name__ == '__main__':
