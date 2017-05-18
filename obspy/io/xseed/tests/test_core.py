@@ -100,7 +100,7 @@ class CoreTestCase(unittest.TestCase):
         for filename in self.other_files:
             self.assertFalse(_is_resp(filename), filename)
 
-    def test_read_resp(self):
+    def test_simple_read_resp(self):
         """
         Currently just tests that all test RESP files can be read without an 
         error.
@@ -108,7 +108,7 @@ class CoreTestCase(unittest.TestCase):
         for f in self.resp_files:
             _read_resp(f)
 
-    def test_read_seed(self):
+    def test_simple_read_seed(self):
         """
         Currently just tests that all test SEED files can be read without an 
         error.
@@ -116,7 +116,7 @@ class CoreTestCase(unittest.TestCase):
         for f in self.seed_files:
             _read_seed(f)
 
-    def test_read_xseed(self):
+    def test_simple_read_xseed(self):
         """
         Currently just tests that all test X(SEED) files can be read without 
         an error.
