@@ -1294,12 +1294,18 @@ def _write_response_stage(parent, stage):
 
     # write decimation
     if stage.decimation_input_sample_rate is not None:
+        stage.decimation_input_sample_rate = \
+            Frequency(stage.decimation_input_sample_rate)
         sub_ = etree.SubElement(sub, "Decimation")
         _write_floattype(sub_, stage, "decimation_input_sample_rate",
                          "InputSampleRate")
         _obj2tag(sub_, "Factor", stage.decimation_factor)
         _obj2tag(sub_, "Offset", stage.decimation_offset)
+        stage.decimation_delay = \
+            FloatWithUncertaintiesAndUnit(stage.decimation_delay)
         _write_floattype(sub_, stage, "decimation_delay", "Delay")
+        stage.decimation_correction = \
+            FloatWithUncertaintiesAndUnit(stage.decimation_correction)
         _write_floattype(sub_, stage, "decimation_correction", "Correction")
     # write gain
     sub_ = etree.SubElement(sub, "StageGain")

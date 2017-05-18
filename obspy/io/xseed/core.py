@@ -158,6 +158,14 @@ def _read_resp(filename, *args, **kwargs):
 
 
 def _parse_to_inventory_object(p):
+    # The volume time in blockette 10 will be mapped to the creation data of
+    # all the ObsPy objects. If it is not given, the current time will be used.
+    creation_date = None
+    blkt10 = p.blockettes.get(10, None)
+    if blkt10:
+        creation_date = blkt10[0].volume_time
+    if not creation_date:
+        creation_date = obspy.UTCDateTime()
 
     n = collections.defaultdict(list)
 
@@ -180,7 +188,7 @@ def _parse_to_inventory_object(p):
             geology=None,
             equipments=None,
             operators=None,
-            creation_date=None,
+            creation_date=creation_date,
             termination_date=None,
             total_number_of_channels=None,
             selected_number_of_channels=None,

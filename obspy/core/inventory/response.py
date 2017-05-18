@@ -126,11 +126,17 @@ class ResponseStage(ComparingObject):
         self.stage_gain_frequency = stage_gain_frequency
         self.name = name
         self.description = description
-        self.decimation_input_sample_rate = decimation_input_sample_rate
+        self.decimation_input_sample_rate = \
+            Frequency(decimation_input_sample_rate) \
+            if decimation_input_sample_rate is not None else None
         self.decimation_factor = decimation_factor
         self.decimation_offset = decimation_offset
-        self.decimation_delay = decimation_delay
-        self.decimation_correction = decimation_correction
+        self.decimation_delay = \
+            FloatWithUncertaintiesAndUnit(decimation_delay) \
+            if decimation_delay is not None else None
+        self.decimation_correction = \
+            FloatWithUncertaintiesAndUnit(decimation_correction) \
+            if decimation_correction is not None else None
 
     def __str__(self):
         ret = (
@@ -1716,7 +1722,7 @@ class InstrumentPolynomial(ComparingObject):
         self._approximation_type = value
 
 
-class FilterCoefficient(CustomFloat):
+class FilterCoefficient(FloatWithUncertainties):
     """
     A filter coefficient.
     """

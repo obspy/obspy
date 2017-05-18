@@ -1126,8 +1126,6 @@ class Parser(object):
                                           "currently end with blockette 58.")
             b58 = blkts[-1]
 
-            resource_id = 'GENERATOR:ObsPy v %s' % __version__
-
             # Poles and Zeros stage.
             if blkts[0].id == 53:
                 # Must be 53 and 58.
@@ -1174,8 +1172,7 @@ class Parser(object):
                     normalization_frequency=b53.normalization_frequency,
                     zeros=zeros,
                     poles=poles,
-                    normalization_factor=b53.A0_normalization_factor,
-                    resource_id=resource_id))
+                    normalization_factor=b53.A0_normalization_factor))
             # Response coefficients stage.
             elif blkts[0].id == 54:
                 assert [b.id for b in blkts] == [54, 57, 58]
@@ -1205,8 +1202,7 @@ class Parser(object):
                     decimation_factor=b57.decimation_factor,
                     decimation_offset=b57.decimation_offset,
                     decimation_delay=b57.estimated_delay,
-                    decimation_correction=b57.correction_applied,
-                    resource_id=resource_id))
+                    decimation_correction=b57.correction_applied))
             # Gain only stage.
             elif blkts[0].id == 58:
                 assert [b.id for b in blkts] == [58]
@@ -1218,8 +1214,7 @@ class Parser(object):
                     stage_gain=b58.sensitivity_gain,
                     stage_gain_frequency=b58.frequency,
                     input_units="",
-                    output_units="",
-                    resource_id=resource_id))
+                    output_units=""))
             # FIR stage.
             elif blkts[0].id == 61:
                 assert [b.id for b in blkts] == [61, 57, 58]
@@ -1249,10 +1244,9 @@ class Parser(object):
                     decimation_factor=b57.decimation_factor,
                     decimation_offset=b57.decimation_offset,
                     decimation_delay=b57.estimated_delay,
-                    decimation_correction=b57.correction_applied,
-                    resource_id=resource_id))
+                    decimation_correction=b57.correction_applied))
             else:
-                import pdb; pdb.set_trace()
+                raise NotImplementedError
 
         # Do one last pass over the response stages to fill in missing units.
         for _i in range(len(response_stages)):
@@ -1263,8 +1257,7 @@ class Parser(object):
                 s.output_units = response_stages[_i + 1].input_units
 
         # Create response object.
-        return Response(resource_id=resource_id,
-                        instrument_sensitivity=instrument_sensitivity,
+        return Response(instrument_sensitivity=instrument_sensitivity,
                         instrument_polynomial=None,
                         response_stages=response_stages)
 

@@ -277,6 +277,14 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(resp.instrument_sensitivity.output_units_description,
                          "Digital Counts")
 
+    def test_read_seed_metainformation(self):
+        """
+        Test the mapping of meta-information for SEED files. This will be 
+        exactly identical for XML-SEED files so no need to test these as well.
+        """
+        filename = os.path.join(self.data_path, "dataless.seed.BW_ROTZ")
+        inv = obspy.read_inventory(filename)
+
     def test_response_calculation(self):
         """
         Test the response calculations with the obspy.core interface.
@@ -304,7 +312,6 @@ class CoreTestCase(unittest.TestCase):
             # okay - if we ever have our own response calculation code this
             # will have to be changed.
             np.testing.assert_equal(e_r, i_r)
-
 
 
 def suite():
