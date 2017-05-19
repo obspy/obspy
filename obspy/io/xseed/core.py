@@ -200,6 +200,10 @@ def _parse_to_inventory_object(p):
             alternate_code=None,
             historical_code=None,
             data_availability=None)
+        if not s.start_date:
+            s.start_date = None
+        if not s.end_date:
+            s.end_date = None
 
         _c = [_b for _b in station if _b.id == 51]
         if _c:

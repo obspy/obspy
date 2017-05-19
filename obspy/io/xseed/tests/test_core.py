@@ -285,6 +285,89 @@ class CoreTestCase(unittest.TestCase):
         filename = os.path.join(self.data_path, "dataless.seed.BW_ROTZ")
         inv = obspy.read_inventory(filename)
 
+        self.assertEqual(len(inv), 1)
+        self.assertEqual(len(inv[0]), 1)
+        self.assertEqual(len(inv[0][0]), 3)
+
+        network = inv[0]
+        self.assertEqual(network.code, "BW")
+
+        station = inv[0][0]
+        self.assertEqual(station.code, "ROTZ")
+        self.assertAlmostEqual(station.latitude, 49.766899)
+        self.assertAlmostEqual(station.longitude, 12.207)
+        self.assertAlmostEqual(station.elevation, 430.0)
+        self.assertEqual(station.site.name, "Rotzenmuhle,Bavaria, BW-Net")
+        self.assertEqual(station.start_date,
+                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z"))
+        self.assertEqual(station.end_date, None)
+
+        # First channel.
+        channel = inv[0][0][0]
+        self.assertEqual(channel.code, "EHZ")
+        self.assertEqual(channel.location_code, "")
+        self.assertAlmostEqual(channel.latitude, 49.766899)
+        self.assertAlmostEqual(channel.longitude, 12.207)
+        self.assertAlmostEqual(channel.elevation, 430.0)
+        self.assertAlmostEqual(channel.depth, 0.0)
+        self.assertEqual(channel.azimuth, 0.0)
+        self.assertEqual(channel.dip, -90.0)
+        self.assertEqual(channel.start_date,
+                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z"))
+        self.assertEqual(channel.end_date, None)
+        self.assertEqual(channel.sample_rate, 200.0)
+        resp = channel.response
+        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
+        self.assertEqual(resp.instrument_sensitivity.input_units_description,
+                         "Velocity in Meters per Second")
+        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
+        self.assertEqual(resp.instrument_sensitivity.output_units_description,
+                         "Digital Counts")
+
+        # Second channel.
+        channel = inv[0][0][1]
+        self.assertEqual(channel.code, "EHN")
+        self.assertEqual(channel.location_code, "")
+        self.assertAlmostEqual(channel.latitude, 49.766899)
+        self.assertAlmostEqual(channel.longitude, 12.207)
+        self.assertAlmostEqual(channel.elevation, 430.0)
+        self.assertAlmostEqual(channel.depth, 0.0)
+        self.assertEqual(channel.azimuth, 0.0)
+        self.assertEqual(channel.dip, 0.0)
+        self.assertEqual(channel.start_date,
+                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z"))
+        self.assertEqual(channel.end_date, None)
+        self.assertEqual(channel.sample_rate, 200.0)
+        resp = channel.response
+        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
+        self.assertEqual(resp.instrument_sensitivity.input_units_description,
+                         "Velocity in Meters per Second")
+        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
+        self.assertEqual(resp.instrument_sensitivity.output_units_description,
+                         "Digital Counts")
+
+        # Third channel.
+        channel = inv[0][0][2]
+        self.assertEqual(channel.code, "EHE")
+        self.assertEqual(channel.location_code, "")
+        self.assertAlmostEqual(channel.latitude, 49.766899)
+        self.assertAlmostEqual(channel.longitude, 12.207)
+        self.assertAlmostEqual(channel.elevation, 430.0)
+        self.assertAlmostEqual(channel.depth, 0.0)
+        self.assertEqual(channel.azimuth, 90.0)
+        self.assertEqual(channel.dip, 0.0)
+        self.assertEqual(channel.start_date,
+                         obspy.UTCDateTime("2006-06-04T00:00:00.000000Z"))
+        self.assertEqual(channel.end_date, None)
+        self.assertEqual(channel.sample_rate, 200.0)
+        resp = channel.response
+        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
+        self.assertEqual(resp.instrument_sensitivity.input_units_description,
+                         "Velocity in Meters per Second")
+        self.assertEqual(resp.instrument_sensitivity.output_units, "COUNTS")
+        self.assertEqual(resp.instrument_sensitivity.output_units_description,
+                         "Digital Counts")
+
     def test_response_calculation(self):
         """
         Test the response calculations with the obspy.core interface.
