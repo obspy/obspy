@@ -703,7 +703,7 @@ class Parser(object):
                     last_blockette_id = blockette_number
                 # Single field lines.
                 if not g[2]:
-                    if blockette_number != "061":
+                    if blockette_number not in ["041", "061"]:
                         value = re.search(field_pattern, g[3]).groups()[0]
                     # Blockette 61 has the FIR coefficients which are a bit
                     # different.
@@ -822,14 +822,18 @@ class Parser(object):
             for blkt in station:
                 if blkt.id == 52:
                     blkt52 = blkt
-                elif blkt52 and hasattr(blkt, "stage_sequence_number") and \
-                        blkt.stage_sequence_number == 1:
+                # Either take a 5X blockette with a stage sequence number of
+                # one or take the first 4x blockette and assume its stages
+                # sequence number is one.
+                elif blkt52 and ((hasattr(blkt, "stage_sequence_number") and \
+                                  blkt.stage_sequence_number == 1) or
+                                 blkt.id in list(range(41, 50))):
                     if hasattr(blkt, "stage_signal_input_units"):
                         key = "stage_signal_input_units"
                     elif hasattr(blkt, "signal_input_units"):
                         key = "signal_input_units"
                     else:
-                        raise NotImplementedError
+                        continue
                     blkt52.units_of_signal_response = getattr(blkt, key)
                     # Reset so each channel only gets the first.
                     blkt52 = None
@@ -841,7 +845,7 @@ class Parser(object):
             for blkt in station:
                 if blkt.id == 52:
                     blkt52 = blkt
-                elif blkt.id == 57:
+                elif blkt.id in [47, 57]:
                     # Set it all the time - the last one will stick.
                     blkt52.sample_rate = \
                         int(round(blkt.input_sample_rate /
@@ -865,6 +869,69 @@ class Parser(object):
                 blkt.unit_description =  mappings[unit_name]
             self.temp['abbreviations'].append(blkt)
             self.blockettes.setdefault(34, []).append(blkt)
+
+        # Keep track of all used response lookup keys so they are not
+        # duplicated.
+        response_lookup_keys = set()
+
+        # Reconstruct blockette 60 and move all the 4X blockettes to the
+        # abbreviations. Another awkward and hard to understand loop.
+        def _finalize_blkt60(stages):
+            key = max(response_lookup_keys) if response_lookup_keys else 0
+            stage_numbers = sorted(stages.keys())
+            assert stage_numbers == list(range(min(stage_numbers),
+                                               max(stage_numbers) + 1))
+            stage_list = []
+            for _i in stage_numbers:
+                lookup_keys = []
+                for s in stages[_i]:
+                    key += 1
+                    response_lookup_keys.add(key)
+                    lookup_keys.append(key)
+                    s.response_lookup_key = key
+                    self.temp["abbreviations"].append(s)
+                stage_list.append(lookup_keys)
+            b = blockette.Blockette060()
+            b.stages = stage_list
+            return b
+
+        new_stations = []
+        for station in self.stations:
+            blkts = []
+            in_blkt_60 = False
+            cur_blkt_stage = None
+            cur_blkt_60_stages = collections.defaultdict(list)
+            for b in station:
+                if 40 <= b.id <= 49:
+                    if not in_blkt_60:
+                        msg = "4X blockette encountered outside of " \
+                            "blockette 60"
+                        raise ValueError(msg)
+                    cur_blkt_60_stages[cur_blkt_stage].append(b)
+                    continue
+                # Otherwise.
+                elif b.id == 60:
+                    in_blkt_60 = True
+                    # Always set in blockette 60 for RESP files.
+                    cur_blkt_stage = b.stage_sequence_number
+                    continue
+                # Now assemble the new Blockette 60 if any.
+                if in_blkt_60:
+                    blkts.append(_finalize_blkt60(cur_blkt_60_stages))
+                    in_blkt_60 = False
+                    cur_blkt_stage = None
+                    cur_blkt_60_stages = []
+                # Just append all other blockettes.
+                blkts.append(b)
+            # Might still have one left.
+            if in_blkt_60:
+                blkts.append(_finalize_blkt60(cur_blkt_60_stages))
+                in_blkt_60 = False
+                cur_blkt_stage = None
+                cur_blkt_60_stages = []
+            new_stations.append(blkts)
+        self.stations = new_stations
+
         self.abbreviations = self.temp["abbreviations"]
 
     @classmethod
@@ -1011,7 +1078,7 @@ class Parser(object):
                                    "time_of_above_calibration"]
             })
         }
-        ignore_fields = ["stage_sequence_number"]
+        ignore_fields = ["stage_sequence_number", "response_name"]
 
         for b in blockettes_for_channel:
             if b.id != 60:

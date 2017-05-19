@@ -413,6 +413,9 @@ class CoreTestCase(unittest.TestCase):
         uses evalresp to get the response. This is compared to using the
         ObsPy Response object - this also uses evalresp but the actual flow
         of the data is very different.
+
+        This is an expensive test but worth it for the trust it builds and 
+        the bugs it found and prevents.
         """
         # Very broad range but the responses should be exactly identical as
         # they use the same code under the hood so it should prove no issue.
@@ -420,11 +423,11 @@ class CoreTestCase(unittest.TestCase):
 
         for filename in self.seed_files + self.xseed_files:
             # Parse the files using the Parser object.
-            p = Parser(filename)
-            p_resp = {_i[0]: _i[1] for _i in p.get_resp()}
-
-            # Also read using the core routines.
-            inv = obspy.read_inventory(filename)
+            with warnings.catch_warnings(record=True) as w:
+                p = Parser(filename)
+                p_resp = {_i[0]: _i[1] for _i in p.get_resp()}
+                # Also read using the core routines.
+                inv = obspy.read_inventory(filename)
 
             # Get all the channels and epochs.
             channels = collections.defaultdict(list)
@@ -474,6 +477,24 @@ class CoreTestCase(unittest.TestCase):
                             np.testing.assert_allclose(
                                 e_r.imag, i_r.imag,
                                 err_msg="real - %s - %s" % (filename, unit),
+                                rtol=1E-6, atol=atol)
+
+                            # Bonus: Also read the RESP file directly with
+                            # obspy.core and test the response.
+                            i_r_r = obspy.read_inventory(tf.name).select(
+                                starttime=t - 1,
+                                endtime=t + 1)[0][0][0].response\
+                                .get_evalresp_response_for_frequencies(
+                                frequencies=frequencies, output=unit)
+                            np.testing.assert_allclose(
+                                e_r.real, i_r_r.real,
+                                err_msg="RESP real - %s - %s" % (filename,
+                                                                 unit),
+                                rtol=1E-6, atol=atol)
+                            np.testing.assert_allclose(
+                                e_r.imag, i_r_r.imag,
+                                err_msg="RESP real - %s - %s" % (filename,
+                                                                 unit),
                                 rtol=1E-6, atol=atol)
 
 
