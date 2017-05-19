@@ -213,6 +213,7 @@ class NRL(object):
 
         return dl_resp
 
+
 class NRLDict(dict):
     def __init__(self, nrl):
         self._nrl = nrl

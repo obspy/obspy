@@ -23,7 +23,7 @@ import numpy as np
 import scipy.interpolate
 
 from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import (ComplexWithUncertainties, CustomFloat,
+from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertainties,
                                          FloatWithUncertaintiesAndUnit,
                                          ObsPyException,
