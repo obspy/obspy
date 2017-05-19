@@ -825,7 +825,7 @@ class Parser(object):
                 # Either take a 5X blockette with a stage sequence number of
                 # one or take the first 4x blockette and assume its stages
                 # sequence number is one.
-                elif blkt52 and ((hasattr(blkt, "stage_sequence_number") and \
+                elif blkt52 and ((hasattr(blkt, "stage_sequence_number") and
                                   blkt.stage_sequence_number == 1) or
                                  blkt.id in list(range(41, 50))):
                     if hasattr(blkt, "stage_signal_input_units"):
@@ -866,7 +866,7 @@ class Parser(object):
             blkt.unit_lookup_code = lookup_key
             blkt.unit_name = unit_name
             if unit_name in mappings:
-                blkt.unit_description =  mappings[unit_name]
+                blkt.unit_description = mappings[unit_name]
             self.temp['abbreviations'].append(blkt)
             self.blockettes.setdefault(34, []).append(blkt)
 
@@ -1015,7 +1015,7 @@ class Parser(object):
         """
         Create an ObsPy response object from all blockettes of a channel.
 
-        This is a method instead of function as it needs to access the 
+        This is a method instead of function as it needs to access the
         abbreviation dictionary.
 
         :param blockettes_for_channel: The blockettes for the channel to

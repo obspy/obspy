@@ -26,7 +26,7 @@ def _is_seed(filename):
     """
     Determine if the file is (dataless) SEED file.
 
-    No comprehensive check - it only checks the initial record sequence 
+    No comprehensive check - it only checks the initial record sequence
     number and the very first blockette.
 
     :type filename: str
@@ -137,7 +137,7 @@ def _read_resp(filename, *args, **kwargs):
     """
     Read resp files to an ObsPy inventory object
 
-    RESP does not save vital information like the station coordinates so 
+    RESP does not save vital information like the station coordinates so
     this information will be missing from the inventory objects.
 
     :param filename: File with a RESP file.
@@ -181,18 +181,18 @@ def _parse_to_inventory_object(p):
         # There might be multiple blockettes 50 if some information changed.
         blkts50 = [b for b in station if b.id == 50]
         station_info = collections.defaultdict(list)
-        keys = ["network_identifier_code","station_call_letters", "latitude",
+        keys = ["network_identifier_code", "station_call_letters", "latitude",
                 "longitude", "elevation", "site_name", "start_effective_date",
                 "end_effective_date", "network_code"]
         for b in blkts50:
             for k in keys:
                 if hasattr(b, k):
-                    v = getattr(b, k)
                     station_info[k].append(getattr(b, k))
+
         # For most fields we just choose the last variant.
         # A bit ugly but there is only so much one can do.
-        last_or_none = \
-            lambda x: station_info[x][-1] if x in station_info else None
+        def last_or_none(x):
+            return station_info[x][-1] if x in station_info else None
 
         network_code = last_or_none("network_code")
         station_call_letters = last_or_none("station_call_letters")
@@ -283,7 +283,7 @@ def _parse_to_inventory_object(p):
             # Get the instrument name if it exists.
             sensor = getattr(b, "instrument_identifier", None)
             if sensor is not None:
-                instrument_name= p.resolve_abbreviation(
+                instrument_name = p.resolve_abbreviation(
                     33, sensor).abbreviation_description
                 sensor = obspy.core.inventory.Equipment(type=instrument_name)
 

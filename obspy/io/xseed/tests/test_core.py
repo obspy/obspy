@@ -285,7 +285,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_read_seed_metainformation(self):
         """
-        Test the mapping of meta-information for SEED files. This will be 
+        Test the mapping of meta-information for SEED files. This will be
         exactly identical for XML-SEED files so no need to test these as well.
         """
         filename = os.path.join(self.data_path, "dataless.seed.BW_ROTZ")
@@ -414,7 +414,7 @@ class CoreTestCase(unittest.TestCase):
         ObsPy Response object - this also uses evalresp but the actual flow
         of the data is very different.
 
-        This is an expensive test but worth it for the trust it builds and 
+        This is an expensive test but worth it for the trust it builds and
         the bugs it found and prevents.
         """
         # Very broad range but the responses should be exactly identical as
@@ -423,7 +423,7 @@ class CoreTestCase(unittest.TestCase):
 
         for filename in self.seed_files + self.xseed_files:
             # Parse the files using the Parser object.
-            with warnings.catch_warnings(record=True) as w:
+            with warnings.catch_warnings(record=True):
                 p = Parser(filename)
                 p_resp = {_i[0]: _i[1] for _i in p.get_resp()}
                 # Also read using the core routines.
@@ -476,7 +476,7 @@ class CoreTestCase(unittest.TestCase):
                                 rtol=1E-6, atol=atol)
                             np.testing.assert_allclose(
                                 e_r.imag, i_r.imag,
-                                err_msg="real - %s - %s" % (filename, unit),
+                                err_msg="imag - %s - %s" % (filename, unit),
                                 rtol=1E-6, atol=atol)
 
                             # Bonus: Also read the RESP file directly with
@@ -493,7 +493,7 @@ class CoreTestCase(unittest.TestCase):
                                 rtol=1E-6, atol=atol)
                             np.testing.assert_allclose(
                                 e_r.imag, i_r_r.imag,
-                                err_msg="RESP real - %s - %s" % (filename,
+                                err_msg="RESP imag - %s - %s" % (filename,
                                                                  unit),
                                 rtol=1E-6, atol=atol)
 
