@@ -863,7 +863,7 @@ class Parser(object):
         for unit_name, lookup_key in unit_lookups.items():
             blkt = blockette.Blockette034()
             blkt.blockette_type = 34
-            blkt.unit_lookup_code = lookup_key
+            blkt.unit_lookup_code = int(lookup_key)
             blkt.unit_name = unit_name
             if unit_name in mappings:
                 blkt.unit_description = mappings[unit_name]

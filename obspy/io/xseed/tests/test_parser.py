@@ -542,27 +542,13 @@ class ParserTestCase(unittest.TestCase):
                                       'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
         p = Parser(sts2_resp_file)
         # Weak but at least tests that something has been read.
-        assert set(p.blockettes.keys()) == {50, 52, 53, 54, 57, 58}
+        assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
 
         rt130_resp_file = os.path.join(self.path,
                                        'RESP.XX.NR008..HHZ.130.1.100')
         p = Parser(rt130_resp_file)
         # Weak but at least tests that something has been read.
-        assert set(p.blockettes.keys()) == {50, 52, 53, 54, 57, 58}
-
-    def test_get_response(self):
-        """
-        Test creating and inventory response from 2 resp files
-        """
-        sts2_resp_file = os.path.join(self.path,
-                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
-        rt130_resp_file = os.path.join(self.path,
-                                       'RESP.XX.NR008..HHZ.130.1.100')
-        dp = Parser(rt130_resp_file)
-        sp = Parser(sts2_resp_file)
-        com_p = Parser.combine_sensor_dl_resps(sp, dp)
-        inv_resp = com_p.get_response()
-        self.assertIsInstance(inv_resp, Response)
+        assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
 
     def test_read_resp_data(self):
         """
@@ -573,14 +559,14 @@ class ParserTestCase(unittest.TestCase):
         with open(sts2_resp_file, "rt") as fh:
             p = Parser(fh.read())
         # Weak but at least tests that something has been read.
-        assert set(p.blockettes.keys()) == {50, 52, 53, 54, 57, 58}
+        assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
 
         rt130_resp_file = os.path.join(self.path,
                                        'RESP.XX.NR008..HHZ.130.1.100')
         with open(rt130_resp_file, "rt") as fh:
             p = Parser(fh.read())
         # Weak but at least tests that something has been read.
-        assert set(p.blockettes.keys()) == {50, 52, 53, 54, 57, 58}
+        assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
 
     def clean_unit_string(self, string):
         """
