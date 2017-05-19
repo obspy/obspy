@@ -1086,12 +1086,15 @@ class Parser(object):
         # Get units.
         input_units = self.resolve_abbreviation(
             34, blkt52.units_of_signal_response)
-        # They should be identical with the output units of the first stage.
-        stage_1_input = self.resolve_abbreviation(
-            34, stages[1][0].stage_signal_input_units)
-        if input_units.unit_name != stage_1_input.unit_name:
-            raise ValueError("Units of the signal response should be "
-                             "identical to the units of the input of stage 1.")
+        # They should be identical with the output units of the first stage
+        # if they exist.
+        si = getattr(stages[1][0], "stage_signal_input_units", None)
+        if si:
+            stage_1_input = self.resolve_abbreviation(34, si)
+            if input_units.unit_name != stage_1_input.unit_name:
+                raise ValueError("Units of the signal response should be "
+                                 "identical to the units of the input of "
+                                 "stage 1.")
 
         # Handling inconsistencies of the SEED specification and in
         # consequence the Parser object.

@@ -178,26 +178,54 @@ def _parse_to_inventory_object(p):
         if station[0].id != 50:
             raise ValueError("Each station must start with blockette 50")
 
-        # Blockette 50.
-        b = station[0]
-        network_code = b.network_code
+        # There might be multiple blockettes 50 if some information changed.
+        blkts50 = [b for b in station if b.id == 50]
+        station_info = collections.defaultdict(list)
+        keys = ["network_identifier_code","station_call_letters", "latitude",
+                "longitude", "elevation", "site_name", "start_effective_date",
+                "end_effective_date", "network_code"]
+        for b in blkts50:
+            for k in keys:
+                if hasattr(b, k):
+                    v = getattr(b, k)
+                    station_info[k].append(getattr(b, k))
+        # For most fields we just choose the last variant.
+        # A bit ugly but there is only so much one can do.
+        last_or_none = \
+            lambda x: station_info[x][-1] if x in station_info else None
+
+        network_code = last_or_none("network_code")
+        station_call_letters = last_or_none("station_call_letters")
+        latitude = last_or_none("latitude")
+        longitude = last_or_none("longitude")
+        elevation = last_or_none("elevation")
+        site_name = last_or_none("site_name")
+
+        # Take the first start-date and the last end-date.
+        start_effective_date = station_info["start_effective_date"][0] \
+            if "start_effective_date" in station_info else None
+        end_effective_date = station_info["end_effective_date"][-1] \
+            if "end_effective_date" in station_info else None
+        if start_effective_date == "":
+            start_effective_date = None
+        if end_effective_date == "":
+            end_effective_date = None
 
         # Get the network description if it exists.
-        nic = getattr(b, "network_identifier_code", None)
+        nic = last_or_none("network_identifier_code")
         if nic is not None:
             desc = p.resolve_abbreviation(33, nic).abbreviation_description
             if desc and network_code not in network_descriptions:
                 network_descriptions[network_code] = desc
 
         s = obspy.core.inventory.Station(
-            code=b.station_call_letters,
+            code=station_call_letters,
             # Set to bogus values if not set.
-            latitude=getattr(b, "latitude", 0.0),
-            longitude=getattr(b, "longitude", 0.0),
-            elevation=getattr(b, "elevation", 123456.0),
+            latitude=latitude or 0.0,
+            longitude=longitude or 0.0,
+            elevation=elevation or 123456.0,
             channels=None,
-            site=obspy.core.inventory.Site(
-                name=getattr(b, "site_name", None)),
+            site=obspy.core.inventory.Site(name=site_name),
             vault=None,
             geology=None,
             equipments=None,
@@ -208,16 +236,12 @@ def _parse_to_inventory_object(p):
             selected_number_of_channels=None,
             description=None,
             comments=None,
-            start_date=getattr(b, "start_effective_date", None),
-            end_date=getattr(b, "end_effective_date", None),
+            start_date=start_effective_date,
+            end_date=end_effective_date,
             restricted_status=None,
             alternate_code=None,
             historical_code=None,
             data_availability=None)
-        if not s.start_date:
-            s.start_date = None
-        if not s.end_date:
-            s.end_date = None
 
         _c = [_b for _b in station if _b.id == 51]
         if _c:
@@ -241,7 +265,7 @@ def _parse_to_inventory_object(p):
 
         # Split the rest into channels
         channels = []
-        for _b in station[1:]:
+        for _b in [_i for _i in station if _i.id != 50]:
             if _b.id == 51:
                 continue
             elif _b.id == 52:
