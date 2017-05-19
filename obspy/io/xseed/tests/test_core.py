@@ -295,6 +295,7 @@ class CoreTestCase(unittest.TestCase):
 
         network = inv[0]
         self.assertEqual(network.code, "BW")
+        self.assertEqual(network.description, "BayernNetz")
 
         station = inv[0][0]
         self.assertEqual(station.code, "ROTZ")
@@ -377,7 +378,7 @@ class CoreTestCase(unittest.TestCase):
         Test the response calculations with the obspy.core interface.
 
         It does it by converting whatever it gets to RESP files and then
-        uses evalreps to get the response. This is compared to using the
+        uses evalresp to get the response. This is compared to using the
         ObsPy Response object - this also uses evalresp but the actual flow
         of the data is very different.
         """

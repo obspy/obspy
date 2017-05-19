@@ -167,14 +167,28 @@ def _parse_to_inventory_object(p):
     if not creation_date:
         creation_date = obspy.UTCDateTime()
 
+    # Dictionary to collect network descriptions. While looping through all
+    # stations it will attempt to figure out the network description. If it
+    # encounters multiple network descriptions it will just use the first one.
+    network_descriptions = {}
+
     n = collections.defaultdict(list)
 
     for station in p.stations:
         if station[0].id != 50:
             raise ValueError("Each station must start with blockette 50")
+
         # Blockette 50.
         b = station[0]
         network_code = b.network_code
+
+        # Get the network description if it exists.
+        nic = getattr(b, "network_identifier_code", None)
+        if nic is not None:
+            desc = p.resolve_abbreviation(33, nic).abbreviation_description
+            if desc and network_code not in network_descriptions:
+                network_descriptions[network_code] = desc
+
         s = obspy.core.inventory.Station(
             code=b.station_call_letters,
             # Set to bogus values if not set.
@@ -303,7 +317,8 @@ def _parse_to_inventory_object(p):
     networks = []
     for code, stations in n.items():
         networks.append(obspy.core.inventory.Network(
-            code=code, stations=stations))
+            code=code, stations=stations,
+            description=network_descriptions.get(code, None)))
 
     inv = obspy.core.inventory.Inventory(
         networks=networks,
