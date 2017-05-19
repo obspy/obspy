@@ -321,6 +321,8 @@ class CoreTestCase(unittest.TestCase):
                          obspy.UTCDateTime("2006-06-04T00:00:00.000000Z"))
         self.assertEqual(channel.end_date, None)
         self.assertEqual(channel.sample_rate, 200.0)
+        self.assertEqual(channel.sensor.type,
+                         "Streckeisen STS-2/N seismometer")
         resp = channel.response
         self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
         self.assertEqual(resp.instrument_sensitivity.input_units_description,
@@ -343,6 +345,8 @@ class CoreTestCase(unittest.TestCase):
                          obspy.UTCDateTime("2006-06-04T00:00:00.000000Z"))
         self.assertEqual(channel.end_date, None)
         self.assertEqual(channel.sample_rate, 200.0)
+        self.assertEqual(channel.sensor.type,
+                         "Streckeisen STS-2/N seismometer")
         resp = channel.response
         self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
         self.assertEqual(resp.instrument_sensitivity.input_units_description,
@@ -365,6 +369,8 @@ class CoreTestCase(unittest.TestCase):
                          obspy.UTCDateTime("2006-06-04T00:00:00.000000Z"))
         self.assertEqual(channel.end_date, None)
         self.assertEqual(channel.sample_rate, 200.0)
+        self.assertEqual(channel.sensor.type,
+                         "Streckeisen STS-2/N seismometer")
         resp = channel.response
         self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
         self.assertEqual(resp.instrument_sensitivity.input_units_description,

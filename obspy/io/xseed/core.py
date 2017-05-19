@@ -254,6 +254,14 @@ def _parse_to_inventory_object(p):
                 raise ValueError("Each station must start with blockette 52")
             # Blockette 50.
             b = channel[0]
+
+            # Get the instrument name if it exists.
+            sensor = getattr(b, "instrument_identifier", None)
+            if sensor is not None:
+                instrument_name= p.resolve_abbreviation(
+                    33, sensor).abbreviation_description
+                sensor = obspy.core.inventory.Equipment(type=instrument_name)
+
             c = obspy.core.inventory.Channel(
                 code=b.channel_identifier,
                 location_code=b.location_identifier,
@@ -273,7 +281,7 @@ def _parse_to_inventory_object(p):
                 clock_drift_in_seconds_per_sample=None,
                 calibration_units=None,
                 calibration_units_description=None,
-                sensor=None,
+                sensor=sensor,
                 pre_amplifier=None,
                 data_logger=None,
                 equipment=None,
