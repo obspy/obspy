@@ -1129,6 +1129,12 @@ class Parser(object):
                                           "currently end with blockette 58.")
             b58 = blkts[-1]
 
+            def _list(value):
+                if hasattr(value, '__iter__'):
+                    return value
+                else:
+                    return [value]
+
             # Poles and Zeros stage.
             if blkts[0].id == 53:
                 # Must be 53 and 58.
@@ -1138,8 +1144,9 @@ class Parser(object):
                 # Might not have zeros.
                 if hasattr(b53, "real_zero"):
                     for r, i, r_err, i_err in zip(
-                            b53.real_zero, b53.imaginary_zero,
-                            b53.real_zero_error, b53.imaginary_zero_error):
+                            _list(b53.real_zero), _list(b53.imaginary_zero),
+                            _list(b53.real_zero_error),
+                            _list(b53.imaginary_zero_error)):
                         z = ComplexWithUncertainties(r, i)
                         err = ComplexWithUncertainties(r_err, i_err)
                         z.lower_uncertainty = z - err
@@ -1149,8 +1156,9 @@ class Parser(object):
                 # Might somehow also not have zeros.
                 if hasattr(b53, "real_pole"):
                     for r, i, r_err, i_err in zip(
-                            b53.real_pole, b53.imaginary_pole,
-                            b53.real_pole_error, b53.imaginary_pole_error):
+                            _list(b53.real_pole), _list(b53.imaginary_pole),
+                            _list(b53.real_pole_error),
+                            _list(b53.imaginary_pole_error)):
                         p = ComplexWithUncertainties(r, i)
                         err = ComplexWithUncertainties(r_err, i_err)
                         p.lower_uncertainty = p - err

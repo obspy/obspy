@@ -7,6 +7,7 @@ import io
 import itertools
 import os
 import unittest
+import warnings
 
 import numpy as np
 
@@ -104,7 +105,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_simple_read_resp(self):
         """
-        Currently just tests that all test RESP files can be read without an 
+        Currently just tests that all test RESP files can be read without an
         error.
         """
         for f in self.resp_files:
@@ -112,15 +113,18 @@ class CoreTestCase(unittest.TestCase):
 
     def test_simple_read_seed(self):
         """
-        Currently just tests that all test SEED files can be read without an 
+        Currently just tests that all test SEED files can be read without an
         error.
         """
-        for f in self.seed_files:
-            _read_seed(f)
+        # One seed file is a bit faulty and thus raises a warning when read
+        # - catch it.
+        with warnings.catch_warnings(record=True):
+            for f in self.seed_files:
+                _read_seed(f)
 
     def test_simple_read_xseed(self):
         """
-        Currently just tests that all test X(SEED) files can be read without 
+        Currently just tests that all test X(SEED) files can be read without
         an error.
         """
         for f in self.xseed_files:
