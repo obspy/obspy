@@ -225,6 +225,7 @@ def _parse_to_inventory_object(p):
             longitude=longitude or 0.0,
             elevation=elevation or 123456.0,
             channels=None,
+
             site=obspy.core.inventory.Site(name=site_name),
             vault=None,
             geology=None,

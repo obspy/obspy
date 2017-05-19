@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import collections
 import io
 import itertools
 import os
@@ -13,6 +14,7 @@ import numpy as np
 
 import obspy
 from obspy.core.util.testing import NamedTemporaryFile
+from obspy.io.xseed import Parser
 from obspy.io.xseed.core import _is_resp, _is_xseed, _is_seed, _read_resp, \
     _read_seed, _read_xseed
 from obspy.signal.invsim import evalresp_for_frequencies
@@ -383,13 +385,10 @@ class CoreTestCase(unittest.TestCase):
         """
         Test the response calculations with the obspy.core interface.
 
-        It does it by converting whatever it gets to RESP files and then
-        uses evalresp to get the response. This is compared to using the
-        ObsPy Response object - this also uses evalresp but the actual flow
-        of the data is very different.
+        Compares with directly calling evalresp.
         """
         # Very broad range but the responses should be exactly identical as
-        # they use the same code under the hood so it should proove no issue.
+        # they use the same code under the hood so it should prove no issue.
         frequencies = np.logspace(-3, 3, 100)
 
         for filename in self.resp_files:
@@ -404,7 +403,78 @@ class CoreTestCase(unittest.TestCase):
                 # but they use exactly the same code under the hood here so it
                 # is okay - if we ever have our own response calculation code
                 # this will have to be changed.
-                np.testing.assert_equal(e_r, i_r, (filename, unit))
+                np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
+
+    def test_response_calculation_from_seed_and_xseed(self):
+        """
+        Test the response calculations with the obspy.core interface.
+
+        It does it by converting whatever it gets to RESP files and then
+        uses evalresp to get the response. This is compared to using the
+        ObsPy Response object - this also uses evalresp but the actual flow
+        of the data is very different.
+        """
+        # Very broad range but the responses should be exactly identical as
+        # they use the same code under the hood so it should prove no issue.
+        frequencies = np.logspace(-3, 3, 100)
+
+        for filename in self.seed_files + self.xseed_files:
+            # Parse the files using the Parser object.
+            p = Parser(filename)
+            p_resp = {_i[0]: _i[1] for _i in p.get_resp()}
+
+            # Also read using the core routines.
+            inv = obspy.read_inventory(filename)
+
+            # Get all the channels and epochs.
+            channels = collections.defaultdict(list)
+            for c in p.get_inventory()["channels"]:
+                channels[c["channel_id"]].append(
+                    (c["start_date"], c["end_date"]))
+
+            # Loop over each.
+            for channel, epochs in channels.items():
+                with NamedTemporaryFile() as tf:
+                    r = p_resp["RESP.%s" % channel]
+                    r.seek(0, 0)
+                    tf.write(r.read())
+
+                    # Now loop over the epochs.
+                    for start, end in epochs:
+                        if end:
+                            t = start + (end - start) / 2
+                        else:
+                            t = start + 10
+
+                        # Find response
+                        n, s, l, c = channel.split(".")
+                        _inv_t = inv.select(network=n, station=s,
+                                            location=l, channel=c,
+                                            starttime=t - 1, endtime=t + 1)
+                        # Should now only be a single channel.
+                        self.assertEqual(_inv_t.get_contents()["channels"],
+                                         [channel])
+                        inv_r = _inv_t[0][0][0].response
+
+                        for unit in ("DISP", "VEL", "ACC"):
+                            # Directly call evalresp.
+                            e_r = evalresp_for_frequencies(
+                                t_samp=None, frequencies=frequencies,
+                                filename=tf.name, date=t, units=unit)
+                            i_r = inv_r.get_evalresp_response_for_frequencies(
+                                frequencies=frequencies, output=unit)
+                            # Adaptive absolute tolerance to deal with very
+                            # small values.
+                            atol = 1E-7 * max(np.abs(e_r).max(),
+                                              np.abs(i_r).max())
+                            np.testing.assert_allclose(
+                                e_r.real, i_r.real,
+                                err_msg="real - %s - %s" % (filename, unit),
+                                rtol=1E-6, atol=atol)
+                            np.testing.assert_allclose(
+                                e_r.imag, i_r.imag,
+                                err_msg="real - %s - %s" % (filename, unit),
+                                rtol=1E-6, atol=atol)
 
 
 def suite():
