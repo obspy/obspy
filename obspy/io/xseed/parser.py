@@ -934,50 +934,6 @@ class Parser(object):
 
         self.abbreviations = self.temp["abbreviations"]
 
-    @classmethod
-    def combine_sensor_dl_resps(cls, sensor, datalogger):
-        """
-        Returns a single response from a sensor and datalogger response.
-
-        Does NOT calculate stage 0: the sensitivity or overall gain.
-
-        Not tested for Parser objects with more than 1 response.
-
-        :type sensor: :class:`~obspy.io.xseed.Parser`
-        :param sensor: Response of a sensor.
-        :type datalogger: :class:`~obspy.io.xseed.Parser`
-        :param datalogger: Response of a datalogger.
-        :rtype: :class: `~obspy.io.xseed.Parser`
-        :returns: Single response of sensor and datalogger together.
-        """
-        # Check both args are parsers
-        if not (isinstance(sensor, cls) and isinstance(datalogger, cls)):
-            raise TypeError('Sensor and datalogger not type {}'.format(cls))
-
-        # Combine: sensor.stage1, dl.stage2, ..., dl.stageN
-
-        # Find all stage 1 blockettes in sensor
-        stage1 = []
-        for b_id, b_list in sensor.blockettes.items():
-            for b in b_list:
-                if hasattr(b, "stage_sequence_number") and \
-                        b.stage_sequence_number == 1:
-                    stage1.append((b_id, b))
-                    # Only 1 stage 1 for a given blockette type
-                    break
-
-        combined = copy.deepcopy(datalogger)
-
-        # Replace stage1 blockettes with sensors
-        for b_id, stage1_b in stage1:
-            for i, b in enumerate(combined.stations[0]):
-                if b.id != b_id:
-                    continue
-                if hasattr(b, "stage_sequence_number") and \
-                        b.stage_sequence_number == 1:
-                    combined.stations[0][i] = stage1_b
-        return combined
-
     def resolve_abbreviation(self, abbreviation_blockette_number, lookup_code):
         if abbreviation_blockette_number not in self.blockettes or \
                 not self.blockettes[abbreviation_blockette_number]:
