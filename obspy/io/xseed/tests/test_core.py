@@ -379,7 +379,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(resp.instrument_sensitivity.output_units_description,
                          "Digital Counts")
 
-    def test_response_calculation(self):
+    def test_response_calculation_from_resp_files(self):
         """
         Test the response calculations with the obspy.core interface.
 
@@ -392,20 +392,19 @@ class CoreTestCase(unittest.TestCase):
         # they use the same code under the hood so it should proove no issue.
         frequencies = np.logspace(-3, 3, 100)
 
-        filename = os.path.join(self.data_path, "RESP.BW.FURT..EHZ")
-
-        for unit in ("DISP", "VEL", "ACC"):
-            r = obspy.read_inventory(filename)[0][0][0].response
-            e_r = evalresp_for_frequencies(
-                t_samp=None, frequencies=frequencies, filename=filename,
-                date=obspy.UTCDateTime(2002, 1, 1), units=unit)
-            i_r = r.get_evalresp_response_for_frequencies(
-                frequencies=frequencies, output=unit)
-            # This is in general very dangerous for floating point numbers but
-            # they use exactly the same code under the hood here so it is
-            # okay - if we ever have our own response calculation code this
-            # will have to be changed.
-            np.testing.assert_equal(e_r, i_r)
+        for filename in self.resp_files:
+            for unit in ("DISP", "VEL", "ACC"):
+                r = obspy.read_inventory(filename)[0][0][0].response
+                e_r = evalresp_for_frequencies(
+                    t_samp=None, frequencies=frequencies, filename=filename,
+                    date=obspy.UTCDateTime(2008, 1, 1), units=unit)
+                i_r = r.get_evalresp_response_for_frequencies(
+                    frequencies=frequencies, output=unit)
+                # This is in general very dangerous for floating point numbers
+                # but they use exactly the same code under the hood here so it
+                # is okay - if we ever have our own response calculation code
+                # this will have to be changed.
+                np.testing.assert_equal(e_r, i_r, (filename, unit))
 
 
 def suite():
