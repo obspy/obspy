@@ -84,29 +84,36 @@ def _is_resp(filename):
     :rtype: bool
     :returns: `True` if file seems to be a RESP file, `False` otherwise.
     """
+    if hasattr(filename, "readline"):
+        return __is_resp(filename)
     try:
         with open(filename, "rb") as fh:
-            try:
-                # lookup the first line that does not start with a hash sign
-                while True:
-                    # use splitlines to correctly detect e.g. mac formatted
-                    # files on Linux
-                    lines = fh.readline().splitlines()
-                    # end of file without finding an appropriate line
-                    if not lines:
-                        return False
-                    # check each line after splitting them
-                    for line in lines:
-                        if line.decode().startswith("#"):
-                            continue
-                        # do the regex check on the first non-comment line
-                        if re.match(r'[bB]0[1-6][0-9]F[0-9]{2} ',
-                                    line.decode()):
-                            return True
-                        return False
-            except UnicodeDecodeError:
+            return __is_resp(fh)
+    except (IOError, TypeError):
+        return False
+
+
+def __is_resp(fh):
+    try:
+        # lookup the first line that does not start with a hash sign
+        while True:
+            # use splitlines to correctly detect e.g. mac formatted
+            # files on Linux
+            lines = fh.readline().splitlines()
+            # end of file without finding an appropriate line
+            if not lines:
                 return False
-    except IOError:
+            # check each line after splitting them
+            for line in lines:
+                if hasattr(line, "decode"):
+                    line = line.decode()
+                if line.startswith("#"):
+                    continue
+                # do the regex check on the first non-comment line
+                if re.match(r'[bB]0[1-6][0-9]F[0-9]{2} ', line):
+                    return True
+                return False
+    except UnicodeDecodeError:
         return False
 
 
