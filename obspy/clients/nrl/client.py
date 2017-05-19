@@ -21,9 +21,9 @@ import sys
 
 import requests
 
+import obspy
 from obspy.core.compatibility import configparser
 from obspy.core.inventory.util import _textwrap
-from obspy.io.xseed import Parser
 
 
 # Simple cache for remote NRL access. The total data amount will always be
@@ -161,18 +161,6 @@ class NRL(object):
             sensor = sensor[sensor_keys.pop(0)]
         return self._read_resp(sensor[1])
 
-    def get_parser(self, datalogger_keys, sensor_keys):
-        """
-        Get  io.xseed.Parser for RESP
-
-        :type datalogger_keys: list of str
-        :type sensor_keys: list of str
-        :rtype: :class:`~obspy.io.xseed.Parser`
-        """
-        dl_parser = Parser(self.get_datalogger_resp(datalogger_keys))
-        sensor_parser = Parser(self.get_sensor_resp(sensor_keys))
-        return Parser.combine_sensor_dl_resps(sensor_parser, dl_parser)
-
     def get_response(self, datalogger_keys, sensor_keys):
         """
         Get Response from NRL tree structure
@@ -189,10 +177,10 @@ class NRL(object):
         ...     datalogger_keys=['REF TEK', 'RT 130 & 130-SMA', '1', '200'])
         >>> print(response)   # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         Channel Response
-          From M/S () to COUNTS ()
+          From M/S (Velocity in Meters per Second) to COUNTS (Digital Counts)
           Overall Sensitivity: 629129 defined at 0.050 Hz
           10 stages:
-            Stage 1: PolesZerosResponseStage from M/S to V, gain: 1
+            Stage 1: PolesZerosResponseStage from M/S to V, gain: 754.3
             Stage 2: ResponseStage from V to V, gain: 1
             Stage 3: Coefficients... from V to COUNTS, gain: 629129
             Stage 4: Coefficients... from COUNTS to COUNTS, gain: 1
@@ -203,9 +191,27 @@ class NRL(object):
             Stage 9: Coefficients... from COUNTS to COUNTS, gain: 1
             Stage 10: Coefficients... from COUNTS to COUNTS, gain: 1
         """
-        resp_parser = self.get_parser(datalogger_keys, sensor_keys)
-        return resp_parser.get_response()
+        # Parse both to inventory objects.
+        with io.BytesIO(
+                self.get_datalogger_resp(datalogger_keys).encode()) as buf:
+            buf.seek(0, 0)
+            dl_resp = obspy.read_inventory(buf, format="RESP")
+        with io.BytesIO(
+                self.get_sensor_resp(sensor_keys).encode()) as buf:
+            buf.seek(0, 0)
+            sensor_resp = obspy.read_inventory(buf, format="RESP")
 
+        # Both can by construction only contain a single channel with a
+        # response object.
+        dl_resp = dl_resp[0][0][0].response
+        sensor_resp = sensor_resp[0][0][0].response
+
+        # Combine both by replace stage one in the data logger with stage
+        # one of the sensor.
+        dl_resp.response_stages.pop(0)
+        dl_resp.response_stages.insert(0, sensor_resp.response_stages[0])
+
+        return dl_resp
 
 class NRLDict(dict):
     def __init__(self, nrl):

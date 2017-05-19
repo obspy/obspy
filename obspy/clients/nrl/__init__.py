@@ -64,7 +64,7 @@ Response objects can be extracted by providing the datalogger and sensor keys:
 ...     datalogger_keys=['REF TEK', 'RT 130 & 130-SMA', '1', '200'])
 >>> print(response) # doctest: +SKIP
 Channel Response
-    From M/S () to COUNTS ()
+    From M/S (Velocity in Meters per Second) to COUNTS (Digital Counts)
     Overall Sensitivity: 1.50991e+09 defined at 0.020 Hz
     10 stages:
         Stage 1: PolesZerosResponseStage from M/S to V, gain: 2400
