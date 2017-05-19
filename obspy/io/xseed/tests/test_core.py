@@ -61,6 +61,14 @@ class CoreTestCase(unittest.TestCase):
         self.other_files = [
             os.path.join(self.data_path, _i) for _i in self.other_files]
 
+        # There are a couple more SEED files in the core test suite.
+        core_data = os.path.join(os.path.dirname(os.path.dirname(
+            os.path.dirname(os.path.dirname(self.data_path)))), "core",
+            "tests", "data")
+        self.seed_files.append(os.path.join(core_data, "AU.MEEK.seed"))
+        self.seed_files.append(os.path.join(
+            core_data, "IRIS_single_channel_with_response.seed"))
+
         for _i in itertools.chain.from_iterable([
                 self.seed_files, self.xseed_files, self.resp_files,
                 self.other_files]):
