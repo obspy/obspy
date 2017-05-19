@@ -607,27 +607,6 @@ class ParserTestCase(unittest.TestCase):
         # compare
         self.assertEqual(seed_list, resp_list)
 
-    def test_join_sensor_dl_resps(self):
-        """
-        Test creation of response from sensor and datalogger.
-        """
-        sts2_resp_file = os.path.join(self.path,
-                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
-        rt130_resp_file = os.path.join(self.path,
-                                       'RESP.XX.NR008..HHZ.130.1.100')
-        sensor = Parser(sts2_resp_file)
-        dl = Parser(rt130_resp_file)
-        Parser.combine_sensor_dl_resps(sensor=sensor, datalogger=dl)
-
-        # Try to use a sensor and dl from bw seed files.
-        sensor = Parser(self.BW_SEED_files[0])
-        dl = Parser(self.BW_SEED_files[1])
-        Parser.combine_sensor_dl_resps(sensor=sensor, datalogger=dl)
-
-    def test_join_wrong_types(self):
-        with self.assertRaises(TypeError):
-            Parser.combine_sensor_dl_resps(None, None)
-
     def test_compare_blockettes(self):
         """
         Tests the comparison of two blockettes.
