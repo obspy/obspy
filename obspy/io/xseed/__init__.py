@@ -9,9 +9,10 @@ representation of `Dataless SEED`. This module contains converters from
 against the complete ORFEUS Dataless SEED archive, the IRIS (US) Dataless SEED
 archive and against ArcLink response requests.
 
-RESP files can also be converted to XML-SEED, Dataless SEED and StationXML.
-These conversions are incomplete as RESP only contains response information,
-and all other information will be left blank and should be populated if needed.
+All files can be converted to ObsPy's internal inventory objects at which
+point they can be written out to any format ObsPy supports. In the case of
+RESP files these are potentially incomplete as RESP files lack vital
+information like geographical coordinates.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
