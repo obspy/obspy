@@ -9,7 +9,8 @@ import os
 import unittest
 
 from obspy import UTCDateTime
-from obspy.io.xseed.utils import datetime_2_string, to_tag, is_resp
+from obspy.io.xseed.utils import datetime_2_string, to_tag
+from obspy.io.xseed.core import _is_resp
 
 
 class UtilsTestCase(unittest.TestCase):
@@ -59,7 +60,7 @@ class UtilsTestCase(unittest.TestCase):
 
     def test_is_resp(self):
         """
-        Checks is_resp() routine on all files in signal/tests/data.
+        Checks _is_resp() routine on all files in signal/tests/data.
         """
         signal_test_files = os.path.abspath(os.path.join(
             inspect.getfile(inspect.currentframe()),
@@ -74,11 +75,11 @@ class UtilsTestCase(unittest.TestCase):
             "RESP.NZ.CRLZ.10.HHZ.windows",
             "RESP.OB.AAA._.BH_"]
         for filename in glob.glob(signal_test_files):
-            got = is_resp(filename)
+            got = _is_resp(filename)
             expected = os.path.basename(filename) in resp_filenames
             self.assertEqual(
                 got, expected,
-                "is_resp() returns %s for file %s" % (got, filename))
+                "_is_resp() returns %s for file %s" % (got, filename))
 
 
 def suite():
