@@ -14,7 +14,6 @@ from lxml import etree
 
 from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.inventory import Response
 from obspy.io.xseed.blockette.blockette010 import Blockette010
 from obspy.io.xseed.blockette.blockette051 import Blockette051
 from obspy.io.xseed.blockette.blockette053 import Blockette053
