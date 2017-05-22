@@ -1126,6 +1126,8 @@ class Parser(object):
             key = "signal_out_units"
         elif hasattr(_s, "signal_output_units"):
             key = "signal_output_units"
+        elif hasattr(_s, "stage_output_units"):
+            key = "stage_output_units"
         else:
             raise NotImplementedError
         # Output units are the outputs of the final stage.
