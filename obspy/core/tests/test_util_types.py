@@ -7,6 +7,7 @@ import unittest
 
 from obspy.core.util import (ComplexWithUncertainties, Enum,
                              FloatWithUncertainties)
+from obspy.core.util.obspy_types import (FloatWithUncertaintiesAndUnit)
 
 
 class UtilTypesTestCase(unittest.TestCase):
@@ -88,6 +89,32 @@ class UtilTypesTestCase(unittest.TestCase):
         self._check_complex_with_u(c4, f1, lu1, uu1, f2, lu2, uu2)
         self.assertEqual(c4.real, fu1)
         self.assertEqual(c4.imag, fu2)
+
+    def test_floating_point_types_are_indempotent(self):
+        """
+        Applying the constructor multiple times should not change the values.
+        """
+        f = FloatWithUncertainties(1.0, lower_uncertainty=0.5,
+                                   upper_uncertainty=1.5)
+        self.assertEqual(f, 1.0)
+        self.assertEqual(f.lower_uncertainty, 0.5)
+        self.assertEqual(f.upper_uncertainty, 1.5)
+        f = FloatWithUncertainties(f)
+        self.assertEqual(f, 1.0)
+        self.assertEqual(f.lower_uncertainty, 0.5)
+        self.assertEqual(f.upper_uncertainty, 1.5)
+
+        f = FloatWithUncertaintiesAndUnit(1.0, lower_uncertainty=0.5,
+                                          upper_uncertainty=1.5, unit="AB")
+        self.assertEqual(f, 1.0)
+        self.assertEqual(f.lower_uncertainty, 0.5)
+        self.assertEqual(f.upper_uncertainty, 1.5)
+        self.assertEqual(f.unit, "AB")
+        f = FloatWithUncertaintiesAndUnit(f)
+        self.assertEqual(f, 1.0)
+        self.assertEqual(f.lower_uncertainty, 0.5)
+        self.assertEqual(f.upper_uncertainty, 1.5)
+        self.assertEqual(f.unit, "AB")
 
 
 def suite():
