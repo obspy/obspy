@@ -984,6 +984,10 @@ class Parser(object):
         :rtype: :class:`obspy.core.inventory.response.Response`
         :returns: Inventory response object.
         """
+        # No response for channel.
+        if set(_i.id for _i in blockettes_for_channel).issubset({52, 59}):
+            return None
+
         from .blockette import Blockette053, Blockette054, \
             Blockette057, Blockette058, Blockette061
 
@@ -1106,18 +1110,35 @@ class Parser(object):
                 continue
             stages[b.stage_sequence_number].append(b)
 
-        # Get units.
-        input_units = self.resolve_abbreviation(
-            34, blkt52.units_of_signal_response)
-        # They should be identical with the output units of the first stage
-        # if they exist.
+        # Get units - first from blockette 52.
+        try:
+            input_units = self.resolve_abbreviation(
+                34, blkt52.units_of_signal_response)
+        except ValueError:
+            input_units = None
+
+        # Also from the output units of the first stage.
+        stage_1_output_units = None
         si = getattr(stages[1][0], "stage_signal_input_units", None)
         if si:
-            stage_1_input = self.resolve_abbreviation(34, si)
-            if input_units.unit_name != stage_1_input.unit_name:
-                raise ValueError("Units of the signal response should be "
-                                 "identical to the units of the input of "
-                                 "stage 1.")
+            try:
+                stage_1_output_units = \
+                    self.resolve_abbreviation(34, si)
+            except ValueError:
+                pass
+
+        # If both exist that should be identical.
+        if input_units is not None and stage_1_output_units is not None and \
+                input_units.unit_name != stage_1_output_units.unit_name:
+            msg = "Units of the signal response should be identical to the " \
+                "units of the input of stage 1."
+            warnings.warn(msg)
+        # Both are None -> raise a warning.
+        elif input_units is None and stage_1_output_units is None:
+            msg = "Could not determine input units."
+            warnings.warn(msg)
+        elif input_units is None:
+            input_units = stage_1_output_units
 
         # Handling inconsistencies of the SEED specification and in
         # consequence the Parser object.
@@ -1141,15 +1162,35 @@ class Parser(object):
         instrument_sensitivity = InstrumentSensitivity(
             value=stages[0][0].sensitivity_gain,
             frequency=stages[0][0].frequency,
-            input_units=input_units.unit_name,
+            input_units=input_units.unit_name if input_units else None,
             output_units=output_units.unit_name,
-            input_units_description=input_units.unit_description,
+            input_units_description=input_units.unit_description
+            if (input_units and hasattr(input_units, "unit_description"))
+            else None,
             output_units_description=output_units.unit_description)
 
         # Afterwards loop over all other stages and assemble them in one list.
         response_stages = []
         for _i in range(1, max(stages.keys()) + 1):
             blkts = stages[_i]
+
+            # All blockettes have to end with blockette 58 (I think). Some
+            # data out in the wild is just off the charts and has wild
+            # stages. We thus search all blockettes of this stage and cut
+            # the first time we encounter blockette 58.
+            prior_length = len(blkts)
+            _blkts = []
+            for b in blkts:
+                _blkts.append(b)
+                if b.id == 58:
+                    break
+            blkts = _blkts
+            if len(blkts) != prior_length:
+                msg = ("Stage %i had %i extra blockettes after blockette 58. "
+                       "The have been ignored. Better check what's up with "
+                       "the file!")
+                warnings.warn(msg)
+
             # Make sure it ends with blockette 58. I'm not sure if its
             # otherwise valid in any case.
             if blkts[-1].id != 58:
@@ -1166,8 +1207,15 @@ class Parser(object):
             # Poles and Zeros stage.
             if blkts[0].id == 53:
                 # Must be 53 and 58.
-                assert [b.id for b in blkts] == [53, 58]
-                b53 = blkts[0]
+                assert set(b.id for b in blkts) == {53, 58}
+                blkts53 = [b for b in blkts if b.id == 53]
+                b53 = blkts53[0]
+
+                if len(blkts53) > 1:
+                    msg = ("Multiple blockettes 53 found! Will use the first "
+                           "one. This is an invalid file - please check it!")
+                    warnings.warn(msg)
+
                 zeros = []
                 # Might not have zeros.
                 if hasattr(b53, "real_zero"):
@@ -1204,7 +1252,8 @@ class Parser(object):
                     stage_gain_frequency=b58.frequency,
                     input_units=i_u.unit_name,
                     output_units=o_u.unit_name,
-                    input_units_description=i_u.unit_description,
+                    input_units_description=i_u.unit_description
+                    if (i_u and hasattr(i_u, "unit_description")) else None,
                     output_units_description=o_u.unit_description,
                     pz_transfer_function_type=transform_map[
                         b53.transfer_function_types],
@@ -1214,10 +1263,36 @@ class Parser(object):
                     normalization_factor=b53.A0_normalization_factor))
             # Response coefficients stage.
             elif blkts[0].id == 54:
-                assert [b.id for b in blkts] == [54, 57, 58]
-                b54 = blkts[0]
-                b57 = blkts[1]
-                b58 = blkts[2]
+                # There can be multiple blockettes 54 in sequence in which
+                # case numerators or denominators are chained from all of them.
+                assert {b.id for b in blkts} == {54, 57, 58}
+                blkts54 = [b for b in blkts if b.id == 54]
+                blkts57 = [b for b in blkts if b.id == 57]
+
+                if len(blkts57) > 1:
+                    msg = ("Multiple blockettes 57 found after blockette 54! "
+                           "Will use the first one. This is an invalid file "
+                           "- please check it!")
+                    warnings.warn(msg)
+
+                # Choose the first one as a reference.
+                b54 = blkts54[0]
+                b57 = blkts57[0]
+
+                # Use all of them for the coefficients.
+                numerator = []
+                denominator = []
+                for b in blkts54:
+                    if hasattr(b, "numerator_coefficient"):
+                        _t = b.numerator_coefficient
+                        if not hasattr(_t, "__iter__"):
+                            _t = [_t]
+                        numerator.extend(_t)
+                    if hasattr(b, "denominator_coefficient"):
+                        _t = b.denominator_coefficient
+                        if not hasattr(_t, "__iter__"):
+                            _t = [_t]
+                        denominator.extend(_t)
 
                 i_u = self.resolve_abbreviation(
                     34, b54.signal_input_units)
@@ -1233,10 +1308,8 @@ class Parser(object):
                     input_units_description=i_u.unit_description,
                     output_units_description=o_u.unit_description,
                     cf_transfer_function_type=transfer_map[b54.response_type],
-                    numerator=b54.numerator_coefficient
-                    if hasattr(b54, "numerator_coefficient") else [],
-                    denominator=b54.denominator_coefficient
-                    if hasattr(b54, "denominator_coefficient") else [],
+                    numerator=numerator,
+                    denominator=denominator,
                     decimation_input_sample_rate=b57.input_sample_rate,
                     decimation_factor=b57.decimation_factor,
                     decimation_offset=b57.decimation_offset,
@@ -1256,10 +1329,29 @@ class Parser(object):
                     output_units=""))
             # FIR stage.
             elif blkts[0].id == 61:
-                assert [b.id for b in blkts] == [61, 57, 58]
-                b61 = blkts[0]
-                b57 = blkts[1]
-                b58 = blkts[2]
+                assert {b.id for b in blkts} == {61, 57, 58}
+
+                blkts61 = [b for b in blkts if b.id == 61]
+                blkts57 = [b for b in blkts if b.id == 57]
+
+                if len(blkts57) > 1:
+                    msg = ("Multiple blockettes 57 found after blockette 61! "
+                           "Will use the first one. This is an invalid file "
+                           "- please check it!")
+                    warnings.warn(msg)
+
+                # Use first blkt 61 as a reference.
+                b61 = blkts61[0]
+                b57 = blkts57[0]
+
+                # Use all of them for the coefficients.
+                coefficients = []
+                for b in blkts61:
+                    if hasattr(b, "FIR_coefficient"):
+                        _t = b.FIR_coefficient
+                        if not hasattr(_t, "__iter__"):
+                            _t = [_t]
+                        coefficients.extend(_t)
 
                 i_u = self.resolve_abbreviation(
                     34, b61.signal_in_units)
@@ -1277,8 +1369,7 @@ class Parser(object):
                     input_units_description=i_u.unit_description,
                     output_units_description=o_u.unit_description,
                     symmetry=symmetry_map[b61.symmetry_code],
-                    coefficients=b61.FIR_coefficient
-                    if hasattr(b61, "FIR_coefficient") else [],
+                    coefficients=coefficients,
                     decimation_input_sample_rate=b57.input_sample_rate,
                     decimation_factor=b57.decimation_factor,
                     decimation_offset=b57.decimation_offset,

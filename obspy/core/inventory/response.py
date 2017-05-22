@@ -138,8 +138,6 @@ class ResponseStage(ComparingObject):
             FloatWithUncertaintiesAndUnit(decimation_correction ) \
             if decimation_correction is not None else None
 
-        FloatWithUncertaintiesAndUnit(decimation_correction) \
-            if decimation_correction is not None else None
     def __str__(self):
         ret = (
             "Response type: {response_type}, Stage Sequence Number: "
