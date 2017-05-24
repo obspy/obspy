@@ -188,6 +188,11 @@ for image_path in $DOCKERFILE_FOLDER/*; do
             continue
         fi
     fi
+    # for ARM images, make sure that qemu multiarch is registered for docker
+    if [[ $image_name == *"armhf" ]]; then
+        echo 'Setting up qemu for docker for ARM images.'
+        $DOCKER run --rm --privileged multiarch/qemu-user-static:register --reset
+    fi
     create_image $image_name;
 done
 
