@@ -1,16 +1,19 @@
 #!/bin/bash
 
+# import list of images used by obspy docker scripts
+source obspy_images.sh
+
 CURDIR=`pwd`
 DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
 LOG_DIR_ROOT=logs/package_debs
 LOG_DIR_BASE=$LOG_DIR_ROOT/$DATETIME
 mkdir -p $LOG_DIR_BASE
 
-DOCKER_IMAGES="debian_7_wheezy debian_7_wheezy_32bit debian_7_wheezy_armhf debian_8_jessie debian_8_jessie_32bit debian_8_jessie_armhf debian_9_stretch debian_9_stretch_32bit debian_9_stretch_armhf ubuntu_14_04_trusty ubuntu_14_04_trusty_32bit ubuntu_16_04_xenial ubuntu_16_04_xenial_32bit ubuntu_16_10_yakkety ubuntu_16_10_yakkety_32bit ubuntu_17_04_zesty ubuntu_17_04_zesty_32bit"
+DOCKER_IMAGES=$OBSPY_DOCKER_IMAGES_DEBUNTU_NON_ARM
 
 # Parse the target for deb package building (e.g. "-tmegies:deb_1.0.2")
 SET_COMMIT_STATUS=false
-while getopts "t:s" opt; do
+while getopts "t:sa" opt; do
     case "$opt" in
     t)  TARGET=(${OPTARG//:/ })
         REPO=${TARGET[0]}
@@ -19,9 +22,21 @@ while getopts "t:s" opt; do
         extra_args=', "-f '$REPO' -t '$GITTARGET'"'
         ;;
     s)  SET_COMMIT_STATUS=true;;
+    a)  DOCKER_IMAGES="$OBSPY_DOCKER_IMAGES_DEBUNTU"
+        echo 'Setting up qemu for docker for ARM images.'
+        $DOCKER run --rm --privileged multiarch/qemu-user-static:register --reset
+        ;;
     esac
 done
 shift $(expr $OPTIND - 1 )
+
+# override list of images to run if specified on command line
+if [ $# != 0 ]; then
+    DOCKER_IMAGES="$*"
+fi
+
+echo "Running the following images:"
+echo $DOCKER_IMAGES
 
 # This bracket is closed at the very end and causes a redirection of everything
 # to the logfile as well as stdout.
@@ -61,34 +76,16 @@ cd $CURDIR
 cp scripts/package_debs.sh $TEMP_PATH/package_debs.sh
 
 
-# Helper function checking if an element is in an array.
-list_not_contains() {
-    for word in $1; do
-        [[ $word == $2 ]] && return 1
-    done
-    return 0
-}
-
-
-# Function to check if an image exists
-image_exists () {
-    # "docker images" does not provide useful return codes.. so use a dummy format string and grep
-    if $DOCKER images obspy:$1 --format 'EXISTS' | grep 'EXISTS' 2>&1 > /dev/null ; then
-        return 0
-    else
-        return 1
-    fi
-}
-
-
 # Function creating an image if it does not exist.
 create_image () {
     image_name=$1;
-    if image_exists $image_name ; then
+    image_path="${DOCKERFILE_FOLDER}/${image_name#obspy:}"
+    has_image=$($DOCKER images --format '{{.Repository}}:{{.Tag}}' | grep $image_name)
+    if [ "$has_image" ]; then
         printf "\e[101m\e[30m  >>> Image '$image_name' already exists.\e[0m\n"
     else
         printf "\e[101m\e[30m  Image '$image_name' will be created.\e[0m\n"
-        $DOCKER build -t obspy:$image_name ${DOCKERFILE_FOLDER}/${image_name}
+        $DOCKER build -t $image_name $image_path
     fi
 }
 
@@ -128,16 +125,6 @@ package_debs_on_image () {
 printf "\e[44m\e[30mSTEP 1: CREATING BASE IMAGES\e[0m\n"
 
 for image_name in ${DOCKER_IMAGES}; do
-    if [ $# != 0 ]; then
-        if list_not_contains "$*" $image_name; then
-            continue
-        fi
-    fi
-    # for ARM images, make sure that qemu multiarch is registered for docker
-    if [[ $image_name == *"armhf" ]]; then
-        echo 'Setting up qemu for docker for ARM images.'
-        $DOCKER run --rm --privileged multiarch/qemu-user-static:register --reset
-    fi
     create_image $image_name;
 done
 
@@ -146,22 +133,7 @@ done
 printf "\n\e[44m\e[30mSTEP 2: BUILDING DEB PACKAGES\e[0m\n"
 
 # Loop over all ObsPy Docker images.
-for image_name in $($DOCKER images obspy --format '{{.Tag}}'); do
-    # skip images that are not in our Debian/Ubuntu build targets
-    if list_not_contains "${DOCKER_IMAGES}" $image_name; then
-        continue
-    fi
-    # skip images that haven't been created yet
-    if ! image_exists $image_name ; then
-        continue
-    fi
-    # if any specific targets are specified on command line..
-    if [ $# != 0 ]; then
-        # skip image, if not in list specified on command line
-        if list_not_contains "$*" $image_name; then
-            continue
-        fi
-    fi
+for image_name in ${DOCKER_IMAGES}; do
     package_debs_on_image $image_name;
 done
 

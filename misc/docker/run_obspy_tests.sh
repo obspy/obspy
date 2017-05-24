@@ -1,18 +1,21 @@
 #!/bin/bash
 
+# import list of images used by obspy docker scripts
+source obspy_images.sh
+
 CURDIR=`pwd`
 DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
 LOG_DIR_ROOT=logs/run_tests
 LOG_DIR_BASE=$LOG_DIR_ROOT/$DATETIME
 mkdir -p $LOG_DIR_BASE
 
-DOCKER_REPOSITORY=obspy
+DOCKER_IMAGES=$OBSPY_DOCKER_IMAGES_WITHOUT_ARM
 
 # Parse the additional args later passed to `obspy-runtests` in
 # the docker images.
 extra_args=""
 SET_COMMIT_STATUS=false
-while getopts "t:e:s" opt; do
+while getopts "t:e:sa" opt; do
     case "$opt" in
     e)  extra_args=', "'$OPTARG'"'
         ;;
@@ -23,9 +26,21 @@ while getopts "t:e:s" opt; do
         OBSPY_DOCKER_TEST_SOURCE_TREE="clone"
         ;;
     s)  SET_COMMIT_STATUS=true;;
+    a)  DOCKER_IMAGES=$OBSPY_DOCKER_IMAGES_WITH_ARM
+        echo 'Setting up qemu for docker for ARM images.'
+        $DOCKER run --rm --privileged multiarch/qemu-user-static:register --reset
+        ;;
     esac
 done
 shift $(expr $OPTIND - 1 )
+
+# override list of images to run if specified on command line
+if [ $# != 0 ]; then
+    DOCKER_IMAGES="$*"
+fi
+
+echo "Running the following images:"
+echo $DOCKER_IMAGES
 
 # This bracket is closed at the very end and causes a redirection of everything
 # to the logfile as well as stdout.
@@ -115,24 +130,16 @@ FULL_VERSION=`cat $NEW_OBSPY_PATH/obspy/RELEASE-VERSION`
 cp scripts/install_and_run_tests_on_image.sh $TEMP_PATH/install_and_run_tests_on_image.sh
 
 
-# Helper function checking if an element is in an array.
-list_not_contains() {
-    for word in $1; do
-        [[ $word == $2 ]] && return 1
-    done
-    return 0
-}
-
-
 # Function creating an image if it does not exist.
 create_image () {
     image_name=$1;
-    has_image=$($DOCKER images ${DOCKER_REPOSITORY} --format '{{.Tag}}' | grep $image_name)
+    image_path="${DOCKERFILE_FOLDER}/${image_name#obspy:}"
+    has_image=$($DOCKER images --format '{{.Repository}}:{{.Tag}}' | grep $image_name)
     if [ "$has_image" ]; then
         printf "\e[101m\e[30m  >>> Image '$image_name' already exists.\e[0m\n"
     else
         printf "\e[101m\e[30m  Image '$image_name' will be created.\e[0m\n"
-        $DOCKER build -t ${DOCKER_REPOSITORY}:$image_name $image_path
+        $DOCKER build -t $image_name $image_path
     fi
 }
 
@@ -181,19 +188,8 @@ run_tests_on_image () {
 # 1. Build all the base images if they do not yet exist.
 printf "\e[44m\e[30mSTEP 1: CREATING BASE IMAGES\e[0m\n"
 
-for image_path in $DOCKERFILE_FOLDER/*; do
-    image_name=$(basename $image_path)
-    if [ $# != 0 ]; then
-        if list_not_contains "$*" $image_name; then
-            continue
-        fi
-    fi
-    # for ARM images, make sure that qemu multiarch is registered for docker
-    if [[ $image_name == *"armhf" ]]; then
-        echo 'Setting up qemu for docker for ARM images.'
-        $DOCKER run --rm --privileged multiarch/qemu-user-static:register --reset
-    fi
-    create_image $image_name;
+for image_name in ${DOCKER_IMAGES}; do
+    create_image $image_name
 done
 
 
@@ -201,13 +197,8 @@ done
 printf "\n\e[44m\e[30mSTEP 2: EXECUTING THE TESTS\e[0m\n"
 
 # Loop over all ObsPy Docker images.
-for image_name in $($DOCKER images ${DOCKER_REPOSITORY} --format '{{.Tag}}'); do
-    if [ $# != 0 ]; then
-        if list_not_contains "$*" $image_name; then
-            continue
-        fi
-    fi
-    run_tests_on_image $image_name;
+for image_name in ${DOCKER_IMAGES}; do
+    run_tests_on_image $image_name
 done
 
 # set commit status

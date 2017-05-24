@@ -18,6 +18,9 @@ then
 fi
 OBSPY_DOCKER=$OBSPY_DOCKER_BASE/misc/docker
 
+# import list of images used by obspy docker scripts
+source obspy_images.sh
+
 DOCKER_TESTS=false
 DOCKER_DEB_PACKAGING=false
 WORK_ON_BRANCHES="None"
@@ -58,7 +61,7 @@ DOCKER=`which docker.io || which docker`
 # we do not want to recreate them on a hourly basis.. ;-)
 DOCKER_IMAGE_AGE_THRESHOLD=`date -Ins --date='7 days ago'`
 # only remove images explicitly listed as used by obspy
-DOCKER_IMAGES=`cat $OBSPY_DOCKER/obspy_images`
+DOCKER_IMAGES=$OBSPY_DOCKER_ALL_IMAGES
 echo "##### Checking age of Docker images"
 echo "Will remove obspy related images older than $DOCKER_IMAGE_AGE_THRESHOLD"
 for DOCKER_IMAGE in $DOCKER_IMAGES
