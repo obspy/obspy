@@ -860,7 +860,11 @@ class Response(ComparingObject):
                 "COUNTS": ew.ENUM_UNITS["COUNTS"],
                 "T": ew.ENUM_UNITS["TESLA"],
                 "PA": ew.ENUM_UNITS["PRESSURE"],
-                "MBAR": ew.ENUM_UNITS["PRESSURE"]}
+                "MBAR": ew.ENUM_UNITS["PRESSURE"],
+                # M/M is the unit of some strain meters and evalresp treats
+                # them as displacement. This is probably not too wrong so
+                # we'll just do the same here.
+                "M/M": ew.ENUM_UNITS["DIS"]}
             if key not in units_mapping:
                 if key is not None:
                     msg = ("The unit '%s' is not known to ObsPy. Raw evalresp "
