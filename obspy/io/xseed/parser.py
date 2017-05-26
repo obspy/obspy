@@ -35,7 +35,9 @@ from obspy.core.inventory import (Response,
                                   CoefficientsTypeResponseStage,
                                   InstrumentSensitivity,
                                   ResponseStage,
-                                  FIRResponseStage)
+                                  FIRResponseStage,
+                                  ResponseListResponseStage)
+from obspy.core.inventory.response import ResponseListElement
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import download_to_file
 from obspy.core.util.decorator import map_example_filename
@@ -1119,7 +1121,8 @@ class Parser(object):
 
         # Also from the output units of the first stage.
         stage_1_output_units = None
-        si = getattr(stages[1][0], "stage_signal_input_units", None)
+        si = getattr(stages[1][0], "stage_signal_input_units", None) \
+            if (1 in stages and stages[1]) else None
         if si:
             try:
                 stage_1_output_units = \
@@ -1140,22 +1143,34 @@ class Parser(object):
         elif input_units is None:
             input_units = stage_1_output_units
 
-        # Handling inconsistencies of the SEED specification and in
-        # consequence the Parser object.
-        _s = stages[max(stages.keys())][0]
-        if hasattr(_s, "signal_out_units"):
-            key = "signal_out_units"
-        elif hasattr(_s, "signal_output_units"):
-            key = "signal_output_units"
-        elif hasattr(_s, "stage_output_units"):
-            key = "stage_output_units"
-        else:
-            raise NotImplementedError
+        # Find the output units by looping over the stages in reverse order
+        # and finding the first stage whose first blockette has an output
+        # unit set.
+        unit_lookup_key = None
+        for _s in reversed(sorted(stages.keys())):
+            _s = stages[_s][0]
+            for attr in dir(_s):
+                if "unit" in attr and "out" in attr and "__" not in attr:
+                    unit_lookup_key = getattr(_s, attr)
+                    break
+            else:
+                continue
+            break
         # Output units are the outputs of the final stage.
-        output_units = self.resolve_abbreviation(34, getattr(_s, key))
+        if unit_lookup_key is None:
+            msg = "Could not determine output units."
+            warnings.warn(msg)
+            output_units = None
+        else:
+            output_units = self.resolve_abbreviation(34, unit_lookup_key)
 
         if 0 not in stages or len(stages[0]) != 1:
             msg = "Channel must a have exactly one stage 0 blockette."
+            raise ValueError(msg)
+
+        # Stage 0 blockette must be a blockette 58.
+        if stages[0][0].id != 58:
+            msg = "Stage 0 must be a blockette 58."
             raise ValueError(msg)
 
         # Assemble the instrument sensitvity.
@@ -1163,11 +1178,13 @@ class Parser(object):
             value=stages[0][0].sensitivity_gain,
             frequency=stages[0][0].frequency,
             input_units=input_units.unit_name if input_units else None,
-            output_units=output_units.unit_name,
+            output_units=output_units.unit_name
+            if output_units is not None else None,
             input_units_description=input_units.unit_description
             if (input_units and hasattr(input_units, "unit_description"))
             else None,
-            output_units_description=output_units.unit_description)
+            output_units_description=output_units.unit_description
+            if output_units is not None else None)
 
         # Afterwards loop over all other stages and assemble them in one list.
         response_stages = []
@@ -1191,12 +1208,14 @@ class Parser(object):
                        "the file!")
                 warnings.warn(msg)
 
-            # Make sure it ends with blockette 58. I'm not sure if its
-            # otherwise valid in any case.
+            # A bit undefined if it does not end with blockette 58 I think.
             if blkts[-1].id != 58:
-                raise NotImplementedError("All response stages must "
-                                          "currently end with blockette 58.")
-            b58 = blkts[-1]
+                msg = ("Response stage %i does not end with blockette 58. " 
+                       "Proceed at your own risk." % _i)
+                warnings.warn(msg)
+                b58 = None
+            else:
+                b58 = blkts[-1]
 
             def _list(value):
                 if hasattr(value, '__iter__'):
@@ -1207,14 +1226,23 @@ class Parser(object):
             # Poles and Zeros stage.
             if blkts[0].id == 53:
                 # Must be 53 and 58.
-                assert set(b.id for b in blkts) == {53, 58}
+                assert set(b.id for b in blkts).issubset({53, 57, 58})
                 blkts53 = [b for b in blkts if b.id == 53]
+                blkts57 = [b for b in blkts if b.id == 57]
                 b53 = blkts53[0]
 
                 if len(blkts53) > 1:
                     msg = ("Multiple blockettes 53 found! Will use the first "
                            "one. This is an invalid file - please check it!")
                     warnings.warn(msg)
+                if len(blkts57) > 1:
+                    msg = ("Multiple blockettes 57 found! Will use the first "
+                           "one. This is an invalid file - please check it!")
+                    warnings.warn(msg)
+                if blkts57:
+                    b57 = blkts57[0]
+                else:
+                    b57 = None
 
                 zeros = []
                 # Might not have zeros.
@@ -1248,8 +1276,8 @@ class Parser(object):
 
                 response_stages.append(PolesZerosResponseStage(
                     stage_sequence_number=b53.stage_sequence_number,
-                    stage_gain=b58.sensitivity_gain,
-                    stage_gain_frequency=b58.frequency,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
                     input_units=i_u.unit_name,
                     output_units=o_u.unit_name,
                     input_units_description=i_u.unit_description
@@ -1260,7 +1288,17 @@ class Parser(object):
                     normalization_frequency=b53.normalization_frequency,
                     zeros=zeros,
                     poles=poles,
-                    normalization_factor=b53.A0_normalization_factor))
+                    normalization_factor=b53.A0_normalization_factor,
+                    decimation_input_sample_rate=b57.input_sample_rate
+                    if b57 else None,
+                    decimation_factor=b57.decimation_factor
+                    if b57 else None,
+                    decimation_offset=b57.decimation_offset
+                    if b57 else None,
+                    decimation_delay=b57.estimated_delay
+                    if b57 else None,
+                    decimation_correction=b57.correction_applied
+                    if b57 else None))
             # Response coefficients stage.
             elif blkts[0].id == 54:
                 # There can be multiple blockettes 54 in sequence in which
@@ -1301,11 +1339,12 @@ class Parser(object):
 
                 response_stages.append(CoefficientsTypeResponseStage(
                     stage_sequence_number=b54.stage_sequence_number,
-                    stage_gain=b58.sensitivity_gain,
-                    stage_gain_frequency=b58.frequency,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
                     input_units=i_u.unit_name,
                     output_units=o_u.unit_name,
-                    input_units_description=i_u.unit_description,
+                    input_units_description=i_u.unit_description
+                    if hasattr(i_u, "unit_description") else None,
                     output_units_description=o_u.unit_description,
                     cf_transfer_function_type=transfer_map[b54.response_type],
                     numerator=numerator,
@@ -1315,16 +1354,57 @@ class Parser(object):
                     decimation_offset=b57.decimation_offset,
                     decimation_delay=b57.estimated_delay,
                     decimation_correction=b57.correction_applied))
+            # Response list stage.
+            elif blkts[0].id == 55:
+                assert set(b.id for b in blkts).issubset({55, 58})
+                b55 = blkts[0]
+                i_u = self.resolve_abbreviation(
+                    34, b55.stage_input_units)
+                o_u = self.resolve_abbreviation(
+                    34, b55.stage_output_units)
+                response_list = [
+                    ResponseListElement(f, a, p) for f, a, p in
+                    zip(b55.frequency, b55.amplitude, b55.phase_angle)]
+                response_stages.append(ResponseListResponseStage(
+                    stage_sequence_number=b55.stage_sequence_number,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
+                    input_units=i_u.unit_name,
+                    output_units=o_u.unit_name,
+                    input_units_description=i_u.unit_description
+                    if hasattr(i_u, "unit_description") else None,
+                    output_units_description=o_u.unit_description,
+                    response_list_elements=response_list))
+            # Decimation stage.
+            elif blkts[0].id == 57:
+                assert [b.id for b in blkts] == [57, 58]
+                b57 = blkts[0]
+                # Cannot assign units yet - will be added at the end in a
+                # final pass by inferring it from the units of previous and
+                # subsequent stages.
+                response_stages.append(ResponseStage(
+                    stage_sequence_number=b58.stage_sequence_number
+                    if b58 else None,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
+                    input_units="",
+                    output_units="",
+                    decimation_input_sample_rate=b57.input_sample_rate,
+                    decimation_factor=b57.decimation_factor,
+                    decimation_offset=b57.decimation_offset,
+                    decimation_delay=b57.estimated_delay,
+                    decimation_correction=b57.correction_applied))
             # Gain only stage.
             elif blkts[0].id == 58:
                 assert [b.id for b in blkts] == [58]
                 # Cannot assign units yet - will be added at the end in a
-                # final pass by infering it from the units of previous and
+                # final pass by inferring it from the units of previous and
                 # subsequent stages.
                 response_stages.append(ResponseStage(
-                    stage_sequence_number=b58.stage_sequence_number,
-                    stage_gain=b58.sensitivity_gain,
-                    stage_gain_frequency=b58.frequency,
+                    stage_sequence_number=b58.stage_sequence_number
+                    if b58 else None,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
                     input_units="",
                     output_units=""))
             # FIR stage.
@@ -1362,8 +1442,8 @@ class Parser(object):
 
                 response_stages.append(FIRResponseStage(
                     stage_sequence_number=b61.stage_sequence_number,
-                    stage_gain=b58.sensitivity_gain,
-                    stage_gain_frequency=b58.frequency,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
                     input_units=i_u.unit_name,
                     output_units=o_u.unit_name,
                     input_units_description=i_u.unit_description,
@@ -1383,7 +1463,7 @@ class Parser(object):
             s = response_stages[_i]
             if not s.input_units and _i != 0:
                 s.input_units = response_stages[_i - 1].output_units
-            if not s.output_units and (_i + 1) <= len(response_stages):
+            if not s.output_units and (_i + 1) < len(response_stages):
                 s.output_units = response_stages[_i + 1].input_units
 
         # Create response object.
