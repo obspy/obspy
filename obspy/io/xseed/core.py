@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import collections
 import io
 import re
+import warnings
 
 import obspy
 import obspy.core.inventory
@@ -117,30 +118,41 @@ def __is_resp(fh):
         return False
 
 
-def _read_seed(filename, *args, **kwargs):
+def _read_seed(filename, skip_invalid_responses=False, *args, **kwargs):
     """
     Read dataless SEED files to an ObsPy inventory object
 
     :param filename: File with a SEED file.
     :type filename: str or file-like object.
+    :param skip_invalid_responses: If True, invalid responses will be replaced
+        by None but a warning will be raised. Otherwise an exception will be
+        raised. Useful for reading very large files where only a few
+        responses are faulty.
     """
     p = Parser(filename)
 
     # Parse to an inventory object.
-    return _parse_to_inventory_object(p)
+    return _parse_to_inventory_object(
+        p, skip_invalid_responses=skip_invalid_responses)
 
 
-def _read_xseed(filename, *args, **kwargs):
+def _read_xseed(filename, skip_invalid_responses=False, *args, **kwargs):
     """
     Read XML-SEED files to an ObsPy inventory object
 
     :param filename: File with a XML-SEED file.
     :type filename: str or file-like object.
+    :param skip_invalid_responses: If True, invalid responses will be replaced
+        by None but a warning will be raised. Otherwise an exception will be
+        raised. Useful for reading very large files where only a few
+        responses are faulty.
     """
-    return _read_seed(filename=filename, *args, **kwargs)
+    return _read_seed(filename=filename,
+                      skip_invalid_responses=skip_invalid_responses,
+                      *args, **kwargs)
 
 
-def _read_resp(filename, *args, **kwargs):
+def _read_resp(filename, skip_invalid_responses=False, *args, **kwargs):
     """
     Read resp files to an ObsPy inventory object
 
@@ -149,6 +161,10 @@ def _read_resp(filename, *args, **kwargs):
 
     :param filename: File with a RESP file.
     :type filename: str or file-like object.
+    :param skip_invalid_responses: If True, invalid responses will be replaced
+        by None but a warning will be raised. Otherwise an exception will be
+        raised. Useful for reading very large files where only a few
+        responses are faulty.
     """
     if hasattr(filename, "read"):
         data = filename.read()
@@ -161,10 +177,18 @@ def _read_resp(filename, *args, **kwargs):
     p._parse_resp(data)
 
     # Parse to an inventory object.
-    return _parse_to_inventory_object(p)
+    return _parse_to_inventory_object(
+        p, skip_invalid_responses=skip_invalid_responses)
 
 
-def _parse_to_inventory_object(p):
+def _parse_to_inventory_object(p, skip_invalid_responses=False):
+    """
+    Parses a Parser object to an obspy.core.inventory.Inventory object.
+
+    :param p: A Parser object.
+    :param skip_invalid_responses: If True, invalid responses will just be
+        replaced by None but a warning will be raised.
+    """
     # The volume time in blockette 10 will be mapped to the creation data of
     # all the ObsPy objects. If it is not given, the current time will be used.
     creation_date = None
@@ -306,7 +330,8 @@ def _parse_to_inventory_object(p):
                 dip=getattr(b, "dip", None),
                 types=None,
                 external_references=None,
-                sample_rate=b.sample_rate,
+                sample_rate=b.sample_rate
+                if hasattr(b, "sample_rate") else None,
                 sample_rate_ratio_number_samples=None,
                 sample_rate_ratio_number_seconds=None,
                 storage_format=None,
@@ -347,7 +372,18 @@ def _parse_to_inventory_object(p):
                         begin_effective_time=_start,
                         end_effective_time=_end))
 
-            resp = p.get_response_for_channel(blockettes_for_channel=channel)
+            try:
+                resp = p.get_response_for_channel(
+                    blockettes_for_channel=channel)
+            except Exception as e:
+                if not skip_invalid_responses:
+                    raise
+                trace_id = "%s.%s.%s.%s" % (network_code, s.code,
+                                            c.location_code, c.code)
+                msg = ("Failed to calculate response for %s with epoch "
+                       "%s - %s" % (trace_id, c.start_date, c.end_date))
+                warnings.warn(msg)
+                resp = None
             c.response = resp
 
             s.channels.append(c)
