@@ -47,7 +47,7 @@ def _create_example_inventory():
 
 
 @map_example_filename("path_or_file_object")
-def read_inventory(path_or_file_object=None, format=None):
+def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     """
     Function to read inventory files.
 
@@ -56,6 +56,9 @@ def read_inventory(path_or_file_object=None, format=None):
         object will be returned.
     :type format: str, optional
     :param format: Format of the file to read (e.g. ``"STATIONXML"``).
+
+    Additional args and kwargs are passed on to the underlying ``_read_X()`` 
+    methods of the inventory plugins.
 
     .. note::
 
@@ -76,7 +79,7 @@ def read_inventory(path_or_file_object=None, format=None):
             download_to_file(url=path_or_file_object, filename_or_buffer=fh)
             return read_inventory(fh.name, format=format)
     return _read_from_plugin("inventory", path_or_file_object,
-                             format=format)[0]
+                             format=format, *args, **kwargs)[0]
 
 
 @python_2_unicode_compatible
