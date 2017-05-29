@@ -1112,12 +1112,15 @@ class Parser(object):
                 continue
             stages[b.stage_sequence_number].append(b)
 
-        # Get units - first from blockette 52.
-        try:
-            input_units = self.resolve_abbreviation(
-                34, blkt52.units_of_signal_response)
-        except ValueError:
+        # Get units - first from blockette 52 if they exist.
+        if not hasattr(blkt52, "units_of_signal_response"):
             input_units = None
+        else:
+            try:
+                input_units = self.resolve_abbreviation(
+                    34, blkt52.units_of_signal_response)
+            except ValueError:
+                input_units = None
 
         # Also from the output units of the first stage.
         stage_1_output_units = None
