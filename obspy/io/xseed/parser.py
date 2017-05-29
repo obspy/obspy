@@ -857,9 +857,10 @@ class Parser(object):
         mappings = {
             "COUNTS": "Digital Counts",
             "COUNTS/V": "Counts per Volt",
+            "M": "Displacement in Meters",
             "M/S": "Velocity in Meters per Second",
             "M/S**2": "Acceleration in Meters Per Second Per Second",
-            "M": "Displacement in Meters",
+            "M**3/M**3": "Volumetric Strain",
             "V": "Volts",
             "A": "Amperes"}
         for unit_name, lookup_key in unit_lookups.items():

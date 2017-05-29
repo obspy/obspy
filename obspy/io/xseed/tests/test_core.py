@@ -48,7 +48,7 @@ class CoreTestCase(unittest.TestCase):
         self.resp_files = ["RESP.BW.FURT..EHZ",
                            "RESP.XX.NR008..HHZ.130.1.100",
                            "RESP.XX.NS085..BHZ.STS2_gen3.120.1500",
-                           "RESP.AZ.DHL..BS1"]
+                           "RESP.BK.BRIB..BV1"]
         self.other_files = ["II_COCO_three_channel_borehole.mseed",
                             "xml-seed-1.0.xsd",
                             "xml-seed-1.1.xsd"]
@@ -405,6 +405,7 @@ class CoreTestCase(unittest.TestCase):
             t = obspy.UTCDateTime(2008, 1, 1)
             if "AZ.DHL..BS1" in filename:
                 t = obspy.UTCDateTime(1999, julday=351)
+
             for unit in ("DISP", "VEL", "ACC"):
                 r = obspy.read_inventory(filename)[0][0][0].response
                 e_r = evalresp_for_frequencies(
