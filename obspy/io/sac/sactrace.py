@@ -1038,7 +1038,7 @@ class SACTrace(object):
         :param source: Full path string for File-like object from a SAC binary
             file on disk.  If it is an open File object, open 'rb'.
         :type source: str or file
-        :param encoding: Encoding string that passes the user specified 
+        :param encoding: Encoding string that passes the user specified
         encoding scheme.
         :type encoding: str
         :param headonly: If headonly is True, only read the header arrays not

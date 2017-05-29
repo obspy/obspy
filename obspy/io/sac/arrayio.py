@@ -438,7 +438,7 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False, encoding='ASCII'):
     :param nulls: If True, return all header values, including nulls, else
         omit them.
     :type nulls: bool
-    :param encoding: Encoding string that passes the user specified 
+    :param encoding: Encoding string that passes the user specified
         encoding scheme.
     :type nulls: str
 
@@ -457,7 +457,7 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False, encoding='ASCII'):
                 [(key, val) for (key, val) in zip(HD.INTHDRS, hi)
                  if val != HD.INULL] + \
                 [(key, val.decode(encoding)) for (key, val)
-                 in zip(HD.STRHDRS,hs) if val.decode(encoding) != HD.SNULL]
+                 in zip(HD.STRHDRS, hs) if val.decode(encoding) != HD.SNULL]
 
     header = dict(items)
 
