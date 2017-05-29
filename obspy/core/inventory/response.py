@@ -866,7 +866,10 @@ class Response(ComparingObject):
                 # we'll just do the same here.
                 "M/M": ew.ENUM_UNITS["DIS"],
                 # Same logic for the volumetric strains.
-                "M**3/M**3": ew.ENUM_UNITS["DIS"]}
+                "M**3/M**3": ew.ENUM_UNITS["DIS"],
+                # No idea what this unit is supposed to be - again - just do
+                # as evalresp does...
+                "MIN": ew.ENUM_UNITS["DIS"]}
             if key not in units_mapping:
                 if key is not None:
                     msg = ("The unit '%s' is not known to ObsPy. Raw evalresp "
