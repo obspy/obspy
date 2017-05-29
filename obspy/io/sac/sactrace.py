@@ -1030,14 +1030,17 @@ class SACTrace(object):
 
     # --------------------------- I/O METHODS ---------------------------------
     @classmethod
-    def read(cls, source, headonly=False, ascii=False, byteorder=None,
-             checksize=False, debug_strings=False):
+    def read(cls, source, encoding='ASCII', headonly=False, ascii=False,
+             byteorder=None, checksize=False, debug_strings=False):
         """
         Construct an instance from a binary or ASCII file on disk.
 
         :param source: Full path string for File-like object from a SAC binary
             file on disk.  If it is an open File object, open 'rb'.
         :type source: str or file
+        :param encoding: Encoding string that passes the user specified 
+        encoding scheme.
+        :type encoding: str
         :param headonly: If headonly is True, only read the header arrays not
             the data array.
         :type headonly: bool
@@ -1089,10 +1092,11 @@ class SACTrace(object):
                                             checksize=checksize)
         if not debug_strings:
             for i, val in enumerate(hs):
-                val = _ut._clean_str(val, strip_whitespace=False)
+                val = _ut._clean_str(val.decode(encoding, 'replace'),
+                                     strip_whitespace=False)
                 if val.startswith(native_str('-12345')):
                     val = HD.SNULL
-                hs[i] = val.encode('ASCII', 'replace')
+                hs[i] = val.encode(encoding, 'replace')
 
         sac = cls._from_arrays(hf, hi, hs, data)
         if sac.dist is None:
@@ -1243,7 +1247,7 @@ class SACTrace(object):
 
         return sac
 
-    def to_obspy_trace(self, debug_headers=False):
+    def to_obspy_trace(self, encoding='ASCII', debug_headers=False):
         """
         Return an ObsPy Trace instance.
 
@@ -1285,7 +1289,8 @@ class SACTrace(object):
             data = self.data
 
         sachdr = _io.header_arrays_to_dict(self._hf, self._hi, self._hs,
-                                           nulls=debug_headers)
+                                           nulls=debug_headers,
+                                           encoding=encoding)
         # TODO: logic to use debug_headers for real
 
         stats = _ut.sac_to_obspy_header(sachdr)

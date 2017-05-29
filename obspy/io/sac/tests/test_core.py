@@ -923,6 +923,13 @@ class CoreTestCase(unittest.TestCase):
         tr0 = read(self.file_encode)[0]
         self.assertEqual(tr0.stats.get('channel'), '????????')
 
+    def test_encoding_flag(self):
+        """
+        Test passing encoding flag through obspy.read
+        """
+        tr0 = read(self.file_encode, encoding='cp1252')[0]
+        self.assertEqual(tr0.stats.get('channel'), 'ÇÏÿÿÇÏÿÿ')
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
