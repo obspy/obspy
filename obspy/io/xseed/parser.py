@@ -1123,36 +1123,37 @@ class Parser(object):
             except ValueError:
                 input_units = None
 
-        # Also from the output units of the first stage.
-        stage_1_output_units = None
-        if 1 in stages and stages[1]:
-            si = getattr(stages[1][0], "stage_signal_input_units", None)
-        # Rare (and technically invalid) SEED files have only stage 0 but
-        # misuse it for more blockettes then they should...
-        elif 0 in stages and stages[0]:
-            si = getattr(stages[0][0], "stage_signal_input_units", None)
-        else:
-            si = None
-
-        if si:
-            try:
-                stage_1_output_units = \
-                    self.resolve_abbreviation(34, si)
-            except ValueError:
-                pass
+        # Also from the output units of the first stage that claims to have
+        # them!
+        stage_x_output_units = None
+        for _stage in list(range(1, max(stages.keys()) + 1)) + [0]:
+            if not stages[_stage]:
+                continue
+            _s = stages[_stage][0]
+            for _attr in dir(_s):
+                if "unit" in _attr and \
+                        ("input" in _attr or "in unit" in _attr):
+                    stage_x_output_units = getattr(_s, _attr)
+                    try:
+                        stage_x_output_units = \
+                            self.resolve_abbreviation(
+                                34, stage_x_output_units)
+                    except ValueError:
+                        pass
+                    break
 
         # If both exist that should be identical.
-        if input_units is not None and stage_1_output_units is not None and \
-                input_units.unit_name != stage_1_output_units.unit_name:
+        if input_units is not None and stage_x_output_units is not None and \
+                input_units.unit_name != stage_x_output_units.unit_name:
             msg = "Units of the signal response should be identical to the " \
                 "units of the input of stage 1."
             warnings.warn(msg)
         # Both are None -> raise a warning.
-        elif input_units is None and stage_1_output_units is None:
+        elif input_units is None and stage_x_output_units is None:
             msg = "Could not determine input units."
             warnings.warn(msg)
         elif input_units is None:
-            input_units = stage_1_output_units
+            input_units = stage_x_output_units
 
         # Find the output units by looping over the stages in reverse order
         # and finding the first stage whose first blockette has an output
@@ -1486,6 +1487,14 @@ class Parser(object):
                 s.input_units = response_stages[_i - 1].output_units
             if not s.output_units and (_i + 1) < len(response_stages):
                 s.output_units = response_stages[_i + 1].input_units
+
+        # If the first stage does not have an input unit but the instrument
+        # sensitivity has, set that.
+        if not getattr(response_stages[0], "input_units", None) and \
+                getattr(instrument_sensitivity, "input_units", None):
+            response_stages[0].input_units = instrument_sensitivity.input_units
+            response_stages[0].input_units_description = \
+                instrument_sensitivity.input_units_description
 
         # Create response object.
         return Response(instrument_sensitivity=instrument_sensitivity,

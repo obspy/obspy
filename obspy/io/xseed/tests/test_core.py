@@ -51,7 +51,10 @@ class CoreTestCase(unittest.TestCase):
                            "RESP.BK.BRIB..BV1",
                            "RESP.BK.DANT.00.LCL",
                            # Has only a stage 0 with blkts 53 and 58.
-                           "RESP.BN.WR0..SHZ"]
+                           "RESP.BN.WR0..SHZ",
+                           # Defines the input units only in stage 2.
+                           "RESP.SG.MEMB..BDI"
+                           ]
         self.other_files = ["II_COCO_three_channel_borehole.mseed",
                             "xml-seed-1.0.xsd",
                             "xml-seed-1.1.xsd"]
