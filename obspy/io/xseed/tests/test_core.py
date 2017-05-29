@@ -49,7 +49,9 @@ class CoreTestCase(unittest.TestCase):
                            "RESP.XX.NR008..HHZ.130.1.100",
                            "RESP.XX.NS085..BHZ.STS2_gen3.120.1500",
                            "RESP.BK.BRIB..BV1",
-                           "RESP.BK.DANT.00.LCL"]
+                           "RESP.BK.DANT.00.LCL",
+                           # Has only a stage 0 with blkts 53 and 58.
+                           "RESP.BN.WR0..SHZ"]
         self.other_files = ["II_COCO_three_channel_borehole.mseed",
                             "xml-seed-1.0.xsd",
                             "xml-seed-1.1.xsd"]
@@ -408,6 +410,8 @@ class CoreTestCase(unittest.TestCase):
                 t = obspy.UTCDateTime(1999, julday=351)
             elif "BK.DANT.00.LCL" in filename:
                 t = obspy.UTCDateTime(2017, 1, 1)
+            elif "BN.WR0..SHZ" in filename:
+                t = obspy.UTCDateTime(1998, 1, 1)
 
             for unit in ("DISP", "VEL", "ACC"):
                 r = obspy.read_inventory(filename)[0][0][0].response

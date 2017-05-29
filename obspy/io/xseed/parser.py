@@ -1125,8 +1125,15 @@ class Parser(object):
 
         # Also from the output units of the first stage.
         stage_1_output_units = None
-        si = getattr(stages[1][0], "stage_signal_input_units", None) \
-            if (1 in stages and stages[1]) else None
+        if 1 in stages and stages[1]:
+            si = getattr(stages[1][0], "stage_signal_input_units", None)
+        # Rare (and technically invalid) SEED files have only stage 0 but
+        # misuse it for more blockettes then they should...
+        elif 0 in stages and stages[0]:
+            si = getattr(stages[0][0], "stage_signal_input_units", None)
+        else:
+            si = None
+
         if si:
             try:
                 stage_1_output_units = \
@@ -1168,9 +1175,19 @@ class Parser(object):
         else:
             output_units = self.resolve_abbreviation(34, unit_lookup_key)
 
-        if 0 not in stages or len(stages[0]) != 1:
-            msg = "Channel must a have exactly one stage 0 blockette."
+        if 0 not in stages:
+            msg = "Channel must a stage 0 blockette."
             raise ValueError(msg)
+        elif len(stages[0]) > 1:
+            _blkts58 = [_i for _i in stages[0] if _i.id == 58]
+            # Attempt to fix it - only works if there is a blockette 58 in
+            # it and the rest of the stages are empty.
+            if list(stages.keys()) == [0] and len(_blkts58) == 1:
+                stages[1] = stages[0]
+                stages[0] = _blkts58
+            else:
+                msg = "Channel must have exactly one stage 0 blockette."
+                raise ValueError(msg)
 
         # Stage 0 blockette must be a blockette 58.
         if stages[0][0].id != 58:
