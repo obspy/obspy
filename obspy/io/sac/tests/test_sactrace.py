@@ -15,9 +15,9 @@ from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
-from obspy.io.sac import header as _hd
-from obspy.io.sac.sactrace import SACTrace
-from obspy.io.sac.util import SacHeaderError, SacHeaderTimeError
+from .. import header as _hd
+from ..sactrace import SACTrace
+from ..util import SacHeaderError, SacHeaderTimeError
 
 
 class SACTraceTestCase(unittest.TestCase):
