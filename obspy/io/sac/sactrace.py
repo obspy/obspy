@@ -1030,17 +1030,14 @@ class SACTrace(object):
 
     # --------------------------- I/O METHODS ---------------------------------
     @classmethod
-    def read(cls, source, encoding='ASCII', headonly=False, ascii=False,
-             byteorder=None, checksize=False, debug_strings=False):
+    def read(cls, source, headonly=False, ascii=False, byteorder=None,
+             checksize=False, debug_strings=False, encoding='ASCII'):
         """
         Construct an instance from a binary or ASCII file on disk.
 
         :param source: Full path string for File-like object from a SAC binary
             file on disk.  If it is an open File object, open 'rb'.
         :type source: str or file
-        :param encoding: Encoding string that passes the user specified
-        encoding scheme.
-        :type encoding: str
         :param headonly: If headonly is True, only read the header arrays not
             the data array.
         :type headonly: bool
@@ -1059,6 +1056,9 @@ class SACTrace(object):
             beginning with '-12345' are considered unset. If True, they
             are instead passed without modification.  Good for debugging.
         :type debug_strings: bool
+        :param encoding: Encoding string that passes the user specified
+        encoding scheme.
+        :type encoding: str
 
         :raises: :class:`SacIOError` if checksize failed, byteorder was wrong,
             or header arrays are wrong size.
@@ -1247,7 +1247,7 @@ class SACTrace(object):
 
         return sac
 
-    def to_obspy_trace(self, encoding='ASCII', debug_headers=False):
+    def to_obspy_trace(self, debug_headers=False, encoding='ASCII'):
         """
         Return an ObsPy Trace instance.
 
@@ -1257,6 +1257,9 @@ class SACTrace(object):
         :param debug_headers: Include _all_ SAC headers into the
             Trace.stats.sac dictionary.
         :type debug_headers: bool
+        :param encoding: Encoding string that passes the user specified
+        encoding scheme.
+        :type encoding: str        
 
         .. rubric:: Example
 
