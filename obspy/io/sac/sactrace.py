@@ -1259,7 +1259,7 @@ class SACTrace(object):
         :type debug_headers: bool
         :param encoding: Encoding string that passes the user specified
         encoding scheme.
-        :type encoding: str        
+        :type encoding: str
 
         .. rubric:: Example
 
