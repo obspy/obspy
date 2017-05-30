@@ -948,6 +948,8 @@ master: (doi: 10.5281/zenodo.165135)
  - scripts:
    * obspy-plot: new option "-o" to output plot to file instead of opening
      a window
+ - obspy.core
+   * added qt frontend for picking arrival times
 
 0.8.4
  - bugfixes to make ObsPy work with the latest Python 2.x and NumPy releases
