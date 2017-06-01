@@ -245,9 +245,13 @@ def _parse_to_inventory_object(p, skip_invalid_responses=False):
         # Get the network description if it exists.
         nic = last_or_none("network_identifier_code")
         if nic is not None:
-            desc = p.resolve_abbreviation(33, nic).abbreviation_description
-            if desc and network_code not in network_descriptions:
-                network_descriptions[network_code] = desc
+            try:
+                desc = p.resolve_abbreviation(33, nic).abbreviation_description
+            except ValueError:
+                pass
+            else:
+                if desc and network_code not in network_descriptions:
+                    network_descriptions[network_code] = desc
 
         s = obspy.core.inventory.Station(
             code=station_call_letters,
