@@ -1126,6 +1126,7 @@ class Parser(object):
         # Also from the output units of the first stage that claims to have
         # them!
         stage_x_output_units = None
+        stage_x_is_stage_1 = False
         for _stage in list(range(1, max(stages.keys()) + 1)) + [0]:
             if not stages[_stage]:
                 continue
@@ -1133,23 +1134,19 @@ class Parser(object):
             for _attr in dir(_s):
                 if "unit" in _attr and \
                         ("input" in _attr or "in unit" in _attr):
-                    stage_x_output_units = getattr(_s, _attr)
                     try:
+                        stage_x_output_units = getattr(_s, _attr)
                         stage_x_output_units = \
                             self.resolve_abbreviation(
                                 34, stage_x_output_units)
                     except ValueError:
                         pass
+                    if _stage == 1:
+                        stage_x_is_stage_1 = True
                     break
 
-        # If both exist that should be identical.
-        if input_units is not None and stage_x_output_units is not None and \
-                input_units.unit_name != stage_x_output_units.unit_name:
-            msg = "Units of the signal response should be identical to the " \
-                "units of the input of stage 1."
-            warnings.warn(msg)
         # Both are None -> raise a warning.
-        elif input_units is None and stage_x_output_units is None:
+        if input_units is None and stage_x_output_units is None:
             msg = "Could not determine input units."
             warnings.warn(msg)
         elif input_units is None:
