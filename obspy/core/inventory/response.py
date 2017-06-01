@@ -918,7 +918,7 @@ class Response(ComparingObject):
                     all_stages[1][0].input_units = \
                         self.instrument_sensitivity.input_units
                     msg = "Set the input units of stage 1 to the overall " \
-                        "input units"
+                        "input units."
                     warnings.warn(msg)
             if not all_stages[1][0].output_units:
                 if max(all_stages.keys()) == 1 and \
@@ -926,7 +926,7 @@ class Response(ComparingObject):
                     all_stages[1][0].output_units = \
                         self.instrument_sensitivity.output_units
                     msg = "Set the output units of stage 1 to the overall " \
-                       "output units"
+                       "output units."
                     warnings.warn(msg)
                 if 2 in all_stages and all_stages[2] and \
                         all_stages[2][0].input_units:

@@ -278,8 +278,19 @@ class ResponseTestCase(unittest.TestCase):
         self.assertIsNone(r.response_stages[0].input_units)
         self.assertIsNone(r.response_stages[0].output_units)
 
-        out = r.get_evalresp_response_for_frequencies(
-            np.array([0.5, 1.0, 2.0]), output="DISP")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            out = r.get_evalresp_response_for_frequencies(
+                np.array([0.5, 1.0, 2.0]), output="DISP")
+
+        self.assertEqual(len(w), 2)
+        self.assertEqual(
+            w[0].message.args[0],
+            "Set the input units of stage 1 to the overall input units.")
+        self.assertEqual(
+            w[1].message.args[0],
+            "Set the output units of stage 1 to the input units of stage 2.")
+
         # Values compared to evalresp output from RESP file - might not be
         # right but it does guarantee that ObsPy behaves like evalresp - be
         # that a good thing or a bad thing.
