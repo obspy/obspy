@@ -267,6 +267,25 @@ class ResponseTestCase(unittest.TestCase):
             "stage with frequencies only from -0.0096 - 20.0096 Hz. You are "
             "requesting a response from 0.4500 - 22.5000 Hz.")
 
+    def test_response_with_no_units_in_stage_1(self):
+        """
+        ObsPy has some heuristics to deal with this particular degenerate case.
+        Test it here.
+        """
+        inv = read_inventory(os.path.join(
+            self.data_dir, "stationxml_no_units_in_stage_1.xml"))
+        r = inv[0][0][0].response
+        self.assertIsNone(r.response_stages[0].input_units)
+        self.assertIsNone(r.response_stages[0].output_units)
+
+        out = r.get_evalresp_response_for_frequencies(
+            np.array([0.5, 1.0, 2.0]), output="DISP")
+        # Values compared to evalresp output from RESP file - might not be
+        # right but it does guarantee that ObsPy behaves like evalresp - be
+        # that a good thing or a bad thing.
+        np.testing.assert_allclose(
+            out, [0 + 9869.2911771081963j, 0 + 19738.582354216393j,
+                  0 + 39477.164708432785j])
 
 def suite():
     return unittest.makeSuite(ResponseTestCase, 'test')

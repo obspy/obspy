@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
 import ctypes as C
 import warnings
 from collections import defaultdict, Iterable
@@ -902,6 +903,38 @@ class Response(ComparingObject):
         stage_list = sorted(all_stages.keys())
 
         stage_objects = []
+
+        # Attempt to fix some potentially faulty responses here.
+        if 1 in all_stages and all_stages[1] and (
+                not all_stages[1][0].input_units or
+                not all_stages[1][0].output_units):
+            # Make a copy to not modify the original
+            all_stages[1][0] = copy.deepcopy(all_stages[1][0])
+            # Some stages 1 are just the sensitivity and as thus don't store
+            # input and output units in for example StationXML. In these cases
+            # try to guess it from the overall sensitivity or stage 2.
+            if not all_stages[1][0].input_units:
+                if self.instrument_sensitivity.input_units:
+                    all_stages[1][0].input_units = \
+                        self.instrument_sensitivity.input_units
+                    msg = "Set the input units of stage 1 to the overall " \
+                        "input units"
+                    warnings.warn(msg)
+            if not all_stages[1][0].output_units:
+                if max(all_stages.keys()) == 1 and \
+                        self.instrument_sensitivity.output_units:
+                    all_stages[1][0].output_units = \
+                        self.instrument_sensitivity.output_units
+                    msg = "Set the output units of stage 1 to the overall " \
+                       "output units"
+                    warnings.warn(msg)
+                if 2 in all_stages and all_stages[2] and \
+                        all_stages[2][0].input_units:
+                    all_stages[1][0].output_units = \
+                        all_stages[2][0].input_units
+                    msg = "Set the output units of stage 1 to the input " \
+                       "units of stage 2."
+                    warnings.warn(msg)
 
         for stage_number in stage_list:
             st = ew.Stage()
