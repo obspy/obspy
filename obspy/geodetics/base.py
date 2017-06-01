@@ -324,7 +324,8 @@ def locations2degrees(lat1, long1, lat2, long2):
     :type long2: float or numpy numeric array
     :param long2: Longitude of point 2 in degrees
     :rtype: float or numpy numeric array
-    :return: Distance in degrees as a floating point number, or numpy array of element-wise distances in degrees 
+    :return: Distance in degrees as a floating point number,
+        or numpy array of element-wise distances in degrees
 
     .. rubric:: Example
 
