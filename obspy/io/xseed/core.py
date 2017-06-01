@@ -318,9 +318,14 @@ def _parse_to_inventory_object(p, skip_invalid_responses=False):
             # Get the instrument name if it exists.
             sensor = getattr(b, "instrument_identifier", None)
             if sensor is not None:
-                instrument_name = p.resolve_abbreviation(
-                    33, sensor).abbreviation_description
-                sensor = obspy.core.inventory.Equipment(type=instrument_name)
+                try:
+                    instrument_name = p.resolve_abbreviation(
+                        33, sensor).abbreviation_description
+                except ValueError:
+                    sensor = None
+                else:
+                    sensor = obspy.core.inventory.Equipment(
+                        type=instrument_name)
 
             c = obspy.core.inventory.Channel(
                 code=b.channel_identifier,
