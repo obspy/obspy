@@ -200,6 +200,7 @@ master: (doi: 10.5281/zenodo.165135)
      (see #1575)
    * Reinforce ASCII encoding in reading non-ASCII SAC files regardless of
       default encoding setting. (see #1768)
+   * Implementing encoding flag for reading/writing SAC files.
 - obspy.io.sh:
    * Fix writing of long headers for Python 3 (see #1526)
    * Whitespace in header fields is not ignored anymore (see #1552)

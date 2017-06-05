@@ -1031,7 +1031,7 @@ class SACTrace(object):
     # --------------------------- I/O METHODS ---------------------------------
     @classmethod
     def read(cls, source, headonly=False, ascii=False, byteorder=None,
-             checksize=False, debug_strings=False):
+             checksize=False, debug_strings=False, encoding='ASCII'):
         """
         Construct an instance from a binary or ASCII file on disk.
 
@@ -1056,6 +1056,9 @@ class SACTrace(object):
             beginning with '-12345' are considered unset. If True, they
             are instead passed without modification.  Good for debugging.
         :type debug_strings: bool
+        :param encoding: Encoding string that passes the user specified
+        encoding scheme.
+        :type encoding: str
 
         :raises: :class:`SacIOError` if checksize failed, byteorder was wrong,
             or header arrays are wrong size.
@@ -1089,10 +1092,11 @@ class SACTrace(object):
                                             checksize=checksize)
         if not debug_strings:
             for i, val in enumerate(hs):
-                val = _ut._clean_str(val, strip_whitespace=False)
+                val = _ut._clean_str(val.decode(encoding, 'replace'),
+                                     strip_whitespace=False)
                 if val.startswith(native_str('-12345')):
                     val = HD.SNULL
-                hs[i] = val.encode('ASCII', 'replace')
+                hs[i] = val.encode(encoding, 'replace')
 
         sac = cls._from_arrays(hf, hi, hs, data)
         if sac.dist is None:
@@ -1243,7 +1247,7 @@ class SACTrace(object):
 
         return sac
 
-    def to_obspy_trace(self, debug_headers=False):
+    def to_obspy_trace(self, debug_headers=False, encoding='ASCII'):
         """
         Return an ObsPy Trace instance.
 
@@ -1253,6 +1257,9 @@ class SACTrace(object):
         :param debug_headers: Include _all_ SAC headers into the
             Trace.stats.sac dictionary.
         :type debug_headers: bool
+        :param encoding: Encoding string that passes the user specified
+        encoding scheme.
+        :type encoding: str
 
         .. rubric:: Example
 
@@ -1285,7 +1292,8 @@ class SACTrace(object):
             data = self.data
 
         sachdr = _io.header_arrays_to_dict(self._hf, self._hi, self._hs,
-                                           nulls=debug_headers)
+                                           nulls=debug_headers,
+                                           encoding=encoding)
         # TODO: logic to use debug_headers for real
 
         stats = _ut.sac_to_obspy_header(sachdr)

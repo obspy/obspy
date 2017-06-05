@@ -170,11 +170,6 @@ def _clean_str(value, strip_whitespace=True):
     SACTrace, and in sac_to_obspy_header, to sanitize strings for making a
     Trace that the user may have manually added.
     """
-    try:
-        value = value.decode('ASCII', 'replace')
-    except AttributeError:
-        pass
-
     null_term = value.find('\x00')
     if null_term >= 0:
         value = value[:null_term] + " " * len(value[null_term:])
