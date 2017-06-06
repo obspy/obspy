@@ -9,6 +9,7 @@
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.49636.svg)](http://dx.doi.org/10.5281/zenodo.49636)
 [![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/obspy/obspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![LGPLv3](https://www.gnu.org/graphics/lgplv3-88x31.png)](https://www.gnu.org/licenses/lgpl.html)
+[![Depsy](http://depsy.org/api/package/pypi/obspy/badge.svg)](http://depsy.org/package/python/obspy)
 
 
 
