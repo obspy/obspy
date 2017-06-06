@@ -86,7 +86,8 @@ Both schema use enumerations. Numerous mappings are applied.
 Unit conversion
 ```````````````
 
-QuakeML uses meter for origin depth, SC3ML uses kilometer.
+QuakeML uses meter for origin depth, origin uncertainty and confidence
+ellipsoid, SC3ML uses kilometer.
 
 Unmapped node
 `````````````
@@ -421,7 +422,13 @@ SC3ML. Unnecessary attributes must also be removed.
     <xsl:template match="qml:origin/qml:depth/qml:value
                          | qml:origin/qml:depth/qml:uncertainty
                          | qml:origin/qml:depth/qml:lowerUncertainty
-                         | qml:origin/qml:depth/qml:upperUncertainty">
+                         | qml:origin/qml:depth/qml:upperUncertainty
+                         | qml:origin/qml:originUncertainty/qml:horizontalUncertainty
+                         | qml:origin/qml:originUncertainty/qml:minHorizontalUncertainty
+                         | qml:origin/qml:originUncertainty/qml:maxHorizontalUncertainty
+                         | qml:confidenceEllipsoid/qml:semiMajorAxisLength
+                         | qml:confidenceEllipsoid/qml:semiMinorAxisLength
+                         | qml:confidenceEllipsoid/qml:semiIntermediateAxisLength">
         <xsl:element name="{local-name()}">
             <xsl:value-of select="current() div 1000"/>
         </xsl:element>

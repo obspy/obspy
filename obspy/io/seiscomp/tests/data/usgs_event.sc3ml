@@ -23,7 +23,7 @@
         <minimumDistance>0.1164</minimumDistance>
       </quality>
       <uncertainty>
-        <horizontalUncertainty>500.0</horizontalUncertainty>
+        <horizontalUncertainty>0.5</horizontalUncertainty>
         <preferredDescription>horizontal uncertainty</preferredDescription>
       </uncertainty>
       <evaluationMode>manual</evaluationMode>
