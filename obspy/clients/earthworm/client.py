@@ -117,7 +117,11 @@ class Client(object):
             st.append(tb.get_obspy_trace())
         if cleanup:
             st._cleanup()
-        st.trim(starttime, endtime)
+
+        # only traces from the first and last tracebuf need to be trimmed
+        st[0].trim(starttime, endtime)
+        st[len(st)-1].trim(starttime, endtime)
+
         return st
 
     def save_waveforms(self, filename, network, station, location, channel,
