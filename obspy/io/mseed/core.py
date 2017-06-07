@@ -495,7 +495,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
 
 
 def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
-                 sequence_number=None, flush=True, verbose=0, **_kwargs):
+                 sequence_number=None, flush=True, verbose=0, append=False,
+                 **_kwargs):
     """
     Write Mini-SEED file from a Stream object.
 
@@ -537,6 +538,10 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
     :type verbose: int, optional
     :param verbose: Controls verbosity, a value of ``0`` will result in no
         diagnostic output.
+    :type append: bool
+    :param append: Whether to append to the file if it exists, or overwrite
+        (default). Only has an effect if a filename is supplied (in contrast to
+        a file-like object)
 
     .. note::
         The ``reclen``, ``encoding``, ``byteorder`` and ``sequence_count``
@@ -812,7 +817,8 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
 
     # Open filehandler or use an existing file like object.
     if not hasattr(filename, 'write'):
-        f = open(filename, 'wb')
+        filemode = "a" if append else "w"
+        f = open(filename, filemode + 'b')
     else:
         f = filename
 
