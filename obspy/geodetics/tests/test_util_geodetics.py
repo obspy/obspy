@@ -283,7 +283,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         assert_loc_np([36.12, 36.12], [-86.67, -86.67], [33.94, 33.94],
                       [-118.40, -118.40], 2893, 2)
 
-        # test numpy broadcasting. As pytest is not installed let's
+        # test numpy broadcasting (bad shapes)
         with self.assertRaises(ValueError):
             locations2degrees(1, 2, [3, 4], [5, 6, 7])
 
