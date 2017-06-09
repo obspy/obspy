@@ -333,6 +333,10 @@ def locations2degrees(lat1, long1, lat2, long2):
     >>> locations2degrees(5, 5, 10, 10)
     7.0397014191753815
     """
+    # broadcast explicitly here so it raises once instead of somewhere in the
+    # middle if things can't be broadcast
+    lat1, lat2, long1, long2 = np.broadcast_arrays(lat1, lat2, long1, long2)
+
     # Convert to radians.
     lat1 = np.radians(np.asarray(lat1))
     lat2 = np.radians(np.asarray(lat2))
