@@ -649,7 +649,7 @@ class SEGYCoreTestCase(unittest.TestCase):
 
     def test_writing_text_and_binary_textual_file_headers(self):
         """
-        Make sure the textual file header can be written if has been passed 
+        Make sure the textual file header can be written if has been passed
         either as text or as a bytestring.
         """
         # Loop over bytes/text and the textual header encoding.
