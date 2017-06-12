@@ -315,15 +315,15 @@ def locations2degrees(lat1, long1, lat2, long2):
     Earth. For more accurate values use the geodesic distance calculations of
     geopy (https://github.com/geopy/geopy).
 
-    :type lat1: ``float or :class:`numpy.ndarray```
+    :type lat1: float or :class:`numpy.ndarray`
     :param lat1: Latitude(s) of point 1 in degrees
-    :type long1: ``float or :class:`numpy.ndarray```
+    :type long1: float or :class:`numpy.ndarray`
     :param long1: Longitude(s) of point 1 in degrees
-    :type lat2: ``float or :class:`numpy.ndarray```
+    :type lat2: float or :class:`numpy.ndarray`
     :param lat2: Latitude(s) of point 2 in degrees
-    :type long2: ``float or :class:`numpy.ndarray```
+    :type long2: float or :class:`numpy.ndarray`
     :param long2: Longitude(s) of point 2 in degrees
-    :rtype: ``float or :class:`numpy.ndarray```
+    :rtype: float or :class:`numpy.ndarray`
     :return: Distance in degrees as a floating point number,
         or numpy array of element-wise distances in degrees
 
