@@ -15,16 +15,15 @@ import warnings
 import numpy as np
 
 from obspy import UTCDateTime, read
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, AttribDict
 from obspy.io.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
                                 _is_segy, _is_su, _read_segy, _read_su,
                                 _write_segy, _write_su)
 from obspy.io.segy.segy import _read_segy as _read_segy_internal
 from obspy.io.segy.segy import SEGYError, SEGYFile, SEGYTrace, \
     SEGYBinaryFileHeader
+from obspy.io.segy.tests import _patch_header
 from obspy.io.segy.tests.header import DTYPES, FILES
-
-from . import _patch_header
 
 
 class SEGYCoreTestCase(unittest.TestCase):
@@ -647,6 +646,32 @@ class SEGYCoreTestCase(unittest.TestCase):
             st = read(buf, format="segy")
         # Results in 1970, 1, 1
         self.assertEqual(st[0].stats.starttime, UTCDateTime(0))
+
+    def test_writing_text_and_binary_textual_file_headers(self):
+        """
+        Make sure the textual file header can be written if has been passed
+        either as text or as a bytestring.
+        """
+        # Loop over bytes/text and the textual header encoding.
+        for textual_file_header in [b"12345", "12345"]:
+            for encoding in ["ASCII", "EBCDIC"]:
+                st = read()
+                for tr in st:
+                    tr.data = np.require(tr.data, dtype=np.float32)
+                st.stats = AttribDict()
+                st.stats.textual_file_header = textual_file_header
+                with io.BytesIO() as buf:
+                    # Warning raised to create a complete header.
+                    with warnings.catch_warnings(record=True):
+                        st.write(buf, format="SEGY", data_encoding=5,
+                                 textual_header_encoding=encoding)
+                    buf.seek(0, 0)
+                    # Read with SEG-Y to preserve the textual file header.
+                    st2 = _read_segy(buf)
+                self.assertEqual(
+                    # Ignore the auto-generated parts of the header.
+                    st2.stats.textual_file_header.decode().split()[0],
+                    "12345")
 
 
 def suite():
