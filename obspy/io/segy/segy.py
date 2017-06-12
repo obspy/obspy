@@ -311,7 +311,7 @@ class SEGYFile(object):
         # case the textual file header has no representation in ASCII - this
         # is then the users responsibility.
         if hasattr(textual_header, "encode"):
-            textual_header = textual_header.encode("ASCII")
+            textual_header = textual_header.encode()
 
         length = len(textual_header)
         # Append spaces to the end if its too short.
