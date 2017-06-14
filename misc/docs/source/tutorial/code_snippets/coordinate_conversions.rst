@@ -27,7 +27,7 @@ coordinates of two German stations to the regionally used Gauß-Krüger system:
 Another common usage is to convert location information in latitude and
 longitude to `Universal Transverse Mercator coordinate system (UTM)`_. This is
 especially useful for large dense array in a small area. Such conversion can
- be easily done using `utm`_ package. Below is its typical usages:
+be easily done using `utm`_ package. Below is its typical usages:
 
 .. doctest::
 
@@ -38,5 +38,5 @@ especially useful for large dense array in a small area. Such conversion can
     (51.51852098408468, 6.693872395145327)
 
 
-.. _`Universal Transverse Mercator coordinate system (UTM)`:https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system
+.. _`Universal Transverse Mercator coordinate system (UTM)`: https://enwikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system
 .. _`utm`: https://pypi.python.org/pypi/utm
