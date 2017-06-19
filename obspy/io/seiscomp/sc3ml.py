@@ -383,6 +383,8 @@ def _read_channel(inventory_root, cha_element, _ns):
                                 unit=True)
     depth = _read_floattype(cha_element, _ns("depth"), Distance,
                             unit=True)
+    # Set depth to 0 if it is missing (#1816)
+    if depth is None: depth = 0
     channel = obspy.core.inventory.Channel(
         code=code, location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
@@ -398,11 +400,11 @@ def _read_channel(inventory_root, cha_element, _ns):
     if sensor_element is not None:
         response_id = sensor_element.get("response")
         if response_id is not None:
-            resp_type = response_id.split("#")[0]
-            if resp_type == 'ResponsePAZ':
-                search = "responsePAZ[@publicID='" + response_id + "']"
-                response_element = inventory_root.find(_ns(search))
-            elif resp_type == 'ResponsePolynomial':
+            resp_type = 'ResponsePAZ'
+            search = "responsePAZ[@publicID='" + response_id + "']"
+            response_element = inventory_root.find(_ns(search))
+            if response_element is None:
+                resp_type == 'ResponsePolynomial'
                 search = "responsePolynomial[@publicID='" + response_id + "']"
                 response_element = inventory_root.find(_ns(search))
         else:
