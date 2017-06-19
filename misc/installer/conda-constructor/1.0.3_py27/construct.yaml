@@ -1,0 +1,31 @@
+name: ObsPy
+version: 1.0.3-py27_0
+
+channels:
+  - http://repo.continuum.io/pkgs/free/
+  - https://conda.anaconda.org/conda-forge
+  - https://conda.anaconda.org/obspy
+
+specs:
+  - python 2.7*
+  - conda
+  - ipython
+  - jupyter
+  - obspy 1.0.3
+  - nomkl          [not win]
+  - numpy
+  - scipy
+  - matplotlib
+  - basemap
+  - basemap-data-hires
+  - sqlalchemy
+  - gdal
+# - cryptography   # starting with obspy 1.1.0
+# - jsonschema     # starting with obspy 1.1.0
+# - geographiclib  # only available for linux-64
+
+license_file: ../../../../LICENSE.txt
+
+welcome_image: obspy_logo_no_text_highres.png  [win]
+header_image: obspy_powered_wide_170x70.png    [win]
+icon_image: obspy_logo_no_text_highres.png     [win]
