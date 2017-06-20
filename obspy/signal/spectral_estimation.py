@@ -1611,7 +1611,8 @@ class PPSD(object):
         :type grid: bool, optional
         :param grid: Enable/disable grid in histogram plot.
         :type show: bool, optional
-        :param show: Enable/disable immediately showing the plot.
+        :param show: Enable/disable immediately showing the plot. If
+            ``show=False``, then the matplotlib figure handle is returned.
         :type max_percentage: float, optional
         :param max_percentage: Maximum percentage to adjust the colormap. The
             default is 30% unless ``cumulative=True``, in which case this value
