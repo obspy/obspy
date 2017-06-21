@@ -73,7 +73,6 @@ def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
         msg = "Traces don't have the same sampling rate!"
         raise ValueError(msg)
     else:
-        ndat1 = st1[0].stats.npts
         sampfreq = st1[0].stats.sampling_rate
 
     # read waveforms
@@ -88,13 +87,15 @@ def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
     gg, _freq = _calc_resp(calib_file, nfft, sampfreq)
 
     # calculate number of windows and overlap
-    nwin = int(np.floor((ndat1 - nfft) / (nfft / 2)) + 1)
     noverlap = nfft * overlap_frac
 
     auto, _freq, _t = \
         spectral_helper(tr1, tr1, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
     cross, freq, _t = \
         spectral_helper(tr2, tr1, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
+
+    # get number of windows that were actually computed inside FFT routine
+    nwin = auto.shape[1]
 
     res = (cross / auto).sum(axis=1) * gg
 
