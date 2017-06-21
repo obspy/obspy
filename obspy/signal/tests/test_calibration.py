@@ -92,6 +92,8 @@ class CalibrationTestCase(unittest.TestCase):
     def test_relcal_different_overlaps(self):
         """
         Tests using different window overlap percentages.
+
+        Regression test for bug #1821.
         """
         st1 = read(os.path.join(self.path, 'ref_STS2'))
         st2 = read(os.path.join(self.path, 'ref_unknown'))
