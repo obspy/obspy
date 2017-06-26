@@ -12,17 +12,18 @@ specs:
   - ipython
   - jupyter
   - obspy 1.0.3
-  - nomkl          [not win]
+  - nomkl                [not win]
   - numpy
   - scipy
   - matplotlib
   - basemap
-  - basemap-data-hires
+# unfortunately no basemap-data-hires for linux32, because conda-forge is not packaging for linux32
+  - basemap-data-hires   [not linux32]
   - sqlalchemy
   - gdal
 # - cryptography   # starting with obspy 1.1.0
 # - jsonschema     # starting with obspy 1.1.0
-# - geographiclib  # only available for linux-64
+  - geographiclib        [linux64]
 
 license_file: ../../../../LICENSE.txt
 
