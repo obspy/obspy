@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.7" version="0.7">
+   <Inventory>
+      <stationGroup publicID="" code="ONSHORE">
+         <stationReference>Station#20170616231913.419725.36985</stationReference>
+         <stationReference>Station#20170616233605.314476.49028</stationReference>
+         <stationReference>Station#20170616233606.187949.35759</stationReference>
+         <stationReference>Station#20170616233607.098174.51968</stationReference>
+         <stationReference>Station#20170616233607.784064.39361</stationReference>
+         <stationReference>Station#20170616233608.413034.16006</stationReference>
+         <stationReference>Station#20170616233609.158301.46468</stationReference>
+         <stationReference>Station#20170616233609.878941.12356</stationReference>
+      </stationGroup>
+      <sensor publicID="NRL/Guralp/CMG3ESP.60.2000" name="Guralp/CMG3ESP.60.2000" response="NRL/Guralp/CMG3ESP.60.2000/1">
+         <model>CMG-3ESP</model>
+         <manufacturer>Guralp</manufacturer>
+         <unit>M/S</unit>
+      </sensor>
+      <datalogger publicID="NRL/Earth_Data/PS6_24.VL.100" name="Earth_Data/PS6_24.VL.100">
+         <digitizerModel>PR6-24</digitizerModel>
+         <digitizerManufacturer>Earth Data</digitizerManufacturer>
+         <recorderModel>PR6-24</recorderModel>
+         <recorderManufacturer>Earth Data</recorderManufacturer>
+         <gain>1</gain>
+         <maxClockDrift>0</maxClockDrift>
+         <decimation sampleRateNumerator="100" sampleRateDenominator="1">
+            <digitalFilterChain>NRL/Earth_Data/PS6_24.VL.100/3 NRL/Earth_Data/PS6_24.VL.100/4 NRL/Earth_Data/PS6_24.VL.100/5 NRL/Earth_Data/PS6_24.VL.100/6 NRL/Earth_Data/PS6_24.VL.100/7</digitalFilterChain>
+         </decimation>
+      </datalogger>
+      <responsePAZ publicID="NRL/Guralp/CMG3ESP.60.2000/1" name="NRL/Guralp/CMG3ESP.60.2000/1">
+         <type>A</type>
+         <gain>2000</gain>
+         <gainFrequency>1</gainFrequency>
+         <normalizationFactor>571508000</normalizationFactor>
+         <normalizationFrequency>1</normalizationFrequency>
+         <numberOfZeros>2</numberOfZeros>
+         <numberOfPoles>5</numberOfPoles>
+         <zeros>(0,0) (0,0)</zeros>
+         <poles>(-0.074016,0.074016) (-0.074016,-0.074016) (-502.65,0) (-1005,0) (-1131,0)</poles>
+      </responsePAZ>
+      <responseFIR publicID="NRL/Earth_Data/PS6_24.VL.100/3" name="NRL/Earth_Data/PS6_24.VL.100/3">
+         <gain>400000</gain>
+         <decimationFactor>1</decimationFactor>
+         <delay>0</delay>
+         <correction>0</correction>
+         <numberOfCoefficients>1</numberOfCoefficients>
+         <symmetry>A</symmetry>
+         <coefficients>1</coefficients>
+      </responseFIR>
+      <responseFIR publicID="NRL/Earth_Data/PS6_24.VL.100/4" name="NRL/Earth_Data/PS6_24.VL.100/4">
+         <gain>1</gain>
+         <decimationFactor>8</decimationFactor>
+         <delay>23.0000064</delay>
+         <correction>23.0000064</correction>
+         <numberOfCoefficients>47</numberOfCoefficients>
+         <symmetry>A</symmetry>
+         <coefficients>0 0 3.8147e-06 2.28882e-05 8.01086e-05 0.000213623 0.000480652 0.000961304 0.00176239 0.00302124 0.00488663 0.00749969 0.0109749 0.0153809 0.0207214 0.0269165 0.033783 0.0410156 0.0482254 0.0549774 0.0608292 0.0653687 0.0682526 0.0692444 0.0682526 0.0653687 0.0608292 0.0549774 0.0482254 0.0410156 0.033783 0.0269165 0.0207214 0.0153809 0.0109749 0.00749969 0.00488663 0.00302124 0.00176239 0.000961304 0.000480652 0.000213623 8.01086e-05 2.28882e-05 3.8147e-06 0 0</coefficients>
+      </responseFIR>
+      <responseFIR publicID="NRL/Earth_Data/PS6_24.VL.100/5" name="NRL/Earth_Data/PS6_24.VL.100/5">
+         <gain>1</gain>
+         <decimationFactor>8</decimationFactor>
+         <delay>36</delay>
+         <correction>36</correction>
+         <numberOfCoefficients>73</numberOfCoefficients>
+         <symmetry>A</symmetry>
+         <coefficients>7.86395e-07 2.15223e-06 4.09013e-06 6.42053e-06 7.613e-06 4.52134e-06 -8.38839e-06 -4.00745e-05 -0.000108702 -0.00023157 -0.000432673 -0.000741861 -0.00118635 -0.00178887 -0.00256156 -0.00349756 -0.00454784 -0.00564473 -0.00667437 -0.00746932 -0.00783206 -0.00753472 -0.0063348 -0.00399943 -0.000360688 0.00471408 0.0112572 0.0191611 0.0282115 0.0380655 0.0482646 0.0582654 0.0675164 0.0754318 0.0814859 0.0852972 0.0865986 0.0852972 0.0814859 0.0754318 0.0675164 0.0582654 0.0482646 0.0380655 0.0282115 0.0191611 0.0112572 0.00471408 -0.000360688 -0.00399943 -0.0063348 -0.00753472 -0.00783206 -0.00746932 -0.00667437 -0.00564473 -0.00454784 -0.00349756 -0.00256156 -0.00178887 -0.00118635 -0.000741861 -0.000432673 -0.00023157 -0.000108702 -4.00745e-05 -8.38839e-06 4.52134e-06 7.613e-06 6.42053e-06 4.09013e-06 2.15223e-06 7.86395e-07</coefficients>
+      </responseFIR>
+      <responseFIR publicID="NRL/Earth_Data/PS6_24.VL.100/6" name="NRL/Earth_Data/PS6_24.VL.100/6">
+         <gain>1</gain>
+         <decimationFactor>6</decimationFactor>
+         <delay>179.00001</delay>
+         <correction>179.00001</correction>
+         <numberOfCoefficients>359</numberOfCoefficients>
+         <symmetry>A</symmetry>
+         <coefficients>2.65528e-08 8.27442e-08 1.93254e-07 3.74066e-07 6.2077e-07 8.83322e-07 1.03141e-06 8.1306e-07 -1.87504e-07 -2.5832e-06 -7.19616e-06 -1.50346e-05 -2.72218e-05 -4.48688e-05 -6.8892e-05 -9.97854e-05 -0.000137374 -0.000180586 -0.00022729 -0.00027425 -0.000317238 -0.000351344 -0.00037147 -0.000372988 -0.000352492 -0.000308536 -0.000242236 -0.000157596 -6.14754e-05 3.69094e-05 0.000126929 0.000197863 0.000240442 0.0002484 0.000219762 0.000157631 7.02376e-05 -2.98274e-05 -0.000127193 -0.000205936 -0.00025214 -0.00025639 -0.000215742 -0.000134768 -2.53884e-05 9.4624e-05 0.000204322 0.000283086 0.000314396 0.000289186 0.000208138 8.23634e-05 -6.7798e-05 -0.000215832 -0.000333534 -0.000396216 -0.00038771 -0.000304158 -0.000155798 3.3839e-05 0.00023136 0.000399158 0.000502362 0.000515858 0.000429998 0.000253752 1.44939e-05 -0.000245872 -0.000477966 -0.000634048 -0.000677574 -0.000591306 -0.000382278 -8.23348e-05 0.000256218 0.000569382 0.000793268 0.000876816 0.000792962 0.000545886 0.000172572 -0.00026206 -0.000676018 -0.000985342 -0.00112076 -0.00104268 -0.000751298 -0.000289526 0.000262482 0.00080072 0.00121648 0.00141788 0.00134954 0.00100638 0.000438164 -0.000256578 -0.000947006 -0.00149407 -0.00177801 -0.00172383 -0.00131955 -0.000622994 0.00024514 0.00112136 0.00182952 0.0022156 0.00218032 0.00170295 0.000850782 -0.000228652 -0.00133207 -0.00223792 -0.00275004 -0.00273914 -0.00217332 -0.0011311 0.000207398 0.00159018 0.00273982 0.00340808 0.00342816 0.00275388 0.00147692 -0.000182664 -0.00191279 -0.00336658 -0.00423052 -0.00429026 -0.00348066 -0.00190891 0.000155796 0.00232614 0.00416736 0.00528232 0.0053946 0.0044128 0.0024617 -0.000128187 -0.00287338 -0.00522482 -0.00667448 -0.0068612 -0.0056545 -0.00319756 0.000101496 0.00363256 0.00669158 0.0086156 0.00891974 0.00740906 0.00424108 -7.70056e-05 -0.00476112 -0.008884 -0.0115484 -0.0120692 -0.0101293 -0.00587744 5.6192e-05 0.00663666 0.012586 0.0166073 0.0176348 0.0150654 0.0089288 -4.06734e-05 -0.0104501 -0.0204142 -0.0278216 -0.0306628 -0.0273692 -0.0171055 3.11476e-05 0.0229484 0.0496454 0.0774432 0.103327 0.124356 0.138068 0.142829 0.138068 0.124356 0.103327 0.0774432 0.0496454 0.0229484 3.11476e-05 -0.0171055 -0.0273692 -0.0306628 -0.0278216 -0.0204142 -0.0104501 -4.06734e-05 0.0089288 0.0150654 0.0176348 0.0166073 0.012586 0.00663666 5.6192e-05 -0.00587744 -0.0101293 -0.0120692 -0.0115484 -0.008884 -0.00476112 -7.70056e-05 0.00424108 0.00740906 0.00891974 0.0086156 0.00669158 0.00363256 0.000101496 -0.00319756 -0.0056545 -0.0068612 -0.00667448 -0.00522482 -0.00287338 -0.000128187 0.0024617 0.0044128 0.0053946 0.00528232 0.00416736 0.00232614 0.000155796 -0.00190891 -0.00348066 -0.00429026 -0.00423052 -0.00336658 -0.00191279 -0.000182664 0.00147692 0.00275388 0.00342816 0.00340808 0.00273982 0.00159018 0.000207398 -0.0011311 -0.00217332 -0.00273914 -0.00275004 -0.00223792 -0.00133207 -0.000228652 0.000850782 0.00170295 0.00218032 0.0022156 0.00182952 0.00112136 0.00024514 -0.000622994 -0.00131955 -0.00172383 -0.00177801 -0.00149407 -0.000947006 -0.000256578 0.000438164 0.00100638 0.00134954 0.00141788 0.00121648 0.00080072 0.000262482 -0.000289526 -0.000751298 -0.00104268 -0.00112076 -0.000985342 -0.000676018 -0.00026206 0.000172572 0.000545886 0.000792962 0.000876816 0.000793268 0.000569382 0.000256218 -8.23348e-05 -0.000382278 -0.000591306 -0.000677574 -0.000634048 -0.000477966 -0.000245872 1.44939e-05 0.000253752 0.000429998 0.000515858 0.000502362 0.000399158 0.00023136 3.3839e-05 -0.000155798 -0.000304158 -0.00038771 -0.000396216 -0.000333534 -0.000215832 -6.7798e-05 8.23634e-05 0.000208138 0.000289186 0.000314396 0.000283086 0.000204322 9.4624e-05 -2.53884e-05 -0.000134768 -0.000215742 -0.00025639 -0.00025214 -0.000205936 -0.000127193 -2.98274e-05 7.02376e-05 0.000157631 0.000219762 0.0002484 0.000240442 0.000197863 0.000126929 3.69094e-05 -6.14754e-05 -0.000157596 -0.000242236 -0.000308536 -0.000352492 -0.000372988 -0.00037147 -0.000351344 -0.000317238 -0.00027425 -0.00022729 -0.000180586 -0.000137374 -9.97854e-05 -6.8892e-05 -4.48688e-05 -2.72218e-05 -1.50346e-05 -7.19616e-06 -2.5832e-06 -1.87504e-07 8.1306e-07 1.03141e-06 8.83322e-07 6.2077e-07 3.74066e-07 1.93254e-07 8.27442e-08 2.65528e-08</coefficients>
+      </responseFIR>
+      <responseFIR publicID="NRL/Earth_Data/PS6_24.VL.100/7" name="NRL/Earth_Data/PS6_24.VL.100/7">
+         <gain>1</gain>
+         <decimationFactor>5</decimationFactor>
+         <delay>159</delay>
+         <correction>159</correction>
+         <numberOfCoefficients>319</numberOfCoefficients>
+         <symmetry>A</symmetry>
+         <coefficients>7.72762e-09 4.52378e-09 -5.3208e-08 -2.80036e-07 -9.08544e-07 -2.34472e-06 -5.21464e-06 -1.03793e-05 -1.88893e-05 -3.1855e-05 -5.02182e-05 -7.44366e-05 -0.000104124 -0.000137722 -0.000172307 -0.000203638 -0.000226532 -0.0002356 -0.000226268 -0.000195955 -0.000145142 -7.8038e-05 -2.5916e-06 7.03544e-05 0.000128752 0.000161671 0.000161835 0.000127774 6.50032e-05 -1.42499e-05 -9.29802e-05 -0.000152783 -0.000178068 -0.000160164 -0.000100242 -1.01214e-05 8.9556e-05 0.000173672 0.00021869 0.000209036 0.000142114 3.04418e-05 -0.000100068 -0.00021568 -0.000283208 -0.000279208 -0.000197535 -5.29412e-05 0.000120744 0.000278002 0.000373138 0.000373118 0.000268272 7.75194e-05 -0.000153942 -0.000364712 -0.000492968 -0.000494058 -0.000355056 -0.000101725 0.000204904 0.000482464 0.000648778 0.000645532 0.000457442 0.000120911 -0.000281414 -0.00064004 -0.000847708 -0.000830656 -0.00057318 -0.00012765 0.00039431 0.000848744 0.00109821 0.00105234 0.000698398 0.000111999 -0.000557036 -0.00112174 -0.00140922 -0.00131236 -0.000826764 -6.09068e-05 0.000785842 0.00147374 0.00178935 0.00161011 0.00094783 -4.36276e-05 -0.00110163 -0.00192275 -0.00224826 -0.00194359 -0.00104776 0.000224088 0.00152962 0.00248958 0.00279606 0.0023085 0.00110801 -0.000508938 -0.0021007 -0.00319878 -0.00344326 -0.00269684 -0.00110249 0.000936892 0.00285672 0.00408406 0.00420524 0.00309968 0.00099797 -0.00155873 -0.00385362 -0.00519124 -0.00510336 -0.0035044 -0.000746438 0.00244968 0.0051769 0.00659364 0.00617604 0.00389756 0.000277256 -0.00372784 -0.00696714 -0.00841784 -0.00749572 -0.00426426 0.000527466 0.00560328 0.00948592 0.0109107 0.00921506 0.00458962 -0.00189363 -0.00850506 -0.0132925 -0.0146243 -0.0116967 -0.00485962 0.0043487 0.0134983 0.0198472 0.021077 0.0160019 0.00506204 -0.00955078 -0.024203 -0.0345266 -0.0363864 -0.0268872 -0.00518748 0.0270918 0.0659838 0.10582 0.140281 0.163636 0.171897 0.163636 0.140281 0.10582 0.0659838 0.0270918 -0.00518748 -0.0268872 -0.0363864 -0.0345266 -0.024203 -0.00955078 0.00506204 0.0160019 0.021077 0.0198472 0.0134983 0.0043487 -0.00485962 -0.0116967 -0.0146243 -0.0132925 -0.00850506 -0.00189363 0.00458962 0.00921506 0.0109107 0.00948592 0.00560328 0.000527466 -0.00426426 -0.00749572 -0.00841784 -0.00696714 -0.00372784 0.000277256 0.00389756 0.00617604 0.00659364 0.0051769 0.00244968 -0.000746438 -0.0035044 -0.00510336 -0.00519124 -0.00385362 -0.00155873 0.00099797 0.00309968 0.00420524 0.00408406 0.00285672 0.000936892 -0.00110249 -0.00269684 -0.00344326 -0.00319878 -0.0021007 -0.000508938 0.00110801 0.0023085 0.00279606 0.00248958 0.00152962 0.000224088 -0.00104776 -0.00194359 -0.00224826 -0.00192275 -0.00110163 -4.36276e-05 0.00094783 0.00161011 0.00178935 0.00147374 0.000785842 -6.09068e-05 -0.000826764 -0.00131236 -0.00140922 -0.00112174 -0.000557036 0.000111999 0.000698398 0.00105234 0.00109821 0.000848744 0.00039431 -0.00012765 -0.00057318 -0.000830656 -0.000847708 -0.00064004 -0.000281414 0.000120911 0.000457442 0.000645532 0.000648778 0.000482464 0.000204904 -0.000101725 -0.000355056 -0.000494058 -0.000492968 -0.000364712 -0.000153942 7.75194e-05 0.000268272 0.000373118 0.000373138 0.000278002 0.000120744 -5.29412e-05 -0.000197535 -0.000279208 -0.000283208 -0.00021568 -0.000100068 3.04418e-05 0.000142114 0.000209036 0.00021869 0.000173672 8.9556e-05 -1.01214e-05 -0.000100242 -0.000160164 -0.000178068 -0.000152783 -9.29802e-05 -1.42499e-05 6.50032e-05 0.000127774 0.000161835 0.000161671 0.000128752 7.03544e-05 -2.5916e-06 -7.8038e-05 -0.000145142 -0.000195955 -0.000226268 -0.0002356 -0.000226532 -0.000203638 -0.000172307 -0.000137722 -0.000104124 -7.44366e-05 -5.02182e-05 -3.1855e-05 -1.88893e-05 -1.03793e-05 -5.21464e-06 -2.34472e-06 -9.08544e-07 -2.80036e-07 -5.3208e-08 4.52378e-09 7.72762e-09</coefficients>
+      </responseFIR>
+      <network publicID="Network#20170616231553.027432.3292" code="XZ">
+         <start>2017-01-17T23:18:47.0000Z</start>
+         <description>VOiLA - Volatile Cycling in the Lesser Antilles</description>
+         <institutions>University of Southampton, Imperial College London, University of Liverpool, Seismic Research Centre</institutions>
+         <region>Lesser Antilles</region>
+         <type>BB</type>
+         <station publicID="Station#20170616231913.419725.36985" code="FCVB" archiveNetworkCode="XZ">
+            <start>2017-06-16T00:00:00.0000Z</start>
+            <description>Headland overlooking Fancy, St. Vincent.</description>
+            <latitude>13.3815</latitude>
+            <longitude>-61.1659</longitude>
+            <elevation>80</elevation>
+            <place>Fancy</place>
+            <country>St Vincent and the Grenadines</country>
+            <affiliation>VOiLA consortium,</affiliation>
+            <type>BB</type>
+            <archive>University of Southa</archive>
+            <sensorLocation publicID="SensorLocation#20170616233641.316737.35827" code="00">
+               <start>2017-01-17T23:18:47.0000Z</start>
+               <stream code="HHZ" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-17T23:18:47.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <depth>0</depth>
+                  <azimuth>0</azimuth>
+                  <dip>-90</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+               </stream>
+               <stream code="HHN" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-17T23:18:47.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <depth>0</depth>
+                  <azimuth>0</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+               </stream>
+               <stream code="HHE" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-17T23:18:47.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <depth>0</depth>
+                  <azimuth>90</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+               </stream>
+            </sensorLocation>
+         </station>
+         <station publicID="Station#20170616233605.314476.49028" code="BEVB" archiveNetworkCode="XZ">
+            <start>2017-01-19T00:00:00.0000Z</start>
+            <description>Radio Hut, Hilltop, Cinnamon Gardens, Bequia</description>
+            <latitude>13.0208</latitude>
+            <longitude>-61.237</longitude>
+            <elevation>200</elevation>
+            <place>Bequia</place>
+            <country>St Vincent and the Grenadines</country>
+            <affiliation>VOiLA consortium,</affiliation>
+            <type>BB</type>
+            <archive>University of Southa</archive>
+            <sensorLocation publicID="SensorLocation#20170617021645.68226.55936" code="00">
+               <start>2017-01-19T00:00:00.0000Z</start>
+               <latitude>13.0208</latitude>
+               <longitude>-61.237</longitude>
+               <elevation>200</elevation>
+               <stream code="HHZ" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-19T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <depth>0</depth>
+                  <azimuth>0</azimuth>
+                  <dip>-90</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+               <stream code="HHN" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-19T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <depth>0</depth>
+                  <azimuth>0</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+               <stream code="HHE" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-19T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <depth>0</depth>
+                  <azimuth>90</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+            </sensorLocation>
+         </station>
+         <station publicID="Station#20170616233606.187949.35759" code="MUVB" archiveNetworkCode="XZ">
+            <start>2017-01-20T00:00:00.0000Z</start>
+            <description>Behind fire station near air strip, Mustique</description>
+            <latitude>12.8877</latitude>
+            <longitude>-61.1784</longitude>
+            <elevation>35</elevation>
+            <place>Mustique</place>
+            <country>St Vincent and the Grenadines</country>
+            <affiliation>VOiLA consortium,</affiliation>
+            <type>BB</type>
+            <archive>University of Southa</archive>
+            <sensorLocation publicID="SensorLocation#20170617021712.486865.28325" code="00">
+               <start>2017-01-20T00:00:00.0000Z</start>
+               <latitude>12.8877</latitude>
+               <longitude>-61.1784</longitude>
+               <elevation>35</elevation>
+               <stream code="HHZ" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-20T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <depth>0</depth>
+                  <azimuth>0</azimuth>
+                  <dip>-90</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+               <stream code="HHN" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-20T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <depth>0</depth>
+                  <azimuth>0</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+               <stream code="HHE" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-20T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <depth>0</depth>
+                  <azimuth>90</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+            </sensorLocation>
+         </station>
+         <station publicID="Station#20170616233607.098174.51968" code="CAVB" archiveNetworkCode="XZ">
+            <start>2017-01-21T00:00:00.0000Z</start>
+            <description>Unnamed Hilltop in south of island, Canouan</description>
+            <latitude>12.7043</latitude>
+            <longitude>-61.3251</longitude>
+            <elevation>100</elevation>
+            <place>Canouan</place>
+            <country>St Vincent and the Grenadines</country>
+            <affiliation>VOiLA consortium,</affiliation>
+            <type>BB</type>
+            <archive>University of Southa</archive>
+            <sensorLocation publicID="SensorLocation#20170617022823.021308.61411" code="00">
+               <start>2017-01-21T00:00:00.0000Z</start>
+               <latitude>12.7043</latitude>
+               <longitude>-61.3251</longitude>
+               <elevation>100</elevation>
+               <stream code="HHZ" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-21T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>0</azimuth>
+                  <dip>-90</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+               <stream code="HHN" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-21T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>0</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+               <stream code="HHE" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-21T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>90</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+            </sensorLocation>
+         </station>
+         <station publicID="Station#20170616233607.784064.39361" code="UNVB" archiveNetworkCode="XZ">
+            <start>2017-01-23T00:00:00.0000Z</start>
+            <description>Reservoir, Union Island</description>
+            <latitude>12.5975</latitude>
+            <longitude>-61.4217</longitude>
+            <elevation>150</elevation>
+            <place>Union Island</place>
+            <country>St Vincent and the Grenadines</country>
+            <affiliation>VOiLA consortium,</affiliation>
+            <type>BB</type>
+            <archive>University of Southa</archive>
+            <sensorLocation publicID="SensorLocation#20170617022924.38834.44939" code="00">
+               <start>2017-01-23T00:00:00.0000Z</start>
+               <latitude>12.5975</latitude>
+               <longitude>-61.4217</longitude>
+               <elevation>150</elevation>
+               <stream code="HHZ" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-23T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>0</azimuth>
+                  <dip>-90</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+               </stream>
+               <stream code="HHN" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-23T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>0</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+               </stream>
+               <stream code="HHE" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-23T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>90</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+               </stream>
+            </sensorLocation>
+         </station>
+         <station publicID="Station#20170616233608.413034.16006" code="CPVB" archiveNetworkCode="XZ">
+            <start>2017-01-25T00:00:00.0000Z</start>
+            <description>Forestry Headquarters, Campden Park, Kingstown</description>
+            <latitude>13.1696</latitude>
+            <longitude>-61.2418</longitude>
+            <elevation>30</elevation>
+            <place>Kingstown</place>
+            <country>St Vincent and the Grenadines</country>
+            <affiliation>VOiLA consortium,</affiliation>
+            <type>BB</type>
+            <archive>University of Southa</archive>
+            <sensorLocation publicID="SensorLocation#20170617023033.635549.59137" code="00">
+               <start>2017-01-25T00:00:00.0000Z</start>
+               <latitude>13.1696</latitude>
+               <longitude>-61.2418</longitude>
+               <elevation>30</elevation>
+               <stream code="HHZ" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-25T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>0</azimuth>
+                  <dip>-90</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+               <stream code="HHN" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-25T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>0</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+               <stream code="HHE" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-25T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>90</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+            </sensorLocation>
+         </station>
+         <station publicID="Station#20170616233609.158301.46468" code="FFGB" archiveNetworkCode="XZ">
+            <start>2017-01-26T00:00:00.0000Z</start>
+            <description>Seismic Vault behind NaDMA office, Fort Frederick, St. George’s</description>
+            <latitude>12.0492</latitude>
+            <longitude>-61.7375</longitude>
+            <elevation>225</elevation>
+            <place>St Georges</place>
+            <country>Grenada</country>
+            <affiliation>VOiLA consortium,</affiliation>
+            <type>BB</type>
+            <archive>University of Southa</archive>
+            <sensorLocation publicID="SensorLocation#20170617023126.203483.21266" code="00">
+               <start>2017-01-26T00:00:00.0000Z</start>
+               <latitude>12.0492</latitude>
+               <longitude>-61.7375</longitude>
+               <elevation>225</elevation>
+               <stream code="HHZ" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-26T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>0</azimuth>
+                  <dip>-90</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+               <stream code="HHN" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-26T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>0</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+               <stream code="HHE" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-26T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>90</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+            </sensorLocation>
+         </station>
+         <station publicID="Station#20170616233609.878941.12356" code="SOLB" archiveNetworkCode="XZ">
+            <start>2017-01-28T00:00:00.0000Z</start>
+            <description>Hilltop near Soufriere</description>
+            <latitude>13.8276</latitude>
+            <longitude>-61.0412</longitude>
+            <elevation>505</elevation>
+            <place>Soufriere</place>
+            <country>Saint Lucia</country>
+            <affiliation>VOiLA consortium,</affiliation>
+            <type>BB</type>
+            <archive>University of Southa</archive>
+            <sensorLocation publicID="SensorLocation#20170617021610.082275.43343" code="00">
+               <start>2017-01-28T00:00:00.0000Z</start>
+               <latitude>13.8276</latitude>
+               <longitude>-61.0412</longitude>
+               <elevation>505</elevation>
+               <stream code="HHZ" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-28T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>0</azimuth>
+                  <dip>-90</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+               <stream code="HHN" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-28T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>0</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+               <stream code="HHE" datalogger="NRL/Earth_Data/PS6_24.VL.100" sensor="NRL/Guralp/CMG3ESP.60.2000">
+                  <start>2017-01-28T00:00:00.0000Z</start>
+                  <sampleRateNumerator>100</sampleRateNumerator>
+                  <sampleRateDenominator>1</sampleRateDenominator>
+                  <azimuth>90</azimuth>
+                  <dip>0</dip>
+                  <gain>800000000</gain>
+                  <gainFrequency>1</gainFrequency>
+                  <gainUnit>M/S</gainUnit>
+                  <format>MSEED</format>
+               </stream>
+            </sensorLocation>
+         </station>
+      </network>
+   </Inventory>
+</seiscomp>
