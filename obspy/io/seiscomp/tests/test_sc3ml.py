@@ -115,7 +115,6 @@ class SC3MLTestCase(unittest.TestCase):
             self.assertEqual(str(w[3].message), "Channel is missing depth "
                                                 "information, using 0.0")
 
-
     def test_compare_upper_level(self):
         """
         Assert the top-level contents of the two dictionaries

@@ -421,15 +421,15 @@ def _read_channel(inventory_root, cha_element, _ns):
 
         for resp_type in ['responsePAZ', 'responsePolynomial']:
             search = "{}[@publicID='{}']".format(resp_type, response_id)
-            response_elements += inventory_root.findall(_ns(search)) 
+            response_elements += inventory_root.findall(_ns(search))
         if len(response_elements) == 0:
             msg = ("Could not find response tag with public ID "
                    "'{}'.".format(response_id))
-            raise ObsPyException(msg)
+            raise obspy.ObsPyException(msg)
         elif len(response_elements) > 1:
             msg = ("Found multiple matching response tags with the same "
                    "public ID '{}'.".format(response_id))
-            raise ObsPyException(msg)
+            raise obspy.ObsPyException(msg)
         response_element = response_elements[0]
     else:
         response_element = None
