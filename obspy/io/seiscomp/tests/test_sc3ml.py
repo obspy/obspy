@@ -104,14 +104,16 @@ class SC3MLTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             read_inventory(os.path.join(self.data_dir,
                                         "sc3ml_empty_depth_and_id.sc3ml"))
-            self.assertEqual(str(w[0].message),
-                             "Sensor is missing longitude information, using 0.0")
-            self.assertEqual(str(w[1].message),
-                             "Sensor is missing latitude information, using 0.0")
-            self.assertEqual(str(w[2].message),
-                             "Sensor is missing elevation information, using 0.0")
-            self.assertEqual(str(w[3].message),
-                             "Channel is missing depth information, using 0.0")
+            self.assertEqual(str(w[0].message), "Sensor is missing "
+                                                "longitude information, "
+                                                "using 0.0")
+            self.assertEqual(str(w[1].message), "Sensor is missing "
+                                                "latitude information, "
+                                                "using 0.0")
+            self.assertEqual(str(w[2].message), "Sensor is missing elevation "
+                                                "information, using 0.0")
+            self.assertEqual(str(w[3].message), "Channel is missing depth "
+                                                "information, using 0.0")
 
 
     def test_compare_upper_level(self):
