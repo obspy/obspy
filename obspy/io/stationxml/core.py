@@ -825,7 +825,7 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
 
     etree.SubElement(root, "Created").text = _format_time(inventory.created)
 
-    level = kwargs.get("level") or "response"
+    level = kwargs.get("level", "response")
     if level not in ["network", "station", "channel", "response"]:
         raise ValueError("Requested stationXML write level is unsupported.")
 
