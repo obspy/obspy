@@ -383,7 +383,8 @@ def _pack_trace_wout_ah_dict(tr, packer, codesize, chansize,
 
     # Poles and Zeros are not provided by stream object, are set to 0
     if hasattr(tr.stats, 'response'):
-        poles, zeros = tr.stats.response.get_paz()
+        poles = tr.stats.response.get_paz().poles
+        zeros = tr.stats.response.get_paz().zeros
         packer.pack_float(len(poles))
         packer.pack_float(0)
         packer.pack_float(len(zeros))
