@@ -59,6 +59,18 @@ class SC3MLTestCase(unittest.TestCase):
 
         self.assertEqual(e.exception.args[0], "Schema version not supported.")
 
+    def test_channel_level(self):
+        """
+        Test inventory without repsonse information up to
+        channel level
+        """
+        inv = read_inventory(os.path.join(self.data_dir,
+                                          "channel_level.sc3ml"))
+        self.assertEqual(inv[0].code, "NL")
+        self.assertEqual(inv[0][0].code, "HGN")
+        for cha in inv[0][0].channels:
+            self.assertTrue(cha.code in ["BHE", "BHN", "BHZ"])
+
     def test_compare_xml(self):
         """
         Easiest way to compare is to write both Inventories back
