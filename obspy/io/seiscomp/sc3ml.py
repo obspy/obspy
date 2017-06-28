@@ -411,10 +411,10 @@ def _read_channel(inventory_root, cha_element, _ns):
     sensor_id = cha_element.get("sensor")
     sensor_element = inventory_root.find(_ns("sensor[@publicID='" + sensor_id +
                                              "']"))
-
     # obtain the poles and zeros responseID and link to particular
     # <responsePAZ> publicID element in the inventory base node
-    if sensor_element is not None:
+    if (sensor_element is not None and
+       sensor_element.get("response") is not None):
 
         response_id = sensor_element.get("response")
         response_elements = []
