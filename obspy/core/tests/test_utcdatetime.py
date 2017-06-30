@@ -5,6 +5,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import copy
 import datetime
+import os
 import unittest
 
 import numpy as np
@@ -16,6 +17,9 @@ class UTCDateTimeTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.utcdatetime.UTCDateTime.
     """
+    def setUp(self):
+        self.data_path = os.path.join(os.path.dirname(__file__), 'data')
+
     def test_from_string(self):
         """
         Tests initialization from a given time string not ISO8601 compatible.
@@ -1122,6 +1126,26 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertTrue(e >= a)
         self.assertFalse(a == e)
         self.assertFalse(e == a)
+
+    def test_load_numpy_binary_with_utcdatetime(self):
+        """
+        Test that loading numpy binaries with pickled UTCDateTime objects that
+        were written on ObsPy 1.0 works.
+
+        utcdatetime_numpy_save_obspy_10.npy was created on Python 2.7 on ObsPy
+        1.0.2:
+        ```
+        x = np.array([UTCDateTime(2016, 1, 1), UTCDateTime(2017, 1, 1),
+                      UTCDateTime(2018, 1, 1)])
+        np.save('utcdatetime_numpy_save_obspy_10.npy', x)
+        ```
+        """
+        file_ = os.path.join(self.data_path,
+                             'utcdatetime_numpy_save_obspy_10.npy')
+        data = np.load(file_)
+        expected = [UTCDateTime(year, 1, 1) for year in (2016, 2017, 2018)]
+        for expected_, got in zip(expected, data):
+            self.assertEqual(expected_, got)
 
 
 def suite():
