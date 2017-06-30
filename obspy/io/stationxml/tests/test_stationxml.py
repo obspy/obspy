@@ -100,7 +100,7 @@ class StationXMLTestCase(unittest.TestCase):
         inv = obspy.read_inventory(filename)
 
         # Write to network level
-        file_buffer = io.BytesIO();
+        file_buffer = io.BytesIO()
         inv.write(file_buffer, format="StationXML", level="network")
         file_buffer.seek(0, 0)
 
@@ -112,7 +112,7 @@ class StationXMLTestCase(unittest.TestCase):
             self.assertTrue(len(net.stations) == 0)
 
         # Write to station level
-        file_buffer = io.BytesIO();
+        file_buffer = io.BytesIO()
         inv.write(file_buffer, format="StationXML", level="station")
         file_buffer.seek(0, 0)
 
@@ -124,7 +124,7 @@ class StationXMLTestCase(unittest.TestCase):
                 self.assertTrue(len(sta.channels) == 0)
 
         # Write to channel level
-        file_buffer = io.BytesIO();
+        file_buffer = io.BytesIO()
         inv.write(file_buffer, format="StationXML", level="channel")
         file_buffer.seek(0, 0)
 
@@ -136,7 +136,7 @@ class StationXMLTestCase(unittest.TestCase):
                 self.assertTrue(len(sta.channels) == len(inv[0][0].channels))
                 for cha in sta.channels:
                     self.assertTrue(cha.response is None)
-        
+ 
     def test_read_and_write_minimal_file(self):
         """
         Test that writing the most basic StationXML document possible works.
