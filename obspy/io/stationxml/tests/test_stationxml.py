@@ -136,7 +136,7 @@ class StationXMLTestCase(unittest.TestCase):
                 self.assertTrue(len(sta.channels) == len(inv[0][0].channels))
                 for cha in sta.channels:
                     self.assertTrue(cha.response is None)
- 
+
     def test_read_and_write_minimal_file(self):
         """
         Test that writing the most basic StationXML document possible works.
