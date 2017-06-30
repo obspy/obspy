@@ -59,6 +59,18 @@ class SC3MLTestCase(unittest.TestCase):
 
         self.assertEqual(e.exception.args[0], "Schema version not supported.")
 
+    def test_channel_level(self):
+        """
+        Test inventory without repsonse information up to
+        channel level
+        """
+        inv = read_inventory(os.path.join(self.data_dir,
+                                          "channel_level.sc3ml"))
+        self.assertEqual(inv[0].code, "NL")
+        self.assertEqual(inv[0][0].code, "HGN")
+        for cha in inv[0][0].channels:
+            self.assertTrue(cha.code in ["BHE", "BHN", "BHZ"])
+
     def test_compare_xml(self):
         """
         Easiest way to compare is to write both Inventories back
@@ -96,6 +108,24 @@ class SC3MLTestCase(unittest.TestCase):
             if(sc3ml != stationxml):
                 tag = str(stationxml).split(">")[0][1:]
                 assert(tag in excluded_tags)
+
+    def test_empty_depth(self):
+        """
+        Assert depth, latitude, longitude, elevation set to 0.0 if left empty
+        """
+        with warnings.catch_warnings(record=True) as w:
+            read_inventory(os.path.join(self.data_dir,
+                                        "sc3ml_empty_depth_and_id.sc3ml"))
+            self.assertEqual(str(w[0].message), "Sensor is missing "
+                                                "longitude information, "
+                                                "using 0.0")
+            self.assertEqual(str(w[1].message), "Sensor is missing "
+                                                "latitude information, "
+                                                "using 0.0")
+            self.assertEqual(str(w[2].message), "Sensor is missing elevation "
+                                                "information, using 0.0")
+            self.assertEqual(str(w[3].message), "Channel is missing depth "
+                                                "information, using 0.0")
 
     def test_compare_upper_level(self):
         """

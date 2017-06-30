@@ -383,6 +383,25 @@ def _read_channel(inventory_root, cha_element, _ns):
                                 unit=True)
     depth = _read_floattype(cha_element, _ns("depth"), Distance,
                             unit=True)
+
+    # Set values to 0 if they are is missing (see #1816)
+    if longitude is None:
+        msg = "Sensor is missing longitude information, using 0.0"
+        warnings.warn(msg)
+        longitude = 0
+    if latitude is None:
+        msg = "Sensor is missing latitude information, using 0.0"
+        warnings.warn(msg)
+        latitude = 0
+    if elevation is None:
+        msg = "Sensor is missing elevation information, using 0.0"
+        warnings.warn(msg)
+        elevation = 0
+    if depth is None:
+        msg = "Channel is missing depth information, using 0.0"
+        warnings.warn(msg)
+        depth = 0
+
     channel = obspy.core.inventory.Channel(
         code=code, location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
@@ -392,21 +411,26 @@ def _read_channel(inventory_root, cha_element, _ns):
     sensor_id = cha_element.get("sensor")
     sensor_element = inventory_root.find(_ns("sensor[@publicID='" + sensor_id +
                                              "']"))
-
     # obtain the poles and zeros responseID and link to particular
     # <responsePAZ> publicID element in the inventory base node
-    if sensor_element is not None:
+    if (sensor_element is not None and
+       sensor_element.get("response") is not None):
+
         response_id = sensor_element.get("response")
-        if response_id is not None:
-            resp_type = response_id.split("#")[0]
-            if resp_type == 'ResponsePAZ':
-                search = "responsePAZ[@publicID='" + response_id + "']"
-                response_element = inventory_root.find(_ns(search))
-            elif resp_type == 'ResponsePolynomial':
-                search = "responsePolynomial[@publicID='" + response_id + "']"
-                response_element = inventory_root.find(_ns(search))
-        else:
-            response_element = None
+        response_elements = []
+
+        for resp_type in ['responsePAZ', 'responsePolynomial']:
+            search = "{}[@publicID='{}']".format(resp_type, response_id)
+            response_elements += inventory_root.findall(_ns(search))
+        if len(response_elements) == 0:
+            msg = ("Could not find response tag with public ID "
+                   "'{}'.".format(response_id))
+            raise obspy.ObsPyException(msg)
+        elif len(response_elements) > 1:
+            msg = ("Found multiple matching response tags with the same "
+                   "public ID '{}'.".format(response_id))
+            raise obspy.ObsPyException(msg)
+        response_element = response_elements[0]
     else:
         response_element = None
 
