@@ -755,7 +755,7 @@ def _read_phone(phone_element, _ns):
 
 
 def _write_stationxml(inventory, file_or_file_object, validate=False,
-                      nsmap=None, **kwargs):
+                      nsmap=None, level="response", **kwargs):
     """
     Writes an inventory object to a buffer.
     :type inventory: :class:`~obspy.core.inventory.Inventory`
@@ -825,8 +825,11 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
 
     etree.SubElement(root, "Created").text = _format_time(inventory.created)
 
+    if level not in ["network", "station", "channel", "response"]:
+        raise ValueError("Requested stationXML write level is unsupported.")
+
     for network in inventory.networks:
-        _write_network(root, network)
+        _write_network(root, network, level)
 
     # Add custom namespace tags to root element
     _write_extra(root, inventory)
@@ -882,7 +885,7 @@ def _write_base_node(element, object_to_read_from):
     _write_extra(element, object_to_read_from)
 
 
-def _write_network(parent, network):
+def _write_network(parent, network, level):
     """
     Helper function converting a Network instance to an etree.Element.
     """
@@ -898,8 +901,11 @@ def _write_network(parent, network):
         etree.SubElement(network_elem, "SelectedNumberStations").text = \
             str(network.selected_number_of_stations)
 
+    if level == "network":
+        return
+
     for station in network.stations:
-        _write_station(network_elem, station)
+        _write_station(network_elem, station, level)
 
 
 def _write_floattype(parent, obj, attr_name, tag, additional_mapping={}):
@@ -992,7 +998,7 @@ def _write_polezero_list(parent, obj):
     _write_extra(parent, obj)
 
 
-def _write_station(parent, station):
+def _write_station(parent, station, level):
     # Write the base node type fields.
     attribs = _get_base_node_attributes(station)
     station_elem = etree.SubElement(parent, "Station", attribs)
@@ -1034,11 +1040,14 @@ def _write_station(parent, station):
     for ref in station.external_references:
         _write_external_reference(station_elem, ref)
 
+    if level == "station":
+        return
+
     for channel in station.channels:
-        _write_channel(station_elem, channel)
+        _write_channel(station_elem, channel, level)
 
 
-def _write_channel(parent, channel):
+def _write_channel(parent, channel, level):
     # Write the base node type fields.
     attribs = _get_base_node_attributes(channel)
     attribs['locationCode'] = channel.location_code
@@ -1092,6 +1101,10 @@ def _write_channel(parent, channel):
     _write_equipment(channel_elem, channel.pre_amplifier, "PreAmplifier")
     _write_equipment(channel_elem, channel.data_logger, "DataLogger")
     _write_equipment(channel_elem, channel.equipment, "Equipment")
+
+    if level == "channel":
+        return
+
     if channel.response is not None:
         _write_response(channel_elem, channel.response)
 
