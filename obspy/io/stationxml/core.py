@@ -755,7 +755,7 @@ def _read_phone(phone_element, _ns):
 
 
 def _write_stationxml(inventory, file_or_file_object, validate=False,
-                      nsmap=None, **kwargs):
+                      nsmap=None, level="response", **kwargs):
     """
     Writes an inventory object to a buffer.
     :type inventory: :class:`~obspy.core.inventory.Inventory`
@@ -825,7 +825,6 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
 
     etree.SubElement(root, "Created").text = _format_time(inventory.created)
 
-    level = kwargs.get("level", "response")
     if level not in ["network", "station", "channel", "response"]:
         raise ValueError("Requested stationXML write level is unsupported.")
 
