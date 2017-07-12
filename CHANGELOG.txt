@@ -98,6 +98,7 @@ master: (doi: 10.5281/zenodo.165135)
       follow the example of big data centers. (see #1572)
     * Level of detail can be specified during inventory write (see #1830)
       using the level keyword (one of: network, station, channel, response).
+    * Skip empty and incomplete channels during reading (see #1839, #1840).
  - obspy.io.segy:
     * Fixing an issue when comparing two still packed SEG-Y trace headers
       (see #1735).
