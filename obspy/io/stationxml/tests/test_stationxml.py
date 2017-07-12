@@ -21,6 +21,7 @@ import re
 import unittest
 import warnings
 
+import obspy
 from obspy.core.util import AttribDict
 from obspy.core.inventory import Inventory, Network
 from obspy.core.util.base import NamedTemporaryFile
@@ -1054,6 +1055,18 @@ class StationXMLTestCase(unittest.TestCase):
                 self.assertIn(line, content)
             # now, read again to test if it's parsed correctly..
             inv = obspy.read_inventory(tmpfile)
+
+    def test_reading_file_with_empty_channel_object(self):
+        """
+        Tests reading a file with an empty channel object. This is strictly
+        speaking not valid but we are forgiving.
+        """
+        filename = os.path.join(self.data_dir, "empty_channel.xml")
+        inv = obspy.read_inventory(filename)
+        self.assertEqual(
+            inv.get_contents(),
+            {'networks': ['IV'], 'stations': ['IV.LATE (Latera)'],
+             'channels': []})
 
 
 def suite():

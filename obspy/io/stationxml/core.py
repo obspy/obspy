@@ -235,6 +235,9 @@ def _read_station(sta_element, _ns):
         station.external_references.append(_read_external_reference(ref, _ns))
     channels = []
     for channel in sta_element.findall(_ns("Channel")):
+        # Skip empty channels.
+        if not channel.items() and not channel.attrib:
+            continue
         channels.append(_read_channel(channel, _ns))
     station.channels = channels
     return station
