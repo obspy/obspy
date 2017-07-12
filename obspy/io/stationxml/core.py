@@ -238,7 +238,10 @@ def _read_station(sta_element, _ns):
         # Skip empty channels.
         if not channel.items() and not channel.attrib:
             continue
-        channels.append(_read_channel(channel, _ns))
+        cha = _read_channel(channel, _ns)
+        # Might be None in case the channel could not be parsed.
+        if cha is not None:
+            channels.append(cha)
     station.channels = channels
     return station
 
@@ -296,6 +299,9 @@ def _read_floattype_list(parent, tag, cls, unit=False, datum=False,
 
 
 def _read_channel(cha_element, _ns):
+    code = cha_element.get("code")
+    location_code = cha_element.get("locationCode")
+
     longitude = _read_floattype(cha_element, _ns("Longitude"), Longitude,
                                 datum=True)
     latitude = _read_floattype(cha_element, _ns("Latitude"), Latitude,
@@ -303,8 +309,14 @@ def _read_channel(cha_element, _ns):
     elevation = _read_floattype(cha_element, _ns("Elevation"), Distance,
                                 unit=True)
     depth = _read_floattype(cha_element, _ns("Depth"), Distance, unit=True)
-    code = cha_element.get("code")
-    location_code = cha_element.get("locationCode")
+
+    if None in [longitude, latitude, elevation, depth]:
+        msg = ("Channel %s.%s does not have a complete set of coordinates and "
+               "thus it cannot be read. It will not be part of the final "
+               "inventory object." % (location_code, code))
+        warnings.warn(msg, UserWarning)
+        return None
+
     channel = obspy.core.inventory.Channel(
         code=code, location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
