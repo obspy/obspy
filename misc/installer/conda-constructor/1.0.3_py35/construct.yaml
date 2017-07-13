@@ -25,7 +25,7 @@ specs:
 # - jsonschema     # starting with obspy 1.1.0
   - geographiclib        [linux64]
 
-license_file: ../../../../LICENSE.txt
+license_file: ../../../../obspy/LICENSE.txt
 
 welcome_image: obspy_logo_no_text_highres.png  [win]
 header_image: obspy_powered_wide_170x70.png    [win]
