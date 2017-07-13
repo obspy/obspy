@@ -2503,6 +2503,83 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             time_array = np.ma.array(time_array, mask=self.data.mask)
         return time_array
 
+    def _get_coordinates(self, inventories):
+        """
+        Search for and return channel coordinates for the trace.
+
+        :type inventories: :class:`~obspy.core.inventory.inventory.Inventory`
+            or :class:`~obspy.core.inventory.network.Network` or a list
+            containing objects of these types or a string with a filename of
+            a StationXML file.
+        :param inventories: Station metadata to use in search for coordinates
+            for each trace in the stream.
+        :returns: `coordinates` object
+        """
+        from collections import Mapping
+        if inventories is None and 'coordinates' in self.stats:
+            # check if coordinates is dictionary-like
+            if not isinstance(self.stats.coordinates, Mapping):
+                msg = ("Coordinates attached to Trace.stats must be a "
+                       "dictionary, or a dictionary-like object "
+                       "(but is of type %s).") % type(self.stats.coordinates)
+                raise TypeError(msg)
+            return self.stats.coordinates
+        elif inventories is None:
+            msg = ('No coordinates found. Use `inventory` '
+                   'parameter to specify an inventory with coordinates.')
+            raise ValueError(msg)
+        from obspy.core.inventory import Inventory, Network, read_inventory
+        if isinstance(inventories, Inventory) or \
+           isinstance(inventories, Network):
+            inventories = [inventories]
+        elif isinstance(inventories, (str, native_str)):
+            inventories = [read_inventory(inventories)]
+        coordinates = []
+        for inv in inventories:
+            try:
+                _coords = AttribDict(
+                    inv.get_coordinates(self.id, self.stats.starttime))
+                coordinates.append(_coords)
+            except Exception:
+                pass
+        if len(coordinates) > 1:
+            msg = "Found more than one matching coordinates. Using first."
+            warnings.warn(msg)
+        elif len(coordinates) < 1:
+            msg = "No matching coordinates found."
+            raise ValueError(msg)
+        return coordinates[0]
+
+    def attach_coordinates(self, inventories):
+        """
+        Search for and attach channel coordinates to the trace as
+        :class:`Trace`.stats.coordinates. Raises an exception if no matching
+        coordinates can be found.
+
+        >>> from obspy import read, read_inventory
+        >>> st = read()
+        >>> tr = st[0]
+        >>> inv = read_inventory()
+        >>> tr.attach_coordinates(inv)
+        >>> print(tr.stats.coordinates.latitude)  \
+                # doctest: +NORMALIZE_WHITESPACE
+        47.737167
+        >>> print(tr.stats.coordinates.longitude)  \
+                # doctest: +NORMALIZE_WHITESPACE
+        12.795714
+        >>> print(tr.stats.coordinates.elevation)  \
+                # doctest: +NORMALIZE_WHITESPACE
+        860.0
+
+        :type inventories: :class:`~obspy.core.inventory.inventory.Inventory`
+            or :class:`~obspy.core.inventory.network.Network` or a list
+            containing objects of these types or a string with a filename of
+            a StationXML file.
+        :param inventories: Station metadata to use in search for coordinates
+            for each trace in the stream.
+        """
+        self.stats.coordinates = self._get_coordinates(inventories)
+
     def _get_response(self, inventories):
         """
         Search for and return channel response for the trace.

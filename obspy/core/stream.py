@@ -2949,6 +2949,50 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return new_stream
 
     @map_example_filename("inventories")
+    def attach_coordinates(self, inventories):
+        """
+        Search for and attach channel coordinates to each trace as
+        trace.stats.coordinates. Does not raise an exception but shows a
+        warning if channel coordinates can not be found for all traces.
+        Returns a list of traces for which no coordinates could be found.
+
+        >>> from obspy import read, read_inventory
+        >>> st = read()
+        >>> inv = read_inventory()
+        >>> st.attach_coordinates(inv)
+        []
+        >>> tr = st[0]
+        >>> print(tr.stats.coordinates.latitude)  \
+                # doctest: +NORMALIZE_WHITESPACE
+        47.737167
+        >>> print(tr.stats.coordinates.longitude)  \
+                # doctest: +NORMALIZE_WHITESPACE
+        12.795714
+        >>> print(tr.stats.coordinates.elevation)  \
+                # doctest: +NORMALIZE_WHITESPACE
+        860.0
+
+        :type inventories: :class:`~obspy.core.inventory.inventory.Inventory`
+            or :class:`~obspy.core.inventory.network.Network` or a list
+            containing objects of these types.
+        :param inventories: Station metadata to use in search for coordinates
+            for each trace in the stream.
+        :rtype: list of :class:`~obspy.core.trace.Trace`
+        :returns: list of traces for which no coordinates could befound.
+        """
+        skipped_traces = []
+        for tr in self.traces:
+            try:
+                tr.attach_coordinates(inventories)
+            except Exception as e:
+                if str(e) == "No matching coordinates found.":
+                    warnings.warn(str(e))
+                    skipped_traces.append(tr)
+                else:
+                    raise
+        return skipped_traces
+
+    @map_example_filename("inventories")
     def attach_response(self, inventories):
         """
         Search for and attach channel response to each trace as
