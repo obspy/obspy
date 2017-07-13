@@ -12,6 +12,7 @@ specs:
   - ipython
   - jupyter
   - obspy 1.0.3
+  - mkl 2017.0.3         [win]
   - nomkl                [not win]
   - numpy 1.13.1
   - scipy 0.19.1
