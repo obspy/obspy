@@ -13,10 +13,10 @@ specs:
   - jupyter
   - obspy 1.0.3
   - nomkl          [not win]
-  - numpy
-  - scipy
-  - matplotlib
-  - basemap
+  - numpy 1.13.1
+  - scipy 0.19.1
+  - matplotlib 1.5.3
+  - basemap 1.1.0
 # unfortunately no basemap-data-hires for linux32, because conda-forge is not packaging for linux32
   - basemap-data-hires   [not linux32]
   - sqlalchemy
