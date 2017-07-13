@@ -16,7 +16,8 @@ specs:
   - obspy 1.0.3
   - numpy 1.13.1         [not linux32]
   - numpy 1.10.4         [linux32]
-  - scipy 0.19.1
+  - scipy 0.19.1         [not linux32]
+  - scipy 0.17.1         [linux32]
   - matplotlib 1.5.3     [not linux32]
   - matplotlib 1.5.1     [linux32]
 # newer basemap not yet in defaults and conda-forge has no linux32 builds
