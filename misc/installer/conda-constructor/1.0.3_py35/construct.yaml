@@ -17,7 +17,9 @@ specs:
   - numpy 1.13.1
   - scipy 0.19.1
   - matplotlib 1.5.3
-  - basemap 1.1.0
+# newer basemap not yet in defaults and conda-forge has no linux32 builds
+  - basemap 1.1.0        [not linux32]
+  - basemap 1.0.7        [linux32]
 # unfortunately no basemap-data-hires for linux32, because conda-forge is not packaging for linux32
   - basemap-data-hires   [not linux32]
   - sqlalchemy
