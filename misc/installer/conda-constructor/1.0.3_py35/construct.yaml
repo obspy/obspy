@@ -1,5 +1,5 @@
 name: ObsPy
-version: 1.0.3-py35_2
+version: 1.0.3-py35_3
 
 channels:
   - http://repo.continuum.io/pkgs/free/
@@ -9,7 +9,7 @@ channels:
 specs:
   - python 3.5*
   - conda
-  - mkl 2017.0.3         [win]
+  - mkl 2017.0.1         [win]
   - nomkl                [not win]
   - ipython
   - jupyter
