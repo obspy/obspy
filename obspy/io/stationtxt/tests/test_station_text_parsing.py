@@ -722,7 +722,7 @@ class StationTextTestCase(unittest.TestCase):
                                 sample_rate=0.0,
                                 sensor=Equipment(
                                     description="Geotech KS-36000-I Borehole "
-                                         "Seismometer"),
+                                                "Seismometer"),
                                 start_date=obspy.UTCDateTime(
                                     "1989-08-29T00:00:00"),
                                 end_date=obspy.UTCDateTime(
