@@ -58,10 +58,12 @@ as FDSNBulkRequests
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from future.builtins import *  # NOQA
+
+from future.utils import string_types
+
 import sys
 import collections
-from future.builtins import *  # NOQA
-from future.utils import string_types
 from obspy.core import UTCDateTime
 
 

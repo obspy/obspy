@@ -34,6 +34,7 @@ and fails the many assumptions built into the Client class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+
 from future.utils import string_types
 
 import logging
