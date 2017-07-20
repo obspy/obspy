@@ -35,12 +35,14 @@ has been retrieved with what was requested.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from future.builtins import *  # NOQA
+
+from future.utils import string_types
+
 import sys
 import collections
 from threading import Lock
 import os
-from future.builtins import *  # NOQA
-from future.utils import string_types
 import requests
 from obspy.core.inventory import Inventory
 from obspy.core import Stream
