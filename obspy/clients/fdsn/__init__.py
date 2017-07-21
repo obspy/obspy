@@ -34,6 +34,7 @@ EMSC    http://www.seismicportal.eu
 ETH     http://eida.ethz.ch
 GEONET  http://service.geonet.org.nz
 GFZ     https://geofon.gfz-potsdam.de
+ICGC    http://ws.icgc.cat
 INGV    http://webservices.rm.ingv.it
 IPGP    http://eida.ipgp.fr
 IRIS    http://service.iris.edu

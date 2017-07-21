@@ -96,8 +96,10 @@ It could include wildcards in any of the fields, as shown in B...
 
 B)  IU ANMO * * 2015-05-24T12:00:00 *
 
+>>> from obspy.clients.fdsn.routers.fedcatalog_parser import FDSNBulkRequestItem
+
 Using obspy.clients.fdsn.routers.FDSNBulkRequestItem, each could be created as:
-itemA = FDSNBulkRequestItem('IU ANMO 00 BHZ 2015-05-24T12:00:00 2015-05-24T12:05:00')
+>>> itemA = FDSNBulkRequestItem('IU ANMO 00 BHZ 2015-05-24T12:00:00 2015-05-24T12:05:00')
 
 And, item B, with wildcards could be created similarly.
 >>> itemB = FDSNBulkRequestItem('IU ANMO * * 2015-05-24T12:00:00 *')
@@ -122,11 +124,14 @@ FDSNBulkRequestItems are grouped into FDSNBulkRequests
 Typically, though, several lines are sent together in a bulk request. These are
 handled by FDSNBulkRequests. Here is an example of a few ways to create these:
 
->>> txt= '''
-  IU ANMO 00 BHZ 2015-05-24T12:00:00 2015-05-24T12:05:00
-  IU ANMO 10 BHZ 2015-05-24T12:00:00 2015-05-24T12:05:00
-  IU ANTO 00 BHZ 2015-05-24T12:00:00 2015-05-24T12:05:00
-  '''
+>>> txt = '''
+... IU ANMO 00 BHZ 2015-05-24T12:00:00 2015-05-24T12:05:00
+... IU ANMO 10 BHZ 2015-05-24T12:00:00 2015-05-24T12:05:00
+... IU ANTO 00 BHZ 2015-05-24T12:00:00 2015-05-24T12:05:00
+... '''
+
+>>> from obspy.clients.fdsn.routers.fedcatalog_parser import FDSNBulkRequests
+
 Each line of txt is converted to an FDSNBulkRequestItem
 >>> brq = FDSNBulkRequests(txt)
 
