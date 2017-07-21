@@ -1308,7 +1308,8 @@ class Parser(object):
                     output_units=o_u.unit_name,
                     input_units_description=i_u.unit_description
                     if (i_u and hasattr(i_u, "unit_description")) else None,
-                    output_units_description=o_u.unit_description,
+                    output_units_description=o_u.unit_description
+                    if (o_u and hasattr(o_u, "unit_description")) else None,
                     pz_transfer_function_type=transform_map[
                         b53.transfer_function_types],
                     normalization_frequency=b53.normalization_frequency,
