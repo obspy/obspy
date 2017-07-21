@@ -1411,7 +1411,13 @@ class Parser(object):
                     decimation_correction=b57.correction_applied))
             # Response list stage.
             elif blkts[0].id == 55:
-                assert set(b.id for b in blkts).issubset({55, 58})
+                assert set(b.id for b in blkts).issubset({55, 57, 58})
+                b57 = [_i for _i in blkts if _i.id == 57]
+                if len(b57):
+                    b57 = b57[0]
+                else:
+                    b57 = None
+
                 b55 = blkts[0]
                 i_u = self.resolve_abbreviation(
                     34, b55.stage_input_units)
@@ -1429,7 +1435,14 @@ class Parser(object):
                     input_units_description=i_u.unit_description
                     if hasattr(i_u, "unit_description") else None,
                     output_units_description=o_u.unit_description,
-                    response_list_elements=response_list))
+                    response_list_elements=response_list,
+                    decimation_input_sample_rate=b57.input_sample_rate
+                    if b57 else None,
+                    decimation_factor=b57.decimation_factor if b57 else None,
+                    decimation_offset=b57.decimation_offset if b57 else None,
+                    decimation_delay=b57.estimated_delay if b57 else None,
+                    decimation_correction=b57.correction_applied
+                    if b57 else None))
             # Decimation stage.
             elif blkts[0].id == 57:
                 assert [b.id for b in blkts] == [57, 58]
