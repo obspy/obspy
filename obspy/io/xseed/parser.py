@@ -705,7 +705,9 @@ class Parser(object):
                     last_blockette_id = blockette_number
                 # Single field lines.
                 if not g[2]:
-                    if blockette_number not in ["041", "061"]:
+                    # Units of blkts 41 and 61 are normal.
+                    if blockette_number not in ["041", "061"] \
+                            or "units lookup" in g[3]:
                         value = re.search(field_pattern, g[3]).groups()[0]
                     # Blockette 61 has the FIR coefficients which are a bit
                     # different.
