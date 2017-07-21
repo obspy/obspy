@@ -1210,7 +1210,12 @@ class Parser(object):
         for _i in range(1, max(stages.keys()) + 1):
             # Some SEED files have blockettes in the wrong order - sort them
             # to fix it.
+            # The sorting is kind of awkward - essentially sort by id,
+            # but make sure 57 + 58 are at the end.
             blkts = sorted(stages[_i], key=lambda x: int(x.blockette_id))
+            b_a = [b for b in blkts if b.blockette_id not in ("057", "058")]
+            b_b = [b for b in blkts if b.blockette_id in ("057", "058")]
+            blkts = b_a + b_b
 
             # All blockettes have to end with blockette 58 (I think). Some
             # data out in the wild is just off the charts and has wild
