@@ -861,6 +861,8 @@ class Response(ComparingObject):
                 "COUNTS": ew.ENUM_UNITS["COUNTS"],
                 "T": ew.ENUM_UNITS["TESLA"],
                 "PA": ew.ENUM_UNITS["PRESSURE"],
+                "PASCAL": ew.ENUM_UNITS["PRESSURE"],
+                "PASCALS": ew.ENUM_UNITS["PRESSURE"],
                 "MBAR": ew.ENUM_UNITS["PRESSURE"]}
             if key not in units_mapping:
                 if key is not None:
