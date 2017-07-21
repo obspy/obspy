@@ -1208,7 +1208,9 @@ class Parser(object):
         # Afterwards loop over all other stages and assemble them in one list.
         response_stages = []
         for _i in range(1, max(stages.keys()) + 1):
-            blkts = stages[_i]
+            # Some SEED files have blockettes in the wrong order - sort them
+            # to fix it.
+            blkts = sorted(stages[_i], key=lambda x: int(x.blockette_id))
 
             # All blockettes have to end with blockette 58 (I think). Some
             # data out in the wild is just off the charts and has wild
