@@ -1228,7 +1228,8 @@ class Parser(object):
             if (input_units and hasattr(input_units, "unit_description"))
             else None,
             output_units_description=output_units.unit_description
-            if output_units is not None else None)
+            if (output_units and hasattr(output_units, "unit_description"))
+            else None)
 
         # Afterwards loop over all other stages and assemble them in one list.
         response_stages = []
