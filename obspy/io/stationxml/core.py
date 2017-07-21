@@ -240,7 +240,16 @@ def _read_station(sta_element, _ns):
             continue
         cha = _read_channel(channel, _ns)
         # Might be None in case the channel could not be parsed.
-        if cha is not None:
+        if cha is None:
+            # This is None if, and only if, one of the coordinates could not
+            # be set.
+            msg = ("Channel %s.%s of station %s does not have a complete set "
+                   "of coordinates and thus it cannot be read. It will not be "
+                   "part of the final inventory object." % (
+                    channel.get("locationCode"), channel.get("code"),
+                    sta_element.get("code")))
+            warnings.warn(msg, UserWarning)
+        else:
             channels.append(cha)
     station.channels = channels
     return station
@@ -299,6 +308,17 @@ def _read_floattype_list(parent, tag, cls, unit=False, datum=False,
 
 
 def _read_channel(cha_element, _ns):
+    """
+    Returns either a :class:`~obspy.core.inventory.channel.Channel` object or
+    ``None``.
+
+    It should return ``None`` if and only if it did not manage to
+    successfully create a :class:`~obspy.core.inventory.channel.Channel`
+    object which can only happen if one of the coordinates is not set. All the
+    others are optional. If either the location or channel code is not set it
+    raises but that is fine as that would deviate too much from the StationXML
+    standard to be worthwhile to recover from.
+    """
     code = cha_element.get("code")
     location_code = cha_element.get("locationCode")
 
@@ -310,11 +330,8 @@ def _read_channel(cha_element, _ns):
                                 unit=True)
     depth = _read_floattype(cha_element, _ns("Depth"), Distance, unit=True)
 
+    # All of these must be given, otherwise it is an invalid station.
     if None in [longitude, latitude, elevation, depth]:
-        msg = ("Channel %s.%s does not have a complete set of coordinates and "
-               "thus it cannot be read. It will not be part of the final "
-               "inventory object." % (location_code, code))
-        warnings.warn(msg, UserWarning)
         return None
 
     channel = obspy.core.inventory.Channel(

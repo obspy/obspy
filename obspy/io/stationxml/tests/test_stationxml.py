@@ -1084,9 +1084,9 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertEqual(len(w), 1)
         self.assertEqual(
             w[0].message.args[0],
-            "Channel 00.BHZ does not have a complete set of coordinates and "
-            "thus it cannot be read. It will not be part of the final "
-            "inventory object.")
+            "Channel 00.BHZ of station LATE does not have a complete set of "
+            "coordinates and thus it cannot be read. It will not be part of "
+            "the final inventory object.")
 
         self.assertEqual(
             inv.get_contents(),
