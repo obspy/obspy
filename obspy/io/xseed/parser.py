@@ -991,6 +991,7 @@ class Parser(object):
         if set(_i.id for _i in blockettes_for_channel).issubset({52, 59}):
             return None
 
+
         from .blockette import Blockette053, Blockette054, \
             Blockette057, Blockette058, Blockette061
 
@@ -1197,6 +1198,19 @@ class Parser(object):
                     raise ValueError(msg)
                 else:
                     stages[0] = _blkts58[:1]
+
+        # If there is no stage zero and exactly one other stages, use it to
+        # reconstruct stage zero by just copying its stage 58.
+        # 2nd condition: Make sure there is exactly one stage not zero.
+        # 3rd condition: Make sure that stage has a blockette 58.
+        if not len(stages[0]) and \
+                len(set(stages.keys()).difference({0})) == 1 and \
+                58 in [b.id for b in stages[sorted(stages.keys())[-1]]]:
+            b = [b for b in stages[sorted(stages.keys())[-1]]
+                 if b.id == 58][0]
+            b = copy.deepcopy(b)
+            b.stage_sequence_number = 0
+            stages[0].append(b)
 
         # Stage 0 blockette must be a blockette 58.
         if stages[0][0].id != 58:
