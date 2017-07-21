@@ -280,7 +280,18 @@ def _parse_to_inventory_object(p, skip_invalid_responses=False):
             data_availability=None)
 
         _c = [_b for _b in station if _b.id == 51]
-        if _c:
+        # If there are comments but no comment description blockettes -
+        # raise a warning but do not fail. Comments are not important enough
+        # to fail parsing the file.
+        if _c and 31 not in p.blockettes:
+            msg = ("The file has comments but no comment descriptions "
+                   "blockettes. This is an error - please fix the file! ObsPy "
+                   "will still read the file as comments are not vital but "
+                   "please be aware that some information might be missing "
+                   "in the final file.")
+            warnings.warn(msg, UserWarning)
+        # Otherwise parse the comments.
+        elif _c:
             for c in _c:
                 # Parse times.
                 _start = c.beginning_effective_time \
