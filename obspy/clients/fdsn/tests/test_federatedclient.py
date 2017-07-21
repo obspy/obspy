@@ -148,7 +148,7 @@ class FederatedClientTestCase(unittest.TestCase):
     def setUpClass(cls):
         # directory where the test files are located
         cls.path = os.path.dirname(__file__)
-        cls.datapath = os.path.join(cls.path, "..", "..", "tests", "data")
+        cls.datapath = os.path.join(cls.path, "data")
         cls.fed_client = FederatedClient(user_agent=USER_AGENT)
         cls.iris_client = Client("IRIS", user_agent=USER_AGENT)
         cls.client = FederatedClient(user_agent=USER_AGENT,

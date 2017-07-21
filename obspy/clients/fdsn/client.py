@@ -888,7 +888,7 @@ class Client(object):
         url = self._build_url("dataselect", "query")
 
         data_stream = self._download(url,
-                                     data=bulk.encode('ascii', 'strict'))
+                                     data=bulk)
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -1033,7 +1033,7 @@ class Client(object):
         url = self._build_url("station", "query")
 
         data_stream = self._download(url,
-                                     data=bulk.encode('ascii', 'strict'))
+                                     data=bulk)
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
