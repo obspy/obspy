@@ -1499,8 +1499,10 @@ class Parser(object):
                     stage_gain_frequency=b58.frequency if b58 else None,
                     input_units=i_u.unit_name,
                     output_units=o_u.unit_name,
-                    input_units_description=i_u.unit_description,
-                    output_units_description=o_u.unit_description,
+                    input_units_description=i_u.unit_description
+                    if (i_u and hasattr(i_u, "unit_description")) else None,
+                    output_units_description=o_u.unit_description
+                    if (o_u and hasattr(o_u, "unit_description")) else None,
                     symmetry=symmetry_map[b61.symmetry_code],
                     coefficients=coefficients,
                     decimation_input_sample_rate=b57.input_sample_rate,
