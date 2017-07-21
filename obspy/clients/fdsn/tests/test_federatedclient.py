@@ -508,7 +508,7 @@ class FederatedClientTestCase(unittest.TestCase):
             self.assertTrue(isinstance(tr.stats.get("response"), Response))
 
 
-def test_suite():
+def suite():
     from unittest import (TestSuite, makeSuite)
     suite = TestSuite()
     suite.addTest(makeSuite(BulkConversionTestCase, 'test'))
@@ -519,4 +519,4 @@ def test_suite():
 
 if __name__ == '__main__':
     # unittest.main()
-    unittest.TextTestRunner().run(test_suite())
+    unittest.TextTestRunner().run(suite())

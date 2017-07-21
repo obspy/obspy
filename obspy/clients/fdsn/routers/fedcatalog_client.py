@@ -321,7 +321,8 @@ class FederatedClient(RoutingClient):
     >>> client = FederatedClient()
     >>> print(client)  #doctest: +ELLIPSIS
     Federated Catalog Routing Client
-
+      request-method: serial
+    <BLANKLINE>
     >>> inv = client.get_stations(network="I?", station="AN*", channel="*HZ")
     ...                           #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
     >>> print(inv)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
@@ -644,7 +645,7 @@ class FederatedClient(RoutingClient):
             :meth:`~obspy.fdsn.clients.Client.get_waveforms`
 
         >>> from requests.packages.urllib3.exceptions import \
-        ...     InsecureRequestWarning
+                InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> client = FederatedClient()
         >>> from obspy.core import  UTCDateTime
@@ -706,7 +707,7 @@ class FederatedClient(RoutingClient):
             :meth:`~obspy.fdsn.clients.Client.get_stations_bulk`
 
         >>> from requests.packages.urllib3.exceptions import \
-        ...     InsecureRequestWarning
+                InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> client = FederatedClient()
         >>> bulktxt = "level=channel\\nA? OKS? * ?HZ * *"
@@ -779,7 +780,7 @@ class FederatedClient(RoutingClient):
             :meth:`~obspy.fdsn.clients.Client.get_stations`
 
         >>> from requests.packages.urllib3.exceptions import \
-        ...     InsecureRequestWarning
+                InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> fclient = FederatedClient()
         >>> INV = fclient.get_stations(network="A?", station="OK*",
@@ -943,7 +944,7 @@ class FederatedRoutingManager(RoutingManager):
     >>> frm = FederatedRoutingManager(r.text)
     >>> print(frm)
     FederatedRoutingManager with 1 items:
-    FederatedRoute for IRIS containing 0 query parameters and 26 request items
+    FederatedRoute for IRIS containing 0 query parameters and 27 request items
     """
 
     def __init__(self, data):
@@ -989,7 +990,7 @@ class FederatedRoutingManager(RoutingManager):
         Here's an example parsing from the actual service:
         >>> import requests
         >>> from requests.packages.urllib3.exceptions import \
-        ...     InsecureRequestWarning
+                InsecureRequestWarning
         >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> url = 'https://service.iris.edu/irisws/fedcatalog/1/query'
         >>> r = requests.get(url, params={"net":"IU", "sta":"ANTO",
@@ -1002,13 +1003,10 @@ class FederatedRoutingManager(RoutingManager):
         ...     print(n.text("STATIONSERVICE"))
         http://service.iris.edu/fdsnws/station/1/
         level=station
-        IU ANTO 00 BHZ 2010-11-10T21:42:00.000 2016-06-22T00:00:00.000
-        IU ANTO 00 BHZ 2016-06-22T00:00:00.000 2599-12-31T23:59:59.000
-        IU ANTO 10 BHZ 2010-11-11T09:23:59.000 2599-12-31T23:59:59.000
+        IU ANTO * * 2010-07-23T00:00:00.000 2599-12-31T23:59:59.000
         http://www.orfeus-eu.org/fdsnws/station/1/
         level=station
-        IU ANTO 00 BHZ 2010-11-10T21:42:00.000 2599-12-31T23:59:59.000
-        IU ANTO 10 BHZ 2010-11-11T09:23:59.000 2599-12-31T23:59:59.000
+        IU ANTO * * 1992-09-25T00:00:00.000 2599-12-31T23:59:59.000
 
         """
 
