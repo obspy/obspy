@@ -1184,8 +1184,19 @@ class Parser(object):
                 stages[1] = stages[0]
                 stages[0] = _blkts58
             else:
-                msg = "Channel must have exactly one stage 0 blockette."
-                raise ValueError(msg)
+                # Check if they are all identical - if they are, just choose
+                # the first one.
+                first = _blkts58[0]
+                all_identical = True
+                for _b in _blkts58[1:]:
+                    if _b != first:
+                        all_identical = False
+                        break
+                if not all_identical:
+                    msg = "Channel must have exactly one stage 0 blockette."
+                    raise ValueError(msg)
+                else:
+                    stages[0] = _blkts58[:1]
 
         # Stage 0 blockette must be a blockette 58.
         if stages[0][0].id != 58:
