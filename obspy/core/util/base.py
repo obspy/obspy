@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import doctest
+import functools
 import inspect
 import io
 import os
@@ -58,6 +59,24 @@ WAVEFORM_ACCEPT_BYTEORDER = ['MSEED', 'Q', 'SAC', 'SEGY', 'SU']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
+
+
+# apply simple memoization cache to load_entry_points
+def decorate_load_entry_point(func):
+    cache = {}
+    sig = inspect.signature(func)
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        b = sig.bind(*args, **kwargs).args
+        if not b in cache:
+            cache[b] = func(*args, **kwargs)
+        return cache[b]
+
+    return wrapper
+
+
+load_entry_point = decorate_load_entry_point(load_entry_point)
 
 
 class NamedTemporaryFile(io.BufferedIOBase):
