@@ -1079,7 +1079,7 @@ class Client(object):
                 msg = ("Unrecognized input for 'bulk' argument. Please "
                        "contact developers if you think this is a bug.")
                 raise NotImplementedError(msg)
-        return bulk
+        return bulk.encode('ASCII')
 
     def _write_to_file_object(self, filename_or_object, data_stream):
         if hasattr(filename_or_object, "write"):
