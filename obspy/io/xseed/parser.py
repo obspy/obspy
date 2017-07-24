@@ -1118,7 +1118,16 @@ class Parser(object):
 
         # Get units - first from blockette 52 if they exist.
         if not hasattr(blkt52, "units_of_signal_response"):
-            input_units = None
+            if stages[0][0].id == 62:
+                try:
+                    input_units = self.resolve_abbreviation(
+                        34, stages[0][0].stage_signal_in_units)
+                except ValueError:
+                    msg = "Failed to resolve units of signal abbreviation."
+                    warnings.warn(msg)
+                    input_units = None
+            else:
+                input_units = None
         else:
             try:
                 input_units = self.resolve_abbreviation(
@@ -1254,11 +1263,9 @@ class Parser(object):
             stages[0][0].stage_sequency_number = 0
             stages[0][0].record_type = 'S'
 
-        # Stage 0 blockette must be a blockette 58.
-        # XXX: In theory stage 0 could also be a blockette 62 but so far
-        # this has not been encountered.
-        if stages[0][0].id != 58:
-            msg = "Stage 0 must be a blockette 58."
+        # Stage 0 blockette must be a blockette 58 or 62.
+        if stages[0][0].id not in (58, 62):
+            msg = "Stage 0 must be a blockette 58 or 62."
             raise ValueError(msg)
 
         # Cannot have both 53 and 54 in one stage.
@@ -1269,19 +1276,38 @@ class Parser(object):
                       "valid." % stage
                 raise InvalidResponseError(msg)
 
-        # Assemble the instrument sensitvity.
-        instrument_sensitivity = InstrumentSensitivity(
-            value=stages[0][0].sensitivity_gain,
-            frequency=stages[0][0].frequency,
-            input_units=input_units.unit_name if input_units else None,
-            output_units=output_units.unit_name
-            if output_units is not None else None,
-            input_units_description=input_units.unit_description
-            if (input_units and hasattr(input_units, "unit_description"))
-            else None,
-            output_units_description=output_units.unit_description
-            if (output_units and hasattr(output_units, "unit_description"))
-            else None)
+        # Assemble the instrument sensitivity.
+        if stages[0][0].id == 58:
+            instrument_sensitivity = InstrumentSensitivity(
+                value=stages[0][0].sensitivity_gain,
+                frequency=stages[0][0].frequency,
+                input_units=input_units.unit_name if input_units else None,
+                output_units=output_units.unit_name
+                if output_units is not None else None,
+                input_units_description=input_units.unit_description
+                if (input_units and hasattr(input_units, "unit_description"))
+                else None,
+                output_units_description=output_units.unit_description
+                if (output_units and hasattr(output_units, "unit_description"))
+                else None)
+        # Blockette 62.
+        else:
+            instrument_sensitivity = None
+
+        # Trying to fit blockette 62 in stage 0 into the inventory object.
+        if stages[0][0].id == 62:
+            if len(stages[0]) != 1:
+                msg = "If blockette 62 is in stage 0 it must currently be " \
+                      "the only blockette in stage 0."
+                raise ValueError(msg)
+            if len(stages.keys()) != 1:
+                msg = "If blockette 62 is in stage 0 it must currently be " \
+                      "the only stage."
+                raise ValueError(msg)
+            # Just move it to stage 1 and it should be covered by the rest
+            # of the logic.
+            stages[1] = stages[0]
+            del stages[0]
 
         # Afterwards loop over all other stages and assemble them in one list.
         response_stages = []
@@ -1313,10 +1339,13 @@ class Parser(object):
                 warnings.warn(msg)
 
             # A bit undefined if it does not end with blockette 58 I think.
-            if blkts[-1].id != 58:
+            # Not needed for blockette 62.
+            if blkts[-1].id != 58 and blkts[0].id != 62:
                 msg = ("Response stage %i does not end with blockette 58. " 
                        "Proceed at your own risk." % _i)
                 warnings.warn(msg)
+                b58 = None
+            if blkts[-1].id != 58 and blkts[0].id == 62:
                 b58 = None
             else:
                 b58 = blkts[-1]

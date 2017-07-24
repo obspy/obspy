@@ -1,0 +1,31 @@
+#		<< obspy, Version 1.0.3.post0+1390.g7e1be43321.dirty >>
+#		
+#		======== CHANNEL RESPONSE DATA ========
+B050F03     Station:     BEER
+B050F16     Network:     UO
+B052F03     Location:    EP
+B052F04     Channel:     BDO
+B052F22     Start date:  2016,275
+B052F23     End date:    2599,365,23:59:59.0000
+#		=======================================
+#		+              +---------------------------------------+                      +
+#		+              |   Polynomial response,  BEER ch BDO   |                      +
+#		+              +---------------------------------------+                      +
+#		
+B062F03     Transfer function type:                P [Polynomial]
+B062F04     Stage sequence number:                 0
+B062F05     Response in units lookup:              PA - Pascals
+B062F06     Response out units lookup:             COUNTS - digital counts
+B062F07     Polynomial Approximation Type:         M [MacLaurin]
+B062F08     Valid Frequency Units:                 B [Hz]
+B062F09     Lower Valid Frequency Bound:           0.001
+B062F10     Upper Valid Frequency Bound:           10
+B062F11     Lower Bound of Approximation:          60000
+B062F12     Upper Bound of Approximation:          110000
+B062F13     Maximum Absolute Error:                0
+B062F14     Number of coefficients:                2
+#		Polynomial coefficients:
+#		  i, coefficient,  error
+B062F15-16    0  8.000000E+04  0.000000E+00
+B062F15-16    1  1.500000E-02  0.000000E+00
+#		

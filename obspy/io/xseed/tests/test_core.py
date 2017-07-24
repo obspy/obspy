@@ -676,6 +676,20 @@ class CoreTestCase(unittest.TestCase):
             coefficients=[8e2, 1.5e-4]
         ))
 
+    def test_parsing_blockette_62_as_stage_0(self):
+        filename = os.path.join(self.data_path, "RESP.blockette_62_as_stage_0")
+        # Make sure there are no warnings.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            inv = obspy.read_inventory(filename)
+        self.assertEqual(len(w), 0)
+        self.assertEqual(inv.get_contents()["channels"], ["UO.BEER.EP.BDO"])
+        r = inv[0][0][0].response
+        # Should have no sensitivity.
+        self.assertIsNone(r.instrument_sensitivity)
+        # For now just test that it is actually read.
+        self.assertIsInstance(r.response_stages[0], PolynomialResponseStage)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
