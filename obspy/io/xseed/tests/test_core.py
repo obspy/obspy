@@ -589,6 +589,19 @@ class CoreTestCase(unittest.TestCase):
             "Channel has multiple (but identical) blockettes 58 for stage 0. "
             "Only one will be used.")
 
+    def test_warning_with_multiple_differing_blockettes_58_in_stage_0(self):
+        filename = os.path.join(self.data_path,
+                                "RESP.repeated_differing_stage_0")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            inv = obspy.read_inventory(filename)
+        self.assertGreaterEqual(len(w), 1)
+        self.assertEqual(
+            w[0].message.args[0],
+            "Channel has multiple different blockettes 58 for stage 0. The "
+            "first one will be chosen - this is a faulty file - try to fix "
+            "it!")
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

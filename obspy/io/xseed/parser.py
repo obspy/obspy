@@ -1211,8 +1211,11 @@ class Parser(object):
                         all_identical = False
                         break
                 if not all_identical:
-                    msg = "Channel must have exactly one stage 0 blockette."
-                    raise ValueError(msg)
+                    msg = ("Channel has multiple different blockettes "
+                           "58 for stage 0. The first one will be chosen - "
+                           "this is a faulty file - try to fix it!")
+                    warnings.warn(msg)
+                    stages[0] = _blkts58[:1]
                 else:
                     msg = ("Channel has multiple (but identical) blockettes "
                            "58 for stage 0. Only one will be used.")
