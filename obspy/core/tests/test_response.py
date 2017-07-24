@@ -25,7 +25,7 @@ from matplotlib import rcParams
 
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
-    _pitick2latex, PolesZerosResponseStage)
+    _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage)
 from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
@@ -297,6 +297,77 @@ class ResponseTestCase(unittest.TestCase):
         np.testing.assert_allclose(
             out, [0 + 9869.2911771081963j, 0 + 19738.582354216393j,
                   0 + 39477.164708432785j])
+
+    def test_str_method_of_the_polynomial_response_stage(self):
+        # First with gain and gain frequency.
+        self.assertEqual(str(PolynomialResponseStage(
+            stage_sequence_number=2,
+            stage_gain=12345.0,
+            stage_gain_frequency=1.0,
+            input_units="PA",
+            input_units_description="Pascal",
+            output_units="COUNTS",
+            output_units_description="digital_counts",
+            frequency_lower_bound=1.0,
+            frequency_upper_bound=2.0,
+            approximation_lower_bound=3.0,
+            approximation_upper_bound=4.0,
+            maximum_error=1.5,
+            coefficients=[1.0, 2.0, 3.0],
+            approximation_type="MACLAURIN",
+            decimation_input_sample_rate=1.0,
+            decimation_factor=2,
+            decimation_offset=3.0,
+            decimation_delay=4.0,
+            decimation_correction=True)),
+            "Response type: PolynomialResponseStage, "
+            "Stage Sequence Number: 2\n"
+            "\tFrom PA (Pascal) to COUNTS (digital_counts)\n"
+            "\tStage gain: 12345.0, defined at 1.00 Hz\n"
+            "\tDecimation:\n"
+            "\t\tInput Sample Rate: 1.00 Hz\n"
+            "\t\tDecimation Factor: 2\n"
+            "\t\tDecimation Offset: 3\n"
+            "\t\tDecimation Delay: 4.00\n"
+            "\t\tDecimation Correction: 1.00\n"
+            "\tPolynomial approximation type: MACLAURIN\n"
+            "\tFrequency lower bound: 1.0\n"
+            "\tFrequency upper bound: 2.0\n"
+            "\tApproximation lower bound: 3.0\n"
+            "\tApproximation upper bound: 4.0\n"
+            "\tMaximum error: 1.5\n"
+            "\tNumber of coefficients: 3"
+        )
+
+        # Now only the very minimum.
+        self.assertEqual(str(PolynomialResponseStage(
+            stage_sequence_number=4,
+            stage_gain=None,
+            stage_gain_frequency=None,
+            input_units=None,
+            input_units_description=None,
+            output_units=None,
+            output_units_description=None,
+            frequency_lower_bound=None,
+            frequency_upper_bound=None,
+            approximation_lower_bound=None,
+            approximation_upper_bound=None,
+            maximum_error=None,
+            coefficients=[],
+            approximation_type="MACLAURIN")),
+            "Response type: PolynomialResponseStage, "
+            "Stage Sequence Number: 4\n"
+            "\tFrom UNKNOWN to UNKNOWN\n"
+            "\tStage gain: UNKNOWN, defined at UNKNOWN Hz\n"
+            "\tPolynomial approximation type: MACLAURIN\n"
+            "\tFrequency lower bound: None\n"
+            "\tFrequency upper bound: None\n"
+            "\tApproximation lower bound: None\n"
+            "\tApproximation upper bound: None\n"
+            "\tMaximum error: None\n"
+            "\tNumber of coefficients: 0"
+        )
+
 
 def suite():
     return unittest.makeSuite(ResponseTestCase, 'test')

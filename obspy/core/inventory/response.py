@@ -136,7 +136,7 @@ class ResponseStage(ComparingObject):
             FloatWithUncertaintiesAndUnit(decimation_delay) \
             if decimation_delay is not None else None
         self.decimation_correction = \
-            FloatWithUncertaintiesAndUnit(decimation_correction ) \
+            FloatWithUncertaintiesAndUnit(decimation_correction) \
             if decimation_correction is not None else None
 
     def __str__(self):
@@ -146,12 +146,13 @@ class ResponseStage(ComparingObject):
             "{name_desc}"
             "{resource_id}"
             "\tFrom {input_units}{input_desc} to {output_units}{output_desc}\n"
-            "\tStage gain: {gain}, defined at {gain_freq:.2f} Hz\n"
+            "\tStage gain: {gain}, defined at {gain_freq} Hz\n"
             "{decimation}").format(
             response_type=self.__class__.__name__,
             response_stage=self.stage_sequence_number,
-            gain=self.stage_gain,
-            gain_freq=self.stage_gain_frequency,
+            gain=self.stage_gain if self.stage_gain is not None else "UNKNOWN",
+            gain_freq=("%.2f" % self.stage_gain_frequency) if
+            self.stage_gain_frequency is not None else "UNKNOWN",
             name_desc="\t%s %s\n" % (
                 self.name, "(%s)" % self.description
                 if self.description else "") if self.name else "",
@@ -704,6 +705,26 @@ class PolynomialResponseStage(ResponseStage):
             new_values.append(x)
         self._coefficients = new_values
 
+    def __str__(self):
+        ret = super(PolynomialResponseStage, self).__str__()
+        ret += (
+            "\n"
+            "\tPolynomial approximation type: {approximation_type}\n"
+            "\tFrequency lower bound: {lower_freq_bound}\n"
+            "\tFrequency upper bound: {upper_freq_bound}\n"
+            "\tApproximation lower bound: {lower_approx_bound}\n"
+            "\tApproximation upper bound: {upper_approx_bound}\n"
+            "\tMaximum error: {max_error}\n"
+            "\tNumber of coefficients: {coeff_count}".format(
+                approximation_type=self._approximation_type,
+                lower_freq_bound=self.frequency_lower_bound,
+                upper_freq_bound=self.frequency_upper_bound,
+                lower_approx_bound=self.approximation_lower_bound,
+                upper_approx_bound=self.approximation_upper_bound,
+                max_error=self.maximum_error,
+                coeff_count=len(self.coefficients)))
+        return ret
+
 
 class Response(ComparingObject):
     """
@@ -928,14 +949,14 @@ class Response(ComparingObject):
                     all_stages[1][0].output_units = \
                         self.instrument_sensitivity.output_units
                     msg = "Set the output units of stage 1 to the overall " \
-                       "output units."
+                        "output units."
                     warnings.warn(msg)
                 if 2 in all_stages and all_stages[2] and \
                         all_stages[2][0].input_units:
                     all_stages[1][0].output_units = \
                         all_stages[2][0].input_units
                     msg = "Set the output units of stage 1 to the input " \
-                       "units of stage 2."
+                        "units of stage 2."
                     warnings.warn(msg)
 
         for stage_number in stage_list:
