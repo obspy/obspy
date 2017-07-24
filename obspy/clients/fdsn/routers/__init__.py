@@ -37,7 +37,7 @@ Retrieving Station Metadata
 Submitting a GET request to the federated catalog service. The service
 recognizes parameters that are normally accepted by the station web service.
 
->>> inv = client.get_stations(station="A*", channel="BHZ", level="station")
+>>> inv = client.get_stations(station="AN*", channel="BHZ", level="station")
 
 
 Retrieving Waveform Metadata
@@ -109,7 +109,7 @@ And, item B, with wildcards could be created similarly.
 ...                             starttime='2015-05-24T12:00:00')
 
   or, using obspy.core.UTCDateTime ...
->>> t1 = UTCDateTime(2015,05,24,12,0,0)
+>>> t1 = UTCDateTime(2015,5,24,12,0,0)
 >>> itemB = FDSNBulkRequestItem(network='IU', station='ANMO', starttime=t1)
 
 Basic comparisons can be made between these items.
