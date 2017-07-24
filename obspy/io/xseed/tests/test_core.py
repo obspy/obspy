@@ -602,6 +602,30 @@ class CoreTestCase(unittest.TestCase):
             "first one will be chosen - this is a faulty file - try to fix "
             "it!")
 
+    def test_blkts_53_and_54_in_one_stage(self):
+        """
+        This should naturally raise.
+        """
+        filename = os.path.join(self.data_path,
+                                "RESP.blkt53_and_54_in_one_stage")
+        with self.assertRaises(InvalidResponseError) as e:
+            obspy.read_inventory(filename, skip_invalid_responses=False)
+        self.assertEqual(
+            e.exception.args[0],
+            "Stage 1 has both, blockette 53 and 54. This is not valid.")
+        # If invalid responses are skipped, check the warning.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            inv = obspy.read_inventory(filename)
+        self.assertGreaterEqual(len(w), 1)
+        self.assertEqual(
+            w[0].message.args[0],
+            "Failed to calculate response for BN.WR0..SHZ with epoch "
+            "1996-03-01T00:00:00.000000Z - 1999-01-03T00:00:00.000000Z "
+            "because: Stage 1 has both, blockette 53 and 54. "
+            "This is not valid.")
+        self.assertIsNone(inv[0][0][0].response)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

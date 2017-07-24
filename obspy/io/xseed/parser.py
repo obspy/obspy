@@ -1247,6 +1247,14 @@ class Parser(object):
             msg = "Stage 0 must be a blockette 58."
             raise ValueError(msg)
 
+        # Cannot have both 53 and 54 in one stage.
+        for stage, blkts in stages.items():
+            _i = {b.id for b in blkts}.intersection({53, 54})
+            if len(_i) > 1:
+                msg = "Stage %i has both, blockette 53 and 54. This is not " \
+                      "valid." % stage
+                raise InvalidResponseError(msg)
+
         # Assemble the instrument sensitvity.
         instrument_sensitivity = InstrumentSensitivity(
             value=stages[0][0].sensitivity_gain,
