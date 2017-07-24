@@ -82,6 +82,16 @@ from future.builtins import *  # NOQA
 # needs to stay above import statements
 DEFAULT_XSEED_VERSION = '1.1'
 
+
+class InvalidResponseError(Exception):
+    """
+    Raised when a response is clearly invalid.
+
+    The error message should give a clearer idea of why.
+    """
+    pass
+
+
 from .parser import Parser
 
 

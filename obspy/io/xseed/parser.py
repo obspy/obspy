@@ -42,7 +42,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import download_to_file
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.obspy_types import ComplexWithUncertainties
-from . import DEFAULT_XSEED_VERSION, blockette
+from . import DEFAULT_XSEED_VERSION, blockette, InvalidResponseError
 from .utils import (IGNORE_ATTR, SEEDParserException, to_tag)
 from .fields import Loop, VariableString
 
@@ -1356,9 +1356,15 @@ class Parser(object):
                     if b57 else None))
             # Response coefficients stage.
             elif blkts[0].id == 54:
+                if {b.id for b in blkts} != {54, 57, 58}:
+                    missing = {57, 58}.difference({b.id for b in blkts})
+                    msg = ("Invalid response specification. A blockette 54 "
+                           "always must always be followed by a blockette 57 "
+                           "and a blockette 58. Missing blockettes: %s." % (
+                       ", ".join(str(_i) for _i in missing)))
+                    raise InvalidResponseError(msg)
                 # There can be multiple blockettes 54 in sequence in which
                 # case numerators or denominators are chained from all of them.
-                assert {b.id for b in blkts} == {54, 57, 58}
                 blkts54 = [b for b in blkts if b.id == 54]
                 blkts57 = [b for b in blkts if b.id == 57]
 

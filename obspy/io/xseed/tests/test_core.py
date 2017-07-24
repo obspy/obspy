@@ -14,7 +14,7 @@ import numpy as np
 
 import obspy
 from obspy.core.util.testing import NamedTemporaryFile
-from obspy.io.xseed import Parser
+from obspy.io.xseed import Parser, InvalidResponseError
 from obspy.io.xseed.core import _is_resp, _is_xseed, _is_seed, _read_resp, \
     _read_seed, _read_xseed
 from obspy.signal.invsim import evalresp_for_frequencies
@@ -520,6 +520,37 @@ class CoreTestCase(unittest.TestCase):
                                 err_msg="RESP imag - %s - %s" % (filename,
                                                                  unit),
                                 rtol=1E-6, atol=atol)
+
+    def test_warning_when_blockette_54_is_not_followed_by_57_and_58(self):
+        filename = os.path.join(self.data_path, "RESP.SG.ST..LDO")
+        # Fail if responses are explicitly not skipped.
+        with self.assertRaises(InvalidResponseError) as e:
+            obspy.read_inventory(filename, skip_invalid_responses=False)
+        self.assertEqual(
+            e.exception.args[0],
+            "Invalid response specification. A blockette 54 always must "
+            "always be followed by a blockette 57 and a blockette 58. "
+            "Missing blockettes: 57, 58.")
+        # Otherwise continue, but raise a warning.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            inv = obspy.read_inventory(filename)
+        # This actually raises two warnings - one that blockette 58 is
+        # missing on stage 2 - this is a generic error that can be
+        # potentially recovered from - then a second one that it actually
+        # cannot recover.
+        self.assertEqual(len(w), 2)
+        self.assertEqual(
+            w[0].message.args[0],
+            "Response stage 2 does not end with blockette 58. Proceed at "
+            "your own risk.")
+        self.assertEqual(
+            w[1].message.args[0],
+            "Failed to calculate response for SG.ST..LDO with epoch "
+            "1997-02-01T00:00:00.000000Z - 2599-12-31T23:59:59.000000Z "
+            "because: Invalid response specification. A blockette 54 always "
+            "must always be followed by a blockette 57 and a blockette 58. "
+            "Missing blockettes: 57, 58.")
 
 
 def suite():
