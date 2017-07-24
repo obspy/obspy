@@ -45,8 +45,8 @@ class Blockette062(Blockette):
         Integer(14, "Number of Polynomial Coefficients", 3),
         # REPEAT fields 15 and 16 for each polynomial coefficient
         Loop("Polynomial Coefficients", "Number of Polynomial Coefficients", [
-            Float(12, "Polynomial Coefficient", 12, mask='%+1.5e'),
-            Float(12, "Polynomial Coefficient Error", 12, mask='%+1.5e'),
+            Float(15, "Polynomial Coefficient", 12, mask='%+1.5e'),
+            Float(16, "Polynomial Coefficient Error", 12, mask='%+1.5e'),
         ])
     ]
 
