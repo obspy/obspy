@@ -36,7 +36,8 @@ from obspy.core.inventory import (Response,
                                   InstrumentSensitivity,
                                   ResponseStage,
                                   FIRResponseStage,
-                                  ResponseListResponseStage)
+                                  ResponseListResponseStage,
+                                  PolynomialResponseStage)
 from obspy.core.inventory.response import ResponseListElement
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import download_to_file
@@ -1608,6 +1609,82 @@ class Parser(object):
                     decimation_offset=b57.decimation_offset,
                     decimation_delay=b57.estimated_delay,
                     decimation_correction=b57.correction_applied))
+            elif blkts[0].id == 62:
+                b62 = blkts[0]
+                ids = {b.id for b in blkts}
+                assert ids.issubset({62, 57, 58})
+
+                if 57 in ids:
+                    b57 = [b for b in blkts if b.id == 57][0]
+                else:
+                    b57 = None
+
+                # Try to get the units.
+                try:
+                    i_u = self.resolve_abbreviation(
+                        34, b62.stage_signal_in_units)
+                except ValueError:
+                    msg = "Failed to resolve the stage signal in units " \
+                          "abbreivation for blockette 62."
+                    warnings.warn(msg)
+                    i_u = None
+                try:
+                    o_u = self.resolve_abbreviation(
+                        34, b62.stage_signal_out_units)
+                except ValueError:
+                    msg = "Failed to resolve the stage signal out units " \
+                          "abbreviation for blockette 62."
+                    warnings.warn(msg)
+                    o_u = None
+
+                if getattr(b62, "polynomial_approximation_type", "M").upper() \
+                        != "M":
+                    msg = "Only the MACLAURIN polynomial approximation type " \
+                        "is currently supported."
+                    raise ValueError(msg)
+
+                # Get the coefficients.
+                coefficients = []
+                if hasattr(b62, "polynomial_coefficient"):
+                    _t = b62.polynomial_coefficient
+                    if not hasattr(_t, "__iter__"):
+                        _t = [_t]
+                    coefficients.extend(_t)
+
+                response_stages.append(PolynomialResponseStage(
+                    stage_sequence_number=b62.stage_sequence_number,
+                    stage_gain=b58.sensitivity_gain if b58 else None,
+                    stage_gain_frequency=b58.frequency if b58 else None,
+                    input_units=i_u.unit_name if i_u else None,
+                    output_units=o_u.unit_name if o_u else None,
+                    input_units_description=i_u.unit_description
+                    if (i_u and hasattr(i_u, "unit_description")) else None,
+                    output_units_description=o_u.unit_description
+                    if (o_u and hasattr(o_u, "unit_description")) else None,
+                    frequency_lower_bound=
+                    getattr(b62, "lower_valid_frequency_bound", None),
+                    frequency_upper_bound=
+                    getattr(b62, "upper_valid_frequency_bound", None),
+                    # Always MACLAURIN - this is tested above.
+                    approximation_type='MACLAURIN',
+                    approximation_lower_bound=
+                    getattr(b62, "lower_bound_of_approximation", None),
+                    approximation_upper_bound=
+                    getattr(b62, "upper_bound_of_approximation", None),
+                    maximum_error=
+                    getattr(b62, "maximum_absolute_error", None),
+                    coefficients=coefficients,
+                    decimation_input_sample_rate=
+                    b57.input_sample_rate if b57 else None,
+                    decimation_factor=
+                    b57.decimation_factor if b57 else None,
+                    decimation_offset=
+                    b57.decimation_offset if b57 else None,
+                    decimation_delay=
+                    b57.estimated_delay if b57 else None,
+                    decimation_correction=
+                    b57.correction_applied if b57 else None
+                ))
             else:
                 raise NotImplementedError
 

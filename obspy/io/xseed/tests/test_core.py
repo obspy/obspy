@@ -13,6 +13,7 @@ import warnings
 import numpy as np
 
 import obspy
+from obspy.core.inventory.response import PolynomialResponseStage
 from obspy.core.util.testing import NamedTemporaryFile
 from obspy.io.xseed import Parser, InvalidResponseError
 from obspy.io.xseed.core import _is_resp, _is_xseed, _is_seed, _read_resp, \
@@ -652,6 +653,28 @@ class CoreTestCase(unittest.TestCase):
             i_r = inv[0][0][0].response.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r)
+
+    def test_parsing_blockette_62(self):
+        filename = os.path.join(self.data_path, "RESP.blockette_62")
+        inv = obspy.read_inventory(filename)
+        self.assertEqual(inv.get_contents()["channels"], ["XH.DR01.30.LDO"])
+        r = inv[0][0][0].response
+        self.assertIsInstance(r.response_stages[0], PolynomialResponseStage)
+        p = r.response_stages[0]
+        self.assertEqual(p, PolynomialResponseStage(
+            stage_sequence_number=1,
+            stage_gain=1.0,
+            stage_gain_frequency=0.002,
+            input_units="PA",
+            output_units="COUNTS",
+            output_units_description="Digital Counts",
+            frequency_lower_bound=0.001,
+            frequency_upper_bound=10.0,
+            approximation_lower_bound=600,
+            approximation_upper_bound=1100,
+            maximum_error=0.0,
+            coefficients=[8e2, 1.5e-4]
+        ))
 
 
 def suite():
