@@ -1124,6 +1124,8 @@ class Parser(object):
                 input_units = self.resolve_abbreviation(
                     34, blkt52.units_of_signal_response)
             except ValueError:
+                msg = "Failed to resolve units of signal abbreviation."
+                warnings.warn(msg)
                 input_units = None
 
         # Also from the output units of the first stage that claims to have
@@ -1155,6 +1157,15 @@ class Parser(object):
         elif input_units is None:
             input_units = stage_x_output_units
 
+        # If its still unresolved for some reason, resolve them now.
+        if isinstance(input_units, int):
+            try:
+                input_units = self.resolve_abbreviation(34, input_units)
+            except ValueError:
+                msg = "Failed to resolve the input units abbreviation."
+                warnings.warn(msg)
+                input_units = None
+
         # Find the output units by looping over the stages in reverse order
         # and finding the first stage whose first blockette has an output
         # unit set.
@@ -1174,7 +1185,12 @@ class Parser(object):
             warnings.warn(msg)
             output_units = None
         else:
-            output_units = self.resolve_abbreviation(34, unit_lookup_key)
+            try:
+                output_units = self.resolve_abbreviation(34, unit_lookup_key)
+            except ValueError:
+                msg = "Could not resolve the output unit abbreviation."
+                warnings.warn(msg)
+                output_units = None
 
         if 0 not in stages:
             msg = "Channel must a stage 0 blockette."
@@ -1323,17 +1339,29 @@ class Parser(object):
                         p.upper_uncertainty = p + err
                         poles.append(p)
 
-                i_u = self.resolve_abbreviation(
-                    34, b53.stage_signal_input_units)
-                o_u = self.resolve_abbreviation(
-                    34, b53.stage_signal_output_units)
+                try:
+                    i_u = self.resolve_abbreviation(
+                        34, b53.stage_signal_input_units)
+                except ValueError:
+                    msg = "Failed to resolve the stage signal input units " \
+                          "abbreivation for blockette 53."
+                    warnings.warn(msg)
+                    i_u = None
+                try:
+                    o_u = self.resolve_abbreviation(
+                        34, b53.stage_signal_output_units)
+                except ValueError:
+                    msg = "Failed to resolve the stage signal output units " \
+                          "abbreviation for blockette 53."
+                    warnings.warn(msg)
+                    o_u = None
 
                 response_stages.append(PolesZerosResponseStage(
                     stage_sequence_number=b53.stage_sequence_number,
                     stage_gain=b58.sensitivity_gain if b58 else None,
                     stage_gain_frequency=b58.frequency if b58 else None,
-                    input_units=i_u.unit_name,
-                    output_units=o_u.unit_name,
+                    input_units=i_u.unit_name if i_u else None,
+                    output_units=o_u.unit_name if o_u else None,
                     input_units_description=i_u.unit_description
                     if (i_u and hasattr(i_u, "unit_description")) else None,
                     output_units_description=o_u.unit_description
@@ -1393,20 +1421,33 @@ class Parser(object):
                             _t = [_t]
                         denominator.extend(_t)
 
-                i_u = self.resolve_abbreviation(
-                    34, b54.signal_input_units)
-                o_u = self.resolve_abbreviation(
-                    34, b54.signal_output_units)
+                try:
+                    i_u = self.resolve_abbreviation(
+                        34, b54.signal_input_units)
+                except ValueError:
+                    msg = "Failed to resolve the signal input units " \
+                          "abbreviation for blockette 53."
+                    warnings.warn(msg)
+                    i_u = None
+                try:
+                    o_u = self.resolve_abbreviation(
+                        34, b54.signal_output_units)
+                except ValueError:
+                    msg = "Failed to resolve the signal output units " \
+                          "abbreviation for blockette 53."
+                    warnings.warn(msg)
+                    o_u = None
 
                 response_stages.append(CoefficientsTypeResponseStage(
                     stage_sequence_number=b54.stage_sequence_number,
                     stage_gain=b58.sensitivity_gain if b58 else None,
                     stage_gain_frequency=b58.frequency if b58 else None,
-                    input_units=i_u.unit_name,
-                    output_units=o_u.unit_name,
+                    input_units=i_u.unit_name if i_u else None,
+                    output_units=o_u.unit_name if o_u else None,
                     input_units_description=i_u.unit_description
-                    if hasattr(i_u, "unit_description") else None,
-                    output_units_description=o_u.unit_description,
+                    if (i_u and hasattr(i_u, "unit_description")) else None,
+                    output_units_description=o_u.unit_description
+                    if (o_u and hasattr(o_u, "unit_description")) else None,
                     cf_transfer_function_type=transfer_map[b54.response_type],
                     numerator=numerator,
                     denominator=denominator,
