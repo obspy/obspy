@@ -552,6 +552,32 @@ class CoreTestCase(unittest.TestCase):
             "must always be followed by a blockette 57 and a blockette 58. "
             "Missing blockettes: 57, 58.")
 
+    def test_warning_when_blockette_57_is_not_followed_by_58(self):
+        filename = os.path.join(self.data_path, "RESP.decimation_without_gain")
+        # Fail if responses are explicitly not skipped.
+        with self.assertRaises(InvalidResponseError) as e:
+            obspy.read_inventory(filename, skip_invalid_responses=False)
+        self.assertEqual(
+            e.exception.args[0],
+            "A decimation stage with blockette 57 must be followed by a "
+            "blockette 58 which is missing here.")
+        # Otherwise continue, but raise a warning.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            inv = obspy.read_inventory(filename)
+        # This triggers a number of warnings as the file is constructed and
+        # misses all kinds of information.
+        self.assertGreaterEqual(len(w), 1)
+        msg = ("Failed to calculate response for XX.ABC..BHX with epoch " 
+               "1999-12-16T02:14:00.000000Z - 1999-12-21T19:10:59.000000Z "
+               "because: A decimation stage with blockette 57 must be "
+               "followed by a blockette 58 which is missing here.")
+        for _w in w:
+            if _w.message.args[0] == msg:
+                break
+        else:
+            raise AssertionError("Could not find warning to test for.")
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

@@ -1492,7 +1492,10 @@ class Parser(object):
                     if b57 else None))
             # Decimation stage.
             elif blkts[0].id == 57:
-                assert [b.id for b in blkts] == [57, 58]
+                if {b.id for b in blkts} != {57, 58}:
+                    msg = "A decimation stage with blockette 57 must be " \
+                          "followed by a blockette 58 which is missing here."
+                    raise InvalidResponseError(msg)
                 b57 = blkts[0]
                 # Cannot assign units yet - will be added at the end in a
                 # final pass by inferring it from the units of previous and
