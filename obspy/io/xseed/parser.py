@@ -1230,7 +1230,14 @@ class Parser(object):
             b.stage_sequence_number = 0
             stages[0].append(b)
 
+        if not stages[0]:
+            msg = "No stage 0 found and it could not be reconstructed from " \
+                  "the other stages."
+            raise InvalidResponseError(msg)
+
         # Stage 0 blockette must be a blockette 58.
+        # XXX: In theory stage 0 could also be a blockette 62 but so far
+        # this has not been encountered.
         if stages[0][0].id != 58:
             msg = "Stage 0 must be a blockette 58."
             raise ValueError(msg)
