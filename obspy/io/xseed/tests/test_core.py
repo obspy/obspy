@@ -626,6 +626,33 @@ class CoreTestCase(unittest.TestCase):
             "This is not valid.")
         self.assertIsNone(inv[0][0][0].response)
 
+    def test_reconstructing_stage_0_from_other_blockettes(self):
+        # This file has no stage 0 but a bunch of other blockettes 58 from
+        # other stages. Try to reconstruct stage 0.
+        filename = os.path.join(self.data_path, "RESP.JM.NMIA0.00.HHN")
+
+        frequencies = np.logspace(-3, 3, 100)
+        t = obspy.UTCDateTime(2015, 1, 1)
+
+        # Should raise no warnings.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            inv = obspy.read_inventory(filename)
+        self.assertEqual(len(w), 0)
+
+        self.assertEqual(inv.get_contents()["channels"], ["JM.NMIA0.00.HNN"])
+
+        # Also check the responses via the inventory objects and by directly
+        # calling evalresp.
+        for unit in ("DISP", "VEL", "ACC"):
+            #r = obspy.read_inventory(filename)[0][0][0].response
+            e_r = evalresp_for_frequencies(
+                t_samp=None, frequencies=frequencies, filename=filename,
+                date=t, units=unit)
+            i_r = inv[0][0][0].response.get_evalresp_response_for_frequencies(
+                frequencies=frequencies, output=unit)
+            np.testing.assert_equal(e_r, i_r)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

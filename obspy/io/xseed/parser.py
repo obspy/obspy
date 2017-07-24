@@ -1235,10 +1235,23 @@ class Parser(object):
             b.stage_sequence_number = 0
             stages[0].append(b)
 
+        # Now try to reconstruct it from all other blockettes 58.
         if not stages[0]:
-            msg = "No stage 0 found and it could not be reconstructed from " \
-                  "the other stages."
-            raise InvalidResponseError(msg)
+            _blkts58 = []
+            for number in sorted(stages.keys()):
+                _blkts58.extend([_i for _i in stages[number] if _i.id == 58])
+            # Just multiply all gains - this appears to be what evalresp is
+            # also doing.
+            gain = 1.0
+            for _b in _blkts58:
+                if hasattr(_b, "sensitivity_gain") and \
+                        _b.sensitivity_gain:
+                    gain *= _b.sensitivity_gain
+            stages[0] = [Blockette058()]
+            stages[0][0].frequency = _blkts58[-1].frequency
+            stages[0][0].sensitivity_gain = gain
+            stages[0][0].stage_sequency_number = 0
+            stages[0][0].record_type = 'S'
 
         # Stage 0 blockette must be a blockette 58.
         # XXX: In theory stage 0 could also be a blockette 62 but so far
