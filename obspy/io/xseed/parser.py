@@ -1698,7 +1698,8 @@ class Parser(object):
 
         # If the first stage does not have an input unit but the instrument
         # sensitivity has, set that.
-        if not getattr(response_stages[0], "input_units", None) and \
+        if response_stages and \
+                not getattr(response_stages[0], "input_units", None) and \
                 getattr(instrument_sensitivity, "input_units", None):
             response_stages[0].input_units = instrument_sensitivity.input_units
             response_stages[0].input_units_description = \
