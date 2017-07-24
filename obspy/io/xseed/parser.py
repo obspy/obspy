@@ -993,7 +993,6 @@ class Parser(object):
         if set(_i.id for _i in blockettes_for_channel).issubset({52, 59}):
             return None
 
-
         from .blockette import Blockette053, Blockette054, \
             Blockette057, Blockette058, Blockette061
 
@@ -1215,6 +1214,9 @@ class Parser(object):
                     msg = "Channel must have exactly one stage 0 blockette."
                     raise ValueError(msg)
                 else:
+                    msg = ("Channel has multiple (but identical) blockettes "
+                           "58 for stage 0. Only one will be used.")
+                    warnings.warn(msg)
                     stages[0] = _blkts58[:1]
 
         # If there is no stage zero and exactly one other stages, use it to
