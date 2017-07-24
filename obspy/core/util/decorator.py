@@ -11,7 +11,6 @@ Decorator used in ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
 
 import functools
 import inspect
@@ -26,6 +25,7 @@ import zipfile
 
 import numpy as np
 from decorator import decorator
+from future.utils import PY2, native_str
 
 from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile
@@ -322,7 +322,7 @@ def _decorate_polyfill(func, caller):
 
 def rlock(func):
     """
-    Place a threading recursive lock (Rlock) on the wrapped function
+    Place a threading recursive lock (Rlock) on the wrapped function.
     """
     # This lock will be instantiated at function creation time, i.e. at the
     # time the Python interpreter sees the decorated function the very

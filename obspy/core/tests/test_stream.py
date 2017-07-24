@@ -2486,8 +2486,8 @@ class StreamTestCase(unittest.TestCase):
 
     def test_read_no_check_compression(self):
         """
-        Test to ensure calling read with check_compression=False does not 
-        call expensive tar or zip functions  
+        Test to ensure calling read with check_compression=False does not
+        call expensive tar or zip functions.
         """
         # write a file to disk
         file_name = 'temp.mseed'
@@ -2496,7 +2496,7 @@ class StreamTestCase(unittest.TestCase):
 
         with mock.patch("tarfile.is_tarfile") as tar_patch:
             with mock.patch("zipfile.is_zipfile") as zip_patch:
-                _ = read(file_name, check_compression=False)
+                read(file_name, check_compression=False)
 
         # delete temp file
         os.remove(file_name)
