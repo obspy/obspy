@@ -1250,6 +1250,10 @@ class Parser(object):
             _blkts58 = []
             for number in sorted(stages.keys()):
                 _blkts58.extend([_i for _i in stages[number] if _i.id == 58])
+            if not _blkts58:
+                msg = "File has not stage 0 and no other blockettes 58. This " \
+                    "is very likely just an invalid response."
+                raise InvalidResponseError(msg)
             # Just multiply all gains - this appears to be what evalresp is
             # also doing.
             gain = 1.0
@@ -1421,8 +1425,10 @@ class Parser(object):
 
                 response_stages.append(PolesZerosResponseStage(
                     stage_sequence_number=b53.stage_sequence_number,
-                    stage_gain=b58.sensitivity_gain if b58 else None,
-                    stage_gain_frequency=b58.frequency if b58 else None,
+                    stage_gain=getattr(b58, "sensitivity_gain", None)
+                    if b58 else None,
+                    stage_gain_frequency=getattr(b58, "frequency", None)
+                    if b58 else None,
                     input_units=i_u.unit_name if i_u else None,
                     output_units=o_u.unit_name if o_u else None,
                     input_units_description=i_u.unit_description

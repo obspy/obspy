@@ -690,6 +690,17 @@ class CoreTestCase(unittest.TestCase):
         # For now just test that it is actually read.
         self.assertIsInstance(r.response_stages[0], PolynomialResponseStage)
 
+    def test_warning_with_no_blockettes_58(self):
+        filename = os.path.join(self.data_path, "RESP.repeated_stage_0")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            inv = obspy.read_inventory(filename)
+        self.assertGreaterEqual(len(w), 1)
+        self.assertEqual(
+            w[0].message.args[0],
+            "Channel has multiple (but identical) blockettes 58 for stage 0. "
+            "Only one will be used.")
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
