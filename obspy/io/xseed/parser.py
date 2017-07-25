@@ -1310,14 +1310,19 @@ class Parser(object):
                 msg = "If blockette 62 is in stage 0 it must currently be " \
                       "the only blockette in stage 0."
                 raise ValueError(msg)
+            # If blockette 62 is set for stage 0 and other stages are
+            # present it should just be a summary of all the other stages
+            # and can thus be removed.
             if len(stages.keys()) != 1:
-                msg = "If blockette 62 is in stage 0 it must currently be " \
-                      "the only stage."
-                raise ValueError(msg)
-            # Just move it to stage 1 and it should be covered by the rest
-            # of the logic.
-            stages[1] = stages[0]
-            del stages[0]
+                del stages[0]
+            # Otherwise (62 is still stage 0, but not other stages exist) it
+            # is the only stage describing the full response. Moving it to
+            # stage 1 should trigger the rest of the logic to work correctly.
+            else:
+                # Just move it to stage 1 and it should be covered by the rest
+                # of the logic.
+                stages[1] = stages[0]
+                del stages[0]
 
         # Afterwards loop over all other stages and assemble them in one list.
         response_stages = []
