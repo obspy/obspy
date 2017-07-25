@@ -593,8 +593,8 @@ class FederatedClient(RoutingClient):
              :meth:`~obspy.fdsn.clients.Client.get_stations_bulk`
 
         >>> client = FederatedClient()
-        >>> bulkreq = str("IU ANMO * ?HZ 2010-02-27T06:30:00 "
-        ...               "2010-02-27T06:33:00")
+        >>> bulkreq = ("IU ANMO * ?HZ 2010-02-27T06:30:00 "
+        ...            "2010-02-27T06:33:00")
         >>> tr = client.get_waveforms_bulk(bulk=bulkreq)
         ...        #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         >>> print(tr)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
@@ -855,7 +855,9 @@ class FederatedClient(RoutingClient):
                 Networks (...):
                     IU (...)
                 Stations (0):...
+        <BLANKLINE>
                 Channels (0):...
+        <BLANKLINE>
         """
 
         svc_name = "STATIONSERVICE"
