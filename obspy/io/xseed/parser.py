@@ -1122,7 +1122,7 @@ class Parser(object):
 
         # Get units - first from blockette 52 if they exist.
         if not hasattr(blkt52, "units_of_signal_response"):
-            if stages[0][0].id == 62:
+            if 0 in stages and stages[0] and stages[0][0].id == 62:
                 try:
                     input_units = self.resolve_abbreviation(
                         34, stages[0][0].stage_signal_in_units)
