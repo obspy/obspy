@@ -1116,6 +1116,10 @@ class Parser(object):
                 continue
             stages[b.stage_sequence_number].append(b)
 
+        # Convert to a normal dictionary to not get any surprises like
+        # automatically generated stages when testing if something is there.
+        stages = dict(stages)
+
         # Get units - first from blockette 52 if they exist.
         if not hasattr(blkt52, "units_of_signal_response"):
             if stages[0][0].id == 62:
@@ -1142,7 +1146,7 @@ class Parser(object):
         stage_x_output_units = None
         stage_x_is_stage_1 = False
         for _stage in list(range(1, max(stages.keys()) + 1)) + [0]:
-            if not stages[_stage]:
+            if _stage not in stages:
                 continue
             _s = stages[_stage][0]
             for _attr in dir(_s):
@@ -1201,10 +1205,12 @@ class Parser(object):
                 warnings.warn(msg)
                 output_units = None
 
+        # The remaning logic assumes that the stages list for blockette 0 at
+        # least exists.
         if 0 not in stages:
-            msg = "Channel must a stage 0 blockette."
-            raise ValueError(msg)
-        elif len(stages[0]) > 1:
+            stages[0] = []
+
+        if len(stages[0]) > 1:
             _blkts58 = [_i for _i in stages[0] if _i.id == 58]
             # Attempt to fix it - only works if there is a blockette 58 in
             # it and the rest of the stages are empty.
@@ -1315,12 +1321,13 @@ class Parser(object):
 
         # Afterwards loop over all other stages and assemble them in one list.
         response_stages = []
-        for _i in range(1, max(stages.keys()) + 1):
+        for _i in sorted(set(stages.keys()).difference({0})):
             # Some SEED files have blockettes in the wrong order - sort them
             # to fix it.
             # The sorting is kind of awkward - essentially sort by id,
             # but make sure 57 + 58 are at the end.
             blkts = sorted(stages[_i], key=lambda x: int(x.blockette_id))
+
             b_a = [b for b in blkts if b.blockette_id not in ("057", "058")]
             b_b = [b for b in blkts if b.blockette_id in ("057", "058")]
             blkts = b_a + b_b
