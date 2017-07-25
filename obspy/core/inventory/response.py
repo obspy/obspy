@@ -861,6 +861,7 @@ class Response(ComparingObject):
                 "M/(S**2)": ew.ENUM_UNITS["ACC"],
                 "M/SEC**2": ew.ENUM_UNITS["ACC"],
                 "M/(SEC**2)": ew.ENUM_UNITS["ACC"],
+                "M/S/S": ew.ENUM_UNITS["ACC"],
                 "NM/S**2": ew.ENUM_UNITS["ACC"],
                 "NM/(S**2)": ew.ENUM_UNITS["ACC"],
                 "NM/SEC**2": ew.ENUM_UNITS["ACC"],
