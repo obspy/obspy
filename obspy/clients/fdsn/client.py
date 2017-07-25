@@ -20,7 +20,6 @@ import gzip
 import io
 import os
 import re
-import sys
 from socket import timeout as socket_timeout
 import textwrap
 import threading
