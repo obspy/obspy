@@ -1351,15 +1351,15 @@ class Parser(object):
 
             # A bit undefined if it does not end with blockette 58 I think.
             # Not needed for blockette 62.
-            if blkts[-1].id != 58 and blkts[0].id != 62:
+            if blkts[-1].id == 58:
+                b58 = blkts[-1]
+            elif blkts[-1].id != 58 and blkts[0].id != 62:
                 msg = ("Response stage %i does not end with blockette 58. " 
                        "Proceed at your own risk." % _i)
                 warnings.warn(msg)
                 b58 = None
-            if blkts[-1].id != 58 and blkts[0].id == 62:
-                b58 = None
             else:
-                b58 = blkts[-1]
+                b58 = None
 
             def _list(value):
                 if hasattr(value, '__iter__'):
@@ -1610,20 +1610,32 @@ class Parser(object):
                     output_units=""))
             # FIR stage.
             elif blkts[0].id == 61:
-                assert {b.id for b in blkts} == {61, 57, 58}
+                _blkt_set = {b.id for b in blkts}
+                if not _blkt_set.issubset({61, 57, 58}):
+                    extra_blkts = _blkt_set.difference({61, 57, 58})
+                    msg = "A stage with blockette 61 may only contain " \
+                          "additional blockettes 57 and 58. This stage has " \
+                          "the following additional blockettes: %s" % (
+                              ", ".join(str(_i) for _i in sorted(extra_blkts)))
+                    raise InvalidResponseError(msg)
 
                 blkts61 = [b for b in blkts if b.id == 61]
-                blkts57 = [b for b in blkts if b.id == 57]
 
+                # Blockette 57.
+                blkts57 = [b for b in blkts if b.id == 57]
                 if len(blkts57) > 1:
                     msg = ("Multiple blockettes 57 found after blockette 61! "
                            "Will use the first one. This is an invalid file "
                            "- please check it!")
                     warnings.warn(msg)
+                if blkts57:
+                    b57 = blkts57[0]
+                else:
+                    b57 = None
 
                 # Use first blkt 61 as a reference.
                 b61 = blkts61[0]
-                b57 = blkts57[0]
+
 
                 # Use all of them for the coefficients.
                 coefficients = []
@@ -1653,11 +1665,16 @@ class Parser(object):
                     if (o_u and hasattr(o_u, "unit_description")) else None,
                     symmetry=symmetry_map[b61.symmetry_code],
                     coefficients=coefficients,
-                    decimation_input_sample_rate=b57.input_sample_rate,
-                    decimation_factor=b57.decimation_factor,
-                    decimation_offset=b57.decimation_offset,
-                    decimation_delay=b57.estimated_delay,
-                    decimation_correction=b57.correction_applied))
+                    decimation_input_sample_rate=
+                    b57.input_sample_rate if b57 else None,
+                    decimation_factor=
+                    b57.decimation_factor if b57 else None,
+                    decimation_offset=
+                    b57.decimation_offset if b57 else None,
+                    decimation_delay=
+                    b57.estimated_delay if b57 else None,
+                    decimation_correction=
+                    b57.correction_applied if b57 else None))
             elif blkts[0].id == 62:
                 b62 = blkts[0]
                 ids = {b.id for b in blkts}
