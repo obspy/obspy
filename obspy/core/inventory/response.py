@@ -1213,7 +1213,10 @@ class Response(ComparingObject):
         blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
         gain_blkt = blkt.blkt_info.gain
         gain_blkt.gain = self.instrument_sensitivity.value
-        gain_blkt.gain_freq = self.instrument_sensitivity.frequency
+        # Set the sensitivity frequency - use 1.0 if not given. This is also
+        # what evalresp does.
+        gain_blkt.gain_freq = self.instrument_sensitivity.frequency \
+            if self.instrument_sensitivity.frequency else 1.0
         st.first_blkt = C.pointer(blkt)
         stage_objects.append(st)
 
