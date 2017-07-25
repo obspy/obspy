@@ -27,15 +27,6 @@ import threading
 import warnings
 from collections import OrderedDict
 
-if sys.version_info.major == 2:
-    from urllib import urlencode
-    import urllib2 as urllib_request
-    import Queue as queue
-else:
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
-    import queue
-
 from lxml import etree
 
 import obspy
@@ -45,6 +36,15 @@ from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
                      FDSNRedirectException, FDSNNoDataException)
 from .wadl_parser import WADLParser
+
+if PY2:
+    from urllib import urlencode
+    import urllib2 as urllib_request
+    import Queue as queue
+else:
+    from urllib.parse import urlencode
+    import urllib.request as urllib_request
+    import queue
 
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
@@ -1079,7 +1079,10 @@ class Client(object):
                 msg = ("Unrecognized input for 'bulk' argument. Please "
                        "contact developers if you think this is a bug.")
                 raise NotImplementedError(msg)
-        return bulk.encode('ASCII')
+        if PY2:
+            return bulk
+        else:
+            return bulk.encode('ASCII')
 
     def _write_to_file_object(self, filename_or_object, data_stream):
         if hasattr(filename_or_object, "write"):
