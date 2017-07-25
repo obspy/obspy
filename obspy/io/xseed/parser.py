@@ -1370,7 +1370,14 @@ class Parser(object):
             # Poles and Zeros stage.
             if blkts[0].id == 53:
                 # Must be 53 and 58.
-                assert set(b.id for b in blkts).issubset({53, 57, 58})
+                _blkt_set = {b.id for b in blkts}
+                if not _blkt_set.issubset({53, 57, 58}):
+                    extra_blkts = _blkt_set.difference({53, 57, 58})
+                    msg = "A stage with blockette 53 may only contain " \
+                          "additional blockettes 57 and 58. This stage has " \
+                          "the following additional blockettes: %s" % (
+                        ", ".join(str(_i) for _i in sorted(extra_blkts)))
+                    raise InvalidResponseError(msg)
                 blkts53 = [b for b in blkts if b.id == 53]
                 blkts57 = [b for b in blkts if b.id == 57]
                 b53 = blkts53[0]
