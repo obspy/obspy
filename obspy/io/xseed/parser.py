@@ -1025,7 +1025,10 @@ class Parser(object):
             43: (Blockette053, {
                 "mappings": {
                     "transfer_function_types": "response_type"},
-                "might_be_empty": []
+                "might_be_empty": ["real_zero", "real_pole", "imaginary_zero",
+                                   "imaginary_pole", "real_zero_error",
+                                   "real_pole_error", "imaginary_zero_error",
+                                   "imaginary_pole_error"]
             }),
             44: (Blockette054, {
                 "mappings": {},
