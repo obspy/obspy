@@ -47,7 +47,7 @@ void merge_lists(struct blkt *first_blkt, struct blkt **second_blkt) {
   /* set up some local pointers and values */
 
   ncoeffs1 = first_blkt->blkt_info.list.nresp;
-  
+
   amp1 = first_blkt->blkt_info.list.amp;
   phase1 = first_blkt->blkt_info.list.phase;
   freq1 = first_blkt->blkt_info.list.freq;
@@ -403,24 +403,28 @@ void check_channel(struct channel *chan) {
         ref_blkt->next_blkt = filt_blkt;
         filt_blkt->next_blkt = deci_blkt;
         deci_blkt->next_blkt = gain_blkt;
-        gain_blkt->next_blkt = (struct blkt *)NULL;
+        if (gain_blkt)
+            gain_blkt->next_blkt = (struct blkt *)NULL;
       }
       else if(deci_flag) {
         stage_ptr->first_blkt = filt_blkt;
         filt_blkt->next_blkt = deci_blkt;
         deci_blkt->next_blkt = gain_blkt;
-        gain_blkt->next_blkt = (struct blkt *)NULL;
+        if (gain_blkt)
+            gain_blkt->next_blkt = (struct blkt *)NULL;
       }
       else if(ref_flag) {
         stage_ptr->first_blkt = ref_blkt;
         ref_blkt->next_blkt = filt_blkt;
         filt_blkt->next_blkt = gain_blkt;
-        gain_blkt->next_blkt = (struct blkt *)NULL;
+        if (gain_blkt)
+            gain_blkt->next_blkt = (struct blkt *)NULL;
       }
       else if(gain_flag) {
         stage_ptr->first_blkt = filt_blkt;
         filt_blkt->next_blkt = gain_blkt;
-        gain_blkt->next_blkt = (struct blkt *)NULL;
+        if (gain_blkt)
+            gain_blkt->next_blkt = (struct blkt *)NULL;
       }
     }
 
