@@ -18,6 +18,7 @@ from obspy.io.xseed.blockette.blockette010 import Blockette010
 from obspy.io.xseed.blockette.blockette051 import Blockette051
 from obspy.io.xseed.blockette.blockette053 import Blockette053
 from obspy.io.xseed.blockette.blockette054 import Blockette054
+import obspy.io.xseed.parser
 from obspy.io.xseed.parser import Parser
 from obspy.io.xseed.utils import SEEDParserException, compare_seed
 
@@ -678,6 +679,11 @@ class ParserTestCase(unittest.TestCase):
         """
         Test case for issue #319: multiple abbreviation dictionaries.
         """
+        # We have to clear the warnings registry here as some other tests
+        # also trigger the warning.
+        if hasattr(obspy.io.xseed.parser, "__warningregistry__"):
+            obspy.io.xseed.parser.__warningregistry__.clear()
+
         filename = os.path.join(self.path, 'BN.LPW._.BHE.dataless')
         # raises a UserWarning: More than one Abbreviation Dictionary Control
         # Headers found!
