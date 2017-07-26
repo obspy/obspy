@@ -108,7 +108,10 @@ def _internal_is_resp(fh):
             # check each line after splitting them
             for line in lines:
                 if hasattr(line, "decode"):
-                    line = line.decode()
+                    try:
+                        line = line.decode()
+                    except UnicodeError:
+                        return False
                 if line.startswith("#"):
                     continue
                 # do the regex check on the first non-comment line
