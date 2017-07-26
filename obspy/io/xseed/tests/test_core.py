@@ -405,7 +405,7 @@ class CoreTestCase(unittest.TestCase):
         """
         # Very broad range but the responses should be exactly identical as
         # they use the same code under the hood so it should prove no issue.
-        frequencies = np.logspace(-3, 3, 100)
+        frequencies = np.logspace(-3, 3, 20)
 
         for filename in self.resp_files:
             # Set the times for the response.
@@ -444,7 +444,7 @@ class CoreTestCase(unittest.TestCase):
         """
         # Very broad range but the responses should be exactly identical as
         # they use the same code under the hood so it should prove no issue.
-        frequencies = np.logspace(-3, 3, 100)
+        frequencies = np.logspace(-3, 3, 20)
 
         for filename in self.seed_files + self.xseed_files:
             # Parse the files using the Parser object.
