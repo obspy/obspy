@@ -15,7 +15,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import codecs
-import copy
 import io
 import os
 import sys
