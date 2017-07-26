@@ -44,6 +44,8 @@ from obspy.core.util.base import download_to_file
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.obspy_types import ComplexWithUncertainties
 from . import DEFAULT_XSEED_VERSION, blockette, InvalidResponseError
+from .blockette import (Blockette053, Blockette054, Blockette057, Blockette058,
+                        Blockette061)
 from .utils import (IGNORE_ATTR, SEEDParserException, to_tag)
 from .fields import Loop, VariableString
 
@@ -985,28 +987,25 @@ class Parser(object):
         :param epoch_str: A string representing the epoch. Used for nice
             warning and error message.
         :type epoch_str: str
+
         :rtype: :class:`obspy.core.inventory.response.Response`
         :returns: Inventory response object.
         """
-        # Function generating nicer messages.
+        # Function generating more descriptive warning and error messages.
         def _epoch_warn_msg(msg):
             return "Epoch %s: %s" % (epoch_str, msg)
 
-        # No response for channel.
+        # Return if there is not response.
         if set(_i.id for _i in blockettes_for_channel).issubset({52, 59}):
             return None
 
-        from .blockette import Blockette053, Blockette054, \
-            Blockette057, Blockette058, Blockette061
-
         transform_map = {'A': 'LAPLACE (RADIANS/SECOND)',
                          'B': 'LAPLACE (HERTZ)',
-                         'D': 'DIGITAL (Z-TRANSFORM)'
-                         }
+                         'D': 'DIGITAL (Z-TRANSFORM)'}
+
         transfer_map = {'A': 'ANALOG (RADIANS/SECOND',
                         'B': 'ANALOG (HERTZ)',
-                        'D': 'DIGITAL'
-                        }
+                        'D': 'DIGITAL'}
 
         # Parse blockette 60 and convert all the dictionary to their real
         # blockette counterparts. Who ever thought blockette 60 was a good
@@ -1051,13 +1050,18 @@ class Parser(object):
         }
         ignore_fields = ["stage_sequence_number", "response_name"]
 
+        # Some preprocessing - mainly filter out comment blockettes and
+        # translate all blockettes in blockette 60 to their full blockette
+        # counterparts.
         for b in blockettes_for_channel:
+            # Filter out comments.
             if b.id != 60:
                 # Comments are irrelevant for the response.
                 if b.id == 59:
                     continue
                 _blockettes.append(b)
                 continue
+            # Translate blockette 60 to their true blockette counterparts.
             for _i, lookup_codes in enumerate(b.stages):
                 stage_sequence_number = _i + 1
                 for code in lookup_codes:
@@ -1106,50 +1110,51 @@ class Parser(object):
                         setattr(_b, field.attribute_name, getattr(_d, key))
                     _b.stage_sequence_number = stage_sequence_number
                     _blockettes.append(_b)
-
         blockettes_for_channel = _blockettes
 
         # Get blockette 52.
         blkt52 = [_i for _i in blockettes_for_channel if _i.id == 52]
         if len(blkt52) != 1:
-            raise InvalidResponseError("Must have a blockette 52.")
+            raise InvalidResponseError("Must have exactly one blockette 52.")
         blkt52 = blkt52[0]
 
         # Sort the rest into stages.
         stages = collections.defaultdict(list)
         for b in blockettes_for_channel:
-            # Blockette 52 does not matter for the response.
+            # Blockette 52 does not belong to any particular stage.
             if b.id == 52:
                 continue
             stages[b.stage_sequence_number].append(b)
-
         # Convert to a normal dictionary to not get any surprises like
         # automatically generated stages when testing if something is there.
         stages = dict(stages)
 
-        # Get units - first from blockette 52 if they exist.
-        if not hasattr(blkt52, "units_of_signal_response"):
+        # Get input units from blockette 52.
+        if hasattr(blkt52, "units_of_signal_response"):
+            try:
+                input_units = self.resolve_abbreviation(
+                    34, blkt52.units_of_signal_response)
+            except ValueError:
+                msg = ("Failed to resolve units of signal abbreviation in "
+                       "blockette 52.")
+                warnings.warn(_epoch_warn_msg(msg))
+                input_units = None
+        # Alternatively stage 0 might be blkt 62 which might also the full
+        # units.
+        else:
             if 0 in stages and stages[0] and stages[0][0].id == 62:
                 try:
                     input_units = self.resolve_abbreviation(
                         34, stages[0][0].stage_signal_in_units)
                 except ValueError:
-                    msg = "Failed to resolve units of signal abbreviation."
+                    msg = ("Failed to resolve units of signal abbreviation "
+                           "in blockette 62.")
                     warnings.warn(_epoch_warn_msg(msg))
                     input_units = None
             else:
                 input_units = None
-        else:
-            try:
-                input_units = self.resolve_abbreviation(
-                    34, blkt52.units_of_signal_response)
-            except ValueError:
-                msg = "Failed to resolve units of signal abbreviation."
-                warnings.warn(_epoch_warn_msg(msg))
-                input_units = None
 
-        # Also from the output units of the first stage that claims to have
-        # them!
+        # Alternatively get them from the first stage that claims to have them.
         stage_x_output_units = None
         for _stage in list(range(1, max(stages.keys()) + 1)) + [0]:
             if _stage not in stages:
@@ -1167,14 +1172,17 @@ class Parser(object):
                         pass
                     break
 
-        # Both are None -> raise a warning.
+        # If both are None -> raise a warning.
         if input_units is None and stage_x_output_units is None:
             msg = "Could not determine input units."
             warnings.warn(_epoch_warn_msg(msg))
+        # Prefer the input units from blockette 52, otherwise use the ones
+        # from the first stage that has them.
         elif input_units is None:
             input_units = stage_x_output_units
 
-        # If its still unresolved for some reason, resolve them now.
+        # If the input units are still unresolved for some reason, resolve
+        # them now.
         if isinstance(input_units, int):
             try:
                 input_units = self.resolve_abbreviation(34, input_units)
@@ -1205,15 +1213,17 @@ class Parser(object):
             try:
                 output_units = self.resolve_abbreviation(34, unit_lookup_key)
             except ValueError:
-                msg = "Could not resolve the output unit abbreviation."
+                msg = "Could not resolve the output units abbreviation."
                 warnings.warn(_epoch_warn_msg(msg))
                 output_units = None
 
-        # The remaning logic assumes that the stages list for blockette 0 at
+        # The remaining logic assumes that the stages list for blockette 0 at
         # least exists.
         if 0 not in stages:
             stages[0] = []
 
+        # Stage zero usually only contains a single blockette (58 or 62).
+        # Deal with cases where this is not true.
         if len(stages[0]) > 1:
             _blkts58 = [_i for _i in stages[0] if _i.id == 58]
             # Attempt to fix it - only works if there is a blockette 58 in
@@ -1255,13 +1265,14 @@ class Parser(object):
             b.stage_sequence_number = 0
             stages[0].append(b)
 
-        # Now try to reconstruct it from all other blockettes 58.
+        # If still no stage 0, try to reconstruct it from all other
+        # blockettes 58.
         if not stages[0]:
             _blkts58 = []
             for number in sorted(stages.keys()):
                 _blkts58.extend([_i for _i in stages[number] if _i.id == 58])
             if not _blkts58:
-                msg = "File has not stage 0 and no other blockettes 58. " \
+                msg = "File has no stage 0 and no other blockettes 58. " \
                     "This is very likely just an invalid response."
                 raise InvalidResponseError(msg)
             # Just multiply all gains - this appears to be what evalresp is
@@ -1277,20 +1288,20 @@ class Parser(object):
             stages[0][0].stage_sequency_number = 0
             stages[0][0].record_type = 'S'
 
-        # Stage 0 blockette must be a blockette 58 or 62.
+        # The final stage 0 blockette must be a blockette 58 or 62.
         if stages[0][0].id not in (58, 62):
             msg = "Stage 0 must be a blockette 58 or 62."
             raise InvalidResponseError(msg)
 
-        # Cannot have both 53 and 54 in one stage.
+        # Cannot have both, blockettes 53 and 54, in one stage.
         for stage, blkts in stages.items():
             _i = {b.id for b in blkts}.intersection({53, 54})
             if len(_i) > 1:
-                msg = "Stage %i has both, blockette 53 and 54. This is not " \
-                      "valid." % stage
+                msg = ("Stage %i has both, blockette 53 and 54. This is not "
+                       "valid.") % stage
                 raise InvalidResponseError(msg)
 
-        # Assemble the instrument sensitivity.
+        # Assemble the total instrument sensitivity.
         if stages[0][0].id == 58:
             instrument_sensitivity = InstrumentSensitivity(
                 value=stages[0][0].sensitivity_gain,
@@ -1304,7 +1315,7 @@ class Parser(object):
                 output_units_description=output_units.unit_description
                 if (output_units and hasattr(output_units, "unit_description"))
                 else None)
-        # Blockette 62.
+        # Does not exist if it is a single blockette 62.
         else:
             instrument_sensitivity = None
 
@@ -1312,7 +1323,7 @@ class Parser(object):
         if stages[0][0].id == 62:
             if len(stages[0]) != 1:
                 msg = "If blockette 62 is in stage 0 it must be " \
-                      "the only blockette in stage 0."
+                    "the only blockette in stage 0."
                 raise InvalidResponseError(msg)
             # If blockette 62 is set for stage 0 and other stages are
             # present it should just be a summary of all the other stages
@@ -1338,25 +1349,14 @@ class Parser(object):
             blkts = sorted(stages[_i], key=lambda x: int(x.blockette_id))
 
             b_a = [b for b in blkts if b.blockette_id not in ("057", "058")]
-            b_b = [b for b in blkts if b.blockette_id in ("057", "058")]
-            blkts = b_a + b_b
-
-            # All blockettes have to end with blockette 58 (I think). Some
-            # data out in the wild is just off the charts and has wild
-            # stages. We thus search all blockettes of this stage and cut
-            # the first time we encounter blockette 58.
-            prior_length = len(blkts)
-            _blkts = []
-            for b in blkts:
-                _blkts.append(b)
-                if b.id == 58:
-                    break
-            blkts = _blkts
-            if len(blkts) != prior_length:
-                msg = ("Stage %i had %i extra blockettes after blockette 58. "
-                       "The have been ignored. Better check what's up with "
-                       "the file!")
+            b_b57 = [b for b in blkts if b.blockette_id in ("057")]
+            b_b58 = [b for b in blkts if b.blockette_id in ("058")]
+            if len(b_b58) > 1:
+                msg = ("Stage %i has %i blockettes 58. Only the first one "
+                       "will be used." % (_i, len(b_b58)))
                 warnings.warn(_epoch_warn_msg(msg))
+                b_b58 = b_b58[:1]
+            blkts = b_a + b_b57 + b_b58
 
             # A bit undefined if it does not end with blockette 58 I think.
             # Not needed for blockette 62.
@@ -1382,9 +1382,11 @@ class Parser(object):
                 _blkt_set = {b.id for b in blkts}
                 if not _blkt_set.issubset({53, 57, 58}):
                     extra_blkts = _blkt_set.difference({53, 57, 58})
-                    msg = "A stage with blockette 53 may only contain " \
-                          "additional blockettes 57 and 58. This stage has " \
-                          "the following additional blockettes: %s" % (
+                    msg = "Stage %i: " \
+                        "A stage with blockette 53 may only contain " \
+                        "additional blockettes 57 and 58. This stage has " \
+                        "the following additional blockettes: %s" % (
+                            _i,
                             ", ".join(str(_i) for _i in sorted(extra_blkts)))
                     raise InvalidResponseError(msg)
                 blkts53 = [b for b in blkts if b.id == 53]
@@ -1392,12 +1394,12 @@ class Parser(object):
                 b53 = blkts53[0]
 
                 if len(blkts53) > 1:
-                    msg = ("Multiple blockettes 53 found! Will use the first "
-                           "one. This is an invalid file - please check it!")
+                    msg = ("Stage %i has %i blockettes 53. Only the first one "
+                           "will be used." % (_i, len(blkts53)))
                     warnings.warn(_epoch_warn_msg(msg))
                 if len(blkts57) > 1:
-                    msg = ("Multiple blockettes 57 found! Will use the first "
-                           "one. This is an invalid file - please check it!")
+                    msg = ("Stage %i has %i blockettes 57. Only the first one "
+                           "will be used." % (_i, len(blkts57)))
                     warnings.warn(_epoch_warn_msg(msg))
                 if blkts57:
                     b57 = blkts57[0]
@@ -1433,16 +1435,16 @@ class Parser(object):
                     i_u = self.resolve_abbreviation(
                         34, b53.stage_signal_input_units)
                 except ValueError:
-                    msg = "Failed to resolve the stage signal input units " \
-                          "abbreivation for blockette 53."
+                    msg = "Stage %i: Failed to resolve the stage signal " \
+                        "input units abbreivation for blockette 53." % _i
                     warnings.warn(_epoch_warn_msg(msg))
                     i_u = None
                 try:
                     o_u = self.resolve_abbreviation(
                         34, b53.stage_signal_output_units)
                 except ValueError:
-                    msg = "Failed to resolve the stage signal output units " \
-                          "abbreviation for blockette 53."
+                    msg = "Stage %i: Failed to resolve the stage signal " \
+                        "output units abbreviation for blockette 53." % _i
                     warnings.warn(_epoch_warn_msg(msg))
                     o_u = None
 
@@ -1478,10 +1480,11 @@ class Parser(object):
             elif blkts[0].id == 54:
                 if {b.id for b in blkts} != {54, 57, 58}:
                     missing = {57, 58}.difference({b.id for b in blkts})
-                    msg = ("Invalid response specification. A blockette 54 "
+                    msg = ("Stage %i: "
+                           "Invalid response specification. A blockette 54 "
                            "always must always be followed by a blockette 57 "
                            "and a blockette 58. Missing blockettes: %s." % (
-                            ", ".join(str(_i) for _i in missing)))
+                            _i, ", ".join(str(_i) for _i in missing)))
                     raise InvalidResponseError(msg)
                 # There can be multiple blockettes 54 in sequence in which
                 # case numerators or denominators are chained from all of them.
@@ -1489,9 +1492,8 @@ class Parser(object):
                 blkts57 = [b for b in blkts if b.id == 57]
 
                 if len(blkts57) > 1:
-                    msg = ("Multiple blockettes 57 found after blockette 54! "
-                           "Will use the first one. This is an invalid file "
-                           "- please check it!")
+                    msg = ("Stage %i has %i blockettes 57. Only the first one "
+                           "will be used." % (_i, len(blkts57)))
                     warnings.warn(_epoch_warn_msg(msg))
 
                 # Choose the first one as a reference.
@@ -1517,16 +1519,16 @@ class Parser(object):
                     i_u = self.resolve_abbreviation(
                         34, b54.signal_input_units)
                 except ValueError:
-                    msg = "Failed to resolve the signal input units " \
-                          "abbreviation for blockette 53."
+                    msg = "Stage %i: Failed to resolve the signal input " \
+                        "units abbreviation for blockette 54." % _i
                     warnings.warn(_epoch_warn_msg(msg))
                     i_u = None
                 try:
                     o_u = self.resolve_abbreviation(
                         34, b54.signal_output_units)
                 except ValueError:
-                    msg = "Failed to resolve the signal output units " \
-                          "abbreviation for blockette 53."
+                    msg = "Stage %i: Failed to resolve the signal output " \
+                        "units abbreviation for blockette 54." % _i
                     warnings.warn(_epoch_warn_msg(msg))
                     o_u = None
 
@@ -1585,8 +1587,9 @@ class Parser(object):
             # Decimation stage.
             elif blkts[0].id == 57:
                 if {b.id for b in blkts} != {57, 58}:
-                    msg = "A decimation stage with blockette 57 must be " \
-                          "followed by a blockette 58 which is missing here."
+                    msg = "Stage %i: A decimation stage with blockette 57 " \
+                        "must be followed by a blockette 58 which is " \
+                        "missing here." % _i
                     raise InvalidResponseError(msg)
                 b57 = blkts[0]
                 # Cannot assign units yet - will be added at the end in a
@@ -1622,10 +1625,12 @@ class Parser(object):
                 _blkt_set = {b.id for b in blkts}
                 if not _blkt_set.issubset({61, 57, 58}):
                     extra_blkts = _blkt_set.difference({61, 57, 58})
-                    msg = "A stage with blockette 61 may only contain " \
-                          "additional blockettes 57 and 58. This stage has " \
-                          "the following additional blockettes: %s" % (
-                              ", ".join(str(_i) for _i in sorted(extra_blkts)))
+                    msg = "Stage %i: " \
+                        "A stage with blockette 61 may only contain " \
+                        "additional blockettes 57 and 58. This stage has " \
+                        "the following additional blockettes: %s" % (
+                            _i,
+                            ", ".join(str(_i) for _i in sorted(extra_blkts)))
                     raise InvalidResponseError(msg)
 
                 blkts61 = [b for b in blkts if b.id == 61]
@@ -1633,9 +1638,10 @@ class Parser(object):
                 # Blockette 57.
                 blkts57 = [b for b in blkts if b.id == 57]
                 if len(blkts57) > 1:
-                    msg = ("Multiple blockettes 57 found after blockette 61! "
+                    msg = ("Stage %i: "
+                           "Multiple blockettes 57 found after blockette 61! "
                            "Will use the first one. This is an invalid file "
-                           "- please check it!")
+                           "- please check it!") % _i
                     warnings.warn(_epoch_warn_msg(msg))
                 if blkts57:
                     b57 = blkts57[0]
@@ -1698,23 +1704,23 @@ class Parser(object):
                     i_u = self.resolve_abbreviation(
                         34, b62.stage_signal_in_units)
                 except ValueError:
-                    msg = "Failed to resolve the stage signal in units " \
-                          "abbreivation for blockette 62."
+                    msg = "Stage %i: Failed to resolve the stage signal in " \
+                          "units abbreivation for blockette 62." % _i
                     warnings.warn(_epoch_warn_msg(msg))
                     i_u = None
                 try:
                     o_u = self.resolve_abbreviation(
                         34, b62.stage_signal_out_units)
                 except ValueError:
-                    msg = "Failed to resolve the stage signal out units " \
-                          "abbreviation for blockette 62."
+                    msg = "Stage %i: Failed to resolve the stage signal out " \
+                        "units abbreviation for blockette 62." % _i
                     warnings.warn(_epoch_warn_msg(msg))
                     o_u = None
 
                 if getattr(b62, "polynomial_approximation_type", "M").upper() \
                         != "M":
-                    msg = "Only the MACLAURIN polynomial approximation type " \
-                        "is currently supported."
+                    msg = "Stage _i: Only the MACLAURIN polynomial " \
+                        "approximation type is currently supported." % _i
                     raise InvalidResponseError(msg)
 
                 # Get the coefficients.
@@ -1760,8 +1766,8 @@ class Parser(object):
                     if b57 else None))
             else:
                 raise NotImplementedError(_epoch_warn_msg(
-                    "Stage has the following blockettes: %s" % ", ".join(
-                        b.id for b in blkts)))
+                    "Stage %i has the following blockettes: %s" % (
+                        _i, ", ".join(b.id for b in blkts))))
 
         # Do one last pass over the response stages to fill in missing units.
         for _i in range(len(response_stages)):
