@@ -57,7 +57,7 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     :type format: str, optional
     :param format: Format of the file to read (e.g. ``"STATIONXML"``).
 
-    Additional args and kwargs are passed on to the underlying ``_read_X()`` 
+    Additional args and kwargs are passed on to the underlying ``_read_X()``
     methods of the inventory plugins.
 
     .. note::

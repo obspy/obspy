@@ -535,7 +535,7 @@ class CoreTestCase(unittest.TestCase):
         # Otherwise continue, but raise a warning.
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            inv = obspy.read_inventory(filename)
+            obspy.read_inventory(filename)
         # This actually raises two warnings - one that blockette 58 is
         # missing on stage 2 - this is a generic error that can be
         # potentially recovered from - then a second one that it actually
@@ -567,11 +567,11 @@ class CoreTestCase(unittest.TestCase):
         # Otherwise continue, but raise a warning.
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            inv = obspy.read_inventory(filename)
+            obspy.read_inventory(filename)
         # This triggers a number of warnings as the file is constructed and
         # misses all kinds of information.
         self.assertGreaterEqual(len(w), 1)
-        msg = ("Failed to calculate response for XX.ABC..BHX with epoch " 
+        msg = ("Failed to calculate response for XX.ABC..BHX with epoch "
                "1999-12-16T02:14:00.000000Z - 1999-12-21T19:10:59.000000Z "
                "because: A decimation stage with blockette 57 must be "
                "followed by a blockette 58 which is missing here.")
@@ -585,7 +585,7 @@ class CoreTestCase(unittest.TestCase):
         filename = os.path.join(self.data_path, "RESP.repeated_stage_0")
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            inv = obspy.read_inventory(filename)
+            obspy.read_inventory(filename)
         self.assertGreaterEqual(len(w), 1)
         self.assertEqual(
             w[0].message.args[0],
@@ -599,7 +599,7 @@ class CoreTestCase(unittest.TestCase):
                                 "RESP.repeated_differing_stage_0")
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            inv = obspy.read_inventory(filename)
+            obspy.read_inventory(filename)
         self.assertGreaterEqual(len(w), 1)
         self.assertEqual(
             w[0].message.args[0],
@@ -652,7 +652,6 @@ class CoreTestCase(unittest.TestCase):
         # Also check the responses via the inventory objects and by directly
         # calling evalresp.
         for unit in ("DISP", "VEL", "ACC"):
-            #r = obspy.read_inventory(filename)[0][0][0].response
             e_r = evalresp_for_frequencies(
                 t_samp=None, frequencies=frequencies, filename=filename,
                 date=t, units=unit)
@@ -700,7 +699,7 @@ class CoreTestCase(unittest.TestCase):
         filename = os.path.join(self.data_path, "RESP.repeated_stage_0")
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            inv = obspy.read_inventory(filename)
+            obspy.read_inventory(filename)
         self.assertGreaterEqual(len(w), 1)
         self.assertEqual(
             w[0].message.args[0],

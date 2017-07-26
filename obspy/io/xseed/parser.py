@@ -1151,7 +1151,6 @@ class Parser(object):
         # Also from the output units of the first stage that claims to have
         # them!
         stage_x_output_units = None
-        stage_x_is_stage_1 = False
         for _stage in list(range(1, max(stages.keys()) + 1)) + [0]:
             if _stage not in stages:
                 continue
@@ -1166,8 +1165,6 @@ class Parser(object):
                                 34, stage_x_output_units)
                     except ValueError:
                         pass
-                    if _stage == 1:
-                        stage_x_is_stage_1 = True
                     break
 
         # Both are None -> raise a warning.
@@ -1264,8 +1261,8 @@ class Parser(object):
             for number in sorted(stages.keys()):
                 _blkts58.extend([_i for _i in stages[number] if _i.id == 58])
             if not _blkts58:
-                msg = "File has not stage 0 and no other blockettes 58. This " \
-                    "is very likely just an invalid response."
+                msg = "File has not stage 0 and no other blockettes 58. " \
+                    "This is very likely just an invalid response."
                 raise InvalidResponseError(msg)
             # Just multiply all gains - this appears to be what evalresp is
             # also doing.
@@ -1366,7 +1363,7 @@ class Parser(object):
             if blkts[-1].id == 58:
                 b58 = blkts[-1]
             elif blkts[-1].id != 58 and blkts[0].id != 62:
-                msg = ("Response stage %i does not end with blockette 58. " 
+                msg = ("Response stage %i does not end with blockette 58. "
                        "Proceed at your own risk." % _i)
                 warnings.warn(_epoch_warn_msg(msg))
                 b58 = None
@@ -1388,7 +1385,7 @@ class Parser(object):
                     msg = "A stage with blockette 53 may only contain " \
                           "additional blockettes 57 and 58. This stage has " \
                           "the following additional blockettes: %s" % (
-                        ", ".join(str(_i) for _i in sorted(extra_blkts)))
+                            ", ".join(str(_i) for _i in sorted(extra_blkts)))
                     raise InvalidResponseError(msg)
                 blkts53 = [b for b in blkts if b.id == 53]
                 blkts57 = [b for b in blkts if b.id == 57]
@@ -1484,7 +1481,7 @@ class Parser(object):
                     msg = ("Invalid response specification. A blockette 54 "
                            "always must always be followed by a blockette 57 "
                            "and a blockette 58. Missing blockettes: %s." % (
-                       ", ".join(str(_i) for _i in missing)))
+                            ", ".join(str(_i) for _i in missing)))
                     raise InvalidResponseError(msg)
                 # There can be multiple blockettes 54 in sequence in which
                 # case numerators or denominators are chained from all of them.
@@ -1648,7 +1645,6 @@ class Parser(object):
                 # Use first blkt 61 as a reference.
                 b61 = blkts61[0]
 
-
                 # Use all of them for the coefficients.
                 coefficients = []
                 for b in blkts61:
@@ -1677,16 +1673,16 @@ class Parser(object):
                     if (o_u and hasattr(o_u, "unit_description")) else None,
                     symmetry=symmetry_map[b61.symmetry_code],
                     coefficients=coefficients,
-                    decimation_input_sample_rate=
-                    b57.input_sample_rate if b57 else None,
-                    decimation_factor=
-                    b57.decimation_factor if b57 else None,
-                    decimation_offset=
-                    b57.decimation_offset if b57 else None,
-                    decimation_delay=
-                    b57.estimated_delay if b57 else None,
-                    decimation_correction=
-                    b57.correction_applied if b57 else None))
+                    decimation_input_sample_rate=b57.input_sample_rate
+                    if b57 else None,
+                    decimation_factor=b57.decimation_factor
+                    if b57 else None,
+                    decimation_offset=b57.decimation_offset
+                    if b57 else None,
+                    decimation_delay=b57.estimated_delay
+                    if b57 else None,
+                    decimation_correction=b57.correction_applied
+                    if b57 else None))
             elif blkts[0].id == 62:
                 b62 = blkts[0]
                 ids = {b.id for b in blkts}
@@ -1739,30 +1735,29 @@ class Parser(object):
                     if (i_u and hasattr(i_u, "unit_description")) else None,
                     output_units_description=o_u.unit_description
                     if (o_u and hasattr(o_u, "unit_description")) else None,
-                    frequency_lower_bound=
-                    getattr(b62, "lower_valid_frequency_bound", None),
-                    frequency_upper_bound=
-                    getattr(b62, "upper_valid_frequency_bound", None),
+                    frequency_lower_bound=getattr(
+                        b62, "lower_valid_frequency_bound", None),
+                    frequency_upper_bound=getattr(
+                        b62, "upper_valid_frequency_bound", None),
                     # Always MACLAURIN - this is tested above.
                     approximation_type='MACLAURIN',
-                    approximation_lower_bound=
-                    getattr(b62, "lower_bound_of_approximation", None),
-                    approximation_upper_bound=
-                    getattr(b62, "upper_bound_of_approximation", None),
-                    maximum_error=
-                    getattr(b62, "maximum_absolute_error", None),
+                    approximation_lower_bound=getattr(
+                        b62, "lower_bound_of_approximation", None),
+                    approximation_upper_bound=getattr(
+                        b62, "upper_bound_of_approximation", None),
+                    maximum_error=getattr(
+                        b62, "maximum_absolute_error", None),
                     coefficients=coefficients,
-                    decimation_input_sample_rate=
-                    b57.input_sample_rate if b57 else None,
-                    decimation_factor=
-                    b57.decimation_factor if b57 else None,
-                    decimation_offset=
-                    b57.decimation_offset if b57 else None,
-                    decimation_delay=
-                    b57.estimated_delay if b57 else None,
-                    decimation_correction=
-                    b57.correction_applied if b57 else None
-                ))
+                    decimation_input_sample_rate=b57.input_sample_rate
+                    if b57 else None,
+                    decimation_factor=b57.decimation_factor
+                    if b57 else None,
+                    decimation_offset=b57.decimation_offset
+                    if b57 else None,
+                    decimation_delay=b57.estimated_delay
+                    if b57 else None,
+                    decimation_correction=b57.correction_applied
+                    if b57 else None))
             else:
                 raise NotImplementedError(_epoch_warn_msg(
                     "Stage has the following blockettes: %s" % ", ".join(
