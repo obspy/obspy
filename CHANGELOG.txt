@@ -9,6 +9,8 @@ master: (doi: 10.5281/zenodo.165135)
      (see #1391).
    * Write support for AH (Ad Hoc version 1) format (see #1754)
    * Client to access the Nominal Response Library (NRL) (see #1185).
+   * `obspy.read_inventory()` can now read dataless SEED and RESP files
+     (see #1185).
  - obspy.core:
    * UTCDateTime is now based on nanoseconds (long) instead of a unix
      timestamp in microseconds (float) - resulting in higher precision and
