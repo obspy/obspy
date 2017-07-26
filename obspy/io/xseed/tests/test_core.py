@@ -543,6 +543,8 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(w), 2)
         self.assertEqual(
             w[0].message.args[0],
+            "Epoch SG.ST..LDO "
+            "[1997-02-01T00:00:00.000000Z - 2599-12-31T23:59:59.000000Z]: "
             "Response stage 2 does not end with blockette 58. Proceed at "
             "your own risk.")
         self.assertEqual(
@@ -587,6 +589,8 @@ class CoreTestCase(unittest.TestCase):
         self.assertGreaterEqual(len(w), 1)
         self.assertEqual(
             w[0].message.args[0],
+            "Epoch BN.WR0..SHZ "
+            "[1996-03-01T00:00:00.000000Z - 1999-01-03T00:00:00.000000Z]: "
             "Channel has multiple (but identical) blockettes 58 for stage 0. "
             "Only one will be used.")
 
@@ -599,6 +603,8 @@ class CoreTestCase(unittest.TestCase):
         self.assertGreaterEqual(len(w), 1)
         self.assertEqual(
             w[0].message.args[0],
+            "Epoch BN.WR0..SHZ "
+            "[1996-03-01T00:00:00.000000Z - 1999-01-03T00:00:00.000000Z]: "
             "Channel has multiple different blockettes 58 for stage 0. The "
             "first one will be chosen - this is a faulty file - try to fix "
             "it!")
@@ -698,6 +704,8 @@ class CoreTestCase(unittest.TestCase):
         self.assertGreaterEqual(len(w), 1)
         self.assertEqual(
             w[0].message.args[0],
+            "Epoch BN.WR0..SHZ "
+            "[1996-03-01T00:00:00.000000Z - 1999-01-03T00:00:00.000000Z]: "
             "Channel has multiple (but identical) blockettes 58 for stage 0. "
             "Only one will be used.")
 

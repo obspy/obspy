@@ -392,8 +392,13 @@ def _parse_to_inventory_object(p, skip_invalid_responses=True):
                         end_effective_time=_end))
 
             try:
+                # Epoch string used to generate nice warning and error
+                # messages.
+                epoch_str = "%s.%s.%s.%s [%s - %s]" % (
+                    network_code, s.code, c.location_code, c.code,
+                    c.start_date, c.end_date)
                 resp = p.get_response_for_channel(
-                    blockettes_for_channel=channel)
+                    blockettes_for_channel=channel, epoch_str=epoch_str)
             except InvalidResponseError as e:
                 if not skip_invalid_responses:
                     raise
