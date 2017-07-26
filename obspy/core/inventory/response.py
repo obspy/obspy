@@ -876,6 +876,7 @@ class Response(ComparingObject):
                 "MM/(SEC**2)": ew.ENUM_UNITS["ACC"],
                 # Evalresp internally treats strain as displacement.
                 "M/M": ew.ENUM_UNITS["DIS"],
+                "M**3/M**3": ew.ENUM_UNITS["DIS"],
                 "V": ew.ENUM_UNITS["VOLTS"],
                 "VOLT": ew.ENUM_UNITS["VOLTS"],
                 "VOLTS": ew.ENUM_UNITS["VOLTS"],
