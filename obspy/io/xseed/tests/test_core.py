@@ -529,8 +529,8 @@ class CoreTestCase(unittest.TestCase):
             obspy.read_inventory(filename, skip_invalid_responses=False)
         self.assertEqual(
             e.exception.args[0],
-            "Invalid response specification. A blockette 54 always must "
-            "always be followed by a blockette 57 and a blockette 58. "
+            "Stage 2: Invalid response specification. A blockette 54 always "
+            "must always be followed by a blockette 57 and a blockette 58. "
             "Missing blockettes: 57, 58.")
         # Otherwise continue, but raise a warning.
         with warnings.catch_warnings(record=True) as w:
@@ -551,9 +551,9 @@ class CoreTestCase(unittest.TestCase):
             w[1].message.args[0],
             "Failed to calculate response for SG.ST..LDO with epoch "
             "1997-02-01T00:00:00.000000Z - 2599-12-31T23:59:59.000000Z "
-            "because: Invalid response specification. A blockette 54 always "
-            "must always be followed by a blockette 57 and a blockette 58. "
-            "Missing blockettes: 57, 58.")
+            "because: Stage 2: Invalid response specification. A blockette 54 "
+            "always must always be followed by a blockette 57 and a "
+            "blockette 58. Missing blockettes: 57, 58.")
 
     def test_warning_when_blockette_57_is_not_followed_by_58(self):
         filename = os.path.join(self.data_path, "RESP.decimation_without_gain")
@@ -562,8 +562,8 @@ class CoreTestCase(unittest.TestCase):
             obspy.read_inventory(filename, skip_invalid_responses=False)
         self.assertEqual(
             e.exception.args[0],
-            "A decimation stage with blockette 57 must be followed by a "
-            "blockette 58 which is missing here.")
+            "Stage 1: A decimation stage with blockette 57 must be followed "
+            "by a blockette 58 which is missing here.")
         # Otherwise continue, but raise a warning.
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -573,8 +573,8 @@ class CoreTestCase(unittest.TestCase):
         self.assertGreaterEqual(len(w), 1)
         msg = ("Failed to calculate response for XX.ABC..BHX with epoch "
                "1999-12-16T02:14:00.000000Z - 1999-12-21T19:10:59.000000Z "
-               "because: A decimation stage with blockette 57 must be "
-               "followed by a blockette 58 which is missing here.")
+               "because: Stage 1: A decimation stage with blockette 57 must "
+               "be followed by a blockette 58 which is missing here.")
         for _w in w:
             if _w.message.args[0] == msg:
                 break
