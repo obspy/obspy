@@ -1242,10 +1242,10 @@ class Parser(object):
                         break
                 if not all_identical:
                     msg = ("Channel has multiple different blockettes "
-                           "58 for stage 0. The first one will be chosen - "
+                           "58 for stage 0. The last one will be chosen - "
                            "this is a faulty file - try to fix it!")
                     warnings.warn(_epoch_warn_msg(msg))
-                    stages[0] = _blkts58[:1]
+                    stages[0] = _blkts58[-1]
                 else:
                     msg = ("Channel has multiple (but identical) blockettes "
                            "58 for stage 0. Only one will be used.")
@@ -1352,10 +1352,10 @@ class Parser(object):
             b_b57 = [b for b in blkts if b.blockette_id in ("057")]
             b_b58 = [b for b in blkts if b.blockette_id in ("058")]
             if len(b_b58) > 1:
-                msg = ("Stage %i has %i blockettes 58. Only the first one "
+                msg = ("Stage %i has %i blockettes 58. Only the last one "
                        "will be used." % (_i, len(b_b58)))
                 warnings.warn(_epoch_warn_msg(msg))
-                b_b58 = b_b58[:1]
+                b_b58 = b_b58[-1:]
             blkts = b_a + b_b57 + b_b58
 
             # A bit undefined if it does not end with blockette 58 I think.
@@ -1391,18 +1391,18 @@ class Parser(object):
                     raise InvalidResponseError(msg)
                 blkts53 = [b for b in blkts if b.id == 53]
                 blkts57 = [b for b in blkts if b.id == 57]
-                b53 = blkts53[0]
+                b53 = blkts53[-1]
 
                 if len(blkts53) > 1:
-                    msg = ("Stage %i has %i blockettes 53. Only the first one "
+                    msg = ("Stage %i has %i blockettes 53. Only the last one "
                            "will be used." % (_i, len(blkts53)))
                     warnings.warn(_epoch_warn_msg(msg))
                 if len(blkts57) > 1:
-                    msg = ("Stage %i has %i blockettes 57. Only the first one "
+                    msg = ("Stage %i has %i blockettes 57. Only the last one "
                            "will be used." % (_i, len(blkts57)))
                     warnings.warn(_epoch_warn_msg(msg))
                 if blkts57:
-                    b57 = blkts57[0]
+                    b57 = blkts57[-1]
                 else:
                     b57 = None
 
@@ -1492,14 +1492,13 @@ class Parser(object):
                 blkts57 = [b for b in blkts if b.id == 57]
 
                 if len(blkts57) > 1:
-                    msg = ("Stage %i has %i blockettes 57. Only the first one "
+                    msg = ("Stage %i has %i blockettes 57. Only the last one "
                            "will be used." % (_i, len(blkts57)))
                     warnings.warn(_epoch_warn_msg(msg))
+                b57 = blkts57[-1]
 
                 # Choose the first one as a reference.
                 b54 = blkts54[0]
-                b57 = blkts57[0]
-
                 # Use all of them for the coefficients.
                 numerator = []
                 denominator = []
@@ -1640,11 +1639,11 @@ class Parser(object):
                 if len(blkts57) > 1:
                     msg = ("Stage %i: "
                            "Multiple blockettes 57 found after blockette 61! "
-                           "Will use the first one. This is an invalid file "
+                           "Will use the last one. This is an invalid file "
                            "- please check it!") % _i
                     warnings.warn(_epoch_warn_msg(msg))
                 if blkts57:
-                    b57 = blkts57[0]
+                    b57 = blkts57[-1]
                 else:
                     b57 = None
 

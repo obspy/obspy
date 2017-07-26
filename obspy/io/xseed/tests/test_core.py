@@ -748,6 +748,28 @@ class CoreTestCase(unittest.TestCase):
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
 
+    def test_response_multiple_gain_blockettes(self):
+        """
+        Evalresp chooses the last one - make sure we do the same.
+        """
+        filename = os.path.join(self.data_path,
+                                "RESP.multiple_gain_blockettes")
+        frequencies = np.logspace(-3, 3, 20)
+
+        # Set the times for the response.
+        t = obspy.UTCDateTime(1996, 1, 1)
+
+        for unit in ("DISP", "VEL", "ACC"):
+            # This raises a warning that it has multiple gain blockettes.
+            with warnings.catch_warnings(record=True):
+                r = obspy.read_inventory(filename)[0][0][0].response
+            e_r = evalresp_for_frequencies(
+                t_samp=None, frequencies=frequencies, filename=filename,
+                date=t, units=unit)
+            i_r = r.get_evalresp_response_for_frequencies(
+                frequencies=frequencies, output=unit)
+            np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
