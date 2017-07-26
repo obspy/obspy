@@ -1218,7 +1218,9 @@ class Response(ComparingObject):
         # what evalresp does.
         gain_blkt.gain_freq = self.instrument_sensitivity.frequency \
             if self.instrument_sensitivity.frequency else 1.0
-        st.first_blkt = C.pointer(blkt)
+        # XXX: Uncommenting seems to prevent some weird things evalresp does.
+        #      Maybe this has to be re-enabled at some point?
+        # st.first_blkt = C.pointer(blkt)
         stage_objects.append(st)
 
         chan = ew.Channel()
