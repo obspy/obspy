@@ -205,7 +205,7 @@ def _parse_to_inventory_object(p, skip_invalid_responses=True):
     # encounters multiple network descriptions it will just use the first one.
     network_descriptions = {}
 
-    n = collections.defaultdict(list)
+    n = collections.OrderedDict()
 
     for station in p.stations:
         if station[0].id != 50:
@@ -416,6 +416,8 @@ def _parse_to_inventory_object(p, skip_invalid_responses=True):
 
             s.channels.append(c)
 
+        if network_code not in n:
+            n[network_code] = []
         n[network_code].append(s)
 
     networks = []
