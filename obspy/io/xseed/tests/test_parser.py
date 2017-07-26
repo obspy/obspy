@@ -681,12 +681,13 @@ class ParserTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'BN.LPW._.BHE.dataless')
         # raises a UserWarning: More than one Abbreviation Dictionary Control
         # Headers found!
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("error", UserWarning)
-            self.assertRaises(UserWarning, Parser, filename)
-            warnings.simplefilter("ignore", UserWarning)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             parser = Parser(filename)
-            self.assertEqual(parser.version, 2.3)
+        self.assertEqual(
+            w[0].message.args[0],
+            "More than one Abbreviation Dictionary Control Headers found!")
+        self.assertEqual(parser.version, 2.3)
 
     def test_issue_157(self):
         """
