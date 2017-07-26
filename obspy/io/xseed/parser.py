@@ -1112,7 +1112,7 @@ class Parser(object):
         # Get blockette 52.
         blkt52 = [_i for _i in blockettes_for_channel if _i.id == 52]
         if len(blkt52) != 1:
-            raise ValueError(_epoch_warn_msg("Must have a blockette 52."))
+            raise InvalidResponseError("Must have a blockette 52.")
         blkt52 = blkt52[0]
 
         # Sort the rest into stages.
@@ -1283,7 +1283,7 @@ class Parser(object):
         # Stage 0 blockette must be a blockette 58 or 62.
         if stages[0][0].id not in (58, 62):
             msg = "Stage 0 must be a blockette 58 or 62."
-            raise ValueError(_epoch_warn_msg(msg))
+            raise InvalidResponseError(msg)
 
         # Cannot have both 53 and 54 in one stage.
         for stage, blkts in stages.items():
@@ -1314,9 +1314,9 @@ class Parser(object):
         # Trying to fit blockette 62 in stage 0 into the inventory object.
         if stages[0][0].id == 62:
             if len(stages[0]) != 1:
-                msg = "If blockette 62 is in stage 0 it must currently be " \
+                msg = "If blockette 62 is in stage 0 it must be " \
                       "the only blockette in stage 0."
-                raise ValueError(_epoch_warn_msg(msg))
+                raise InvalidResponseError(msg)
             # If blockette 62 is set for stage 0 and other stages are
             # present it should just be a summary of all the other stages
             # and can thus be removed.
@@ -1719,7 +1719,7 @@ class Parser(object):
                         != "M":
                     msg = "Only the MACLAURIN polynomial approximation type " \
                         "is currently supported."
-                    raise ValueError(_epoch_msg(msg))
+                    raise InvalidResponseError(msg)
 
                 # Get the coefficients.
                 coefficients = []
@@ -1764,7 +1764,9 @@ class Parser(object):
                     b57.correction_applied if b57 else None
                 ))
             else:
-                raise NotImplementedError(_epoch_warn_msg("Not implemented"))
+                raise NotImplementedError(_epoch_warn_msg(
+                    "Stage has the following blockettes: %s" % ", ".join(
+                        b.id for b in blkts)))
 
         # Do one last pass over the response stages to fill in missing units.
         for _i in range(len(response_stages)):
