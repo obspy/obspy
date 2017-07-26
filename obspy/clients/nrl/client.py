@@ -145,9 +145,9 @@ class NRL(object):
         :type datalogger_keys: list of str
         :rtype: str
         """
-        datalogger = copy.deepcopy(self.dataloggers)
-        while datalogger_keys:
-            datalogger = datalogger[datalogger_keys.pop(0)]
+        datalogger = self.dataloggers
+        for key in datalogger_keys:
+            datalogger = datalogger[key]
         return self._read_resp(datalogger[1])
 
     def get_sensor_resp(self, sensor_keys):
@@ -157,9 +157,9 @@ class NRL(object):
         :type sensor_keys: list of str
         :rtype: str
         """
-        sensor = copy.deepcopy(self.sensors)
-        while sensor_keys:
-            sensor = sensor[sensor_keys.pop(0)]
+        sensor = self.sensors
+        for key in sensor_keys:
+            sensor = sensor[key]
         return self._read_resp(sensor[1])
 
     def get_response(self, datalogger_keys, sensor_keys):
