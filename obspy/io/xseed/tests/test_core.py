@@ -525,8 +525,9 @@ class CoreTestCase(unittest.TestCase):
     def test_warning_when_blockette_54_is_not_followed_by_57_and_58(self):
         filename = os.path.join(self.data_path, "RESP.SG.ST..LDO")
         # Fail if responses are explicitly not skipped.
-        with self.assertRaises(InvalidResponseError) as e:
-            obspy.read_inventory(filename, skip_invalid_responses=False)
+        with warnings.catch_warnings(record=True):
+            with self.assertRaises(InvalidResponseError) as e:
+                obspy.read_inventory(filename, skip_invalid_responses=False)
         self.assertEqual(
             e.exception.args[0],
             "Stage 2: Invalid response specification. A blockette 54 always "
@@ -558,8 +559,9 @@ class CoreTestCase(unittest.TestCase):
     def test_warning_when_blockette_57_is_not_followed_by_58(self):
         filename = os.path.join(self.data_path, "RESP.decimation_without_gain")
         # Fail if responses are explicitly not skipped.
-        with self.assertRaises(InvalidResponseError) as e:
-            obspy.read_inventory(filename, skip_invalid_responses=False)
+        with warnings.catch_warnings(record=True):
+            with self.assertRaises(InvalidResponseError) as e:
+                obspy.read_inventory(filename, skip_invalid_responses=False)
         self.assertEqual(
             e.exception.args[0],
             "Stage 1: A decimation stage with blockette 57 must be followed "
