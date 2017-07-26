@@ -18,6 +18,7 @@ from obspy.core.util.testing import NamedTemporaryFile
 from obspy.io.xseed import Parser, InvalidResponseError
 from obspy.io.xseed.core import _is_resp, _is_xseed, _is_seed, _read_resp, \
     _read_seed, _read_xseed
+import obspy.io.xseed.parser
 from obspy.signal.invsim import evalresp_for_frequencies
 
 
@@ -533,6 +534,11 @@ class CoreTestCase(unittest.TestCase):
             "Stage 2: Invalid response specification. A blockette 54 always "
             "must always be followed by a blockette 57 and a blockette 58. "
             "Missing blockettes: 57, 58.")
+
+        # Delete warning registry to reliably trigger the warning.
+        if hasattr(obspy.io.xseed.parser, "__warningregistry__"):
+            obspy.io.xseed.parser.__warningregistry__.clear()
+
         # Otherwise continue, but raise a warning.
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
