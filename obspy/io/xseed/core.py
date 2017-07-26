@@ -87,15 +87,15 @@ def _is_resp(filename):
     :returns: `True` if file seems to be a RESP file, `False` otherwise.
     """
     if hasattr(filename, "readline"):
-        return __is_resp(filename)
+        return _internal_is_resp(filename)
     try:
         with open(filename, "rb") as fh:
-            return __is_resp(fh)
+            return _internal_is_resp(fh)
     except (IOError, TypeError):
         return False
 
 
-def __is_resp(fh):
+def _internal_is_resp(fh):
     try:
         # lookup the first line that does not start with a hash sign
         while True:
