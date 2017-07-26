@@ -614,7 +614,7 @@ class CoreTestCase(unittest.TestCase):
             "Epoch BN.WR0..SHZ "
             "[1996-03-01T00:00:00.000000Z - 1999-01-03T00:00:00.000000Z]: "
             "Channel has multiple different blockettes 58 for stage 0. The "
-            "first one will be chosen - this is a faulty file - try to fix "
+            "last one will be chosen - this is a faulty file - try to fix "
             "it!")
 
     def test_blkts_53_and_54_in_one_stage(self):
@@ -766,6 +766,45 @@ class CoreTestCase(unittest.TestCase):
             e_r = evalresp_for_frequencies(
                 t_samp=None, frequencies=frequencies, filename=filename,
                 date=t, units=unit)
+            i_r = r.get_evalresp_response_for_frequencies(
+                frequencies=frequencies, output=unit)
+            np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
+
+    def test_response_regression_1(self):
+        """
+        Regression test as fixing one issue broke something else.
+        """
+        filename = os.path.join(self.data_path, "RESP.regression_1")
+        frequencies = np.logspace(-3, 3, 20)
+
+        # Set the times for the response.
+        t = obspy.UTCDateTime(2010, 1, 1)
+
+        for unit in ("DISP", "VEL", "ACC"):
+            r = obspy.read_inventory(filename)[0][0][0].response
+            e_r = evalresp_for_frequencies(
+                t_samp=None, frequencies=frequencies, filename=filename,
+                date=t, units=unit)
+            i_r = r.get_evalresp_response_for_frequencies(
+                frequencies=frequencies, output=unit)
+            np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
+
+    def test_response_regression_2(self):
+        """
+        Another regression test.
+        """
+        filename = os.path.join(self.data_path, "RESP.regression_2")
+        frequencies = np.logspace(-3, 3, 20)
+        frequencies = [1.0]
+
+        # Set the times for the response.
+        t = obspy.UTCDateTime(2013, 1, 1)
+
+        for unit in ("DISP", "VEL", "ACC"):
+            e_r = evalresp_for_frequencies(
+                t_samp=None, frequencies=frequencies, filename=filename,
+                date=t, units=unit)
+            r = obspy.read_inventory(filename)[0][0][0].response
             i_r = r.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))

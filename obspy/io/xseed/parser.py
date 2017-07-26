@@ -1245,7 +1245,7 @@ class Parser(object):
                            "58 for stage 0. The last one will be chosen - "
                            "this is a faulty file - try to fix it!")
                     warnings.warn(_epoch_warn_msg(msg))
-                    stages[0] = _blkts58[-1]
+                    stages[0] = _blkts58[:-1]
                 else:
                     msg = ("Channel has multiple (but identical) blockettes "
                            "58 for stage 0. Only one will be used.")
