@@ -15,6 +15,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import codecs
+import copy
 import io
 import os
 import sys
@@ -144,7 +145,7 @@ class NRL(object):
         :type datalogger_keys: list of str
         :rtype: str
         """
-        datalogger = self.dataloggers
+        datalogger = copy.deepcopy(self.dataloggers)
         while datalogger_keys:
             datalogger = datalogger[datalogger_keys.pop(0)]
         return self._read_resp(datalogger[1])
@@ -156,7 +157,7 @@ class NRL(object):
         :type sensor_keys: list of str
         :rtype: str
         """
-        sensor = self.sensors
+        sensor = copy.deepcopy(self.sensors)
         while sensor_keys:
             sensor = sensor[sensor_keys.pop(0)]
         return self._read_resp(sensor[1])
