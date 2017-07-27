@@ -18,17 +18,57 @@ import codecs
 import io
 import os
 import sys
+import warnings
 
 import requests
 
 import obspy
 from obspy.core.compatibility import configparser
+from obspy.core.inventory.response import ResponseStage
 from obspy.core.inventory.util import _textwrap
 
 
 # Simple cache for remote NRL access. The total data amount will always be
 # fairly small so I don't think it needs any cache eviction for now.
 _remote_nrl_cache = {}
+
+def _cleanup_response(response):
+    """
+    Clean's up a given response by removing stages that do not do anything.
+    """
+    def _stage_does_nothing(stage):
+        # Only remove basic response stages for now.
+        if not isinstance(stage, ResponseStage):
+            return False
+
+        # List of attributes that should be None:
+        should_be_none = ["decimation_correction", "decimation_delay",
+                          "decimation_factor", "decimation_input_sample_rate",
+                          "decimation_offset"]
+        for attr in should_be_none:
+            if getattr(stage, attr) is not None:
+                return False
+
+        if stage.input_units != stage.output_units:
+            return False
+
+        if stage.stage_gain and stage.stage_gain != 1.0:
+            return False
+
+        return True
+
+    stages = []
+    response.response_stages = \
+        sorted(response.response_stages, key=lambda x: x.stage_sequence_number)
+    stage_sequence_number = 0
+    for st in response.response_stages:
+        if _stage_does_nothing(st) is True:
+            continue
+        stage_sequence_number += 1
+        st.stage_sequence_number = stage_sequence_number
+        stages.append(st)
+
+    response.response_stages = stages
 
 
 class NRL(object):
@@ -206,10 +246,45 @@ class NRL(object):
         dl_resp = dl_resp[0][0][0].response
         sensor_resp = sensor_resp[0][0][0].response
 
+        # Clean the responses a bit to get rid of unnecessary stages.
+        _cleanup_response(dl_resp)
+        _cleanup_response(sensor_resp)
+
         # Combine both by replace stage one in the data logger with stage
         # one of the sensor.
         dl_resp.response_stages.pop(0)
         dl_resp.response_stages.insert(0, sensor_resp.response_stages[0])
+
+        if not hasattr(dl_resp, "instrument_sensitivity"):
+            msg = "Could not find an instrument sensitivity - will not " \
+                  "recalculate the overall sensitivity."
+            warnings.warn(msg)
+        elif not dl_resp.instrument_sensitivity.input_units:
+            msg = "Could not determine input units - will not " \
+                "recalculate the overall sensitivity."
+            warnings.warn(msg)
+        else:
+            i_u = dl_resp.instrument_sensitivity.input_units
+
+            unit_map = {
+                "DISP": ["M"],
+                "VEL": ["M/S", "M/SEC"],
+                "ACC": ["M/S**2", "M/(S**2)", "M/SEC**2", "M/(SEC**2)",
+                        "M/S/S"]}
+            unit = None
+            for key, value in unit_map.items():
+                if i_u and i_u.upper() in value:
+                    unit = key
+            if not unit:
+                msg = ("ObsPy does not know how to map unit '%s' to "
+                       "displacement, velocity, or acceleration - overall "
+                       "sensitivity will not be recalculated.") % i_u
+                warnings.warn(msg)
+            else:
+                freq, gain = \
+                    dl_resp._get_overall_sensitivity_and_gain(output=unit)
+                dl_resp.instrument_sensitivity.value = gain
+                dl_resp.instrument_sensitivity.frequency = freq
 
         return dl_resp
 
