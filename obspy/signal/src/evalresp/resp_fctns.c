@@ -403,28 +403,24 @@ void check_channel(struct channel *chan) {
         ref_blkt->next_blkt = filt_blkt;
         filt_blkt->next_blkt = deci_blkt;
         deci_blkt->next_blkt = gain_blkt;
-        if (gain_blkt)
-            gain_blkt->next_blkt = (struct blkt *)NULL;
+        gain_blkt->next_blkt = (struct blkt *)NULL;
       }
       else if(deci_flag) {
         stage_ptr->first_blkt = filt_blkt;
         filt_blkt->next_blkt = deci_blkt;
         deci_blkt->next_blkt = gain_blkt;
-        if (gain_blkt)
-            gain_blkt->next_blkt = (struct blkt *)NULL;
+        gain_blkt->next_blkt = (struct blkt *)NULL;
       }
       else if(ref_flag) {
         stage_ptr->first_blkt = ref_blkt;
         ref_blkt->next_blkt = filt_blkt;
         filt_blkt->next_blkt = gain_blkt;
-        if (gain_blkt)
-            gain_blkt->next_blkt = (struct blkt *)NULL;
+        gain_blkt->next_blkt = (struct blkt *)NULL;
       }
       else if(gain_flag) {
         stage_ptr->first_blkt = filt_blkt;
         filt_blkt->next_blkt = gain_blkt;
-        if (gain_blkt)
-            gain_blkt->next_blkt = (struct blkt *)NULL;
+        gain_blkt->next_blkt = (struct blkt *)NULL;
       }
     }
 
