@@ -32,6 +32,7 @@ from obspy.core.inventory.util import _textwrap
 # fairly small so I don't think it needs any cache eviction for now.
 _remote_nrl_cache = {}
 
+
 def _cleanup_response(response):
     """
     Clean's up a given response by removing stages that do not do anything.
