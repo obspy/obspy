@@ -235,7 +235,7 @@ class TauModel(object):
                 self._depth_cache.popitem(last=False)
             return value
         else:
-            return self._load_from_depth_cache()
+            return self._load_from_depth_cache(depth)
 
     def _load_from_depth_cache(self, depth):
         depth_corrected = self.split_branch(depth)

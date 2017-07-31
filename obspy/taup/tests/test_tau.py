@@ -13,6 +13,7 @@ import inspect
 import os
 import unittest
 import warnings
+from collections import OrderedDict
 
 import numpy as np
 
@@ -36,6 +37,13 @@ class TauPyModelTestCase(unittest.TestCase):
     """
     Test suite for the obspy.taup.TauPy class.
     """
+
+    def setUp(self):
+        """setup method. Instantiates cache values to be used in
+        P phase arrival calculations
+        to test also `TauModel.load_from_depth_cache`"""
+        self.caches = [OrderedDict(), False, None]
+
     def _read_taup_output(self, filename):
         """
         Helper method reading a stdout capture of TauP.
@@ -172,82 +180,96 @@ class TauPyModelTestCase(unittest.TestCase):
 
     def test_p_iasp91(self):
         """
-        Test P phase arrival against TauP output in in model IASP91.
+        Test P phase arrival against TauP output in model IASP91
+        with different cache values to test `TauModel.load_from_depth_cache`
         """
-        m = TauPyModel(model="iasp91")
-        arrivals = m.get_travel_times(source_depth_in_km=10.0,
-                                      distance_in_degree=35.0,
-                                      phase_list=["P"])
-        self._compare_arrivals_with_file(arrivals,
-                                         "taup_time_-h_10_-ph_P_-deg_35")
+        for cache in self.caches:
+            m = TauPyModel(model="iasp91", cache=cache)
+            arrivals = m.get_travel_times(source_depth_in_km=10.0,
+                                          distance_in_degree=35.0,
+                                          phase_list=["P"])
+            self._compare_arrivals_with_file(arrivals,
+                                             "taup_time_-h_10_-ph_P_-deg_35")
 
     def test_p_ak135(self):
         """
-        Test P phase arrival against TauP output in in model AK135.
+        Test P phase arrival against TauP output in model AK135
+        with different cache values to test `TauModel.load_from_depth_cache`
         """
-        m = TauPyModel(model="ak135")
-        arrivals = m.get_travel_times(source_depth_in_km=10.0,
-                                      distance_in_degree=35.0,
-                                      phase_list=["P"])
-        self._compare_arrivals_with_file(
-            arrivals, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
+        for cache in self.caches:
+            m = TauPyModel(model="ak135", cache=cache)
+            arrivals = m.get_travel_times(source_depth_in_km=10.0,
+                                          distance_in_degree=35.0,
+                                          phase_list=["P"])
+            self._compare_arrivals_with_file(
+                arrivals, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
 
     def test_p_ak135f_no_mud(self):
         """
-        Test P phase arrival against TauP output in in model ak135f_no_mud.
+        Test P phase arrival against TauP output in model ak135f_no_mud
+        with different cache values to test `TauModel.load_from_depth_cache`
         """
-        m = TauPyModel(model="ak135f_no_mud")
-        arrivals = m.get_travel_times(source_depth_in_km=10.0,
-                                      distance_in_degree=35.0,
-                                      phase_list=["P"])
-        self._compare_arrivals_with_file(
-            arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_ak135f_no_mud")
+        for cache in self.caches:
+            m = TauPyModel(model="ak135f_no_mud", cache=cache)
+            arrivals = m.get_travel_times(source_depth_in_km=10.0,
+                                          distance_in_degree=35.0,
+                                          phase_list=["P"])
+            self._compare_arrivals_with_file(
+                arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_ak135f_no_mud")
 
     def test_p_jb(self):
         """
-        Test P phase arrival against TauP output in in model jb.
+        Test P phase arrival against TauP output in model jb
+        with different cache values to test `TauModel.load_from_depth_cache`
         """
-        m = TauPyModel(model="jb")
-        arrivals = m.get_travel_times(source_depth_in_km=10.0,
-                                      distance_in_degree=35.0,
-                                      phase_list=["P"])
-        self._compare_arrivals_with_file(
-            arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_jb")
+        for cache in self.caches:
+            m = TauPyModel(model="jb", cache=cache)
+            arrivals = m.get_travel_times(source_depth_in_km=10.0,
+                                          distance_in_degree=35.0,
+                                          phase_list=["P"])
+            self._compare_arrivals_with_file(
+                arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_jb")
 
     def test_p_pwdk(self):
         """
-        Test P phase arrival against TauP output in in model pwdk.
+        Test P phase arrival against TauP output in model pwdk
+        with different cache values to test `TauModel.load_from_depth_cache`
         """
-        m = TauPyModel(model="pwdk")
-        arrivals = m.get_travel_times(source_depth_in_km=10.0,
-                                      distance_in_degree=35.0,
-                                      phase_list=["P"])
-        self._compare_arrivals_with_file(
-            arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_pwdk")
+        for cache in self.caches:
+            m = TauPyModel(model="pwdk", cache=cache)
+            arrivals = m.get_travel_times(source_depth_in_km=10.0,
+                                          distance_in_degree=35.0,
+                                          phase_list=["P"])
+            self._compare_arrivals_with_file(
+                arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_pwdk")
 
     def test_iasp91(self):
         """
         Test travel times for lots of phases against output from TauP in model
-        IASP91.
+        IASP91 with different cache values to test
+        `TauModel.load_from_depth_cache`
         """
-        m = TauPyModel(model="iasp91")
-        arrivals = m.get_travel_times(source_depth_in_km=10.0,
-                                      distance_in_degree=35.0,
-                                      phase_list=["ttall"])
-        self._compare_arrivals_with_file(arrivals,
-                                         "taup_time_-h_10_-ph_ttall_-deg_35")
+        for cache in self.caches:
+            m = TauPyModel(model="iasp91", cache=cache)
+            arrivals = m.get_travel_times(source_depth_in_km=10.0,
+                                          distance_in_degree=35.0,
+                                          phase_list=["ttall"])
+            self._compare_arrivals_with_file(
+                arrivals, "taup_time_-h_10_-ph_ttall_-deg_35")
 
     def test_ak135(self):
         """
         Test travel times for lots of phases against output from TauP in model
-        AK135.
+        AK135 with different cache values to test
+        `TauModel.load_from_depth_cache`
         """
-        m = TauPyModel(model="ak135")
-        arrivals = m.get_travel_times(source_depth_in_km=10.0,
-                                      distance_in_degree=35.0,
-                                      phase_list=["ttall"])
-        self._compare_arrivals_with_file(
-            arrivals, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
+        for cache in self.caches:
+            m = TauPyModel(model="ak135", cache=cache)
+            arrivals = m.get_travel_times(source_depth_in_km=10.0,
+                                          distance_in_degree=35.0,
+                                          phase_list=["ttall"])
+            self._compare_arrivals_with_file(
+                arrivals, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
 
     def test_pierce_p_iasp91(self):
         """
