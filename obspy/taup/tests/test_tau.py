@@ -180,7 +180,7 @@ class TauPyModelTestCase(unittest.TestCase):
 
     def test_p_iasp91(self):
         """
-        Test P phase arrival against TauP output in in model IASP91
+        Test P phase arrival against TauP output in model IASP91
         with different cache values to test `TauModel.load_from_depth_cache`
         """
         for cache in self.caches:
@@ -193,7 +193,7 @@ class TauPyModelTestCase(unittest.TestCase):
 
     def test_p_ak135(self):
         """
-        Test P phase arrival against TauP output in in model AK135
+        Test P phase arrival against TauP output in model AK135
         with different cache values to test `TauModel.load_from_depth_cache`
         """
         for cache in self.caches:
@@ -206,7 +206,7 @@ class TauPyModelTestCase(unittest.TestCase):
 
     def test_p_ak135f_no_mud(self):
         """
-        Test P phase arrival against TauP output in in model ak135f_no_mud
+        Test P phase arrival against TauP output in model ak135f_no_mud
         with different cache values to test `TauModel.load_from_depth_cache`
         """
         for cache in self.caches:
@@ -219,7 +219,7 @@ class TauPyModelTestCase(unittest.TestCase):
 
     def test_p_jb(self):
         """
-        Test P phase arrival against TauP output in in model jb
+        Test P phase arrival against TauP output in model jb
         with different cache values to test `TauModel.load_from_depth_cache`
         """
         for cache in self.caches:
@@ -232,7 +232,7 @@ class TauPyModelTestCase(unittest.TestCase):
 
     def test_p_pwdk(self):
         """
-        Test P phase arrival against TauP output in in model pwdk
+        Test P phase arrival against TauP output in model pwdk
         with different cache values to test `TauModel.load_from_depth_cache`
         """
         for cache in self.caches:
