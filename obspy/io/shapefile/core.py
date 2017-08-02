@@ -100,7 +100,11 @@ def _add_catalog_layer(data_source, catalog):
         ["Longitude", ogr.OFTReal, 16, 10],
         ["Latitude", ogr.OFTReal, 16, 10],
         ["Depth", ogr.OFTReal, 8, 3],
-        ["Magnitude", ogr.OFTReal, 8, 3]
+        ["MinHorUncM", ogr.OFTReal, 12, 3],
+        ["MaxHorUncM", ogr.OFTReal, 12, 3],
+        ["MaxHorAzi", ogr.OFTReal, 7, 3],
+        ["OriUncDesc", ogr.OFTString, 40, None],
+        ["Magnitude", ogr.OFTReal, 8, 3],
     ]
 
     layer = _create_layer(data_source, "earthquakes", field_definitions)
@@ -157,6 +161,31 @@ def _add_catalog_layer(data_source, catalog):
             if magnitude.resource_id is not None:
                 feature.SetField(native_str("MagID"),
                                  native_str(magnitude.resource_id))
+            if origin.origin_uncertainty is not None:
+                ou = origin.origin_uncertainty
+                ou_description = ou.preferred_description
+                if ou_description == 'uncertainty ellipse':
+                    feature.SetField(native_str("MinHorUncM"),
+                                     ou.min_horizontal_uncertainty)
+                    feature.SetField(native_str("MaxHorUncM"),
+                                     ou.max_horizontal_uncertainty)
+                    feature.SetField(native_str("MaxHorAzi"),
+                                     ou.azimuth_max_horizontal_uncertainty)
+                    feature.SetField(native_str("OriUncDesc"), ou_description)
+                elif ou_description == 'horizontal uncertainty':
+                    feature.SetField(native_str("MinHorUncM"),
+                                     ou.horizontal_uncertainty)
+                    feature.SetField(native_str("MaxHorUncM"),
+                                     ou.horizontal_uncertainty)
+                    feature.SetField(native_str("MaxHorAzi"), 0.0)
+                    feature.SetField(native_str("OriUncDesc"), ou_description)
+                else:
+                    msg = ('Encountered an event with origin uncertainty '
+                           'description of type "{}". This is not yet '
+                           'implemented for output as shapefile. No origin '
+                           'uncertainty will be added to shapefile for such '
+                           'events.').format(ou_description)
+                    warnings.warn(msg)
 
             if origin.latitude is not None and origin.longitude is not None:
                 point = ogr.Geometry(ogr.wkbPoint)
@@ -197,7 +226,7 @@ def _add_inventory_layer(data_source, inventory):
         ["Elevation", ogr.OFTReal, 9, 3],
         ["StartDate", ogr.OFTDate, None, None],
         ["EndDate", ogr.OFTDate, None, None],
-        ["Channels", ogr.OFTString, 254, None]
+        ["Channels", ogr.OFTString, 254, None],
     ]
 
     layer = _create_layer(data_source, "stations", field_definitions)
