@@ -74,8 +74,8 @@ class EventTestCase(unittest.TestCase):
 
     def test_station_magnitude(self):
         # Missing origin in original QuakeML test case.
-        self.cmp_file('quakeml_1.2_magnitude.xml',
-                      'quakeml_1.2_magnitude.sc3ml',
+        self.cmp_file('quakeml_1.2_stationmagnitude.xml',
+                      'quakeml_1.2_stationmagnitude.sc3ml',
                       path=self.path)
 
     def test_data_used_in_moment_tensor(self):

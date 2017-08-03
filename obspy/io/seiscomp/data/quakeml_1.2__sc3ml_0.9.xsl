@@ -120,11 +120,10 @@ SC3ML. Unnecessary attributes must also be removed.
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
         xmlns:ext="http://exslt.org/common"
-        xmlns:sc="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9"
         xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9"
         xmlns:qml="http://quakeml.org/xmlns/bed/1.2"
         xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"
-        exclude-result-prefixes="q qml xsl">
+        exclude-result-prefixes="xsl xs ext q qml">
     <xsl:output method="xml" encoding="UTF-8" indent="yes"/>
     <xsl:strip-space elements="*"/>
 
@@ -158,18 +157,18 @@ SC3ML. Unnecessary attributes must also be removed.
         <!-- Write a disordered sc3ml in this variable. It will be ordered in
              a second time. -->
         <xsl:variable name="disordered">
-            <seiscomp version="{$version}">
-                <xsl:for-each select="./q:quakeml/qml:eventParameters">
-                    <EventParameters>
-                        <xsl:copy-of select="@publicID"/>
-                        <xsl:apply-templates/>
-                    </EventParameters>
-                </xsl:for-each>
-            </seiscomp>
+            <xsl:for-each select="./q:quakeml/qml:eventParameters">
+                <EventParameters>
+                    <xsl:copy-of select="@publicID"/>
+                    <xsl:apply-templates/>
+                </EventParameters>
+            </xsl:for-each>
         </xsl:variable>
 
         <!-- Reorder nodes -->
-        <xsl:apply-templates select="ext:node-set($disordered)" mode="reorder"/>
+        <seiscomp version="{$version}">
+            <xsl:apply-templates select="ext:node-set($disordered)" mode="reorder"/>
+        </seiscomp>
     </xsl:template>
 
     <xsl:template match="qml:event">
@@ -565,5 +564,4 @@ SC3ML. Unnecessary attributes must also be removed.
             </xsl:choose>
         </xsl:element>
     </xsl:template>
-
 </xsl:stylesheet>
