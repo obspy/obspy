@@ -83,7 +83,7 @@ class CodeFormattingTestCase(unittest.TestCase):
                 files.append(filename)
         report = style_guide.check_files(files)
 
-        # Make sure no error occured.
+        # Make sure no error occurred.
         assert report.total_errors == 0
 
     @unittest.skipIf(CLEAN_VERSION_NUMBER,

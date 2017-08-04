@@ -43,7 +43,7 @@ _headonly_warning_msg = (
 @map_example_filename("pathname_or_url")
 def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
          endtime=None, nearest_sample=True, dtype=None, apply_calib=False,
-         **kwargs):
+         check_compression=True, **kwargs):
     """
     Read waveform files into an ObsPy Stream object.
 
@@ -85,6 +85,9 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     :type apply_calib: bool, optional
     :param apply_calib: Automatically applies the calibration factor
         ``trace.stats.calib`` for each trace, if set. Defaults to ``False``.
+    :param check_compression: Check for compression on file and decompress
+        if needed. This may be disabled for a moderate speed up.
+    :type check_compression: bool, optional
     :param kwargs: Additional keyword arguments passed to the underlying
         waveform reader method.
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
@@ -197,6 +200,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     kwargs['starttime'] = starttime
     kwargs['endtime'] = endtime
     kwargs['nearest_sample'] = nearest_sample
+    kwargs['check_compression'] = check_compression
     # create stream
     st = Stream()
     if pathname_or_url is None:

@@ -10,25 +10,24 @@ Base utilities and constants for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
+from future.builtins import *  # NOQA
 
 import doctest
+import functools
 import inspect
 import io
 import os
-import pkg_resources
 import sys
 import tempfile
 from collections import OrderedDict
 
-from pkg_resources import iter_entry_points, load_entry_point
 import numpy as np
-
+import pkg_resources
 import requests
+from future.utils import native_str
+from pkg_resources import iter_entry_points, load_entry_point
 
 from obspy.core.util.misc import to_int_or_zero
-
 
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
@@ -58,6 +57,30 @@ WAVEFORM_ACCEPT_BYTEORDER = ['MSEED', 'Q', 'SAC', 'SEGY', 'SU']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
+
+
+# apply simple memoization cache on load_entry_points
+# this function cannot go in decorator.py due to circular import issues
+def _load_entry_point_decorator(func):
+    """
+    Decorate pkg_resources' load_entry_point function to cache outputs.
+    """
+    cache = {}
+    expected_keys = ('dist', 'group', 'name')
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # make a str key from the inputs to func for hashing in cache
+        input_dict = inspect.getcallargs(func, *args, **kwargs)
+        hash_str = '/'.join([input_dict[x] for x in expected_keys])
+        if hash_str not in cache:
+            cache[hash_str] = func(*args, **kwargs)
+        return cache[hash_str]
+
+    return wrapper
+
+
+load_entry_point = _load_entry_point_decorator(load_entry_point)
 
 
 class NamedTemporaryFile(io.BufferedIOBase):
