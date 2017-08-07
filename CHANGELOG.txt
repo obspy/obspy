@@ -88,7 +88,7 @@ master: (doi: 10.5281/zenodo.165135)
  - obspy.io.quakeml:
     * Read and write support for nested custom tags (see #1463)
  - obspy.io.seiscomp:
-    * Write support for SC3ML event (see #1638)
+    * Read and write support for SC3ML event (see #1638 and #1848)
     * Fix bug where files with arbitrary publicIDs and files with missing
       depth, latitude, longitude, or elevation tags could not be read
       (see #1817)

@@ -20,7 +20,7 @@ import os
 
 from lxml import etree
 
-from obspy.io.quakeml.core import Pickler
+from obspy.io.quakeml.core import Pickler, Unpickler, _xml_doc_from_anything
 
 
 def _validate_sc3ml(path_or_object, verbose=False):
@@ -38,15 +38,22 @@ def _validate_sc3ml(path_or_object, verbose=False):
                                    'sc3ml_0.9.xsd')
     xmlschema = etree.XMLSchema(etree.parse(schema_location))
 
+    if hasattr(path_or_object, "tell") and hasattr(path_or_object, "seek"):
+        current_position = path_or_object.tell()
+
     if isinstance(path_or_object, etree._Element):
         xmldoc = path_or_object
     else:
         try:
-            xmldoc = etree.parse(path_or_object)
-        except etree.XMLSyntaxError:
-            if verbose:
-                print('Not an XML file')
+            xmldoc = _xml_doc_from_anything(path_or_object)
+        except ValueError:
             return False
+        finally:
+            # Make sure to reset file pointer position.
+            try:
+                path_or_object.seek(current_position, 0)
+            except Exception:
+                pass
 
     valid = xmlschema.validate(xmldoc)
 
@@ -57,6 +64,47 @@ def _validate_sc3ml(path_or_object, verbose=False):
             print("\t%s" % entry)
 
     return valid
+
+
+def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
+    """
+    Read a 0.9 SC3ML file and returns a :class:`~obspy.core.event.Catalog`.
+
+    An XSLT file is used to convert the SC3ML file to a QuakeML file. The
+    catalog is then generated using the QuakeML module.
+
+    .. warning::
+    This function should NOT be called directly, it registers via the
+    the :meth:`~obspy.core.event.catalog.Catalog.write` method of an
+    ObsPy :class:`~obspy.core.event.catalog.Catalog` object, call this
+    instead.
+
+    :type filename: str
+    :param filename: SC3ML file to be read.
+    :type id_prefix: str
+    :param id_prefix: ID prefix. SC3ML does not enforce any particular ID
+        restriction, this ID prefix allow to convert the IDs to a well
+        formatted QuakeML ID. You can modify the default ID prefix with the
+        reverse DNS name of your institute.
+    :rtype: :class:`~obspy.core.event.Catalog`
+    :return: An ObsPy Catalog object.
+
+    .. rubric:: Example
+
+    >>> from obspy import read_events
+    >>> cat = read_events('/path/to/iris_events.sc3ml')
+    >>> print(cat)
+    2 Event(s) in Catalog:
+    2011-03-11T05:46:24.120000Z | +38.297, +142.373
+    2006-09-10T04:26:33.610000Z |  +9.614, +121.961
+    """
+    xslt_filename = os.path.join(os.path.dirname(__file__), 'data',
+                                 'sc3ml_0.9__quakeml_1.2.xsl')
+    transform = etree.XSLT(etree.parse(xslt_filename))
+    sc3ml_doc = _xml_doc_from_anything(filename)
+    quakeml_doc = transform(sc3ml_doc,
+                            ID_PREFIX=etree.XSLT.strparam(id_prefix))
+    return Unpickler().load(io.BytesIO(quakeml_doc))
 
 
 def _write_sc3ml(catalog, filename, validate=False, verbose=False,

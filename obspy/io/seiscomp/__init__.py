@@ -3,8 +3,8 @@
 obspy.io.seiscomp - SeisComP3 Inventory and Event Files
 =======================================================
 
-This module provides read support for SeisComP3 inventory files and write
-support for SeisComP3 event files.
+This module provides read support for SeisComP3 inventory files and read and
+write support for SeisComP3 event files.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)

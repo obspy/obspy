@@ -302,6 +302,8 @@ ENTRY_POINTS = {
         'writeFormat = obspy.io.quakeml.core:_write_quakeml',
         ],
     'obspy.plugin.event.SC3ML': [
+        'isFormat = obspy.io.seiscomp.sc3ml:_is_sc3ml',
+        'readFormat = obspy.io.seiscomp.event:_read_sc3ml',
         'writeFormat = obspy.io.seiscomp.event:_write_sc3ml',
         ],
     'obspy.plugin.event.MCHEDR': [

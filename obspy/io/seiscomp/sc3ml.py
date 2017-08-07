@@ -34,6 +34,7 @@ from obspy.core.inventory import (CoefficientsTypeResponseStage,
                                   FilterCoefficient, FIRResponseStage,
                                   PolesZerosResponseStage,
                                   PolynomialResponseStage)
+from obspy.io.quakeml.core import _xml_doc_from_anything
 from obspy.io.stationxml.core import _read_floattype
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
@@ -55,34 +56,39 @@ def _is_sc3ml(path_or_file_object):
                                                         "seek"):
         current_position = path_or_file_object.tell()
 
-    try:
-        if isinstance(path_or_file_object, etree._Element):
-            xmldoc = path_or_file_object
-        else:
-            try:
-                xmldoc = etree.parse(path_or_file_object)
-            except etree.XMLSyntaxError:
-                return False
-        root = xmldoc.getroot()
+    if isinstance(path_or_file_object, etree._Element):
+        xmldoc = path_or_file_object
+    else:
         try:
-            match = re.match(
-                r'{http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[-+]?'
-                r'[0-9]*\.?[0-9]+}', root.tag)
-            assert match is not None
-        except Exception:
+            xmldoc = _xml_doc_from_anything(path_or_file_object)
+        except ValueError:
             return False
-        # Check if schema version is supported
-        if root.attrib["version"] not in SCHEMA_VERSION:
-            warnings.warn("The sc3ml file has version %s, ObsPy can "
-                          "deal with versions %s. Proceed with caution." % (
-                              root.attrib["version"], SCHEMA_VERSION))
-        return True
-    finally:
-        # Make sure to reset file pointer position.
-        try:
-            path_or_file_object.seek(current_position, 0)
-        except Exception:
-            pass
+        finally:
+            # Make sure to reset file pointer position.
+            try:
+                path_or_file_object.seek(current_position, 0)
+            except Exception:
+                pass
+
+    if hasattr(xmldoc, "getroot"):
+        root = xmldoc.getroot()
+    else:
+        root = xmldoc
+
+    try:
+        match = re.match(
+            r'{http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[-+]?'
+            r'[0-9]*\.?[0-9]+}', root.tag)
+        assert match is not None
+    except Exception:
+        return False
+    # Check if schema version is supported
+    if root.attrib["version"] not in SCHEMA_VERSION:
+        warnings.warn("The sc3ml file has version %s, ObsPy can "
+                      "deal with versions %s. Proceed with caution." % (
+                          root.attrib["version"], SCHEMA_VERSION))
+
+    return True
 
 
 def validate_sc3ml(path_or_object):
