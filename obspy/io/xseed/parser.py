@@ -1283,7 +1283,13 @@ class Parser(object):
                         _b.sensitivity_gain:
                     gain *= _b.sensitivity_gain
             stages[0] = [Blockette058()]
-            stages[0][0].frequency = _blkts58[-1].frequency
+            # Use the last found frequency. If none is found, just set it to
+            # one.
+            all_frequencies = [_b.frequency for _b in _blkts58 if _b.frequency]
+            if all_frequencies:
+                stages[0][0].frequency = all_frequencies[-1]
+            else:
+                stages[0][0].frequency = 1.0
             stages[0][0].sensitivity_gain = gain
             stages[0][0].stage_sequency_number = 0
             stages[0][0].record_type = 'S'
