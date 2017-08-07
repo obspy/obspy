@@ -24,7 +24,6 @@ import requests
 
 import obspy
 from obspy.core.compatibility import configparser
-from obspy.core.inventory.response import ResponseStage
 from obspy.core.inventory.util import _textwrap
 
 

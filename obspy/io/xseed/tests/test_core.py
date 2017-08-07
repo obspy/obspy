@@ -818,7 +818,7 @@ class CoreTestCase(unittest.TestCase):
         frequencies = [1.0]
 
         # Set the times for the response.
-        t = obspy.UTCDateTime(2009, 1, 23)
+        # t = obspy.UTCDateTime(2009, 1, 23)
 
         for unit in ("DISP", "VEL", "ACC"):
             # This still sometimes triggers a segfault - but not if called
