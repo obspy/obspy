@@ -44,6 +44,8 @@ master: (doi: 10.5281/zenodo.165135)
    * Order of extra tags for event type classes serialized to QuakeML can now
      be controlled by using an OrderedDict (see #1617)
    * Bode plots can now optionally plot the phase in degrees (see #1763).
+   * `Stream.select()` now also works on the component level if channels only
+     have one letter (see #1847).
  - obspy.clients.earthworm:
    * Much faster trace unpacking (see #1762).
  - obspy.clients.fdsn:
