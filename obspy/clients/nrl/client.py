@@ -33,45 +33,6 @@ from obspy.core.inventory.util import _textwrap
 _remote_nrl_cache = {}
 
 
-def _cleanup_response(response):
-    """
-    Clean's up a given response by removing stages that do not do anything.
-    """
-    def _stage_does_nothing(stage):
-        # Only remove basic response stages for now.
-        if not isinstance(stage, ResponseStage):
-            return False
-
-        # List of attributes that should be None:
-        should_be_none = ["decimation_correction", "decimation_delay",
-                          "decimation_factor", "decimation_input_sample_rate",
-                          "decimation_offset"]
-        for attr in should_be_none:
-            if getattr(stage, attr) is not None:
-                return False
-
-        if stage.input_units != stage.output_units:
-            return False
-
-        if stage.stage_gain and stage.stage_gain != 1.0:
-            return False
-
-        return True
-
-    stages = []
-    response.response_stages = \
-        sorted(response.response_stages, key=lambda x: x.stage_sequence_number)
-    stage_sequence_number = 0
-    for st in response.response_stages:
-        if _stage_does_nothing(st) is True:
-            continue
-        stage_sequence_number += 1
-        st.stage_sequence_number = stage_sequence_number
-        stages.append(st)
-
-    response.response_stages = stages
-
-
 class NRL(object):
     """
     NRL client base class for accessing the Nominal Response Library.
@@ -246,10 +207,6 @@ class NRL(object):
         # response object.
         dl_resp = dl_resp[0][0][0].response
         sensor_resp = sensor_resp[0][0][0].response
-
-        # Clean the responses a bit to get rid of unnecessary stages.
-        _cleanup_response(dl_resp)
-        _cleanup_response(sensor_resp)
 
         # Combine both by replace stage one in the data logger with stage
         # one of the sensor.
