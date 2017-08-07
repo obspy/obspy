@@ -1809,8 +1809,6 @@ class Stream(object):
             if npts is not None and int(npts) != trace.stats.npts:
                 continue
             if component is not None:
-                if len(trace.stats.channel) < 3:
-                    continue
                 if not fnmatch.fnmatch(trace.stats.channel[-1].upper(),
                                        component.upper()):
                     continue

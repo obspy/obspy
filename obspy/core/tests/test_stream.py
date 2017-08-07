@@ -656,6 +656,22 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(stream2), 1)
         self.assertIn(stream[4], stream2)
 
+    def test_select_on_single_letter_channels(self):
+        st = read()
+        st[0].stats.channel = "Z"
+        st[1].stats.channel = "N"
+        st[2].stats.channel = "E"
+
+        self.assertEqual([tr.stats.channel for tr in st], ["Z", "N", "E"])
+
+        self.assertEqual(st.select(component="Z")[0], st[0])
+        self.assertEqual(st.select(component="N")[0], st[1])
+        self.assertEqual(st.select(component="E")[0], st[2])
+
+        self.assertEqual(len(st.select(component="Z")), 1)
+        self.assertEqual(len(st.select(component="N")), 1)
+        self.assertEqual(len(st.select(component="E")), 1)
+
     def test_sort(self):
         """
         Tests the sort method of the Stream object.
@@ -2167,22 +2183,6 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st.select(station=""), st2)
         self.assertEqual(st.select(channel=""), st2)
         self.assertEqual(st.select(npts=0), st2)
-
-    def test_select_short_channel_code(self):
-        """
-        Test that select by component only checks channel codes longer than two
-        characters.
-        """
-        st = Stream([Trace(), Trace(), Trace(), Trace(), Trace(), Trace()])
-        st[0].stats.channel = "EHZ"
-        st[1].stats.channel = "HZ"
-        st[2].stats.channel = "Z"
-        st[3].stats.channel = "E"
-        st[4].stats.channel = "N"
-        st[5].stats.channel = "EHN"
-        self.assertEqual(len(st.select(component="Z")), 1)
-        self.assertEqual(len(st.select(component="N")), 1)
-        self.assertEqual(len(st.select(component="E")), 0)
 
     def test_remove_response(self):
         """
