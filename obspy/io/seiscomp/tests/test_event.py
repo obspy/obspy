@@ -131,7 +131,7 @@ class EventTestCase(unittest.TestCase):
         self.assertEqual(len(catalog.events), 1)
         self.assertEqual(len(catalog.events[0].origins), 1)
 
-    def test_read_ID_prefix(self):
+    def test_read_id_prefix(self):
         filename = \
             os.path.join(self.path, 'qml-example-1.2-RC3_wrong_id.sc3ml')
         catalog = _read_sc3ml(filename, id_prefix='quakeml:obspy.org/')
