@@ -1484,13 +1484,12 @@ class Parser(object):
                     if b57 else None))
             # Response coefficients stage.
             elif blkts[0].id == 54:
-                if {b.id for b in blkts} != {54, 57, 58}:
-                    missing = {57, 58}.difference({b.id for b in blkts})
+                _blkts = [b.id for b in blkts]
+                if 57 not in _blkts:
                     msg = ("Stage %i: "
                            "Invalid response specification. A blockette 54 "
-                           "always must always be followed by a blockette 57 "
-                           "and a blockette 58. Missing blockettes: %s." % (
-                            _i, ", ".join(str(_i) for _i in missing)))
+                           "must always be followed by a blockette 57 "
+                           "which is missing.") % _i
                     raise InvalidResponseError(msg)
                 # There can be multiple blockettes 54 in sequence in which
                 # case numerators or denominators are chained from all of them.

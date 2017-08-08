@@ -523,7 +523,7 @@ class CoreTestCase(unittest.TestCase):
                                                                  unit),
                                 rtol=1E-6, atol=atol)
 
-    def test_warning_when_blockette_54_is_not_followed_by_57_and_58(self):
+    def test_warning_when_blockette_54_is_not_followed_by_57(self):
         filename = os.path.join(self.data_path, "RESP.SG.ST..LDO")
         # Fail if responses are explicitly not skipped.
         with warnings.catch_warnings(record=True):
@@ -531,9 +531,8 @@ class CoreTestCase(unittest.TestCase):
                 obspy.read_inventory(filename, skip_invalid_responses=False)
         self.assertEqual(
             e.exception.args[0],
-            "Stage 2: Invalid response specification. A blockette 54 always "
-            "must always be followed by a blockette 57 and a blockette 58. "
-            "Missing blockettes: 57, 58.")
+            "Stage 2: Invalid response specification. A blockette 54 "
+            "must always be followed by a blockette 57 which is missing.")
 
         # Delete warning registry to reliably trigger the warning.
         if hasattr(obspy.io.xseed.parser, "__warningregistry__"):
@@ -559,8 +558,7 @@ class CoreTestCase(unittest.TestCase):
             "Failed to calculate response for SG.ST..LDO with epoch "
             "1997-02-01T00:00:00.000000Z - 2599-12-31T23:59:59.000000Z "
             "because: Stage 2: Invalid response specification. A blockette 54 "
-            "always must always be followed by a blockette 57 and a "
-            "blockette 58. Missing blockettes: 57, 58.")
+            "must always be followed by a blockette 57 which is missing.")
 
     def test_warning_when_blockette_57_is_not_followed_by_58(self):
         filename = os.path.join(self.data_path, "RESP.decimation_without_gain")
@@ -837,6 +835,26 @@ class CoreTestCase(unittest.TestCase):
         Test a RESP file with many zero frequency gains in file.
         """
         filename = os.path.join(self.data_path, "RESP.many_zero_frequencies")
+        frequencies = np.logspace(-3, 3, 20)
+        frequencies = [1.0]
+
+        # Set the times for the response.
+        t = obspy.UTCDateTime(2005, 1, 1)
+
+        for unit in ("DISP", "VEL", "ACC"):
+            e_r = evalresp_for_frequencies(
+                t_samp=None, frequencies=frequencies, filename=filename,
+                date=t, units=unit)
+            r = obspy.read_inventory(filename)[0][0][0].response
+            i_r = r.get_evalresp_response_for_frequencies(
+                frequencies=frequencies, output=unit)
+            np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
+
+    def test_response_54_without_58(self):
+        """
+        Regression test as blockette 54 might not be followed by blockette 58.
+        """
+        filename = os.path.join(self.data_path, "RESP.blockette_54_without_58")
         frequencies = np.logspace(-3, 3, 20)
         frequencies = [1.0]
 
