@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-sc3ml events write support.
+sc3ml events read and write support.
 
 :author:
     EOST (École et Observatoire des Sciences de la Terre)
