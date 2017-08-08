@@ -767,7 +767,8 @@ class Response(ComparingObject):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
-    def _get_overall_sensitivity_and_gain(self, output='VEL'):
+    def _get_overall_sensitivity_and_gain(
+            self, frequency=None, output='VEL'):
         """
         Get the overall sensitivity and gain from stages 1 to N.
 
@@ -784,12 +785,20 @@ class Response(ComparingObject):
             ``"ACC"``
                 acceleration, output unit is meters/second**2
 
+        :type frequency: float
+        :param frequency: Frequency to calculate overall sensitivity for in
+            Hertz. Defaults to normalization frequency of stage 1.
         :rtype: :tuple: ( float, float )
         :returns: frequency and gain at frequency.
         """
-        chan = self._call_eval_resp_for_frequencies(frequencies=np.zeros(1),
-                                                    output=output)[1]
-        return chan.sensfreq, chan.calc_sensit
+        if frequency is None:
+            # XXX is this safe enough, or should we lookup the stage sequence
+            # XXX number explicitly?
+            frequency = self.response_stages[0].normalization_frequency
+        response_at_frequency = self._call_eval_resp_for_frequencies(
+            frequencies=[frequency], output=output)[0][0]
+        overall_sensitivity = abs(response_at_frequency)
+        return frequency, overall_sensitivity
 
     def _call_eval_resp_for_frequencies(
             self, frequencies, output="VEL", start_stage=None, end_stage=None):
