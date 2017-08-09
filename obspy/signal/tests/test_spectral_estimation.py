@@ -225,6 +225,39 @@ class PsdTestCase(unittest.TestCase):
             np.testing.assert_array_equal(ppsd_loaded.period_bin_centers,
                                           binning['period_bins'])
 
+    def test_ppsd_warnings(self):
+        """
+        Test some warning messages shown by PPSD routine
+        """
+        ppsd = _get_ppsd()
+        # test warning message if SEED ID is mismatched
+        for key in ('network', 'station', 'location', 'channel'):
+            tr, _ = _get_sample_data()
+            # change starttime, data could then be added if ID and sampling
+            # rate match
+            tr.stats.starttime += 24 * 3600
+            tr.stats[key] = 'XX'
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always', UserWarning)
+                self.assertEqual(ppsd.add(tr), False)
+            self.assertEqual(len(w), 1)
+            self.assertEqual(
+                str(w[0].message),
+                'No traces with matching SEED ID in provided stream object.')
+        # test warning message if sampling rate is mismatched
+        tr, _ = _get_sample_data()
+        # change starttime, data could then be added if ID and sampling
+        # rate match
+        tr.stats.starttime += 24 * 3600
+        tr.stats.sampling_rate = 123
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            self.assertEqual(ppsd.add(tr), False)
+        self.assertEqual(len(w), 1)
+        self.assertEqual(
+            str(w[0].message),
+            'No traces with matching sampling rate in provided stream object.')
+
     def test_ppsd_w_iris(self):
         # Bands to be used this is the upper and lower frequency band pairs
         fres = zip([0.1, 0.05], [0.2, 0.1])
