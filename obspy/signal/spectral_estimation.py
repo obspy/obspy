@@ -689,9 +689,22 @@ class PPSD(object):
         # prepare the list of traces to go through
         if isinstance(stream, Trace):
             stream = Stream([stream])
+        if not stream:
+            msg = 'Empty stream object provided to PPSD.add()'
+            warnings.warn(msg)
+            return False
         # select appropriate traces
-        stream = stream.select(id=self.id,
-                               sampling_rate=self.sampling_rate)
+        stream = stream.select(id=self.id)
+        if not stream:
+            msg = 'No traces with matching SEED ID in provided stream object.'
+            warnings.warn(msg)
+            return False
+        stream = stream.select(sampling_rate=self.sampling_rate)
+        if not stream:
+            msg = ('No traces with matching sampling rate in provided stream '
+                   'object.')
+            warnings.warn(msg)
+            return False
         # save information on available data and gaps
         self.__insert_data_times(stream)
         self.__insert_gap_times(stream)
