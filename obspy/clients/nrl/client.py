@@ -238,8 +238,36 @@ class NRL(object):
                        "sensitivity will not be recalculated.") % i_u
                 warnings.warn(msg)
             else:
+                # lookup normalization frequency of sensor's poles-and-zeros
+                # stage, it should be in the flat part of the response
+                stage_one = dl_resp.response_stages[0]
+                try:
+                    frequency = stage_one.normalization_frequency
+                except AttributeError:
+                    frequency = None
+                for stage in dl_resp.response_stages[::-1]:
+                    # determine sampling rate
+                    try:
+                        sampling_rate = (
+                            stage.decimation_input_sample_rate /
+                            stage.decimation_factor)
+                        break
+                    except:
+                        continue
+                else:
+                    sampling_rate = None
+                if sampling_rate:
+                    # if sensor's normalization frequency is above 0.5*nyquist,
+                    # use that instead (e.g. to avoid computing an overall
+                    # sensitivity above nyquist)
+                    if frequency:
+                        nyquist = sampling_rate / 2.0
+                        frequency = min(frequency, nyquist / 2.0)
+                    else:
+                        frequency = nyquist / 2.0
                 freq, gain = \
-                    dl_resp._get_overall_sensitivity_and_gain(output=unit)
+                    dl_resp._get_overall_sensitivity_and_gain(
+                        output=unit, frequency=frequency)
                 dl_resp.instrument_sensitivity.value = gain
                 dl_resp.instrument_sensitivity.frequency = freq
 
