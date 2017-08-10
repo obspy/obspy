@@ -796,12 +796,14 @@ class Response(ComparingObject):
             # XXX number explicitly?
             frequency = self.response_stages[0].normalization_frequency
         response_at_frequency = self._call_eval_resp_for_frequencies(
-            frequencies=[frequency], output=output)[0][0]
+            frequencies=[frequency], output=output,
+            hide_sensitivity_mismatch_warning=True)[0][0]
         overall_sensitivity = abs(response_at_frequency)
         return frequency, overall_sensitivity
 
     def _call_eval_resp_for_frequencies(
-            self, frequencies, output="VEL", start_stage=None, end_stage=None):
+            self, frequencies, output="VEL", start_stage=None,
+            end_stage=None, hide_sensitivity_mismatch_warning=False):
         """
         Returns frequency response for given frequencies using evalresp.
 
@@ -825,6 +827,9 @@ class Response(ComparingObject):
         :type end_stage: int, optional
         :param end_stage: Stage sequence number of last stage that will be
             used (disregarding all later stages).
+        :type hide_sensitivity_mismatch_warning: bool
+        :param hide_sensitivity_mismatch_warning: Hide the evalresp warning
+            that computed and reported sensitivities don't match.
         :rtype: :tuple: ( :class:`numpy.ndarray`, chan )
         :returns: frequency response at requested frequencies
         """
@@ -1260,8 +1265,9 @@ class Response(ComparingObject):
             if rc:
                 e, m = ew.ENUM_ERROR_CODES[rc]
                 raise e('check_channel: ' + m)
-
-            rc = clibevresp._obspy_norm_resp(C.byref(chan), -1, 0)
+            rc = clibevresp._obspy_norm_resp(
+                C.byref(chan), -1, 0,
+                1 if hide_sensitivity_mismatch_warning else 0)
             if rc:
                 e, m = ew.ENUM_ERROR_CODES[rc]
                 raise e('norm_resp: ' + m)
