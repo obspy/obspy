@@ -179,7 +179,7 @@ class NRL(object):
         >>> print(response)   # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         Channel Response
           From M/S (Velocity in Meters per Second) to COUNTS (Digital Counts)
-          Overall Sensitivity: 4.74411e+08 defined at 0.050 Hz
+          Overall Sensitivity: 4.74576e+08 defined at 1.000 Hz
           10 stages:
             Stage 1: PolesZerosResponseStage from M/S to V, gain: 754.3
             Stage 2: ResponseStage from V to V, gain: 1
