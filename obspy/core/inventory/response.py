@@ -834,7 +834,7 @@ class Response(ComparingObject):
                     frequency = nyquist / 2.0
 
         if frequency is None:
-            msg = ("Could not automatically determine a suitable frequency " 
+            msg = ("Could not automatically determine a suitable frequency "
                    "at which to calculate the sensitivity. The overall "
                    "sensitivity will not be recalculated.")
             warnings.warn(msg)
