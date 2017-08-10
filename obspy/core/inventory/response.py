@@ -777,14 +777,12 @@ class Response(ComparingObject):
         if not hasattr(self, "instrument_sensitivity"):
             msg = "Could not find an instrument sensitivity - will not " \
                   "recalculate the overall sensitivity."
-            warnings.warn(msg)
-            return
+            raise ValueError(msg)
 
         if not self.instrument_sensitivity.input_units:
             msg = "Could not determine input units - will not " \
                   "recalculate the overall sensitivity."
-            warnings.warn(msg)
-            return
+            raise ValueError(msg)
 
         i_u = self.instrument_sensitivity.input_units
 
@@ -801,8 +799,7 @@ class Response(ComparingObject):
             msg = ("ObsPy does not know how to map unit '%s' to "
                    "displacement, velocity, or acceleration - overall "
                    "sensitivity will not be recalculated.") % i_u
-            warnings.warn(msg)
-            return
+            raise ValueError(msg)
 
         # Determine frequency if not given.
         if frequency is None:
@@ -837,8 +834,7 @@ class Response(ComparingObject):
             msg = ("Could not automatically determine a suitable frequency "
                    "at which to calculate the sensitivity. The overall "
                    "sensitivity will not be recalculated.")
-            warnings.warn(msg)
-            return
+            raise ValueError(msg)
 
         freq, gain = self._get_overall_sensitivity_and_gain(
             output=unit, frequency=frequency)

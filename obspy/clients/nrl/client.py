@@ -18,6 +18,7 @@ import codecs
 import io
 import os
 import sys
+import warnings
 
 import requests
 
@@ -210,7 +211,11 @@ class NRL(object):
         # one of the sensor.
         dl_resp.response_stages.pop(0)
         dl_resp.response_stages.insert(0, sensor_resp.response_stages[0])
-        dl_resp.recalculate_overall_sensitivity()
+        try:
+            dl_resp.recalculate_overall_sensitivity()
+        except ValueError:
+            msg = "Failed to recalculate overall sensitivity."
+            warnings.warn(msg)
 
         return dl_resp
 
