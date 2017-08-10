@@ -260,8 +260,8 @@ class NRL(object):
                     # if sensor's normalization frequency is above 0.5*nyquist,
                     # use that instead (e.g. to avoid computing an overall
                     # sensitivity above nyquist)
+                    nyquist = sampling_rate / 2.0
                     if frequency:
-                        nyquist = sampling_rate / 2.0
                         frequency = min(frequency, nyquist / 2.0)
                     else:
                         frequency = nyquist / 2.0
