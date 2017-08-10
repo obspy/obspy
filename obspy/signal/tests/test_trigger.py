@@ -389,6 +389,13 @@ class TriggerTestCase(unittest.TestCase):
             t = UTCDateTime(t)
             st_ = st.select(station="UH1").slice(t, t + 2.5).copy()
             templ.setdefault("UH1", []).append(st_)
+        # add another template with different SEED ID, it should be ignored
+        # (this can happen when using many templates over a long time period
+        # and instrument changes over time)
+        st_ = st_.copy()
+        for tr in st_:
+            tr.stats.channel = 'X' + tr.stats.channel[1:]
+        templ['UH1'].insert(0, st_)
         trace_ids = {"BW.UH1..SHZ": 1,
                      "BW.UH2..SHZ": 1,
                      "BW.UH3..SHZ": 1,
