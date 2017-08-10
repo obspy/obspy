@@ -649,7 +649,7 @@ def templates_max_similarity(st, time, streams_templates):
             msg = "Skipping template(s) for station %s due to problems in " + \
                   "three component correlation (gappy traces?)"
             warnings.warn(msg % st_tmpl[0].stats.station)
-            break
+            continue
         ind = cc.argmax()
         ind2 = ind + len(data_short)
         coef = 0.0
