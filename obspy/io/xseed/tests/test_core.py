@@ -7,6 +7,7 @@ import collections
 import io
 import itertools
 import os
+import sys
 import unittest
 import warnings
 
@@ -850,6 +851,8 @@ class CoreTestCase(unittest.TestCase):
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
 
+    @unittest.skipIf(sys.platform == "win32",
+                     "Test crashes Python on Windows.")
     def test_response_54_without_58(self):
         """
         Regression test as blockette 54 might not be followed by blockette 58.
