@@ -152,6 +152,9 @@ master: (doi: 10.5281/zenodo.165135)
  - obspy.signal:
    * fixed a bug in calibration.rel_calib_stack (resulting amplitude response
      had wrong scaling if using non-default "overlap_fraction", see #1821)
+   * fixed a bug in coincidence_trigger() with event templates. when a template
+     with mismatching SEED ID was encountered all following (potentially valid)
+     templates were skipped as well (see #1850)
    * New obspy.signal.quality_control module to compute quality metrics from
      MiniSEED files. (see #1141)
    * New correlate function for calculating the cross-correlation function

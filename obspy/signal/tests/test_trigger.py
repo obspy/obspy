@@ -389,6 +389,13 @@ class TriggerTestCase(unittest.TestCase):
             t = UTCDateTime(t)
             st_ = st.select(station="UH1").slice(t, t + 2.5).copy()
             templ.setdefault("UH1", []).append(st_)
+        # add another template with different SEED ID, it should be ignored
+        # (this can happen when using many templates over a long time period
+        # and instrument changes over time)
+        st_ = st_.copy()
+        for tr in st_:
+            tr.stats.channel = 'X' + tr.stats.channel[1:]
+        templ['UH1'].insert(0, st_)
         trace_ids = {"BW.UH1..SHZ": 1,
                      "BW.UH2..SHZ": 1,
                      "BW.UH3..SHZ": 1,
@@ -403,8 +410,26 @@ class TriggerTestCase(unittest.TestCase):
                 "classicstalta", 5, 1, st.copy(), 4, sta=0.5, lta=10,
                 trace_ids=trace_ids, event_templates=templ,
                 similarity_threshold=similarity_thresholds)
-            # two warnings get raised
-            self.assertEqual(len(w), 2)
+        # four warnings get raised
+        self.assertEqual(len(w), 4)
+        self.assertEqual(
+            str(w[0].message),
+            "At least one trace's ID was not found in the trace ID list and "
+            "was disregarded (BW.UH3..SHN)")
+        self.assertEqual(
+            str(w[1].message),
+            "At least one trace's ID was not found in the trace ID list and "
+            "was disregarded (BW.UH3..SHE)")
+        self.assertEqual(
+            str(w[2].message),
+            'Skipping trace BW.UH1..XHZ in template correlation (not present '
+            'in stream to check).')
+        self.assertEqual(
+            str(w[3].message),
+            "Skipping template(s) for station 'UH1': No common SEED IDs when "
+            "comparing template (BW.UH1..XHZ) and data streams (BW.UH1..SHZ, "
+            "BW.UH2..SHZ, BW.UH3..SHE, BW.UH3..SHN, BW.UH3..SHZ, "
+            "BW.UH4..EHZ).")
         # check floats in resulting dictionary separately
         self.assertAlmostEqual(trig[0].pop('duration'), 3.96, places=6)
         self.assertAlmostEqual(trig[1].pop('duration'), 1.99, places=6)
