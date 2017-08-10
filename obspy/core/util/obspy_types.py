@@ -303,6 +303,8 @@ class FloatWithUncertaintiesAndUnit(FloatWithUncertainties):
         super(FloatWithUncertaintiesAndUnit, self).__init__(
             value, lower_uncertainty=lower_uncertainty,
             upper_uncertainty=upper_uncertainty)
+        if unit is None and hasattr(value, "unit"):
+            unit = value.unit
         self.unit = unit
 
     @property

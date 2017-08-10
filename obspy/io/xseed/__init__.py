@@ -9,6 +9,11 @@ representation of `Dataless SEED`. This module contains converters from
 against the complete ORFEUS Dataless SEED archive, the IRIS (US) Dataless SEED
 archive and against ArcLink response requests.
 
+All files can be converted to ObsPy's internal inventory objects at which
+point they can be written out to any format ObsPy supports. In the case of
+RESP files these are potentially incomplete as RESP files lack vital
+information like geographical coordinates.
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
@@ -76,6 +81,16 @@ from future.builtins import *  # NOQA
 
 # needs to stay above import statements
 DEFAULT_XSEED_VERSION = '1.1'
+
+
+class InvalidResponseError(Exception):
+    """
+    Raised when a response is clearly invalid.
+
+    The error message should give a clearer idea of why.
+    """
+    pass
+
 
 from .parser import Parser
 

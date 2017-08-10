@@ -940,11 +940,14 @@ def _write_network(parent, network, level):
         _write_station(network_elem, station, level)
 
 
-def _write_floattype(parent, obj, attr_name, tag, additional_mapping={}):
+def _write_floattype(parent, obj, attr_name, tag, additional_mapping={},
+                     cls=None):
     attribs = {}
     obj_ = getattr(obj, attr_name)
     if obj_ is None:
         return
+    if cls and not isinstance(obj_, cls):
+        obj_ = cls(obj_)
     attribs["datum"] = obj_.__dict__.get("datum")
     if hasattr(obj_, "unit"):
         attribs["unit"] = obj_.unit
@@ -1159,16 +1162,30 @@ def _write_polynomial_common_fields(element, polynomial):
     etree.SubElement(element, "ApproximationType").text = \
         str(polynomial.approximation_type)
     _write_floattype(element, polynomial,
-                     "frequency_lower_bound", "FrequencyLowerBound")
+                     "frequency_lower_bound", "FrequencyLowerBound",
+                     cls=Frequency)
     _write_floattype(element, polynomial,
-                     "frequency_upper_bound", "FrequencyUpperBound")
+                     "frequency_upper_bound", "FrequencyUpperBound",
+                     cls=Frequency)
     etree.SubElement(element, "ApproximationLowerBound").text = \
         _float_to_str(polynomial.approximation_lower_bound)
     etree.SubElement(element, "ApproximationUpperBound").text = \
         _float_to_str(polynomial.approximation_upper_bound)
     etree.SubElement(element, "MaximumError").text = \
         _float_to_str(polynomial.maximum_error)
-    _write_floattype_list(element, polynomial,
+
+    # Patch the polynomial to make sure the coefficients have the correct type.
+    p = copy.deepcopy(polynomial)
+    coeffs = []
+    for _i, c in enumerate(polynomial.coefficients):
+        if not isinstance(c, CoefficientWithUncertainties):
+            c = CoefficientWithUncertainties(c)
+        if "number" not in c.__dict__:
+            c.__dict__["number"] = _i + 1
+        coeffs.append(c)
+    p.coefficients = coeffs
+
+    _write_floattype_list(element, p,
                           "coefficients", "Coefficient",
                           additional_mapping={"number": "number"})
     _write_extra(element, polynomial)

@@ -1,0 +1,76 @@
+#		<< obspy, Version 1.0.3.post0+1391.g4201c70d14.dirty >>
+#		
+#		======== CHANNEL RESPONSE DATA ========
+B050F03     Station:     GTC1
+B050F16     Network:     PS
+B052F03     Location:    ??
+B052F04     Channel:     EGE
+B052F22     Start date:  1993,091
+B052F23     End date:    2599,365,23:59:59.0000
+#		=======================================
+#		+               +--------------------------------------------+                +
+#		+               |   Response (Poles & Zeros),  GTC1 ch EGE   |                +
+#		+               +--------------------------------------------+                +
+#		
+B053F03     Transfer function type:                A [Laplace Transform (Rad/sec)]
+B053F04     Stage sequence number:                 1
+B053F05     Response in units lookup:              M/S/S - Acceleration in Meters Per Second
+B053F06     Response out units lookup:             V - Volts
+B053F07     A0 normalization factor:               1
+B053F08     Normalization frequency:               0.02
+B053F09     Number of zeroes:                      0
+B053F14     Number of poles:                       0
+#		Complex zeroes:
+#		  i  real          imag          real_error    imag_error
+#		Complex poles:
+#		  i  real          imag          real_error    imag_error
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  GTC1 ch EGE      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 1
+B058F04     Gain:                                  1.012510E+07
+B058F05     Frequency of gain:                     2.000000E-02 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+               +-------------------------------------------+                 +
+#		+               |   Response (Coefficients),  GTC1 ch EGE   |                 +
+#		+               +-------------------------------------------+                 +
+#		
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 2
+B054F05     Response in units lookup:              V - Volts
+B054F06     Response out units lookup:             COUNTS - Digital Counts
+B054F07     Number of numerators:                  0
+B054F10     Number of denominators:                0
+#		
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,  GTC1 ch EGE   |                       +
+#		+                      +------------------------------+                       +
+#		
+B057F03     Stage sequence number:                 2
+B057F04     Input sample rate:                     5.120000E+03
+B057F05     Decimation factor:                     1
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             0.000000E+00
+B057F08     Correction applied (seconds):          0.000000E+00
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  GTC1 ch EGE      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 2
+B058F04     Gain:                                  1.000000E+00
+B058F05     Frequency of gain:                     0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity,  GTC1 ch EGE   |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           1.012510E+07
+B058F05     Frequency of sensitivity:              2.000000E-02 HZ
+B058F06     Number of calibrations:                0
+#		

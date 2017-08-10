@@ -1,0 +1,152 @@
+#		<< obspy, Version 1.0.3.post0+1395.g4855a590a4.dirty >>
+#		
+#		======== CHANNEL RESPONSE DATA ========
+B050F03     Station:     CHL1
+B050F16     Network:     PB
+B052F03     Location:    LM
+B052F04     Channel:     LS1
+B052F22     Start date:  2008,237
+B052F23     End date:    2599,365,23:59:59.0000
+#		=======================================
+#		+               +--------------------------------------------+                +
+#		+               |   Response (Poles & Zeros),  CHL1 ch LS1   |                +
+#		+               +--------------------------------------------+                +
+#		
+B053F03     Transfer function type:                A [Laplace Transform (Rad/sec)]
+B053F04     Stage sequence number:                 1
+B053F05     Response in units lookup:              M/M - STRAIN
+B053F06     Response out units lookup:             V - VOLTS
+B053F07     A0 normalization factor:               1
+B053F08     Normalization frequency:               0
+B053F09     Number of zeroes:                      0
+B053F14     Number of poles:                       0
+#		Complex zeroes:
+#		  i  real          imag          real_error    imag_error
+#		Complex poles:
+#		  i  real          imag          real_error    imag_error
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  CHL1 ch LS1      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 1
+B058F04     Gain:                                  5.901050E-07
+B058F05     Frequency of gain:                     0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+               +--------------------------------------------+                +
+#		+               |   Response (Poles & Zeros),  CHL1 ch LS1   |                +
+#		+               +--------------------------------------------+                +
+#		
+B053F03     Transfer function type:                A [Laplace Transform (Rad/sec)]
+B053F04     Stage sequence number:                 2
+B053F05     Response in units lookup:              V - VOLTS
+B053F06     Response out units lookup:             V - VOLTS
+B053F07     A0 normalization factor:               1
+B053F08     Normalization frequency:               0
+B053F09     Number of zeroes:                      0
+B053F14     Number of poles:                       4
+#		Complex zeroes:
+#		  i  real          imag          real_error    imag_error
+#		Complex poles:
+#		  i  real          imag          real_error    imag_error
+B053F15-18    0 -8.300000E-02  0.000000E+00  0.000000E+00  0.000000E+00
+B053F15-18    1 -8.400000E-02  0.000000E+00  0.000000E+00  0.000000E+00
+B053F15-18    2 -7.800000E-02  0.000000E+00  0.000000E+00  0.000000E+00
+B053F15-18    3 -4.600000E-02  0.000000E+00  0.000000E+00  0.000000E+00
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  CHL1 ch LS1      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 2
+B058F04     Gain:                                  1.000000E+00
+B058F05     Frequency of gain:                     0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+               +-------------------------------------------+                 +
+#		+               |   Response (Coefficients),  CHL1 ch LS1   |                 +
+#		+               +-------------------------------------------+                 +
+#		
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 3
+B054F05     Response in units lookup:              V - VOLTS
+B054F06     Response out units lookup:             COUNTS - DIGITAL
+B054F07     Number of numerators:                  0
+B054F10     Number of denominators:                0
+#		
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,  CHL1 ch LS1   |                       +
+#		+                      +------------------------------+                       +
+#		
+B057F03     Stage sequence number:                 3
+B057F04     Input sample rate:                     1.000000E+01
+B057F05     Decimation factor:                     1
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             0.000000E+00
+B057F08     Correction applied (seconds):          0.000000E+00
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  CHL1 ch LS1      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 3
+B058F04     Gain:                                  3.052000E-04
+B058F05     Frequency of gain:                     0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+               +-------------------------------------------+                 +
+#		+               |   Response (Coefficients),  CHL1 ch LS1   |                 +
+#		+               +-------------------------------------------+                 +
+#		
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 4
+B054F05     Response in units lookup:              COUNTS - DIGITAL
+B054F06     Response out units lookup:             COUNTS - DIGITAL
+B054F07     Number of numerators:                  10
+B054F10     Number of denominators:                1
+#		Numerator coefficients:
+#		  i, coefficient,  error
+B054F08-09    0  1.000000E-01  0.000000E+00
+B054F08-09    1  1.000000E-01  0.000000E+00
+B054F08-09    2  1.000000E-01  0.000000E+00
+B054F08-09    3  1.000000E-01  0.000000E+00
+B054F08-09    4  1.000000E-01  0.000000E+00
+B054F08-09    5  1.000000E-01  0.000000E+00
+B054F08-09    6  1.000000E-01  0.000000E+00
+B054F08-09    7  1.000000E-01  0.000000E+00
+B054F08-09    8  1.000000E-01  0.000000E+00
+B054F08-09    9  1.000000E-01  0.000000E+00
+#		Denominator coefficients:
+#		 i, coefficient, error
+B054F11-12    0  1.000000E+00  0.000000E+00
+#		
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,  CHL1 ch LS1   |                       +
+#		+                      +------------------------------+                       +
+#		
+B057F03     Stage sequence number:                 4
+B057F04     Input sample rate:                     1.000000E+01
+B057F05     Decimation factor:                     10
+B057F06     Decimation offset:                     4
+B057F07     Estimated delay (seconds):             5.000000E-01
+B057F08     Correction applied (seconds):          0.000000E+00
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  CHL1 ch LS1      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 4
+B058F04     Gain:                                  1.000000E+00
+B058F05     Frequency of gain:                     0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity,  CHL1 ch LS1   |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           1.801000E-10
+B058F05     Frequency of sensitivity:              0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		

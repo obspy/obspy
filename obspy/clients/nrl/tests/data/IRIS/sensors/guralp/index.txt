@@ -1,0 +1,29 @@
+[Main]
+question = "Select the Guralp sensor model"
+
+[CMG-1T]
+path = "cmg-1t.txt"
+
+[CMG-3T]
+path = "cmg-3t.txt"
+
+[CMG-3T/NSN Hybrid]
+path = "cmg-3t_nsn_hybrid.txt"
+
+[CMG-3ESP]
+path = "cmg-3esp.txt"
+
+[CMG-6T]
+path = "cmg-6t.txt"
+
+[CMG-6TF]
+path = "cmg-6tf.txt"
+
+[CMG-40T]
+path = "cmg-40t.txt"
+
+[CMG-EDU-T]
+path = "cmg-edut.txt"
+
+[CMG-5]
+path = "cmg-5t.txt" 

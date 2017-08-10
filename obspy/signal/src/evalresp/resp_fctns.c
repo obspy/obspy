@@ -47,7 +47,7 @@ void merge_lists(struct blkt *first_blkt, struct blkt **second_blkt) {
   /* set up some local pointers and values */
 
   ncoeffs1 = first_blkt->blkt_info.list.nresp;
-  
+
   amp1 = first_blkt->blkt_info.list.amp;
   phase1 = first_blkt->blkt_info.list.phase;
   freq1 = first_blkt->blkt_info.list.freq;

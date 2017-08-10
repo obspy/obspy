@@ -90,11 +90,11 @@ KEYWORDS = [
     'focal mechanism', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
     'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
     'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
-    'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'observatory', 'ORFEUS', 'PDAS',
-    'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
-    'REFTEK130', 'RT-130', 'RESP', 'response file', 'RT', 'SAC', 'scardec',
-    'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub',
-    'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
+    'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS',
+    'PDAS', 'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime',
+    'REFTEK', 'REFTEK130', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
+    'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN',
+    'SeisHub', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
     'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
     'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston',
@@ -367,7 +367,10 @@ ENTRY_POINTS = {
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
         'STATIONTXT = obspy.io.stationtxt.core',
-        'KML = obspy.io.kml.core'
+        'KML = obspy.io.kml.core',
+        'SEED = obspy.io.xseed.core',
+        'XSEED = obspy.io.xseed.core',
+        'RESP = obspy.io.xseed.core',
         ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
@@ -400,6 +403,18 @@ ENTRY_POINTS = {
     'obspy.plugin.inventory.KML': [
         'writeFormat = obspy.io.kml.core:_write_kml',
         ],
+    'obspy.plugin.inventory.SEED': [
+        'isFormat = obspy.io.xseed.core:_is_seed',
+        'readFormat = obspy.io.xseed.core:_read_seed',
+    ],
+    'obspy.plugin.inventory.XSEED': [
+        'isFormat = obspy.io.xseed.core:_is_xseed',
+        'readFormat = obspy.io.xseed.core:_read_xseed',
+    ],
+    'obspy.plugin.inventory.RESP': [
+        'isFormat = obspy.io.xseed.core:_is_resp',
+        'readFormat = obspy.io.xseed.core:_read_resp',
+    ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
         'constant = scipy.signal:detrend',
