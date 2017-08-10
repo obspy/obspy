@@ -625,6 +625,14 @@ def templates_max_similarity(st, time, streams_templates):
                       "(not present in stream to check)."
                 warnings.warn(msg % id_)
                 ids.remove(id_)
+        if not ids:
+            msg = ("Skipping template(s) for station '{}': No common SEED IDs "
+                   "when comparing template ({}) and data streams ({}).")
+            warnings.warn(msg.format(
+                st_tmpl[0].stats.station,
+                ', '.join(sorted(set(tr.id for tr in st_tmpl))),
+                ', '.join(sorted(set(tr.id for tr in st_)))))
+            continue
         # determine best (combined) shift of multi-component data
         for id_ in ids:
             tr1 = st_.select(id=id_)[0]
