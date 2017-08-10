@@ -47,6 +47,7 @@ ODC     http://www.orfeus-eu.org
 ORFEUS  http://www.orfeus-eu.org
 RESIF   http://ws.resif.fr
 SCEDC   https://service.scedc.caltech.edu
+TEXNET  http://rtserve.beg.utexas.edu
 USGS    https://earthquake.usgs.gov
 USP     http://sismo.iag.usp.br
 
