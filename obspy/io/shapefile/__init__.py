@@ -14,6 +14,18 @@ Write support works via the ObsPy plugin structure for
 >>> cat = read_events()  # load example data
 >>> cat.write("my_events.shp", format="SHAPEFILE")  # doctest: +SKIP
 
+For Catalog objects, an additional shapefile with error ellipses representing
+the origin uncertainty can be written using the ``error_ellipses`` kwarg. Since
+origin uncertainties are in meters (as opposed to degrees), an appropriate
+coordinate system has to be specified by EPSG code (the example contains events
+near Vanuatu and correspondingly the EPSG code for 'WGS 84 / UTM zone 58S'):
+
+>>> cat = read_events('/path/to/vanua.sum.grid0.loc.hyp')  # doctest: +SKIP
+>>> cat.write('my_events.shp', format='SHAPEFILE',  # doctest: +SKIP
+...           error_ellipses={'filename': 'my_events_errors.shp',
+...                           'epsg': 32758})
+
+
 .. seealso::
 
     The format definition can be found
