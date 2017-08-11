@@ -11,30 +11,40 @@ other general packages and packages that don't fit it any of the other
 categories.*
 
 .. autosummary::
-   :toctree: .
-   :nosignatures:
+    :toctree: .
+    :nosignatures:
 
-   obspy.core
-   obspy.db
-   obspy.geodetics
-   obspy.imaging
-   obspy.realtime
-   obspy.signal
-   obspy.taup
+    obspy.core
+    obspy.db
+    obspy.geodetics
+    obspy.imaging
+    obspy.realtime
+    obspy.signal
+    obspy.taup
 
 
 .. rubric:: Scripts
 
-*All scripts shipping with ObsPy.*
+*All command-line scripts shipping with ObsPy.*
 
 .. autosummary::
-   :template: script.rst
-   :toctree: autogen
-   :nosignatures:
+    :template: script.rst
+    :toctree: autogen
+    :nosignatures:
 
-   obspy.scripts.runtests
-   obspy.scripts.reftekrescue
-   obspy.scripts.sds_html_report
+    obspy.scripts.flinnengdahl
+    obspy.scripts.runtests
+    obspy.scripts.reftekrescue
+    obspy.scripts.print
+    obspy.scripts.sds_html_report
+    obspy.db.scripts.indexer
+    obspy.imaging.scripts.scan
+    obspy.imaging.scripts.plot
+    obspy.imaging.scripts.mopad
+    obspy.io.mseed.scripts.recordanalyzer
+    obspy.io.xseed.scripts.dataless2xseed
+    obspy.io.xseed.scripts.xseed2dataless
+    obspy.io.xseed.scripts.dataless2resp
 
 
 .. rubric:: Database or Web Service Access Clients
@@ -77,26 +87,26 @@ categories.*
 
 
 .. autosummary::
-   :toctree: .
-   :nosignatures:
+    :toctree: .
+    :nosignatures:
 
-   obspy.io.ah
-   obspy.io.ascii
-   obspy.io.css
-   obspy.io.gcf
-   obspy.io.gse2
-   obspy.io.kinemetrics
-   obspy.io.mseed
-   obspy.io.nied.knet
-   obspy.io.pdas
-   obspy.io.reftek
-   obspy.io.sac
-   obspy.io.seisan
-   obspy.io.seg2
-   obspy.io.segy
-   obspy.io.sh
-   obspy.io.wav
-   obspy.io.win
+    obspy.io.ah
+    obspy.io.ascii
+    obspy.io.css
+    obspy.io.gcf
+    obspy.io.gse2
+    obspy.io.kinemetrics
+    obspy.io.mseed
+    obspy.io.nied.knet
+    obspy.io.pdas
+    obspy.io.reftek
+    obspy.io.sac
+    obspy.io.seisan
+    obspy.io.seg2
+    obspy.io.segy
+    obspy.io.sh
+    obspy.io.wav
+    obspy.io.win
    obspy.io.y
 
 .. rubric:: Event Data Import/Export Plug-ins
@@ -118,24 +128,24 @@ categories.*
     cat.write("/path/to/outfile", format="quakeml")
 
 .. autosummary::
-   :toctree: .
-   :nosignatures:
+    :toctree: .
+    :nosignatures:
 
-   obspy.io.cmtsolution
-   obspy.io.cnv
-   obspy.io.gse2
-   obspy.io.json
-   obspy.io.kml
-   obspy.io.ndk
-   obspy.io.nied.fnetmt
-   obspy.io.nlloc
-   obspy.io.nordic
-   obspy.io.pde
-   obspy.io.seiscomp
-   obspy.io.scardec
-   obspy.io.shapefile
-   obspy.io.quakeml
-   obspy.io.zmap
+    obspy.io.cmtsolution
+    obspy.io.cnv
+    obspy.io.gse2
+    obspy.io.json
+    obspy.io.kml
+    obspy.io.ndk
+    obspy.io.nied.fnetmt
+    obspy.io.nlloc
+    obspy.io.nordic
+    obspy.io.pde
+    obspy.io.seiscomp
+    obspy.io.scardec
+    obspy.io.shapefile
+    obspy.io.quakeml
+    obspy.io.zmap
 
 .. rubric:: Inventory Data Import/Export Plug-ins
 
@@ -158,15 +168,15 @@ categories.*
     inv.write("/path/to/outfile", format="stationxml")
 
 .. autosummary::
-   :toctree: .
-   :nosignatures:
+    :toctree: .
+    :nosignatures:
 
-   obspy.io.arclink
-   obspy.io.css
-   obspy.io.kml
-   obspy.io.sac.sacpz
-   obspy.io.seiscomp
-   obspy.io.shapefile
-   obspy.io.stationtxt
-   obspy.io.stationxml
-   obspy.io.xseed
+    obspy.io.arclink
+    obspy.io.css
+    obspy.io.kml
+    obspy.io.sac.sacpz
+    obspy.io.seiscomp
+    obspy.io.shapefile
+    obspy.io.stationtxt
+    obspy.io.stationxml
+    obspy.io.xseed

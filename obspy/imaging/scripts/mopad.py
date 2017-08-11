@@ -13,6 +13,8 @@
 #
 # flake8: noqa
 """
+MoPaD command line utility.
+
 USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
 
 ::
