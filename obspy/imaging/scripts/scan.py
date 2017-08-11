@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # 2010-01-27 Moritz Beyreuther
 """
+Scan a directory to determine the data availability.
+
 Scan all specified files/directories, determine which time spans are covered
 for which stations and plot everything in summarized in one overview plot.
 Start times of traces with available data are marked by crosses, gaps are

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.reftek - REFTEK130 read support
-========================================
+obspy.io.reftek - REFTEK130 read support for ObsPy
+==================================================
 
 This module provides read support for the RefTek 130 data format.
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.geodetics - Various geodetic utilities for ObsPy.
-=======================================================
+obspy.geodetics - Various geodetic utilities for ObsPy
+======================================================
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)

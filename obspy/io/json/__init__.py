@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-JSON write support
+obspy.io.json - JSON write support for ObsPy
+============================================
 
 JavaScript Object Notation is a text-based open standard designed for
 human-readable data interchange. The JSON format is often used for serializing

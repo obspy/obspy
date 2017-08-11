@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Wiggle plot of the data in files
+Simple script to plot waveforms in one or more files.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

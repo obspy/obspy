@@ -1,5 +1,5 @@
 """
-obspy.imaging - Plotting Routines for ObsPy
+obspy.imaging - Plotting routines for ObsPy
 ===========================================
 This module provides routines for plotting and displaying often used in
 seismology. It can currently plot waveform data, generate spectrograms and draw
