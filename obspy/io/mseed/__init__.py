@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.mseed - MiniSEED read and write support
-================================================
+obspy.io.mseed - MiniSEED read and write support for ObsPy
+==========================================================
 This module provides read and write support for the `MiniSEED
 <https://ds.iris.edu/ds/nodes/dmc/data/formats/#miniseed>`_ (and the
 data part of full SEED) waveform data format and some other convenient

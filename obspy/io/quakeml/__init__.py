@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.quakeml - Read and write support for QuakeML files
+obspy.io.quakeml - QuakeML read and write support for ObsPy
 ===========================================================
 
 :copyright:

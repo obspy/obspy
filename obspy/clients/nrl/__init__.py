@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.clients.nrl - Nominal Response Library Client for ObsPy
+obspy.clients.nrl - Nominal Response Library client for ObsPy
 =============================================================
 
 This module contains a client to access the Nominal Response Library (NRL)

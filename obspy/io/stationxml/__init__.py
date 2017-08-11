@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.stationxml - Read and write support for StationXML files
+obspy.io.stationxml - StationXML read and write support for ObsPy
 =================================================================
 
 :copyright:
