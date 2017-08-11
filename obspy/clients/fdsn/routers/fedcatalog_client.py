@@ -349,10 +349,11 @@ class FederatedClient(RoutingClient):
 
     def __init__(self, **kwargs):
         """
-        initializer for FederatedClient
+        Initializes an FDSN Fed Catalog Web Service client.
 
         :type **kwargs: keyword arguments
-        :param **kwargs: arguments destined for either Fedcatalog or Client
+        :param **kwargs: arguments destined for either Fedcatalog or 
+        RoutingClient
         """
         RoutingClient.__init__(self, **kwargs)
         PROVIDERS.refresh()
