@@ -21,49 +21,29 @@ import os
 from lxml import etree
 
 from obspy.io.quakeml.core import Pickler, Unpickler, _xml_doc_from_anything
+from obspy.io.seiscomp.core import _is_sc3ml as _is_sc3ml_version
+from obspy.io.seiscomp.core import validate as validate_sc3ml
 
 
-def _validate_sc3ml(path_or_object, verbose=False):
+SCHEMA_VERSION = ['0.9']
+
+
+def _is_sc3ml(path_or_file_object):
     """
-    Validates a SC3ML file against the SC3ML 0.9 schema. Returns either True or
-    False.
+    Simple function checking if the passed object contains a valid sc3ml file.
+    Returns True of False.
 
-    :param path_or_object: File name or file like object. Can also be an etree
-        element.
-    :type verbose: bool
-    :param verbose: Print error log if True.
+    The test is not exhaustive - it only checks the root tag but that should
+    be good enough for most real world use cases. If the schema is used to
+    test for a StationXML file, many real world files are false negatives as
+    they don't adhere to the standard.
+
+    :type path_or_file_object: str
+    :param path_or_file_object: File name or file like object.
+    :rtype: bool
+    :return: ``True`` if SC3ML file is valid.
     """
-    # Get the schema location.
-    schema_location = os.path.join(os.path.dirname(__file__), 'data',
-                                   'sc3ml_0.9.xsd')
-    xmlschema = etree.XMLSchema(etree.parse(schema_location))
-
-    if hasattr(path_or_object, "tell") and hasattr(path_or_object, "seek"):
-        current_position = path_or_object.tell()
-
-    if isinstance(path_or_object, etree._Element):
-        xmldoc = path_or_object
-    else:
-        try:
-            xmldoc = _xml_doc_from_anything(path_or_object)
-        except ValueError:
-            return False
-        finally:
-            # Make sure to reset file pointer position.
-            try:
-                path_or_object.seek(current_position, 0)
-            except Exception:
-                pass
-
-    valid = xmlschema.validate(xmldoc)
-
-    # Pretty error printing if the validation fails.
-    if verbose and valid is not True:
-        print("Error validating SC3ML file:")
-        for entry in xmlschema.error_log:
-            print("\t%s" % entry)
-
-    return valid
+    return _is_sc3ml_version(path_or_file_object, SCHEMA_VERSION)
 
 
 def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
@@ -83,7 +63,7 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     :param filename: SC3ML file to be read.
     :type id_prefix: str
     :param id_prefix: ID prefix. SC3ML does not enforce any particular ID
-        restriction, this ID prefix allow to convert the IDs to a well
+        restriction, this ID prefix allows to convert the IDs to a well
         formatted QuakeML ID. You can modify the default ID prefix with the
         reverse DNS name of your institute.
     :rtype: :class:`~obspy.core.event.Catalog`
@@ -146,7 +126,7 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
         for event in sc3ml_doc.xpath("//*[local-name()='event']"):
             event.getparent().remove(event)
 
-    if validate and not _validate_sc3ml(io.BytesIO(sc3ml_doc), verbose):
+    if validate and not validate_sc3ml(io.BytesIO(sc3ml_doc), verbose=verbose):
         raise AssertionError("The final SC3ML file did not pass validation.")
 
     # Open filehandler or use an existing file like object.

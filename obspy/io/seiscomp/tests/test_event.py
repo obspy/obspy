@@ -18,13 +18,16 @@ from future.builtins import *  # NOQA
 import filecmp
 import os
 import unittest
+import warnings
 
 from lxml import etree
 
 from obspy import read_events
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.io.quakeml.core import _read_quakeml, _validate
-from obspy.io.seiscomp.event import _read_sc3ml, _validate_sc3ml
+from obspy.io.quakeml.core import _read_quakeml
+from obspy.io.quakeml.core import _validate as _validate_quakeml
+from obspy.io.seiscomp.core import validate as validate_sc3ml
+from obspy.io.seiscomp.event import _is_sc3ml, _read_sc3ml
 
 
 class EventTestCase(unittest.TestCase):
@@ -55,7 +58,7 @@ class EventTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tf.write(quakeml_doc)
             if validate:
-                self.assertTrue(_validate(tf.name))
+                self.assertTrue(_validate_quakeml(tf.name))
             filepath_cmp = os.path.join(self.path, quakeml_file)
             self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
 
@@ -75,9 +78,26 @@ class EventTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tf.write(sc3ml_doc)
             if validate:
-                self.assertTrue(_validate_sc3ml(tf.name))
+                self.assertTrue(validate_sc3ml(tf.name))
             filepath_cmp = os.path.join(self.path, sc3ml_file)
             self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
+
+    def test_sc3ml_versions(self):
+        """
+        Test multiple schema versions
+        """
+        self.assertTrue(_is_sc3ml(os.path.join(self.path, 'version0.9')))
+
+        for version in ['0.7', '0.8', '0.10']:
+            filename = os.path.join(self.path, 'version%s' % version)
+
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                self.assertTrue(_is_sc3ml(filename))
+
+                self.assertEqual(len(w), 1)
+                expected_message = 'The sc3ml file has version'
+                self.assertTrue(str(w[0].message).startswith(expected_message))
 
     def test_read_xslt_event(self):
         self.cmp_read_xslt_file('quakeml_1.2_event.sc3ml',

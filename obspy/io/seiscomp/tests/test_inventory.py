@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Test suite for the sc3ml reader.
+Test suite for the sc3ml reader inventory.
 
 Modified after obspy.io.stationXML
     > obspy.obspy.io.stationxml.core.py
@@ -18,7 +18,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import inspect
 import io
 import os
 import warnings
@@ -35,8 +34,7 @@ class SC3MLTestCase(unittest.TestCase):
         """
         Read example stationXML/sc3ml format to Inventory
         """
-        self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe()))), "data")
+        self.data_dir = os.path.join(os.path.dirname(__file__), "data")
         stationxml_path = os.path.join(self.data_dir, "EB_response_stationXML")
         sc3ml_path = os.path.join(self.data_dir, "EB_response_sc3ml")
         self.stationxml_inventory = read_inventory(stationxml_path,
