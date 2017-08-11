@@ -11,8 +11,8 @@ implement the FDSN web service definitions (https://www.fdsn.org/webservices/).
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 
-Basic Usage
------------
+Basic FDSN Client Usage
+-----------------------
 
 The first step is always to initialize a client object.
 
@@ -133,6 +133,62 @@ USP     http://sismo.iag.usp.br
                                         starttime=starttime,
                                         endtime=endtime)
         inventory.plot()
+
+
+Basic FDSN FedCatalog Client Usage
+----------------------------------
+
+The obspy.clients.fdsn.routers.fedcatalog_client module provides federated
+access to multiple web servers that implement the FDSN Station and Dataselect 
+web service definitions (https://www.fdsn.org/webservices/).
+
+The first step is always to initialize a FederatedClient object.
+
+>>> from obspy.clients.fdsn.routers import FederatedClient
+>>> fclient = FederatedClient()
+
+(1) :meth:`~obspy.clients.fdsn.routers.fedcatalog_client. \
+        FederatedClient.get_waveforms()`: The following
+    example illustrates how to request 60 minutes of the ``"LHZ"``
+    channel of station Apirathos, Naxos, Greece (``"APE"``) of the GEOFON 
+    (``"GE"``) for a seismic event around 2006-01-08T11:34:54.000
+    (UTC). Results are returned as a :class:`~obspy.core.stream.Stream` object.
+
+    >>> from obspy import UTCDateTime
+    >>> t = UTCDateTime("2006-01-08T11:34:54.000")
+    >>> st = fclient.get_waveforms("GE", "APE", "--", "LHZ", t, t + 60 * 60)
+    >>> st.plot()  # doctest: +SKIP
+
+    .. plot::
+
+        from obspy import UTCDateTime
+        from obspy.clients.fdsn import Client
+        client = Client()
+        t = UTCDateTime("2006-01-08T11:34:54.000")
+        st = fclient.get_waveforms("GE", "APE", "--", "LHZ", t, t + 60 * 60)
+        st.plot()
+
+(2) :meth:`~obspy.clients.fdsn.routers.fedcatalog_client. \
+        FederatedClient.get_stations()`: Uses the IRIS Fed Catalog 
+        web service to return station metadata 
+    :class:`~obspy.core.inventory.inventory.Inventory` object.
+
+    >>> inventory = fclient.get_stations(network="GE", station="A*",
+    ...                           channel="?HZ", level="station",
+    ...                           endtime="2016-12-31")
+    >>> print(inventory)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    Inventory created at 2...Z
+        Sending institution: SeisComP3 (GFZ)
+        Contains:
+            Networks (1):
+                GE
+            Stations (4):
+                GE.APE (GEOFON Station Apirathos, Naxos)
+                GE.APE (NOA/GEOFON Station Apeiranthos,Naxos, Greece)
+                GE.APEZ (GEOFON Station Moni Apezanon, Greece)
+                GE.ARPR (GEOFON/MedNet/KOERI Station Arapgir, Turkey)
+            Channels (0):
+    <BLANKLINE>
 
 Please see the documentation for each method for further information and
 examples.
