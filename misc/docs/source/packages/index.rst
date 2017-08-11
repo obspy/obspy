@@ -2,9 +2,13 @@
 ObsPy Library Reference
 =======================
 
-The functionality is provided through the following packages:
+ObsPy's functionality is provided through the following packages.
 
 .. rubric:: General Packages
+
+*This section lists the core package that ties everything together as well as
+other general packages and packages that don't fit it any of the other
+categories.*
 
 .. autosummary::
    :toctree: .
@@ -18,7 +22,10 @@ The functionality is provided through the following packages:
    obspy.signal
    obspy.taup
 
+
 .. rubric:: Scripts
+
+*All scripts shipping with ObsPy.*
 
 .. autosummary::
    :template: script.rst
@@ -29,7 +36,45 @@ The functionality is provided through the following packages:
    obspy.scripts.reftekrescue
    obspy.scripts.sds_html_report
 
+
+.. rubric:: Database or Web Service Access Clients
+
+*All ObsPy clients enabling remote and local access to data.*
+
+.. autosummary::
+    :toctree: .
+    :nosignatures:
+
+    obspy.clients.arclink
+    obspy.clients.earthworm
+    obspy.clients.fdsn
+    obspy.clients.filesystem
+    obspy.clients.iris
+    obspy.clients.neic
+    obspy.clients.nrl
+    obspy.clients.seedlink
+    obspy.clients.seishub
+    obspy.clients.syngine
+
+
 .. rubric:: Waveform Import/Export Plug-ins
+
+.. warning::
+    In most cases these modules do not need to be called directly. They
+    register via the central ObsPy
+    :func:`~obspy.core.stream.read` function - call this instead.
+
+
+**Usage Example:**
+
+.. code-block:: python
+
+    import obspy
+    # Format will be detected automatically.
+    st = obspy.read("/path/to/file")
+    # Many formats can also be written out - just use the module name.
+    st.write("/path/to/outfile", format="mseed")
+
 
 .. autosummary::
    :toctree: .
@@ -56,6 +101,22 @@ The functionality is provided through the following packages:
 
 .. rubric:: Event Data Import/Export Plug-ins
 
+.. warning::
+    In most cases these modules do not need to be called directly. They
+    register via the central ObsPy
+    :func:`~obspy.core.event.read_events` function - call this instead.
+
+
+**Usage Example:**
+
+.. code-block:: python
+
+    import obspy
+    # Format will be detected automatically.
+    cat = obspy.read_events("/path/to/file")
+    # Many formats can also be written out - just use the module name.
+    cat.write("/path/to/outfile", format="quakeml")
+
 .. autosummary::
    :toctree: .
    :nosignatures:
@@ -78,6 +139,24 @@ The functionality is provided through the following packages:
 
 .. rubric:: Inventory Data Import/Export Plug-ins
 
+
+.. warning::
+    In most cases these modules do not need to be called directly. They
+    register via the central ObsPy
+    :func:`~obspy.core.inventory.inventory.read_inventory` function -
+    call this instead.
+
+
+**Usage Example:**
+
+.. code-block:: python
+
+    import obspy
+    # Format will be detected automatically.
+    inv = obspy.read_inventory("/path/to/file")
+    # Many formats can also be written out - just use the module name.
+    inv.write("/path/to/outfile", format="stationxml")
+
 .. autosummary::
    :toctree: .
    :nosignatures:
@@ -91,20 +170,3 @@ The functionality is provided through the following packages:
    obspy.io.stationtxt
    obspy.io.stationxml
    obspy.io.xseed
-
-.. rubric:: Database or Web Service Access Clients
-
-.. autosummary::
-   :toctree: .
-   :nosignatures:
-
-   obspy.clients.arclink
-   obspy.clients.earthworm
-   obspy.clients.fdsn
-   obspy.clients.filesystem
-   obspy.clients.iris
-   obspy.clients.neic
-   obspy.clients.nrl
-   obspy.clients.seedlink
-   obspy.clients.seishub
-   obspy.clients.syngine
