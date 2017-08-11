@@ -16,7 +16,6 @@ The functionality is provided through the following packages:
    obspy.realtime
    obspy.signal
    obspy.taup
-   obspy.io.xseed
 
 .. rubric:: Scripts
 
@@ -90,6 +89,7 @@ The functionality is provided through the following packages:
    obspy.io.shapefile
    obspy.io.stationtxt
    obspy.io.stationxml
+   obspy.io.xseed
 
 .. rubric:: Database or Web Service Access Clients
 
