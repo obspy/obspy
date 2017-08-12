@@ -10,19 +10,21 @@ Various additional utilities for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
 
+import contextlib
 import inspect
+import io
 import itertools
 import math
 import os
 import platform
 import shutil
+from subprocess import STDOUT, CalledProcessError, check_output
 import sys
 import tempfile
 import warnings
-from contextlib import contextmanager
-from subprocess import STDOUT, CalledProcessError, check_output
+
+from future.builtins import *  # NOQA
 
 import numpy as np
 
@@ -33,7 +35,6 @@ import numpy as np
 # We use this e.g. in seishub.client.getWaveform to request two samples more on
 # both start and end to cut to the samples that really are nearest to requested
 # start/end time afterwards.
-
 BAND_CODE = {'F': 1000.0,
              'G': 1000.0,
              'D': 250.0,
@@ -262,24 +263,21 @@ def get_untracked_files_from_git():
     return files
 
 
-@contextmanager
-def CatchOutput():  # noqa -> this name is IMHO okay for a context manager.
+@contextlib.contextmanager
+def CatchOutput():  # NOQA
     """
     A context manager that catches stdout/stderr/exit() for its scope.
 
     Always use with "with" statement. Does nothing otherwise.
 
-    Based on: https://bugs.python.org/msg184312
-
     >>> with CatchOutput() as out:  # doctest: +SKIP
-    ...    os.system('echo "mystdout"')
-    ...    os.system('echo "mystderr" >&2')
+    ...    sys.stdout.write("mystdout")
+    ...    sys.stderr.write("mystderr")
     >>> print(out.stdout)  # doctest: +SKIP
     mystdout
     >>> print(out.stderr)  # doctest: +SKIP
     mystderr
     """
-
     # Dummy class to transport the output.
     class Output():
         pass
@@ -287,48 +285,24 @@ def CatchOutput():  # noqa -> this name is IMHO okay for a context manager.
     out.stdout = ''
     out.stderr = ''
 
-    stdout_fd = sys.stdout.fileno()
-    stderr_fd = sys.stderr.fileno()
-    with tempfile.TemporaryFile(prefix='obspy-') as tmp_stdout:
-        with tempfile.TemporaryFile(prefix='obspy-') as tmp_stderr:
-            stdout_copy = os.dup(stdout_fd)
-            stderr_copy = os.dup(stderr_fd)
+    sys.stdout = temp_out = io.StringIO()
+    sys.stderr = temp_err = io.StringIO()
 
-            try:
-                sys.stdout.flush()
-                os.dup2(tmp_stdout.fileno(), stdout_fd)
+    yield out
 
-                sys.stderr.flush()
-                os.dup2(tmp_stderr.fileno(), stderr_fd)
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
 
-                raised = False
-                yield out
+    out.stdout = temp_out.getvalue()
+    out.stderr = temp_err.getvalue()
 
-            except SystemExit:
-                raised = True
-
-            finally:
-                sys.stdout.flush()
-                os.dup2(stdout_copy, stdout_fd)
-                os.close(stdout_copy)
-                tmp_stdout.seek(0)
-                out.stdout = tmp_stdout.read()
-
-                sys.stderr.flush()
-                os.dup2(stderr_copy, stderr_fd)
-                os.close(stderr_copy)
-                tmp_stderr.seek(0)
-                out.stderr = tmp_stderr.read()
-
-                if platform.system() == "Windows":
-                    out.stdout = out.stdout.replace(b'\r', b'')
-                    out.stderr = out.stderr.replace(b'\r', b'')
-
-                if raised:
-                    raise SystemExit(out.stderr)
+    # replace Windows specific newlines for cleaner tests
+    if platform.system() == "Windows":
+        out.stdout = out.stdout.replace('\r', u'')
+        out.stderr = out.stderr.replace('\r', u'')
 
 
-@contextmanager
+@contextlib.contextmanager
 def TemporaryWorkingDirectory():  # noqa --> this name is IMHO ok for a CM
     """
     A context manager that changes to a temporary working directory.
