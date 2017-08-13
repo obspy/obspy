@@ -10,14 +10,15 @@ Various additional utilities for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from future.utils import PY2
 
 import contextlib
 import inspect
 import io
 import itertools
+import locale
 import math
 import os
-import platform
 import shutil
 from subprocess import STDOUT, CalledProcessError, check_output
 import sys
@@ -28,6 +29,8 @@ from future.builtins import *  # NOQA
 
 import numpy as np
 
+
+WIN32 = sys.platform.startswith('win32')
 
 # The following dictionary maps the first character of the channel_id to the
 # lowest sampling rate this so called Band Code should be used for according
@@ -263,10 +266,22 @@ def get_untracked_files_from_git():
     return files
 
 
+if PY2:
+    from cStringIO import StringIO as CaptureIO
+else:
+    class CaptureIO(io.TextIOWrapper):
+        def __init__(self):
+            super(CaptureIO, self).__init__(io.BytesIO(), encoding='utf-8',
+                                            newline='\n', write_through=True)
+
+        def getvalue(self):
+            return self.buffer.getvalue().decode('utf-8')
+
+
 @contextlib.contextmanager
 def CatchOutput():  # NOQA
     """
-    A context manager that catches stdout/stderr/exit() for its scope.
+    A context manager that captures input to stdout/stderr. Python level only!
 
     Always use with "with" statement. Does nothing otherwise.
 
@@ -280,26 +295,126 @@ def CatchOutput():  # NOQA
     """
     # Dummy class to transport the output.
     class Output():
-        pass
+        stdout = ''
+        stderr = ''
     out = Output()
-    out.stdout = ''
-    out.stderr = ''
 
-    sys.stdout = temp_out = io.StringIO()
-    sys.stderr = temp_err = io.StringIO()
+    # set current stdout/stderr to in-memory text streams
+    sys.stdout = stdout_result = CaptureIO()
+    sys.stderr = stderr_result = CaptureIO()
 
-    yield out
+    try:
+        raised = False
+        yield out
+    except SystemExit:
+        raised = True
+    finally:
+        out.stdout = stdout_result.getvalue()
+        out.stderr = stderr_result.getvalue()
 
+        # reset to original stdout/stderr
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+        # normalize line breaks
+        if WIN32:
+            out.stdout = out.stdout.replace('\r', '')
+            out.stderr = out.stderr.replace('\r', '')
+        # remove encoding for PY2 -> we always want PY2 unicode/PY3 str
+        if PY2:
+            if sys.stdout.isatty():
+                out.stdout.decode(sys.stdout.encoding)
+            else:
+                out.stdout.decode(locale.getpreferredencoding())
+            if sys.stderr.isatty():
+                out.stderr.decode(sys.stderr.encoding)
+            else:
+                out.stderr.decode(locale.getpreferredencoding())
+
+    if raised:
+        raise SystemExit(out.stderr)
+
+
+def _py36_windowsconsoleio_workaround():
+    """
+    This monkey patch prevents crashing Py3.6 under Windows while using
+    the SuppressOutput context manager.
+
+    Python 3.6 implemented unicode console handling for Windows. This works
+    by reading/writing to the raw console handle using
+    ``{Read,Write}ConsoleW``.
+    The problem is that we are going to ``dup2`` over the stdio file
+    descriptors when doing ``FDCapture`` and this will ``CloseHandle`` the
+    handles used by Python to write to the console. Though there is still some
+    weirdness and the console handle seems to only be closed randomly and not
+    on the first call to ``CloseHandle``, or maybe it gets reopened with the
+    same handle value when we suspend capturing.
+    The workaround in this case will reopen stdio with a different fd which
+    also means a different handle by replicating the logic in
+    "Py_lifecycle.c:initstdio/create_stdio".
+    See https://github.com/pytest-dev/py/issues/103
+
+    See http://bugs.python.org/issue30555
+    """
+    if not WIN32 or sys.version_info[:2] < (3, 6):
+        return
+
+    buffered = hasattr(sys.stdout.buffer, 'raw')
+    raw_stdout = sys.stdout.buffer.raw if buffered else sys.stdout.buffer
+
+    if not isinstance(raw_stdout, io._WindowsConsoleIO):
+        return
+
+    def _reopen_stdio(f, mode):
+        if not buffered and mode[0] == 'w':
+            buffering = 0
+        else:
+            buffering = -1
+
+        return io.TextIOWrapper(
+            open(os.dup(f.fileno()), mode, buffering),
+            f.encoding,
+            f.errors,
+            f.newlines,
+            f.line_buffering)
+
+    sys.__stdin__ = sys.stdin = _reopen_stdio(sys.stdin, 'rb')
+    sys.__stdout__ = sys.stdout = _reopen_stdio(sys.stdout, 'wb')
+    sys.__stderr__ = sys.stderr = _reopen_stdio(sys.stderr, 'wb')
+
+
+_py36_windowsconsoleio_workaround()
+
+
+@contextlib.contextmanager
+def SuppressOutput():  # noqa
+    """
+    A context manager that suppresses output to stdout/stderr.
+    Always use with "with" statement. Does nothing otherwise.
+    >>> with SuppressOutput():  # doctest: +SKIP
+    ...    os.system('echo "mystdout"')
+    ...    os.system('echo "mystderr" >&2')
+
+    Note: Does not work reliably for Windows Python 3.6 under Windows - see
+    function definition of _py36_windowsconsoleio_workaround().
+    """
+    with os.fdopen(os.dup(1), 'wb', 0) as tmp_stdout:
+        with os.fdopen(os.dup(2), 'wb', 0) as tmp_stderr:
+            with open(os.devnull, 'wb') as to_file:
+                sys.stdout.flush()
+                sys.stderr.flush()
+                os.dup2(to_file.fileno(), 1)
+                os.dup2(to_file.fileno(), 2)
+                try:
+                    yield
+                finally:
+                    sys.stdout.flush()
+                    sys.stderr.flush()
+                    os.dup2(tmp_stdout.fileno(), 1)
+                    os.dup2(tmp_stderr.fileno(), 2)
+    # reset to original stdout/stderr
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
-
-    out.stdout = temp_out.getvalue()
-    out.stderr = temp_err.getvalue()
-
-    # replace Windows specific newlines for cleaner tests
-    if platform.system() == "Windows":
-        out.stdout = out.stdout.replace('\r', u'')
-        out.stderr = out.stderr.replace('\r', u'')
 
 
 @contextlib.contextmanager

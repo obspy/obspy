@@ -2,6 +2,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY2
 
 import os
 import sys
@@ -49,6 +50,18 @@ class UtilMiscTestCase(unittest.TestCase):
             print("test_catch_output #5", file=sys.stderr)
         self.assertEqual(out.stdout, 'test_catch_output #4\n')
         self.assertEqual(out.stderr, 'test_catch_output #5\n')
+
+    def test_catch_output_bytes(self):
+        with CatchOutput() as out:
+            if PY2:
+                sys.stdout.write(b"test_catch_output_bytes #1")
+                sys.stderr.write(b"test_catch_output_bytes #2")
+            else:
+                # PY3 does not allow to write directly bytes into text streams
+                sys.stdout.buffer.write(b"test_catch_output_bytes #1")
+                sys.stderr.buffer.write(b"test_catch_output_bytes #2")
+        self.assertEqual(out.stdout, 'test_catch_output_bytes #1')
+        self.assertEqual(out.stderr, 'test_catch_output_bytes #2')
 
     def test_catch_output_io(self):
         """

@@ -34,6 +34,17 @@ class MopadTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'images')
         self.mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
 
+    def _normalized_assert_equal(self, expected, result):
+        """
+        PY2 console uses ASCII as default encoding and writing '°' to stdout
+        raises an exception which is handled by mopad replacing it with 'deg'
+        here we normalize it across Python versions - can be removed once
+        PY2 support is dropped
+        """
+        result = result.replace('°', ' deg')
+        expected = expected.replace('°', ' deg')
+        return self.assertEqual(expected, result)
+
     #
     # obspy-mopad convert
     #
@@ -47,7 +58,7 @@ Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
         result = out.stdout[:-1]
-        self.assertEqual(expected, result)
+        self._normalized_assert_equal(expected, result)
 
     def test_script_convert_type_tensor(self):
         with CatchOutput() as out:
@@ -136,7 +147,7 @@ Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
         result = out.stdout[:-1]
-        self.assertEqual(expected, result)
+        self._normalized_assert_equal(expected, result)
 
     #
     # obspy-mopad gmt
@@ -165,7 +176,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
         # Test actual data
         exp_data = np.genfromtxt(expected, comments='>')
-        with io.BytesIO(out.stdout.encode(sys.stdout.encoding)) as bio:
+        with io.BytesIO(out.stdout.encode('utf-8')) as bio:
             out_data = np.genfromtxt(bio, comments='>')
         self.assertEqual(exp_data.shape, out_data.shape,
                          msg='Data does not match!')
