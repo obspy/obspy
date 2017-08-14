@@ -1499,7 +1499,6 @@ class Response(ComparingObject):
             raise ZeroSamplingRate(msg)
 
         t_samp = 1.0 / sampling_rate
-        nyquist = sampling_rate / 2.0
         nfft = sampling_rate / min_freq
 
         cpx_response, freq = self.get_evalresp_response(
@@ -1513,7 +1512,6 @@ class Response(ComparingObject):
             phase = np.unwrap(phase)
 
         return freq, amplitude, phase
-
 
     def plot(self, min_freq, output="VEL", start_stage=None,
              end_stage=None, label=None, axes=None, sampling_rate=None,
@@ -1625,6 +1623,8 @@ class Response(ComparingObject):
 
         # plot phase response
         ax2.semilogx(freq, phase, color=color, lw=lw)
+
+        nyquist = sampling_rate / 2.0
 
         # plot nyquist frequency
         for ax in (ax1, ax2):
