@@ -1507,8 +1507,8 @@ class Response(ComparingObject):
 
         amplitude = abs(cpx_response)
 
-        phase = np.angle(cpx_response, deg=plot_degrees)
-        if unwrap_phase and not plot_degrees:
+        phase = np.angle(cpx_response, deg=degrees)
+        if unwrap_phase and not degrees:
             phase = np.unwrap(phase)
 
         return freq, amplitude, phase
