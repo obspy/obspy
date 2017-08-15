@@ -1479,7 +1479,7 @@ class Response(ComparingObject):
 
     def get_frequency_response(self, min_freq, output="VEL", start_stage=None,
                                end_stage=None, sampling_rate=None,
-                               unwrap_phase=False, plot_degrees=False):
+                               unwrap_phase=False, degrees=False):
 
         # detect sampling rate from response stages
         if sampling_rate is None:
@@ -1579,7 +1579,17 @@ class Response(ComparingObject):
         import matplotlib.pyplot as plt
         from matplotlib.transforms import blended_transform_factory
 
-        freq, amplitude, phase = self.get_frequency_response(**locals())
+        kwargs = {
+          "min_freq": min_freq,
+          "output": output,
+          "start_stage": start_stage,
+          "end_stage": end_stage,
+          "sampling_rate": sampling_rate,
+          "unwrap_phase": unwrap_phase,
+          "degrees": plot_degrees
+        }
+
+        freq, amplitude, phase = self.get_frequency_response(**kwargs)
 
         if axes:
             ax1, ax2 = axes
