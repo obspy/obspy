@@ -586,6 +586,35 @@ class FederatedRoute(RoutingResponse):
         else:
             return str(self.request_items)
 
+    def get_service_mappings(self):
+        """
+        return service mappings for the federated route
+
+        :rtype: dict
+        :return: the service mapping for the given federated route
+
+        >>> fed_resp = FederatedRoute("IRISDMC")
+        >>> svc_url = "http://service.iris.edu/fdsnws/station/1/"
+        >>> fed_resp.add_service("STATIONSERVICE", svc_url)
+        >>> fed_resp.get_service_mappings()
+        {'station': 'http://service.iris.edu/fdsnws/station/1'}
+        >>> fed_resp = FederatedRoute("IRISDMC")
+        >>> svc_url = "http://service.iris.edu/fdsnws/dataselect/1/"
+        >>> fed_resp.add_service("DATASELECTSERVICE", svc_url)
+        >>> fed_resp.get_service_mappings()
+        {'dataselect': 'http://service.iris.edu/fdsnws/dataselect/1'}
+        """
+        service_mappings = {}
+        if self.services.get('STATIONSERVICE'):
+            service_mappings['station'] = self.services \
+                                        .get('STATIONSERVICE') \
+                                        .strip('/')
+        if self.services.get('DATASELECTSERVICE'):
+            service_mappings['dataselect'] = self.services \
+                                        .get('DATASELECTSERVICE') \
+                                        .strip('/')
+        return service_mappings
+
     def __str__(self):
         """
         return a summary representation of this item

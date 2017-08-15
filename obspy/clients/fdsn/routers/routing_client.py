@@ -254,7 +254,8 @@ class RoutingClient(object):
                 route.request_items.difference_update(successful_requests)
 
             try:
-                client = Client(route.provider_id, **self.args_to_clients)
+                client = Client(service_mappings=route.get_service_mappings(),
+                                **self.args_to_clients)
 
                 msg = "request to: {0}: {1} items.\n{2}".format(
                     route.provider_id, len(route),
@@ -322,7 +323,9 @@ class RoutingClient(object):
                 continue
 
             try:
-                client = Client(route.provider_id, **self.args_to_clients)
+                client = Client(service_mappings=route.get_service_mappings(),
+                                **self.args_to_clients)
+
                 p_kwargs = kwargs.copy()
                 p_kwargs.update({'client': client, 'service': service,
                                  'output': output_q, 'passed': passed_q,
