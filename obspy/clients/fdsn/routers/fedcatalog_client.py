@@ -407,6 +407,7 @@ class FederatedClient(RoutingClient):
         Retrieves and parses routing details from the fedcatalog service,
         which takes a query, determines which datacenters/providers hold
         the appropriate data, and then returns information about the holdings
+
         :type routing_file: str
         :param routing_file: filename used to write out raw fedcatalog response
         :type targetservice: str
