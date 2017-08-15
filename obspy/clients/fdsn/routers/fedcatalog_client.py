@@ -347,15 +347,24 @@ class FederatedClient(RoutingClient):
                 no data, no response, or a timeout
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, use_parallel=False, include_provider=None,
+                 exclude_provider=None, **kwargs):
         """
         Initializes an FDSN Fed Catalog Web Service client.
 
-        :type **kwargs: keyword arguments
-        :param **kwargs: arguments destined for either Fedcatalog or 
-        RoutingClient
+        :type use_parallel: boolean
+        :param use_parallel: determines whether clients will be polled in in
+        parallel or in series.  If the FederatedClient appears to hang during
+        a request, set this to False.
+        :type exclude_provider: str or list of str
+        :param exclude_provider: Get no data from these providers
+        :type include_provider: str or list of str
+        :param include_provider: Get data only from these providers
+        :param **kwargs: additional arguments are passed along to each instance
+        of the new FederatedClient
         """
-        RoutingClient.__init__(self, **kwargs)
+        RoutingClient.__init__(self, use_parallel=False, include_provider=None,
+                               exclude_provider=None, **kwargs)
         PROVIDERS.refresh()
 
     def __str__(self):
@@ -380,25 +389,136 @@ class FederatedClient(RoutingClient):
     # FederatedClient.get_routing() and FederatedClient.get_routing_bulk()
     # communicate directly with the fedcatalog service
     # -------------------------------------------------
-    def get_routing(self, routing_file=None, **kwargs):
+    def get_routing(self, routing_file=None, targetservice=None,
+                    includeoverlaps=None, level=None, datacenter=None,
+                    network=None, station=None, location=None, channel=None,
+                    starttime=None, endtime=None, startbefore=None,
+                    startafter=None, endbefore=None, endafter=None,
+                    minlatitude=None, maxlatitude=None, minlongitude=None,
+                    maxlongitude=None, latitude=None, longitude=None,
+                    minradius=None, maxradius=None, quality=None,
+                    minimumlength=None, longestonly=None,
+                    includerestricted=None, includeavailability=None,
+                    updatedafter=None, matchtimeseries=None, format="request",
+                    **kwargs):
         """
         send query to the fedcatalog service as param=value pairs (GET)
 
         Retrieves and parses routing details from the fedcatalog service,
         which takes a query, determines which datacenters/providers hold
         the appropriate data, and then returns information about the holdings
-
         :type routing_file: str
         :param routing_file: filename used to write out raw fedcatalog response
+        :type targetservice: str
+        :param targetservice: By default all known service endpoints are
+        returned in the results. Specify station or dataselect to only return
+        endpoints for one of those services.
+        :type includeoverlaps: str
+        :param includeoverlaps: true    Control whether overlapping channel
+            entries are included in the response (true or false). Overlapping
+            entries will occur when the same data are available from multiple
+        data centers.
+        :type level: str
+        :param level: Specify level of detail (for an fdsnws-station service)
+            using network, station, channel, or response.
+        :type datacenter: str
+        :param datacenter: Limit the results to metadata held at an FDSN data
+            center of interest.
+            Use data center codes available at the datacenters endpoint
+            (https://service.iris.edu/irisws/fedcatalog/1/datacenters). Accepts
+            wildcards, lists, and negation.
+        :type network: str
+        :param network: Select one or more network codes. Can be SEED network
+            codes or data center defined codes. Multiple codes are
+            comma-separated (e.g. ``"IU,TA"``).
+        :type station: str
+        :param station: Select one or more SEED station codes. Multiple codes
+            are comma-separated (e.g. ``"ANMO,PFO"``).
+        :type location: str
+        :param location: Select one or more SEED location identifiers. Multiple
+            identifiers are comma-separated (e.g. ``"00,01"``).  As a
+            special case ``“--“`` (two dashes) will be translated to a string
+            of two space characters to match blank location IDs.
+        :type channel: str
+        :param channel: Select one or more SEED channel codes. Multiple codes
+            are comma-separated (e.g. ``"BHZ,HHZ"``).
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Limit to metadata epochs starting on or after the
+            specified start time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Limit to metadata epochs ending on or before the
+            specified end time.
+        :type startbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param startbefore: Limit to metadata epochs starting before specified
+            time.
+        :type startafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param startafter: Limit to metadata epochs starting after specified
+            time.
+        :type endbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endbefore: Limit to metadata epochs ending before specified
+            time.
+        :type endafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endafter: Limit to metadata epochs ending after specified time.
+        :type minlatitude: float
+        :param minlatitude: Limit to stations with a latitude larger than the
+            specified minimum.
+        :type maxlatitude: float
+        :param maxlatitude: Limit to stations with a latitude smaller than the
+            specified maximum.
+        :type minlongitude: float
+        :param minlongitude: Limit to stations with a longitude larger than the
+            specified minimum.
+        :type maxlongitude: float
+        :param maxlongitude: Limit to stations with a longitude smaller than
+            the specified maximum.
+        :type latitude: float
+        :param latitude: Specify the latitude to be used for a radius search.
+        :type longitude: float
+        :param longitude: Specify the longitude to the used for a radius
+            search.
+        :type minradius: float
+        :param minradius: Limit results to stations within the specified
+            minimum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type maxradius: float
+        :param maxradius: Limit results to stations within the specified
+            maximum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type quality: str
+        :param quality: Select data based on miniSEED data quality indicator.
+            D, R, Q, M, B. M and B (default) are treated the same and indicate
+            best available. If M or B are selected, the output data records
+            will be stamped with an M.
+        :type minimumlength: float
+        :param minimumlength: Limit results to continuous data segments of a
+            minimum length specified in seconds.
+        :type longestonly: bool
+        :param minimumlength: Limit results to the longest continuous
+            segment per channel.
+        :param includerestricted: Specify if results should include information
+            for restricted stations.
+        :type includeavailability: bool
+        :param includeavailability: Specify if results should include
+            information about time series data availability.
+        :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param updatedafter: Limit to metadata updated after specified date;
+            updates are data center specific.
+        :type matchtimeseries: bool
+        :param matchtimeseries: Only include data for which matching time
+            series data is available.
+        :type format: str
+        :param format: Specify output format. Accepted values are request
+            (the default) and text.
         :type **kwargs: various
-        :param **kwargs: arguments to be passed to the fedcatalog service
-        as GET parameters.  eg ... http://.../query?param1=val1&param2=val2&...
+        :param **kwargs: additional arguments to be passed to the fedcatalog
+            service  as GET parameters.
+            eg ... http://.../query?param1=val1&param2=val2&...
         :rtype: :class:`~obspy.clients.fdsn.routers.FederatedRoutingManager`
         :returns: parsed response from the FedCatalog service
 
         >>> client = FederatedClient()
-        >>> params = {"station":"ANTO", "includeoverlaps":"true"}
-        >>> frm = client.get_routing(**params)
+        >>> frm = client.get_routing(station = "ANTO",
+        ...                          includeoverlaps = "true")
         >>> for f in frm:
         ...   print(f)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         FederatedRoute for IRIS containing 0 query parameters ... request items
@@ -408,7 +528,26 @@ class FederatedClient(RoutingClient):
         if 'bulk' in kwargs:
             ValueError("To post a bulk request, use get_routing_bulk")
         query_url = FEDCATALOG_URL + "query"
-        resp = requests.get(query_url, params=kwargs, verify=False)
+
+        params = {
+           'targetservice': targetservice, 'includeoverlaps': includeoverlaps,
+           'level': level, 'datacenter': datacenter, 'network': network,
+           'station': station, 'location': location, 'channel': channel,
+           'starttime': starttime, 'endtime': endtime,
+           'startbefore': startbefore, 'startafter': startafter,
+           'endbefore': endbefore, 'endafter': endafter,
+           'minlatitude': minlatitude, 'maxlatitude': maxlatitude,
+           'minlongitude': minlongitude, 'maxlongitude': maxlongitude,
+           'latitude': latitude, 'longitude': longitude,
+           'minradius': minradius, 'maxradius': maxradius, 'quality': quality,
+           'minimumlength': minimumlength, 'longestonly': longestonly,
+           'includerestricted': includerestricted,
+           'includeavailability': includeavailability,
+           'updatedafter': updatedafter, 'matchtimeseries': matchtimeseries,
+           'format': format
+        }
+        params.update(kwargs)
+        resp = requests.get(query_url, params=params, verify=False)
         resp.raise_for_status()
 
         if routing_file is not None:
@@ -422,7 +561,18 @@ class FederatedClient(RoutingClient):
         frm = FederatedRoutingManager(resp.text)
         return frm
 
-    def get_routing_bulk(self, bulk, routing_file=None, **kwargs):
+    def get_routing_bulk(self, bulk, routing_file=None, targetservice=None,
+                         includeoverlaps=None, level=None, datacenter=None,
+                         network=None, station=None, location=None,
+                         channel=None, starttime=None, endtime=None,
+                         startbefore=None, startafter=None, endbefore=None,
+                         endafter=None, minlatitude=None, maxlatitude=None,
+                         minlongitude=None, maxlongitude=None, latitude=None,
+                         longitude=None, minradius=None, maxradius=None,
+                         quality=None, minimumlength=None, longestonly=None,
+                         includerestricted=None, includeavailability=None,
+                         updatedafter=None, matchtimeseries=None,
+                         format="request", **kwargs):
         """
         send query to the fedcatalog service as a POST.
 
@@ -431,28 +581,150 @@ class FederatedClient(RoutingClient):
         the appropriate data, and then sends back holdings information
         :type bulk: str, iterable of str
         :param bulk:
-        :type routing_file:
-        :param routing_file: file to write out raw fedcatalog response
-        :type **kwargs: other parameters
-        :param **kwargs: only kwargs that should go to fedcatalog
+        :type routing_file: str
+        :param routing_file: filename used to write out raw fedcatalog response
+        :type targetservice: str
+        :param targetservice: By default all known service endpoints are
+        returned in the results. Specify station or dataselect to only return
+        endpoints for one of those services.
+        :type includeoverlaps: str
+        :param includeoverlaps: true    Control whether overlapping channel
+            entries are included in the response (true or false). Overlapping
+            entries will occur when the same data are available from multiple
+        data centers.
+        :type level: str
+        :param level: Specify level of detail (for an fdsnws-station service)
+            using network, station, channel, or response.
+        :type datacenter: str
+        :param datacenter: Limit the results to metadata held at an FDSN data
+            center of interest.
+            Use data center codes available at the datacenters endpoint
+            (https://service.iris.edu/irisws/fedcatalog/1/datacenters). Accepts
+            wildcards, lists, and negation.
+        :type network: str
+        :param network: Select one or more network codes. Can be SEED network
+            codes or data center defined codes. Multiple codes are
+            comma-separated (e.g. ``"IU,TA"``).
+        :type station: str
+        :param station: Select one or more SEED station codes. Multiple codes
+            are comma-separated (e.g. ``"ANMO,PFO"``).
+        :type location: str
+        :param location: Select one or more SEED location identifiers. Multiple
+            identifiers are comma-separated (e.g. ``"00,01"``).  As a
+            special case ``“--“`` (two dashes) will be translated to a string
+            of two space characters to match blank location IDs.
+        :type channel: str
+        :param channel: Select one or more SEED channel codes. Multiple codes
+            are comma-separated (e.g. ``"BHZ,HHZ"``).
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Limit to metadata epochs starting on or after the
+            specified start time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Limit to metadata epochs ending on or before the
+            specified end time.
+        :type startbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param startbefore: Limit to metadata epochs starting before specified
+            time.
+        :type startafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param startafter: Limit to metadata epochs starting after specified
+            time.
+        :type endbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endbefore: Limit to metadata epochs ending before specified
+            time.
+        :type endafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endafter: Limit to metadata epochs ending after specified time.
+        :type minlatitude: float
+        :param minlatitude: Limit to stations with a latitude larger than the
+            specified minimum.
+        :type maxlatitude: float
+        :param maxlatitude: Limit to stations with a latitude smaller than the
+            specified maximum.
+        :type minlongitude: float
+        :param minlongitude: Limit to stations with a longitude larger than the
+            specified minimum.
+        :type maxlongitude: float
+        :param maxlongitude: Limit to stations with a longitude smaller than
+            the specified maximum.
+        :type latitude: float
+        :param latitude: Specify the latitude to be used for a radius search.
+        :type longitude: float
+        :param longitude: Specify the longitude to the used for a radius
+            search.
+        :type minradius: float
+        :param minradius: Limit results to stations within the specified
+            minimum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type maxradius: float
+        :param maxradius: Limit results to stations within the specified
+            maximum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type quality: str
+        :param quality: Select data based on miniSEED data quality indicator.
+            D, R, Q, M, B. M and B (default) are treated the same and indicate
+            best available. If M or B are selected, the output data records
+            will be stamped with an M.
+        :type minimumlength: float
+        :param minimumlength: Limit results to continuous data segments of a
+            minimum length specified in seconds.
+        :type longestonly: bool
+        :param minimumlength: Limit results to the longest continuous
+            segment per channel.
+        :param includerestricted: Specify if results should include information
+            for restricted stations.
+        :type includeavailability: bool
+        :param includeavailability: Specify if results should include
+            information about time series data availability.
+        :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param updatedafter: Limit to metadata updated after specified date;
+            updates are data center specific.
+        :type matchtimeseries: bool
+        :param matchtimeseries: Only include data for which matching time
+            series data is available.
+        :type format: str
+        :param format: Specify output format. Accepted values are request
+            (the default) and text.
+        :type **kwargs: various
+        :param **kwargs: additional arguments to be passed to the fedcatalog
+            service  as GET parameters.
+            eg ... http://.../query?param1=val1&param2=val2&...
         :rtype: :class:`~obspy.clients.fdsn.routers.FederatedRoutingManager`
         :returns: parsed response from the FedCatalog service
 
         >>> client = FederatedClient()
-        >>> params={"includeoverlaps":"true"}
-        >>> frm = client.get_routing_bulk(bulk="* ANTO * * * *", **params)
+        >>> frm = client.get_routing_bulk(bulk="* ANTO * * * *",
+        ...                               includeoverlaps = "true")
         >>> for f in frm:
         ...   print(f)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         FederatedRoute for IRIS ... 0 query parameters and ... request items
         FederatedRoute for ORFEUS containing 0 ... and ... request items
 
         """
+
+        params = {
+           'targetservice': targetservice, 'includeoverlaps': includeoverlaps,
+           'level': level, 'datacenter': datacenter, 'network': network,
+           'station': station, 'location': location, 'channel': channel,
+           'starttime': starttime, 'endtime': endtime,
+           'startbefore': startbefore, 'startafter': startafter,
+           'endbefore': endbefore, 'endafter': endafter,
+           'minlatitude': minlatitude, 'maxlatitude': maxlatitude,
+           'minlongitude': minlongitude, 'maxlongitude': maxlongitude,
+           'latitude': latitude, 'longitude': longitude,
+           'minradius': minradius, 'maxradius': maxradius, 'quality': quality,
+           'minimumlength': minimumlength, 'longestonly': longestonly,
+           'includerestricted': includerestricted,
+           'includeavailability': includeavailability,
+           'updatedafter': updatedafter, 'matchtimeseries': matchtimeseries,
+           'format': format
+        }
+        params.update(kwargs)
+
         if not isinstance(bulk, string_types)\
                 and isinstance(bulk, collections.Iterable):
             print(bulk, file=sys.stderr)
-            bulk = get_bulk_string(bulk=bulk, arguments=kwargs)
-        elif isinstance(bulk, string_types) and kwargs:
-            bulk = get_bulk_string(bulk=bulk, arguments=kwargs)
+            bulk = get_bulk_string(bulk=bulk, arguments=params)
+        elif isinstance(bulk, string_types) and params:
+            bulk = get_bulk_string(bulk=bulk, arguments=params)
 
         assert bulk, "Bulk is empty after homogenizing it via get_bulk_string"
         assert isinstance(bulk, string_types), \
