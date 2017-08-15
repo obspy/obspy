@@ -1477,6 +1477,43 @@ class Response(ComparingObject):
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
 
+    def get_frequency_response(self, min_freq, output="VEL", start_stage=None,
+                               end_stage=None, sampling_rate=None,
+                               unwrap_phase=False, degrees=False):
+
+        # detect sampling rate from response stages
+        if sampling_rate is None:
+            for stage in self.response_stages[::-1]:
+                if (stage.decimation_input_sample_rate is not None and
+                        stage.decimation_factor is not None):
+                    sampling_rate = (stage.decimation_input_sample_rate /
+                                     stage.decimation_factor)
+                    break
+            else:
+                msg = ("Failed to autodetect sampling rate of channel from "
+                       "response stages. Please manually specify parameter "
+                       "`sampling_rate`")
+                raise Exception(msg)
+        if sampling_rate == 0:
+            msg = "Can not plot response for channel with sampling rate `0`."
+            raise ZeroSamplingRate(msg)
+
+        t_samp = 1.0 / sampling_rate
+        nyquist = sampling_rate / 2.0
+        nfft = sampling_rate / min_freq
+
+        cpx_response, freq = self.get_evalresp_response(
+            t_samp=t_samp, nfft=nfft, output=output, start_stage=start_stage,
+            end_stage=end_stage)
+
+        amplitude = abs(cpx_response)
+
+        phase = np.angle(cpx_response, deg=degrees)
+        if unwrap_phase and not degrees:
+            phase = np.unwrap(phase)
+
+        return freq, amplitude, phase, nyquist
+
     def plot(self, min_freq, output="VEL", start_stage=None,
              end_stage=None, label=None, axes=None, sampling_rate=None,
              unwrap_phase=False, plot_degrees=False, show=True, outfile=None):
@@ -1543,30 +1580,17 @@ class Response(ComparingObject):
         import matplotlib.pyplot as plt
         from matplotlib.transforms import blended_transform_factory
 
-        # detect sampling rate from response stages
-        if sampling_rate is None:
-            for stage in self.response_stages[::-1]:
-                if (stage.decimation_input_sample_rate is not None and
-                        stage.decimation_factor is not None):
-                    sampling_rate = (stage.decimation_input_sample_rate /
-                                     stage.decimation_factor)
-                    break
-            else:
-                msg = ("Failed to autodetect sampling rate of channel from "
-                       "response stages. Please manually specify parameter "
-                       "`sampling_rate`")
-                raise Exception(msg)
-        if sampling_rate == 0:
-            msg = "Can not plot response for channel with sampling rate `0`."
-            raise ZeroSamplingRate(msg)
+        kwargs = {
+          "output": output,
+          "start_stage": start_stage,
+          "end_stage": end_stage,
+          "sampling_rate": sampling_rate,
+          "unwrap_phase": unwrap_phase,
+          "degrees": plot_degrees
+        }
 
-        t_samp = 1.0 / sampling_rate
-        nyquist = sampling_rate / 2.0
-        nfft = sampling_rate / min_freq
-
-        cpx_response, freq = self.get_evalresp_response(
-            t_samp=t_samp, nfft=nfft, output=output, start_stage=start_stage,
-            end_stage=end_stage)
+        freq, amplitude, phase, nyquist = self.get_frequency_response(min_freq,
+                                                                      **kwargs)
 
         if axes:
             ax1, ax2 = axes
@@ -1582,7 +1606,7 @@ class Response(ComparingObject):
 
         # plot amplitude response
         lw = 1.5
-        lines = ax1.loglog(freq, abs(cpx_response), lw=lw, **label_kwarg)
+        lines = ax1.loglog(freq, amplitude, lw=lw, **label_kwarg)
         color = lines[0].get_color()
         if self.instrument_sensitivity:
             trans_above = blended_transform_factory(ax1.transData,
@@ -1609,9 +1633,6 @@ class Response(ComparingObject):
                              arrowprops=arrowprops, bbox=bbox)
 
         # plot phase response
-        phase = np.angle(cpx_response, deg=plot_degrees)
-        if unwrap_phase and not plot_degrees:
-            phase = np.unwrap(phase)
         ax2.semilogx(freq, phase, color=color, lw=lw)
 
         # plot nyquist frequency
