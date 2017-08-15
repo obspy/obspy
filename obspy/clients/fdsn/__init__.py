@@ -138,7 +138,7 @@ Basic FDSN FedCatalog Client Usage
 ----------------------------------
 
 The obspy.clients.fdsn.routers.fedcatalog_client module provides federated
-access to multiple web servers that implement the FDSN Station and Dataselect 
+access to multiple web servers that implement the FDSN Station and Dataselect
 web service definitions (https://www.fdsn.org/webservices/).
 
 The first step is always to initialize a FederatedClient object.
@@ -149,7 +149,7 @@ The first step is always to initialize a FederatedClient object.
 (1) :meth:`~obspy.clients.fdsn.routers.fedcatalog_client. \
         FederatedClient.get_waveforms()`: The following
     example illustrates how to request 60 minutes of the ``"LHZ"``
-    channel of station Apirathos, Naxos, Greece (``"APE"``) of the GEOFON 
+    channel of station Apirathos, Naxos, Greece (``"APE"``) of the GEOFON
     (``"GE"``) for a seismic event around 2006-01-08T11:34:54.000
     (UTC). Results are returned as a :class:`~obspy.core.stream.Stream` object.
 
@@ -168,8 +168,8 @@ The first step is always to initialize a FederatedClient object.
         st.plot()
 
 (2) :meth:`~obspy.clients.fdsn.routers.fedcatalog_client. \
-        FederatedClient.get_stations()`: Uses the IRIS Fed Catalog 
-        web service to return station metadata 
+        FederatedClient.get_stations()`: Uses the IRIS Fed Catalog
+        web service to return station metadata
     :class:`~obspy.core.inventory.inventory.Inventory` object.
 
     >>> inventory = fclient.get_stations(network="GE", station="A*",
