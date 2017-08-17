@@ -364,8 +364,9 @@ class FederatedClient(RoutingClient):
             of :class:`obspy.clients.fdsn.Client()` (when accessing individual
             data centers)
         """
-        RoutingClient.__init__(self, use_parallel=False, include_provider=None,
-                               exclude_provider=None, **kwargs)
+        super(FederatedClient, self).__init__(
+            use_parallel=use_parallel, include_provider=include_provider,
+            exclude_provider=exclude_provider, **kwargs)
         PROVIDERS.refresh()
 
     def __str__(self):
