@@ -360,8 +360,9 @@ class FederatedClient(RoutingClient):
         :param exclude_provider: Get no data from these providers
         :type include_provider: str or list of str
         :param include_provider: Get data only from these providers
-        :param **kwargs: additional arguments are passed along to each instance
-        of the new FederatedClient
+        :param **kwargs: additional kwargs are passed down to each instance
+            of :class:`obspy.clients.fdsn.Client()` (when accessing individual
+            data centers)
         """
         RoutingClient.__init__(self, use_parallel=False, include_provider=None,
                                exclude_provider=None, **kwargs)
@@ -908,16 +909,16 @@ class FederatedClient(RoutingClient):
 
         :type includeoverlaps: boolean
         :param includeoverlaps: retrieve same information from multiple sources
-        (not recommended)
+            (not recommended)
         :type reroute: boolean
         :param reroute: if data doesn't arrive from provider, look elsewhere
         :type existing_routes: str, FederatedRoutingManager, FederatedRoute
         :param existing_routes: will skip initial query to fedcatalog service,
-        instead use existing routes in a FederatedRoutingManager
+            instead use existing routes in a FederatedRoutingManager
         :rtype: :class:`~obspy.core.stream.Stream`
         :returns: one or more traces in a stream
         other parameters as seen in
-            :meth:`~obspy.fdsn.clients.Client.get_waveforms`
+            :meth:`~obspy.clients.fdsn.Client.get_waveforms`
 
         >>> from requests.packages.urllib3.exceptions import \
                 InsecureRequestWarning
@@ -961,14 +962,14 @@ class FederatedClient(RoutingClient):
     def get_stations_bulk(self, bulk, includeoverlaps=False, reroute=False,
                           existing_routes=None, **kwargs):
         """
-        retrieve station metadata from data providers via POST request
+        Retrieve station metadata from data providers via POST request
         to the Fedcatalog service
 
         :type bulk: text (bulk request formatted)
         :param bulk: text containing request to send to router
         :type includeoverlaps: boolean
         :param includeoverlaps: retrieve same information from multiple sources
-        (not recommended)
+            (not recommended)
         :type reroute: boolean
         :param reroute: if data doesn't arrive from provider , see if it is
             available elsewhere
@@ -1038,21 +1039,21 @@ class FederatedClient(RoutingClient):
     def get_stations(self, includeoverlaps=False, reroute=False,
                      existing_routes=None, **kwargs):
         """
-        retrieve metadata from providers via GET request to Fedcatalog service
+        Retrieve metadata from providers via GET request to Fedcatalog service
 
         :type includeoverlaps: boolean
         :param includeoverlaps: retrieve same information from multiple sources
-        (not recommended)
+            (not recommended)
         :type reroute: boolean
-        :param reroute: if data doesn't arrive from provider , check elsewhere
+        :param reroute: if data does not arrive from provider, check elsewhere
         :type existing_routes: str
         :param existing_routes: will skip initial query to fedcatalog service,
-        instead using the information from here to make the queries.
+            instead using the information from here to make the queries.
         :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
         :returns: an inventory tree containing network/station/channel metadata
 
-        other parameters as seen in
-            :meth:`~obspy.fdsn.clients.Client.get_stations`
+        other parameters as seen in :meth:`FDSN Client.get_stations
+        <obspy.clients.fdsn.Client.get_stations>`
 
         >>> from requests.packages.urllib3.exceptions import \
                 InsecureRequestWarning

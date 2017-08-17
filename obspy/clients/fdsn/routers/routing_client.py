@@ -110,7 +110,6 @@ class RoutingClient(object):
         :param **kwargs: additional arguments are passed along to each instance
         of the new client
         """
-
         self.use_parallel = use_parallel and not _DISABLE_PARALLEL_REQESTS
         self.args_to_clients = kwargs  # passed to clients during intialization
         if isinstance(include_provider, string_types):
@@ -423,7 +422,7 @@ class RoutingManager(object):
 
     def add_routes(self, route):
         """
-        Add a route (RoutingResponse) to the routing manger
+        Add a route (RoutingResponse) to the routing manager
         """
         if isinstance(route, RoutingResponse):
             self.routes.append(route)
