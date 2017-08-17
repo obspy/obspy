@@ -535,6 +535,10 @@ class FederatedClient(RoutingClient):
             ValueError("To post a bulk request, use get_routing_bulk")
         query_url = FEDCATALOG_URL + "query"
 
+        # Special location handling. Convert empty strings to "--".
+        if location == '':
+            location = '--'
+
         params = {
            'targetservice': targetservice, 'includeoverlaps': includeoverlaps,
            'level': level, 'datacenter': datacenter, 'network': network,
