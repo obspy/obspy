@@ -1354,9 +1354,9 @@ class Parser(object):
             # but make sure 57 + 58 are at the end.
             blkts = sorted(stages[_i], key=lambda x: int(x.blockette_id))
 
-            b_a = [b for b in blkts if b.blockette_id not in ("057", "058")]
-            b_b57 = [b for b in blkts if b.blockette_id in ("057")]
-            b_b58 = [b for b in blkts if b.blockette_id in ("058")]
+            b_a = [b_ for b_ in blkts if b_.blockette_id not in ("057", "058")]
+            b_b57 = [b_ for b_ in blkts if b_.blockette_id in ("057")]
+            b_b58 = [b_ for b_ in blkts if b_.blockette_id in ("058")]
             if len(b_b58) > 1:
                 msg = ("Stage %i has %i blockettes 58. Only the last one "
                        "will be used." % (_i, len(b_b58)))
@@ -1385,7 +1385,7 @@ class Parser(object):
             # Poles and Zeros stage.
             if blkts[0].id == 53:
                 # Must be 53 and 58.
-                _blkt_set = {b.id for b in blkts}
+                _blkt_set = {b_.id for b_ in blkts}
                 if not _blkt_set.issubset({53, 57, 58}):
                     extra_blkts = _blkt_set.difference({53, 57, 58})
                     msg = "Stage %i: " \
@@ -1395,8 +1395,8 @@ class Parser(object):
                             _i,
                             ", ".join(str(_i) for _i in sorted(extra_blkts)))
                     raise InvalidResponseError(msg)
-                blkts53 = [b for b in blkts if b.id == 53]
-                blkts57 = [b for b in blkts if b.id == 57]
+                blkts53 = [b_ for b_ in blkts if b_.id == 53]
+                blkts57 = [b_ for b_ in blkts if b_.id == 57]
                 b53 = blkts53[-1]
 
                 if len(blkts53) > 1:
@@ -1484,7 +1484,7 @@ class Parser(object):
                     if b57 else None))
             # Response coefficients stage.
             elif blkts[0].id == 54:
-                _blkts = [b.id for b in blkts]
+                _blkts = [b_.id for b_ in blkts]
                 if 57 not in _blkts:
                     msg = ("Stage %i: "
                            "Invalid response specification. A blockette 54 "
@@ -1493,8 +1493,8 @@ class Parser(object):
                     raise InvalidResponseError(msg)
                 # There can be multiple blockettes 54 in sequence in which
                 # case numerators or denominators are chained from all of them.
-                blkts54 = [b for b in blkts if b.id == 54]
-                blkts57 = [b for b in blkts if b.id == 57]
+                blkts54 = [b_ for b_ in blkts if b_.id == 54]
+                blkts57 = [b_ for b_ in blkts if b_.id == 57]
 
                 if len(blkts57) > 1:
                     msg = ("Stage %i has %i blockettes 57. Only the last one "
@@ -1556,7 +1556,7 @@ class Parser(object):
                     decimation_correction=b57.correction_applied))
             # Response list stage.
             elif blkts[0].id == 55:
-                assert set(b.id for b in blkts).issubset({55, 57, 58})
+                assert set(b_.id for b_ in blkts).issubset({55, 57, 58})
                 b57 = [_i for _i in blkts if _i.id == 57]
                 if len(b57):
                     b57 = b57[0]
@@ -1590,7 +1590,7 @@ class Parser(object):
                     if b57 else None))
             # Decimation stage.
             elif blkts[0].id == 57:
-                if {b.id for b in blkts} != {57, 58}:
+                if {b_.id for b_ in blkts} != {57, 58}:
                     msg = "Stage %i: A decimation stage with blockette 57 " \
                         "must be followed by a blockette 58 which is " \
                         "missing here." % _i
@@ -1613,7 +1613,7 @@ class Parser(object):
                     decimation_correction=b57.correction_applied))
             # Gain only stage.
             elif blkts[0].id == 58:
-                assert [b.id for b in blkts] == [58]
+                assert [b_.id for b_ in blkts] == [58]
                 # Cannot assign units yet - will be added at the end in a
                 # final pass by inferring it from the units of previous and
                 # subsequent stages.
@@ -1626,7 +1626,7 @@ class Parser(object):
                     output_units=""))
             # FIR stage.
             elif blkts[0].id == 61:
-                _blkt_set = {b.id for b in blkts}
+                _blkt_set = {b_.id for b_ in blkts}
                 if not _blkt_set.issubset({61, 57, 58}):
                     extra_blkts = _blkt_set.difference({61, 57, 58})
                     msg = "Stage %i: " \
@@ -1637,10 +1637,10 @@ class Parser(object):
                             ", ".join(str(_i) for _i in sorted(extra_blkts)))
                     raise InvalidResponseError(msg)
 
-                blkts61 = [b for b in blkts if b.id == 61]
+                blkts61 = [b_ for b_ in blkts if b_.id == 61]
 
                 # Blockette 57.
-                blkts57 = [b for b in blkts if b.id == 57]
+                blkts57 = [b_ for b_ in blkts if b_.id == 57]
                 if len(blkts57) > 1:
                     msg = ("Stage %i: "
                            "Multiple blockettes 57 found after blockette 61! "
@@ -1695,11 +1695,11 @@ class Parser(object):
                     if b57 else None))
             elif blkts[0].id == 62:
                 b62 = blkts[0]
-                ids = {b.id for b in blkts}
+                ids = {b_.id for b_ in blkts}
                 assert ids.issubset({62, 57, 58})
 
                 if 57 in ids:
-                    b57 = [b for b in blkts if b.id == 57][0]
+                    b57 = [b_ for b_ in blkts if b_.id == 57][0]
                 else:
                     b57 = None
 
@@ -1771,7 +1771,7 @@ class Parser(object):
             else:
                 raise NotImplementedError(_epoch_warn_msg(
                     "Stage %i has the following blockettes: %s" % (
-                        _i, ", ".join(b.id for b in blkts))))
+                        _i, ", ".join(b_.id for b_ in blkts))))
 
         # Do one last pass over the response stages to fill in missing units.
         for _i in range(len(response_stages)):

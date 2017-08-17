@@ -375,7 +375,7 @@ def _parse_to_inventory_object(p, skip_invalid_responses=True):
                 data_availability=None)
 
             # Parse the comments if any.
-            comments = [b for b in channel if b.id == 59]
+            comments = [b_ for b_ in channel if b_.id == 59]
             if comments:
                 for _c in comments:
                     # Parse times.
