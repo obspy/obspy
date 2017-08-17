@@ -3,7 +3,7 @@
 obspy.clients.fdsn - FDSN web service client for ObsPy
 ======================================================
 The obspy.clients.fdsn package contains a client to access web servers that
-implement the FDSN web service definitions (https://www.fdsn.org/webservices/).
+implement the `FDSN web service definitions`_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -138,45 +138,48 @@ USP     http://sismo.iag.usp.br
 Basic FDSN FedCatalog Client Usage
 ----------------------------------
 
-The obspy.clients.fdsn.routers.fedcatalog_client module provides federated
-access to multiple web servers that implement the FDSN Station and Dataselect
-web service definitions (https://www.fdsn.org/webservices/).
+The
+:mod:`FDSN fedcatalog_client <obspy.clients.fdsn.routers.fedcatalog_client>`
+module provides federated
+access to multiple web servers that implement the
+`FDSN Station and Dataselect web service definitions
+<https://www.fdsn.org/webservices/>`_.
 
-The first step is always to initialize a FederatedClient object.
+The first step is always to initialize a :class:`FederatedClient` object.
 
->>> from obspy.clients.fdsn.routers import FederatedClient
->>> fclient = FederatedClient()
+>>> from obspy.clients.fdsn import FederatedClient
+>>> client = FederatedClient()
 
-(1) :meth:`~obspy.clients.fdsn.routers.fedcatalog_client. \
-        FederatedClient.get_waveforms()`: The following
-    example illustrates how to request 60 minutes of the ``"LHZ"``
-    channel of station Apirathos, Naxos, Greece (``"APE"``) of the GEOFON
-    (``"GE"``) for a seismic event around 2006-01-08T11:34:54.000
-    (UTC). Results are returned as a :class:`~obspy.core.stream.Stream` object.
+(1) :meth:`~obspy.clients.fdsn.routers.fedcatalog_client.
+FederatedClient.get_waveforms()`: The following
+example illustrates how to request 60 minutes of the ``"LHZ"`` channel of
+station Apirathos, Naxos, Greece (``"APE"``) of the GEOFON (``"GE"``) for a
+seismic event around 2006-01-08T11:34:54.000 (UTC). Results are returned as a
+:class:`~obspy.core.stream.Stream` object.
 
     >>> from obspy import UTCDateTime
     >>> t = UTCDateTime("2006-01-08T11:34:54.000")
-    >>> st = fclient.get_waveforms("GE", "APE", "--", "LHZ", t, t + 60 * 60)
+    >>> st = client.get_waveforms("GE", "APE", "", "LHZ", t, t + 60 * 60)
     >>> st.plot()  # doctest: +SKIP
 
     .. plot::
 
         from obspy import UTCDateTime
         from obspy.clients.fdsn import Client
-        client = Client()
+        client = Client('GFZ')
         t = UTCDateTime("2006-01-08T11:34:54.000")
-        st = fclient.get_waveforms("GE", "APE", "--", "LHZ", t, t + 60 * 60)
+        st = client.get_waveforms("GE", "APE", "", "LHZ", t, t + 60 * 60)
         st.plot()
 
-(2) :meth:`~obspy.clients.fdsn.routers.fedcatalog_client. \
-        FederatedClient.get_stations()`: Uses the IRIS Fed Catalog
-        web service to return station metadata
+(2) :meth:`~obspy.clients.fdsn.routers.fedcatalog_client.
+FederatedClient.get_stations()`: Uses the IRIS Fed Catalog web service to
+    return station metadata as an
     :class:`~obspy.core.inventory.inventory.Inventory` object.
 
-    >>> inventory = fclient.get_stations(network="GE", station="A*",
-    ...                           channel="?HZ", level="station",
-    ...                           endtime="2016-12-31")
-    >>> print(inventory)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    >>> inventory = client.get_stations(network="GE", station="A*",
+    ...                                 channel="?HZ", level="station",
+    ...                                 endtime="2016-12-31")
+    >>> print(inventory)  # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
     Inventory created at 2...Z
         Sending institution: SeisComP3 (GFZ)
         Contains:
@@ -192,6 +195,8 @@ The first step is always to initialize a FederatedClient object.
 
 Please see the documentation for each method for further information and
 examples.
+
+.. _FDSN web service definitions: https://www.fdsn.org/webservices/
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
