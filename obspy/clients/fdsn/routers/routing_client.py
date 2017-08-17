@@ -123,16 +123,19 @@ class RoutingClient(object):
             self.exclude_provider = exclude_provider
 
     def __str__(self):
-        part1 = "RoutingClient\n"
-        part2 = "  request-method: %s\n" % \
-                ("parallel" if self.use_parallel else "serial")
+        parts = ["RoutingClient",
+                 "  request-method: %s" %
+                 ("parallel" if self.use_parallel else "serial")]
         if self.include_provider:
-            return part1 + part2 + "  include: %s" % \
-                (",".join(self.include_provider))
+            parts.append("  include: %s" %
+                         (",".join(self.include_provider)))
         if self.exclude_provider:
-            return part1 + part2 + "  exclude: %s" %\
-                (",".join(self.exclude_provider))
-        return part1 + part2
+            parts.append("  exclude: %s" %
+                         (",".join(self.exclude_provider)))
+        return '\n'.join(parts)
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def _request(self, client, service, route, output, passed,
                  failed, **kwarg):
