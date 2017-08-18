@@ -44,6 +44,7 @@ import collections
 from threading import Lock
 import os
 import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from obspy.core.inventory import Inventory
 from obspy.core import Stream
 from obspy.clients.fdsn.client import convert_to_string
@@ -54,6 +55,11 @@ from obspy.clients.fdsn.routers import (FederatedRoute,)
 from obspy.clients.fdsn.routers.fedcatalog_parser import (
     PreParse, FedcatResponseLine, DatacenterItem,
     inventory_to_bulkrequests, stream_to_bulkrequests)
+
+
+# ignore InsecureRequestWarning
+# https://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 # IRIS uses different codes for datacenters than obspy.
