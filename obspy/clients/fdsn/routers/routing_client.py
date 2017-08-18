@@ -58,12 +58,12 @@ def set_up_logger():
     # logging facilities swiped from mass_downloader.py
     # Setup the logger.
     logger = logging.getLogger("obspy.clients.fdsn.routing_client")
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.ERROR)
     # Prevent propagating to higher loggers.
     logger.propagate = 0
     # Console log handler.
     clh = logging.StreamHandler()
-    clh.setLevel(logging.INFO)
+    clh.setLevel(logging.ERROR)
     # Add formatter
     _format = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
     formatter = logging.Formatter(_format)
