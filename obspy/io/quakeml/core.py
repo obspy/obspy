@@ -1829,20 +1829,12 @@ def _write_quakeml(catalog, filename, validate=False, nsmap=None,
         raise AssertionError(
             "The final QuakeML file did not pass validation.")
 
-    # Open filehandler or use an existing file like object.
-    if not hasattr(filename, "write"):
-        file_opened = True
-        fh = open(filename, "wb")
-    else:
-        file_opened = False
-        fh = filename
-
+    # Open filehandler or use an existing file like object
     try:
-        fh.write(xml_doc)
-    finally:
-        # Close if a file has been opened by this function.
-        if file_opened is True:
-            fh.close()
+        with open(filename, 'wb') as fh:
+            fh.write(xml_doc)
+    except TypeError:
+        filename.write(xml_doc)
 
 
 def _read_seishub_event_xml(filename):

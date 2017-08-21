@@ -129,17 +129,9 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
     if validate and not validate_sc3ml(io.BytesIO(sc3ml_doc), verbose=verbose):
         raise AssertionError("The final SC3ML file did not pass validation.")
 
-    # Open filehandler or use an existing file like object.
-    if not hasattr(filename, "write"):
-        file_opened = True
-        fh = open(filename, "wb")
-    else:
-        file_opened = False
-        fh = filename
-
+    # Open filehandler or use an existing file like object
     try:
-        fh.write(sc3ml_doc)
-    finally:
-        # Close if a file has been opened by this function.
-        if file_opened is True:
-            fh.close()
+        with open(filename, 'wb') as fh:
+            fh.write(sc3ml_doc)
+    except TypeError:
+        filename.write(sc3ml_doc)
