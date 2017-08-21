@@ -57,8 +57,7 @@ CALCULATED VALUES
 	Corrected Starttime: 2007-12-31T23:59:59.765000Z
 
 ''' % (self.test_file,)  # noqa
-        self.assertEqual(expected.encode('utf-8'),  # noqa
-                         out.stdout)
+        self.assertEqual(expected, out.stdout)  # noqa
 
     def test_second_record(self):
         with CatchOutput() as out:
@@ -100,8 +99,7 @@ CALCULATED VALUES
 	Corrected Starttime: 2008-01-01T00:00:01.825000Z
 
 ''' % (self.test_file,)  # noqa
-        self.assertEqual(expected.encode('utf-8'),  # noqa
-                         out.stdout)
+        self.assertEqual(expected, out.stdout)  # noqa
 
     def test_record_with_data_offset_zero(self):
         """
@@ -148,8 +146,7 @@ CALCULATED VALUES
 	Corrected Starttime: 2016-08-21T01:43:37.000000Z
 
 ''' % (filename,)  # noqa
-        self.assertEqual(expected.encode('utf-8'),  # noqa
-                         out.stdout)
+        self.assertEqual(expected, out.stdout)  # noqa
 
         with CatchOutput() as out:
             obspy_recordanalyzer(['-n', '2', filename])
@@ -190,8 +187,7 @@ CALCULATED VALUES
 	Corrected Starttime: 2016-08-21T01:45:31.000000Z
 
 ''' % (filename,)  # noqa
-        self.assertEqual(expected.encode('utf-8'),  # noqa
-                         out.stdout)
+        self.assertEqual(expected, out.stdout)  # noqa
 
 
 def suite():

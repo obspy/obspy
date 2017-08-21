@@ -1148,8 +1148,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(len(w), 1)
         self.assertEqual(w[0].category, InternalMSEEDWarning)
 
-        self.assertIn(b"calling msr_parse with", out.stdout)
-        self.assertIn(b"buflen=512, reclen=-1, dataflag=0, verbose=2",
+        self.assertIn("calling msr_parse with", out.stdout)
+        self.assertIn("buflen=512, reclen=-1, dataflag=0, verbose=2",
                       out.stdout)
         self.assertEqual(st[0].stats.station, 'UH3')
 
