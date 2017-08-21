@@ -47,7 +47,7 @@ import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from obspy.core.inventory import Inventory
 from obspy.core import Stream
-from obspy.clients.fdsn.client import convert_to_string
+from obspy.clients.fdsn.client import convert_to_string, Client
 from obspy.clients.fdsn.header import (FDSNException, FDSNNoDataException)
 from obspy.clients.fdsn.routers.routing_client import (
     RoutingClient, RoutingManager, ROUTING_LOGGER)
@@ -68,8 +68,6 @@ REMAPS = (("IRISDMC", "IRIS"),
           ("GEOFON", "GFZ"),
           ("SED", "ETH"),
           ("USPC", "USP"))
-
-FEDCATALOG_URL = 'https://service.iris.edu/irisws/fedcatalog/1/'
 
 
 def distribute_args(argdict):
@@ -353,11 +351,16 @@ class FederatedClient(RoutingClient):
                 no data, no response, or a timeout
     """
 
-    def __init__(self, use_parallel=False, include_provider=None,
+    def __init__(self, base_url='https://service.iris.edu/irisws/fedcatalog/', 
+                 major_version=1, use_parallel=False, include_provider=None,
                  exclude_provider=None, **kwargs):
         """
         Initializes an FDSN Fed Catalog Web Service client.
 
+        :type base_url: str
+        :param base_url: The base URL of the IRIS FedCatalog web service. 
+        :type major_version: int
+        :param major_version: The major version of the FedCatalog web service.
         :type use_parallel: boolean
         :param use_parallel: determines whether clients will be polled in in
         parallel or in series.  If the FederatedClient appears to hang during
@@ -373,6 +376,17 @@ class FederatedClient(RoutingClient):
         super(FederatedClient, self).__init__(
             use_parallel=use_parallel, include_provider=include_provider,
             exclude_provider=exclude_provider, **kwargs)
+
+        # Make sure the url does not end with a slash.
+        base_url = base_url.strip("/")
+        # Catch invalid URLs to avoid confusing error messages
+        if not Client._validate_base_url(base_url):
+            msg = "The FedCatalog service URL `{}` is not a valid URL."\
+                  .format(base_url)
+            raise ValueError(msg)
+
+        self.query_url = "/".join([base_url, str(major_version), "query"])
+
         PROVIDERS.refresh()
 
     def __str__(self):
@@ -539,7 +553,6 @@ class FederatedClient(RoutingClient):
         """
         if 'bulk' in kwargs:
             ValueError("To post a bulk request, use get_routing_bulk")
-        query_url = FEDCATALOG_URL + "query"
 
         # Special location handling. Convert empty strings to "--".
         if location == '':
@@ -563,7 +576,7 @@ class FederatedClient(RoutingClient):
            'format': format
         }
         params.update(kwargs)
-        resp = requests.get(query_url, params=params, verify=False)
+        resp = requests.get(self.query_url, params=params, verify=False)
         resp.raise_for_status()
 
         if routing_file is not None:
@@ -601,13 +614,13 @@ class FederatedClient(RoutingClient):
         :param routing_file: filename used to write out raw fedcatalog response
         :type targetservice: str
         :param targetservice: By default all known service endpoints are
-        returned in the results. Specify station or dataselect to only return
-        endpoints for one of those services.
+            returned in the results. Specify station or dataselect to only return
+            endpoints for one of those services.
         :type includeoverlaps: str
         :param includeoverlaps: true    Control whether overlapping channel
             entries are included in the response (true or false). Overlapping
             entries will occur when the same data are available from multiple
-        data centers.
+            data centers.
         :type level: str
         :param level: Specify level of detail (for an fdsnws-station service)
             using network, station, channel, or response.
@@ -746,7 +759,7 @@ class FederatedClient(RoutingClient):
         assert isinstance(bulk, string_types), \
             "Bulk should be a string, but is a " + bulk.__class__.__name__
 
-        resp = requests.post(FEDCATALOG_URL + "query", data=bulk, verify=False)
+        resp = requests.post(self.query_url, data=bulk, verify=False)
         resp.raise_for_status()
         if routing_file is not None:
             if isinstance(routing_file, string_types):
