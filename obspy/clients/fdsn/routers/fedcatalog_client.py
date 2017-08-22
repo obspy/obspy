@@ -159,7 +159,8 @@ def get_bulk_string(bulk, arguments):
         bulk = '\n'.join((args, tmp))
     else:
         bulk = tmp
-    assert isinstance(bulk, string_types)
+    if not isinstance(bulk, string_types):
+        raise FDSNException("Failed to convert bulk dictionary to a string")
     return bulk
 
 
@@ -326,7 +327,6 @@ class FederatedClient(RoutingClient):
     >>> print(client)  #doctest: +ELLIPSIS
     Federated Catalog Routing Client
       request-method: serial
-    <BLANKLINE>
     >>> inv = client.get_stations(network="I?", station="AN*", channel="*HZ")
     ...                           #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
     >>> print(inv)  #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
@@ -755,9 +755,13 @@ class FederatedClient(RoutingClient):
         elif isinstance(bulk, string_types) and params:
             bulk = get_bulk_string(bulk=bulk, arguments=params)
 
-        assert bulk, "Bulk is empty after homogenizing it via get_bulk_string"
-        assert isinstance(bulk, string_types), \
-            "Bulk should be a string, but is a " + bulk.__class__.__name__
+        if not bulk:
+            msg = "Bulk is empty after homogenizing it via get_bulk_string"
+            raise FDSNException(msg)
+        elif not isinstance(bulk, string_types):
+            msg = ("Bulk should be a string, "
+                   "but is a " + bulk.__class__.__name__)
+            raise FDSNException(msg)
 
         resp = requests.post(self.query_url, data=bulk, verify=False)
         resp.raise_for_status()
@@ -818,20 +822,25 @@ class FederatedClient(RoutingClient):
 
         # communicate via queues or similar. Therefore, make containers exist,
         # and have the 'put' routine
-        assert service in bulk_services, "couldn't find {0}\n".format(service)
-        assert route is not None, "missing route"
-        assert filename or output is not None, \
-            "missing container for storing output [output]"
-        assert filename or hasattr(output, 'put'), \
-            "'output' does not have a 'put' routine"
-        assert passed is not None, \
-            "missing container for storing successful requests [passed]"
-        assert hasattr(passed, 'put'), \
-            "'passed' does not have a 'put' routine"
-        assert failed is not None, \
-            "missing container for storing failed requests [failed]"
-        assert hasattr(failed, 'put'), \
-            "'failed' does not have a 'put' routine"
+        if service not in bulk_services:
+            raise FDSNException("couldn't find {0}\n".format(service))
+        elif route is None:
+            raise FDSNException("missing route")
+        elif not filename and output is None:
+            raise FDSNException("missing container for "
+                                "storing output [output]")
+        elif not filename and not hasattr(output, 'put'):
+            raise FDSNException("'output' does not have a 'put' routine")
+        elif passed is None:
+            raise FDSNException("missing container for storing "
+                                "successful requests [passed]")
+        elif not hasattr(passed, 'put'):
+            raise FDSNException("'passed' does not have a 'put' routine")
+        elif failed is None:
+            raise FDSNException("missing container for storing "
+                                "failed requests [failed]")
+        elif not hasattr(failed, 'put'):
+            raise FDSNException("'failed' does not have a 'put' routine")
 
         try:
             # get_bulk is the client's "get_xxx_bulk" function.
@@ -964,8 +973,9 @@ class FederatedClient(RoutingClient):
         svc_name = 'DATASELECTSERVICE'
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
-        assert "bulk" not in fed_kwargs, \
-               "Bulk request should be sent to get_waveforms_bulk instead"
+        if "bulk" in fed_kwargs:
+            raise FDSNException("Bulk request should be sent "
+                                "to get_waveforms_bulk instead")
 
         frm = self.get_routing(network=network, station=station,
                                location=location, channel=channel,
@@ -1166,8 +1176,8 @@ class FederatedClient(RoutingClient):
         fed_kwargs, svc_kwargs = distribute_args(kwargs)
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
-        assert "bulk" not in fed_kwargs, \
-               "use get_stations_bulk for bulk requests"
+        if "bulk" in fed_kwargs:
+            raise FDSNException("use get_stations_bulk for bulk requests")
 
         frm = self.get_routing(**fed_kwargs) if not existing_routes \
             else get_existing_route(existing_routes)
@@ -1209,8 +1219,9 @@ class FederatedClient(RoutingClient):
         The simple appending/extending of data will not rearrange existing data
         That is, inventory trees will not be merged.
         """
-        assert "filename" not in svc_kwargs,\
-            "Rerouting doesn't work for items sent to file"
+        if "filename" in svc_kwargs:
+            raise FDSNException("Rerouting doesn't work ",
+                                "for items sent to file")
         # what about if svc_kwargs has filename (?)
         ROUTING_LOGGER.info(
             "%d items were not retrieved, trying again, but from any provider"
