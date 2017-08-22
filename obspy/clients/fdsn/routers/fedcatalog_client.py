@@ -351,14 +351,14 @@ class FederatedClient(RoutingClient):
                 no data, no response, or a timeout
     """
 
-    def __init__(self, base_url='https://service.iris.edu/irisws/fedcatalog/', 
+    def __init__(self, base_url='https://service.iris.edu/irisws/fedcatalog/',
                  major_version=1, use_parallel=False, include_provider=None,
                  exclude_provider=None, **kwargs):
         """
         Initializes an FDSN Fed Catalog Web Service client.
 
         :type base_url: str
-        :param base_url: The base URL of the IRIS FedCatalog web service. 
+        :param base_url: The base URL of the IRIS FedCatalog web service.
         :type major_version: int
         :param major_version: The major version of the FedCatalog web service.
         :type use_parallel: boolean
@@ -614,8 +614,8 @@ class FederatedClient(RoutingClient):
         :param routing_file: filename used to write out raw fedcatalog response
         :type targetservice: str
         :param targetservice: By default all known service endpoints are
-            returned in the results. Specify station or dataselect to only return
-            endpoints for one of those services.
+            returned in the results. Specify station or dataselect to only
+            return endpoints for one of those services.
         :type includeoverlaps: str
         :param includeoverlaps: true    Control whether overlapping channel
             entries are included in the response (true or false). Overlapping
