@@ -260,6 +260,20 @@ class FederatedClientTestCase(unittest.TestCase):
         self.assertEqual(
             data[0].id, 'IU.ANMO.00.BHZ',
             msg="retrieved incorrect waveform {0}".format(data[0].id))
+        self.assertEqual(len(data), 1, msg="expected one waveform in stream")
+        self.assertEqual(
+            data[0].id, 'IU.ANMO.00.BHZ',
+            msg="retrieved incorrect waveform {0}".format(data[0].id))
+        # test including an empty location code
+        endt = UTCDateTime(2017, 6, 1, 1, 0, 0)
+        params = {"network": "TA", "station": "O14K", "location": "",
+                  "channel": "LHZ", "starttime": "2017-06-01T00:00:00",
+                  "endtime": endt}
+        data = self.fed_client.get_waveforms(**params)
+        self.assertEqual(len(data), 1, msg="expected one waveform in stream")
+        self.assertEqual(
+            data[0].id, 'TA.O14K..LHZ',
+            msg="retrieved incorrect waveform {0}".format(data[0].id))
         # don't forget to test the attach_response
 
     def test_fedstations_use_existing(self):
