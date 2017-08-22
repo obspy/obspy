@@ -1443,7 +1443,7 @@ class Client(object):
             elif isinstance(wadl, FDSNRedirectException):
                 redirect_messages.add(str(wadl))
                 continue
-            elif wadl == "timeout":
+            elif wadl.decode('utf-8') == "timeout":
                 raise FDSNException("Timeout while requesting '%s'." % url)
 
             if "dataselect" in url:
