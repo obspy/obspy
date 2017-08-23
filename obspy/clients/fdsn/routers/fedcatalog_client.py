@@ -164,19 +164,6 @@ def get_bulk_string(bulk, arguments):
     return bulk
 
 
-def get_existing_route(existing_routes):
-    # does not know how to read from file.
-    # load routes into a FederatedRoutingManager first
-    if isinstance(existing_routes, FederatedRoutingManager):
-        frm = existing_routes
-    elif isinstance(existing_routes, (string_types, FederatedRoute)):
-        frm = FederatedRoutingManager(existing_routes)
-    else:
-        msg = "unsure how to convert %s into FederatedRoutingManager"
-        NotImplementedError(msg % existing_routes.__class__)
-    return frm
-
-
 class FedcatalogProviders(object):
     """
     Class containing datacenter details retrieved from the fedcatalog service
@@ -311,9 +298,6 @@ class FedcatalogProviders(object):
                "LastUpdate:{lastUpdate}".format(**self._providers[name])
 
 
-PROVIDERS = FedcatalogProviders()
-
-
 class FederatedClient(RoutingClient):
     """
     FDSN Web service request client.
@@ -387,7 +371,7 @@ class FederatedClient(RoutingClient):
 
         self.query_url = "/".join([base_url, str(major_version), "query"])
 
-        PROVIDERS.refresh()
+        self._providers = FedcatalogProviders()
 
     def __str__(self):
         """
@@ -587,7 +571,7 @@ class FederatedClient(RoutingClient):
                 # assume it is an open file-like-type
                 routing_file.write(resp.text)
 
-        frm = FederatedRoutingManager(resp.text)
+        frm = FederatedRoutingManager(resp.text, self._providers)
         return frm
 
     def get_routing_bulk(self, bulk, routing_file=None, targetservice=None,
@@ -773,7 +757,22 @@ class FederatedClient(RoutingClient):
                 # assume it is an open file-like-type
                 routing_file.write(resp.text)
 
-        frm = FederatedRoutingManager(resp.text)
+        frm = FederatedRoutingManager(resp.text, self._providers)
+        return frm
+
+    def get_existing_route(self, existing_routes):
+        """
+        Return a set of existing routes as a :class:`FederatedRoutingManager`
+        """
+        # does not know how to read from file.
+        # load routes into a FederatedRoutingManager first
+        if isinstance(existing_routes, FederatedRoutingManager):
+            frm = existing_routes
+        elif isinstance(existing_routes, (string_types, FederatedRoute)):
+            frm = FederatedRoutingManager(existing_routes, self._providers)
+        else:
+            msg = "unsure how to convert %s into FederatedRoutingManager"
+            NotImplementedError(msg % existing_routes.__class__)
         return frm
 
     # -------------------------------------------------
@@ -923,7 +922,7 @@ class FederatedClient(RoutingClient):
 
         frm = self.get_routing_bulk(
             bulk=bulk, **fed_kwargs)\
-            if not existing_routes else get_existing_route(existing_routes)
+            if not existing_routes else self.get_existing_route(existing_routes)
         data, _, failed = self.query(frm, svc_name, **svc_kwargs)
 
         if reroute and failed:
@@ -981,7 +980,7 @@ class FederatedClient(RoutingClient):
                                location=location, channel=channel,
                                starttime=starttime, endtime=endtime,
                                **fed_kwargs) if not existing_routes \
-            else get_existing_route(existing_routes)
+            else self.get_existing_route(existing_routes)
 
         data, _, failed = self.query(frm, svc_name, **svc_kwargs)
 
@@ -1058,7 +1057,7 @@ class FederatedClient(RoutingClient):
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
         frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)\
-            if not existing_routes else get_existing_route(existing_routes)
+            if not existing_routes else self.get_existing_route(existing_routes)
 
         # frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)
         inv, _, failed = self.query(frm, svc_name, **svc_kwargs)
@@ -1180,7 +1179,7 @@ class FederatedClient(RoutingClient):
             raise FDSNException("use get_stations_bulk for bulk requests")
 
         frm = self.get_routing(**fed_kwargs) if not existing_routes \
-            else get_existing_route(existing_routes)
+            else self.get_existing_route(existing_routes)
 
         # query queries all providers
         inv, _, failed = self.query(frm, svc_name, **svc_kwargs)
@@ -1263,14 +1262,16 @@ class FederatedRoutingManager(RoutingManager):
     FederatedRoute for IRIS containing 0 query parameters and 27 request items
     """
 
-    def __init__(self, data):
+    def __init__(self, data, provider_details=None):
         """
         initialize a FederatedRoutingManager object
         :type data: str
         :param data: text block
         :
         """
-        RoutingManager.__init__(self, data, provider_details=PROVIDERS)
+        if not provider_details:
+            provider_details = FedcatalogProviders()
+        RoutingManager.__init__(self, data, provider_details=provider_details)
 
     def parse_routing(self, block_text):
         """
