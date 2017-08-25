@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9">
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9" version="0.9">
   <EventParameters publicID="smi:www.iris.edu/ws/event/query">
     <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
       <time>
-        <value>2011-03-11T05:46:24.120000Z</value>
+        <value>2011-03-11T05:46:24.1200</value>
       </time>
       <latitude>
         <value>38.297</value>
@@ -20,7 +20,7 @@
     </origin>
     <origin publicID="smi:www.iris.edu/ws/event/query?originId=3881858">
       <time>
-        <value>2006-09-10T04:26:33.610000Z</value>
+        <value>2006-09-10T04:26:33.6100</value>
       </time>
       <latitude>
         <value>9.614</value>

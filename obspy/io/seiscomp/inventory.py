@@ -17,10 +17,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import inspect
-import re
 import math
-import os
 import warnings
 import obspy
 
@@ -35,6 +32,8 @@ from obspy.core.inventory import (CoefficientsTypeResponseStage,
                                   PolesZerosResponseStage,
                                   PolynomialResponseStage)
 from obspy.io.stationxml.core import _read_floattype
+from obspy.io.seiscomp.core import _is_sc3ml as _is_sc3ml_version
+
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
@@ -43,80 +42,20 @@ SCHEMA_VERSION = ["0.7", "0.8", "0.9"]
 
 def _is_sc3ml(path_or_file_object):
     """
-    Simple function checking if the passed object contains a valid sc3ml 0.7
-    file. Returns True of False.
+    Simple function checking if the passed object contains a valid sc3ml file.
+    Returns True of False.
+
     The test is not exhaustive - it only checks the root tag but that should
     be good enough for most real world use cases. If the schema is used to
     test for a StationXML file, many real world files are false negatives as
     they don't adhere to the standard.
+
+    :type path_or_file_object: str
     :param path_or_file_object: File name or file like object.
+    :rtype: bool
+    :return: ``True`` if SC3ML file is valid.
     """
-    if hasattr(path_or_file_object, "tell") and hasattr(path_or_file_object,
-                                                        "seek"):
-        current_position = path_or_file_object.tell()
-
-    try:
-        if isinstance(path_or_file_object, etree._Element):
-            xmldoc = path_or_file_object
-        else:
-            try:
-                xmldoc = etree.parse(path_or_file_object)
-            except etree.XMLSyntaxError:
-                return False
-        root = xmldoc.getroot()
-        try:
-            match = re.match(
-                r'{http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[-+]?'
-                r'[0-9]*\.?[0-9]+}', root.tag)
-            assert match is not None
-        except Exception:
-            return False
-        # Check if schema version is supported
-        if root.attrib["version"] not in SCHEMA_VERSION:
-            warnings.warn("The sc3ml file has version %s, ObsPy can "
-                          "deal with versions %s. Proceed with caution." % (
-                              root.attrib["version"], SCHEMA_VERSION))
-        return True
-    finally:
-        # Make sure to reset file pointer position.
-        try:
-            path_or_file_object.seek(current_position, 0)
-        except Exception:
-            pass
-
-
-def validate_sc3ml(path_or_object):
-    """
-    Checks if the given path is a valid sc3ml file.
-
-    Returns a tuple. The first item is a boolean describing if the validation
-    was successful or not. The second item is a list of all found validation
-    errors, if existent.
-
-    :param path_or_object: File name or file like object. Can also be an etree
-        element.
-    """
-    # Get the schema location.
-    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "data",
-                                   "sc3ml_0.7.xsd")
-
-    xmlschema = etree.XMLSchema(etree.parse(schema_location))
-
-    if isinstance(path_or_object, etree._Element):
-        xmldoc = path_or_object
-    else:
-        try:
-            xmldoc = etree.parse(path_or_object)
-        except etree.XMLSyntaxError:
-            return (False, ("Not a XML file.",))
-
-    valid = xmlschema.validate(xmldoc)
-
-    # Pretty error printing if the validation fails.
-    if valid is not True:
-        return (False, xmlschema.error_log)
-    return (True, ())
+    return _is_sc3ml_version(path_or_file_object, SCHEMA_VERSION)
 
 
 def _read_sc3ml(path_or_file_object):

@@ -302,6 +302,8 @@ ENTRY_POINTS = {
         'writeFormat = obspy.io.quakeml.core:_write_quakeml',
         ],
     'obspy.plugin.event.SC3ML': [
+        'isFormat = obspy.io.seiscomp.event:_is_sc3ml',
+        'readFormat = obspy.io.seiscomp.event:_read_sc3ml',
         'writeFormat = obspy.io.seiscomp.event:_write_sc3ml',
         ],
     'obspy.plugin.event.MCHEDR': [
@@ -362,7 +364,7 @@ ENTRY_POINTS = {
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
         'INVENTORYXML = obspy.io.arclink.inventory',
-        'SC3ML = obspy.io.seiscomp.sc3ml',
+        'SC3ML = obspy.io.seiscomp.inventory',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
@@ -382,8 +384,8 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.arclink.inventory:_read_inventory_xml',
         ],
     'obspy.plugin.inventory.SC3ML': [
-        'isFormat = obspy.io.seiscomp.sc3ml:_is_sc3ml',
-        'readFormat = obspy.io.seiscomp.sc3ml:_read_sc3ml',
+        'isFormat = obspy.io.seiscomp.inventory:_is_sc3ml',
+        'readFormat = obspy.io.seiscomp.inventory:_read_sc3ml',
         ],
     'obspy.plugin.inventory.SACPZ': [
         'writeFormat = obspy.io.sac.sacpz:_write_sacpz',

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9" version="0.9">
-  <EventParameters publicID="smi:eu.emsc/unid">
+<q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
+  <eventParameters publicID="smi:eu.emsc/unid">
     <event publicID="smi:ch.ethz.sed/event/historical/1165">
       <preferredOriginID>smi:ch.ethz.sed/origin/2054</preferredOriginID>
       <preferredMagnitudeID>smi:ch.ethz.sed/magnitude/1015</preferredMagnitudeID>
@@ -33,10 +33,9 @@
           <agencyID>EMSC</agencyID>
         </creationInfo>
       </comment>
-      <comment>
+      <comment id="smi:some/comment/id/number_3">
         <text>Another comment</text>
-        <id>smi:some/comment/id/number_3</id>
       </comment>
     </event>
-  </EventParameters>
-</seiscomp>
+  </eventParameters>
+</q:quakeml>
