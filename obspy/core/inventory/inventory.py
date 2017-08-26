@@ -17,7 +17,6 @@ from future.utils import python_2_unicode_compatible, native_str
 import copy
 import fnmatch
 import os
-from pkg_resources import load_entry_point
 import textwrap
 import warnings
 
@@ -26,6 +25,7 @@ from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
                                   _read_from_plugin, NamedTemporaryFile,
                                   download_to_file)
 from obspy.core.util.decorator import map_example_filename
+from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .network import Network
@@ -270,7 +270,7 @@ class Inventory(ComparingObject):
             # get format specific entry point
             format_ep = ENTRY_POINTS['inventory_write'][format]
             # search writeFormat method for given entry point
-            write_format = load_entry_point(
+            write_format = buffered_load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.inventory.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):

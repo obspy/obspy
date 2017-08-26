@@ -24,6 +24,7 @@ from subprocess import STDOUT, CalledProcessError, check_output
 import sys
 import tempfile
 import warnings
+from pkg_resources import load_entry_point
 
 from future.builtins import *  # NOQA
 
@@ -54,6 +55,12 @@ BAND_CODE = {'F': 1000.0,
              'P': 0.000001,
              'T': 0.0000001,
              'Q': 0.00000001}
+
+# Dict that stores results from load entry points
+_ENTRY_POINT_CACHE = {}
+
+# The kwargs used by load_entry_point function
+_LOAD_ENTRY_POINT_KEYS = ('dist', 'group', 'name')
 
 
 def guess_delta(channel):
@@ -612,6 +619,23 @@ def limit_numpy_fft_cache(max_size_in_mb_per_cache=100):
             continue
         if total_size > max_size_in_mb_per_cache * 1024 * 1024:
             cache.clear()
+
+
+def buffered_load_entry_point(dist, group, name):
+    """
+    Return `name` entry point of `group` for `dist` or raise ImportError
+    :type dist: str
+    :param dist: The name of the distribution containing the entry point.
+    :type group: str
+    :param group: The name of the group containing the entry point.
+    :type name: str
+    :param name: The name of the entry point. 
+    :return: The loaded entry point. 
+    """
+    hash_str = '/'.join([dist, group, name])
+    if hash_str not in _ENTRY_POINT_CACHE:
+        _ENTRY_POINT_CACHE[hash_str] = load_entry_point(dist, group, name)
+    return _ENTRY_POINT_CACHE[hash_str]
 
 
 if __name__ == '__main__':

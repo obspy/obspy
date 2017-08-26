@@ -11,14 +11,15 @@ import unittest
 import warnings
 from copy import deepcopy
 
-from pkg_resources import load_entry_point
 import numpy as np
 
 from obspy import Trace, read
 from obspy.core.compatibility import mock
+from obspy.io.mseed.core import _write_mseed
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import (NamedTemporaryFile, _get_entry_points,
                                   DEFAULT_MODULES, WAVEFORM_ACCEPT_BYTEORDER)
+from obspy.core.util.misc import buffered_load_entry_point, _ENTRY_POINT_CACHE
 
 
 def _get_default_eps(group, subgroup=None):
@@ -46,7 +47,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                                           'readFormat')
             # using format keyword
             for ep in formats_ep.values():
-                is_format = load_entry_point(
+                is_format = buffered_load_entry_point(
                     ep.dist.key, 'obspy.plugin.waveform.' + ep.name,
                     'isFormat')
                 self.assertFalse(False, is_format(tmpfile))
@@ -202,7 +203,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         # Big loop over every format.
         for format in formats:
             # search isFormat for given entry point
-            is_format = load_entry_point(
+            is_format = buffered_load_entry_point(
                 format.dist.key, 'obspy.plugin.waveform.' + format.name,
                 'isFormat')
             for f, path in paths.items():
@@ -457,26 +458,37 @@ class WaveformPluginsTestCase(unittest.TestCase):
         # Test for stream as well as for trace.
         stream_trace = [read(), read()[0]]
 
+        # get mseed cache name and mseed function
+        mseed_name = "obspy/obspy.plugin.waveform.MSEED/writeFormat"
+        mseed_func = _ENTRY_POINT_CACHE.get(mseed_name, _write_mseed)
+
         for suffix, module_name in formats:
-            # A bit of magic to get the fully qualified function name...
-            fct_name = module_name + "." + load_entry_point(
-                "obspy",
-                "obspy.plugin.waveform.%s" % suffix,
-                "writeFormat").__name__
+            # get a list of dist, group, name.
+            entry_point_list = ["obspy", "obspy.plugin.waveform.%s" % suffix,
+                                "writeFormat"]
+            # load entry point to make sure it is in the cache.
+            _ = buffered_load_entry_point(*entry_point_list)
+            # get the cache name for monkey patching.
+            entry_point_name = '/'.join(entry_point_list)
             # For stream and trace.
             for obj in stream_trace:
                 # Various versions of the suffix.
                 for s in [suffix.capitalize(), suffix.lower(), suffix.upper()]:
-                    with mock.patch(fct_name) as p:
+                    # create a mock function and patch the entry point cache.
+                    mocked_func = mock.MagicMock(_ENTRY_POINT_CACHE[entry_point_name])
+                    mock_dict = {entry_point_name: mocked_func}
+                    with mock.patch.dict(_ENTRY_POINT_CACHE, mock_dict):
                         obj.write("temp." + s)
                     # Make sure the fct has actually been called.
-                    self.assertEqual(p.call_count, 1)
+                    self.assertEqual(mocked_func.call_count, 1)
 
-                    # Manually specifying the format name should overwrite
-                    # this.
-                    with mock.patch("obspy.io.mseed.core._write_mseed") as p:
+                    # Specifying the format name should overwrite this.
+                    mocked_mseed_func = mock.MagicMock(mseed_func)
+                    mseed_mock_dict = {mseed_name: mocked_mseed_func}
+                    with mock.patch.dict(_ENTRY_POINT_CACHE, mseed_mock_dict):
                         obj.write("temp." + s, format="mseed")
-                    self.assertEqual(p.call_count, 1)
+                    self.assertEqual(mocked_mseed_func.call_count, 1)
+                    self.assertEqual(mocked_func.call_count, 1)
 
         # An unknown suffix should raise.
         with self.assertRaises(TypeError):

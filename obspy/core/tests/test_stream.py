@@ -2494,15 +2494,24 @@ class StreamTestCase(unittest.TestCase):
         st = read()
         st.write(file_name, 'mseed')  # maybe read from test data instead?
 
-        with mock.patch("tarfile.is_tarfile") as tar_patch:
-            with mock.patch("zipfile.is_zipfile") as zip_patch:
+        with mock.patch("tarfile.is_tarfile") as tar_p:
+            with mock.patch("zipfile.is_zipfile") as zip_p:
                 read(file_name, check_compression=False)
+
+        # assert neither compression check function was called.
+        self.assertEqual(tar_p.call_count, 0)
+        self.assertEqual(zip_p.call_count, 0)
+
+        # ensure compression checks get called when check_compression is True
+        with mock.patch("tarfile.is_tarfile", return_value=0) as tar_p:
+            with mock.patch("zipfile.is_zipfile", return_value=0) as zip_p:
+                read(file_name, check_compression=True)
+        self.assertEqual(tar_p.call_count, 1)
+        self.assertGreaterEqual(zip_p.call_count, 1)
 
         # delete temp file
         os.remove(file_name)
-        # assert neither compression check function was called.
-        self.assertEqual(tar_patch.call_count, 0)
-        self.assertEqual(zip_patch.call_count, 0)
+
 
 
 def suite():
