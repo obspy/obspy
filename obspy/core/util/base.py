@@ -13,7 +13,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import doctest
-import functools
 import inspect
 import io
 import os
@@ -469,8 +468,8 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     mod_list = []
     for name, ep in eps.items():
         module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
-        func = buffered_load_entry_point(ep.dist.key,
-                                "obspy.plugin.%s.%s" % (group, name), method)
+        ep_list = [ep.dist.key, "obspy.plugin.%s.%s" % (group, name), method]
+        func = buffered_load_entry_point(*ep_list)
         func_str = ':func:`%s`' % ".".join((ep.module_name, func.__name__))
         mod_list.append((name, module_short, func_str))
 

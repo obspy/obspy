@@ -8,7 +8,6 @@ import os
 import sys
 import tempfile
 import unittest
-from pkg_resources import load_entry_point
 
 import obspy.core.util.misc as misc
 from obspy import UTCDateTime, read

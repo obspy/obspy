@@ -467,7 +467,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             entry_point_list = ["obspy", "obspy.plugin.waveform.%s" % suffix,
                                 "writeFormat"]
             # load entry point to make sure it is in the cache.
-            _ = buffered_load_entry_point(*entry_point_list)
+            buffered_load_entry_point(*entry_point_list)
             # get the cache name for monkey patching.
             entry_point_name = '/'.join(entry_point_list)
             # For stream and trace.
@@ -475,7 +475,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 # Various versions of the suffix.
                 for s in [suffix.capitalize(), suffix.lower(), suffix.upper()]:
                     # create a mock function and patch the entry point cache.
-                    mocked_func = mock.MagicMock(_ENTRY_POINT_CACHE[entry_point_name])
+                    write_func = _ENTRY_POINT_CACHE[entry_point_name]
+                    mocked_func = mock.MagicMock(write_func)
                     mock_dict = {entry_point_name: mocked_func}
                     with mock.patch.dict(_ENTRY_POINT_CACHE, mock_dict):
                         obj.write("temp." + s)

@@ -629,8 +629,8 @@ def buffered_load_entry_point(dist, group, name):
     :type group: str
     :param group: The name of the group containing the entry point.
     :type name: str
-    :param name: The name of the entry point. 
-    :return: The loaded entry point. 
+    :param name: The name of the entry point.
+    :return: The loaded entry point
     """
     hash_str = '/'.join([dist, group, name])
     if hash_str not in _ENTRY_POINT_CACHE:

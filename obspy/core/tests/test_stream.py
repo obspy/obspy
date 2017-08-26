@@ -2513,7 +2513,6 @@ class StreamTestCase(unittest.TestCase):
         os.remove(file_name)
 
 
-
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
 
