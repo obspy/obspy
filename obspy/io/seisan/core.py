@@ -89,12 +89,12 @@ def _get_version(data):
         type of file can also be read with SEISAN, but so far only data written
         on Linux have been tested for reading on all systems.
 
-        From version 7.0,the Linux and PC file structures are exactly the same.
-        On Sun the structure is the same except that the bytes are swapped.
-        This is used by SEISAN to find out where the file was written. Since
-        there is always 80 characters in the first write, character one in the
-        Linux and PC file will be the character P (which is represented by 80)
-        while on Sun character 4 is P.
+        From version 7.0, the Linux and PC file structures are exactly the
+        same. On Sun the structure is the same except that the bytes are
+        swapped. This is used by SEISAN to find out where the file was written.
+        Since there is always 80 characters in the first write, character one
+        in the Linux and PC file will be the character P (which is represented
+        by 80) while on Sun character 4 is P.
     """
     # check size of data chunk
     if len(data) < 12 * 80:
