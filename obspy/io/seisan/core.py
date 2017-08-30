@@ -99,7 +99,7 @@ def _get_version(data):
     # check size of data chunk
     if len(data) < 12 * 80:
         return False
-    if data[0:2] == b'KP' and data[82:83] == 'P':
+    if data[0:2] == b'KP' and data[82:83] == b'P':
         return ("<", 32, 6)
     elif data[0:8] == b'\x00\x00\x00\x00\x00\x00\x00P' and \
             data[88:96] == b'\x00\x00\x00\x00\x00\x00\x00P':
