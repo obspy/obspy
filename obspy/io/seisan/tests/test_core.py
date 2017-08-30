@@ -29,26 +29,34 @@ class CoreTestCase(unittest.TestCase):
         """
         Tests resulting version strings of SEISAN file.
         """
-        # 1 - big endian, 32 bit
+        # 1 - big endian, 32 bit, version 7
         file = os.path.join(self.path, '1996-06-03-1917-52S.TEST__002')
         with open(file, 'rb') as fp:
             data = fp.read(80 * 12)
         self.assertEqual(_get_version(data), ('>', 32, 7))
-        # 2 - little endian, 32 bit
+        # 2 - little endian, 32 bit, version 7
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
         with open(file, 'rb') as fp:
             data = fp.read(80 * 12)
         self.assertEqual(_get_version(data), ('<', 32, 7))
+        # 3 - little endian, 32 bit, version 6
+        file = os.path.join(self.path, '2005-07-23-1452-04S.CER___030')
+        with open(file, 'rb') as fp:
+            data = fp.read(80 * 12)
+        self.assertEqual(_get_version(data), ('<', 32, 6))
 
     def test_is_seisan(self):
         """
         Tests SEISAN file check.
         """
-        # 1 - big endian, 32 bit
+        # 1 - big endian, 32 bit, version 7
         file = os.path.join(self.path, '1996-06-03-1917-52S.TEST__002')
         self.assertTrue(_is_seisan(file))
-        # 2 - little endian, 32 bit
+        # 2 - little endian, 32 bit, version 7
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
+        self.assertTrue(_is_seisan(file))
+        # 3 - little endian, 32 bit, version 6
+        file = os.path.join(self.path, '2005-07-23-1452-04S.CER___030')
         self.assertTrue(_is_seisan(file))
 
     def test_read_seisan(self):
@@ -71,7 +79,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(st1[20].stats.sampling_rate, 75.2, 1)
         self.assertEqual(st1[20].stats.npts, 3675)
         self.assertAlmostEqual(st1[20].stats.delta, 0.0133, 4)
-        datafile = os.path.join(self.path, 'MBGBSBJE')
+        datafile = os.path.join(self.path, '9701-30-1048-54S.MVO_21_1.ascii')
         # compare with ASCII values of trace
         # XXX: extracted ASCII file contains less values than the original
         # Seisan file!
@@ -88,8 +96,24 @@ class CoreTestCase(unittest.TestCase):
         """
         Test SEISAN file reader with headonly flag.
         """
-        # 1 - big endian, 32 bit
+        # 1 - big endian, 32 bit, version 7
         file = os.path.join(self.path, '9701-30-1048-54S.MVO_21_1')
+        st1 = _read_seisan(file, headonly=True)
+        self.assertEqual(len(st1), 21)
+        self.assertEqual(st1[0].stats.network, '')
+        self.assertEqual(st1[0].stats.station, 'MBGA')
+        self.assertEqual(st1[0].stats.location, 'J')
+        self.assertEqual(st1[0].stats.channel, 'SBZ')
+        self.assertEqual(st1[0].stats.starttime,
+                         UTCDateTime('1997-01-30T10:48:54.040000Z'))
+        self.assertEqual(st1[0].stats.endtime,
+                         UTCDateTime('1997-01-30T10:49:42.902881Z'))
+        self.assertAlmostEqual(st1[0].stats.sampling_rate, 75.2, 1)
+        self.assertEqual(st1[0].stats.npts, 3675)
+        self.assertAlmostEqual(st1[20].stats.delta, 0.0133, 4)
+        self.assertEqual(list(st1[0].data), [])  # no data
+        # 2 - little endian, 32 bit, version 6
+        file = os.path.join(self.path, '2005-07-23-1452-04S.CER___030')
         st1 = _read_seisan(file, headonly=True)
         self.assertEqual(len(st1), 21)
         self.assertEqual(st1[0].stats.network, '')
@@ -109,11 +133,10 @@ class CoreTestCase(unittest.TestCase):
         """
         Test for #970
         """
-        _file = os.path.join(self.path, 'SEISAN_Bug',
-                             '2011-09-06-1311-36S.A1032_001BH_Z')
+        _file = os.path.join(self.path, '2011-09-06-1311-36S.A1032_001BH_Z')
         st = read(_file, format='SEISAN')
-        _file_ref = os.path.join(self.path, 'SEISAN_Bug',
-                                 '2011-09-06-1311-36S.A1032_001BH_Z_MSEED')
+        _file_ref = os.path.join(self.path,
+                                 '2011-09-06-1311-36S.A1032_001BH_Z.mseed')
 
         # raises "UserWarning: Record contains a fractional seconds" - ignore
         with warnings.catch_warnings(record=True) as w:
