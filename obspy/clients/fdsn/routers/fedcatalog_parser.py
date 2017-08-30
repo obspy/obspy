@@ -586,6 +586,16 @@ class FederatedRoute(RoutingResponse):
         else:
             return str(self.request_items)
 
+    def get_unique_route_key(self):
+        """
+        return a unique identifier for the given federated route based on the
+        datacenter provider id and datacenter uri.
+        """
+        return "{0}-{1}".format(self.provider_id,
+                                self.services
+                                    .get('DATACENTER')
+                                    .strip('/'))
+
     def get_service_mappings(self):
         """
         return service mappings for the federated route

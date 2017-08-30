@@ -48,7 +48,7 @@ from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.routers.fedcatalog_parser import (RoutingResponse,
                                                           FDSNBulkRequests)
 
-_DISABLE_PARALLEL_REQESTS = True
+_DISABLE_PARALLEL_REQUESTS = False
 
 
 def set_up_logger():
@@ -94,6 +94,9 @@ class RoutingClient(object):
     source.
     """
 
+    # cache clients to prevent creating a new one on every request
+    __fdsn_client_cache = {}
+
     def __init__(self, use_parallel=False, include_provider=None,
                  exclude_provider=None, **kwargs):
         """
@@ -110,7 +113,7 @@ class RoutingClient(object):
         :param **kwargs: additional arguments are passed along to each instance
         of the new client
         """
-        self.use_parallel = use_parallel and not _DISABLE_PARALLEL_REQESTS
+        self.use_parallel = use_parallel and not _DISABLE_PARALLEL_REQUESTS
         self.args_to_clients = kwargs  # passed to clients during intialization
         if isinstance(include_provider, string_types):
             self.include_provider = (include_provider,)
@@ -256,8 +259,16 @@ class RoutingClient(object):
                 route.request_items.difference_update(successful_requests)
 
             try:
-                client = Client(service_mappings=route.get_service_mappings(),
-                                **self.args_to_clients)
+                # get client from the cache if it already exists otherwise
+                # create and cache a new client
+                route_key = route.get_unique_route_key()
+                if route_key in self.__fdsn_client_cache:
+                    client = self.__fdsn_client_cache.get(route_key)
+                else:
+                    client = Client(
+                                 service_mappings=route.get_service_mappings(),
+                                 **self.args_to_clients)
+                    self.__fdsn_client_cache[route_key] = client
 
                 msg = "request to: {0}: {1} items.\n{2}".format(
                     route.provider_id, len(route),
@@ -320,14 +331,22 @@ class RoutingClient(object):
         # Setup process for each provider
         processes = []
         msgs = []
+
         for route in routing_mgr:
             if self._skip_provider_for_route(route):
                 continue
 
             try:
-                client = Client(service_mappings=route.get_service_mappings(),
-                                **self.args_to_clients)
-
+                # get client from the cache if it already exists otherwise
+                # create and cache a new client
+                route_key = route.get_unique_route_key()
+                if route_key in self.__fdsn_client_cache:
+                    client = self.__fdsn_client_cache.get(route_key)
+                else:
+                    client = Client(
+                                 service_mappings=route.get_service_mappings(),
+                                 **self.args_to_clients)
+                    self.__fdsn_client_cache[route_key] = client
                 p_kwargs = kwargs.copy()
                 p_kwargs.update({'client': client, 'service': service,
                                  'output': output_q, 'passed': passed_q,
