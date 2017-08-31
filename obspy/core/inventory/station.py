@@ -382,7 +382,7 @@ class Station(BaseNode):
                                        channel.upper()):
                     continue
             if sampling_rate is not None:
-                if not cha.sample_rate:
+                if cha.sample_rate is None:
                     msg = ("Omitting channel that has no sampling rate "
                            "specified.")
                     warnings.warn(msg)
