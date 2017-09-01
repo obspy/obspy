@@ -2484,19 +2484,15 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(arg[1]["order"], 2)
             self.assertEqual(arg[1]["plot"], True)
 
-    def test_read_no_check_compression(self):
+    def test_read_check_compression(self):
         """
         Test to ensure calling read with check_compression=False does not
         call expensive tar or zip functions.
         """
-        # write a file to disk
-        file_name = 'temp.mseed'
-        st = read()
-        st.write(file_name, 'mseed')  # maybe read from test data instead?
-
         with mock.patch("tarfile.is_tarfile") as tar_p:
             with mock.patch("zipfile.is_zipfile") as zip_p:
-                read(file_name, check_compression=False)
+                read('/path/to/slist.ascii', format='SLIST',
+                     check_compression=False)
 
         # assert neither compression check function was called.
         self.assertEqual(tar_p.call_count, 0)
@@ -2505,13 +2501,10 @@ class StreamTestCase(unittest.TestCase):
         # ensure compression checks get called when check_compression is True
         with mock.patch("tarfile.is_tarfile", return_value=0) as tar_p:
             with mock.patch("zipfile.is_zipfile", return_value=0) as zip_p:
-                read(file_name, check_compression=True)
+                read('/path/to/slist.ascii', format='SLIST',
+                     check_compression=True)
         self.assertEqual(tar_p.call_count, 1)
         self.assertGreaterEqual(zip_p.call_count, 1)
-
-        # delete temp file
-        os.remove(file_name)
-
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
