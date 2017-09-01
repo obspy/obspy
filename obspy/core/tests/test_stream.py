@@ -2506,6 +2506,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(tar_p.call_count, 1)
         self.assertGreaterEqual(zip_p.call_count, 1)
 
+
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
 
