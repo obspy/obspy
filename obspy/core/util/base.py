@@ -13,7 +13,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import doctest
-import functools
 import inspect
 import io
 import os
@@ -25,9 +24,10 @@ import numpy as np
 import pkg_resources
 import requests
 from future.utils import native_str
-from pkg_resources import iter_entry_points, load_entry_point
+from pkg_resources import iter_entry_points
 
-from obspy.core.util.misc import to_int_or_zero
+from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
+
 
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
@@ -57,30 +57,6 @@ WAVEFORM_ACCEPT_BYTEORDER = ['MSEED', 'Q', 'SAC', 'SEGY', 'SU']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
-
-
-# apply simple memoization cache on load_entry_points
-# this function cannot go in decorator.py due to circular import issues
-def _load_entry_point_decorator(func):
-    """
-    Decorate pkg_resources' load_entry_point function to cache outputs.
-    """
-    cache = {}
-    expected_keys = ('dist', 'group', 'name')
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        # make a str key from the inputs to func for hashing in cache
-        input_dict = inspect.getcallargs(func, *args, **kwargs)
-        hash_str = '/'.join([input_dict[x] for x in expected_keys])
-        if hash_str not in cache:
-            cache[hash_str] = func(*args, **kwargs)
-        return cache[hash_str]
-
-    return wrapper
-
-
-load_entry_point = _load_entry_point_decorator(load_entry_point)
 
 
 class NamedTemporaryFile(io.BufferedIOBase):
@@ -343,8 +319,9 @@ def _get_function_from_entry_point(group, type):
     # import function point
     # any issue during import of entry point should be raised, so the user has
     # a chance to correct the problem
-    func = load_entry_point(entry_point.dist.key, 'obspy.plugin.%s' % (group),
-                            entry_point.name)
+    func = buffered_load_entry_point(entry_point.dist.key,
+                                     'obspy.plugin.%s' % (group),
+                                     entry_point.name)
     return func
 
 
@@ -392,7 +369,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
         # auto detect format - go through all known formats in given sort order
         for format_ep in eps.values():
             # search isFormat for given entry point
-            is_format = load_entry_point(
+            is_format = buffered_load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
@@ -422,7 +399,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     # file format should be known by now
     try:
         # search readFormat for given entry point
-        read_format = load_entry_point(
+        read_format = buffered_load_entry_point(
             format_ep.dist.key,
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
             'readFormat')
@@ -491,8 +468,8 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     mod_list = []
     for name, ep in eps.items():
         module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
-        func = load_entry_point(ep.dist.key,
-                                "obspy.plugin.%s.%s" % (group, name), method)
+        ep_list = [ep.dist.key, "obspy.plugin.%s.%s" % (group, name), method]
+        func = buffered_load_entry_point(*ep_list)
         func_str = ':func:`%s`' % ".".join((ep.module_name, func.__name__))
         mod_list.append((name, module_short, func_str))
 

@@ -22,7 +22,6 @@ import re
 import warnings
 from glob import glob, has_magic
 
-from pkg_resources import load_entry_point
 import numpy as np
 
 from obspy.core import compatibility
@@ -33,7 +32,7 @@ from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
                                   _read_from_plugin, download_to_file)
 from obspy.core.util.decorator import (map_example_filename,
                                        raise_if_masked, uncompress_file)
-from obspy.core.util.misc import get_window_times
+from obspy.core.util.misc import get_window_times, buffered_load_entry_point
 
 
 _headonly_warning_msg = (
@@ -1433,7 +1432,7 @@ class Stream(object):
             # get format specific entry point
             format_ep = ENTRY_POINTS['waveform_write'][format]
             # search writeFormat method for given entry point
-            write_format = load_entry_point(
+            write_format = buffered_load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
