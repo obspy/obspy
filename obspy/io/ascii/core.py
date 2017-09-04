@@ -249,7 +249,7 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
     return stream
 
 
-def _write_slist(stream, filename, **kwargs):  # @UnusedVariable
+def _write_slist(stream, filename, custom_fmt=None, **kwargs):  # @UnusedVariable
     """
     Writes a ASCII SLIST file.
 
@@ -322,10 +322,16 @@ def _write_slist(stream, filename, **kwargs):  # @UnusedVariable
             # sample type
             if trace.data.dtype.name.startswith('int'):
                 dtype = 'INTEGER'
-                fmt = '%d'
+                if custom_fmt is None:
+                    fmt = '%d'
+                else:
+                    fmt = custom_fmt
             elif trace.data.dtype.name.startswith('float'):
                 dtype = 'FLOAT'
-                fmt = '%f'
+                if custom_fmt is None:
+                    fmt = '%f'
+                else:
+                    fmt = custom_fmt
             else:
                 raise NotImplementedError
             # unit
@@ -350,7 +356,7 @@ def _write_slist(stream, filename, **kwargs):  # @UnusedVariable
                          '\n').encode('ascii', 'strict'))
 
 
-def _write_tspair(stream, filename, **kwargs):  # @UnusedVariable
+def _write_tspair(stream, filename, custom_fmt=None, **kwargs):  # @UnusedVariable
     """
     Writes a ASCII TSPAIR file.
 
@@ -430,12 +436,16 @@ def _write_tspair(stream, filename, **kwargs):  # @UnusedVariable
             # sample type
             if trace.data.dtype.name.startswith('int'):
                 dtype = 'INTEGER'
-                fmt = '%d'
+                if custom_fmt is None:
+                    fmt = '%d'
+                else:
+                    fmt = custom_fmt
             elif trace.data.dtype.name.startswith('float'):
                 dtype = 'FLOAT'
-                fmt = '%f'
-            else:
-                raise NotImplementedError
+                if custom_fmt is None:
+                    fmt = '%f'
+                else:
+                    fmt = custom_fmt
             # unit
             try:
                 unit = stats.ascii.unit
