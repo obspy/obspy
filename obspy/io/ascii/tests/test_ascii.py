@@ -322,7 +322,7 @@ class ASCIITestCase(unittest.TestCase):
                 '2008-01-15T00:00:00.025000, TSPAIR, FLOAT, Counts')
             self.assertEqual(
                 lines[1].strip(),
-                '2008-01-15T00:00:00.025000  185.009995')
+                '2008-01-15T00:00:00.025000  +185.00999')
             # read again
             stream = _read_tspair(tmpfile)
             stream.verify()
@@ -424,8 +424,7 @@ class ASCIITestCase(unittest.TestCase):
                 '2008-01-15T00:00:00.025000, SLIST, FLOAT, Counts')
             self.assertEqual(
                 lines[1].strip(),
-                '185.009995\t181.020004\t185.029999\t189.039993\t' +
-                '194.050003\t205.059998')
+                '+185.00999\t+181.02\t+185.03\t+189.03999\t+194.05\t+205.06')
             # read again
             stream = _read_slist(tmpfile)
             stream.verify()

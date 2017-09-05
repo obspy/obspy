@@ -327,10 +327,10 @@ def _write_slist(stream, filename, custom_fmt=None,  **kwargs):  # @UnusedVariab
                 fmt = '%d'
             elif trace.data.dtype.name.startswith('float32'):
                 dtype = 'FLOAT'
-                fmt = '%+.8e'
+                fmt = '%+.8g'
             elif trace.data.dtype.name.startswith('float64'):
                 dtype = 'FLOAT'
-                fmt = '%+.10e'
+                fmt = '%+.10g'
 
             else:
                 raise NotImplementedError
@@ -445,10 +445,10 @@ def _write_tspair(stream, filename, custom_fmt=None, **kwargs):  # @UnusedVariab
                 fmt = '%d'
             elif trace.data.dtype.name.startswith('float32'):
                 dtype = 'FLOAT'
-                fmt = '%+.8e'
+                fmt = '%+.8g'
             elif trace.data.dtype.name.startswith('float64'):
                 dtype = 'FLOAT'
-                fmt = '%+.10e'
+                fmt = '%+.10g'
             # fmt
             if custom_fmt is not None:
                 fmt = custom_fmt
