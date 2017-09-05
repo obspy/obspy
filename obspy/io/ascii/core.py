@@ -249,7 +249,7 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
     return stream
 
 
-def _write_slist(stream, filename, custom_fmt=None, **kwargs):  # @UnusedVariable
+def _write_slist(stream, filename, custom_fmt=None,  **kwargs):  # @UnusedVariable
     """
     Writes a ASCII SLIST file.
 
@@ -322,18 +322,16 @@ def _write_slist(stream, filename, custom_fmt=None, **kwargs):  # @UnusedVariabl
             # sample type
             if trace.data.dtype.name.startswith('int'):
                 dtype = 'INTEGER'
-                if custom_fmt is None:
-                    fmt = '%d'
-                else:
-                    fmt = custom_fmt
+                fmt = '%d'
             elif trace.data.dtype.name.startswith('float'):
                 dtype = 'FLOAT'
-                if custom_fmt is None:
-                    fmt = '%f'
-                else:
-                    fmt = custom_fmt
+                fmt = '%f'
+
             else:
                 raise NotImplementedError
+            # fmt
+            if not custom_fmt is None:
+                fmt = custom_fmt
             # unit
             try:
                 unit = stats.ascii.unit
@@ -425,6 +423,7 @@ def _write_tspair(stream, filename, custom_fmt=None, **kwargs):  # @UnusedVariab
         2003-05-29T02:13:22.318400  2767
         ...
     """
+    custom_fmt = kwargs.get('custom_fmt', None)
     with open(filename, 'wb') as fh:
         for trace in stream:
             stats = trace.stats
@@ -436,16 +435,13 @@ def _write_tspair(stream, filename, custom_fmt=None, **kwargs):  # @UnusedVariab
             # sample type
             if trace.data.dtype.name.startswith('int'):
                 dtype = 'INTEGER'
-                if custom_fmt is None:
-                    fmt = '%d'
-                else:
-                    fmt = custom_fmt
+                fmt = '%d'
             elif trace.data.dtype.name.startswith('float'):
                 dtype = 'FLOAT'
-                if custom_fmt is None:
-                    fmt = '%f'
-                else:
-                    fmt = custom_fmt
+                fmt = '%f'
+            # fmt
+            if not custom_fmt is None:
+                fmt = custom_fmt
             # unit
             try:
                 unit = stats.ascii.unit
