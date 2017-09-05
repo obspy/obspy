@@ -325,14 +325,17 @@ def _write_slist(stream, filename, custom_fmt=None,  **kwargs):  # @UnusedVariab
             if trace.data.dtype.name.startswith('int'):
                 dtype = 'INTEGER'
                 fmt = '%d'
-            elif trace.data.dtype.name.startswith('float'):
+            elif trace.data.dtype.name.startswith('float32'):
                 dtype = 'FLOAT'
                 fmt = '%f'
+            elif trace.data.dtype.name.startswith('float64'):
+                dtype = 'FLOAT'
+                fmt = '%d'
 
             else:
                 raise NotImplementedError
             # fmt
-            if not custom_fmt is None:
+            if  custom_fmt is not None:
                 fmt = custom_fmt
             # unit
             try:
@@ -440,11 +443,14 @@ def _write_tspair(stream, filename, custom_fmt=None, **kwargs):  # @UnusedVariab
             if trace.data.dtype.name.startswith('int'):
                 dtype = 'INTEGER'
                 fmt = '%d'
-            elif trace.data.dtype.name.startswith('float'):
+            elif trace.data.dtype.name.startswith('float32'):
                 dtype = 'FLOAT'
                 fmt = '%f'
+            elif trace.data.dtype.name.startswith('float64'):
+                dtype = 'FLOAT'
+                fmt = '%d'
             # fmt
-            if not custom_fmt is None:
+            if custom_fmt is not None:
                 fmt = custom_fmt
             # unit
             try:
