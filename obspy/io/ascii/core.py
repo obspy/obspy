@@ -335,7 +335,7 @@ def _write_slist(stream, filename, custom_fmt=None,
             else:
                 raise NotImplementedError
             # fmt
-            if  custom_fmt is not None:
+            if custom_fmt is not None:
                 dtype = 'CUSTOM'
                 fmt = custom_fmt
             # unit
