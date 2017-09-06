@@ -560,7 +560,6 @@ class ASCIITestCase(unittest.TestCase):
                 '185.02999879999999\t189.03999329999999\t' +
                 '194.0500031\t205.0599976')
 
-
     def test_write_slist_file_multiple_traces(self):
         """
         Write SLIST file test via obspy.core.ascii._write_tspair.
@@ -686,7 +685,6 @@ class ASCIITestCase(unittest.TestCase):
 
 def suite():
     return unittest.makeSuite(ASCIITestCase, 'test')
-
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
