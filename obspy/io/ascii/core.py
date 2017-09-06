@@ -336,7 +336,7 @@ def _write_slist(stream, filename, custom_fmt=None,
                 raise NotImplementedError
             # fmt
             if custom_fmt is not None:
-                dtype = 'CUSTOM'
+                dtype = _determine_dtype(custom_fmt)
                 fmt = custom_fmt
             # unit
             try:
@@ -451,7 +451,7 @@ def _write_tspair(stream, filename, custom_fmt=None,
                 fmt = '%+.10e'
             # fmt
             if custom_fmt is not None:
-                dtype = 'CUSTOM'
+                dtype = _determine_dtype(custom_fmt)
                 fmt = custom_fmt
             # unit
             try:
@@ -468,6 +468,24 @@ def _write_tspair(stream, filename, custom_fmt=None,
                 # .26s cuts the Z from the time string
                 line = ('%.26s  ' + fmt + '\n') % (UTCDateTime(t), d)
                 fh.write(line.encode('ascii', 'strict'))
+
+
+def _determine_dtype(custom_fmt):
+    """
+    :type custom_fmt: str
+    :param custom_fmt: Python string formatter.
+    :rtype: str
+    :return: Datatype string for writing in header. Currently supported
+        are 'INTEGER', 'FLOAT' and `CUSTOM`.
+    """
+    floats = ('e', 'f', 'g')
+    ints = ('d', 'i')
+    if custom_fmt[-1].lower() in floats:
+        return 'FLOAT'
+    elif custom_fmt[-1].lower() in ints:
+        return 'INTEGER'
+    else:
+        return 'CUSTOM'
 
 
 def _parse_data(data, data_type):

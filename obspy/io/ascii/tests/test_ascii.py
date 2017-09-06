@@ -9,8 +9,9 @@ import unittest
 import numpy as np
 
 from obspy import Trace, UTCDateTime, read
-from obspy.io.ascii.core import (_is_slist, _is_tspair, _read_slist,
-                                 _read_tspair, _write_slist, _write_tspair)
+from obspy.io.ascii.core import (_determine_dtype, _is_slist, _is_tspair,
+                                 _read_slist, _read_tspair, _write_slist,
+                                 _write_tspair)
 from obspy.core.util import NamedTemporaryFile
 
 
@@ -320,7 +321,6 @@ class ASCIITestCase(unittest.TestCase):
         testfile_orig = os.path.join(self.path, 'data', 'tspair_float.ascii')
         testfile = os.path.join(self.path, 'data',
                                 'tspair_float_custom_fmt.ascii')
-        self.assertRaises(NotImplementedError, _read_tspair, testfile)
         stream_orig = _read_tspair(testfile_orig)
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
@@ -332,16 +332,56 @@ class ASCIITestCase(unittest.TestCase):
             self.assertEqual(
                 lines[0].strip(),
                 'TIMESERIES XX_TEST__BHZ_R, 12 samples, 40 sps, ' +
-                '2008-01-15T00:00:00.025000, TSPAIR, CUSTOM, Counts')
+                '2008-01-15T00:00:00.025000, TSPAIR, FLOAT, Counts')
             self.assertEqual(
                 lines[1].strip(),
                 '2008-01-15T00:00:00.025000  185.00999450000000')
+            # read again
+            stream = _read_tspair(tmpfile)
+            stream.verify()
+            self.assertEqual(stream[0].stats.network, 'XX')
+            self.assertEqual(stream[0].stats.station, 'TEST')
+            self.assertEqual(stream[0].stats.location, '')
+            self.assertEqual(stream[0].stats.channel, 'BHZ')
+            self.assertEqual(stream[0].stats.sampling_rate, 40.0)
+            self.assertEqual(stream[0].stats.npts, 12)
+            self.assertEqual(stream[0].stats.starttime,
+                             UTCDateTime("2008-01-15T00:00:00.025000"))
+            self.assertEqual(stream[0].stats.calib, 1.0e-00)
+            self.assertEqual(stream[0].stats.mseed.dataquality, 'R')
+            data = [185.01, 181.02, 185.03, 189.04, 194.05, 205.06,
+                    209.07, 214.08, 222.09, 225.98, 226.99, 219.00]
+            np.testing.assert_array_almost_equal(stream[0].data, data,
+                                                 decimal=2)
             # compare raw header
             with open(testfile, 'rt') as f:
                 lines_orig = f.readlines()
             with open(tmpfile, 'rt') as f:
                 lines_new = f.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
+
+    def test_write_tspair_custom_fmt_custom(self):
+        """
+        Write TSPAIR file test via obspy.core.ascii._write_tspair.
+        """
+        # float
+        testfile_orig = os.path.join(self.path, 'data', 'tspair_float.ascii')
+        stream_orig = _read_tspair(testfile_orig)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            # write
+            _write_tspair(stream_orig, tmpfile, custom_fmt='%+r')
+            self.assertRaises(NotImplementedError, _read_tspair, tmpfile)
+            # look at the raw data
+            with open(tmpfile, 'rt') as f:
+                lines = f.readlines()
+            self.assertEqual(
+                lines[0].strip(),
+                'TIMESERIES XX_TEST__BHZ_R, 12 samples, 40 sps, ' +
+                '2008-01-15T00:00:00.025000, TSPAIR, CUSTOM, Counts')
+            self.assertEqual(
+                lines[1].strip(),
+                '2008-01-15T00:00:00.025000  185.0099945')
 
     def test_write_tspair_file_multiple_traces(self):
         """
@@ -446,7 +486,7 @@ class ASCIITestCase(unittest.TestCase):
                 lines_new = f.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
 
-    def test_write_slist_custom_fmt(self):
+    def test_write_slist_custom_fmt_float(self):
         """
         Write SLIST file test via obspy.core.ascii._write_tspair.
         """
@@ -454,7 +494,6 @@ class ASCIITestCase(unittest.TestCase):
         testfile_orig = os.path.join(self.path, 'data', 'slist_float.ascii')
         testfile = os.path.join(self.path, 'data',
                                 'slist_float_custom_fmt.ascii')
-        self.assertRaises(NotImplementedError, _read_slist, testfile)
         stream_orig = _read_slist(testfile_orig)
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
@@ -466,18 +505,61 @@ class ASCIITestCase(unittest.TestCase):
             self.assertEqual(
                 lines[0].strip(),
                 'TIMESERIES XX_TEST__BHZ_R, 12 samples, 40 sps, ' +
-                '2008-01-15T00:00:00.025000, SLIST, CUSTOM, Counts')
+                '2008-01-15T00:00:00.025000, SLIST, FLOAT, Counts')
             self.assertEqual(
                 lines[1].strip(),
                 '185.00999450000000\t181.02000430000001\t' +
                 '185.02999879999999\t189.03999329999999\t' +
                 '194.05000310000000\t205.05999760000000')
+            # read again
+            stream = _read_slist(tmpfile)
+            stream.verify()
+            self.assertEqual(stream[0].stats.network, 'XX')
+            self.assertEqual(stream[0].stats.station, 'TEST')
+            self.assertEqual(stream[0].stats.location, '')
+            self.assertEqual(stream[0].stats.channel, 'BHZ')
+            self.assertEqual(stream[0].stats.sampling_rate, 40.0)
+            self.assertEqual(stream[0].stats.npts, 12)
+            self.assertEqual(stream[0].stats.starttime,
+                             UTCDateTime("2008-01-15T00:00:00.025000"))
+            self.assertEqual(stream[0].stats.calib, 1.0e-00)
+            self.assertEqual(stream[0].stats.mseed.dataquality, 'R')
+            data = [185.01, 181.02, 185.03, 189.04, 194.05, 205.06,
+                    209.07, 214.08, 222.09, 225.98, 226.99, 219.00]
+            np.testing.assert_array_almost_equal(stream[0].data, data,
+                                                 decimal=2)
             # compare raw header
             with open(testfile, 'rt') as f:
                 lines_orig = f.readlines()
             with open(tmpfile, 'rt') as f:
                 lines_new = f.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
+
+    def test_write_slist_custom_fmt_custom(self):
+        """
+        Write SLIST file test via obspy.core.ascii._write_tspair.
+        """
+        # float
+        testfile_orig = os.path.join(self.path, 'data', 'slist_float.ascii')
+        stream_orig = _read_slist(testfile_orig)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            # write
+            _write_slist(stream_orig, tmpfile, custom_fmt='%+r')
+            self.assertRaises(NotImplementedError, _read_slist, tmpfile)
+            # look at the raw data
+            with open(tmpfile, 'rt') as f:
+                lines = f.readlines()
+            self.assertEqual(
+                lines[0].strip(),
+                'TIMESERIES XX_TEST__BHZ_R, 12 samples, 40 sps, ' +
+                '2008-01-15T00:00:00.025000, SLIST, CUSTOM, Counts')
+            self.assertEqual(
+                lines[1].strip(),
+                '185.0099945\t181.02000430000001\t' +
+                '185.02999879999999\t189.03999329999999\t' +
+                '194.0500031\t205.0599976')
+
 
     def test_write_slist_file_multiple_traces(self):
         """
@@ -568,6 +650,37 @@ class ASCIITestCase(unittest.TestCase):
                 self.assertEqual(tr.stats.sampling_rate,
                                  got.stats.sampling_rate)
 
+    def test_determine_dtype(self):
+        """
+        Tests _determine_dtype for properly returned types
+        """
+        float_formats = ['%+10.10e', '%+.10e', '%.3e',
+                         '%+10.10E', '%+.10E', '%.3E',
+                         '%+10.10f', '%+.10f', '%.3f',
+                         '%+10.10F', '%+.10F', '%.3F',
+                         '%+10.10g', '%+.10g', '%.3g',
+                         '%+10.10G', '%+.10G', '%.3G']
+
+        int_formats = ['%+10.10i', '%+.10i', '%.3i',
+                       '%+10.10I', '%+.10I', '%.3I',
+                       '%+10.10d', '%+.10d', '%.3d',
+                       '%+10.10D', '%+.10D', '%.3D']
+
+        custom_formats = ['%+10.10s', '%+.10s', '%.3s',
+                          '%+10.10x', '%+.10x', '%.3x',
+                          '%+10.10k', '%+.10k', '%.3k',
+                          '%+10.10z', '%+.10z', '%.3z',
+                          '%+10.10w', '%+.10w', '%.3w',
+                          '%+10.10q', '%+.10q', '%.3q']
+
+        for format in float_formats:
+            self.assertEqual('FLOAT', _determine_dtype(format))
+
+        for format in int_formats:
+            self.assertEqual('INTEGER', _determine_dtype(format))
+
+        for format in custom_formats:
+            self.assertEqual('CUSTOM', _determine_dtype(format))
 
 def suite():
     return unittest.makeSuite(ASCIITestCase, 'test')
