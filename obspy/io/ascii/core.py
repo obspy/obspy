@@ -477,15 +477,20 @@ def _determine_dtype(custom_fmt):
     :rtype: str
     :return: Datatype string for writing in header. Currently supported
         are 'INTEGER', 'FLOAT' and `CUSTOM`.
+    :raises ValueError: if provided string is empty.
     """
     floats = ('e', 'f', 'g')
     ints = ('d', 'i')
-    if custom_fmt[-1].lower() in floats:
-        return 'FLOAT'
-    elif custom_fmt[-1].lower() in ints:
-        return 'INTEGER'
-    else:
-        return 'CUSTOM'
+    try:
+        if custom_fmt[-1].lower() in floats:
+            return 'FLOAT'
+        elif custom_fmt[-1].lower() in ints:
+            return 'INTEGER'
+        else:
+            return 'CUSTOM'
+    except IndexError:
+        raise ValueError('Provided string is not valid for determining ' +
+                         'datatype. Provide a proper Python string formatter')
 
 
 def _parse_data(data, data_type):

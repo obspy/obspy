@@ -682,6 +682,8 @@ class ASCIITestCase(unittest.TestCase):
         for format in custom_formats:
             self.assertEqual('CUSTOM', _determine_dtype(format))
 
+        self.assertRaises(ValueError, _determine_dtype, '')
+
 def suite():
     return unittest.makeSuite(ASCIITestCase, 'test')
 
