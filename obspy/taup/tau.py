@@ -165,6 +165,53 @@ class Arrivals(list):
         return self.__class__(super(Arrivals, self).copy(),
                               model=self.model)
 
+    def timeplot(self, PHASES, ax=None, show=True):
+        """Method to plot the travel times of arrivals class, if any have
+        been calculated.
+        :param ax: Axes to plot to. If not given, a new figure with an axes
+            will be created. Must be a polar axes for the spherical plot and
+            a regular one for the Cartesian plot.
+        :type ax: :class:`matplotlib.axes.Axes`
+        :param show: Show the plot.
+        :type show: bool
+
+        :returns: The (possibly created) axes instance.
+        :rtype: :class:`matplotlib.axes.Axes`
+
+        """
+        import matplotlib.pyplot as plt
+        cmap = plt.cm.Dark2
+        colors = cmap(np.linspace(0,1,len(PHASES)))
+        
+        if not self:
+            raise ValueError("Can only plot arrivals with calculated travel times.")
+
+        # create an axis/figure, if there is none, yet:
+        if not ax:
+            plt.figure(figsize=(10, 10))
+            ax = plt.subplot(111)
+        
+        # extract the time/distance for each phase, and for each receiver:
+        for arrival in self:
+            data = {}
+            phase= arrival.name
+            if phase in PHASES:
+                plt.plot(arrival.distance,arrival.time/60,'.',label=phase,color=colors[PHASES.index(phase)])
+                     
+        # merge all arrival labels of a certain phase:
+        handles, labels = plt.gca().get_legend_handles_labels()
+        labels, ids = np.unique(labels, return_index=True)
+        handles = [handles[i] for i in ids]
+        
+        plt.legend(handles, labels, loc=2,numpoints=1)
+        
+        plt.grid()
+        plt.xlabel('Distance (degrees)')
+        plt.ylabel('Time (minutes)')
+        if show:
+            plt.show()
+        return ax
+    
     def plot(self, plot_type="spherical", plot_all=True, legend=True,
              label_arrivals=False, ax=None, show=True):
         """
