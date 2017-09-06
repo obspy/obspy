@@ -249,7 +249,8 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
     return stream
 
 
-def _write_slist(stream, filename, custom_fmt=None,  **kwargs):  # @UnusedVariable
+def _write_slist(stream, filename, custom_fmt=None,
+                 **kwargs):  # @UnusedVariable
     """
     Writes a ASCII SLIST file.
 
@@ -359,7 +360,8 @@ def _write_slist(stream, filename, custom_fmt=None,  **kwargs):  # @UnusedVariab
                          '\n').encode('ascii', 'strict'))
 
 
-def _write_tspair(stream, filename, custom_fmt=None, **kwargs):  # @UnusedVariable
+def _write_tspair(stream, filename, custom_fmt=None,
+                  **kwargs):  # @UnusedVariable
     """
     Writes a ASCII TSPAIR file.
 

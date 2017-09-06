@@ -318,8 +318,9 @@ class ASCIITestCase(unittest.TestCase):
         """
         # float
         testfile_orig = os.path.join(self.path, 'data', 'tspair_float.ascii')
-        testfile = os.path.join(self.path, 'data', 'tspair_float_custom_fmt.ascii')
-        self.assertRaises(NotImplementedError,_read_tspair, testfile)
+        testfile = os.path.join(self.path, 'data',
+                                'tspair_float_custom_fmt.ascii')
+        self.assertRaises(NotImplementedError, _read_tspair, testfile)
         stream_orig = _read_tspair(testfile_orig)
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
@@ -451,7 +452,8 @@ class ASCIITestCase(unittest.TestCase):
         """
         # float
         testfile_orig = os.path.join(self.path, 'data', 'slist_float.ascii')
-        testfile = os.path.join(self.path, 'data', 'slist_float_custom_fmt.ascii')
+        testfile = os.path.join(self.path, 'data',
+                                'slist_float_custom_fmt.ascii')
         self.assertRaises(NotImplementedError, _read_slist, testfile)
         stream_orig = _read_slist(testfile_orig)
         with NamedTemporaryFile() as tf:
@@ -467,8 +469,9 @@ class ASCIITestCase(unittest.TestCase):
                 '2008-01-15T00:00:00.025000, SLIST, CUSTOM, Counts')
             self.assertEqual(
                 lines[1].strip(),
-                '185.00999450000000\t181.02000430000001\t185.02999879999999\t' +
-                '189.03999329999999\t194.05000310000000\t205.05999760000000')
+                '185.00999450000000\t181.02000430000001\t' +
+                '185.02999879999999\t189.03999329999999\t' +
+                '194.05000310000000\t205.05999760000000')
             # compare raw header
             with open(testfile, 'rt') as f:
                 lines_orig = f.readlines()
