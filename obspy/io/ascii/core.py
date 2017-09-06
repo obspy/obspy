@@ -325,17 +325,15 @@ def _write_slist(stream, filename, custom_fmt=None,  **kwargs):  # @UnusedVariab
             if trace.data.dtype.name.startswith('int'):
                 dtype = 'INTEGER'
                 fmt = '%d'
-            elif trace.data.dtype.name.startswith('float32'):
+            elif trace.data.dtype.name.startswith('float'):
                 dtype = 'FLOAT'
-                fmt = '%+.8g'
-            elif trace.data.dtype.name.startswith('float64'):
-                dtype = 'FLOAT'
-                fmt = '%+.10g'
+                fmt = '%+.10e'
 
             else:
                 raise NotImplementedError
             # fmt
             if  custom_fmt is not None:
+                dtype = 'CUSTOM'
                 fmt = custom_fmt
             # unit
             try:
@@ -430,7 +428,6 @@ def _write_tspair(stream, filename, custom_fmt=None, **kwargs):  # @UnusedVariab
         2003-05-29T02:13:22.318400  2767
         ...
     """
-    custom_fmt = kwargs.get('custom_fmt', None)
     with open(filename, 'wb') as fh:
         for trace in stream:
             stats = trace.stats
@@ -443,14 +440,12 @@ def _write_tspair(stream, filename, custom_fmt=None, **kwargs):  # @UnusedVariab
             if trace.data.dtype.name.startswith('int'):
                 dtype = 'INTEGER'
                 fmt = '%d'
-            elif trace.data.dtype.name.startswith('float32'):
+            elif trace.data.dtype.name.startswith('float'):
                 dtype = 'FLOAT'
-                fmt = '%+.8g'
-            elif trace.data.dtype.name.startswith('float64'):
-                dtype = 'FLOAT'
-                fmt = '%+.10g'
+                fmt = '%+.10e'
             # fmt
             if custom_fmt is not None:
+                dtype = 'CUSTOM'
                 fmt = custom_fmt
             # unit
             try:
@@ -483,7 +478,7 @@ def _parse_data(data, data_type):
     if data_type == "INTEGER":
         dtype = np.int_
     elif data_type == "FLOAT":
-        dtype = np.float32
+        dtype = np.float64
     else:
         raise NotImplementedError
     # Seek to the beginning of the StringIO.

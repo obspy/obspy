@@ -278,6 +278,16 @@ class ASCIITestCase(unittest.TestCase):
             tmpfile = tf.name
             # write
             _write_tspair(stream_orig, tmpfile)
+            # look at the raw data
+            with open(tmpfile, 'rt') as f:
+                lines = f.readlines()
+            self.assertEqual(
+                lines[0].strip(),
+                'TIMESERIES XX_TEST__BHZ_R, 12 samples, 40 sps, ' +
+                '2008-01-15T00:00:00.025000, TSPAIR, FLOAT, Counts')
+            self.assertEqual(
+                lines[1].strip(),
+                '2008-01-15T00:00:00.025000  +1.8500999450e+02')
             # read again
             stream = _read_tspair(tmpfile)
             stream.verify()
@@ -306,9 +316,11 @@ class ASCIITestCase(unittest.TestCase):
         """
         Write TSPAIR file test via obspy.core.ascii._write_tspair.
         """
-        # float32
+        # float
+        testfile_orig = os.path.join(self.path, 'data', 'tspair_float.ascii')
         testfile = os.path.join(self.path, 'data', 'tspair_float_custom_fmt.ascii')
-        stream_orig = _read_tspair(testfile)
+        self.assertRaises(NotImplementedError,_read_tspair, testfile)
+        stream_orig = _read_tspair(testfile_orig)
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             # write
@@ -319,27 +331,10 @@ class ASCIITestCase(unittest.TestCase):
             self.assertEqual(
                 lines[0].strip(),
                 'TIMESERIES XX_TEST__BHZ_R, 12 samples, 40 sps, ' +
-                '2008-01-15T00:00:00.025000, TSPAIR, FLOAT, Counts')
+                '2008-01-15T00:00:00.025000, TSPAIR, CUSTOM, Counts')
             self.assertEqual(
                 lines[1].strip(),
-                '2008-01-15T00:00:00.025000  +185.00999')
-            # read again
-            stream = _read_tspair(tmpfile)
-            stream.verify()
-            self.assertEqual(stream[0].stats.network, 'XX')
-            self.assertEqual(stream[0].stats.station, 'TEST')
-            self.assertEqual(stream[0].stats.location, '')
-            self.assertEqual(stream[0].stats.channel, 'BHZ')
-            self.assertEqual(stream[0].stats.sampling_rate, 40.0)
-            self.assertEqual(stream[0].stats.npts, 12)
-            self.assertEqual(stream[0].stats.starttime,
-                             UTCDateTime("2008-01-15T00:00:00.025000"))
-            self.assertEqual(stream[0].stats.calib, 1.0e-00)
-            self.assertEqual(stream[0].stats.mseed.dataquality, 'R')
-            data = [185.01, 181.02, 185.03, 189.04, 194.05, 205.06,
-                    209.07, 214.08, 222.09, 225.98, 226.99, 219.00]
-            np.testing.assert_array_almost_equal(stream[0].data, data,
-                                                 decimal=2)
+                '2008-01-15T00:00:00.025000  185.00999450000000')
             # compare raw header
             with open(testfile, 'rt') as f:
                 lines_orig = f.readlines()
@@ -424,7 +419,8 @@ class ASCIITestCase(unittest.TestCase):
                 '2008-01-15T00:00:00.025000, SLIST, FLOAT, Counts')
             self.assertEqual(
                 lines[1].strip(),
-                '+185.00999\t+181.02\t+185.03\t+189.03999\t+194.05\t+205.06')
+                '+1.8500999450e+02\t+1.8102000430e+02\t+1.8502999880e+02\t' +
+                '+1.8903999330e+02\t+1.9405000310e+02\t+2.0505999760e+02')
             # read again
             stream = _read_slist(tmpfile)
             stream.verify()
@@ -453,9 +449,11 @@ class ASCIITestCase(unittest.TestCase):
         """
         Write SLIST file test via obspy.core.ascii._write_tspair.
         """
-        # float32
+        # float
+        testfile_orig = os.path.join(self.path, 'data', 'slist_float.ascii')
         testfile = os.path.join(self.path, 'data', 'slist_float_custom_fmt.ascii')
-        stream_orig = _read_slist(testfile)
+        self.assertRaises(NotImplementedError, _read_slist, testfile)
+        stream_orig = _read_slist(testfile_orig)
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             # write
@@ -466,35 +464,17 @@ class ASCIITestCase(unittest.TestCase):
             self.assertEqual(
                 lines[0].strip(),
                 'TIMESERIES XX_TEST__BHZ_R, 12 samples, 40 sps, ' +
-                '2008-01-15T00:00:00.025000, SLIST, FLOAT, Counts')
+                '2008-01-15T00:00:00.025000, SLIST, CUSTOM, Counts')
             self.assertEqual(
                 lines[1].strip(),
-                '185.00999450683594\t181.02000427246094\t185.02999877929688\t' +
-                '189.03999328613281\t194.05000305175781\t205.05999755859375')
-            # read again
-            stream = _read_slist(tmpfile)
-            stream.verify()
-            self.assertEqual(stream[0].stats.network, 'XX')
-            self.assertEqual(stream[0].stats.station, 'TEST')
-            self.assertEqual(stream[0].stats.location, '')
-            self.assertEqual(stream[0].stats.channel, 'BHZ')
-            self.assertEqual(stream[0].stats.sampling_rate, 40.0)
-            self.assertEqual(stream[0].stats.npts, 12)
-            self.assertEqual(stream[0].stats.starttime,
-                             UTCDateTime("2008-01-15T00:00:00.025000"))
-            self.assertEqual(stream[0].stats.calib, 1.0e-00)
-            self.assertEqual(stream[0].stats.mseed.dataquality, 'R')
-            data = [185.01, 181.02, 185.03, 189.04, 194.05, 205.06,
-                    209.07, 214.08, 222.09, 225.98, 226.99, 219.00]
-            np.testing.assert_array_almost_equal(stream[0].data, data,
-                                                 decimal=2)
+                '185.00999450000000\t181.02000430000001\t185.02999879999999\t' +
+                '189.03999329999999\t194.05000310000000\t205.05999760000000')
             # compare raw header
             with open(testfile, 'rt') as f:
                 lines_orig = f.readlines()
             with open(tmpfile, 'rt') as f:
                 lines_new = f.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
-
 
     def test_write_slist_file_multiple_traces(self):
         """
