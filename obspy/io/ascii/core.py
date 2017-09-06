@@ -264,6 +264,8 @@ def _write_slist(stream, filename, custom_fmt=None,  **kwargs):  # @UnusedVariab
     :param filename: Name of file to write.
     :type custom_fmt: str
     :param custom_fmt: formatter for writing sample values. Defaults to None.
+        Using this parameter will set ``TYPE`` value in header to ``CUSTOM``
+        and ObsPy will raise an exception while trying to read that file.
 
     .. rubric:: Example
 
@@ -372,6 +374,8 @@ def _write_tspair(stream, filename, custom_fmt=None, **kwargs):  # @UnusedVariab
     :param filename: Name of file to write.
     :type custom_fmt: str
     :param custom_fmt: formatter for writing sample values. Defaults to None.
+        Using this parameter will set ``TYPE`` value in header to ``CUSTOM``
+        and ObsPy will raise an exception while trying to read that file.
 
     .. rubric:: Example
 
