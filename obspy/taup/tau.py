@@ -165,7 +165,7 @@ class Arrivals(list):
         return self.__class__(super(Arrivals, self).copy(),
                               model=self.model)
 
-    def timeplot(self, PHASES, ax=None, show=True):
+    def timeplot(self, phases, ax=None, show=True):
         """Method to plot the travel times of arrivals class, if any have
         been calculated.
         :param ax: Axes to plot to. If not given, a new figure with an axes
@@ -181,23 +181,21 @@ class Arrivals(list):
         """
         import matplotlib.pyplot as plt
         cmap = plt.cm.Dark2
-        colors = cmap(np.linspace(0,1,len(PHASES)))
-        
+        colors = cmap(np.linspace(0, 1, len(phases)))
         if not self:
-            raise ValueError("Can only plot arrivals with calculated travel times.")
+            raise ValueError("Can only plot calculated travel times.")
 
         # create an axis/figure, if there is none, yet:
         if not ax:
             plt.figure(figsize=(10, 10))
             ax = plt.subplot(111)
-        
+            
         # extract the time/distance for each phase, and for each receiver:
         for arrival in self:
-            data = {}
             phase= arrival.name
-            if phase in PHASES:
-                plt.plot(arrival.distance,arrival.time/60,'.',label=phase,color=colors[PHASES.index(phase)])
-                     
+            if phase in phases:
+                plt.plot(arrival.distance,arrival.time / 60,'.',label=phase,color=colors[phases.index(phase)])
+        
         # merge all arrival labels of a certain phase:
         handles, labels = plt.gca().get_legend_handles_labels()
         labels, ids = np.unique(labels, return_index=True)
@@ -214,9 +212,7 @@ class Arrivals(list):
     
     def plot(self, plot_type="spherical", plot_all=True, legend=True,
              label_arrivals=False, ax=None, show=True):
-        """
-        Plot the ray paths if any have been calculated.
-
+        """ Plot the ray paths if any have been calculated.
         :param plot_type: Either ``"spherical"`` or ``"cartesian"``.
             A spherical plot is always global whereas a Cartesian one can
             also be local.
