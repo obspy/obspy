@@ -189,27 +189,28 @@ class Arrivals(list):
         if not ax:
             plt.figure(figsize=(10, 10))
             ax = plt.subplot(111)
-            
+
         # extract the time/distance for each phase, and for each receiver:
         for arrival in self:
-            phase= arrival.name
+            phase = arrival.name
             if phase in phases:
-                plt.plot(arrival.distance,arrival.time / 60,'.',label=phase,color=colors[phases.index(phase)])
-        
+                plt.plot(arrival.distance, arrival.time / 60, '.',
+                         label=phase,color=colors[phases.index(phase)])
+
         # merge all arrival labels of a certain phase:
         handles, labels = plt.gca().get_legend_handles_labels()
         labels, ids = np.unique(labels, return_index=True)
         handles = [handles[i] for i in ids]
-        
-        plt.legend(handles, labels, loc=2,numpoints=1)
-        
+
+        plt.legend(handles, labels, loc=2, numpoints=1)
+
         plt.grid()
         plt.xlabel('Distance (degrees)')
         plt.ylabel('Time (minutes)')
         if show:
             plt.show()
         return ax
-    
+
     def plot(self, plot_type="spherical", plot_all=True, legend=True,
              label_arrivals=False, ax=None, show=True):
         """ Plot the ray paths if any have been calculated.
