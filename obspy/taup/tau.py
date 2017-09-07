@@ -195,7 +195,7 @@ class Arrivals(list):
             phase = arrival.name
             if phase in phases:
                 plt.plot(arrival.distance, arrival.time / 60, '.',
-                         label = phase, color=colors[phases.index(phase)])
+                         label=phase, color=colors[phases.index(phase)])
 
         # merge all arrival labels of a certain phase:
         handles, labels = plt.gca().get_legend_handles_labels()
