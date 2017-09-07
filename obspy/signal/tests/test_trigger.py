@@ -349,16 +349,26 @@ class TriggerTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(item[key], _type))
         # check some of the detailed info
         ev = res[-1]
-        self.assertAlmostEqual(ev['cft_peak_wmean'], 18.101139518271076)
-        self.assertAlmostEqual(ev['cft_std_wmean'], 4.800051726246676)
-        self.assertAlmostEqual(ev['cft_peaks'][0], 18.985548683223936)
-        self.assertAlmostEqual(ev['cft_peaks'][1], 16.852175794415011)
-        self.assertAlmostEqual(ev['cft_peaks'][2], 18.64005853900883)
-        self.assertAlmostEqual(ev['cft_peaks'][3], 17.572363634564621)
-        self.assertAlmostEqual(ev['cft_stds'][0], 4.8909448258821362)
-        self.assertAlmostEqual(ev['cft_stds'][1], 4.4446373508521804)
-        self.assertAlmostEqual(ev['cft_stds'][2], 5.3499401252675964)
-        self.assertAlmostEqual(ev['cft_stds'][3], 4.2723814539487703)
+        self.assertAlmostEqual(ev['cft_peak_wmean'], 18.101139518271076,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_std_wmean'], 4.800051726246676,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_peaks'][0], 18.985548683223936,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_peaks'][1], 16.852175794415011,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_peaks'][2], 18.64005853900883,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_peaks'][3], 17.572363634564621,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_stds'][0], 4.8909448258821362,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_stds'][1], 4.4446373508521804,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_stds'][2], 5.3499401252675964,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_stds'][3], 4.2723814539487703,
+                               places=5)
 
     def test_coincidence_trigger_with_similarity_checking(self):
         """
