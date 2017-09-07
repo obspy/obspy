@@ -683,6 +683,7 @@ class ASCIITestCase(unittest.TestCase):
 
         self.assertRaises(ValueError, _determine_dtype, '')
 
+
 def suite():
     return unittest.makeSuite(ASCIITestCase, 'test')
 
