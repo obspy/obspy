@@ -166,8 +166,12 @@ class Arrivals(list):
                               model=self.model)
 
     def timeplot(self, phases, ax=None, show=True):
-        """Method to plot the travel times of arrivals class, if any have
+        """
+        Method to plot the travel times of arrivals class, if any have
         been calculated.
+        
+        :param phases: Phases to plot.
+        :type phases: list of str 
         :param ax: Axes to plot to. If not given, a new figure with an axes
             will be created. Must be a polar axes for the spherical plot and
             a regular one for the Cartesian plot.
@@ -213,7 +217,9 @@ class Arrivals(list):
 
     def plot(self, plot_type="spherical", plot_all=True, legend=True,
              label_arrivals=False, ax=None, show=True):
-        """ Plot the ray paths if any have been calculated.
+        """ 
+        Plot the ray paths if any have been calculated.
+        
         :param plot_type: Either ``"spherical"`` or ``"cartesian"``.
             A spherical plot is always global whereas a Cartesian one can
             also be local.
