@@ -174,8 +174,8 @@ def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
                 if not start_byte:
                     # end of file
                     break
-                # convert to int32
-                length = start_byte[0]
+                # convert to unsigned int8
+                length = np.fromstring(start_byte, np.uint8)[0]
                 data += fh.read(length)
                 end_byte = fh.read(1)
                 assert start_byte == end_byte

@@ -167,8 +167,12 @@ class WaveformPluginsTestCase(unittest.TestCase):
         modules for false positives.
         """
         known_false = [
-            os.path.join('seisan', 'tests', 'data', 'SEISAN_Bug',
-                         '2011-09-06-1311-36S.A1032_001BH_Z_MSEED'),
+            os.path.join('seisan', 'tests', 'data',
+                         '2011-09-06-1311-36S.A1032_001BH_Z.mseed'),
+            os.path.join('seisan', 'tests', 'data',
+                         'D1360930.203.mseed'),
+            os.path.join('seisan', 'tests', 'data',
+                         '9701-30-1048-54S.MVO_21_1.ascii'),
             os.path.join('core', 'tests', 'data',
                          'IU_ULN_00_LH1_2015-07-18T02.mseed'),
             # That file is not in obspy.io.mseed as it is used to test an
