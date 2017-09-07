@@ -140,19 +140,59 @@ def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
     .KONO.0.L0N | 2001-01-13T17:42:24.924000Z - ... | 1.0 Hz, 3542 samples
     .KONO.0.L0E | 2001-01-13T17:42:24.924000Z - ... | 1.0 Hz, 3542 samples
     """
-    def _readline(fh, length=80):
-        data = fh.read(length + 8)
-        end = length + 4
-        start = 4
-        return data[start:end]
-    # read data chunk from given file
+    # get version info from event file header (at least 12*80 bytes)
     fh = open(filename, 'rb')
     data = fh.read(80 * 12)
-    # get version info from file
-    (byteorder, arch, _version) = _get_version(data)
-    # fetch lines
-    fh.seek(0)
-    # start with event file header
+    (byteorder, arch, version) = _get_version(data)
+    dlen = arch // 8
+    dtype = np.dtype(native_str(byteorder + 'i' + str(dlen)))
+    stype = native_str('=i' + str(dlen))
+
+    def _readline(fh, version=version, dtype=dtype):
+        if version >= 7:
+            # On Sun, Linux, MaxOSX and PC from version 7.0 (using Digital
+            # Fortran), every write is preceded and terminated with 4
+            # additional bytes giving the number of bytes in the write.
+            # With 64 bit systems, 8 bytes is used to define number of bytes
+            # written.
+            start_bytes = fh.read(dtype.itemsize)
+            # convert to int32/int64
+            length = np.fromstring(start_bytes, dtype=dtype)[0]
+            data = fh.read(length)
+            end_bytes = fh.read(dtype.itemsize)
+            assert start_bytes == end_bytes
+            return data
+        else:  # version <= 6
+            # Every write is preceded and terminated with one byte giving the
+            # number of bytes in the write. If the write contains more than 128
+            # bytes, it is blocked in records of 128 bytes, each with the start
+            # and end byte which in this case is the number 128. Each record is
+            # thus 130 bytes long.
+            data = b''
+            while True:
+                start_byte = fh.read(1)
+                if not start_byte:
+                    # end of file
+                    break
+                # convert to int32
+                length = start_byte[0]
+                data += fh.read(length)
+                end_byte = fh.read(1)
+                assert start_byte == end_byte
+                if length == 128:
+                    # blocked data - repeat loop
+                    continue
+                # end of blocked data
+                break
+            return data
+
+    # reset file pointer
+    if version >= 7:
+        fh.seek(0)
+    else:
+        # version <= 6 starts with first byte K
+        fh.seek(1)
+    # event file header
     # line 1
     data = _readline(fh)
     number_of_channels = int(data[30:33])
@@ -160,19 +200,16 @@ def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
     number_of_lines = number_of_channels // 3 + (number_of_channels % 3 and 1)
     if number_of_lines < 10:
         number_of_lines = 10
-    # line 2
+    # line 2 - always empty
     data = _readline(fh)
     # line 3
     for _i in range(0, number_of_lines):
         data = _readline(fh)
     # now parse each event file channel header + data
     stream = Stream()
-    dlen = arch // 8
-    dtype = np.dtype(native_str(byteorder + 'i' + str(dlen)))
-    stype = native_str('=i' + str(dlen))
     for _i in range(number_of_channels):
         # get channel header
-        temp = _readline(fh, 1040).decode()
+        temp = _readline(fh).decode()
         # create Stats
         header = Stats()
         header['network'] = (temp[16] + temp[19]).strip()
@@ -191,20 +228,17 @@ def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
         header['starttime'] = UTCDateTime(year, month, day, hour, mins) + secs
         if headonly:
             # skip data
-            fh.seek(dlen * (header['npts'] + 2), 1)
+            from_buffer(_readline(fh), dtype=dtype)
             stream.append(Trace(header=header))
         else:
             # fetch data
-            data = from_buffer(
-                fh.read((header['npts'] + 2) * dtype.itemsize),
-                dtype=dtype)
+            data = from_buffer(_readline(fh), dtype=dtype)
             # convert to system byte order
             data = np.require(data, stype)
-            nbytes = (data.size - 2) * dtype.itemsize
-            if nbytes != data[0] or nbytes != data[-1]:
-                msg = "Mismatching byte size %d, %d, %d"
-                warnings.warn(msg % (nbytes, data[0], data[-1]))
-            stream.append(Trace(data=data[1:-1], header=header))
+            if header['npts'] != len(data):
+                msg = "Mismatching byte size %d != %d"
+                warnings.warn(msg % (header['npts'], len(data)))
+            stream.append(Trace(data=data, header=header))
     fh.close()
     return stream
 
