@@ -715,14 +715,16 @@ def create_taup_model(model_name, output_dir, input_dir):
     TauPCreate.main(model_file_name, output_dir, input_dir)
 
 
-def traveltime_plot(min_degree=0, max_degree=360, npoints=1000,
-                    phases=['P', 'S'], source_depth, model='iasp91',
+def traveltime_plot(source_depth, min_degree=0, max_degree=360, npoints=1000,
+                    phases=['P', 'S'], model='iasp91',
                     ax=None, show=True):
         """
         Method to plot the travel times of arrivals class, if any have
         been calculated.
 
-        :param min_degree: minimum distance from the source (in degrees) to 
+        :param source_depth: Source depth in kilometers.
+        :type source_depth: float
+        :param min_degree: minimum distance from the source (in degrees) to a
             plot travel times Defaults to ``0``.
         :type min_degree: float
         :param max_degree: maximum distance from the source (in degrees) to
@@ -730,11 +732,9 @@ def traveltime_plot(min_degree=0, max_degree=360, npoints=1000,
         :type max_degree: float
         :param npoints: Number of points to plot. Defaults to ``1000``.
         :type npoints: int
-        :param phases: List of phase names which should be used within the 
+        :param phases: List of phase names which should be used within the
             plot. Defaults to ``['P', 'S']``.
         :type phases: list of str, optional
-        :param source_depth: Source depth in kilometers.
-        :type source_depth: float
         :param model: string containing the model to use. Defaults to 'iasp91'.
         :type model: str
         :param ax: Axes to plot to. If not given, a new figure with an axes
@@ -749,16 +749,14 @@ def traveltime_plot(min_degree=0, max_degree=360, npoints=1000,
         .. rubric:: Example
 
         >>> from obspy.taup import traveltime_plot
-        >>> traveltime_plot(min_degree=0, max_degree=50,
-                     phases=['P', 'S', 'PP'], source_depth=120,
-                     model='iasp91', npoints=1000)
+        >>> traveltime_plot(source_depth=120, min_degree=0, max_degree=50,
+        ...          phases=['P', 'S', 'PP'], model='iasp91', npoints=1000)
 
         .. plot::
 
             from obspy.taup import traveltime_plot
-            traveltime_plot(min_degree=0, max_degree=50,
-                    phases=['P', 'S', 'PP'], source_depth=120,
-                    model='iasp91', npoints=1000)
+            traveltime_plot(source_depth=120, min_degree=0, max_degree=50,
+                    phases=['P', 'S', 'PP'], model='iasp91', npoints=1000)
 
         """
 
