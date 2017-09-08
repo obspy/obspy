@@ -169,23 +169,28 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.npts, 12000)
         self.assertEqual(list(st[0].data), [])
 
-    def test_read_seisan_vs_reference(self):
+    def test_read_obspy(self):
         """
-        Test for #970
+        Test ObsPy read function and compare against given MiniSEED files.
         """
-        _fn = os.path.join(self.path, '2011-09-06-1311-36S.A1032_001BH_Z')
-        st = read(_fn, format='SEISAN')
-        _fn_ref = os.path.join(self.path,
-                               '2011-09-06-1311-36S.A1032_001BH_Z.mseed')
-
+        # 1 - little endian, 32 bit, version 7
+        st1 = read(os.path.join(self.path,
+                                '2011-09-06-1311-36S.A1032_001BH_Z'))
         # raises "UserWarning: Record contains a fractional seconds" - ignore
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always', UserWarning)
-            st_ref = read(_fn_ref, format='MSEED')
-        self.assertEqual(len(w), 1)
-        self.assertEqual(w[0].category, UserWarning)
+            st2 = read(os.path.join(self.path,
+                                    '2011-09-06-1311-36S.A1032_001BH_Z.mseed'))
+            self.assertEqual(len(w), 1)
+            self.assertEqual(w[0].category, UserWarning)
+        self.assertEqual(len(st1), len(st2))
+        self.assertTrue(np.allclose(st1[0].data, st2[0].data))
 
-        self.assertTrue(np.allclose(st[0].data, st_ref[0].data))
+        # 2 - little endian, 32 bit, version 6
+        st1 = read(os.path.join(self.path, 'D1360930.203'))
+        st2 = read(os.path.join(self.path, 'D1360930.203.mseed'))
+        self.assertEqual(len(st1), len(st2))
+        self.assertTrue(np.allclose(st1[0].data, st2[0].data))
 
 
 def suite():
