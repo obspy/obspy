@@ -153,7 +153,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.npts, 6000)
         self.assertEqual(list(st[0].data), [])  # no data
 
-        # 3 - little endian, 32 bit, version 6
+        # 3 - little endian, 32 bit, version 6, 1 channel
         fn = os.path.join(self.path, 'D1360930.203')
         st = _read_seisan(fn, headonly=True)
         self.assertEqual(len(st), 1)
@@ -168,6 +168,25 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.sampling_rate, 100.0)
         self.assertEqual(st[0].stats.npts, 12000)
         self.assertEqual(list(st[0].data), [])
+
+        # 4 - little endian, 32 bit, version 6, 3 channels
+        fn = os.path.join(self.path, '2005-07-23-1452-04S.CER___030')
+        st = _read_seisan(fn, headonly=True)
+        self.assertEqual(len(st), 3)
+        self.assertEqual(st[0].stats.channel, 'BHZ')
+        self.assertEqual(st[1].stats.channel, 'BHN')
+        self.assertEqual(st[2].stats.channel, 'BHE')
+        for i in range(0, 3):
+            self.assertEqual(st[i].stats.network, '')
+            self.assertEqual(st[i].stats.station, 'CER')
+            self.assertEqual(st[i].stats.location, '')
+            self.assertEqual(st[i].stats.starttime,
+                             UTCDateTime('2005-07-23T14:52:04.000000Z'))
+            self.assertEqual(st[i].stats.endtime,
+                             UTCDateTime('2005-07-23T14:53:14.993333Z'))
+            self.assertEqual(st[i].stats.sampling_rate, 150.0)
+            self.assertEqual(st[i].stats.npts, 10650)
+            self.assertEqual(list(st[i].data), [])
 
     def test_read_obspy(self):
         """
@@ -186,11 +205,20 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(st1), len(st2))
         self.assertTrue(np.allclose(st1[0].data, st2[0].data))
 
-        # 2 - little endian, 32 bit, version 6
+        # 2 - little endian, 32 bit, version 6, 1 channel
         st1 = read(os.path.join(self.path, 'D1360930.203'))
         st2 = read(os.path.join(self.path, 'D1360930.203.mseed'))
         self.assertEqual(len(st1), len(st2))
         self.assertTrue(np.allclose(st1[0].data, st2[0].data))
+
+        # 3 - little endian, 32 bit, version 6, 3 channels
+        st1 = read(os.path.join(self.path, '2005-07-23-1452-04S.CER___030'))
+        st2 = read(os.path.join(self.path,
+                                '2005-07-23-1452-04S.CER___030.mseed'))
+        self.assertEqual(len(st1), len(st2))
+        self.assertTrue(np.allclose(st1[0].data, st2[0].data))
+        self.assertTrue(np.allclose(st1[1].data, st2[1].data))
+        self.assertTrue(np.allclose(st1[2].data, st2[2].data))
 
 
 def suite():

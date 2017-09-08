@@ -172,6 +172,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
             os.path.join('seisan', 'tests', 'data',
                          'D1360930.203.mseed'),
             os.path.join('seisan', 'tests', 'data',
+                         '2005-07-23-1452-04S.CER___030.mseed'),
+            os.path.join('seisan', 'tests', 'data',
                          '9701-30-1048-54S.MVO_21_1.ascii'),
             os.path.join('core', 'tests', 'data',
                          'IU_ULN_00_LH1_2015-07-18T02.mseed'),
