@@ -714,8 +714,9 @@ def create_taup_model(model_name, output_dir, input_dir):
         model_file_name = model_name + ".tvel"
     TauPCreate.main(model_file_name, output_dir, input_dir)
 
+
 def traveltime_plot(min_degree=0, max_degree=360, npoints=1000,
-                    phases=['P','S'], source_depth=10, model='iasp91',
+                    phases=['P', 'S'], source_depth=10, model='iasp91',
                     ax=None, show=True):
         """
         Method to plot the travel times of arrivals class, if any have
@@ -729,8 +730,8 @@ def traveltime_plot(min_degree=0, max_degree=360, npoints=1000,
         :type max_degree: float, optional
         :param npoints: Number of points to plot. Defaults to ``1000``.
         :type npoints: int, optional
-        :param phases: List of phase names which should be used within the plot.
-            Defaults to ``['P','S']``.
+        :param phases: List of phase names which should be used within the 
+            plot. Defaults to ``['P', 'S']``.
         :type phases: list of str, optional
         :param source_depth: Source pepth in kilometers. Defaults to ``10``.
         :type source_depth: float, optional
@@ -784,8 +785,8 @@ def traveltime_plot(min_degree=0, max_degree=360, npoints=1000,
             for arrival in arrivals:
                 phase = arrival.name
                 if phase in phases:
-                   plt.plot(arrival.distance, arrival.time/60,'.',
-                            label=phase, color=colors[phases.index(phase)])
+                    plt.plot(arrival.distance, arrival.time/60, '.',
+                             label=phase, color=colors[phases.index(phase)])
 
         # merge all arrival labels with the same phase:
         handles, labels = plt.gca().get_legend_handles_labels()
