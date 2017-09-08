@@ -23,7 +23,7 @@ request text block.
 :func:`data_to_request()` helper function to convert
 :class:`~obspy.core.inventory.inventory.Inventory` or
 :class:`~obpsy.core.Stream` into FDSNBulkRequests. Useful for comparing what
-has been retrieved with what was requested.
+    has been retrieved with what was requested.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -36,19 +36,19 @@ has been retrieved with what was requested.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-
-from future.utils import string_types
+from future.utils import string_types, PY2
 
 import sys
 import collections
 from threading import Lock
 import os
-import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+import json
 from obspy.core.inventory import Inventory
 from obspy.core import Stream
-from obspy.clients.fdsn.client import convert_to_string, Client
-from obspy.clients.fdsn.header import (FDSNException, FDSNNoDataException)
+from obspy.clients.fdsn.client import convert_to_string, raise_on_error, \
+                                      download_url, Client
+from obspy.clients.fdsn.header import (FDSNException, FDSNNoDataException,
+                                       DEFAULT_USER_AGENT)
 from obspy.clients.fdsn.routers.routing_client import (
     RoutingClient, RoutingManager, ROUTING_LOGGER)
 from obspy.clients.fdsn.routers import (FederatedRoute,)
@@ -56,10 +56,12 @@ from obspy.clients.fdsn.routers.fedcatalog_parser import (
     PreParse, FedcatResponseLine, DatacenterItem,
     inventory_to_bulkrequests, stream_to_bulkrequests)
 
-
-# ignore InsecureRequestWarning
-# https://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+if PY2:
+    from urllib import urlencode
+    import urllib2 as urllib_request
+else:
+    from urllib.parse import urlencode
+    import urllib.request as urllib_request
 
 
 # IRIS uses different codes for datacenters than obspy.
@@ -164,6 +166,37 @@ def get_bulk_string(bulk, arguments):
     return bulk
 
 
+class CustomRedirectHandler(urllib_request.HTTPRedirectHandler):
+    """
+    Custom redirection handler to also do it for POST requests which the
+    standard library does not do by default.
+    """
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """
+        Copied and modified from the standard library.
+        """
+        # Force the same behaviour for GET, HEAD, and POST.
+        m = req.get_method()
+        if (not (code in (301, 302, 303, 307) and
+                 m in ("GET", "HEAD", "POST"))):
+            raise urllib_request.HTTPError(req.full_url, code, msg, headers,
+                                           fp)
+
+        # be conciliant with URIs containing a space
+        newurl = newurl.replace(' ', '%20')
+        content_headers = ("content-length", "content-type")
+        newheaders = dict((k, v) for k, v in req.headers.items()
+                          if k.lower() not in content_headers)
+
+        # Also redirect the data of the request which the standard library
+        # interestingly enough does not do.
+        return urllib_request.Request(
+            newurl, headers=newheaders,
+            data=req.data,
+            origin_req_host=req.origin_req_host,
+            unverifiable=True)
+
+
 class FedcatalogProviders(object):
     """
     Class containing datacenter details retrieved from the fedcatalog service
@@ -177,13 +210,30 @@ class FedcatalogProviders(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, request_headers=None, opener=None):
         """
         Initializer for FedcatalogProviders
+
+        :type request_headers: dict
+        :param request_headers: Optional dictionary of request headers
+        :type opener: urllib2.OpenerDirector
+        :param opener: Optional url opener
         """
         self._providers = dict()
         self._lock = Lock()
         self._failed_refreshes = 0
+        handlers = []
+        # Redirect if no credentials are given or the force_redirect
+        # flag is True.
+        handlers.append(CustomRedirectHandler())
+        if opener is None:
+            self._url_opener = urllib_request.build_opener(*handlers)
+        else:
+            self._url_opener = opener
+        if request_headers is None:
+            self.request_headers = {"User-Agent": DEFAULT_USER_AGENT}
+        else:
+            self.request_headers = request_headers
         self.refresh()
 
     def __iter__(self):
@@ -264,8 +314,9 @@ class FedcatalogProviders(object):
                 ROUTING_LOGGER.error(msg, self._failed_refreshes)
             url = 'https://service.iris.edu/irisws/fedcatalog/1/datacenters'
             try:
-                resp = requests.get(url, verify=False)
-                self._providers = {v['name']: v for v in resp.json()}
+                resp = download(url, opener=self._url_opener,
+                                headers=self.request_headers)
+                self._providers = {v['name']: v for v in json.load(resp)}
                 self._failed_refreshes = 0
             except Exception as err:
                 msg = "Unable to update provider profiles: %s"
@@ -337,7 +388,8 @@ class FederatedClient(RoutingClient):
 
     def __init__(self, base_url='https://service.iris.edu/irisws/fedcatalog/',
                  major_version=1, use_parallel=False, include_provider=None,
-                 exclude_provider=None, **kwargs):
+                 exclude_provider=None, user_agent=DEFAULT_USER_AGENT,
+                 debug=False, timeout=120, **kwargs):
         """
         Initializes an FDSN Fed Catalog Web Service client.
 
@@ -347,12 +399,20 @@ class FederatedClient(RoutingClient):
         :param major_version: The major version of the FedCatalog web service.
         :type use_parallel: boolean
         :param use_parallel: determines whether clients will be polled in in
-        parallel or in series.  If the FederatedClient appears to hang during
-        a request, set this to False.
+            parallel or in series.  If the FederatedClient appears to hang
+            during a request, set this to False.
         :type exclude_provider: str or list of str
         :param exclude_provider: Get no data from these providers
         :type include_provider: str or list of str
         :param include_provider: Get data only from these providers
+        :type user_agent: str
+        :param user_agent: The user agent for all requests.
+        :type debug: bool
+        :param debug: Debug flag.
+        :type timeout: float
+        :param timeout: Maximum time (in seconds) to wait for a single request
+            to receive the first byte of the response (after which an exception
+            is raised).
         :param **kwargs: additional kwargs are passed down to each instance
             of :class:`obspy.clients.fdsn.Client()` (when accessing individual
             data centers)
@@ -371,7 +431,23 @@ class FederatedClient(RoutingClient):
 
         self.query_url = "/".join([base_url, str(major_version), "query"])
 
-        self._providers = FedcatalogProviders()
+        handlers = []
+        # Redirect if no credentials are given or the force_redirect
+        # flag is True.
+        handlers.append(CustomRedirectHandler())
+
+        self.debug = debug
+
+        self.timeout = timeout
+
+        # Don't install globally to not mess with other codes.
+        self._url_opener = urllib_request.build_opener(*handlers)
+
+        self.request_headers = {"User-Agent": user_agent}
+
+        self._providers = FedcatalogProviders(
+                                        request_headers=self.request_headers,
+                                        opener=self._url_opener)
 
     def __str__(self):
         """
@@ -560,18 +636,20 @@ class FederatedClient(RoutingClient):
            'format': format
         }
         params.update(kwargs)
-        resp = requests.get(self.query_url, params=params, verify=False)
-        resp.raise_for_status()
 
+        url = build_url(self.query_url, parameters=params)
+        resp = download(url, opener=self._url_opener,
+                        headers=self.request_headers)
+        resp_data = resp.read()
         if routing_file is not None:
             if isinstance(routing_file, string_types):
                 with open(routing_file, 'wb') as fileh:
-                    fileh.write(resp.text)
+                    fileh.write(resp_data)
             else:
                 # assume it is an open file-like-type
-                routing_file.write(resp.text)
+                routing_file.write(resp_data)
 
-        frm = FederatedRoutingManager(resp.text, self._providers)
+        frm = FederatedRoutingManager(resp_data, self._providers)
         return frm
 
     def get_routing_bulk(self, bulk, routing_file=None, targetservice=None,
@@ -747,17 +825,20 @@ class FederatedClient(RoutingClient):
                    "but is a " + bulk.__class__.__name__)
             raise FDSNException(msg)
 
-        resp = requests.post(self.query_url, data=bulk, verify=False)
-        resp.raise_for_status()
+        url = build_url(self.query_url)
+        resp = download(url, opener=self._url_opener,
+                        headers=self.request_headers, data=bulk)
+        resp_data = resp.read()
+
         if routing_file is not None:
             if isinstance(routing_file, string_types):
                 with open(routing_file, 'wb') as fileh:
-                    fileh.write(resp.text)
+                    fileh.write(resp_data)
             else:
                 # assume it is an open file-like-type
-                routing_file.write(resp.text)
+                routing_file.write(resp_data)
 
-        frm = FederatedRoutingManager(resp.text, self._providers)
+        frm = FederatedRoutingManager(resp_data, self._providers)
         return frm
 
     def get_existing_route(self, existing_routes):
@@ -876,7 +957,8 @@ class FederatedClient(RoutingClient):
 
         except FDSNException as ex:
             failed.put(route.request_items)
-            print("Failed to retrieve data from: {0}", route.provider_id)
+            print("Failed to retrieve data from: {0}"
+                  .format(route.provider_id))
             print(ex)
             raise
 
@@ -922,7 +1004,8 @@ class FederatedClient(RoutingClient):
 
         frm = self.get_routing_bulk(
             bulk=bulk, **fed_kwargs)\
-            if not existing_routes else self.get_existing_route(existing_routes)
+            if not existing_routes \
+            else self.get_existing_route(existing_routes)
         data, _, failed = self.query(frm, svc_name, **svc_kwargs)
 
         if reroute and failed:
@@ -1057,7 +1140,8 @@ class FederatedClient(RoutingClient):
         fed_kwargs["includeoverlaps"] = includeoverlaps
 
         frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)\
-            if not existing_routes else self.get_existing_route(existing_routes)
+            if not existing_routes \
+            else self.get_existing_route(existing_routes)
 
         # frm = self.get_routing_bulk(bulk=bulk, **fed_kwargs)
         inv, _, failed = self.query(frm, svc_name, **svc_kwargs)
@@ -1360,6 +1444,40 @@ class FederatedRoutingManager(RoutingManager):
         return fed_resp
 
 
+def build_url(base_url, parameters=None):
+    """
+    URL builder for the FederatedClient webservice.
+
+    Built as a separate function to enhance testability.
+    """
+
+    # Avoid mutable kwargs.
+    if parameters is None:
+        parameters = {}
+    valid_params = {}
+    if parameters:
+        # Strip parameters.
+        for key, value in parameters.items():
+            try:
+                if value is not None:
+                    valid_params[key] = str(value).strip()
+            except Exception:
+                pass
+        base_url = "?".join((base_url, urlencode(valid_params)))
+
+    return base_url
+
+
+def download(url, opener, headers, debug=False, return_string=False,
+             data=None, timeout=120, use_gzip=True):
+    code, data = download_url(
+        url, opener=opener, headers=headers,
+        debug=debug, return_string=return_string, data=data,
+        timeout=timeout, use_gzip=use_gzip)
+    raise_on_error(code, data)
+    return data
+
+
 def data_to_request(data):
     """
     convert either station metadata or waveform data to FDSNBulkRequests
@@ -1374,8 +1492,6 @@ def data_to_request(data):
 
 
 if __name__ == '__main__':
-    from requests.packages.urllib3.exceptions import InsecureRequestWarning
     import doctest
 
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     doctest.testmod(exclude_empty=True)

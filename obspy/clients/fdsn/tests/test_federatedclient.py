@@ -173,14 +173,14 @@ class FederatedClientTestCase(unittest.TestCase):
         print(inv)
 
         # test something against the SED/ETH
-        bulktext = "* B* -- BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00"
+        bulktext = "C? B* -- BHZ 2015-01-01T00:00:00 2015-05-31T00:00:00"
         inv = fed_client.get_stations_bulk(bulktext)
         # default level of station
         self.assertTrue(has_level(inv, "station"))
         self.assertFalse(has_level(inv, "channel"))
         self.assertGreater(len(inv.networks[0].stations), 4)
         endt = UTCDateTime(2015, 5, 31, 0, 0, 0)
-        params = {"station": "B*", "channel": "BHZ",
+        params = {"network": "I?", "station": "B*", "channel": "BHZ",
                   "starttime": "2015-01-01T00:00:00",
                   "endtime": endt,
                   "level": "channel"}
@@ -281,7 +281,8 @@ class FederatedClientTestCase(unittest.TestCase):
         frm = client.get_routing(station="ANTO",
                                  starttime=UTCDateTime(2015, 1, 1),
                                  includeoverlaps=True)
-        self.assertEqual(len(frm), 2, msg="Expected to retrieve 2 routes")
+        self.assertEqual(len(frm), 2, msg=("Expected to retrieve 2 routes, "
+                                           "got %s" % len(frm)))
 
         orf_frm = FederatedRoutingManager(frm.get_route('ORFEUS'))
 
