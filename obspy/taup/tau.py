@@ -716,7 +716,7 @@ def create_taup_model(model_name, output_dir, input_dir):
 
 
 def traveltime_plot(min_degree=0, max_degree=360, npoints=1000,
-                    phases=['P', 'S'], source_depth=10, model='iasp91',
+                    phases=['P', 'S'], source_depth, model='iasp91',
                     ax=None, show=True):
         """
         Method to plot the travel times of arrivals class, if any have
@@ -724,22 +724,21 @@ def traveltime_plot(min_degree=0, max_degree=360, npoints=1000,
 
         :param min_degree: minimum distance from the source (in degrees) to 
             plot travel times Defaults to ``0``.
-        :type min_degree: float, optional
+        :type min_degree: float
         :param max_degree: maximum distance from the source (in degrees) to
             plot travel times. Defaults to ``360``.
-        :type max_degree: float, optional
+        :type max_degree: float
         :param npoints: Number of points to plot. Defaults to ``1000``.
-        :type npoints: int, optional
+        :type npoints: int
         :param phases: List of phase names which should be used within the 
             plot. Defaults to ``['P', 'S']``.
         :type phases: list of str, optional
-        :param source_depth: Source pepth in kilometers. Defaults to ``10``.
-        :type source_depth: float, optional
-        :param model: string containing the model to use.
-        :type model: str. Defaults to 'iasp91'
+        :param source_depth: Source depth in kilometers.
+        :type source_depth: float
+        :param model: string containing the model to use. Defaults to 'iasp91'.
+        :type model: str
         :param ax: Axes to plot to. If not given, a new figure with an axes
-            will be created. Must be a polar axes for the spherical plot and
-            a regular one for the Cartesian plot.
+            will be created.
         :type ax: :class:`matplotlib.axes.Axes`
         :param show: Show the plot.
         :type show: bool
@@ -749,15 +748,15 @@ def traveltime_plot(min_degree=0, max_degree=360, npoints=1000,
 
         .. rubric:: Example
 
-        >>> from obspy.taup.tau import traveltime_plot
+        >>> from obspy.taup import traveltime_plot
         >>> traveltime_plot(min_degree=0, max_degree=50,
                      phases=['P', 'S', 'PP'], source_depth=120,
                      model='iasp91', npoints=1000)
 
         .. plot::
 
-            from obspy.taup.tau import traveltime_plot
-            travetime_plot(min_degree=0, max_degree=50,
+            from obspy.taup import traveltime_plot
+            traveltime_plot(min_degree=0, max_degree=50,
                     phases=['P', 'S', 'PP'], source_depth=120,
                     model='iasp91', npoints=1000)
 
