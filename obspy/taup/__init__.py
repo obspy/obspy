@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-obspy.taup - Ray theoretical travel times and paths
+"""obspy.taup - Ray theoretical travel times and paths
 ===================================================
 
 :copyright:
@@ -185,6 +184,36 @@ Additionally, Cartesian coordinates may be used instead of a polar grid:
     TauPyModel().get_ray_paths(
         500, 130, phase_list=["ttbasic"]).plot(plot_type="cartesian")
 
+If ray paths have been calculated, traveltimes for these ray paths can
+be plotted using the :meth:`~obspy.taup.tau.Arrivals.timeplot` method:
+
+>>> arrivals = model.get_ray_paths(source_depth_in_km=500,
+...                                distance_in_degree=130)
+>>> arrivals.timeplot()  # doctest: +SKIP
+
+.. plot::
+    :width: 50%
+    :align: center
+
+    from obspy.taup import TauPyModel
+    TauPyModel().get_ray_paths(500, 130).timeplot()
+
+Alternatively, there is convenience wrapper function to plot the traveltimes:
+
+>>> from obspy.taup import traveltime_plot
+>>> traveltime_plot(min_degree=0, max_degree=50,
+...             phases=['P', 'S', 'PP'], source_depth=120,
+...             model='iasp91', npoints=1000) # doctest: +SKIP
+
+.. plot::
+    :width: 50%
+    :align: center
+
+    from obspy.taup import traveltime_plot
+    traveltime_plot(min_degree=0, max_degree=50,
+             phases=['P', 'S', 'PP'], source_depth=120,
+             model='iasp91', npoints=1000)
+
 More examples of plotting may be found in the :doc:`ObsPy tutorial
 </tutorial/code_snippets/travel_time>`.
 
@@ -359,6 +388,7 @@ Building custom models
 
 Custom models can be built from ``.tvel`` and ``.nd`` files using the
 :func:`~obspy.taup.taup_create.build_taup_model` function.
+
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -383,6 +413,7 @@ _DEFAULT_VALUES = {
 
 # Convenience imports.
 from .tau import TauPyModel  # NOQA
+from .tau import traveltime_plot
 
 
 if __name__ == '__main__':
