@@ -169,9 +169,9 @@ class Arrivals(list):
         """
         Method to plot the travel times of arrivals class, if any have
         been calculated.
-        
+
         :param phases: Phases to plot.
-        :type phases: list of str 
+        :type phases: list of str
         :param ax: Axes to plot to. If not given, a new figure with an axes
             will be created. Must be a polar axes for the spherical plot and
             a regular one for the Cartesian plot.
@@ -217,9 +217,9 @@ class Arrivals(list):
 
     def plot(self, plot_type="spherical", plot_all=True, legend=True,
              label_arrivals=False, ax=None, show=True):
-        """ 
+        """
         Plot the ray paths if any have been calculated.
-        
+
         :param plot_type: Either ``"spherical"`` or ``"cartesian"``.
             A spherical plot is always global whereas a Cartesian one can
             also be local.
@@ -713,3 +713,90 @@ def create_taup_model(model_name, output_dir, input_dir):
     else:
         model_file_name = model_name + ".tvel"
     TauPCreate.main(model_file_name, output_dir, input_dir)
+
+def traveltime_plot(min_degree=0, max_degree=360, npoints=1000,
+                    phases=['P','S'], source_depth=10, model='iasp91',
+                    ax=None, show=True):
+        """
+        Method to plot the travel times of arrivals class, if any have
+        been calculated.
+
+        :param min_degree: minimum distance from the source (in degrees) to 
+            plot travel times Defaults to ``0``.
+        :type min_degree: float, optional
+        :param max_degree: maximum distance from the source (in degrees) to
+            plot travel times. Defaults to ``360``.
+        :type max_degree: float, optional
+        :param npoints: Number of points to plot. Defaults to ``1000``.
+        :type npoints: int, optional
+        :param phases: List of phase names which should be used within the plot.
+            Defaults to ``['P','S']``.
+        :type phases: list of str, optional
+        :param source_depth: Source pepth in kilometers. Defaults to ``10``.
+        :type source_depth: float, optional
+        :param model: string containing the model to use.
+        :type model: str. Defaults to 'iasp91'
+        :param ax: Axes to plot to. If not given, a new figure with an axes
+            will be created. Must be a polar axes for the spherical plot and
+            a regular one for the Cartesian plot.
+        :type ax: :class:`matplotlib.axes.Axes`
+        :param show: Show the plot.
+        :type show: bool
+
+        :returns: The (possibly created) axes instance.
+        :rtype: :class:`matplotlib.axes.Axes`
+
+        .. rubric:: Example
+
+        >>> from obspy.taup.tau import traveltime_plot
+        >>> traveltime_plot(min_degree=0, max_degree=50,
+                     phases=['P', 'S', 'PP'], source_depth=120,
+                     model='iasp91', npoints=1000)
+
+        .. plot::
+
+            from obspy.taup.tau import traveltime_plot
+            travetime_plot(min_degree=0, max_degree=50,
+                    phases=['P', 'S', 'PP'], source_depth=120,
+                    model='iasp91', npoints=1000)
+
+        """
+
+        import matplotlib.pyplot as plt
+
+        # move to cm.tab10 or tab20 when using matplotlib2.x:
+        cmap = plt.cm.Dark2
+        colors = cmap(np.linspace(0, 1, len(phases)))
+
+        # compute the requested arrivals:
+        model = TauPyModel(model)
+
+        # create an axis/figure, if there is none, yet:
+        if not ax:
+            plt.figure(figsize=(10, 10))
+            ax = plt.subplot(111)
+
+        # calculate the arrival times and plot vs. epicentral distance:
+        degrees = np.linspace(min_degree, max_degree, npoints)
+        for degree in degrees:
+            arrivals = model.get_ray_paths(source_depth, degree,
+                                           phase_list=phases)
+            for arrival in arrivals:
+                phase = arrival.name
+                if phase in phases:
+                   plt.plot(arrival.distance, arrival.time/60,'.',
+                            label=phase, color=colors[phases.index(phase)])
+
+        # merge all arrival labels with the same phase:
+        handles, labels = plt.gca().get_legend_handles_labels()
+        labels, ids = np.unique(labels, return_index=True)
+        handles = [handles[i] for i in ids]
+
+        plt.legend(handles, labels, loc=2, numpoints=1)
+
+        plt.grid()
+        plt.xlabel('Distance (degrees)')
+        plt.ylabel('Time (minutes)')
+        if show:
+            plt.show()
+        return ax
