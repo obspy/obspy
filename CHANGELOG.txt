@@ -80,6 +80,8 @@ master: (doi: 10.5281/zenodo.165135)
      vertical, see #1445).
  - obspy.io.arclink:
     * Read support for Arclink Inventory XML (see #1539)
+ - obspy.io.ascii:
+    * Custom formatting of sample values when writing SLIST and TSPAIR.
  - obspy.io.datamark:
     * Renamed without deprectation to obspy.io.win to match its original name.
       Datamark is a datalogger, saving the WIN format.
