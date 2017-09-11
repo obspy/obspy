@@ -207,7 +207,7 @@ int decomp_6b_buffer (int n_of_samples, int32_t *dta, char * (* reader)(char *, 
   int i, ibuf=-1, k, inn, jsign=0, joflow=0;
   int32_t itemp;
   char cbuf[83]=" ";
-
+  setbuf(stdout, NULL);
   if (n_of_samples == 0) { printf ("decomp_6b: no action.\n"); return 0; }
   
   while (1) {
