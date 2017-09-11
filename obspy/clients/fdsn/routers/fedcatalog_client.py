@@ -46,7 +46,8 @@ import json
 from obspy.core.inventory import Inventory
 from obspy.core import Stream
 from obspy.clients.fdsn.client import convert_to_string, raise_on_error, \
-                                      download_url, Client
+                                      download_url, Client, \
+                                      CustomRedirectHandler
 from obspy.clients.fdsn.header import (FDSNException, FDSNNoDataException,
                                        DEFAULT_USER_AGENT)
 from obspy.clients.fdsn.routers.routing_client import (
@@ -164,37 +165,6 @@ def get_bulk_string(bulk, arguments):
     if not isinstance(bulk, string_types):
         raise FDSNException("Failed to convert bulk dictionary to a string")
     return bulk
-
-
-class CustomRedirectHandler(urllib_request.HTTPRedirectHandler):
-    """
-    Custom redirection handler to also do it for POST requests which the
-    standard library does not do by default.
-    """
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        """
-        Copied and modified from the standard library.
-        """
-        # Force the same behaviour for GET, HEAD, and POST.
-        m = req.get_method()
-        if (not (code in (301, 302, 303, 307) and
-                 m in ("GET", "HEAD", "POST"))):
-            raise urllib_request.HTTPError(req.full_url, code, msg, headers,
-                                           fp)
-
-        # be conciliant with URIs containing a space
-        newurl = newurl.replace(' ', '%20')
-        content_headers = ("content-length", "content-type")
-        newheaders = dict((k, v) for k, v in req.headers.items()
-                          if k.lower() not in content_headers)
-
-        # Also redirect the data of the request which the standard library
-        # interestingly enough does not do.
-        return urllib_request.Request(
-            newurl, headers=newheaders,
-            data=req.data,
-            origin_req_host=req.origin_req_host,
-            unverifiable=True)
 
 
 class FedcatalogProviders(object):
@@ -356,8 +326,6 @@ class FederatedClient(RoutingClient):
     For details see the :meth:`~obspy.clients.fdsn.client.Client.__init__()`
     method.
 
-    >>> from requests.packages.urllib3.exceptions import InsecureRequestWarning
-    >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     >>> client = FederatedClient()
     >>> print(client)  #doctest: +ELLIPSIS
     Federated Catalog Routing Client
@@ -1038,9 +1006,6 @@ class FederatedClient(RoutingClient):
         other parameters as seen in
             :meth:`~obspy.clients.fdsn.Client.get_waveforms`
 
-        >>> from requests.packages.urllib3.exceptions import \
-                InsecureRequestWarning
-        >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> client = FederatedClient()
         >>> from obspy.core import  UTCDateTime
         >>> t_st = UTCDateTime("2010-02-27T06:30:00")
@@ -1101,9 +1066,6 @@ class FederatedClient(RoutingClient):
         other parameters as seen in
             :meth:`~obspy.fdsn.clients.Client.get_stations_bulk`
 
-        >>> from requests.packages.urllib3.exceptions import \
-                InsecureRequestWarning
-        >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> client = FederatedClient()
         >>> bulktxt = "level=channel\\nA? OKS? * ?HZ * *"
         >>> INV = client.get_stations_bulk(bulktxt)  #doctest: +ELLIPSIS
@@ -1175,9 +1137,6 @@ class FederatedClient(RoutingClient):
         other parameters as seen in :meth:`FDSN Client.get_stations
         <obspy.clients.fdsn.Client.get_stations>`
 
-        >>> from requests.packages.urllib3.exceptions import \
-                InsecureRequestWarning
-        >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         >>> fclient = FederatedClient()
         >>> INV = fclient.get_stations(network="A?", station="OK*",
         ...                           channel="?HZ", level="station",
@@ -1389,16 +1348,20 @@ class FederatedRoutingManager(RoutingManager):
         HL ARG -- VHZ 2015-01-01T00:00:00.000 2016-01-02T00:00:00.000
 
         Here's an example parsing from the actual service:
-        >>> import requests
-        >>> from requests.packages.urllib3.exceptions import \
-                InsecureRequestWarning
-        >>> requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-        >>> url = 'https://service.iris.edu/irisws/fedcatalog/1/query'
-        >>> r = requests.get(url, params={"net":"IU", "sta":"ANTO",
-        ...                  "cha":"BHZ", "endafter":"2013-01-01",
-        ...                  "includeoverlaps":"true", "level":"station"},
-        ...                  verify=False)
-        >>> frp = FederatedRoutingManager(r.text)
+        >>> handlers = []
+        >>> handlers.append(CustomRedirectHandler())
+        >>> url_opener = urllib_request.build_opener(*handlers)
+        >>> params={"net":"IU", "sta":"ANTO",
+        ...         "cha":"BHZ", "endafter":"2013-01-01",
+        ...         "includeoverlaps":"true", "level":"station"}
+        >>> url = build_url(
+                    'https://service.iris.edu/irisws/fedcatalog/1/query',
+                    parameters=params)
+        >>> request_headers = {"User-Agent": DEFAULT_USER_AGENT}
+        >>> resp = download(url, opener=url_opener,
+                            headers=request_headers)
+        >>> resp_data = resp.read()
+        >>> frp = FederatedRoutingManager(resp_data)
         >>> for n in frp:
         ...     print(n.services["STATIONSERVICE"])
         ...     print(n.text("STATIONSERVICE"))
