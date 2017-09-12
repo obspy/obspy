@@ -45,17 +45,20 @@ class SC3MLTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        read_inventory(os.path.join(self.data_dir, "version0.7"))
-        read_inventory(os.path.join(self.data_dir, "version0.8"))
-        read_inventory(os.path.join(self.data_dir, "version0.9"))
+        for version in ['0.5', '0.6', '0.7', '0.8', '0.9']:
+            filename = os.path.join(self.data_dir, 'version%s' % version)
+            read_inventory(filename)
 
-        with self.assertRaises(ValueError) as e:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                read_inventory(os.path.join(self.data_dir,
-                                            "version0.10"))
+        for version in ['0.3', '0.10']:
+            filename = os.path.join(self.data_dir, 'version%s' % version)
 
-        self.assertEqual(e.exception.args[0], "Schema version not supported.")
+            with self.assertRaises(ValueError) as e:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    read_inventory(filename)
+
+                self.assertEqual(e.exception.args[0],
+                                 "Schema version not supported.")
 
     def test_channel_level(self):
         """

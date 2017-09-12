@@ -17,6 +17,8 @@ from future.builtins import *  # NOQA
 
 import io
 import os
+import re
+import warnings
 
 from lxml import etree
 
@@ -25,7 +27,7 @@ from obspy.io.seiscomp.core import _is_sc3ml as _is_sc3ml_version
 from obspy.io.seiscomp.core import validate as validate_sc3ml
 
 
-SCHEMA_VERSION = ['0.9']
+SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9']
 
 
 def _is_sc3ml(path_or_file_object):
@@ -78,12 +80,29 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     2011-03-11T05:46:24.120000Z | +38.297, +142.373
     2006-09-10T04:26:33.610000Z |  +9.614, +121.961
     """
-    xslt_filename = os.path.join(os.path.dirname(__file__), 'data',
-                                 'sc3ml_0.9__quakeml_1.2.xsl')
-    transform = etree.XSLT(etree.parse(xslt_filename))
     sc3ml_doc = _xml_doc_from_anything(filename)
+
+    match = re.match(
+        r'{http://geofon\.gfz-potsdam\.de/ns/seiscomp3-schema/([-+]?'
+        r'[0-9]*\.?[0-9]+)}', sc3ml_doc.tag)
+
+    try:
+        version = match.group(1)
+    except AttributeError:
+        warnings.warn('The file does not appear to be a SC3ML file. Proceed '
+                      'with caution.')
+        version = SCHEMA_VERSION[-1]
+    else:
+        if version not in SCHEMA_VERSION:
+            # By default, try to convert with the latest version
+            version = SCHEMA_VERSION[-1]
+
+    xslt_filename = os.path.join(os.path.dirname(__file__), 'data',
+                                 'sc3ml_%s__quakeml_1.2.xsl' % version)
+    transform = etree.XSLT(etree.parse(xslt_filename))
     quakeml_doc = transform(sc3ml_doc,
                             ID_PREFIX=etree.XSLT.strparam(id_prefix))
+
     return Unpickler().load(io.BytesIO(quakeml_doc))
 
 

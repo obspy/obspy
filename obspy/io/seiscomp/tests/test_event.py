@@ -86,9 +86,11 @@ class EventTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        self.assertTrue(_is_sc3ml(os.path.join(self.path, 'version0.9')))
+        for version in ['0.5', '0.6', '0.7', '0.8', '0.9']:
+            filename = os.path.join(self.path, 'version%s' % version)
+            self.assertTrue(_is_sc3ml(filename))
 
-        for version in ['0.7', '0.8', '0.10']:
+        for version in ['0.3', '0.10']:
             filename = os.path.join(self.path, 'version%s' % version)
 
             with warnings.catch_warnings(record=True) as w:

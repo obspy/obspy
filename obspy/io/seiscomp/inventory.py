@@ -37,7 +37,7 @@ from obspy.io.seiscomp.core import _is_sc3ml as _is_sc3ml_version
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
-SCHEMA_VERSION = ["0.7", "0.8", "0.9"]
+SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9']
 
 
 def _is_sc3ml(path_or_file_object):
