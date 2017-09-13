@@ -781,11 +781,9 @@ class StreamTestCase(unittest.TestCase):
         tr2.stats.calib = 2.0
         st = Stream([tr1, tr2])
         # this also emits an UserWarning
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always', UserWarning)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
             self.assertRaises(Exception, st.merge)
-            self.assertEqual(w[0].category, UserWarning)
-            self.assertIn('Incompatible traces', str(w[0]))
         # 2 - different calibration factors for the different channels is ok
         tr1 = Trace(data=np.zeros(5))
         tr1.stats.calib = 2.00
@@ -813,11 +811,9 @@ class StreamTestCase(unittest.TestCase):
         tr2.stats.sampling_rate = 50
         st = Stream([tr1, tr2])
         # this also emits an UserWarning
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always', UserWarning)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
             self.assertRaises(Exception, st.merge)
-            self.assertEqual(w[0].category, UserWarning)
-            self.assertIn('Incompatible traces', str(w[0]))
         # 2 - different sampling rates for the different channels is ok
         tr1 = Trace(data=np.zeros(5))
         tr1.stats.sampling_rate = 200
@@ -843,11 +839,9 @@ class StreamTestCase(unittest.TestCase):
         tr2 = Trace(data=np.zeros(5, dtype=np.float32))
         st = Stream([tr1, tr2])
         # this also emits an UserWarning
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always', UserWarning)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
             self.assertRaises(Exception, st.merge)
-            self.assertEqual(w[0].category, UserWarning)
-            self.assertIn('Incompatible traces', str(w[0]))
         # 2 - different sampling rates for the different channels is ok
         tr1 = Trace(data=np.zeros(5, dtype=np.int32))
         tr1.stats.channel = 'EHE'
