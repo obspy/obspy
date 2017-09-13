@@ -8,10 +8,12 @@ import os
 import sys
 import tempfile
 import unittest
+import warnings
 
-import obspy.core.util.misc as misc
 from obspy import UTCDateTime, read
 from obspy.core.compatibility import mock
+from obspy.core.util.misc import CatchOutput, get_window_times, \
+    _ENTRY_POINT_CACHE
 
 
 class UtilMiscTestCase(unittest.TestCase):
@@ -24,7 +26,7 @@ class UtilMiscTestCase(unittest.TestCase):
         Tests that CatchOutput suppresses messages
         """
         # this should write nothing to console
-        with misc.CatchOutput():
+        with CatchOutput():
             sys.stdout.write("test_suppress_output #1 failed")
             sys.stderr.write("test_suppress_output #2 failed")
             print("test_suppress_output #3 failed")
@@ -35,25 +37,25 @@ class UtilMiscTestCase(unittest.TestCase):
         """
         Tests that CatchOutput catches messages
         """
-        with misc.CatchOutput() as out:
+        with CatchOutput() as out:
             sys.stdout.write("test_catch_output #1")
             sys.stderr.write("test_catch_output #2")
         self.assertEqual(out.stdout, 'test_catch_output #1')
         self.assertEqual(out.stderr, 'test_catch_output #2')
 
-        with misc.CatchOutput() as out:
+        with CatchOutput() as out:
             print("test_catch_output #3")
         self.assertEqual(out.stdout, 'test_catch_output #3\n')
         self.assertEqual(out.stderr, '')
 
-        with misc.CatchOutput() as out:
+        with CatchOutput() as out:
             print("test_catch_output #4", file=sys.stdout)
             print("test_catch_output #5", file=sys.stderr)
         self.assertEqual(out.stdout, 'test_catch_output #4\n')
         self.assertEqual(out.stderr, 'test_catch_output #5\n')
 
     def test_catch_output_bytes(self):
-        with misc.CatchOutput() as out:
+        with CatchOutput() as out:
             if PY2:
                 sys.stdout.write(b"test_catch_output_bytes #1")
                 sys.stderr.write(b"test_catch_output_bytes #2")
@@ -68,7 +70,7 @@ class UtilMiscTestCase(unittest.TestCase):
         """
         Tests that CatchOutput context manager does not break I/O.
         """
-        with misc.CatchOutput():
+        with CatchOutput():
             fn = tempfile.TemporaryFile(prefix='obspy')
 
         try:
@@ -108,7 +110,7 @@ class UtilMiscTestCase(unittest.TestCase):
         """
         # Basic windows. 4 pieces.
         self.assertEqual(
-            misc.get_window_times(
+            get_window_times(
                 starttime=UTCDateTime(0),
                 endtime=UTCDateTime(20),
                 window_length=5.0,
@@ -125,7 +127,7 @@ class UtilMiscTestCase(unittest.TestCase):
 
         # Different step size.
         self.assertEqual(
-            misc.get_window_times(
+            get_window_times(
                 starttime=UTCDateTime(0),
                 endtime=UTCDateTime(20),
                 window_length=5.0,
@@ -140,7 +142,7 @@ class UtilMiscTestCase(unittest.TestCase):
 
         # With offset.
         self.assertEqual(
-            misc.get_window_times(
+            get_window_times(
                 starttime=UTCDateTime(0),
                 endtime=UTCDateTime(20),
                 window_length=5.0,
@@ -155,7 +157,7 @@ class UtilMiscTestCase(unittest.TestCase):
 
         # Don't return partial windows.
         self.assertEqual(
-            misc.get_window_times(
+            get_window_times(
                 starttime=UTCDateTime(0),
                 endtime=UTCDateTime(20),
                 window_length=15.0,
@@ -169,7 +171,7 @@ class UtilMiscTestCase(unittest.TestCase):
 
         # Return partial windows.
         self.assertEqual(
-            misc.get_window_times(
+            get_window_times(
                 starttime=UTCDateTime(0),
                 endtime=UTCDateTime(20),
                 window_length=15.0,
@@ -184,7 +186,7 @@ class UtilMiscTestCase(unittest.TestCase):
 
         # Negative step length has to be used together with an offset.
         self.assertEqual(
-            misc.get_window_times(
+            get_window_times(
                 starttime=UTCDateTime(0),
                 endtime=UTCDateTime(20),
                 window_length=5.0,
@@ -201,7 +203,7 @@ class UtilMiscTestCase(unittest.TestCase):
 
         # Negative step length and not partial windows.
         self.assertEqual(
-            misc.get_window_times(
+            get_window_times(
                 starttime=UTCDateTime(0),
                 endtime=UTCDateTime(20),
                 window_length=15.0,
@@ -215,7 +217,7 @@ class UtilMiscTestCase(unittest.TestCase):
 
         # Negative step length with partial windows.
         self.assertEqual(
-            misc.get_window_times(
+            get_window_times(
                 starttime=UTCDateTime(0),
                 endtime=UTCDateTime(20),
                 window_length=15.0,
@@ -230,7 +232,7 @@ class UtilMiscTestCase(unittest.TestCase):
 
         # Smaller step than window.
         self.assertEqual(
-            misc.get_window_times(
+            get_window_times(
                 starttime=UTCDateTime(0),
                 endtime=UTCDateTime(2),
                 window_length=1.0,
@@ -250,12 +252,15 @@ class UtilMiscTestCase(unittest.TestCase):
         """
         Ensure the entry point buffer caches results from load_entry_point
         """
-        with mock.patch.dict(misc._ENTRY_POINT_CACHE, clear=True):
+        with mock.patch.dict(_ENTRY_POINT_CACHE, clear=True):
             with mock.patch('obspy.core.util.misc.load_entry_point') as p:
-                st = read()
-                st.write('temp.mseed', 'mseed')
-                st.write('temp.mseed', 'mseed')
-            self.assertEqual(p.call_count, len(misc._ENTRY_POINT_CACHE))
+                # raises UserWarning: No matching response information found.
+                with warnings.catch_warnings(record=True):
+                    warnings.simplefilter('ignore', UserWarning)
+                    st = read()
+                    st.write('temp.mseed', 'mseed')
+            self.assertEqual(len(_ENTRY_POINT_CACHE), 3)
+            self.assertEqual(p.call_count, 3)
 
 
 def suite():
