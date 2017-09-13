@@ -52,7 +52,7 @@ class ScardecTestCase(unittest.TestCase):
         finally:
             try:
                 os.remove(temp_filename)
-            except:
+            except Exception:
                 pass
 
         # Test file header
