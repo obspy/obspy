@@ -871,99 +871,99 @@ class UTCDateTimeTestCase(unittest.TestCase):
             dt2 = UTCDateTime(0.004, precision=precision)
             dt3 = UTCDateTime(0.007, precision=precision)
             # comparison
-            self.assertEquals(dt1 == dt2, False)
-            self.assertEquals(dt2 == dt3, False)
-            self.assertEquals(dt1 == dt3, False)
-            self.assertEquals(dt1 < dt2, True)
-            self.assertEquals(dt2 < dt3, True)
-            self.assertEquals(dt1 < dt3, True)
-            self.assertEquals(dt1 <= dt2, True)
-            self.assertEquals(dt2 <= dt3, True)
-            self.assertEquals(dt1 <= dt3, True)
-            self.assertEquals(dt1 > dt2, False)
-            self.assertEquals(dt2 > dt3, False)
-            self.assertEquals(dt1 > dt3, False)
-            self.assertEquals(dt1 >= dt2, False)
-            self.assertEquals(dt2 >= dt3, False)
-            self.assertEquals(dt1 >= dt3, False)
+            self.assertEqual(dt1 == dt2, False)
+            self.assertEqual(dt2 == dt3, False)
+            self.assertEqual(dt1 == dt3, False)
+            self.assertEqual(dt1 < dt2, True)
+            self.assertEqual(dt2 < dt3, True)
+            self.assertEqual(dt1 < dt3, True)
+            self.assertEqual(dt1 <= dt2, True)
+            self.assertEqual(dt2 <= dt3, True)
+            self.assertEqual(dt1 <= dt3, True)
+            self.assertEqual(dt1 > dt2, False)
+            self.assertEqual(dt2 > dt3, False)
+            self.assertEqual(dt1 > dt3, False)
+            self.assertEqual(dt1 >= dt2, False)
+            self.assertEqual(dt2 >= dt3, False)
+            self.assertEqual(dt1 >= dt3, False)
             # sorting
             times = [dt3, dt2, dt1]
             sorted_times = sorted(times)
-            self.assertEquals(sorted_times[0] <= sorted_times[2], True)
-            self.assertEquals(sorted_times[0] < sorted_times[2], True)
-            self.assertEquals(sorted_times[0] == sorted_times[2], False)
-            self.assertEquals(sorted_times, [dt1, dt2, dt3])
+            self.assertEqual(sorted_times[0] <= sorted_times[2], True)
+            self.assertEqual(sorted_times[0] < sorted_times[2], True)
+            self.assertEqual(sorted_times[0] == sorted_times[2], False)
+            self.assertEqual(sorted_times, [dt1, dt2, dt3])
             # min, max
             max_times = max(dt2, dt1, dt3)
-            self.assertEquals(max_times, dt3)
-            self.assertEquals(max_times._ns, 7000000)
+            self.assertEqual(max_times, dt3)
+            self.assertEqual(max_times._ns, 7000000)
             max_times = max(dt1, dt2, dt3)
-            self.assertEquals(max_times, dt3)
-            self.assertEquals(max_times._ns, 7000000)
+            self.assertEqual(max_times, dt3)
+            self.assertEqual(max_times._ns, 7000000)
             times = [dt2, dt1, dt3]
-            self.assertEquals(max(times), dt3)
-            self.assertEquals(max(times)._ns, 7000000)
-            self.assertEquals(min(times), dt1)
-            self.assertEquals(min(times)._ns, 1000000)
-            self.assertEquals(max(times) - min(times), 0.006)
+            self.assertEqual(max(times), dt3)
+            self.assertEqual(max(times)._ns, 7000000)
+            self.assertEqual(min(times), dt1)
+            self.assertEqual(min(times)._ns, 1000000)
+            self.assertEqual(max(times) - min(times), 0.006)
             times = [dt1, dt2, dt3]
-            self.assertEquals(max(times) - min(times), 0.006)
+            self.assertEqual(max(times) - min(times), 0.006)
 
         # 2 - precision set to 2
         dt1 = UTCDateTime(0.001, precision=2)  # == 0.00
         dt2 = UTCDateTime(0.004, precision=2)  # == 0.00
         dt3 = UTCDateTime(0.007, precision=2)  # == 0.01
         # comparison
-        self.assertEquals(dt1 == dt2, True)
-        self.assertEquals(dt2 == dt3, False)
-        self.assertEquals(dt1 == dt3, False)
-        self.assertEquals(dt1 < dt2, False)
-        self.assertEquals(dt2 < dt3, True)
-        self.assertEquals(dt1 < dt3, True)
-        self.assertEquals(dt1 <= dt2, True)
-        self.assertEquals(dt2 <= dt3, True)
-        self.assertEquals(dt1 <= dt3, True)
-        self.assertEquals(dt1 > dt2, False)
-        self.assertEquals(dt2 > dt3, False)
-        self.assertEquals(dt1 > dt3, False)
-        self.assertEquals(dt1 >= dt2, True)
-        self.assertEquals(dt2 >= dt3, False)
-        self.assertEquals(dt1 >= dt3, False)
+        self.assertEqual(dt1 == dt2, True)
+        self.assertEqual(dt2 == dt3, False)
+        self.assertEqual(dt1 == dt3, False)
+        self.assertEqual(dt1 < dt2, False)
+        self.assertEqual(dt2 < dt3, True)
+        self.assertEqual(dt1 < dt3, True)
+        self.assertEqual(dt1 <= dt2, True)
+        self.assertEqual(dt2 <= dt3, True)
+        self.assertEqual(dt1 <= dt3, True)
+        self.assertEqual(dt1 > dt2, False)
+        self.assertEqual(dt2 > dt3, False)
+        self.assertEqual(dt1 > dt3, False)
+        self.assertEqual(dt1 >= dt2, True)
+        self.assertEqual(dt2 >= dt3, False)
+        self.assertEqual(dt1 >= dt3, False)
         # sorting
         times = [dt3, dt2, dt1]
         sorted_times = sorted(times)
-        self.assertEquals(sorted_times[0] <= sorted_times[2], True)
-        self.assertEquals(sorted_times[0] < sorted_times[2], True)
-        self.assertEquals(sorted_times[0] == sorted_times[2], False)
-        self.assertEquals(sorted_times[0] > sorted_times[2], False)
-        self.assertEquals(sorted_times[0] >= sorted_times[2], False)
-        self.assertEquals(sorted_times, [dt2, dt1, dt3])  # expected
-        self.assertEquals(sorted_times, [dt2, dt1, dt3])  # due to precision
+        self.assertEqual(sorted_times[0] <= sorted_times[2], True)
+        self.assertEqual(sorted_times[0] < sorted_times[2], True)
+        self.assertEqual(sorted_times[0] == sorted_times[2], False)
+        self.assertEqual(sorted_times[0] > sorted_times[2], False)
+        self.assertEqual(sorted_times[0] >= sorted_times[2], False)
+        self.assertEqual(sorted_times, [dt2, dt1, dt3])  # expected
+        self.assertEqual(sorted_times, [dt2, dt1, dt3])  # due to precision
         # check correct sort order
-        self.assertEquals(sorted_times[0]._ns, dt2._ns)
-        self.assertEquals(sorted_times[2]._ns, dt3._ns)
+        self.assertEqual(sorted_times[0]._ns, dt2._ns)
+        self.assertEqual(sorted_times[2]._ns, dt3._ns)
         # min, max
         max_times = max(dt2, dt1, dt3)
-        self.assertEquals(max_times, dt3)
-        self.assertEquals(max_times._ns, 7000000)
+        self.assertEqual(max_times, dt3)
+        self.assertEqual(max_times._ns, 7000000)
         max_times = max(dt1, dt2, dt3)
-        self.assertEquals(max_times, dt3)
-        self.assertEquals(max_times._ns, 7000000)
+        self.assertEqual(max_times, dt3)
+        self.assertEqual(max_times._ns, 7000000)
         # min, max lists
         times = [dt2, dt1, dt3]
-        self.assertEquals(max(times), dt3)
-        self.assertEquals(max(times)._ns, 7000000)
-        self.assertEquals(min(times), dt2)  # expected
-        self.assertEquals(min(times), dt1)  # due to precision
-        self.assertEquals(min(times)._ns, 4000000)  # due to given list order
-        self.assertEquals(max(times) - min(times), 0.01)
+        self.assertEqual(max(times), dt3)
+        self.assertEqual(max(times)._ns, 7000000)
+        self.assertEqual(min(times), dt2)  # expected
+        self.assertEqual(min(times), dt1)  # due to precision
+        self.assertEqual(min(times)._ns, 4000000)  # due to given list order
+        self.assertEqual(max(times) - min(times), 0.01)
         times = [dt1, dt2, dt3]
-        self.assertEquals(max(times), dt3)
-        self.assertEquals(max(times)._ns, 7000000)
-        self.assertEquals(min(times), dt1)  # expected
-        self.assertEquals(min(times), dt2)  # due to precision
-        self.assertEquals(min(times)._ns, 1000000)  # due to given list order
-        self.assertEquals(max(times) - min(times), 0.01)
+        self.assertEqual(max(times), dt3)
+        self.assertEqual(max(times)._ns, 7000000)
+        self.assertEqual(min(times), dt1)  # expected
+        self.assertEqual(min(times), dt2)  # due to precision
+        self.assertEqual(min(times)._ns, 1000000)  # due to given list order
+        self.assertEqual(max(times) - min(times), 0.01)
 
     def test_datetime_with_timezone(self):
         """
