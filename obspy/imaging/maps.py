@@ -373,7 +373,7 @@ def _plot_basemap_into_axes(
                     delta = round(2. * dval / n, round_pos) / 2
                 new_val1 = np.ceil(val1 / delta) * delta
                 new_val2 = np.floor(val2 / delta) * delta
-                n = (new_val2 - new_val1) / delta + 1
+                n = int((new_val2 - new_val1) / delta + 1)
                 return np.linspace(new_val1, new_val2, n)
 
             n_1 = int(np.ceil(height / max(width, height) * 8))
