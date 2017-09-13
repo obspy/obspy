@@ -108,19 +108,26 @@ class ScanTestCase(unittest.TestCase):
             for filename in self.all_files:
                 shutil.copy(filename, os.curdir)
 
+                # save via command line
             obspy_scan([os.curdir, '--write', 'scan.npz'])
+
+            # save via Python
             scanner.parse(os.curdir)
             scanner.save_npz('scanner.npz')
             scanner = Scanner()
+
             # version string of '0.0.0+archive' raises UserWarning - ignore
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('ignore', UserWarning)
-                scanner.load_npz('scanner.npz')
 
-            with ImageComparison(self.path, 'scan.png') as ic:
-                obspy_scan(['--load', 'scan.npz', '--output', ic.name])
-        with ImageComparison(self.path, 'scan.png') as ic:
-            scanner.plot(ic.name)
+                # load via Python
+                scanner.load_npz('scanner.npz')
+                with ImageComparison(self.path, 'scan.png') as ic:
+                    scanner.plot(ic.name)
+
+                # load via command line
+                with ImageComparison(self.path, 'scan.png') as ic:
+                    obspy_scan(['--load', 'scan.npz', '--output', ic.name])
 
     def test_scan_times(self):
         """
