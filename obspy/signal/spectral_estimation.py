@@ -26,11 +26,9 @@ import bisect
 import glob
 import math
 import os
-import platform
 import warnings
 
 import numpy as np
-import matplotlib
 from matplotlib import mlab
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.ticker import FormatStrFormatter
@@ -226,7 +224,8 @@ class PPSD(object):
     def __init__(self, stats, metadata, skip_on_gaps=False,
                  db_bins=(-200, -50, 1.), ppsd_length=3600.0, overlap=0.5,
                  special_handling=None, period_smoothing_width_octaves=1.0,
-                 period_step_octaves=0.125, period_limits=None, **kwargs):
+                 period_step_octaves=0.125, period_limits=None,
+                 **kwargs):  # @UnusedVariable
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -1130,7 +1129,7 @@ class PPSD(object):
                         units="VEL", freq=False, debug=False)
         return resp
 
-    def _get_response_from_paz_dict(self, tr):
+    def _get_response_from_paz_dict(self, tr):  # @UnusedVariable
         paz = self.metadata
         resp = paz_to_freq_resp(paz['poles'], paz['zeros'],
                                 paz['gain'] * paz['sensitivity'],
@@ -1395,19 +1394,6 @@ class PPSD(object):
             ax.grid()
 
         if self.special_handling is None:
-            # TODO can be removed once Ubuntu 16.10 is dropped (July 2017)
-            if (platform.system() == 'Linux' and
-                    platform.linux_distribution() ==
-                    ('Ubuntu', '16.10', 'yakkety') and
-                    matplotlib.__file__.startswith('/usr/lib')):
-                msg = ('Matplotlib rendering on Ubuntu 16.10 Yakkety has a '
-                       'bug, see https://github.com/matplotlib/matplotlib/'
-                       'issues/6976. Trying to work around it by setting'
-                       'matplotlib.rcParams["mathtext.fontset"] = "stix", see '
-                       'https://github.com/matplotlib/matplotlib/issues/6976#'
-                       'issuecomment-248855463')
-                warnings.warn(msg)
-                matplotlib.rcParams["mathtext.fontset"] = "stix"
             cb.ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
         else:
             cb.ax.set_ylabel('Amplitude [dB]')
