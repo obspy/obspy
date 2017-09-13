@@ -3,18 +3,18 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+from future.builtins import *  # NOQA @UnusedWildImport
+
 import inspect
 import io
+import os
+import unittest
+import numpy as np
+import warnings
+
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.scardec.core import _is_scardec
-import os
-import unittest
-import warnings
-
-from future.builtins import *  # NOQA @UnusedWildImport
-
-import numpy as np
 
 
 class ScardecTestCase(unittest.TestCase):
