@@ -104,6 +104,12 @@ class PsdTestCase(unittest.TestCase):
         # some pre-computed ppsd used for plotting tests:
         # (ppsd._psd_periods was downcast to np.float16 to save space)
         self.example_ppsd_npz = os.path.join(PATH, "ppsd_kw1_ehz.npz")
+        # ignore some "RuntimeWarning: underflow encountered in multiply"
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
 
     def test_obspy_psd_vs_pitsa(self):
         """
