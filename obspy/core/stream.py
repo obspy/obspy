@@ -1710,7 +1710,7 @@ class Stream(object):
             include_partial_windows=include_partial_windows)
 
         if len(windows) < 1:
-            raise StopIteration
+            return
 
         for start, stop in windows:
             temp = self.slice(start, stop,
@@ -1720,8 +1720,6 @@ class Stream(object):
             if not temp:
                 continue
             yield temp
-
-        raise StopIteration
 
     def select(self, network=None, station=None, location=None, channel=None,
                sampling_rate=None, npts=None, component=None, id=None):

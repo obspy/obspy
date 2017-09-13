@@ -1245,13 +1245,11 @@ class Trace(object):
             include_partial_windows=include_partial_windows)
 
         if len(windows) < 1:
-            raise StopIteration
+            return
 
         for start, stop in windows:
             yield self.slice(start, stop,
                              nearest_sample=nearest_sample)
-
-        raise StopIteration
 
     def verify(self):
         """
