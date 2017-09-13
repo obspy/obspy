@@ -399,6 +399,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     else:
         print("Error: Could not sent a test report to %s." % (server))
         print(response.reason)
+    conn.close()
 
 
 class _TextTestResult(unittest._TextTestResult):
