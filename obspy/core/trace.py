@@ -164,7 +164,8 @@ class Stats(AttribDict):
             elif key == 'starttime':
                 value = UTCDateTime(value)
             elif key == 'npts':
-                value = int(value)
+                if not isinstance(value, int):
+                    value = int(value)
             # set current key
             super(Stats, self).__setitem__(key, value)
             # set derived value: delta
