@@ -315,16 +315,17 @@ def locations2degrees(lat1, long1, lat2, long2):
     Earth. For more accurate values use the geodesic distance calculations of
     geopy (https://github.com/geopy/geopy).
 
-    :type lat1: float
-    :param lat1: Latitude of point 1 in degrees
-    :type long1: float
-    :param long1: Longitude of point 1 in degrees
-    :type lat2: float
-    :param lat2: Latitude of point 2 in degrees
-    :type long2: float
-    :param long2: Longitude of point 2 in degrees
-    :rtype: float
-    :return: Distance in degrees as a floating point number.
+    :type lat1: float or :class:`numpy.ndarray`
+    :param lat1: Latitude(s) of point 1 in degrees
+    :type long1: float or :class:`numpy.ndarray`
+    :param long1: Longitude(s) of point 1 in degrees
+    :type lat2: float or :class:`numpy.ndarray`
+    :param lat2: Latitude(s) of point 2 in degrees
+    :type long2: float or :class:`numpy.ndarray`
+    :param long2: Longitude(s) of point 2 in degrees
+    :rtype: float or :class:`numpy.ndarray`
+    :return: Distance in degrees as a floating point number,
+        or numpy array of element-wise distances in degrees
 
     .. rubric:: Example
 
@@ -332,20 +333,24 @@ def locations2degrees(lat1, long1, lat2, long2):
     >>> locations2degrees(5, 5, 10, 10)
     7.0397014191753815
     """
+    # broadcast explicitly here so it raises once instead of somewhere in the
+    # middle if things can't be broadcast
+    lat1, lat2, long1, long2 = np.broadcast_arrays(lat1, lat2, long1, long2)
+
     # Convert to radians.
-    lat1 = math.radians(lat1)
-    lat2 = math.radians(lat2)
-    long1 = math.radians(long1)
-    long2 = math.radians(long2)
+    lat1 = np.radians(np.asarray(lat1))
+    lat2 = np.radians(np.asarray(lat2))
+    long1 = np.radians(np.asarray(long1))
+    long2 = np.radians(np.asarray(long2))
     long_diff = long2 - long1
-    gd = math.degrees(
-        math.atan2(
-            math.sqrt((
-                math.cos(lat2) * math.sin(long_diff)) ** 2 +
-                (math.cos(lat1) * math.sin(lat2) - math.sin(lat1) *
-                    math.cos(lat2) * math.cos(long_diff)) ** 2),
-            math.sin(lat1) * math.sin(lat2) + math.cos(lat1) * math.cos(lat2) *
-            math.cos(long_diff)))
+    gd = np.degrees(
+        np.arctan2(
+            np.sqrt((
+                np.cos(lat2) * np.sin(long_diff)) ** 2 +
+                (np.cos(lat1) * np.sin(lat2) - np.sin(lat1) *
+                    np.cos(lat2) * np.cos(long_diff)) ** 2),
+            np.sin(lat1) * np.sin(lat2) + np.cos(lat1) * np.cos(lat2) *
+            np.cos(long_diff)))
     return gd
 
 

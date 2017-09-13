@@ -17,7 +17,6 @@ from future.utils import python_2_unicode_compatible, native_str
 import copy
 import fnmatch
 import os
-from pkg_resources import load_entry_point
 import textwrap
 import warnings
 
@@ -26,6 +25,7 @@ from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
                                   _read_from_plugin, NamedTemporaryFile,
                                   download_to_file)
 from obspy.core.util.decorator import map_example_filename
+from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .network import Network
@@ -47,7 +47,7 @@ def _create_example_inventory():
 
 
 @map_example_filename("path_or_file_object")
-def read_inventory(path_or_file_object=None, format=None):
+def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     """
     Function to read inventory files.
 
@@ -56,6 +56,9 @@ def read_inventory(path_or_file_object=None, format=None):
         object will be returned.
     :type format: str, optional
     :param format: Format of the file to read (e.g. ``"STATIONXML"``).
+
+    Additional args and kwargs are passed on to the underlying ``_read_X()``
+    methods of the inventory plugins.
 
     .. note::
 
@@ -76,7 +79,7 @@ def read_inventory(path_or_file_object=None, format=None):
             download_to_file(url=path_or_file_object, filename_or_buffer=fh)
             return read_inventory(fh.name, format=format)
     return _read_from_plugin("inventory", path_or_file_object,
-                             format=format)[0]
+                             format=format, *args, **kwargs)[0]
 
 
 @python_2_unicode_compatible
@@ -267,7 +270,7 @@ class Inventory(ComparingObject):
             # get format specific entry point
             format_ep = ENTRY_POINTS['inventory_write'][format]
             # search writeFormat method for given entry point
-            write_format = load_entry_point(
+            write_format = buffered_load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.inventory.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
@@ -680,8 +683,8 @@ class Inventory(ComparingObject):
 
     def plot_response(self, min_freq, output="VEL", network="*", station="*",
                       location="*", channel="*", time=None, starttime=None,
-                      endtime=None, axes=None, unwrap_phase=False, show=True,
-                      outfile=None):
+                      endtime=None, axes=None, unwrap_phase=False,
+                      plot_degrees=False, show=True, outfile=None):
         """
         Show bode plot of instrument response of all (or a subset of) the
         inventory's channels.
@@ -728,6 +731,8 @@ class Inventory(ComparingObject):
             opened.
         :type unwrap_phase: bool
         :param unwrap_phase: Set optional phase unwrapping using NumPy.
+        :type plot_degrees: bool
+        :param plot_degrees: if ``True`` plot bode in degrees
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.
@@ -773,7 +778,8 @@ class Inventory(ComparingObject):
                                  axes=(ax1, ax2),
                                  label=".".join((net.code, sta.code,
                                                  cha.location_code, cha.code)),
-                                 unwrap_phase=unwrap_phase, show=False,
+                                 unwrap_phase=unwrap_phase,
+                                 plot_degrees=plot_degrees, show=False,
                                  outfile=None)
                     except ZeroSamplingRate:
                         msg = ("Skipping plot of channel with zero "
@@ -782,12 +788,10 @@ class Inventory(ComparingObject):
                     except ObsPyException as e:
                         msg = "Skipping plot of channel (%s):\n%s"
                         warnings.warn(msg % (str(e), str(cha)), UserWarning)
-
         # final adjustments to plot if we created the figure in here
         if not axes:
             from obspy.core.inventory.response import _adjust_bode_plot_figure
-            _adjust_bode_plot_figure(fig, show=False)
-
+            _adjust_bode_plot_figure(fig, plot_degrees, show=False)
         if outfile:
             fig.savefig(outfile)
         else:

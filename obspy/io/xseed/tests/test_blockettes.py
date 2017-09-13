@@ -297,6 +297,35 @@ class BlocketteTestCase(unittest.TestCase):
         blockette.parse_seed(b050_orig.encode('utf-8'))
         self.assertRaises(SEEDTypeException, blockette.get_seed)
 
+    def test_equality_and_unequality(self):
+        """
+        Tests the rich (un)equality dunder methods.
+        """
+        a = Blockette050()
+        b = Blockette050()
+        c = Blockette050()
+        d = Blockette060()
+
+        a.test = 1
+        b.test = 1
+        c.test = 2
+        d.test = 1
+
+        self.assertTrue(a == a)
+        self.assertTrue(a == b)
+        self.assertTrue(a != c)
+        self.assertTrue(a != d)
+        # Revert order
+        self.assertTrue(a == a)
+        self.assertTrue(b == a)
+        self.assertTrue(c != a)
+        self.assertTrue(d != a)
+        # Negations
+        self.assertFalse(a != a)
+        self.assertFalse(a != b)
+        self.assertFalse(a == c)
+        self.assertFalse(a == d)
+
 
 def suite():
     return unittest.makeSuite(BlocketteTestCase, 'test')

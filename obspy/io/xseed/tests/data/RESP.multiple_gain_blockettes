@@ -1,0 +1,76 @@
+#		<< obspy, Version 1.0.3.post0+1404.g5be16f2928.dirty >>
+#
+#		======== CHANNEL RESPONSE DATA ========
+B050F03     Station:     BMN
+B050F16     Network:     US
+B052F03     Location:    ??
+B052F04     Channel:     LLZ
+B052F22     Start date:  1995,001
+B052F23     End date:    1997,014,00:08:00.0000
+#		=======================================
+#		+               +--------------------------------------------+                +
+#		+               |   Response (Poles & Zeros),   BMN ch LLZ   |                +
+#		+               +--------------------------------------------+                +
+#
+B053F03     Transfer function type:                A [Laplace Transform (Rad/sec)]
+B053F04     Stage sequence number:                 1
+B053F05     Response in units lookup:              M/S**2 - Acceleration in Meters Per Second Per Second
+B053F06     Response out units lookup:             V - Volts
+B053F07     A0 normalization factor:               2.67955E+11
+B053F08     Normalization frequency:               0.1
+B053F09     Number of zeroes:                      0
+B053F14     Number of poles:                       4
+#		Complex zeroes:
+#		  i  real          imag          real_error    imag_error
+#		Complex poles:
+#		  i  real          imag          real_error    imag_error
+B053F15-18    0 -2.199000E+02  0.000000E+00  0.000000E+00  0.000000E+00
+B053F15-18    1 -5.655000E+02  0.000000E+00  0.000000E+00  0.000000E+00
+B053F15-18    2 -1.225000E+03  0.000000E+00  0.000000E+00  0.000000E+00
+B053F15-18    3 -1.759000E+03  0.000000E+00  0.000000E+00  0.000000E+00
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,   BMN ch LLZ      |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 1
+B058F04     Gain:                                  4.900000E-01
+B058F05     Frequency of gain:                     1.000000E-01 HZ
+B058F06     Number of calibrations:                0
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,   BMN ch LLZ      |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 1
+B058F04     Gain:                                  1.247060E+03
+B058F05     Frequency of gain:                     1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,   BMN ch LLZ      |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 1
+B058F04     Gain:                                  1.310400E+03
+B058F05     Frequency of gain:                     1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,   BMN ch LLZ      |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 1
+B058F04     Gain:                                  5.000000E-01
+B058F05     Frequency of gain:                     1.000000E-01 HZ
+B058F06     Number of calibrations:                0
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity,   BMN ch LLZ   |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           0.5
+B058F05     Frequency of sensitivity:              1.000000E-01 HZ
+B058F06     Number of calibrations:                0
+#

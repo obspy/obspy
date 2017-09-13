@@ -105,15 +105,23 @@ def _is_segy(filename):
     _number_of_data_traces = unpack(fmt, _number_of_data_traces)[0]
     _number_of_auxiliary_traces = unpack(fmt,
                                          _number_of_auxiliary_traces)[0]
+
     _format_number = unpack(fmt, _format_number)[0]
+    # Test the version number. The only really supported version number in
+    # ObsPy is 1.0 which is encoded as 0100_16. Many file have version
+    # number zero which is used to indicate "traditional SEG-Y" conforming
+    # to the 1975 standard.
+    # Also allow 0010_16 and 0001_16 as the definition is honestly awkward
+    # and I image many writers get it wrong.
+    if _format_number not in (0x0000, 0x0100, 0x0010, 0x0001):
+        return False
+
     _fixed_length = unpack(fmt, _fixed_length)[0]
     _extended_number = unpack(fmt, _extended_number)[0]
     # Make some sanity checks and return False if they fail.
-    # Unfortunately the format number is 0 in many files so it cannot be truly
-    # tested.
     if _sample_interval <= 0 or _samples_per_trace <= 0 \
-       or _number_of_data_traces < 0 or _number_of_auxiliary_traces < 0 \
-       or _format_number < 0 or _fixed_length < 0 or _extended_number < 0:
+            or _number_of_data_traces < 0 or _number_of_auxiliary_traces < 0 \
+            or _fixed_length < 0 or _extended_number < 0:
         return False
     return True
 
@@ -656,7 +664,7 @@ class LazyTraceHeaderAttribDict(AttribDict):
 
     This version is used for the SEGY/SU trace headers.
     """
-    readonly = []
+    readonly = ["unpacked_header", "endian"]
 
     def __init__(self, unpacked_header, unpacked_header_endian, data={}):
         dict.__init__(data)
@@ -667,9 +675,7 @@ class LazyTraceHeaderAttribDict(AttribDict):
     def __getitem__(self, name):
         # Return if already set.
         if name in self.__dict__:
-            if name in self.readonly:
-                return self.__dict__[name]
-            return super(AttribDict, self).__getitem__(name)
+            return self.__dict__[name]
         # Otherwise try to unpack them.
         try:
             index = TRACE_HEADER_KEYS.index(name)
@@ -694,7 +700,7 @@ class LazyTraceHeaderAttribDict(AttribDict):
             unpacked_header=deepcopy(self.__dict__['unpacked_header']),
             unpacked_header_endian=deepcopy(self.__dict__['endian']),
             data=dict((k, deepcopy(v)) for k, v in self.__dict__.items()
-                      if k not in ('unpacked_data', 'endian')))
+                      if k not in self.readonly))
         return ad
 
 

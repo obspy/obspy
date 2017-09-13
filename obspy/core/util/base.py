@@ -10,24 +10,23 @@ Base utilities and constants for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
+from future.builtins import *  # NOQA
 
 import doctest
 import inspect
 import io
 import os
-import pkg_resources
 import sys
 import tempfile
 from collections import OrderedDict
 
-from pkg_resources import iter_entry_points, load_entry_point
 import numpy as np
-
+import pkg_resources
 import requests
+from future.utils import native_str
+from pkg_resources import iter_entry_points
 
-from obspy.core.util.misc import to_int_or_zero
+from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 
 
 # defining ObsPy modules currently used by runtests and the path function
@@ -36,13 +35,14 @@ DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
                    'io.cnv', 'io.css', 'io.win', 'io.gcf', 'io.gse2',
                    'io.json', 'io.kinemetrics', 'io.kml', 'io.mseed', 'io.ndk',
                    'io.nied', 'io.nlloc', 'io.nordic', 'io.pdas', 'io.pde',
-                   'io.quakeml', 'io.reftek', 'io.sac', 'io.seg2', 'io.segy',
-                   'io.seisan', 'io.sh', 'io.shapefile', 'io.seiscomp',
-                   'io.stationtxt', 'io.stationxml', 'io.wav', 'io.xseed',
-                   'io.y', 'io.zmap', 'realtime', 'scripts', 'signal', 'taup']
+                   'io.quakeml', 'io.reftek', 'io.sac', 'io.scardec',
+                   'io.seg2', 'io.segy', 'io.seisan', 'io.sh', 'io.shapefile',
+                   'io.seiscomp', 'io.stationtxt', 'io.stationxml', 'io.wav',
+                   'io.xseed', 'io.y', 'io.zmap', 'realtime', 'scripts',
+                   'signal', 'taup']
 NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',
-                   'clients.iris', 'clients.neic', 'clients.seedlink',
-                   'clients.seishub', 'clients.syngine']
+                   'clients.iris', 'clients.neic', 'clients.nrl',
+                   'clients.seedlink', 'clients.seishub', 'clients.syngine']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
@@ -319,19 +319,21 @@ def _get_function_from_entry_point(group, type):
     # import function point
     # any issue during import of entry point should be raised, so the user has
     # a chance to correct the problem
-    func = load_entry_point(entry_point.dist.key, 'obspy.plugin.%s' % (group),
-                            entry_point.name)
+    func = buffered_load_entry_point(entry_point.dist.key,
+                                     'obspy.plugin.%s' % (group),
+                                     entry_point.name)
     return func
 
 
-def get_dependency_version(package_name):
+def get_dependency_version(package_name, raw_string=False):
     """
     Get version information of a dependency package.
 
     :type package_name: str
     :param package_name: Name of package to return version info for
     :returns: Package version as a list of three integers or ``None`` if
-        import fails.
+        import fails. With option ``raw_string=True`` returns raw version
+        string instead (or ``None`` if import fails).
         The last version number can indicate different things like it being a
         version from the old svn trunk, the latest git repo, some release
         candidate version, ...
@@ -339,12 +341,14 @@ def get_dependency_version(package_name):
         0.
     """
     try:
-        version = pkg_resources.get_distribution(package_name).version
+        version_string = pkg_resources.get_distribution(package_name).version
     except pkg_resources.DistributionNotFound:
         return None
-    version = version.split("rc")[0].strip("~")
-    version = list(map(to_int_or_zero, version.split(".")))
-    return version
+    if raw_string:
+        return version_string
+    version_list = version_string.split("rc")[0].strip("~")
+    version_list = list(map(to_int_or_zero, version_list.split(".")))
+    return version_list
 
 
 NUMPY_VERSION = get_dependency_version('numpy')
@@ -365,7 +369,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
         # auto detect format - go through all known formats in given sort order
         for format_ep in eps.values():
             # search isFormat for given entry point
-            is_format = load_entry_point(
+            is_format = buffered_load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
@@ -395,7 +399,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     # file format should be known by now
     try:
         # search readFormat for given entry point
-        read_format = load_entry_point(
+        read_format = buffered_load_entry_point(
             format_ep.dist.key,
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
             'readFormat')
@@ -435,6 +439,8 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     NORDIC    :mod:`obspy.io.nordic` :func:`obspy.io.nordic.core.write_select`
     QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
     SC3ML   :mod:`...io.seiscomp` :func:`obspy.io.seiscomp.event._write_sc3ml`
+    SCARDEC   :mod:`obspy.io.scardec`
+                             :func:`obspy.io.scardec.core._write_scardec`
     SHAPEFILE :mod:`obspy.io.shapefile`
                              :func:`obspy.io.shapefile.core._write_shapefile`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`
@@ -462,8 +468,8 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     mod_list = []
     for name, ep in eps.items():
         module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
-        func = load_entry_point(ep.dist.key,
-                                "obspy.plugin.%s.%s" % (group, name), method)
+        ep_list = [ep.dist.key, "obspy.plugin.%s.%s" % (group, name), method]
+        func = buffered_load_entry_point(*ep_list)
         func_str = ':func:`%s`' % ".".join((ep.module_name, func.__name__))
         mod_list.append((name, module_short, func_str))
 

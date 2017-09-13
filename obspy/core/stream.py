@@ -22,7 +22,6 @@ import re
 import warnings
 from glob import glob, has_magic
 
-from pkg_resources import load_entry_point
 import numpy as np
 
 from obspy.core import compatibility
@@ -33,7 +32,7 @@ from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
                                   _read_from_plugin, download_to_file)
 from obspy.core.util.decorator import (map_example_filename,
                                        raise_if_masked, uncompress_file)
-from obspy.core.util.misc import get_window_times
+from obspy.core.util.misc import get_window_times, buffered_load_entry_point
 
 
 _headonly_warning_msg = (
@@ -43,7 +42,7 @@ _headonly_warning_msg = (
 @map_example_filename("pathname_or_url")
 def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
          endtime=None, nearest_sample=True, dtype=None, apply_calib=False,
-         **kwargs):
+         check_compression=True, **kwargs):
     """
     Read waveform files into an ObsPy Stream object.
 
@@ -85,6 +84,9 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     :type apply_calib: bool, optional
     :param apply_calib: Automatically applies the calibration factor
         ``trace.stats.calib`` for each trace, if set. Defaults to ``False``.
+    :param check_compression: Check for compression on file and decompress
+        if needed. This may be disabled for a moderate speed up.
+    :type check_compression: bool, optional
     :param kwargs: Additional keyword arguments passed to the underlying
         waveform reader method.
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
@@ -197,6 +199,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     kwargs['starttime'] = starttime
     kwargs['endtime'] = endtime
     kwargs['nearest_sample'] = nearest_sample
+    kwargs['check_compression'] = check_compression
     # create stream
     st = Stream()
     if pathname_or_url is None:
@@ -1429,7 +1432,7 @@ class Stream(object):
             # get format specific entry point
             format_ep = ENTRY_POINTS['waveform_write'][format]
             # search writeFormat method for given entry point
-            write_format = load_entry_point(
+            write_format = buffered_load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
@@ -1805,8 +1808,6 @@ class Stream(object):
             if npts is not None and int(npts) != trace.stats.npts:
                 continue
             if component is not None:
-                if len(trace.stats.channel) < 3:
-                    continue
                 if not fnmatch.fnmatch(trace.stats.channel[-1].upper(),
                                        component.upper()):
                     continue

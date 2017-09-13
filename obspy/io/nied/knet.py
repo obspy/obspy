@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """
+obspy.io.nied.knet - K-NET/KiK-net read support for ObsPy
+=========================================================
+
 Reading of the K-NET and KiK-net ASCII format as defined on
 http://www.kyoshin.bosai.go.jp.
 """

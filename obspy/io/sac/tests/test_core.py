@@ -36,6 +36,7 @@ class CoreTestCase(unittest.TestCase):
         self.fileseis = os.path.join(self.path, "data", "seism.sac")
         self.file_notascii = os.path.join(self.path, "data",
                                           "non_ascii.sac")
+        self.file_encode = os.path.join(self.path, "data", "test_encode.sac")
         self.testdata = np.array(
             [-8.74227766e-08, -3.09016973e-01,
              -5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
@@ -914,6 +915,20 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr1.stats.starttime, reftime)
         self.assertAlmostEqual(tr1.stats.sac.a, a, places=5)
         self.assertEqual(tr1.stats.sac.b, b)
+
+    def test_wrong_encoding(self):
+        """
+        Read SAC file with wrong encoding
+        """
+        tr0 = read(self.file_encode)[0]
+        self.assertEqual(tr0.stats.get('channel'), '????????')
+
+    def test_encoding_flag(self):
+        """
+        Test passing encoding flag through obspy.read
+        """
+        tr0 = read(self.file_encode, encoding='cp1252')[0]
+        self.assertEqual(tr0.stats.get('channel'), 'ÇÏÿÿÇÏÿÿ')
 
 
 def suite():

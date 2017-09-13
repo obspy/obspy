@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.zmap - ZMAP read/write support.
-========================================
+obspy.io.zmap - ZMAP read and write support for ObsPy
+=====================================================
 
 This module provides read and write support for the ZMAP format.
 

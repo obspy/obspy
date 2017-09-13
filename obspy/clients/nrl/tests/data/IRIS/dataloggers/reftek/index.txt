@@ -1,0 +1,20 @@
+[Main]
+question = "Select the REF TEK model"
+
+[RT 125 & 125A]
+path = "RT125/index.txt
+
+[RT 130 & 130-SMA]
+path = "rt130.txt
+
+[RT 130S & 130-SMHR]
+path = "rt130S.txt"
+
+[RT 72A-06]
+path = "rt72a06.txt"
+
+[RT 72A-07]
+path = "rt72a07.txt"
+
+[RT 72A-08]
+path = "RT72A08/index.txt"

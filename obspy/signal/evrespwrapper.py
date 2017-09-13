@@ -257,7 +257,8 @@ clibevresp._obspy_check_channel.restype = C.c_int
 
 
 # int _obspy_norm_resp(struct channel *chan, int start_stage, int stop_stage)
-clibevresp._obspy_norm_resp.argtypes = [C.POINTER(Channel), C.c_int, C.c_int]
+clibevresp._obspy_norm_resp.argtypes = [C.POINTER(Channel), C.c_int, C.c_int,
+                                        C.c_int]
 clibevresp._obspy_norm_resp.restype = C.c_int
 
 

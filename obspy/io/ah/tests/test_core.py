@@ -10,7 +10,8 @@ import unittest
 import numpy as np
 
 from obspy import UTCDateTime, read
-from obspy.io.ah.core import _is_ah, _read_ah
+from obspy.io.ah.core import _is_ah, _read_ah, _write_ah1, _read_ah1
+from obspy.core.util import NamedTemporaryFile
 
 
 class CoreTestCase(unittest.TestCase):
@@ -252,6 +253,74 @@ class CoreTestCase(unittest.TestCase):
             52.8057518, 175.80580139, 322.80578613, 463.80578613]))
         np.testing.assert_array_almost_equal(tr.data[-4:], np.array([
             1.80574405, 2.80574393, 3.80574393, 3.80574393]))
+
+    def test_write_ah1(self):
+        """
+        Testing writing AH1 file format using _write_ah1() function.
+        """
+        # AH v1
+        testfile = os.path.join(self.path, 'st.ah')
+        stream_orig = _read_ah(testfile)
+
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name + '.AH'
+            # write testfile
+            _write_ah1(stream_orig, tmpfile)
+            # read again
+            st = _read_ah1(tmpfile)
+            self.assertEqual(len(st), 1)
+            tr = st[0]
+            ah = tr.stats.ah
+            stats = tr.stats
+            # stream header
+            self.assertEqual(stats.network, '')
+            self.assertEqual(stats.station, 'ALE')
+            self.assertEqual(stats.location, '')
+            self.assertEqual(stats.channel, 'VHZ')
+            starttime = UTCDateTime(1994, 6, 9, 0, 40, 45)
+            endtime = UTCDateTime(1994, 6, 12, 8, 55, 4, 724522)
+            self.assertEqual(stats.starttime, starttime)
+            self.assertEqual(stats.endtime, endtime)
+            self.assertAlmostEqual(stats.sampling_rate, 0.100000, 6)
+            self.assertAlmostEqual(stats.delta, 9.999990, 6)
+            self.assertEqual(stats.npts, 28887)
+            self.assertEqual(len(tr), 28887)
+            self.assertEqual(stats.calib, 1.0)
+
+            # station
+            self.assertEqual(ah.version, '1.0')
+            self.assertEqual(ah.station.code, 'ALE')
+            self.assertEqual(ah.station.channel, 'VHZ')
+            self.assertEqual(ah.station.type, 'Global S')
+            self.assertEqual(ah.station.latitude, 82.50330352783203)
+            self.assertEqual(ah.station.longitude, -62.349998474121094)
+            self.assertEqual(ah.station.elevation, 60.0)
+            self.assertEqual(ah.station.gain, 265302864.0)
+            self.assertEqual(len(ah.station.poles), 13)
+            self.assertEqual(len(ah.station.zeros), 6)
+            # event
+            self.assertEqual(ah.event.latitude, -13.872200012207031)
+            self.assertEqual(ah.event.longitude, -67.51249694824219)
+            self.assertEqual(ah.event.depth, 640000.0)
+            origintime = UTCDateTime(1994, 6, 9, 0, 33, 16)
+            self.assertEqual(ah.event.origin_time, origintime)
+            self.assertEqual(ah.event.comment, 'null')
+            # record
+            self.assertEqual(ah.record.type, 1)
+            self.assertEqual(ah.record.ndata, 28887)
+            self.assertEqual(tr.data.dtype, np.float64)
+            self.assertAlmostEqual(ah.record.delta, 9.999990, 6)
+            self.assertEqual(ah.record.max_amplitude, 9.265750885009766)
+            rstarttime = UTCDateTime(1994, 6, 9, 0, 40, 45)
+            self.assertEqual(ah.record.start_time, rstarttime)
+            comment = 'Comp azm=0.0,inc=-90.0; Disp (m);'
+            self.assertEqual(ah.record.comment, comment)
+            self.assertEqual(ah.record.log, 'null')
+            # data
+            np.testing.assert_array_almost_equal(tr.data[:4], np.array([
+                -236., -242., -252., -262.]))
+            np.testing.assert_array_almost_equal(tr.data[-4:], np.array([
+                101.,  106.,  107.,  104.]))
 
 
 def suite():

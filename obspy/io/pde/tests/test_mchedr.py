@@ -87,7 +87,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
             origin.resource_id,
             ResourceIdentifier(
                 id='quakeml:us.anss.org/origin/20120101052755.98'))
-        self.assertEqual(origin.type, 'hypocenter')
+        self.assertEqual(origin.origin_type, 'hypocenter')
         self.assertEqual(
             origin.time,
             UTCDateTime(2012, 1, 1, 5, 27, 55, 980000))
@@ -109,7 +109,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
                 id='quakeml:us.anss.org/earthmodel/ak135'))
         self.assertEqual(origin.evaluation_mode, None)
         self.assertEqual(origin.evaluation_status, None)
-        self.assertEqual(origin.origin_type, None)
+        self.assertEqual(origin.origin_type, 'hypocenter')
         # composite times
         self.assertEqual(len(origin.composite_times), 0)
         # quality

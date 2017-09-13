@@ -150,13 +150,13 @@ class ScanTestCase(unittest.TestCase):
             "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, "
             "2008-01-15T00:00:02.000000, SLIST, INTEGER, Counts",
         ]
-
         files = []
-        expected_stdout_lines = [
+        expected = [
             "XX.TEST..BHZ 2008-01-15T00:00:01.000000Z "
             "2008-01-15T00:00:00.899995Z -0.100",
             "XX.TEST..BHZ 2008-01-15T00:00:01.899999Z "
-            "2008-01-15T00:00:02.000000Z 0.100"]
+            "2008-01-15T00:00:02.000000Z 0.100"
+        ]
         with NamedTemporaryFile() as f1, NamedTemporaryFile() as f2, \
                 NamedTemporaryFile() as f3:
             for i, fp in enumerate([f1, f2, f3]):
@@ -169,8 +169,7 @@ class ScanTestCase(unittest.TestCase):
                     as ic:
                 with CatchOutput() as out:
                     obspy_scan(files + ['--output', ic.name, '--print-gaps'])
-                self.assertEqual(
-                    expected_stdout_lines, out.stdout.decode().splitlines())
+                self.assertEqual(expected, out.stdout.splitlines())
 
 
 def suite():

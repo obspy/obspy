@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Test suite for the sc3ml reader.
+Test suite for the sc3ml reader inventory.
 
 Modified after obspy.io.stationXML
     > obspy.obspy.io.stationxml.core.py
@@ -18,7 +18,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import inspect
 import io
 import os
 import warnings
@@ -35,8 +34,7 @@ class SC3MLTestCase(unittest.TestCase):
         """
         Read example stationXML/sc3ml format to Inventory
         """
-        self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe()))), "data")
+        self.data_dir = os.path.join(os.path.dirname(__file__), "data")
         stationxml_path = os.path.join(self.data_dir, "EB_response_stationXML")
         sc3ml_path = os.path.join(self.data_dir, "EB_response_sc3ml")
         self.stationxml_inventory = read_inventory(stationxml_path,
@@ -58,6 +56,18 @@ class SC3MLTestCase(unittest.TestCase):
                                             "version0.10"))
 
         self.assertEqual(e.exception.args[0], "Schema version not supported.")
+
+    def test_channel_level(self):
+        """
+        Test inventory without repsonse information up to
+        channel level
+        """
+        inv = read_inventory(os.path.join(self.data_dir,
+                                          "channel_level.sc3ml"))
+        self.assertEqual(inv[0].code, "NL")
+        self.assertEqual(inv[0][0].code, "HGN")
+        for cha in inv[0][0].channels:
+            self.assertTrue(cha.code in ["BHE", "BHN", "BHZ"])
 
     def test_compare_xml(self):
         """
@@ -96,6 +106,24 @@ class SC3MLTestCase(unittest.TestCase):
             if(sc3ml != stationxml):
                 tag = str(stationxml).split(">")[0][1:]
                 assert(tag in excluded_tags)
+
+    def test_empty_depth(self):
+        """
+        Assert depth, latitude, longitude, elevation set to 0.0 if left empty
+        """
+        with warnings.catch_warnings(record=True) as w:
+            read_inventory(os.path.join(self.data_dir,
+                                        "sc3ml_empty_depth_and_id.sc3ml"))
+            self.assertEqual(str(w[0].message), "Sensor is missing "
+                                                "longitude information, "
+                                                "using 0.0")
+            self.assertEqual(str(w[1].message), "Sensor is missing "
+                                                "latitude information, "
+                                                "using 0.0")
+            self.assertEqual(str(w[2].message), "Sensor is missing elevation "
+                                                "information, using 0.0")
+            self.assertEqual(str(w[3].message), "Channel is missing depth "
+                                                "information, using 0.0")
 
     def test_compare_upper_level(self):
         """

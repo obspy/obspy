@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9">
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9" version="0.9">
   <EventParameters publicID="smi:nz.org.geonet/catalog/1">
     <amplitude publicID="smi:nz.org.geonet/event/2806038g/amplitude/1/modified">
       <type>A</type>
       <amplitude>
-        <value>1e-08</value>
+        <value>1.0e-08</value>
       </amplitude>
       <timeWindow>
-        <reference>2007-10-10T14:40:39.055000Z</reference>
-        <begin>0.0</begin>
+        <reference>2007-10-10T14:40:39.055</reference>
+        <begin>0</begin>
         <end>0.51424</end>
       </timeWindow>
       <unit>m/s</unit>
     </amplitude>
     <origin publicID="smi:nz.org.geonet/event/2806038g/origin/1">
       <time>
-        <value>2007-10-10T14:40:39.055000Z</value>
+        <value>2007-10-10T14:40:39.055</value>
         <uncertainty>0.51424</uncertainty>
         <confidenceLevel>68.0</confidenceLevel>
       </time>
@@ -42,13 +42,21 @@
         <usedPhaseCount>23</usedPhaseCount>
         <usedStationCount>19</usedStationCount>
         <standardError>0.21386</standardError>
-        <azimuthalGap>203.0</azimuthalGap>
+        <azimuthalGap>203</azimuthalGap>
         <maximumDistance>217.43</maximumDistance>
         <minimumDistance>96.61</minimumDistance>
       </quality>
       <type>hypocenter</type>
       <evaluationMode>manual</evaluationMode>
       <evaluationStatus>confirmed</evaluationStatus>
+      <stationMagnitude publicID="smi:nz.org.geonet/event/2806038g/stationmagnitude/1">
+        <originID>smi:nz.org.geonet/event/2806038g/origin/1</originID>
+        <magnitude>
+          <value>3.662</value>
+          <uncertainty>0.217</uncertainty>
+        </magnitude>
+        <amplitudeID>smi:nz.org.geonet/event/2806038g/amplitude/1/modified</amplitudeID>
+      </stationMagnitude>
       <magnitude publicID="smi:nz.org.geonet/event/2806038g/magnitude/1">
         <magnitude>
           <value>3.662</value>

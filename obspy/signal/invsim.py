@@ -367,18 +367,6 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     :param nfft: Number of FFT points of signal which needs correction
     :rtype: :class:`numpy.ndarray` complex128
     :return: Frequency response of PAZ of length nfft
-
-    .. note::
-        In order to plot/calculate the phase you need to multiply the
-        complex part by -1. This results from the different definition of
-        the Fourier transform and the phase. The numpy.fft is defined as
-        A(jw) = \int_{-\inf}^{+\inf} a(t) e^{-jwt}; where as the analytic
-        signal is defined A(jw) = | A(jw) | e^{j\phi}. That is in order to
-        calculate the phase the complex conjugate of the signal needs to be
-        taken. E.g. phi = angle(f,conj(h),deg=True)
-        As the range of phi is from -pi to pi you could add 2*pi to the
-        negative values in order to get a plot from [0, 2pi]:
-        where(phi<0,phi+2*pi,phi); plot(f,phi)
     """
     n = nfft // 2
     b, a = scipy.signal.ltisys.zpk2tf(zeros, poles, scale_fac)

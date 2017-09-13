@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.kml - Keyhole Markup Language (KML) write support
-==========================================================
+obspy.io.kml - Keyhole Markup Language (KML) write support for ObsPy
+====================================================================
 This module provides write support for the Keyhole Markup Language (KML)
 format.
 

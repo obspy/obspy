@@ -170,11 +170,6 @@ def _clean_str(value, strip_whitespace=True):
     SACTrace, and in sac_to_obspy_header, to sanitize strings for making a
     Trace that the user may have manually added.
     """
-    try:
-        value = value.decode('ASCII', 'replace')
-    except AttributeError:
-        pass
-
     null_term = value.find('\x00')
     if null_term >= 0:
         value = value[:null_term] + " " * len(value[null_term:])
@@ -328,7 +323,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             reftime = None
 
         relhdrs = [hdr for hdr in HD.RELHDRS
-                   if header.get(hdr) not in (None, HD.SNULL)]
+                   if header.get(hdr) not in (None, HD.FNULL)]
 
         if reftime:
             # Set current 'b' relative to the old reftime.

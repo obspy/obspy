@@ -1148,8 +1148,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(len(w), 1)
         self.assertEqual(w[0].category, InternalMSEEDWarning)
 
-        self.assertIn(b"calling msr_parse with", out.stdout)
-        self.assertIn(b"buflen=512, reclen=-1, dataflag=0, verbose=2",
+        self.assertIn("calling msr_parse with", out.stdout)
+        self.assertIn("buflen=512, reclen=-1, dataflag=0, verbose=2",
                       out.stdout)
         self.assertEqual(st[0].stats.station, 'UH3')
 
@@ -1411,8 +1411,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                        msg=filename) as e:
                     # The file has a couple other issues as well and the
                     # data cannot be unpacked. Unpacking it would raises an
-                    # earlier error than the one we are testing here.
-                    read(filename, headonly=True)
+                    # earlier error than the one we are testing here
+                    # raises InternalMSEEDWarning
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore', InternalMSEEDWarning)
+                        read(filename, headonly=True)
 
                 with io.open(reference, "rt") as fh:
                     err_msg = fh.readlines()[-1]
@@ -1495,6 +1498,53 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
         # Make sure 23 files have been tested.
         self.assertEqual(count, 24)
+
+    def test_per_trace_mseed_attributes(self):
+        """
+        Tests that most mseed specific attributes like record count, record
+        length and so on are set per trace and not globally.
+        """
+        # Create a concatenated tests file.
+        data_files = ["test.mseed", "two_channels.mseed",
+                      "BW.BGLD.__.EHE.D.2008.001.first_10_records"]
+        data_files = [os.path.join(self.path, "data", _i) for _i in data_files]
+
+        with io.BytesIO() as buf:
+            for d in data_files:
+                with io.open(d, "rb") as fh:
+                    buf.write(fh.read())
+            buf.seek(0, 0)
+            st = read(buf)
+
+        self.assertEqual(len(st), 4)
+        self.assertEqual(st[0].stats.mseed, {
+            'byteorder': '>',
+            'dataquality': 'R',
+            'encoding': 'STEIM2',
+            'filesize': 14336,
+            'number_of_records': 2,
+            'record_length': 4096})
+        self.assertEqual(st[1].stats.mseed, {
+            'byteorder': '>',
+            'dataquality': 'D',
+            'encoding': 'STEIM2',
+            'filesize': 14336,
+            'number_of_records': 1,
+            'record_length': 512})
+        self.assertEqual(st[2].stats.mseed, {
+            'byteorder': '>',
+            'dataquality': 'D',
+            'encoding': 'STEIM2',
+            'filesize': 14336,
+            'number_of_records': 1,
+            'record_length': 512})
+        self.assertEqual(st[3].stats.mseed, {
+            'byteorder': '>',
+            'dataquality': 'D',
+            'encoding': 'STEIM1',
+            'filesize': 14336,
+            'number_of_records': 10,
+            'record_length': 512})
 
 
 def suite():

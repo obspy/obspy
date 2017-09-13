@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9">
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9" version="0.9">
   <EventParameters publicID="smi:eu.emsc/unid">
     <pick publicID="smi:ch.ethz.sed/pick/117634">
       <time>
@@ -49,6 +49,27 @@
       <evaluationMode>automatic</evaluationMode>
       <evaluationStatus>confirmed</evaluationStatus>
     </pick>
-    <event publicID="smi:ch.ethz.sed/event/historical/1165"/>
+    <origin publicID="smi:ch.ethz.sed/event/historical/1165/origin/1">
+      <time>
+        <value>2011-03-11T05:46:24.120000Z</value>
+      </time>
+      <latitude>
+        <value>38.297</value>
+      </latitude>
+      <longitude>
+        <value>142.373</value>
+      </longitude>
+      <arrival>
+        <pickID>smi:ch.ethz.sed/pick/117634</pickID>
+        <phase>Pn</phase>
+      </arrival>
+      <arrival>
+        <pickID>smi:geonet.org.nz/pick/4965421</pickID>
+        <phase>Pn</phase>
+      </arrival>
+    </origin>
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <originReference>smi:ch.ethz.sed/event/historical/1165/origin/1</originReference>
+    </event>
   </EventParameters>
 </seiscomp>

@@ -55,6 +55,26 @@ class StationTestCase(unittest.TestCase):
                 rcParams['savefig.dpi'] = 72
                 sta.plot(0.05, channel="*[NE]", outfile=ic.name)
 
+    def test_response_plot_degrees(self):
+        """
+        Tests the response plot.
+        """
+        # Bug in matplotlib 1.4.0 - 1.4.x:
+        # See https://github.com/matplotlib/matplotlib/issues/4012
+        reltol = 1.0
+        if [1, 4, 0] <= MATPLOTLIB_VERSION <= [1, 5, 0]:
+            reltol = 2.0
+
+        sta = read_inventory()[0][0]
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            with ImageComparison(self.image_dir,
+                                 "station_response_degrees.png",
+                                 reltol=reltol) as ic:
+                rcParams['savefig.dpi'] = 72
+                sta.plot(0.05, channel="*[NE]", plot_degrees=True,
+                         outfile=ic.name)
+
     def test_len(self):
         """
         Tests the __len__ property.

@@ -656,6 +656,22 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(stream2), 1)
         self.assertIn(stream[4], stream2)
 
+    def test_select_on_single_letter_channels(self):
+        st = read()
+        st[0].stats.channel = "Z"
+        st[1].stats.channel = "N"
+        st[2].stats.channel = "E"
+
+        self.assertEqual([tr.stats.channel for tr in st], ["Z", "N", "E"])
+
+        self.assertEqual(st.select(component="Z")[0], st[0])
+        self.assertEqual(st.select(component="N")[0], st[1])
+        self.assertEqual(st.select(component="E")[0], st[2])
+
+        self.assertEqual(len(st.select(component="Z")), 1)
+        self.assertEqual(len(st.select(component="N")), 1)
+        self.assertEqual(len(st.select(component="E")), 1)
+
     def test_sort(self):
         """
         Tests the sort method of the Stream object.
@@ -2168,22 +2184,6 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st.select(channel=""), st2)
         self.assertEqual(st.select(npts=0), st2)
 
-    def test_select_short_channel_code(self):
-        """
-        Test that select by component only checks channel codes longer than two
-        characters.
-        """
-        st = Stream([Trace(), Trace(), Trace(), Trace(), Trace(), Trace()])
-        st[0].stats.channel = "EHZ"
-        st[1].stats.channel = "HZ"
-        st[2].stats.channel = "Z"
-        st[3].stats.channel = "E"
-        st[4].stats.channel = "N"
-        st[5].stats.channel = "EHN"
-        self.assertEqual(len(st.select(component="Z")), 1)
-        self.assertEqual(len(st.select(component="N")), 1)
-        self.assertEqual(len(st.select(component="E")), 0)
-
     def test_remove_response(self):
         """
         Tests that the remove_response method is called for all traces of a
@@ -2483,6 +2483,28 @@ class StreamTestCase(unittest.TestCase):
         for arg in patch.call_args_list:
             self.assertEqual(arg[1]["order"], 2)
             self.assertEqual(arg[1]["plot"], True)
+
+    def test_read_check_compression(self):
+        """
+        Test to ensure calling read with check_compression=False does not
+        call expensive tar or zip functions.
+        """
+        with mock.patch("tarfile.is_tarfile") as tar_p:
+            with mock.patch("zipfile.is_zipfile") as zip_p:
+                read('/path/to/slist.ascii', format='SLIST',
+                     check_compression=False)
+
+        # assert neither compression check function was called.
+        self.assertEqual(tar_p.call_count, 0)
+        self.assertEqual(zip_p.call_count, 0)
+
+        # ensure compression checks get called when check_compression is True
+        with mock.patch("tarfile.is_tarfile", return_value=0) as tar_p:
+            with mock.patch("zipfile.is_zipfile", return_value=0) as zip_p:
+                read('/path/to/slist.ascii', format='SLIST',
+                     check_compression=True)
+        self.assertEqual(tar_p.call_count, 1)
+        self.assertGreaterEqual(zip_p.call_count, 1)
 
 
 def suite():

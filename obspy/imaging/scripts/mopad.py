@@ -13,6 +13,8 @@
 #
 # flake8: noqa
 """
+MoPaD command line utility.
+
 USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
 
 ::
@@ -2370,7 +2372,14 @@ class BeachBall:
         size = min(width, height)
 
         fig = plt.figure(34, figsize=(size, size))
-        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], polar=True, axisbg='#d5de9c')
+        # TODO remove once minimum required matplotlib version reaches 2.0
+        # see matplotlib/matplotlib#5501
+        if MATPLOTLIB_VERSION < [2, 0]:
+            axis_facecolor_kwargs = dict(axisbg='#d5de9c')
+        else:
+            axis_facecolor_kwargs = dict(facecolor='#d5de9c')
+        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], polar=True,
+                          **axis_facecolor_kwargs)
 
         r_steps = [0.000001]
         for i in (np.arange(4) + 1) * 0.2:
@@ -5104,7 +5113,7 @@ The 'source mechanism' as a comma-separated list of length:
         try:
             print(aa)
         except Exception:
-            print(aa.replace('°', ' deg'))
+            print(str(aa).replace('°', ' deg'))
 
 
 if __name__ == '__main__':

@@ -22,24 +22,20 @@ class PrintTestCase(unittest.TestCase):
         with CatchOutput() as out:
             obspy_print(self.all_files)
 
-        self.assertEqual(
-            '''1 Trace(s) in Stream:
+        expected = '''1 Trace(s) in Stream:
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
-'''.encode('utf-8'),  # noqa
-            out.stdout
-        )
+'''  # noqa
+        self.assertEqual(expected, out.stdout)
 
     def test_print_nomerge(self):
         with CatchOutput() as out:
             obspy_print(['--no-merge'] + self.all_files)
 
-        self.assertEqual(
-            '''2 Trace(s) in Stream:
+        expected = '''2 Trace(s) in Stream:
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
-'''.encode('utf-8'),  # noqa
-            out.stdout
-        )
+'''  # noqa
+        self.assertEqual(expected, out.stdout)
 
 
 def suite():

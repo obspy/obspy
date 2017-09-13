@@ -26,12 +26,13 @@ import bisect
 import glob
 import math
 import os
+import platform
 import warnings
 
 import numpy as np
+import matplotlib
 from matplotlib import mlab
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.dates import date2num
 from matplotlib.ticker import FormatStrFormatter
 
 from obspy import Stream, Trace, UTCDateTime, __version__
@@ -41,6 +42,7 @@ from obspy.core.inventory import Inventory
 from obspy.core.util import AttribDict
 from obspy.core.util.base import MATPLOTLIB_VERSION
 from obspy.imaging.cm import obspy_sequential
+from obspy.imaging.util import _set_xaxis_obspy_dates
 from obspy.io.xseed import Parser
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.util import prev_pow_2
@@ -403,6 +405,14 @@ class PPSD(object):
         return self._len
 
     @property
+    def step(self):
+        """
+        Time step between start times of adjacent psd segments in seconds
+        (assuming gap-less data).
+        """
+        return self.ppsd_length * (1.0 - self.overlap)
+
+    @property
     def nfft(self):
         return self._nfft
 
@@ -471,6 +481,17 @@ class PPSD(object):
         plot.
         """
         return self._period_binning[4, :]
+
+    @property
+    def psd_values(self):
+        """
+        Returns all individual smoothed psd arrays as a list. The corresponding
+        times can be accessed as :attr:`PPSD.times_processed`, the
+        corresponding central periods in seconds (central frequencies in Hertz)
+        can be accessed as :attr:`PPSD.psd_periods`
+        (:attr:`PPSD.psd_frequencies`).
+        """
+        return self._binned_psds
 
     @property
     def times_processed(self):
@@ -668,9 +689,22 @@ class PPSD(object):
         # prepare the list of traces to go through
         if isinstance(stream, Trace):
             stream = Stream([stream])
+        if not stream:
+            msg = 'Empty stream object provided to PPSD.add()'
+            warnings.warn(msg)
+            return False
         # select appropriate traces
-        stream = stream.select(id=self.id,
-                               sampling_rate=self.sampling_rate)
+        stream = stream.select(id=self.id)
+        if not stream:
+            msg = 'No traces with matching SEED ID in provided stream object.'
+            warnings.warn(msg)
+            return False
+        stream = stream.select(sampling_rate=self.sampling_rate)
+        if not stream:
+            msg = ('No traces with matching sampling rate in provided stream '
+                   'object.')
+            warnings.warn(msg)
+            return False
         # save information on available data and gaps
         self.__insert_data_times(stream)
         self.__insert_gap_times(stream)
@@ -1280,6 +1314,281 @@ class PPSD(object):
             msg = msg % (duplicates, len(_times_processed), filename)
             warnings.warn(msg)
 
+    def _split_lists(self, times, psds):
+        """
+        """
+        t_diff_gapless = self.step
+        gap_indices = np.argwhere(np.diff(times) - t_diff_gapless)
+        gap_indices = (gap_indices.flatten() + 1).tolist()
+
+        if not len(gap_indices):
+            return [(times, psds)]
+
+        gapless = []
+        indices_start = [0] + gap_indices
+        indices_end = gap_indices + [len(times)]
+        for start, end in zip(indices_start, indices_end):
+            gapless.append((times[start:end], psds[start:end]))
+        return gapless
+
+    def _get_gapless_psd(self):
+        """
+        Helper routine to get a list of 2-tuples with gapless portions of
+        processed PPSD time ranges.
+        This means that PSD time history is split whenever to adjacent PSD
+        timestamps are not separated by exactly
+        ``self.ppsd_length * (1 - self.overlap)``.
+        """
+        return self._split_lists(self.times_processed, self.psd_values)
+
+    def plot_spectrogram(self, cmap=obspy_sequential, clim=None, grid=True,
+                         filename=None, show=True):
+        """
+        Plot the temporal evolution of the PSD in a spectrogram-like plot.
+
+        .. note::
+            For example plots see the :ref:`Obspy Gallery <gallery>`.
+
+        :type cmap: :class:`matplotlib.colors.Colormap`
+        :param cmap: Specify a custom colormap instance. If not specified, then
+            the default ObsPy sequential colormap is used.
+        :type clim: list
+        :param clim: Minimum/maximum dB values for lower/upper end of colormap.
+            Specified as type ``float`` or ``None`` for no clipping on one end
+            of the scale (e.g. ``clim=[-150, None]`` for a lower limit of
+            ``-150`` dB and no clipping on upper end).
+        :type grid: bool
+        :param grid: Enable/disable grid in histogram plot.
+        :type filename: str
+        :param filename: Name of output file
+        :type show: bool
+        :param show: Enable/disable immediately showing the plot.
+        """
+        import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots()
+
+        quadmeshes = []
+        yedges = self.period_xedges
+
+        for times, psds in self._get_gapless_psd():
+            xedges = [t.matplotlib_date for t in times] + \
+                [(times[-1] + self.step).matplotlib_date]
+            meshgrid_x, meshgrid_y = np.meshgrid(xedges, yedges)
+            data = np.array(psds).T
+
+            quadmesh = ax.pcolormesh(meshgrid_x, meshgrid_y, data, cmap=cmap,
+                                     zorder=-1)
+            quadmeshes.append(quadmesh)
+
+        if clim is None:
+            cmin = min(qm.get_clim()[0] for qm in quadmeshes)
+            cmax = max(qm.get_clim()[1] for qm in quadmeshes)
+            clim = (cmin, cmax)
+
+        for quadmesh in quadmeshes:
+            quadmesh.set_clim(*clim)
+
+        cb = plt.colorbar(quadmesh, ax=ax)
+
+        if grid:
+            ax.grid()
+
+        if self.special_handling is None:
+            # TODO can be removed once Ubuntu 16.10 is dropped (July 2017)
+            if (platform.system() == 'Linux' and
+                    platform.linux_distribution() ==
+                    ('Ubuntu', '16.10', 'yakkety') and
+                    matplotlib.__file__.startswith('/usr/lib')):
+                msg = ('Matplotlib rendering on Ubuntu 16.10 Yakkety has a '
+                       'bug, see https://github.com/matplotlib/matplotlib/'
+                       'issues/6976. Trying to work around it by setting'
+                       'matplotlib.rcParams["mathtext.fontset"] = "stix", see '
+                       'https://github.com/matplotlib/matplotlib/issues/6976#'
+                       'issuecomment-248855463')
+                warnings.warn(msg)
+                matplotlib.rcParams["mathtext.fontset"] = "stix"
+            cb.ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+        else:
+            cb.ax.set_ylabel('Amplitude [dB]')
+        ax.set_ylabel('Period [s]')
+
+        fig.autofmt_xdate()
+        _set_xaxis_obspy_dates(ax)
+
+        ax.set_yscale("log")
+        ax.set_xlim(self.times_processed[0].matplotlib_date,
+                    (self.times_processed[-1] + self.step).matplotlib_date)
+        ax.set_ylim(yedges[0], yedges[-1])
+        try:
+            ax.set_facecolor('0.8')
+        # mpl <2 has different API for setting Axes background color
+        except AttributeError:
+            ax.set_axis_bgcolor('0.8')
+
+        fig.tight_layout()
+
+        if filename is not None:
+            plt.savefig(filename)
+            plt.close()
+        elif show:
+            plt.draw()
+            plt.show()
+        else:
+            plt.draw()
+            return fig
+
+    def extract_psd_values(self, period):
+        """
+        Extract PSD values for given period in seconds.
+
+        Selects the period bin whose center period is closest to the specified
+        period. Also returns the minimum, center and maximum period of the
+        selected bin. The respective times of the PSD values can be accessed as
+        :attr:`PPSD.times_processed`.
+
+        :type period: float
+        :param period: Period to extract PSD values for in seconds.
+        :rtype: four-tuple of (list, float, float, float)
+        :returns: PSD values for requested period (at times)
+        """
+        # evaluate which period bin to extract
+        period_diff = np.abs(self.period_bin_centers - period)
+        index = np.argmin(period_diff)
+        period_min = self.period_bin_left_edges[index]
+        period_max = self.period_bin_right_edges[index]
+        period_center = self.period_bin_centers[index]
+        psd_values = [psd[index] for psd in self.psd_values]
+        return psd_values, period_min, period_center, period_max
+
+    def plot_temporal(self, period, color=None, legend=True, grid=True,
+                      linestyle="-", marker=None, filename=None, show=True,
+                      **temporal_restrictions):
+        """
+        Plot the evolution of PSD value of one (or more) period bins over time.
+
+        If a filename is specified the plot is saved to this file, otherwise
+        a matplotlib figure is returned or shown.
+
+        Additional keyword arguments are passed on to :meth:`_stack_selection`
+        to restrict at which times PSD values are selected (e.g. to compare
+        temporal evolution during a specific time span of each day).
+
+        .. note::
+            For example plots see the :ref:`Obspy Gallery <gallery>`.
+
+        :type period: float (or list thereof)
+        :param period: Period of PSD values to plot. The period bin with the
+            central period that is closest to the specified value is selected.
+            Multiple values can be specified in a list (``color`` option should
+            then also be a list of color specifications, or left ``None``).
+        :type color: matplotlib color specification (or list thereof)
+        :param color: Color specification understood by :mod:`matplotlib` (or a
+            list thereof in case of multiple periods to plot). ``None`` for
+            default colors.
+        :type grid: bool
+        :param grid: Enable/disable grid in histogram plot.
+        :type legend: bool
+        :param legend: Enable/disable grid in histogram plot.
+        :type linestyle: str
+        :param linestyle: Linestyle for lines in the plot (see
+            :func:`matplotlib.pyplot.plot`).
+        :type marker: str
+        :param marker: Marker for lines in the plot (see
+            :func:`matplotlib.pyplot.plot`).
+        :type filename: str
+        :param filename: Name of output file
+        :type show: bool
+        :param show: Enable/disable immediately showing the plot.
+        """
+        import matplotlib.pyplot as plt
+
+        try:
+            len(period)
+        except TypeError:
+            periods = [period]
+        else:
+            periods = period
+
+        if color is None:
+            colors = [None] * len(periods)
+        else:
+            if len(periods) == 1:
+                colors = [color]
+            else:
+                colors = color
+
+        times = self._times_processed
+
+        if temporal_restrictions:
+            mask = ~self._stack_selection(**temporal_restrictions)
+            times = [x for i, x in enumerate(times) if not mask[i]]
+        else:
+            mask = None
+
+        fig, ax = plt.subplots()
+
+        for period, color in zip(periods, colors):
+            cur_color = color
+            # extract psd values for given period
+            psd_values, period_min, _, period_max = \
+                self.extract_psd_values(period)
+            if mask is not None:
+                psd_values = [x for i, x in enumerate(psd_values)
+                              if not mask[i]]
+            # if right edge of period range is less than one second we label
+            # the line in Hertz
+            if period_max < 1:
+                label = "{:.2g}-{:.2g} [Hz]".format(
+                    1.0 / period_max, 1.0 / period_min)
+            else:
+                label = "{:.2g}-{:.2g} [s]".format(period_min, period_max)
+
+            for i, (times_, psd_values) in enumerate(
+                    self._split_lists(times, psd_values)):
+                # only label first line plotted for each period
+                if i:
+                    label = None
+                # older matplotlib raises when passing in `color=None`
+                if color is None:
+                    if cur_color is None:
+                        color_kwargs = {}
+                    else:
+                        color_kwargs = {'color': cur_color}
+                else:
+                    color_kwargs = {'color': color}
+                times_ = [UTCDateTime(t).matplotlib_date for t in times_]
+                line = ax.plot(times_, psd_values, label=label, ls=linestyle,
+                               marker=marker, **color_kwargs)[0]
+                # plot the next lines with the same color (we can't easily
+                # determine the color beforehand if we rely on the color cycle,
+                # i.e. when user doesn't specify colors explictly)
+                cur_color = line.get_color()
+
+        if legend:
+            ax.legend()
+
+        if grid:
+            ax.grid()
+
+        if self.special_handling is None:
+            ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+        else:
+            ax.set_ylabel('Amplitude [dB]')
+
+        fig.autofmt_xdate()
+        _set_xaxis_obspy_dates(ax)
+
+        if filename is not None:
+            plt.savefig(filename)
+            plt.close()
+        elif show:
+            plt.draw()
+            plt.show()
+        else:
+            plt.draw()
+            return fig
+
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
              show_noise_models=True, grid=True, show=True,
@@ -1290,6 +1599,9 @@ class PPSD(object):
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
         a plot window is shown.
+
+        .. note::
+            For example plots see the :ref:`Obspy Gallery <gallery>`.
 
         :type filename: str, optional
         :param filename: Name of output file
@@ -1312,7 +1624,8 @@ class PPSD(object):
         :type grid: bool, optional
         :param grid: Enable/disable grid in histogram plot.
         :type show: bool, optional
-        :param show: Enable/disable immediately showing the plot.
+        :param show: Enable/disable immediately showing the plot. If
+            ``show=False``, then the matplotlib figure handle is returned.
         :type max_percentage: float, optional
         :param max_percentage: Maximum percentage to adjust the colormap. The
             default is 30% unless ``cumulative=True``, in which case this value
@@ -1540,8 +1853,7 @@ class PPSD(object):
         :param filename: Name of output file
         """
         import matplotlib.pyplot as plt
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        fig, ax = plt.subplots()
 
         self.__plot_coverage(ax)
         fig.autofmt_xdate()
@@ -1572,9 +1884,8 @@ class PPSD(object):
             # skip on empty lists (i.e. all data used, or none used in stack)
             if not times:
                 continue
-            starts = [date2num(t.datetime) for t in times]
-            ends = [date2num((t + self.ppsd_length).datetime)
-                    for t in times]
+            starts = [t.matplotlib_date for t in times]
+            ends = [(t + self.ppsd_length).matplotlib_date for t in times]
             startends = np.array([starts, ends])
             startends = compress_start_end(startends.T, 20,
                                            merge_overlaps=True)
@@ -1583,13 +1894,13 @@ class PPSD(object):
                 ax.axvspan(start, end, 0, 0.6, fc=color, lw=0)
         # plot data that was fed to PPSD
         for start, end in self.times_data:
-            start = date2num(start.datetime)
-            end = date2num(end.datetime)
+            start = start.matplotlib_date
+            end = end.matplotlib_date
             ax.axvspan(start, end, 0.6, 1, facecolor="g", lw=0)
         # plot gaps in data fed to PPSD
         for start, end in self.times_gaps:
-            start = date2num(start.datetime)
-            end = date2num(end.datetime)
+            start = start.matplotlib_date
+            end = end.matplotlib_date
             ax.axvspan(start, end, 0.6, 1, facecolor="r", lw=0)
 
         ax.autoscale_view()

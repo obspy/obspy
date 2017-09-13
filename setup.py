@@ -90,11 +90,11 @@ KEYWORDS = [
     'focal mechanism', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
     'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
     'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
-    'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'observatory', 'ORFEUS', 'PDAS',
-    'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
-    'REFTEK130', 'RT-130', 'RESP', 'response file', 'RT', 'SAC', 'sc3ml',
-    'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub',
-    'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
+    'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS',
+    'PDAS', 'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime',
+    'REFTEK', 'REFTEK130', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
+    'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN',
+    'SeisHub', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
     'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
     'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston',
@@ -264,6 +264,7 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.AH': [
         'isFormat = obspy.io.ah.core:_is_ah',
         'readFormat = obspy.io.ah.core:_read_ah',
+        'writeFormat = obspy.io.ah.core:_write_ah1'
         ],
     'obspy.plugin.waveform.KNET': [
         'isFormat = obspy.io.nied.knet:_is_knet_ascii',
@@ -289,6 +290,7 @@ ENTRY_POINTS = {
         'NORDIC = obspy.io.nordic.core',
         'CNV = obspy.io.cnv.core',
         'CMTSOLUTION = obspy.io.cmtsolution.core',
+        'SCARDEC = obspy.io.scardec.core',
         'SHAPEFILE = obspy.io.shapefile.core',
         'KML = obspy.io.kml.core',
         'FNETMT = obspy.io.nied.fnetmt',
@@ -300,6 +302,8 @@ ENTRY_POINTS = {
         'writeFormat = obspy.io.quakeml.core:_write_quakeml',
         ],
     'obspy.plugin.event.SC3ML': [
+        'isFormat = obspy.io.seiscomp.event:_is_sc3ml',
+        'readFormat = obspy.io.seiscomp.event:_read_sc3ml',
         'writeFormat = obspy.io.seiscomp.event:_write_sc3ml',
         ],
     'obspy.plugin.event.MCHEDR': [
@@ -338,6 +342,11 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.cmtsolution.core:_read_cmtsolution',
         'writeFormat = obspy.io.cmtsolution.core:_write_cmtsolution'
         ],
+    'obspy.plugin.event.SCARDEC': [
+        'isFormat = obspy.io.scardec.core:_is_scardec',
+        'readFormat = obspy.io.scardec.core:_read_scardec',
+        'writeFormat = obspy.io.scardec.core:_write_scardec'
+        ],
     'obspy.plugin.event.FNETMT': [
         'isFormat = obspy.io.nied.fnetmt:_is_fnetmt_catalog',
         'readFormat = obspy.io.nied.fnetmt:_read_fnetmt_catalog',
@@ -355,12 +364,15 @@ ENTRY_POINTS = {
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
         'INVENTORYXML = obspy.io.arclink.inventory',
-        'SC3ML = obspy.io.seiscomp.sc3ml',
+        'SC3ML = obspy.io.seiscomp.inventory',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
         'STATIONTXT = obspy.io.stationtxt.core',
-        'KML = obspy.io.kml.core'
+        'KML = obspy.io.kml.core',
+        'SEED = obspy.io.xseed.core',
+        'XSEED = obspy.io.xseed.core',
+        'RESP = obspy.io.xseed.core',
         ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
@@ -372,8 +384,8 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.arclink.inventory:_read_inventory_xml',
         ],
     'obspy.plugin.inventory.SC3ML': [
-        'isFormat = obspy.io.seiscomp.sc3ml:_is_sc3ml',
-        'readFormat = obspy.io.seiscomp.sc3ml:_read_sc3ml',
+        'isFormat = obspy.io.seiscomp.inventory:_is_sc3ml',
+        'readFormat = obspy.io.seiscomp.inventory:_read_sc3ml',
         ],
     'obspy.plugin.inventory.SACPZ': [
         'writeFormat = obspy.io.sac.sacpz:_write_sacpz',
@@ -393,6 +405,18 @@ ENTRY_POINTS = {
     'obspy.plugin.inventory.KML': [
         'writeFormat = obspy.io.kml.core:_write_kml',
         ],
+    'obspy.plugin.inventory.SEED': [
+        'isFormat = obspy.io.xseed.core:_is_seed',
+        'readFormat = obspy.io.xseed.core:_read_seed',
+    ],
+    'obspy.plugin.inventory.XSEED': [
+        'isFormat = obspy.io.xseed.core:_is_xseed',
+        'readFormat = obspy.io.xseed.core:_read_xseed',
+    ],
+    'obspy.plugin.inventory.RESP': [
+        'isFormat = obspy.io.xseed.core:_is_resp',
+        'readFormat = obspy.io.xseed.core:_read_resp',
+    ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
         'constant = scipy.signal:detrend',

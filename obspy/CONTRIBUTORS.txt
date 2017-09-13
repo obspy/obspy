@@ -38,6 +38,7 @@ Kremers, Simon
 Kress, Victor
 Krieger, Lars
 Krischer, Lion
+Kula, Damian
 Käufl, Paul
 Köhler, Andreas
 Lecocq, Thomas
@@ -65,8 +66,10 @@ Sales de Andrade, Elliott
 Satriano, Claudio
 Saul, Joachim
 Scheingraber, Chris
+Schneider, Simon
 Sippl, Christian
 Snoke, Arthur
+Stähler, Simon C.
 Stange, Stefan
 Sullivan, Benjamin
 Tian, Dongdong
@@ -77,4 +80,6 @@ Walther, Marcus
 Wassermann, Joachim
 Williams, Mark C.
 Winkelman, Andrew
+Zaccarelli, Riccardo
 Zad, Seyed Kasra Hosseini
+Zhu, Lijun

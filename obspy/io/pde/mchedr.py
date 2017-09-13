@@ -286,7 +286,7 @@ class Unpickler(object):
         origin.quality.associated_phase_count = 0
         # depth_phase_count can be incremented in record 'S '
         origin.quality.depth_phase_count = 0
-        origin.type = 'hypocenter'
+        origin.origin_type = 'hypocenter'
         origin.region = fe_region_name
         event.origins.append(origin)
         return event
@@ -495,7 +495,7 @@ class Unpickler(object):
         origin.quality.standard_error = standard_dev
         origin.quality.used_station_count = station_number
         origin.quality.used_phase_count = phase_number
-        origin.type = 'hypocenter'
+        origin.origin_type = 'hypocenter'
         event.origins.append(origin)
 
     def _parse_record_ae(self, line, event):
@@ -640,7 +640,7 @@ class Unpickler(object):
             quality.used_phase_count = \
                 component_number + component_number2
             origin.quality = quality
-            origin.type = 'centroid'
+            origin.origin_type = 'centroid'
             event.origins.append(origin)
         focal_mechanism = FocalMechanism()
         res_id = '/'.join((res_id_prefix, 'focalmechanism',

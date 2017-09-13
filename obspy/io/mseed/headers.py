@@ -16,6 +16,23 @@ from . import InternalMSEEDError, InternalMSEEDWarning
 from obspy.core.util.libnames import _load_cdll
 
 
+# Load the shared library. Later on it is wrapped into another object that
+# correctly set's up error and warning handles - but information from the
+# library is already required at an earlier point.
+__clibmseed = _load_cdll("mseed")
+
+
+# Size of the off_t type.
+sizeoff_off_t = C.c_int.in_dll(__clibmseed, "LM_SIZEOF_OFF_T").value
+for _c in [C.c_long, C.c_longlong, C.c_int]:
+    if C.sizeof(_c) == sizeoff_off_t:
+        off_t_type = _c
+        break
+else:  # pragma: no cover
+    raise InternalMSEEDError("Could not determine corresponding ctypes "
+                             "datatype for off_t.")
+
+
 HPTERROR = -2145916800000000
 
 ENDIAN = {0: '<', 1: '>'}
@@ -462,9 +479,9 @@ MsfileparamS._fields_ = [
     ('readlen', C.c_int),
     ('readoffset', C.c_int),
     ('packtype', C.c_int),
-    ('packhdroffset', C.c_long),
-    ('filepos', C.c_long),
-    ('filesize', C.c_long),
+    ('packhdroffset', off_t_type),
+    ('filepos', off_t_type),
+    ('filesize', off_t_type),
     ('recordcount', C.c_int),
 ]
 MSFileParam = MsfileparamS  # noqa
@@ -581,7 +598,11 @@ ContinuousSegment._fields_ = [
     ('samprate', C.c_double),
     ('sampletype', C.c_char),
     ('hpdelta', C.c_longlong),
+    ('recordcnt', C.c_int64),
     ('samplecnt', C.c_int64),
+    ('encoding', C.c_byte),
+    ('byteorder', C.c_byte),
+    ('reclen', C.c_int),
     ('timing_quality', C.c_uint8),
     ('calibration_type', C.c_int8),
     ('datasamples', C.c_void_p),  # Data samples, 'numsamples' of type
@@ -619,8 +640,6 @@ LinkedIDList._fields_ = [
 # Define the argument and return types of all the used libmseed functions.
 ##########################################################################
 
-__clibmseed = _load_cdll("mseed")
-
 # Declare function of libmseed library, argument parsing
 __clibmseed.mst_init.argtypes = [C.POINTER(MSTrace)]
 __clibmseed.mst_init.restype = C.POINTER(MSTrace)
@@ -639,7 +658,7 @@ __clibmseed.msr_init.restype = C.POINTER(MSRecord)
 
 __clibmseed.ms_readmsr_r.argtypes = [
     C.POINTER(C.POINTER(MSFileParam)), C.POINTER(C.POINTER(MSRecord)),
-    C.c_char_p, C.c_int, C.POINTER(Py_ssize_t), C.POINTER(C.c_int), C.c_short,
+    C.c_char_p, C.c_int, C.POINTER(off_t_type), C.POINTER(C.c_int), C.c_short,
     C.c_short, C.c_short]
 __clibmseed.ms_readmsr_r.restypes = C.c_int
 

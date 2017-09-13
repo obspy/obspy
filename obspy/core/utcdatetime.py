@@ -137,6 +137,9 @@ class UTCDateTime(object):
         >>> UTCDateTime("20110818_03:00:00")
         UTCDateTime(2011, 8, 18, 3, 0)
 
+        >>> UTCDateTime("1970/01/17 12:23:34")
+        UTCDateTime(1970, 1, 17, 12, 23, 34)
+
     (4) Using multiple arguments in the following order: `year, month,
         day[, hour[, minute[, second[, microsecond]]]`. The year, month and day
         arguments are required.
@@ -285,6 +288,7 @@ class UTCDateTime(object):
                 value = value.replace('-', ' ')
                 value = value.replace(':', ' ')
                 value = value.replace(',', ' ')
+                value = value.replace('/', ' ')
                 value = value.replace('Z', ' ')
                 value = value.replace('W', ' ')
                 # check for ordinal date (julian date)

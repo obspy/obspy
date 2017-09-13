@@ -59,7 +59,7 @@ git clean -fxd
 # first of all selectively use debian build instructions for either
 # buildsystem=python_distutils (older Debuntu releases) or buildsystem=pybuild
 # (newer Debuntu releases)
-if [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "precise" ]
+if [ "$CODENAME" == "wheezy" ]
 then
     # old build style, python2 only
     cp -a debian/python_distutils/* debian/
@@ -104,11 +104,6 @@ cat >> debian/changelog << EOF
 
  -- ObsPy Development Team <devs@obspy.org>  $DATE
 EOF
-# adjust dh compatibility for older dh versions
-if [ $CODENAME = "squeeze" ]
-    then
-    echo "8" > ./debian/compat
-fi
 # build the package
 export FFLAGS="$FFLAGS -fPIC"  # needed for gfortran
 export LDFLAGS="$LDFLAGS -shared -z relro -z now"  # needed for gfortran

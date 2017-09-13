@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.clients.syngine - Client for the IRIS Syngine service
-===========================================================
+obspy.clients.syngine - IRIS Syngine client for ObsPy
+=====================================================
 
 This module offers methods to download from the IRIS syngine service
 (https://ds.iris.edu/ds/products/syngine/). The service is able to generate

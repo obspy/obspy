@@ -419,7 +419,7 @@ class InventoryBasemapTestCase(unittest.TestCase):
         Basemap.
         """
         inv = read_inventory()
-        reltol = 1.0
+        reltol = 1.3
         # Coordinate lines might be slightly off, depending on the basemap
         # version.
         if BASEMAP_VERSION < [1, 0, 7]:
@@ -469,7 +469,7 @@ class InventoryBasemapTestCase(unittest.TestCase):
         """
         inv = read_inventory()
         cat = read_events()
-        reltol = 1.0
+        reltol = 1.1
         # Coordinate lines might be slightly off, depending on the basemap
         # version.
         if BASEMAP_VERSION < [1, 0, 7]:

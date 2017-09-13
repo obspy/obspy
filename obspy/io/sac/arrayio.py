@@ -425,7 +425,7 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
 # TODO: this functionality is basically the same as the getters and setters in
 #    sac.sactrace. find a way to avoid duplication?
 # TODO: put these in sac.util?
-def header_arrays_to_dict(hf, hi, hs, nulls=False):
+def header_arrays_to_dict(hf, hi, hs, nulls=False, encoding='ASCII'):
     """
     Convert SAC header arrays to a more user-friendly dict.
 
@@ -438,6 +438,9 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
     :param nulls: If True, return all header values, including nulls, else
         omit them.
     :type nulls: bool
+    :param encoding: Encoding string that passes the user specified
+        encoding scheme.
+    :type nulls: str
 
     :return: SAC header dictionary
     :rtype: dict
@@ -453,8 +456,8 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
                  if val != HD.FNULL] + \
                 [(key, val) for (key, val) in zip(HD.INTHDRS, hi)
                  if val != HD.INULL] + \
-                [(key, val.decode()) for (key, val) in zip(HD.STRHDRS, hs)
-                 if val.decode() != HD.SNULL]
+                [(key, val.decode(encoding)) for (key, val)
+                 in zip(HD.STRHDRS, hs) if val.decode(encoding) != HD.SNULL]
 
     header = dict(items)
 

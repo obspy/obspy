@@ -55,6 +55,14 @@ class Blockette(object):
         self.xseed_version = kwargs.get('xseed_version', DEFAULT_XSEED_VERSION)
         self.seed_version = kwargs.get('version', 2.4)
 
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
     def __str__(self):
         """
         Pretty prints the informations stored in the blockette.

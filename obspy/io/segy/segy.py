@@ -17,6 +17,7 @@ from future.builtins import *  # NOQA
 import io
 import os
 from struct import pack, unpack
+import warnings
 
 import numpy as np
 
@@ -65,6 +66,20 @@ class SEGYTraceOnTheFlyDataUnpackingError(SEGYError):
 class SEGYWritingError(SEGYError):
     """
     Raised if the trace header is not the required 240 byte long.
+    """
+    pass
+
+
+class SEGYWarning(UserWarning):
+    """
+    SEG Y warnings base class.
+    """
+    pass
+
+
+class SEGYInvalidTextualHeaderWarning(SEGYWarning):
+    """
+    Warning that is raised if an invalid textual header is about to be written.
     """
     pass
 
@@ -180,8 +195,12 @@ class SEGYFile(object):
         # character always is mostly 'C' and therefore used to check the
         # encoding. Sometimes is it not C but also cannot be decoded from
         # EBCDIC so it is treated as ASCII and all empty symbols are removed.
+        #
+        # Also check the revision number and textual header end markers for
+        # the "C" as they might be set when the first byte is not.
         if not self.textual_header_encoding:
-            if textual_header[0:1] != b'C':
+            if not (b'C' in (textual_header[0:1], textual_header[3040:3041],
+                             textual_header[3120:3120])):
                 try:
                     textual_header = \
                         textual_header.decode('EBCDIC-CP-BE').encode('ascii')
@@ -221,7 +240,7 @@ class SEGYFile(object):
         # If bytes 3506-3506 are not zero, an extended textual header follows
         # which is not supported so far.
         if bfh.number_of_3200_byte_ext_file_header_records_following != 0:
-            msg = 'Extended textual headers are supported yet. ' + \
+            msg = 'Extended textual headers are not yet supported. ' + \
                 'Please contact the developers.'
             raise NotImplementedError(msg)
 
@@ -286,20 +305,71 @@ class SEGYFile(object):
         small it will be padded with zeros. If it is too long or an invalid
         encoding is specified an exception will be raised.
         """
-        length = len(self.textual_file_header)
+        textual_header = self.textual_file_header
+
+        # Convert to ASCII bytes if necessary - this will raise an error in
+        # case the textual file header has no representation in ASCII - this
+        # is then the users responsibility.
+        if hasattr(textual_header, "encode"):
+            textual_header = textual_header.encode()
+
+        length = len(textual_header)
         # Append spaces to the end if its too short.
         if length < 3200:
-            textual_header = self.textual_file_header + b' ' * (3200 - length)
+            textual_header = textual_header + b' ' * (3200 - length)
         elif length == 3200:
-            textual_header = self.textual_file_header
+            textual_header = textual_header
         # The length must not exceed 3200 byte.
         else:
             msg = 'self.textual_file_header is not allowed to be longer ' + \
                   'than 3200 bytes'
             raise SEGYWritingError(msg)
-        if self.textual_header_encoding.upper() == 'ASCII':
+
+        # Assert the encoding.
+        enc = self.textual_header_encoding.upper()
+
+        # Make sure revision number and end header marker are present. If
+        # not: add them - if something else is already present, raise a
+        # warning but don't do anything.
+
+        # Make sure the textual header has the required fields.
+        revision_number = textual_header[3200-160:3200-146].decode()
+        end_header_mark = textual_header[3200-80:3200-58]
+        if revision_number != "C39 SEG Y REV1":
+            if revision_number.strip() in ("", "C", "C39"):
+                textual_header = textual_header[:3200-160] + \
+                    b"C39 SEG Y REV1" + textual_header[3200-146:]
+            else:
+                # Raise warning but don't do anything.
+                msg = ("The revision number in the textual header should be "
+                       "set as 'C39 SEG Y REV1' for a fully valid SEG-Y "
+                       "file. It is set to '%s' which will be written to the "
+                       "file. Please change it if you want a fully valid file."
+                       % revision_number)
+                warnings.warn(msg, SEGYInvalidTextualHeaderWarning)
+
+        desired_end_header_mark = b"C40 END TEXTUAL HEADER" if enc == "ASCII" \
+            else b"C40 END EBCDIC        "
+
+        if end_header_mark != desired_end_header_mark:
+            if end_header_mark.strip() in (b"", b"C", b"C40"):
+                textual_header = textual_header[:3200-80] + \
+                    desired_end_header_mark + textual_header[3200-58:]
+            else:
+                # Raise warning but don't do anything.
+                msg = ("The end header mark in the textual header should be "
+                       "set as 'C40 END TEXTUAL HEADER' or as "
+                       "'C40 END EBCDIC        ' for a fully valid "
+                       "SEG-Y file. It is set to '%s' which will be written "
+                       "to the file. Please change it if you want a fully "
+                       "valid file."
+                       % end_header_mark.decode())
+                warnings.warn(msg, SEGYInvalidTextualHeaderWarning)
+
+        # Finally encode the header if necessary.
+        if enc == 'ASCII':
             pass
-        elif self.textual_header_encoding.upper() == 'EBCDIC':
+        elif enc == 'EBCDIC':
             textual_header = \
                 textual_header.decode('ascii').encode('EBCDIC-CP-BE')
         # Should not happen.
@@ -307,6 +377,7 @@ class SEGYFile(object):
             msg = 'self.textual_header_encoding has to be either ASCII or ' + \
                   'EBCDIC.'
             raise SEGYWritingError(msg)
+
         file.write(textual_header)
 
     def _read_traces(self, unpack_headers=False, headonly=False,
@@ -698,6 +769,14 @@ class SEGYTrace(object):
             hour = tr_header.hour_of_day
             minute = tr_header.minute_of_hour
             second = tr_header.second_of_minute
+            # work around some strange SEGY files that don't store proper
+            # start date/time but only a year (see #1722)
+            if julday == 0 and hour == 0 and minute == 0 and second == 0:
+                msg = ('Trace starttime does not store a proper date (day '
+                       'of year is zero). Using January 1st 00:00 as '
+                       'trace start time.')
+                warnings.warn(msg)
+                julday = 1
             trace.stats.starttime = UTCDateTime(
                 year=year, julday=julday, hour=hour, minute=minute,
                 second=second)

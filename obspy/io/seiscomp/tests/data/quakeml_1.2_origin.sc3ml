@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9">
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9" version="0.9">
   <EventParameters publicID="smi:eu.emsc/unid">
     <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
       <time>
@@ -28,14 +28,14 @@
         <minimumDistance>2.45</minimumDistance>
       </quality>
       <uncertainty>
-        <horizontalUncertainty>9000.0</horizontalUncertainty>
-        <minHorizontalUncertainty>6000.0</minHorizontalUncertainty>
-        <maxHorizontalUncertainty>10000.0</maxHorizontalUncertainty>
+        <horizontalUncertainty>9</horizontalUncertainty>
+        <minHorizontalUncertainty>6</minHorizontalUncertainty>
+        <maxHorizontalUncertainty>10</maxHorizontalUncertainty>
         <azimuthMaxHorizontalUncertainty>80.0</azimuthMaxHorizontalUncertainty>
         <confidenceEllipsoid>
-          <semiMajorAxisLength>0.123</semiMajorAxisLength>
-          <semiMinorAxisLength>1.123</semiMinorAxisLength>
-          <semiIntermediateAxisLength>2.123</semiIntermediateAxisLength>
+          <semiMajorAxisLength>0.000123</semiMajorAxisLength>
+          <semiMinorAxisLength>0.001123</semiMinorAxisLength>
+          <semiIntermediateAxisLength>0.002123</semiIntermediateAxisLength>
           <majorAxisPlunge>3.123</majorAxisPlunge>
           <majorAxisAzimuth>4.123</majorAxisAzimuth>
           <majorAxisRotation>5.123</majorAxisRotation>

@@ -380,10 +380,15 @@ def _internal_read_sac(buf, headonly=False, debug_headers=False, fsize=True,
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
+
+    # Extract encoding flag (default to ascii)
+    encoding_str = kwargs.get('encoding', 'ascii')
+
     # read SAC file
-    sac = SACTrace.read(buf, headonly=headonly, ascii=False, checksize=fsize)
+    sac = SACTrace.read(buf, headonly=headonly, ascii=False,
+                        checksize=fsize, encoding=encoding_str)
     # assign all header entries to a new dictionary compatible with an ObsPy
-    tr = sac.to_obspy_trace(debug_headers=debug_headers)
+    tr = sac.to_obspy_trace(debug_headers=debug_headers, encoding=encoding_str)
 
     return Stream([tr])
 

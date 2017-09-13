@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
+Build a quality control HTML page.
+
 Build QC html page with information on latency, data availability percentage
 and gap/overlap count from a local SDS archive.
 
