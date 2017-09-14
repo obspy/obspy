@@ -860,8 +860,7 @@ def raypath_plot(source_depth, min_degree=10, max_degree=90, nrecs=20,
 
         >>> from obspy.taup import raypath_plot
         >>> import matplotlib.pyplot as plt
-        >>> ax = plt.subplot(111, polar=True)
-        >>> fig = ax.figure
+        >>> fig, ax = plt.subplot(111, polar=True)
         >>> ax = raypath_plot(source_depth=100, ax=ax, fig=fig)
         >>> plt.show()
 
@@ -870,8 +869,7 @@ def raypath_plot(source_depth, min_degree=10, max_degree=90, nrecs=20,
         from obspy.taup.tau import raypath_plot
         import matplotlib.pyplot as plt
 
-        ax = plt.subplot(111, polar=True)
-        fig = ax.figure
+        fig, ax = plt.subplot(111, polar=True)
 
         ax = raypath_plot(source_depth=100, ax=ax, fig=fig)
 
