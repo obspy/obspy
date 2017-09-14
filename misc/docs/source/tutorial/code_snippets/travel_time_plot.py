@@ -1,3 +1,6 @@
 from obspy.taup import traveltime_plot
-traveltime_plot(min_degree=0, max_degree=50, phases=['P', 'S', 'PP'],
-                source_depth=120, model='iasp91')
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots()
+ax = traveltime_plot(source_depth=10, ax=ax, fig=fig)
+plt.show()

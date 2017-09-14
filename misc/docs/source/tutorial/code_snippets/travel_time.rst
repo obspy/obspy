@@ -17,7 +17,7 @@ Cartesian Ray Paths
 -------------------
 
 The following lines show how to create a simple plot of ray paths for a given
-distance range, phase, and the ``iasp91`` velocity model on a Cartesian map,
+distance, phase(s), and the ``iasp91`` velocity model on a Cartesian map,
 using the :func:`~obspy.taup.tau.Arrivals.plot` function of the class
 :class:`obspy.taup.tau.Arrivals`.
 
@@ -28,7 +28,7 @@ Spherical Ray Paths
 -------------------
 
 The following lines show how to create a simple plot of ray paths for a given
-distance range, phase, and the ``iasp91`` velocity model on a spherical map,
+distance, phase(s), and the ``iasp91`` velocity model on a spherical map,
 using the :func:`~obspy.taup.tau.Arrivals.plot` function of the class
 :class:`obspy.taup.tau.Arrivals`.
 
@@ -38,11 +38,11 @@ using the :func:`~obspy.taup.tau.Arrivals.plot` function of the class
 Body Wave Ray Paths
 -------------------
 
-The following lines show how to create a large set of body wave ray paths for
-several distance, phases and the ``iasp91`` velocity model using the
+The following lines show how to create a plot of ray paths for several
+distances, phases and the ``iasp91`` velocity model using the
 :func:`~obspy.taup.tau.Arrivals.plot` function of the class
-:class:`obspy.taup.tau.Arrivals`. For simpler examples, try one of the plots
-in the preceeding sections.
+:class:`obspy.taup.tau.Arrivals`. For examples with rays for one
+distance, try one of the plots in the preceding sections.
 
-.. plot:: tutorial/code_snippets/travel_time_body_waves.py
+.. plot:: tutorial/code_snippets/ray_path_plot.py
    :include-source:

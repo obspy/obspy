@@ -184,8 +184,8 @@ Additionally, Cartesian coordinates may be used instead of a polar grid:
     TauPyModel().get_ray_paths(
         500, 130, phase_list=["ttbasic"]).plot(plot_type="cartesian")
 
-If ray paths have been calculated, traveltimes for these ray paths can
-be plotted using the :meth:`~obspy.taup.tau.Arrivals.timeplot` method:
+Travel times for these ray paths can be plotted using the
+:meth:`~obspy.taup.tau.Arrivals.timeplot` method:
 
 >>> arrivals = model.get_ray_paths(source_depth_in_km=500,
 ...                                distance_in_degree=130)
@@ -198,21 +198,48 @@ be plotted using the :meth:`~obspy.taup.tau.Arrivals.timeplot` method:
     from obspy.taup import TauPyModel
     TauPyModel().get_ray_paths(500, 130).timeplot()
 
-Alternatively, there is convenience wrapper function to plot the traveltimes:
+Alternatively, convenience wrapper functions are in place to plot the
+travel times and the ray paths.
+
+The travel times wrapper function is:
 
 >>> from obspy.taup import traveltime_plot
->>> traveltime_plot(min_degree=0, max_degree=50,
-...             phases=['P', 'S', 'PP'], source_depth=120,
-...             model='iasp91', npoints=1000) # doctest: +SKIP
+>>> import matplotlib.pyplot as plt
+>>> fig, ax = plt.subplots()
+>>> ax = traveltime_plot(source_depth=10, ax=ax, fig=fig)
+>>> plt.show()
 
 .. plot::
     :width: 50%
     :align: center
 
     from obspy.taup import traveltime_plot
-    traveltime_plot(min_degree=0, max_degree=50,
-             phases=['P', 'S', 'PP'], source_depth=120,
-             model='iasp91', npoints=1000)
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots()
+    ax = traveltime_plot(source_depth=10, ax=ax, fig=fig)
+    plt.show()
+
+The ray path plot wrapper function is:
+
+>>> from obspy.taup import raypath_plot
+>>> import matplotlib.pyplot as plt
+>>> ax = plt.subplot(111, polar=True)
+>>> fig = ax.figure
+>>> ax = raypath_plot(source_depth=100, ax=ax, fig=fig)
+>>> plt.show()
+
+.. plot::
+    :width: 50%
+    :align: center
+
+    from obspy.taup import raypath_plot
+    import matplotlib.pyplot as plt
+    ax = plt.subplot(111, polar=True)
+    fig = ax.figure
+
+    ax = raypath_plot(source_depth=100, ax=ax, fig=fig)
+    plt.show()
 
 More examples of plotting may be found in the :doc:`ObsPy tutorial
 </tutorial/code_snippets/travel_time>`.
@@ -412,9 +439,9 @@ _DEFAULT_VALUES = {
 
 
 # Convenience imports.
-from .tau import TauPyModel  # NOQA
-from .tau import traveltime_plot
-
+from .tau import TauPyModel # NOQA
+from .tau import traveltime_plot # NOQA
+from .tau import raypath_plot # NOQA
 
 if __name__ == '__main__':
     import doctest
