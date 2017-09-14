@@ -365,7 +365,8 @@ def _py36_windowsconsoleio_workaround():
     """
     if not WIN32 or sys.version_info[:2] < (3, 6):
         return
-
+    if not hasattr(sys.stdout, 'buffer'):
+        return
     buffered = hasattr(sys.stdout.buffer, 'raw')
     raw_stdout = sys.stdout.buffer.raw if buffered else sys.stdout.buffer
 
