@@ -807,6 +807,17 @@ class ParserTestCase(unittest.TestCase):
         # result.
         self.assertTrue(np.allclose(tr_2, tr_r_e, atol=tr_r_e.max() / 4.0))
 
+    def test_underline_in_site_name(self):
+        """
+        Test case for issue #1893.
+        """
+        filename = os.path.join(self.path, 'UP_BACU_HH.dataless')
+        parser = Parser()
+        parser.read(filename)
+        # value given by pdcc
+        self.assertEqual(parser.blockettes[50][0].site_name,
+                         'T3930_b A6689 3930')
+
 
 def suite():
     return unittest.makeSuite(ParserTestCase, 'test')
