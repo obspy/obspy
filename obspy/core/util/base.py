@@ -505,6 +505,13 @@ class ComparingObject(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def _repr_pretty_(self, p, cycle):
+        lines = str(self).splitlines()
+        for i, line in enumerate(lines):
+            p.text(line)
+            if i + 1 != len(lines):
+                p.break_()
+
 
 def _get_deprecated_argument_action(old_name, new_name, real_action='store'):
     """

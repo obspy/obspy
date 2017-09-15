@@ -144,6 +144,9 @@ class Stats(AttribDict):
         'location': '',
         'channel': '',
     }
+    _priorized_keys = ('network', 'station', 'location', 'channel',
+                       'starttime', 'endtime', 'sampling_rate', 'delta',
+                       'npts', 'calib')
 
     def __init__(self, header={}):
         """
@@ -196,13 +199,29 @@ class Stats(AttribDict):
         """
         Return better readable string representation of Stats object.
         """
-        priorized_keys = ['network', 'station', 'location', 'channel',
-                          'starttime', 'endtime', 'sampling_rate', 'delta',
-                          'npts', 'calib']
-        return self._pretty_str(priorized_keys)
+        return self._pretty_str(self._priorized_keys)
 
     def _repr_pretty_(self, p, cycle):
-        p.text(str(self))
+        if cycle:
+            p.text(str(self))
+        else:
+            # two {{ is escape sequence for literal {
+            keys = list(self._priorized_keys)
+            for key in sorted(self.keys()):
+                if key not in keys:
+                    keys.append(key)
+            key_width = max(len(key) for key in keys) + 2
+            for key in keys:
+                p.text(key.rjust(key_width))
+                p.text(': ')
+                # another 2 indents for the ': '
+                with p.group(key_width + 2, '', ''):
+                    value = getattr(self, key)
+                    if isinstance(value, (str, native_str)):
+                        p.pretty(native_str(value))
+                    else:
+                        p.pretty(value)
+                p.break_()
 
 
 @decorator

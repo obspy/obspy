@@ -11,6 +11,7 @@ AttribDict class for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import native_str
 
 import collections
 import copy
@@ -65,7 +66,15 @@ class AttribDict(collections.MutableMapping):
         self.update(dict(*args, **kwargs))
 
     def __repr__(self):
-        return "%s(%s)" % (self.__class__.__name__, self.__dict__)
+        tmp_dict = {}
+        for key in self:
+            value = self.__dict__[key]
+            if isinstance(key, (str, native_str)):
+                key = native_str(key)
+            if isinstance(value, (str, native_str)):
+                value = native_str(value)
+            tmp_dict[key] = value
+        return "%s(%s)" % (self.__class__.__name__, tmp_dict)
 
     def __getitem__(self, name, default=None):
         try:
@@ -165,9 +174,39 @@ class AttribDict(collections.MutableMapping):
         # check if keys exist
         other_keys = [k for k in keys if k not in priorized_keys]
         # priorized keys first + all other keys
-        keys = priorized_keys + sorted(other_keys)
-        head = [pattern % (k, self.__dict__[k]) for k in keys]
+        keys = copy.deepcopy(list(priorized_keys)) + sorted(other_keys)
+        head = []
+        for key in keys:
+            value = self.__dict__[key]
+            if isinstance(key, (str, native_str)):
+                key = native_str(key)
+            if isinstance(value, (str, native_str)):
+                value = native_str(value)
+            head.append(pattern % (key, value))
         return "\n".join(head)
+
+    def _repr_pretty_(self, p, cycle):
+        cls_name = self.__class__.__name__
+        if cycle:
+            p.text('{}({!s})'.format(cls_name, self.__dict__))
+        else:
+            # two {{ is escape sequence for literal {
+            # another 2 indents for the '({'
+            pretty_indent = len(cls_name) + 2
+            with p.group(pretty_indent, '{}({{'.format(cls_name), '})'):
+                for idx, (key, value) in enumerate(
+                        sorted(self.__dict__.items())):
+                    if idx:
+                        p.text(',')
+                        p.breakable()
+                    if isinstance(key, (str, native_str)):
+                        key = native_str(key)
+                    p.pretty(key)
+                    p.text(': ')
+                    if isinstance(value, (str, native_str)):
+                        value = native_str(value)
+                    with p.group(len(key) + 2, '', ''):
+                        p.pretty(value)
 
     def __iter__(self):
         return iter(self.__dict__)

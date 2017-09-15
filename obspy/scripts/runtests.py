@@ -116,7 +116,8 @@ HARD_DEPENDENCIES = [
     "sqlalchemy", "decorator", "requests"]
 OPTIONAL_DEPENDENCIES = [
     "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "osgeo.gdal",
-    "mpl_toolkits.basemap", "mock", "pyflakes", "geographiclib", "cartopy"]
+    "mpl_toolkits.basemap", "mock", "pyflakes", "geographiclib", "cartopy",
+    "IPython"]
 DEPENDENCIES = HARD_DEPENDENCIES + OPTIONAL_DEPENDENCIES
 
 PSTATS_HELP = """

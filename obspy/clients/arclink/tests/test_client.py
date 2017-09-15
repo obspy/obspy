@@ -16,10 +16,12 @@ from obspy import read
 from obspy.clients.arclink import Client
 from obspy.clients.arclink.client import ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core import Stats
 from obspy.core.util import AttribDict, NamedTemporaryFile
+from obspy.core.util.testing import ObsPyTestCase
 
 
-class ClientTestCase(unittest.TestCase):
+class ClientTestCase(ObsPyTestCase):
     """
     Test cases for obspy.clients.arclink.client.Client.
     """
@@ -235,7 +237,7 @@ class ClientTestCase(unittest.TestCase):
         t = UTCDateTime("2010-08-01T12:00:00")
         st = client.get_waveforms("BW", "RJOB", "", "EHZ", t, t + 60,
                                   metadata=True)
-        results = {
+        results = Stats({
             'network': 'BW',
             '_format': 'MSEED',
             'paz': AttribDict({
@@ -272,9 +274,9 @@ class ClientTestCase(unittest.TestCase):
             'calib': 1.0,
             'npts': 1370,
             'endtime': UTCDateTime(2010, 8, 1, 12, 0, 6, 845000),
-            'channel': 'EHZ'}
+            'channel': 'EHZ'})
         results['processing'] = st[0].stats['processing']
-        self.assertEqual(st[0].stats, results)
+        self.assertEqual(results, st[0].stats)
         # example 2
         client = Client(user='test@obspy.org')
         st = client.get_waveforms("CZ", "VRAC", "", "BHZ", t, t + 60,
