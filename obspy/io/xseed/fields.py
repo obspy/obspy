@@ -56,7 +56,7 @@ class Field(object):
         if self.id:
             return "F%02d" % self.id
 
-    def _repr_pretty_(self, p, cycle):
+    def _repr_pretty_(self, p, cycle):  # @UnusedVariable
         p.text(str(self))
 
     def convert(self, value):
@@ -81,25 +81,28 @@ class Field(object):
             return sn
         rx_list = []
         if 'U' in self.flags:
-            rx_list.append("[A-Z]")
+            # upper case A—Z
+            rx_list.append(r"[A-Z]")
         if 'L' in self.flags:
-            rx_list.append("[a-z]")
+            # lower case a—z
+            rx_list.append(r"[a-z]")
         if 'N' in self.flags:
-            rx_list.append("[0-9]")
+            # digits 0—9
+            rx_list.append(r"[0-9]")
         if 'P' in self.flags:
-            rx_list.append("[^A-Za-z0-9 ]")
+            # any punctuation characters (including “_”)
+            rx_list.append(r"[^A-Za-z0-9 ]")
         if 'S' in self.flags:
-            rx_list.append(" ")
+            # spaces between words
+            rx_list.append(r" ")
         if '_' in self.flags:
-            rx_list.append("_")
+            # underline symbol
+            rx_list.append(r"_")
+        # auto-format
         if 'U' in self.flags and 'L' not in self.flags:
             sn = sn.upper()
         elif 'L' in self.flags and 'U' not in self.flags:
             sn = sn.lower()
-        if 'S' in self.flags and 'X' not in self.flags:
-            sn = sn.replace("_", " ")
-        elif 'X' in self.flags and 'S' not in self.flags:
-            sn = sn.replace(" ", "_")
         rx = "|".join(rx_list)
         sn = "".join(re.findall(rx, sn))
         if re.match("(" + rx + ")*$", sn) is None:
