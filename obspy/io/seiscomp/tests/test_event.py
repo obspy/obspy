@@ -18,7 +18,6 @@ from future.builtins import *  # NOQA
 import filecmp
 import os
 import unittest
-import warnings
 
 from lxml import etree
 
@@ -27,7 +26,7 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.quakeml.core import _read_quakeml
 from obspy.io.quakeml.core import _validate as _validate_quakeml
 from obspy.io.seiscomp.core import validate as validate_sc3ml
-from obspy.io.seiscomp.event import _is_sc3ml, _read_sc3ml
+from obspy.io.seiscomp.event import _read_sc3ml
 
 
 class EventTestCase(unittest.TestCase):
@@ -88,18 +87,23 @@ class EventTestCase(unittest.TestCase):
         """
         for version in ['0.5', '0.6', '0.7', '0.8', '0.9']:
             filename = os.path.join(self.path, 'version%s' % version)
-            self.assertTrue(_is_sc3ml(filename))
+            read_events(filename)
 
-        for version in ['0.3', '0.10']:
-            filename = os.path.join(self.path, 'version%s' % version)
+        filename = os.path.join(self.path, 'version0.3')
+        with self.assertRaises(ValueError) as e:
+            read_events(filename)
 
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
-                self.assertTrue(_is_sc3ml(filename))
+            expected_message = ("Can't read SC3ML version 0.3, ObsPy can deal "
+                                "with versions [0.5, 0.6, 0.7, 0.8, 0.9].")
+            self.assertEqual(e.exception.args[0], expected_message)
 
-                self.assertEqual(len(w), 1)
-                expected_message = 'The sc3ml file has version'
-                self.assertTrue(str(w[0].message).startswith(expected_message))
+        filename = os.path.join(self.path, 'version0.10')
+        with self.assertRaises(ValueError) as e:
+            read_events(filename)
+
+            expected_message = ("Can't read SC3ML version 0.10, ObsPy can deal"
+                                " with versions [0.5, 0.6, 0.7, 0.8, 0.9].")
+            self.assertEqual(e.exception.args[0], expected_message)
 
     def test_read_xslt_event(self):
         self.cmp_read_xslt_file('quakeml_1.2_event.sc3ml',
@@ -195,6 +199,17 @@ class EventTestCase(unittest.TestCase):
 
             catalog = read_events(data)
             self.assertEqual(len(catalog), 1)
+
+    def test_read_quakeml(self):
+        """
+        Test reading a QuakeML file via read_events.
+        """
+        filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
+        with self.assertRaises(ValueError) as e:
+            read_events(filename, format='SC3ML')
+
+            expected_message = "Not a SC3ML compatible file or string."
+            self.assertEqual(e.exception.args[0], expected_message)
 
     def test_write_xslt_event(self):
         self.cmp_write_xslt_file('quakeml_1.2_event.xml',

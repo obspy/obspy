@@ -17,7 +17,6 @@ from future.builtins import *  # NOQA
 
 import os
 import re
-import warnings
 
 from lxml import etree
 
@@ -28,7 +27,7 @@ from obspy.io.quakeml.core import _xml_doc_from_anything
 SUPPORTED_XSD_VERSION = ['0.3', '0.5', '0.6', '0.7', '0.8', '0.9']
 
 
-def _is_sc3ml(path_or_file_object, schema_versions):
+def _is_sc3ml(path_or_file_object):
     """
     Simple function checking if the passed object contains a valid sc3ml file
     according to the list of versions given in parameters. Returns True of
@@ -41,8 +40,6 @@ def _is_sc3ml(path_or_file_object, schema_versions):
 
     :type path_or_file_object: str
     :param path_or_file_object: File name or file like object.
-    :type schema_versions: list of strings
-    :param schema_versions: List of supported SC3ML version.
     :rtype: bool
     :return: `True` if file is a SC3ML file.
     """
@@ -73,17 +70,7 @@ def _is_sc3ml(path_or_file_object, schema_versions):
         r'{http://geofon\.gfz-potsdam\.de/ns/seiscomp3-schema/([-+]?'
         r'[0-9]*\.?[0-9]+)}', root.tag)
 
-    if match is None:
-        return False
-
-    # Check if schema version is supported
-    version = match.group(1)
-    if version not in schema_versions:
-        warnings.warn('The sc3ml file has version %s, ObsPy can '
-                      'deal with versions [%s]. Proceed with caution.' % (
-                          version, ', '.join(schema_versions)))
-
-    return True
+    return match is not None
 
 
 def validate(path_or_object, version='0.9', verbose=False):

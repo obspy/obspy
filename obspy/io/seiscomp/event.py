@@ -18,34 +18,14 @@ from future.builtins import *  # NOQA
 import io
 import os
 import re
-import warnings
 
 from lxml import etree
 
 from obspy.io.quakeml.core import Pickler, Unpickler, _xml_doc_from_anything
-from obspy.io.seiscomp.core import _is_sc3ml as _is_sc3ml_version
 from obspy.io.seiscomp.core import validate as validate_sc3ml
 
 
 SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9']
-
-
-def _is_sc3ml(path_or_file_object):
-    """
-    Simple function checking if the passed object contains a valid sc3ml file.
-    Returns True of False.
-
-    The test is not exhaustive - it only checks the root tag but that should
-    be good enough for most real world use cases. If the schema is used to
-    test for a StationXML file, many real world files are false negatives as
-    they don't adhere to the standard.
-
-    :type path_or_file_object: str
-    :param path_or_file_object: File name or file like object.
-    :rtype: bool
-    :return: ``True`` if SC3ML file is valid.
-    """
-    return _is_sc3ml_version(path_or_file_object, SCHEMA_VERSION)
 
 
 def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
@@ -89,13 +69,13 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     try:
         version = match.group(1)
     except AttributeError:
-        warnings.warn('The file does not appear to be a SC3ML file. Proceed '
-                      'with caution.')
-        version = SCHEMA_VERSION[-1]
+        raise ValueError("Not a SC3ML compatible file or string.")
     else:
         if version not in SCHEMA_VERSION:
-            # By default, try to convert with the latest version
-            version = SCHEMA_VERSION[-1]
+            message = ("Can't read SC3ML version %s, ObsPy can deal with "
+                       "versions [%s].") % (
+                version, ', '.join(SCHEMA_VERSION))
+            raise ValueError(message)
 
     xslt_filename = os.path.join(os.path.dirname(__file__), 'data',
                                  'sc3ml_%s__quakeml_1.2.xsl' % version)

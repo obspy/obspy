@@ -17,7 +17,6 @@ from future.builtins import *  # NOQA
 
 import os
 import unittest
-import warnings
 
 from obspy.io.seiscomp.core import _is_sc3ml, validate
 
@@ -33,35 +32,13 @@ class CoreTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        filename_07 = os.path.join(self.data_dir, 'version0.7')
-        filename_08 = os.path.join(self.data_dir, 'version0.8')
-        filename_09 = os.path.join(self.data_dir, 'version0.9')
-
-        self.assertTrue(_is_sc3ml(filename_07, ['0.7', '0.8']))
-        self.assertTrue(_is_sc3ml(filename_08, ['0.7', '0.8']))
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always')
-            self.assertTrue(_is_sc3ml(filename_09, ['0.7', '0.8']))
-
-            self.assertEqual(len(w), 1)
-            expected_message = ("The sc3ml file has version 0.9, ObsPy can "
-                                "deal with versions [0.7, 0.8]. Proceed "
-                                "with caution.")
-            self.assertEqual(str(w[0].message), expected_message)
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always')
-            self.assertTrue(_is_sc3ml(filename_09, []))
-
-            self.assertEqual(len(w), 1)
-            expected_message = ("The sc3ml file has version 0.9, ObsPy can "
-                                "deal with versions []. Proceed with caution.")
-            self.assertEqual(str(w[0].message), expected_message)
+        for version in ['0.3', '0.5', '0.9', '0.10']:
+            filename = os.path.join(self.data_dir, 'version%s' % version)
+            self.assertTrue(_is_sc3ml(filename))
 
     def test_sc3ml_no_version_attribute(self):
         filename = os.path.join(self.data_dir, 'no_version_attribute.sc3ml')
-        self.assertTrue(_is_sc3ml(filename, ['0.9']))
+        self.assertTrue(_is_sc3ml(filename))
 
     def test_validate(self):
         filename = os.path.join(self.data_dir, 'qml-example-1.2-RC3.sc3ml')

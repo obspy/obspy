@@ -32,30 +32,11 @@ from obspy.core.inventory import (CoefficientsTypeResponseStage,
                                   PolesZerosResponseStage,
                                   PolynomialResponseStage)
 from obspy.io.stationxml.core import _read_floattype
-from obspy.io.seiscomp.core import _is_sc3ml as _is_sc3ml_version
 
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
 SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9']
-
-
-def _is_sc3ml(path_or_file_object):
-    """
-    Simple function checking if the passed object contains a valid sc3ml file.
-    Returns True of False.
-
-    The test is not exhaustive - it only checks the root tag but that should
-    be good enough for most real world use cases. If the schema is used to
-    test for a StationXML file, many real world files are false negatives as
-    they don't adhere to the standard.
-
-    :type path_or_file_object: str
-    :param path_or_file_object: File name or file like object.
-    :rtype: bool
-    :return: ``True`` if SC3ML file is valid.
-    """
-    return _is_sc3ml_version(path_or_file_object, SCHEMA_VERSION)
 
 
 def _read_sc3ml(path_or_file_object):
