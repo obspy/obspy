@@ -93,17 +93,17 @@ class EventTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             read_events(filename)
 
-            expected_message = ("Can't read SC3ML version 0.3, ObsPy can deal "
-                                "with versions [0.5, 0.6, 0.7, 0.8, 0.9].")
-            self.assertEqual(e.exception.args[0], expected_message)
+        expected_message = ("Can't read SC3ML version 0.3, ObsPy can deal "
+                            "with versions [0.5, 0.6, 0.7, 0.8, 0.9].")
+        self.assertEqual(e.exception.args[0], expected_message)
 
         filename = os.path.join(self.path, 'version0.10')
         with self.assertRaises(ValueError) as e:
             read_events(filename)
 
-            expected_message = ("Can't read SC3ML version 0.10, ObsPy can deal"
-                                " with versions [0.5, 0.6, 0.7, 0.8, 0.9].")
-            self.assertEqual(e.exception.args[0], expected_message)
+        expected_message = ("Can't read SC3ML version 0.10, ObsPy can deal "
+                            "with versions [0.5, 0.6, 0.7, 0.8, 0.9].")
+        self.assertEqual(e.exception.args[0], expected_message)
 
     def test_read_xslt_event(self):
         self.cmp_read_xslt_file('quakeml_1.2_event.sc3ml',
@@ -208,8 +208,8 @@ class EventTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             read_events(filename, format='SC3ML')
 
-            expected_message = "Not a SC3ML compatible file or string."
-            self.assertEqual(e.exception.args[0], expected_message)
+        expected_message = "Not a SC3ML compatible file or string."
+        self.assertEqual(e.exception.args[0], expected_message)
 
     def test_write_xslt_event(self):
         self.cmp_write_xslt_file('quakeml_1.2_event.xml',

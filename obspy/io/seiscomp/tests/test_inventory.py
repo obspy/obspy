@@ -57,8 +57,8 @@ class SC3MLTestCase(unittest.TestCase):
                     warnings.simplefilter("ignore")
                     read_inventory(filename)
 
-                self.assertEqual(e.exception.args[0],
-                                 "Schema version not supported.")
+            self.assertEqual(e.exception.args[0],
+                             "Schema version not supported.")
 
     def test_channel_level(self):
         """

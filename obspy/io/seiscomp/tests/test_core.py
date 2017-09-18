@@ -47,9 +47,10 @@ class CoreTestCase(unittest.TestCase):
 
         with self.assertRaises(ValueError) as e:
             validate(filename, version='0.10')
-            expected_error = ("0.10 is not a supported version. Use one of "
-                              "these versions: ['0.7', '0.8', '0.9'].")
-            self.assertEqual(e.exception.args[0], expected_error)
+
+        expected_error = ("0.10 is not a supported version. Use one of these "
+                          "versions: [0.3, 0.5, 0.6, 0.7, 0.8, 0.9].")
+        self.assertEqual(e.exception.args[0], expected_error)
 
 
 def suite():

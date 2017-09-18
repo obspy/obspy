@@ -89,7 +89,8 @@ def validate(path_or_object, version='0.9', verbose=False):
     """
     if version not in SUPPORTED_XSD_VERSION:
         raise ValueError('%s is not a supported version. Use one of these '
-                         'versions: %s' % (version, SUPPORTED_XSD_VERSION))
+                         'versions: [%s].'
+                         % (version, ', '.join(SUPPORTED_XSD_VERSION)))
 
     # Get the schema location.
     xsd_filename = 'sc3ml_%s.xsd' % version
