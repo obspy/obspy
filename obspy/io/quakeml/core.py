@@ -807,11 +807,11 @@ class Unpickler(object):
         :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.MomentTensor`
         """
-        obj = MomentTensor(force_resource_id=False)
         try:
             mt_el = self._xpath('momentTensor', parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = MomentTensor(force_resource_id=False)
         # required parameters
         obj.derived_origin_id = self._xpath2obj('derivedOriginID', mt_el)
         # optional parameter
@@ -1605,7 +1605,7 @@ class Pickler(object):
         """
         Converts a MomentTensor into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.MomentTensor`
+        :type moment_tensor: :class:`~obspy.core.event.MomentTensor`
         :rtype: etree.Element
         """
         if moment_tensor is None:
