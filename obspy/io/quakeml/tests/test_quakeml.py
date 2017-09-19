@@ -1020,7 +1020,7 @@ class QuakeMLTestCase(unittest.TestCase):
         fm = FocalMechanism()
         event = Event(focal_mechanisms=[fm])
         cat = Catalog(events=[event])
-        cat.write(memfile, format="QUAKEML")
+        cat.write(memfile, format="QUAKEML", validate=True)
         # now read again, and make sure there's no stub MomentTensor, but
         # rather `None`
         memfile.seek(0)
@@ -1035,13 +1035,13 @@ class QuakeMLTestCase(unittest.TestCase):
         # Test 1: Test subelements of moment_tensor
         memfile = io.BytesIO()
         # create virtually empty FocalMechanism
-        mt = MomentTensor()
+        mt = MomentTensor(derived_origin_id='smi:local/abc')
         fm = FocalMechanism(moment_tensor=mt)
         event = Event(focal_mechanisms=[fm])
         cat = Catalog(events=[event])
-        cat.write(memfile, format="QUAKEML")
-        # now read again, and make sure there's no stub MomentTensor, but
-        # rather `None`
+        cat.write(memfile, format="QUAKEML", validate=True)
+        # now read again, and make sure there's no stub subelements on
+        # MomentTensor, but rather `None`
         memfile.seek(0)
         cat = read_events(memfile, format="QUAKEML")
         self.assertEqual(cat[0].focal_mechanisms[0].moment_tensor.tensor, None)
@@ -1054,7 +1054,7 @@ class QuakeMLTestCase(unittest.TestCase):
         fm = FocalMechanism()
         event = Event(focal_mechanisms=[fm])
         cat = Catalog(events=[event])
-        cat.write(memfile, format="QUAKEML")
+        cat.write(memfile, format="QUAKEML", validate=True)
         # now read again, and make sure there's no stub MomentTensor, but
         # rather `None`
         memfile.seek(0)
