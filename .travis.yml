@@ -17,8 +17,6 @@ matrix:
     - os: linux
       env: PYTHON_VERSION=2.7
     - os: linux
-      env: PYTHON_VERSION=3.3
-    - os: linux
       env: PYTHON_VERSION=3.4
     - os: linux
       env: PYTHON_VERSION=3.5
@@ -92,14 +90,6 @@ install:
         # and hick-ups..
         mkdir -p $HOME/.matplotlib
         echo 'backend:AGG' > $HOME/.matplotlib/matplotlibrc
-      elif [[ "${PYTHON_VERSION}" == '3.3' ]]; then
-        # Let conda resolve to the latest versions.
-        NUMPY="numpy"
-        SCIPY="scipy"
-        MATPLOTLIB="matplotlib"
-        BASEMAP="basemap"
-        # anaconda doesn't provide pyproj for Python 3.3 anymore
-        PYPROJ=""
       elif [[ "${PYTHON_VERSION}" == '3.4' ]]; then
         # 3.4 apparently no longer get's updated packages.
         # Let conda resolve to the latest versions.
