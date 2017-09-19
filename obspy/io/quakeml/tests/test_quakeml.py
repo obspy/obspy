@@ -1009,6 +1009,24 @@ class QuakeMLTestCase(unittest.TestCase):
         # No warning should have been raised.
         self.assertEqual(len(w), 0)
 
+    def test_focal_mechanism_write_read(self):
+        """
+        Test for a bug in reading a FocalMechanism without MomentTensor from
+        QuakeML file. Makes sure that FocalMechanism.moment_tensor stays None
+        if no MomentTensor is in the file.
+        """
+        memfile = io.BytesIO()
+        # create virtually empty FocalMechanism
+        fm = FocalMechanism()
+        event = Event(focal_mechanisms=[fm])
+        cat = Catalog(events=[event])
+        cat.write(memfile, format="QUAKEML")
+        # now read again, and make sure there's no stub MomentTensor, but
+        # rather `None`
+        memfile.seek(0)
+        cat = read_events(memfile, format="QUAKEML")
+        self.assertEqual(cat[0].focal_mechanisms[0].moment_tensor, None)
+
 
 def suite():
     return unittest.makeSuite(QuakeMLTestCase, 'test')
