@@ -24,14 +24,14 @@ matrix:
       env: PYTHON_VERSION=3.5
     - os: linux
       env: PYTHON_VERSION=3.6
-    - os: linux
-      env: PYTHON_VERSION=3.5 ARCHITECTURE_32BIT="True"
-      addons:
-        apt:
-          packages:
-            # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
-            - libstdc++6:i386
-            - gcc-multilib
+    # - os: linux
+    #   env: PYTHON_VERSION=3.5 ARCHITECTURE_32BIT="True"
+    #   addons:
+    #     apt:
+    #       packages:
+    #         # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
+    #         - libstdc++6:i386
+    #         - gcc-multilib
     - os: osx
       env: PYTHON_VERSION=2.7
     - os: osx
@@ -50,22 +50,23 @@ install:
     else
       export OS="Linux";
     fi
-  - |
-      if [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
-        export ARCH=""
-        # OPT is used by setuptools patches contained in newer numpy versions
-        # used by obspy when running pip install --no-deps .
-        export OPT="-m32"
-        # workaround for sudo dpkg --add-architecture i386
-        # be sure multiarch is the only file in this directory
-        ls /etc/dpkg/dpkg.cfg.d/
-        # multiarch must contain foreign-architecture i386. If not it will
-        # error later and you need to do the following and add sudo: true
-        #sudo sh -c "echo 'foreign-architecture i386' > /etc/dpkg/dpkg.cfg.d/multiarch"
-        cat /etc/dpkg/dpkg.cfg.d/multiarch
-      else
-        export ARCH="_64"
-      fi
+  # - |
+  # -   if [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
+  # -     export ARCH=""
+  # -     # OPT is used by setuptools patches contained in newer numpy versions
+  # -     # used by obspy when running pip install --no-deps .
+  # -     export OPT="-m32"
+  # -     # workaround for sudo dpkg --add-architecture i386
+  # -     # be sure multiarch is the only file in this directory
+  # -     ls /etc/dpkg/dpkg.cfg.d/
+  # -     # multiarch must contain foreign-architecture i386. If not it will
+  # -     # error later and you need to do the following and add sudo: true
+  # -     #sudo sh -c "echo 'foreign-architecture i386' > /etc/dpkg/dpkg.cfg.d/multiarch"
+  # -     cat /etc/dpkg/dpkg.cfg.d/multiarch
+  # -   else
+  # -     export ARCH="_64"
+  # -   fi
+  - export ARCH="_64"
   - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda2-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
     else
@@ -107,14 +108,14 @@ install:
         MATPLOTLIB="matplotlib"
         BASEMAP="basemap"
         PYPROJ="pyproj"
-      elif [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
-        # Special packages for 32bit. Also let conda resolve to the latest
-        # versions.
-        NUMPY="numpy"
-        SCIPY="scipy"
-        MATPLOTLIB="matplotlib"
-        BASEMAP="basemap"
-        PYPROJ="pyproj"
+      # elif [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
+      #   # Special packages for 32bit. Also let conda resolve to the latest
+      #   # versions.
+      #   NUMPY="numpy"
+      #   SCIPY="scipy"
+      #   MATPLOTLIB="matplotlib"
+      #   BASEMAP="basemap"
+      #   PYPROJ="pyproj"
       # For anything else also let conda resolve, but force matplotlib 2.
       else
         NUMPY="numpy"
