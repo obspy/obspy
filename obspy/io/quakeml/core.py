@@ -696,11 +696,11 @@ class Unpickler(object):
         :param name: tag name of sub nodal plane
         :rtype: :class:`~obspy.core.event.NodalPlane`
         """
-        obj = NodalPlane()
         try:
             sub_el = self._xpath(name, parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = NodalPlane()
         # required parameter
         obj.strike, obj.strike_errors = self._float_value(sub_el, 'strike')
         obj.dip, obj.dip_errors = self._float_value(sub_el, 'dip')
@@ -715,11 +715,11 @@ class Unpickler(object):
         :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.NodalPlanes`
         """
-        obj = NodalPlanes()
         try:
             sub_el = self._xpath('nodalPlanes', parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = NodalPlanes()
         # optional parameter
         obj.nodal_plane_1 = self._nodal_plane(sub_el, 'nodalPlane1')
         obj.nodal_plane_2 = self._nodal_plane(sub_el, 'nodalPlane2')
@@ -738,11 +738,11 @@ class Unpickler(object):
         :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.SourceTimeFunction`
         """
-        obj = SourceTimeFunction()
         try:
             sub_el = self._xpath('sourceTimeFunction', parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = SourceTimeFunction()
         # required parameters
         obj.type = self._xpath2obj('type', sub_el)
         obj.duration = self._xpath2obj('duration', sub_el, float)
@@ -759,11 +759,11 @@ class Unpickler(object):
         :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.Tensor`
         """
-        obj = Tensor()
         try:
             sub_el = self._xpath('tensor', parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = Tensor()
         # required parameters
         obj.m_rr, obj.m_rr_errors = self._float_value(sub_el, 'Mrr')
         obj.m_tt, obj.m_tt_errors = self._float_value(sub_el, 'Mtt')
@@ -1525,9 +1525,11 @@ class Pickler(object):
         """
         Converts a NodalPlanes into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.NodalPlanes`
+        :type obj: :class:`~obspy.core.event.NodalPlanes`
         :rtype: etree.Element
         """
+        if obj is None:
+            return
         subelement = etree.Element('nodalPlanes')
         # optional
         if obj.nodal_plane_1:
@@ -1561,7 +1563,7 @@ class Pickler(object):
         """
         Converts a PrincipalAxes into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.PrincipalAxes`
+        :type obj: :class:`~obspy.core.event.PrincipalAxes`
         :rtype: etree.Element
         """
         if obj is None:
@@ -1671,9 +1673,11 @@ class Pickler(object):
         """
         Converts a FocalMechanism into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.FocalMechanism`
+        :type focal_mechanism: :class:`~obspy.core.event.FocalMechanism`
         :rtype: etree.Element
         """
+        if focal_mechanism is None:
+            return
         element = etree.Element(
             'focalMechanism',
             attrib={'publicID': self._id(focal_mechanism.resource_id)})
@@ -1688,10 +1692,8 @@ class Pickler(object):
         self._str(focal_mechanism.misfit, element, 'misfit')
         self._str(focal_mechanism.station_distribution_ratio, element,
                   'stationDistributionRatio')
-        if focal_mechanism.nodal_planes:
-            self._nodal_planes(focal_mechanism.nodal_planes, element)
-        if focal_mechanism.principal_axes:
-            self._principal_axes(focal_mechanism.principal_axes, element)
+        self._nodal_planes(focal_mechanism.nodal_planes, element)
+        self._principal_axes(focal_mechanism.principal_axes, element)
         self._str(focal_mechanism.method_id, element, 'methodID')
         self._moment_tensor(focal_mechanism.moment_tensor, element)
         self._str(focal_mechanism.evaluation_mode, element, 'evaluationMode')

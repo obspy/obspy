@@ -1060,8 +1060,7 @@ class QuakeMLTestCase(unittest.TestCase):
         memfile.seek(0)
         cat = read_events(memfile, format="QUAKEML")
         self.assertEqual(cat[0].focal_mechanisms[0].nodal_planes, None)
-        self.assertEqual(
-            cat[0].focal_mechanisms[0].moment_tensor.principal_axes, None)
+        self.assertEqual(cat[0].focal_mechanisms[0].principal_axes, None)
 
 
 def suite():
