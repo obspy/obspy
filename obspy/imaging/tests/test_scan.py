@@ -108,7 +108,7 @@ class ScanTestCase(unittest.TestCase):
             for filename in self.all_files:
                 shutil.copy(filename, os.curdir)
 
-                # save via command line
+            # save via command line
             obspy_scan([os.curdir, '--write', 'scan.npz'])
 
             # save via Python
