@@ -1078,10 +1078,10 @@ class Client(object):
                 msg = ("Unrecognized input for 'bulk' argument. Please "
                        "contact developers if you think this is a bug.")
                 raise NotImplementedError(msg)
-        if PY2:
-            return bulk
-        else:
-            return bulk.encode('ASCII')
+
+        if hasattr(bulk, "encode"):
+            bulk = bulk.encode("ascii")
+        return bulk
 
     def _write_to_file_object(self, filename_or_object, data_stream):
         if hasattr(filename_or_object, "write"):
@@ -1393,12 +1393,18 @@ class Client(object):
             item = wadl_queue.get()
             url, wadl = item
 
+            # Just a safety measure.
+            if hasattr(wadl, "decode"):
+                decoded_wadl = wadl.decode('utf-8')
+            else:
+                decoded_wadl = wadl
+
             if wadl is None:
                 continue
             elif isinstance(wadl, FDSNRedirectException):
                 redirect_messages.add(str(wadl))
                 continue
-            elif wadl.decode('utf-8') == "timeout":
+            elif decoded_wadl == "timeout":
                 raise FDSNException("Timeout while requesting '%s'." % url)
 
             if "dataselect" in url:
@@ -1582,12 +1588,9 @@ def raise_on_error(code, data):
     """
     Raise an error for non-200 HTTP response codes
 
-    Note: Also used by the ~obspy.clients.fdsn.routers.fedcatalog_client
-          module.
-
     :type code: int
     :param code: HTTP response code
-    :type data: io.BytesIO
+    :type data: :class:`io.BytesIO`
     :param data: Data returned by the server
     """
     # get detailed server response message
@@ -1652,9 +1655,6 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
     specified.
 
     Performs a http GET if data=None, otherwise a http POST.
-
-    Note: Also used by the ~obspy.clients.fdsn.routers.fedcatalog_client
-          module.
     """
     if debug is True:
         print("Downloading %s %s requesting gzip compression" % (
