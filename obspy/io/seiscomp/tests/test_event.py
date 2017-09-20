@@ -211,6 +211,29 @@ class EventTestCase(unittest.TestCase):
         expected_message = "Not a SC3ML compatible file or string."
         self.assertEqual(e.exception.args[0], expected_message)
 
+    def test_multiple_number_sign(self):
+        """
+        Test reading events with publicID containing several #.
+
+        See #1872.
+        """
+        filename = os.path.join(self.path, 'multiple_#.sc3ml')
+        catalog = _read_sc3ml(filename)
+
+        self.assertEqual(len(catalog.events), 6)
+        self.assertEqual(catalog.events[0].resource_id,
+                         'smi:org.gfz-potsdam.de/geofon/test')
+        self.assertEqual(catalog.events[1].resource_id,
+                         'smi:org.gfz-potsdam.de/geofon/test#')
+        self.assertEqual(catalog.events[2].resource_id,
+                         'smi:org.gfz-potsdam.de/geofon/test#test')
+        self.assertEqual(catalog.events[3].resource_id,
+                         'smi:org.gfz-potsdam.de/geofon/test#test_')
+        self.assertEqual(catalog.events[4].resource_id,
+                         'smi:org.gfz-potsdam.de/geofon/test#test_test')
+        self.assertEqual(catalog.events[5].resource_id,
+                         'smi:org.gfz-potsdam.de/geofon/test#test_test_test')
+
     def test_write_xslt_event(self):
         self.cmp_write_xslt_file('quakeml_1.2_event.xml',
                                  'quakeml_1.2_event.sc3ml',

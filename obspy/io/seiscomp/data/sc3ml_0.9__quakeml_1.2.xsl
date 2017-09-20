@@ -154,6 +154,8 @@
  *    - Don't modify id if it starts with 'smi:' or 'quakeml:'
  *    - Fix Arrival publicID generation
  *
+ *  * 20.09.2017: Keep only one # character in publicID
+ *
  ********************************************************************** -->
 <xsl:stylesheet version="1.0"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -549,15 +551,29 @@
     <!-- Converts a scs id to a quakeml id -->
     <xsl:template name="convertID">
         <xsl:param name="id"/>
+        <!-- Keep only one # character in a publicID -->
+        <xsl:variable name="new_id">
+            <xsl:choose>
+                <xsl:when test="contains($id, '#')">
+                    <xsl:value-of select="concat(
+                        substring-before($id, '#'),
+                        '#',
+                        translate(substring-after($id, '#'), '#', '_'))" />
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$id" />
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
         <!-- If the id starts with 'smi:' or 'quakeml:', consider that the id
              is already well formated -->
         <xsl:choose>
-            <xsl:when test="starts-with($id, 'smi:')
-                            or starts-with($id, 'quakeml:')">
-                <xsl:value-of select="$id"/>
+            <xsl:when test="starts-with($new_id, 'smi:')
+                            or starts-with($new_id, 'quakeml:')">
+                <xsl:value-of select="$new_id"/>
             </xsl:when>
             <xsl:otherwise>
-                <xsl:value-of select="concat($ID_PREFIX, translate($id, ' :', '__'))"/>
+                <xsl:value-of select="concat($ID_PREFIX, translate($new_id, ' :', '__'))"/>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
