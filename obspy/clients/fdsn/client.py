@@ -411,7 +411,7 @@ class Client(object):
                      minradius=None, maxradius=None, level=None,
                      includerestricted=None, includeavailability=None,
                      updatedafter=None, matchtimeseries=None, filename=None,
-                     format="xml", **kwargs):
+                     format=None, **kwargs):
         """
         Query the station service of the FDSN client.
 
