@@ -69,7 +69,7 @@ def _xml_doc_from_anything(source):
     Will raise a ValueError if it fails.
     """
     try:
-        xml_doc = etree.parse(source)
+        xml_doc = etree.parse(source).getroot()
     except Exception:
         try:
             xml_doc = etree.fromstring(source)
