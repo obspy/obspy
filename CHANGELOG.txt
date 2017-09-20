@@ -93,6 +93,10 @@ master: (doi: 10.5281/zenodo.165135)
       beta branch (see #1760 and #1783)
  - obspy.io.quakeml:
     * Read and write support for nested custom tags (see #1463)
+    * Fix some minor bugs that could lead to empty stub elements, e.g. like
+      empty MomentTensor when reading and later writing again a QuakeML file
+      with a FocalMechanism but no MomentTensor, potentially resulting in
+      QuakeML files that breach the QuakeML schema (see #1896)
  - obspy.io.seiscomp:
     * Read and write support for SC3ML event (see #1638 and #1848)
     * Fix bug where files with arbitrary publicIDs and files with missing
