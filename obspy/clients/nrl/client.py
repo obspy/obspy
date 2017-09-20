@@ -138,29 +138,37 @@ class NRL(object):
     def _clean_str(self, string):
         return string.strip('\'"')
 
-    def get_datalogger_resp(self, datalogger_keys):
+    def get_datalogger_response(self, datalogger_keys):
         """
-        Get the RESP string of a datalogger by keys.
+        Get the datalogger response.
 
         :type datalogger_keys: list of str
-        :rtype: str
+        :rtype: :class:`~obspy.core.inventory.response.Response`
         """
         datalogger = self.dataloggers
         for key in datalogger_keys:
             datalogger = datalogger[key]
-        return self._read_resp(datalogger[1])
 
-    def get_sensor_resp(self, sensor_keys):
+        # Parse to an inventory object and return a response object.
+        with io.BytesIO(self._read_resp(datalogger[1]).encode()) as buf:
+            buf.seek(0, 0)
+            return obspy.read_inventory(buf, format="RESP")[0][0][0].response
+
+    def get_sensor_response(self, sensor_keys):
         """
-        Get the RESP string of a sensor by keys.
+        Get the sensor response.
 
         :type sensor_keys: list of str
-        :rtype: str
+        :rtype: :class:`~obspy.core.inventory.response.Response`
         """
         sensor = self.sensors
         for key in sensor_keys:
             sensor = sensor[key]
-        return self._read_resp(sensor[1])
+
+        # Parse to an inventory object and return a response object.
+        with io.BytesIO(self._read_resp(sensor[1]).encode()) as buf:
+            buf.seek(0, 0)
+            return obspy.read_inventory(buf, format="RESP")[0][0][0].response
 
     def get_response(self, datalogger_keys, sensor_keys):
         """
@@ -192,20 +200,8 @@ class NRL(object):
             Stage 9: Coefficients... from COUNTS to COUNTS, gain: 1
             Stage 10: Coefficients... from COUNTS to COUNTS, gain: 1
         """
-        # Parse both to inventory objects.
-        with io.BytesIO(
-                self.get_datalogger_resp(datalogger_keys).encode()) as buf:
-            buf.seek(0, 0)
-            dl_resp = obspy.read_inventory(buf, format="RESP")
-        with io.BytesIO(
-                self.get_sensor_resp(sensor_keys).encode()) as buf:
-            buf.seek(0, 0)
-            sensor_resp = obspy.read_inventory(buf, format="RESP")
-
-        # Both can by construction only contain a single channel with a
-        # response object.
-        dl_resp = dl_resp[0][0][0].response
-        sensor_resp = sensor_resp[0][0][0].response
+        dl_resp = self.get_datalogger_response(datalogger_keys)
+        sensor_resp = self.get_sensor_response(sensor_keys)
 
         # Combine both by replace stage one in the data logger with stage
         # one of the sensor.
