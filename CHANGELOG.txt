@@ -65,7 +65,8 @@ master: (doi: 10.5281/zenodo.165135)
    * Fixing cross implementation of bulk waveform and station requests (see
      #1685).
    * Updating some endpoint mappings to use HTTPS. (See #1690, #1665, #1048)
-   * Adding a mapping for the TEXNET fdsnws service (see #1852).
+   * Adding mappings for the TEXNET (see #1852) and the ICGC (see #1902)
+     services.
  - obspy.imaging:
    * The functionality behind the `obspy-scan` command line script has been
      refactored into a `Scanner` class so that it can be reused in custom
