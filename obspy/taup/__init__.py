@@ -143,14 +143,14 @@ If ray paths have been calculated, they can be plotted using the
 
 >>> arrivals = model.get_ray_paths(source_depth_in_km=500,
 ...                                distance_in_degree=130)
->>> arrivals.plot()  # doctest: +SKIP
+>>> arrivals.plot_rays()  # doctest: +SKIP
 
 .. plot::
     :width: 50%
     :align: center
 
     from obspy.taup import TauPyModel
-    TauPyModel().get_ray_paths(500, 130).plot()
+    TauPyModel().get_ray_paths(500, 130, phase_list=["ttbasic"]).plot_rays()
 
 Plotting will only show the requested phases:
 
@@ -158,7 +158,7 @@ Plotting will only show the requested phases:
 ...     source_depth_in_km=500,
 ...     distance_in_degree=130,
 ...     phase_list=["Pdiff", "Sdiff", "pPdiff", "sSdiff"])
->>> arrivals.plot()  # doctest: +SKIP
+>>> ax = arrivals.plot_rays()  # doctest: +SKIP
 
 .. plot::
     :width: 50%
@@ -174,7 +174,7 @@ Additionally, Cartesian coordinates may be used instead of a polar grid:
 >>> arrivals = model.get_ray_paths(source_depth_in_km=500,
 ...                                distance_in_degree=130,
 ...                                phase_list=["ttbasic"])
->>> arrivals.plot(plot_type="cartesian")  # doctest: +SKIP
+>>> ax = arrivals.plot_rays(plot_type="cartesian")  # doctest: +SKIP
 
 .. plot::
     :width: 75%
@@ -182,64 +182,64 @@ Additionally, Cartesian coordinates may be used instead of a polar grid:
 
     from obspy.taup import TauPyModel
     TauPyModel().get_ray_paths(
-        500, 130, phase_list=["ttbasic"]).plot(plot_type="cartesian")
+        500, 130, phase_list=["ttbasic"]).plot_rays(plot_type="cartesian")
 
 Travel times for these ray paths can be plotted using the
-:meth:`~obspy.taup.tau.Arrivals.timeplot` method:
+:meth:`~obspy.taup.tau.Arrivals.plot_times` method:
 
 >>> arrivals = model.get_ray_paths(source_depth_in_km=500,
 ...                                distance_in_degree=130)
->>> arrivals.timeplot()  # doctest: +SKIP
+>>> ax = arrivals.plot_times()  # doctest: +SKIP
 
 .. plot::
     :width: 50%
     :align: center
 
     from obspy.taup import TauPyModel
-    TauPyModel().get_ray_paths(500, 130).timeplot()
+    ax = TauPyModel().get_ray_paths(500, 130).plot_times()
 
-Alternatively, convenience wrapper functions are in place to plot the
-travel times and the ray paths.
+Alternatively, convenience wrapper functions plot the arrival times
+and the ray paths for a range of epicentral distances.
 
 The travel times wrapper function is:
 
->>> from obspy.taup import traveltime_plot
+>>> from obspy.taup import plot_travel_times
 >>> import matplotlib.pyplot as plt
 >>> fig, ax = plt.subplots()
->>> ax = traveltime_plot(source_depth=10, ax=ax, fig=fig)
->>> plt.show()
+>>> ax = plot_travel_times(source_depth=10, phase_list=["P","S","PP"],
+... ax=ax, fig=fig)
+There were 2 epicentral distances without an arrival
 
 .. plot::
     :width: 50%
     :align: center
 
-    from obspy.taup import traveltime_plot
+    from obspy.taup import plot_travel_times
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots()
-    ax = traveltime_plot(source_depth=10, ax=ax, fig=fig)
-    plt.show()
+    ax = plot_travel_times(source_depth=10, ax=ax, phase_list=["P","S","PP"],
+    ... fig=fig)
 
 The ray path plot wrapper function is:
 
->>> from obspy.taup import raypath_plot
+>>> from obspy.taup import plot_ray_paths
 >>> import matplotlib.pyplot as plt
 >>> ax = plt.subplot(111, polar=True)
 >>> fig = ax.figure
->>> ax = raypath_plot(source_depth=100, ax=ax, fig=fig)
->>> plt.show()
+>>> ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig)
+There were rays for all but the following epicentral distances:
+ [0.0, 360.0]
 
 .. plot::
     :width: 50%
     :align: center
 
-    from obspy.taup import raypath_plot
+    from obspy.taup import plot_ray_paths
     import matplotlib.pyplot as plt
     ax = plt.subplot(111, polar=True)
     fig = ax.figure
-
-    ax = raypath_plot(source_depth=100, ax=ax, fig=fig)
-    plt.show()
+    ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig)
 
 More examples of plotting may be found in the :doc:`ObsPy tutorial
 </tutorial/code_snippets/travel_time>`.
@@ -415,7 +415,6 @@ Building custom models
 
 Custom models can be built from ``.tvel`` and ``.nd`` files using the
 :func:`~obspy.taup.taup_create.build_taup_model` function.
-
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -440,8 +439,8 @@ _DEFAULT_VALUES = {
 
 # Convenience imports.
 from .tau import TauPyModel # NOQA
-from .tau import traveltime_plot # NOQA
-from .tau import raypath_plot # NOQA
+from .tau import plot_travel_times # NOQA
+from .tau import plot_ray_paths # NOQA
 
 if __name__ == '__main__':
     import doctest

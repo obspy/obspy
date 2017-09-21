@@ -21,42 +21,47 @@ class TauPyPlottingTestCase(unittest.TestCase):
     TauPy plotting tests.
     """
     def setUp(self):
-        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        self.image_dir = os.path.join(os.path.dirname(__file__),
+                                      'images')
         self.model = TauPyModel(model="iasp91")
 
-    def test_spherical_all_phases(self):
+    def test_spherical_many_phases(self):
         """
-        Spherical plot of the ray paths for all phases for a single
+        Spherical plot of the ray paths for many phases for a single
         epicentral distance, but both ways around the globe.
-
         """
         with ImageComparison(self.image_dir,
-                             "spherical_all_phases.png") as ic:
-            self.model.get_ray_paths(500, 140).plot(plot_type="spherical",
-                                                    plot_all=True, show=False)
+                             "spherical_many_phases.png") as ic:
+            self.model.get_ray_paths(500,
+                                     140).plot_rays(plot_type="spherical",
+                                                    plot_all=True,
+                                                    show=False)
             plt.savefig(ic.name)
 
-    def test_spherical_all_phases_buried_station(self):
+    def test_spherical_many_phases_buried_station(self):
         """
-        Same as test_spherical_all_phases, but this time the receiver is
+        Same as test_spherical_many_phases, but this time the receiver is
         buried.
         """
         with ImageComparison(self.image_dir,
-                             "spherical_all_phases_buried_station.png") as ic:
+                             "spherical_many_phases_buried_station.png") as ic:
             arrivals = self.model.get_ray_paths(500, 140,
-                                                receiver_depth_in_km=200)
-            arrivals.plot(plot_type="spherical", plot_all=True, show=False)
+                                                receiver_depth_in_km=1000)
+            arrivals.plot_rays(plot_type="spherical",
+                               plot_all=True, show=False)
             plt.savefig(ic.name)
 
-    def test_spherical_all_phases_one_way(self):
+    def test_spherical_many_phases_one_way(self):
         """
         Same as test_spherical_many_phases, but this time no phases
         travelling the other way around the globe are plotted.
         """
         with ImageComparison(self.image_dir,
-                             "spherical_all_phases_one_way.png") as ic:
-            self.model.get_ray_paths(500, 140).plot(plot_type="spherical",
-                                                    plot_all=False, show=False)
+                             "spherical_many_phases_one_way.png") as ic:
+            self.model.get_ray_paths(500,
+                                     140).plot_rays(plot_type="spherical",
+                                                    plot_all=False,
+                                                    show=False)
             plt.savefig(ic.name)
 
     def test_spherical_more_then_360_degrees(self):
@@ -65,8 +70,9 @@ class TauPyPlottingTestCase(unittest.TestCase):
         """
         with ImageComparison(self.image_dir,
                              "spherical_more_then_360.png") as ic:
-            self.model.get_ray_paths(0, 10, phase_list=["PPPPPP"]).plot(
-                plot_type="spherical", plot_all=True, show=False)
+            self.model.get_ray_paths(0, 10, phase_list=["PPPPPP"]).plot_rays(
+                plot_type="spherical", plot_all=True, show=False,
+                phase_list=['PPPPPP'])
             plt.savefig(ic.name)
 
     def test_spherical_diff_phases(self):
@@ -77,51 +83,58 @@ class TauPyPlottingTestCase(unittest.TestCase):
                              "spherical_diff_phases.png") as ic:
             self.model.get_ray_paths(
                 700, 140, phase_list=["Pdiff", "Sdiff", "pSdiff", "sSdiff",
-                                      "pPdiff", "sPdiff"]).plot(
-                plot_type="spherical", plot_all=True, show=False)
+                                      "pPdiff", "sPdiff"]).plot_rays(
+                                          plot_type="spherical", legend=True,
+                                          plot_all=True, show=False)
             plt.savefig(ic.name)
 
-    def test_cartesian_all_phases(self):
+    def test_cartesian_many_phases(self):
         """
-         Cartesian plot of the ray paths for all phases for a single
+         Cartesian plot of the ray paths for many phases for a single
          epicentral distance, but both ways around the globe.
          """
         with ImageComparison(self.image_dir,
-                             "cartesian_all_phases.png") as ic:
-            self.model.get_ray_paths(500, 140).plot(plot_type="cartesian",
-                                                    plot_all=True, show=False)
+                             "cartesian_many_phases.png") as ic:
+            self.model.get_ray_paths(500, 140).plot_rays(plot_type="cartesian",
+                                                         plot_all=True,
+                                                         show=False)
             plt.savefig(ic.name)
 
-    def test_cartesian_all_phases_buried_station(self):
+    def test_cartesian_many_phases_buried_station(self):
         """
-        Same as test_cartesian_all_phases but this time the receiver is
+        Same as test_cartesian_many_phases but this time the receiver is
         buried.
         """
         with ImageComparison(self.image_dir,
-                             "cartesian_all_phases_buried_station.png") as ic:
+                             "cartesian_many_phases_buried_station.png") as ic:
             arrivals = self.model.get_ray_paths(500, 140,
-                                                receiver_depth_in_km=200)
-            arrivals.plot(plot_type="cartesian", plot_all=True, show=False)
+                                                receiver_depth_in_km=1000)
+            arrivals.plot_rays(plot_type="cartesian", plot_all=True,
+                               show=False)
             plt.savefig(ic.name)
 
-    def test_cartesian_all_phases_one_way(self):
+    def test_cartesian_many_phases_one_way(self):
         """
         Same as test_cartesian_many_phases but this time no phases
         travelling the other way around the globe are plotted.
         """
         with ImageComparison(self.image_dir,
-                             "cartesian_all_phases_one_way.png") as ic:
-            self.model.get_ray_paths(500, 140).plot(plot_type="cartesian",
-                                                    plot_all=False, show=False)
+                             "cartesian_many_phases_one_way.png") as ic:
+            self.model.get_ray_paths(500, 140).plot_rays(plot_type="cartesian",
+                                                         plot_all=False,
+                                                         show=False)
             plt.savefig(ic.name)
 
-    def test_traveltime_plot(self):
+    def test_plot_travel_times(self):
         """
-        Travel time plot for all phases at a single epicentral distance.
+        Travel time plot for many phases at a single epicentral distance.
         """
         with ImageComparison(self.image_dir,
-                             "traveltimes_all_phases.png") as ic:
-            self.model.get_ray_paths(10, 100).timeplot(show=False)
+                             "traveltimes_many_phases.png") as ic:
+            self.model.get_ray_paths(10, 100,
+                                     phase_list=("ttbasic",)).plot_times(
+                                         show=False, phase_list=("ttbasic",),
+                                         legend=True)
             plt.savefig(ic.name)
 
 

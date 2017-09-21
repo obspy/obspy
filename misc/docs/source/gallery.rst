@@ -138,7 +138,7 @@ Gallery
     :target: tutorial/code_snippets/time_frequency_misfit.html#plot-the-time-frequency-misfits
     :alt: Time Frequency Misfit
 
-.. gallery-plot:: tutorial/code_snippets/travel_time_plot.py
+.. gallery-plot:: tutorial/code_snippets/plot_travel_times.py
     :target: tutorial/code_snippets/travel_time.html#travel-time-plot
     :alt: Travel Time Plot
 	  
