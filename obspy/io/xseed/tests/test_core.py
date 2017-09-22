@@ -13,7 +13,6 @@ import warnings
 
 import numpy as np
 
-import obspy
 from obspy.core.inventory.response import PolynomialResponseStage
 from obspy.core.util.testing import NamedTemporaryFile
 from obspy.io.xseed import Parser, InvalidResponseError
@@ -794,7 +793,6 @@ class CoreTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.data_path, "RESP.regression_2")
         frequencies = np.logspace(-3, 3, 20)
-        frequencies = [1.0]
 
         # Set the times for the response.
         t = obspy.UTCDateTime(2013, 1, 1)
@@ -814,7 +812,6 @@ class CoreTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.data_path, "RESP.regression_segfault")
         frequencies = np.logspace(-3, 3, 20)
-        frequencies = [1.0]
 
         # Set the times for the response.
         # t = obspy.UTCDateTime(2009, 1, 23)
@@ -837,7 +834,6 @@ class CoreTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.data_path, "RESP.many_zero_frequencies")
         frequencies = np.logspace(-3, 3, 20)
-        frequencies = [1.0]
 
         # Set the times for the response.
         t = obspy.UTCDateTime(2005, 1, 1)
@@ -859,7 +855,6 @@ class CoreTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.data_path, "RESP.blockette_54_without_58")
         frequencies = np.logspace(-3, 3, 20)
-        frequencies = [1.0]
 
         # Set the times for the response.
         t = obspy.UTCDateTime(2005, 1, 1)
@@ -868,7 +863,9 @@ class CoreTestCase(unittest.TestCase):
             e_r = evalresp_for_frequencies(
                 t_samp=None, frequencies=frequencies, filename=filename,
                 date=t, units=unit)
-            r = obspy.read_inventory(filename)[0][0][0].response
+            # Catch warning.
+            with warnings.catch_warnings(record=True):
+                r = obspy.read_inventory(filename)[0][0][0].response
             i_r = r.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))

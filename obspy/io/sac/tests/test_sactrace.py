@@ -69,9 +69,9 @@ class SACTraceTestCase(unittest.TestCase):
         A read should fail if the byteorder is wrong
         """
         with self.assertRaises(IOError):
-            sac = SACTrace.read(self.filebe, byteorder='little')
+            SACTrace.read(self.filebe, byteorder='little')
         with self.assertRaises(IOError):
-            sac = SACTrace.read(self.file, byteorder='big')
+            SACTrace.read(self.file, byteorder='big')
         # a SACTrace should show the correct byteorder
         sac = SACTrace.read(self.filebe, byteorder='big')
         self.assertEqual(sac.byteorder, 'big')
@@ -373,7 +373,14 @@ class SACTraceTestCase(unittest.TestCase):
 
             # get/set value too long
             too_long = "{}_1234567890".format(hdr)
-            setattr(sac, hdr, too_long)
+            # will raise "UserWarning: Alphanumeric headers longer than 8
+            # characters are right-truncated"
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always', UserWarning)
+                setattr(sac, hdr, too_long)
+                self.assertEqual(len(w), 1)
+                self.assertEqual(w[0].category, UserWarning)
+                self.assertIn('Alphanumeric headers longer than 8', str(w[0]))
             self.assertEqual(sac._hs[_hd.STRHDRS.index(hdr)].decode(),
                              too_long[:8])
             self.assertEqual(getattr(sac, hdr), too_long[:8].strip())

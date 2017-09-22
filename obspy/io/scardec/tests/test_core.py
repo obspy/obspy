@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import inspect
@@ -9,6 +10,7 @@ import io
 import os
 import unittest
 import numpy as np
+import warnings
 
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
@@ -46,13 +48,24 @@ class ScardecTestCase(unittest.TestCase):
             temp_filename = tf.name
 
         try:
-            cat.write(temp_filename, format="SCARDEC")
+            # raises two UserWarnings
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always', UserWarning)
+
+                cat.write(temp_filename, format="SCARDEC")
+
+                self.assertEqual(len(w), 2)
+                self.assertEqual(w[0].category, UserWarning)
+                self.assertIn('No moment wave magnitude found', str(w[0]))
+                self.assertEqual(w[1].category, UserWarning)
+                self.assertIn('No derived origin attached', str(w[1]))
+
             with open(temp_filename, "rb") as fh:
                 new_data = fh.read()
         finally:
             try:
                 os.remove(temp_filename)
-            except:
+            except Exception:
                 pass
 
         # Test file header
@@ -82,9 +95,19 @@ class ScardecTestCase(unittest.TestCase):
             cat = obspy.read_events(fh)
 
         with NamedTemporaryFile() as tf:
-            cat.write(tf, format="SCARDEC")
-            tf.seek(0, 0)
-            new_data = tf.read()
+            # raises two UserWarnings
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always', UserWarning)
+
+                cat.write(tf, format="SCARDEC")
+                tf.seek(0, 0)
+                new_data = tf.read()
+
+                self.assertEqual(len(w), 2)
+                self.assertEqual(w[0].category, UserWarning)
+                self.assertIn('No moment wave magnitude found', str(w[0]))
+                self.assertEqual(w[1].category, UserWarning)
+                self.assertIn('No derived origin attached', str(w[1]))
 
         # Test file header
         self.assertEqual(data.decode().splitlines()[0:2],
@@ -107,19 +130,30 @@ class ScardecTestCase(unittest.TestCase):
         This time it tests reading from and writing to BytesIO objects.
         """
         filename = os.path.join(self.datapath, "test.scardec")
+
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
             data = buf.read()
             buf.seek(0, 0)
 
-        with buf:
-            buf.seek(0, 0)
-            cat = obspy.read_events(buf)
+            with buf:
+                buf.seek(0, 0)
+                cat = obspy.read_events(buf)
 
-            with io.BytesIO() as buf2:
-                cat.write(buf2, format="SCARDEC")
-                buf2.seek(0, 0)
-                new_data = buf2.read()
+                # raises two UserWarnings
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter('always', UserWarning)
+
+                    with io.BytesIO() as buf2:
+                        cat.write(buf2, format="SCARDEC")
+                        buf2.seek(0, 0)
+                        new_data = buf2.read()
+
+                self.assertEqual(len(w), 2)
+                self.assertEqual(w[0].category, UserWarning)
+                self.assertIn('No moment wave magnitude found', str(w[0]))
+                self.assertEqual(w[1].category, UserWarning)
+                self.assertIn('No derived origin attached', str(w[1]))
 
         # Test file header
         self.assertEqual(data.decode().splitlines()[0:2],

@@ -780,7 +780,10 @@ class StreamTestCase(unittest.TestCase):
         tr2 = Trace(data=np.zeros(5))
         tr2.stats.calib = 2.0
         st = Stream([tr1, tr2])
-        self.assertRaises(Exception, st.merge)
+        # this also emits an UserWarning
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            self.assertRaises(Exception, st.merge)
         # 2 - different calibration factors for the different channels is ok
         tr1 = Trace(data=np.zeros(5))
         tr1.stats.calib = 2.00
@@ -807,7 +810,10 @@ class StreamTestCase(unittest.TestCase):
         tr2 = Trace(data=np.zeros(5))
         tr2.stats.sampling_rate = 50
         st = Stream([tr1, tr2])
-        self.assertRaises(Exception, st.merge)
+        # this also emits an UserWarning
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            self.assertRaises(Exception, st.merge)
         # 2 - different sampling rates for the different channels is ok
         tr1 = Trace(data=np.zeros(5))
         tr1.stats.sampling_rate = 200
@@ -832,7 +838,10 @@ class StreamTestCase(unittest.TestCase):
         tr1 = Trace(data=np.zeros(5, dtype=np.int32))
         tr2 = Trace(data=np.zeros(5, dtype=np.float32))
         st = Stream([tr1, tr2])
-        self.assertRaises(Exception, st.merge)
+        # this also emits an UserWarning
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            self.assertRaises(Exception, st.merge)
         # 2 - different sampling rates for the different channels is ok
         tr1 = Trace(data=np.zeros(5, dtype=np.int32))
         tr1.stats.channel = 'EHE'
