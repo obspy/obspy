@@ -272,8 +272,9 @@ class Arrivals(list):
         """
         import matplotlib.pyplot as plt
 
-        phase_names = parse_phase_list(phase_list)
-
+        # I don't get this, but without sorting, I get a different
+        # order each call:
+        phase_names = sorted(parse_phase_list(phase_list))
         arrivals = []
         for arrival in self:
             if arrival.path is None:
@@ -309,14 +310,14 @@ class Arrivals(list):
             intp = matplotlib.cbook.simple_linear_interpolation
             radius = self.model.radius_of_planet
             for ray in arrivals:
-                if arrival.name in phase_names:
+                if ray.name in phase_names:
                     # Requires interpolation,or diffracted phases look funny.
                     ax.plot(intp(ray.path["dist"], 100),
                             radius - intp(ray.path["depth"], 100),
                             color=COLORS[phase_names.index(ray.name) %
                                          len(COLORS)], label=ray.name, lw=2.0)
                 else:
-                    print("Phase %s not in phase_list" % arrival.name)
+                    print("Phase %s not in phase_list" % ray.name)
                 ax.set_yticks(radius - discons)
                 ax.xaxis.set_major_formatter(plt.NullFormatter())
                 ax.yaxis.set_major_formatter(plt.NullFormatter())
@@ -382,12 +383,12 @@ class Arrivals(list):
 
             # Plot the ray paths:
             for ray in arrivals:
-                if arrival.name in phase_names:
+                if ray.name in phase_names:
                     ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
                             color=COLORS[phase_names.index(ray.name) %
                                          len(COLORS)], label=ray.name, lw=2.0)
                 else:
-                    print("Phase %s not in phase_list" % arrival.name)
+                    print("Phase %s not in phase_list" % ray.name)
 
             # Pretty station marker:
             ms = 14
@@ -437,7 +438,6 @@ class Arrivals(list):
                         markersize=ms, zorder=10, markeredgewidth=1.5,
                         markeredgecolor="0.3", clip_on=False, lw=0,
                         transform=station_marker_transform)
-
             if legend:
                 if isinstance(legend, bool):
                     loc = "lower left"
