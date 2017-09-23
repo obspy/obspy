@@ -84,6 +84,9 @@ class TauPyPlottingTestCase(unittest.TestCase):
             self.model.get_ray_paths(
                 700, 140, phase_list=["Pdiff", "Sdiff", "pSdiff", "sSdiff",
                                       "pPdiff", "sPdiff"]).plot_rays(
+                                          phase_list=["Pdiff", "Sdiff",
+                                                      "pSdiff", "sSdiff",
+                                                      "pPdiff", "sPdiff"],
                                           plot_type="spherical", legend=True,
                                           plot_all=True, show=False)
             plt.savefig(ic.name)
@@ -133,8 +136,7 @@ class TauPyPlottingTestCase(unittest.TestCase):
                              "traveltimes_many_phases.png") as ic:
             self.model.get_ray_paths(10, 100,
                                      phase_list=("ttbasic",)).plot_times(
-                                         show=False, phase_list=("ttbasic",),
-                                         legend=True)
+                                         show=False, legend=True)
             plt.savefig(ic.name)
 
 

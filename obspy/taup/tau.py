@@ -25,12 +25,11 @@ from .taup_geo import calc_dist, add_geo_to_arrivals
 from .utils import parse_phase_list
 import obspy.geodetics.base as geodetics
 
-# Pretty paired colors. Reorder to have saturated colors first and remove
-# some colors at the end.
-cmap = get_cmap('Paired', lut=12)
-COLORS = ['#%02x%02x%02x' % tuple(int(col * 255) for col in cmap(i)[:3])
-          for i in range(12)]
-COLORS = COLORS[1:][::2][:-1] + COLORS[::2][:-1]
+
+# Reorder tab20 colors to have saturated colors first:
+cmap = get_cmap('tab20')
+COLORS = cmap.colors
+COLORS = COLORS[0::2] + COLORS[1::2]
 
 
 class _SmartPolarText(matplotlib.text.Text):
@@ -208,7 +207,7 @@ class Arrivals(list):
                 ax.plot(arrival.distance, arrival.time / 60, '.',
                         label=arrival.name,
                         color=COLORS[phase_names.index(arrival.name)
-                                     % len(COLORS)])
+                                     % len(cmap.colors)])
             else:
                 print("Phase %s not in phase_list" % arrival.name)
         if legend:
@@ -315,7 +314,8 @@ class Arrivals(list):
                     ax.plot(intp(ray.path["dist"], 100),
                             radius - intp(ray.path["depth"], 100),
                             color=COLORS[phase_names.index(ray.name) %
-                                         len(COLORS)], label=ray.name, lw=2.0)
+                                         len(cmap.colors)],
+                            label=ray.name, lw=2.0)
                 else:
                     print("Phase %s not in phase_list" % ray.name)
                 ax.set_yticks(radius - discons)
@@ -386,7 +386,8 @@ class Arrivals(list):
                 if ray.name in phase_names:
                     ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
                             color=COLORS[phase_names.index(ray.name) %
-                                         len(COLORS)], label=ray.name, lw=2.0)
+                                         len(cmap.colors)],
+                            label=ray.name, lw=2.0)
                 else:
                     print("Phase %s not in phase_list" % ray.name)
 
