@@ -25,12 +25,12 @@ from .taup_geo import calc_dist, add_geo_to_arrivals
 from .utils import parse_phase_list
 import obspy.geodetics.base as geodetics
 
-
-# Reorder Paired color map to have saturated colors first, and removed
-# "yellow":
-cmap = get_cmap('Paired')
-COLORS = cmap.colors
-COLORS = COLORS[1::2] + COLORS[0::2][:-1]
+# Pretty paired colors. Reorder to have saturated colors first and remove
+# some colors at the end.
+cmap = get_cmap('Paired', lut=12)
+COLORS = ['#%02x%02x%02x' % tuple(int(col * 255) for col in cmap(i)[:3])
+          for i in range(12)]
+COLORS = COLORS[1:][::2][:-1] + COLORS[::2][:-1]
 
 
 class _SmartPolarText(matplotlib.text.Text):
@@ -194,7 +194,7 @@ class Arrivals(list):
         if not self:
             raise ValueError("No travel times.")
 
-        phase_names = parse_phase_list(phase_list)
+        phase_names = sorted(parse_phase_list(phase_list))
 
         # create an axis/figure, if there is none yet:
         if not ax:
