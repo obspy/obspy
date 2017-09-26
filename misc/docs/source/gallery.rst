@@ -142,7 +142,7 @@ Gallery
     :target: tutorial/code_snippets/travel_time.html#travel-time-plot
     :alt: Travel Time Plot
 	  
-.. gallery-plot:: tutorial/code_snippets/ray_path_plot.py
+.. gallery-plot:: tutorial/code_snippets/plot_ray_paths.py
     :target: tutorial/code_snippets/ray_path.html#ray-path-plot
     :alt: Ray Path Plot
 
