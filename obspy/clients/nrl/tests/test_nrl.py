@@ -6,8 +6,10 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 
+import numpy as np
 
-from obspy.core.inventory import Response
+from obspy.core.inventory import (Response, PolesZerosResponseStage,
+                                  ResponseStage, CoefficientsTypeResponseStage)
 from obspy.clients.nrl.client import NRL, LocalNRL, RemoteNRL
 
 
@@ -38,10 +40,45 @@ class NRLTestCase(unittest.TestCase):
         self.assertIsInstance(self.nrl_online, RemoteNRL)
 
     def test_get_response(self):
+        # Get only the sensor response.
+        sensor_resp = self.nrl_local.get_sensor_response(self.local_sensor_key)
+
+        # Get only the datalogger response.
+        dl_resp = self.nrl_local.get_datalogger_response(self.local_dl_key)
+
+        # Get full response.
         resp = self.nrl_local.get_response(
             datalogger_keys=self.local_dl_key,
             sensor_keys=self.local_sensor_key)
+
+        # All of them should be Response objects.
         self.assertIsInstance(resp, Response)
+        self.assertIsInstance(dl_resp, Response)
+        self.assertIsInstance(sensor_resp, Response)
+
+        # The full response is the first stage from the sensor and all
+        # following from the datalogger.
+        self.assertEqual(resp.response_stages[0],
+                         sensor_resp.response_stages[0])
+        self.assertEqual(resp.response_stages[1:],
+                         dl_resp.response_stages[1:])
+
+        # Test the actual responses. Testing the parsing of the exact values
+        # and what not is done in obspy.io.xseed.
+        paz = sensor_resp.response_stages[0]
+        self.assertIsInstance(paz, PolesZerosResponseStage)
+        np.testing.assert_allclose(
+            paz.poles, [(-0.037008 + 0.037008j), (-0.037008 - 0.037008j),
+                        (-502.65 + 0j), (-1005 + 0j), (-1131 + 0j)])
+        np.testing.assert_allclose(paz.zeros, [0j, 0j])
+
+        self.assertEqual(len(dl_resp.response_stages), 15)
+        self.assertEqual(len(resp.response_stages), 15)
+
+        self.assertIsInstance(resp.response_stages[1], ResponseStage)
+        for _i in range(2, 15):
+            self.assertIsInstance(resp.response_stages[_i],
+                                  CoefficientsTypeResponseStage)
 
     def test_nrl_class_str_method(self):
         out = str(self.nrl_local)
