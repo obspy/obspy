@@ -262,7 +262,7 @@ class LocalNRL(NRL):
         """
         Returns a configparser from a path to an index.txt
         """
-        cp = configparser.SafeConfigParser()
+        cp = configparser.ConfigParser()
         with codecs.open(path, mode='r', encoding='UTF-8') as f:
             if sys.version_info.major == 2:  # pragma: no cover
                 cp.readfp(f)
