@@ -18,7 +18,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D  # NOQA
 from matplotlib.cm import get_cmap
 
 from obspy.core.util import MATPLOTLIB_VERSION
@@ -42,6 +41,10 @@ def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0):
         :meth:`obspy.core.event.event.Event.plot`, parameter `kind`).
     """
     import matplotlib.pyplot as plt
+    # restrict potential fails on matplotlib 1.5.1 (e.g. Ubuntu xenial) owed to
+    # matplotlib/matplotlib#6537 to routines that actually use Axes3D, for that
+    # reason do the Axes3D import inside this routine.
+    from mpl_toolkits.mplot3d import Axes3D  # NOQA
     # make 2d layout of kind parameter
     if isinstance(kind[0], (list, tuple)):
         nrows = len(kind)
