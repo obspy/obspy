@@ -26,10 +26,11 @@ from .utils import parse_phase_list
 import obspy.geodetics.base as geodetics
 
 
-# Reorder tab20 colors to have saturated colors first:
-cmap = get_cmap('tab20')
+# Reorder Paired color map to have saturated colors first, and removed
+# "yellow":
+cmap = get_cmap('Paired')
 COLORS = cmap.colors
-COLORS = COLORS[0::2] + COLORS[1::2]
+COLORS = COLORS[1::2] + COLORS[0::2][:-1]
 
 
 class _SmartPolarText(matplotlib.text.Text):
@@ -207,7 +208,7 @@ class Arrivals(list):
                 ax.plot(arrival.distance, arrival.time / 60, '.',
                         label=arrival.name,
                         color=COLORS[phase_names.index(arrival.name)
-                                     % len(cmap.colors)])
+                                     % len(COLORS)])
             else:
                 print("Phase %s not in phase_list" % arrival.name)
         if legend:
@@ -314,7 +315,7 @@ class Arrivals(list):
                     ax.plot(intp(ray.path["dist"], 100),
                             radius - intp(ray.path["depth"], 100),
                             color=COLORS[phase_names.index(ray.name) %
-                                         len(cmap.colors)],
+                                         len(COLORS)],
                             label=ray.name, lw=2.0)
                 else:
                     print("Phase %s not in phase_list" % ray.name)
@@ -386,7 +387,7 @@ class Arrivals(list):
                 if ray.name in phase_names:
                     ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
                             color=COLORS[phase_names.index(ray.name) %
-                                         len(cmap.colors)],
+                                         len(COLORS)],
                             label=ray.name, lw=2.0)
                 else:
                     print("Phase %s not in phase_list" % ray.name)
