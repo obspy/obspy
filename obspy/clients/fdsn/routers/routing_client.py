@@ -5,7 +5,7 @@ This module contains the Routing client and manager for ObsPy.  These classes
 are intended to be subclassed.
 
 :class:`~obspy.clients.fdsn.routers.RoutingClient`
-This class contains the genericized methods used to query for information.
+This class contains the generalized methods used to query for information.
 In general, it will first query the routing service, and depending upon
 the response, query the specific services from each data provider.
 
