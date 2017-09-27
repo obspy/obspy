@@ -1,7 +1,6 @@
 from obspy.taup.tau import plot_ray_paths
 import matplotlib.pyplot as plt
 
-ax = plt.subplot(111, polar=True)
-fig = ax.figure
+fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
 ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig, phase_list=['P', 'PKP'],
                     npoints=25)

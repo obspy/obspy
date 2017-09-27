@@ -866,7 +866,7 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
         >>> import matplotlib.pyplot as plt
         >>> fig, ax = plt.subplots()
         >>> ax = plot_travel_times(source_depth=10, phase_list=['P','S','PP'],
-        ... ax=ax, fig=fig)
+        >>> ...                    ax=ax, fig=fig)
         There were 2 epicentral distances without an arrival
 
         .. plot::
@@ -876,7 +876,7 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
 
             fig, ax = plt.subplots()
             ax = plot_travel_times(source_depth=10,
-            ... phase_list=['P','S','PP'], ax=ax, fig=fig)
+                                   phase_list=['P','S','PP'], ax=ax, fig=fig)
         """
         import matplotlib.pyplot as plt
 
@@ -921,106 +921,106 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
                    plot_type='spherical', phase_list=['P', 'S', 'PP'],
                    model='iasp91', plot_all=True, legend=False,
                    label_arrivals=False, fig=None, show=True, ax=None):
-        """
-        Returns a ray path plot and any created axis instance of this
-        plot.
+    """
+    Returns a ray path plot and any created axis instance of this
+    plot.
 
-        :param source_depth: Source depth in kilometers.
-        :type source_depth: float
-        :param min_degrees: minimum distance from the source (in degrees).
-        :type min_degrees: float
-        :param max_degrees: maximum distance from the source (in degrees).
-        :type max_degrees: float
-        :param npoints: Number of receivers to plot.
-        :type npoints: int
-        :param plot_type: type of plot to create.
-        :type plot_type: str
-        :param phase_list: List of phase names.
-        :type phase_list: list of str
-        :param model: Model name.
-        :type model: str
-        :param plot_all: By default all rays, even those travelling in the
-            other direction and thus arriving at a distance of *360 - x*
-            degrees are shown. Set this to ``False`` to only show rays
-            arriving at exactly *x* degrees.
-        :type plot_all: bool
-        :param legend: If boolean, specify whether or not to show the legend
-            (at the default location.) If a str, specify the location of the
-            legend. If you are plotting a single phase, you may consider using
-            the ``label_arrivals`` argument.
-        :type legend: bool or str
-        :param label_arrivals: Label the arrivals with their respective phase
-            names. This setting is only useful if you are plotting a single
-            phase as otherwise the names could be large and possibly overlap
-            or clip. Consider using the ``legend`` parameter instead if you
-            are plotting multiple phases.
-        :type label_arrivals: bool
-        :param fig: Figure to plot into. If not given, a new figure instance
-            will be created.
-        :type fig: :class:`matplotlib.axes.Axes
-        :param show: Show the plot.
-        :type show: bool
-        :param ax: Axes to plot in. If not given, a new figure with an axes
-            will be created.
-        :type ax: :class:`matplotlib.axes.Axes`
+    :param source_depth: Source depth in kilometers.
+    :type source_depth: float
+    :param min_degrees: minimum distance from the source (in degrees).
+    :type min_degrees: float
+    :param max_degrees: maximum distance from the source (in degrees).
+    :type max_degrees: float
+    :param npoints: Number of receivers to plot.
+    :type npoints: int
+    :param plot_type: type of plot to create.
+    :type plot_type: str
+    :param phase_list: List of phase names.
+    :type phase_list: list of str
+    :param model: Model name.
+    :type model: str
+    :param plot_all: By default all rays, even those travelling in the
+        other direction and thus arriving at a distance of *360 - x*
+        degrees are shown. Set this to ``False`` to only show rays
+        arriving at exactly *x* degrees.
+    :type plot_all: bool
+    :param legend: If boolean, specify whether or not to show the legend
+        (at the default location.) If a str, specify the location of the
+        legend. If you are plotting a single phase, you may consider using
+        the ``label_arrivals`` argument.
+    :type legend: bool or str
+    :param label_arrivals: Label the arrivals with their respective phase
+        names. This setting is only useful if you are plotting a single
+        phase as otherwise the names could be large and possibly overlap
+        or clip. Consider using the ``legend`` parameter instead if you
+        are plotting multiple phases.
+    :type label_arrivals: bool
+    :param fig: Figure to plot into. If not given, a new figure instance
+        will be created.
+    :type fig: :class:`matplotlib.axes.Axes
+    :param show: Show the plot.
+    :type show: bool
+    :param ax: Axes to plot in. If not given, a new figure with an axes
+        will be created.
+    :type ax: :class:`matplotlib.axes.Axes`
 
-        :returns: ax
-        :rtype: :class:`matplotlib.axes.Axes`
+    :returns: ax
+    :rtype: :class:`matplotlib.axes.Axes`
 
-        .. rubric:: Example
+    .. rubric:: Example
 
-        >>> from obspy.taup.tau import plot_ray_paths
-        >>> import matplotlib.pyplot as plt
-        >>> ax = plt.subplot(111, polar=True)
-        >>> fig = ax.figure
-        >>> ax = plot_ray_paths(source_depth=10, plot_type="spherical",
-        ... ax=ax, fig=fig, legend=True, phase_list=['P','S','PP'])
-        There were rays for all but the following epicentral distances:
-         [0.0, 360.0]
+    >>> from obspy.taup.tau import plot_ray_paths
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
+    >>> ax = plot_ray_paths(source_depth=10, plot_type="spherical",
+    >>> ...                 ax=ax, fig=fig, legend=True,
+    >>> ...                 phase_list=['P','S','PP'])
+    There were rays for all but the following epicentral distances:
+     [0.0, 360.0]
 
-        .. plot::
+    .. plot::
 
-            from obspy.taup.tau import plot_ray_paths
-            import matplotlib.pyplot as plt
+    from obspy.taup.tau import plot_ray_paths
+    import matplotlib.pyplot as plt
 
-            ax = plt.subplot(111, polar=True)
-            fig = ax.figure
-            ax = plot_ray_paths(source_depth=10, plot_type="spherical", ...
-            ax=ax, fig=fig, legend=True, phase_list=['P','S','PP'])
-        """
-        import matplotlib.pyplot as plt
-        model = TauPyModel(model)
+    fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
+    ax = plot_ray_paths(source_depth=10, plot_type="spherical",
+                        ax=ax, fig=fig, legend=True,
+                        phase_list=['P','S','PP'])
+    """
+    import matplotlib.pyplot as plt
+    model = TauPyModel(model)
 
-        # set up a list of epicentral distances without a ray, and a flag:
-        norays = []
-        plotted = False
+    # set up a list of epicentral distances without a ray, and a flag:
+    norays = []
+    plotted = False
 
-        # calculate the arrival times and plot vs. epicentral distance:
-        degrees = np.linspace(min_degrees, max_degrees, npoints)
-        for degree in degrees:
-            try:
-                ax = model.get_ray_paths(source_depth, degree,
-                                         phase_list=phase_list).plot_rays(
-                                             phase_list=phase_list, show=False,
-                                             ax=ax, plot_type=plot_type,
-                                             plot_all=plot_all, legend=False)
-                plotted = True
-            except ValueError as err:
-                norays.append(degree)
-                pass
+    # calculate the arrival times and plot vs. epicentral distance:
+    degrees = np.linspace(min_degrees, max_degrees, npoints)
+    for degree in degrees:
+        try:
+            arrivals = model.get_ray_paths(source_depth, degree,
+                                           phase_list=phase_list)
+            ax = arrivals.plot_rays(phase_list=phase_list, show=False,
+                                    ax=ax, plot_type=plot_type,
+                                    plot_all=plot_all, legend=False)
+            plotted = True
+        except ValueError as err:
+            norays.append(degree)
+            pass
 
-        if plotted:
-            print("There were rays for all but the following epicentral "
-                  "distances:\n", norays)
-        else:
-            raise ValueError("No ray paths to plot.")
+    if plotted:
+        print("There were rays for all but the following epicentral "
+              "distances:\n", norays)
+    else:
+        raise ValueError("No ray paths to plot.")
 
-        # merge all arrival labels of a certain phase:
-        handles, labels = ax.get_legend_handles_labels()
-        labels, ids = np.unique(labels, return_index=True)
-        handles = [handles[i] for i in ids]
-        ax.legend(handles, labels, loc=2, numpoints=1)
+    # merge all arrival labels of a certain phase:
+    handles, labels = ax.get_legend_handles_labels()
+    labels, ids = np.unique(labels, return_index=True)
+    handles = [handles[i] for i in ids]
+    ax.legend(handles, labels, loc=2, numpoints=1)
 
-        if show:
-            plt.show()
-        return ax
+    if show:
+        plt.show()
+    return ax
