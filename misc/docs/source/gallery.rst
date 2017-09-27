@@ -143,7 +143,7 @@ Gallery
     :alt: Travel Time Plot
 	  
 .. gallery-plot:: tutorial/code_snippets/plot_ray_paths.py
-    :target: tutorial/code_snippets/ray_path.html#ray-path-plot
+    :target: tutorial/code_snippets/travel_time.html#ray-path-plot
     :alt: Ray Path Plot
 
 .. gallery-plot:: tutorial/code_snippets/travel_time_cartesian_raypath.py

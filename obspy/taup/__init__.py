@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""obspy.taup - Ray theoretical travel times and paths
+"""
+obspy.taup - Ray theoretical travel times and paths
 ===================================================
 
 :copyright:
@@ -139,7 +140,7 @@ Plotting
 --------
 
 If ray paths have been calculated, they can be plotted using the
-:meth:`~obspy.taup.tau.Arrivals.plot` method:
+:meth:`~obspy.taup.tau.Arrivals.plot_rays` method:
 
 >>> arrivals = model.get_ray_paths(source_depth_in_km=500,
 ...                                distance_in_degree=130)
@@ -165,9 +166,8 @@ Plotting will only show the requested phases:
     :align: center
 
     from obspy.taup import TauPyModel
-    TauPyModel().get_ray_paths(
-        500, 130,
-        phase_list=["Pdiff", "Sdiff", "pPdiff", "sSdiff"]).plot()
+    TauPyModel().get_ray_paths(500, 130,
+        phase_list=["Pdiff", "Sdiff", "pPdiff", "sSdiff"]).plot_rays()
 
 Additionally, Cartesian coordinates may be used instead of a polar grid:
 
