@@ -144,7 +144,7 @@ If ray paths have been calculated, they can be plotted using the
 
 >>> arrivals = model.get_ray_paths(source_depth_in_km=500,
 ...                                distance_in_degree=130)
->>> arrivals.plot_rays()
+>>> ax = arrivals.plot_rays()
 
 .. plot::
     :width: 50%
@@ -230,7 +230,6 @@ The ray path plot wrapper function is:
 >>> ax = plt.subplot(111, polar=True)
 >>> fig = ax.figure
 >>> ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig)
-
 There were rays for all but the following epicentral distances:
  [0.0, 360.0]
 
@@ -240,6 +239,7 @@ There were rays for all but the following epicentral distances:
 
     from obspy.taup import plot_ray_paths
     import matplotlib.pyplot as plt
+
     ax = plt.subplot(111, polar=True)
     fig = ax.figure
     ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig)

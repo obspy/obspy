@@ -865,8 +865,8 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
         >>> from obspy.taup import plot_travel_times
         >>> import matplotlib.pyplot as plt
         >>> fig, ax = plt.subplots()
-        >>> ax = plot_travel_times(source_depth=10, phase_list=['P','S','PP'],
-        >>> ...                    ax=ax, fig=fig)
+        >>> ax = plot_travel_times(source_depth=10, phase_list=['P','S','PP'],\
+        ax=ax, fig=fig)
         There were 2 epicentral distances without an arrival
 
         .. plot::
@@ -891,10 +891,10 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
         degrees = np.linspace(min_degrees, max_degrees, npoints)
         for degree in degrees:
             try:
-                ax = model.get_ray_paths(source_depth, degree,
-                                         phase_list=phase_list).plot_times(
-                                             phase_list=phase_list, show=False,
-                                             ax=ax)
+                arrivals = model.get_ray_paths(source_depth, degree,
+                                               phase_list=phase_list)
+                ax = arrivals.plot_times(phase_list=phase_list, show=False,
+                                         ax=ax)
                 plotted = True
             except ValueError as err:
                 notimes.append(degree)
@@ -972,9 +972,8 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
     >>> from obspy.taup.tau import plot_ray_paths
     >>> import matplotlib.pyplot as plt
     >>> fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
-    >>> ax = plot_ray_paths(source_depth=10, plot_type="spherical",
-    >>> ...                 ax=ax, fig=fig, legend=True,
-    >>> ...                 phase_list=['P','S','PP'])
+    >>> ax = plot_ray_paths(source_depth=10, plot_type="spherical",\
+    ax=ax, fig=fig, legend=True, phase_list=['P','S','PP'])
     There were rays for all but the following epicentral distances:
      [0.0, 360.0]
 
