@@ -29,7 +29,7 @@ PHASES = [
 
 model = TauPyModel(model='iasp91')
 
-fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
+fig, ax = plt.subplots(subplot_kw=dict(polar=True))
 
 # Plot all pre-determined phases
 for phase, distance in PHASES:
