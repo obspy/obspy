@@ -17,10 +17,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import inspect
-import re
 import math
-import os
 import warnings
 import obspy
 
@@ -36,87 +33,10 @@ from obspy.core.inventory import (CoefficientsTypeResponseStage,
                                   PolynomialResponseStage)
 from obspy.io.stationxml.core import _read_floattype
 
+
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
-SCHEMA_VERSION = ["0.7", "0.8", "0.9"]
-
-
-def _is_sc3ml(path_or_file_object):
-    """
-    Simple function checking if the passed object contains a valid sc3ml 0.7
-    file. Returns True of False.
-    The test is not exhaustive - it only checks the root tag but that should
-    be good enough for most real world use cases. If the schema is used to
-    test for a StationXML file, many real world files are false negatives as
-    they don't adhere to the standard.
-    :param path_or_file_object: File name or file like object.
-    """
-    if hasattr(path_or_file_object, "tell") and hasattr(path_or_file_object,
-                                                        "seek"):
-        current_position = path_or_file_object.tell()
-
-    try:
-        if isinstance(path_or_file_object, etree._Element):
-            xmldoc = path_or_file_object
-        else:
-            try:
-                xmldoc = etree.parse(path_or_file_object)
-            except etree.XMLSyntaxError:
-                return False
-        root = xmldoc.getroot()
-        try:
-            match = re.match(
-                r'{http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[-+]?'
-                r'[0-9]*\.?[0-9]+}', root.tag)
-            assert match is not None
-        except Exception:
-            return False
-        # Check if schema version is supported
-        if root.attrib["version"] not in SCHEMA_VERSION:
-            warnings.warn("The sc3ml file has version %s, ObsPy can "
-                          "deal with versions %s. Proceed with caution." % (
-                              root.attrib["version"], SCHEMA_VERSION))
-        return True
-    finally:
-        # Make sure to reset file pointer position.
-        try:
-            path_or_file_object.seek(current_position, 0)
-        except Exception:
-            pass
-
-
-def validate_sc3ml(path_or_object):
-    """
-    Checks if the given path is a valid sc3ml file.
-
-    Returns a tuple. The first item is a boolean describing if the validation
-    was successful or not. The second item is a list of all found validation
-    errors, if existent.
-
-    :param path_or_object: File name or file like object. Can also be an etree
-        element.
-    """
-    # Get the schema location.
-    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "data",
-                                   "sc3ml_0.7.xsd")
-
-    xmlschema = etree.XMLSchema(etree.parse(schema_location))
-
-    if isinstance(path_or_object, etree._Element):
-        xmldoc = path_or_object
-    else:
-        try:
-            xmldoc = etree.parse(path_or_object)
-        except etree.XMLSyntaxError:
-            return (False, ("Not a XML file.",))
-
-    valid = xmlschema.validate(xmldoc)
-
-    # Pretty error printing if the validation fails.
-    if valid is not True:
-        return (False, xmlschema.error_log)
-    return (True, ())
+SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9']
 
 
 def _read_sc3ml(path_or_file_object):
@@ -383,6 +303,25 @@ def _read_channel(inventory_root, cha_element, _ns):
                                 unit=True)
     depth = _read_floattype(cha_element, _ns("depth"), Distance,
                             unit=True)
+
+    # Set values to 0 if they are is missing (see #1816)
+    if longitude is None:
+        msg = "Sensor is missing longitude information, using 0.0"
+        warnings.warn(msg)
+        longitude = 0
+    if latitude is None:
+        msg = "Sensor is missing latitude information, using 0.0"
+        warnings.warn(msg)
+        latitude = 0
+    if elevation is None:
+        msg = "Sensor is missing elevation information, using 0.0"
+        warnings.warn(msg)
+        elevation = 0
+    if depth is None:
+        msg = "Channel is missing depth information, using 0.0"
+        warnings.warn(msg)
+        depth = 0
+
     channel = obspy.core.inventory.Channel(
         code=code, location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
@@ -392,21 +331,26 @@ def _read_channel(inventory_root, cha_element, _ns):
     sensor_id = cha_element.get("sensor")
     sensor_element = inventory_root.find(_ns("sensor[@publicID='" + sensor_id +
                                              "']"))
-
     # obtain the poles and zeros responseID and link to particular
     # <responsePAZ> publicID element in the inventory base node
-    if sensor_element is not None:
+    if (sensor_element is not None and
+       sensor_element.get("response") is not None):
+
         response_id = sensor_element.get("response")
-        if response_id is not None:
-            resp_type = response_id.split("#")[0]
-            if resp_type == 'ResponsePAZ':
-                search = "responsePAZ[@publicID='" + response_id + "']"
-                response_element = inventory_root.find(_ns(search))
-            elif resp_type == 'ResponsePolynomial':
-                search = "responsePolynomial[@publicID='" + response_id + "']"
-                response_element = inventory_root.find(_ns(search))
-        else:
-            response_element = None
+        response_elements = []
+
+        for resp_type in ['responsePAZ', 'responsePolynomial']:
+            search = "{}[@publicID='{}']".format(resp_type, response_id)
+            response_elements += inventory_root.findall(_ns(search))
+        if len(response_elements) == 0:
+            msg = ("Could not find response tag with public ID "
+                   "'{}'.".format(response_id))
+            raise obspy.ObsPyException(msg)
+        elif len(response_elements) > 1:
+            msg = ("Found multiple matching response tags with the same "
+                   "public ID '{}'.".format(response_id))
+            raise obspy.ObsPyException(msg)
+        response_element = response_elements[0]
     else:
         response_element = None
 

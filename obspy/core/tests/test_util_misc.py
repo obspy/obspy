@@ -2,55 +2,69 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY2
 
 import os
-import platform
 import sys
 import tempfile
 import unittest
-from ctypes import CDLL
-from ctypes.util import find_library
+import warnings
 
-from obspy import UTCDateTime
-from obspy.core.util.misc import CatchOutput, get_window_times
+from obspy import UTCDateTime, read
+from obspy.core.compatibility import mock
+from obspy.core.util.misc import CatchOutput, get_window_times, \
+    _ENTRY_POINT_CACHE
 
 
 class UtilMiscTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.misc
     """
-    @unittest.skipIf(sys.platform in ("darwin", "win32") and
-                     platform.python_version_tuple()[0] == "3",
-                     "Does not work with Python 3 for some Windows and OSX "
-                     "versions")
+
+    def test_supress_output(self):
+        """
+        Tests that CatchOutput suppresses messages
+        """
+        # this should write nothing to console
+        with CatchOutput():
+            sys.stdout.write("test_suppress_output #1 failed")
+            sys.stderr.write("test_suppress_output #2 failed")
+            print("test_suppress_output #3 failed")
+            print("test_suppress_output #4 failed", file=sys.stdout)
+            print("test_suppress_output #5 failed", file=sys.stderr)
+
     def test_catch_output(self):
         """
-        Tests for CatchOutput context manager.
+        Tests that CatchOutput catches messages
         """
-        libc = CDLL(find_library("c"))
+        with CatchOutput() as out:
+            sys.stdout.write("test_catch_output #1")
+            sys.stderr.write("test_catch_output #2")
+        self.assertEqual(out.stdout, 'test_catch_output #1')
+        self.assertEqual(out.stderr, 'test_catch_output #2')
 
         with CatchOutput() as out:
-            os.system('echo "abc"')
-            libc.printf(b"def\n")
-            # This flush is necessary for Python 3, which uses different
-            # buffering modes. Fortunately, in practice, we do not mix Python
-            # and C writes to stdout. This can also be fixed by setting the
-            # PYTHONUNBUFFERED environment variable, but this must be done
-            # externally, and cannot be done by the script.
-            libc.fflush(None)
-            print("ghi")
-            print("jkl", file=sys.stdout)
-            os.system('echo "123" 1>&2')
-            print("456", file=sys.stderr)
+            print("test_catch_output #3")
+        self.assertEqual(out.stdout, 'test_catch_output #3\n')
+        self.assertEqual(out.stderr, '')
 
-        if platform.system() == "Windows":
-            self.assertEqual(out.stdout.splitlines(),
-                             ['"abc"', 'def', 'ghi', 'jkl'])
-            self.assertEqual(out.stderr.splitlines(),
-                             ['"123" ', '456'])
-        else:
-            self.assertEqual(out.stdout, b"abc\ndef\nghi\njkl\n")
-            self.assertEqual(out.stderr, b"123\n456\n")
+        with CatchOutput() as out:
+            print("test_catch_output #4", file=sys.stdout)
+            print("test_catch_output #5", file=sys.stderr)
+        self.assertEqual(out.stdout, 'test_catch_output #4\n')
+        self.assertEqual(out.stderr, 'test_catch_output #5\n')
+
+    def test_catch_output_bytes(self):
+        with CatchOutput() as out:
+            if PY2:
+                sys.stdout.write(b"test_catch_output_bytes #1")
+                sys.stderr.write(b"test_catch_output_bytes #2")
+            else:
+                # PY3 does not allow to write directly bytes into text streams
+                sys.stdout.buffer.write(b"test_catch_output_bytes #1")
+                sys.stderr.buffer.write(b"test_catch_output_bytes #2")
+        self.assertEqual(out.stdout, 'test_catch_output_bytes #1')
+        self.assertEqual(out.stderr, 'test_catch_output_bytes #2')
 
     def test_catch_output_io(self):
         """
@@ -233,6 +247,20 @@ class UtilMiscTestCase(unittest.TestCase):
                 (UTCDateTime(1.0), UTCDateTime(2.0))
             ]
         )
+
+    def test_entry_point_buffer(self):
+        """
+        Ensure the entry point buffer caches results from load_entry_point
+        """
+        with mock.patch.dict(_ENTRY_POINT_CACHE, clear=True):
+            with mock.patch('obspy.core.util.misc.load_entry_point') as p:
+                # raises UserWarning: No matching response information found.
+                with warnings.catch_warnings(record=True):
+                    warnings.simplefilter('ignore', UserWarning)
+                    st = read()
+                    st.write('temp.mseed', 'mseed')
+            self.assertEqual(len(_ENTRY_POINT_CACHE), 3)
+            self.assertEqual(p.call_count, 3)
 
 
 def suite():

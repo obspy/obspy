@@ -18,6 +18,7 @@ from obspy.io.xseed.blockette.blockette010 import Blockette010
 from obspy.io.xseed.blockette.blockette051 import Blockette051
 from obspy.io.xseed.blockette.blockette053 import Blockette053
 from obspy.io.xseed.blockette.blockette054 import Blockette054
+import obspy.io.xseed.parser
 from obspy.io.xseed.parser import Parser
 from obspy.io.xseed.utils import SEEDParserException, compare_seed
 
@@ -533,6 +534,80 @@ class ParserTestCase(unittest.TestCase):
             # create RESP files
             sp2.get_resp()
 
+    def test_read_resp(self):
+        """
+        Tests reading a respfile by calling Parser(filename)
+        """
+        sts2_resp_file = os.path.join(self.path,
+                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        p = Parser(sts2_resp_file)
+        # Weak but at least tests that something has been read.
+        assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
+
+        rt130_resp_file = os.path.join(self.path,
+                                       'RESP.XX.NR008..HHZ.130.1.100')
+        p = Parser(rt130_resp_file)
+        # Weak but at least tests that something has been read.
+        assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
+
+    def test_read_resp_data(self):
+        """
+        Tests reading a resp string by calling Parser(string)
+        """
+        sts2_resp_file = os.path.join(self.path,
+                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        with open(sts2_resp_file, "rt") as fh:
+            p = Parser(fh.read())
+        # Weak but at least tests that something has been read.
+        assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
+
+        rt130_resp_file = os.path.join(self.path,
+                                       'RESP.XX.NR008..HHZ.130.1.100')
+        with open(rt130_resp_file, "rt") as fh:
+            p = Parser(fh.read())
+        # Weak but at least tests that something has been read.
+        assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
+
+    def clean_unit_string(self, string):
+        """
+        Returns a list of cleaned strings
+        """
+        # Strip out string constants that differ.
+        # Unit descriptions, and case
+        dirty_fields = ['B054F05', 'B054F06', 'B053F05', 'B053F06']
+        ret = list()
+
+        for line in string.split(b'\n'):
+            line = line.decode('ascii')
+            if line[:7] not in dirty_fields:
+                line = line.upper()
+            else:
+                line = line.split('-')[0].upper()
+            ret.append(line)
+        return ret
+
+    def test_resp_round_trip(self):
+        single_seed = os.path.join(
+            self.path,
+            '../../../../',
+            'core/tests/data/IRIS_single_channel_with_response.seed')
+        # Make parser and get resp from SEED
+        seed_p = Parser(single_seed)
+        resp_from_seed = seed_p.get_resp()[0][1]
+        resp_from_seed.seek(0)
+        resp_from_seed = resp_from_seed.read()
+        seed_list = self.clean_unit_string(resp_from_seed)
+
+        # make parser from resp made above and make a resp from it
+        resp_p = Parser(resp_from_seed.decode('ascii'))
+        resp_from_resp = resp_p.get_resp()[0][1]
+        resp_from_resp.seek(0)
+        resp_from_resp = resp_from_resp.read()
+        resp_list = self.clean_unit_string(resp_from_resp)
+
+        # compare
+        self.assertEqual(seed_list, resp_list)
+
     def test_compare_blockettes(self):
         """
         Tests the comparison of two blockettes.
@@ -604,15 +679,21 @@ class ParserTestCase(unittest.TestCase):
         """
         Test case for issue #319: multiple abbreviation dictionaries.
         """
+        # We have to clear the warnings registry here as some other tests
+        # also trigger the warning.
+        if hasattr(obspy.io.xseed.parser, "__warningregistry__"):
+            obspy.io.xseed.parser.__warningregistry__.clear()
+
         filename = os.path.join(self.path, 'BN.LPW._.BHE.dataless')
         # raises a UserWarning: More than one Abbreviation Dictionary Control
         # Headers found!
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("error", UserWarning)
-            self.assertRaises(UserWarning, Parser, filename)
-            warnings.simplefilter("ignore", UserWarning)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             parser = Parser(filename)
-            self.assertEqual(parser.version, 2.3)
+        self.assertEqual(
+            w[0].message.args[0],
+            "More than one Abbreviation Dictionary Control Headers found!")
+        self.assertEqual(parser.version, 2.3)
 
     def test_issue_157(self):
         """
@@ -725,6 +806,17 @@ class ParserTestCase(unittest.TestCase):
         # rotation. The energy comparison should still ensure a sensible
         # result.
         self.assertTrue(np.allclose(tr_2, tr_r_e, atol=tr_r_e.max() / 4.0))
+
+    def test_underline_in_site_name(self):
+        """
+        Test case for issue #1893.
+        """
+        filename = os.path.join(self.path, 'UP_BACU_HH.dataless')
+        parser = Parser()
+        parser.read(filename)
+        # value given by pdcc
+        self.assertEqual(parser.blockettes[50][0].site_name,
+                         'T3930_b A6689 3930')
 
 
 def suite():

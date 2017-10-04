@@ -10,22 +10,28 @@ Various additional utilities for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.utils import PY2
 
+import contextlib
 import inspect
+import io
 import itertools
+import locale
 import math
 import os
-import platform
 import shutil
+from subprocess import STDOUT, CalledProcessError, check_output
 import sys
 import tempfile
 import warnings
-from contextlib import contextmanager
-from subprocess import STDOUT, CalledProcessError, check_output
+from pkg_resources import load_entry_point
+
+from future.builtins import *  # NOQA
 
 import numpy as np
 
+
+WIN32 = sys.platform.startswith('win32')
 
 # The following dictionary maps the first character of the channel_id to the
 # lowest sampling rate this so called Band Code should be used for according
@@ -33,7 +39,6 @@ import numpy as np
 # We use this e.g. in seishub.client.getWaveform to request two samples more on
 # both start and end to cut to the samples that really are nearest to requested
 # start/end time afterwards.
-
 BAND_CODE = {'F': 1000.0,
              'G': 1000.0,
              'D': 250.0,
@@ -50,6 +55,12 @@ BAND_CODE = {'F': 1000.0,
              'P': 0.000001,
              'T': 0.0000001,
              'Q': 0.00000001}
+
+# Dict that stores results from load entry points
+_ENTRY_POINT_CACHE = {}
+
+# The kwargs used by load_entry_point function
+_LOAD_ENTRY_POINT_KEYS = ('dist', 'group', 'name')
 
 
 def guess_delta(channel):
@@ -262,73 +273,159 @@ def get_untracked_files_from_git():
     return files
 
 
-@contextmanager
-def CatchOutput():  # noqa -> this name is IMHO okay for a context manager.
+if PY2:
+    from cStringIO import StringIO as CaptureIO
+else:
+    class CaptureIO(io.TextIOWrapper):
+        def __init__(self):
+            super(CaptureIO, self).__init__(io.BytesIO(), encoding='utf-8',
+                                            newline='\n', write_through=True)
+
+        def getvalue(self):
+            return self.buffer.getvalue().decode('utf-8')
+
+
+@contextlib.contextmanager
+def CatchOutput():  # NOQA
     """
-    A context manager that catches stdout/stderr/exit() for its scope.
+    A context manager that captures input to stdout/stderr. Python level only!
 
     Always use with "with" statement. Does nothing otherwise.
 
-    Based on: https://bugs.python.org/msg184312
-
     >>> with CatchOutput() as out:  # doctest: +SKIP
-    ...    os.system('echo "mystdout"')
-    ...    os.system('echo "mystderr" >&2')
+    ...    sys.stdout.write("mystdout")
+    ...    sys.stderr.write("mystderr")
     >>> print(out.stdout)  # doctest: +SKIP
     mystdout
     >>> print(out.stderr)  # doctest: +SKIP
     mystderr
     """
-
     # Dummy class to transport the output.
     class Output():
-        pass
+        stdout = ''
+        stderr = ''
     out = Output()
-    out.stdout = ''
-    out.stderr = ''
 
-    stdout_fd = sys.stdout.fileno()
-    stderr_fd = sys.stderr.fileno()
-    with tempfile.TemporaryFile(prefix='obspy-') as tmp_stdout:
-        with tempfile.TemporaryFile(prefix='obspy-') as tmp_stderr:
-            stdout_copy = os.dup(stdout_fd)
-            stderr_copy = os.dup(stderr_fd)
+    # set current stdout/stderr to in-memory text streams
+    sys.stdout = stdout_result = CaptureIO()
+    sys.stderr = stderr_result = CaptureIO()
 
-            try:
+    try:
+        raised = False
+        yield out
+    except SystemExit:
+        raised = True
+    finally:
+        out.stdout = stdout_result.getvalue()
+        out.stderr = stderr_result.getvalue()
+
+        # reset to original stdout/stderr
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+        # normalize line breaks
+        if WIN32:
+            out.stdout = out.stdout.replace('\r', '')
+            out.stderr = out.stderr.replace('\r', '')
+        # remove encoding for PY2 -> we always want PY2 unicode/PY3 str
+        if PY2:
+            if sys.stdout.isatty():
+                out.stdout.decode(sys.stdout.encoding)
+            else:
+                out.stdout.decode(locale.getpreferredencoding())
+            if sys.stderr.isatty():
+                out.stderr.decode(sys.stderr.encoding)
+            else:
+                out.stderr.decode(locale.getpreferredencoding())
+
+    if raised:
+        raise SystemExit(out.stderr)
+
+
+def _py36_windowsconsoleio_workaround():
+    """
+    This monkey patch prevents crashing Py3.6 under Windows while using
+    the SuppressOutput context manager.
+
+    Python 3.6 implemented unicode console handling for Windows. This works
+    by reading/writing to the raw console handle using
+    ``{Read,Write}ConsoleW``.
+    The problem is that we are going to ``dup2`` over the stdio file
+    descriptors when doing ``FDCapture`` and this will ``CloseHandle`` the
+    handles used by Python to write to the console. Though there is still some
+    weirdness and the console handle seems to only be closed randomly and not
+    on the first call to ``CloseHandle``, or maybe it gets reopened with the
+    same handle value when we suspend capturing.
+    The workaround in this case will reopen stdio with a different fd which
+    also means a different handle by replicating the logic in
+    "Py_lifecycle.c:initstdio/create_stdio".
+    See https://github.com/pytest-dev/py/issues/103
+
+    See http://bugs.python.org/issue30555
+    """
+    if not WIN32 or sys.version_info[:2] < (3, 6):
+        return
+    if not hasattr(sys.stdout, 'buffer'):
+        return
+    buffered = hasattr(sys.stdout.buffer, 'raw')
+    raw_stdout = sys.stdout.buffer.raw if buffered else sys.stdout.buffer
+
+    if not isinstance(raw_stdout, io._WindowsConsoleIO):
+        return
+
+    def _reopen_stdio(f, mode):
+        if not buffered and mode[0] == 'w':
+            buffering = 0
+        else:
+            buffering = -1
+
+        return io.TextIOWrapper(
+            open(os.dup(f.fileno()), mode, buffering),
+            f.encoding,
+            f.errors,
+            f.newlines,
+            f.line_buffering)
+
+    sys.__stdin__ = sys.stdin = _reopen_stdio(sys.stdin, 'rb')
+    sys.__stdout__ = sys.stdout = _reopen_stdio(sys.stdout, 'wb')
+    sys.__stderr__ = sys.stderr = _reopen_stdio(sys.stderr, 'wb')
+
+
+_py36_windowsconsoleio_workaround()
+
+
+@contextlib.contextmanager
+def SuppressOutput():  # noqa
+    """
+    A context manager that suppresses output to stdout/stderr.
+    Always use with "with" statement. Does nothing otherwise.
+    >>> with SuppressOutput():  # doctest: +SKIP
+    ...    os.system('echo "mystdout"')
+    ...    os.system('echo "mystderr" >&2')
+
+    Note: Does not work reliably for Windows Python 3.6 under Windows - see
+    function definition of _py36_windowsconsoleio_workaround().
+    """
+    with os.fdopen(os.dup(1), 'wb', 0) as tmp_stdout:
+        with os.fdopen(os.dup(2), 'wb', 0) as tmp_stderr:
+            with open(os.devnull, 'wb') as to_file:
                 sys.stdout.flush()
-                os.dup2(tmp_stdout.fileno(), stdout_fd)
-
                 sys.stderr.flush()
-                os.dup2(tmp_stderr.fileno(), stderr_fd)
-
-                raised = False
-                yield out
-
-            except SystemExit:
-                raised = True
-
-            finally:
-                sys.stdout.flush()
-                os.dup2(stdout_copy, stdout_fd)
-                os.close(stdout_copy)
-                tmp_stdout.seek(0)
-                out.stdout = tmp_stdout.read()
-
-                sys.stderr.flush()
-                os.dup2(stderr_copy, stderr_fd)
-                os.close(stderr_copy)
-                tmp_stderr.seek(0)
-                out.stderr = tmp_stderr.read()
-
-                if platform.system() == "Windows":
-                    out.stdout = out.stdout.replace(b'\r', b'')
-                    out.stderr = out.stderr.replace(b'\r', b'')
-
-                if raised:
-                    raise SystemExit(out.stderr)
+                os.dup2(to_file.fileno(), 1)
+                os.dup2(to_file.fileno(), 2)
+                try:
+                    yield
+                finally:
+                    sys.stdout.flush()
+                    sys.stderr.flush()
+                    os.dup2(tmp_stdout.fileno(), 1)
+                    os.dup2(tmp_stderr.fileno(), 2)
+    # reset to original stdout/stderr
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
 
 
-@contextmanager
+@contextlib.contextmanager
 def TemporaryWorkingDirectory():  # noqa --> this name is IMHO ok for a CM
     """
     A context manager that changes to a temporary working directory.
@@ -523,6 +620,23 @@ def limit_numpy_fft_cache(max_size_in_mb_per_cache=100):
             continue
         if total_size > max_size_in_mb_per_cache * 1024 * 1024:
             cache.clear()
+
+
+def buffered_load_entry_point(dist, group, name):
+    """
+    Return `name` entry point of `group` for `dist` or raise ImportError
+    :type dist: str
+    :param dist: The name of the distribution containing the entry point.
+    :type group: str
+    :param group: The name of the group containing the entry point.
+    :type name: str
+    :param name: The name of the entry point.
+    :return: The loaded entry point
+    """
+    hash_str = '/'.join([dist, group, name])
+    if hash_str not in _ENTRY_POINT_CACHE:
+        _ENTRY_POINT_CACHE[hash_str] = load_entry_point(dist, group, name)
+    return _ENTRY_POINT_CACHE[hash_str]
 
 
 if __name__ == '__main__':

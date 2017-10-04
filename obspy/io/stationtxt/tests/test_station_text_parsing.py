@@ -721,8 +721,8 @@ class StationTextTestCase(unittest.TestCase):
                                 dip=0.0,
                                 sample_rate=0.0,
                                 sensor=Equipment(
-                                    type="Geotech KS-36000-I Borehole "
-                                         "Seismometer"),
+                                    description="Geotech KS-36000-I Borehole "
+                                                "Seismometer"),
                                 start_date=obspy.UTCDateTime(
                                     "1989-08-29T00:00:00"),
                                 end_date=obspy.UTCDateTime(
@@ -738,7 +738,7 @@ class StationTextTestCase(unittest.TestCase):
                                 dip=-90.0,
                                 sample_rate=0.0,
                                 sensor=Equipment(
-                                    type="Titan Accelerometer"),
+                                    description="Titan Accelerometer"),
                                 start_date=obspy.UTCDateTime(
                                     "2013-06-20T16:30:00"),
                                 response=resp_2),
@@ -767,7 +767,7 @@ class StationTextTestCase(unittest.TestCase):
                                 dip=0.0,
                                 sample_rate=0.0,
                                 sensor=Equipment(
-                                    type="Reftek 130 Datalogger"),
+                                    description="Reftek 130 Datalogger"),
                                 start_date=obspy.UTCDateTime(
                                     "2013-11-23T00:00:00"),
                                 end_date=obspy.UTCDateTime(

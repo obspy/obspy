@@ -29,13 +29,13 @@ import os
 import warnings
 
 import numpy as np
-from pkg_resources import load_entry_point
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _read_from_plugin
 from obspy.core.util.base import ENTRY_POINTS, download_to_file
 from obspy.core.util.decorator import (map_example_filename, rlock,
                                        uncompress_file)
+from obspy.core.util.misc import buffered_load_entry_point
 from obspy.imaging.cm import obspy_sequential
 
 from .base import CreationInfo, ResourceIdentifier
@@ -493,7 +493,7 @@ class Catalog(object):
             # get format specific entry point
             format_ep = EVENT_ENTRY_POINTS_WRITE[format]
             # search writeFormat method for given entry point
-            write_format = load_entry_point(
+            write_format = buffered_load_entry_point(
                 format_ep.dist.key, 'obspy.plugin.event.%s' % (format_ep.name),
                 'writeFormat')
         except (IndexError, ImportError):

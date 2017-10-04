@@ -10,6 +10,7 @@ import os
 import unittest
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from obspy.core.util.testing import ImageComparison
 from obspy.imaging.mopad_wrapper import beach
@@ -23,6 +24,12 @@ class MopadTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'images')
+        # ignore some "RuntimeWarning: invalid value encountered in sign"
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
 
     def test_collection(self):
         """

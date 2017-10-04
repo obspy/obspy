@@ -1,0 +1,90 @@
+#		<< obspy, Version 1.0.3.post0+1433.gb42d58147a.krischer.resptoinventoryresponse >>
+#
+#		======== CHANNEL RESPONSE DATA ========
+B050F03     Station:     E034
+B050F16     Network:     IB
+B052F03     Location:    ??
+B052F04     Channel:     HHE
+B052F22     Start date:  2008,155
+B052F23     End date:    2009,257,23:59:59.0000
+#		=======================================
+#		+            +--------------------------------------------------+             +
+#		+            |   Response Reference Information,  E034 ch HHE   |             +
+#		+            +--------------------------------------------------+             +
+#
+B060F03     Number of Stages:                      2
+B060F04     Stage number:                          1
+B060F05     Number of Responses:                   1
+#
+#		+               +--------------------------------------------+                +
+#		+               |   Response (Poles & Zeros),  E034 ch HHE   |                +
+#		+               +--------------------------------------------+                +
+#
+B043F05     Response type:                         A [Laplace Transform (Rad/sec)]
+B043F06     Response in units lookup:              M/S - Velocity in Meters per Second
+B043F07     Response out units lookup:             V - Volts
+B043F08     A0 normalization factor:               9.09218E+11
+B043F09     Normalization frequency:               1
+B043F10     Number of zeroes:                      2
+B043F15     Number of poles:                       6
+#		Complex zeroes:
+#		  i  real          imag          real_error    imag_error
+B043F11-14    0  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+B043F11-14    1  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+#		Complex poles:
+#		  i  real          imag          real_error    imag_error
+B043F16-19    0 -1.480320E-01  1.480320E-01  0.000000E+00  0.000000E+00
+B043F16-19    1 -1.480320E-01 -1.480320E-01  0.000000E+00  0.000000E+00
+B043F16-19    2 -3.919550E+02  8.506930E+02  0.000000E+00  0.000000E+00
+B043F16-19    3 -3.919550E+02 -8.506930E+02  0.000000E+00  0.000000E+00
+B043F16-19    4 -2.199110E+03  0.000000E+00  0.000000E+00  0.000000E+00
+B043F16-19    5 -4.712390E+02  0.000000E+00  0.000000E+00  0.000000E+00
+#
+#		+            +--------------------------------------------------+             +
+#		+            |   Response Reference Information,  E034 ch HHE   |             +
+#		+            +--------------------------------------------------+             +
+#
+B060F03     Number of Stages:                      2
+B060F04     Stage number:                          2
+B060F05     Number of Responses:                   3
+#
+#		+               +-------------------------------------------+                 +
+#		+               |   Response (Coefficients),  E034 ch HHE   |                 +
+#		+               +-------------------------------------------+                 +
+#
+B044F05     Response type:                         D
+B044F06     Response in units lookup:              V - Volts
+B044F07     Response out units lookup:             COUNTS - Digital Counts
+B044F08     Number of numerators:                  0
+B044F11     Number of denominators:                0
+#		Numerator coefficients:
+#		  i, coefficient,  error
+#
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,  E034 ch HHE   |                       +
+#		+                      +------------------------------+                       +
+#
+B047F05     Response input sample rate:            1.000000E+02
+B047F06     Response decimation factor:            1
+B047F07     Response decimation offset:            0
+B047F08     Response delay:                        0.000000E+00
+B047F09     Response correction:                   0.000000E+00
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity,  E034 ch HHE   |                  +
+#		+                  +---------------------------------------+                  +
+#
+B048F05     Sensitivity:                           1.000000E+00
+B048F06     Frequency of sensitivity:              0.000000E+00
+B048F07     Number of calibrations:                0
+#
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity,  E034 ch HHE   |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           1
+B058F05     Frequency of sensitivity:              1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#

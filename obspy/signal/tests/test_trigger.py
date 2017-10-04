@@ -349,16 +349,26 @@ class TriggerTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(item[key], _type))
         # check some of the detailed info
         ev = res[-1]
-        self.assertAlmostEqual(ev['cft_peak_wmean'], 18.101139518271076)
-        self.assertAlmostEqual(ev['cft_std_wmean'], 4.800051726246676)
-        self.assertAlmostEqual(ev['cft_peaks'][0], 18.985548683223936)
-        self.assertAlmostEqual(ev['cft_peaks'][1], 16.852175794415011)
-        self.assertAlmostEqual(ev['cft_peaks'][2], 18.64005853900883)
-        self.assertAlmostEqual(ev['cft_peaks'][3], 17.572363634564621)
-        self.assertAlmostEqual(ev['cft_stds'][0], 4.8909448258821362)
-        self.assertAlmostEqual(ev['cft_stds'][1], 4.4446373508521804)
-        self.assertAlmostEqual(ev['cft_stds'][2], 5.3499401252675964)
-        self.assertAlmostEqual(ev['cft_stds'][3], 4.2723814539487703)
+        self.assertAlmostEqual(ev['cft_peak_wmean'], 18.101139518271076,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_std_wmean'], 4.800051726246676,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_peaks'][0], 18.985548683223936,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_peaks'][1], 16.852175794415011,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_peaks'][2], 18.64005853900883,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_peaks'][3], 17.572363634564621,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_stds'][0], 4.8909448258821362,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_stds'][1], 4.4446373508521804,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_stds'][2], 5.3499401252675964,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_stds'][3], 4.2723814539487703,
+                               places=5)
 
     def test_coincidence_trigger_with_similarity_checking(self):
         """
@@ -389,6 +399,13 @@ class TriggerTestCase(unittest.TestCase):
             t = UTCDateTime(t)
             st_ = st.select(station="UH1").slice(t, t + 2.5).copy()
             templ.setdefault("UH1", []).append(st_)
+        # add another template with different SEED ID, it should be ignored
+        # (this can happen when using many templates over a long time period
+        # and instrument changes over time)
+        st_ = st_.copy()
+        for tr in st_:
+            tr.stats.channel = 'X' + tr.stats.channel[1:]
+        templ['UH1'].insert(0, st_)
         trace_ids = {"BW.UH1..SHZ": 1,
                      "BW.UH2..SHZ": 1,
                      "BW.UH3..SHZ": 1,
@@ -403,8 +420,26 @@ class TriggerTestCase(unittest.TestCase):
                 "classicstalta", 5, 1, st.copy(), 4, sta=0.5, lta=10,
                 trace_ids=trace_ids, event_templates=templ,
                 similarity_threshold=similarity_thresholds)
-            # two warnings get raised
-            self.assertEqual(len(w), 2)
+        # four warnings get raised
+        self.assertEqual(len(w), 4)
+        self.assertEqual(
+            str(w[0].message),
+            "At least one trace's ID was not found in the trace ID list and "
+            "was disregarded (BW.UH3..SHN)")
+        self.assertEqual(
+            str(w[1].message),
+            "At least one trace's ID was not found in the trace ID list and "
+            "was disregarded (BW.UH3..SHE)")
+        self.assertEqual(
+            str(w[2].message),
+            'Skipping trace BW.UH1..XHZ in template correlation (not present '
+            'in stream to check).')
+        self.assertEqual(
+            str(w[3].message),
+            "Skipping template(s) for station 'UH1': No common SEED IDs when "
+            "comparing template (BW.UH1..XHZ) and data streams (BW.UH1..SHZ, "
+            "BW.UH2..SHZ, BW.UH3..SHE, BW.UH3..SHN, BW.UH3..SHZ, "
+            "BW.UH4..EHZ).")
         # check floats in resulting dictionary separately
         self.assertAlmostEqual(trig[0].pop('duration'), 3.96, places=6)
         self.assertAlmostEqual(trig[1].pop('duration'), 1.99, places=6)

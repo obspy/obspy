@@ -104,7 +104,7 @@ def _internal_is_scardec(buf):
     try:
         _internal_read_single_scardec(buf)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -118,7 +118,7 @@ def _read_scardec(filename_or_buf, **kwargs):
     return _buffer_proxy(filename_or_buf, _internal_read_scardec, **kwargs)
 
 
-def _internal_read_scardec(buf, **kwargs):
+def _internal_read_scardec(buf, **kwargs):  # @UnusedVariable
     """
     Reads a SCARDEC file to a :class:`~obspy.core.event.Catalog` object.
 
@@ -331,7 +331,7 @@ def _write_scardec(catalog, filename_or_buf, **kwargs):
                          file_mode="wb", catalog=catalog, **kwargs)
 
 
-def _internal_write_scardec(buf, catalog, **kwargs):
+def _internal_write_scardec(buf, catalog, **kwargs):  # @UnusedVariable
     """
     Write events to a file.
 
@@ -350,7 +350,7 @@ def _internal_write_scardec(buf, catalog, **kwargs):
             buf.write(b"\n")
 
 
-def _internal_write_single_scardec(buf, event, **kwargs):
+def _internal_write_single_scardec(buf, event, **kwargs):  # @UnusedVariable
     """
     Write an event to a file.
 

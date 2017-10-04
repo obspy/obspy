@@ -99,12 +99,12 @@ enum units { UNDEF_UNITS, DIS, VEL, ACC, COUNTS, VOLTS, DEFAULT, PRESSURE, TESLA
 
 enum filt_types { UNDEF_FILT, LAPLACE_PZ, ANALOG_PZ, IIR_PZ,
                   FIR_SYM_1, FIR_SYM_2, FIR_ASYM, LIST, GENERIC, DECIMATION,
-                  GAIN, REFERENCE, FIR_COEFFS, IIR_COEFFS 
+                  GAIN, REFERENCE, FIR_COEFFS, IIR_COEFFS
 };
 
 /* enumeration representing the types of stages that are recognized */
 /* IGD 05/15/02 Added GENERIC_TYPE */
-enum stage_types { UNDEF_STAGE, PZ_TYPE, IIR_TYPE, FIR_TYPE, 
+enum stage_types { UNDEF_STAGE, PZ_TYPE, IIR_TYPE, FIR_TYPE,
 		GAIN_TYPE, LIST_TYPE, IIR_COEFFS_TYPE, GENERIC_TYPE
 };
 
@@ -457,7 +457,7 @@ void fir_asym_trans(struct blkt *, double, struct complex *);
 void iir_pz_trans(struct blkt *, double, struct complex *);
 void calc_time_shift(double, double, struct complex *);
 void zmul(struct complex *, struct complex *);
-void norm_resp(struct channel *, int, int);
+void norm_resp(struct channel *, int, int, int);
 void calc_list(struct blkt *, int , struct complex *); /*IGD i.dricker@isti.com for version 3.2.17 */
 void iir_trans(struct blkt *, double , struct complex *); /* IGD for version 3.2.17 */
 int is_time (const char * );

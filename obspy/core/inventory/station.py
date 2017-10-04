@@ -46,6 +46,8 @@ class Station(BaseNode):
         """
         :type channels: list of :class:`~obspy.core.inventory.channel.Channel`
         :param channels: All channels belonging to this station.
+        :type site: :class:`~obspy.core.inventory.util.Site`
+        :param site: The lexical description of the site
         :type latitude: :class:`~obspy.core.inventory.util.Latitude`
         :param latitude: The latitude of the station
         :type longitude: :class:`~obspy.core.inventory.util.Longitude`
@@ -380,7 +382,7 @@ class Station(BaseNode):
                                        channel.upper()):
                     continue
             if sampling_rate is not None:
-                if not cha.sample_rate:
+                if cha.sample_rate is None:
                     msg = ("Omitting channel that has no sampling rate "
                            "specified.")
                     warnings.warn(msg)

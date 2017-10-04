@@ -52,7 +52,7 @@ class UtilFlinnEngdahlTestCase(unittest.TestCase):
 
             self.assertEqual(
                 region,
-                checked_region.encode('utf-8'),
+                checked_region,
                 msg='(%s, %s) got %s instead of %s' % (
                     longitude,
                     latitude,

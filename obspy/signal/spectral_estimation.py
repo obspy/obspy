@@ -26,11 +26,9 @@ import bisect
 import glob
 import math
 import os
-import platform
 import warnings
 
 import numpy as np
-import matplotlib
 from matplotlib import mlab
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.ticker import FormatStrFormatter
@@ -226,7 +224,8 @@ class PPSD(object):
     def __init__(self, stats, metadata, skip_on_gaps=False,
                  db_bins=(-200, -50, 1.), ppsd_length=3600.0, overlap=0.5,
                  special_handling=None, period_smoothing_width_octaves=1.0,
-                 period_step_octaves=0.125, period_limits=None, **kwargs):
+                 period_step_octaves=0.125, period_limits=None,
+                 **kwargs):  # @UnusedVariable
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -689,9 +688,22 @@ class PPSD(object):
         # prepare the list of traces to go through
         if isinstance(stream, Trace):
             stream = Stream([stream])
+        if not stream:
+            msg = 'Empty stream object provided to PPSD.add()'
+            warnings.warn(msg)
+            return False
         # select appropriate traces
-        stream = stream.select(id=self.id,
-                               sampling_rate=self.sampling_rate)
+        stream = stream.select(id=self.id)
+        if not stream:
+            msg = 'No traces with matching SEED ID in provided stream object.'
+            warnings.warn(msg)
+            return False
+        stream = stream.select(sampling_rate=self.sampling_rate)
+        if not stream:
+            msg = ('No traces with matching sampling rate in provided stream '
+                   'object.')
+            warnings.warn(msg)
+            return False
         # save information on available data and gaps
         self.__insert_data_times(stream)
         self.__insert_gap_times(stream)
@@ -1117,7 +1129,7 @@ class PPSD(object):
                         units="VEL", freq=False, debug=False)
         return resp
 
-    def _get_response_from_paz_dict(self, tr):
+    def _get_response_from_paz_dict(self, tr):  # @UnusedVariable
         paz = self.metadata
         resp = paz_to_freq_resp(paz['poles'], paz['zeros'],
                                 paz['gain'] * paz['sensitivity'],
@@ -1382,19 +1394,6 @@ class PPSD(object):
             ax.grid()
 
         if self.special_handling is None:
-            # TODO can be removed once Ubuntu 16.10 is dropped (July 2017)
-            if (platform.system() == 'Linux' and
-                    platform.linux_distribution() ==
-                    ('Ubuntu', '16.10', 'yakkety') and
-                    matplotlib.__file__.startswith('/usr/lib')):
-                msg = ('Matplotlib rendering on Ubuntu 16.10 Yakkety has a '
-                       'bug, see https://github.com/matplotlib/matplotlib/'
-                       'issues/6976. Trying to work around it by setting'
-                       'matplotlib.rcParams["mathtext.fontset"] = "stix", see '
-                       'https://github.com/matplotlib/matplotlib/issues/6976#'
-                       'issuecomment-248855463')
-                warnings.warn(msg)
-                matplotlib.rcParams["mathtext.fontset"] = "stix"
             cb.ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
         else:
             cb.ax.set_ylabel('Amplitude [dB]')
@@ -1611,7 +1610,8 @@ class PPSD(object):
         :type grid: bool, optional
         :param grid: Enable/disable grid in histogram plot.
         :type show: bool, optional
-        :param show: Enable/disable immediately showing the plot.
+        :param show: Enable/disable immediately showing the plot. If
+            ``show=False``, then the matplotlib figure handle is returned.
         :type max_percentage: float, optional
         :param max_percentage: Maximum percentage to adjust the colormap. The
             default is 30% unless ``cumulative=True``, in which case this value

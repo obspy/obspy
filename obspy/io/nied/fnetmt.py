@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+obspy.io.nied.fnet - F-net moment tensor file read support for ObsPy
+====================================================================
 F-net moment tensor file format support for ObsPy.
 
 :copyright:

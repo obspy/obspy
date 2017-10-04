@@ -9,7 +9,8 @@
        :toctree: autogen
        :nosignatures:
 
+       core
        event
-       sc3ml
+       inventory
 
     .. comment to end block

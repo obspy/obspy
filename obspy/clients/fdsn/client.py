@@ -106,27 +106,28 @@ class Client(object):
     # initializing a client with the same base URL is cheap.
     __service_discovery_cache = {}
 
-    RE_UINT8 = '(?:25[0-5]|2[0-4]\d|[0-1]?\d{1,2})'
-    RE_HEX4 = '(?:[\d,a-f]{4}|[1-9,a-f][0-9,a-f]{0,2}|0)'
+    RE_UINT8 = r'(?:25[0-5]|2[0-4]\d|[0-1]?\d{1,2})'
+    RE_HEX4 = r'(?:[\d,a-f]{4}|[1-9,a-f][0-9,a-f]{0,2}|0)'
 
-    RE_IPv4 = '(?:' + RE_UINT8 + '(?:\.' + RE_UINT8 + '){3})'
+    RE_IPv4 = r'(?:' + RE_UINT8 + r'(?:\.' + RE_UINT8 + r'){3})'
     RE_IPv6 = \
-        '(?:\[' + RE_HEX4 + '(?::' + RE_HEX4 + '){7}\]' + \
-        '|\[(?:' + RE_HEX4 + ':){0,5}' + RE_HEX4 + '::\]' + \
-        '|\[::' + RE_HEX4 + '(?::' + RE_HEX4 + '){0,5}\]' + \
-        '|\[::' + RE_HEX4 + '(?::' + RE_HEX4 + '){0,3}:' + RE_IPv4 + '\]' + \
-        '|\[' + RE_HEX4 + ':' + \
-        '(?:' + RE_HEX4 + ':|:' + RE_HEX4 + '){0,4}' + \
-        ':' + RE_HEX4 + '\])'
+        r'(?:\[' + RE_HEX4 + r'(?::' + RE_HEX4 + r'){7}\]' + \
+        r'|\[(?:' + RE_HEX4 + r':){0,5}' + RE_HEX4 + r'::\]' + \
+        r'|\[::' + RE_HEX4 + r'(?::' + RE_HEX4 + r'){0,5}\]' + \
+        r'|\[::' + RE_HEX4 + r'(?::' + RE_HEX4 + r'){0,3}:' + RE_IPv4 + \
+        r'\]' + \
+        r'|\[' + RE_HEX4 + r':' + \
+        r'(?:' + RE_HEX4 + r':|:' + RE_HEX4 + r'){0,4}' + \
+        r':' + RE_HEX4 + r'\])'
 
-    URL_REGEX = 'https?://' + \
-                '(' + RE_IPv4 + \
-                '|' + RE_IPv6 + \
-                '|localhost' + \
-                '|\w+' + \
-                '|(?:\w(?:[\w-]{0,61}[\w])?\.){1,}([a-z]{2,6}))' + \
-                '(?::\d{2,5})?' + \
-                '(/[\w\.-]+)*/?$'
+    URL_REGEX = r'https?://' + \
+                r'(' + RE_IPv4 + \
+                r'|' + RE_IPv6 + \
+                r'|localhost' + \
+                r'|\w+' + \
+                r'|(?:\w(?:[\w-]{0,61}[\w])?\.){1,}([a-z]{2,6}))' + \
+                r'(?::\d{2,5})?' + \
+                r'(/[\w\.-]+)*/?$'
 
     @classmethod
     def _validate_base_url(cls, base_url):
@@ -410,7 +411,7 @@ class Client(object):
                      minradius=None, maxradius=None, level=None,
                      includerestricted=None, includeavailability=None,
                      updatedafter=None, matchtimeseries=None, filename=None,
-                     format="xml", **kwargs):
+                     format=None, **kwargs):
         """
         Query the station service of the FDSN client.
 

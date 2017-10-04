@@ -138,6 +138,8 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
 
     if not is_valid_byteorder(hi):
         if is_byteorder_specified:
+            if is_file_name:
+                f.close()
             # specified but not valid. you dun messed up.
             raise SacIOError("Incorrect byteorder {}".format(byteorder))
         else:
@@ -153,7 +155,7 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
     # check header lengths
     if len(hf) != 70 or len(hi) != 40 or len(hs) != 24:
         hf = hi = hs = None
-        if not is_file_name:
+        if is_file_name:
             f.close()
         raise SacIOError("Cannot read all header values")
 
@@ -167,6 +169,8 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
         f.seek(cur_pos, os.SEEK_SET)
         th_length = (632 + 4 * int(npts))
         if length != th_length:
+            if is_file_name:
+                f.close()
             msg = "Actual and theoretical file size are inconsistent.\n" \
                   "Actual/Theoretical: {}/{}\n" \
                   "Check that headers are consistent with time series."
@@ -182,7 +186,8 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
                            dtype=native_str(endian_str + 'f4'))
 
         if len(data) != npts:
-            f.close()
+            if is_file_name:
+                f.close()
             raise SacIOError("Cannot read all data points")
 
     if is_file_name:
@@ -414,7 +419,8 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
                        fmt=native_str("%#15.7g"), delimiter='')
             np.savetxt(f, data[5 * rows:], delimiter=b'\t')
         except Exception:
-            f.close()
+            if is_file_name:
+                f.close()
             raise SacIOError("Cannot write trace values: " + f.name)
 
     if is_file_name:
@@ -425,7 +431,7 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
 # TODO: this functionality is basically the same as the getters and setters in
 #    sac.sactrace. find a way to avoid duplication?
 # TODO: put these in sac.util?
-def header_arrays_to_dict(hf, hi, hs, nulls=False):
+def header_arrays_to_dict(hf, hi, hs, nulls=False, encoding='ASCII'):
     """
     Convert SAC header arrays to a more user-friendly dict.
 
@@ -438,6 +444,9 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
     :param nulls: If True, return all header values, including nulls, else
         omit them.
     :type nulls: bool
+    :param encoding: Encoding string that passes the user specified
+        encoding scheme.
+    :type nulls: str
 
     :return: SAC header dictionary
     :rtype: dict
@@ -453,8 +462,8 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
                  if val != HD.FNULL] + \
                 [(key, val) for (key, val) in zip(HD.INTHDRS, hi)
                  if val != HD.INULL] + \
-                [(key, val.decode()) for (key, val) in zip(HD.STRHDRS, hs)
-                 if val.decode() != HD.SNULL]
+                [(key, val.decode(encoding)) for (key, val)
+                 in zip(HD.STRHDRS, hs) if val.decode(encoding) != HD.SNULL]
 
     header = dict(items)
 

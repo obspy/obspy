@@ -1009,6 +1009,59 @@ class QuakeMLTestCase(unittest.TestCase):
         # No warning should have been raised.
         self.assertEqual(len(w), 0)
 
+    def test_focal_mechanism_write_read(self):
+        """
+        Test for a bug in reading a FocalMechanism without MomentTensor from
+        QuakeML file. Makes sure that FocalMechanism.moment_tensor stays None
+        if no MomentTensor is in the file.
+        """
+        memfile = io.BytesIO()
+        # create virtually empty FocalMechanism
+        fm = FocalMechanism()
+        event = Event(focal_mechanisms=[fm])
+        cat = Catalog(events=[event])
+        cat.write(memfile, format="QUAKEML", validate=True)
+        # now read again, and make sure there's no stub MomentTensor, but
+        # rather `None`
+        memfile.seek(0)
+        cat = read_events(memfile, format="QUAKEML")
+        self.assertEqual(cat[0].focal_mechanisms[0].moment_tensor, None)
+
+    def test_avoid_empty_stub_elements(self):
+        """
+        Test for a bug in reading QuakeML. Makes sure that some subelements do
+        not get assigned stub elements, but rather stay None.
+        """
+        # Test 1: Test subelements of moment_tensor
+        memfile = io.BytesIO()
+        # create virtually empty FocalMechanism
+        mt = MomentTensor(derived_origin_id='smi:local/abc')
+        fm = FocalMechanism(moment_tensor=mt)
+        event = Event(focal_mechanisms=[fm])
+        cat = Catalog(events=[event])
+        cat.write(memfile, format="QUAKEML", validate=True)
+        # now read again, and make sure there's no stub subelements on
+        # MomentTensor, but rather `None`
+        memfile.seek(0)
+        cat = read_events(memfile, format="QUAKEML")
+        self.assertEqual(cat[0].focal_mechanisms[0].moment_tensor.tensor, None)
+        self.assertEqual(
+            cat[0].focal_mechanisms[0].moment_tensor.source_time_function,
+            None)
+        # Test 2: Test subelements of focal_mechanism
+        memfile = io.BytesIO()
+        # create virtually empty FocalMechanism
+        fm = FocalMechanism()
+        event = Event(focal_mechanisms=[fm])
+        cat = Catalog(events=[event])
+        cat.write(memfile, format="QUAKEML", validate=True)
+        # now read again, and make sure there's no stub MomentTensor, but
+        # rather `None`
+        memfile.seek(0)
+        cat = read_events(memfile, format="QUAKEML")
+        self.assertEqual(cat[0].focal_mechanisms[0].nodal_planes, None)
+        self.assertEqual(cat[0].focal_mechanisms[0].principal_axes, None)
+
 
 def suite():
     return unittest.makeSuite(QuakeMLTestCase, 'test')

@@ -89,6 +89,35 @@ class CalibrationTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(amp, amp2, decimal=4)
         np.testing.assert_array_almost_equal(phase, phase2, decimal=4)
 
+    def test_relcal_different_overlaps(self):
+        """
+        Tests using different window overlap percentages.
+
+        Regression test for bug #1821.
+        """
+        st1 = read(os.path.join(self.path, 'ref_STS2'))
+        st2 = read(os.path.join(self.path, 'ref_unknown'))
+        calfile = os.path.join(self.path, 'STS2_simp.cal')
+
+        def median_amplitude_plateau(freq, amp):
+            # resulting response is pretty much flat in this frequency range
+            return np.median(amp[(freq >= 0.3) & (freq <= 3)])
+
+        # correct results using default overlap fraction of 0.5
+        freq, amp, phase = rel_calib_stack(
+            st1, st2, calfile, 20, smooth=10, overlap_frac=0.5,
+            save_data=False)
+        amp_expected = median_amplitude_plateau(freq, amp)
+        for overlap in np.linspace(0.1, 0.9, 5):
+            freq2, amp2, phase2 = rel_calib_stack(
+                st1, st2, calfile, 20, smooth=10, overlap_frac=overlap,
+                save_data=False)
+            amp_got = median_amplitude_plateau(freq2, amp2)
+            percentual_difference = abs(
+                (amp_expected - amp_got) / amp_expected)
+            # make sure results are close for any overlap choice
+            self.assertTrue(percentual_difference < 0.01)
+
     def test_relcal_using_dict(self):
         """
         Tests using paz dictionary instead of a gse2 file.

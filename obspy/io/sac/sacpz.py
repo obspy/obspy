@@ -1,4 +1,7 @@
 """
+obspy.io.sac.sacpz - SACPZ write support for ObsPy
+==================================================
+
 Module for SAC poles and zero (SACPZ) file I/O.
 
 :copyright:

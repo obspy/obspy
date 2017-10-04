@@ -235,7 +235,22 @@ def _read_station(sta_element, _ns):
         station.external_references.append(_read_external_reference(ref, _ns))
     channels = []
     for channel in sta_element.findall(_ns("Channel")):
-        channels.append(_read_channel(channel, _ns))
+        # Skip empty channels.
+        if not channel.items() and not channel.attrib:
+            continue
+        cha = _read_channel(channel, _ns)
+        # Might be None in case the channel could not be parsed.
+        if cha is None:
+            # This is None if, and only if, one of the coordinates could not
+            # be set.
+            msg = ("Channel %s.%s of station %s does not have a complete set "
+                   "of coordinates and thus it cannot be read. It will not be "
+                   "part of the final inventory object." % (
+                    channel.get("locationCode"), channel.get("code"),
+                    sta_element.get("code")))
+            warnings.warn(msg, UserWarning)
+        else:
+            channels.append(cha)
     station.channels = channels
     return station
 
@@ -293,6 +308,20 @@ def _read_floattype_list(parent, tag, cls, unit=False, datum=False,
 
 
 def _read_channel(cha_element, _ns):
+    """
+    Returns either a :class:`~obspy.core.inventory.channel.Channel` object or
+    ``None``.
+
+    It should return ``None`` if and only if it did not manage to
+    successfully create a :class:`~obspy.core.inventory.channel.Channel`
+    object which can only happen if one of the coordinates is not set. All the
+    others are optional. If either the location or channel code is not set it
+    raises but that is fine as that would deviate too much from the StationXML
+    standard to be worthwhile to recover from.
+    """
+    code = cha_element.get("code")
+    location_code = cha_element.get("locationCode")
+
     longitude = _read_floattype(cha_element, _ns("Longitude"), Longitude,
                                 datum=True)
     latitude = _read_floattype(cha_element, _ns("Latitude"), Latitude,
@@ -300,8 +329,11 @@ def _read_channel(cha_element, _ns):
     elevation = _read_floattype(cha_element, _ns("Elevation"), Distance,
                                 unit=True)
     depth = _read_floattype(cha_element, _ns("Depth"), Distance, unit=True)
-    code = cha_element.get("code")
-    location_code = cha_element.get("locationCode")
+
+    # All of these must be given, otherwise it is an invalid station.
+    if None in [longitude, latitude, elevation, depth]:
+        return None
+
     channel = obspy.core.inventory.Channel(
         code=code, location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
@@ -755,7 +787,7 @@ def _read_phone(phone_element, _ns):
 
 
 def _write_stationxml(inventory, file_or_file_object, validate=False,
-                      nsmap=None, **kwargs):
+                      nsmap=None, level="response", **kwargs):
     """
     Writes an inventory object to a buffer.
     :type inventory: :class:`~obspy.core.inventory.Inventory`
@@ -825,8 +857,11 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
 
     etree.SubElement(root, "Created").text = _format_time(inventory.created)
 
+    if level not in ["network", "station", "channel", "response"]:
+        raise ValueError("Requested stationXML write level is unsupported.")
+
     for network in inventory.networks:
-        _write_network(root, network)
+        _write_network(root, network, level)
 
     # Add custom namespace tags to root element
     _write_extra(root, inventory)
@@ -882,7 +917,7 @@ def _write_base_node(element, object_to_read_from):
     _write_extra(element, object_to_read_from)
 
 
-def _write_network(parent, network):
+def _write_network(parent, network, level):
     """
     Helper function converting a Network instance to an etree.Element.
     """
@@ -898,15 +933,21 @@ def _write_network(parent, network):
         etree.SubElement(network_elem, "SelectedNumberStations").text = \
             str(network.selected_number_of_stations)
 
+    if level == "network":
+        return
+
     for station in network.stations:
-        _write_station(network_elem, station)
+        _write_station(network_elem, station, level)
 
 
-def _write_floattype(parent, obj, attr_name, tag, additional_mapping={}):
+def _write_floattype(parent, obj, attr_name, tag, additional_mapping={},
+                     cls=None):
     attribs = {}
     obj_ = getattr(obj, attr_name)
     if obj_ is None:
         return
+    if cls and not isinstance(obj_, cls):
+        obj_ = cls(obj_)
     attribs["datum"] = obj_.__dict__.get("datum")
     if hasattr(obj_, "unit"):
         attribs["unit"] = obj_.unit
@@ -992,7 +1033,7 @@ def _write_polezero_list(parent, obj):
     _write_extra(parent, obj)
 
 
-def _write_station(parent, station):
+def _write_station(parent, station, level):
     # Write the base node type fields.
     attribs = _get_base_node_attributes(station)
     station_elem = etree.SubElement(parent, "Station", attribs)
@@ -1034,11 +1075,14 @@ def _write_station(parent, station):
     for ref in station.external_references:
         _write_external_reference(station_elem, ref)
 
+    if level == "station":
+        return
+
     for channel in station.channels:
-        _write_channel(station_elem, channel)
+        _write_channel(station_elem, channel, level)
 
 
-def _write_channel(parent, channel):
+def _write_channel(parent, channel, level):
     # Write the base node type fields.
     attribs = _get_base_node_attributes(channel)
     attribs['locationCode'] = channel.location_code
@@ -1092,6 +1136,10 @@ def _write_channel(parent, channel):
     _write_equipment(channel_elem, channel.pre_amplifier, "PreAmplifier")
     _write_equipment(channel_elem, channel.data_logger, "DataLogger")
     _write_equipment(channel_elem, channel.equipment, "Equipment")
+
+    if level == "channel":
+        return
+
     if channel.response is not None:
         _write_response(channel_elem, channel.response)
 
@@ -1114,16 +1162,30 @@ def _write_polynomial_common_fields(element, polynomial):
     etree.SubElement(element, "ApproximationType").text = \
         str(polynomial.approximation_type)
     _write_floattype(element, polynomial,
-                     "frequency_lower_bound", "FrequencyLowerBound")
+                     "frequency_lower_bound", "FrequencyLowerBound",
+                     cls=Frequency)
     _write_floattype(element, polynomial,
-                     "frequency_upper_bound", "FrequencyUpperBound")
+                     "frequency_upper_bound", "FrequencyUpperBound",
+                     cls=Frequency)
     etree.SubElement(element, "ApproximationLowerBound").text = \
         _float_to_str(polynomial.approximation_lower_bound)
     etree.SubElement(element, "ApproximationUpperBound").text = \
         _float_to_str(polynomial.approximation_upper_bound)
     etree.SubElement(element, "MaximumError").text = \
         _float_to_str(polynomial.maximum_error)
-    _write_floattype_list(element, polynomial,
+
+    # Patch the polynomial to make sure the coefficients have the correct type.
+    p = copy.deepcopy(polynomial)
+    coeffs = []
+    for _i, c in enumerate(polynomial.coefficients):
+        if not isinstance(c, CoefficientWithUncertainties):
+            c = CoefficientWithUncertainties(c)
+        if "number" not in c.__dict__:
+            c.__dict__["number"] = _i + 1
+        coeffs.append(c)
+    p.coefficients = coeffs
+
+    _write_floattype_list(element, p,
                           "coefficients", "Coefficient",
                           additional_mapping={"number": "number"})
     _write_extra(element, polynomial)

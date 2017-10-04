@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9">
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9" version="0.9">
   <EventParameters publicID="smi:ISC/bulletin">
     <focalMechanism publicID="smi:ISC/fmid=292310">
       <momentTensor publicID="smi:ISC/mtid=123456">
+        <derivedOriginID>smi:some/origin/id</derivedOriginID>
         <dataUsed>
           <waveType>body waves</waveType>
           <stationCount>88</stationCount>
@@ -13,6 +14,7 @@
     </focalMechanism>
     <focalMechanism publicID="smi:ISC/fmid=2923102">
       <momentTensor publicID="smi:ISC/mtid=1234562">
+        <derivedOriginID>smi:some/origin/id</derivedOriginID>
         <dataUsed>
           <waveType>body waves</waveType>
           <stationCount>88</stationCount>

@@ -364,8 +364,8 @@ def inventory_to_station_text(inventory_or_network, level):
                     cha.elevation is not None and
                     cha.elevation or sta.elevation,
                     cha.depth, cha.azimuth, cha.dip,
-                    cha.sensor.type
-                    if (cha.sensor and cha.sensor.type) else None,
+                    cha.sensor.description
+                    if (cha.sensor and cha.sensor.description) else None,
                     sensitivity.value
                     if (sensitivity and sensitivity.value) else None,
                     sensitivity.frequency

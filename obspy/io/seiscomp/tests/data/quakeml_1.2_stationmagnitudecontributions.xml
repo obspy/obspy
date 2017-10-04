@@ -1,8 +1,24 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2"
-  xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
+<?xml version="1.0" encoding="UTF-8"?>
+<q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
   <eventParameters publicID="smi:eu.emsc/unid">
     <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <magnitude publicID="smi:ch.ethz.sed/magnitude/37465">
+        <mag>
+          <value>5.5</value>
+        </mag>
+        <type>MS</type>
+        <originID>smi:ch.ethz.sed/event/historical/1165/origin/1</originID>
+        <stationMagnitudeContribution>
+          <stationMagnitudeID>smi:ch.ethz.sed/magnitude/station/881342</stationMagnitudeID>
+          <residual>0.02</residual>
+          <weight>0.77</weight>
+        </stationMagnitudeContribution>
+        <stationMagnitudeContribution>
+          <stationMagnitudeID>smi:ch.ethz.sed/magnitude/station/881334</stationMagnitudeID>
+          <residual>0.0</residual>
+          <weight>0.0</weight>
+        </stationMagnitudeContribution>
+      </magnitude>
       <origin publicID="smi:ch.ethz.sed/event/historical/1165/origin/1">
         <time>
           <value>2011-03-11T05:46:24.120000Z</value>
@@ -14,23 +30,6 @@
           <value>142.373</value>
         </longitude>
       </origin>
-      <magnitude publicID="smi:ch.ethz.sed/magnitude/37465">
-        <originID>smi:ch.ethz.sed/event/historical/1165/origin/1</originID>
-        <mag>
-          <value>5.5</value>
-        </mag>
-        <type>MS</type>
-        <stationMagnitudeContribution>
-            <stationMagnitudeID>smi:ch.ethz.sed/magnitude/station/881342</stationMagnitudeID>
-            <weight>0.77</weight>
-            <residual>0.02</residual>
-        </stationMagnitudeContribution>
-        <stationMagnitudeContribution>
-            <stationMagnitudeID>smi:ch.ethz.sed/magnitude/station/881334</stationMagnitudeID>
-            <weight>0.0</weight>
-            <residual>0.0</residual>
-        </stationMagnitudeContribution>
-      </magnitude>
     </event>
   </eventParameters>
 </q:quakeml>

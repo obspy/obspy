@@ -13,6 +13,8 @@
 #
 # flake8: noqa
 """
+MoPaD command line utility.
+
 USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
 
 ::
@@ -5111,7 +5113,7 @@ The 'source mechanism' as a comma-separated list of length:
         try:
             print(aa)
         except Exception:
-            print(aa.replace('°', ' deg'))
+            print(str(aa).replace('°', ' deg'))
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.shapefile - ESRI shapefile write support
-=================================================
+obspy.io.shapefile - ESRI shapefile write support for ObsPy
+===========================================================
 This module provides write support for the ESRI shapefile format.
 
 Write support works via the ObsPy plugin structure for

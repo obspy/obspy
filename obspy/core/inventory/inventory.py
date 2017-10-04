@@ -17,7 +17,6 @@ from future.utils import python_2_unicode_compatible, native_str
 import copy
 import fnmatch
 import os
-from pkg_resources import load_entry_point
 import textwrap
 import warnings
 
@@ -26,6 +25,7 @@ from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
                                   _read_from_plugin, NamedTemporaryFile,
                                   download_to_file)
 from obspy.core.util.decorator import map_example_filename
+from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .network import Network
@@ -47,7 +47,7 @@ def _create_example_inventory():
 
 
 @map_example_filename("path_or_file_object")
-def read_inventory(path_or_file_object=None, format=None):
+def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     """
     Function to read inventory files.
 
@@ -56,6 +56,9 @@ def read_inventory(path_or_file_object=None, format=None):
         object will be returned.
     :type format: str, optional
     :param format: Format of the file to read (e.g. ``"STATIONXML"``).
+
+    Additional args and kwargs are passed on to the underlying ``_read_X()``
+    methods of the inventory plugins.
 
     .. note::
 
@@ -76,7 +79,7 @@ def read_inventory(path_or_file_object=None, format=None):
             download_to_file(url=path_or_file_object, filename_or_buffer=fh)
             return read_inventory(fh.name, format=format)
     return _read_from_plugin("inventory", path_or_file_object,
-                             format=format)[0]
+                             format=format, *args, **kwargs)[0]
 
 
 @python_2_unicode_compatible
@@ -267,7 +270,7 @@ class Inventory(ComparingObject):
             # get format specific entry point
             format_ep = ENTRY_POINTS['inventory_write'][format]
             # search writeFormat method for given entry point
-            write_format = load_entry_point(
+            write_format = buffered_load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.inventory.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):

@@ -305,12 +305,20 @@ class SEGYFile(object):
         small it will be padded with zeros. If it is too long or an invalid
         encoding is specified an exception will be raised.
         """
-        length = len(self.textual_file_header)
+        textual_header = self.textual_file_header
+
+        # Convert to ASCII bytes if necessary - this will raise an error in
+        # case the textual file header has no representation in ASCII - this
+        # is then the users responsibility.
+        if hasattr(textual_header, "encode"):
+            textual_header = textual_header.encode()
+
+        length = len(textual_header)
         # Append spaces to the end if its too short.
         if length < 3200:
-            textual_header = self.textual_file_header + b' ' * (3200 - length)
+            textual_header = textual_header + b' ' * (3200 - length)
         elif length == 3200:
-            textual_header = self.textual_file_header
+            textual_header = textual_header
         # The length must not exceed 3200 byte.
         else:
             msg = 'self.textual_file_header is not allowed to be longer ' + \

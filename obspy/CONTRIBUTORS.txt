@@ -38,10 +38,12 @@ Kremers, Simon
 Kress, Victor
 Krieger, Lars
 Krischer, Lion
+Kula, Damian
 Käufl, Paul
 Köhler, Andreas
 Lecocq, Thomas
 Leeman, John
+Legovini, Paride
 Lesage, Philippe
 Lomax, Anthony
 Lopes, Rui L.
@@ -79,5 +81,6 @@ Walther, Marcus
 Wassermann, Joachim
 Williams, Mark C.
 Winkelman, Andrew
+Zaccarelli, Riccardo
 Zad, Seyed Kasra Hosseini
 Zhu, Lijun

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-sc3ml events write support.
+sc3ml events read and write support.
 
 :author:
     EOST (École et Observatoire des Sciences de la Terre)
@@ -17,46 +17,73 @@ from future.builtins import *  # NOQA
 
 import io
 import os
+import re
 
 from lxml import etree
 
-from obspy.io.quakeml.core import Pickler
+from obspy.io.quakeml.core import Pickler, Unpickler, _xml_doc_from_anything
+from obspy.io.seiscomp.core import validate as validate_sc3ml
 
 
-def _validate_sc3ml(path_or_object, verbose=False):
+SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9']
+
+
+def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     """
-    Validates a SC3ML file against the SC3ML 0.9 schema. Returns either True or
-    False.
+    Read a 0.9 SC3ML file and returns a :class:`~obspy.core.event.Catalog`.
 
-    :param path_or_object: File name or file like object. Can also be an etree
-        element.
-    :type verbose: bool
-    :param verbose: Print error log if True.
+    An XSLT file is used to convert the SC3ML file to a QuakeML file. The
+    catalog is then generated using the QuakeML module.
+
+    .. warning::
+    This function should NOT be called directly, it registers via the
+    the :meth:`~obspy.core.event.catalog.Catalog.write` method of an
+    ObsPy :class:`~obspy.core.event.catalog.Catalog` object, call this
+    instead.
+
+    :type filename: str
+    :param filename: SC3ML file to be read.
+    :type id_prefix: str
+    :param id_prefix: ID prefix. SC3ML does not enforce any particular ID
+        restriction, this ID prefix allows to convert the IDs to a well
+        formatted QuakeML ID. You can modify the default ID prefix with the
+        reverse DNS name of your institute.
+    :rtype: :class:`~obspy.core.event.Catalog`
+    :return: An ObsPy Catalog object.
+
+    .. rubric:: Example
+
+    >>> from obspy import read_events
+    >>> cat = read_events('/path/to/iris_events.sc3ml')
+    >>> print(cat)
+    2 Event(s) in Catalog:
+    2011-03-11T05:46:24.120000Z | +38.297, +142.373
+    2006-09-10T04:26:33.610000Z |  +9.614, +121.961
     """
-    # Get the schema location.
-    schema_location = os.path.join(os.path.dirname(__file__), 'data',
-                                   'sc3ml_0.9.xsd')
-    xmlschema = etree.XMLSchema(etree.parse(schema_location))
+    sc3ml_doc = _xml_doc_from_anything(filename)
 
-    if isinstance(path_or_object, etree._Element):
-        xmldoc = path_or_object
+    match = re.match(
+        r'{http://geofon\.gfz-potsdam\.de/ns/seiscomp3-schema/([-+]?'
+        r'[0-9]*\.?[0-9]+)}', sc3ml_doc.tag)
+
+    try:
+        version = match.group(1)
+    except AttributeError:
+        raise ValueError("Not a SC3ML compatible file or string.")
     else:
-        try:
-            xmldoc = etree.parse(path_or_object)
-        except etree.XMLSyntaxError:
-            if verbose:
-                print('Not an XML file')
-            return False
+        if version not in SCHEMA_VERSION:
+            message = ("Can't read SC3ML version %s, ObsPy can deal with "
+                       "versions [%s].") % (
+                version, ', '.join(SCHEMA_VERSION))
+            raise ValueError(message)
 
-    valid = xmlschema.validate(xmldoc)
+    xslt_filename = os.path.join(os.path.dirname(__file__), 'data',
+                                 'sc3ml_%s__quakeml_1.2.xsl' % version)
+    transform = etree.XSLT(etree.parse(xslt_filename))
+    quakeml_doc = transform(sc3ml_doc,
+                            ID_PREFIX=etree.XSLT.strparam(id_prefix))
 
-    # Pretty error printing if the validation fails.
-    if verbose and valid is not True:
-        print("Error validating SC3ML file:")
-        for entry in xmlschema.error_log:
-            print("\t%s" % entry)
-
-    return valid
+    return Unpickler().load(io.BytesIO(quakeml_doc))
 
 
 def _write_sc3ml(catalog, filename, validate=False, verbose=False,
@@ -98,20 +125,12 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
         for event in sc3ml_doc.xpath("//*[local-name()='event']"):
             event.getparent().remove(event)
 
-    if validate and not _validate_sc3ml(io.BytesIO(sc3ml_doc), verbose):
+    if validate and not validate_sc3ml(io.BytesIO(sc3ml_doc), verbose=verbose):
         raise AssertionError("The final SC3ML file did not pass validation.")
 
-    # Open filehandler or use an existing file like object.
-    if not hasattr(filename, "write"):
-        file_opened = True
-        fh = open(filename, "wb")
-    else:
-        file_opened = False
-        fh = filename
-
+    # Open filehandler or use an existing file like object
     try:
-        fh.write(sc3ml_doc)
-    finally:
-        # Close if a file has been opened by this function.
-        if file_opened is True:
-            fh.close()
+        with open(filename, 'wb') as fh:
+            fh.write(sc3ml_doc)
+    except TypeError:
+        filename.write(sc3ml_doc)
