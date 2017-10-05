@@ -236,7 +236,8 @@ class Arrivals(list):
         Plot ray paths if any have been calculated.
 
         :param phase_list: List of phases for which ray paths are plotted,
-            if they exist.
+            if they exist. Default is to plot all phases in arrivals object
+            that are defined in ``"ttall"``
         :type phase_list: list of str
         :param plot_type: Either ``"spherical"`` or ``"cartesian"``.
             A spherical plot is always global whereas a Cartesian one can
@@ -362,7 +363,7 @@ class Arrivals(list):
                 # We cannot just set the text of the annotations above because
                 # it changes the arrow path.
                 t = _SmartPolarText(np.deg2rad(distance),
-                                    station_radius + radius * 0.07,
+                                    station_radius + radius * 0.1,
                                     name, clip_on=False)
                 ax.add_artist(t)
 
