@@ -199,7 +199,8 @@ class Restrictions(object):
                                      "MH[ZNE12]", "EH[ZNE12]",
                                      "LH[ZNE12]", "HL[ZNE12]",
                                      "BL[ZNE12]", "ML[ZNE12]",
-                                     "EL[ZNE12]", "LL[ZNE12]"),
+                                     "EL[ZNE12]", "LL[ZNE12]",
+                                     "SH[ZNE12]"),
                  location_priorities=("", "00", "10")):
         self.starttime = obspy.UTCDateTime(starttime)
         self.endtime = obspy.UTCDateTime(endtime)
