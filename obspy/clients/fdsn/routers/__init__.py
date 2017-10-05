@@ -6,14 +6,14 @@ obspy.clients.fdsn.routers - FDSN Federated catalog webservice client for ObsPy
 The obspy.clients.fdsn package contains a client to access web servers that
 implement the FDSN web service definitions (https://www.fdsn.org/webservices/).
 The holdings of many of these services are indexed by the FedCatalog service
- (https://service.iris.edu/irisws/fedcatalog/1/). Users searching for waveforms
- or metadata can then query the FedCatalog service to learn which provider
- holds which data. Furthermore, the results from a FedCatalog query are easily
- turned into POST requests for each service.
+(https://service.iris.edu/irisws/fedcatalog/1/). Users searching for waveforms
+or metadata can then query the FedCatalog service to learn which provider
+holds which data. Furthermore, the results from a FedCatalog query are easily
+turned into requests for each service.
 
- This FederatedClient first queries the FedCatalog service to determine where
- the data of interest reside. It then queries the individual web services from
- each provider using the FDSN Client routines to retrieve the resulting data.
+This FederatedClient first queries the FedCatalog service to determine where
+the data of interest reside. It then queries the individual web services from
+each provider using the FDSN Client routines to retrieve the resulting data.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -34,48 +34,35 @@ The first step is always to initialize a client object.
 Retrieving Station Metadata
 ---------------------------
 
-Submitting a GET request to the federated catalog service. The service
+Submitting a metadata request to the federated catalog service. The service
 recognizes parameters that are normally accepted by the station web service.
 
 >>> inv = client.get_stations(station="AN*", channel="BHZ", level="station")
 
 
-Retrieving Waveform Metadata
----------------------------
-Submitting a GET request to the federated catalog service. The service
-recognizes not only the parameters normally accepted by the bulkdataselect web
-service, but also the parameters accepted by the station service. This
-includes geographic parameters. For more details, see the help for
-obspy.clients.fdsn
+Retrieving Waveform Data
+------------------------
+Submitting a waveform data request to the federated catalog service. The
+service recognizes not only the parameters normally accepted by the
+bulkdataselect web service, but also the parameters accepted by the station
+service. This includes geographic parameters. For more details, see the help
+for :mod:`obspy.clients.fdsn`.
 
     >>> from obspy import UTCDateTime
     >>> t = UTCDateTime("2010-02-27T06:45:00.000")
     >>> st = client.get_waveforms("IU", "ANMO", "00", "LHZ", t, t + 60 * 60)
-    >>> st.plot()  # doctest: +SKIP
+    >>> print(st)  # doctest: +SKIP
 
-    .. plot::
-
-        from obspy import UTCDateTime
-        from obspy.clients.fdsn import FederatedClient
-        client = Client()
-        t = UTCDateTime("2010-02-27T06:45:00.000")
-        st = client.get_waveforms("IU", "ANMO", "00", "LHZ", t, t + 60 * 60)
-        st.plot()
 
 caveats
 ----
-* duplicated metadata remains duplicated.
-
-suggestions for future
-----------------------
-* bulk requests for a certain level of metadata, eg. network, station
-  will return an egregious amount of data that is very likely duplicated
-  Perhaps the fedcatalog web service could recognize it and return pared
-  down data or the fdsn.client.Client  class could recognize and reduce
-  the duplications. example:
+* The Fed Catalog service returns results only at the station or channel level.
+  Consequently, bulk requests for a certain level of metadata, eg. network,
+  station will return an egregious amount of data that is very likely
+  duplicated. For example:
     >>> INV2 = fclient.get_stations(network="I?", station="AN*",
-    ...                           level="network", includeoverlaps="true")
-    ...                           #doctest: +SKIP
+    ...                             level="network", includeoverlaps="true") \
+                                    #doctest: +SKIP
 
 
 Getting comfortable with the building blocks of the routing modules:
@@ -97,7 +84,7 @@ It could include wildcards in any of the fields, as shown in B...
 B)  IU ANMO * * 2015-05-24T12:00:00 *
 
 >>> from obspy.clients.fdsn.routers.fedcatalog_parser import \
-        FDSNBulkRequestItem
+...     FDSNBulkRequestItem
 
 Using obspy.clients.fdsn.routers.FDSNBulkRequestItem, each could be created as:
 >>> itemA = FDSNBulkRequestItem('IU ANMO 00 BHZ 2015-05-24T12:00:00 '
@@ -158,7 +145,7 @@ FDSNBulkRequests can ALSO be created from obspy data, via a conversion routine
   the station, which might not reflect channel, data, or network start and end
   times.
 
-ASKING FOR DATA
+Asking For Data
 ===============
 The fdsn.FederatedClient is accessed in much the same way as the fdsn.Client.
 The primary methods for getting data include the standard four:

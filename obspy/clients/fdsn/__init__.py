@@ -145,7 +145,8 @@ access to multiple web servers that implement the
 `FDSN Station and Dataselect web service definitions
 <https://www.fdsn.org/webservices/>`_.
 
-The first step is always to initialize a :class:`FederatedClient` object.
+The first step is always to initialize a
+:class:`~obspy.clients.fdsn.FederatedClient` object.
 
 >>> from obspy.clients.fdsn import FederatedClient
 >>> client = FederatedClient()
