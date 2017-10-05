@@ -36,7 +36,8 @@ for phase, distance in PHASES:
     arrivals = model.get_ray_paths(700, distance, phase_list=[phase])
     ax = arrivals.plot_rays(plot_type='spherical',
                             legend=False, label_arrivals=True,
-                            show=False, ax=ax, phase_list=[phase])
+                            plot_all=True,
+                            show=False, ax=ax)
 
 # Annotate regions
 ax.text(0, 0, 'Solid\ninner\ncore',

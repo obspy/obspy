@@ -227,8 +227,7 @@ The ray path plot wrapper function is:
 
 >>> from obspy.taup import plot_ray_paths
 >>> import matplotlib.pyplot as plt
->>> ax = plt.subplot(111, polar=True)
->>> fig = ax.figure
+>>> fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
 >>> ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig)
 There were rays for all but the following epicentral distances:
  [0.0, 360.0]
@@ -240,8 +239,7 @@ There were rays for all but the following epicentral distances:
     from obspy.taup import plot_ray_paths
     import matplotlib.pyplot as plt
 
-    ax = plt.subplot(111, polar=True)
-    fig = ax.figure
+    fig, ax = plt.subplot(subplot_kw=dict(projection='polar'))
     ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig)
 
 More examples of plotting may be found in the :doc:`ObsPy tutorial

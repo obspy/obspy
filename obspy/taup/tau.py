@@ -198,7 +198,7 @@ class Arrivals(list):
 
         # create an axis/figure, if there is none yet:
         if not ax:
-            ax = plt.subplot(111)
+            ax = plt.subplot()
         if not fig:
             fig = ax.figure
 
@@ -210,7 +210,8 @@ class Arrivals(list):
                         color=COLORS[phase_names.index(arrival.name)
                                      % len(COLORS)])
             else:
-                print("Phase %s not in phase_list" % arrival.name)
+                ax.plot(arrival.distance, arrival.time / 60, '.',
+                        label=arrival.name, color='k')
         if legend:
             if isinstance(legend, bool):
                 if 0 <= arrival.distance <= 180.0:
@@ -281,6 +282,8 @@ class Arrivals(list):
                 continue
             dist = arrival.purist_distance % 360.0
             distance = arrival.distance
+            if distance < 0:
+                distance = (distance % 360)
             if abs(dist - distance) / dist > 1E-5:
                 if plot_all is False:
                     continue
@@ -298,7 +301,7 @@ class Arrivals(list):
 
         if plot_type == "spherical":
             if not ax:
-                ax = plt.subplot(111, polar=True)
+                ax = plt.subplot(polar=True)
             if not fig:
                 fig = ax.figure
 
@@ -315,10 +318,11 @@ class Arrivals(list):
                     ax.plot(intp(ray.path["dist"], 100),
                             radius - intp(ray.path["depth"], 100),
                             color=COLORS[phase_names.index(ray.name) %
-                                         len(COLORS)],
-                            label=ray.name, lw=2.0)
+                                         len(COLORS)], label=ray.name, lw=2.0)
                 else:
-                    print("Phase %s not in phase_list" % ray.name)
+                    ax.plot(intp(ray.path["dist"], 100),
+                            radius - intp(ray.path["depth"], 100),
+                            color='k', label=ray.name, lw=2.0)
                 ax.set_yticks(radius - discons)
                 ax.xaxis.set_major_formatter(plt.NullFormatter())
                 ax.yaxis.set_major_formatter(plt.NullFormatter())
@@ -377,7 +381,7 @@ class Arrivals(list):
 
         elif plot_type == "cartesian":
             if not ax:
-                ax = plt.subplot(111)
+                ax = plt.subplot()
                 ax.invert_yaxis()
             if not fig:
                 fig = ax.figure
@@ -390,7 +394,8 @@ class Arrivals(list):
                                          len(COLORS)],
                             label=ray.name, lw=2.0)
                 else:
-                    print("Phase %s not in phase_list" % ray.name)
+                    ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
+                            color='k', label=ray.name, lw=2.0)
 
             # Pretty station marker:
             ms = 14
