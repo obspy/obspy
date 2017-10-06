@@ -865,97 +865,100 @@ def create_taup_model(model_name, output_dir, input_dir):
 
 
 def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
-                      max_degrees=180, npoints=500, model='iasp91',
-                      fig=None, ax=None, show=True):
-        """
-        Returns a travel time plot and any created axis instance of this
-        plot.
+                      max_degrees=180, npoints=50, model='iasp91',
+                      legend=True, verbose=False, fig=None, ax=None,
+                      show=True):
+    """
+    Returns a travel time plot and any created axis instance of this
+    plot.
 
-        :param source_depth: Source depth in kilometers.
-        :type source_depth: float
-        :param min_degrees: minimum distance from the source (in degrees)
-        :type min_degrees: float
-        :param max_degrees: maximum distance from the source (in degrees)
-        :type max_degrees: float
-        :param npoints: Number of points to plot.
-        :type npoints: int
-        :param phase_list: List of phase names to plot.
-        :type phase_list: list of str, optional
-        :param model: string containing the model to use.
-        :type model: str
-        :param fig: Figure to plot in. If not given, a new figure instance
-            will be created.
-        :type fig: :class:`matplotlib.axes.Axes
-        :param ax: Axes to plot in. If not given, a new figure with an axes
-            will be created.
-        param show: Show the plot.
-        type show: bool
-        :type ax: :class:`matplotlib.Figure.figure`
+    :param source_depth: Source depth in kilometers.
+    :type source_depth: float
+    :param min_degrees: minimum distance from the source (in degrees)
+    :type min_degrees: float
+    :param max_degrees: maximum distance from the source (in degrees)
+    :type max_degrees: float
+    :param npoints: Number of points to plot.
+    :type npoints: int
+    :param phase_list: List of phase names to plot.
+    :type phase_list: list of str, optional
+    :param model: string containing the model to use.
+    :type model: str
+    :param fig: Figure to plot in. If not given, a new figure instance
+        will be created.
+    :type fig: :class:`matplotlib.axes.Axes
+    :param ax: Axes to plot in. If not given, a new figure with an axes
+        will be created.
+    param show: Show the plot.
+    type show: bool
+    :type ax: :class:`matplotlib.Figure.figure`
 
-        :returns: ax
-        :rtype: :class:`matplotlib.axes.Axes`
+    :returns: ax
+    :rtype: :class:`matplotlib.axes.Axes`
 
-        .. rubric:: Example
+    .. rubric:: Example
 
-        >>> from obspy.taup import plot_travel_times
-        >>> import matplotlib.pyplot as plt
-        >>> fig, ax = plt.subplots()
-        >>> ax = plot_travel_times(source_depth=10, phase_list=['P','S','PP'],\
-        ax=ax, fig=fig)
-        There were 2 epicentral distances without an arrival
+    >>> from obspy.taup import plot_travel_times
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots()
+    >>> ax = plot_travel_times(source_depth=10, phase_list=['P','S','PP'],\
+    ax=ax, fig=fig)
+    There were 2 epicentral distances without an arrival
 
-        .. plot::
+    .. plot::
 
-            from obspy.taup import plot_travel_times
-            import matplotlib.pyplot as plt
-
-            fig, ax = plt.subplots()
-            ax = plot_travel_times(source_depth=10,
-                                   phase_list=['P','S','PP'], ax=ax, fig=fig)
-        """
+        from obspy.taup import plot_travel_times
         import matplotlib.pyplot as plt
 
-        # compute the requested arrivals:
-        model = TauPyModel(model)
+        fig, ax = plt.subplots()
+        ax = plot_travel_times(source_depth=10,
+                               phase_list=['P','S','PP'], ax=ax, fig=fig)
+    """
+    import matplotlib.pyplot as plt
 
-        # a list of epicentral distances without a travel time, and a flag:
-        notimes = []
-        plotted = False
+    # compute the requested arrivals:
+    model = TauPyModel(model)
 
-        # calculate the arrival times and plot vs. epicentral distance:
-        degrees = np.linspace(min_degrees, max_degrees, npoints)
-        for degree in degrees:
-            try:
-                arrivals = model.get_ray_paths(source_depth, degree,
-                                               phase_list=phase_list)
-                ax = arrivals.plot_times(phase_list=phase_list, show=False,
-                                         ax=ax)
-                plotted = True
-            except ValueError as err:
-                notimes.append(degree)
-                pass
+    # a list of epicentral distances without a travel time, and a flag:
+    notimes = []
+    plotted = False
 
-        if plotted:
-            print(("There were {} epicentral distances "
-                   "without an arrival").format(len(notimes)))
-        else:
-            raise ValueError("No arrival times to plot.")
+    # calculate the arrival times and plot vs. epicentral distance:
+    degrees = np.linspace(min_degrees, max_degrees, npoints)
+    for degree in degrees:
+        try:
+            arrivals = model.get_ray_paths(source_depth, degree,
+                                           phase_list=phase_list)
+            ax = arrivals.plot_times(phase_list=phase_list, show=False,
+                                     ax=ax)
+            plotted = True
+        except ValueError as err:
+            notimes.append(degree)
+            pass
 
+    if plotted:
+        print(("There were {} epicentral distances "
+               "without an arrival").format(len(notimes)))
+    else:
+        raise ValueError("No arrival times to plot.")
+
+    if legend:
         # merge all arrival labels of a certain phase:
         handles, labels = ax.get_legend_handles_labels()
         labels, ids = np.unique(labels, return_index=True)
         handles = [handles[i] for i in ids]
         ax.legend(handles, labels, loc=2, numpoints=1)
 
-        if show:
-            plt.show()
-        return ax
+    if show:
+        plt.show()
+    return ax
 
 
 def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
                    plot_type='spherical', phase_list=['P', 'S', 'PP'],
                    model='iasp91', plot_all=True, legend=False,
-                   label_arrivals=False, fig=None, show=True, ax=None):
+                   label_arrivals=False, verbose=False, fig=None, show=True,
+                   ax=None):
     """
     Plot ray paths for seismic phases.
 
@@ -986,6 +989,9 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
         or clip. Consider using the ``legend`` parameter instead if you
         are plotting multiple phases.
     :type label_arrivals: bool
+    :param verbose: Whether to print information about selected phases that
+        were not encountered at individual epicentral distances.
+    :type verbose: bool
     :param fig: Figure to plot into. If not given, a new figure instance
         will be created.
     :type fig: :class:`matplotlib.figure.Figure`
@@ -1004,7 +1010,7 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
     >>> fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
     >>> ax = plot_ray_paths(source_depth=10, plot_type="spherical",
     ...                     ax=ax, fig=fig, legend=True,
-    ...                     phase_list=['P', 'S', 'PP'])
+    ...                     phase_list=['P', 'S', 'PP'], verbose=True)
     There were rays for all but the following epicentral distances:
      [0.0, 360.0]
 
@@ -1039,16 +1045,18 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
             norays.append(degree)
 
     if plotted:
-        print("There were rays for all but the following epicentral "
-              "distances:\n", norays)
+        if verbose:
+            print("There were rays for all but the following epicentral "
+                  "distances:\n", norays)
     else:
         raise ValueError("No ray paths to plot.")
 
-    # merge all arrival labels of a certain phase:
-    handles, labels = ax.get_legend_handles_labels()
-    labels, ids = np.unique(labels, return_index=True)
-    handles = [handles[i] for i in ids]
-    ax.legend(handles, labels, loc=2, numpoints=1)
+    if legend:
+        # merge all arrival labels of a certain phase:
+        handles, labels = ax.get_legend_handles_labels()
+        labels, ids = np.unique(labels, return_index=True)
+        handles = [handles[i] for i in ids]
+        ax.legend(handles, labels, loc=2, numpoints=1)
 
     if show:
         plt.show()
