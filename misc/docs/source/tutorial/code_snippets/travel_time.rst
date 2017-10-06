@@ -50,8 +50,8 @@ function :func:`~obspy.taup.tau.plot_ray_paths`.
 
 For examples with rays for a single epicentral distance, try the
 :func:`~obspy.taup.tau.Arrivals.plot_rays` method in the previous
-section.  A more advanced example with a custom list of phases and
-distances is
+section. The following is a more advanced example with a custom list of phases
+and distances:
 
 .. plot:: tutorial/code_snippets/travel_time_body_waves.py
    :include-source:

@@ -171,7 +171,9 @@ class Arrivals(list):
         Plot arrival times if any have been calculated.
 
         :param phase_list: List of phases for which travel times are plotted,
-            if they exist.
+            if they exist. See `Phase naming in taup`_ for details on
+            phase naming and convenience keys like ``'ttbasic'``. Defaults to
+            ``'ttall'``.
         :type phase_list: list of str
         :param show: Show the plot.
         :type show: bool
@@ -181,12 +183,11 @@ class Arrivals(list):
         :type legend: bool or str
         :param fig: Figure instance to plot in. If not given, a new figure
             will be created.
-        :type figure: :class:`matplotlib.figure.Figure`
+        :type fig: :class:`matplotlib.figure.Figure`
         :param ax: Axes to plot in. If not given, a new figure with an axes
             will be created.
         :type ax: :class:`matplotlib.axes.Axes`
-
-        :returns: The (possibly created) axes instance.
+        :returns: Matplotlib axes with the plot
         :rtype: :class:`matplotlib.axes.Axes`
         """
         import matplotlib.pyplot as plt
@@ -236,8 +237,9 @@ class Arrivals(list):
         Plot ray paths if any have been calculated.
 
         :param phase_list: List of phases for which ray paths are plotted,
-            if they exist. Default is to plot all phases in arrivals object
-            that are defined in ``"ttall"``
+            if they exist. See `Phase naming in taup`_ for details on
+            phase naming and convenience keys like ``'ttbasic'``. Defaults to
+            ``'ttall'``.
         :type phase_list: list of str
         :param plot_type: Either ``"spherical"`` or ``"cartesian"``.
             A spherical plot is always global whereas a Cartesian one can
@@ -268,8 +270,7 @@ class Arrivals(list):
             will be created. Must be a polar axes for the spherical plot and
             a regular one for the Cartesian plot.
         :type ax: :class:`matplotlib.axes.Axes`
-
-        :returns: ax
+        :returns: Matplotlib axes with the plot
         :rtype: :class:`matplotlib.axes.Axes`
         """
         import matplotlib.pyplot as plt
@@ -494,16 +495,15 @@ class Arrivals(list):
             will be created. Must be a polar axes for the spherical plot and
             a regular one for the Cartesian plot.
         :type ax: :class:`matplotlib.axes.Axes`
-
-        :returns: ax
+        :returns: Matplotlib axes with the plot
         :rtype: :class:`matplotlib.axes.Axes`
 
-        .. versionchanged:: 1.03
+        .. versionchanged:: 1.1.0
 
-        Deprecated.
+            Deprecated.
 
-        With the introduction of plot_times(), plot() has been renamed to
-        plot_rays()
+            With the introduction of plot_times(), plot() has been renamed to
+            plot_rays()
         """
 
         # display warning
@@ -928,8 +928,7 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
                    model='iasp91', plot_all=True, legend=False,
                    label_arrivals=False, fig=None, show=True, ax=None):
     """
-    Returns a ray path plot and any created axis instance of this
-    plot.
+    Plot ray paths for seismic phases.
 
     :param source_depth: Source depth in kilometers.
     :type source_depth: float
@@ -950,11 +949,8 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
         degrees are shown. Set this to ``False`` to only show rays
         arriving at exactly *x* degrees.
     :type plot_all: bool
-    :param legend: If boolean, specify whether or not to show the legend
-        (at the default location.) If a str, specify the location of the
-        legend. If you are plotting a single phase, you may consider using
-        the ``label_arrivals`` argument.
-    :type legend: bool or str
+    :param legend: Whether or not to show the legend
+    :type legend: bool
     :param label_arrivals: Label the arrivals with their respective phase
         names. This setting is only useful if you are plotting a single
         phase as otherwise the names could be large and possibly overlap
@@ -963,14 +959,13 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
     :type label_arrivals: bool
     :param fig: Figure to plot into. If not given, a new figure instance
         will be created.
-    :type fig: :class:`matplotlib.axes.Axes
+    :type fig: :class:`matplotlib.figure.Figure`
     :param show: Show the plot.
     :type show: bool
     :param ax: Axes to plot in. If not given, a new figure with an axes
         will be created.
     :type ax: :class:`matplotlib.axes.Axes`
-
-    :returns: ax
+    :returns: Matplotlib axes with the plot
     :rtype: :class:`matplotlib.axes.Axes`
 
     .. rubric:: Example
@@ -978,8 +973,9 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
     >>> from obspy.taup.tau import plot_ray_paths
     >>> import matplotlib.pyplot as plt
     >>> fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
-    >>> ax = plot_ray_paths(source_depth=10, plot_type="spherical",\
-    ax=ax, fig=fig, legend=True, phase_list=['P','S','PP'])
+    >>> ax = plot_ray_paths(source_depth=10, plot_type="spherical",
+    ...                     ax=ax, fig=fig, legend=True,
+    ...                     phase_list=['P', 'S', 'PP'])
     There were rays for all but the following epicentral distances:
      [0.0, 360.0]
 
@@ -1010,9 +1006,8 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
                                     ax=ax, plot_type=plot_type,
                                     plot_all=plot_all, legend=False)
             plotted = True
-        except ValueError as err:
+        except ValueError:
             norays.append(degree)
-            pass
 
     if plotted:
         print("There were rays for all but the following epicentral "
