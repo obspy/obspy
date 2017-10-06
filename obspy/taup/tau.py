@@ -884,6 +884,11 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
     :type phase_list: list of str, optional
     :param model: string containing the model to use.
     :type model: str
+    :param legend: Whether or not to show the legend
+    :type legend: bool
+    :param verbose: Whether to print information about epicentral distances
+        that did not have an arrival.
+    :type verbose: bool
     :param fig: Figure to plot in. If not given, a new figure instance
         will be created.
     :type fig: :class:`matplotlib.axes.Axes
@@ -892,27 +897,18 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
     param show: Show the plot.
     type show: bool
     :type ax: :class:`matplotlib.Figure.figure`
-
     :returns: ax
     :rtype: :class:`matplotlib.axes.Axes`
 
     .. rubric:: Example
 
     >>> from obspy.taup import plot_travel_times
-    >>> import matplotlib.pyplot as plt
-    >>> fig, ax = plt.subplots()
-    >>> ax = plot_travel_times(source_depth=10, phase_list=['P','S','PP'],\
-    ax=ax, fig=fig)
-    There were 2 epicentral distances without an arrival
+    >>> ax = plot_travel_times(source_depth=10, phase_list=['P', 'S', 'PP'])
 
     .. plot::
 
         from obspy.taup import plot_travel_times
-        import matplotlib.pyplot as plt
-
-        fig, ax = plt.subplots()
-        ax = plot_travel_times(source_depth=10,
-                               phase_list=['P','S','PP'], ax=ax, fig=fig)
+        ax = plot_travel_times(source_depth=10, phase_list=['P','S','PP'])
     """
     import matplotlib.pyplot as plt
 
@@ -932,13 +928,16 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
             ax = arrivals.plot_times(phase_list=phase_list, show=False,
                                      ax=ax)
             plotted = True
-        except ValueError as err:
+        except ValueError:
             notimes.append(degree)
-            pass
 
     if plotted:
-        print(("There were {} epicentral distances "
-               "without an arrival").format(len(notimes)))
+        if verbose:
+            if len(notimes) == 1:
+                tmpl = "There was {} epicentral distance without an arrival"
+            else:
+                tmpl = "There were {} epicentral distances without an arrival"
+            print(tmpl.format(len(notimes)))
     else:
         raise ValueError("No arrival times to plot.")
 
