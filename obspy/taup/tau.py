@@ -321,9 +321,13 @@ class Arrivals(list):
         discons = self.model.s_mod.v_mod.get_discontinuity_depths()
 
         if plot_type == "spherical":
-            if not ax:
-                ax = plt.subplot(polar=True)
-            if not fig:
+            if fig and ax:
+                pass
+            elif not fig and not ax:
+                fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+            elif not ax:
+                ax = fig.subplot(polar=True)
+            elif not fig:
                 fig = ax.figure
 
             ax.set_theta_zero_location('N')
@@ -401,10 +405,15 @@ class Arrivals(list):
                 ax.legend(loc=loc, prop=dict(size="small"))
 
         elif plot_type == "cartesian":
-            if not ax:
-                ax = plt.subplot()
+            if fig and ax:
+                pass
+            elif not fig and not ax:
+                fig, ax = plt.subplots()
                 ax.invert_yaxis()
-            if not fig:
+            elif not ax:
+                ax = fig.subplot()
+                ax.invert_yaxis()
+            elif not fig:
                 fig = ax.figure
 
             # Plot the ray paths:
