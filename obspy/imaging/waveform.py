@@ -1112,10 +1112,17 @@ class WaveformPlotting(object):
             ax.legend(legend_lines, legend_labels)
 
         # Setting up plot axes
-        if self.sect_offset_min is not None:
-            self.set_offset_lim(left=self._offset_min)
-        if self.sect_offset_max is not None:
-            self.set_offset_lim(right=self._offset_max)
+        if self.sect_orientation == 'vertical':
+            if self.sect_offset_min is not None:
+                self.set_offset_lim(left=self._offset_min)
+            if self.sect_offset_max is not None:
+                self.set_offset_lim(right=self._offset_max)
+        elif self.sect_orientation == 'horizontal':
+            if self.sect_offset_min is not None:
+                self.set_offset_lim(bottom=self._offset_min)
+            if self.sect_offset_max is not None:
+                self.set_offset_lim(top=self._offset_max)
+
         # Set up offset ticks
         tick_min, tick_max = np.array(self.get_offset_lim())
         if tick_min != 0.0 and self.sect_plot_dx is not None:
