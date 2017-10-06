@@ -175,12 +175,17 @@ class Arrivals(list):
             phase naming and convenience keys like ``'ttbasic'``. Defaults to
             ``'ttall'``.
         :type phase_list: list of str
-        :param show: Show the plot.
-        :type show: bool
+        :param plot_all: By default all rays, even those travelling in the
+            other direction and thus arriving at a distance of *360 - x*
+            degrees are shown. Set this to ``False`` to only show rays
+            arriving at exactly *x* degrees.
+        :type plot_all: bool
         :param legend: If boolean, specify whether or not to show the legend
             (at the default location.) If a str, specify the location of the
             legend.
         :type legend: bool or str
+        :param show: Show the plot.
+        :type show: bool
         :param fig: Figure instance to plot in. If not given, a new figure
             will be created.
         :type fig: :class:`matplotlib.figure.Figure`
@@ -208,6 +213,13 @@ class Arrivals(list):
 
         # extract the time/distance for each phase, and for each distance:
         for arrival in self:
+            if plot_all is False:
+                dist = arrival.purist_distance % 360.0
+                distance = arrival.distance
+                if distance < 0:
+                    distance = (distance % 360)
+                if abs(dist - distance) / dist > 1E-5:
+                    continue
             if arrival.name in phase_names:
                 ax.plot(arrival.distance, arrival.time / 60, '.',
                         label=arrival.name,
