@@ -167,7 +167,8 @@ class TauPyPlottingTestCase(unittest.TestCase):
             # base line image looks awkward with points at the left/right end
             # of the plot but that's only due to the "classic" style sheet used
             # in tests. default mpl2 style makes room around plotted artists
-            # larger point size to ensure plot can fail properly if points should move
+            # larger point size to ensure plot can fail properly if points
+            # should move
             mpl.rcParams['lines.markersize'] = 20
             plot_travel_times(10, phase_list=("P", "S", "SKS", "PP"),
                               min_degrees=40, max_degrees=60, show=False,
