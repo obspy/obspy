@@ -352,7 +352,7 @@ class TauPyModelTestCase(unittest.TestCase):
                                                receiver_longitude_in_deg=-50.0,
                                                phase_list=["P"])
             geodetics.HAS_GEOGRAPHICLIB = has_geographiclib_real
-            assert issubclass(w[-1].category, UserWarning)
+            self.assertTrue(issubclass(w[-1].category, UserWarning))
 
         self.assertEqual(len(arrivals), 1)
         p_arr = arrivals[0]
@@ -613,7 +613,7 @@ class TauPyModelTestCase(unittest.TestCase):
                                            receiver_longitude_in_deg=-60.0,
                                            phase_list=["P"])
             geodetics.HAS_GEOGRAPHICLIB = has_geographiclib_real
-            assert issubclass(w[-1].category, UserWarning)
+            self.assertTrue(issubclass(w[-1].category, UserWarning))
 
         self.assertEqual(len(arrivals), 1)
 
