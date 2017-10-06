@@ -165,8 +165,8 @@ class Arrivals(list):
         return self.__class__(super(Arrivals, self).copy(),
                               model=self.model)
 
-    def plot_times(self, phase_list=("ttall",), show=True, legend=False,
-                   fig=None, ax=None):
+    def plot_times(self, phase_list=None, plot_all=True, legend=False,
+                   show=True, fig=None, ax=None):
         """
         Plot arrival times if any have been calculated.
 
@@ -194,6 +194,9 @@ class Arrivals(list):
 
         if not self:
             raise ValueError("No travel times.")
+
+        if phase_list is None:
+            phase_list = ("ttall",)
 
         phase_names = sorted(parse_phase_list(phase_list))
 
@@ -230,7 +233,7 @@ class Arrivals(list):
             plt.show()
         return ax
 
-    def plot_rays(self, phase_list=("ttall",), plot_type="spherical",
+    def plot_rays(self, phase_list=None, plot_type="spherical",
                   plot_all=True, legend=False, label_arrivals=False,
                   show=True, fig=None, ax=None):
         """
@@ -277,6 +280,10 @@ class Arrivals(list):
 
         # I don't get this, but without sorting, I get a different
         # order each call:
+
+        if phase_list is None:
+            phase_list = ("ttall",)
+
         phase_names = sorted(parse_phase_list(phase_list))
         arrivals = []
         for arrival in self:
