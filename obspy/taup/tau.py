@@ -484,7 +484,8 @@ class Arrivals(list):
             ax.set_xlabel("Distance [deg]")
             ax.set_ylabel("Depth [km]")
         else:
-            raise NotImplementedError("Plot style not an option.")
+            msg = "Plot type '{}' is not a valid option.".format(plot_type)
+            raise ValueError(msg)
         if show:
             plt.show()
         return ax
