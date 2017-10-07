@@ -1,6 +1,10 @@
 import glob
 import os
 import shutil
+import warnings
+
+warnings.filterwarnings(
+    "ignore", "Matplotlib is building the font cache", UserWarning)
 
 from obspy import UTCDateTime
 

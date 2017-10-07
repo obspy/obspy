@@ -42,7 +42,7 @@ if [ "$BUILD_PR" = true ] ; then
     GITTARGET=${FORKTARGET[1]}
 fi
 
-CONDATMPBIN=$CONDABASE/env/$CONDATMPNAME/bin
+CONDATMPBIN=$CONDABASE/envs/$CONDATMPNAME/bin
 LOG=$BASEDIR/log.txt
 GITDIR=$BASEDIR/src/obspy
 DOCSDIR=$DOCSBASEDIR/$DOCSNAME
@@ -73,7 +73,7 @@ cd $HOME
 # set up build env
 . $CONDAMAINBIN/deactivate
 $CONDAMAINBIN/conda env remove -y -n $CONDATMPNAME
-$CONDAMAINBIN/conda create -y -n $CONDATMPNAME --clone py3-docs-master
+$CONDAMAINBIN/conda create -y -n $CONDATMPNAME --clone py3-docs-master_mpl202
 . $CONDAMAINBIN/activate $CONDATMPNAME
 
 # clone github repository
