@@ -877,8 +877,8 @@ def create_taup_model(model_name, output_dir, input_dir):
 
 def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
                       max_degrees=180, npoints=50, model='iasp91',
-                      legend=True, verbose=False, fig=None, ax=None,
-                      show=True):
+                      plot_all=True, legend=True, verbose=False, fig=None,
+                      ax=None, show=True):
     """
     Returns a travel time plot and any created axis instance of this
     plot.
@@ -895,6 +895,11 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
     :type phase_list: list of str, optional
     :param model: string containing the model to use.
     :type model: str
+    :param plot_all: By default all rays, even those travelling in the
+        other direction and thus arriving at a distance of *360 - x*
+        degrees are shown. Set this to ``False`` to only show rays
+        arriving at exactly *x* degrees.
+    :type plot_all: bool
     :param legend: Whether or not to show the legend
     :type legend: bool
     :param verbose: Whether to print information about epicentral distances
@@ -937,7 +942,7 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
             arrivals = model.get_ray_paths(source_depth, degree,
                                            phase_list=phase_list)
             ax = arrivals.plot_times(phase_list=phase_list, show=False,
-                                     ax=ax)
+                                     ax=ax, plot_all=plot_all)
             plotted = True
         except ValueError:
             notimes.append(degree)
