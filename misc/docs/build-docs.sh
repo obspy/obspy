@@ -125,6 +125,10 @@ if [ ! -f build/html/index.html ] ; then
     SUCCESS=false
 fi
 
+CLEAN_SUCCESS=$SUCCESS
+if [ "$SUCCESS" = true ] ; then
+    grep -i -e Warning -e Error build/html/sphinx-build_warnings.txt && CLEAN_SUCCESS=false
+fi
 
 if [ "$SUCCESS" = true ] ; then
     # perform rest of docs building
@@ -175,8 +179,10 @@ fi
 
 # create github pull request status
 if [ "$BUILD_PR" = true ] ; then
-    if [ "$SUCCESS" = true ] ; then
+    if [ "$CLEAN_SUCCESS" = true ] ; then
         python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='$COMMIT', status='success', context='docs-buildbot', description='Check out Pull Request docs build here:', target_url='http://docs.obspy.org/pull-requests/${PR_NUMBER}/')"
+    elif [ "$SUCCESS" = true ] ; then
+        python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='$COMMIT', status='failure', context='docs-buildbot', description='Build succeeded, but there are warnings/errors:', target_url='http://docs.obspy.org/pull-requests/${PR_NUMBER}/build_status.html')"
     else
         python -c "from obspy_github_api import set_commit_status; set_commit_status(commit='$COMMIT', status='error', context='docs-buildbot', description='Log for failed Pull Request docs build here:', target_url='http://docs.obspy.org/pull-requests/${PR_NUMBER}.log')"
     fi

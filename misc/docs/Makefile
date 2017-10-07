@@ -78,7 +78,7 @@ assets:
 html: assets credits citations
 	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR); fi
 	if [ ! -d $(BUILDDIR)/html ]; then mkdir $(BUILDDIR)/html; fi
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	$(SPHINXBUILD) -w $(BUILDDIR)/html/sphinx-build_warnings.txt -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html 1> $(BUILDDIR)/html/sphinx-build_stdout.txt 2> $(BUILDDIR)/html/sphinx-build_stderr.txt
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
