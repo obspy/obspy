@@ -207,9 +207,13 @@ class Arrivals(list):
         phase_names = sorted(parse_phase_list(phase_list))
 
         # create an axis/figure, if there is none yet:
-        if not ax:
-            ax = plt.subplot()
-        if not fig:
+        if fig and ax:
+            pass
+        elif not fig and not ax:
+            fig, ax = plt.subplots()
+        elif not ax:
+            ax = fig.add_subplot(1, 1, 1)
+        elif not fig:
             fig = ax.figure
 
         # extract the time/distance for each phase, and for each distance:
@@ -332,7 +336,7 @@ class Arrivals(list):
             elif not fig and not ax:
                 fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
             elif not ax:
-                ax = fig.subplot(polar=True)
+                ax = fig.add_subplot(1, 1, 1, polar=True)
             elif not fig:
                 fig = ax.figure
 
@@ -422,7 +426,7 @@ class Arrivals(list):
                 fig, ax = plt.subplots()
                 ax.invert_yaxis()
             elif not ax:
-                ax = fig.subplot()
+                ax = fig.add_subplot(1, 1, 1)
                 ax.invert_yaxis()
             elif not fig:
                 fig = ax.figure
