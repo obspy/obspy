@@ -175,6 +175,46 @@ class TauPyPlottingTestCase(unittest.TestCase):
                               legend=True, npoints=4)
             plt.savefig(ic.name)
 
+    def test_ray_plot_mismatching_axes_type_warnings(self):
+        """
+        Test warnings when attempting ray path plots in spherical/cartesian
+        with bad axes type (polar/not polar).
+        """
+        arrivals = self.model.get_ray_paths(500, 20, phase_list=['P'])
+        # polar pot attempted in cartesian axes
+        fig, ax = plt.subplots()
+        expected_message = ("Axes instance provided for plotting with "
+                            "`plot_type='spherical'` but it seems the axes is "
+                            "not a polar axes.")
+        try:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                # this raises an exception as well:
+                # "AttributeError: 'AxesSubplot' object has no attribute "
+                # "'set_theta_zero_location'"
+                with self.assertRaises(AttributeError):
+                    arrivals.plot_rays(plot_type="spherical", ax=ax,
+                                       show=False)
+            self.assertEqual(len(w), 1)
+            self.assertEqual(str(w[0].message), expected_message)
+            self.assertEqual(w[0].category, UserWarning)
+        finally:
+            plt.close(fig)
+        # cartesian pot attempted in polar axes
+        fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+        expected_message = ("Axes instance provided for plotting with "
+                            "`plot_type='cartesian'` but it seems the axes is "
+                            "a polar axes.")
+        try:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                arrivals.plot_rays(plot_type="cartesian", ax=ax, show=False)
+            self.assertEqual(len(w), 1)
+            self.assertEqual(str(w[0].message), expected_message)
+            self.assertEqual(w[0].category, UserWarning)
+        finally:
+            plt.close(fig)
+
 
 def suite():
     return unittest.makeSuite(TauPyPlottingTestCase, 'test')

@@ -10,6 +10,7 @@ from future.builtins import *  # NOQA
 import copy
 import warnings
 
+import matplotlib as mpl
 import matplotlib.cbook
 from matplotlib.cm import get_cmap
 import matplotlib.text
@@ -321,6 +322,11 @@ class Arrivals(list):
         discons = self.model.s_mod.v_mod.get_discontinuity_depths()
 
         if plot_type == "spherical":
+            if ax and not isinstance(ax, mpl.projections.polar.PolarAxes):
+                msg = ("Axes instance provided for plotting with "
+                       "`plot_type='spherical'` but it seems the axes is not "
+                       "a polar axes.")
+                warnings.warn(msg)
             if fig and ax:
                 pass
             elif not fig and not ax:
@@ -405,6 +411,11 @@ class Arrivals(list):
                 ax.legend(loc=loc, prop=dict(size="small"))
 
         elif plot_type == "cartesian":
+            if ax and isinstance(ax, mpl.projections.polar.PolarAxes):
+                msg = ("Axes instance provided for plotting with "
+                       "`plot_type='cartesian'` but it seems the axes is "
+                       "a polar axes.")
+                warnings.warn(msg)
             if fig and ax:
                 pass
             elif not fig and not ax:
