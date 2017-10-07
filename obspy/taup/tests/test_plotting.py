@@ -215,6 +215,17 @@ class TauPyPlottingTestCase(unittest.TestCase):
         finally:
             plt.close(fig)
 
+    def test_invalid_plot_option(self):
+        """
+        Test error message when attempting ray path plots with invalid plot
+        type
+        """
+        arrivals = self.model.get_ray_paths(500, 20, phase_list=['P'])
+        # polar plot attempted in cartesian axes
+        expected_msg = "Plot type 'spam' is not a valid option."
+        with self.assertRaisesRegexp(ValueError, expected_msg):
+            arrivals.plot_rays(plot_type="spam")
+
 
 def suite():
     return unittest.makeSuite(TauPyPlottingTestCase, 'test')
