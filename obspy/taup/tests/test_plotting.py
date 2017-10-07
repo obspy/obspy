@@ -189,8 +189,8 @@ class TauPyPlottingTestCase(unittest.TestCase):
         # same test should fail if plot_all=True
         with self.assertRaises(ImageComparisonException):
             with ImageComparison(
-                    self.image_dir,
-                    "traveltimes_plot_all_False.png") as ic:
+                    self.image_dir, "traveltimes_plot_all_False.png",
+                    no_uploads=True) as ic:
                 _test_plot_all(plot_all=True)
                 plt.savefig(ic.name)
 

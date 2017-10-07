@@ -272,6 +272,11 @@ class ImageComparison(NamedTemporaryFile):
         default will leave the style as is. You may wish to set it to
         ``'default'`` to enable the new style from Matplotlib 2.0, or some
         alternate style, which will work back to Matplotlib 1.4.0.
+    :type no_uploads: bool
+    :param no_uploads: If set to ``True`` no uploads to imgur are attempted, no
+        matter what (e.g. any options to ``obspy-runtests`` that would normally
+        cause an upload attempt). This can be used to forcibly deactivate
+        upload attempts in image tests that are expected to fail.
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing.
@@ -305,7 +310,8 @@ class ImageComparison(NamedTemporaryFile):
     """
     def __init__(self, image_path, image_name, reltol=1,
                  adjust_tolerance=True, plt_close_all_enter=True,
-                 plt_close_all_exit=True, style=None, *args, **kwargs):
+                 plt_close_all_exit=True, style=None, no_uploads=False, *args,
+                 **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
         super(ImageComparison, self).__init__(suffix=self.suffix, *args,
                                               **kwargs)
@@ -318,6 +324,7 @@ class ImageComparison(NamedTemporaryFile):
         self.tol = reltol * 3.0
         self.plt_close_all_enter = plt_close_all_enter
         self.plt_close_all_exit = plt_close_all_exit
+        self.no_uploads = no_uploads
 
         if (MATPLOTLIB_VERSION < [1, 4, 0] or
                 (MATPLOTLIB_VERSION[:2] == [1, 4] and style is None)):
@@ -561,11 +568,14 @@ class ImageComparison(NamedTemporaryFile):
 
     def _upload_images(self):
         """
-        Uploads images to imgur.
+        Uploads images to imgur unless explicitly deactivated with option
+        `no_uploads` (to speed up tests that are expected to fail).
 
         :returns: ``dict`` with links to uploaded images or ``str`` with
             message if upload failed
         """
+        if self.no_uploads:
+            return "Upload to imgur deactivated with option 'no_uploads'."
         try:
             import pyimgur
             # try to get imgur client id from environment
