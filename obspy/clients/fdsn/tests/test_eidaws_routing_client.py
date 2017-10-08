@@ -11,6 +11,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import collections
 from distutils.version import LooseVersion
 import unittest
 
@@ -21,9 +22,14 @@ from obspy.clients.fdsn.routing.eidaws_routing_client import \
     EIDAWSRoutingClient
 
 
+_DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
+
+
 class EIDAWSRoutingClientTestCase(unittest.TestCase):
     def setUp(self):
         self.client = EIDAWSRoutingClient()
+        self._cls = ("obspy.clients.fdsn.routing.eidaws_routing_client."
+                     "EIDAWSRoutingClient")
 
     def test_get_service_version(self):
         # At the time of test writing the version is 1.1.1. Here we just
@@ -132,8 +138,7 @@ NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
         This just dispatches to the get_waveforms_bulk() method - so no need
         to also test it explicitly.
         """
-        with mock.patch("obspy.clients.fdsn.routing.eidaws_routing_client."
-                        "EIDAWSRoutingClient.get_waveforms_bulk") as p:
+        with mock.patch(self._cls + ".get_waveforms_bulk") as p:
             p.return_value = "1234"
             st = self.client.get_waveforms(
                 "XX", "XXXXX", "XX", "XXX",
@@ -147,6 +152,45 @@ NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
             ("XX", "XXXXX", "XX", "XXX", obspy.UTCDateTime(2017, 1, 1),
              obspy.UTCDateTime(2017, 1, 2)))
         self.assertEqual(p.call_args[1],
+                         {"longestonly": True, "minimumlength": 2})
+
+    def test_get_waveforms_bulk(self):
+        # Some mock routing response.
+        content = """
+http://example1.com/fdsnws/station/1/query
+AA B1 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
+
+http://example2.com/fdsnws/station/1/query
+AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
+"""
+        if hasattr(content, "encode"):
+            data = content.encode()
+
+        with mock.patch(self._cls + "._download") as p1, \
+                mock.patch(self._cls + "._download_waveforms") as p2:
+            p1.return_value = _DummyResponse(content=content)
+            p2.return_value = "1234"
+
+            st = self.client.get_waveforms_bulk(
+                [["AA", "B*", "", "DD", obspy.UTCDateTime(2017, 1, 1),
+                  obspy.UTCDateTime(2017, 1, 2)]],
+                longestonly=True, minimumlength=2)
+        self.assertEqual(st, "1234")
+
+        self.assertEqual(p1.call_count, 1)
+        self.assertEqual(p1.call_args[0][0],
+                         "http://www.orfeus-eu.org/eidaws/routing/1/query")
+        self.assertEqual(p1.call_args[1]["data"], (
+            b"service=station\nformat=post\n"
+            b"AA B* -- DD 2017-01-01T00:00:00.000000 "
+            b"2017-01-02T00:00:00.000000"))
+
+        self.assertEqual(p2.call_args[0][0], {
+            "http://example1.com":
+            "AA B1 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00",
+            "http://example2.com":
+            "AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00"})
+        self.assertEqual(p2.call_args[1],
                          {"longestonly": True, "minimumlength": 2})
 
 
