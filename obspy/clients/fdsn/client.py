@@ -883,7 +883,7 @@ class Client(object):
             minimumlength=minimumlength,
             longestonly=longestonly
         )
-        bulk = self._get_bulk_string(bulk, arguments)
+        bulk = get_bulk_string(bulk, arguments)
 
         url = self._build_url("dataselect", "query")
 
@@ -1028,7 +1028,7 @@ class Client(object):
             includerestriced=includerestricted,
             includeavailability=includeavailability
         )
-        bulk = self._get_bulk_string(bulk, arguments)
+        bulk = get_bulk_string(bulk, arguments)
 
         url = self._build_url("station", "query")
 
@@ -1043,45 +1043,6 @@ class Client(object):
             inv = obspy.read_inventory(data_stream, format="stationxml")
             data_stream.close()
             return inv
-
-    def _get_bulk_string(self, bulk, arguments):
-        # If its an iterable, we build up the query string from it
-        # StringIO objects also have __iter__ so check for 'read' as well
-        if isinstance(bulk, collections.Iterable) \
-                and not hasattr(bulk, "read") \
-                and not isinstance(bulk, (str, native_str)):
-            tmp = ["%s=%s" % (key, convert_to_string(value))
-                   for key, value in arguments.items() if value is not None]
-            # empty location codes have to be represented by two dashes
-            tmp += [" ".join((net, sta, loc or "--", cha,
-                              convert_to_string(t1), convert_to_string(t2)))
-                    for net, sta, loc, cha, t1, t2 in bulk]
-            bulk = "\n".join(tmp)
-        else:
-            if any([value is not None for value in arguments.values()]):
-                msg = ("Parameters %s are ignored when request data is "
-                       "provided as a string or file!")
-                warnings.warn(msg % arguments.keys())
-            # if it has a read method, read data from there
-            if hasattr(bulk, "read"):
-                bulk = bulk.read()
-            elif isinstance(bulk, (str, native_str)):
-                # check if bulk is a local file
-                if "\n" not in bulk and os.path.isfile(bulk):
-                    with open(bulk, 'r') as fh:
-                        tmp = fh.read()
-                    bulk = tmp
-                # just use bulk as input data
-                else:
-                    pass
-            else:
-                msg = ("Unrecognized input for 'bulk' argument. Please "
-                       "contact developers if you think this is a bug.")
-                raise NotImplementedError(msg)
-
-        if hasattr(bulk, "encode"):
-            bulk = bulk.encode("ascii")
-        return bulk
 
     def _write_to_file_object(self, filename_or_object, data_stream):
         if hasattr(filename_or_object, "write"):
@@ -1762,6 +1723,47 @@ def parse_simple_xml(xml_string):
     children = [i.text for i in root if i.tag == child_tag]
 
     return {root.tag.lower(): set(children)}
+
+
+def get_bulk_string(bulk, arguments):
+    # If its an iterable, we build up the query string from it
+    # StringIO objects also have __iter__ so check for 'read' as well
+    if isinstance(bulk, collections.Iterable) \
+            and not hasattr(bulk, "read") \
+            and not isinstance(bulk, (str, native_str)):
+        tmp = ["%s=%s" % (key, convert_to_string(value))
+               for key, value in arguments.items() if value is not None]
+        # empty location codes have to be represented by two dashes
+        tmp += [" ".join((net, sta, loc or "--", cha,
+                          convert_to_string(t1), convert_to_string(t2)))
+                for net, sta, loc, cha, t1, t2 in bulk]
+        bulk = "\n".join(tmp)
+    else:
+        if any([value is not None for value in arguments.values()]):
+            msg = ("Parameters %s are ignored when request data is "
+                   "provided as a string or file!")
+            warnings.warn(msg % arguments.keys())
+        # if it has a read method, read data from there
+        if hasattr(bulk, "read"):
+            bulk = bulk.read()
+        elif isinstance(bulk, (str, native_str)):
+            # check if bulk is a local file
+            if "\n" not in bulk and os.path.isfile(bulk):
+                with open(bulk, 'r') as fh:
+                    tmp = fh.read()
+                bulk = tmp
+            # just use bulk as input data
+            else:
+                pass
+        else:
+            msg = ("Unrecognized input for 'bulk' argument. Please "
+                   "contact developers if you think this is a bug.")
+            raise NotImplementedError(msg)
+
+    if hasattr(bulk, "encode"):
+        bulk = bulk.encode("ascii")
+    return bulk
+
 
 
 if __name__ == '__main__':
