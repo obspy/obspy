@@ -112,12 +112,6 @@ class _RoutingClient(HTTPClient):
 
         return collection
 
-    def _handle_requests_http_error(self, r):
-        import pdb; pdb.set_trace()
-
-    def get_service_version(self):
-        raise NotImplementedError
-
 
 if __name__ == '__main__':
     import doctest
