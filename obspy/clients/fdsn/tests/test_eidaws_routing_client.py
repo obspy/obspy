@@ -193,6 +193,47 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
         self.assertEqual(p2.call_args[1],
                          {"longestonly": True, "minimumlength": 2})
 
+    def test_get_stations(self):
+        # Some mock routing response.
+        content = """
+http://example1.com/fdsnws/station/1/query
+AA B1 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
+
+http://example2.com/fdsnws/station/1/query
+AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
+"""
+        if hasattr(content, "encode"):
+            data = content.encode()
+
+        with mock.patch(self._cls + "._download") as p1, \
+                mock.patch(self._cls + "._download_stations") as p2:
+            p1.return_value = _DummyResponse(content=content)
+            p2.return_value = "1234"
+
+            inv = self.client.get_stations(
+                network="AA", channel="DD",
+                starttime=obspy.UTCDateTime(2017, 1, 1), latitude=0.0,
+                longitude=1.0)
+        self.assertEqual(inv, "1234")
+
+        self.assertEqual(p1.call_count, 1)
+        self.assertEqual(p1.call_args[0][0],
+                         "http://www.orfeus-eu.org/eidaws/routing/1/query")
+        # Only a few arguments should be part of the URL.
+        self.assertEqual(p1.call_args[1]["params"], {
+            "network": "AA", "channel": "DD",
+            "starttime": "2017-01-01T00:00:00.000000Z",
+            "format": "post", "service": "station", "alternative": 'false'})
+
+        self.assertEqual(p2.call_args[0][0], {
+            "http://example1.com":
+                "AA B1 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00",
+            "http://example2.com":
+                "AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00"})
+        self.assertEqual(p2.call_args[1], {
+            "network": "AA", "channel": "DD", "longitude": 1.0,
+            "latitude": 0.0, "starttime": obspy.UTCDateTime(2017, 1, 1)})
+
 
 def suite():
     return unittest.makeSuite(EIDAWSRoutingClientTestCase, 'test')
