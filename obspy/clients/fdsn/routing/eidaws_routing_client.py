@@ -114,8 +114,8 @@ class EIDAWSRoutingClient(_RoutingClient):
 
         Only the ``network``, ``station``, ``location``, ``channel``,
         ``starttime``, and ``endtime`` parameters are used for the actual
-        routing. All other arguments are just passed on each single fdsnws
-        station implementation.
+        routing. These and all other arguments are then just passed on to each
+        single fdsnws station implementation.
 
         Arguments are the same as in
         :meth:`obspy.clients.fdsn.client.Client.get_stations()`.
