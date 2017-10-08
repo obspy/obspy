@@ -11,6 +11,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+from distutils.version import LooseVersion
 import unittest
 
 import obspy
@@ -19,18 +20,16 @@ from obspy.clients.fdsn.routing.eidaws_routing_client import \
     EIDAWSRoutingClient
 
 
-
 class EIDAWSRoutingClientTestCase(unittest.TestCase):
-    def test_get_waveforms_mocked(self):
-        """
-        Mock test to be less dependent on changes at the services.
-        """
-        c = EIDAWSRoutingClient()
-        with mock.patch():
-            c.get_waveforms("B*", "", "", "LHZ",
-                            obspy.UTCDateTime(2016, 1, 1),
-                            obspy.UTCDateTime(2016, 1, 1, 0, 1))
+    def setUp(self):
+        self.client = EIDAWSRoutingClient()
 
+    def test_get_service_version(self):
+        # At the time of test writing the version is 1.1.1. Here we just
+        # make sure it is larger.
+        self.assertGreaterEqual(
+            LooseVersion(self.client.get_service_version()),
+            LooseVersion("1.1.1"))
 
     def test_response_splitting(self):
         data = """
