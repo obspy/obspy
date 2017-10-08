@@ -79,6 +79,45 @@ NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
                 "http://geofon.gfz-potsdam.de": (
                     "NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00")})
 
+    def test_non_allowed_parameters(self):
+        with self.assertRaises(ValueError) as e:
+            self.client.get_waveforms(
+                "BW", "ALTM", "", "LHZ",
+                obspy.UTCDateTime(2017, 1, 1),
+                obspy.UTCDateTime(2017, 1, 1, 0, 1),
+                filename="out.mseed")
+        self.assertEqual(e.exception.args[0],
+                         'The `filename` argument is not supported')
+
+        with self.assertRaises(ValueError) as e:
+            self.client.get_waveforms(
+                "BW", "ALTM", "", "LHZ",
+                obspy.UTCDateTime(2017, 1, 1),
+                obspy.UTCDateTime(2017, 1, 1, 0, 1),
+                attach_response=True)
+        self.assertEqual(e.exception.args[0],
+                         'The `attach_response` argument is not supported')
+
+        with self.assertRaises(ValueError) as e:
+            self.client.get_waveforms_bulk([], filename="out.mseed")
+        self.assertEqual(e.exception.args[0],
+                         'The `filename` argument is not supported')
+
+        with self.assertRaises(ValueError) as e:
+            self.client.get_waveforms_bulk([], attach_response=True)
+        self.assertEqual(e.exception.args[0],
+                         'The `attach_response` argument is not supported')
+
+        with self.assertRaises(ValueError) as e:
+            self.client.get_stations(filename="out.xml")
+        self.assertEqual(e.exception.args[0],
+                         'The `filename` argument is not supported')
+
+        with self.assertRaises(ValueError) as e:
+            self.client.get_stations_bulk([], filename="out.xml")
+        self.assertEqual(e.exception.args[0],
+                         'The `filename` argument is not supported')
+
 
 def suite():
     return unittest.makeSuite(EIDAWSRoutingClientTestCase, 'test')
