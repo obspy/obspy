@@ -720,6 +720,7 @@ class Client(object):
             data_stream.close()
             if attach_response:
                 self._attach_responses(st)
+            self._attach_dataselect_url_to_stream(st)
             return st
 
     def _attach_responses(self, st):
@@ -898,6 +899,7 @@ class Client(object):
             data_stream.close()
             if attach_response:
                 self._attach_responses(st)
+            self._attach_dataselect_url_to_stream(st)
             return st
 
     def get_stations_bulk(self, bulk, level=None, includerestricted=None,
@@ -1444,6 +1446,14 @@ class Client(object):
         """
         version = self.get_webservice_version(service)
         return ".".join(map(str, version))
+
+    def _attach_dataselect_url_to_stream(self, st):
+        """
+        Attaches the actually used dataselet URL to each Trace.
+        """
+        url = self._build_url("dataselect", "query")
+        for tr in st:
+            tr.stats._fdsnws_dataselect_url = url
 
 
 def convert_to_string(value):
