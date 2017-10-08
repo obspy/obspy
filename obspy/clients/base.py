@@ -212,6 +212,11 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
             p = PreparedRequest()
             p.prepare(method="GET", **_request_args)
             print("Downloading %s ..." % p.url)
+            if data is not None:
+                print("Sending along the following payload:")
+                print("-" * 70)
+                print(data.decode() if hasattr(data, "decode") else data)
+                print("-" * 70)
 
         # Workaround for old request versions.
         try:
