@@ -205,7 +205,6 @@ from future.utils import PY2, native_str
 
 from .client import Client  # NOQA
 from .header import URL_MAPPINGS  # NOQA
-from .routers import FederatedClient  # NOQA
 
 
 # insert supported URL mapping list dynamically in docstring

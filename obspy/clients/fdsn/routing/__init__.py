@@ -194,15 +194,9 @@ places where the missing data could be found, and then requeries each provider.
 With any luck, the desired data could be downloaded from elsewhere, and
 was added to the retrieved data.
 """
-# convenience imports
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-
-from .routing_client import (RoutingClient, RoutingManager)  # NOQA
-from .fedcatalog_parser import (FederatedRoute)  # NOQA
-from .fedcatalog_client import (FederatedClient, FederatedRoutingManager,  # NOQA
-                                FedcatalogProviders)  # NOQA
 
 
 if __name__ == '__main__':
