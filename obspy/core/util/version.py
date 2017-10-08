@@ -107,7 +107,7 @@ def call_git_describe(abbrev=10, dirty=True,
     # (this line prevents official releases)
     # should work again now, see #482 and obspy/obspy@b437f31
     if "-" not in line and "." not in line:
-        version = "0.0.0.dev+.g%s" % line
+        version = "0.0.0.dev+0.g%s" % line
     else:
         parts = line.split('-', 1)
         version = parts[0]
