@@ -234,6 +234,48 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
             "network": "AA", "channel": "DD", "longitude": 1.0,
             "latitude": 0.0, "starttime": obspy.UTCDateTime(2017, 1, 1)})
 
+    def test_get_stations_bulk(self):
+        # Some mock routing response.
+        content = """
+http://example1.com/fdsnws/station/1/query
+AA B1 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
+
+http://example2.com/fdsnws/station/1/query
+AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
+"""
+        if hasattr(content, "encode"):
+            data = content.encode()
+
+        with mock.patch(self._cls + "._download") as p1, \
+                mock.patch(self._cls + "._download_stations") as p2:
+            p1.return_value = _DummyResponse(content=content)
+            p2.return_value = "1234"
+
+            inv = self.client.get_stations_bulk(
+                [["AA", "B*", "", "DD", obspy.UTCDateTime(2017, 1, 1),
+                  obspy.UTCDateTime(2017, 1, 2)]],
+                latitude=0.0, longitude=1.0,
+                starttime=obspy.UTCDateTime(2017, 1, 1))
+        self.assertEqual(inv, "1234")
+
+        self.assertEqual(p1.call_count, 1)
+        self.assertEqual(p1.call_args[0][0],
+                         "http://www.orfeus-eu.org/eidaws/routing/1/query")
+        self.assertEqual(p1.call_args[1]["data"], (
+            b"service=station\nformat=post\n"
+            b"AA B* -- DD 2017-01-01T00:00:00.000000 "
+            b"2017-01-02T00:00:00.000000"))
+
+        self.assertEqual(p2.call_args[0][0], {
+            "http://example1.com":
+                "AA B1 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00",
+            "http://example2.com":
+                "AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00"})
+        # Only select parameters are passed on.
+        self.assertEqual(p2.call_args[1], {
+            "longitude": 1.0, "latitude": 0.0,
+            "starttime": obspy.UTCDateTime(2017, 1, 1)})
+
 
 def suite():
     return unittest.makeSuite(EIDAWSRoutingClientTestCase, 'test')

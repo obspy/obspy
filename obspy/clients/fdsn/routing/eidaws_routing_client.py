@@ -212,7 +212,7 @@ class EIDAWSRoutingClient(_RoutingClient):
             raise_on_error(r.status_code, c)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import doctest
 
     doctest.testmod(exclude_empty=True)
