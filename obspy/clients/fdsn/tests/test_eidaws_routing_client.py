@@ -127,6 +127,28 @@ NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
         self.assertEqual(e.exception.args[0],
                          "No data available for request.")
 
+    def test_get_waveforms(self):
+        """
+        This just dispatches to the get_waveforms_bulk() method - so no need
+        to also test it explicitly.
+        """
+        with mock.patch("obspy.clients.fdsn.routing.eidaws_routing_client."
+                        "EIDAWSRoutingClient.get_waveforms_bulk") as p:
+            p.return_value = "1234"
+            st = self.client.get_waveforms(
+                "XX", "XXXXX", "XX", "XXX",
+                obspy.UTCDateTime(2017, 1, 1),
+                obspy.UTCDateTime(2017, 1, 2),
+                longestonly=True, minimumlength=2)
+        self.assertEqual(st, "1234")
+        self.assertEqual(p.call_count, 1)
+        self.assertEqual(
+            p.call_args[0][0][0],
+            ("XX", "XXXXX", "XX", "XXX", obspy.UTCDateTime(2017, 1, 1),
+             obspy.UTCDateTime(2017, 1, 2)))
+        self.assertEqual(p.call_args[1],
+                         {"longestonly": True, "minimumlength": 2})
+
 
 def suite():
     return unittest.makeSuite(EIDAWSRoutingClientTestCase, 'test')
