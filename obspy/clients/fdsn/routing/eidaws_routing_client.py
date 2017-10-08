@@ -199,7 +199,7 @@ class EIDAWSRoutingClient(_RoutingClient):
     def _handle_requests_http_error(self, r):
         # In lieu of any more knowledge let's just assume the same semantics
         # as for the fdsn web services.
-        if r.content:
+        if r.content:  # pragma: no cover
             c = r.content
         else:
             c = r.reason

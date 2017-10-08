@@ -16,6 +16,7 @@ import unittest
 
 import obspy
 from obspy.core.compatibility import mock
+from obspy.clients.fdsn.header import FDSNNoDataException
 from obspy.clients.fdsn.routing.eidaws_routing_client import \
     EIDAWSRoutingClient
 
@@ -117,6 +118,14 @@ NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
             self.client.get_stations_bulk([], filename="out.xml")
         self.assertEqual(e.exception.args[0],
                          'The `filename` argument is not supported')
+
+    def test_error_handling(self):
+        with self.assertRaises(FDSNNoDataException) as e:
+            self.client.get_waveforms(
+                "XX", "XXXXX", "XX", "XXX",
+                obspy.UTCDateTime(2017, 1, 1), obspy.UTCDateTime(2017, 1, 2))
+        self.assertEqual(e.exception.args[0],
+                         "No data available for request.")
 
 
 def suite():
