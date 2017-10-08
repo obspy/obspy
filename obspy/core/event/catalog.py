@@ -466,9 +466,9 @@ class Catalog(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.event import read_events
-        >>> catalog = read_events() # doctest: +SKIP
-        >>> catalog.write("example.xml", format="QUAKEML") # doctest: +SKIP
+        >>> from obspy import read_events
+        >>> catalog = read_events()
+        >>> catalog.write("example.xml", format="QUAKEML")  # doctest: +SKIP
 
         Writing single events into files with meaningful filenames can be done
         e.g. using event.id
@@ -481,7 +481,8 @@ class Catalog(object):
 
         Additional ObsPy modules extend the parameters of the
         :meth:`~obspy.core.event.Catalog.write` method. The following
-        table summarizes all known formats currently available for ObsPy.
+        table summarizes all known formats with write capability currently
+        available for ObsPy.
 
         Please refer to the `Linked Function Call`_ of each module for any
         extra options available.
@@ -496,10 +497,11 @@ class Catalog(object):
             write_format = buffered_load_entry_point(
                 format_ep.dist.key, 'obspy.plugin.event.%s' % (format_ep.name),
                 'writeFormat')
-        except (IndexError, ImportError):
-            msg = "Format \"%s\" is not supported. Supported types: %s"
-            raise TypeError(msg % (format, ', '.join(EVENT_ENTRY_POINTS)))
-        write_format(self, filename, **kwargs)
+        except (IndexError, ImportError, KeyError):
+            msg = "Writing format \"%s\" is not supported. Supported types: %s"
+            raise ValueError(msg % (format,
+                                    ', '.join(EVENT_ENTRY_POINTS_WRITE)))
+        return write_format(self, filename, **kwargs)
 
     def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0',
@@ -772,15 +774,16 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
     multiple event files given via file name or URL using the
     ``pathname_or_url`` attribute.
 
-    :type pathname_or_url: str or StringIO.StringIO, optional
+    :type pathname_or_url: str or StringIO.StringIO
     :param pathname_or_url: String containing a file name or a URL or a open
         file-like object. Wildcards are allowed for a file name. If this
         attribute is omitted, an example :class:`~obspy.core.event.Catalog`
         object will be returned.
-    :type format: str, optional
+    :type format: str
     :param format: Format of the file to read (e.g. ``"QUAKEML"``). See the
         `Supported Formats`_ section below for a list of supported formats.
-    :return: A ObsPy :class:`~obspy.core.event.Catalog` object.
+    :rtype: :class:`~obspy.core.event.Catalog`
+    :return: An ObsPy :class:`~obspy.core.event.Catalog` object.
 
     .. rubric:: _`Supported Formats`
 

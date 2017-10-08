@@ -428,9 +428,9 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
     >>> print(table)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    ======... ===============... ========================================...
-    Format    Required Module    _`Linked Function Call`
-    ======... ===============... ========================================...
+    ======... ===========... ========================================...
+    Format    Used Module    _`Linked Function Call`
+    ======... ===========... ========================================...
     CMTSOLUTION  :mod:`...io.cmtsolution` :func:`..._write_cmtsolution`
     CNV       :mod:`...io.cnv`   :func:`obspy.io.cnv.core._write_cnv`
     JSON      :mod:`...io.json`  :func:`obspy.io.json.core._write_json`
@@ -444,7 +444,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     SHAPEFILE :mod:`obspy.io.shapefile`
                              :func:`obspy.io.shapefile.core._write_shapefile`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`
-    ======... ===============... ========================================...
+    ======... ===========... ========================================...
 
     :type group: str
     :param group: Plugin group to search (e.g. "waveform" or "event").
@@ -474,7 +474,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
         mod_list.append((name, module_short, func_str))
 
     mod_list = sorted(mod_list)
-    headers = ["Format", "Required Module", "_`Linked Function Call`"]
+    headers = ["Format", "Used Module", "_`Linked Function Call`"]
     maxlens = [max([len(x[0]) for x in mod_list] + [len(headers[0])]),
                max([len(x[1]) for x in mod_list] + [len(headers[1])]),
                max([len(x[2]) for x in mod_list] + [len(headers[2])])]

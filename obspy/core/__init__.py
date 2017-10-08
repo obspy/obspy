@@ -56,7 +56,8 @@ A :class:`~obspy.core.stream.Stream` with an example seismogram can be created
 by calling :func:`~obspy.core.stream.read()` without any arguments.
 Local files can be read by specifying the filename, files stored on http
 servers (e.g. at https://examples.obspy.org) can be read by specifying their
-URL. For details see the documentation of :func:`~obspy.core.stream.read`.
+URL. For details and supported formats see the documentation of
+:func:`~obspy.core.stream.read`.
 
 >>> from obspy import read
 >>> st = read()
@@ -92,7 +93,10 @@ Event Metadata
 Event metadata are handled in a hierarchy of classes closely modelled after the
 de-facto standard format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
 See the IPython notebooks mentioned in the :ref:`ObsPy Tutorial <tutorial>` for
-more detailed usage examples.
+more detailed usage examples. See
+:func:`~obspy.core.event.catalog.read_events()` and
+:meth:`Catalog.write() <obspy.core.event.catalog.Catalog.write>` for supported
+formats.
 
 .. figure:: /_images/Event.png
 
@@ -103,7 +107,10 @@ Station metadata are handled in a hierarchy of classes closely modelled after
 the de-facto standard format
 `FDSN StationXML <https://www.fdsn.org/xml/station/>`_ which was developed as a
 human readable XML replacement for Dataless SEED.
-See :mod:`obspy.core.inventory` for more details.
+See :mod:`obspy.core.inventory` for more details. See
+:func:`~obspy.core.inventory.inventory.read_inventory()` and
+:meth:`Inventory.write() <obspy.core.inventory.inventory.Inventory.write>` for
+supported formats.
 
 .. figure:: /_images/Inventory.png
 
@@ -114,11 +121,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 # don't change order
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.attribdict import AttribDict
-from obspy.core.trace import Stats, Trace
-from obspy.core.stream import Stream, read
-from obspy.scripts.runtests import run_tests
+from obspy.core.utcdatetime import UTCDateTime  # NOQA
+from obspy.core.util.attribdict import AttribDict  # NOQA
+from obspy.core.trace import Stats, Trace  # NOQA
+from obspy.core.stream import Stream, read  # NOQA
+from obspy.scripts.runtests import run_tests  # NOQA
 
 
 if __name__ == '__main__':
