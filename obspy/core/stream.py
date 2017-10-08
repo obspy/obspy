@@ -2578,7 +2578,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 :class:`~obspy.io.xseed.parser.Parser` object) and ignores
                 ``back_azimuth`` and ``inclination`` parameters. Additional
                 kwargs will be passed on to :meth:`_rotate_to_zne()` (use if
-                other component pairs than ``["Z", "1", "2"]`` and
+                other components than ``["Z", "1", "2"]`` and
                 ``["1", "2", "3"]`` need to be rotated).
                 Trims common channels used in rotation to time spans that are
                 available for all three channels (i.e. cuts away parts for
@@ -3200,7 +3200,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.traces = new_traces
 
     def _rotate_to_zne(
-            self, inventory, component_pairs=("Z12", "123")):
+            self, inventory, components=("Z12", "123")):
         """
         Rotate all matching traces to ZNE, specifying sets of component codes.
 
@@ -3213,16 +3213,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type inventory: :class:`~obspy.core.inventory.inventory.Inventory` or
             :class:`~obspy.io.xseed.parser.Parser`
         :param inventory: Inventory or Parser with metadata of channels.
-        :type component_pairs: list or tuple
-        :param component_pairs: List of combinations of three (case sensitive)
+        :type components: list or tuple
+        :param components: List of combinations of three (case sensitive)
             component characters. Rotations are executed in this order, so
             order might matter in very strange cases (e.g. if traces with more
             than three component codes are present for the same SEED ID down to
-            the component code). For example, a component_pair ``"Z12"`` would
-            rotate sets of "BHZ", "BH1", "BH2" (and "HHZ", "HH1", "HH2", etc.)
-            channels at the same station.
+            the component code). For example, specifying components ``"Z12"``
+            would rotate sets of "BHZ", "BH1", "BH2" (and "HHZ", "HH1", "HH2",
+            etc.) channels at the same station.
         """
-        for component_pair in component_pairs:
+        for component_pair in components:
             st = self.select(component="[{}]".format(component_pair))
             netstaloc = sorted(set(
                 [(tr.stats.network, tr.stats.station, tr.stats.location)
