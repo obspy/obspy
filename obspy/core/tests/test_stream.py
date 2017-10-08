@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import inspect
 import os
 import pickle
 import unittest
@@ -11,7 +12,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from obspy import Stream, Trace, UTCDateTime, read
+from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.stream import _is_pickle, _read_pickle, _write_pickle
 from obspy.core.util.attribdict import AttribDict
@@ -54,7 +55,8 @@ class StreamTestCase(unittest.TestCase):
             data=np.random.randint(0, 1000, 12000).astype(np.float64),
             header=header)
         self.gse2_stream = Stream(traces=[trace])
-        self.data_path = os.path.join(os.path.dirname(__file__), 'data')
+        self.data_path = os.path.join(os.path.dirname(os.path.abspath(
+            inspect.getfile(inspect.currentframe()))), "data")
 
     @staticmethod
     def __remove_processing(st):
@@ -2514,6 +2516,37 @@ class StreamTestCase(unittest.TestCase):
                      check_compression=True)
         self.assertEqual(tar_p.call_count, 1)
         self.assertGreaterEqual(zip_p.call_count, 1)
+
+    def test_rotate_to_zne(self):
+        """
+        Tests rotating all traces in stream to ZNE given an inventory object.
+        """
+        inv = read_inventory("/path/to/ffbx.stationxml", format="STATIONXML")
+        parser = Parser("/path/to/ffbx.dataless")
+        st_expected = read('/path/to/ffbx_rotated.slist', format='SLIST')
+        for tr in st_expected:
+            # ignore format specific keys and processing which also holds
+            # version number
+            tr.stats.pop('ascii')
+            tr.stats.pop('_format')
+        # check rotation using both Inventory and Parser as metadata input
+        for metadata in (inv, parser):
+            st = read("/path/to/ffbx_unrotated_gaps.mseed", format="MSEED")
+            st.rotate("->ZNE", inventory=metadata)
+            # do some checks on results
+            self.assertEqual(len(st), 30)
+            # compare data
+            for tr_got, tr_expected in zip(st, st_expected):
+                np.testing.assert_allclose(tr_got.data, tr_expected.data,
+                                           rtol=1e-7)
+            # compare stats
+            for tr_expected, tr_got in zip(st_expected, st):
+                # ignore format specific keys and processing which also holds
+                # version number
+                tr_got.stats.pop('mseed')
+                tr_got.stats.pop('_format')
+                tr_got.stats.pop('processing')
+                self.assertEqual(tr_got.stats, tr_expected.stats)
 
 
 def suite():

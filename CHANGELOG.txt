@@ -42,6 +42,8 @@ master: (doi: 10.5281/zenodo.165135)
      see #1439).
    * Instrument correction for response list stages originating from inventory
      objects (see #1514).
+   * `Stream.rotate(...)` can now also be used to rotate unaligned channels to
+     Z-N-E, given an Inventory (see #1310)
    * Non finite floats (NaN, inf, -inf) can now no longer be set for all
      event objects (see #1597).
    * Instrument responses can now also be calculated for a given list of

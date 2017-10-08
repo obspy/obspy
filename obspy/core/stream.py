@@ -2563,13 +2563,26 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.normalize(norm=norm)
         return self
 
-    def rotate(self, method, back_azimuth=None, inclination=None):
+    def rotate(self, method, back_azimuth=None, inclination=None,
+               inventory=None, **kwargs):
         """
         Rotate stream objects.
 
         :type method: str
         :param method: Determines the rotation method.
 
+            ``'->ZNE'``: Rotates data from three components into Z, North- and
+                East-components based on the station metadata (e.g. borehole
+                stations). Uses mandatory ``inventory`` parameter (provide
+                either an :class:`~obspy.core.inventory.inventory.Inventory` or
+                :class:`~obspy.io.xseed.parser.Parser` object) and ignores
+                ``back_azimuth`` and ``inclination`` parameters. Additional
+                kwargs will be passed on to :meth:`_rotate_to_zne()` (use if
+                other components than ``["Z", "1", "2"]`` and
+                ``["1", "2", "3"]`` need to be rotated).
+                Trims common channels used in rotation to time spans that are
+                available for all three channels (i.e. cuts away parts for
+                which one or two channels used in rotation do not have data).
             ``'NE->RT'``: Rotates the North- and East-components of a
                 seismogram to radial and transverse components.
             ``'RT->NE'``: Rotates the radial and transverse components of a
@@ -2589,8 +2602,27 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             Only necessary for three component rotations. If not given,
             ``stats.inclination`` will be used. It will also be written after
             the rotation is done.
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory` or
+            :class:`~obspy.io.xseed.parser.Parser`
+        :param inventory: Inventory or SEED Parser with metadata of channels.
+
+        Example to rotate unaligned borehole instrument data based on station
+        inventory (a dataless SEED :class:`~obspy.io.xseed.parser.Parser` can
+        also be provided, see details for option ``inventory``):
+
+        >>> from obspy import read, read_inventory
+        >>> st = read("/path/to/ffbx_unrotated_gaps.mseed")
+        >>> inv = read_inventory("/path/to/ffbx.stationxml")
+        >>> st.rotate(method="->ZNE", inventory=inv)  # doctest: +ELLIPSIS
+        <obspy.core.stream.Stream object at 0x...>
         """
-        if method == "NE->RT":
+        if method == "->ZNE":
+            if inventory is None:
+                msg = ("With method '->ZNE' station metadata has to be "
+                       "provided as 'inventory' parameter.")
+                raise ValueError(msg)
+            return self._rotate_to_zne(inventory, **kwargs)
+        elif method == "NE->RT":
             func = "rotate_ne_rt"
         elif method == "RT->NE":
             func = "rotate_rt_ne"
@@ -2599,8 +2631,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         elif method == "LQT->ZNE":
             func = "rotate_lqt_zne"
         else:
-            raise ValueError("Method has to be one of ('NE->RT', 'RT->NE', "
-                             "'ZNE->LQT', or 'LQT->ZNE').")
+            msg = ("Method has to be one of ('->ZNE', 'NE->RT', 'RT->NE', "
+                   "'ZNE->LQT', or 'LQT->ZNE').")
+            raise ValueError(msg)
         # Retrieve function call from entry points
         func = _get_function_from_entry_point("rotate", func)
         # Split to get the components. No need for further checks for the
@@ -3099,6 +3132,205 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.stats.sampling_rate = sampling_rate
             st += tr
         return st
+
+    def _get_common_channels_info(self):
+        """
+        Returns a dictionary with information on common channels.
+        """
+        # get all ids down to location code
+        ids_ = set([tr.id.rsplit(".", 1)[0] for tr in self])
+        all_channels = {}
+        # work can be separated by net.sta.loc, so iterate over each
+        for id_ in ids_:
+            net, sta, loc = id_.split(".")
+            channels = {}
+            st_ = self.select(network=net, station=sta, location=loc)
+            # for each individual channel collect earliest start time and
+            # latest endtime
+            for tr in st_:
+                cha = tr.stats.channel
+                cha_common = cha and cha[:-1] or None
+                cha_common_dict = channels.setdefault(cha_common, {})
+                cha_dict = cha_common_dict.setdefault(cha, {})
+                cha_dict["start"] = min(tr.stats.starttime.timestamp,
+                                        cha_dict.get("start", np.inf))
+                cha_dict["end"] = max(tr.stats.endtime.timestamp,
+                                      cha_dict.get("end", -np.inf))
+            # convert all timestamp objects back to UTCDateTime
+            for cha_common_dict in channels.values():
+                for cha_dict in cha_common_dict.values():
+                    cha_dict["start"] = UTCDateTime(cha_dict["start"])
+                    cha_dict["end"] = UTCDateTime(cha_dict["end"])
+            # now for every combination of common channels determine earliest
+            # common start time and latest common end time, as well as gap
+            # information in between
+            for cha_common, channels_ in channels.items():
+                if cha_common is None:
+                    cha_pattern = ""
+                else:
+                    cha_pattern = cha_common + "?"
+                st__ = self.select(network=net, station=sta, location=loc,
+                                   channel=cha_pattern)
+                start = max(
+                    [cha_dict_["start"] for cha_dict_ in channels_.values()])
+                end = min(
+                    [cha_dict_["end"] for cha_dict_ in channels_.values()])
+                gaps = st__.get_gaps()
+                all_channels[(net, sta, loc, cha_pattern)] = {
+                    "start": start, "end": end, "gaps": gaps,
+                    "channels": channels_}
+        return all_channels
+
+    def _trim_common_channels(self):
+        """
+        Trim all channels that have the same ID down to the component character
+        to the earliest common start time and latest common end time. Works in
+        place.
+        """
+        self._cleanup()
+        channel_infos = self._get_common_channels_info()
+        new_traces = []
+        for (net, sta, loc, cha_pattern), infos in channel_infos.items():
+            st = self.select(network=net, station=sta, location=loc,
+                             channel=cha_pattern)
+            st.trim(infos["start"], infos["end"])
+            for _, _, _, _, start_, end_, _, _ in infos["gaps"]:
+                st = st.cutout(start_, end_)
+            new_traces += st.traces
+        self.traces = new_traces
+
+    def _rotate_to_zne(
+            self, inventory, components=("Z12", "123")):
+        """
+        Rotate all matching traces to ZNE, specifying sets of component codes.
+
+        >>> from obspy import read, read_inventory
+        >>> st = read("/path/to/ffbx_unrotated_gaps.mseed")
+        >>> inv = read_inventory("/path/to/ffbx.stationxml")
+        >>> st._rotate_to_zne(inv)  # doctest: +ELLIPSIS
+        <obspy.core.stream.Stream object at 0x...>
+
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory` or
+            :class:`~obspy.io.xseed.parser.Parser`
+        :param inventory: Inventory or Parser with metadata of channels.
+        :type components: list or tuple
+        :param components: List of combinations of three (case sensitive)
+            component characters. Rotations are executed in this order, so
+            order might matter in very strange cases (e.g. if traces with more
+            than three component codes are present for the same SEED ID down to
+            the component code). For example, specifying components ``"Z12"``
+            would rotate sets of "BHZ", "BH1", "BH2" (and "HHZ", "HH1", "HH2",
+            etc.) channels at the same station.
+        """
+        for component_pair in components:
+            st = self.select(component="[{}]".format(component_pair))
+            netstaloc = sorted(set(
+                [(tr.stats.network, tr.stats.station, tr.stats.location)
+                 for tr in st]))
+            for net, sta, loc in netstaloc:
+                channels = set(
+                    [tr.stats.channel
+                     for tr in st.select(network=net, station=sta,
+                                         location=loc)])
+                common_channels = {}
+                for channel in channels:
+                    if channel == "":
+                        continue
+                    cha_without_comp = channel[:-1]
+                    component = channel[-1]
+                    common_channels.setdefault(
+                        cha_without_comp, set()).add(component)
+                for cha_without_comp, components in sorted(
+                        common_channels.items()):
+                    if components == set(component_pair):
+                        channels_ = [cha_without_comp + comp
+                                     for comp in component_pair]
+                        self._rotate_specific_channels_to_zne(
+                            net, sta, loc, channels_, inventory)
+        return self
+
+    def _rotate_specific_channels_to_zne(
+            self, network, station, location, channels, inventory):
+        """
+        Rotate three explicitly specified channels to ZNE.
+
+        >>> from obspy import read, read_inventory
+        >>> st = read("/path/to/ffbx_unrotated_gaps.mseed")
+        >>> inv = read_inventory("/path/to/ffbx.stationxml")
+        >>> st._rotate_specific_channels_to_zne(
+        ...     "BW", "FFB1", "", ["HHZ", "HH1", "HH2"],
+        ...     inv)  # doctest: +ELLIPSIS
+        <obspy.core.stream.Stream object at 0x...>
+
+        :type network: str
+        :param network: Network code of channels that should be rotated.
+        :type station: str
+        :param station: Station code of channels that should be rotated.
+        :type location: str
+        :param location: Location code of channels that should be rotated.
+        :type channels: list
+        :param channels: The three channel codes of channels that should be
+            rotated.
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory` or
+            :class:`~obspy.io.xseed.parser.Parser`
+        :param inventory: Inventory or Parser with metadata of channels.
+        """
+        from obspy.signal.rotate import rotate2zne
+        from obspy.core.inventory import Inventory, Network
+        from obspy.io.xseed import Parser
+
+        if isinstance(inventory, (Inventory, Network)):
+            metadata_getter = inventory.get_channel_metadata
+        elif isinstance(inventory, Parser):
+            # xseed Parser has everything in get_coordinates method due to
+            # historic reasons..
+            metadata_getter = inventory.get_coordinates
+        else:
+            msg = 'Wrong type for "inventory": {}'.format(str(type(inventory)))
+            raise TypeError(msg)
+        # build temporary stream that has only those traces that are supposed
+        # to be used in rotation
+        st = self.select(network=network, station=station, location=location)
+        st = (st.select(channel=channels[0]) + st.select(channel=channels[1]) +
+              st.select(channel=channels[2]))
+        # remove the original unrotated traces from the stream
+        for tr in st.traces:
+            self.remove(tr)
+        # cut data so that we end up with a set of matching pieces for the tree
+        # components (i.e. cut away any parts where one of the three components
+        # has no data)
+        st._trim_common_channels()
+        # sort by start time, so each three consecutive traces can then be used
+        # in one rotation run
+        st.sort(keys=["starttime"])
+        # woooops, that's unexpected. must be a bug in the trimming helper
+        # routine
+        if len(st) % 3 != 0:
+            msg = ("Unexpected behavior in rotation. Please file a bug "
+                   "report on github.")
+            raise NotImplementedError(msg)
+        num_pieces = int(len(st) / 3)
+        for i in range(num_pieces):
+            # three consecutive traces are always the ones that combine for one
+            # rotation run
+            traces = [st.pop() for i in range(3)]
+            # paranoid.. do a quick check of the channels again.
+            if set([tr.stats.channel for tr in traces]) != set(channels):
+                msg = ("Unexpected behavior in rotation. Please file a bug "
+                       "report on github.")
+                raise NotImplementedError(msg)
+            # `.get_orientation()` works the same for Inventory and Parser
+            orientation = [metadata_getter(tr.id, tr.stats.starttime)
+                           for tr in traces]
+            zne = rotate2zne(
+                traces[0], orientation[0]["azimuth"], orientation[0]["dip"],
+                traces[1], orientation[1]["azimuth"], orientation[1]["dip"],
+                traces[2], orientation[2]["azimuth"], orientation[2]["dip"])
+            for tr, new_data, component in zip(traces, zne, "ZNE"):
+                tr.data = new_data
+                tr.stats.channel = tr.stats.channel[:-1] + component
+            self.traces += traces
+        return self
 
 
 def _is_pickle(filename):  # @UnusedVariable
