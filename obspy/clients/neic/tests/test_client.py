@@ -58,7 +58,14 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(stats.network, "IU")
             self.assertEqual(stats.location, "00")
             self.assertEqual(stats.channel, "BH" + component)
-            self.assertEqual(stats.endtime - stats.starttime, duration_long)
+            # requested data duration has some minor fluctuations sometimes but
+            # should be pretty close to the expected duration.
+            # it should not be over a delta longer than expected (it should be
+            # trimmed correctly if more data is returned) but sometimes it's
+            # one delta shorter
+            self.assertTrue(
+                abs(duration_long - (stats.endtime - stats.starttime)) <=
+                tr.stats.delta)
             # if the following fails this is likely due to a change at the
             # requested station and simply has to be adapted
             self.assertEqual(stats.sampling_rate, 20.0)
@@ -74,7 +81,14 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(stats.network, "IU")
             self.assertEqual(stats.location, "00")
             self.assertEqual(stats.channel, "BH" + component)
-            self.assertEqual(stats.endtime - stats.starttime, duration)
+            # requested data duration has some minor fluctuations sometimes but
+            # should be pretty close to the expected duration.
+            # it should not be over a delta longer than expected (it should be
+            # trimmed correctly if more data is returned) but sometimes it's
+            # one delta shorter
+            self.assertTrue(
+                abs(duration - (stats.endtime - stats.starttime)) <=
+                tr.stats.delta)
             # if the following fails this is likely due to a change at the
             # requested station and simply has to be adapted
             self.assertEqual(stats.sampling_rate, 20.0)

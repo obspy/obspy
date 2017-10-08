@@ -258,7 +258,7 @@ class ClientTestCase(unittest.TestCase):
                 'encoding': 'STEIM1',
                 'filesize': 30720,
                 'dataquality': 'D',
-                'number_of_records': 60,
+                'number_of_records': 4,
                 'byteorder': '>'}),
             'coordinates': AttribDict({
                 'latitude': 47.737167,

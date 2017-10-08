@@ -33,7 +33,7 @@ BGR     http://eida.bgr.de
 EMSC    http://www.seismicportal.eu
 ETH     http://eida.ethz.ch
 GEONET  http://service.geonet.org.nz
-GFZ     https://geofon.gfz-potsdam.de
+GFZ     http://geofon.gfz-potsdam.de
 ICGC    http://ws.icgc.cat
 INGV    http://webservices.rm.ingv.it
 IPGP    http://eida.ipgp.fr
@@ -47,9 +47,9 @@ NOA     http://eida.gein.noa.gr
 ODC     http://www.orfeus-eu.org
 ORFEUS  http://www.orfeus-eu.org
 RESIF   http://ws.resif.fr
-SCEDC   https://service.scedc.caltech.edu
+SCEDC   http://service.scedc.caltech.edu
 TEXNET  http://rtserve.beg.utexas.edu
-USGS    https://earthquake.usgs.gov
+USGS    http://earthquake.usgs.gov
 USP     http://sismo.iag.usp.br
 
 (1) :meth:`~obspy.clients.fdsn.client.Client.get_waveforms()`: The following
