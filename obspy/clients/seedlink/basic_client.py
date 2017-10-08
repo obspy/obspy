@@ -65,7 +65,7 @@ class Client(object):
 
         >>> from obspy import UTCDateTime
         >>> client = Client('rtserver.ipgp.fr')
-        >>> t = UTCDateTime() - 3600
+        >>> t = UTCDateTime() - 1500
         >>> st = client.get_waveforms("G", "FDF", "00", "BHZ", t, t + 5)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
