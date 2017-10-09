@@ -11,6 +11,11 @@ implement the `FDSN web service definitions`_.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 
+
+.. contents:: Contents
+    :local:
+    :depth: 2
+
 Basic FDSN Client Usage
 -----------------------
 

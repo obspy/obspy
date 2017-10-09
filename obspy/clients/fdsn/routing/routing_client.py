@@ -31,6 +31,35 @@ from future.utils import string_types
 
 
 def RoutingClient(routing_type, *args, **kwargs):
+    """
+    Helper function to get the correct routing instance.
+
+    :type routing_type: str
+    :param routing_type: The type of router to initialize. ``"federator"`` or
+        ``"eidaws"``. Will consequently return either a
+        :class:`~.federator_routing_client.FederatorRoutingClient` or a
+        :class:`~.eidaws_routing_client.EIDAWSRoutingClient` object,
+        respectively.
+
+    Remaining ``args`` and ``kwargs`` will be passed to the underlying classes.
+
+
+
+    >>> from obspy.clients.fdsn import RoutingClient
+
+    Get an instance of a routing client using the IRIS Federator:
+
+    >>> c = RoutingClient("federator")
+    >>> print(type(c))  # doctest: +ELLIPSIS
+    <class '...routing.federator_routing_client.FederatorRoutingClient'>
+
+    Or get an instance of a routing client using the EIDAWS routing web
+    service:
+
+    >>> c = RoutingClient("eidaws")
+    >>> print(type(c))  # doctest: +ELLIPSIS
+    <class '...routing.eidaws_routing_client.EIDAWSRoutingClient'>
+    """
     if routing_type.lower() == "eidaws":
         from .eidaws_routing_client import EIDAWSRoutingClient
         return EIDAWSRoutingClient(*args, **kwargs)
