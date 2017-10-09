@@ -41,6 +41,7 @@ class FederatorRoutingClientTestCase(unittest.TestCase):
 
     def test_response_splitting(self):
         data = """
+RANDOM_KEY=true
 
 DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
 DATASELECTSERVICE=http://geofon.gfz-potsdam1.de/fdsnws/dataselect/1/
@@ -173,6 +174,62 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
                 "AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00")})
         self.assertEqual(p2.call_args[1],
                          {"longestonly": True, "minimumlength": 2})
+
+    def test_get_waveforms(self):
+        """
+        This just dispatches to the get_waveforms_bulk() method - so no need
+        to also test it explicitly.
+        """
+        with mock.patch(self._cls + ".get_waveforms_bulk") as p:
+            p.return_value = "1234"
+            st = self.client.get_waveforms(
+                network="XX", station="XXXXX", location="XX",
+                channel="XXX", starttime=obspy.UTCDateTime(2017, 1, 1),
+                endtime=obspy.UTCDateTime(2017, 1, 2),
+                latitude=1.0, longitude=2.0,
+                longestonly=True, minimumlength=2)
+        self.assertEqual(st, "1234")
+        self.assertEqual(p.call_count, 1)
+        self.assertEqual(
+            p.call_args[0][0][0],
+            ["XX", "XXXXX", "XX", "XXX", obspy.UTCDateTime(2017, 1, 1),
+             obspy.UTCDateTime(2017, 1, 2)])
+        # SNCLs + times should be filtered out.
+        self.assertEqual(p.call_args[1],
+                         {"longestonly": True,
+                          "minimumlength": 2, "latitude": 1.0,
+                          "longitude": 2.0})
+
+        # Don't pass in the SNCLs.
+        with mock.patch(self._cls + ".get_waveforms_bulk") as p:
+            p.return_value = "1234"
+            st = self.client.get_waveforms(
+                starttime=obspy.UTCDateTime(2017, 1, 1),
+                endtime=obspy.UTCDateTime(2017, 1, 2),
+                latitude=1.0, longitude=2.0,
+                longestonly=True, minimumlength=2)
+        self.assertEqual(st, "1234")
+        self.assertEqual(p.call_count, 1)
+        self.assertEqual(
+            p.call_args[0][0][0],
+            ["*", "*", "*", "*", obspy.UTCDateTime(2017, 1, 1),
+             obspy.UTCDateTime(2017, 1, 2)])
+        self.assertEqual(p.call_args[1],
+                         {"longestonly": True,
+                          "minimumlength": 2, "latitude": 1.0,
+                          "longitude": 2.0})
+
+    def test_get_waveforms_error_handling(self):
+        # Some parameters should not be passed explicitly.
+        with self.assertRaises(ValueError) as e:
+            self.client.get_waveforms_bulk([[
+                "AA", "BB", "", "LHZ", obspy.UTCDateTime(2016, 1, 1),
+                obspy.UTCDateTime(2016, 1, 2)]], network="BB")
+        self.assertEqual(
+            e.exception.args[0],
+            "`network` must not be part of the optional parameters in a bulk "
+            "request.")
+
 
 
 def suite():  # pragma: no cover

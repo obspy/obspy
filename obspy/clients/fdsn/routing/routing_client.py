@@ -67,8 +67,11 @@ def _download_bulk(r):
         service = c.services["station"]
     # Keep only kwargs that are supported by this particular service.
     kwargs = {k: v for k, v in r["kwargs"].items() if k in service}
+    bulk_str = ""
+    for key, value in kwargs.items():
+        bulk_str += "%s=%s\n" % (key, str(value))
     try:
-        return fct(r["bulk_str"], **kwargs)
+        return fct(bulk_str + r["bulk_str"])
     except FDSNException:
         return None
 

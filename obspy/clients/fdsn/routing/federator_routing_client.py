@@ -194,6 +194,9 @@ class FederatorRoutingClient(BaseRoutingClient):
                     continue
                 current_key = line[len(key) + 1:line.find("/fdsnws")]
                 continue
+            # Anything before the first data center can be ignored.
+            if current_key is None:
+                continue
             split[current_key].append(line)
 
         return {k: "\n".join(v) for k, v in split.items()}

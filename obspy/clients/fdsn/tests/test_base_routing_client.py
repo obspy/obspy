@@ -142,11 +142,9 @@ class BaseRoutingClientTestCase(unittest.TestCase):
         wf_bulk = mock_instance.get_waveforms_bulk
         self.assertEqual(wf_bulk.call_count, 4)
         self.assertEqual(set(_i[0][0] for _i in wf_bulk.call_args_list),
-                         set(["1234"]))
+                         set(["test1=a\n1234"]))
         for _i in wf_bulk.call_args_list:
-            self.assertIn("test1", _i[1])
-            self.assertNotIn("test2", _i[1])
-            self.assertEqual(_i[1]["test1"], "a")
+            self.assertEqual(_i[1], {})
 
         # Once again, but raising exceptions this time.
         with mock.patch("obspy.clients.fdsn.client.Client") as p:
@@ -196,15 +194,13 @@ class BaseRoutingClientTestCase(unittest.TestCase):
         self.assertEqual(set(_i[1]["timeout"] for _i in p.call_args_list),
                          set([240]))
 
-        # Waveform download.
+        # Station download.
         wf_bulk = mock_instance.get_stations_bulk
         self.assertEqual(wf_bulk.call_count, 4)
         self.assertEqual(set(_i[0][0] for _i in wf_bulk.call_args_list),
-                         set(["1234"]))
+                         set(["test1=a\n1234"]))
         for _i in wf_bulk.call_args_list:
-            self.assertIn("test1", _i[1])
-            self.assertNotIn("test2", _i[1])
-            self.assertEqual(_i[1]["test1"], "a")
+            self.assertEqual(_i[1], {})
 
 
 def suite():  # pragma: no cover
