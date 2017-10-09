@@ -305,6 +305,15 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         # stable.
         self.assertGreaterEqual(len(st), 1)
 
+        # Same with the bulk request.
+        st2 = self.client.get_waveforms_bulk(
+            [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
+              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
+            latitude = 35.0, longitude = -120, maxradius = 0.2)
+        self.assertGreaterEqual(len(st2), 1)
+
+        self.assertEqual(st, st2)
+
     def test_get_stations_integration_test(self):
         """
         Integration test that does not mock anything but actually downloads
@@ -319,6 +328,19 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         # it is unlikely to every yield less. So this test should be fairly
         # stable.
         self.assertGreaterEqual(len(inv), 1)
+
+        # Again repeat with the bulk request.
+        inv2 = self.client.get_stations_bulk(
+            [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
+              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
+            latitude = 35.0, longitude = -120, maxradius = 0.2,
+            level="network")
+        self.assertGreaterEqual(len(inv2), 1)
+
+        # The results should be basically identical - they will still differ
+        # because times stamps and also order might change slightly.
+        # But the get_contents() method should be safe enough.
+        self.assertEqual(inv.get_contents(), inv2.get_contents())
 
 
 def suite():  # pragma: no cover

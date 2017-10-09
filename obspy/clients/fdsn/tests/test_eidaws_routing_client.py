@@ -294,9 +294,6 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
         st2 = self.client.get_waveforms_bulk(
             [["B*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
               obspy.UTCDateTime(2017, 1, 1, 0, 1)]])
-        # This yields 1 channel at the time of writing this test - I assume
-        # it is unlikely to every yield less. So this test should be fairly
-        # stable.
         self.assertGreaterEqual(len(st2), 1)
 
         # They should be identical.
@@ -322,9 +319,6 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
             [["B*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
               obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
             level="network")
-        # This yields 1 network at the time of writing this test - I assume
-        # it is unlikely to every yield less. So this test should be fairly
-        # stable.
         self.assertGreaterEqual(len(inv2), 1)
 
         # The results should be basically identical - they will still differ
