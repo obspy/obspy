@@ -21,7 +21,7 @@ from obspy.core.compatibility import urlparse
 import obspy
 
 from ...base import HTTPClient
-from ..client import Client
+from .. import client
 from ..header import FDSNException, URL_MAPPINGS, FDSNNoDataException
 from future.utils import string_types
 
@@ -37,13 +37,17 @@ def RoutingClient(routing_type, *args, **kwargs):
 
 
 def _download_bulk(r):
-    c = Client(r["endpoint"], debug=r["debug"], timeout=r["timeout"])
+    c = client.Client(r["endpoint"], debug=r["debug"], timeout=r["timeout"])
     if r["data_type"] == "waveform":
         fct = c.get_waveforms_bulk
+        service = c.services["dataselect"]
     elif r["data_type"] == "station":
         fct = c.get_stations_bulk
+        service = c.services["stations"]
+    # Keep only kwargs that are supported by this particular service.
+    kwargs = {k: v for k, v in r["kwargs"].items() if k in service}
     try:
-        return fct(r["bulk_str"])
+        return fct(r["bulk_str"], **kwargs)
     except FDSNException:
         return None
 

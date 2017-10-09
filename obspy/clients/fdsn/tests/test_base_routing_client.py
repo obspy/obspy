@@ -14,6 +14,8 @@ from future.builtins import *  # NOQA
 import collections
 import unittest
 
+import obspy
+from obspy.core.compatibility import mock
 from obspy.clients.fdsn.routing.routing_client import BaseRoutingClient
 
 
@@ -90,6 +92,40 @@ class BaseRoutingClientTestCase(unittest.TestCase):
                              exclude_providers=["IRIS", "http://example.com"])
         self.assertEqual(c._filter_requests(split), {})
 
+    def test_downloading_waveforms(self):
+        split = {
+            "https://example.com": "1234",
+            "http://example2.com": "1234",
+            "http://example3.com": "1234",
+            "http://service.iris.edu": "1234"
+        }
+        with mock.patch("obspy.clients.fdsn.client.Client") as p:
+            mock_instance = p.return_value
+            mock_instance.get_waveforms_bulk.return_value = obspy.Stream()
+            # Only accept test1 as a an argument.
+            mock_instance.services = {"dataselect": {"test1": True}}
+            c = self._cls_object(debug=False, timeout=240)
+            # test2 should not be passed on.
+            c._download_waveforms(split=split, test1="a", test2="b")
+
+        # Test initialization.
+        self.assertEqual(p.call_count, 4)
+        self.assertEqual(set(_i[0][0] for _i in p.call_args_list),
+                         set(split.keys()))
+        self.assertEqual(set(_i[1]["debug"] for _i in p.call_args_list),
+                         set([False]))
+        self.assertEqual(set(_i[1]["timeout"] for _i in p.call_args_list),
+                         set([240]))
+
+        # Waveform download.
+        wf_bulk = mock_instance.get_waveforms_bulk
+        self.assertEqual(wf_bulk.call_count, 4)
+        self.assertEqual(set(_i[0][0] for _i in wf_bulk.call_args_list),
+                         set(["1234"]))
+        for _i in wf_bulk.call_args_list:
+            self.assertIn("test1", _i[1])
+            self.assertNotIn("test2", _i[1])
+            self.assertEqual(_i[1]["test1"], "a")
 
 def suite():
     return unittest.makeSuite(BaseRoutingClientTestCase, 'test')
