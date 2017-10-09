@@ -80,12 +80,10 @@ class UtilBaseTestCase(unittest.TestCase):
         # image comparison that should raise
         # avoid uploading the staged test fail image
         # (after an estimate of 10000 uploads of it.. ;-))
-        with mock.patch.object(ImageComparison, '_upload_images',
-                               new=mock.MagicMock(return_value='')):
-            with self.assertRaises(ImageComparisonException):
-                with ImageComparison(path, img_basename,
-                                     adjust_tolerance=False) as ic:
-                    shutil.copy(img_fail, ic.name)
+        with self.assertRaises(ImageComparisonException):
+            with ImageComparison(path, img_basename, adjust_tolerance=False,
+                                 no_uploads=True) as ic:
+                shutil.copy(img_fail, ic.name)
 
         # check that temp file is deleted
         self.assertFalse(os.path.exists(ic.name))

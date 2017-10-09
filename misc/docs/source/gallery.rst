@@ -138,7 +138,7 @@ Gallery
     :target: tutorial/code_snippets/time_frequency_misfit.html#plot-the-time-frequency-misfits
     :alt: Time Frequency Misfit
 
-.. gallery-plot:: tutorial/code_snippets/travel_time_plot.py
+.. gallery-plot:: tutorial/code_snippets/plot_travel_times.py
     :target: tutorial/code_snippets/travel_time.html#travel-time-plot
     :alt: Travel Time Plot
 
@@ -150,8 +150,12 @@ Gallery
     :target: tutorial/code_snippets/travel_time.html#spherical-ray-paths
     :alt: Spherical Ray Paths
 
+.. gallery-plot:: tutorial/code_snippets/plot_ray_paths.py
+    :target: tutorial/code_snippets/travel_time.html#ray-path-plot
+    :alt: Ray Path Plot
+
 .. gallery-plot:: tutorial/code_snippets/travel_time_body_waves.py
-    :target: tutorial/code_snippets/travel_time.html#body-wave-ray-paths
+    :target: tutorial/code_snippets/travel_time.html#travel-time-body-waves
     :alt: Body Wave Ray Paths
 
 .. gallery-plot:: tutorial/code_snippets/xcorr_pick_correction.py
