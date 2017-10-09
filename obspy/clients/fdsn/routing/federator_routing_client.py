@@ -24,7 +24,7 @@ from .routing_client import (
 
 
 class FederatorRoutingClient(BaseRoutingClient):
-    def __init__(self, url="http://www.orfeus-eu.org/eidaws/routing/1",
+    def __init__(self, url="https://service.iris.edu/irisws/fedcatalog/1",
                  include_providers=None, exclude_providers=None,
                  debug=False, timeout=120):
         """
@@ -73,10 +73,8 @@ class FederatorRoutingClient(BaseRoutingClient):
                 del kwargs[_i]
             else:
                 bulk.append("*")
-        bulk.append(starttime, endtime)
-
-        return self.get_waveforms_bulk(bulk, **kwargs)
-
+        bulk.extend([starttime, endtime])
+        return self.get_waveforms_bulk([bulk], **kwargs)
 
     @_assert_attach_response_not_in_kwargs
     @_assert_filename_not_in_kwargs
@@ -91,7 +89,6 @@ class FederatorRoutingClient(BaseRoutingClient):
         The ``filename`` and ``attach_response`` parameters of the single
         provider FDSN client are not supported.
         """
-
         bulk_params = ["network", "station", "location", "channel",
                        "starttime", "endtime"]
         for _i in bulk_params:
@@ -102,10 +99,9 @@ class FederatorRoutingClient(BaseRoutingClient):
         params = {k: str(kwargs[k])
                   for k in self.kwargs_of_interest if k in kwargs}
         params["format"] = "request"
-        params["targetservice"] = "dataselect"
 
         bulk_str = get_bulk_string(bulk, params)
-        r = self._download(self._url + "/query", params=params)
+        r = self._download(self._url + "/query", data=bulk_str)
         split = self.split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content,
             service="dataselect")

@@ -31,9 +31,12 @@ from future.utils import string_types
 
 
 def RoutingClient(routing_type, *args, **kwargs):
-    from .eidaws_routing_client import EIDAWSRoutingClient
     if routing_type.lower() == "eidaws":
+        from .eidaws_routing_client import EIDAWSRoutingClient
         return EIDAWSRoutingClient(*args, **kwargs)
+    if routing_type.lower() == "federator":
+        from .federator_routing_client import FederatorRoutingClient
+        return FederatorRoutingClient(*args, **kwargs)
     else:
         raise NotImplementedError(
             "Routing type '%s' is not implemented. Available types: "

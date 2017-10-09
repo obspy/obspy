@@ -21,6 +21,8 @@ from obspy.clients.fdsn.routing.routing_client import (
     BaseRoutingClient, RoutingClient)
 from obspy.clients.fdsn.routing.eidaws_routing_client import (
     EIDAWSRoutingClient)
+from obspy.clients.fdsn.routing.federator_routing_client import (
+    FederatorRoutingClient)
 
 
 _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
@@ -47,6 +49,9 @@ class BaseRoutingClientTestCase(unittest.TestCase):
     def test_router_intialization_helper_function(self):
         c = RoutingClient("EIDAWS")
         self.assertIsInstance(c, EIDAWSRoutingClient)
+
+        c = RoutingClient("FEDERATOR")
+        self.assertIsInstance(c, FederatorRoutingClient)
 
         with self.assertRaises(NotImplementedError) as e:
             RoutingClient("random")
