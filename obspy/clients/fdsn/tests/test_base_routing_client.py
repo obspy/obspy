@@ -182,7 +182,7 @@ class BaseRoutingClientTestCase(unittest.TestCase):
             mock_instance.get_stations_bulk.return_value = \
                 obspy.Inventory([], "")
             # Only accept test1 as a an argument.
-            mock_instance.services = {"stations": {"test1": True}}
+            mock_instance.services = {"station": {"test1": True}}
             c = self._cls_object(debug=False, timeout=240)
             # test2 should not be passed on.
             c._download_stations(split=split, test1="a", test2="b")

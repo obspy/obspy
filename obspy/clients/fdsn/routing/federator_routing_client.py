@@ -107,6 +107,59 @@ class FederatorRoutingClient(BaseRoutingClient):
             service="dataselect")
         return self._download_waveforms(split, **kwargs)
 
+    @_assert_filename_not_in_kwargs
+    def get_stations(self, **kwargs):
+        """
+        Get stations from multiple data centers.
+
+        It will pass on most parameters to the federated routing service.
+        They will also be passed on to the individual FDSNWS implementations
+        if a service supports them.
+
+        The ``filename`` parameter of the single provider FDSN client is not
+        supported.
+        """
+        # Just pass these to the bulk request.
+        bulk = []
+        for _i in ["network", "station", "location", "channel", "starttime",
+                   "endtime"]:
+            if _i in kwargs:
+                bulk.append(kwargs[_i])
+                del kwargs[_i]
+            else:
+                bulk.append("*")
+        return self.get_stations_bulk([bulk], **kwargs)
+
+    @_assert_filename_not_in_kwargs
+    def get_stations_bulk(self, bulk, **kwargs):
+        """
+        Get stations from multiple data centers.
+
+        It will pass on most parameters to the federated routing service.
+        They will also be passed on to the individual FDSNWS implementations
+        if a service supports them.
+
+        The ``filename`` parameter of the single provider FDSN client is not
+        supported.
+        """
+        bulk_params = ["network", "station", "location", "channel",
+                       "starttime", "endtime"]
+        for _i in bulk_params:
+            if _i in kwargs:
+                raise ValueError("`%s` must not be part of the optional "
+                                 "parameters in a bulk request." % _i)
+
+        params = {k: str(kwargs[k])
+                  for k in self.kwargs_of_interest if k in kwargs}
+        params["format"] = "request"
+
+        bulk_str = get_bulk_string(bulk, params)
+        r = self._download(self._url + "/query", data=bulk_str)
+        split = self.split_routing_response(
+            r.content.decode() if hasattr(r.content, "decode") else r.content,
+            service="station")
+        return self._download_stations(split, **kwargs)
+
     def get_service_version(self):
         r = self._download(self._url + "/version")
         return r.content.decode() if \

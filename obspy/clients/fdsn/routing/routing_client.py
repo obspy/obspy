@@ -64,7 +64,7 @@ def _download_bulk(r):
         service = c.services["dataselect"]
     elif r["data_type"] == "station":
         fct = c.get_stations_bulk
-        service = c.services["stations"]
+        service = c.services["station"]
     # Keep only kwargs that are supported by this particular service.
     kwargs = {k: v for k, v in r["kwargs"].items() if k in service}
     try:
