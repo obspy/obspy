@@ -16,7 +16,10 @@ import unittest
 
 import obspy
 from obspy.core.compatibility import mock
-from obspy.clients.fdsn.routing.routing_client import BaseRoutingClient
+from obspy.clients.fdsn.routing.routing_client import (
+    BaseRoutingClient, RoutingClient)
+from obspy.clients.fdsn.routing.eidaws_routing_client import (
+    EIDAWSRoutingClient)
 
 
 _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
@@ -39,6 +42,17 @@ class BaseRoutingClientTestCase(unittest.TestCase):
         self._cls_object = _DummyBaseRoutingClient
         self._cls = ("obspy.clients.fdsn.routing.routing_client."
                      "BaseRoutingClient")
+
+    def test_router_intialization_helper_function(self):
+        c = RoutingClient("EIDAWS")
+        self.assertIsInstance(c, EIDAWSRoutingClient)
+
+        with self.assertRaises(NotImplementedError) as e:
+            RoutingClient("random")
+        self.assertEqual(
+            e.exception.args[0],
+            "Routing type 'random' is not implemented. Available types: "
+            "EIDAWS")
 
     def test_expansion_of_include_and_exclude_providers(self):
         c = self._cls_object(

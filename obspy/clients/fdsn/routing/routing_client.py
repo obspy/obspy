@@ -33,7 +33,7 @@ def RoutingClient(routing_type, *args, **kwargs):
     else:
         raise NotImplementedError(
             "Routing type '%s' is not implemented. Available types: "
-            "EIDAWS")
+            "EIDAWS" % routing_type)
 
 
 def _download_bulk(r):
