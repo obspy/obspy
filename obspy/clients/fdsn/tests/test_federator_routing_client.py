@@ -22,7 +22,8 @@ from obspy.clients.fdsn.routing.federator_routing_client import \
 _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
 
 
-class EIDAWSRoutingClientTestCase(unittest.TestCase):
+class FederatorRoutingClientTestCase(unittest.TestCase):
+    maxDiff = None
     def setUp(self):
         self.client = FederatorRoutingClient()
         self._cls = ("obspy.clients.fdsn.routing.federator_routing_client."
@@ -35,8 +36,51 @@ class EIDAWSRoutingClientTestCase(unittest.TestCase):
             LooseVersion(self.client.get_service_version()),
             LooseVersion("1.1.1"))
 
+
+    def test_response_splitting(self):
+        data = """
+
+DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
+DATASELECTSERVICE=http://geofon.gfz-potsdam1.de/fdsnws/dataselect/1/
+STATIONSERVICE=http://geofon.gfz-potsdam2.de/fdsnws/station/1/
+AF CER -- BHE 2007-03-15T00:47:00 2599-12-31T23:59:59
+AF CER -- BHN 2007-03-15T00:47:00 2599-12-31T23:59:59
+
+
+DATACENTER=INGV,http://www.ingv.it
+DATASELECTSERVICE=http://webservices1.rm.ingv.it/fdsnws/dataselect/1/
+STATIONSERVICE=http://webservices2.rm.ingv.it/fdsnws/station/1/
+EVENTSERVICE=http://webservices.rm.ingv.it/fdsnws/event/1/
+AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00
+        """
+        self.assertEqual(
+            FederatorRoutingClient.split_routing_response(data, "dataselect"),
+            {"http://geofon.gfz-potsdam1.de": (
+                "AF CER -- BHE 2007-03-15T00:47:00 2599-12-31T23:59:59\n"
+                "AF CER -- BHN 2007-03-15T00:47:00 2599-12-31T23:59:59"),
+             "http://webservices1.rm.ingv.it": (
+                "AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00"
+             )
+            })
+        self.assertEqual(
+            FederatorRoutingClient.split_routing_response(data, "station"),
+            {"http://geofon.gfz-potsdam2.de": (
+                "AF CER -- BHE 2007-03-15T00:47:00 2599-12-31T23:59:59\n"
+                "AF CER -- BHN 2007-03-15T00:47:00 2599-12-31T23:59:59"),
+                "http://webservices2.rm.ingv.it": (
+                    "AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00"
+                )
+            })
+
+        # Error handling.
+        with self.assertRaises(ValueError) as e:
+            FederatorRoutingClient.split_routing_response(data, "random")
+        self.assertEqual(e.exception.args[0],
+                         "Service must be 'dataselect' or 'station'.")
+
+
 def suite():  # pragma: no cover
-    return unittest.makeSuite(EIDAWSRoutingClientTestCase, 'test')
+    return unittest.makeSuite(FederatorRoutingClientTestCase, 'test')
 
 
 if __name__ == '__main__':  # pragma: no cover
