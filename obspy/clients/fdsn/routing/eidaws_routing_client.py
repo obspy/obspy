@@ -60,6 +60,11 @@ class EIDAWSRoutingClient(BaseRoutingClient):
 
         The ``filename`` and ``attach_response`` parameters of the single
         provider FDSN client are not supported.
+
+        This can route on a number of different parameters, please see the
+        web site of the `EIDAWS Routing Service
+        <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_
+        for details.
         """
         # This just calls the bulk downloader to only implement the logic once.
         return self.get_waveforms_bulk(
@@ -80,6 +85,11 @@ class EIDAWSRoutingClient(BaseRoutingClient):
 
         The ``filename`` and ``attach_response`` parameters of the single
         provider FDSN client are not supported.
+
+        This can route on a number of different parameters, please see the
+        web site of the `EIDAWS Routing Service
+        <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_
+        for details.
         """
         # XXX: Really confusing but the waveform version of the service does
         # not really ever return something when called with POST. Not sure
@@ -111,6 +121,11 @@ class EIDAWSRoutingClient(BaseRoutingClient):
 
         The ``filename`` parameter of the single provider FDSN client is not
         supported for practical reasons.
+
+        This can route on a number of different parameters, please see the
+        web site of the `EIDAWS Routing Service
+        <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_
+        for details.
         """
         # This unfortunately cannot just be passed to the bulk service
         # as NSLC and the times might be empty and the bulk service does not
@@ -146,6 +161,11 @@ class EIDAWSRoutingClient(BaseRoutingClient):
 
         The ``filename`` parameter of the single provider FDSN client is not
         supported for practical reasons.
+
+        This can route on a number of different parameters, please see the
+        web site of the `EIDAWS Routing Service
+        <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_
+        for details.
         """
         arguments = collections.OrderedDict()
         arguments["service"] = "station"

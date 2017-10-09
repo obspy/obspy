@@ -65,6 +65,11 @@ class FederatorRoutingClient(BaseRoutingClient):
 
         The ``filename`` and ``attach_response`` parameters of the single
         provider FDSN client are not supported.
+
+        This can route on a number of different parameters, please see the
+        web site of the
+        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
+        for details.
         """
         # Just pass these to the bulk request.
         bulk = []
@@ -89,6 +94,11 @@ class FederatorRoutingClient(BaseRoutingClient):
 
         The ``filename`` and ``attach_response`` parameters of the single
         provider FDSN client are not supported.
+
+        This can route on a number of different parameters, please see the
+        web site of the
+        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
+        for details.
         """
         bulk_params = ["network", "station", "location", "channel",
                        "starttime", "endtime"]
@@ -119,6 +129,11 @@ class FederatorRoutingClient(BaseRoutingClient):
 
         The ``filename`` parameter of the single provider FDSN client is not
         supported.
+
+        This can route on a number of different parameters, please see the
+        web site of the
+        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
+        for details.
         """
         # Just pass these to the bulk request.
         bulk = []
@@ -142,6 +157,11 @@ class FederatorRoutingClient(BaseRoutingClient):
 
         The ``filename`` parameter of the single provider FDSN client is not
         supported.
+
+        This can route on a number of different parameters, please see the
+        web site of the
+        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
+        for details.
         """
         bulk_params = ["network", "station", "location", "channel",
                        "starttime", "endtime"]
