@@ -24,7 +24,7 @@ from .routing_client import (
 
 
 class FederatorRoutingClient(BaseRoutingClient):
-    def __init__(self, url="https://service.iris.edu/irisws/fedcatalog/1",
+    def __init__(self, url="http://service.iris.edu/irisws/fedcatalog/1",
                  include_providers=None, exclude_providers=None,
                  debug=False, timeout=120):
         """

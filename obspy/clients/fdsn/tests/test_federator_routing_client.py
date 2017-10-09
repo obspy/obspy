@@ -124,6 +124,56 @@ AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00
                           "minimumlength": 2, "latitude": 1.0,
                           "longitude": 2.0})
 
+    def test_get_waveforms_bulk(self):
+        # Some mock routing response.
+        content = """
+DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
+DATASELECTSERVICE=http://geofon.gfz-potsdam.de/fdsnws/dataselect/1/
+STATIONSERVICE=http://geofon.gfz-potsdam.de/fdsnws/station/1/
+AF CER -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
+AF CVNA -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
+
+DATACENTER=IRISDMC,http://ds.iris.edu
+DATASELECTSERVICE=http://service.iris.edu/fdsnws/dataselect/1/
+STATIONSERVICE=http://service.iris.edu/fdsnws/station/1/
+EVENTSERVICE=http://service.iris.edu/fdsnws/event/1/
+SACPZSERVICE=http://service.iris.edu/irisws/sacpz/1/
+RESPSERVICE=http://service.iris.edu/irisws/resp/1/
+AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
+AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
+        """
+        if hasattr(content, "encode"):
+            data = content.encode()
+
+        with mock.patch(self._cls + "._download") as p1, \
+                mock.patch(self._cls + "._download_waveforms") as p2:
+            p1.return_value = _DummyResponse(content=content)
+            p2.return_value = "1234"
+
+            st = self.client.get_waveforms_bulk(
+                [["A*", "C*", "", "LHZ", obspy.UTCDateTime(2017, 1, 1),
+                  obspy.UTCDateTime(2017, 1, 2)]],
+                longestonly=True, minimumlength=2)
+        self.assertEqual(st, "1234")
+
+        self.assertEqual(p1.call_count, 1)
+        self.assertEqual(p1.call_args[0][0],
+                         "http://service.iris.edu/irisws/fedcatalog/1/query")
+        self.assertEqual(p1.call_args[1]["data"], (
+            b"format=request\n"
+            b"A* C* -- LHZ 2017-01-01T00:00:00.000000 "
+            b"2017-01-02T00:00:00.000000"))
+
+        self.assertEqual(p2.call_args[0][0], {
+            "http://geofon.gfz-potsdam.de": (
+                "AF CER -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00\n"
+                "AF CVNA -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00"),
+            "http://service.iris.edu": (
+                "AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00\n"
+                "AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00")})
+        self.assertEqual(p2.call_args[1],
+                         {"longestonly": True, "minimumlength": 2})
+
 
 def suite():  # pragma: no cover
     return unittest.makeSuite(FederatorRoutingClientTestCase, 'test')
