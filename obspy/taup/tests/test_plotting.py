@@ -198,8 +198,8 @@ class TauPyPlottingTestCase(unittest.TestCase):
         tol = {}
         # adjust tolerance on Travis minimum dependency build, tolerance is set
         # so high for that build that image comparison can virtually never
-        # fail..
-        if MATPLOTLIB_VERSION < [1, 2]:
+        # fail.. (also adjust for matplotlib 1.2.0 on centos)
+        if MATPLOTLIB_VERSION <= [1, 2]:
             tol['reltol'] = 5
             tol['adjust_tolerance'] = False
         with self.assertRaises(ImageComparisonException):
