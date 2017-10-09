@@ -21,7 +21,7 @@ import obspy
 
 from ...base import HTTPClient
 from ..client import Client
-from ..header import FDSNException
+from ..header import FDSNException, URL_MAPPINGS
 from future.utils import string_types, with_metaclass
 
 
@@ -57,20 +57,34 @@ class BaseRoutingClient(HTTPClient):
         :type routing_type: str
         :param routing_type: str
         :type exclude_providers: str or list of str
-        :param exclude_providers: Get no data from these providers
+        :param exclude_providers: Get no data from these providers. Can be
+            the full HTTP address or one of the shortcuts ObsPy knows about.
         :type include_providers: str or list of str
-        :param include_providers: Get data only from these providers
+        :param include_providers: Get data only from these providers. Can be
+            the full HTTP address of one of the shortcuts ObsPy knows about.
         """
         HTTPClient.__init__(self, debug=debug, timeout=timeout)
-        if isinstance(include_providers, string_types):
-            self.include_providers = (include_providers,)
-        else:
-            self.include_providers = include_providers
+        self.include_providers = self._expand_providers(include_providers)
+        self.exclude_providers = self._expand_providers(exclude_providers)
 
-        if isinstance(exclude_providers, string_types):
-            self.exclude_providers = (exclude_providers,)
-        else:
-            self.exclude_providers = exclude_providers
+    def _expand_providers(self, providers):
+        if providers is None:
+            providers = []
+        elif isinstance(providers, string_types):
+            providers = [providers]
+        return [URL_MAPPINGS[_i] if _i in URL_MAPPINGS else _i
+                for _i in providers]
+
+    def _filter_requests(self, split):
+        """
+        Filter requests based on including and excluding providers.
+
+        :type split: dict
+        :param split: A dictionary containing the desired routing.
+        """
+        filtered_split = {}
+        for key, value in split.items():
+            pass
 
     def _download_waveforms(self, split, **kwargs):
         return self._download_parallel(split, data_type="waveform", **kwargs)
