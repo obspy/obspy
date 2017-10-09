@@ -230,6 +230,47 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
             "`network` must not be part of the optional parameters in a bulk "
             "request.")
 
+    def test_get_stations(self):
+        """
+        This just dispatches to the get_waveforms_bulk() method - so no need
+        to also test it explicitly.
+        """
+        with mock.patch(self._cls + ".get_stations_bulk") as p:
+            p.return_value = "1234"
+            st = self.client.get_stations(
+                network="XX", station="XXXXX", location="XX",
+                channel="XXX", starttime=obspy.UTCDateTime(2017, 1, 1),
+                endtime=obspy.UTCDateTime(2017, 1, 2),
+                latitude=1.0, longitude=2.0,
+                maximumradius=1.0, level="network")
+        self.assertEqual(st, "1234")
+        self.assertEqual(p.call_count, 1)
+        self.assertEqual(
+            p.call_args[0][0][0],
+            ["XX", "XXXXX", "XX", "XXX", obspy.UTCDateTime(2017, 1, 1),
+             obspy.UTCDateTime(2017, 1, 2)])
+        # SNCLs + times should be filtered out.
+        self.assertEqual(p.call_args[1],
+                         {"latitude": 1.0, "longitude": 2.0,
+                          "maximumradius": 1.0, "level": "network"})
+
+        # Don't pass in the SNCLs.
+        with mock.patch(self._cls + ".get_stations_bulk") as p:
+            p.return_value = "1234"
+            st = self.client.get_stations(
+                starttime=obspy.UTCDateTime(2017, 1, 1),
+                endtime=obspy.UTCDateTime(2017, 1, 2),
+                latitude=1.0, longitude=2.0,
+                maximumradius=1.0, level="network")
+        self.assertEqual(st, "1234")
+        self.assertEqual(p.call_count, 1)
+        self.assertEqual(
+            p.call_args[0][0][0],
+            ["*", "*", "*", "*", obspy.UTCDateTime(2017, 1, 1),
+             obspy.UTCDateTime(2017, 1, 2)])
+        self.assertEqual(p.call_args[1],
+                         {"latitude": 1.0, "longitude": 2.0,
+                          "maximumradius": 1.0, "level": "network"})
 
 
 def suite():  # pragma: no cover
