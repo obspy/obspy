@@ -17,6 +17,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import doctest
     doctest.testmod(exclude_empty=True)
