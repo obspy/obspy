@@ -19,7 +19,7 @@ import io
 import decorator
 
 from ..client import get_bulk_string, raise_on_error
-from .routing_client import _RoutingClient
+from .routing_client import BaseRoutingClient
 
 
 @decorator.decorator
@@ -35,7 +35,7 @@ def _assert_attach_response_not_in_kwargs(f, *args, **kwargs):
     return f(*args, **kwargs)
 
 
-class EIDAWSRoutingClient(_RoutingClient):
+class EIDAWSRoutingClient(BaseRoutingClient):
     """
     Routing client for the EIDAWS routing service.
 
@@ -48,15 +48,15 @@ class EIDAWSRoutingClient(_RoutingClient):
         Initialize an EIDAWS router client.
 
         All parameters except ``url`` are passed on to the
-        :class:`~obspy.clients.fdsn.routing.routing_clieng._RoutingClient`
+        :class:`~obspy.clients.fdsn.routing.routing_clieng.BaseRoutingClient`
         parent class
 
         :param url: The URL of the routing service.
         :type url: str
         """
-        _RoutingClient.__init__(self, debug=debug, timeout=timeout,
-                                include_providers=include_providers,
-                                exclude_providers=exclude_providers)
+        BaseRoutingClient.__init__(self, debug=debug, timeout=timeout,
+                                   include_providers=include_providers,
+                                   exclude_providers=exclude_providers)
         self._url = url
 
     @_assert_filename_not_in_kwargs

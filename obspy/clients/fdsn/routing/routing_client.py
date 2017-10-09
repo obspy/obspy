@@ -50,7 +50,7 @@ def _download_bulk(r):
 # Does not inherit from the FDSN client as that would be fairly hacky as
 # some methods just make no sense for the routing client to have (e.g.
 # get_events() but also others).
-class _RoutingClient(HTTPClient):
+class BaseRoutingClient(HTTPClient):
     def __init__(self, debug=False, timeout=120, include_providers=None,
                  exclude_providers=None):
         """
