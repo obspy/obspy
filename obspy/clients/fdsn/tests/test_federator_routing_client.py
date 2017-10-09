@@ -175,50 +175,6 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         self.assertEqual(p2.call_args[1],
                          {"longestonly": True, "minimumlength": 2})
 
-    def test_get_waveforms(self):
-        """
-        This just dispatches to the get_waveforms_bulk() method - so no need
-        to also test it explicitly.
-        """
-        with mock.patch(self._cls + ".get_waveforms_bulk") as p:
-            p.return_value = "1234"
-            st = self.client.get_waveforms(
-                network="XX", station="XXXXX", location="XX",
-                channel="XXX", starttime=obspy.UTCDateTime(2017, 1, 1),
-                endtime=obspy.UTCDateTime(2017, 1, 2),
-                latitude=1.0, longitude=2.0,
-                longestonly=True, minimumlength=2)
-        self.assertEqual(st, "1234")
-        self.assertEqual(p.call_count, 1)
-        self.assertEqual(
-            p.call_args[0][0][0],
-            ["XX", "XXXXX", "XX", "XXX", obspy.UTCDateTime(2017, 1, 1),
-             obspy.UTCDateTime(2017, 1, 2)])
-        # SNCLs + times should be filtered out.
-        self.assertEqual(p.call_args[1],
-                         {"longestonly": True,
-                          "minimumlength": 2, "latitude": 1.0,
-                          "longitude": 2.0})
-
-        # Don't pass in the SNCLs.
-        with mock.patch(self._cls + ".get_waveforms_bulk") as p:
-            p.return_value = "1234"
-            st = self.client.get_waveforms(
-                starttime=obspy.UTCDateTime(2017, 1, 1),
-                endtime=obspy.UTCDateTime(2017, 1, 2),
-                latitude=1.0, longitude=2.0,
-                longestonly=True, minimumlength=2)
-        self.assertEqual(st, "1234")
-        self.assertEqual(p.call_count, 1)
-        self.assertEqual(
-            p.call_args[0][0][0],
-            ["*", "*", "*", "*", obspy.UTCDateTime(2017, 1, 1),
-             obspy.UTCDateTime(2017, 1, 2)])
-        self.assertEqual(p.call_args[1],
-                         {"longestonly": True,
-                          "minimumlength": 2, "latitude": 1.0,
-                          "longitude": 2.0})
-
     def test_get_waveforms_error_handling(self):
         # Some parameters should not be passed explicitly.
         with self.assertRaises(ValueError) as e:
@@ -271,6 +227,68 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         self.assertEqual(p.call_args[1],
                          {"latitude": 1.0, "longitude": 2.0,
                           "maximumradius": 1.0, "level": "network"})
+
+    def test_get_stations_bulk(self):
+        # Some mock routing response.
+        content = """
+DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
+DATASELECTSERVICE=http://geofon.gfz-potsdam.de/fdsnws/dataselect/1/
+STATIONSERVICE=http://geofon.gfz-potsdam.de/fdsnws/station/1/
+AF CER -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
+AF CVNA -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
+
+DATACENTER=IRISDMC,http://ds.iris.edu
+DATASELECTSERVICE=http://service.iris.edu/fdsnws/dataselect/1/
+STATIONSERVICE=http://service.iris.edu/fdsnws/station/1/
+EVENTSERVICE=http://service.iris.edu/fdsnws/event/1/
+SACPZSERVICE=http://service.iris.edu/irisws/sacpz/1/
+RESPSERVICE=http://service.iris.edu/irisws/resp/1/
+AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
+AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
+        """
+        if hasattr(content, "encode"):
+            data = content.encode()
+
+        with mock.patch(self._cls + "._download") as p1, \
+                mock.patch(self._cls + "._download_stations") as p2:
+            p1.return_value = _DummyResponse(content=content)
+            p2.return_value = "1234"
+
+            st = self.client.get_stations_bulk(
+                [["A*", "C*", "", "LHZ", obspy.UTCDateTime(2017, 1, 1),
+                  obspy.UTCDateTime(2017, 1, 2)]],
+                level="network")
+        self.assertEqual(st, "1234")
+
+        self.assertEqual(p1.call_count, 1)
+        self.assertEqual(p1.call_args[0][0],
+                         "http://service.iris.edu/irisws/fedcatalog/1/query")
+        self.assertEqual(p1.call_args[1]["data"], (
+            b"level=network\n"
+            b"format=request\n"
+            b"A* C* -- LHZ 2017-01-01T00:00:00.000000 "
+            b"2017-01-02T00:00:00.000000"))
+
+        self.assertEqual(p2.call_args[0][0], {
+            "http://geofon.gfz-potsdam.de": (
+                "AF CER -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00\n"
+                "AF CVNA -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00"),
+            "http://service.iris.edu": (
+                "AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00\n"
+                "AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00")})
+        self.assertEqual(p2.call_args[1],
+                         {"level": "network"})
+
+    def test_get_stations_error_handling(self):
+        # Some parameters should not be passed explicitly.
+        with self.assertRaises(ValueError) as e:
+            self.client.get_stations_bulk([[
+                "AA", "BB", "", "LHZ", obspy.UTCDateTime(2016, 1, 1),
+                obspy.UTCDateTime(2016, 1, 2)]], network="BB")
+        self.assertEqual(
+            e.exception.args[0],
+            "`network` must not be part of the optional parameters in a bulk "
+            "request.")
 
 
 def suite():  # pragma: no cover
