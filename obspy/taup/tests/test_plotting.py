@@ -14,6 +14,7 @@ import warnings
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.taup import TauPyModel, plot_travel_times
@@ -187,10 +188,17 @@ class TauPyPlottingTestCase(unittest.TestCase):
             _test_plot_all(plot_all=False)
             plt.savefig(ic.name)
         # same test should fail if plot_all=True
+        tol = {}
+        # adjust tolerance on Travis minimum dependency build, tolerance is set
+        # so high for that build that image comparison can virtually never
+        # fail..
+        if MATPLOTLIB_VERSION < [1, 2]:
+            tol['reltol'] = 5
+            tol['adjust_tolerance'] = False
         with self.assertRaises(ImageComparisonException):
             with ImageComparison(
                     self.image_dir, "traveltimes_plot_all_False.png",
-                    no_uploads=True) as ic:
+                    no_uploads=True, **tol) as ic:
                 _test_plot_all(plot_all=True)
                 plt.savefig(ic.name)
 
