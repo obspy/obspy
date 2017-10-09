@@ -15,6 +15,8 @@ import collections
 from distutils.version import LooseVersion
 import unittest
 
+import obspy
+from obspy.core.compatibility import mock
 from obspy.clients.fdsn.routing.federator_routing_client import \
     FederatorRoutingClient
 
@@ -77,6 +79,30 @@ AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00
             FederatorRoutingClient.split_routing_response(data, "random")
         self.assertEqual(e.exception.args[0],
                          "Service must be 'dataselect' or 'station'.")
+
+    def test_get_waveforms(self):
+        """
+        This just dispatches to the get_waveforms_bulk() method - so no need
+        to also test it explicitly.
+        """
+        with mock.patch(self._cls + ".get_waveforms_bulk") as p:
+            p.return_value = "1234"
+            st = self.client.get_waveforms(
+                network="XX", station="XXXXX", location="XX",
+                channel="XXX", starttime=obspy.UTCDateTime(2017, 1, 1),
+                endtime=obspy.UTCDateTime(2017, 1, 2),
+                latitude=1.0, longitude=2.0,
+                longestonly=True, minimumlength=2)
+        self.assertEqual(st, "1234")
+        self.assertEqual(p.call_count, 1)
+        self.assertEqual(
+            p.call_args[0][0][0],
+            ["XX", "XXXXX", "XX", "XXX", obspy.UTCDateTime(2017, 1, 1),
+             obspy.UTCDateTime(2017, 1, 2)])
+        self.assertEqual(p.call_args[1],
+                         {"longestonly": True,
+                          "minimumlength": 2, "latitude": 1.0,
+                          "longitude": 2.0})
 
 
 def suite():  # pragma: no cover
