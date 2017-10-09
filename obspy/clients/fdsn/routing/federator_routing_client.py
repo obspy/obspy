@@ -50,7 +50,8 @@ class FederatorRoutingClient(BaseRoutingClient):
             "includeoverlaps", "level", "network", "station", "channel",
             "location", "starttime", "endtime", "startbefore", "endbefore",
             "startafter", "endafter", "minlatitude", "maxlatitude",
-            "minlongitude", "maxlongitude"]
+            "minlongitude", "maxlongitude", "latitude", "longitude",
+            "minradius", "maxradius"]
 
     @_assert_attach_response_not_in_kwargs
     @_assert_filename_not_in_kwargs
