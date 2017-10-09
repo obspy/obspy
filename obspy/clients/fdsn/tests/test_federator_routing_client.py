@@ -25,7 +25,6 @@ _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
 
 
 class FederatorRoutingClientTestCase(unittest.TestCase):
-    maxDiff = None
     def setUp(self):
         self.client = FederatorRoutingClient()
         self._cls = ("obspy.clients.fdsn.routing.federator_routing_client."
@@ -37,7 +36,6 @@ class FederatorRoutingClientTestCase(unittest.TestCase):
         self.assertGreaterEqual(
             LooseVersion(self.client.get_service_version()),
             LooseVersion("1.1.1"))
-
 
     def test_response_splitting(self):
         data = """
@@ -63,8 +61,7 @@ AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00
                 "AF CER -- BHN 2007-03-15T00:47:00 2599-12-31T23:59:59"),
              "http://webservices1.rm.ingv.it": (
                 "AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00"
-             )
-            })
+             )})
         self.assertEqual(
             FederatorRoutingClient.split_routing_response(data, "station"),
             {"http://geofon.gfz-potsdam2.de": (
@@ -72,8 +69,7 @@ AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00
                 "AF CER -- BHN 2007-03-15T00:47:00 2599-12-31T23:59:59"),
                 "http://webservices2.rm.ingv.it": (
                     "AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00"
-                )
-            })
+                )})
 
         # Error handling.
         with self.assertRaises(ValueError) as e:
@@ -144,7 +140,7 @@ AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         """
         if hasattr(content, "encode"):
-            data = content.encode()
+            content = content.encode()
 
         with mock.patch(self._cls + "._download") as p1, \
                 mock.patch(self._cls + "._download_waveforms") as p2:
@@ -247,7 +243,7 @@ AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         """
         if hasattr(content, "encode"):
-            data = content.encode()
+            content = content.encode()
 
         with mock.patch(self._cls + "._download") as p1, \
                 mock.patch(self._cls + "._download_stations") as p2:
@@ -298,8 +294,8 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         st = self.client.get_waveforms(
             starttime=obspy.UTCDateTime(2017, 1, 1),
             endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
-            latitude = 35.0, longitude = -120, maxradius = 0.2,
-            channel = "LHZ")
+            latitude=35.0, longitude=-120, maxradius=0.2,
+            channel="LHZ")
         # This yields 1 channel at the time of writing this test - I assume
         # it is unlikely to every yield less. So this test should be fairly
         # stable.
@@ -309,7 +305,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         st2 = self.client.get_waveforms_bulk(
             [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
               obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
-            latitude = 35.0, longitude = -120, maxradius = 0.2)
+            latitude=35.0, longitude=-120, maxradius=0.2)
         self.assertGreaterEqual(len(st2), 1)
 
         self.assertEqual(st, st2)
@@ -322,8 +318,8 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         inv = self.client.get_stations(
             starttime=obspy.UTCDateTime(2017, 1, 1),
             endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
-            latitude = 35.0, longitude = -120, maxradius = 0.2,
-            channel = "LHZ", level="network")
+            latitude=35.0, longitude=-120, maxradius=0.2,
+            channel="LHZ", level="network")
         # This yields 1 network at the time of writing this test - I assume
         # it is unlikely to every yield less. So this test should be fairly
         # stable.
@@ -333,7 +329,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         inv2 = self.client.get_stations_bulk(
             [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
               obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
-            latitude = 35.0, longitude = -120, maxradius = 0.2,
+            latitude=35.0, longitude=-120, maxradius=0.2,
             level="network")
         self.assertGreaterEqual(len(inv2), 1)
 

@@ -164,7 +164,7 @@ http://example2.com/fdsnws/station/1/query
 AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
 """
         if hasattr(content, "encode"):
-            data = content.encode()
+            content = content.encode()
 
         with mock.patch(self._cls + "._download") as p1, \
                 mock.patch(self._cls + "._download_waveforms") as p2:
@@ -203,7 +203,7 @@ http://example2.com/fdsnws/station/1/query
 AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
 """
         if hasattr(content, "encode"):
-            data = content.encode()
+            content = content.encode()
 
         with mock.patch(self._cls + "._download") as p1, \
                 mock.patch(self._cls + "._download_stations") as p2:
@@ -244,7 +244,7 @@ http://example2.com/fdsnws/station/1/query
 AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
 """
         if hasattr(content, "encode"):
-            data = content.encode()
+            content = content.encode()
 
         with mock.patch(self._cls + "._download") as p1, \
                 mock.patch(self._cls + "._download_stations") as p2:

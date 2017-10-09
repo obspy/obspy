@@ -35,7 +35,8 @@ class BaseRoutingClientTestCase(unittest.TestCase):
         class _DummyBaseRoutingClient(BaseRoutingClient):  # pragma: no cover
             def get_service_version(self):
                 """
-                Return a semantic version number of the remote service as a string.
+                Return a semantic version number of the remote service as a
+                string.
                 """
                 return "0.0.0"
 
