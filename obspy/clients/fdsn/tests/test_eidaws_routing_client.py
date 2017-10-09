@@ -230,9 +230,9 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
                 "AA B1 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00",
             "http://example2.com":
                 "AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00"})
+        # SNCL and times should be filtered out.
         self.assertEqual(p2.call_args[1], {
-            "network": "AA", "channel": "DD", "longitude": 1.0,
-            "latitude": 0.0, "starttime": obspy.UTCDateTime(2017, 1, 1)})
+            "longitude": 1.0, "latitude": 0.0})
 
     def test_get_stations_bulk(self):
         # Some mock routing response.
@@ -262,7 +262,7 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
         self.assertEqual(p1.call_args[0][0],
                          "http://www.orfeus-eu.org/eidaws/routing/1/query")
         self.assertEqual(p1.call_args[1]["data"], (
-            b"service=station\nformat=post\n"
+            b"service=station\nformat=post\nalternative=false\n"
             b"AA B* -- DD 2017-01-01T00:00:00.000000 "
             b"2017-01-02T00:00:00.000000"))
 
@@ -290,6 +290,18 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
         # stable.
         self.assertGreaterEqual(len(st), 1)
 
+        # Same with the bulk download.
+        st2 = self.client.get_waveforms_bulk(
+            [["B*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
+              obspy.UTCDateTime(2017, 1, 1, 0, 1)]])
+        # This yields 1 channel at the time of writing this test - I assume
+        # it is unlikely to every yield less. So this test should be fairly
+        # stable.
+        self.assertGreaterEqual(len(st2), 1)
+
+        # They should be identical.
+        self.assertEqual(st, st2)
+
     def test_get_stations_integration_test(self):
         """
         Integration test that does not mock anything but actually downloads
@@ -315,8 +327,10 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
         # stable.
         self.assertGreaterEqual(len(inv2), 1)
 
-        # The results should naturally be the same.
-        self.assertEqual(inv, inv2)
+        # The results should be basically identical - they will still differ
+        # because times stamps and also order might change slightly.
+        # But the get_contents() method should be safe enough.
+        self.assertEqual(inv.get_contents(), inv2.get_contents())
 
 
 def suite():  # pragma: no cover

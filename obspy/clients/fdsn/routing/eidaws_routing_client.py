@@ -119,8 +119,12 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         # Parameters the routing service can work with.
         kwargs_of_interest = ["network", "station", "location", "channel",
                               "starttime", "endtime"]
-        params = {k: str(kwargs[k])
-                  for k in kwargs_of_interest if k in kwargs}
+        params = {}
+        for _i in kwargs_of_interest:
+            if _i in kwargs:
+                params[_i] = str(kwargs[_i])
+                del kwargs[_i]
+
         params["format"] = "post"
         params["service"] = "station"
         params["alternative"] = "false"
