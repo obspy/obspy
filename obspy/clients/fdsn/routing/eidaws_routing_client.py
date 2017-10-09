@@ -144,7 +144,7 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         supported for practical reasons.
         """
         arguments = collections.OrderedDict(
-            service="station", format="post")
+            service="station", format="post", alternative="false")
         bulk_str = get_bulk_string(bulk, arguments)
         r = self._download(self._url + "/query", data=bulk_str)
         split = self.split_routing_response(

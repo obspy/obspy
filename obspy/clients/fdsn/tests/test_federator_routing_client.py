@@ -305,6 +305,21 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         # stable.
         self.assertGreaterEqual(len(st), 1)
 
+    def test_get_stations_integration_test(self):
+        """
+        Integration test that does not mock anything but actually downloads
+        things.
+        """
+        inv = self.client.get_stations(
+            starttime=obspy.UTCDateTime(2017, 1, 1),
+            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
+            latitude = 35.0, longitude = -120, maxradius = 0.2,
+            channel = "LHZ", level="network")
+        # This yields 1 network at the time of writing this test - I assume
+        # it is unlikely to every yield less. So this test should be fairly
+        # stable.
+        self.assertGreaterEqual(len(inv), 1)
+
 
 def suite():  # pragma: no cover
     return unittest.makeSuite(FederatorRoutingClientTestCase, 'test')

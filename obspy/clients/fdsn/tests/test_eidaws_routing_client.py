@@ -276,6 +276,48 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
             "longitude": 1.0, "latitude": 0.0,
             "starttime": obspy.UTCDateTime(2017, 1, 1)})
 
+    def test_get_waveforms_integration_test(self):
+        """
+        Integration test that does not mock anything but actually downloads
+        things.
+        """
+        st = self.client.get_waveforms(
+            network="B*", station="*", location="*", channel="LHZ",
+            starttime=obspy.UTCDateTime(2017, 1, 1),
+            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1))
+        # This yields 1 channel at the time of writing this test - I assume
+        # it is unlikely to every yield less. So this test should be fairly
+        # stable.
+        self.assertGreaterEqual(len(st), 1)
+
+    def test_get_stations_integration_test(self):
+        """
+        Integration test that does not mock anything but actually downloads
+        things.
+        """
+        inv = self.client.get_stations(
+            network="B*", station="*", location="*", channel="LHZ",
+            starttime=obspy.UTCDateTime(2017, 1, 1),
+            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
+            level="network")
+        # This yields 1 network at the time of writing this test - I assume
+        # it is unlikely to every yield less. So this test should be fairly
+        # stable.
+        self.assertGreaterEqual(len(inv), 1)
+
+        # Can also be formulated as a bulk query.
+        inv2 = self.client.get_stations_bulk(
+            [["B*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
+              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
+            level="network")
+        # This yields 1 network at the time of writing this test - I assume
+        # it is unlikely to every yield less. So this test should be fairly
+        # stable.
+        self.assertGreaterEqual(len(inv2), 1)
+
+        # The results should naturally be the same.
+        self.assertEqual(inv, inv2)
+
 
 def suite():  # pragma: no cover
     return unittest.makeSuite(EIDAWSRoutingClientTestCase, 'test')
