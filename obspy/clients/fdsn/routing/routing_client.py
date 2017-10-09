@@ -43,8 +43,6 @@ def RoutingClient(routing_type, *args, **kwargs):
 
     Remaining ``args`` and ``kwargs`` will be passed to the underlying classes.
 
-
-
     >>> from obspy.clients.fdsn import RoutingClient
 
     Get an instance of a routing client using the IRIS Federator:

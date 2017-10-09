@@ -89,7 +89,7 @@ class EIDAWSRoutingClient(BaseRoutingClient):
 
         bulk_str = get_bulk_string(bulk, arguments)
         r = self._download(self._url + "/query", data=bulk_str)
-        split = self.split_routing_response(
+        split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content)
         return self._download_waveforms(split, **kwargs)
 
@@ -129,7 +129,7 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         params["service"] = "station"
         params["alternative"] = "false"
         r = self._download(self._url + "/query", params=params)
-        split = self.split_routing_response(
+        split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content)
         return self._download_stations(split, **kwargs)
 
@@ -153,12 +153,12 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         arguments["alternative"] = "false"
         bulk_str = get_bulk_string(bulk, arguments)
         r = self._download(self._url + "/query", data=bulk_str)
-        split = self.split_routing_response(
+        split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content)
         return self._download_stations(split, **kwargs)
 
     @staticmethod
-    def split_routing_response(data):
+    def _split_routing_response(data):
         """
         Splits the routing responses per data center for the EIDAWS output.
 

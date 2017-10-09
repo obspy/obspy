@@ -59,7 +59,7 @@ ND * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
         # This should return a dictionary that contains the root URL of each
         # fdsn implementation and the POST payload ready to be submitted.
         self.assertEqual(
-            EIDAWSRoutingClient.split_routing_response(data),
+            EIDAWSRoutingClient._split_routing_response(data),
             {
                 "http://geofon.gfz-potsdam.de": (
                     "NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00"),
@@ -81,7 +81,7 @@ NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
         # This should return a dictionary that contains the root URL of each
         # fdsn implementation and the POST payload ready to be submitted.
         self.assertEqual(
-            EIDAWSRoutingClient.split_routing_response(data),
+            EIDAWSRoutingClient._split_routing_response(data),
             {
                 "http://geofon.gfz-potsdam.de": (
                     "NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00")})

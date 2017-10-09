@@ -103,7 +103,7 @@ class FederatorRoutingClient(BaseRoutingClient):
 
         bulk_str = get_bulk_string(bulk, params)
         r = self._download(self._url + "/query", data=bulk_str)
-        split = self.split_routing_response(
+        split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content,
             service="dataselect")
         return self._download_waveforms(split, **kwargs)
@@ -158,7 +158,7 @@ class FederatorRoutingClient(BaseRoutingClient):
 
         bulk_str = get_bulk_string(bulk, params)
         r = self._download(self._url + "/query", data=bulk_str)
-        split = self.split_routing_response(
+        split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content,
             service="station")
         return self._download_stations(split, **kwargs)
@@ -169,7 +169,7 @@ class FederatorRoutingClient(BaseRoutingClient):
             hasattr(r.content, "decode") else r.content
 
     @staticmethod
-    def split_routing_response(data, service):
+    def _split_routing_response(data, service):
         """
         Splits the routing responses per data center for the federator output.
 
