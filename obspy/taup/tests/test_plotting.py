@@ -140,10 +140,17 @@ class TauPyPlottingTestCase(unittest.TestCase):
                 arrivals.plot(plot_type="cartesian", plot_all=False,
                               show=False, legend=False)
                 plt.savefig(ic.name)
-            self.assertEqual(len(w), 1)
-            self.assertEqual(
-                str(w[0].message), 'The plot() function is deprecated. Please '
-                'use arrivals.plot_rays()')
+            self.assertGreaterEqual(len(w), 1)
+            for w_ in w:
+                try:
+                    self.assertEqual(
+                        str(w[0].message), 'The plot() function is '
+                        'deprecated. Please use arrivals.plot_rays()')
+                except:
+                    continue
+                break
+            else:
+                raise
             self.assertEqual(w[0].category, ObsPyDeprecationWarning)
 
     def test_plot_travel_times(self):
