@@ -14,25 +14,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import collections
-import io
 
-import decorator
-
-from ..client import get_bulk_string, raise_on_error
-from .routing_client import BaseRoutingClient
-
-
-@decorator.decorator
-def _assert_filename_not_in_kwargs(f, *args, **kwargs):
-    if "filename" in kwargs:
-        raise ValueError("The `filename` argument is not supported")
-    return f(*args, **kwargs)
-
-@decorator.decorator
-def _assert_attach_response_not_in_kwargs(f, *args, **kwargs):
-    if "attach_response" in kwargs:
-        raise ValueError("The `attach_response` argument is not supported")
-    return f(*args, **kwargs)
+from ..client import get_bulk_string
+from .routing_client import (
+    BaseRoutingClient, _assert_attach_response_not_in_kwargs,
+    _assert_filename_not_in_kwargs)
 
 
 class EIDAWSRoutingClient(BaseRoutingClient):
@@ -196,23 +182,7 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         return r.content.decode() if \
             hasattr(r.content, "decode") else r.content
 
-    def _handle_requests_http_error(self, r):
-        # In lieu of any more knowledge let's just assume the same semantics
-        # as for the fdsn web services.
-        if r.content:  # pragma: no cover
-            c = r.content
-        else:
-            c = r.reason
-
-        if hasattr(c, "encode"):
-            c = c.encode()
-
-        with io.BytesIO(c) as f:
-            f.seek(0, 0)
-            raise_on_error(r.status_code, c)
-
 
 if __name__ == '__main__':  # pragma: no cover
     import doctest
-
     doctest.testmod(exclude_empty=True)

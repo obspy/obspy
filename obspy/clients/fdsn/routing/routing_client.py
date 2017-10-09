@@ -15,13 +15,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 from multiprocessing.dummy import Pool as ThreadPool
+
+import decorator
 
 from obspy.core.compatibility import urlparse
 import obspy
 
 from ...base import HTTPClient
 from .. import client
+from ..client import raise_on_error
 from ..header import FDSNException, URL_MAPPINGS, FDSNNoDataException
 from future.utils import string_types
 
@@ -34,6 +38,20 @@ def RoutingClient(routing_type, *args, **kwargs):
         raise NotImplementedError(
             "Routing type '%s' is not implemented. Available types: "
             "EIDAWS" % routing_type)
+
+
+@decorator.decorator
+def _assert_filename_not_in_kwargs(f, *args, **kwargs):
+    if "filename" in kwargs:
+        raise ValueError("The `filename` argument is not supported")
+    return f(*args, **kwargs)
+
+
+@decorator.decorator
+def _assert_attach_response_not_in_kwargs(f, *args, **kwargs):
+    if "attach_response" in kwargs:
+        raise ValueError("The `attach_response` argument is not supported")
+    return f(*args, **kwargs)
 
 
 def _download_bulk(r):
@@ -166,6 +184,25 @@ class BaseRoutingClient(HTTPClient):
             collection += _i
 
         return collection
+
+    def _handle_requests_http_error(self, r):
+        """
+        This assumes the same error code semantics as the base fdsnws web
+        services.
+
+        Please overwrite this method in a child class if necessary.
+        """
+        if r.content:  # pragma: no cover
+            c = r.content
+        else:
+            c = r.reason
+
+        if hasattr(c, "encode"):
+            c = c.encode()
+
+        with io.BytesIO(c) as f:
+            f.seek(0, 0)
+            raise_on_error(r.status_code, c)
 
 
 if __name__ == '__main__':  # pragma: no cover
