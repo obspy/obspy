@@ -17,12 +17,13 @@ from future.builtins import *  # NOQA
 
 from multiprocessing.dummy import Pool as ThreadPool
 
+from obspy.core.compatibility import urlparse
 import obspy
 
 from ...base import HTTPClient
 from ..client import Client
-from ..header import FDSNException, URL_MAPPINGS
-from future.utils import string_types, with_metaclass
+from ..header import FDSNException, URL_MAPPINGS, FDSNNoDataException
+from future.utils import string_types
 
 
 def RoutingClient(routing_type, *args, **kwargs):
@@ -47,6 +48,11 @@ def _download_bulk(r):
         return None
 
 
+def _strip_protocol(url):
+    url = urlparse(url)
+    return url.netloc + url.path
+
+
 # Does not inherit from the FDSN client as that would be fairly hacky as
 # some methods just make no sense for the routing client to have (e.g.
 # get_events() but also others).
@@ -64,16 +70,33 @@ class BaseRoutingClient(HTTPClient):
             the full HTTP address of one of the shortcuts ObsPy knows about.
         """
         HTTPClient.__init__(self, debug=debug, timeout=timeout)
-        self.include_providers = self._expand_providers(include_providers)
-        self.exclude_providers = self._expand_providers(exclude_providers)
+        self.include_providers = include_providers
+        self.exclude_providers = exclude_providers
+
+    @property
+    def include_providers(self):
+        return self.__include_providers
+
+    @include_providers.setter
+    def include_providers(self, value):
+        self.__include_providers = self._expand_providers(value)
+
+    @property
+    def exclude_providers(self):
+        return self.__exclude_providers
+
+    @exclude_providers.setter
+    def exclude_providers(self, value):
+        self.__exclude_providers = self._expand_providers(value)
 
     def _expand_providers(self, providers):
         if providers is None:
             providers = []
         elif isinstance(providers, string_types):
             providers = [providers]
-        return [URL_MAPPINGS[_i] if _i in URL_MAPPINGS else _i
-                for _i in providers]
+        return [_strip_protocol(URL_MAPPINGS[_i])
+                if _i in URL_MAPPINGS
+                else _strip_protocol(_i) for _i in providers]
 
     def _filter_requests(self, split):
         """
@@ -82,9 +105,15 @@ class BaseRoutingClient(HTTPClient):
         :type split: dict
         :param split: A dictionary containing the desired routing.
         """
-        filtered_split = {}
-        for key, value in split.items():
-            pass
+        key_map = {_strip_protocol(url): url for url in split.keys()}
+
+        # Apply both filters.
+        f_keys = set(key_map.keys())
+        if self.include_providers:
+            f_keys = f_keys.intersection(set(self.include_providers))
+        f_keys = f_keys.difference(set(self.exclude_providers))
+
+        return {key_map[k]: split[key_map[k]] for k in f_keys}
 
     def _download_waveforms(self, split, **kwargs):
         return self._download_parallel(split, data_type="waveform", **kwargs)
@@ -93,6 +122,14 @@ class BaseRoutingClient(HTTPClient):
         return self._download_parallel(split, data_type="station", **kwargs)
 
     def _download_parallel(self, split, data_type, **kwargs):
+        # Apply the provider filter.
+        split = self._filter_requests(split)
+
+        if not split:
+            raise FDSNNoDataException(
+                "Nothing remains to download after the provider "
+                "inclusion/exclusion filters have been applied.")
+
         if data_type not in ["waveform", "station"]:  # pragma: no cover
             raise ValueError("Invalid data type.")
 

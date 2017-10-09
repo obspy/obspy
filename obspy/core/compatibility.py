@@ -19,8 +19,10 @@ except ImportError:
 
 if PY2:
     from string import maketrans
+    from urlparse import urlparse
 else:
     maketrans = bytes.maketrans
+    from urllib.parse import urlparse
 
 
 # NumPy does not offer the from_buffer method under Python 3 and instead

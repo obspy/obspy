@@ -43,11 +43,9 @@ class BaseRoutingClientTestCase(unittest.TestCase):
             include_providers=["IRIS", "http://example.com"],
             exclude_providers=["BGR", "http://example2.com"])
         self.assertEqual(
-            c.include_providers,
-            ["http://service.iris.edu", "http://example.com"])
+            c.include_providers, ["service.iris.edu", "example.com"])
         self.assertEqual(
-            c.exclude_providers,
-            ["http://eida.bgr.de", "http://example2.com"])
+            c.exclude_providers, ["eida.bgr.de", "example2.com"])
 
         # None are set.
         c = self._cls_object()
@@ -57,13 +55,40 @@ class BaseRoutingClientTestCase(unittest.TestCase):
         # Single strings.
         c = self._cls_object(include_providers="IRIS",
                              exclude_providers="BGR")
-        self.assertEqual(c.include_providers, ["http://service.iris.edu"])
-        self.assertEqual(c.exclude_providers, ["http://eida.bgr.de"])
+        self.assertEqual(c.include_providers, ["service.iris.edu"])
+        self.assertEqual(c.exclude_providers, ["eida.bgr.de"])
 
-        c = self._cls_object(include_providers="http://example.com",
+        c = self._cls_object(include_providers="http://example.com/path",
                              exclude_providers="http://example2.com")
-        self.assertEqual(c.include_providers, ["http://example.com"])
-        self.assertEqual(c.exclude_providers, ["http://example2.com"])
+        self.assertEqual(c.include_providers, ["example.com/path"])
+        self.assertEqual(c.exclude_providers, ["example2.com"])
+
+    def test_request_filtering(self):
+        split = {
+            # Note that this is HTTPS.
+            "https://example.com": "1234",
+            "http://example2.com": "1234",
+            "http://example3.com": "1234",
+            "http://service.iris.edu": "1234"
+        }
+
+        c = self._cls_object(include_providers=["IRIS", "http://example.com"])
+        self.assertEqual(c._filter_requests(split), {
+            "https://example.com": "1234",
+            "http://service.iris.edu": "1234"
+        })
+
+        c = self._cls_object(exclude_providers=["IRIS", "http://example.com"])
+        self.assertEqual(c._filter_requests(split), {
+            "http://example2.com": "1234",
+            "http://example3.com": "1234"
+        })
+
+        # Both filters are always applied - it might result in zero
+        # remaining providers.
+        c = self._cls_object(include_providers=["IRIS", "http://example.com"],
+                             exclude_providers=["IRIS", "http://example.com"])
+        self.assertEqual(c._filter_requests(split), {})
 
 
 def suite():
