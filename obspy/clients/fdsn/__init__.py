@@ -135,63 +135,92 @@ USP     http://sismo.iag.usp.br
         inventory.plot()
 
 
-Basic FDSN FedCatalog Client Usage
-----------------------------------
+Basic Routing Clients Usage
+---------------------------
 
-The
-:mod:`FDSN fedcatalog_client <obspy.clients.fdsn.routers.fedcatalog_client>`
-module provides federated
-access to multiple web servers that implement the
-`FDSN Station and Dataselect web service definitions
-<https://www.fdsn.org/webservices/>`_.
+Routers are web services that can be queried for which data centers offer
+certain pieces of data. That information can then be used to get the actual
+data from various data center across the globe. All current routing services
+only support the ``dataselect`` and the ``station`` FDSNWS services.
 
-The first step is always to initialize a :class:`FederatedClient` object.
+ObsPy has support for two routing services:
 
->>> from obspy.clients.fdsn import FederatedClient
->>> client = FederatedClient()
+(i) The `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_.
+(ii) The `EIDAWS Routing Service
+     <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_.
 
-(1) :meth:`~obspy.clients.fdsn.routers.fedcatalog_client.
-FederatedClient.get_waveforms()`: The following
-example illustrates how to request 60 minutes of the ``"LHZ"`` channel of
-station Apirathos, Naxos, Greece (``"APE"``) of the GEOFON (``"GE"``) for a
-seismic event around 2006-01-08T11:34:54.000 (UTC). Results are returned as a
-:class:`~obspy.core.stream.Stream` object.
+To use them, call the
+:func:`~obspy.clients.fdsn.routing.routing_client.RoutingClient` function:
 
-    >>> from obspy import UTCDateTime
-    >>> t = UTCDateTime("2006-01-08T11:34:54.000")
-    >>> st = client.get_waveforms("GE", "APE", "", "LHZ", t, t + 60 * 60)
-    >>> st.plot()  # doctest: +SKIP
 
-    .. plot::
+>>> from obspy.clients.fdsn import RoutingClient
 
-        from obspy import UTCDateTime
-        from obspy.clients.fdsn import Client
-        client = Client('GFZ')
-        t = UTCDateTime("2006-01-08T11:34:54.000")
-        st = client.get_waveforms("GE", "APE", "", "LHZ", t, t + 60 * 60)
-        st.plot()
+Get an instance of a routing client using the IRIS Federator:
 
-(2) :meth:`~obspy.clients.fdsn.routers.fedcatalog_client.
-FederatedClient.get_stations()`: Uses the IRIS Fed Catalog web service to
-    return station metadata as an
-    :class:`~obspy.core.inventory.inventory.Inventory` object.
+>>> c = RoutingClient("federator")
+>>> print(type(c))  # doctest: +ELLIPSIS
+<class '...fdsn.routing.federator_routing_client.FederatorRoutingClient'>
 
-    >>> inventory = client.get_stations(network="GE", station="A*",
-    ...                                 channel="?HZ", level="station",
-    ...                                 endtime="2016-12-31")
-    >>> print(inventory)  # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-    Inventory created at 2...Z
-        Sending institution: SeisComP3 (GFZ)
-        Contains:
-            Networks (1):
-                GE
-            Stations (4):
-                GE.APE (GEOFON Station Apirathos, Naxos)
-                GE.APE (NOA/GEOFON Station Apeiranthos,Naxos, Greece)
-                GE.APEZ (GEOFON Station Moni Apezanon, Greece)
-                GE.ARPR (GEOFON/MedNet/KOERI Station Arapgir, Turkey)
-            Channels (0):
-    <BLANKLINE>
+Or get an instance of a routing client using the EIDAWS routing web service:
+
+>>> c = RoutingClient("eidaws")
+>>> print(type(c))  # doctest: +ELLIPSIS
+<class '...fdsn.routing.eidaws_routing_client.EIDAWSRoutingClient'>
+
+They can be used like the normal FDSNWS clients, meaning the
+``get_(waveforms|stations)(_bulk)()`` functions should work as expected. The
+different services route on different parameters - please see the
+documentation of the various services for details. A quick rule of thumb: The
+EIDAWS web service uses the FDSN/SEED identifiers and the times to do the
+routing, whereas the IRIS Federator can use all parameters usually available
+for the FDSNWS station services for the routing.
+
+The following snippet will call the IRIS federator to figure out who has
+waveform data for that particular query and subsequently call the individual
+data centers to actually get the data. This happens fully automatically -
+please note that the Federator client also supports non-standard waveform
+query parameters like geographical constraints.
+
+>>> c = RoutingClient("federator")
+>>> st = c.get_waveforms(
+...     channel="LHZ", starttime=obspy.UTCDateTime(2017, 1, 1),
+...     endtime=obspy.UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
+...     longitude=10, maxradius=25)  # doctest: +SKIP
+>>> print(st)  # doctest: +SKIP
+2 Trace(s) in Stream:
+II.MBAR.00.LHZ | 2017-01-01T00:00:00Z - ... | 1.0 Hz, 300 samples
+II.MBAR.10.LHZ | 2017-01-01T00:00:00Z - ... | 1.0 Hz, 300 samples
+
+The same works for stations:
+
+>>> c = RoutingClient("federator")
+>>> inv = c.get_stations(
+...     channel="LHZ", starttime=obspy.UTCDateTime(2017, 1, 1),
+...     endtime=obspy.UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
+...     level="channel", longitude=10, maxradius=25)  # doctest: +SKIP
+>>> print(inv)  # doctest: +SKIP
+Inventory created at 2017-10-09T14:26:28.466161Z
+    Created by: ObsPy 1.0.3.post0+1706.gef068de324.dirty
+                https://www.obspy.org
+    Sending institution: IRIS-DMC,ObsPy ..., SeisComP3 (GFZ,IPGP, IRIS-DMC)
+    Contains:
+        Networks (6):
+            AF, G, II, IU, TT, YY
+        Stations (10):
+            AF.EKNA (Ekona, Cameroon)
+            AF.KIG (Kigali, Rwanda)
+            G.TAM (Tamanrasset, Algeria)
+            II.MBAR (Mbarara, Uganda)
+            IU.KOWA (Kowa, Mali)
+            TT.TATN (Station Tataouine, Tunisia)
+            YY.GIDA (Health Center, Gidami, Ethiopia)
+            YY.GUBA (Police Station, Guba, Ethiopia)
+            YY.MEND (High School, Mendi, Ethiopia)
+            YY.SHER (Police Station, Sherkole, Ethiopia)
+        Channels (11):
+            AF.EKNA..LHZ, AF.KIG..LHZ, G.TAM.00.LHZ, II.MBAR.00.LHZ,
+            II.MBAR.10.LHZ, IU.KOWA.00.LHZ, TT.TATN.00.LHZ, YY.GIDA..LHZ,
+            YY.GUBA..LHZ, YY.MEND..LHZ, YY.SHER..LHZ
 
 Please see the documentation for each method for further information and
 examples.
@@ -204,6 +233,7 @@ from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
 from .client import Client  # NOQA
+from .routing.routing_client import RoutingClient  # NOQA
 from .header import URL_MAPPINGS  # NOQA
 
 
