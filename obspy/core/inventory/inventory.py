@@ -54,11 +54,27 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     :param path_or_file_object: File name or file like object. If this
         attribute is omitted, an example :class:`Inventory`
         object will be returned.
-    :type format: str, optional
-    :param format: Format of the file to read (e.g. ``"STATIONXML"``).
+    :type format: str
+    :param format: Format of the file to read (e.g. ``"STATIONXML"``). See the
+        `Supported Formats`_ section below for a list of supported formats.
+    :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
+    :return: An ObsPy :class:`~obspy.core.inventory.inventory.Inventory`
+        object.
 
     Additional args and kwargs are passed on to the underlying ``_read_X()``
     methods of the inventory plugins.
+
+    .. rubric:: _`Supported Formats`
+
+    Additional ObsPy modules extend the functionality of the
+    :func:`~obspy.core.inventory.inventory.read_inventory` function. The
+    following table summarizes all known file formats currently supported by
+    ObsPy.
+
+    Please refer to the `Linked Function Call`_ of each module for any extra
+    options available at the import stage.
+
+    %s
 
     .. note::
 
@@ -263,7 +279,30 @@ class Inventory(ComparingObject):
 
         :param path_or_file_object: File name or file-like object to be written
             to.
-        :param format: The format of the written file.
+        :type format: str
+        :param format: The file format to use (e.g. ``"STATIONXML"``). See the
+            `Supported Formats`_ section below for a list of supported formats.
+        :param kwargs: Additional keyword arguments passed to the underlying
+            plugin's writer method.
+
+        .. rubric:: Example
+
+        >>> from obspy import read_inventory
+        >>> inventory = read_inventory()
+        >>> inventory.write("example.xml",
+        ...                 format="STATIONXML")  # doctest: +SKIP
+
+        .. rubric:: _`Supported Formats`
+
+        Additional ObsPy modules extend the parameters of the
+        :meth:`~obspy.core.inventory.inventory.Inventory.write()` method. The
+        following table summarizes all known formats with write capability
+        currently available for ObsPy.
+
+        Please refer to the `Linked Function Call`_ of each module for any
+        extra options available.
+
+        %s
         """
         format = format.upper()
         try:
@@ -274,9 +313,10 @@ class Inventory(ComparingObject):
                 format_ep.dist.key,
                 'obspy.plugin.inventory.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
-            msg = "Writing format \"%s\" is not supported. Supported types: %s"
-            raise TypeError(msg % (format,
-                                   ', '.join(ENTRY_POINTS['inventory_write'])))
+            msg = "Writing format '{}' is not supported. Supported types: {}"
+            msg = msg.format(format,
+                             ', '.join(ENTRY_POINTS['inventory_write']))
+            raise ValueError(msg)
         return write_format(self, path_or_file_object, **kwargs)
 
     @property

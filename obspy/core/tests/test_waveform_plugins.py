@@ -501,7 +501,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     self.assertEqual(mocked_func.call_count, 1)
 
         # An unknown suffix should raise.
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             for obj in stream_trace:
                 obj.write("temp.random_suffix")
 

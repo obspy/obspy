@@ -1982,9 +1982,9 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(ct[0].stats.mseed.dataquality, 'A')
 
     def test_write(self):
-        # writing in unknown format raises TypeError
+        # writing in unknown format raises ValueError
         st = read()
-        self.assertRaises(TypeError, st.write, 'file.ext', format="UNKNOWN")
+        self.assertRaises(ValueError, st.write, 'file.ext', format="UNKNOWN")
 
     def test_detrend(self):
         """

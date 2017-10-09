@@ -1437,8 +1437,8 @@ class Stream(object):
                 'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
             msg = "Writing format \"%s\" is not supported. Supported types: %s"
-            raise TypeError(msg % (format,
-                                   ', '.join(ENTRY_POINTS['waveform_write'])))
+            raise ValueError(msg % (format,
+                                    ', '.join(ENTRY_POINTS['waveform_write'])))
         write_format(self, filename, **kwargs)
 
     def trim(self, starttime=None, endtime=None, pad=False,
