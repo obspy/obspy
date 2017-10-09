@@ -16,6 +16,7 @@ import unittest
 
 import obspy
 from obspy.core.compatibility import mock
+from obspy.clients.fdsn.header import FDSNNoDataException
 from obspy.clients.fdsn.routing.routing_client import (
     BaseRoutingClient, RoutingClient)
 from obspy.clients.fdsn.routing.eidaws_routing_client import (
@@ -115,13 +116,14 @@ class BaseRoutingClientTestCase(unittest.TestCase):
         }
         with mock.patch("obspy.clients.fdsn.client.Client") as p:
             mock_instance = p.return_value
-            mock_instance.get_waveforms_bulk.return_value = obspy.Stream()
+            mock_instance.get_waveforms_bulk.return_value = obspy.read()
             # Only accept test1 as a an argument.
             mock_instance.services = {"dataselect": {"test1": True}}
             c = self._cls_object(debug=False, timeout=240)
             # test2 should not be passed on.
-            c._download_waveforms(split=split, test1="a", test2="b")
+            st = c._download_waveforms(split=split, test1="a", test2="b")
 
+        self.assertEqual(len(st), 12)
         # Test initialization.
         self.assertEqual(p.call_count, 4)
         self.assertEqual(set(_i[0][0] for _i in p.call_args_list),
@@ -140,6 +142,19 @@ class BaseRoutingClientTestCase(unittest.TestCase):
             self.assertIn("test1", _i[1])
             self.assertNotIn("test2", _i[1])
             self.assertEqual(_i[1]["test1"], "a")
+
+        # Once again, but raising exceptions this time.
+        with mock.patch("obspy.clients.fdsn.client.Client") as p:
+            mock_instance = p.return_value
+            mock_instance.get_waveforms_bulk.side_effect = \
+                FDSNNoDataException("No data")
+            # Only accept test1 as a an argument.
+            mock_instance.services = {"dataselect": {"test1": True}}
+            c = self._cls_object(debug=False, timeout=240)
+            # test2 should not be passed on.
+            st = c._download_waveforms(split=split, test1="a", test2="b")
+
+        self.assertEqual(len(st), 0)
 
     def test_downloading_stations(self):
         split = {
