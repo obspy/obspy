@@ -150,8 +150,10 @@ class FederatorRoutingClient(BaseRoutingClient):
                 raise ValueError("`%s` must not be part of the optional "
                                  "parameters in a bulk request." % _i)
 
-        params = {k: str(kwargs[k])
-                  for k in self.kwargs_of_interest if k in kwargs}
+        params = collections.OrderedDict()
+        for k in self.kwargs_of_interest:
+            if k in kwargs:
+                params[k] = str(kwargs[k])
         params["format"] = "request"
 
         bulk_str = get_bulk_string(bulk, params)

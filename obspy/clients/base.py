@@ -50,7 +50,7 @@ class MyNewClient(WaveformClient, StationClient):
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import PY2, with_metaclass
+from future.utils import PY2, with_metaclass, native_str
 
 from abc import ABCMeta, abstractmethod
 import io
@@ -198,7 +198,10 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         :return: The response object assuming ``filename`` is ``None``.
         :rtype: :class:`requests.Response`
         """
-        _request_args = {"url": url,
+        if params:
+            params = {k: native_str(v) for k, v in params.items()}
+
+        _request_args = {"url": native_str(url),
                          "headers": {"User-Agent": self._user_agent},
                          "params": params}
 

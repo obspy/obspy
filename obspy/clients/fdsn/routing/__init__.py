@@ -17,6 +17,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 
+# Extremely ugly way to avoid a race condition the first time strptime is
+# imported which is not thread safe...
+#
+# See https://bugs.python.org/issue7980
+import time
+time.strptime("30 Nov 00", "%d %b %y")
+
+
 if __name__ == '__main__':  # pragma: no cover
     import doctest
     doctest.testmod(exclude_empty=True)

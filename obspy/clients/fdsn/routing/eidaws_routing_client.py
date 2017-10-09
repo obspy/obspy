@@ -147,8 +147,10 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         The ``filename`` parameter of the single provider FDSN client is not
         supported for practical reasons.
         """
-        arguments = collections.OrderedDict(
-            service="station", format="post", alternative="false")
+        arguments = collections.OrderedDict()
+        arguments["service"] = "station"
+        arguments["format"] = "post"
+        arguments["alternative"] = "false"
         bulk_str = get_bulk_string(bulk, arguments)
         r = self._download(self._url + "/query", data=bulk_str)
         split = self.split_routing_response(
