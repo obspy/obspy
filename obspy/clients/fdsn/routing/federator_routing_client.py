@@ -104,10 +104,11 @@ class FederatorRoutingClient(BaseRoutingClient):
         params["format"] = "request"
         params["targetservice"] = "dataselect"
 
-        bulk_str = get_bulk_str(bulk, params)
+        bulk_str = get_bulk_string(bulk, params)
         r = self._download(self._url + "/query", params=params)
         split = self.split_routing_response(
-            r.content.decode() if hasattr(r.content, "decode") else r.content)
+            r.content.decode() if hasattr(r.content, "decode") else r.content,
+            service="dataselect")
         return self._download_waveforms(split, **kwargs)
 
     def get_service_version(self):
