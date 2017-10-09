@@ -156,6 +156,15 @@ class BaseRoutingClientTestCase(unittest.TestCase):
 
         self.assertEqual(len(st), 0)
 
+        # Provider filtering might result in no data left.
+        c.include_providers = "http://random.com"
+        with self.assertRaises(FDSNNoDataException) as e:
+            c._download_waveforms(split=split, test1="a", test2="b")
+        self.assertEqual(
+            e.exception.args[0],
+            "Nothing remains to download after the provider "
+            "inclusion/exclusion filters have been applied.")
+
     def test_downloading_stations(self):
         split = {
             "https://example.com": "1234",
@@ -193,9 +202,9 @@ class BaseRoutingClientTestCase(unittest.TestCase):
             self.assertEqual(_i[1]["test1"], "a")
 
 
-def suite():
+def suite():  # pragma: no cover
     return unittest.makeSuite(BaseRoutingClientTestCase, 'test')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main(defaultTest='suite')

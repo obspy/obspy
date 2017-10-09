@@ -277,9 +277,9 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
             "starttime": obspy.UTCDateTime(2017, 1, 1)})
 
 
-def suite():
+def suite():  # pragma: no cover
     return unittest.makeSuite(EIDAWSRoutingClientTestCase, 'test')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main(defaultTest='suite')
