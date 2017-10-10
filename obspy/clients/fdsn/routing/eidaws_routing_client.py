@@ -65,11 +65,8 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_
         for details.
         """
-        # XXX: Really confusing but the waveform version of the service does
-        # not really ever return something when called with POST. Not sure
-        # if I'm doing it wrong or the service is wrong.
         arguments = collections.OrderedDict(
-            service="station", format="post")
+            service="dataselect", format="post")
 
         bulk_str = get_bulk_string(bulk, arguments)
         r = self._download(self._url + "/query", data=bulk_str)
