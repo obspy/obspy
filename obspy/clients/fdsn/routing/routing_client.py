@@ -14,25 +14,19 @@ Base class for all FDSN routers.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY3
 
 import io
 from multiprocessing.dummy import Pool as ThreadPool
 
 import decorator
 
-from obspy.core.compatibility import urlparse
+from obspy.core.compatibility import urlparse, string_types
 import obspy
 
 from ...base import HTTPClient
 from .. import client
 from ..client import raise_on_error
 from ..header import FDSNException, URL_MAPPINGS, FDSNNoDataException
-
-if PY3:
-    string_types = (str,)  # NOQA
-else:
-    string_types = (basestring,)  # NOQA
 
 
 def RoutingClient(routing_type, *args, **kwargs):  # NOQA

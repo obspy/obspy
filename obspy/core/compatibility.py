@@ -25,6 +25,13 @@ else:
     from urllib.parse import urlparse  # NOQA
 
 
+# Define the string types.
+if PY2:
+    string_types = (basestring,)  # NOQA
+else:
+    string_types = (str,)  # NOQA
+
+
 # NumPy does not offer the from_buffer method under Python 3 and instead
 # relies on the built-in memoryview object.
 if PY2:
