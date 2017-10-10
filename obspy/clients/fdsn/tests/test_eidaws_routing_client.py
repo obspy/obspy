@@ -168,9 +168,16 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
             content = content.encode()
 
         with mock.patch(self._cls + "._download") as p1, \
-                mock.patch(self._cls + "._download_waveforms") as p2:
+                mock.patch(self._cls + "._download_waveforms") as p2, \
+                mock.patch(self._cls + ".get_stations_bulk") as p3:
             p1.return_value = _DummyResponse(content=content)
             p2.return_value = "1234"
+
+            # For the underlying get_stations_bulk() call.
+            _dummy_inv = mock.MagicMock()
+            _dummy_inv.get_contents.return_value = {
+                "channels": ["AA.BB.CC.DD", "AA.BB.CC.DD"]}
+            p3.return_value = _dummy_inv
 
             st = self.client.get_waveforms_bulk(
                 [["AA", "B*", "", "DD", obspy.UTCDateTime(2017, 1, 1),
@@ -181,11 +188,14 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
         self.assertEqual(p1.call_count, 1)
         self.assertEqual(p1.call_args[0][0],
                          "http://www.orfeus-eu.org/eidaws/routing/1/query")
+        # This has been modified by our mocked call to get_stations_bulk().
         self.assertEqual(p1.call_args[1]["data"], (
             b"service=dataselect\nformat=post\n"
-            b"AA B* -- DD 2017-01-01T00:00:00.000000 "
+            b"AA BB CC DD 2017-01-01T00:00:00.000000 "
             b"2017-01-02T00:00:00.000000"))
 
+        # This is the final call to _download_waveforms() which is again
+        # dependent on the dummy response to the _download() function.
         self.assertEqual(p2.call_args[0][0], {
             "http://example1.com":
             "AA B1 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00",
@@ -193,6 +203,17 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
             "AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00"})
         self.assertEqual(p2.call_args[1],
                          {"longestonly": True, "minimumlength": 2})
+
+        # Call to this only dependent on the original bulk request.
+        self.assertEqual(p3.call_count, 1)
+        self.assertEqual(p3.call_args[0][0][0],
+                         ["AA", "B*", "--", "DD",
+                          str(obspy.UTCDateTime(2017, 1, 1))[:-1],
+                          str(obspy.UTCDateTime(2017, 1, 2))[:-1]])
+        # Everything should be passed on.
+        self.assertEqual(p3.call_args[1], {
+            "format": "text", "level": "channel", "longestonly": True,
+            "minimumlength": 2})
 
     def test_get_stations(self):
         # Some mock routing response.

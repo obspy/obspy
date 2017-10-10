@@ -65,10 +65,45 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_
         for details.
         """
+        # Multi-step procedure - first get the stations to be able to use
+        # more query parameters - and then construct the waveform string
+        # from it.
+        #
+        # This has to be done for each time interval - otherwise it will get
+        # a lot more complicated. I guess in most cases people will use bulk
+        # requests for the same time span so it should be fine.
+
+        # Group by time interval - utilize the existing get_bulk_string()
+        # method to not have to deal with various different inputs.
+        _tmp_bulk_str = get_bulk_string(bulk, {})
+        if hasattr(_tmp_bulk_str, "decode"):
+            _tmp_bulk_str = _tmp_bulk_str.decode()
+
+        # Parse and split.
+        bulk_per_time_interval = collections.defaultdict(list)
+        for line in _tmp_bulk_str.splitlines():
+            # Cannot really happen - just a safety measure.
+            if not line:  # pragma: no cover
+                continue
+            item = line.split()
+            bulk_per_time_interval[(item[-2], item[-1])].append(item)
+
+        # Build up the new bulk string for each found time interval by
+        # querying the station services.
+        new_bulk = []
+        for t, _b in bulk_per_time_interval.items():
+            # channel level and text to keep it fast.
+            inv = self.get_stations_bulk(_b, format="text",
+                                         level="channel", **kwargs)
+            for c in sorted(set(inv.get_contents()["channels"])):
+                new_bulk.append(c.split("."))
+                new_bulk[-1].extend(t)
+
+        # Finally get the waveforms by getting the routes and downloading
+        # everytyhing.
         arguments = collections.OrderedDict(
             service="dataselect", format="post")
-
-        bulk_str = get_bulk_string(bulk, arguments)
+        bulk_str = get_bulk_string(new_bulk, arguments)
         r = self._download(self._url + "/query", data=bulk_str)
         split = self._split_routing_response(
             r.content.decode() if hasattr(r.content, "decode") else r.content)
