@@ -193,14 +193,6 @@ class EIDAWSRoutingClient(BaseRoutingClient):
 
         return {k: "\n".join(v) for k, v in split.items()}
 
-    def get_service_version(self):
-        """
-        Return a semantic version number of the remote service as a string.
-        """
-        r = self._download(self._url + "/version")
-        return r.content.decode() if \
-            hasattr(r.content, "decode") else r.content
-
 
 if __name__ == '__main__':  # pragma: no cover
     import doctest

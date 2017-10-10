@@ -267,6 +267,14 @@ class BaseRoutingClient(HTTPClient):
         bulk.extend([starttime, endtime])
         return self.get_waveforms_bulk([bulk], **kwargs)
 
+    def get_service_version(self):
+        """
+        Return a semantic version number of the remote service as a string.
+        """
+        r = self._download(self._url + "/version")
+        return r.content.decode() if \
+            hasattr(r.content, "decode") else r.content
+
     @_assert_filename_not_in_kwargs
     def get_stations(self, **kwargs):
         """

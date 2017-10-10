@@ -145,11 +145,6 @@ class FederatorRoutingClient(BaseRoutingClient):
             service="station")
         return self._download_stations(split, **kwargs)
 
-    def get_service_version(self):
-        r = self._download(self._url + "/version")
-        return r.content.decode() if \
-            hasattr(r.content, "decode") else r.content
-
     @staticmethod
     def _split_routing_response(data, service):
         """
