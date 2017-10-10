@@ -55,35 +55,6 @@ class FederatorRoutingClient(BaseRoutingClient):
 
     @_assert_attach_response_not_in_kwargs
     @_assert_filename_not_in_kwargs
-    def get_waveforms(self, starttime, endtime, **kwargs):
-        """
-        Get waveforms from multiple data centers.
-
-        It will pass on most parameters to the federated routing service.
-        They will also be passed on to the individual FDSNWS implementations
-        if a service supports them.
-
-        The ``filename`` and ``attach_response`` parameters of the single
-        provider FDSN client are not supported.
-
-        This can route on a number of different parameters, please see the
-        web site of the
-        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
-        for details.
-        """
-        # Just pass these to the bulk request.
-        bulk = []
-        for _i in ["network", "station", "location", "channel"]:
-            if _i in kwargs:
-                bulk.append(kwargs[_i])
-                del kwargs[_i]
-            else:
-                bulk.append("*")
-        bulk.extend([starttime, endtime])
-        return self.get_waveforms_bulk([bulk], **kwargs)
-
-    @_assert_attach_response_not_in_kwargs
-    @_assert_filename_not_in_kwargs
     def get_waveforms_bulk(self, bulk, **kwargs):
         """
         Get waveforms from multiple data centers.

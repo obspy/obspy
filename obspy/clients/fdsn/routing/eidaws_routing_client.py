@@ -47,32 +47,6 @@ class EIDAWSRoutingClient(BaseRoutingClient):
 
     @_assert_filename_not_in_kwargs
     @_assert_attach_response_not_in_kwargs
-    def get_waveforms(self, network, station, location, channel, starttime,
-                      endtime, **kwargs):
-        """
-        Get waveforms from multiple data centers.
-
-        Arguments are the same as in
-        :meth:`obspy.clients.fdsn.client.Client.get_waveforms()`.
-        Any additional ``**kwargs`` are passed on to each individual service's
-        dataselect service if the service supports them (otherwise they are
-        silently ignored for that particular fdsnws endpoint).
-
-        The ``filename`` and ``attach_response`` parameters of the single
-        provider FDSN client are not supported.
-
-        This can route on a number of different parameters, please see the
-        web site of the `EIDAWS Routing Service
-        <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_
-        for details.
-        """
-        # This just calls the bulk downloader to only implement the logic once.
-        return self.get_waveforms_bulk(
-            [(network, station, location, channel, starttime, endtime)],
-            **kwargs)
-
-    @_assert_filename_not_in_kwargs
-    @_assert_attach_response_not_in_kwargs
     def get_waveforms_bulk(self, bulk, **kwargs):
         """
         Get waveforms from multiple data centers.
