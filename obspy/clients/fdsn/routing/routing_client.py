@@ -30,9 +30,9 @@ from ..client import raise_on_error
 from ..header import FDSNException, URL_MAPPINGS, FDSNNoDataException
 
 if PY3:
-    string_types = (str,)
+    string_types = (str,)  # NOQA
 else:
-    string_types = (basestring,)
+    string_types = (basestring,)  # NOQA
 
 
 def RoutingClient(routing_type, *args, **kwargs):  # NOQA
