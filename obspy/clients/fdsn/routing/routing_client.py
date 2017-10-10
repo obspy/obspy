@@ -25,7 +25,8 @@ from obspy.core.compatibility import urlparse
 import obspy
 
 from ...base import HTTPClient
-from ..client import raise_on_error, Client
+from .. import client
+from ..client import raise_on_error
 from ..header import FDSNException, URL_MAPPINGS, FDSNNoDataException
 
 if PY3:
@@ -89,7 +90,7 @@ def _assert_attach_response_not_in_kwargs(f, *args, **kwargs):
 
 
 def _download_bulk(r):
-    c = Client(r["endpoint"], debug=r["debug"], timeout=r["timeout"])
+    c = client.Client(r["endpoint"], debug=r["debug"], timeout=r["timeout"])
     if r["data_type"] == "waveform":
         fct = c.get_waveforms_bulk
         service = c.services["dataselect"]
