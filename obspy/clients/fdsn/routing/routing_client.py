@@ -251,9 +251,8 @@ class BaseRoutingClient(HTTPClient):
         The ``filename`` and ``attach_response`` parameters of the single
         provider FDSN client are not supported.
 
-        This can route on a number of different parameters, please see the
-        web site of the `EIDAWS Routing Service
-        <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_
+        This can route on a number of different parameters, depending on the
+        service, please see the web site of each individual routing service
         for details.
         """
         # This just calls the bulk downloader to only implement the logic once.
