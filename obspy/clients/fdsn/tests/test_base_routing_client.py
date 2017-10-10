@@ -48,10 +48,10 @@ class BaseRoutingClientTestCase(unittest.TestCase):
                      "BaseRoutingClient")
 
     def test_router_intialization_helper_function(self):
-        c = RoutingClient("EIDAWS")
+        c = RoutingClient("eida-routing")
         self.assertIsInstance(c, EIDAWSRoutingClient)
 
-        c = RoutingClient("FEDERATOR")
+        c = RoutingClient("iris-federator")
         self.assertIsInstance(c, FederatorRoutingClient)
 
         with self.assertRaises(NotImplementedError) as e:
@@ -59,7 +59,7 @@ class BaseRoutingClientTestCase(unittest.TestCase):
         self.assertEqual(
             e.exception.args[0],
             "Routing type 'random' is not implemented. Available types: "
-            "EIDAWS")
+            "`iris-federator`, `eida-routing`")
 
     def test_expansion_of_include_and_exclude_providers(self):
         c = self._cls_object(

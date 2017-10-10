@@ -162,31 +162,31 @@ To use them, call the
 
 Get an instance of a routing client using the IRIS Federator:
 
->>> c = RoutingClient("federator")
+>>> c = RoutingClient("iris-federator")
 >>> print(type(c))  # doctest: +ELLIPSIS
 <class '...fdsn.routing.federator_routing_client.FederatorRoutingClient'>
 
 Or get an instance of a routing client using the EIDAWS routing web service:
 
->>> c = RoutingClient("eidaws")
+>>> c = RoutingClient("eida-routing")
 >>> print(type(c))  # doctest: +ELLIPSIS
 <class '...fdsn.routing.eidaws_routing_client.EIDAWSRoutingClient'>
 
 They can be used like the normal FDSNWS clients, meaning the
-``get_(waveforms|stations)(_bulk)()`` functions should work as expected. The
-different services route on different parameters - please see the
-documentation of the various services for details. A quick rule of thumb: The
-EIDAWS web service uses the FDSN/SEED identifiers and the times to do the
-routing, whereas the IRIS Federator can use all parameters usually available
-for the FDSNWS station services for the routing.
+``get_(waveforms|stations)(_bulk)()`` functions should work as expected.
+
+To be able to do geographic waveform queries with the EIDA service,
+ObsPy will internally perform a station query before downloading the
+waveforms. This results in a similar usage between the EIDA and IRIS routing
+services from a user's perspective.
 
 The following snippet will call the IRIS federator to figure out who has
 waveform data for that particular query and subsequently call the individual
 data centers to actually get the data. This happens fully automatically -
-please note that the Federator client also supports non-standard waveform
+please note that the clients also supports non-standard waveform
 query parameters like geographical constraints.
 
->>> c = RoutingClient("federator")
+>>> c = RoutingClient("iris-federator")
 >>> st = c.get_waveforms(
 ...     channel="LHZ", starttime=obspy.UTCDateTime(2017, 1, 1),
 ...     endtime=obspy.UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
@@ -198,7 +198,7 @@ II.MBAR.10.LHZ | 2017-01-01T00:00:00Z - ... | 1.0 Hz, 300 samples
 
 The same works for stations:
 
->>> c = RoutingClient("federator")
+>>> c = RoutingClient("iris-federator")
 >>> inv = c.get_stations(
 ...     channel="LHZ", starttime=obspy.UTCDateTime(2017, 1, 1),
 ...     endtime=obspy.UTCDateTime(2017, 1, 1, 0, 5), latitude=10,

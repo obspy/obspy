@@ -34,10 +34,10 @@ def RoutingClient(routing_type, *args, **kwargs):  # NOQA
     Helper function to get the correct routing instance.
 
     :type routing_type: str
-    :param routing_type: The type of router to initialize. ``"federator"`` or
-        ``"eidaws"``. Will consequently return either a
-        :class:`~.federator_routing_client.FederatorRoutingClient` or a
-        :class:`~.eidaws_routing_client.EIDAWSRoutingClient` object,
+    :param routing_type: The type of router to initialize.
+        ``"iris-federator"`` or ``"eida-routing"``. Will consequently return
+        either a :class:`~.federator_routing_client.FederatorRoutingClient` or
+        a :class:`~.eidaws_routing_client.EIDAWSRoutingClient` object,
         respectively.
 
     Remaining ``args`` and ``kwargs`` will be passed to the underlying classes.
@@ -46,27 +46,27 @@ def RoutingClient(routing_type, *args, **kwargs):  # NOQA
 
     Get an instance of a routing client using the IRIS Federator:
 
-    >>> c = RoutingClient("federator")
+    >>> c = RoutingClient("iris-federator")
     >>> print(type(c))  # doctest: +ELLIPSIS
     <class '...routing.federator_routing_client.FederatorRoutingClient'>
 
     Or get an instance of a routing client using the EIDAWS routing web
     service:
 
-    >>> c = RoutingClient("eidaws")
+    >>> c = RoutingClient("eida-routing")
     >>> print(type(c))  # doctest: +ELLIPSIS
     <class '...routing.eidaws_routing_client.EIDAWSRoutingClient'>
     """
-    if routing_type.lower() == "eidaws":
+    if routing_type.lower() == "eida-routing":
         from .eidaws_routing_client import EIDAWSRoutingClient
         return EIDAWSRoutingClient(*args, **kwargs)
-    if routing_type.lower() == "federator":
+    if routing_type.lower() == "iris-federator":
         from .federator_routing_client import FederatorRoutingClient
         return FederatorRoutingClient(*args, **kwargs)
     else:
         raise NotImplementedError(
             "Routing type '%s' is not implemented. Available types: "
-            "EIDAWS" % routing_type)
+            "`iris-federator`, `eida-routing`" % routing_type)
 
 
 @decorator.decorator
