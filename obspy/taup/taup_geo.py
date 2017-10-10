@@ -189,79 +189,81 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                 arrival.pierce = geo_pierce
 
             # choose whether we need to resample the trace
-            if arrival.path is not None and not resample:
-                geo_path = np.empty(arrival.path.shape, dtype=TimeDistGeo)
-                for i, path_point in enumerate(arrival.path):
-                    signed_dist = np.degrees(sign * path_point['dist'])
-                    pos = line.ArcPosition(signed_dist)
-                    geo_path[i] = (path_point['p'], path_point['time'],
-                                   path_point['dist'], path_point['depth'],
-                                   pos['lat2'], pos['lon2'])
-                arrival.path = geo_path
+            if arrival.path is not None:
+                if resample:
+                    rplanet = radius_of_planet_in_km
+                    # compute approximate distance between sampling points
+                    mindist = 200  # km
+                    radii = rplanet - arrival.path['depth']
+                    rmean = np.sqrt(radii[1:] * radii[:-1])
+                    diff_dists = rmean * np.diff(arrival.path['dist'])
+                    npts_extra = np.floor(diff_dists / mindist).astype(int)
 
-            elif arrival.path is not None and resample:
-                rplanet = radius_of_planet_in_km
-                # compute approximate distance between sampling points
-                mindist = 200  # km
-                radii = rplanet - arrival.path['depth']
-                rmean = np.sqrt(radii[1:] * radii[:-1])
-                diff_dists = rmean * np.diff(arrival.path['dist'])
-                npts_extra = np.floor(diff_dists / mindist).astype(int)
+                    # count number of extra points and initialize array
+                    npts_old = len(arrival.path)
+                    npts_new = int(npts_old + np.sum(npts_extra))
+                    geo_path = np.empty(npts_new, dtype=TimeDistGeo)
 
-                # count number of extra points and initialize array
-                npts_old = len(arrival.path)
-                npts_new = int(npts_old + np.sum(npts_extra))
-                geo_path = np.empty(npts_new, dtype=TimeDistGeo)
+                    # now loop through path, adding extra points
+                    i_new = 0
+                    for i_old, path_point in enumerate(arrival.path):
+                        # first add the original point at the new index
+                        dist = np.degrees(sign * path_point['dist'])
+                        pos = line.ArcPosition(dist)
+                        geo_path[i_new] = (path_point['p'], path_point['time'],
+                                           path_point['dist'],
+                                           path_point['depth'],
+                                           pos['lat2'], pos['lon2'])
+                        i_new += 1
 
-                # now loop through path, adding extra points
-                i_new = 0
-                for i_old, path_point in enumerate(arrival.path):
-                    # first add the original point at the new index
-                    dist = np.degrees(sign * path_point['dist'])
-                    pos = line.ArcPosition(dist)
-                    geo_path[i_new] = (path_point['p'], path_point['time'],
+                        if i_old > npts_old - 2:
+                            continue
+
+                        # now check if we need to add new points
+                        npts_new = npts_extra[i_old]
+                        if npts_new > 0:
+                            # if yes, distribute them linearly between the old
+                            # and the next point
+                            next_point = arrival.path[i_old + 1]
+                            dist_next = np.degrees(sign * next_point['dist'])
+                            dists_new = np.linspace(dist, dist_next,
+                                                    npts_new + 2)[1: -1]
+
+                            # now get all interpolated parameters
+                            xs = [dist, dist_next]
+                            ys = [path_point['p'], next_point['p']]
+                            p_interp = np.interp(dists_new, xs, ys)
+                            ys = [path_point['time'], next_point['time']]
+                            time_interp = np.interp(dists_new, xs, ys)
+                            ys = [path_point['depth'], next_point['depth']]
+                            depth_interp = np.interp(dists_new, xs, ys)
+                            pos_interp = [line.ArcPosition(dist_new)
+                                          for dist_new in dists_new]
+                            lat_interp = [point['lat2']
+                                          for point in pos_interp]
+                            lon_interp = [point['lon2']
+                                          for point in pos_interp]
+
+                            # add them to geo_path
+                            for i_extra in range(npts_new):
+                                geo_path[i_new] = (p_interp[i_extra],
+                                                   time_interp[i_extra],
+                                                   dists_new[i_extra],
+                                                   depth_interp[i_extra],
+                                                   lat_interp[i_extra],
+                                                   lon_interp[i_extra])
+                                i_new += 1
+
+                    arrival.path = geo_path
+                else:
+                    geo_path = np.empty(arrival.path.shape, dtype=TimeDistGeo)
+                    for i, path_point in enumerate(arrival.path):
+                        signed_dist = np.degrees(sign * path_point['dist'])
+                        pos = line.ArcPosition(signed_dist)
+                        geo_path[i] = (path_point['p'], path_point['time'],
                                        path_point['dist'], path_point['depth'],
                                        pos['lat2'], pos['lon2'])
-                    i_new += 1
-
-                    if i_old > npts_old - 2:
-                        continue
-
-                    # now check if we need to add new points
-                    npts_new = npts_extra[i_old]
-                    if npts_new > 0:
-                        # if yes, distribute them linearly between the old and
-                        # the next point
-                        next_point = arrival.path[i_old + 1]
-                        dist_next = np.degrees(sign * next_point['dist'])
-                        dists_new = np.linspace(dist, dist_next,
-                                                npts_new + 2)[1: -1]
-
-                        # now get all interpolated parameters
-                        xs = [dist, dist_next]
-                        ys = [path_point['p'], next_point['p']]
-                        p_interp = np.interp(dists_new, xs, ys)
-                        ys = [path_point['time'], next_point['time']]
-                        time_interp = np.interp(dists_new, xs, ys)
-                        ys = [path_point['depth'], next_point['depth']]
-                        depth_interp = np.interp(dists_new, xs, ys)
-                        pos_interp = [line.ArcPosition(dist_new) for dist_new
-                                      in dists_new]
-                        lat_interp = [point['lat2'] for point in pos_interp]
-                        lon_interp = [point['lon2'] for point in pos_interp]
-
-                        # add them to geo_path
-                        for i_extra in range(npts_new):
-                            geo_path[i_new] = (p_interp[i_extra],
-                                               time_interp[i_extra],
-                                               dists_new[i_extra],
-                                               depth_interp[i_extra],
-                                               lat_interp[i_extra],
-                                               lon_interp[i_extra])
-                            i_new += 1
-
-                arrival.path = geo_path
-
+                    arrival.path = geo_path
     else:
         # geographiclib is not installed ...
         # and  obspy/geodetics does not help much
