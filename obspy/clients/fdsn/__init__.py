@@ -254,7 +254,7 @@ if r"%s" in Client.__init__.__doc__:
             Client.__init__.__doc__ % \
             str(sorted(URL_MAPPINGS.keys())).strip("[]")
 
-__all__ = [native_str("Client")]
+__all__ = [native_str(x) for x in ("Client", "RoutingClient")]
 
 
 if __name__ == '__main__':
