@@ -30,7 +30,7 @@ from ..header import FDSNException, URL_MAPPINGS, FDSNNoDataException
 from future.utils import string_types
 
 
-def RoutingClient(routing_type, *args, **kwargs):
+def RoutingClient(routing_type, *args, **kwargs):  # NOQA
     """
     Helper function to get the correct routing instance.
 
