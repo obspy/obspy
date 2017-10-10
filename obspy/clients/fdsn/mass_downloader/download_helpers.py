@@ -369,7 +369,8 @@ class Station(object):
                        (_i.location, _i.channel) == id][0]
             for time_interval in channel.intervals:
                 # Check that file exists before proceeding
-                if not os.path.isfile(time_interval.filename):
+                if not time_interval.filename or \
+                        not os.path.isfile(time_interval.filename):
                     continue
                 # Check that the time_interval.start and end are correct!
                 time_interval.start, time_interval.end = \
