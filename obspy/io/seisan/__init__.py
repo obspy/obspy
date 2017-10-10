@@ -17,7 +17,7 @@ Reading
 Importing SEISAN files is done similar to reading any other waveform data
 format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
 the :mod:`obspy.core` module. Examples seismograms files may be found at
-https://examples.obspy.org.
+http://examples.obspy.org.
 
 >>> from obspy import read
 >>> st = read("/path/to/2001-01-13-1742-24S.KONO__004")
