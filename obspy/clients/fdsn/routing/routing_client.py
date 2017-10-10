@@ -267,6 +267,36 @@ class BaseRoutingClient(HTTPClient):
         bulk.extend([starttime, endtime])
         return self.get_waveforms_bulk([bulk], **kwargs)
 
+    @_assert_filename_not_in_kwargs
+    def get_stations(self, **kwargs):
+        """
+        Get stations from multiple data centers.
+
+        It will pass on most parameters to the underlying routed service.
+        They will also be passed on to the individual FDSNWS implementations
+        if a service supports them.
+
+        The ``filename`` parameter of the single provider FDSN client is not
+        supported.
+
+        This can route on a number of different parameters, please see the
+        web sites of the
+        `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
+        and of the `EIDAWS Routing Service
+        <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_ for
+        details.
+        """
+        # Just pass these to the bulk request.
+        bulk = []
+        for _i in ["network", "station", "location", "channel", "starttime",
+                   "endtime"]:
+            if _i in kwargs:
+                bulk.append(kwargs[_i])
+                del kwargs[_i]
+            else:
+                bulk.append("*")
+        return self.get_stations_bulk([bulk], **kwargs)
+
 
 if __name__ == '__main__':  # pragma: no cover
     import doctest

@@ -139,26 +139,7 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_
         for details.
         """
-        # This unfortunately cannot just be passed to the bulk service
-        # as NSLC and the times might be empty and the bulk service does not
-        # support that.
-        #
-        # Parameters the routing service can work with.
-        kwargs_of_interest = ["network", "station", "location", "channel",
-                              "starttime", "endtime"]
-        params = {}
-        for _i in kwargs_of_interest:
-            if _i in kwargs:
-                params[_i] = str(kwargs[_i])
-                del kwargs[_i]
-
-        params["format"] = "post"
-        params["service"] = "station"
-        params["alternative"] = "false"
-        r = self._download(self._url + "/query", params=params)
-        split = self._split_routing_response(
-            r.content.decode() if hasattr(r.content, "decode") else r.content)
-        return self._download_stations(split, **kwargs)
+        return super(EIDAWSRoutingClient, self).get_stations(**kwargs)
 
     @_assert_filename_not_in_kwargs
     def get_stations_bulk(self, bulk, **kwargs):

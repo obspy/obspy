@@ -106,16 +106,7 @@ class FederatorRoutingClient(BaseRoutingClient):
         `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_
         for details.
         """
-        # Just pass these to the bulk request.
-        bulk = []
-        for _i in ["network", "station", "location", "channel", "starttime",
-                   "endtime"]:
-            if _i in kwargs:
-                bulk.append(kwargs[_i])
-                del kwargs[_i]
-            else:
-                bulk.append("*")
-        return self.get_stations_bulk([bulk], **kwargs)
+        return super(FederatorRoutingClient, self).get_stations(**kwargs)
 
     @_assert_filename_not_in_kwargs
     def get_stations_bulk(self, bulk, **kwargs):
