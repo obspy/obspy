@@ -8,14 +8,14 @@ import unittest
 import os
 
 import obspy
-from obspy.imaging.ray_paths import get_ray_paths
+from obspy.taup.ray_paths import get_ray_paths
 
 import obspy.geodetics.base as geodetics
 
 
-class PathPlottingTestCase(unittest.TestCase):
+class RayPathCalculationsTestCase(unittest.TestCase):
     """
-    Test suite for obspy.core.util.geodetics
+    Test suite for obspy.taup.ray_paths
     """
     def setUp(self):
         # load an inventory and an event catalog to test
@@ -58,7 +58,7 @@ class PathPlottingTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(PathPlottingTestCase, 'test')
+    return unittest.makeSuite(RayPathCalculationsTestCase, 'test')
 
 
 if __name__ == '__main__':

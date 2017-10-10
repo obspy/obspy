@@ -16,7 +16,6 @@
        mopad_wrapper
        maps
        source
-       ray_paths
 
     .. comment to end block
 

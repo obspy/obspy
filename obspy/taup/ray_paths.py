@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Plotting 3D ray paths.
+Calculations for 3D ray paths.
 
 :author:
     Matthias Meschede
