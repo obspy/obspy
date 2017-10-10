@@ -13,6 +13,8 @@ master: (doi: 10.5281/zenodo.165135)
      (see #1185).
    * change version number scheme for scenarios when no official version number
      can be determined (see #1889 and #1916)
+   * Support for the IRIS Federator and EIDAWS FDSNWS web routing services
+     (see #1779 and #1919).
  - obspy.core:
    * UTCDateTime is now based on nanoseconds (long) instead of a unix
      timestamp in microseconds (float) - resulting in higher precision and
