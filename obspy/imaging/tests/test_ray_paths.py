@@ -8,18 +8,9 @@ import unittest
 import os
 
 import obspy
-from obspy.core.util.testing import ImageComparison
-from obspy import read_inventory, read_events
-from obspy.imaging.ray_paths import plot_rays, get_ray_paths
+from obspy.imaging.ray_paths import get_ray_paths
 
 import obspy.geodetics.base as geodetics
-
-
-try:
-    from mayavi import mlab  # @UnusedImport # NOQA
-    HAS_MAYAVI = True
-except ImportError:
-    HAS_MAYAVI = False
 
 
 class PathPlottingTestCase(unittest.TestCase):
@@ -64,29 +55,6 @@ class PathPlottingTestCase(unittest.TestCase):
                                      taup_model='iasp91')
         self.assertEqual(len(greatcircles), 1)
         self.assertEqual(greatcircles[0][1], 'P')
-
-    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
-                     'geographiclib is not installed or doesn\'t run')
-    @unittest.skipIf(not HAS_MAYAVI,
-                     'Module mayavi is not installed or doesn\'t run')
-    def test_path_plotting(self):
-        # uncomment the following to read the global network inventory and
-        # a basic catalog that are used by the commented tests:
-        filedir = os.path.dirname(__file__)
-        data_path = os.path.join(filedir, 'data', 'IU_stations.txt')
-        # image_path = os.path.join(filedir, 'images', 'ray_paths.png')
-        inventory = read_inventory(data_path)
-        # inventory = read_inventory()
-        catalog = read_events()
-
-        # this test uses the resampling method along the CMB
-        view_dict = {'elevation': 80, 'azimuth': -20, 'distance': 4.,
-                     'focalpoint': (0., 0., 0.)}
-        with ImageComparison(self.path, 'ray_paths.png', reltol=1.5) as ic:
-            plot_rays(inventory=inventory, catalog=catalog,
-                      phase_list=['Pdiff'], colorscheme='dark',
-                      kind='mayavi', view_dict=view_dict, icol=2,
-                      fname_out=ic.name)
 
 
 def suite():
