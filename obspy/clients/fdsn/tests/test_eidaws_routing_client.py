@@ -89,18 +89,18 @@ NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
     def test_non_allowed_parameters(self):
         with self.assertRaises(ValueError) as e:
             self.client.get_waveforms(
-                "BW", "ALTM", "", "LHZ",
-                obspy.UTCDateTime(2017, 1, 1),
-                obspy.UTCDateTime(2017, 1, 1, 0, 1),
+                network="BW", station="ALTM", location="", channel="LHZ",
+                starttime=obspy.UTCDateTime(2017, 1, 1),
+                endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
                 filename="out.mseed")
         self.assertEqual(e.exception.args[0],
                          'The `filename` argument is not supported')
 
         with self.assertRaises(ValueError) as e:
             self.client.get_waveforms(
-                "BW", "ALTM", "", "LHZ",
-                obspy.UTCDateTime(2017, 1, 1),
-                obspy.UTCDateTime(2017, 1, 1, 0, 1),
+                network="BW", station="ALTM", location="", channel="LHZ",
+                starttime=obspy.UTCDateTime(2017, 1, 1),
+                endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
                 attach_response=True)
         self.assertEqual(e.exception.args[0],
                          'The `attach_response` argument is not supported')
@@ -128,8 +128,9 @@ NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
     def test_error_handling(self):
         with self.assertRaises(FDSNNoDataException) as e:
             self.client.get_waveforms(
-                "XX", "XXXXX", "XX", "XXX",
-                obspy.UTCDateTime(2017, 1, 1), obspy.UTCDateTime(2017, 1, 2))
+                network="XX", station="XXXXX", location="XX", channel="XXX",
+                starttime=obspy.UTCDateTime(2017, 1, 1),
+                endtime=obspy.UTCDateTime(2017, 1, 2))
         self.assertEqual(e.exception.args[0],
                          "No data available for request.")
 
@@ -141,16 +142,16 @@ NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
         with mock.patch(self._cls + ".get_waveforms_bulk") as p:
             p.return_value = "1234"
             st = self.client.get_waveforms(
-                "XX", "XXXXX", "XX", "XXX",
-                obspy.UTCDateTime(2017, 1, 1),
-                obspy.UTCDateTime(2017, 1, 2),
+                network="XX", station="XXXXX", location="XX", channel="XXX",
+                starttime=obspy.UTCDateTime(2017, 1, 1),
+                endtime=obspy.UTCDateTime(2017, 1, 2),
                 longestonly=True, minimumlength=2)
         self.assertEqual(st, "1234")
         self.assertEqual(p.call_count, 1)
         self.assertEqual(
             p.call_args[0][0][0],
-            ("XX", "XXXXX", "XX", "XXX", obspy.UTCDateTime(2017, 1, 1),
-             obspy.UTCDateTime(2017, 1, 2)))
+            ["XX", "XXXXX", "XX", "XXX", obspy.UTCDateTime(2017, 1, 1),
+             obspy.UTCDateTime(2017, 1, 2)])
         self.assertEqual(p.call_args[1],
                          {"longestonly": True, "minimumlength": 2})
 
