@@ -162,14 +162,14 @@ To use them, call the
 
 Get an instance of a routing client using the IRIS Federator:
 
->>> c = RoutingClient("iris-federator")
->>> print(type(c))  # doctest: +ELLIPSIS
+>>> client = RoutingClient("iris-federator")
+>>> print(type(client))  # doctest: +ELLIPSIS
 <class '...fdsn.routing.federator_routing_client.FederatorRoutingClient'>
 
 Or get an instance of a routing client using the EIDAWS routing web service:
 
->>> c = RoutingClient("eida-routing")
->>> print(type(c))  # doctest: +ELLIPSIS
+>>> client = RoutingClient("eida-routing")
+>>> print(type(client))  # doctest: +ELLIPSIS
 <class '...fdsn.routing.eidaws_routing_client.EIDAWSRoutingClient'>
 
 They can be used like the normal FDSNWS clients, meaning the
@@ -186,10 +186,11 @@ data centers to actually get the data. This happens fully automatically -
 please note that the clients also supports non-standard waveform
 query parameters like geographical constraints.
 
->>> c = RoutingClient("iris-federator")
->>> st = c.get_waveforms(
-...     channel="LHZ", starttime=obspy.UTCDateTime(2017, 1, 1),
-...     endtime=obspy.UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
+>>> from obspy import UTCDateTime
+>>> client = RoutingClient("iris-federator")
+>>> st = client.get_waveforms(
+...     channel="LHZ", starttime=UTCDateTime(2017, 1, 1),
+...     endtime=UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
 ...     longitude=10, maxradius=25)  # doctest: +SKIP
 >>> print(st)  # doctest: +SKIP
 2 Trace(s) in Stream:
@@ -198,10 +199,10 @@ II.MBAR.10.LHZ | 2017-01-01T00:00:00Z - ... | 1.0 Hz, 300 samples
 
 The same works for stations:
 
->>> c = RoutingClient("iris-federator")
->>> inv = c.get_stations(
-...     channel="LHZ", starttime=obspy.UTCDateTime(2017, 1, 1),
-...     endtime=obspy.UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
+>>> client = RoutingClient("iris-federator")
+>>> inv = client.get_stations(
+...     channel="LHZ", starttime=UTCDateTime(2017, 1, 1),
+...     endtime=UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
 ...     level="channel", longitude=10, maxradius=25)  # doctest: +SKIP
 >>> print(inv)  # doctest: +SKIP
 Inventory created at 2017-10-09T14:26:28.466161Z
