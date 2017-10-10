@@ -1042,7 +1042,8 @@ class Client(object):
             data_stream.close()
             return
         else:
-            inv = obspy.read_inventory(data_stream, format="stationxml")
+            # Works with text and StationXML data.
+            inv = obspy.read_inventory(data_stream)
             data_stream.close()
             return inv
 
