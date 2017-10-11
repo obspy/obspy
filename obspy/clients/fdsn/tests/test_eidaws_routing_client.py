@@ -243,8 +243,8 @@ AA B2 -- DD 2017-01-01T00:00:00 2017-01-02T00:10:00
                          "http://www.orfeus-eu.org/eidaws/routing/1/query")
         # Only a few arguments should be part of the URL.
         self.assertEqual(p1.call_args[1], {
-            'data': 'service=station\nformat=post\nalternative=false\n'
-                    'AA * * DD 2017-01-01T00:00:00.000000 *'})
+            'data': b'service=station\nformat=post\nalternative=false\n'
+                    b'AA * * DD 2017-01-01T00:00:00.000000 *'})
 
         self.assertEqual(p2.call_args[0][0], {
             "http://example1.com":
