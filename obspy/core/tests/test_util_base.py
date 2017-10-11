@@ -8,8 +8,11 @@ import shutil
 import unittest
 
 from obspy.core.compatibility import mock
-from obspy.core.util.base import NamedTemporaryFile, get_dependency_version
+from obspy.core.util.base import (NamedTemporaryFile, get_dependency_version,
+                                  download_to_file)
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
+
+from requests import HTTPError
 
 
 class UtilBaseTestCase(unittest.TestCase):
@@ -87,6 +90,24 @@ class UtilBaseTestCase(unittest.TestCase):
 
         # check that temp file is deleted
         self.assertFalse(os.path.exists(ic.name))
+
+    def test_mock_read_inventory_http_errors(self):
+        """
+        Tests HTTP Error on 204, 400, and 500
+        """
+        url = "http://obspy.org"
+        for response_tuple in [("204", "No Content"), ("400", "Bad Request"),
+                               ("500", "Internal Server Error")]:
+            code = response_tuple[0]
+            reason = response_tuple[1]
+            with mock.patch("requests.get") as mocked_get:
+                mocked_get.return_value.status_code = code
+                mocked_get.return_value.reason = reason
+                with self.assertRaises(HTTPError) as e:
+                    download_to_file(url, None)
+                self.assertEqual(e.exception.args[0],
+                                 "%s HTTP Error: %s for url: %s" %
+                                 (code, reason, url))
 
 
 def suite():
