@@ -20,21 +20,11 @@ import gzip
 import io
 import os
 import re
-import sys
 from socket import timeout as socket_timeout
 import textwrap
 import threading
 import warnings
 from collections import OrderedDict
-
-if sys.version_info.major == 2:
-    from urllib import urlencode
-    import urllib2 as urllib_request
-    import Queue as queue
-else:
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
-    import queue
 
 from lxml import etree
 
@@ -45,6 +35,15 @@ from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
                      FDSNRedirectException, FDSNNoDataException)
 from .wadl_parser import WADLParser
+
+if PY2:
+    from urllib import urlencode
+    import urllib2 as urllib_request
+    import Queue as queue
+else:
+    from urllib.parse import urlencode
+    import urllib.request as urllib_request
+    import queue
 
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
@@ -889,7 +888,7 @@ class Client(object):
         url = self._build_url("dataselect", "query")
 
         data_stream = self._download(url,
-                                     data=bulk.encode('ascii', 'strict'))
+                                     data=bulk)
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -1034,7 +1033,7 @@ class Client(object):
         url = self._build_url("station", "query")
 
         data_stream = self._download(url,
-                                     data=bulk.encode('ascii', 'strict'))
+                                     data=bulk)
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -1079,7 +1078,10 @@ class Client(object):
                 msg = ("Unrecognized input for 'bulk' argument. Please "
                        "contact developers if you think this is a bug.")
                 raise NotImplementedError(msg)
-        return bulk
+        if PY2:
+            return bulk
+        else:
+            return bulk.encode('ASCII')
 
     def _write_to_file_object(self, filename_or_object, data_stream):
         if hasattr(filename_or_object, "write"):
@@ -1296,53 +1298,7 @@ class Client(object):
             url, opener=self._url_opener, headers=self.request_headers,
             debug=self.debug, return_string=return_string, data=data,
             timeout=self.timeout, use_gzip=use_gzip)
-        # get detailed server response message
-        if code != 200:
-            try:
-                server_info = data.read()
-            except Exception:
-                server_info = None
-            else:
-                server_info = server_info.decode('ASCII', errors='ignore')
-            if server_info:
-                server_info = "\n".join(
-                    line for line in server_info.splitlines() if line)
-        # No data.
-        if code == 204:
-            raise FDSNNoDataException("No data available for request.",
-                                      server_info)
-        elif code == 400:
-            msg = ("Bad request. If you think your request was valid "
-                   "please contact the developers.")
-            raise FDSNException(msg, server_info)
-        elif code == 401:
-            raise FDSNException("Unauthorized, authentication required.",
-                                server_info)
-        elif code == 403:
-            raise FDSNException("Authentication failed.", server_info)
-        elif code == 413:
-            raise FDSNException("Request would result in too much data. "
-                                "Denied by the datacenter. Split the request "
-                                "in smaller parts", server_info)
-        # Request URI too large.
-        elif code == 414:
-            msg = ("The request URI is too large. Please contact the ObsPy "
-                   "developers.", server_info)
-            raise NotImplementedError(msg)
-        elif code == 500:
-            raise FDSNException("Service responds: Internal server error",
-                                server_info)
-        elif code == 503:
-            raise FDSNException("Service temporarily unavailable", server_info)
-        elif code is None:
-            if "timeout" in str(data).lower():
-                raise FDSNException("Timed Out")
-            else:
-                raise FDSNException("Unknown Error (%s): %s" % (
-                    (str(data.__class__.__name__), str(data))))
-        # Catch any non 200 codes.
-        elif code != 200:
-            raise FDSNException("Unknown HTTP code: %i" % code, server_info)
+        raise_on_error(code, data)
         return data
 
     def _build_url(self, service, resource_type, parameters={}):
@@ -1442,7 +1398,7 @@ class Client(object):
             elif isinstance(wadl, FDSNRedirectException):
                 redirect_messages.add(str(wadl))
                 continue
-            elif wadl == "timeout":
+            elif wadl.decode('utf-8') == "timeout":
                 raise FDSNException("Timeout while requesting '%s'." % url)
 
             if "dataselect" in url:
@@ -1622,6 +1578,67 @@ def build_url(base_url, service, major_version, resource_type,
     return url
 
 
+def raise_on_error(code, data):
+    """
+    Raise an error for non-200 HTTP response codes
+
+    Note: Also used by the ~obspy.clients.fdsn.routers.fedcatalog_client
+          module.
+
+    :type code: int
+    :param code: HTTP response code
+    :type data: io.BytesIO
+    :param data: Data returned by the server
+    """
+    # get detailed server response message
+    if code != 200:
+        try:
+            server_info = data.read()
+        except Exception:
+            server_info = None
+        else:
+            server_info = server_info.decode('ASCII', errors='ignore')
+        if server_info:
+            server_info = "\n".join(
+                line for line in server_info.splitlines() if line)
+    # No data.
+    if code == 204:
+        raise FDSNNoDataException("No data available for request.",
+                                  server_info)
+    elif code == 400:
+        msg = ("Bad request. If you think your request was valid "
+               "please contact the developers.")
+        raise FDSNException(msg, server_info)
+    elif code == 401:
+        raise FDSNException("Unauthorized, authentication required.",
+                            server_info)
+    elif code == 403:
+        raise FDSNException("Authentication failed.", server_info)
+    elif code == 413:
+        raise FDSNException("Request would result in too much data. "
+                            "Denied by the datacenter. Split the request "
+                            "in smaller parts", server_info)
+    # Request URI too large.
+    elif code == 414:
+        msg = ("The request URI is too large. Please contact the ObsPy "
+               "developers.", server_info)
+        raise NotImplementedError(msg)
+    elif code == 500:
+        raise FDSNException("Service responds: Internal server error",
+                            server_info)
+    elif code == 503:
+        raise FDSNException("Service temporarily unavailable", server_info)
+    elif code is None:
+        if "timeout" in str(data).lower():
+            raise FDSNException("Timed Out")
+        else:
+            raise FDSNException("Unknown Error (%s): %s" % (
+                (str(data.__class__.__name__), str(data))))
+    # Catch any non 200 codes.
+    elif code != 200:
+        raise FDSNException("Unknown HTTP code: %i" % code, server_info)
+
+
 def download_url(url, opener, timeout=10, headers={}, debug=False,
                  return_string=True, data=None, use_gzip=True):
     """
@@ -1635,6 +1652,9 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
     specified.
 
     Performs a http GET if data=None, otherwise a http POST.
+
+    Note: Also used by the ~obspy.clients.fdsn.routers.fedcatalog_client
+          module.
     """
     if debug is True:
         print("Downloading %s %s requesting gzip compression" % (

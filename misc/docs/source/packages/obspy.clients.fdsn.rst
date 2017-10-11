@@ -10,6 +10,7 @@
        :nosignatures:
 
        client.Client
+       client.FederatedClient
 
     .. comment to end block
 
@@ -20,6 +21,10 @@
        :nosignatures:
 
        client
+       routers
+       routers.fedcatalog_parser
+       routers.fedcatalog_client.FederatedClient
+       routers.routing_client
        mass_downloader
        mass_downloader.domain
        mass_downloader.mass_downloader.MassDownloader
