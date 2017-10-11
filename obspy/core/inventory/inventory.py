@@ -76,8 +76,12 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
         suffix = \
             os.path.basename(path_or_file_object).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            download_to_file(url=path_or_file_object, filename_or_buffer=fh)
-            return read_inventory(fh.name, format=format)
+            status_code = download_to_file(url=path_or_file_object,
+                                           filename_or_buffer=fh)
+            if status_code == 204:
+                return Inventory([], "")
+            else:
+                return read_inventory(fh.name, format=format)
     return _read_from_plugin("inventory", path_or_file_object,
                              format=format, *args, **kwargs)[0]
 

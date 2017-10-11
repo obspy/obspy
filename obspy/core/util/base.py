@@ -587,6 +587,8 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
                     continue
                 fh.write(chunk)
 
+    return r.status_code
+
 
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)
