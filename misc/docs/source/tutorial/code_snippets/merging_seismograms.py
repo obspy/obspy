@@ -5,9 +5,9 @@ import obspy
 
 
 # Read in all files starting with dis.
-st = obspy.read("https://examples.obspy.org/dis.G.SCZ.__.BHE")
-st += obspy.read("https://examples.obspy.org/dis.G.SCZ.__.BHE.1")
-st += obspy.read("https://examples.obspy.org/dis.G.SCZ.__.BHE.2")
+st = obspy.read("http://examples.obspy.org/dis.G.SCZ.__.BHE")
+st += obspy.read("http://examples.obspy.org/dis.G.SCZ.__.BHE.1")
+st += obspy.read("http://examples.obspy.org/dis.G.SCZ.__.BHE.2")
 
 # sort
 st.sort(['starttime'])

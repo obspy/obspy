@@ -11,16 +11,16 @@ contains three channels of a seismograph.
 .. doctest::
 
    >>> from obspy.core import read
-   >>> singlechannel = read('https://examples.obspy.org/COP.BHZ.DK.2009.050')
+   >>> singlechannel = read('http://examples.obspy.org/COP.BHZ.DK.2009.050')
    >>> print(singlechannel)
    1 Trace(s) in Stream:
    DK.COP..BHZ | 2009-02-19T00:00:00.025100Z - 2009-02-19T23:59:59.975100Z | 20.0 Hz, 1728000 samples
 
 .. doctest::
 
-   >>> threechannels = read('https://examples.obspy.org/COP.BHE.DK.2009.050')
-   >>> threechannels += read('https://examples.obspy.org/COP.BHN.DK.2009.050')
-   >>> threechannels += read('https://examples.obspy.org/COP.BHZ.DK.2009.050')
+   >>> threechannels = read('http://examples.obspy.org/COP.BHE.DK.2009.050')
+   >>> threechannels += read('http://examples.obspy.org/COP.BHN.DK.2009.050')
+   >>> threechannels += read('http://examples.obspy.org/COP.BHZ.DK.2009.050')
    >>> print(threechannels)
    3 Trace(s) in Stream:
    DK.COP..BHE | 2009-02-19T00:00:00.035100Z - 2009-02-19T23:59:59.985100Z | 20.0 Hz, 1728000 samples
@@ -97,7 +97,7 @@ setting the ``type`` parameter to ``'dayplot'``:
 Event information can be included in the plot as well (experimental feature, syntax might change):
 
     >>> from obspy import read
-    >>> st = read("https://examples.obspy.org/GR.BFO..LHZ.2012.108")
+    >>> st = read("http://examples.obspy.org/GR.BFO..LHZ.2012.108")
     >>> st.filter("lowpass", freq=0.1, corners=2)
     >>> st.plot(type="dayplot", interval=60, right_vertical_labels=False,
     ...         vertical_scaling_range=5e3, one_tick_per_line=True,

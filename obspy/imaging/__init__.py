@@ -23,7 +23,7 @@ arguments to adjust the plot, such as color and tick format changes.
 Additionally the start and end time of the plot can be given as
 :class:`~obspy.core.utcdatetime.UTCDateTime` objects.
 
-Examples files may be retrieved via https://examples.obspy.org.
+Examples files may be retrieved via http://examples.obspy.org.
 
 >>> from obspy import read
 >>> st = read()

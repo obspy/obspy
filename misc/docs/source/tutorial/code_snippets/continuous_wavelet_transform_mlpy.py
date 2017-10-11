@@ -7,7 +7,7 @@ import obspy
 from obspy.imaging.cm import obspy_sequential
 
 
-tr = obspy.read("https://examples.obspy.org/a02i.2008.240.mseed")[0]
+tr = obspy.read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
 
 omega0 = 8
 wavelet_fct = "morlet"
