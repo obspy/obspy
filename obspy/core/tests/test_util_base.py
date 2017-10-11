@@ -9,7 +9,7 @@ import unittest
 
 from obspy.core.compatibility import mock
 from obspy.core.util.base import (NamedTemporaryFile, get_dependency_version,
-                                 download_to_file)
+                                  download_to_file)
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 
 from requests import HTTPError
