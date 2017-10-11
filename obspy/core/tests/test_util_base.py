@@ -99,16 +99,16 @@ class UtilBaseTestCase(unittest.TestCase):
         url = "http://obspy.org"
         for response_tuple in [("204", "No Content"), ("400", "Bad Request"),
                                ("500", "Internal Server Error")]:
-          code = response_tuple[0]
-          reason = response_tuple[1]
-          with mock.patch("requests.get") as mocked_get:
-            mocked_get.return_value.status_code = code
-            mocked_get.return_value.reason = reason
-            with self.assertRaises(HTTPError) as e:
-              download_to_file(url, None)
-            self.assertEqual(e.exception.args[0],
-                             "%s HTTP Error: %s for url: %s" % (code,
-                                                                reason, url))
+            code = response_tuple[0]
+            reason = response_tuple[1]
+            with mock.patch("requests.get") as mocked_get:
+                mocked_get.return_value.status_code = code
+                mocked_get.return_value.reason = reason
+                with self.assertRaises(HTTPError) as e:
+                    download_to_file(url, None)
+                    self.assertEqual(e.exception.args[0],
+                                     "%s HTTP Error: %s for url: %s" %
+                                     (code, reason, url))
 
 
 def suite():
