@@ -106,9 +106,12 @@ class EIDAWSRoutingClient(BaseRoutingClient):
                 new_bulk[-1].extend(t)
 
         # Finally get the waveforms by getting the routes and downloading
-        # everytyhing.
-        arguments = collections.OrderedDict(
-            service="dataselect", format="post")
+        # everytyhing. Don't directly pass in the initializer as the order
+        # would not be guaranteed across all Python version.
+        arguments = collections.OrderedDict()
+        arguments["service"] = "dataselect"
+        arguments["format"] = "post"
+
         bulk_str = get_bulk_string(new_bulk, arguments)
         r = self._download(self._url + "/query", data=bulk_str)
         split = self._split_routing_response(
