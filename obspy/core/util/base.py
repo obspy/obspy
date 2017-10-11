@@ -575,7 +575,7 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
 
     # Raise anything except for 200
     if r.status_code != 200:
-        raise requests.HTTPError(u'%s HTTP Error: %s for url: %s'
+        raise requests.HTTPError('%s HTTP Error: %s for url: %s'
                                  % (r.status_code, r.reason, url))
 
     if hasattr(filename_or_buffer, "write"):

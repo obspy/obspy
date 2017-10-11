@@ -107,9 +107,9 @@ class UtilBaseTestCase(unittest.TestCase):
                 mocked_get.return_value.reason = reason
                 with self.assertRaises(HTTPError) as e:
                     download_to_file(url, None)
-                    self.assertEqual(e.exception.args[0],
-                                     "%s HTTP Error: %s for url: %s" %
-                                     (code, reason, url))
+                self.assertEqual(e.exception.args[0],
+                                 "%s HTTP Error: %s for url: %s" %
+                                 (code, reason, url))
 
 
 def suite():
