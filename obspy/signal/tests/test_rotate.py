@@ -185,6 +185,41 @@ class RotateTestCase(unittest.TestCase):
         np.testing.assert_allclose(_dip_azimuth2zne_base_vector(0, 270),
                                    [0.0, 0.0, -1.0], atol=1E-10)
 
+        # Normalizing helper.
+        def _n(v):
+            return np.array(v) / np.linalg.norm(np.array(v))
+
+        # 4 corners in the plain.
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(0, 45),
+                                   _n([0.0, 1.0, 1.0]), atol=1E-10)
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(0, 135),
+                                   _n([0.0, -1.0, 1.0]), atol=1E-10)
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(0, 225),
+                                   _n([0.0, -1.0, -1.0]), atol=1E-10)
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(0, 315),
+                                   _n([0.0, 1.0, -1.0]), atol=1E-10)
+
+        # 4 corners in the top.
+        dip = np.rad2deg(np.arctan2(1, np.sqrt(2)))
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(-dip, 45),
+                                   _n([1.0, 1.0, 1.0]), atol=1E-10)
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(-dip, 135),
+                                   _n([1.0, -1.0, 1.0]), atol=1E-10)
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(-dip, 225),
+                                   _n([1.0, -1.0, -1.0]), atol=1E-10)
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(-dip, 315),
+                                   _n([1.0, 1.0, -1.0]), atol=1E-10)
+
+        # And in the bottom
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(dip, 45),
+                                   _n([-1.0, 1.0, 1.0]), atol=1E-10)
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(dip, 135),
+                                   _n([-1.0, -1.0, 1.0]), atol=1E-10)
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(dip, 225),
+                                   _n([-1.0, -1.0, -1.0]), atol=1E-10)
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(dip, 315),
+                                   _n([-1.0, 1.0, -1.0]), atol=1E-10)
+
     def test_base_vector_from_azimuth_and_dip_calculation(self):
         """
         Tests the _dip_azimuth2zne_base_vector() method against a solution
