@@ -34,13 +34,12 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
     :param taup_model: the taup model for which the greatcircle paths are
                   computed
     :returns: a list of tuples
-              [(gcircle, phase_name, value, station_label, event_label), ...]
-              gcircle is a [3, npoints] array with the path coordinates.
-              phase_name is the name of the seismic phase,
-              value is a certain value that can be chosen, like the radiation
-              pattern intensity.
-              station_label is the name of the station that belongs to the path
-              event_label is the name of the event that belongs to the path
+        ``[(gcircle, phase_name, value, station_label, event_label,
+        event_id, origin_id), ...]``. ``gcircle`` is an array of shape
+        ``[3, npoints]`` with the path coordinates.  ``phase_name`` is the name
+        of the seismic phase, ``station_label`` is the name of the station that
+        belongs to the path. ``event_label`` is the name of the event that
+        belongs to the path.
     """
     # GEOGRAPHICLIB is mandatory for this function
     if not geodetics.HAS_GEOGRAPHICLIB:
@@ -52,7 +51,7 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
     stlabels = []
     for network in inventory:
         for station in network:
-            label_ = "   " + ".".join((network.code, station.code))
+            label_ = ".".join((network.code, station.code))
             if station.latitude is None or station.longitude is None:
                 msg = ("Station '%s' does not have latitude/longitude "
                        "information and will not be plotted." % label_)
@@ -71,6 +70,8 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
     evlons = []
     evdepths = []
     evlabels = []
+    event_ids = []
+    origin_ids = []
     for event in catalog:
         if not event.origins:
             msg = ("Event '%s' does not have an origin and will not be "
@@ -86,12 +87,15 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
         evlats.append(origin.latitude)
         evlons.append(origin.longitude)
         if not origin.get('depth'):
+            # XXX do we really want to include events without depth???
             origin.depth = 0.
         evdepths.append(origin.get('depth') * 1e-3)
         magnitude = event.preferred_magnitude() or event.magnitudes[0]
         mag = magnitude.mag
-        label = '  {:s} | M{:.1f}'.format(str(origin.time.date), mag)
+        label = '{:s} | M{:.1f}'.format(str(origin.time.date), mag)
         evlabels.append(label)
+        event_ids.append(str(event.resource_id))
+        origin_ids.append(str(origin.resource_id))
 
     # initialize taup model if it is not provided
     if isinstance(taup_model, str):
@@ -104,8 +108,8 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
     r_earth = model.model.radius_of_planet
     greatcircles = []
     for stlat, stlon, stlabel in zip(stlats, stlons, stlabels):
-        for evlat, evlon, evdepth_km, evlabel in zip(evlats, evlons, evdepths,
-                                                     evlabels):
+        for evlat, evlon, evdepth_km, evlabel, event_id, origin_id in zip(
+                evlats, evlons, evdepths, evlabels, event_ids, origin_ids):
             arrivals = model.get_ray_paths_geo(
                     evdepth_km, evlat, evlon, stlat, stlon,
                     phase_list=phase_list, resample=True)
@@ -125,9 +129,8 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
                                         radii * np.sin(thetas) * np.sin(phis),
                                         radii * np.cos(thetas)])
 
-                value = 0.
-                greatcircles.append((gcircle, arr.name, value, stlabel,
-                                     evlabel))
+                greatcircles.append((gcircle, arr.name, stlabel, evlabel,
+                                     event_id, origin_id))
 
     return greatcircles
 
