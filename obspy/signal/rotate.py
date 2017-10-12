@@ -137,24 +137,7 @@ def _dip_azimuth2zne_base_vector(dip, azimuth):
     length to a vector in the ZNE (Vertical, North, East) base.
 
     The definition of azimuth and dip is according to the SEED reference
-    manual, as are the following examples (they use rounding for small
-    numerical inaccuracies - also positive and negative zero are treated as
-    equal):
-
-    >>> r = lambda x: np.array([_i if _i != -0.0 else 0.0\
-        for _i in np.round(x, 10)])
-    >>> r(_dip_azimuth2zne_base_vector(-90, 0)) #doctest: +NORMALIZE_WHITESPACE
-    array([ 1., 0., 0.])
-    >>> r(_dip_azimuth2zne_base_vector(90, 0)) #doctest: +NORMALIZE_WHITESPACE
-    array([-1., 0., 0.])
-    >>> r(_dip_azimuth2zne_base_vector(0, 0)) #doctest: +NORMALIZE_WHITESPACE
-    array([ 0., 1., 0.])
-    >>> r(_dip_azimuth2zne_base_vector(0, 180)) #doctest: +NORMALIZE_WHITESPACE
-    array([ 0., -1., 0.])
-    >>> r(_dip_azimuth2zne_base_vector(0, 90)) #doctest: +NORMALIZE_WHITESPACE
-    array([ 0., 0., 1.])
-    >>> r(_dip_azimuth2zne_base_vector(0, 270)) #doctest: +NORMALIZE_WHITESPACE
-    array([ 0., 0., -1.])
+    manual.
     """
     dip = np.deg2rad(dip)
     azimuth = np.deg2rad(azimuth)

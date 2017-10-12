@@ -165,6 +165,26 @@ class RotateTestCase(unittest.TestCase):
             ValueError, 'All three data arrays must be of same length.',
             rotate2zne, z, azi_1, dip_1, n, azi_2, dip_2, e, azi_3, dip_3)
 
+    def test_base_vector_calculation_simple_cases(self):
+        """
+        Tests the _dip_azimuth2zne_base_vector() with some simple cases.
+        """
+        # Up and down.
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(-90, 0),
+                                   [1.0, 0.0, 0.0], atol=1E-10)
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(90, 0),
+                                   [-1.0, 0.0, 0.0], atol=1E-10)
+        # North and South.
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(0, 0),
+                                   [0.0, 1.0, 0.0], atol=1E-10)
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(0, 180),
+                                   [0.0, -1.0, 0.0], atol=1E-10)
+        # East and West.
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(0, 90),
+                                   [0.0, 0.0, 1.0], atol=1E-10)
+        np.testing.assert_allclose(_dip_azimuth2zne_base_vector(0, 270),
+                                   [0.0, 0.0, -1.0], atol=1E-10)
+
     def test_base_vector_from_azimuth_and_dip_calculation(self):
         """
         Tests the _dip_azimuth2zne_base_vector() method against a solution
