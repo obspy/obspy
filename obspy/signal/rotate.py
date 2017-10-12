@@ -25,8 +25,6 @@ from math import cos, sin, radians
 
 import numpy as np
 
-from obspy.core.util.decorator import deprecated
-
 
 def rotate_ne_rt(n, e, ba):
     """
@@ -131,19 +129,6 @@ def rotate_lqt_zne(l, q, t, ba, inc):
     n = -l * sin(inc) * cos(ba) + q * cos(inc) * cos(ba) + t * sin(ba)
     e = -l * sin(inc) * sin(ba) + q * cos(inc) * sin(ba) - t * cos(ba)
     return z, n, e
-
-
-@deprecated()
-def _dip_azimuth2zse_base_vector(dip, azimuth):
-    """
-    DEPRECATED in foavor of :func:`_dip_azimuth2zne_base_vector`
-    """
-    dip = np.deg2rad(dip)
-    azimuth = np.deg2rad(azimuth)
-
-    return np.array([-np.sin(dip),
-                     np.cos(azimuth) * np.cos(dip),
-                     np.sin(azimuth) * np.cos(dip)])
 
 
 def _dip_azimuth2zne_base_vector(dip, azimuth):
