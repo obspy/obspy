@@ -516,6 +516,14 @@ class ClientTestCase(unittest.TestCase):
         for query, filename in zip(queries, result_files):
             # test output to stream
             got = client.get_waveforms(*query)
+            # Assert that the meta-information about the provider is stored.
+            for tr in got:
+                self.assertEqual(
+                    tr.stats._fdsnws_dataselect_url,
+                    client.base_url + "/fdsnws/dataselect/1/query")
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
             self.assertEqual(got, expected, "Dataselect failed for query %s" %
@@ -543,6 +551,9 @@ class ClientTestCase(unittest.TestCase):
         got = client.get_waveforms(*query)
         file_ = os.path.join(self.datapath, filename)
         expected = read(file_)
+        # Remove fdsnws URL as it is not in the data from the disc.
+        for tr in got:
+            del tr.stats._fdsnws_dataselect_url
         self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_conflicting_params(self):
@@ -655,6 +666,9 @@ class ClientTestCase(unittest.TestCase):
         for client in clients:
             # test output to stream
             got = client.get_waveforms_bulk(bulk, **params)
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
             with NamedTemporaryFile() as tf:
@@ -671,6 +685,19 @@ class ClientTestCase(unittest.TestCase):
         for client in clients:
             # test output to stream
             got = client.get_waveforms_bulk(bulk)
+            # Assert that the meta-information about the provider is stored.
+            for tr in got:
+                if client.user:
+                    self.assertEqual(
+                        tr.stats._fdsnws_dataselect_url,
+                        client.base_url + "/fdsnws/dataselect/1/queryauth")
+                else:
+                    self.assertEqual(
+                        tr.stats._fdsnws_dataselect_url,
+                        client.base_url + "/fdsnws/dataselect/1/query")
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
             with NamedTemporaryFile() as tf:
@@ -683,10 +710,16 @@ class ClientTestCase(unittest.TestCase):
                 with open(tf.name, "wt") as fh:
                     fh.write(bulk)
                 got = client.get_waveforms_bulk(bulk)
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             self.assertEqual(got, expected, failmsg(got, expected))
         # test cases for providing a file-like object
         for client in clients:
             got = client.get_waveforms_bulk(io.StringIO(bulk))
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_station_bulk(self):

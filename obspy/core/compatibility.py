@@ -18,9 +18,18 @@ except ImportError:
     pass
 
 if PY2:
-    from string import maketrans
+    from string import maketrans  # NOQA
+    from urlparse import urlparse  # NOQA
 else:
-    maketrans = bytes.maketrans
+    maketrans = bytes.maketrans  # NOQA
+    from urllib.parse import urlparse  # NOQA
+
+
+# Define the string types.
+if PY2:
+    string_types = (basestring,)  # NOQA
+else:
+    string_types = (str,)  # NOQA
 
 
 # NumPy does not offer the from_buffer method under Python 3 and instead

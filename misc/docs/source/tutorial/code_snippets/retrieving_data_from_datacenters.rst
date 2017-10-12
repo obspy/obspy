@@ -21,6 +21,9 @@ the documentation of the various modules.
 The FDSN Web Services
 ---------------------
 
+Basic FDSN Web Services
+-----------------------
+
 +----------------------+--------------------------------+
 | Available Data Types | Format                         |
 +======================+================================+
@@ -42,6 +45,30 @@ to request data from any data center implementing the `FDSN web services
 IRIS/ORFEUS/INGV/ETH/GFZ/RESIF/... - a curated list can be found `here
 <https://www.fdsn.org/webservices/datacenters/>`_. As a further advantage it
 returns data in the most modern and future proof formats.
+
+FDSN Routing Web Services
+-------------------------
+
+If you don't know which data center has what data, use one of the routing
+services. ObsPy has support for two of them:
+
+(i) The `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_.
+(ii) The `EIDAWS Routing Service
+     <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_.
+
+See the bottom part of the :mod:`obspy.clients.fdsn` module page for usage
+details.
+
+FDSN Mass Downloader
+--------------------
+
+If you want to download a lot of data across a number of data centers,
+ObsPy's mass (or batch) downloader is for you. You can formulate your queries
+for example in terms of geographical domains and ObsPy will download
+waveforms and corresponding station meta information to produce complete
+data sets, ready for research, including some basic quality control.
+
+See the :mod:`obspy.clients.fdsn.mass_downloader` page for more details.
 
 -------
 ArcLink
