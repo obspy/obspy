@@ -21,9 +21,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from math import cos, sin, radians
+from math import cos, sin, pi
 
 import numpy as np
+
+from obspy.core.util.decorator import deprecated
 
 
 def rotate_ne_rt(n, e, ba):
@@ -47,9 +49,8 @@ def rotate_ne_rt(n, e, ba):
         raise TypeError("North and East component have different length.")
     if ba < 0 or ba > 360:
         raise ValueError("Back Azimuth should be between 0 and 360 degrees.")
-    ba = radians(ba)
-    r = - e * sin(ba) - n * cos(ba)
-    t = - e * cos(ba) + n * sin(ba)
+    r = e * sin((ba + 180) * 2 * pi / 360) + n * cos((ba + 180) * 2 * pi / 360)
+    t = e * cos((ba + 180) * 2 * pi / 360) - n * sin((ba + 180) * 2 * pi / 360)
     return r, t
 
 
@@ -101,8 +102,8 @@ def rotate_zne_lqt(z, n, e, ba, inc):
         raise ValueError("Back Azimuth should be between 0 and 360 degrees!")
     if inc < 0 or inc > 360:
         raise ValueError("Inclination should be between 0 and 360 degrees!")
-    ba = radians(ba)
-    inc = radians(inc)
+    ba *= 2 * pi / 360
+    inc *= 2 * pi / 360
     l = z * cos(inc) - n * sin(inc) * cos(ba) - e * sin(inc) * sin(ba)
     q = z * sin(inc) + n * cos(inc) * cos(ba) + e * cos(inc) * sin(ba)
     t = n * sin(ba) - e * cos(ba)
@@ -123,18 +124,31 @@ def rotate_lqt_zne(l, q, t, ba, inc):
         raise ValueError("Back Azimuth should be between 0 and 360 degrees!")
     if inc < 0 or inc > 360:
         raise ValueError("Inclination should be between 0 and 360 degrees!")
-    ba = radians(ba)
-    inc = radians(inc)
+    ba *= 2 * pi / 360
+    inc *= 2 * pi / 360
     z = l * cos(inc) + q * sin(inc)
     n = -l * sin(inc) * cos(ba) + q * cos(inc) * cos(ba) + t * sin(ba)
     e = -l * sin(inc) * sin(ba) + q * cos(inc) * sin(ba) - t * cos(ba)
     return z, n, e
 
 
+@deprecated()
 def _dip_azimuth2zse_base_vector(dip, azimuth):
     """
+    DEPRECATED in foavor of :func:`_dip_azimuth2zne_base_vector`
+    """
+    dip = np.deg2rad(dip)
+    azimuth = np.deg2rad(azimuth)
+
+    return np.array([-np.sin(dip),
+                     np.cos(azimuth) * np.cos(dip),
+                     np.sin(azimuth) * np.cos(dip)])
+
+
+def _dip_azimuth2zne_base_vector(dip, azimuth):
+    """
     Helper function converting a vector described with azimuth and dip of unit
-    length to a vector in the ZSE (Vertical, South, East) base.
+    length to a vector in the ZNE (Vertical, North, East) base.
 
     The definition of azimuth and dip is according to the SEED reference
     manual, as are the following examples (they use rounding for small
@@ -143,24 +157,24 @@ def _dip_azimuth2zse_base_vector(dip, azimuth):
 
     >>> r = lambda x: np.array([_i if _i != -0.0 else 0.0\
         for _i in np.round(x, 10)])
-    >>> r(_dip_azimuth2zse_base_vector(-90, 0)) #doctest: +NORMALIZE_WHITESPACE
+    >>> r(_dip_azimuth2zne_base_vector(-90, 0)) #doctest: +NORMALIZE_WHITESPACE
     array([ 1., 0., 0.])
-    >>> r(_dip_azimuth2zse_base_vector(90, 0)) #doctest: +NORMALIZE_WHITESPACE
+    >>> r(_dip_azimuth2zne_base_vector(90, 0)) #doctest: +NORMALIZE_WHITESPACE
     array([-1., 0., 0.])
-    >>> r(_dip_azimuth2zse_base_vector(0, 0)) #doctest: +NORMALIZE_WHITESPACE
-    array([ 0., -1., 0.])
-    >>> r(_dip_azimuth2zse_base_vector(0, 180)) #doctest: +NORMALIZE_WHITESPACE
+    >>> r(_dip_azimuth2zne_base_vector(0, 0)) #doctest: +NORMALIZE_WHITESPACE
     array([ 0., 1., 0.])
-    >>> r(_dip_azimuth2zse_base_vector(0, 90)) #doctest: +NORMALIZE_WHITESPACE
+    >>> r(_dip_azimuth2zne_base_vector(0, 180)) #doctest: +NORMALIZE_WHITESPACE
+    array([ 0., -1., 0.])
+    >>> r(_dip_azimuth2zne_base_vector(0, 90)) #doctest: +NORMALIZE_WHITESPACE
     array([ 0., 0., 1.])
-    >>> r(_dip_azimuth2zse_base_vector(0, 270)) #doctest: +NORMALIZE_WHITESPACE
+    >>> r(_dip_azimuth2zne_base_vector(0, 270)) #doctest: +NORMALIZE_WHITESPACE
     array([ 0., 0., -1.])
     """
     dip = np.deg2rad(dip)
     azimuth = np.deg2rad(azimuth)
 
     return np.array([-np.sin(dip),
-                     -np.cos(azimuth) * np.cos(dip),
+                     np.cos(azimuth) * np.cos(dip),
                      np.sin(azimuth) * np.cos(dip)])
 
 
@@ -224,18 +238,17 @@ def rotate2zne(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
     # coordinate system.
 
     # Define the base vectors of the old base in terms of the new base vectors.
-    base_vector_1 = _dip_azimuth2zse_base_vector(dip_1, azimuth_1)
-    base_vector_2 = _dip_azimuth2zse_base_vector(dip_2, azimuth_2)
-    base_vector_3 = _dip_azimuth2zse_base_vector(dip_3, azimuth_3)
+    base_vector_1 = _dip_azimuth2zne_base_vector(dip_1, azimuth_1)
+    base_vector_2 = _dip_azimuth2zne_base_vector(dip_2, azimuth_2)
+    base_vector_3 = _dip_azimuth2zne_base_vector(dip_3, azimuth_3)
 
     # Build transformation matrix.
-    _t = np.matrix([base_vector_1, base_vector_2, base_vector_3]).transpose()
+    _t = np.matrix([base_vector_1, base_vector_2, base_vector_3])
 
-    if not inverse:
+    if inverse:
         x, y, z = np.dot(_t, [data_1, data_2, data_3])
-        y *= -1
     else:
-        x, y, z = np.dot(np.linalg.inv(_t), [data_1, -data_2, data_3])
+        x, y, z = np.dot(np.linalg.inv(_t), [data_1, data_2, data_3])
 
     # Replace all negative zeros. These might confuse some further
     # processing programs.
