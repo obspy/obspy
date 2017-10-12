@@ -796,7 +796,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(energy_before, energy_after))
 
         # The vertical channel should not have changed at all.
-        np.testing.assert_array_equal(tr_z.data, tr_r_z.data)
+        np.testing.assert_allclose(tr_z.data, tr_r_z.data, rtol=1e-10)
         # The other two are only rotated by 2 degree so should also not have
         # changed much but at least a little bit. And the components should be
         # renamed.
