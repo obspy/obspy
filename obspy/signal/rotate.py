@@ -203,32 +203,31 @@ def rotate2zne(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
         msg = "All three data arrays must be of same length."
         raise ValueError(msg)
 
-    # Internally works in Vertical, South, and East components; a right handed
-    # coordinate system.
-
     # Define the base vectors of the old base in terms of the new base vectors.
     base_vector_1 = _dip_azimuth2zne_base_vector(dip_1, azimuth_1)
     base_vector_2 = _dip_azimuth2zne_base_vector(dip_2, azimuth_2)
     base_vector_3 = _dip_azimuth2zne_base_vector(dip_3, azimuth_3)
 
-    # Build transformation matrix.
-    _t = np.matrix([base_vector_1, base_vector_2, base_vector_3])
+    # Base change matrix.
+    m = np.array([base_vector_1,
+                  base_vector_2,
+                  base_vector_3])
 
-    if inverse:
-        x, y, z = np.dot(_t, [data_1, data_2, data_3])
-    else:
-        x, y, z = np.dot(np.linalg.inv(_t), [data_1, data_2, data_3])
+    if not inverse:
+        m = np.linalg.inv(m)
+
+    z, n, e = np.dot(m, [data_1, data_2, data_3])
 
     # Replace all negative zeros. These might confuse some further
     # processing programs.
-    x = np.array(x).ravel()
-    x[x == -0.0] = 0
-    y = np.array(y).ravel()
-    y[y == -0.0] = 0
     z = np.array(z).ravel()
     z[z == -0.0] = 0
+    n = np.array(n).ravel()
+    n[n == -0.0] = 0
+    e = np.array(e).ravel()
+    e[e == -0.0] = 0
 
-    return x, y, z
+    return z, n, e
 
 
 if __name__ == '__main__':
