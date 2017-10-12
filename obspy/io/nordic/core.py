@@ -28,18 +28,24 @@ import warnings
 import datetime
 import os
 import io
+import numpy as np
 
 from obspy import UTCDateTime, read
 from obspy.geodetics import kilometers2degrees, degrees2kilometers
-from obspy.core.event import Event, Origin, Magnitude, Comment, Catalog
-from obspy.core.event import EventDescription, CreationInfo, OriginQuality
-from obspy.core.event import Pick, WaveformStreamID, Arrival, Amplitude
+from obspy.core.event import (
+    Event, Origin, Magnitude, Comment, Catalog, EventDescription, CreationInfo,
+    OriginQuality, Pick, WaveformStreamID, Arrival, Amplitude,
+    ConfidenceEllipsoid)
 
 
-mag_mapping = {"ML": "L", "MLv": "L", "mB": "B", "Ms": "S", "MW": "W",
-               "MbLg": "G", "Mc": "C"}
+mag_mapping = {"ML": "L", "MLv": "L", "mB": "B", "Ms": "s", "MS": "S",
+               "MW": "W", "MbLg": "G", "Mc": "C"}
 
 onsets = {'I': 'impulsive', 'E': 'emergent'}
+
+accepted_tags = ['1', '6', '7', 'E', ' ', 'F', 'M', '3']
+# List of currently implemented line-endings, which in Nordic mark what format
+# info in that line will be.
 
 
 class NordicParsingError(Exception):
@@ -63,12 +69,18 @@ def _is_sfile(sfile):
     if not hasattr(sfile, "readline"):
         try:
             with open(sfile, 'r') as f:
-                head_line = _get_headline(f)
+                tags = _get_line_tags(f=f)
         except Exception:
             return False
     else:
-        head_line = _get_headline(sfile)
-    if head_line is not None:
+        tags = _get_line_tags(f=sfile)
+    if tags is not None:
+        # Note that there can be two origin lines, but only to allow more
+        # magnitudes, not more origins.
+        try:
+            head_line = tags['1'][0][0]
+        except KeyError:
+            return False
         try:
             sfile_seconds = int(head_line[16:18])
         except ValueError:
@@ -76,10 +88,10 @@ def _is_sfile(sfile):
         if sfile_seconds == 60:
             sfile_seconds = 0
         try:
-            UTCDateTime(int(head_line[1:5]), int(head_line[6:8]),
-                        int(head_line[8:10]), int(head_line[11:13]),
-                        int(head_line[13:15]), sfile_seconds,
-                        int(head_line[19:20]) * 100000)
+            UTCDateTime(
+                int(head_line[1:5]), int(head_line[6:8]), int(head_line[8:10]),
+                int(head_line[11:13]), int(head_line[13:15]), sfile_seconds,
+                int(head_line[19:20]) * 100000)
             return True
         except Exception:
             return False
@@ -87,14 +99,28 @@ def _is_sfile(sfile):
         return False
 
 
-def _get_headline(f):
+def _get_line_tags(f):
+    f.seek(0)
+    line = f.readline()
+    if len(line.rstrip('\n').rstrip('\r')) != 80:
+        # Cannot be Nordic
+        raise NordicParsingError(
+            "Lines are not 80 characters long: not a nordic file")
+    f.seek(0)
+    tags = {}
     for i, line in enumerate(f):
-        if i == 0 and len(line.rstrip()) != 80:
-            return None
-        if line[79] == '1':
-            return line
-    else:
-        return None
+        try:
+            line_id = line[79]
+        except IndexError:
+            line_id = ' '
+        if line_id in tags.keys():
+            tags[line_id].append((line, i))
+        elif line_id in accepted_tags:
+            tags.update({line_id: [(line, i)]})
+        else:
+            UserWarning("Lines of type %s have not been implemented yet, "
+                        "please submit a development request" % line_id)
+    return tags
 
 
 def _int_conv(string):
@@ -220,6 +246,97 @@ def _nortoevmag(mag_type):
     return mag
 
 
+def xyz_to_confidence_ellipsoid(errors):
+    """
+    Convert from errors and covariance in x, y, z to error ellipse axes.
+
+    Forms a covariance matrix and finds the eigenvalues and eigenvectors. Units
+    should be m for everything, which means that the covariances are m * m
+
+    :type errors: dict
+    :param errors: Dictionary of x_err, y_err, z_err, xy_cov, xz_cov, yz_cov
+    :return: :class:`~obspy.core.event.ConfidenceEllipsoid`
+
+    .. Note::
+        Definitions of used angles are given here:
+        https://quake.ethz.ch/quakeml/QuakeML2.0/BasicEventDescriptionTypes\
+        Discussion#class_ConfidenceEllipsoid
+    """
+    covariance_matrix = np.array([
+        [errors['x_err'] ** 2, errors['xy_cov'], errors['xz_cov']],
+        [errors['xy_cov'], errors['y_err'] ** 2, errors['yz_cov']],
+        [errors['xz_cov'], errors['yz_cov'], errors['z_err'] ** 2]])
+    eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
+    # Columns in eigenvectors correspond to eigenvalues
+    lengths = np.abs(eigenvalues) ** 0.5
+    major_ind = np.argmax(lengths)
+    minor_ind = np.argmin(lengths)
+    inter_ind = [i for i in range(3) if i not in [major_ind, minor_ind]][0]
+    # Reorder eigenvectors
+    eigenvectors = np.array(
+        [eigenvectors[:, major_ind], eigenvectors[:, inter_ind],
+         eigenvectors[:, minor_ind]]).T
+    psi = np.arctan2(eigenvectors[1, 0], eigenvectors[0, 0])
+    theta = np.arctan2(eigenvectors[2, 1], eigenvectors[2, 2])
+    phi = np.arctan2(-eigenvectors[2, 0], np.sqrt(eigenvectors[0, 0] ** 2 +
+                                                  eigenvectors[1, 0] ** 2))
+    confidence_ellipsoid = ConfidenceEllipsoid(
+        semi_major_axis_length=lengths[major_ind],
+        semi_minor_axis_length=lengths[minor_ind],
+        semi_intermediate_axis_length=lengths[inter_ind],
+        major_axis_plunge=np.degrees(phi),
+        major_axis_azimuth=np.degrees(psi),
+        major_axis_rotation=np.degrees(theta))
+    return confidence_ellipsoid
+
+
+def confidence_ellipsoid_to_xyz(confidence_ellipsoid):
+    """
+    Convert from confidence ellipsoid to errors in x, y, z and covariance.
+
+    :type confidence_ellipsoid: :class:`~obspy.core.event.confidenceEllipsoid`
+    :param confidence_ellipsoid: Full input covariance ellipsoid
+    :return: dictionary of x_err, y_err, z_err, xy_cov, xz_cov, yz_cov in m
+
+    .. Note::
+        Follows definition of Euler angles (z-y'-x'' intrinsic) to rotation
+        matrix from:
+        https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions
+    """
+    try:
+        phi = np.radians(confidence_ellipsoid.major_axis_plunge)
+        # rotation around x
+        psi = np.radians(confidence_ellipsoid.major_axis_azimuth)
+        # rotation around z
+        theta = np.radians(confidence_ellipsoid.major_axis_rotation)
+        # rotation around y
+    except Exception:
+        raise NordicParsingError("Cannot parse rotation angles, incomplete "
+                                 "confidenceEllipsoid?")
+    rotation_matrix = np.array([
+        [np.cos(theta) * np.cos(psi),
+         np.sin(phi) * np.sin(theta) * np.cos(psi) - np.cos(phi) * np.sin(psi),
+         np.sin(phi) * np.sin(psi) + np.cos(phi) * np.sin(theta) * np.cos(psi)],
+        [np.cos(theta) * np.sin(psi),
+         np.cos(phi) * np.cos(psi) + np.sin(phi) * np.sin(theta) * np.sin(psi),
+         np.cos(phi) * np.sin(theta) * np.sin(psi) - np.sin(phi) * np.cos(psi)],
+        [-np.sin(theta), np.sin(phi) * np.cos(theta),
+         np.cos(phi) * np.cos(theta)]])
+    eigenvalues = np.array([
+        confidence_ellipsoid.semi_major_axis_length ** 2,
+        confidence_ellipsoid.semi_intermediate_axis_length ** 2,
+        confidence_ellipsoid.semi_minor_axis_length ** 2])
+    covariance_matrix = np.dot(np.dot(rotation_matrix, np.diag(eigenvalues)),
+                               np.linalg.inv(rotation_matrix))
+    errors = {'x_err': np.sqrt(covariance_matrix[0, 0]),
+              'y_err': np.sqrt(covariance_matrix[1, 1]),
+              'z_err': np.sqrt(covariance_matrix[2, 2]),
+              'xy_cov': covariance_matrix[0, 1],
+              'xz_cov': covariance_matrix[0, 2],
+              'yz_cov': covariance_matrix[1, 2]}
+    return errors
+
+
 def readheader(sfile):
     """
     Read header information from a seisan nordic format S-file.
@@ -230,25 +347,34 @@ def readheader(sfile):
     :returns: :class:`~obspy.core.event.event.Event`
     """
     with open(sfile, 'r') as f:
-        header = _readheader(f=f)
+        tagged_lines = _get_line_tags(f)
+        try:
+            header = _readheader(head_lines=tagged_lines['1'])
+        except KeyError:
+            raise NordicParsingError("No header lines found")
     return header
 
 
-def _readheader(f):
+def _readheader(head_lines):
     """
     Internal header reader.
-    :type f: file
-    :param f: File open in read-mode.
+    :type head_lines: list
+    :param head_lines: List of up to two header lines
 
     :returns: :class:`~obspy.core.event.event.Event`
     """
-    f.seek(0)
     # Base populate to allow for empty parts of file
     new_event = Event()
-    topline = _get_headline(f=f)
-    if not topline:
-        raise NordicParsingError('No header found, or incorrect '
-                                 'formatting: corrupt s-file')
+    head_lines.sort(key=lambda tup: tup[1])
+    if len(head_lines) > 2:
+        raise NordicParsingError("More than two type 1 lines found - "
+                                 "does not follow spec")
+    elif len(head_lines) == 2:
+        topline = head_lines[0][0]
+        add_mag_line = head_lines[1][0]
+    else:
+        topline = head_lines[0][0]
+        add_mag_line = None
     try:
         sfile_seconds = int(topline[16:18])
         if sfile_seconds == 60:
@@ -257,15 +383,10 @@ def _readheader(f):
         else:
             add_seconds = 0
         new_event.origins.append(Origin())
-        new_event.origins[0].time = UTCDateTime(int(topline[1:5]),
-                                                int(topline[6:8]),
-                                                int(topline[8:10]),
-                                                int(topline[11:13]),
-                                                int(topline[13:15]),
-                                                sfile_seconds,
-                                                int(topline[19:20]) *
-                                                100000)\
-            + add_seconds
+        new_event.origins[0].time = UTCDateTime(
+            int(topline[1:5]), int(topline[6:8]), int(topline[8:10]),
+            int(topline[11:13]), int(topline[13:15]), sfile_seconds,
+            int(topline[19:20]) * 100000) + add_seconds
     except Exception:
         NordicParsingError("Couldn't read a date from sfile")
     # new_event.loc_mod_ind=topline[20]
@@ -290,17 +411,11 @@ def _readheader(f):
         new_event.origins[0].quality = OriginQuality(
             standard_error=_float_conv(topline[51:55]))
     # Read in magnitudes if they are there.
-    for index in [59, 67, 75]:
-        if not topline[index].isspace():
-            new_event.magnitudes.append(Magnitude())
-            new_event.magnitudes[-1].mag = _float_conv(
-                topline[index - 3:index])
-            new_event.magnitudes[-1].magnitude_type = \
-                _nortoevmag(topline[index])
-            new_event.magnitudes[-1].creation_info = \
-                CreationInfo(agency_id=topline[index + 1:index + 4].strip())
-            new_event.magnitudes[-1].origin_id = new_event.origins[0].\
-                resource_id
+    magnitudes = []
+    magnitudes.extend(_read_mags(topline, new_event))
+    if add_mag_line:
+        magnitudes.extend(_read_mags(add_mag_line, new_event))
+    new_event.magnitudes = magnitudes
     # Set the useful things like preferred magnitude and preferred origin
     new_event.preferred_origin_id = new_event.origins[0].resource_id
     try:
@@ -322,6 +437,22 @@ def _readheader(f):
     return new_event
 
 
+def _read_mags(line, event):
+    """
+    Read the magnitude info from a Nordic header line. Convenience function
+    """
+    magnitudes = []
+    for index in [59, 67, 75]:
+        if not line[index].isspace():
+            magnitudes.append(Magnitude(
+                mag=_float_conv(line[index - 3:index]),
+                magnitude_type=_nortoevmag(line[index]),
+                creation_info=CreationInfo(
+                    agency_id=line[index + 1:index + 4].strip()),
+                origin_id=event.origins[0].resource_id))
+    return magnitudes
+
+
 def read_spectral_info(sfile):
     """
     Read spectral info from an sfile.
@@ -334,28 +465,35 @@ def read_spectral_info(sfile):
         manual, expect for logs which have been converted to floats.
     """
     with open(sfile, 'r') as f:
-        spec_inf = _read_spectral_info(f=f)
+        tagged_lines = _get_line_tags(f=f)
+        spec_inf = _read_spectral_info(tagged_lines=tagged_lines)
     return spec_inf
 
 
-def _read_spectral_info(f):
+def _read_spectral_info(tagged_lines, event=None):
     """
     Internal spectral reader.
 
-    :type f: file
-    :param f: File open in read mode.
+    :type tagged_lines: dict
+    :param tagged_lines: dictionary of tagged lines
+    :type event: :class:`~obspy.core.event.Event`
+    :param event: Event to associate spectral info with
 
     :returns:
         list of dictionaries of spectral information, units as in
         seisan manual, expect for logs which have been converted to floats.
     """
-    event = _readheader(f=f)
-    f.seek(0)
+    if '3' not in tagged_lines.keys():
+        return {}
+    if event is None:
+        event = _readheader(head_lines=tagged_lines['1'])
     origin_date = UTCDateTime(event.origins[0].time.date)
     relevant_lines = []
-    for line in f:
-        if line[1:5] == 'SPEC':
+    for line in tagged_lines['3']:
+        if line[0][1:5] == 'SPEC':
             relevant_lines.append(line)
+    relevant_lines = [line[0] for line in
+                      sorted(relevant_lines, key=lambda tup: tup[1])]
     spec_inf = {}
     if not relevant_lines:
         return spec_inf
@@ -459,10 +597,20 @@ def read_nordic(select_file, return_wavnames=False):
             tmp_sfile = io.StringIO()
             for event_line in event_str:
                 tmp_sfile.write(event_line)
-            new_event = _readheader(f=tmp_sfile)
+            tagged_lines = _get_line_tags(f=tmp_sfile)
+            # Get basic event info
+            new_event = _readheader(head_lines=tagged_lines['1'])
+            # Get uncertainty info
+            new_event = _read_uncertainty(tagged_lines, new_event)
+            # Get focal mechanisms
+            new_event = _read_focal_mechanisms(tagged_lines, new_event)
+            # Get moment tensors
+            new_event = _read_moment_tensors(tagged_lines, new_event)
             if return_wavnames:
                 wav_names.append(_readwavename(f=tmp_sfile))
-            catalog += _read_picks(f=tmp_sfile, new_event=new_event)
+            new_event = _read_picks(tagged_lines=tagged_lines,
+                                    new_event=new_event)
+            catalog += new_event
             event_str = []
     f.close()
     if return_wavnames:
@@ -470,32 +618,60 @@ def read_nordic(select_file, return_wavnames=False):
     return catalog
 
 
-def _read_picks(f, new_event):
+def _read_uncertainty(tagged_lines, event):
+    """
+
+    :param tagged_lines:
+    :param event:
+    :return:
+    """
+    return event
+
+
+def _read_focal_mechanisms(tagged_lines, event):
+    """
+
+    :param tagged_lines:
+    :param event:
+    :return:
+    """
+    return event
+
+
+def _read_moment_tensors(tagged_lines, event):
+    """
+
+    :param tagged_lines:
+    :param event:
+    :return:
+    """
+    return event
+
+
+def _read_picks(tagged_lines, new_event):
     """
     Internal pick reader. Use read_nordic instead.
 
-    :type f: file
-    :param f: File open in read mode
-    :type wav_names: list
-    :param wav_names: List of waveform files in the sfile
+    :type tagged_lines: dict
+    :param tagged_lines: Lines keyed by line type
     :type new_event: :class:`~obspy.core.event.event.Event`
     :param new_event: event to associate picks with.
 
     :returns: :class:`~obspy.core.event.event.Event`
     """
-    f.seek(0)
     evtime = new_event.origins[0].time
     pickline = []
     # Set a default, ignored later unless overwritten
     snr = None
-    for line in f:
-        if line[79] == '7':
-            header = line
-            break
-    for line in f:
-        if len(line.rstrip('\n').rstrip('\r')) in [80, 79] and \
-           line[79] in ' 4\n':
-            pickline += [line]
+    # pick-lines can be tagged by either ' ' or '4'
+    tags = [' ', '4']
+    for tag in tags:
+        try:
+            pickline.extend([tup[0] for tup in
+                             sorted(tagged_lines[tag], key=lambda tup: tup[1])])
+        except KeyError:
+            pass
+    header = sorted(tagged_lines['1'], key=lambda tup: tup[1])[0][0]
     for line in pickline:
         if line[18:28].strip() == '':  # If line is empty miss it
             continue
@@ -837,7 +1013,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     try:
         evtime = event.origins[0].time
     except IndexError:
-        msg = ('Need at least one origin with at least an origin time')
+        msg = 'Need at least one origin with at least an origin time'
         raise NordicParsingError(msg)
     if not evtime:
         msg = ('event has an origin, but time is not populated.  ' +
@@ -876,7 +1052,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     else:
         lon = ''
     if event.origins[0].depth is not None:
-        depth = '{0:.1f}'.format(event.origins[0].depth / 1000)
+        depth = '{0:.1f}'.format(event.origins[0].depth / 1000.0)
     else:
         depth = ''
     if event.creation_info:
@@ -897,7 +1073,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     else:
         timerms = '0.0'
     conv_mags = []
-    for mag_ind in range(3):
+    # Get up to six magnitudes
+    for mag_ind in range(6):
         mag_info = {}
         try:
             mag_info['mag'] = '{0:.1f}'.format(
@@ -910,9 +1087,10 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
             else:
                 mag_info['agency'] = ''
         except IndexError:
-            mag_info['mag'] = ''
-            mag_info['type'] = ''
-            mag_info['agency'] = ''
+            if mag_ind == 3:
+                break
+            else:
+                mag_info.update({'mag': '', 'type': '', 'agency': ''})
         conv_mags.append(mag_info)
     # Work out how many stations were used
     if len(event.picks) > 0:
@@ -924,41 +1102,54 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         sfile = open(sfile_path, 'w')
     else:
         sfile = string_io
-    sfile.write(' ' + str(evtime.year) + ' ' +
-                str(evtime.month).rjust(2) +
-                str(evtime.day).rjust(2) + ' ' +
-                str(evtime.hour).rjust(2) +
-                str(evtime.minute).rjust(2) + ' ' +
-                str(evtime.second).rjust(2) + '.' +
-                str(evtime.microsecond).ljust(1)[0:1] + ' ' +
-                evtype.ljust(2) + lat.rjust(7) + ' ' + lon.rjust(7) +
-                depth.rjust(5) + agency.rjust(5) + ksta.rjust(3) +
-                timerms.rjust(4) +
-                conv_mags[0]['mag'].rjust(4) + conv_mags[0]['type'].rjust(1) +
-                conv_mags[0]['agency'][0:3].rjust(3) +
-                conv_mags[1]['mag'].rjust(4) + conv_mags[1]['type'].rjust(1) +
-                conv_mags[1]['agency'][0:3].rjust(3) +
-                conv_mags[2]['mag'].rjust(4) + conv_mags[2]['type'].rjust(1) +
-                conv_mags[2]['agency'][0:3].rjust(3) + '1' + '\n')
-    # Write line 2 of s-file
-    sfile.write(' ACTION:ARG ' + str(datetime.datetime.now().year)[2:4] + '-' +
-                str(datetime.datetime.now().month).zfill(2) + '-' +
-                str(datetime.datetime.now().day).zfill(2) + ' ' +
-                str(datetime.datetime.now().hour).zfill(2) + ':' +
-                str(datetime.datetime.now().minute).zfill(2) + ' OP:' +
-                userid.ljust(4) + ' STATUS:' + 'ID:'.rjust(18) +
-                str(evtime.year) +
-                str(evtime.month).zfill(2) +
-                str(evtime.day).zfill(2) +
-                str(evtime.hour).zfill(2) +
-                str(evtime.minute).zfill(2) +
-                str(evtime.second).zfill(2) +
-                'I'.rjust(6) + '\n')
-    # Write line 3 of s-file
+    # Write a second line if more than three magnitudes...
+    line_one_begin = (
+        ' ' + str(evtime.year) + ' ' + str(evtime.month).rjust(2) +
+        str(evtime.day).rjust(2) + ' ' + str(evtime.hour).rjust(2) +
+        str(evtime.minute).rjust(2) + ' ' + str(evtime.second).rjust(2) + '.' +
+        str(evtime.microsecond).ljust(1)[0:1] + ' ' + evtype.ljust(2) +
+        lat.rjust(7) + ' ' + lon.rjust(7) + depth.rjust(5) + agency.rjust(5) +
+        ksta.rjust(3) + timerms.rjust(4))
+    sfile.write(line_one_begin)
+    for conv_mag in conv_mags[0:3]:
+        sfile.write(conv_mag['mag'].rjust(4) + conv_mag['type'].rjust(1) +
+                    conv_mag['agency'][0:3].rjust(3))
+    sfile.write('1\n')
+    if len(conv_mags) > 3:
+        sfile.write(line_one_begin)
+        for conv_mag in conv_mags[3:6]:
+            sfile.write(conv_mag['mag'].rjust(4) + conv_mag['type'].rjust(1) +
+                        conv_mag['agency'][0:3].rjust(3))
+        sfile.write('1\n')
+    # Write hyp error line
+    try:
+        sfile.write(_write_hyp_error_line(event.origins[0]) + '\n')
+    except NordicParsingError:
+        pass
+    # Write fault plane solution
+    if hasattr(event, 'focal_mechanisms') and len(event.focal_mechanisms) > 0:
+        for focal_mechanism in event.focal_mechanisms:
+            sfile.write(_write_focal_mechanism_line(focal_mechanism) + '\n')
+        # Write moment tensor solution
+        if hasattr(focal_mechanism, 'moment_tensor'):
+            sfile.write(
+                _write_moment_tensor_line(focal_mechanism) + '\n')
+    # Write line 2 (type: I) of s-file
+    sfile.write(
+        ' ACTION:ARG ' + str(datetime.datetime.now().year)[2:4] + '-' +
+        str(datetime.datetime.now().month).zfill(2) + '-' +
+        str(datetime.datetime.now().day).zfill(2) + ' ' +
+        str(datetime.datetime.now().hour).zfill(2) + ':' +
+        str(datetime.datetime.now().minute).zfill(2) + ' OP:' +
+        userid.ljust(4) + ' STATUS:' + 'ID:'.rjust(18) + str(evtime.year) +
+        str(evtime.month).zfill(2) + str(evtime.day).zfill(2) +
+        str(evtime.hour).zfill(2) + str(evtime.minute).zfill(2) +
+        str(evtime.second).zfill(2) + 'I'.rjust(6) + '\n')
+    # Write line-type 6 of s-file
     for wavefile in wavefiles:
         sfile.write(' ' + os.path.basename(wavefile) +
                     '6'.rjust(79 - len(wavefile)) + '\n')
-    # Write final line of s-file
+    # Write final line (line-type 7) of s-file header
     sfile.write(' STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU' +
                 ' VELO AIN AR TRES W  DIS CAZ7\n')
     # Now call the populate sfile function
@@ -971,6 +1162,128 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         return str(sfilename)
     else:
         return
+
+
+def _write_moment_tensor_line(focal_mechanism):
+    """
+    Generate the two lines required for moment tensor solutions in Nordic.
+    """
+    # First line contains hypocenter info, second contains tensor info
+    lines = [list(' ' * 79 + 'M'), list(' ' * 79 + 'M')]
+    # Get the origin associated with the moment tensor
+    origin = focal_mechanism.moment_tensor.derived_origin_id.\
+        get_referred_object()
+    magnitude = focal_mechanism.moment_tensor.moment_magnitude_id.\
+        get_referred_object()
+    # Sort out the first line
+    lines[0][1:5] = str(origin.time.year).rjust(4)
+    lines[0][6:8] = str(origin.time.month).rjust(2)
+    lines[0][8:10] = str(origin.time.day).rjust(2)
+    lines[0][11:13] = str(origin.time.hour).rjust(2)
+    lines[0][13:15] = str(origin.time.minute).rjust(2)
+    lines[0][16:20] = str(origin.time.second).rjust(2) + '.' +\
+        str(origin.time.microsecond).ljust(1)[0:1]
+    lines[0][23:30] = _str_conv(origin.latitude, 3).rjust(7)
+    lines[0][30:38] = _str_conv(origin.longitude, 3).rjust(8)
+    lines[0][38:43] = _str_conv(origin.depth / 1000.0, 1).rjust(5)
+    if hasattr(origin, 'creation_info') and hasattr(
+            origin.creation_info, 'agency_id'):
+        lines[0][45:48] = origin.creation_info.agency_id.rjust(3)[0:3]
+    lines[0][55:59] = _str_conv(magnitude.mag, 1).rjust(4)
+    lines[0][59] = _evmagtonor(magnitude.magnitude_type)
+    if hasattr(magnitude, 'creation_info') and hasattr(
+            magnitude.creation_info, 'agency_id'):
+        lines[0][60:63] = magnitude.creation_info.agency_id.rjust(3)[0:3]
+    lines[0][70:77] = (str(
+        focal_mechanism.moment_tensor.method_id).split('/')[-1]).rjust(7)
+    # Sort out the second line
+    lines[1][1:3] = 'MT'
+    lines[1][3:9] = _str_conv(
+        focal_mechanism.moment_tensor.tensor.m_rr, 3).rjust(6)
+    lines[1][10:16] = _str_conv(
+        focal_mechanism.moment_tensor.tensor.m_tt, 3).rjust(6)
+    lines[1][17:23] = _str_conv(
+        focal_mechanism.moment_tensor.tensor.m_pp, 3).rjust(6)
+    lines[1][24:30] = _str_conv(
+        focal_mechanism.moment_tensor.tensor.m_rt, 3).rjust(6)
+    lines[1][31:37] = _str_conv(
+        focal_mechanism.moment_tensor.tensor.m_rp, 3).rjust(6)
+    lines[1][38:44] = _str_conv(
+        focal_mechanism.moment_tensor.tensor.m_tp, 3).rjust(6)
+    if hasattr(magnitude, 'creation_info') and hasattr(
+            magnitude.creation_info, 'agency_id'):
+        lines[1][45:48] = magnitude.creation_info.agency_id.rjust(3)[0:3]
+    lines[1][48] = 'S'
+    lines[1][52:62] = (
+        "%.3e" % focal_mechanism.moment_tensor.scalar_moment).rjust(10)
+    lines[1][70:77] = (
+        str(focal_mechanism.moment_tensor.method_id).split('/')[-1]).rjust(7)
+    return '\n'.join([''.join(line) for line in lines])
+
+
+def _write_focal_mechanism_line(focal_mechanism):
+    """
+    Get the line for a focal-mechanism
+    """
+    line = list(' ' * 79 + 'F')
+    line[0:10] = (_str_conv(
+        focal_mechanism.nodal_planes.nodal_plane_1.strike, 1)).rjust(10)
+    line[10:20] = (_str_conv(
+        focal_mechanism.nodal_planes.nodal_plane_1.dip, 1)).rjust(10)
+    line[20:30] = (_str_conv(
+        focal_mechanism.nodal_planes.nodal_plane_1.rake, 1)).rjust(10)
+    try:
+        line[30:35] = (_str_conv(
+            focal_mechanism.nodal_planes.nodal_plane_1.
+                strike_errors.uncertainty, 1)).rjust(5)
+        line[35:40] = (_str_conv(
+            focal_mechanism.nodal_planes.nodal_plane_1.
+                dip_errors.uncertainty, 1)).rjust(5)
+        line[40:45] = (_str_conv(
+            focal_mechanism.nodal_planes.nodal_plane_1.
+                rake_errors.uncertainty, 1)).rjust(5)
+    except AttributeError:
+        pass
+    if hasattr(focal_mechanism, 'misfit'):
+        line[45:50] = (_str_conv(focal_mechanism.misfit, 1)).rjust(5)
+    if hasattr(focal_mechanism, 'station_distribution_ratio'):
+        line[50:55] = (_str_conv(
+            focal_mechanism.station_distribution_ratio, 1)).rjust(5)
+    if hasattr(focal_mechanism, 'creation_info') and hasattr(
+            focal_mechanism.creation_id, 'agency_id'):
+        line[66:69] = (str(focal_mechanism.creation_info.agency_id)).rjust(3)[0:3]
+    if hasattr(focal_mechanism, 'method_id'):
+        line[70:77] = (str(focal_mechanism.method_id).split('/')[-1]).rjust(7)
+    return ''.join(line)
+
+
+def _write_hyp_error_line(origin):
+    """
+    Generate hypocentral error line.
+
+    format:
+     GAP=126        0.64       1.3     1.7  2.3 -0.9900E+00 -0.4052E+00  \
+     0.2392E+00E
+    """
+    error_line = list(' ' * 79 + 'E')
+    if not hasattr(origin, 'quality'):
+        raise NordicParsingError("Origin has no quality associated")
+    error_line[1:5] = 'GAP='
+    error_line[5:8] = str(int(origin.quality['azimuthal_gap'])).ljust(3)
+    error_line[14:20] = (_str_conv(
+        origin.quality['standard_error'], 2)).rjust(6)
+    try:
+        errors = confidence_ellipsoid_to_xyz(
+            origin.origin_uncertainty['confidence_ellipsoid'])
+    except NordicParsingError:
+        return ''.join(error_line)
+    error_line[24:30] = (_str_conv(errors['y_err'] / 1000.0, 1)).rjust(6)
+    error_line[32:38] = (_str_conv(errors['x_err'] / 1000.0, 1)).rjust(6)
+    error_line[38:43] = (_str_conv(errors['z_err'] / 1000.0, 1)).rjust(5)
+    error_line[43:55] = ("%.4e" % (errors['xy_cov'] / 1E06)).rjust(12)
+    error_line[55:67] = ("%.4e" % (errors['xz_cov'] / 1E06)).rjust(12)
+    error_line[67:79] = ("%.4e" % (errors['yz_cov'] / 1E06)).rjust(12)
+    return ''.join(error_line)
 
 
 def nordpick(event):
@@ -1136,27 +1449,22 @@ def nordpick(event):
                           % pick.evaluation_mode)
         # Generate a print string and attach it to the list
         channel_code = pick.waveform_id.channel_code or '   '
-        pick_strings.append(' ' + pick.waveform_id.station_code.ljust(5) +
-                            channel_code[0] + channel_code[-1] +
-                            ' ' + impulsivity + phase_hint.ljust(4) +
-                            _str_conv(weight).rjust(1) + eval_mode +
-                            polarity.rjust(1) + ' ' +
-                            str(pick.time.hour).rjust(2) +
-                            str(pick.time.minute).rjust(2) +
-                            str(pick.time.second).rjust(3) + '.' +
-                            str(float(pick.time.microsecond) /
-                            (10 ** 4)).split('.')[0].zfill(2) +
-                            _str_conv(coda).rjust(5)[0:5] +
-                            _str_conv(amp, rounded=1).rjust(7)[0:7] +
-                            _str_conv(peri, rounded=peri_round).rjust(5) +
-                            _str_conv(azimuth).rjust(6) +
-                            _str_conv(velocity).rjust(5) +
-                            _str_conv(' ').rjust(4) +
-                            _str_conv(azimuthres).rjust(3) +
-                            _str_conv(timeres, rounded=2).rjust(5)[0:5] +
-                            _str_conv(' ').rjust(2) +
-                            distance.rjust(5) +
-                            _str_conv(caz).rjust(4) + ' ')
+        pick_strings.append(
+            ' ' + pick.waveform_id.station_code.ljust(5) + channel_code[0] +
+            channel_code[-1] + ' ' + impulsivity + phase_hint.ljust(4) +
+            _str_conv(weight).rjust(1) + eval_mode + polarity.rjust(1) + ' ' +
+            str(pick.time.hour).rjust(2) + str(pick.time.minute).rjust(2) +
+            str(pick.time.second).rjust(3) + '.' +
+            str(float(pick.time.microsecond) /
+                (10 ** 4)).split('.')[0].zfill(2) +
+            _str_conv(coda).rjust(5)[0:5] +
+            _str_conv(amp, rounded=1).rjust(7)[0:7] +
+            _str_conv(peri, rounded=peri_round).rjust(5) +
+            _str_conv(azimuth).rjust(6) + _str_conv(velocity).rjust(5) +
+            _str_conv(' ').rjust(4) + _str_conv(azimuthres).rjust(3) +
+            _str_conv(timeres, rounded=2).rjust(5)[0:5] +
+            _str_conv(' ').rjust(2) + distance.rjust(5) +
+            _str_conv(caz).rjust(4) + ' ')
         # Note that currently finalweight is unsupported, nor is velocity, or
         # angle of incidence.  This is because obspy.event stores slowness in
         # s/deg and takeoff angle, which would require computation from the

@@ -95,6 +95,11 @@ master: (doi: 10.5281/zenodo.165135)
     * Also parse author information and COMMENT line (see #1484)
     * Fix reading hypocenter files created by NonLinLoc versions of the 6.0.x
       beta branch (see #1760 and #1783)
+ - obspy.io.nordic:
+    * Add ability to read and write focal mechanism, hypocentral error, moment
+      tensor information
+    * Add explicit warnings about lines not yet able to read.
+    * Fix mapping of MS to S and Ms to s.
  - obspy.io.quakeml:
     * Read and write support for nested custom tags (see #1463)
     * Fix some minor bugs that could lead to empty stub elements, e.g. like

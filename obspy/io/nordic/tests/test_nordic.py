@@ -14,16 +14,17 @@ import unittest
 import warnings
 
 from obspy import read_events, Catalog, UTCDateTime, read
-from obspy.core.event import Pick, WaveformStreamID, Arrival, Amplitude
-from obspy.core.event import Event, Origin, Magnitude, OriginQuality
-from obspy.core.event import EventDescription, CreationInfo
+from obspy.core.event import (
+    Pick, WaveformStreamID, Arrival, Amplitude, Event, Origin, Magnitude,
+    OriginQuality, EventDescription, CreationInfo, OriginUncertainty,
+    ConfidenceEllipsoid, QuantityError, FocalMechanism, MomentTensor,
+    NodalPlane, NodalPlanes, ResourceIdentifier, Tensor)
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.io.nordic.core import _is_sfile, read_spectral_info, read_nordic
-from obspy.io.nordic.core import readwavename, blanksfile, _write_nordic
-from obspy.io.nordic.core import nordpick, readheader
-from obspy.io.nordic.core import _int_conv, _readheader, _evmagtonor
-from obspy.io.nordic.core import write_select, NordicParsingError
-from obspy.io.nordic.core import _float_conv, _nortoevmag, _str_conv
+from obspy.io.nordic.core import (
+    _is_sfile, read_spectral_info, read_nordic, readwavename, blanksfile,
+    _write_nordic, nordpick, readheader, _int_conv, _readheader, _evmagtonor,
+    write_select, NordicParsingError, _float_conv, _nortoevmag, _str_conv,
+    _get_line_tags, xyz_to_confidence_ellipsoid, confidence_ellipsoid_to_xyz)
 
 
 class TestNordicMethods(unittest.TestCase):
@@ -45,9 +46,9 @@ class TestNordicMethods(unittest.TestCase):
         test_cat = Catalog()
         test_cat += test_event
         # Check the read-write s-file functionality
-        sfile = _write_nordic(test_cat[0], filename=None, userid='TEST',
-                              evtype='L', outdir='.',
-                              wavefiles='test', explosion=True, overwrite=True)
+        sfile = _write_nordic(
+            test_cat[0], filename=None, userid='TEST', evtype='L', outdir='.',
+            wavefiles='test', explosion=True, overwrite=True)
         self.assertEqual(readwavename(sfile), ['test'])
         read_cat = Catalog()
         # raises "UserWarning: AIN in header, currently unsupported"
@@ -290,7 +291,8 @@ class TestNordicMethods(unittest.TestCase):
             # raises "UserWarning: AIN in header, currently unsupported"
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
-                head_2 = _readheader(f=f)
+                tagged_lines = _get_line_tags(f=f)
+                head_2 = _readheader(head_lines=tagged_lines['1'])
         self.assertTrue(test_similarity(head_1, head_2))
 
     def test_missing_header(self):
@@ -356,13 +358,9 @@ class TestNordicMethods(unittest.TestCase):
         """
         Check that we convert magnitudes as we should!
         """
-        magnitude_map = [('L', 'ML'),
-                         ('B', 'mB'),
-                         ('S', 'Ms'),
-                         ('W', 'MW'),
-                         ('G', 'MbLg'),
-                         ('C', 'Mc'),
-                         ]
+        magnitude_map = [
+            ('L', 'ML'), ('B', 'mB'), ('S', 'Ms'), ('W', 'MW'), ('G', 'MbLg'),
+            ('C', 'Mc')]
         for magnitude in magnitude_map:
             self.assertEqual(magnitude[0], _evmagtonor(magnitude[1]))
             self.assertEqual(_nortoevmag(magnitude[0]), magnitude[1])
@@ -412,6 +410,8 @@ class TestNordicMethods(unittest.TestCase):
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 write_select(cat, filename=tf.name)
+            if not _is_sfile(tf.name):
+                raise(NordicParsingError("format is wrong somehow"))
             cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
                 self.assertTrue(test_similarity(event_1=event_1,
@@ -430,6 +430,30 @@ class TestNordicMethods(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
+                self.assertTrue(test_similarity(event_1=event_1,
+                                                event_2=event_2))
+
+    def test_more_than_three_mags(self):
+        cat = Catalog()
+        cat += full_test_event()
+        cat[0].magnitudes.append(Magnitude(
+            mag=0.9, magnitude_type='MS', creation_info=CreationInfo('TES'),
+            origin_id=cat[0].origins[0].resource_id))
+        with NamedTemporaryFile(suffix='.out') as tf:
+            # raises UserWarning: mb is not convertible
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat.write(tf.name, format='nordic')
+            # raises "UserWarning: AIN in header, currently unsupported"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+            with open(tf.name, 'r') as f:
+                for line in f:
+                    print(line.rstrip())
+            for event_1, event_2 in zip(cat, cat_back):
+                self.assertTrue(
+                    len(event_1.magnitudes) == len(event_2.magnitudes))
                 self.assertTrue(test_similarity(event_1=event_1,
                                                 event_2=event_2))
 
@@ -494,11 +518,10 @@ class TestNordicMethods(unittest.TestCase):
                   'Sfile_no_location']
         for sfile in sfiles:
             self.assertTrue(_is_sfile(os.path.join(self.testing_path, sfile)))
-        self.assertFalse(_is_sfile(os.path.join(self.testing_path,
-                                                'Sfile_no_header')))
-        self.assertFalse(_is_sfile(os.path.join(self.path, '..', '..',
-                                                'nlloc', 'tests', 'data',
-                                                'nlloc.hyp')))
+        self.assertFalse(
+            _is_sfile(os.path.join(self.testing_path, 'Sfile_no_header')))
+        self.assertFalse(_is_sfile(os.path.join(
+            self.path, '..', '..', 'nlloc', 'tests', 'data', 'nlloc.hyp')))
 
     def test_read_picks_across_day_end(self):
         testing_path = os.path.join(self.testing_path, 'sfile_over_day')
@@ -547,6 +570,17 @@ class TestNordicMethods(unittest.TestCase):
         self.assertEqual(
             int([p for p in pick_strings if p.split()[0] == 'WZ11' and
                  p.split()[1] == 'HZ'][0].split()[-1]), 30)
+
+    def test_convert_xyz_error(self):
+        """
+        Test that we are able to map between xyz errors and ellipsoid
+        """
+        errors = {'x_err': 640, 'y_err': 1300, 'z_err': 1700,
+                  'xy_cov': -990000, 'xz_cov': -405200, 'yz_cov': 239200}
+        confidence_ellipsoid = xyz_to_confidence_ellipsoid(errors)
+        errors_back = confidence_ellipsoid_to_xyz(confidence_ellipsoid)
+        self.assertEqual(errors, errors_back)
+        # TODO: Test mapping for known result.
 
 
 def test_similarity(event_1, event_2, verbose=False):
@@ -663,36 +697,27 @@ def full_test_event():
     Function to generate a basic, full test event
     """
     test_event = Event()
-    test_event.origins.append(Origin())
-    test_event.origins[0].time = UTCDateTime("2012-03-26") + 1.2
+    test_event.origins.append(Origin(
+        time=UTCDateTime("2012-03-26") + 1.2, latitude=45.0, longitude=25.0,
+        depth=15000))
     test_event.event_descriptions.append(EventDescription())
     test_event.event_descriptions[0].text = 'LE'
-    test_event.origins[0].latitude = 45.0
-    test_event.origins[0].longitude = 25.0
-    test_event.origins[0].depth = 15000
     test_event.creation_info = CreationInfo(agency_id='TES')
-    test_event.origins[0].quality = OriginQuality(standard_error=0.01)
-    test_event.magnitudes.append(Magnitude())
-    test_event.magnitudes[0].mag = 0.1
-    test_event.magnitudes[0].magnitude_type = 'ML'
-    test_event.magnitudes[0].creation_info = CreationInfo('TES')
-    test_event.magnitudes[0].origin_id = test_event.origins[0].resource_id
-    test_event.magnitudes.append(Magnitude())
-    test_event.magnitudes[1].mag = 0.5
-    test_event.magnitudes[1].magnitude_type = 'Mc'
-    test_event.magnitudes[1].creation_info = CreationInfo('TES')
-    test_event.magnitudes[1].origin_id = test_event.origins[0].resource_id
-    test_event.magnitudes.append(Magnitude())
-    test_event.magnitudes[2].mag = 1.3
-    test_event.magnitudes[2].magnitude_type = 'Ms'
-    test_event.magnitudes[2].creation_info = CreationInfo('TES')
-    test_event.magnitudes[2].origin_id = test_event.origins[0].resource_id
+    test_event.magnitudes.append(Magnitude(
+        mag=0.1, magnitude_type='ML', creation_info=CreationInfo('TES'),
+        origin_id=test_event.origins[0].resource_id))
+    test_event.magnitudes.append(Magnitude(
+        mag=0.5, magnitude_type='Mc', creation_info=CreationInfo('TES'),
+        origin_id=test_event.origins[0].resource_id))
+    test_event.magnitudes.append(Magnitude(
+        mag=1.3, magnitude_type='Ms', creation_info=CreationInfo('TES'),
+        origin_id=test_event.origins[0].resource_id))
 
     # Define the test pick
-    _waveform_id_1 = WaveformStreamID(station_code='FOZ', channel_code='SHZ',
-                                      network_code='NZ')
-    _waveform_id_2 = WaveformStreamID(station_code='WTSZ', channel_code='BH1',
-                                      network_code=' ')
+    _waveform_id_1 = WaveformStreamID(
+        station_code='FOZ', channel_code='SHZ', network_code='NZ')
+    _waveform_id_2 = WaveformStreamID(
+        station_code='WTSZ', channel_code='BH1', network_code=' ')
     # Pick to associate with amplitude
     test_event.picks.append(
         Pick(waveform_id=_waveform_id_1, phase_hint='IAML',
@@ -714,51 +739,64 @@ def full_test_event():
              polarity='undecidable', time=UTCDateTime("2012-03-26") + 1.62,
              evaluation_mode="automatic"))
     # Test a generic local magnitude amplitude pick
-    test_event.amplitudes.append(
-        Amplitude(generic_amplitude=2.0, period=0.4,
-                  pick_id=test_event.picks[0].resource_id,
-                  waveform_id=test_event.picks[0].waveform_id, unit='m',
-                  magnitude_hint='ML', category='point', type='AML'))
+    test_event.amplitudes.append(Amplitude(
+        generic_amplitude=2.0, period=0.4,
+        pick_id=test_event.picks[0].resource_id,
+        waveform_id=test_event.picks[0].waveform_id, unit='m',
+        magnitude_hint='ML', category='point', type='AML'))
     # Test a coda magnitude pick
-    test_event.amplitudes.append(
-        Amplitude(generic_amplitude=10,
-                  pick_id=test_event.picks[1].resource_id,
-                  waveform_id=test_event.picks[1].waveform_id, type='END',
-                  category='duration', unit='s', magnitude_hint='Mc',
-                  snr=2.3))
-    test_event.origins[0].arrivals.append(
-        Arrival(time_weight=0, phase=test_event.picks[1].phase_hint,
-                pick_id=test_event.picks[1].resource_id))
-    test_event.origins[0].arrivals.append(
-        Arrival(time_weight=2, phase=test_event.picks[2].phase_hint,
-                pick_id=test_event.picks[2].resource_id,
-                backazimuth_residual=5, time_residual=0.2, distance=15,
-                azimuth=25))
-    test_event.origins[0].arrivals.append(
-        Arrival(time_weight=2, phase=test_event.picks[3].phase_hint,
-                pick_id=test_event.picks[3].resource_id,
-                backazimuth_residual=5, time_residual=0.2, distance=15,
-                azimuth=25))
+    test_event.amplitudes.append(Amplitude(
+        generic_amplitude=10, pick_id=test_event.picks[1].resource_id,
+        waveform_id=test_event.picks[1].waveform_id, type='END',
+        category='duration', unit='s', magnitude_hint='Mc', snr=2.3))
+    test_event.origins[0].arrivals.append(Arrival(
+        time_weight=0, phase=test_event.picks[1].phase_hint,
+        pick_id=test_event.picks[1].resource_id))
+    test_event.origins[0].arrivals.append(Arrival(
+        time_weight=2, phase=test_event.picks[2].phase_hint,
+        pick_id=test_event.picks[2].resource_id, backazimuth_residual=5,
+        time_residual=0.2, distance=15, azimuth=25))
+    test_event.origins[0].arrivals.append(Arrival(
+        time_weight=2, phase=test_event.picks[3].phase_hint,
+        pick_id=test_event.picks[3].resource_id, backazimuth_residual=5,
+        time_residual=0.2, distance=15, azimuth=25))
+    # Add in error info (line E)
+    test_event.origins[0].quality = OriginQuality(
+        standard_error=0.01, azimuthal_gap=36)
+    # Origin uncertainty in Seisan is output as long-lat-depth, quakeML has
+    # semi-major and semi-minor
+    test_event.origins[0].origin_uncertainty = OriginUncertainty(
+        confidence_ellipsoid=ConfidenceEllipsoid(
+            semi_major_axis_length=3000, semi_minor_axis_length=1000,
+            semi_intermediate_axis_length=2000, major_axis_plunge=20,
+            major_axis_azimuth=100, major_axis_rotation=4))
+    test_event.origins[0].time_errors = QuantityError(uncertainty=0.5)
+    # Add in fault-plane solution info (line F) - Note have to check program
+    # used to determine which fields are filled....
+    test_event.focal_mechanisms.append(FocalMechanism(
+        nodal_planes=NodalPlanes(nodal_plane_1=NodalPlane(
+            strike=180, dip=20, rake=30, strike_errors=QuantityError(10),
+            dip_errors=QuantityError(10), rake_errors=QuantityError(20))),
+        method_id=ResourceIdentifier("smi:nc.anss.org/focalMechanism/FPFIT"),
+        creation_info=CreationInfo(agency_id="NC"), misfit=0.5,
+        station_distribution_ratio=0.8))
+    # Need to test high-precision origin and that it is preferred origin.
+    # Moment tensor includes another origin
+    test_event.origins.append(Origin(
+        time=UTCDateTime("2012-03-26") + 1.2, latitude=45.1, longitude=25.2,
+        depth=14500))
+    test_event.magnitudes.append(Magnitude(
+        mag=0.1, magnitude_type='MW', creation_info=CreationInfo('TES'),
+        origin_id=test_event.origins[-1].resource_id))
+    # Moment tensors go with focal-mechanisms
+    test_event.focal_mechanisms.append(FocalMechanism(
+        moment_tensor=MomentTensor(
+            derived_origin_id=test_event.origins[-1].resource_id,
+            moment_magnitude_id=test_event.magnitudes[-1].resource_id,
+            scalar_moment=100, tensor=Tensor(
+                m_rr=100, m_tt=100, m_pp=10, m_rt=1, m_rp=20, m_tp=15),
+            method_id=ResourceIdentifier('smi:nc.anss.org/momentTensor/BLAH'))))
     return test_event
-
-    def test_nortoevmag(self):
-        self.assertEqual(_nortoevmag('b'), 'mB')
-        # raises "UserWarning: bob is not convertible"
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always', UserWarning)
-            self.assertEqual(_nortoevmag('bob'), '')
-        self.assertEquals(len(w), 1)
-        self.assertEquals('bob is not convertible', w[0].messages)
-
-    def test_evmagtonor(self):
-        self.assertEqual(_evmagtonor('mB'), 'B')
-        self.assertEqual(_evmagtonor('M'), 'W')
-        # raises "UserWarning: bob is not convertible"
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always', UserWarning)
-            self.assertEqual(_evmagtonor('bob'), '')
-        self.assertEquals(len(w), 1)
-        self.assertEquals('bob is not convertible', w[0].messages)
 
 
 def suite():
