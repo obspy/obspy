@@ -21,7 +21,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from math import cos, sin, pi
+from math import cos, sin, radians
 
 import numpy as np
 
@@ -49,8 +49,9 @@ def rotate_ne_rt(n, e, ba):
         raise TypeError("North and East component have different length.")
     if ba < 0 or ba > 360:
         raise ValueError("Back Azimuth should be between 0 and 360 degrees.")
-    r = e * sin((ba + 180) * 2 * pi / 360) + n * cos((ba + 180) * 2 * pi / 360)
-    t = e * cos((ba + 180) * 2 * pi / 360) - n * sin((ba + 180) * 2 * pi / 360)
+    ba = radians(ba)
+    r = - e * sin(ba) - n * cos(ba)
+    t = - e * cos(ba) + n * sin(ba)
     return r, t
 
 
@@ -102,8 +103,8 @@ def rotate_zne_lqt(z, n, e, ba, inc):
         raise ValueError("Back Azimuth should be between 0 and 360 degrees!")
     if inc < 0 or inc > 360:
         raise ValueError("Inclination should be between 0 and 360 degrees!")
-    ba *= 2 * pi / 360
-    inc *= 2 * pi / 360
+    ba = radians(ba)
+    inc = radians(inc)
     l = z * cos(inc) - n * sin(inc) * cos(ba) - e * sin(inc) * sin(ba)
     q = z * sin(inc) + n * cos(inc) * cos(ba) + e * cos(inc) * sin(ba)
     t = n * sin(ba) - e * cos(ba)
@@ -124,8 +125,8 @@ def rotate_lqt_zne(l, q, t, ba, inc):
         raise ValueError("Back Azimuth should be between 0 and 360 degrees!")
     if inc < 0 or inc > 360:
         raise ValueError("Inclination should be between 0 and 360 degrees!")
-    ba *= 2 * pi / 360
-    inc *= 2 * pi / 360
+    ba = radians(ba)
+    inc = radians(inc)
     z = l * cos(inc) + q * sin(inc)
     n = -l * sin(inc) * cos(ba) + q * cos(inc) * cos(ba) + t * sin(ba)
     e = -l * sin(inc) * sin(ba) + q * cos(inc) * sin(ba) - t * cos(ba)
