@@ -203,21 +203,10 @@ def compare_images(expected, actual, tol):
             "shape %s." % (str(actual_image.shape),
                            str(expected_image.shape)))
 
-    if actual_image.shape[2] == 4:
-        has_alpha_channel = True
-    elif actual_image.shape[2] == 3:
-        has_alpha_channel = False
-    else:
-        raise ImageComparisonException(
-            'The last dimension of the images is {:d} should be either 4 '
-            '(with alpha channel), or 3 (no alpha channel)'.
-            format(actual_image.shape[2]))
-
     # Set the "color" of fully transparent pixels to white. This avoids the
     # issue of different "colors" for transparent pixels.
-    if has_alpha_channel:
-        expected_image[expected_image[..., 3] <= 0.0035] = [1.0, 1.0, 1.0, 0.0]
-        actual_image[actual_image[..., 3] <= 0.0035] = [1.0, 1.0, 1.0, 0.0]
+    expected_image[expected_image[..., 3] <= 0.0035] = [1.0, 1.0, 1.0, 0.0]
+    actual_image[actual_image[..., 3] <= 0.0035] = [1.0, 1.0, 1.0, 0.0]
 
     # This deviates a bit from the matplotlib version and just calculates
     # the root mean square error of all pixel values without any other fancy
@@ -239,8 +228,7 @@ def compare_images(expected, actual, tol):
     abs_diff_image *= 10.0
     save_image_np = np.clip(abs_diff_image, 0.0, 1.0)
     # Hard-code the alpha channel to fully solid
-    if has_alpha_channel:
-        save_image_np[:, :, 3] = 1.0
+    save_image_np[:, :, 3] = 1.0
 
     write_png(np.uint8(save_image_np * 255.0), diff_image)
 
