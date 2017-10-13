@@ -21,6 +21,7 @@
 
        c_wrappers
        helper_classes
+       ray_paths
        seismic_phase
        slowness_layer
        slowness_model
