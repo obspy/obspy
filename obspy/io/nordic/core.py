@@ -35,7 +35,8 @@ from obspy.geodetics import kilometers2degrees, degrees2kilometers
 from obspy.core.event import (
     Event, Origin, Magnitude, Comment, Catalog, EventDescription, CreationInfo,
     OriginQuality, Pick, WaveformStreamID, Arrival, Amplitude,
-    ConfidenceEllipsoid)
+    ConfidenceEllipsoid, OriginUncertainty, FocalMechanism, MomentTensor,
+    NodalPlane, NodalPlanes, QuantityError, Tensor, ResourceIdentifier)
 
 
 mag_mapping = {"ML": "L", "MLv": "L", "mB": "B", "Ms": "s", "MS": "S",
@@ -230,7 +231,7 @@ def _nortoevmag(mag_type):
     """
     Switch from nordic type magnitude notation to obspy event magnitudes.
 
-    >>> print(_nortoevmag('b'))  # doctest: +SKIP
+    >>> print(_nortoevmag('B'))  # doctest: +SKIP
     mB
     >>> print(_nortoevmag('bob'))  # doctest: +SKIP
     <BLANKLINE>
@@ -239,7 +240,7 @@ def _nortoevmag(mag_type):
         return "ML"
     inv_mag_mapping = {item: key for key, item in mag_mapping.items()}
     try:
-        mag = inv_mag_mapping[mag_type.upper()]
+        mag = inv_mag_mapping[mag_type]
     except KeyError:
         warnings.warn(mag_type + ' is not convertible')
         return ''
@@ -620,21 +621,51 @@ def read_nordic(select_file, return_wavnames=False):
 
 def _read_uncertainty(tagged_lines, event):
     """
-
-    :param tagged_lines:
-    :param event:
-    :return:
+    Read hyp uncertainty line.
     """
+    if 'E' not in tagged_lines.keys():
+        return event
+    # In principle there shouldn't be more than one error line, but I think
+    # there can be - need to associate the correct error
+    line = tagged_lines['E'][0][0]
+    try:
+        errors = {'x_err': float(line[24:30]), 'y_err': float(line[32:38]),
+                  'z_err': float(line[38:43]), 'xy_cov': float(line[43:55]),
+                  'xz_cov': float(line[55:67]), 'yz_cov': float(line[67:79])}
+        event.origins[0].origin_uncertainty = OriginUncertainty(
+            confidence_ellipsoid=xyz_to_confidence_ellipsoid(errors))
+    except ValueError:
+        pass
+    try:
+        event.origins[0].quality = OriginQuality(
+            azimuthal_gap=int(line[5:8]), standard_error=float(line[14:20]))
+    except ValueError:
+        pass
     return event
 
 
 def _read_focal_mechanisms(tagged_lines, event):
     """
-
-    :param tagged_lines:
-    :param event:
-    :return:
+    Read focal mechanism info from s-file
     """
+    if 'F' not in tagged_lines.keys():
+        return event
+    UserWarning("Found focal-mechanism info: reading amplitude-ratio fit,"
+                "number of bad polarities and number of bad amplitude ratios"
+                "is not implemented.")
+    for line, line_num in tagged_lines['F']:
+        event.focal_mechanisms.append(FocalMechanism(
+            nodal_planes=NodalPlanes(nodal_plane_1=NodalPlane(
+                strike=float(line[0:10]), dip=float(line[10:20]),
+                rake=float(line[20:30]),
+                strike_errors=QuantityError(float(line[30:35])),
+                dip_errors=QuantityError(float(line[35:40])),
+                rake_errors=QuantityError(float(line[40:45])))),
+            method_id=ResourceIdentifier(
+                "smi:nc.anss.org/focalMehcanism/" + line[70:77].strip()),
+            creation_info=CreationInfo(agency_id=line[66:69].strip),
+            misfit=float(line[45:50]),
+            station_distribution_ratio=float(line[50:55])))
     return event
 
 
@@ -645,6 +676,46 @@ def _read_moment_tensors(tagged_lines, event):
     :param event:
     :return:
     """
+    if 'M' not in tagged_lines.keys():
+        return event
+    # Group moment tensor lines together
+    mt_lines = sorted(tagged_lines['M'], key=lambda tup: tup[1])
+    for mt_ind in range(len(mt_lines) // 2):
+        mt_line_1 = mt_lines[mt_ind * 2][0]
+        mt_line_2 = mt_lines[(mt_ind * 2) + 1][0]
+        if not str(mt_line_2[1:3]) == str('MT'):
+            raise NordicParsingError("Matching moment tensor lines not found.")
+        sfile_seconds = int(mt_line_1[16:18])
+        if sfile_seconds == 60:
+            sfile_seconds = 0
+            add_seconds = 60
+        else:
+            add_seconds = 0
+        ori_time = UTCDateTime(
+            int(mt_line_1[1:5]), int(mt_line_1[6:8]), int(mt_line_1[8:10]),
+            int(mt_line_1[11:13]), int(mt_line_1[13:15]), sfile_seconds,
+            int(mt_line_1[19:20]) * 100000) + add_seconds
+        event.origins.append(Origin(
+            time=ori_time, latitude=float(mt_line_1[23:30]),
+            longitude=float(mt_line_1[30:38]),
+            depth=float(mt_line_1[38:43]) * 1000,
+            creation_info=CreationInfo(agency_id=mt_line_1[45:48].strip())))
+        event.magnitudes.append(Magnitude(
+            mag=float(mt_line_1[55:59]),
+            magnitude_type=_nortoevmag(mt_line_1[59]),
+            creation_info=CreationInfo(agency_id=mt_line_1[60:63].strip()),
+            origin_id=event.origins[-1].resource_id))
+        event.focal_mechanisms.append(FocalMechanism(
+            moment_tensor=MomentTensor(
+                derived_origin_id=event.origins[-1].resource_id,
+                moment_magnitude_id=event.magnitudes[-1].resource_id,
+                scalar_moment=float(mt_line_2[52:62]), tensor=Tensor(
+                    m_rr=float(mt_line_2[3:9]), m_tt=float(mt_line_2[10:16]),
+                    m_pp=float(mt_line_2[17:23]), m_rt=float(mt_line_2[24:30]),
+                    m_rp=float(mt_line_2[31:37]), m_tp=float(mt_line_2[38:44])),
+                method_id=ResourceIdentifier(
+                    "smi:nc.anss.org/momentTensor/" + mt_line_1[70:77].strip()
+                ))))
     return event
 
 
@@ -1074,9 +1145,18 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         timerms = '0.0'
     conv_mags = []
     # Get up to six magnitudes
+    mt_ids = []
+    if hasattr(event, 'focal_mechanisms'):
+        for fm in event.focal_mechanisms:
+            if hasattr(fm, 'moment_tensor') and hasattr(
+               fm.moment_tensor, 'moment_magnitude_id'):
+                mt_ids.append(fm.moment_tensor.moment_magnitude_id)
     for mag_ind in range(6):
         mag_info = {}
         try:
+            if event.magnitudes[mag_ind].resource_id in mt_ids:
+                raise IndexError("Repeated magnitude")
+                # This magnitude will get put in with the moment tensor
             mag_info['mag'] = '{0:.1f}'.format(
                 event.magnitudes[mag_ind].mag) or ''
             mag_info['type'] = _evmagtonor(event.magnitudes[mag_ind].
@@ -1087,11 +1167,11 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
             else:
                 mag_info['agency'] = ''
         except IndexError:
-            if mag_ind == 3:
-                break
-            else:
-                mag_info.update({'mag': '', 'type': '', 'agency': ''})
+            mag_info.update({'mag': '', 'type': '', 'agency': ''})
         conv_mags.append(mag_info)
+    conv_mags.sort(key=lambda d: d['mag'], reverse=True)
+    if conv_mags[3]['mag'] == '':
+        conv_mags = conv_mags[0:3]
     # Work out how many stations were used
     if len(event.picks) > 0:
         stations = [pick.waveform_id.station_code for pick in event.picks]
@@ -1124,16 +1204,22 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     # Write hyp error line
     try:
         sfile.write(_write_hyp_error_line(event.origins[0]) + '\n')
-    except NordicParsingError:
+    except (NordicParsingError, TypeError):
         pass
     # Write fault plane solution
     if hasattr(event, 'focal_mechanisms') and len(event.focal_mechanisms) > 0:
         for focal_mechanism in event.focal_mechanisms:
-            sfile.write(_write_focal_mechanism_line(focal_mechanism) + '\n')
+            try:
+                sfile.write(_write_focal_mechanism_line(focal_mechanism) + '\n')
+            except AttributeError:
+                pass
         # Write moment tensor solution
-        if hasattr(focal_mechanism, 'moment_tensor'):
-            sfile.write(
-                _write_moment_tensor_line(focal_mechanism) + '\n')
+        for focal_mechanism in event.focal_mechanisms:
+            try:
+                sfile.write(
+                    _write_moment_tensor_line(focal_mechanism) + '\n')
+            except AttributeError:
+                pass
     # Write line 2 (type: I) of s-file
     sfile.write(
         ' ACTION:ARG ' + str(datetime.datetime.now().year)[2:4] + '-' +
@@ -1250,7 +1336,7 @@ def _write_focal_mechanism_line(focal_mechanism):
         line[50:55] = (_str_conv(
             focal_mechanism.station_distribution_ratio, 1)).rjust(5)
     if hasattr(focal_mechanism, 'creation_info') and hasattr(
-            focal_mechanism.creation_id, 'agency_id'):
+            focal_mechanism.creation_info, 'agency_id'):
         line[66:69] = (str(focal_mechanism.creation_info.agency_id)).rjust(3)[0:3]
     if hasattr(focal_mechanism, 'method_id'):
         line[70:77] = (str(focal_mechanism.method_id).split('/')[-1]).rjust(7)

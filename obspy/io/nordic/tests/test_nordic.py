@@ -42,6 +42,9 @@ class TestNordicMethods(unittest.TestCase):
         """
         # Set-up a test event
         test_event = full_test_event()
+        # Sort the magnitudes - they are sorted on writing and we need to check
+        # like-for-like
+        test_event.magnitudes.sort(key=lambda obj: obj['mag'], reverse=True)
         # Add the event to a catalogue which can be used for QuakeML testing
         test_cat = Catalog()
         test_cat += test_event
@@ -359,8 +362,8 @@ class TestNordicMethods(unittest.TestCase):
         Check that we convert magnitudes as we should!
         """
         magnitude_map = [
-            ('L', 'ML'), ('B', 'mB'), ('S', 'Ms'), ('W', 'MW'), ('G', 'MbLg'),
-            ('C', 'Mc')]
+            ('L', 'ML'), ('B', 'mB'), ('S', 'MS'), ('W', 'MW'), ('G', 'MbLg'),
+            ('C', 'Mc'), ('s', 'Ms')]
         for magnitude in magnitude_map:
             self.assertEqual(magnitude[0], _evmagtonor(magnitude[1]))
             self.assertEqual(_nortoevmag(magnitude[0]), magnitude[1])
@@ -448,14 +451,11 @@ class TestNordicMethods(unittest.TestCase):
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
-            with open(tf.name, 'r') as f:
-                for line in f:
-                    print(line.rstrip())
             for event_1, event_2 in zip(cat, cat_back):
                 self.assertTrue(
                     len(event_1.magnitudes) == len(event_2.magnitudes))
-                self.assertTrue(test_similarity(event_1=event_1,
-                                                event_2=event_2))
+                self.assertTrue(test_similarity(
+                    event_1=event_1, event_2=event_2))
 
     def test_inaccurate_picks(self):
         testing_path = os.path.join(self.testing_path, 'bad_picks.sfile')
