@@ -395,8 +395,9 @@ class RotateTestCase(unittest.TestCase):
 
                 # Three horizontal components are linearly dependent, as are
                 # Z, Q, and L.
-                if (a[2] == b[2] == c[2] == 0 or
-                    set([_i[3] for _i in (a, b, c)]) == set(["Z", "Q", "L"])):
+                if a[2] == b[2] == c[2] == 0 or \
+                        set([_i[3] for _i in (a, b, c)]) == \
+                        set(["Z", "Q", "L"]):
                     with self.assertRaises(ValueError) as err:
                         rotate2zne(a[0], a[1], a[2],
                                    b[0], b[1], b[2],
