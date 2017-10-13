@@ -288,7 +288,7 @@ class RotateTestCase(unittest.TestCase):
         """
         This also tests non-orthogonal configurations to some degree.
         """
-        np.random.seed(123)
+        np.random.seed(456)
         z = np.random.random(10)
         n = np.random.random(10)
         e = np.random.random(10)
@@ -310,6 +310,115 @@ class RotateTestCase(unittest.TestCase):
                 np.testing.assert_allclose(z_new, z)
                 np.testing.assert_allclose(n_new, n)
                 np.testing.assert_allclose(e_new, e)
+
+    def test_rotate2zne_against_lqt(self):
+        np.random.seed(789)
+        z = np.random.random(10)
+        n = np.random.random(10)
+        e = np.random.random(10)
+
+        bas = [0.0, 14.325, 38.234, 78.1, 90.0, 136.3435, 265.4, 180.0,
+               351.35, 360.0]
+        incs = [0.0, 10.325, 32.23, 88.1, 90.0, 132.3435, 245.4, 180.0,
+                341.35, 360.0]
+
+        for ba, inc in itertools.product(bas, incs):
+            l, q, t = rotate_zne_lqt(z=z, n=n, e=e, ba=ba, inc=inc)
+
+            dip_l = (inc % 180.0) - 90.0
+            if 180 <= inc < 360:
+                dip_l *= -1.0
+
+            dip_q = ((inc + 90) % 180) - 90
+            if 0 < inc < 90 or 270 <= inc < 360:
+                dip_q *= -1.0
+
+            az_l = ba + 180.0
+            az_q = ba
+
+            # Azimuths flip depending on the incidence angle.
+            if inc > 180:
+                az_l += 180
+            if 90 < inc <= 270:
+                az_q += 180
+
+            z_new, n_new, e_new = rotate2zne(l, az_l, dip_l,
+                                             q, az_q, dip_q,
+                                             t, ba + 270, 0)
+            np.testing.assert_allclose(z_new, z)
+            np.testing.assert_allclose(n_new, n)
+            np.testing.assert_allclose(e_new, e)
+
+    def test_rotate2zne_against_lqt_different_combinations(self):
+        np.random.seed(101112)
+        z = np.random.random(10)
+        n = np.random.random(10)
+        e = np.random.random(10)
+
+        # Exclude coordinate axis.
+        bas = [14.325, 38.234, 78.1, 136.3435, 265.4, 351.35]
+        incs = [10.325, 32.23, 88.1, 132.3435, 245.4, 341.35]
+
+        success_count = 0
+        failure_count = 0
+
+        for ba, inc in itertools.product(bas, incs):
+            l, q, t = rotate_zne_lqt(z=z, n=n, e=e, ba=ba, inc=inc)
+
+            dip_l = (inc % 180.0) - 90.0
+            if 180 <= inc < 360:
+                dip_l *= -1.0
+
+            dip_q = ((inc + 90) % 180) - 90
+            if 0 < inc < 90 or 270 <= inc < 360:
+                dip_q *= -1.0
+
+            az_l = ba + 180.0
+            az_q = ba
+
+            # Azimuths flip depending on the incidence angle.
+            if inc > 180:
+                az_l += 180
+            if 90 < inc <= 270:
+                az_q += 180
+
+            _z = [z, 0, -90, "Z"]
+            _n = [n, 0, 0, "N"]
+            _e = [e, 90, 0, "E"]
+            _l = [l, az_l, dip_l, "L"]
+            _q = [q, az_q, dip_q, "Q"]
+            _t = [t, ba + 270, 0, "T"]
+
+            # Any three of them (except three horizontal ones) should be
+            # able to reconstruct ZNE.
+            for a, b, c in itertools.permutations([_l, _q, _t, _z, _n, _e], 3):
+
+                # Three horizontal components are linearly dependent, as are
+                # Z, Q, and L.
+                if (a[2] == b[2] == c[2] == 0 or
+                    set([_i[3] for _i in (a, b, c)]) == set(["Z", "Q", "L"])):
+                    with self.assertRaises(ValueError) as err:
+                        rotate2zne(a[0], a[1], a[2],
+                                   b[0], b[1], b[2],
+                                   c[0], c[1], c[2])
+                    self.assertTrue(err.exception.args[0].startswith(
+                        "The given directions are not linearly independent, "
+                        "at least within numerical precision. Determinant of "
+                        "the base change matrix:"))
+                    failure_count += 1
+                    continue
+
+                z_new, n_new, e_new = rotate2zne(a[0], a[1], a[2],
+                                                 b[0], b[1], b[2],
+                                                 c[0], c[1], c[2])
+                np.testing.assert_allclose(z_new, z)
+                np.testing.assert_allclose(n_new, n)
+                np.testing.assert_allclose(e_new, e)
+                success_count += 1
+        # Make sure it actually tested all combinations.
+        self.assertEqual(success_count, 3888)
+        # Also the linearly dependent variants.
+        self.assertEqual(failure_count, 432)
 
 
 def suite():

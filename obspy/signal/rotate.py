@@ -213,6 +213,14 @@ def rotate2zne(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
                   base_vector_2,
                   base_vector_3])
 
+    # Determinant gives the volume change of a unit cube going from one
+    # basis to the next. It should neither be too small nor to large. These
+    # here are arbitrary limits.
+    if not (1E-6 < abs(np.linalg.det(m)) < 1E6):
+        raise ValueError("The given directions are not linearly independent, "
+                         "at least within numerical precision. Determinant "
+                         "of the base change matrix: %g" % np.linalg.det(m))
+
     if not inverse:
         m = np.linalg.inv(m)
 
