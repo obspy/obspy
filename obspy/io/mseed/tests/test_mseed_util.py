@@ -1233,6 +1233,37 @@ class MSEEDUtilTestCase(unittest.TestCase):
         # Move the file_bfr to where it was before
         file_bfr.seek(prev_pos, os.SEEK_SET)
 
+    def test_get_record_information_with_invalid_word_order(self):
+        filename = os.path.join(self.path, "data",
+                                "record_with_invalid_word_order.mseed")
+        with warnings.catch_warnings(record=True) as w:
+            info = util.get_record_information(filename)
+
+        self.assertEqual(len(w), 1)
+        self.assertEqual(
+            w[0].message.args[0],
+            'Invalid word order "95" in blockette 1000 for record with '
+            'ID IU.COR..LHZ at offset 0.')
+        self.assertEqual(info, {
+            'filesize': 4096,
+            'station': 'COR',
+            'location': '',
+            'channel': 'LHZ',
+            'network': 'IU',
+            'npts': 1267,
+            'activity_flags': 64,
+            'io_and_clock_flags': 32,
+            'data_quality_flags': 0,
+            'time_correction': 0,
+            'encoding': 11,
+            'record_length': 4096,
+            'samp_rate': 1.0,
+            'starttime': UTCDateTime(1995, 6, 24, 0, 0, 0, 265000),
+            'endtime': UTCDateTime(1995, 6, 24, 0, 21, 6, 265000),
+            'byteorder': '>',
+            'number_of_records': 1,
+            'excess_bytes': 0})
+
 
 def suite():
     return unittest.makeSuite(MSEEDUtilTestCase, 'test')

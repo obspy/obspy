@@ -152,6 +152,7 @@ master: (doi: 10.5281/zenodo.165135)
      files larger than 2048 MiB (#1746).
    * `.stats.mseed` attributes are no longer per-file but per-trace where
      applicable (see #1782).
+   * `get_record_information()` - Don't fail if the word order is invalid.
  - obspy.io.nlloc:
    * Set preferred origin of event (see #1570)
  - obspy.io.nordic:
