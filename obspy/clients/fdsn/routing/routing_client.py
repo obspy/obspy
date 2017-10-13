@@ -16,6 +16,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import io
+import re
 from multiprocessing.dummy import Pool as ThreadPool
 
 import decorator
@@ -84,7 +85,19 @@ def _assert_attach_response_not_in_kwargs(f, *args, **kwargs):
 
 
 def _download_bulk(r):
-    c = client.Client(r["endpoint"], debug=r["debug"], timeout=r["timeout"])
+    # determine base url:
+    # take everything in between (optional) http[s]:// and the next /
+    base_url = re.match(
+        pattern=r'(https?://)?([^/]*)',
+        string=r["endpoint"]).group(2)
+    # get appropriate credentials info from credentials dictionary
+    credentials = r["credentials"].get(base_url, {})
+    if r["debug"] and credentials:
+        print("Fetching from '{}' using{} credentials{}".format(
+            base_url, credentials and "" or " no",
+            credentials and ": {!s}".format(credentials.keys()) or ""))
+    c = client.Client(r["endpoint"], debug=r["debug"], timeout=r["timeout"],
+                      **credentials)
     if r["data_type"] == "waveform":
         fct = c.get_waveforms_bulk
         service = c.services["dataselect"]
@@ -112,7 +125,7 @@ def _strip_protocol(url):
 # get_events() but also others).
 class BaseRoutingClient(HTTPClient):
     def __init__(self, debug=False, timeout=120, include_providers=None,
-                 exclude_providers=None):
+                 exclude_providers=None, credentials=None):
         """
         :type routing_type: str
         :param routing_type: The type of
@@ -123,10 +136,18 @@ class BaseRoutingClient(HTTPClient):
         :type include_providers: str or list of str
         :param include_providers: Get data only from these providers. Can be
             the full HTTP address of one of the shortcuts ObsPy knows about.
+        :type credentials: dict
+        :param credentials: Credentials for the individual data centers as a
+            dictionary that maps base url of FDSN web service to either
+            username/password or EIDA token, e.g.
+            ``credentials={
+            'geofon.gfz-potsdam.de': {'token': 'my_token_file.txt'},
+            'service.iris.edu': {'user': 'me', 'password': 'my_pass'}}``
         """
         HTTPClient.__init__(self, debug=debug, timeout=timeout)
         self.include_providers = include_providers
         self.exclude_providers = exclude_providers
+        self.credentials = credentials or {}
 
     @property
     def include_providers(self):
@@ -197,7 +218,8 @@ class BaseRoutingClient(HTTPClient):
                 "endpoint": k,
                 "bulk_str": v,
                 "data_type": data_type,
-                "kwargs": kwargs})
+                "kwargs": kwargs,
+                "credentials": self.credentials})
         pool = ThreadPool(processes=len(dl_requests))
         results = pool.map(_download_bulk, dl_requests)
 
