@@ -26,6 +26,7 @@ import threading
 import warnings
 from collections import OrderedDict
 
+import requests
 from lxml import etree
 
 import obspy
@@ -138,7 +139,8 @@ class Client(object):
 
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=120, service_mappings=None, force_redirect=False):
+                 timeout=120, service_mappings=None, force_redirect=False,
+                 eida_token=None):
         """
         Initializes an FDSN Web Service client.
 
@@ -193,6 +195,13 @@ class Client(object):
             when a redirect is discovered. This is done to improve security.
             Settings this flag to ``True`` will force all redirects to be
             followed even if credentials are given.
+        :type eida_token: str
+        :param eida_token: Token for EIDA authentication mechanism, see
+            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php. If a
+            token is provided, options ``user`` and ``password`` will be
+            overridden. This mechanism is only available on select EIDA nodes.
+            The token can be provided in form of the PGP message as a string,
+            or the filename of a local file with the PGP message in it.
         """
         self.debug = debug
         self.user = user
@@ -219,6 +228,45 @@ class Client(object):
             raise ValueError(msg)
 
         self.base_url = base_url
+
+        # use EIDA token if provided
+        if eida_token is not None:
+            eida_token_file = None
+            # check if there's a local file that matches the provided string
+            if os.path.isfile(eida_token):
+                eida_token_file = eida_token
+                with open(eida_token_file, 'rb') as fh:
+                    eida_token = fh.read().decode()
+            # sanity check on the token
+            if not _validate_eida_token(eida_token):
+                if eida_token_file:
+                    msg = ("Read EIDA token from file '{}' but it does not "
+                           "seem to contain a valid PGP message.").format(
+                                eida_token_file)
+                else:
+                    msg = "EIDA token does not seem to be a valid PGP message"
+                raise ValueError(msg)
+            # force https so that we don't send around tokens unsecurely
+            url = 'https://{}/fdsnws/dataselect/1/auth'.format(re.sub(
+                pattern='^http://', repl='', string=self.base_url, count=1))
+            # paranoid: check again that we only send the token to https
+            if not url.startswith('https://'):
+                msg = 'This should not happen, please file a bug report.'
+                raise Exception(msg)
+            # retrieve user/password using the token
+            response = requests.post(url, data=eida_token)
+            # if credentials were returned the status code seems to be 200
+            if response.status_code != 200:
+                msg = ("Failed to resolve EIDA token from URL '{}', server "
+                       "replied with HTTP status code '{!s}' and message "
+                       "'{}'.").format(url, response.status_code,
+                                       response.reason)
+                raise FDSNException(msg)
+            if user is not None or password is not None:
+                msg = ("EIDA authentication token provided, options 'user' "
+                       "and 'password' will be overridden.")
+                warnings.warn(msg)
+            user, password = response.content.decode().split(':')
 
         # Only add the authentication handler if required.
         handlers = []
@@ -1774,6 +1822,17 @@ def get_bulk_string(bulk, arguments):
     if hasattr(bulk, "encode"):
         bulk = bulk.encode("ascii")
     return bulk
+
+
+def _validate_eida_token(token):
+    """
+    Just a basic check if the string contains something that looks like a PGP
+    message
+    """
+    if re.search(pattern='BEGIN PGP MESSAGE', string=token,
+                 flags=re.IGNORECASE):
+        return True
+    return False
 
 
 if __name__ == '__main__':
