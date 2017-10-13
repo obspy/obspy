@@ -265,6 +265,24 @@ class RotateTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(n, n_ref, rtol=1E-7, atol=1E-7))
         self.assertTrue(np.allclose(e, e_ref, rtol=1E-7, atol=1E-7))
 
+    def test_rotate2zne_against_rotate_ne_rt(self):
+        np.random.seed(123)
+        z = np.random.random(10)
+        n = np.random.random(10)
+        e = np.random.random(10)
+
+        for ba in [0.0, 14.325, 38.234, 78.1, 90.0, 136.3435, 265.4, 351.35]:
+            r, t = rotate_ne_rt(n=n, e=e, ba=ba)
+
+            # Unrotate with rotate2zne() - this should make sure the azimuth is
+            # interpreted correctly.
+            z_new, n_new, e_new = rotate2zne(z, 0, -90,
+                                             r, ba + 180, 0,
+                                             t, ba + 270, 0)
+            np.testing.assert_allclose(z_new, z)
+            np.testing.assert_allclose(n_new, n)
+            np.testing.assert_allclose(e_new, e)
+
 
 def suite():
     return unittest.makeSuite(RotateTestCase, 'test')
