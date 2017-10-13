@@ -421,6 +421,85 @@ class RotateTestCase(unittest.TestCase):
         # Also the linearly dependent variants.
         self.assertEqual(failure_count, 432)
 
+    def test_with_real_data(self):
+        # Filtered and downsampled test data with two co-located
+        # seismometers on a step table. One (UVW) in Galperin configuration,
+        # the other (XYZ) oriented 25 degree towards counter-clockwise from
+        # North.
+        #
+        # Original data can be found here:
+        # http://examples.obspy.org/step_table_galperin_and_xyz.mseed
+        #
+        # Picture of setup:
+        # http://examples.obspy.org/step_table_galperin_and_xyz.jpg
+        u = np.array([
+            -887.77005805, 7126.9690531, 48436.17065483, 138585.24660557,
+            220190.69362083, 179040.5715419, -21365.23030094,
+            -253885.25529288, -344888.20815164, -259362.36082208,
+            -117476.30748613, - 42988.81966958, -45995.43307308,
+            -57130.87444412, -30545.75344533, 16298.87665025])
+        v = np.array([
+            2.33308511e+02, 8.16259596e+03, 5.11074487e+04, 1.48229541e+05,
+            2.41322335e+05, 2.08201013e+05, 4.93732289e+03, -2.39867750e+05,
+            -3.44167596e+05, -2.66558032e+05, -1.27714987e+05, -5.54712804e+04,
+            -6.19973652e+04, -7.66740787e+04, -5.17925310e+04,
+            -4.71673443e+03])
+        w = np.array([
+            1692.48532892, 9875.6136413, 53089.61423663, 149373.52749023,
+            240009.30157128, 204362.69005767, 1212.47406863, -239380.57384624,
+            -336783.01040666, -252884.65411222, -110766.44577398,
+            -38182.18142102, -45729.92956198, -61691.87092415,
+            -38434.81993441, 6224.73096858])
+        x = np.array([
+            -1844.85832046, -1778.44974024, -2145.6117388, -4325.27560474,
+            -8278.1836905, -10842.53378841, -8565.12113951, -2024.53838011,
+            4439.22322848, 7340.96354878 , 7081.65449722, 6303.91640198,
+            6549.98692684, 7223.59663617, 7133.72073748, 6068.56702479])
+        y = np.array([
+            -242.70568894, -458.3864756, -351.75925077, 2142.51669733,
+            8287.98182002, 15822.24351111, 20151.78532927, 18511.90136103,
+            12430.22438956, 5837.66044337, 1274.9580289, -1597.06115226,
+            -4331.40686142, -7529.87533286, -10544.34374306, -12656.77586305])
+        z = np.array([
+            5.79050980e+02, 1.45190734e+04, 8.85582128e+04, 2.53690907e+05,
+            4.08578800e+05, 3.45046937e+05, -8.15914926e+03, -4.26449298e+05,
+            -5.97207861e+05, -4.53464470e+05, -2.07176498e+05, -7.94526512e+04,
+            -8.95206215e+04, -1.14008287e+05, -7.05797830e+04, 1.01175730e+04])
+
+        # Set component orientation.
+        u = (u, 90.0, -(90.0 - 54.7), "U")
+        v = (v, 330.0, -(90.0 - 54.7), "V")
+        w = (w, 210.0, -(90.0 - 54.7), "W")
+        x = (x, 65.0, 0.0, "X")
+        y = (y, 335.0, 0.0, "Y")
+        z = (z, 0.0, -90.0, "Z")
+
+        # Any three should result in the same ZNE.
+        success_count = 0
+        failure_count = 0
+        for a, b, c in itertools.permutations([x, y, z, u], 3):
+            # Except if "X" and "Y" are both part of it because they contain
+            # too little data.
+            if set(["X", "Y"]).issubset(set([a[-1], b[-1], c[-1]])):
+                failure_count += 1
+                continue
+
+            z_new, _, _ = rotate2zne(
+                a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2])
+            np.testing.assert_allclose(z_new, z[0], rtol=1E-5)
+            success_count += 1
+
+            # Sanity check that it fails for slightly different rotations.
+            z_new, _, _ = rotate2zne(
+                a[0], a[1] + 1.5, a[2] - 1.5,
+                b[0], b[1] - 0.7, b[2] + 1.2,
+                c[0], c[1] + 1.0, c[2] - 0.4)
+            with self.assertRaises(AssertionError):
+                np.testing.assert_allclose(z_new, z[0], rtol=1E-5)
+
+        self.assertEqual(success_count, 12)
+        self.assertEqual(failure_count, 12)
+
 
 def suite():
     return unittest.makeSuite(RotateTestCase, 'test')
