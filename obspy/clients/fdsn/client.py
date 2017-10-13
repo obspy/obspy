@@ -206,6 +206,7 @@ class Client(object):
         self.debug = debug
         self.user = user
         self.timeout = timeout
+        self._force_redirect = force_redirect
 
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
@@ -229,7 +230,7 @@ class Client(object):
 
         self.base_url = base_url
 
-        self._set_opener(user, password, force_redirect)
+        self._set_opener(user, password)
 
         self.request_headers = {"User-Agent": user_agent}
         # Avoid mutable kwarg.
@@ -261,9 +262,22 @@ class Client(object):
                        "and 'password' will be overridden.")
                 warnings.warn(msg)
             user, password = self._resolve_eida_token(eida_token)
-            self._set_opener(user, password, force_redirect)
+            self._set_opener(user, password)
 
-    def _set_opener(self, user, password, force_redirect):
+    def set_credentials(self, user, password):
+        """
+        Set user and password resulting in subsequent web service
+        requests for waveforms being authenticated for potential access to
+        restricted data.
+
+        :type user: str
+        :param user: User name of credentials.
+        :type password: str
+        :param password: Password for given user name.
+        """
+        self._set_opener(user, password)
+
+    def _set_opener(self, user, password):
         # Only add the authentication handler if required.
         handlers = []
         if user is not None and password is not None:
@@ -272,7 +286,7 @@ class Client(object):
             password_mgr.add_password(None, self.base_url, user, password)
             handlers.append(urllib_request.HTTPDigestAuthHandler(password_mgr))
 
-        if (user is None and password is None) or force_redirect is True:
+        if (user is None and password is None) or self._force_redirect is True:
             # Redirect if no credentials are given or the force_redirect
             # flag is True.
             handlers.append(CustomRedirectHandler())

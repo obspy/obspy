@@ -1261,21 +1261,21 @@ class ClientTestCase(unittest.TestCase):
         # now, if we set new user/password, we should get a http digest auth
         # handler
         user, password = ("spam", "eggs")
-        client._set_opener(user=user, password=password, force_redirect=False)
+        client._set_opener(user=user, password=password)
         _assert_credentials(client, user, password)
         # now, if we resolve the EIDA token, the http digest auth handler
         # should change
         user, password = client._resolve_eida_token(token=token)
         _assert_eida_user_and_password(user, password)
-        client._set_opener(user=user, password=password, force_redirect=False)
+        client._set_opener(user=user, password=password)
         _assert_credentials(client, user, password)
         # do it again, now providing the token data directly as a string (first
         # change the authentication again to dummy user/password
-        client._set_opener(user="foo", password="bar", force_redirect=False)
+        client._set_opener(user="foo", password="bar")
         _assert_credentials(client, "foo", "bar")
         user, password = client._resolve_eida_token(token=token_data)
         _assert_eida_user_and_password(user, password)
-        client._set_opener(user=user, password=password, force_redirect=False)
+        client._set_opener(user=user, password=password)
         _assert_credentials(client, user, password)
         # last tests, test that providing the token during init behaves as
         # expected
