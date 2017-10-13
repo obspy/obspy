@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA
 from future.utils import PY2
 
 import gzip
+import itertools
 import os
 import unittest
 
@@ -282,6 +283,33 @@ class RotateTestCase(unittest.TestCase):
             np.testing.assert_allclose(z_new, z)
             np.testing.assert_allclose(n_new, n)
             np.testing.assert_allclose(e_new, e)
+
+    def test_rotate2zne_against_ne_rt_picking_any_two_horizontal_comps(self):
+        """
+        This also tests non-orthogonal configurations to some degree.
+        """
+        np.random.seed(123)
+        z = np.random.random(10)
+        n = np.random.random(10)
+        e = np.random.random(10)
+
+        # Careful to not pick any coordinate axes.
+        for ba in [14.325, 38.234, 78.1, 136.3435, 265.4, 351.35]:
+            r, t = rotate_ne_rt(n=n, e=e, ba=ba)
+
+            _r = [r, ba + 180, 0]
+            _t = [t, ba + 270, 0]
+            _n = [n, 0, 0]
+            _e = [e, 90, 0]
+
+            # Picking any two should be enough to reconstruct n and e.
+            for a, b in itertools.permutations([_r, _t, _n, _e], 2):
+                z_new, n_new, e_new = rotate2zne(z, 0, -90,
+                                                 a[0], a[1], a[2],
+                                                 b[0], b[1], b[2])
+                np.testing.assert_allclose(z_new, z)
+                np.testing.assert_allclose(n_new, n)
+                np.testing.assert_allclose(e_new, e)
 
 
 def suite():
