@@ -127,24 +127,29 @@ class RotateTestCase(unittest.TestCase):
         The rotate2zne() function has an inverse argument. Thus round
         tripping should work.
         """
-        z = np.ones(10, dtype=np.float64)
-        n = 2.0 * np.ones(10, dtype=np.float64)
-        e = 3.0 * np.ones(10, dtype=np.float64)
+        np.random.seed(45645623)
+        z = np.random.random(10)
+        n = np.random.random(10)
+        e = np.random.random(10)
 
-        # Random values.
-        dip_1, dip_2, dip_3 = 0.0, 30.0, 60.0
-        azi_1, azi_2, azi_3 = 0.0, 170.0, 35.0
+        for _ in range(100):
+            # The risk of producing linear dependent directions is very
+            # small (the seed value should also prevent it across machines).
+            dip_1, dip_2, dip_3 = np.random.random(3) * 180.0 - 90.0
+            azi_1, azi_2, azi_3 = np.random.random(3) * 360.0
 
-        a, b, c = rotate2zne(z, azi_1, dip_1, n, azi_2, dip_2, e, azi_3, dip_3)
+            a, b, c = rotate2zne(z, azi_1, dip_1,
+                                 n, azi_2, dip_2,
+                                 e, azi_3, dip_3)
 
-        z_new, n_new, e_new = rotate2zne(a, azi_1, dip_1,
-                                         b, azi_2, dip_2,
-                                         c, azi_3, dip_3,
-                                         inverse=True)
+            z_new, n_new, e_new = rotate2zne(a, azi_1, dip_1,
+                                             b, azi_2, dip_2,
+                                             c, azi_3, dip_3,
+                                             inverse=True)
 
-        self.assertTrue(np.allclose(z, z_new, rtol=1E-7, atol=1e-7))
-        self.assertTrue(np.allclose(n, n_new, rtol=1E-7, atol=1e-7))
-        self.assertTrue(np.allclose(e, e_new, rtol=1E-7, atol=1e-7))
+            np.testing.assert_allclose(z, z_new, rtol=1E-7, atol=1e-7)
+            np.testing.assert_allclose(n, n_new, rtol=1E-7, atol=1e-7)
+            np.testing.assert_allclose(e, e_new, rtol=1E-7, atol=1e-7)
 
     def test_rotate2zne_raise(self):
         """
