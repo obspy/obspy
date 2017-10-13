@@ -229,62 +229,7 @@ class Client(object):
 
         self.base_url = base_url
 
-        # use EIDA token if provided
-        if eida_token is not None:
-            eida_token_file = None
-            # check if there's a local file that matches the provided string
-            if os.path.isfile(eida_token):
-                eida_token_file = eida_token
-                with open(eida_token_file, 'rb') as fh:
-                    eida_token = fh.read().decode()
-            # sanity check on the token
-            if not _validate_eida_token(eida_token):
-                if eida_token_file:
-                    msg = ("Read EIDA token from file '{}' but it does not "
-                           "seem to contain a valid PGP message.").format(
-                                eida_token_file)
-                else:
-                    msg = "EIDA token does not seem to be a valid PGP message"
-                raise ValueError(msg)
-            # force https so that we don't send around tokens unsecurely
-            url = 'https://{}/fdsnws/dataselect/1/auth'.format(re.sub(
-                pattern='^http://', repl='', string=self.base_url, count=1))
-            # paranoid: check again that we only send the token to https
-            if not url.startswith('https://'):
-                msg = 'This should not happen, please file a bug report.'
-                raise Exception(msg)
-            # retrieve user/password using the token
-            response = requests.post(url, data=eida_token)
-            # if credentials were returned the status code seems to be 200
-            if response.status_code != 200:
-                msg = ("Failed to resolve EIDA token from URL '{}', server "
-                       "replied with HTTP status code '{!s}' and message "
-                       "'{}'.").format(url, response.status_code,
-                                       response.reason)
-                raise FDSNException(msg)
-            if user is not None or password is not None:
-                msg = ("EIDA authentication token provided, options 'user' "
-                       "and 'password' will be overridden.")
-                warnings.warn(msg)
-            user, password = response.content.decode().split(':')
-
-        # Only add the authentication handler if required.
-        handlers = []
-        if user is not None and password is not None:
-            # Create an OpenerDirector for HTTP Digest Authentication
-            password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
-            password_mgr.add_password(None, base_url, user, password)
-            handlers.append(urllib_request.HTTPDigestAuthHandler(password_mgr))
-
-        if (user is None and password is None) or force_redirect is True:
-            # Redirect if no credentials are given or the force_redirect
-            # flag is True.
-            handlers.append(CustomRedirectHandler())
-        else:
-            handlers.append(NoRedirectionHandler())
-
-        # Don't install globally to not mess with other codes.
-        self._url_opener = urllib_request.build_opener(*handlers)
+        self._set_opener(user, password, force_redirect)
 
         self.request_headers = {"User-Agent": user_agent}
         # Avoid mutable kwarg.
@@ -308,6 +253,73 @@ class Client(object):
             print("Request Headers: %s" % str(self.request_headers))
 
         self._discover_services()
+
+        # use EIDA token if provided
+        if eida_token is not None:
+            if user is not None or password is not None:
+                msg = ("EIDA authentication token provided, options 'user' "
+                       "and 'password' will be overridden.")
+                warnings.warn(msg)
+            user, password = self._resolve_eida_token(eida_token)
+            self._set_opener(user, password, force_redirect)
+
+    def _set_opener(self, user, password, force_redirect):
+        # Only add the authentication handler if required.
+        handlers = []
+        if user is not None and password is not None:
+            # Create an OpenerDirector for HTTP Digest Authentication
+            password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr.add_password(None, self.base_url, user, password)
+            handlers.append(urllib_request.HTTPDigestAuthHandler(password_mgr))
+
+        if (user is None and password is None) or force_redirect is True:
+            # Redirect if no credentials are given or the force_redirect
+            # flag is True.
+            handlers.append(CustomRedirectHandler())
+        else:
+            handlers.append(NoRedirectionHandler())
+
+        # Don't install globally to not mess with other codes.
+        self._url_opener = urllib_request.build_opener(*handlers)
+        if self.debug:
+            print('Installed new opener with handlers: {!s}'.format(handlers))
+
+    def _resolve_eida_token(self, token):
+        token_file = None
+        # check if there's a local file that matches the provided string
+        if os.path.isfile(token):
+            token_file = token
+            with open(token_file, 'rb') as fh:
+                token = fh.read().decode()
+        # sanity check on the token
+        if not _validate_eida_token(token):
+            if token_file:
+                msg = ("Read EIDA token from file '{}' but it does not "
+                       "seem to contain a valid PGP message.").format(
+                            token_file)
+            else:
+                msg = "EIDA token does not seem to be a valid PGP message"
+            raise ValueError(msg)
+        # force https so that we don't send around tokens unsecurely
+        url = 'https://{}/fdsnws/dataselect/1/auth'.format(re.sub(
+            pattern='^http://', repl='', string=self.base_url, count=1))
+        # paranoid: check again that we only send the token to https
+        if not url.startswith('https://'):
+            msg = 'This should not happen, please file a bug report.'
+            raise Exception(msg)
+        # retrieve user/password using the token
+        if self.debug:
+            print('Downloading {} with eida token data in POST'.format(url))
+        response = requests.post(url, data=token)
+        # if credentials were returned the status code seems to be 200
+        if response.status_code != 200:
+            msg = ("Failed to resolve EIDA token from URL '{}', server "
+                   "replied with HTTP status code '{!s}' and message "
+                   "'{}'.").format(url, response.status_code,
+                                   response.reason)
+            raise FDSNException(msg)
+        user, password = response.content.decode().split(':')
+        return user, password
 
     def get_events(self, starttime=None, endtime=None, minlatitude=None,
                    maxlatitude=None, minlongitude=None, maxlongitude=None,
