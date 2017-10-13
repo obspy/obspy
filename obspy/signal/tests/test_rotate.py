@@ -466,7 +466,7 @@ class RotateTestCase(unittest.TestCase):
             -5.97207861e+05, -4.53464470e+05, -2.07176498e+05, -7.94526512e+04,
             -8.95206215e+04, -1.14008287e+05, -7.05797830e+04, 1.01175730e+04])
 
-        # Set component orientation.
+        # Component orientations.
         u = (u, 90.0, -(90.0 - 54.7), "U")
         v = (v, 330.0, -(90.0 - 54.7), "V")
         w = (w, 210.0, -(90.0 - 54.7), "W")
@@ -478,8 +478,8 @@ class RotateTestCase(unittest.TestCase):
         success_count = 0
         failure_count = 0
         for a, b, c in itertools.permutations([x, y, z, u], 3):
-            # Except if "X" and "Y" are both part of it because they contain
-            # too little data.
+            # Except if "X" and "Y" are both part of it because they don't
+            # really contain any data (vertical step table).
             if set(["X", "Y"]).issubset(set([a[-1], b[-1], c[-1]])):
                 failure_count += 1
                 continue
