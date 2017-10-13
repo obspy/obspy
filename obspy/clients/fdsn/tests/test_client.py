@@ -1275,7 +1275,7 @@ class ClientTestCase(unittest.TestCase):
         _assert_credentials(client, "foo", "bar")
         user, password = client._resolve_eida_token(token=token_data)
         _assert_eida_user_and_password(user, password)
-        client._set_opener(user=user, password=password)
+        client.set_eida_token(token_data)
         _assert_credentials(client, user, password)
         # last tests, test that providing the token during init behaves as
         # expected

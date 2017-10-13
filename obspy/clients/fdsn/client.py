@@ -277,6 +277,27 @@ class Client(object):
         """
         self._set_opener(user, password)
 
+    def set_eida_token(self, token):
+        """
+        Fetch user and password from the server using the provided token,
+        resulting in subsequent web service requests for waveforms being
+        authenticated for potential access to restricted data.
+        This only works for select EIDA nodes and relies on the auth mechanism
+        described here:
+        http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php
+
+        :type token: str
+        :param token: Token for EIDA authentication mechanism, see
+            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php. If
+            the client was initialized with options ``user`` and ``password``,
+            these settings will be overridden. This mechanism is only available
+            on select EIDA nodes. The token can be provided in form of the PGP
+            message as a string, or the filename of a local file with the PGP
+            message in it.
+        """
+        user, password = self._resolve_eida_token(token)
+        self.set_credentials(user, password)
+
     def _set_opener(self, user, password):
         # Only add the authentication handler if required.
         handlers = []
