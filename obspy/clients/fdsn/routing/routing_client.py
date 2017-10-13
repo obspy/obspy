@@ -42,6 +42,8 @@ def RoutingClient(routing_type, *args, **kwargs):  # NOQA
         respectively.
 
     Remaining ``args`` and ``kwargs`` will be passed to the underlying classes.
+    For example, credentials can be supported for all underlying data centers.
+    See :meth:`BaseRoutingClient <BaseRoutingClient.__init__>` for details.
 
     >>> from obspy.clients.fdsn import RoutingClient
 
