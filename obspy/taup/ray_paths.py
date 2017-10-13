@@ -69,9 +69,10 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
     evlats = []
     evlons = []
     evdepths = []
-    evlabels = []
     event_ids = []
     origin_ids = []
+    magnitudes = []
+    times = []
     for event in catalog:
         if not event.origins:
             msg = ("Event '%s' does not have an origin and will not be "
@@ -92,10 +93,10 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
         evdepths.append(origin.get('depth') * 1e-3)
         magnitude = event.preferred_magnitude() or event.magnitudes[0]
         mag = magnitude.mag
-        label = '{:s} | M{:.1f}'.format(str(origin.time.date), mag)
-        evlabels.append(label)
         event_ids.append(str(event.resource_id))
         origin_ids.append(str(origin.resource_id))
+        magnitudes.append(mag)
+        times.append(origin.time.timestamp)
 
     # initialize taup model if it is not provided
     if isinstance(taup_model, str):
@@ -108,8 +109,9 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
     r_earth = model.model.radius_of_planet
     greatcircles = []
     for stlat, stlon, stlabel in zip(stlats, stlons, stlabels):
-        for evlat, evlon, evdepth_km, evlabel, event_id, origin_id in zip(
-                evlats, evlons, evdepths, evlabels, event_ids, origin_ids):
+        for evlat, evlon, evdepth_km, time, magnitude, event_id, origin_id \
+                in zip(evlats, evlons, evdepths, times, magnitudes, event_ids,
+                       origin_ids):
             arrivals = model.get_ray_paths_geo(
                     evdepth_km, evlat, evlon, stlat, stlon,
                     phase_list=phase_list, resample=True)
@@ -129,8 +131,8 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
                                         radii * np.sin(thetas) * np.sin(phis),
                                         radii * np.cos(thetas)])
 
-                greatcircles.append((gcircle, arr.name, stlabel, evlabel,
-                                     event_id, origin_id))
+                greatcircles.append((gcircle, arr.name, stlabel, time,
+                                     magnitude, event_id, origin_id))
 
     return greatcircles
 

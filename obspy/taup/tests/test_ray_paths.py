@@ -44,7 +44,7 @@ class RayPathCalculationsTestCase(unittest.TestCase):
         inventory = obspy.core.inventory.Inventory(
                 source='ME', networks=[network])
 
-        otime = obspy.UTCDateTime()
+        otime = obspy.UTCDateTime('2017-02-03T12:00:00.0Z')
         origin = obspy.core.event.Origin(latitude=0., longitude=90.,
                                          depth=100000., time=otime)
         origin.resource_id = 'smi:local/just-a-test2'
@@ -65,9 +65,12 @@ class RayPathCalculationsTestCase(unittest.TestCase):
         # now check details of first ray
         circ = greatcircles[0]
         path = circ[0]
-        expected_meta = ('P', 'NET.STA', '2017-10-12 | M7.0',
-                         'smi:local/just-a-test', 'smi:local/just-a-test2')
-        self.assertEqual(circ[1:], expected_meta)
+        self.assertEqual(circ[1], 'P')
+        self.assertEqual(circ[2], 'NET.STA')
+        np.testing.assert_allclose(circ[3], otime.timestamp, atol=1e-5, rtol=0)
+        self.assertEqual(circ[4], 7.0)
+        self.assertEqual(circ[5], 'smi:local/just-a-test')
+        self.assertEqual(circ[6], 'smi:local/just-a-test2')
         self.assertEqual(path.shape, (3, 274))
         # now check some coordinates of the calculated path, start, end and
         # some values in between
@@ -133,9 +136,12 @@ class RayPathCalculationsTestCase(unittest.TestCase):
         # now check details of first ray
         circ = greatcircles[0]
         path = circ[0]
-        expected_meta = ('P', 'NET.STA', '2017-10-12 | M7.0',
-                         'smi:local/just-a-test', 'smi:local/just-a-test2')
-        self.assertEqual(circ[1:], expected_meta)
+        self.assertEqual(circ[1], 'P')
+        self.assertEqual(circ[2], 'NET.STA')
+        np.testing.assert_allclose(circ[3], otime.timestamp, atol=1e-5, rtol=0)
+        self.assertEqual(circ[4], 7.0)
+        self.assertEqual(circ[5], 'smi:local/just-a-test')
+        self.assertEqual(circ[6], 'smi:local/just-a-test2')
         self.assertEqual(path.shape, (3, 270))
         # now check some coordinates of the calculated path, start, end and
         # some values in between
