@@ -207,6 +207,7 @@ class Client(object):
         self.user = user
         self.timeout = timeout
         self._force_redirect = force_redirect
+        self._has_eida_auth = False
 
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
@@ -257,6 +258,11 @@ class Client(object):
 
         # use EIDA token if provided
         if eida_token is not None:
+            if not self._has_eida_auth:
+                msg = ("EIDA token provided but service at '{}' does not "
+                       "specify /dataselect/auth in its "
+                       "application.wadl").format(
+                           self.base_url)
             if user is not None or password is not None:
                 msg = ("EIDA authentication token provided, options 'user' "
                        "and 'password' will be overridden.")
@@ -320,6 +326,11 @@ class Client(object):
             print('Installed new opener with handlers: {!s}'.format(handlers))
 
     def _resolve_eida_token(self, token):
+        if not self._has_eida_auth:
+            msg = ("EIDA token authentication requested but service at '{}' "
+                   "does not specify /dataselect/auth in the "
+                   "dataselect/application.wadl.").format(self.base_url)
+            raise FDSNException(msg)
         token_file = None
         # check if there's a local file that matches the provided string
         if os.path.isfile(token):
@@ -1467,9 +1478,12 @@ class Client(object):
                 raise FDSNException("Timeout while requesting '%s'." % url)
 
             if "dataselect" in url:
-                self.services["dataselect"] = WADLParser(wadl).parameters
+                wadl_parser = WADLParser(wadl)
+                self.services["dataselect"] = wadl_parser.parameters
                 if self.debug is True:
                     print("Discovered dataselect service")
+                # check if EIDA auth endpoint is in wadl
+                self._has_eida_auth = wadl_parser._has_eida_auth
             elif "event" in url and "application.wadl" in url:
                 self.services["event"] = WADLParser(wadl).parameters
                 if self.debug is True:
@@ -1485,7 +1499,6 @@ class Client(object):
                 except ValueError:
                     msg = "Could not parse the catalogs at '%s'." % url
                     warnings.warn(msg)
-
             elif "event" in url and "contributors" in url:
                 try:
                     self.services["available_event_contributors"] = \
