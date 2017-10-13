@@ -12,6 +12,7 @@ The obspy.clients.fdsn.client test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY2
 
 import io
 import os
@@ -20,6 +21,11 @@ import sys
 import unittest
 import warnings
 from difflib import Differ
+
+if PY2:
+    import urllib2 as urllib_request
+else:
+    import urllib.request as urllib_request
 
 import lxml
 import requests
@@ -1216,6 +1222,84 @@ class ClientTestCase(unittest.TestCase):
                           starttime=UTCDateTime("2001-01-07T01:00:00"),
                           endtime=UTCDateTime("2001-01-07T01:01:00"),
                           minmagnitude=8)
+
+    def test_eida_token_resolution(self):
+        """
+        Tests that EIDA tokens are resolved correctly and new credentials get
+        installed with the opener of the Client.
+        """
+        token = os.path.join(self.datapath, 'eida_token.txt')
+        with open(token, 'rb') as fh:
+            token_data = fh.read().decode()
+
+        def _assert_eida_user_and_password(user, password):
+            # user/pass is not static for the static test token
+            for value in user, password:
+                # seems safe to assume both user and password are at least 10
+                # chars long
+                # example user/password:
+                # wWGgJnH4GvdVY7gDMH21xEpb wDnzlpljqdaCXlP2
+                re.match('^[a-zA-Z0-9]{10,}$', value)
+
+        def _get_http_digest_auth_handler(client):
+            handlers = [h for h in client._url_opener.handlers
+                        if isinstance(h, urllib_request.HTTPDigestAuthHandler)]
+            self.assertLessEqual(len(handlers), 1)
+            return handlers and handlers[0] or None
+
+        def _assert_credentials(client, user, password):
+            handler = _get_http_digest_auth_handler(client)
+            self.assertIsInstance(handler,
+                                  urllib_request.HTTPDigestAuthHandler)
+            for user_, password_ in handler.passwd.passwd[None].values():
+                self.assertEqual(user, user_)
+                self.assertEqual(password, password_)
+
+        client = Client('GFZ')
+        # this is a plain client, so it should not have http digest auth
+        self.assertEqual(_get_http_digest_auth_handler(client), None)
+        # now, if we set new user/password, we should get a http digest auth
+        # handler
+        user, password = ("spam", "eggs")
+        client._set_opener(user=user, password=password, force_redirect=False)
+        _assert_credentials(client, user, password)
+        # now, if we resolve the EIDA token, the http digest auth handler
+        # should change
+        user, password = client._resolve_eida_token(token=token)
+        _assert_eida_user_and_password(user, password)
+        client._set_opener(user=user, password=password, force_redirect=False)
+        _assert_credentials(client, user, password)
+        # do it again, now providing the token data directly as a string (first
+        # change the authentication again to dummy user/password
+        client._set_opener(user="foo", password="bar", force_redirect=False)
+        _assert_credentials(client, "foo", "bar")
+        user, password = client._resolve_eida_token(token=token_data)
+        _assert_eida_user_and_password(user, password)
+        client._set_opener(user=user, password=password, force_redirect=False)
+        _assert_credentials(client, user, password)
+        # last tests, test that providing the token during init behaves as
+        # expected
+        with warnings.catch_warnings(record=True) as w:
+            warnings.filterwarnings('always')
+            client = Client('GFZ', eida_token=token, user="foo",
+                            password="bar")
+        # check that the warning showed
+        for w_ in w:
+            try:
+                self.assertEqual(
+                    str(w_.message),
+                    "EIDA authentication token provided, options 'user' and "
+                    "'password' will be overridden.")
+            except:
+                continue
+            break
+        else:
+            raise
+        handler = _get_http_digest_auth_handler(client)
+        for user, password in handler.passwd.passwd[None].values():
+            self.assertNotEqual(user, "foo")
+            self.assertNotEqual(password, "bar")
+            _assert_eida_user_and_password(user, password)
 
 
 def suite():
