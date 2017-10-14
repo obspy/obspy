@@ -210,7 +210,7 @@ class Client(object):
         self._write_ln('BYE')
         self._client.close()
 
-    def _fetch(self, request_type, request_data, route=True):
+    def _fetch(self, request_type, request_data, route=False):
         # skip routing on request
         if not route:
             # always use initial node if routing is disabled
@@ -450,6 +450,8 @@ class Client(object):
         # fetching PAZ and coordinates
         if metadata:
             # fetch metadata only once
+            # NOTE: The outing step here is not strictly necessary
+            # TODO: Routing should preferably be done only once
             inv = self.get_inventory(network=network, station=station,
                                      location=location, channel=channel,
                                      starttime=starttime, endtime=endtime,
@@ -616,6 +618,7 @@ class Client(object):
         # request data
         rdata = [starttime, endtime, network, station]
         # fetch plain XML document
+        # TODO: A simpler "routing-less" methods, check _request
         result = self._fetch(rtype, rdata, route=False)
         # parse XML document
         xml_doc = etree.fromstring(result)
@@ -745,7 +748,7 @@ class Client(object):
         return result
 
     def get_metadata(self, network, station, location, channel, time,
-                     route=True):
+                     route=False):
         """
         Returns poles, zeros, normalization factor and sensitivity and station
         coordinates for a single channel at a given time.
@@ -889,7 +892,7 @@ class Client(object):
         return paz
 
     def get_paz(self, network, station, location, channel, time,
-                route=True):
+                route=False):
         """
         Returns poles, zeros, normalization factor and sensitivity for a
         single channel at a given time.
@@ -959,7 +962,7 @@ class Client(object):
             raise ArcLinkException(msg)
 
     def save_response(self, filename, network, station, location, channel,
-                      starttime, endtime, format='SEED'):
+                      starttime, endtime, format='SEED', route=False):
         """
         Writes response information into a file.
 
@@ -980,6 +983,8 @@ class Client(object):
         :type format: str, optional
         :param format: Output format. Currently only Dataless SEED (``'SEED'``)
             is supported.
+        :type route: bool, optional
+        :param route: Enables ArcLink routing (default is ``False``).
         :return: None
 
         .. rubric:: Example
@@ -1000,7 +1005,7 @@ class Client(object):
             # request data
             rdata = [starttime, endtime, network, station, channel, location]
             # fetch dataless
-            data = self._fetch(rtype, rdata)
+            data = self._fetch(rtype, rdata, route=route)
         else:
             raise ValueError("Unsupported format %s" % format)
         if hasattr(filename, "write") and hasattr(filename.write, "__call__"):
@@ -1037,7 +1042,7 @@ class Client(object):
         :type instruments: bool, optional
         :param instruments: Include instrument data (default is ``False``).
         :type route: bool, optional
-        :param route: Enables ArcLink routing (default is ``True``).
+        :param route: Enables ArcLink routing (default is ``False``).
         :type sensortype: str, optional
         :param sensortype: Limit streams to those using specific sensor types:
             ``"VBB"``, ``"BB"``, ``"SM"``, ``"OBS"``, etc. Can be also a
@@ -1329,7 +1334,7 @@ class Client(object):
 
         return data
 
-    def get_networks(self, starttime, endtime, route=True):
+    def get_networks(self, starttime, endtime, route=False):
         """
         Returns a dictionary of available networks within the given time span.
 
@@ -1348,7 +1353,7 @@ class Client(object):
         return self.get_inventory(network='*', starttime=starttime,
                                   endtime=endtime, route=route)
 
-    def get_stations(self, starttime, endtime, network, route=True):
+    def get_stations(self, starttime, endtime, network, route=False):
         """
         Returns a dictionary of available stations in the given network(s).
 
@@ -1364,7 +1369,7 @@ class Client(object):
         :param network: Network code, e.g. ``'BW'``.
         :return: Dictionary of station data.
         :type route: bool, optional
-        :param route: Enables ArcLink routing (default is ``True``).
+        :param route: Enables ArcLink routing (default is ``False``).
         """
         data = self.get_inventory(network=network, starttime=starttime,
                                   endtime=endtime, route=route)

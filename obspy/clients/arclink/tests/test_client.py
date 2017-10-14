@@ -401,8 +401,50 @@ class ClientTestCase(unittest.TestCase):
                         'restricted': False, 'archive_net': '',
                         'longitude': 12.729887, 'affiliation': 'BayernNetz',
                         'depth': None, 'place': 'Wildenmoos',
-                        'country': ' BW-Net', 'latitude': 47.744171,
+                        'country': 'BW-Net', 'latitude': 47.744171,
                         'end': None}) in result)
+        # example 2
+        expected = AttribDict(
+            {'code': 'WDD', 'description': 'Wied Dalam',
+             'affiliation': '', 'country': '', 'place': '', 'remark': '',
+             'restricted': False, 'archive_net': '',
+             'latitude': 35.8373, 'longitude': 14.5242,
+             'elevation': 44.0, 'depth': None,
+             'start': UTCDateTime(1995, 7, 6, 0, 0), 'end': None})
+        # routing default
+        result = client.get_stations(start, end, 'MN')
+        self.assertTrue(expected in result)
+        # w/o routing
+        result = client.get_stations(start, end, 'MN', route=False)
+        self.assertTrue(expected in result)
+        # w/ routing
+        result = client.get_stations(start, end, 'MN', route=True)
+        self.assertTrue(expected in result)
+
+    @unittest.expectedFailure
+    def test_get_stations_inconsistency(self):
+        """
+        """
+        # initialize client
+        client = Client(user='test@obspy.org')
+        # example 1
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        result_origin = AttribDict(
+            {'remark': '', 'code': 'RWMO', 'elevation': 763.0,
+             'description': 'Wildenmoos, Bavaria, BW-Net',
+             'start': UTCDateTime(2006, 7, 4, 0, 0),
+             'restricted': False, 'archive_net': '',
+             'longitude': 12.729887, 'affiliation': 'BayernNetz',
+             'depth': None, 'place': 'Wildenmoos',
+             'country': ' BW-Net', 'latitude': 47.744171,
+             'end': None})
+        # OK: from origin node
+        result = client.get_stations(start, end, 'BW', route=True)
+        self.assertTrue(result_origin in result)
+        # BUT: this one from a different node was modified and fails
+        result = client.get_stations(start, end, 'BW')
+        self.assertTrue(result_origin in result)
 
     def test_save_waveform(self):
         """
