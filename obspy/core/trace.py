@@ -284,6 +284,7 @@ class Trace(object):
         # set some defaults if not set yet
         if header is None:
             header = {}
+        header = header.copy()
         header.setdefault('npts', len(data))
         self.stats = Stats(header)
         # set data without changing npts in stats object (for headonly option)
