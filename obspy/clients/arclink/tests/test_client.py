@@ -216,14 +216,20 @@ class ClientTestCase(unittest.TestCase):
 
     def test_get_inventory_stationgroup(self):
         """
-        Tests get_inventory method for StationGroup, issue #1756.  
+        Tests get_inventory method for StationGroup, issue #1756.
         """
-        # 1 - w/o routing okay 
+        # 1 - defined @NIEP
         client = Client(user='test@obspy.org')
-        client.get_inventory(network="_NFOVRANC", route=False)
-        # 2 - w/ routing, issue #1756
+        result = client.get_inventory(network="_NFOVRANC", route=False)
+        self.assertIn('RO', result)
+        self.assertIn('RO.BISRR', result)
+        self.assertIn('RO.VRI', result)
+        # 2 - defined @INGV
         client = Client(user='test@obspy.org')
-        client.get_inventory(network="_NFOTABOO")
+        result = client.get_inventory(network="_NFOTABOO")
+        self.assertIn('IV', result)
+        self.assertIn('IV.ATBU', result)
+        self.assertIn('IV.SSFR', result)
 
     def test_get_inventory_twice(self):
         """
