@@ -115,7 +115,7 @@ HARD_DEPENDENCIES = [
     "future", "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
     "sqlalchemy", "decorator", "requests"]
 OPTIONAL_DEPENDENCIES = [
-    "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "osgeo.gdal",
+    "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "shapefile",
     "mpl_toolkits.basemap", "mock", "pyflakes", "geographiclib", "cartopy"]
 DEPENDENCIES = HARD_DEPENDENCIES + OPTIONAL_DEPENDENCIES
 

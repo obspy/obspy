@@ -115,7 +115,7 @@ EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur', 'pyproj', 'pep8-naming'],
     # arclink decryption also works with: pycrypto, cryptography, pycryptodome
     'arclink': ['m2crypto'],
-    'io.shapefile': ['gdal'],
+    'io.shapefile': ['pyshp'],
     }
 # PY2
 if sys.version_info[0] == 2:

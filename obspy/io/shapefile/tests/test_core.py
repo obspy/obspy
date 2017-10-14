@@ -9,23 +9,13 @@ import unittest
 
 from obspy import read_events, read_inventory
 from obspy.core.util.misc import TemporaryWorkingDirectory
-from obspy.io.shapefile.core import (
-    _write_shapefile, GDAL_VERSION_SUFFICIENT)
-
-try:
-    from osgeo import gdal, ogr, osr  # NOQA
-except ImportError:
-    HAS_GDAL = False
-else:
-    HAS_GDAL = True
-    no_filecmp = gdal.VersionInfo() >= '2000000'
+from obspy.io.shapefile.core import _write_shapefile, HAS_PYSHP
 
 
 SHAPEFILE_SUFFIXES = (".shp", ".shx", ".dbf", ".prj")
 
 
-@unittest.skipIf(not HAS_GDAL or not GDAL_VERSION_SUFFICIENT,
-                 'gdal not installed or version is too old')
+@unittest.skipIf(not HAS_PYSHP, 'pyshp not installed')
 class ShapefileTestCase(unittest.TestCase):
     def setUp(self):
         self.path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -40,7 +30,7 @@ class ShapefileTestCase(unittest.TestCase):
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("catalog" + suffix))
                 self.assertTrue(
-                    no_filecmp or filecmp.cmp(
+                    filecmp.cmp(
                         "catalog" + suffix,
                         self.catalog_shape_basename + suffix),
                     msg="%s not binary equal." % ("catalog" + suffix))
@@ -52,7 +42,7 @@ class ShapefileTestCase(unittest.TestCase):
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("catalog" + suffix))
                 self.assertTrue(
-                    no_filecmp or filecmp.cmp(
+                    filecmp.cmp(
                         "catalog" + suffix,
                         self.catalog_shape_basename + suffix),
                     msg="%s not binary equal." % ("catalog" + suffix))
@@ -64,7 +54,7 @@ class ShapefileTestCase(unittest.TestCase):
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("inventory" + suffix))
                 self.assertTrue(
-                    no_filecmp or filecmp.cmp(
+                    filecmp.cmp(
                         "inventory" + suffix,
                         self.inventory_shape_basename + suffix),
                     msg="%s not binary equal." % ("inventory" + suffix))
@@ -76,7 +66,7 @@ class ShapefileTestCase(unittest.TestCase):
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("inventory" + suffix))
                 self.assertTrue(
-                    no_filecmp or filecmp.cmp(
+                    filecmp.cmp(
                         "inventory" + suffix,
                         self.inventory_shape_basename + suffix),
                     msg="%s not binary equal." % ("inventory" + suffix))
