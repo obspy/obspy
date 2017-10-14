@@ -213,6 +213,17 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(channel[2].endtime, UTCDateTime(2011, 1, 15, 9, 56))
         self.assertEqual(channel[2].gain, 588000000.0)
 
+    def test_get_inventory_stationgroup(self):
+        """
+        Tests get_inventory method for StationGroup, issue #1756.  
+        """
+        # 1 - w/o routing okay 
+        client = Client(user='test@obspy.org')
+        client.get_inventory(network="_NFOVRANC", route=False)
+        # 2 - w/ routing, issue #1756
+        client = Client(user='test@obspy.org')
+        client.get_inventory(network="_NFOTABOO")
+
     def test_get_inventory_twice(self):
         """
         Requesting inventory data twice should not fail.
