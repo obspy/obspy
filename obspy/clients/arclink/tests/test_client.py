@@ -178,8 +178,9 @@ class ClientTestCase(unittest.TestCase):
         self.assertIn('BW.MANZ', result)
         self.assertIn('BW.MANZ..EHE', result)
         # 5 - unknown network 00 via webdc.eu:18002
-        self.assertRaises(ArcLinkException, client.get_inventory, '00', '',
-                          starttime=dt, endtime=dt + 1)
+        result = client.get_inventory('00', '', starttime=dt, endtime=dt + 1)
+        self.assertIsInstance(result, AttribDict)
+        self.assertEqual(result, AttribDict({}))
         # 6 - get channel gain without PAZ
         start = UTCDateTime("1970-01-01 00:00:00")
         end = UTCDateTime("2020-10-19 00:00:00")
