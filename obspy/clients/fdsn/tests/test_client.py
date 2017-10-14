@@ -1352,6 +1352,19 @@ class ClientTestCase(unittest.TestCase):
                     starttime=UTCDateTime("2010-02-27T06:30:00.000"),
                     endtime=UTCDateTime("2010-02-27T06:40:00.000"))
 
+        # test invalid token/token file
+        with self.assertRaisesRegexp(
+                ValueError,
+                'EIDA token does not seem to be a valid PGP message'):
+            client = Client('GFZ', eida_token="spam")
+        with self.assertRaisesRegexp(
+                ValueError,
+                "Read EIDA token from file '[^']*event_helpstring.txt' but it "
+                "does not seem to contain a valid PGP message."):
+            client = Client(
+                'GFZ', eida_token=os.path.join(self.datapath,
+                                               'event_helpstring.txt'))
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
