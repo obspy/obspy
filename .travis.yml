@@ -121,16 +121,16 @@ install:
         $MATPLOTLIB
         $BASEMAP
         $PYPROJ
-        future
-        lxml
+        coverage
         decorator
-        sqlalchemy
+        docopt
+        future
+        jsonschema
+        lxml
         mock
         nose
-        docopt
-        coverage
         requests
-        jsonschema
+        sqlalchemy
         "freetype<2.8"
   - source activate test-environment
   # additional, optional packages that run some more tests but are not
