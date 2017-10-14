@@ -115,6 +115,8 @@ EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur', 'pyproj', 'pep8-naming'],
     # arclink decryption also works with: pycrypto, cryptography, pycryptodome
     'arclink': ['m2crypto'],
+    # io.shapefile also uses 'pyproj' when writing error ellipses to shapefile
+    # is requested
     'io.shapefile': ['gdal'],
     }
 # PY2
