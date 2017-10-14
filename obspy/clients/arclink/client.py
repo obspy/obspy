@@ -1103,15 +1103,19 @@ class Client(object):
             rdata.append('lonmin=%f' % min_longitude)
         if max_longitude:
             rdata.append('lonmax=%f' % max_longitude)
+
         # fetch plain XML document
-        if network == '*':
-            # set route to False if not network id is given
+        if network == '*' or network[0] == '_':
+            # To not use routing if
+            #  (1) not network id is given,
+            #  (2) virtual network (Station group) is requested
             result = self._fetch(rtype, rdata, route=False)
         else:
             result = self._fetch(rtype, rdata, route=route)
+
         # parse XML document
         xml_doc = etree.fromstring(result)
-        # get routing version
+        # get inventory version
         if _INVENTORY_NS_1_0 in xml_doc.nsmap.values():
             xml_ns = _INVENTORY_NS_1_0
             stream_ns = 'sensorLocation'

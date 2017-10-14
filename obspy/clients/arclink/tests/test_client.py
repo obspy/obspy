@@ -218,18 +218,25 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests get_inventory method for StationGroup, issue #1756.
         """
-        # 1 - defined @NIEP
         client = Client(user='test@obspy.org')
+        # 1 - defined @NIEP
         result = client.get_inventory(network="_NFOVRANC", route=False)
         self.assertIn('RO', result)
         self.assertIn('RO.BISRR', result)
         self.assertIn('RO.VRI', result)
         # 2 - defined @INGV
-        client = Client(user='test@obspy.org')
-        result = client.get_inventory(network="_NFOTABOO")
+        result = client.get_inventory(network="_NFOTABOO", route=True)
         self.assertIn('IV', result)
         self.assertIn('IV.ATBU', result)
         self.assertIn('IV.SSFR', result)
+        # 3 - defined @ETH
+        result = client.get_inventory(network="_NFOVALAIS")
+        self.assertIn('CH', result)
+        self.assertIn('S', result)
+        self.assertIn('7H', result)
+        self.assertIn('CH.AIGLE', result)
+        self.assertIn('CH.VANNI', result)
+        self.assertIn('S.ESION', result)
 
     def test_get_inventory_twice(self):
         """
