@@ -129,7 +129,6 @@ install:
         lxml
         mock
         nose
-        pyshp
         requests
         sqlalchemy
         "freetype<2.8"
@@ -143,6 +142,9 @@ install:
   # least our builds work..
   # XXX - conda install --no-update-dependencies m2crypto || true
   # XXX - conda install --no-update-dependencies cartopy || true
+  # pyshp is safe to install, it depends on no other packages and has a noarch
+  # py6 package
+  - conda install -c conda-forge --no-update-dependencies pyshp
   # install packages not available via conda
   - pip install codecov
   - pip install geographiclib
