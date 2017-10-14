@@ -28,12 +28,13 @@ else:
     import urllib.request as urllib_request
 
 import lxml
+import numpy as np
 import requests
 
-from obspy import UTCDateTime, read, read_inventory
+from obspy import UTCDateTime, read, read_inventory, Stream, Trace
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.clients.fdsn import Client
+from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNException, FDSNRedirectException,
@@ -1300,6 +1301,56 @@ class ClientTestCase(unittest.TestCase):
             self.assertNotEqual(user, "foo")
             self.assertNotEqual(password, "bar")
             _assert_eida_user_and_password(user, password)
+
+        # now lets test the RoutingClient with credentials..
+        credentials_ = {'geofon.gfz-potsdam.de': {'eida_token': token}}
+        for credentials, should_have_credentials in zip((None, credentials_),
+                                                        (False, True)):
+            def side_effect(self_, *args, **kwargs):
+                """
+                This mocks out Client.get_waveforms_bulk which gets called by
+                the routing client, checks authentication handlers and returns
+                a dummy stream.
+                """
+                # check that we're at the expected FDSN WS server
+                self.assertEqual('http://geofon.gfz-potsdam.de',
+                                 self_.base_url)
+                # check if credentials were used
+                # eida auth availability should be positive in all cases
+                self.assertTrue(self_._has_eida_auth)
+                # depending on whether we specified credentials, the
+                # underlying FDSN client should have EIDA authentication
+                # flag and should also have a HTTP digest handler with
+                # appropriate user/password
+                handler = _get_http_digest_auth_handler(self_)
+                if should_have_credentials:
+                    for user, password in handler.passwd.passwd[None].values():
+                        _assert_eida_user_and_password(user, password)
+                else:
+                    self.assertEqual(handler, None)
+                # just always return some dummy stream, we're not
+                # interested in checking the data downloading which
+                # succeeds regardless if auth is used or not as it's public
+                # data
+                return Stream([Trace(data=np.ones(2))])
+
+            with mock.patch(
+                    'obspy.clients.fdsn.client.Client.get_waveforms_bulk',
+                    autospec=True) as p:
+
+                p.side_effect = side_effect
+
+                routing_client = RoutingClient('eida-routing',
+                                               credentials=credentials)
+                # do a waveform request on the routing client which internally
+                # connects to the GFZ FDSNWS. this should be done using the
+                # above supplied credentials, i.e. should use the given EIDA
+                # token to resolve user/password for the normal FDSN queryauth
+                # mechanism
+                routing_client.get_waveforms(
+                    network="GE", station="KMBO", location="00", channel="BHZ",
+                    starttime=UTCDateTime("2010-02-27T06:30:00.000"),
+                    endtime=UTCDateTime("2010-02-27T06:40:00.000"))
 
 
 def suite():
