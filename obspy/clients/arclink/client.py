@@ -1011,7 +1011,7 @@ class Client(object):
 
     def get_inventory(self, network, station='*', location='*', channel='*',
                       starttime=UTCDateTime(), endtime=UTCDateTime(),
-                      instruments=False, route=True, sensortype='',
+                      instruments=False, route=False, sensortype='',
                       min_latitude=None, max_latitude=None,
                       min_longitude=None, max_longitude=None,
                       restricted=None, permanent=None, modified_after=None):
