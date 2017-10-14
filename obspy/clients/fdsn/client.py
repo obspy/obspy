@@ -207,7 +207,6 @@ class Client(object):
         self.user = user
         self.timeout = timeout
         self._force_redirect = force_redirect
-        self._has_eida_auth = False
 
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
@@ -269,6 +268,10 @@ class Client(object):
                 warnings.warn(msg)
             user, password = self._resolve_eida_token(eida_token)
             self._set_opener(user, password)
+
+    @property
+    def _has_eida_auth(self):
+        return self.services.get('eida-auth', False)
 
     def set_credentials(self, user, password):
         """
@@ -1480,10 +1483,15 @@ class Client(object):
             if "dataselect" in url:
                 wadl_parser = WADLParser(wadl)
                 self.services["dataselect"] = wadl_parser.parameters
+                # check if EIDA auth endpoint is in wadl
+                # we need to attach it to the discovered services, as these are
+                # later loaded from cache and just attaching an attribute to
+                # this client won't help knowing later if EIDA auth is
+                # supported at the server. a bit ugly but can't be helped.
+                if wadl_parser._has_eida_auth:
+                    self.services["eida-auth"] = True
                 if self.debug is True:
                     print("Discovered dataselect service")
-                # check if EIDA auth endpoint is in wadl
-                self._has_eida_auth = wadl_parser._has_eida_auth
             elif "event" in url and "application.wadl" in url:
                 self.services["event"] = WADLParser(wadl).parameters
                 if self.debug is True:
