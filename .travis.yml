@@ -129,6 +129,7 @@ install:
         lxml
         mock
         nose
+        pyshp
         requests
         sqlalchemy
         "freetype<2.8"
