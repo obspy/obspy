@@ -95,8 +95,8 @@ def _download_bulk(r):
     # get appropriate credentials info from credentials dictionary
     credentials = r["credentials"].get(base_url, {})
     if r["debug"] and credentials:
-        print("Fetching from '{}' using{} credentials{}".format(
-            base_url, credentials and "" or " no",
+        print("Fetching from '{}' using{}credentials{}".format(
+            base_url, credentials and " " or " no ",
             credentials and ": {!s}".format(credentials.keys()) or ""))
     c = client.Client(r["endpoint"], debug=r["debug"], timeout=r["timeout"],
                       **credentials)
