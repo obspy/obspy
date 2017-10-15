@@ -137,14 +137,18 @@ install:
   # available for all archs. "--no-update-dependencies" keeps other packages at
   # already installed version (ideally we should handle package versions
   # through pinning or an environment file..)
-  - conda config --add channels conda-forge
+  #- conda config --add channels conda-forge
   # XXX for now don't try to install other optional dependencies so that at
   # least our builds work..
   # XXX - conda install --no-update-dependencies m2crypto || true
   # XXX - conda install --no-update-dependencies cartopy || true
   # pyshp is safe to install, it depends on no other packages and has a noarch
   # py6 package
-  - conda install -c conda-forge --no-update-dependencies pyshp
+  # not a clue why conda is trying to pull in other packages when doing
+  # "conda install -c conda-forge --no-update-dependencies pyshp", because the
+  # pyshp conda package lists 0 dependencies, anyway, so use "--no-deps" to
+  # really avoid installing/updating any other packages
+  - conda install -c conda-forge --no-update-dependencies --no-deps pyshp
   # install packages not available via conda
   - pip install codecov
   - pip install geographiclib
