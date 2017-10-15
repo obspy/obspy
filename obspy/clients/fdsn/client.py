@@ -31,6 +31,7 @@ from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
+from obspy.core.compatibility import urlparse
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
@@ -329,11 +330,15 @@ class Client(object):
             print('Installed new opener with handlers: {!s}'.format(handlers))
 
     def _resolve_eida_token(self, token):
+        """
+        Use the token to get credentials.
+        """
         if not self._has_eida_auth:
             msg = ("EIDA token authentication requested but service at '{}' "
                    "does not specify /dataselect/auth in the "
                    "dataselect/application.wadl.").format(self.base_url)
             raise FDSNException(msg)
+
         token_file = None
         # check if there's a local file that matches the provided string
         if os.path.isfile(token):
@@ -347,15 +352,19 @@ class Client(object):
                        "seem to contain a valid PGP message.").format(
                             token_file)
             else:
-                msg = "EIDA token does not seem to be a valid PGP message"
+                msg = ("EIDA token does not seem to be a valid PGP message. "
+                       "If you passed a filename, make sure the file "
+                       "actually exists.")
             raise ValueError(msg)
+
         # force https so that we don't send around tokens unsecurely
-        url = 'https://{}/fdsnws/dataselect/1/auth'.format(re.sub(
-            pattern='^http://', repl='', string=self.base_url, count=1))
+        url = 'https://{}/fdsnws/dataselect/1/auth'.format(
+            urlparse(self.base_url).netloc + urlparse(self.base_url).path)
         # paranoid: check again that we only send the token to https
-        if not url.startswith('https://'):
+        if urlparse(url).scheme != "https":
             msg = 'This should not happen, please file a bug report.'
             raise Exception(msg)
+
         # retrieve user/password using the token
         if self.debug:
             print('Downloading {} with eida token data in POST'.format(url))
