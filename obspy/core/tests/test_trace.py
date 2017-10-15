@@ -2694,6 +2694,19 @@ class TraceTestCase(unittest.TestCase):
         self.assertFalse(tr_opt_out.data.flags['C_CONTIGUOUS'])
         self.assertFalse(tr_opt_out.data.flags['F_CONTIGUOUS'])
 
+    def test_header_dict_copied(self):
+        """
+        Regression test for #1934 (collisions when using  the same header
+        dictionary for multiple Trace inits)
+        """
+        header = {'station': 'MS', 'starttime': 1}
+        tr1 = Trace(data=np.ones(2), header=header)
+        tr2 = Trace(data=np.zeros(5), header=header)
+        self.assertEqual(len(tr1), 2)
+        self.assertEqual(len(tr2), 5)
+        self.assertEqual(tr1.stats.npts, 2)
+        self.assertEqual(tr2.stats.npts, 5)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
