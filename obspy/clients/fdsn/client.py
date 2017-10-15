@@ -255,20 +255,21 @@ class Client(object):
 
         self._discover_services()
 
-        # use EIDA token if provided
+        # Use EIDA token if provided - this requires setting new url openers.
+        #
+        # This can only happen after the services have been discovered as
+        # the clients needs to know if the fdsnws implementation has support
+        # for the EIDA token system.
+        #
+        # This is a non-standard feature but we support it, given the number
+        # of EIDA nodes out there.
         if eida_token is not None:
-            if not self._has_eida_auth:
-                msg = ("EIDA token provided but service at '{}' does not "
-                       "specify /dataselect/auth in its "
-                       "application.wadl").format(
-                           self.base_url)
-                raise FDSNException(msg)
+            # Make sure user/pw are not also given.
             if user is not None or password is not None:
                 msg = ("EIDA authentication token provided, but "
                        "user and password are also given.")
                 raise FDSNException(msg)
-            user, password = self._resolve_eida_token(eida_token)
-            self._set_opener(user, password)
+            self.set_eida_token(eida_token)
 
     @property
     def _has_eida_auth(self):
