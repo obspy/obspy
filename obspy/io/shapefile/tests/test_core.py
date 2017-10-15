@@ -123,6 +123,7 @@ class ShapefileTestCase(unittest.TestCase):
             self.assertEqual(shp.fields, expected_catalog_fields)
             self.assertEqual(shp.records(), expected_catalog_records)
             self.assertEqual(shp.shapeType, shapefile.POINT)
+            shp.close()
 
     def test_write_catalog_shapefile_via_plugin(self):
         # read two events with uncertainties, one deserializes with "confidence
@@ -155,6 +156,7 @@ class ShapefileTestCase(unittest.TestCase):
             self.assertEqual(shp.fields, expected_catalog_fields)
             self.assertEqual(shp.records(), expected_catalog_records)
             self.assertEqual(shp.shapeType, shapefile.POINT)
+            shp.close()
 
     def test_write_inventory_shapefile(self):
         inv = read_inventory()
@@ -167,6 +169,7 @@ class ShapefileTestCase(unittest.TestCase):
             self.assertEqual(shp.fields, expected_inventory_fields)
             self.assertEqual(shp.records(), expected_inventory_records)
             self.assertEqual(shp.shapeType, shapefile.POINT)
+            shp.close()
 
     def test_write_inventory_shapefile_via_plugin(self):
         inv = read_inventory()
@@ -179,6 +182,7 @@ class ShapefileTestCase(unittest.TestCase):
             self.assertEqual(shp.fields, expected_inventory_fields)
             self.assertEqual(shp.records(), expected_inventory_records)
             self.assertEqual(shp.shapeType, shapefile.POINT)
+            shp.close()
 
 
 def suite():
