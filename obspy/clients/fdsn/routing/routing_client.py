@@ -16,7 +16,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import io
-import re
 from multiprocessing.dummy import Pool as ThreadPool
 
 import decorator
