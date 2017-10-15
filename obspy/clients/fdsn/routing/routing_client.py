@@ -150,6 +150,8 @@ class BaseRoutingClient(HTTPClient):
             The root level ``'EIDA_TOKEN'`` will be applied to all data centers
             that claim to support the ``/auth`` route and don't have data
             center specific credentials.
+            You can also use a URL mapping as for the normal FDSN client
+            instead of the URL.
         """
         HTTPClient.__init__(self, debug=debug, timeout=timeout)
         self.include_providers = include_providers
