@@ -1289,8 +1289,11 @@ class ClientTestCase(unittest.TestCase):
 
         # now lets test the RoutingClient with credentials..
         credentials_ = {'geofon.gfz-potsdam.de': {'eida_token': token}}
-        for credentials, should_have_credentials in zip((None, credentials_),
-                                                        (False, True)):
+        credentials_mapping_ = {'GFZ': {'eida_token': token}}
+        global_eida_credentials_ = {'EIDA_TOKEN': token}
+        for credentials, should_have_credentials in zip(
+                (None, credentials_, credentials_mapping_,
+                 global_eida_credentials_), (False, True, True, True)):
             def side_effect(self_, *args, **kwargs):
                 """
                 This mocks out Client.get_waveforms_bulk which gets called by
