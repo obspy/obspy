@@ -1278,29 +1278,14 @@ class ClientTestCase(unittest.TestCase):
         _assert_eida_user_and_password(user, password)
         client.set_eida_token(token_data)
         _assert_credentials(client, user, password)
-        # last tests, test that providing the token during init behaves as
-        # expected
-        with warnings.catch_warnings(record=True) as w:
-            warnings.filterwarnings('always')
-            client = Client('GFZ', eida_token=token, user="foo",
-                            password="bar")
-        # check that the warning showed
-        for w_ in w:
-            try:
-                self.assertEqual(
-                    str(w_.message),
-                    "EIDA authentication token provided, options 'user' and "
-                    "'password' will be overridden.")
-            except:
-                continue
-            break
-        else:
-            raise
-        handler = _get_http_digest_auth_handler(client)
-        for user, password in handler.passwd.passwd[None].values():
-            self.assertNotEqual(user, "foo")
-            self.assertNotEqual(password, "bar")
-            _assert_eida_user_and_password(user, password)
+
+        # Raise if token and user/pw are given.
+        with self.assertRaises(FDSNException) as err:
+            Client('GFZ', eida_token=token, user="foo", password="bar")
+        self.assertEqual(
+            err.exception.args[0],
+            "EIDA authentication token provided, but user and password are "
+            "also given.")
 
         # now lets test the RoutingClient with credentials..
         credentials_ = {'geofon.gfz-potsdam.de': {'eida_token': token}}
