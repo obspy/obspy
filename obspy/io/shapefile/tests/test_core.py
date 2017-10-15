@@ -84,6 +84,20 @@ expected_inventory_records = [
      None, '.EHZ,.EHN,.EHE']]
 
 
+def _close_shapefile_reader(reader):
+    """
+    Current pyshp version 1.2.12 doesn't properly close files, so for now do
+    this manually during tests. (see GeospatialPython/pyshp#107)
+    """
+    for key in ('dbf', 'shx', 'shp'):
+        attribute = getattr(reader, key, None)
+        if attribute is not None:
+            try:
+                attribute.close()
+            except (AttributeError, IOError):
+                pass
+
+
 @unittest.skipIf(not HAS_PYSHP, 'pyshp not installed')
 class ShapefileTestCase(unittest.TestCase):
     def setUp(self):
@@ -123,7 +137,7 @@ class ShapefileTestCase(unittest.TestCase):
             self.assertEqual(shp.fields, expected_catalog_fields)
             self.assertEqual(shp.records(), expected_catalog_records)
             self.assertEqual(shp.shapeType, shapefile.POINT)
-            shp.close()
+            _close_shapefile_reader(shp)
 
     def test_write_catalog_shapefile_via_plugin(self):
         # read two events with uncertainties, one deserializes with "confidence
@@ -156,7 +170,7 @@ class ShapefileTestCase(unittest.TestCase):
             self.assertEqual(shp.fields, expected_catalog_fields)
             self.assertEqual(shp.records(), expected_catalog_records)
             self.assertEqual(shp.shapeType, shapefile.POINT)
-            shp.close()
+            _close_shapefile_reader(shp)
 
     def test_write_inventory_shapefile(self):
         inv = read_inventory()
@@ -169,7 +183,7 @@ class ShapefileTestCase(unittest.TestCase):
             self.assertEqual(shp.fields, expected_inventory_fields)
             self.assertEqual(shp.records(), expected_inventory_records)
             self.assertEqual(shp.shapeType, shapefile.POINT)
-            shp.close()
+            _close_shapefile_reader(shp)
 
     def test_write_inventory_shapefile_via_plugin(self):
         inv = read_inventory()
@@ -182,7 +196,7 @@ class ShapefileTestCase(unittest.TestCase):
             self.assertEqual(shp.fields, expected_inventory_fields)
             self.assertEqual(shp.records(), expected_inventory_records)
             self.assertEqual(shp.shapeType, shapefile.POINT)
-            shp.close()
+            _close_shapefile_reader(shp)
 
 
 def suite():
