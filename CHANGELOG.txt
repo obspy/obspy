@@ -72,6 +72,7 @@ master: (doi: 10.5281/zenodo.165135)
      #1685).
    * Adding mappings for the TEXNET (see #1852) and the ICGC (see #1902)
      services.
+   * Support for the non-standard EIDA token authentication (see #1928).
  - obspy.imaging:
    * The functionality behind the `obspy-scan` command line script has been
      refactored into a `Scanner` class so that it can be reused in custom
