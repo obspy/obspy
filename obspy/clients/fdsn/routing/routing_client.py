@@ -87,25 +87,25 @@ def _assert_attach_response_not_in_kwargs(f, *args, **kwargs):
 
 
 def _download_bulk(r):
-    # determine base url:
-    # take everything in between (optional) http[s]:// and the next /
-    base_url = re.match(
-        pattern=r'(https?://)?([^/]*)',
-        string=r["endpoint"]).group(2)
-    # get appropriate credentials info from credentials dictionary
-    credentials = r["credentials"].get(base_url, {})
-    if r["debug"] and credentials:
-        print("Fetching from '{}' using{}credentials{}".format(
-            base_url, credentials and " " or " no ",
-            credentials and ": {!s}".format(credentials.keys()) or ""))
+    # Figure out the passed credentials, if any. Two possibilities:
+    # (1) User and password, given explicitly for the base URLs (or an
+    #     explicity given `eida_token` key per URL).
+    # (2) A global EIDA_TOKEN key. It will be used for all services that
+    #     don't have explicit credentials and also support the `/auth` route.
+    credentials = r["credentials"].get(urlparse(r["endpoint"]).netloc, {})
     c = client.Client(r["endpoint"], debug=r["debug"], timeout=r["timeout"],
                       **credentials)
+    if not credentials and "EIDA_TOKEN" in r["credentials"] and \
+            c._has_eida_auth:
+        c.set_eida_token(r["credentials"]["EIDA_TOKEN"])
+
     if r["data_type"] == "waveform":
         fct = c.get_waveforms_bulk
         service = c.services["dataselect"]
     elif r["data_type"] == "station":
         fct = c.get_stations_bulk
         service = c.services["station"]
+
     # Keep only kwargs that are supported by this particular service.
     kwargs = {k: v for k, v in r["kwargs"].items() if k in service}
     bulk_str = ""
@@ -143,13 +143,31 @@ class BaseRoutingClient(HTTPClient):
             dictionary that maps base url of FDSN web service to either
             username/password or EIDA token, e.g.
             ``credentials={
-            'geofon.gfz-potsdam.de': {'token': 'my_token_file.txt'},
-            'service.iris.edu': {'user': 'me', 'password': 'my_pass'}}``
+            'geofon.gfz-potsdam.de': {'eida_token': 'my_token_file.txt'},
+            'service.iris.edu': {'user': 'me', 'password': 'my_pass'}
+            'EIDA_TOKEN': '/path/to/token.txt'
+            }``
+            The root level ``'EIDA_TOKEN'`` will be applied to all data centers
+            that claim to support the ``/auth`` route and don't have data
+            center specific credentials.
         """
         HTTPClient.__init__(self, debug=debug, timeout=timeout)
         self.include_providers = include_providers
         self.exclude_providers = exclude_providers
-        self.credentials = credentials or {}
+
+        # Parse credentials.
+        self.credentials = {}
+        for key, value in (credentials or {}).items():
+            if key == "EIDA_TOKEN":
+                self.credentials[key] = value
+            # Map, if necessary.
+            if key in URL_MAPPINGS:
+                key = URL_MAPPINGS[key]
+            # Make sure urlparse works correctly.
+            if not key.startswith("http"):
+                key = "http://" + key
+            # Only use the location.
+            self.credentials[urlparse(key).netloc] = value
 
     @property
     def include_providers(self):
