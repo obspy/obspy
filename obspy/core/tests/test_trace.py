@@ -2700,8 +2700,14 @@ class TraceTestCase(unittest.TestCase):
         dictionary for multiple Trace inits)
         """
         header = {'station': 'MS', 'starttime': 1}
+        original_header = deepcopy(header)
+
+        # Init two traces and make sure the original header did not change.
         tr1 = Trace(data=np.ones(2), header=header)
+        self.assertEqual(header, original_header)
         tr2 = Trace(data=np.zeros(5), header=header)
+        self.assertEqual(header, original_header)
+
         self.assertEqual(len(tr1), 2)
         self.assertEqual(len(tr2), 5)
         self.assertEqual(tr1.stats.npts, 2)
