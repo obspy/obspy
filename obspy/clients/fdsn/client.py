@@ -368,15 +368,14 @@ class Client(object):
             msg = 'This should not happen, please file a bug report.'
             raise Exception(msg)
 
-        # retrieve user/password using the token
-        if self.debug:
-            print('Downloading {} with eida token data in POST'.format(url))
-
         # Already does the error checking with fdsnws semantics.
         response = self._download(url=url, data=token.encode(),
                                   use_gzip=True, return_string=True)
 
         user, password = response.decode().split(':')
+        if self.debug:
+            print('Got temporary user/pw: {}/{}'.format(user, password))
+
         return user, password
 
     def get_events(self, starttime=None, endtime=None, minlatitude=None,
