@@ -26,7 +26,6 @@ import threading
 import warnings
 from collections import OrderedDict
 
-import requests
 from lxml import etree
 
 import obspy
@@ -368,15 +367,12 @@ class Client(object):
         # retrieve user/password using the token
         if self.debug:
             print('Downloading {} with eida token data in POST'.format(url))
-        response = requests.post(url, data=token)
-        # if credentials were returned the status code seems to be 200
-        if response.status_code != 200:
-            msg = ("Failed to resolve EIDA token from URL '{}', server "
-                   "replied with HTTP status code '{!s}' and message "
-                   "'{}'.").format(url, response.status_code,
-                                   response.reason)
-            raise FDSNException(msg)
-        user, password = response.content.decode().split(':')
+
+        # Already does the error checking with fdsnws semantics.
+        response = self._download(url=url, data=token.encode(),
+                                  use_gzip=True, return_string=True)
+
+        user, password = response.decode().split(':')
         return user, password
 
     def get_events(self, starttime=None, endtime=None, minlatitude=None,
