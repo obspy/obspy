@@ -281,6 +281,8 @@ class Client(object):
         requests for waveforms being authenticated for potential access to
         restricted data.
 
+        This will overwrite any previously set-up credentials/authentication.
+
         :type user: str
         :param user: User name of credentials.
         :type password: str
@@ -297,14 +299,14 @@ class Client(object):
         described here:
         http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php
 
+        This will overwrite any previously set-up credentials/authentication.
+
         :type token: str
         :param token: Token for EIDA authentication mechanism, see
-            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php. If
-            the client was initialized with options ``user`` and ``password``,
-            these settings will be overridden. This mechanism is only available
-            on select EIDA nodes. The token can be provided in form of the PGP
-            message as a string, or the filename of a local file with the PGP
-            message in it.
+            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php.
+            This mechanism is only available on select EIDA nodes. The token
+            can be provided in form of the PGP message as a string, or the
+            filename of a local file with the PGP message in it.
         """
         user, password = self._resolve_eida_token(token)
         self.set_credentials(user, password)
