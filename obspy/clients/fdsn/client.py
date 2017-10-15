@@ -262,7 +262,7 @@ class Client(object):
                        "specify /dataselect/auth in its "
                        "application.wadl").format(
                            self.base_url)
-                raise FDSNNoDataException(msg)
+                raise FDSNException(msg)
             if user is not None or password is not None:
                 msg = ("EIDA authentication token provided, options 'user' "
                        "and 'password' will be overridden.")
