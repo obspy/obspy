@@ -264,9 +264,9 @@ class Client(object):
                            self.base_url)
                 raise FDSNException(msg)
             if user is not None or password is not None:
-                msg = ("EIDA authentication token provided, options 'user' "
-                       "and 'password' will be overridden.")
-                warnings.warn(msg)
+                msg = ("EIDA authentication token provided, but "
+                       "user and password are also given.")
+                raise FDSNException(msg)
             user, password = self._resolve_eida_token(eida_token)
             self._set_opener(user, password)
 
