@@ -298,3 +298,11 @@ $ OBSPY_DOCKER_BASE=/path/to/obspy/dockers/deb-branches ./cronjob_docker_tests.s
  * openSUSE: https://en.opensuse.org/Lifetime#Maintained_Regular_distributions
  * CentOS: https://en.wikipedia.org/wiki/CentOS#End-of-support_schedule
  * Fedora: https://fedoraproject.org/wiki/Releases#Current_Supported_Releases
+
+# Lookup available packages:
+
+ * Debian: https://www.debian.org/distrib/packages
+ * Ubuntu: https://packages.ubuntu.com/
+ * openSUSE: https://software.opensuse.org/find
+ * CentOS: http://mirror.centos.org/centos/7/os/x86_64/Packages/
+ * Fedora: https://fedoraproject.org/wiki/Releases#Current_Supported_Release://admin.fedoraproject.org/pkgdb/packages/
