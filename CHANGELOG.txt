@@ -86,6 +86,8 @@ master: (doi: 10.5281/zenodo.165135)
      vertical, see #1445).
  - obspy.io.arclink:
     * Read support for Arclink Inventory XML (see #1539)
+    * default for `route` parameter in metadata requests is changed to `False`
+      (see #1756)
  - obspy.io.ascii:
     * Custom formatting of sample values when writing SLIST and TSPAIR.
  - obspy.io.datamark:
