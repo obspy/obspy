@@ -8,11 +8,12 @@ import os
 import unittest
 import warnings
 
-import shapefile
-
 from obspy import read_events, read_inventory
 from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.io.shapefile.core import _write_shapefile, HAS_PYSHP
+
+if HAS_PYSHP:
+    import shapefile
 
 
 SHAPEFILE_SUFFIXES = (".shp", ".shx", ".dbf", ".prj")
