@@ -220,13 +220,9 @@ class ClientTestCase(unittest.TestCase):
         Tests get_inventory method for StationGroup, issue #1756.
         """
         client = Client(user='test@obspy.org')
-        # 1 - defined @NIEP
-        result = client.get_inventory(network="_NFOVRANC", route=False)
-        self.assertIn('RO', result)
-        self.assertIn('RO.BISRR', result)
-        self.assertIn('RO.VRI', result)
-        # 2 - defined @INGV
+        # 1 - defined @INGV
         with warnings.catch_warnings(record=True) as w:
+            warnings.filterwarnings("always")
             result = client.get_inventory(network="_NFOTABOO", route=True)
         self.assertEqual(len(w), 1)
         self.assertEqual(
@@ -236,6 +232,11 @@ class ClientTestCase(unittest.TestCase):
         self.assertIn('IV', result)
         self.assertIn('IV.ATBU', result)
         self.assertIn('IV.SSFR', result)
+        # 2 - defined @NIEP
+        result = client.get_inventory(network="_NFOVRANC", route=False)
+        self.assertIn('RO', result)
+        self.assertIn('RO.BISRR', result)
+        self.assertIn('RO.VRI', result)
         # 3 - defined @ETH
         result = client.get_inventory(network="_NFOVALAIS")
         self.assertIn('CH', result)
