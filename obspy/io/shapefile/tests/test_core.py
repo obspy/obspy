@@ -108,6 +108,14 @@ def _assert_records_and_fields(got_fields, got_records, expected_fields,
                 if field_type == 'D':
                     if got == 'None':
                         got = None
+                    # yet another workaround for testing results from old pyshp
+                    # Reader.. seem to sometimes return the raw unconverted
+                    # string e.g. '20120101'
+                    elif len(got) == 8:
+                        got = datetime.date(
+                            year=int(got[:4]),
+                            month=int(got[4:6].lstrip('0')),
+                            day=int(got[6:8].lstrip('0')))
                     else:
                         year, month, day = got
                         got = datetime.date(year=year, month=month, day=day)
