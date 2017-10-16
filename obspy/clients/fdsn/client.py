@@ -30,6 +30,7 @@ from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
+from obspy.core.compatibility import urlparse
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
@@ -138,7 +139,8 @@ class Client(object):
 
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=120, service_mappings=None, force_redirect=False):
+                 timeout=120, service_mappings=None, force_redirect=False,
+                 eida_token=None):
         """
         Initializes an FDSN Web Service client.
 
@@ -193,10 +195,18 @@ class Client(object):
             when a redirect is discovered. This is done to improve security.
             Settings this flag to ``True`` will force all redirects to be
             followed even if credentials are given.
+        :type eida_token: str
+        :param eida_token: Token for EIDA authentication mechanism, see
+            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php. If a
+            token is provided, options ``user`` and ``password`` must not be
+            used. This mechanism is only available on select EIDA nodes. The
+            token can be provided in form of the PGP message as a string, or
+            the filename of a local file with the PGP message in it.
         """
         self.debug = debug
         self.user = user
         self.timeout = timeout
+        self._force_redirect = force_redirect
 
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
@@ -220,23 +230,7 @@ class Client(object):
 
         self.base_url = base_url
 
-        # Only add the authentication handler if required.
-        handlers = []
-        if user is not None and password is not None:
-            # Create an OpenerDirector for HTTP Digest Authentication
-            password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
-            password_mgr.add_password(None, base_url, user, password)
-            handlers.append(urllib_request.HTTPDigestAuthHandler(password_mgr))
-
-        if (user is None and password is None) or force_redirect is True:
-            # Redirect if no credentials are given or the force_redirect
-            # flag is True.
-            handlers.append(CustomRedirectHandler())
-        else:
-            handlers.append(NoRedirectionHandler())
-
-        # Don't install globally to not mess with other codes.
-        self._url_opener = urllib_request.build_opener(*handlers)
+        self._set_opener(user, password)
 
         self.request_headers = {"User-Agent": user_agent}
         # Avoid mutable kwarg.
@@ -260,6 +254,129 @@ class Client(object):
             print("Request Headers: %s" % str(self.request_headers))
 
         self._discover_services()
+
+        # Use EIDA token if provided - this requires setting new url openers.
+        #
+        # This can only happen after the services have been discovered as
+        # the clients needs to know if the fdsnws implementation has support
+        # for the EIDA token system.
+        #
+        # This is a non-standard feature but we support it, given the number
+        # of EIDA nodes out there.
+        if eida_token is not None:
+            # Make sure user/pw are not also given.
+            if user is not None or password is not None:
+                msg = ("EIDA authentication token provided, but "
+                       "user and password are also given.")
+                raise FDSNException(msg)
+            self.set_eida_token(eida_token)
+
+    @property
+    def _has_eida_auth(self):
+        return self.services.get('eida-auth', False)
+
+    def set_credentials(self, user, password):
+        """
+        Set user and password resulting in subsequent web service
+        requests for waveforms being authenticated for potential access to
+        restricted data.
+
+        This will overwrite any previously set-up credentials/authentication.
+
+        :type user: str
+        :param user: User name of credentials.
+        :type password: str
+        :param password: Password for given user name.
+        """
+        self._set_opener(user, password)
+
+    def set_eida_token(self, token):
+        """
+        Fetch user and password from the server using the provided token,
+        resulting in subsequent web service requests for waveforms being
+        authenticated for potential access to restricted data.
+        This only works for select EIDA nodes and relies on the auth mechanism
+        described here:
+        http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php
+
+        This will overwrite any previously set-up credentials/authentication.
+
+        :type token: str
+        :param token: Token for EIDA authentication mechanism, see
+            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php.
+            This mechanism is only available on select EIDA nodes. The token
+            can be provided in form of the PGP message as a string, or the
+            filename of a local file with the PGP message in it.
+        """
+        user, password = self._resolve_eida_token(token)
+        self.set_credentials(user, password)
+
+    def _set_opener(self, user, password):
+        # Only add the authentication handler if required.
+        handlers = []
+        if user is not None and password is not None:
+            # Create an OpenerDirector for HTTP Digest Authentication
+            password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr.add_password(None, self.base_url, user, password)
+            handlers.append(urllib_request.HTTPDigestAuthHandler(password_mgr))
+
+        if (user is None and password is None) or self._force_redirect is True:
+            # Redirect if no credentials are given or the force_redirect
+            # flag is True.
+            handlers.append(CustomRedirectHandler())
+        else:
+            handlers.append(NoRedirectionHandler())
+
+        # Don't install globally to not mess with other codes.
+        self._url_opener = urllib_request.build_opener(*handlers)
+        if self.debug:
+            print('Installed new opener with handlers: {!s}'.format(handlers))
+
+    def _resolve_eida_token(self, token):
+        """
+        Use the token to get credentials.
+        """
+        if not self._has_eida_auth:
+            msg = ("EIDA token authentication requested but service at '{}' "
+                   "does not specify /dataselect/auth in the "
+                   "dataselect/application.wadl.").format(self.base_url)
+            raise FDSNException(msg)
+
+        token_file = None
+        # check if there's a local file that matches the provided string
+        if os.path.isfile(token):
+            token_file = token
+            with open(token_file, 'rb') as fh:
+                token = fh.read().decode()
+        # sanity check on the token
+        if not _validate_eida_token(token):
+            if token_file:
+                msg = ("Read EIDA token from file '{}' but it does not "
+                       "seem to contain a valid PGP message.").format(
+                            token_file)
+            else:
+                msg = ("EIDA token does not seem to be a valid PGP message. "
+                       "If you passed a filename, make sure the file "
+                       "actually exists.")
+            raise ValueError(msg)
+
+        # force https so that we don't send around tokens unsecurely
+        url = 'https://{}/fdsnws/dataselect/1/auth'.format(
+            urlparse(self.base_url).netloc + urlparse(self.base_url).path)
+        # paranoid: check again that we only send the token to https
+        if urlparse(url).scheme != "https":
+            msg = 'This should not happen, please file a bug report.'
+            raise Exception(msg)
+
+        # Already does the error checking with fdsnws semantics.
+        response = self._download(url=url, data=token.encode(),
+                                  use_gzip=True, return_string=True)
+
+        user, password = response.decode().split(':')
+        if self.debug:
+            print('Got temporary user/pw: {}/{}'.format(user, password))
+
+        return user, password
 
     def get_events(self, starttime=None, endtime=None, minlatitude=None,
                    maxlatitude=None, minlongitude=None, maxlongitude=None,
@@ -1372,7 +1489,15 @@ class Client(object):
                 raise FDSNException("Timeout while requesting '%s'." % url)
 
             if "dataselect" in url:
-                self.services["dataselect"] = WADLParser(wadl).parameters
+                wadl_parser = WADLParser(wadl)
+                self.services["dataselect"] = wadl_parser.parameters
+                # check if EIDA auth endpoint is in wadl
+                # we need to attach it to the discovered services, as these are
+                # later loaded from cache and just attaching an attribute to
+                # this client won't help knowing later if EIDA auth is
+                # supported at the server. a bit ugly but can't be helped.
+                if wadl_parser._has_eida_auth:
+                    self.services["eida-auth"] = True
                 if self.debug is True:
                     print("Discovered dataselect service")
             elif "event" in url and "application.wadl" in url:
@@ -1390,7 +1515,6 @@ class Client(object):
                 except ValueError:
                     msg = "Could not parse the catalogs at '%s'." % url
                     warnings.warn(msg)
-
             elif "event" in url and "contributors" in url:
                 try:
                     self.services["available_event_contributors"] = \
@@ -1774,6 +1898,17 @@ def get_bulk_string(bulk, arguments):
     if hasattr(bulk, "encode"):
         bulk = bulk.encode("ascii")
     return bulk
+
+
+def _validate_eida_token(token):
+    """
+    Just a basic check if the string contains something that looks like a PGP
+    message
+    """
+    if re.search(pattern='BEGIN PGP MESSAGE', string=token,
+                 flags=re.IGNORECASE):
+        return True
+    return False
 
 
 if __name__ == '__main__':

@@ -26,7 +26,7 @@ from .routing_client import (
 class FederatorRoutingClient(BaseRoutingClient):
     def __init__(self, url="http://service.iris.edu/irisws/fedcatalog/1",
                  include_providers=None, exclude_providers=None,
-                 debug=False, timeout=120):
+                 debug=False, timeout=120, **kwargs):
         """
         Initialize a federated routing client.
 
@@ -39,7 +39,8 @@ class FederatorRoutingClient(BaseRoutingClient):
         """
         BaseRoutingClient.__init__(self, debug=debug, timeout=timeout,
                                    include_providers=include_providers,
-                                   exclude_providers=exclude_providers)
+                                   exclude_providers=exclude_providers,
+                                   **kwargs)
         self._url = url
 
         # Parameters the routing service can work with. If this becomes a

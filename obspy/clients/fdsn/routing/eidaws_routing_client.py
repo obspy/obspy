@@ -35,7 +35,7 @@ class EIDAWSRoutingClient(BaseRoutingClient):
     """
     def __init__(self, url="http://www.orfeus-eu.org/eidaws/routing/1",
                  include_providers=None, exclude_providers=None,
-                 debug=False, timeout=120):
+                 debug=False, timeout=120, **kwargs):
         """
         Initialize an EIDAWS router client.
 
@@ -48,7 +48,8 @@ class EIDAWSRoutingClient(BaseRoutingClient):
         """
         BaseRoutingClient.__init__(self, debug=debug, timeout=timeout,
                                    include_providers=include_providers,
-                                   exclude_providers=exclude_providers)
+                                   exclude_providers=exclude_providers,
+                                   **kwargs)
         self._url = url
 
     @_assert_filename_not_in_kwargs

@@ -41,6 +41,8 @@ def RoutingClient(routing_type, *args, **kwargs):  # NOQA
         respectively.
 
     Remaining ``args`` and ``kwargs`` will be passed to the underlying classes.
+    For example, credentials can be supported for all underlying data centers.
+    See :meth:`BaseRoutingClient <BaseRoutingClient.__init__>` for details.
 
     >>> from obspy.clients.fdsn import RoutingClient
 
@@ -84,13 +86,25 @@ def _assert_attach_response_not_in_kwargs(f, *args, **kwargs):
 
 
 def _download_bulk(r):
-    c = client.Client(r["endpoint"], debug=r["debug"], timeout=r["timeout"])
+    # Figure out the passed credentials, if any. Two possibilities:
+    # (1) User and password, given explicitly for the base URLs (or an
+    #     explicity given `eida_token` key per URL).
+    # (2) A global EIDA_TOKEN key. It will be used for all services that
+    #     don't have explicit credentials and also support the `/auth` route.
+    credentials = r["credentials"].get(urlparse(r["endpoint"]).netloc, {})
+    c = client.Client(r["endpoint"], debug=r["debug"], timeout=r["timeout"],
+                      **credentials)
+    if not credentials and "EIDA_TOKEN" in r["credentials"] and \
+            c._has_eida_auth:
+        c.set_eida_token(r["credentials"]["EIDA_TOKEN"])
+
     if r["data_type"] == "waveform":
         fct = c.get_waveforms_bulk
         service = c.services["dataselect"]
     elif r["data_type"] == "station":
         fct = c.get_stations_bulk
         service = c.services["station"]
+
     # Keep only kwargs that are supported by this particular service.
     kwargs = {k: v for k, v in r["kwargs"].items() if k in service}
     bulk_str = ""
@@ -112,7 +126,7 @@ def _strip_protocol(url):
 # get_events() but also others).
 class BaseRoutingClient(HTTPClient):
     def __init__(self, debug=False, timeout=120, include_providers=None,
-                 exclude_providers=None):
+                 exclude_providers=None, credentials=None):
         """
         :type routing_type: str
         :param routing_type: The type of
@@ -123,10 +137,38 @@ class BaseRoutingClient(HTTPClient):
         :type include_providers: str or list of str
         :param include_providers: Get data only from these providers. Can be
             the full HTTP address of one of the shortcuts ObsPy knows about.
+        :type credentials: dict
+        :param credentials: Credentials for the individual data centers as a
+            dictionary that maps base url of FDSN web service to either
+            username/password or EIDA token, e.g.
+            ``credentials={
+            'geofon.gfz-potsdam.de': {'eida_token': 'my_token_file.txt'},
+            'service.iris.edu': {'user': 'me', 'password': 'my_pass'}
+            'EIDA_TOKEN': '/path/to/token.txt'
+            }``
+            The root level ``'EIDA_TOKEN'`` will be applied to all data centers
+            that claim to support the ``/auth`` route and don't have data
+            center specific credentials.
+            You can also use a URL mapping as for the normal FDSN client
+            instead of the URL.
         """
         HTTPClient.__init__(self, debug=debug, timeout=timeout)
         self.include_providers = include_providers
         self.exclude_providers = exclude_providers
+
+        # Parse credentials.
+        self.credentials = {}
+        for key, value in (credentials or {}).items():
+            if key == "EIDA_TOKEN":
+                self.credentials[key] = value
+            # Map, if necessary.
+            if key in URL_MAPPINGS:
+                key = URL_MAPPINGS[key]
+            # Make sure urlparse works correctly.
+            if not key.startswith("http"):
+                key = "http://" + key
+            # Only use the location.
+            self.credentials[urlparse(key).netloc] = value
 
     @property
     def include_providers(self):
@@ -197,7 +239,8 @@ class BaseRoutingClient(HTTPClient):
                 "endpoint": k,
                 "bulk_str": v,
                 "data_type": data_type,
-                "kwargs": kwargs})
+                "kwargs": kwargs,
+                "credentials": self.credentials})
         pool = ThreadPool(processes=len(dl_requests))
         results = pool.map(_download_bulk, dl_requests)
 
