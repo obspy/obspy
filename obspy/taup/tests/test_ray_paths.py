@@ -26,8 +26,8 @@ class RayPathCalculationsTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'images')
         pass
 
-    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
-                     'geographiclib is not installed or doesn\'t run')
+    @unittest.skipIf(not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
+                     'test needs geographiclib >= 1.34')
     def test_compute_ray_paths(self):
         # careful, the full inventory, catalog test is long (1min)
         # greatcircles = get_ray_paths(
