@@ -279,8 +279,17 @@ def _add_record(writer, feature):
     values = []
     for key, type_, width, precision in writer.fields:
         value = feature.get(key)
-        if type_ == 'C' and value is not None:
-            value = native_str(value)
+        if type_ == 'C':
+            # mimick pyshp 1.2.12 behavior of putting 'None' in string fields
+            # for value of `None`
+            if value is None:
+                value = 'None'
+            else:
+                value = native_str(value)
+        # work around older pyshp not converting `None`s properly (e.g. for
+        # float fields)
+        elif value is None:
+            value = ''
         values.append(value)
     writer.record(*values)
 
