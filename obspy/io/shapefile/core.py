@@ -4,22 +4,36 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import datetime
 import re
 import warnings
 
-from obspy import Catalog
+from obspy import Catalog, UTCDateTime
 from obspy.core.event import Origin, Magnitude
 from obspy.core.inventory import Inventory
+from obspy.core.util.misc import to_int_or_zero
 
 try:
     import shapefile
 except ImportError as e:
     HAS_PYSHP = False
+    PYSHP_VERSION = None
+    PYSHP_VERSION_AT_LEAST_1_2_12 = False
     IMPORTERROR_MSG = str(e) + (
         ". ObsPy's write support for shapefiles requires the 'pyshp' module "
         "to be installed in addition to the general ObsPy dependencies.")
 else:
     HAS_PYSHP = True
+    try:
+        PYSHP_VERSION = list(map(to_int_or_zero,
+                                 shapefile.__version__.split('.')))
+    except AttributeError:
+        PYSHP_VERSION = None
+    PYSHP_VERSION_AT_LEAST_1_2_12 = PYSHP_VERSION >= [1, 2, 12]
+PYSHP_VERSION_WARNING = (
+    'pyshp versions < 1.2.12 are buggy, e.g. in writing numerical values to '
+    'the dbf table, so e.g. timestamp float values might lack proper '
+    'precision. You should update to a newer pyshp version.')
 
 
 def _write_shapefile(obj, filename, **kwargs):
@@ -39,6 +53,8 @@ def _write_shapefile(obj, filename, **kwargs):
     """
     if not HAS_PYSHP:
         raise ImportError(IMPORTERROR_MSG)
+    if PYSHP_VERSION < [1, 2, 12]:
+        warnings.warn(PYSHP_VERSION_WARNING)
     if not filename.endswith(".shp"):
         filename += ".shp"
 
@@ -286,6 +302,11 @@ def _add_record(writer, feature):
                 value = 'None'
             else:
                 value = native_str(value)
+        # older pyshp is not correctly writing dates as thenowadays used
+        # '%Y%m%d' (8 chars), work around this
+        elif type_ == 'D':
+            if isinstance(value, (UTCDateTime, datetime.date)):
+                value = value.strftime('%Y%m%d')
         # work around older pyshp not converting `None`s properly (e.g. for
         # float fields)
         elif value is None:

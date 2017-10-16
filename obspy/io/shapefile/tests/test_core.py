@@ -10,7 +10,9 @@ import warnings
 
 from obspy import read_events, read_inventory
 from obspy.core.util.misc import TemporaryWorkingDirectory
-from obspy.io.shapefile.core import _write_shapefile, HAS_PYSHP
+from obspy.io.shapefile.core import (
+    _write_shapefile, HAS_PYSHP, PYSHP_VERSION_AT_LEAST_1_2_12,
+    PYSHP_VERSION_WARNING)
 
 if HAS_PYSHP:
     import shapefile
@@ -85,6 +87,46 @@ expected_inventory_records = [
      None, '.EHZ,.EHN,.EHE']]
 
 
+def _assert_records_and_fields(got_fields, got_records, expected_fields,
+                               expected_records):
+    if got_fields != expected_fields:
+        msg = 'Expected Fields:\n{!s}\nActual Fields\n{!s}'
+        msg = msg.format(expected_fields, got_fields)
+        raise AssertionError(msg)
+    if len(got_records) != len(expected_records):
+        msg = 'Expected Fields:\n{!s}\nActual Fields\n{!s}'
+        msg = msg.format(expected_fields, got_fields)
+        raise AssertionError(msg)
+    # omit first field which is deletion flag field
+    for got_record, expected_record in zip(got_records, expected_records):
+        for i, (field, got, expected) in enumerate(zip(
+                expected_fields[1:], got_record, expected_record)):
+            # on older pyshp <=1.2.10 date fields don't get cast to
+            # datetime.date on reading..
+            field_type = field[1]
+            if not PYSHP_VERSION_AT_LEAST_1_2_12:
+                if field_type == 'D':
+                    if got == 'None':
+                        got = None
+                    else:
+                        year, month, day = got
+                        got = datetime.date(year=year, month=month, day=day)
+                # it seems on older pyshp version empty numeric fields don't
+                # get cast to None properly during reading..
+                elif field_type == 'N':
+                    if hasattr(got, 'strip') and not got.strip(' '):
+                        got = None
+                    else:
+                        # old pyshp is seriously buggy and doesn't respect the
+                        # sepcified precision when writing numerical fields
+                        if round(got, 1) == round(expected, 1):
+                            continue
+            if not got == expected:
+                msg = "Record {} mismatching:\nExpected: '{!s}'\nGot: '{!s}'"
+                msg = msg.format(i, expected, got)
+                raise AssertionError(msg)
+
+
 def _close_shapefile_reader(reader):
     """
     Current pyshp version 1.2.12 doesn't properly close files, so for now do
@@ -126,7 +168,7 @@ class ShapefileTestCase(unittest.TestCase):
                         'not yet implemented for output as shapefile. No '
                         'origin uncertainty will be added to shapefile for '
                         'such events.')
-                except:
+                except AssertionError:
                     continue
                 break
             else:
@@ -138,8 +180,10 @@ class ShapefileTestCase(unittest.TestCase):
                     open("catalog.shx", "rb") as fh_shx:
                 shp = shapefile.Reader(shp=fh_shp, shx=fh_shx, dbf=fh_dbf)
                 # check contents of shapefile that we just wrote
-                self.assertEqual(shp.fields, expected_catalog_fields)
-                self.assertEqual(shp.records(), expected_catalog_records)
+                _assert_records_and_fields(
+                    got_fields=shp.fields, got_records=shp.records(),
+                    expected_fields=expected_catalog_fields,
+                    expected_records=expected_catalog_records)
                 self.assertEqual(shp.shapeType, shapefile.POINT)
                 _close_shapefile_reader(shp)
 
@@ -162,7 +206,7 @@ class ShapefileTestCase(unittest.TestCase):
                         'not yet implemented for output as shapefile. No '
                         'origin uncertainty will be added to shapefile for '
                         'such events.')
-                except:
+                except AssertionError:
                     continue
                 break
             else:
@@ -174,15 +218,29 @@ class ShapefileTestCase(unittest.TestCase):
                     open("catalog.shx", "rb") as fh_shx:
                 shp = shapefile.Reader(shp=fh_shp, shx=fh_shx, dbf=fh_dbf)
                 # check contents of shapefile that we just wrote
-                self.assertEqual(shp.fields, expected_catalog_fields)
-                self.assertEqual(shp.records(), expected_catalog_records)
+                _assert_records_and_fields(
+                    got_fields=shp.fields, got_records=shp.records(),
+                    expected_fields=expected_catalog_fields,
+                    expected_records=expected_catalog_records)
                 self.assertEqual(shp.shapeType, shapefile.POINT)
                 _close_shapefile_reader(shp)
 
     def test_write_inventory_shapefile(self):
         inv = read_inventory()
         with TemporaryWorkingDirectory():
-            _write_shapefile(inv, "inventory.shp")
+            with warnings.catch_warnings(record=True) as w:
+                warnings.filterwarnings('always')
+                _write_shapefile(inv, "inventory.shp")
+            for w_ in w:
+                try:
+                    self.assertEqual(
+                        str(w_.message), PYSHP_VERSION_WARNING)
+                except AssertionError:
+                    continue
+                break
+            else:
+                if not PYSHP_VERSION_AT_LEAST_1_2_12:
+                    raise AssertionError('pyshape version warning not shown')
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("inventory" + suffix))
             with open("inventory.shp", "rb") as fh_shp, \
@@ -190,15 +248,29 @@ class ShapefileTestCase(unittest.TestCase):
                     open("inventory.shx", "rb") as fh_shx:
                 shp = shapefile.Reader(shp=fh_shp, shx=fh_shx, dbf=fh_dbf)
                 # check contents of shapefile that we just wrote
-                self.assertEqual(shp.fields, expected_inventory_fields)
-                self.assertEqual(shp.records(), expected_inventory_records)
+                _assert_records_and_fields(
+                    got_fields=shp.fields, got_records=shp.records(),
+                    expected_fields=expected_inventory_fields,
+                    expected_records=expected_inventory_records)
                 self.assertEqual(shp.shapeType, shapefile.POINT)
                 _close_shapefile_reader(shp)
 
     def test_write_inventory_shapefile_via_plugin(self):
         inv = read_inventory()
         with TemporaryWorkingDirectory():
-            inv.write("inventory.shp", "SHAPEFILE")
+            with warnings.catch_warnings(record=True) as w:
+                warnings.filterwarnings('always')
+                inv.write("inventory.shp", "SHAPEFILE")
+            for w_ in w:
+                try:
+                    self.assertEqual(
+                        str(w_.message), PYSHP_VERSION_WARNING)
+                except AssertionError:
+                    continue
+                break
+            else:
+                if not PYSHP_VERSION_AT_LEAST_1_2_12:
+                    raise AssertionError('pyshape version warning not shown')
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("inventory" + suffix))
             with open("inventory.shp", "rb") as fh_shp, \
@@ -206,8 +278,10 @@ class ShapefileTestCase(unittest.TestCase):
                     open("inventory.shx", "rb") as fh_shx:
                 shp = shapefile.Reader(shp=fh_shp, shx=fh_shx, dbf=fh_dbf)
                 # check contents of shapefile that we just wrote
-                self.assertEqual(shp.fields, expected_inventory_fields)
-                self.assertEqual(shp.records(), expected_inventory_records)
+                _assert_records_and_fields(
+                    got_fields=shp.fields, got_records=shp.records(),
+                    expected_fields=expected_inventory_fields,
+                    expected_records=expected_inventory_records)
                 self.assertEqual(shp.shapeType, shapefile.POINT)
                 _close_shapefile_reader(shp)
 
