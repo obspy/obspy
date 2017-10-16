@@ -144,14 +144,14 @@ class TauPyPlottingTestCase(unittest.TestCase):
             for w_ in w:
                 try:
                     self.assertEqual(
-                        str(w[0].message), 'The plot() function is '
+                        str(w_.message), 'The plot() function is '
                         'deprecated. Please use arrivals.plot_rays()')
-                except:
+                    self.assertEqual(w_.category, ObsPyDeprecationWarning)
+                except AssertionError:
                     continue
                 break
             else:
                 raise
-            self.assertEqual(w[0].category, ObsPyDeprecationWarning)
 
     def test_plot_travel_times(self):
         """
