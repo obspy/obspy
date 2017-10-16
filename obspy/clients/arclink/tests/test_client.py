@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import io
 import operator
 import unittest
+import warnings
 
 import numpy as np
 
@@ -225,7 +226,13 @@ class ClientTestCase(unittest.TestCase):
         self.assertIn('RO.BISRR', result)
         self.assertIn('RO.VRI', result)
         # 2 - defined @INGV
-        result = client.get_inventory(network="_NFOTABOO", route=True)
+        with warnings.catch_warnings(record=True) as w:
+            result = client.get_inventory(network="_NFOTABOO", route=True)
+        self.assertEqual(len(w), 1)
+        self.assertEqual(
+            str(w[0].message),
+            "Routing was requested but parameter 'network' is '_NFOTABOO' "
+            "and therefore routing is disabled.")
         self.assertIn('IV', result)
         self.assertIn('IV.ATBU', result)
         self.assertIn('IV.SSFR', result)

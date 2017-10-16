@@ -1115,7 +1115,7 @@ class Client(object):
             #  (1) not network id is given,
             #  (2) virtual network (Station group) is requested
             if route:
-                msg = ("Routing was requested but parameter 'netork' is '{}' "
+                msg = ("Routing was requested but parameter 'network' is '{}' "
                        "and therefore routing is disabled.").format(network)
                 warnings.warn(msg)
             result = self._fetch(rtype, rdata, route=False)
