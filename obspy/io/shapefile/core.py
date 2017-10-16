@@ -295,22 +295,47 @@ def _add_record(writer, feature):
     values = []
     for key, type_, width, precision in writer.fields:
         value = feature.get(key)
-        if type_ == 'C':
-            # mimick pyshp 1.2.12 behavior of putting 'None' in string fields
-            # for value of `None`
-            if value is None:
-                value = 'None'
-            else:
-                value = native_str(value)
-        # older pyshp is not correctly writing dates as thenowadays used
-        # '%Y%m%d' (8 chars), work around this
-        elif type_ == 'D':
-            if isinstance(value, (UTCDateTime, datetime.date)):
-                value = value.strftime('%Y%m%d')
-        # work around older pyshp not converting `None`s properly (e.g. for
-        # float fields)
-        elif value is None:
-            value = ''
+        # various hacks for old pyshp < 1.2.12
+        if not PYSHP_VERSION_AT_LEAST_1_2_12:
+            if type_ == 'C':
+                # mimick pyshp 1.2.12 behavior of putting 'None' in string
+                # fields for value of `None`
+                if value is None:
+                    value = 'None'
+                else:
+                    value = native_str(value)
+            # older pyshp is not correctly writing dates as thenowadays used
+            # '%Y%m%d' (8 chars), work around this
+            elif type_ == 'D':
+                if isinstance(value, (UTCDateTime, datetime.date)):
+                    value = value.strftime('%Y%m%d')
+            # work around issues with older pyshp, backport 1.2.12 behavior
+            elif type_ == 'L':
+                # logical: 1 byte - initialized to 0x20 (space)
+                # otherwise T or F
+                if value in [True, 1]:
+                    value = "T"
+                elif value in [False, 0]:
+                    value = "F"
+                else:
+                    value = ' '
+            # work around issues with older pyshp, backport 1.2.12 behavior
+            elif type_ in ('N', 'F'):
+                # numeric or float: number stored as a string, right justified,
+                # and padded with blanks to the width of the field.
+                if value in (None, ''):
+                    value = ' ' * width  # QGIS NULL
+                elif not precision:
+                    # caps the size if exceeds the field size
+                    value = format(value, "d")[:width].rjust(width)
+                else:
+                    # caps the size if exceeds the field size
+                    value = format(value, ".%sf" % precision)[:width].rjust(
+                        width)
+            # work around older pyshp not converting `None`s properly (e.g. for
+            # float fields)
+            elif value is None:
+                value = ''
         values.append(value)
     writer.record(*values)
 

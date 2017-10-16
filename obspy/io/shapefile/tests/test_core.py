@@ -122,7 +122,9 @@ def _assert_records_and_fields(got_fields, got_records, expected_fields,
                 # it seems on older pyshp version empty numeric fields don't
                 # get cast to None properly during reading..
                 elif field_type == 'N':
-                    if hasattr(got, 'strip') and not got.strip(' '):
+                    if got is None and expected is None:
+                        continue
+                    elif hasattr(got, 'strip') and not got.strip(b' '):
                         got = None
                     else:
                         # old pyshp is seriously buggy and doesn't respect the
