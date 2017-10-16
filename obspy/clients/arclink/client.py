@@ -210,7 +210,7 @@ class Client(object):
         self._write_ln('BYE')
         self._client.close()
 
-    def _fetch(self, request_type, request_data, route=False):
+    def _fetch(self, request_type, request_data, route=True):
         # skip routing on request
         if not route:
             # always use initial node if routing is disabled
