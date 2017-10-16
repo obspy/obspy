@@ -79,7 +79,8 @@ else:
     IS_MSVC = False
 
 # Use system libraries? Set later...
-EXTERNAL_LIBS = False
+EXTERNAL_EVALRESP = False
+EXTERNAL_LIBMSEED = False
 
 # package specific settings
 KEYWORDS = [
@@ -534,19 +535,31 @@ def add_features():
         return {}
 
     class ExternalLibFeature(setuptools.Feature):
+        def __init__(self, *args, **kwargs):
+            self.name = kwargs['name']
+            setuptools.Feature.__init__(self, *args, **kwargs)
+
         def include_in(self, dist):
-            global EXTERNAL_LIBS
-            EXTERNAL_LIBS = True
+            globals()[self.name] = True
 
         def exclude_from(self, dist):
-            global EXTERNAL_LIBS
-            EXTERNAL_LIBS = False
+            globals()[self.name] = False
 
     return {
-        'system-libs': ExternalLibFeature(
+        'system-libs': setuptools.Feature(
             'use of system C libraries',
             standard=False,
-            EXTERNAL_LIBS=True
+            require_features=('system-evalresp', 'system-libmseed')
+        ),
+        'system-evalresp': ExternalLibFeature(
+            'use of system evalresp library',
+            standard=False,
+            name='EXTERNAL_EVALRESP'
+        ),
+        'system-libmseed': ExternalLibFeature(
+            'use of system libmseed library',
+            standard=False,
+            name='EXTERNAL_LIBMSEED'
         )
     }
 
@@ -571,7 +584,7 @@ def configuration(parent_package="", top_path=None):
     # LIBMSEED
     path = os.path.join("obspy", "io", "mseed", "src")
     files = [os.path.join(path, "obspy-readbuffer.c")]
-    if not EXTERNAL_LIBS:
+    if not EXTERNAL_LIBMSEED:
         files += glob.glob(os.path.join(path, "libmseed", "*.c"))
     # compiler specific options
     kwargs = {}
@@ -583,7 +596,7 @@ def configuration(parent_package="", top_path=None):
             export_symbols(path, 'libmseed', 'libmseed.def')
         kwargs['export_symbols'] += \
             export_symbols(path, 'obspy-readbuffer.def')
-    if EXTERNAL_LIBS:
+    if EXTERNAL_LIBMSEED:
         kwargs['libraries'] = ['mseed']
     config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
                          files, **kwargs)
@@ -612,7 +625,7 @@ def configuration(parent_package="", top_path=None):
 
     # EVALRESP
     path = os.path.join("obspy", "signal", "src")
-    if EXTERNAL_LIBS:
+    if EXTERNAL_EVALRESP:
         files = glob.glob(os.path.join(path, "evalresp", "_obspy*.c"))
     else:
         files = glob.glob(os.path.join(path, "evalresp", "*.c"))
@@ -623,7 +636,7 @@ def configuration(parent_package="", top_path=None):
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
-    if EXTERNAL_LIBS:
+    if EXTERNAL_EVALRESP:
         kwargs['libraries'] = ['evresp']
     config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
                          files, **kwargs)
