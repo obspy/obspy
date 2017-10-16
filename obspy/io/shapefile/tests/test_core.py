@@ -133,12 +133,15 @@ class ShapefileTestCase(unittest.TestCase):
                 raise
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("catalog" + suffix))
-            shp = shapefile.Reader("catalog.shp")
-            # check contents of shapefile that we just wrote
-            self.assertEqual(shp.fields, expected_catalog_fields)
-            self.assertEqual(shp.records(), expected_catalog_records)
-            self.assertEqual(shp.shapeType, shapefile.POINT)
-            _close_shapefile_reader(shp)
+            with open("catalog.shp", "rb") as fh_shp, \
+                    open("catalog.dbf", "rb") as fh_dbf, \
+                    open("catalog.shx", "rb") as fh_shx:
+                shp = shapefile.Reader(shp=fh_shp, shx=fh_shx, dbf=fh_dbf)
+                # check contents of shapefile that we just wrote
+                self.assertEqual(shp.fields, expected_catalog_fields)
+                self.assertEqual(shp.records(), expected_catalog_records)
+                self.assertEqual(shp.shapeType, shapefile.POINT)
+                _close_shapefile_reader(shp)
 
     def test_write_catalog_shapefile_via_plugin(self):
         # read two events with uncertainties, one deserializes with "confidence
@@ -166,12 +169,15 @@ class ShapefileTestCase(unittest.TestCase):
                 raise
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("catalog" + suffix))
-            shp = shapefile.Reader("catalog.shp")
-            # check contents of shapefile that we just wrote
-            self.assertEqual(shp.fields, expected_catalog_fields)
-            self.assertEqual(shp.records(), expected_catalog_records)
-            self.assertEqual(shp.shapeType, shapefile.POINT)
-            _close_shapefile_reader(shp)
+            with open("catalog.shp", "rb") as fh_shp, \
+                    open("catalog.dbf", "rb") as fh_dbf, \
+                    open("catalog.shx", "rb") as fh_shx:
+                shp = shapefile.Reader(shp=fh_shp, shx=fh_shx, dbf=fh_dbf)
+                # check contents of shapefile that we just wrote
+                self.assertEqual(shp.fields, expected_catalog_fields)
+                self.assertEqual(shp.records(), expected_catalog_records)
+                self.assertEqual(shp.shapeType, shapefile.POINT)
+                _close_shapefile_reader(shp)
 
     def test_write_inventory_shapefile(self):
         inv = read_inventory()
@@ -179,12 +185,15 @@ class ShapefileTestCase(unittest.TestCase):
             _write_shapefile(inv, "inventory.shp")
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("inventory" + suffix))
-            shp = shapefile.Reader("inventory.shp")
-            # check contents of shapefile that we just wrote
-            self.assertEqual(shp.fields, expected_inventory_fields)
-            self.assertEqual(shp.records(), expected_inventory_records)
-            self.assertEqual(shp.shapeType, shapefile.POINT)
-            _close_shapefile_reader(shp)
+            with open("inventory.shp", "rb") as fh_shp, \
+                    open("inventory.dbf", "rb") as fh_dbf, \
+                    open("inventory.shx", "rb") as fh_shx:
+                shp = shapefile.Reader(shp=fh_shp, shx=fh_shx, dbf=fh_dbf)
+                # check contents of shapefile that we just wrote
+                self.assertEqual(shp.fields, expected_inventory_fields)
+                self.assertEqual(shp.records(), expected_inventory_records)
+                self.assertEqual(shp.shapeType, shapefile.POINT)
+                _close_shapefile_reader(shp)
 
     def test_write_inventory_shapefile_via_plugin(self):
         inv = read_inventory()
@@ -192,12 +201,15 @@ class ShapefileTestCase(unittest.TestCase):
             inv.write("inventory.shp", "SHAPEFILE")
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("inventory" + suffix))
-            shp = shapefile.Reader("inventory.shp")
-            # check contents of shapefile that we just wrote
-            self.assertEqual(shp.fields, expected_inventory_fields)
-            self.assertEqual(shp.records(), expected_inventory_records)
-            self.assertEqual(shp.shapeType, shapefile.POINT)
-            _close_shapefile_reader(shp)
+            with open("inventory.shp", "rb") as fh_shp, \
+                    open("inventory.dbf", "rb") as fh_dbf, \
+                    open("inventory.shx", "rb") as fh_shx:
+                shp = shapefile.Reader(shp=fh_shp, shx=fh_shx, dbf=fh_dbf)
+                # check contents of shapefile that we just wrote
+                self.assertEqual(shp.fields, expected_inventory_fields)
+                self.assertEqual(shp.records(), expected_inventory_records)
+                self.assertEqual(shp.shapeType, shapefile.POINT)
+                _close_shapefile_reader(shp)
 
 
 def suite():
