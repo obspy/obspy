@@ -254,6 +254,16 @@ def _save_projection_file(filename):
 def _create_layer(writer, field_definitions):
     # Add the fields we're interested in
     for name, type_, width, precision in field_definitions:
+        # default field width is not set correctly for dates and booleans in
+        # shapefile <=1.2.10, see
+        # GeospatialPython/pyshp@ba61854aa7161fd7d4cff12b0fd08b6ec7581bb7 and
+        # GeospatialPython/pyshp#71 so work around this
+        if type_ == 'D':
+            width = 8
+            precision = 0
+        elif type_ == 'L':
+            width = 1
+            precision = 0
         type_ = native_str(type_)
         name = native_str(name)
         kwargs = dict(fieldType=type_, size=width, decimal=precision)
