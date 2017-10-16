@@ -198,10 +198,10 @@ class Client(object):
         :type eida_token: str
         :param eida_token: Token for EIDA authentication mechanism, see
             http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php. If a
-            token is provided, options ``user`` and ``password`` must be given.
-            This mechanism is only available on select EIDA nodes. The token
-            can be provided in form of the PGP message as a string, or the
-            filename of a local file with the PGP message in it.
+            token is provided, options ``user`` and ``password`` must not be
+            used. This mechanism is only available on select EIDA nodes. The
+            token can be provided in form of the PGP message as a string, or
+            the filename of a local file with the PGP message in it.
         """
         self.debug = debug
         self.user = user
