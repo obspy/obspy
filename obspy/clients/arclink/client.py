@@ -450,7 +450,7 @@ class Client(object):
         # fetching PAZ and coordinates
         if metadata:
             # fetch metadata only once
-            # NOTE: The outing step here is not strictly necessary
+            # NOTE: The routing step here is not strictly necessary
             # TODO: Routing should preferably be done only once
             inv = self.get_inventory(network=network, station=station,
                                      location=location, channel=channel,
