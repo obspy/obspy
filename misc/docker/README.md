@@ -208,13 +208,15 @@ $ docker login  # docker hub user needs write access to "obspy/base-images" of o
 $ docker push obspy/base-images:${DISTRO_FULL}
 ```
 
-To create a Raspbian (Debian ``armhf`` for Raspberry Pi) docker base image (using ``qemu``, https://wiki.debian.org/ArmHardFloatChroot):
+To create a Raspbian (Debian ``armhf`` for Raspberry Pi) docker base image (using ``qemu``, https://wiki.debian.org/ArmHardFloatChroot).
+This imports the public key for the Raspbian repository at the start, so the package integrity can be verified later on.
 
 ```bash
 $ cd /tmp
-$ DISTRO=jessie
-$ DISTRO_FULL=debian_8_jessie_armhf
-$ sudo qemu-debootstrap --arch=armhf ${DISTRO} ${DISTRO_FULL} ftp://ftp.debian.org/debian/ 2>&1 | tee ${DISTRO_FULL}.debootstrap.log
+$ wget https://archive.raspbian.org/raspbian.public.key -O - | sudo gpg --import -
+$ DISTRO=stretch
+$ DISTRO_FULL=debian_9_stretch_armhf
+$ sudo qemu-debootstrap --arch=armhf --keyring /root/.gnupg/pubring.gpg ${DISTRO} ${DISTRO_FULL} http://archive.raspbian.org/raspbian 2>&1 | tee ${DISTRO_FULL}.debootstrap.log
 $ sudo tar -C ${DISTRO_FULL} -c . | docker import - obspy/base-images:${DISTRO_FULL}
 $ docker login  # docker hub user needs write access to "obspy/base-images" of organization "obspy"
 $ docker push obspy/base-images:${DISTRO_FULL}

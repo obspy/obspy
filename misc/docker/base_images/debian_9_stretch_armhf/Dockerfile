@@ -9,7 +9,15 @@ ENV DEBCONF_NOWARNINGS=yes
 
 # Fix potentially wrong repo address and fetch public key for signed repo
 RUN sed 's#deb[ ]\+[^ ]\+ \(.*\)#deb http://archive.raspbian.org/raspbian/ \1#' /etc/apt/sources.list --in-place
-RUN wget 'https://archive.raspbian.org/raspbian.public.key' -O - | apt-key add -
+
+# On our Debian stretch Raspbian armhf image, we're currently suffering from this bug:
+# https://bugs.launchpad.net/ubuntu/+source/apt/+bug/1577926
+# The workaround described here works:
+# https://bugs.launchpad.net/ubuntu/+source/apt/+bug/1577926/comments/10
+# To me looks like this is no security breach, just internally not using _apt
+# user but root for package look ups. Can't see how this could breach security
+# of checking the repository/package signatures.
+RUN echo '' >> /etc/apt/apt.conf && echo 'APT::Sandbox::User "root";' >> /etc/apt/apt.conf
 
 # install packages to install obspy and build deb packages
 RUN apt-get update && apt-get upgrade -y
