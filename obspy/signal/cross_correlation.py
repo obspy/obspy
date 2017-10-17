@@ -27,7 +27,6 @@ import scipy
 
 from obspy import Stream, Trace
 from obspy.core.util.misc import MatplotlibBackend
-from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
 
 
@@ -332,89 +331,6 @@ def correlate_template(data, template, mode='valid', normalize='full',
             msg = "normalize has to be one of (None, 'naive', 'full')"
             raise ValueError(msg)
     return cc
-
-
-def xcorr(tr1, tr2, shift_len, full_xcorr=False):
-    """
-    Cross correlation of tr1 and tr2 in the time domain using window_len.
-
-    .. note::
-       Please use the :func:`~obspy.signal.cross_correlation.correlate`
-       function for new code.
-
-    ::
-
-                                    Mid Sample
-                                        |
-        |AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|
-        |BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|
-        |<-shift_len/2->|   <- region of support ->     |<-shift_len/2->|
-
-
-    :type tr1: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
-    :param tr1: Trace 1
-    :type tr2: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
-    :param tr2: Trace 2 to correlate with trace 1
-    :type shift_len: int
-    :param shift_len: Total length of samples to shift for cross correlation.
-    :type full_xcorr: bool
-    :param full_xcorr: If ``True``, the complete xcorr function will be
-        returned as :class:`~numpy.ndarray`
-    :return: **index, value[, fct]** - Index of maximum xcorr value and the
-        value itself. The complete xcorr function is returned only if
-        ``full_xcorr=True``.
-
-    .. note::
-       As shift_len gets higher the window supporting the cross correlation
-       actually gets smaller. So with shift_len=0 you get the correlation
-       coefficient of both traces as a whole without any shift applied. As the
-       xcorr function works in time domain and does not zero pad at all, with
-       higher shifts allowed the window of support gets smaller so that the
-       moving windows shifted against each other do not run out of the
-       timeseries bounds at high time shifts. Of course there are other
-       possibilities to do cross correlations e.g. in frequency domain.
-
-    .. seealso::
-       `ObsPy-users mailing list
-       <http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html>`_
-       and `issue #249 <https://github.com/obspy/obspy/issues/249>`_.
-    """
-    from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
-    msg = ('Call to deprecated function xcorr(). Please use the correlate and '
-           'xcorr_max functions.')
-    warnings.warn(msg, ObsPyDeprecationWarning)
-
-    # if we get Trace objects, use their data arrays
-    for tr in [tr1, tr2]:
-        if isinstance(tr, Trace):
-            tr = tr.data
-
-    # check if shift_len parameter is in an acceptable range.
-    # if not the underlying c code tampers with shift_len and uses shift_len/2
-    # instead. we want to avoid this silent automagic and raise an error in the
-    # python layer right here.
-    # see ticket #249 and src/xcorr.c lines 43-57
-    if min(len(tr1), len(tr2)) - 2 * shift_len <= 0:
-        msg = "shift_len too large. The underlying C code would silently " + \
-              "use shift_len/2 which we want to avoid."
-        raise ValueError(msg)
-    # be nice and adapt type if necessary
-    tr1 = np.ascontiguousarray(tr1, np.float32)
-    tr2 = np.ascontiguousarray(tr2, np.float32)
-    corp = np.empty(2 * shift_len + 1, dtype=np.float64, order='C')
-
-    shift = C.c_int()
-    coe_p = C.c_double()
-
-    res = clibsignal.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
-                            C.byref(shift), C.byref(coe_p))
-    if res:
-        raise MemoryError
-
-    if full_xcorr:
-        return shift.value, coe_p.value, corp
-    else:
-        return shift.value, coe_p.value
 
 
 def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
