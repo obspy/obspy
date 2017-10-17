@@ -5,6 +5,10 @@ MAINTAINER Tobias Megies
 # Set the env variables to non-interactive
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NOWARNINGS=yes
 
+# Fix potentially wrong repo address and fetch public key for signed repo
+RUN sed 's#deb[ ]\+[^ ]\+ \(.*\)#deb http://archive.raspbian.org/raspbian/ \1#' /etc/apt/sources.list --in-place
+RUN wget 'https://archive.raspbian.org/raspbian.public.key' -O - | apt-key add -
+
 # install packages to install obspy and build deb packages
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get update && apt-get -y --no-install-recommends install \
