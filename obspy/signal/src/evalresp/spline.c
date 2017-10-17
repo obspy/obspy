@@ -104,6 +104,14 @@ double basis_function_b_val ( double tdata[], double tval )
   {
     yval = pow ( ( 1.0 - u ), 3 ) / 6.0;
   }
+  else
+  {
+    /* Cannot really happen based on r8vec_bracket. */
+    fprintf(stderr, "\n");
+    fprintf(stderr, "BASIS_FUNCTION_B_VAL - Fatal error!\n");
+    fprintf(stderr, "  tval outside tdata, %f not in (%f,%f)\n", tval, tdata[0], tdata[4]);
+    exit(1);
+  }
 
   return yval;
 
@@ -237,6 +245,14 @@ double basis_function_beta_val ( double beta1, double beta2, double tdata[],
   else if ( tval < tdata[4] )
   {
     yval = 2.0 * pow ( beta1 * ( 1.0 - u ), 3 );
+  }
+  else
+  {
+    /* Cannot really happen based on r8vec_bracket. */
+    fprintf(stderr, "\n");
+    fprintf(stderr, "BASIS_FUNCTION_BETA_VAL - Fatal error!\n");
+    fprintf(stderr, "  tval outside tdata, %f not in (%f,%f)\n", tval, tdata[0], tdata[4]);
+    exit(1);
   }
 
   yval = yval / ( 2.0 + beta2 + 4.0 * beta1 + 4.0 * beta1 * beta1
@@ -968,6 +984,18 @@ double basis_matrix_tmp ( int left, int n, double mbasis[], int ndata,
   {
     arg = 0.5 * ( 1.0 + tval - tdata[left-1] );
     first = left - 1;
+  }
+  else
+  {
+    /* Cannot really happen based on its callers. */
+    fprintf(stderr, "\n");
+    fprintf(stderr, "BASIS_MATRIX_TMP - Fatal error!\n");
+    if (left < 1) {
+      fprintf(stderr, "  Left outside range, %d < 1\n", left);
+    } else {
+      fprintf(stderr, "  Left outside range, %d > %d\n", left, ndata - 1);
+    }
+    exit(1);
   }
 /*
   TVEC(I) = ARG^(N-I).
@@ -3209,6 +3237,11 @@ double pchst ( double arg1, double arg2 )
     {
       value = -1.0;
     }
+    else
+    {
+      /* NaN */
+      value = arg2;
+    }
   }
   else if ( 0.0 < arg1 )
   {
@@ -3224,6 +3257,16 @@ double pchst ( double arg1, double arg2 )
     {
       value = 1.0;
     }
+    else
+    {
+      /* NaN */
+      value = arg2;
+    }
+  }
+  else
+  {
+    /* NaN */
+    value = arg1;
   }
 
   return value;
@@ -6005,7 +6048,18 @@ double spline_overhauser_uni_val ( int ndata, double tdata[], double ydata[],
     mbasis = basis_matrix_overhauser_uni_r ( );
 
     yval = basis_matrix_tmp ( left, 3, mbasis, ndata, tdata, ydata, tval );
-
+  }
+  else
+  {
+    /* Cannot really happen based on r8vec_bracket. */
+    fprintf(stderr, "\n");
+    fprintf(stderr, "BASIS_FUNCTION_BETA_VAL - Fatal error!\n");
+    if (left < 1) {
+      fprintf(stderr, "  Left outside range, %d < 1\n", left);
+    } else {
+      fprintf(stderr, "  Left outside range, %d > %d\n", left, ndata - 1);
+    }
+    exit(1);
   }
 
   free ( mbasis );
