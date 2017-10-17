@@ -49,7 +49,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-lxml \
     python3-matplotlib \
     python3-mock \
-    python3-mpltoolkits.basemap \
     python3-nose \
     python3-numpy \
     python3-pip \
