@@ -34,12 +34,13 @@ def get_ray_paths(inventory, catalog, phase_list=['P'],
     :param taup_model: the taup model for which the greatcircle paths are
                   computed
     :returns: a list of tuples
-        ``[(gcircle, phase_name, value, station_label, event_label,
-        event_id, origin_id), ...]``. ``gcircle`` is an array of shape
-        ``[3, npoints]`` with the path coordinates.  ``phase_name`` is the name
-        of the seismic phase, ``station_label`` is the name of the station that
-        belongs to the path. ``event_label`` is the name of the event that
-        belongs to the path.
+        ``[(gcircle, phase_name, station_label, event_timestamp,
+        event_magnitude, event_id, origin_id), ...]``. ``gcircle`` is an array
+        of shape ``[3, npoints]`` with the path coordinates. ``phase_name`` is
+        the name of the seismic phase, ``station_label`` is the name of the
+        station and network that belongs to the path. ``event_timestamp``,
+        ``event_magnitude``, ``event_id`` and ``origin_id`` describe the event
+        that belongs to the path.
     """
     # GEOGRAPHICLIB is mandatory for this function
     if not geodetics.HAS_GEOGRAPHICLIB:
