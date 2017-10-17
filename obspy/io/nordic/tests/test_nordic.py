@@ -292,7 +292,7 @@ class TestNordicMethods(unittest.TestCase):
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 head_2 = _readheader(f=f)
-        self.assertTrue(test_similarity(head_1, head_2))
+        _assert_similarity(head_1, head_2)
 
     def test_missing_header(self):
         # Check that a suitable error is raised
@@ -312,7 +312,7 @@ class TestNordicMethods(unittest.TestCase):
             file_object.close()
 
             ref_cat = read_events(filename)
-            self.assertTrue(test_similarity(cat[0], ref_cat[0]))
+            _assert_similarity(cat[0], ref_cat[0])
 
     def test_reading_bytes_io(self):
         filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
@@ -327,7 +327,7 @@ class TestNordicMethods(unittest.TestCase):
             file_object.close()
 
             ref_cat = read_events(filename)
-            self.assertTrue(test_similarity(cat[0], ref_cat[0]))
+            _assert_similarity(cat[0], ref_cat[0])
 
     def test_corrupt_header(self):
         filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
@@ -414,8 +414,7 @@ class TestNordicMethods(unittest.TestCase):
                 write_select(cat, filename=tf.name)
             cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
-                self.assertTrue(test_similarity(event_1=event_1,
-                                                event_2=event_2))
+                _assert_similarity(event_1=event_1, event_2=event_2)
 
     def test_write_plugin(self):
         cat = read_events()
@@ -430,8 +429,7 @@ class TestNordicMethods(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
-                self.assertTrue(test_similarity(event_1=event_1,
-                                                event_2=event_2))
+                _assert_similarity(event_1=event_1, event_2=event_2)
 
     def test_inaccurate_picks(self):
         testing_path = os.path.join(self.testing_path, 'bad_picks.sfile')
@@ -549,10 +547,20 @@ class TestNordicMethods(unittest.TestCase):
                  p.split()[1] == 'HZ'][0].split()[-1]), 30)
 
 
-def test_similarity(event_1, event_2, verbose=False):
+def _assert_similarity(event_1, event_2, verbose=False):
+    """
+    Raise AssertionError if testing similarity fails
+    """
+    if not _test_similarity(event_1, event_2, verbose=verbose):
+        raise AssertionError('Events failed similarity check')
+
+
+def _test_similarity(event_1, event_2, verbose=False):
     """
     Check the similarity of the components of obspy events, discounting
     resource IDs, which are not maintained in nordic files.
+
+    Raise AssertionError if test fails
 
     :type event_1: obspy.core.event.Event
     :param event_1: First event
@@ -560,8 +568,6 @@ def test_similarity(event_1, event_2, verbose=False):
     :param event_2: Comparison event
     :type verbose: bool
     :param verbose: If true and fails will output why it fails.
-
-    :return: bool
     """
     # Check origins
     if len(event_1.origins) != len(event_2.origins):
