@@ -11,7 +11,12 @@ cd /obspy
 # option.
 set -o pipefail
 
-pip install -v -e . 2>&1 | tee /INSTALL_LOG.txt
+if [ $(cat /container_name.txt) == "fedora_26" ]; then
+    python setup.py --with-system-libmseed develop -v 2>&1 | tee /INSTALL_LOG.txt
+else
+    pip install -v -e . 2>&1 | tee /INSTALL_LOG.txt
+fi
+
 if [ $? != 0 ]; then
     echo -e "${red}Installation failed!${no_color}"
 else
