@@ -16,7 +16,7 @@ Reading
 Importing WAV files is done similar to reading any other waveform data
 format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
 the :mod:`obspy.core` module. Examples seismograms files may be found at
-http://examples.obspy.org.
+https://examples.obspy.org.
 
 >>> from obspy import read
 >>> st = read("/path/to/3cssan.near.8.1.RNON.wav")

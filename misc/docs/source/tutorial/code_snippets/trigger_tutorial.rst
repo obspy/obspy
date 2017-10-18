@@ -4,7 +4,7 @@ Trigger/Picker Tutorial
 
 This is a small tutorial that started as a practical for the UNESCO short
 course on triggering. Test data used in this tutorial can be downloaded here:
-`trigger_data.zip <http://examples.obspy.org/trigger_data.zip>`_.
+`trigger_data.zip <https://examples.obspy.org/trigger_data.zip>`_.
 
 The triggers are implemented as described in [Withers1998]_. Information on
 finding the right trigger parameters for STA/LTA type triggers can be found in
@@ -24,7 +24,7 @@ The data files are read into an ObsPy :class:`~obspy.core.trace.Trace` object
 using the :func:`~obspy.core.stream.read()` function.
 
     >>> from obspy.core import read
-    >>> st = read("http://examples.obspy.org/ev0_6.a01.gse2")
+    >>> st = read("https://examples.obspy.org/ev0_6.a01.gse2")
     >>> st = st.select(component="Z")
     >>> tr = st[0]
 
@@ -105,7 +105,7 @@ are the following:
 
     >>> from obspy.core import read
     >>> from obspy.signal.trigger import plot_trigger
-    >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
+    >>> trace = read("https://examples.obspy.org/ev0_6.a01.gse2")[0]
     >>> df = trace.stats.sampling_rate
 
 Classic Sta Lta
@@ -175,7 +175,7 @@ example is available from our web server:
     ...          "BW.UH3..SHZ.D.2010.147.cut.slist.gz",
     ...          "BW.UH4..SHZ.D.2010.147.cut.slist.gz"]
     >>> for filename in files:
-    ...     st += read("http://examples.obspy.org/" + filename)
+    ...     st += read("https://examples.obspy.org/" + filename)
 
 After applying a bandpass filter we run the coincidence triggering on all data.
 In the example a recursive STA/LTA is used. The trigger parameters are set to
@@ -277,7 +277,7 @@ network trigger on vertical components only.
     ...          "BW.UH3..SHE.D.2010.147.cut.slist.gz",
     ...          "BW.UH4..SHZ.D.2010.147.cut.slist.gz"]
     >>> for filename in files:
-    ...     st += read("http://examples.obspy.org/" + filename)
+    ...     st += read("https://examples.obspy.org/" + filename)
     >>> st.filter('bandpass', freqmin=10, freqmax=20)  # optional prefiltering
 
 Here we set up a dictionary with template events for one single station. The
@@ -361,7 +361,7 @@ samples.
 
     >>> from obspy.core import read
     >>> from obspy.signal.trigger import pk_baer
-    >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
+    >>> trace = read("https://examples.obspy.org/ev0_6.a01.gse2")[0]
     >>> df = trace.stats.sampling_rate
     >>> p_pick, phase_info = pk_baer(trace.data, df,
     ...                             20, 60, 7.0, 12.0, 100, 100)
@@ -382,9 +382,9 @@ For :func:`~obspy.signal.trigger.ar_pick`, input and output are in seconds.
 
     >>> from obspy.core import read
     >>> from obspy.signal.trigger import ar_pick
-    >>> tr1 = read('http://examples.obspy.org/loc_RJOB20050801145719850.z.gse2')[0]
-    >>> tr2 = read('http://examples.obspy.org/loc_RJOB20050801145719850.n.gse2')[0]
-    >>> tr3 = read('http://examples.obspy.org/loc_RJOB20050801145719850.e.gse2')[0]
+    >>> tr1 = read('https://examples.obspy.org/loc_RJOB20050801145719850.z.gse2')[0]
+    >>> tr2 = read('https://examples.obspy.org/loc_RJOB20050801145719850.n.gse2')[0]
+    >>> tr3 = read('https://examples.obspy.org/loc_RJOB20050801145719850.e.gse2')[0]
     >>> df = tr1.stats.sampling_rate
     >>> p_pick, s_pick = ar_pick(tr1.data, tr2.data, tr3.data, df,
     ...                          1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2)

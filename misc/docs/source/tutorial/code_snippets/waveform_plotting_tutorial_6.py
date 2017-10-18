@@ -4,7 +4,7 @@ from obspy import read, Stream
 from obspy.geodetics import gps2dist_azimuth
 
 
-host = 'http://examples.obspy.org/'
+host = 'https://examples.obspy.org/'
 # Files (fmt: SAC)
 files = ['TOK.2011.328.21.10.54.OKR01.HHN.inv',
          'TOK.2011.328.21.10.54.OKR02.HHN.inv',

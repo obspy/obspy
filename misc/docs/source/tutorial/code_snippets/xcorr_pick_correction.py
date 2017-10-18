@@ -5,7 +5,7 @@ from obspy.signal.cross_correlation import xcorr_pick_correction
 
 
 # read example data of two small earthquakes
-path = "http://examples.obspy.org/BW.UH1..EHZ.D.2010.147.%s.slist.gz"
+path = "https://examples.obspy.org/BW.UH1..EHZ.D.2010.147.%s.slist.gz"
 st1 = obspy.read(path % ("a", ))
 st2 = obspy.read(path % ("b", ))
 # select the single traces to use in correlation.

@@ -21,7 +21,7 @@ webserver:
     >>> from scipy.cluster import hierarchy
     >>> from scipy.spatial import distance
     >>> 
-    >>> url = "http://examples.obspy.org/dissimilarities.npz"
+    >>> url = "https://examples.obspy.org/dissimilarities.npz"
     >>> with io.BytesIO(urllib.urlopen(url).read()) as fh, np.load(fh) as data:
     ...     dissimilarity = data['dissimilarity']
 
@@ -53,4 +53,4 @@ right-hand subplot:
 
 
 .. _`SciPy`: https://docs.scipy.org/doc/scipy/reference/cluster.html
-.. _`examples webserver`: http://examples.obspy.org
+.. _`examples webserver`: https://examples.obspy.org
