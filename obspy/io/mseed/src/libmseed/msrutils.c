@@ -7,7 +7,7 @@
  *   ORFEUS/EC-Project MEREDIAN
  *   IRIS Data Management Center
  *
- * modified: 2016.286
+ * modified: 2016.283
  ***************************************************************************/
 
 #include <stdio.h>
@@ -571,6 +571,14 @@ msr_starttime_uc (MSRecord *msr)
  * actual last sample time and *not* the time "covered" by the last
  * sample.
  *
+ * On the epoch time scale the value of a leap second is the same as
+ * the second following the leap second, without external information
+ * the values are ambiguous.
+ *
+ * Leap second handling: when a record completely contains a leap
+ * second, starts before and ends after, the calculated end time will
+ * be adjusted (reduced) by one second.
+ *
  * Returns the time of the last sample as a high precision epoch time
  * on success and HPTERROR on error.
  ***************************************************************************/
@@ -592,7 +600,7 @@ msr_endtime (MSRecord *msr)
     while (lslist)
     {
       if (lslist->leapsecond > msr->starttime &&
-          lslist->leapsecond < (msr->starttime + span))
+          lslist->leapsecond <= (msr->starttime + span - HPTMODULUS))
       {
         span -= HPTMODULUS;
         break;

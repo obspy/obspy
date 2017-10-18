@@ -145,7 +145,7 @@ master: (doi: 10.5281/zenodo.165135)
      function is also much faster. (see #1141)
    * Always hook up the libmseed logging to its Python counterpart to avoid
      some rare segfaults. (see #1658)
-   * Update to libmseed v2.19.4 (see #1703, #1780).
+   * Update to libmseed v2.19.5 (see #1703, #1780, #1939).
    * Correctly read MiniSEED files with a data offset of 48 bytes (see #1540).
    * InternalMSEEDReadingError now called InternalMSEEDError and
      InternalMSEEDReadingWarning now called InternalMSEEDWarning as both
@@ -193,6 +193,8 @@ master: (doi: 10.5281/zenodo.165135)
      available via `PPSD.psd_values` property (see #1327)
    * Fixed bug in `rotate2zne()` for non-orthogonal configurations
      (see #1913, #1927).
+   * Fixed build warnings in evalresp, partially backported from evalresp
+     4.0.6 (see #1939).
  - obspy.taup:
    * Add obspy.taup.taup_geo.calc_dist_azi, a function to return the distance,
      azimuth and backazimuth for a source - receiver pair. (see #1538)
