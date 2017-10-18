@@ -35,6 +35,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-numpy \
     python-pip \
     python-pyproj \
+    python-pyshp \
     python-requests \
     python-scipy \
     python-setuptools \
@@ -54,6 +55,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-numpy \
     python3-pip \
     python3-pyproj \
+    python3-pyshp \
     python3-requests \
     python3-scipy \
     python3-sqlalchemy \

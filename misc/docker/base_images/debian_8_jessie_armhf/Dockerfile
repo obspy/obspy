@@ -5,6 +5,9 @@ MAINTAINER Tobias Megies
 # Set the env variables to non-interactive
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NOWARNINGS=yes
 
+# Fix potentially wrong repo address and fetch public key for signed repo
+RUN sed 's#deb[ ]\+[^ ]\+ \(.*\)#deb http://archive.raspbian.org/raspbian/ \1#' /etc/apt/sources.list --in-place
+
 # install packages to install obspy and build deb packages
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get update && apt-get -y --no-install-recommends install \
@@ -35,6 +38,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-numpy \
     python-pip \
     python-pyproj \
+    python-pyshp \
     python-requests \
     python-scipy \
     python-setuptools \
@@ -54,6 +58,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-numpy \
     python3-pip \
     python3-pyproj \
+    python3-pyshp \
     python3-requests \
     python3-scipy \
     python3-sqlalchemy \

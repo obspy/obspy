@@ -12,7 +12,7 @@ from scipy.spatial import distance
 from obspy.imaging.cm import obspy_sequential
 
 
-url = "https://examples.obspy.org/dissimilarities.npz"
+url = "http://examples.obspy.org/dissimilarities.npz"
 with io.BytesIO(urlopen(url).read()) as fh, np.load(fh) as data:
     dissimilarity = data['dissimilarity']
 

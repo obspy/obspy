@@ -526,8 +526,9 @@ double r, i;
 *=================================================================*/
 void norm_resp(struct channel *chan, int start_stage, int stop_stage,
                int hide_sensitivity_mismatch_warning) {
+  // TODO - NULL assignments below made blindly to fix compiler warning.  bug?
   struct stage *stage_ptr;
-  struct blkt *fil, *last_fil, *main_filt;
+  struct blkt *fil, *last_fil = NULL, *main_filt = NULL;
   int i, main_type, reset_gain, skipped_stages = 0;
   double w,  f;
   double  percent_diff;

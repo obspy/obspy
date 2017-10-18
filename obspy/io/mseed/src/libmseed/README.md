@@ -56,3 +56,5 @@ in the ChangeLog.
 
 This library also uses code bits published in the public domain and
 acknowledgement is included in the code whenever possible.
+
+With software provided by http://2038bug.com/ (site offline, checked Oct. 2017)

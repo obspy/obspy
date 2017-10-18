@@ -7,7 +7,6 @@ import collections
 import io
 import itertools
 import os
-import sys
 import unittest
 import warnings
 
@@ -843,29 +842,6 @@ class CoreTestCase(unittest.TestCase):
                 t_samp=None, frequencies=frequencies, filename=filename,
                 date=t, units=unit)
             r = obspy.read_inventory(filename)[0][0][0].response
-            i_r = r.get_evalresp_response_for_frequencies(
-                frequencies=frequencies, output=unit)
-            np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
-
-    @unittest.skipIf(sys.platform == "win32",
-                     "Test crashes Python on Windows.")
-    def test_response_54_without_58(self):
-        """
-        Regression test as blockette 54 might not be followed by blockette 58.
-        """
-        filename = os.path.join(self.data_path, "RESP.blockette_54_without_58")
-        frequencies = np.logspace(-3, 3, 20)
-
-        # Set the times for the response.
-        t = obspy.UTCDateTime(2005, 1, 1)
-
-        for unit in ("DISP", "VEL", "ACC"):
-            e_r = evalresp_for_frequencies(
-                t_samp=None, frequencies=frequencies, filename=filename,
-                date=t, units=unit)
-            # Catch warning.
-            with warnings.catch_warnings(record=True):
-                r = obspy.read_inventory(filename)[0][0][0].response
             i_r = r.get_evalresp_response_for_frequencies(
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))

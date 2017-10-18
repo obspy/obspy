@@ -45,7 +45,7 @@ URL_MAPPINGS = {
     "GEONET": "http://service.geonet.org.nz",
     "GFZ": "http://geofon.gfz-potsdam.de",
     "ICGC": "http://ws.icgc.cat",
-    "INGV": "http://webservices.rm.ingv.it",
+    "INGV": "http://webservices.ingv.it",
     "IPGP": "http://eida.ipgp.fr",
     "IRIS": "http://service.iris.edu",
     "ISC": "http://isc-mirror.iris.washington.edu",

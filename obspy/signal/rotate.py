@@ -131,36 +131,19 @@ def rotate_lqt_zne(l, q, t, ba, inc):
     return z, n, e
 
 
-def _dip_azimuth2zse_base_vector(dip, azimuth):
+def _dip_azimuth2zne_base_vector(dip, azimuth):
     """
     Helper function converting a vector described with azimuth and dip of unit
-    length to a vector in the ZSE (Vertical, South, East) base.
+    length to a vector in the ZNE (Vertical, North, East) base.
 
     The definition of azimuth and dip is according to the SEED reference
-    manual, as are the following examples (they use rounding for small
-    numerical inaccuracies - also positive and negative zero are treated as
-    equal):
-
-    >>> r = lambda x: np.array([_i if _i != -0.0 else 0.0\
-        for _i in np.round(x, 10)])
-    >>> r(_dip_azimuth2zse_base_vector(-90, 0)) #doctest: +NORMALIZE_WHITESPACE
-    array([ 1., 0., 0.])
-    >>> r(_dip_azimuth2zse_base_vector(90, 0)) #doctest: +NORMALIZE_WHITESPACE
-    array([-1., 0., 0.])
-    >>> r(_dip_azimuth2zse_base_vector(0, 0)) #doctest: +NORMALIZE_WHITESPACE
-    array([ 0., -1., 0.])
-    >>> r(_dip_azimuth2zse_base_vector(0, 180)) #doctest: +NORMALIZE_WHITESPACE
-    array([ 0., 1., 0.])
-    >>> r(_dip_azimuth2zse_base_vector(0, 90)) #doctest: +NORMALIZE_WHITESPACE
-    array([ 0., 0., 1.])
-    >>> r(_dip_azimuth2zse_base_vector(0, 270)) #doctest: +NORMALIZE_WHITESPACE
-    array([ 0., 0., -1.])
+    manual.
     """
     dip = np.deg2rad(dip)
     azimuth = np.deg2rad(azimuth)
 
     return np.array([-np.sin(dip),
-                     -np.cos(azimuth) * np.cos(dip),
+                     np.cos(azimuth) * np.cos(dip),
                      np.sin(azimuth) * np.cos(dip)])
 
 
@@ -220,33 +203,39 @@ def rotate2zne(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
         msg = "All three data arrays must be of same length."
         raise ValueError(msg)
 
-    # Internally works in Vertical, South, and East components; a right handed
-    # coordinate system.
-
     # Define the base vectors of the old base in terms of the new base vectors.
-    base_vector_1 = _dip_azimuth2zse_base_vector(dip_1, azimuth_1)
-    base_vector_2 = _dip_azimuth2zse_base_vector(dip_2, azimuth_2)
-    base_vector_3 = _dip_azimuth2zse_base_vector(dip_3, azimuth_3)
+    base_vector_1 = _dip_azimuth2zne_base_vector(dip_1, azimuth_1)
+    base_vector_2 = _dip_azimuth2zne_base_vector(dip_2, azimuth_2)
+    base_vector_3 = _dip_azimuth2zne_base_vector(dip_3, azimuth_3)
 
-    # Build transformation matrix.
-    _t = np.matrix([base_vector_1, base_vector_2, base_vector_3]).transpose()
+    # Base change matrix.
+    m = np.array([base_vector_1,
+                  base_vector_2,
+                  base_vector_3])
+
+    # Determinant gives the volume change of a unit cube going from one
+    # basis to the next. It should neither be too small nor to large. These
+    # here are arbitrary limits.
+    if not (1E-6 < abs(np.linalg.det(m)) < 1E6):
+        raise ValueError("The given directions are not linearly independent, "
+                         "at least within numerical precision. Determinant "
+                         "of the base change matrix: %g" % np.linalg.det(m))
 
     if not inverse:
-        x, y, z = np.dot(_t, [data_1, data_2, data_3])
-        y *= -1
-    else:
-        x, y, z = np.dot(np.linalg.inv(_t), [data_1, -data_2, data_3])
+        m = np.linalg.inv(m)
+
+    z, n, e = np.dot(m, [data_1, data_2, data_3])
 
     # Replace all negative zeros. These might confuse some further
     # processing programs.
-    x = np.array(x).ravel()
-    x[x == -0.0] = 0
-    y = np.array(y).ravel()
-    y[y == -0.0] = 0
     z = np.array(z).ravel()
     z[z == -0.0] = 0
+    n = np.array(n).ravel()
+    n[n == -0.0] = 0
+    e = np.array(e).ravel()
+    e[e == -0.0] = 0
 
-    return x, y, z
+    return z, n, e
 
 
 if __name__ == '__main__':

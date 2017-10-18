@@ -1255,7 +1255,9 @@ class StationTestCase(unittest.TestCase):
 
         with mock.patch("obspy.clients.fdsn.mass_downloader"
                         ".utils.safe_delete") as p1, \
-                mock.patch("obspy.io.mseed.util.get_start_and_end_time") as p2:
+                mock.patch("obspy.io.mseed.util.get_start_and_end_time") \
+                as p2, \
+                mock.patch("os.path.isfile") as p_isfile:  # NOQA
             p2.return_value = (obspy.UTCDateTime(1), obspy.UTCDateTime(2))
             # By default, nothing will happen.
             station.sanitize_downloads(logger)

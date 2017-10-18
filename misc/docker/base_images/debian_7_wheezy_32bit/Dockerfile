@@ -21,7 +21,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python \
     python-decorator \
     python-dev \
-    python-gdal \
     python-geographiclib \
     python-imaging \
     python-jsonschema \
@@ -35,6 +34,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-numpy \
     python-pip \
     python-pyproj \
+    python-pyshp \
     python-requests \
     python-scipy \
     python-setuptools \

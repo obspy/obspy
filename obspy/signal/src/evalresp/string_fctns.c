@@ -788,15 +788,16 @@ char line[500];
 		break;
    }
   if (strncmp (line, "B054F10", 7) == 0)	{
-	for (i=0; i<4; i++)
+	for (i=0; i<4; i++) {
 		result = fscanf(fp, "%s", line);
-		if (result != 1)
-			return 0;
-		denoms = atoi (line);
-		if (denoms == 0)
-			result = 0;
-		else
-			result = 1;
+	}
+	if (result != 1)
+		return 0;
+	denoms = atoi (line);
+	if (denoms == 0)
+		result = 0;
+	else
+		result = 1;
   }
  else 
 	result = 0;

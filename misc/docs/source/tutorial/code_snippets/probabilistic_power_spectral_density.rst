@@ -18,7 +18,7 @@ Read data and select a trace with the desired station/channel combination:
 
 .. doctest::
 
-    >>> st = read("https://examples.obspy.org/BW.KW1..EHZ.D.2011.037")
+    >>> st = read("http://examples.obspy.org/BW.KW1..EHZ.D.2011.037")
     >>> tr = st.select(id="BW.KW1..EHZ")[0]
 
 Metadata can be provided as an
@@ -32,7 +32,7 @@ probabilistic psd statistics.
 
 .. doctest::
 
-    >>> parser = Parser("https://examples.obspy.org/dataless.seed.BW_KW1")
+    >>> parser = Parser("http://examples.obspy.org/dataless.seed.BW_KW1")
     >>> ppsd = PPSD(tr.stats, metadata=parser)
 
 Now we can add data (either trace or stream objects) to the ppsd estimate. This
@@ -69,7 +69,7 @@ Additional information from other files/sources can be added step by step.
 
 .. doctest::
 
-    >>> st = read("https://examples.obspy.org/BW.KW1..EHZ.D.2011.038")
+    >>> st = read("http://examples.obspy.org/BW.KW1..EHZ.D.2011.038")
     >>> ppsd.add(st)
     True
         

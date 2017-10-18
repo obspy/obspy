@@ -243,7 +243,8 @@ void print_resp_itp(double *freqs, int nfreqs, struct response *first,
                 double listinterp_tension, int unwrap_flag) {
   int i;
   double amp, pha;
-  char filename[MAXLINELEN];
+  /* Space for "SPECTRA." + station.network.location.channel + NUL */
+  char filename[8+STALEN+1+NETLEN+1+LOCIDLEN+1+CHALEN+1];
   FILE *fptr1, *fptr2;
   struct response *resp;
   struct complex *output;

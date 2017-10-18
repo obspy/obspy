@@ -45,6 +45,7 @@ Lecocq, Thomas
 Leeman, John
 Legovini, Paride
 Lesage, Philippe
+Li, Yulin
 Lomax, Anthony
 Lopes, Rui L.
 MacCarthy, Jonathan
@@ -75,6 +76,7 @@ Stange, Stefan
 Sullivan, Benjamin
 Tian, Dongdong
 Trabant, Chad
+Trani, Luca
 Uieda, Leonardo
 Walker, Andrew
 Walther, Marcus

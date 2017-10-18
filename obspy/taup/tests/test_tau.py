@@ -294,8 +294,8 @@ class TauPyModelTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(expected[:, 2],
                                        p_arr.pierce['time'], 1)
 
-    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
-                     'Module geographiclib is not installed')
+    @unittest.skipIf(not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
+                     'test needs geographiclib >= 1.34')
     def test_pierce_p_iasp91_geo(self):
         """
         Test single pierce point against output from TauP using geo data.
@@ -525,8 +525,8 @@ class TauPyModelTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(interpolated_actual,
                                     interpolated_expected, rtol=1E-4, atol=0))
 
-    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
-                     'Module geographiclib is not installed')
+    @unittest.skipIf(not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
+                     'test needs geographiclib >= 1.34')
     def test_single_path_geo_iasp91(self):
         """
         Test the raypath for a single phase given geographical input.

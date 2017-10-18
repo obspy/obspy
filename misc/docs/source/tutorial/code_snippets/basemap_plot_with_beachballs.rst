@@ -56,7 +56,7 @@ our SRTM data file (from CGIAR_) look like this::
 
 .. _basemap: http://matplotlib.org/basemap/
 .. _download: http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/
-.. _here: https://examples.obspy.org/srtm_1240-1300E_4740-4750N.asc.gz
+.. _here: http://examples.obspy.org/srtm_1240-1300E_4740-4750N.asc.gz
 .. _CGIAR: http://srtm.csi.cgiar.org/
 .. _NumPy: http://www.numpy.org/
 .. _GDAL: https://trac.osgeo.org/gdal/wiki/GdalOgrInPython

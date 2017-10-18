@@ -5,7 +5,7 @@ import obspy
 import obspy.signal
 
 
-st = obspy.read("https://examples.obspy.org/RJOB_061005_072159.ehz.new")
+st = obspy.read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
 data = st[0].data
 npts = st[0].stats.npts
 samprate = st[0].stats.sampling_rate

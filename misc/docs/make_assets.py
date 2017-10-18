@@ -15,23 +15,23 @@ import sys
 CDN_URL = 'https://netdna.bootstrapcdn.com/bootstrap/3.1.1/'
 
 ASSETS = {
-    'source/_static/css/base.css': 'https://tests.obspy.org/static/base.css',
+    'source/_static/css/base.css': 'http://tests.obspy.org/static/base.css',
 
     'source/_static/font.css':
-        'https://tests.obspy.org/static/font/style.css',
+        'http://tests.obspy.org/static/font/style.css',
     'source/_static/fonts/icomoon.eot':
-        'https://tests.obspy.org/static/font/fonts/icomoon.eot',
+        'http://tests.obspy.org/static/font/fonts/icomoon.eot',
     'source/_static/fonts/icomoon.svg':
-        'https://tests.obspy.org/static/font/fonts/icomoon.svg',
+        'http://tests.obspy.org/static/font/fonts/icomoon.svg',
     'source/_static/fonts/icomoon.ttf':
-        'https://tests.obspy.org/static/font/fonts/icomoon.ttf',
+        'http://tests.obspy.org/static/font/fonts/icomoon.ttf',
     'source/_static/fonts/icomoon.woff':
-        'https://tests.obspy.org/static/font/fonts/icomoon.woff',
+        'http://tests.obspy.org/static/font/fonts/icomoon.woff',
 
     'source/_templates/navbar-local.html':
-        'https://tests.obspy.org/snippets/navbar.html',
+        'http://tests.obspy.org/snippets/navbar.html',
     'source/_templates/footer.html':
-        'https://tests.obspy.org/snippets/footer.html',
+        'http://tests.obspy.org/snippets/footer.html',
 
     'source/_static/css/bootstrap.min.css':
         CDN_URL + 'css/bootstrap.min.css',

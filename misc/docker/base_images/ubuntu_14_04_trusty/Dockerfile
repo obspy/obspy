@@ -22,7 +22,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-decorator \
     python-dev \
     python-flake8 \
-    python-gdal \
     python-geographiclib \
     python-imaging \
     python-jsonschema \
@@ -36,6 +35,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-numpy \
     python-pip \
     python-pyproj \
+    python-pyshp \
     python-requests \
     python-scipy \
     python-setuptools \
@@ -45,16 +45,15 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-decorator \
     python3-dev \
     python3-flake8 \
-    python3-gdal \
     python3-jsonschema \
     python3-lxml \
     python3-matplotlib \
     python3-mock \
-    python3-mpltoolkits.basemap \
     python3-nose \
     python3-numpy \
     python3-pip \
     python3-pyproj \
+    python3-pyshp \
     python3-requests \
     python3-scipy \
     python3-sqlalchemy \

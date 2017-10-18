@@ -33,11 +33,13 @@ class WADLParser(object):
         self.nsmap = doc.nsmap
         self._ns = self.nsmap.get(None, None)
         self.parameters = {}
+        self._has_eida_auth = False
 
         # Get the url.
         url = self._xpath(doc, "/application/resources")[0].get("base")
         if "dataselect" in url:
             self._wadl_type = "dataselect"
+            self._has_eida_auth = self._check_for_eida_auth(doc)
         elif "station" in url:
             self._wadl_type = "station"
         elif "event" in url:
@@ -236,6 +238,10 @@ class WADLParser(object):
             nsmap.pop(None, None)
             nsmap[default_abbreviation] = self._ns
         return doc.xpath(expr, namespaces=nsmap)
+
+    def _check_for_eida_auth(self, doc):
+        auth_endpoint = self._xpath(doc, '//resources/resource[@path="auth"]')
+        return auth_endpoint and True or False
 
 
 if __name__ == '__main__':

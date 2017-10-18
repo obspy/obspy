@@ -20,6 +20,7 @@ from obspy.core.event import (
     ConfidenceEllipsoid, QuantityError, FocalMechanism, MomentTensor,
     NodalPlane, NodalPlanes, ResourceIdentifier, Tensor)
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.io.nordic.core import (
     _is_sfile, read_spectral_info, read_nordic, readwavename, blanksfile,
     _write_nordic, nordpick, readheader, _int_conv, _readheader, _evmagtonor,
@@ -49,16 +50,16 @@ class TestNordicMethods(unittest.TestCase):
         test_cat = Catalog()
         test_cat += test_event
         # Check the read-write s-file functionality
-        sfile = _write_nordic(
-            test_cat[0], filename=None, userid='TEST', evtype='L', outdir='.',
-            wavefiles='test', explosion=True, overwrite=True)
-        self.assertEqual(readwavename(sfile), ['test'])
-        read_cat = Catalog()
-        # raises "UserWarning: AIN in header, currently unsupported"
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', UserWarning)
-            read_cat += read_nordic(sfile)
-        os.remove(sfile)
+        with TemporaryWorkingDirectory():
+            sfile = _write_nordic(test_cat[0], filename=None, userid='TEST',
+                                  evtype='L', outdir='.', wavefiles='test',
+                                  explosion=True, overwrite=True)
+            self.assertEqual(readwavename(sfile), ['test'])
+            read_cat = Catalog()
+            # raises "UserWarning: AIN in header, currently unsupported"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                read_cat += read_nordic(sfile)
         read_ev = read_cat[0]
         test_ev = test_cat[0]
         for read_pick, test_pick in zip(read_ev.picks, test_ev.picks):
@@ -200,40 +201,39 @@ class TestNordicMethods(unittest.TestCase):
 
     def test_blanksfile(self):
         st = read()
-        testing_path = 'Temporary_wavefile'
-        st.write(testing_path, format='MSEED')
-        sfile = blanksfile(testing_path, 'L', 'TEST', overwrite=True)
-        self.assertTrue(os.path.isfile(sfile))
-        os.remove(sfile)
-        sfile = blanksfile(testing_path, 'L', 'TEST', overwrite=True,
-                           evtime=UTCDateTime())
-        self.assertTrue(os.path.isfile(sfile))
-        os.remove(sfile)
-        with self.assertRaises(NordicParsingError):
-            # No wavefile
-            blanksfile('albert', 'L', 'TEST', overwrite=True)
-        with self.assertRaises(NordicParsingError):
-            # USER ID too long
-            blanksfile(testing_path, 'L', 'TESTICLE', overwrite=True)
-        with self.assertRaises(NordicParsingError):
-            # Unknown event type
-            blanksfile(testing_path, 'U', 'TEST', overwrite=True)
-        # Check that it breaks when writing multiple versions
-        sfiles = []
-        for _i in range(10):
-            # raises UserWarning: Desired sfile exists, will not overwrite
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore', UserWarning)
-                sfiles.append(blanksfile(testing_path, 'L', 'TEST'))
-        with self.assertRaises(NordicParsingError):
-            # raises UserWarning: Desired sfile exists, will not overwrite
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore', UserWarning)
-                blanksfile(testing_path, 'L', 'TEST')
-        for sfile in sfiles:
+        with TemporaryWorkingDirectory():
+            testing_path = 'Temporary_wavefile'
+            st.write(testing_path, format='MSEED')
+            sfile = blanksfile(testing_path, 'L', 'TEST', overwrite=True)
             self.assertTrue(os.path.isfile(sfile))
             os.remove(sfile)
-        os.remove(testing_path)
+            sfile = blanksfile(testing_path, 'L', 'TEST', overwrite=True,
+                               evtime=UTCDateTime())
+            self.assertTrue(os.path.isfile(sfile))
+            os.remove(sfile)
+            with self.assertRaises(NordicParsingError):
+                # No wavefile
+                blanksfile('albert', 'L', 'TEST', overwrite=True)
+            with self.assertRaises(NordicParsingError):
+                # USER ID too long
+                blanksfile(testing_path, 'L', 'TESTICLE', overwrite=True)
+            with self.assertRaises(NordicParsingError):
+                # Unknown event type
+                blanksfile(testing_path, 'U', 'TEST', overwrite=True)
+            # Check that it breaks when writing multiple versions
+            sfiles = []
+            for _i in range(10):
+                # raises UserWarning: Desired sfile exists, will not overwrite
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', UserWarning)
+                    sfiles.append(blanksfile(testing_path, 'L', 'TEST'))
+            with self.assertRaises(NordicParsingError):
+                # raises UserWarning: Desired sfile exists, will not overwrite
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', UserWarning)
+                    blanksfile(testing_path, 'L', 'TEST')
+            for sfile in sfiles:
+                self.assertTrue(os.path.isfile(sfile))
 
     def test_write_empty(self):
         """
@@ -248,10 +248,11 @@ class TestNordicMethods(unittest.TestCase):
             _write_nordic(test_event, filename=None, userid='TEST', evtype='L',
                           outdir='.', wavefiles='test')
         test_event.origins[0].time = UTCDateTime()
-        test_sfile = _write_nordic(test_event, filename=None, userid='TEST',
-                                   evtype='L', outdir='.', wavefiles='test')
-        self.assertTrue(os.path.isfile(test_sfile))
-        os.remove(test_sfile)
+        with TemporaryWorkingDirectory():
+            test_sfile = _write_nordic(test_event, filename=None,
+                                       userid='TEST', evtype='L', outdir='.',
+                                       wavefiles='test')
+            self.assertTrue(os.path.isfile(test_sfile))
 
     def test_read_empty_header(self):
         """
@@ -296,7 +297,7 @@ class TestNordicMethods(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 tagged_lines = _get_line_tags(f=f)
                 head_2 = _readheader(head_lines=tagged_lines['1'])
-        self.assertTrue(test_similarity(head_1, head_2))
+        _assert_similarity(head_1, head_2)
 
     def test_missing_header(self):
         # Check that a suitable error is raised
@@ -316,7 +317,7 @@ class TestNordicMethods(unittest.TestCase):
             file_object.close()
 
             ref_cat = read_events(filename)
-            self.assertTrue(test_similarity(cat[0], ref_cat[0]))
+            _assert_similarity(cat[0], ref_cat[0])
 
     def test_reading_bytes_io(self):
         filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
@@ -331,7 +332,7 @@ class TestNordicMethods(unittest.TestCase):
             file_object.close()
 
             ref_cat = read_events(filename)
-            self.assertTrue(test_similarity(cat[0], ref_cat[0]))
+            _assert_similarity(cat[0], ref_cat[0])
 
     def test_corrupt_header(self):
         filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
@@ -349,13 +350,12 @@ class TestNordicMethods(unittest.TestCase):
         event = full_test_event()
         # Try to write the same event multiple times, but not overwrite
         sfiles = []
-        for _i in range(59):
-            sfiles.append(_write_nordic(event=event, filename=None,
-                                        overwrite=False))
-        with self.assertRaises(NordicParsingError):
-            _write_nordic(event=event, filename=None, overwrite=False)
-        for sfile in sfiles:
-            os.remove(sfile)
+        with TemporaryWorkingDirectory():
+            for _i in range(59):
+                sfiles.append(_write_nordic(event=event, filename=None,
+                                            overwrite=False))
+            with self.assertRaises(NordicParsingError):
+                _write_nordic(event=event, filename=None, overwrite=False)
 
     def test_mag_conv(self):
         """
@@ -417,8 +417,7 @@ class TestNordicMethods(unittest.TestCase):
                 raise(NordicParsingError("format is wrong somehow"))
             cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
-                self.assertTrue(test_similarity(event_1=event_1,
-                                                event_2=event_2))
+                _assert_similarity(event_1=event_1, event_2=event_2)
 
     def test_write_plugin(self):
         cat = read_events()
@@ -433,8 +432,7 @@ class TestNordicMethods(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
-                self.assertTrue(test_similarity(event_1=event_1,
-                                                event_2=event_2))
+                _assert_similarity(event_1=event_1, event_2=event_2)
 
     def test_more_than_three_mags(self):
         cat = Catalog()
@@ -583,10 +581,20 @@ class TestNordicMethods(unittest.TestCase):
         # TODO: Test mapping for known result.
 
 
-def test_similarity(event_1, event_2, verbose=False):
+def _assert_similarity(event_1, event_2, verbose=False):
+    """
+    Raise AssertionError if testing similarity fails
+    """
+    if not _test_similarity(event_1, event_2, verbose=verbose):
+        raise AssertionError('Events failed similarity check')
+
+
+def _test_similarity(event_1, event_2, verbose=False):
     """
     Check the similarity of the components of obspy events, discounting
     resource IDs, which are not maintained in nordic files.
+
+    Raise AssertionError if test fails
 
     :type event_1: obspy.core.event.Event
     :param event_1: First event
@@ -594,8 +602,6 @@ def test_similarity(event_1, event_2, verbose=False):
     :param event_2: Comparison event
     :type verbose: bool
     :param verbose: If true and fails will output why it fails.
-
-    :return: bool
     """
     # Check origins
     if len(event_1.origins) != len(event_2.origins):

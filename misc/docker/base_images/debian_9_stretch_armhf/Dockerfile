@@ -7,6 +7,18 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_PRIORITY=critical
 ENV DEBCONF_NOWARNINGS=yes
 
+# Fix potentially wrong repo address and fetch public key for signed repo
+RUN sed 's#deb[ ]\+[^ ]\+ \(.*\)#deb http://archive.raspbian.org/raspbian/ \1#' /etc/apt/sources.list --in-place
+
+# On our Debian stretch Raspbian armhf image, we're currently suffering from this bug:
+# https://bugs.launchpad.net/ubuntu/+source/apt/+bug/1577926
+# The workaround described here works:
+# https://bugs.launchpad.net/ubuntu/+source/apt/+bug/1577926/comments/10
+# To me looks like this is no security breach, just internally not using _apt
+# user but root for package look ups. Can't see how this could breach security
+# of checking the repository/package signatures.
+RUN echo '' >> /etc/apt/apt.conf && echo 'APT::Sandbox::User "root";' >> /etc/apt/apt.conf
+
 # install packages to install obspy and build deb packages
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get update && apt-get -y --no-install-recommends install \
@@ -25,7 +37,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-decorator \
     python-dev \
     python-flake8 \
-    python-gdal \
     python-geographiclib \
     python-imaging \
     python-jsonschema \
@@ -39,6 +50,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-numpy \
     python-pip \
     python-pyproj \
+    python-pyshp \
     python-requests \
     python-scipy \
     python-setuptools \
@@ -50,7 +62,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-decorator \
     python3-dev \
     python3-flake8 \
-    python3-gdal \
     python3-geographiclib \
     python3-jsonschema \
     python3-lxml \
@@ -61,6 +72,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-numpy \
     python3-pip \
     python3-pyproj \
+    python3-pyshp \
     python3-requests \
     python3-scipy \
     python3-setuptools \

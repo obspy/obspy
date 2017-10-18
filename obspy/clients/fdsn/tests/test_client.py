@@ -12,6 +12,7 @@ The obspy.clients.fdsn.client test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY2
 
 import io
 import os
@@ -21,13 +22,19 @@ import unittest
 import warnings
 from difflib import Differ
 
+if PY2:
+    import urllib2 as urllib_request
+else:
+    import urllib.request as urllib_request
+
 import lxml
+import numpy as np
 import requests
 
-from obspy import UTCDateTime, read, read_inventory
+from obspy import UTCDateTime, read, read_inventory, Stream, Trace
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.clients.fdsn import Client
+from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNException, FDSNRedirectException,
@@ -516,6 +523,14 @@ class ClientTestCase(unittest.TestCase):
         for query, filename in zip(queries, result_files):
             # test output to stream
             got = client.get_waveforms(*query)
+            # Assert that the meta-information about the provider is stored.
+            for tr in got:
+                self.assertEqual(
+                    tr.stats._fdsnws_dataselect_url,
+                    client.base_url + "/fdsnws/dataselect/1/query")
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
             self.assertEqual(got, expected, "Dataselect failed for query %s" %
@@ -543,6 +558,9 @@ class ClientTestCase(unittest.TestCase):
         got = client.get_waveforms(*query)
         file_ = os.path.join(self.datapath, filename)
         expected = read(file_)
+        # Remove fdsnws URL as it is not in the data from the disc.
+        for tr in got:
+            del tr.stats._fdsnws_dataselect_url
         self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_conflicting_params(self):
@@ -655,6 +673,9 @@ class ClientTestCase(unittest.TestCase):
         for client in clients:
             # test output to stream
             got = client.get_waveforms_bulk(bulk, **params)
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
             with NamedTemporaryFile() as tf:
@@ -671,6 +692,19 @@ class ClientTestCase(unittest.TestCase):
         for client in clients:
             # test output to stream
             got = client.get_waveforms_bulk(bulk)
+            # Assert that the meta-information about the provider is stored.
+            for tr in got:
+                if client.user:
+                    self.assertEqual(
+                        tr.stats._fdsnws_dataselect_url,
+                        client.base_url + "/fdsnws/dataselect/1/queryauth")
+                else:
+                    self.assertEqual(
+                        tr.stats._fdsnws_dataselect_url,
+                        client.base_url + "/fdsnws/dataselect/1/query")
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
             with NamedTemporaryFile() as tf:
@@ -683,10 +717,16 @@ class ClientTestCase(unittest.TestCase):
                 with open(tf.name, "wt") as fh:
                     fh.write(bulk)
                 got = client.get_waveforms_bulk(bulk)
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             self.assertEqual(got, expected, failmsg(got, expected))
         # test cases for providing a file-like object
         for client in clients:
             got = client.get_waveforms_bulk(io.StringIO(bulk))
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
             self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_station_bulk(self):
@@ -1183,6 +1223,135 @@ class ClientTestCase(unittest.TestCase):
                           starttime=UTCDateTime("2001-01-07T01:00:00"),
                           endtime=UTCDateTime("2001-01-07T01:01:00"),
                           minmagnitude=8)
+
+    def test_eida_token_resolution(self):
+        """
+        Tests that EIDA tokens are resolved correctly and new credentials get
+        installed with the opener of the Client.
+        """
+        token = os.path.join(self.datapath, 'eida_token.txt')
+        with open(token, 'rb') as fh:
+            token_data = fh.read().decode()
+
+        def _assert_eida_user_and_password(user, password):
+            # user/pass is not static for the static test token
+            for value in user, password:
+                # seems safe to assume both user and password are at least 10
+                # chars long
+                # example user/password:
+                # wWGgJnH4GvdVY7gDMH21xEpb wDnzlpljqdaCXlP2
+                re.match('^[a-zA-Z0-9]{10,}$', value)
+
+        def _get_http_digest_auth_handler(client):
+            handlers = [h for h in client._url_opener.handlers
+                        if isinstance(h, urllib_request.HTTPDigestAuthHandler)]
+            self.assertLessEqual(len(handlers), 1)
+            return handlers and handlers[0] or None
+
+        def _assert_credentials(client, user, password):
+            handler = _get_http_digest_auth_handler(client)
+            self.assertIsInstance(handler,
+                                  urllib_request.HTTPDigestAuthHandler)
+            for user_, password_ in handler.passwd.passwd[None].values():
+                self.assertEqual(user, user_)
+                self.assertEqual(password, password_)
+
+        client = Client('GFZ')
+        # this is a plain client, so it should not have http digest auth
+        self.assertEqual(_get_http_digest_auth_handler(client), None)
+        # now, if we set new user/password, we should get a http digest auth
+        # handler
+        user, password = ("spam", "eggs")
+        client._set_opener(user=user, password=password)
+        _assert_credentials(client, user, password)
+        # now, if we resolve the EIDA token, the http digest auth handler
+        # should change
+        user, password = client._resolve_eida_token(token=token)
+        _assert_eida_user_and_password(user, password)
+        client._set_opener(user=user, password=password)
+        _assert_credentials(client, user, password)
+        # do it again, now providing the token data directly as a string (first
+        # change the authentication again to dummy user/password
+        client._set_opener(user="foo", password="bar")
+        _assert_credentials(client, "foo", "bar")
+        user, password = client._resolve_eida_token(token=token_data)
+        _assert_eida_user_and_password(user, password)
+        client.set_eida_token(token_data)
+        _assert_credentials(client, user, password)
+
+        # Raise if token and user/pw are given.
+        with self.assertRaises(FDSNException) as err:
+            Client('GFZ', eida_token=token, user="foo", password="bar")
+        self.assertEqual(
+            err.exception.args[0],
+            "EIDA authentication token provided, but user and password are "
+            "also given.")
+
+        # now lets test the RoutingClient with credentials..
+        credentials_ = {'geofon.gfz-potsdam.de': {'eida_token': token}}
+        credentials_mapping_ = {'GFZ': {'eida_token': token}}
+        global_eida_credentials_ = {'EIDA_TOKEN': token}
+        for credentials, should_have_credentials in zip(
+                (None, credentials_, credentials_mapping_,
+                 global_eida_credentials_), (False, True, True, True)):
+            def side_effect(self_, *args, **kwargs):
+                """
+                This mocks out Client.get_waveforms_bulk which gets called by
+                the routing client, checks authentication handlers and returns
+                a dummy stream.
+                """
+                # check that we're at the expected FDSN WS server
+                self.assertEqual('http://geofon.gfz-potsdam.de',
+                                 self_.base_url)
+                # check if credentials were used
+                # eida auth availability should be positive in all cases
+                self.assertTrue(self_._has_eida_auth)
+                # depending on whether we specified credentials, the
+                # underlying FDSN client should have EIDA authentication
+                # flag and should also have a HTTP digest handler with
+                # appropriate user/password
+                handler = _get_http_digest_auth_handler(self_)
+                if should_have_credentials:
+                    for user, password in handler.passwd.passwd[None].values():
+                        _assert_eida_user_and_password(user, password)
+                else:
+                    self.assertEqual(handler, None)
+                # just always return some dummy stream, we're not
+                # interested in checking the data downloading which
+                # succeeds regardless if auth is used or not as it's public
+                # data
+                return Stream([Trace(data=np.ones(2))])
+
+            with mock.patch(
+                    'obspy.clients.fdsn.client.Client.get_waveforms_bulk',
+                    autospec=True) as p:
+
+                p.side_effect = side_effect
+
+                routing_client = RoutingClient('eida-routing',
+                                               credentials=credentials)
+                # do a waveform request on the routing client which internally
+                # connects to the GFZ FDSNWS. this should be done using the
+                # above supplied credentials, i.e. should use the given EIDA
+                # token to resolve user/password for the normal FDSN queryauth
+                # mechanism
+                routing_client.get_waveforms(
+                    network="GE", station="KMBO", location="00", channel="BHZ",
+                    starttime=UTCDateTime("2010-02-27T06:30:00.000"),
+                    endtime=UTCDateTime("2010-02-27T06:40:00.000"))
+
+        # test invalid token/token file
+        with self.assertRaisesRegexp(
+                ValueError,
+                'EIDA token does not seem to be a valid PGP message'):
+            client = Client('GFZ', eida_token="spam")
+        with self.assertRaisesRegexp(
+                ValueError,
+                "Read EIDA token from file '[^']*event_helpstring.txt' but it "
+                "does not seem to contain a valid PGP message."):
+            client = Client(
+                'GFZ', eida_token=os.path.join(self.datapath,
+                                               'event_helpstring.txt'))
 
 
 def suite():

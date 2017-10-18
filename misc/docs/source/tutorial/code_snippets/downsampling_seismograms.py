@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import obspy
 
 # Read the seismogram
-st = obspy.read("https://examples.obspy.org/RJOB_061005_072159.ehz.new")
+st = obspy.read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
 
 # There is only one trace in the Stream object, let's work on that trace...
 tr = st[0]
