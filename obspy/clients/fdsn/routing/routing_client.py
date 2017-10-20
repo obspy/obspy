@@ -18,6 +18,7 @@ from future.builtins import *  # NOQA
 from multiprocessing.dummy import Pool as ThreadPool
 
 import decorator
+import warnings
 
 from obspy.core.compatibility import (urlparse, string_types,
                                       get_reason_from_response)
@@ -92,8 +93,16 @@ def _download_bulk(r):
     # (2) A global EIDA_TOKEN key. It will be used for all services that
     #     don't have explicit credentials and also support the `/auth` route.
     credentials = r["credentials"].get(urlparse(r["endpoint"]).netloc, {})
-    c = client.Client(r["endpoint"], debug=r["debug"], timeout=r["timeout"],
-                      **credentials)
+    try:
+        c = client.Client(r["endpoint"], debug=r["debug"],
+                          timeout=r["timeout"], **credentials)
+    # This should rarely happen but better safe than sorry.
+    except FDSNException as e:  # pragma: no cover
+        msg = e.args[0]
+        msg += "It will not be used for routing. Try again later?"
+        warnings.warn(msg)
+        return None
+
     if not credentials and "EIDA_TOKEN" in r["credentials"] and \
             c._has_eida_auth:
         c.set_eida_token(r["credentials"]["EIDA_TOKEN"])
