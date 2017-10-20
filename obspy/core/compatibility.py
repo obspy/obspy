@@ -169,3 +169,22 @@ def get_text_from_response(r):
     except Exception:
         pass
     return c
+
+
+def get_reason_from_response(r):
+    """
+    Get the status text.
+
+    :type r: :class:`requests.Response
+    :param r: The server's response.
+    """
+    # Very old requests version might not have the reason attribute.
+    if hasattr(r, "reason"):
+        c = r.reason
+    else:  # pragma: no cover
+        c = r.raw.reason
+
+    if hasattr(c, "encode"):
+        c = c.encode()
+
+    return c

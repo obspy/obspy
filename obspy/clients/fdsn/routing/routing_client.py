@@ -15,12 +15,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import io
 from multiprocessing.dummy import Pool as ThreadPool
 
 import decorator
 
-from obspy.core.compatibility import urlparse, string_types
+from obspy.core.compatibility import (urlparse, string_types,
+                                      get_reason_from_response)
 import obspy
 
 from ...base import HTTPClient
@@ -268,17 +268,7 @@ class BaseRoutingClient(HTTPClient):
 
         Please overwrite this method in a child class if necessary.
         """
-        if r.content:  # pragma: no cover
-            c = r.content
-        else:
-            c = r.reason
-
-        if hasattr(c, "encode"):
-            c = c.encode()
-
-        with io.BytesIO(c) as f:
-            f.seek(0, 0)
-            raise_on_error(r.status_code, c)
+        raise_on_error(r.status_code, get_reason_from_response(r))
 
     @_assert_filename_not_in_kwargs
     @_assert_attach_response_not_in_kwargs
