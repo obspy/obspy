@@ -213,7 +213,7 @@ class ISFReader(object):
             line = self._get_next_line()
             # regex assumes that at least an integer or float for magnitude
             # value is present
-            if re.match('[a-z ]{5}[<> ][\d ]\d[\. ][\d ]', line):
+            if re.match('[a-zA-Z ]{5}[<> ][\d ]\d[\. ][\d ]', line):
                 magnitudes.append(self._parse_magnitude(line))
                 continue
             if line.strip().startswith('('):
