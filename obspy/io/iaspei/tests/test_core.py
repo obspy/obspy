@@ -9,7 +9,7 @@ import re
 import unittest
 
 from obspy import read_events
-from obspy.io.iaspei.core import _read_ims10_bulletin
+from obspy.io.iaspei.core import _read_ims10_bulletin, _is_ims10_bulletin
 
 
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
@@ -114,6 +114,13 @@ class IASPEITestCase(unittest.TestCase):
                           _no_uuid_hashes=True)
         self.assertEqual(len(cat), 1)
         _assert_catalog(cat)
+
+    def test_is_ims10_bulltin(self):
+        """
+        Test checking if file is IMS10 bulletin format
+        """
+        self.assertTrue(_is_ims10_bulletin(self.path_to_ims))
+        self.assertFalse(_is_ims10_bulletin(path_to_quakeml))
 
 
 def suite():

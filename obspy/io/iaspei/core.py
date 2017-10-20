@@ -19,11 +19,12 @@ import re
 import warnings
 
 from obspy import UTCDateTime
-from obspy.core.util.obspy_types import ObsPyReadingError
 from obspy.core.event import (
     Catalog, Event, Origin, Comment, EventDescription, OriginUncertainty,
     QuantityError, OriginQuality, CreationInfo, Magnitude, ResourceIdentifier,
     Pick, StationMagnitude, WaveformStreamID, Amplitude)
+from obspy.core.util.decorator import map_example_filename
+from obspy.core.util.obspy_types import ObsPyReadingError
 from .util import (
     float_or_none, int_or_none, fixed_flag, evaluation_mode_and_status)
 
@@ -586,6 +587,38 @@ def _read_ims10_bulletin(filename, **kwargs):
     finally:
         if file_opened:
             fh.close()
+
+
+@map_example_filename("filename")
+def _is_ims10_bulletin(filename, **kwargs):
+    """
+    Checks whether a file is ISF IMS1.0 bulletin format.
+
+    :type filename: str or file
+    :param filename: name of the file to be checked or open file-like object.
+    :rtype: bool
+    :return: ``True`` if ISF IMS1.0 bulletin file.
+    """
+    if all(hasattr(filename, attr) for attr in ['tell', 'seek', 'read']):
+        # we got an open file
+        pos = filename.tell()
+        filename.seek(0)
+        first_line = filename.readline()
+        filename.seek(pos)
+        if hasattr(first_line, 'decode'):
+            first_line = first_line.decode('UTF-8')
+    else:
+        try:
+            with open(filename, 'rb') as f:
+                first_line = f.readline().decode('UTF-8')
+        except Exception:
+            try:
+                first_line = filename.decode().decode('UTF-8')
+            except Exception:
+                first_line = str(filename)
+    if first_line.strip().upper() == 'DATA_TYPE BULLETIN IMS1.0:SHORT':
+        return True
+    return False
 
 
 if __name__ == '__main__':
