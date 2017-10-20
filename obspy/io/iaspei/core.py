@@ -15,7 +15,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import re
 import warnings
 
 from obspy import UTCDateTime
@@ -157,24 +156,19 @@ class ISFReader(object):
 
     def _read_phases(self):
         event = self.cat[-1]
-        # since we can't identify which origin a phase line belongs to, there's
-        # no way we can create arrival objects
-        # arrival id at the end seems to be always there, so use that to check
-        pattern = re.compile('.{5} .{109}\d{3}')
         while not self._next_line_type():
             line = self._get_next_line()
-            if re.match(pattern, line):
-                pick, amplitude, station_magnitude = self._parse_phase(line)
-                event.picks.append(pick)
-                if amplitude:
-                    event.amplitudes.append(amplitude)
-                if station_magnitude:
-                    event.station_magnitudes.append(station_magnitude)
-                continue
             if line.strip().startswith('('):
                 comment = self._parse_generic_comment(line)
                 event.picks[-1].comments.append(comment)
                 continue
+            pick, amplitude, station_magnitude = self._parse_phase(line)
+            event.picks.append(pick)
+            if amplitude:
+                event.amplitudes.append(amplitude)
+            if station_magnitude:
+                event.station_magnitudes.append(station_magnitude)
+            continue
 
     def _read_origins(self):
         event = self.cat[-1]
@@ -185,17 +179,16 @@ class ISFReader(object):
         try:
             while not self._next_line_type():
                 line = self._get_next_line()
-                if re.match('[0-9]{4}/[0-9]{2}/[0-9]{2}', line):
-                    origin, event_type, event_type_certainty = \
-                        self._parse_origin(line)
-                    origins.append(origin)
-                    event_types_certainties.append(
-                        (event_type, event_type_certainty))
-                    continue
                 if line.strip().startswith('('):
                     origins[-1].comments.append(
                         self._parse_generic_comment(line))
                     continue
+                origin, event_type, event_type_certainty = \
+                    self._parse_origin(line)
+                origins.append(origin)
+                event_types_certainties.append(
+                    (event_type, event_type_certainty))
+                continue
         finally:
             # check event types/certainties for consistency
             event_types = set(type_ for type_, _ in event_types_certainties)
@@ -222,30 +215,22 @@ class ISFReader(object):
         event = self.cat[-1]
         while not self._next_line_type():
             line = self._get_next_line()
-            # regex assumes that at least an integer or float for magnitude
-            # value is present
-            if re.match('[a-zA-Z\d ]{5}[<> ][\d ]\d[\. ][\d ]', line):
-                event.magnitudes.append(self._parse_magnitude(line))
-                continue
             if line.strip().startswith('('):
                 event.magnitudes[-1].comments.append(
                     self._parse_generic_comment(line))
                 continue
-            # header = _block_header(line)
-            # if header:
-            #     self._process_block(line)
-            #     import pdb; pdb.set_trace()
+            event.magnitudes.append(self._parse_magnitude(line))
+            continue
 
     def _read_bibliography(self):
         event = self.cat[-1]
         while not self._next_line_type():
             line = self._get_next_line()
-            if re.match('[0-9]{4}', line):
-                event.comments.append(self._parse_bibliography_item(line))
-                continue
             if line.strip().startswith('('):
                 # TODO parse bibliography comment blocks
                 continue
+            event.comments.append(self._parse_bibliography_item(line))
+            continue
 
     def _make_comment(self, text):
         id_ = self._construct_id(['comment'], add_hash=True)
