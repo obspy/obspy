@@ -1,4 +1,20 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+IASPEI Seismic Format (ISF) support for ObsPy
+
+Currently only supports reading IMS1.0 bulletin files.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
+"""
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
+
 import re
 import warnings
 
@@ -8,8 +24,8 @@ from obspy.core.event import (
     Catalog, Event, Origin, Comment, EventDescription, OriginUncertainty,
     QuantityError, OriginQuality, CreationInfo, Magnitude, ResourceIdentifier,
     Pick, StationMagnitude, WaveformStreamID, Amplitude)
-
-test_file = '19670130012028.isf'
+from .util import (
+    float_or_none, int_or_none, fixed_flag, evaluation_mode_and_status)
 
 
 PICK_EVALUATION_MODE = {'m': 'manual', 'a': 'automatic', '_': None, '': None}
@@ -43,51 +59,6 @@ LOCATION_METHODS = {'i': 'inversion', 'p': 'pattern recognition',
 
 class ISFEndOfFile(StopIteration):
     pass
-
-
-def evaluation_mode_and_status(my_string):
-    """
-    Return QuakeML standard evaluation mode and status based on the single
-    field ISF "analysis type" field.
-    """
-    my_string = my_string.lower()
-    # TODO check this matching
-    if my_string == 'a':
-        mode = 'automatic'
-        status = None
-    elif my_string == 'm':
-        mode = 'manual'
-        status = 'reviewed'
-    elif my_string == 'g':
-        mode = 'manual'
-        status = 'preliminary'
-    elif not my_string.strip():
-        return None, None
-    else:
-        raise ValueError()
-    return mode, status
-
-
-def type_or_none(my_string, type_, multiplier=None):
-    my_string = my_string.strip() or None
-    my_string = my_string and type_(my_string)
-    if my_string is not None and multiplier is not None:
-        my_string = my_string * multiplier
-    return my_string and type_(my_string)
-
-
-def float_or_none(my_string, **kwargs):
-    return type_or_none(my_string, float)
-
-
-def int_or_none(my_string, **kwargs):
-    return type_or_none(my_string, int)
-
-
-def fixed_flag(my_char):
-    if len(my_char) != 1:
-        raise ValueError()
-    return my_char.lower() == 'f'
 
 
 class ISFReader(object):
@@ -568,11 +539,28 @@ class ISFReader(object):
         return comment
 
 
-def _read_isf(fh):
-    cat = ISFReader(fh).deserialize()
-    return cat
+def _read_ims10_bulletin(filename):
+    """
+    Reads an ISF IMS1.0 bulletin file to a :class:`~obspy.core.event.Catalog`
+    object.
+
+    :param filename: File or file-like object in text mode.
+    """
+    # Open filehandler or use an existing file like object.
+    if not hasattr(filename, "read"):
+        file_opened = True
+        fh = open(filename, 'rb')
+    else:
+        file_opened = False
+        fh = filename
+    try:
+        catalog = ISFReader(fh).deserialize()
+        return catalog
+    finally:
+        if file_opened:
+            fh.close()
 
 
-with open(test_file, 'rb') as fh:
-    cat = _read_isf(fh)
-cat.write('/tmp/isc.xml', format="QuakeML")
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
