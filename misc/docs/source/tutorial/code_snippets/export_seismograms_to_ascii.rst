@@ -11,7 +11,7 @@ using the :meth:`~obspy.core.stream.Stream.write` method on the generated
 :class:`~obspy.core.stream.Stream` object.
 
     >>> from obspy.core import read
-    >>> stream = read('http://examples.obspy.org/RJOB20090824.ehz')
+    >>> stream = read('https://examples.obspy.org/RJOB20090824.ehz')
     >>> stream.write('outfile.ascii', format='SLIST')
 
 The following ASCII formats are currently supported:

@@ -347,9 +347,9 @@ def _colormap_plot_ppsd(cmaps):
     from obspy import read
     from obspy.signal import PPSD
     from obspy.io.xseed import Parser
-    st = read("http://examples.obspy.org/BW.KW1..EHZ.D.2011.037")
-    st += read("http://examples.obspy.org/BW.KW1..EHZ.D.2011.038")
-    parser = Parser("http://examples.obspy.org/dataless.seed.BW_KW1")
+    st = read("https://examples.obspy.org/BW.KW1..EHZ.D.2011.037")
+    st += read("https://examples.obspy.org/BW.KW1..EHZ.D.2011.038")
+    parser = Parser("https://examples.obspy.org/dataless.seed.BW_KW1")
     ppsd = PPSD(st[0].stats, metadata=parser)
     ppsd.add(st)
 
@@ -437,7 +437,7 @@ def _colormap_plot_similarity(cmaps):
     import io
     from urllib.request import urlopen
 
-    url = "http://examples.obspy.org/dissimilarities.npz"
+    url = "https://examples.obspy.org/dissimilarities.npz"
     with io.BytesIO(urlopen(url).read()) as fh, np.load(fh) as data:
         dissimilarity = data['dissimilarity']
 
@@ -457,7 +457,7 @@ def _get_beamforming_example_stream():
     from obspy import read
     from obspy.core.util import AttribDict
     from obspy.signal.invsim import corn_freq_2_paz
-    st = read("http://examples.obspy.org/agfa.mseed")
+    st = read("https://examples.obspy.org/agfa.mseed")
     # Set PAZ and coordinates for all 5 channels
     st[0].stats.paz = AttribDict({
         'poles': [(-0.03736 - 0.03617j), (-0.03736 + 0.03617j)],
