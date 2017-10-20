@@ -50,7 +50,7 @@ def _assert_catalog(got):
     #         for comment in item.comments:
     #             comment.resource_id = 'smi:local/dummy'
 
-    # some for fixes for the comparison, these are due to buggy QuakeML reader
+    # some more fixes for the comparison, these are due to buggy QuakeML reader
     # behavior and should be fixed in io.quakeml eventually
     for event in expected:
         for pick in event.picks:
@@ -59,16 +59,30 @@ def _assert_catalog(got):
             pick.waveform_id.network_code = None
             # QuakeML reader seems to add empty QuantityError for
             # pick.horizontal_slowness_errors
-            pick.horizontal_slowness_errors = None
-    for event in expected:
+            for key in ['horizontal_slowness_errors', 'time_errors',
+                        'backazimuth_errors']:
+                setattr(pick, key, None)
         for origin in event.origins:
             if origin.origin_uncertainty is not None:
                 # QuakeML reader seems to add empty ConfidenceEllipsoid
                 origin.origin_uncertainty.confidence_ellipsoid = None
+            # QuakeML reader seems to add empty QuantityError for
+            # pick.horizontal_slowness_errors
+            for key in ['time_errors', 'longitude_errors', 'latitude_errors',
+                        'depth_errors']:
+                setattr(origin, key, None)
         for station_magnitude in event.station_magnitudes:
             # QuakeML reader seems to set origin_id to
             # `ResourceIdentifier(id="None")`
-            station_magnitude.origin_id = None
+            # QuakeML reader seems to add empty QuantityError for
+            # pick.horizontal_slowness_errors
+            for key in ['origin_id', 'mag_errors']:
+                setattr(station_magnitude, key, None)
+        for magnitude in event.magnitudes:
+            # QuakeML reader seems to add empty QuantityError for
+            # pick.horizontal_slowness_errors
+            for key in ['mag_errors']:
+                setattr(magnitude, key, None)
     # now finally these catalogs should compare equal
     if got != expected:
         raise AssertionError()
