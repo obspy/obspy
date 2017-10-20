@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Py3k compatibility module
+ObsPy's compatibility layer.
+
+Includes things to easy dealing with Py2/Py3 differences as well as making
+it work with various versions of our dependencies.
 """
 from future.utils import PY2
 
@@ -121,7 +124,6 @@ def round_away(number):
     >>> round_away(-11.0)
     -11
     """
-
     floor = np.floor(number)
     ceil = np.ceil(number)
     if (floor != ceil) and (abs(number - floor) == abs(ceil - number)):
