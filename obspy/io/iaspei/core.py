@@ -65,9 +65,10 @@ class ISFReader(object):
     encoding = 'UTF-8'
     resource_id_prefix = 'smi:local'
 
-    def __init__(self, fh):
+    def __init__(self, fh, **kwargs):
         self.fh = fh
         self.cat = Catalog()
+        self._no_uuid_hashes = kwargs.get('_no_uuid_hashes', False)
 
     def deserialize(self):
         try:
@@ -90,7 +91,7 @@ class ISFReader(object):
 
     def _construct_id(self, parts, add_hash=False):
         id_ = '/'.join([str(self.cat.resource_id)] + list(parts))
-        if add_hash:
+        if add_hash and not self._no_uuid_hashes:
             id_ = str(ResourceIdentifier(prefix=id_))
         return id_
 
@@ -232,10 +233,13 @@ class ISFReader(object):
                 continue
             return comments
 
-    @staticmethod
-    def _parse_bibliography_item(line):
-        comment = Comment(text=line)
+    def _make_comment(self, text):
+        id_ = self._construct_id(['comment'], add_hash=True)
+        comment = Comment(text=text, resource_id=id_)
         return comment
+
+    def _parse_bibliography_item(self, line):
+        return self._make_comment(line)
 
     def _parse_origin(self, line):
         # 1-10    i4,a1,i2,a1,i2    epicenter date (yyyy/mm/dd)
@@ -324,7 +328,7 @@ class ISFReader(object):
         comments = []
         if location_method:
             comments.append(
-                Comment(text='location method: ' + location_method))
+                self._make_comment('location method: ' + location_method))
         if author:
             creation_info = CreationInfo(author=author)
         else:
@@ -509,9 +513,11 @@ class ISFReader(object):
         # process items
         waveform_id = WaveformStreamID(station_code=station_code)
         evaluation_mode = PICK_EVALUATION_MODE[evaluation_mode.strip().lower()]
-        comments = [Comment(text=', '.join(comments))]
-        add_hash = phase_id and False or True
-        resource_id = self._construct_id(['pick'], add_hash=add_hash)
+        comments = [self._make_comment(', '.join(comments))]
+        if phase_id:
+            resource_id = self._construct_id(['pick'], add_hash=True)
+        else:
+            resource_id = self._construct_id(['pick', phase_id])
         if mag:
             comment = ('min max indicator (<, >, or blank): ' +
                        min_max_indicator)
@@ -519,7 +525,7 @@ class ISFReader(object):
                 mag=mag, magnitude_type=magnitude_type,
                 resource_id=self._construct_id(['station_magnitude'],
                                                add_hash=True),
-                comments=[Comment(text=comment)])
+                comments=[self._make_comment(comment)])
         else:
             station_magnitude = None
 
@@ -533,13 +539,11 @@ class ISFReader(object):
                 unit='m', generic_amplitude=amplitude, period=period)
         return pick, amplitude, station_magnitude
 
-    @staticmethod
-    def _parse_generic_comment(line):
-        comment = Comment(text=line)
-        return comment
+    def _parse_generic_comment(self, line):
+        return self._make_comment(line)
 
 
-def _read_ims10_bulletin(filename):
+def _read_ims10_bulletin(filename, **kwargs):
     """
     Reads an ISF IMS1.0 bulletin file to a :class:`~obspy.core.event.Catalog`
     object.
@@ -554,7 +558,7 @@ def _read_ims10_bulletin(filename):
         file_opened = False
         fh = filename
     try:
-        catalog = ISFReader(fh).deserialize()
+        catalog = ISFReader(fh, **kwargs).deserialize()
         return catalog
     finally:
         if file_opened:
