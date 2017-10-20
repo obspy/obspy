@@ -405,6 +405,18 @@ class ISFReader(object):
         hour = int(my_string[0:2])
         minute = int(my_string[3:5])
         seconds = float(my_string[6:])
+
+        all_guesses = []
+        for origin in self.cat.events[-1].origins:
+            first_guess = UTCDateTime(
+                origin.time.year, origin.time.month, origin.time.day, hour,
+                minute, seconds)
+            all_guesses.append((first_guess, origin.time))
+            all_guesses.append((first_guess - 86400, origin.time))
+            all_guesses.append((first_guess + 86400, origin.time))
+
+        pick_date = sorted(all_guesses, key=lambda x: abs(x[0] - x[1]))[0][0]
+
         # make sure event origin times are reasonably close together
         if origin_time_max - origin_time_min > 5 * 3600:
             msg = ('Origin times in event differ by more than 5 hours, this '
@@ -412,19 +424,13 @@ class ISFReader(object):
                    'the pick might be tricky. Sorry.')
             raise NotImplementedError(msg)
         # now try the date of the latest origin and raise if things seem fishy
-        t = UTCDateTime(origin_time_max.date)
-        t += 3600 * hour + 60 * minute + seconds
+        t = UTCDateTime(pick_date.year, pick_date.month, pick_date.day, hour,
+                        minute, seconds)
         for origin_time in origin_times:
-            if t < origin_time:
-                msg = ("The pick time that was determined is earlier than one "
-                       "of the event's origin times. This is currently not "
-                       "implemented, sorry. Please report an issue on our "
-                       "github.")
-                raise NotImplementedError(msg)
             if t - origin_time > 6 * 3600:
-                msg = ('This pick would have a time more than 5 hours after '
-                       'one of the origins in the event. This seems fishy. '
-                       'Please report an issue on our github.')
+                msg = ('This pick would have a time more than 6 hours after '
+                       'or before one of the origins in the event. This seems '
+                       'fishy. Please report an issue on our github.')
                 raise NotImplementedError(msg)
         return t
 
