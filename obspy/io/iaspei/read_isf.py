@@ -6,7 +6,7 @@ from obspy import UTCDateTime
 from obspy.core.util.obspy_types import ObsPyReadingError
 from obspy.core.event import (
     Catalog, Event, Origin, Comment, EventDescription, OriginUncertainty,
-    QuantityError, OriginQuality, CreationInfo)
+    QuantityError, OriginQuality, CreationInfo, Magnitude, ResourceIdentifier)
 
 test_file = '19670130012028.isf'
 
@@ -112,6 +112,9 @@ class ISFReader(object):
             raise ObsPyReadingError()
         self._read_event(line)
 
+    def _construct_id(self, *parts):
+        return '/'.join([str(self.cat.resource_id)] + list(parts))
+
     def _get_next_line(self):
         line = self.fh.readline().decode(self.encoding).rstrip()
         if line.startswith('STOP'):
@@ -122,8 +125,7 @@ class ISFReader(object):
         # TODO check if the various blocks always come ordered same aas in our
         # test data or if oreder of blocks is random.. then we would have to
         # acoount for random order..
-        event_id = '/'.join([str(self.cat.resource_id), 'event',
-                             line[6:14].strip()])
+        event_id = self._construct_id('event', line[6:14].strip())
         region = line[15:80].strip()
         event = Event(
             resource_id=event_id,
@@ -174,7 +176,7 @@ class ISFReader(object):
                 continue
             if line.strip().startswith('('):
                 origins[-1].comments.append(
-                    self._parse_origin_comment(line))
+                    self._parse_generic_comment(line))
                 continue
             break
         # check event types/certainties for consistency
@@ -197,12 +199,14 @@ class ISFReader(object):
         magnitudes = []
         while True:
             line = self._get_next_line()
-            if re.match('[0-9]{4}/[0-9]{2}/[0-9]{2}', line):
+            # regex assumes that at least an integer or float for magnitude
+            # value is present
+            if re.match('[a-z ]{5}[<> ][\d ]\d[\. ][\d ]', line):
                 magnitudes.append(self._parse_magnitude(line))
                 continue
             if line.strip().startswith('('):
                 magnitudes[-1].comments.append(
-                    self._parse_magnitude_comment(line))
+                    self._parse_generic_comment(line))
                 continue
             return magnitudes
 
@@ -286,8 +290,7 @@ class ISFReader(object):
         # 119-127 a9    author of the origin
         author = line[118:127].strip()
         # 129-136 a8    origin identification
-        origin_id = '/'.join([str(self.cat.resource_id), 'origin',
-                              line[128:136].strip()])
+        origin_id = self._construct_id('origin', line[128:136].strip())
 
         # do some combinations
         depth_error = depth_error and dict(uncertainty=depth_error,
@@ -325,8 +328,52 @@ class ISFReader(object):
             comments=comments, creation_info=creation_info)
         return origin, event_type, event_type_certainty
 
+    def _parse_magnitude(self, line):
+        #    1-5  a5   magnitude type (mb, Ms, ML, mbmle, msmle)
+        magnitude_type = line[0:5].strip()
+        #      6  a1   min max indicator (<, >, or blank)
+        # TODO figure out the meaning of this min max indicator
+        min_max_indicator = line[5:6].strip()
+        #   7-10  f4.1 magnitude value
+        mag = float_or_none(line[6:10])
+        #  12-14  f3.1 standard magnitude error
+        mag_errors = float_or_none(line[11:14])
+        #  16-19  i4   number of stations used to calculate magni-tude
+        station_count = int_or_none(line[15:19])
+        #  21-29  a9   author of the origin
+        author = line[20:29].strip()
+        #  31-38  a8   origin identification
+        origin_id = line[30:38].strip()
+
+        # process items
+        if author:
+            creation_info = CreationInfo(author=author)
+        else:
+            creation_info = None
+        mag_errors = mag_errors and QuantityError(uncertainty=mag_errors)
+        if origin_id:
+            origin_id = self._construct_id('origin', origin_id)
+        else:
+            origin_id = None
+        if not magnitude_type:
+            magnitude_type = None
+        # magnitudes have no id field, so construct a unique one at least
+        resource_id = ResourceIdentifier(
+            prefix=self._construct_id('magnitude'))
+
+        if min_max_indicator:
+            msg = 'Magnitude min/max indicator field not yet implemented'
+            warnings.warn(msg)
+
+        # combine and return
+        return Magnitude(
+            magnitude_type=magnitude_type, mag=mag,
+            station_count=station_count, creation_info=creation_info,
+            mag_errors=mag_errors, origin_id=origin_id,
+            resource_id=resource_id)
+
     @staticmethod
-    def _parse_origin_comment(line):
+    def _parse_generic_comment(line):
         comment = Comment(text=line)
         return comment
 
