@@ -1,11 +1,16 @@
 import re
 
 from obspy import UTCDateTime
+from obspy.core.util.obspy_types import ObsPyReadingError
 from obspy.core.event import (
     Catalog, Event, Origin, Comment, EventDescription, OriginUncertainty,
     QuantityError, OriginQuality)
 
 test_file = '19670130012028.isf'
+
+
+class ISFEndOfFile(StopIteration):
+    pass
 
 
 def evaluation_mode_and_status(my_string):
@@ -64,19 +69,19 @@ class ISFReader(object):
     def deserialize(self):
         try:
             self._deserialize()
-        except StopIteration:
+        except ISFEndOfFile:
             pass
         return self.cat
 
     def _deserialize(self):
         line = self._get_next_line()
         if not line.startswith('DATA_TYPE BULLETIN IMS1.0:short'):
-            raise Exception()
+            raise ObsPyReadingError()
         line = self._get_next_line()
         catalog_description = line.strip()
         line = self._get_next_line()
         if not line.startswith('Event'):
-            raise Exception()
+            raise ObsPyReadingError()
         event = self._read_event(line)
         self.cat.append(event)
 
@@ -84,7 +89,7 @@ class ISFReader(object):
         line = self.fh.readline().decode(self.encoding).rstrip()
         print(line)
         if line.startswith('STOP'):
-            raise StopIteration
+            raise ISFEndOfFile
         return line
 
     def _read_event(self, line):
