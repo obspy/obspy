@@ -26,7 +26,8 @@ from obspy.core.event import (
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.obspy_types import ObsPyReadingError
 from .util import (
-    float_or_none, int_or_none, fixed_flag, evaluation_mode_and_status)
+    float_or_none, int_or_none, fixed_flag, evaluation_mode_and_status,
+    _block_header)
 
 
 PICK_EVALUATION_MODE = {'m': 'manual', 'a': 'automatic', '_': None, '': None}
@@ -67,11 +68,18 @@ class ISFReader(object):
     resource_id_prefix = 'smi:local'
 
     def __init__(self, fh, **kwargs):
-        self.fh = fh
+        self.lines = [line.decode(self.encoding).rstrip()
+                      for line in fh.readlines()
+                      if line.strip()]
         self.cat = Catalog()
         self._no_uuid_hashes = kwargs.get('_no_uuid_hashes', False)
 
     def deserialize(self):
+        if not self.lines:
+            raise ObsPyReadingError()
+        line = self._get_next_line()
+        if not line.startswith('DATA_TYPE BULLETIN IMS1.0:short'):
+            raise ObsPyReadingError()
         try:
             self._deserialize()
         except ISFEndOfFile:
@@ -80,15 +88,20 @@ class ISFReader(object):
 
     def _deserialize(self):
         line = self._get_next_line()
-        if not line.startswith('DATA_TYPE BULLETIN IMS1.0:short'):
-            raise ObsPyReadingError()
-        line = self._get_next_line()
         catalog_description = line.strip()
         self.cat.description = catalog_description
-        line = self._get_next_line()
-        if not line.startswith('Event'):
+        if not self.lines[0].startswith('Event'):
             raise ObsPyReadingError()
-        self._read_event(line)
+        # get next line stops the loop eventually, raising a controlled
+        # exception
+        while True:
+            next_line_type = self._next_line_type()
+            if next_line_type == 'event':
+                self._read_event_header()
+            elif next_line_type:
+                self._process_block()
+            else:
+                raise ObsPyReadingError
 
     def _construct_id(self, parts, add_hash=False):
         id_ = '/'.join([str(self.cat.resource_id)] + list(parts))
@@ -97,15 +110,15 @@ class ISFReader(object):
         return id_
 
     def _get_next_line(self):
-        line = self.fh.readline().decode(self.encoding).rstrip()
+        if not self.lines:
+            raise ISFEndOfFile
+        line = self.lines.pop(0)
         if line.startswith('STOP'):
             raise ISFEndOfFile
         return line
 
-    def _read_event(self, line):
-        # TODO check if the various blocks always come ordered same aas in our
-        # test data or if oreder of blocks is random.. then we would have to
-        # acoount for random order..
+    def _read_event_header(self):
+        line = self._get_next_line()
         event_id = self._construct_id(['event', line[6:14].strip()])
         region = line[15:80].strip()
         event = Event(
@@ -114,35 +127,28 @@ class ISFReader(object):
                                                  type='region name')])
         self.cat.append(event)
 
-        while True:
-            # get next line stops the loop eventually, raising a controlled
-            # exception
-            line = self._get_next_line()
-            # ignore blank lines
-            if not line.strip():
-                continue
-            self._process_block(line, event)
+    def _next_line_type(self):
+        if not self.lines:
+            raise ISFEndOfFile
+        return _block_header(self.lines[0])
 
-    def _process_block(self, line, event):
-        header_start = [x.lower() for x in line.split()[:4]]
+    def _process_block(self):
+        if not self.cat:
+            raise ObsPyReadingError
+        line = self._get_next_line()
+        block_type = _block_header(line)
         # read origins block
-        if header_start == ['date', 'time', 'err', 'rms']:
-            origins, event_type, event_type_certainty = self._read_origins()
-            event.origins.extend(origins)
-            event.event_type = event_type
-            event.event_type_certainty = event_type_certainty
+        if block_type == 'origins':
+            self._read_origins()
         # read publications block
-        elif header_start == ['year', 'volume', 'page1', 'page2']:
-            event.comments.extend(self._read_bibliography())
+        elif block_type == 'bibliography':
+            self._read_bibliography()
         # read magnitudes block
-        elif header_start == ['magnitude', 'err', 'nsta', 'author']:
-            event.magnitudes.extend(self._read_magnitudes())
+        elif block_type == 'magnitudes':
+            self._read_magnitudes()
         # read phases block
-        elif header_start == ['sta', 'dist', 'evaz', 'phase']:
-            picks, amplitudes, station_magnitudes = self._read_phases()
-            event.picks.extend(picks)
-            event.station_magnitudes.extend(station_magnitudes)
-            event.amplitudes.extend(amplitudes)
+        elif block_type == 'phases':
+            self._read_phases()
         # unexpected block header line
         else:
             msg = ('Unexpected line while reading file (line will be '
@@ -150,89 +156,96 @@ class ISFReader(object):
             warnings.warn(msg)
 
     def _read_phases(self):
+        event = self.cat[-1]
         # since we can't identify which origin a phase line belongs to, there's
         # no way we can create arrival objects
-        picks = []
-        amplitudes = []
-        station_magnitudes = []
-        pattern = re.compile(
-            '.{5} [\d ]{3}[\. ][0-9 ]{2}.{16}\d{2}:\d{2}:\d{2}')
-        while True:
+        # arrival id at the end seems to be always there, so use that to check
+        pattern = re.compile('.{5} .{109}\d{3}')
+        while not self._next_line_type():
             line = self._get_next_line()
             if re.match(pattern, line):
                 pick, amplitude, station_magnitude = self._parse_phase(line)
-                picks.append(pick)
+                event.picks.append(pick)
                 if amplitude:
-                    amplitudes.append(amplitude)
+                    event.amplitudes.append(amplitude)
                 if station_magnitude:
-                    station_magnitudes.append(station_magnitude)
+                    event.station_magnitudes.append(station_magnitude)
                 continue
             if line.strip().startswith('('):
                 comment = self._parse_generic_comment(line)
-                picks[-1].comments.append(comment)
+                event.picks[-1].comments.append(comment)
                 continue
-            break
-        return picks, amplitudes, station_magnitudes
 
     def _read_origins(self):
+        event = self.cat[-1]
         origins = []
         event_types_certainties = []
-        while True:
-            line = self._get_next_line()
-            if re.match('[0-9]{4}/[0-9]{2}/[0-9]{2}', line):
-                origin, event_type, event_type_certainty = \
-                    self._parse_origin(line)
-                origins.append(origin)
-                event_types_certainties.append(
-                    (event_type, event_type_certainty))
-                continue
-            if line.strip().startswith('('):
-                origins[-1].comments.append(
-                    self._parse_generic_comment(line))
-                continue
-            break
-        # check event types/certainties for consistency
-        event_types = set(type_ for type_, _ in event_types_certainties)
-        event_types.discard(None)
-        if len(event_types) == 1:
-            event_type = event_types.pop()
-            certainties = set(
-                cert for type_, cert in event_types_certainties
-                if type_ == event_type)
-            if "known" in certainties:
-                event_type_certainty = "known"
-            elif "suspected" in certainties:
-                event_type_certainty = "suspected"
+        # just in case origin block is at end of file, make sure the event type
+        # routine below gets executed, even if next line is EOF at some point
+        try:
+            while not self._next_line_type():
+                line = self._get_next_line()
+                if re.match('[0-9]{4}/[0-9]{2}/[0-9]{2}', line):
+                    origin, event_type, event_type_certainty = \
+                        self._parse_origin(line)
+                    origins.append(origin)
+                    event_types_certainties.append(
+                        (event_type, event_type_certainty))
+                    continue
+                if line.strip().startswith('('):
+                    origins[-1].comments.append(
+                        self._parse_generic_comment(line))
+                    continue
+        finally:
+            # check event types/certainties for consistency
+            event_types = set(type_ for type_, _ in event_types_certainties)
+            event_types.discard(None)
+            if len(event_types) == 1:
+                event_type = event_types.pop()
+                certainties = set(
+                    cert for type_, cert in event_types_certainties
+                    if type_ == event_type)
+                if "known" in certainties:
+                    event_type_certainty = "known"
+                elif "suspected" in certainties:
+                    event_type_certainty = "suspected"
+                else:
+                    event_type_certainty = None
             else:
+                event_type = None
                 event_type_certainty = None
-        return origins, event_type, event_type_certainty
+            event.origins.extend(origins)
+            event.event_type = event_type
+            event.event_type_certainty = event_type_certainty
 
     def _read_magnitudes(self):
-        magnitudes = []
-        while True:
+        event = self.cat[-1]
+        while not self._next_line_type():
             line = self._get_next_line()
             # regex assumes that at least an integer or float for magnitude
             # value is present
-            if re.match('[a-zA-Z ]{5}[<> ][\d ]\d[\. ][\d ]', line):
-                magnitudes.append(self._parse_magnitude(line))
+            if re.match('[a-zA-Z\d ]{5}[<> ][\d ]\d[\. ][\d ]', line):
+                event.magnitudes.append(self._parse_magnitude(line))
                 continue
             if line.strip().startswith('('):
-                magnitudes[-1].comments.append(
+                event.magnitudes[-1].comments.append(
                     self._parse_generic_comment(line))
                 continue
-            return magnitudes
+            # header = _block_header(line)
+            # if header:
+            #     self._process_block(line)
+            #     import pdb; pdb.set_trace()
 
     def _read_bibliography(self):
-        comments = []
-        while True:
+        event = self.cat[-1]
+        while not self._next_line_type():
             line = self._get_next_line()
             if re.match('[0-9]{4}', line):
-                comments.append(self._parse_bibliography_item(line))
+                event.comments.append(self._parse_bibliography_item(line))
                 continue
             if line.strip().startswith('('):
                 # TODO parse bibliography comment blocks
                 continue
-            return comments
 
     def _make_comment(self, text):
         id_ = self._construct_id(['comment'], add_hash=True)
@@ -405,6 +418,8 @@ class ISFReader(object):
         Look up absolute time of pick including date, based on the time-of-day
         only representation in the phase line
         """
+        if not my_string.strip():
+            return None
         # TODO maybe we should defer phases block parsing.. but that will make
         # the whole reading more complex
         if not self.cat.events:
