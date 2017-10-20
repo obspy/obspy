@@ -581,9 +581,23 @@ class ImageComparison(NamedTemporaryFile):
             # try to get imgur client id from environment
             imgur_clientid = \
                 os.environ.get("OBSPY_IMGUR_CLIENTID") or "53b182544dc5d89"
+            imgur_client_secret = \
+                os.environ.get("OBSPY_IMGUR_CLIENT_SECRET", None)
+            imgur_client_refresh_token = \
+                os.environ.get("OBSPY_IMGUR_REFRESH_TOKEN", None)
             # upload images and return urls
             links = {}
-            imgur = pyimgur.Imgur(imgur_clientid)
+            imgur = pyimgur.Imgur(imgur_clientid,
+                                  client_secret=imgur_client_secret,
+                                  refresh_token=imgur_client_refresh_token)
+            if imgur_client_secret and imgur_client_refresh_token:
+                try:
+                    imgur.refresh_access_token()
+                except Exception as e:
+                    msg = ('Refreshing access token for Imgur API failed '
+                           '(caught {}: {!s}).)').format(e.__class__.__name__,
+                                                         e)
+                    warnings.warn(msg)
             if os.path.exists(self.baseline_image):
                 up = imgur.upload_image(self.baseline_image, title=self.name)
                 links['expected'] = up.link
