@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 import re
+import warnings
 
 from obspy import UTCDateTime
 from obspy.core.util.obspy_types import ObsPyReadingError
@@ -112,7 +114,6 @@ class ISFReader(object):
 
     def _get_next_line(self):
         line = self.fh.readline().decode(self.encoding).rstrip()
-        print(line)
         if line.startswith('STOP'):
             raise ISFEndOfFile
         return line
@@ -155,8 +156,9 @@ class ISFReader(object):
             event.magnitudes.extend(self._read_magnitudes())
         # unexpected block header line
         else:
-            msg = 'Unexpected block header line while reading file:\n' + line
-            raise ObsPyReadingError(msg)
+            msg = ('Unexpected line while reading file (line will be '
+                   'ignored):\n' + line)
+            warnings.warn(msg)
 
     def _read_origins(self):
         origins = []
