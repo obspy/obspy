@@ -538,7 +538,7 @@ class ISFReader(object):
         # process items
         waveform_id = WaveformStreamID(station_code=station_code)
         evaluation_mode = PICK_EVALUATION_MODE[evaluation_mode.strip().lower()]
-        comments = [Comment(text=c) for c in comments]
+        comments = [Comment(text=', '.join(comments))]
         add_hash = phase_id and False or True
         resource_id = self._construct_id(['pick'], add_hash=add_hash)
         if mag:
