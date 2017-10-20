@@ -107,8 +107,9 @@ class Client(object):
     >>> t = UTCDateTime("2009-09-03 00:00:00")
     >>> client = Client(timeout=20)
     >>>
-    >>> st = client.waveform.get_waveforms("BW", "RTBE", "", "EHZ", t, t + 20)
-    >>> print(st)  # doctest: +ELLIPSIS
+    >>> st = client.waveform.get_waveforms(
+    ...     "BW", "RTBE", "", "EHZ", t, t + 20)  # doctest: +SKIP
+    >>> print(st)  # doctest: +ELLIPSIS +SKIP
     1 Trace(s) in Stream:
     BW.RTBE..EHZ | 2009-09-03T00:00:00.000000Z - ... | 200.0 Hz, 4001 samples
     """  # noqa
@@ -718,16 +719,17 @@ master/seishub/plugins/seismology/waveform.py
         .. rubric:: Example
 
         >>> c = Client(timeout=20)
-        >>> paz = c.station.get_paz('BW.MANZ..EHZ', '20090707')
-        >>> paz['zeros']
+        >>> paz = c.station.get_paz(
+        ...     'BW.MANZ..EHZ', '20090707')  # doctest: +SKIP
+        >>> paz['zeros']  # doctest: +SKIP
         [0j, 0j]
-        >>> len(paz['poles'])
+        >>> len(paz['poles'])  # doctest: +SKIP
         5
-        >>> print(paz['poles'][0])
+        >>> print(paz['poles'][0])  # doctest: +SKIP
         (-0.037004+0.037016j)
-        >>> paz['gain']
+        >>> paz['gain']  # doctest: +SKIP
         60077000.0
-        >>> paz['sensitivity']
+        >>> paz['sensitivity']  # doctest: +SKIP
         2516800000.0
         """
         # try to read PAZ from previously obtained XSEED data
