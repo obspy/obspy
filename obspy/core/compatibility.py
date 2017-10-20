@@ -5,6 +5,7 @@ Py3k compatibility module
 from future.utils import PY2
 
 import io
+import json
 
 import numpy as np
 
@@ -127,3 +128,42 @@ def round_away(number):
         return int(int(number) + int(np.sign(number)))
     else:
         return int(np.round(number))
+
+
+def get_json_from_response(r):
+    """
+    Get a JSON response in a way that also works for very old request
+    versions.
+
+    :type r: :class:`requests.Response
+    :param r: The server's response.
+    """
+    if hasattr(r, "json"):
+        if isinstance(r.json, dict):
+            return r.json
+        return r.json()
+
+    c = r.content
+    try:
+        c = c.decode()
+    except Exception:
+        pass
+    return json.loads(c)
+
+
+def get_text_from_response(r):
+    """
+    Get a text response in a way that also works for very old request versions.
+
+    :type r: :class:`requests.Response
+    :param r: The server's response.
+    """
+    if hasattr(r, "text"):
+        return r.text
+
+    c = r.content
+    try:
+        c = c.decode()
+    except Exception:
+        pass
+    return c

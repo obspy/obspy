@@ -16,42 +16,16 @@ from future.utils import native_str
 
 import collections
 import io
-import json
 import zipfile
 
 import numpy as np
 
 import obspy
 from obspy.core import AttribDict
+from obspy.core import compatibility
 
 from ..base import WaveformClient, HTTPClient, DEFAULT_USER_AGENT, \
     ClientHTTPException
-
-
-def get_json(r):
-    if hasattr(r, "json"):
-        if isinstance(r.json, dict):
-            return r.json
-        return r.json()
-
-    c = r.content
-    try:
-        c = c.decode()
-    except Exception:
-        pass
-    return json.loads(c)
-
-
-def get_text(r):
-    if hasattr(r, "text"):
-        return r.text
-
-    c = r.content
-    try:
-        c = c.decode()
-    except Exception:
-        pass
-    return c
 
 
 class Client(WaveformClient, HTTPClient):
@@ -84,7 +58,7 @@ class Client(WaveformClient, HTTPClient):
 
     def _handle_requests_http_error(self, r):
         msg = "HTTP code %i when downloading '%s':\n\n%s" % (
-            r.status_code, r.url, get_text(r))
+            r.status_code, r.url, compatibility.get_text_from_response(r))
         raise ClientHTTPException(msg.strip())
 
     def get_model_info(self, model_name):
@@ -107,7 +81,7 @@ class Client(WaveformClient, HTTPClient):
         model_name = model_name.strip().lower()
         r = self._download(self._get_url("info"),
                            params={"model": model_name})
-        info = AttribDict(get_json(r))
+        info = AttribDict(compatibility.get_json_from_response(r))
         # Convert slip and sliprate into numpy arrays for easier handling.
         info.slip = np.array(info.slip, dtype=np.float64)
         info.sliprate = np.array(info.sliprate, dtype=np.float64)
@@ -117,14 +91,15 @@ class Client(WaveformClient, HTTPClient):
         """
         Get information about all available velocity models.
         """
-        return get_json(self._download(self._get_url("models")))
+        return compatibility.get_json_from_response(
+            self._download(self._get_url("models")))
 
     def get_service_version(self):
         """
         Get the service version of the remote Syngine server.
         """
         r = self._download(self._get_url("version"))
-        return get_text(r)
+        return compatibility.get_text_from_response(r)
 
     def _convert_parameters(self, model, **kwargs):
         model = model.strip().lower()
