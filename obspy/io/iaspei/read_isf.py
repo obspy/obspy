@@ -108,8 +108,7 @@ class ISFReader(object):
         line = self._get_next_line()
         if not line.startswith('Event'):
             raise ObsPyReadingError()
-        event = self._read_event(line)
-        self.cat.append(event)
+        self._read_event(line)
 
     def _get_next_line(self):
         line = self.fh.readline().decode(self.encoding).rstrip()
@@ -129,35 +128,35 @@ class ISFReader(object):
             resource_id=event_id,
             event_descriptions=[EventDescription(text=region,
                                                  type='region name')])
+        self.cat.append(event)
 
-        # read origins block
         while True:
+            # get next line stops the loop eventually, raising a controlled
+            # exception
             line = self._get_next_line()
-            if line.split()[:3] != ['Date', 'Time', 'Err']:
+            # ignore blank lines
+            if not line.strip():
                 continue
+            self._process_block(line, event)
+
+    def _process_block(self, line, event):
+        header_start = [x.lower() for x in line.split()[:4]]
+        # read origins block
+        if header_start == ['date', 'time', 'err', 'rms']:
             origins, event_type, event_type_certainty = self._read_origins()
             event.origins.extend(origins)
             event.event_type = event_type
             event.event_type_certainty = event_type_certainty
-            break
-
         # read publications block
-        while True:
-            line = self._get_next_line()
-            if line.split()[:3] != ['Year', 'Volume', 'Page1']:
-                continue
+        elif header_start == ['year', 'volume', 'page1', 'page2']:
             event.comments.extend(self._read_bibliography())
-            break
-
         # read magnitudes block
-        while True:
-            line = self._get_next_line()
-            if line.split()[:3] != ['Magnitude', 'Err', 'Nsta']:
-                continue
+        elif header_start == ['magnitude', 'err', 'nsta', 'author']:
             event.magnitudes.extend(self._read_magnitudes())
-            break
-
-        return event
+        # unexpected block header line
+        else:
+            msg = 'Unexpected block header line while reading file:\n' + line
+            raise ObsPyReadingError(msg)
 
     def _read_origins(self):
         origins = []
