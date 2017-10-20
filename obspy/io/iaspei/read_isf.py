@@ -6,11 +6,16 @@ from obspy import UTCDateTime
 from obspy.core.util.obspy_types import ObsPyReadingError
 from obspy.core.event import (
     Catalog, Event, Origin, Comment, EventDescription, OriginUncertainty,
-    QuantityError, OriginQuality, CreationInfo, Magnitude, ResourceIdentifier)
+    QuantityError, OriginQuality, CreationInfo, Magnitude, ResourceIdentifier,
+    Pick, StationMagnitude, WaveformStreamID, Amplitude)
 
 test_file = '19670130012028.isf'
 
 
+PICK_EVALUATION_MODE = {'m': 'manual', 'a': 'automatic', '_': None, '': None}
+POLARITY = {'c': 'positive', 'd': 'negative', '_': None, '': None}
+ONSET = {'i': 'impulsive', 'e': 'emergent', 'q': 'questionable', '_': None,
+         '': None}
 EVENT_TYPE_CERTAINTY = {
     "uk": (None, None),
     "de": ("earthquake", "known"),
@@ -112,8 +117,11 @@ class ISFReader(object):
             raise ObsPyReadingError()
         self._read_event(line)
 
-    def _construct_id(self, *parts):
-        return '/'.join([str(self.cat.resource_id)] + list(parts))
+    def _construct_id(self, parts, add_hash=False):
+        id_ = '/'.join([str(self.cat.resource_id)] + list(parts))
+        if add_hash:
+            id_ = str(ResourceIdentifier(prefix=id_))
+        return id_
 
     def _get_next_line(self):
         line = self.fh.readline().decode(self.encoding).rstrip()
@@ -125,7 +133,7 @@ class ISFReader(object):
         # TODO check if the various blocks always come ordered same aas in our
         # test data or if oreder of blocks is random.. then we would have to
         # acoount for random order..
-        event_id = self._construct_id('event', line[6:14].strip())
+        event_id = self._construct_id(['event', line[6:14].strip()])
         region = line[15:80].strip()
         event = Event(
             resource_id=event_id,
@@ -156,11 +164,42 @@ class ISFReader(object):
         # read magnitudes block
         elif header_start == ['magnitude', 'err', 'nsta', 'author']:
             event.magnitudes.extend(self._read_magnitudes())
+        # read phases block
+        elif header_start == ['sta', 'dist', 'evaz', 'phase']:
+            picks, amplitudes, station_magnitudes = self._read_phases()
+            event.picks.extend(picks)
+            event.station_magnitudes.extend(station_magnitudes)
+            event.amplitudes.extend(amplitudes)
         # unexpected block header line
         else:
             msg = ('Unexpected line while reading file (line will be '
                    'ignored):\n' + line)
             warnings.warn(msg)
+
+    def _read_phases(self):
+        # since we can't identify which origin a phase line belongs to, there's
+        # no way we can create arrival objects
+        picks = []
+        amplitudes = []
+        station_magnitudes = []
+        pattern = re.compile(
+            '.{5} [\d ]{3}[\. ][0-9 ]{2}.{16}\d{2}:\d{2}:\d{2}')
+        while True:
+            line = self._get_next_line()
+            if re.match(pattern, line):
+                pick, amplitude, station_magnitude = self._parse_phase(line)
+                picks.append(pick)
+                if amplitude:
+                    amplitudes.append(amplitude)
+                if station_magnitude:
+                    station_magnitudes.append(station_magnitude)
+                continue
+            if line.strip().startswith('('):
+                comment = self._parse_generic_comment(line)
+                picks[-1].comments.append(comment)
+                continue
+            break
+        return picks, amplitudes, station_magnitudes
 
     def _read_origins(self):
         origins = []
@@ -275,11 +314,11 @@ class ISFReader(object):
         maximum_distance = float_or_none(line[104:110])
         # 112     a1    analysis type: (a = automatic, m = manual, g = guess)
         evaluation_mode, evaluation_status = \
-            evaluation_mode_and_status(line[112])
+            evaluation_mode_and_status(line[111])
         # 114     a1    location method: (i = inversion, p = pattern
         #                                 recognition, g = ground truth, o =
         #                                 other)
-        location_method = LOCATION_METHODS[line[114].strip().lower()]
+        location_method = LOCATION_METHODS[line[113].strip().lower()]
         # 116-117 a2    event type:
         # XXX event type and event type certainty is specified per origin,
         # XXX not sure how to bset handle this, for now only use it if
@@ -290,7 +329,7 @@ class ISFReader(object):
         # 119-127 a9    author of the origin
         author = line[118:127].strip()
         # 129-136 a8    origin identification
-        origin_id = self._construct_id('origin', line[128:136].strip())
+        origin_id = self._construct_id(['origin', line[128:136].strip()])
 
         # do some combinations
         depth_error = depth_error and dict(uncertainty=depth_error,
@@ -352,14 +391,13 @@ class ISFReader(object):
             creation_info = None
         mag_errors = mag_errors and QuantityError(uncertainty=mag_errors)
         if origin_id:
-            origin_id = self._construct_id('origin', origin_id)
+            origin_id = self._construct_id(['origin', origin_id])
         else:
             origin_id = None
         if not magnitude_type:
             magnitude_type = None
         # magnitudes have no id field, so construct a unique one at least
-        resource_id = ResourceIdentifier(
-            prefix=self._construct_id('magnitude'))
+        resource_id = self._construct_id(['magnitude'], add_hash=True)
 
         if min_max_indicator:
             msg = 'Magnitude min/max indicator field not yet implemented'
@@ -433,6 +471,96 @@ class ISFReader(object):
                        'fishy. Please report an issue on our github.')
                 raise NotImplementedError(msg)
         return t
+
+    def _parse_phase(self, line):
+        # since we can not identify which origin a phase line corresponds to,
+        # we can not use any of the included information that would go in the
+        # Arrival object, as that would have to be attached to the appropriate
+        # origin..
+        # for now, just append all of these items as comments to the pick
+        comments = []
+
+        # 1-5     a5      station code
+        station_code = line[0:5].strip()
+        # 7-12    f6.2    station-to-event distance (degrees)
+        comments.append(
+            'station-to-event distance (degrees): "{}"'.format(line[6:12]))
+        # 14-18   f5.1    event-to-station azimuth (degrees)
+        comments.append(
+            'event-to-station azimuth (degrees): "{}"'.format(line[13:18]))
+        # 20-27   a8      phase code
+        phase_hint = line[19:27].strip()
+        # 29-40   i2,a1,i2,a1,f6.3        arrival time (hh:mm:ss.sss)
+        time = self._get_pick_time(line[28:40])
+        # 42-46   f5.1    time residual (seconds)
+        comments.append('time residual (seconds): "{}"'.format(line[41:46]))
+        # 48-52   f5.1    observed azimuth (degrees)
+        comments.append('observed azimuth (degrees): "{}"'.format(line[47:52]))
+        # 54-58   f5.1    azimuth residual (degrees)
+        comments.append('azimuth residual (degrees): "{}"'.format(line[53:58]))
+        # 60-65   f5.1    observed slowness (seconds/degree)
+        comments.append(
+            'observed slowness (seconds/degree): "{}"'.format(line[59:65]))
+        # 67-72   f5.1    slowness residual (seconds/degree)
+        comments.append(
+            'slowness residual (seconds/degree): "{}"'.format(line[66:71]))
+        # 74      a1      time defining flag (T or _)
+        comments.append('time defining flag (T or _): "{}"'.format(line[73]))
+        # 75      a1      azimuth defining flag (A or _)
+        comments.append(
+            'azimuth defining flag (A or _): "{}"'.format(line[74]))
+        # 76      a1      slowness defining flag (S or _)
+        comments.append(
+            'slowness defining flag (S or _): "{}"'.format(line[75]))
+        # 78-82   f5.1    signal-to-noise ratio
+        comments.append('signal-to-noise ratio: "{}"'.format(line[77:82]))
+        # 84-92   f9.1    amplitude (nanometers)
+        amplitude = float_or_none(line[83:92])
+        # 94-98   f5.2    period (seconds)
+        period = float_or_none(line[93:98])
+        # 100     a1      type of pick (a = automatic, m = manual)
+        evaluation_mode = line[99]
+        # 101     a1      direction of short period motion
+        #                 (c = compression, d = dilatation, _= null)
+        polarity = POLARITY[line[100].strip().lower()]
+        # 102     a1      onset quality (i = impulsive, e = emergent,
+        #                                q = questionable, _ = null)
+        onset = ONSET[line[101].strip().lower()]
+        # 104-108 a5      magnitude type (mb, Ms, ML, mbmle, msmle)
+        magnitude_type = line[103:108].strip()
+        # 109     a1      min max indicator (<, >, or blank)
+        min_max_indicator = line[108]
+        # 110-113 f4.1    magnitude value
+        mag = float_or_none(line[109:113])
+        # 115-122 a8      arrival identification
+        phase_id = line[114:122].strip()
+
+        # process items
+        waveform_id = WaveformStreamID(station_code=station_code)
+        evaluation_mode = PICK_EVALUATION_MODE[evaluation_mode.strip().lower()]
+        comments = [Comment(text=c) for c in comments]
+        add_hash = phase_id and False or True
+        resource_id = self._construct_id(['pick'], add_hash=add_hash)
+        if mag:
+            comment = ('min max indicator (<, >, or blank): ' +
+                       min_max_indicator)
+            station_magnitude = StationMagnitude(
+                mag=mag, magnitude_type=magnitude_type,
+                resource_id=self._construct_id(['station_magnitude'],
+                                               add_hash=True),
+                comments=[Comment(text=comment)])
+        else:
+            station_magnitude = None
+
+        # assemble
+        pick = Pick(phase_hint=phase_hint, time=time, waveform_id=waveform_id,
+                    evaluation_mode=evaluation_mode, comments=comments,
+                    polarity=polarity, onset=onset, resource_id=resource_id)
+        if amplitude:
+            amplitude /= 1e9  # convert from nanometers to meters
+            amplitude = Amplitude(
+                unit='m', generic_amplitude=amplitude, period=period)
+        return pick, amplitude, station_magnitude
 
     @staticmethod
     def _parse_generic_comment(line):
