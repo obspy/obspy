@@ -318,6 +318,10 @@ class ISFReader(object):
                 azimuth_max_horizontal_uncertainty=_uncertainty_major_azimuth,
                 preferred_description='uncertainty ellipse',
                 confidence_level=90)
+            # event init always sets an empty QuantityError, even when
+            # specifying None, which is strange
+            for key in ['confidence_ellipsoid']:
+                setattr(origin_uncertainty, key, None)
         else:
             origin_uncertainty = None
         origin_quality = OriginQuality(
@@ -340,6 +344,11 @@ class ISFReader(object):
             origin_uncertainty=origin_uncertainty, time_fixed=time_fixed,
             epicenter_fixed=epicenter_fixed, origin_quality=origin_quality,
             comments=comments, creation_info=creation_info)
+        # event init always sets an empty QuantityError, even when specifying
+        # None, which is strange
+        for key in ('time_errors', 'longitude_errors', 'latitude_errors',
+                    'depth_errors'):
+            setattr(origin, key, None)
         return origin, event_type, event_type_certainty
 
     def _parse_magnitude(self, line):
@@ -379,11 +388,16 @@ class ISFReader(object):
             warnings.warn(msg)
 
         # combine and return
-        return Magnitude(
+        mag = Magnitude(
             magnitude_type=magnitude_type, mag=mag,
             station_count=station_count, creation_info=creation_info,
             mag_errors=mag_errors, origin_id=origin_id,
             resource_id=resource_id)
+        # event init always sets an empty QuantityError, even when specifying
+        # None, which is strange
+        for key in ['mag_errors']:
+            setattr(mag, key, None)
+        return mag
 
     def _get_pick_time(self, my_string):
         """
@@ -526,6 +540,10 @@ class ISFReader(object):
                 resource_id=self._construct_id(['station_magnitude'],
                                                add_hash=True),
                 comments=[self._make_comment(comment)])
+            # event init always sets an empty ResourceIdentifier, even when
+            # specifying None, which is strange
+            for key in ['origin_id', 'mag_errors']:
+                setattr(station_magnitude, key, None)
         else:
             station_magnitude = None
 
@@ -533,6 +551,11 @@ class ISFReader(object):
         pick = Pick(phase_hint=phase_hint, time=time, waveform_id=waveform_id,
                     evaluation_mode=evaluation_mode, comments=comments,
                     polarity=polarity, onset=onset, resource_id=resource_id)
+        # event init always sets an empty QuantityError, even when specifying
+        # None, which is strange
+        for key in ('time_errors', 'horizontal_slowness_errors',
+                    'backazimuth_errors'):
+            setattr(pick, key, None)
         if amplitude:
             amplitude /= 1e9  # convert from nanometers to meters
             amplitude = Amplitude(
