@@ -294,7 +294,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         st = self.client.get_waveforms(
             starttime=obspy.UTCDateTime(2017, 1, 1),
             endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
-            latitude=35.0, longitude=-120, maxradius=0.2,
+            latitude=35.0, longitude=-110, maxradius=0.3,
             channel="LHZ")
         # This yields 1 channel at the time of writing this test - I assume
         # it is unlikely to every yield less. So this test should be fairly
@@ -305,7 +305,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         st2 = self.client.get_waveforms_bulk(
             [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
               obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
-            latitude=35.0, longitude=-120, maxradius=0.2)
+            latitude=35.0, longitude=-110, maxradius=0.3)
         self.assertGreaterEqual(len(st2), 1)
 
         self.assertEqual(st, st2)
