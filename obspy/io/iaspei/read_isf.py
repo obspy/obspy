@@ -122,7 +122,7 @@ class ISFReader(object):
         # TODO check if the various blocks always come ordered same aas in our
         # test data or if oreder of blocks is random.. then we would have to
         # acoount for random order..
-        event_id = '/'.join([self.resource_id_prefix, 'event',
+        event_id = '/'.join([str(self.cat.resource_id), 'event',
                              line[6:14].strip()])
         region = line[15:80].strip()
         event = Event(
@@ -285,7 +285,7 @@ class ISFReader(object):
         # 119-127 a9    author of the origin
         author = line[118:127].strip()
         # 129-136 a8    origin identification
-        origin_id = '/'.join([self.resource_id_prefix, 'origin',
+        origin_id = '/'.join([str(self.cat.resource_id), 'origin',
                               line[128:136].strip()])
 
         # do some combinations
