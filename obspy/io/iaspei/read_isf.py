@@ -9,6 +9,29 @@ from obspy.core.event import (
 test_file = '19670130012028.isf'
 
 
+EVENT_TYPE_CERTAINTY = {
+    "uk": (None, None),
+    "de": ("earthquake", "known"),
+    "fe": ("earthquake", "known"),
+    "ke": ("earthquake", "known"),
+    "se": ("earthquake", "suspected"),
+    "kr": ("rock burst", "known"),
+    "sr": ("rock burst", "suspected"),
+    "ki": ("induced or triggered event", "known"),
+    "si": ("induced or triggered event", "suspected"),
+    "km": ("mining explosion", "known"),
+    "sm": ("mining explosion", "suspected"),
+    "kh": ("chemical explosion", "known"),
+    "sh": ("chemical explosion", "suspected"),
+    "kx": ("experimental explosion", "known"),
+    "sx": ("experimental explosion", "suspected"),
+    "kn": ("nuclear explosion", "known"),
+    "sn": ("nuclear explosion", "suspected"),
+    "ls": ("landslide", "known"),
+    "": (None, None),
+    }
+
+
 class ISFEndOfFile(StopIteration):
     pass
 
@@ -79,6 +102,7 @@ class ISFReader(object):
             raise ObsPyReadingError()
         line = self._get_next_line()
         catalog_description = line.strip()
+        self.cat.description = catalog_description
         line = self._get_next_line()
         if not line.startswith('Event'):
             raise ObsPyReadingError()
@@ -109,7 +133,10 @@ class ISFReader(object):
             line = self._get_next_line()
             if line.split()[:3] != ['Date', 'Time', 'Err']:
                 continue
-            event.origins.extend(self._read_origins())
+            origins, event_type, event_type_certainty = self._read_origins()
+            event.origins.extend(origins)
+            event.event_type = event_type
+            event.event_type_certainty = event_type_certainty
             break
 
         # read publications block
@@ -132,16 +159,36 @@ class ISFReader(object):
 
     def _read_origins(self):
         origins = []
+        event_types_certainties = []
         while True:
             line = self._get_next_line()
             if re.match('[0-9]{4}/[0-9]{2}/[0-9]{2}', line):
-                origins.append(self._parse_origin(line))
+                origin, event_type, event_type_certainty = \
+                    self._parse_origin(line)
+                origins.append(origin)
+                event_types_certainties.append(
+                    (event_type, event_type_certainty))
                 continue
             if line.strip().startswith('('):
                 origins[-1].comments.append(
                     self._parse_origin_comment(line))
                 continue
-            return origins
+            break
+        # check event types/certainties for consistency
+        event_types = set(type_ for type_, _ in event_types_certainties)
+        event_types.discard(None)
+        if len(event_types) == 1:
+            event_type = event_types.pop()
+            certainties = set(
+                cert for type_, cert in event_types_certainties
+                if type_ == event_type)
+            if "known" in certainties:
+                event_type_certainty = "known"
+            elif "suspected" in certainties:
+                event_type_certainty = "suspected"
+            else:
+                event_type_certainty = None
+        return origins, event_type, event_type_certainty
 
     def _read_magnitudes(self):
         magnitudes = []
@@ -227,26 +274,12 @@ class ISFReader(object):
         #                                 other)
         location_method = line[114]
         # 116-117 a2    event type:
-        #                 uk = unknown
-        #                 de = damaging earthquake ( Not standard IMS )
-        #                 fe = felt earthquake ( Not standard IMS )
-        #                 ke = known earthquake
-        #                 se = suspected earthquake
-        #                 kr = known rockburst
-        #                 sr = suspected rockburst
-        #                 ki = known induced event
-        #                 si = suspected induced event
-        #                 km = known mine expl.
-        #                 sm = suspected mine expl.
-        #                 kh = known chemical expl. ( Not standard IMS )
-        #                 sh = suspected chemical expl. ( Not standard IMS )
-        #                 kx = known experimental expl.
-        #                 sx = suspected experimental expl.
-        #                 kn = known nuclear expl.
-        #                 sn = suspected nuclear explosion
-        #                 ls = landslide
-        # XXX map to QuakeML enum
-        event_type = None
+        # XXX event type and event type certainty is specified per origin,
+        # XXX not sure how to bset handle this, for now only use it if
+        # XXX information on the individual origins do not clash.. not sure yet
+        # XXX how to identify the preferred origin..
+        event_type, event_type_certainty = \
+            EVENT_TYPE_CERTAINTY[line[115:117].strip()]
         # 119-127 a9    author of the origin
         author = line[118:127].strip()
         # 129-136 a8    origin identification
@@ -277,11 +310,11 @@ class ISFReader(object):
             latitude=latitude, depth=depth, depth_errors=depth_error,
             origin_uncertainty=origin_uncertainty, time_fixed=time_fixed,
             epicenter_fixed=epicenter_fixed, origin_quality=origin_quality)
-        return origin
+        return origin, event_type, event_type_certainty
 
     @staticmethod
     def _parse_origin_comment(line):
-        comment = Comment()
+        comment = Comment(text=line)
         return comment
 
 
@@ -292,3 +325,4 @@ def _read_isf(fh):
 
 with open(test_file, 'rb') as fh:
     cat = _read_isf(fh)
+cat.write('/tmp/isc.xml', format="QuakeML")
