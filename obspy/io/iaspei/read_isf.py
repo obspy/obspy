@@ -372,6 +372,62 @@ class ISFReader(object):
             mag_errors=mag_errors, origin_id=origin_id,
             resource_id=resource_id)
 
+    def _get_pick_time(self, my_string):
+        """
+        Look up absolute time of pick including date, based on the time-of-day
+        only representation in the phase line
+        """
+        # TODO maybe we should defer phases block parsing.. but that will make
+        # the whole reading more complex
+        if not self.cat.events:
+            msg = ('Can not parse phases block before parsing origins block, '
+                   'because phase lines do not contain date information, only '
+                   'time-of-day')
+            raise NotImplementedError(msg)
+        origin_times = [origin.time for origin in self.cat.events[-1].origins]
+        if not origin_times:
+            msg = ('Can not parse phases block unless origins with origin '
+                   'time information are present, because phase lines do not '
+                   'contain date information, only time-of-day')
+            raise NotImplementedError(msg)
+        # XXX this whole routine is on shaky ground..
+        # since picks only have a time-of-day and there's not even an
+        # association to one of the origins, in principle this would need some
+        # real tough logic to make it failsafe. actually this would mean using
+        # taup with the given epicentral distance of the pick and check what
+        # date is appropriate.
+        # for now just do a very simple logic and raise exceptions when things
+        # look fishy. this is ugly but it's not worth spending more time on
+        # this, unless somebody starts bumping into one of the explicitly
+        # raised exceptions below.
+        origin_time_min = min(origin_times)
+        origin_time_max = max(origin_times)
+        hour = int(my_string[0:2])
+        minute = int(my_string[3:5])
+        seconds = float(my_string[6:])
+        # make sure event origin times are reasonably close together
+        if origin_time_max - origin_time_min > 5 * 3600:
+            msg = ('Origin times in event differ by more than 5 hours, this '
+                   'is currently not implemented as determining the date of '
+                   'the pick might be tricky. Sorry.')
+            raise NotImplementedError(msg)
+        # now try the date of the latest origin and raise if things seem fishy
+        t = UTCDateTime(origin_time_max.date)
+        t += 3600 * hour + 60 * minute + seconds
+        for origin_time in origin_times:
+            if t < origin_time:
+                msg = ("The pick time that was determined is earlier than one "
+                       "of the event's origin times. This is currently not "
+                       "implemented, sorry. Please report an issue on our "
+                       "github.")
+                raise NotImplementedError(msg)
+            if t - origin_time > 6 * 3600:
+                msg = ('This pick would have a time more than 5 hours after '
+                       'one of the origins in the event. This seems fishy. '
+                       'Please report an issue on our github.')
+                raise NotImplementedError(msg)
+        return t
+
     @staticmethod
     def _parse_generic_comment(line):
         comment = Comment(text=line)
