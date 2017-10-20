@@ -4,7 +4,7 @@ from obspy import UTCDateTime
 from obspy.core.util.obspy_types import ObsPyReadingError
 from obspy.core.event import (
     Catalog, Event, Origin, Comment, EventDescription, OriginUncertainty,
-    QuantityError, OriginQuality)
+    QuantityError, OriginQuality, CreationInfo)
 
 test_file = '19670130012028.isf'
 
@@ -30,6 +30,8 @@ EVENT_TYPE_CERTAINTY = {
     "ls": ("landslide", "known"),
     "": (None, None),
     }
+LOCATION_METHODS = {'i': 'inversion', 'p': 'pattern recognition',
+                    'g': 'ground truth', 'o': 'other', '': None}
 
 
 class ISFEndOfFile(StopIteration):
@@ -272,14 +274,14 @@ class ISFReader(object):
         # 114     a1    location method: (i = inversion, p = pattern
         #                                 recognition, g = ground truth, o =
         #                                 other)
-        location_method = line[114]
+        location_method = LOCATION_METHODS[line[114].strip().lower()]
         # 116-117 a2    event type:
         # XXX event type and event type certainty is specified per origin,
         # XXX not sure how to bset handle this, for now only use it if
         # XXX information on the individual origins do not clash.. not sure yet
         # XXX how to identify the preferred origin..
         event_type, event_type_certainty = \
-            EVENT_TYPE_CERTAINTY[line[115:117].strip()]
+            EVENT_TYPE_CERTAINTY[line[115:117].strip().lower()]
         # 119-127 a9    author of the origin
         author = line[118:127].strip()
         # 129-136 a8    origin identification
@@ -305,11 +307,21 @@ class ISFReader(object):
             used_station_count=used_station_count, azimuthal_gap=azimuthal_gap,
             minimum_distance=minimum_distance,
             maximum_distance=maximum_distance)
+        comments = []
+        if location_method:
+            comments.append(
+                Comment(text='location method: ' + location_method))
+        if author:
+            creation_info = CreationInfo(author=author)
+        else:
+            creation_info = None
+        # assemble whole event
         origin = Origin(
             time=time, resource_id=origin_id, longitude=longitude,
             latitude=latitude, depth=depth, depth_errors=depth_error,
             origin_uncertainty=origin_uncertainty, time_fixed=time_fixed,
-            epicenter_fixed=epicenter_fixed, origin_quality=origin_quality)
+            epicenter_fixed=epicenter_fixed, origin_quality=origin_quality,
+            comments=comments, creation_info=creation_info)
         return origin, event_type, event_type_certainty
 
     @staticmethod
