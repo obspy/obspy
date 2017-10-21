@@ -5,7 +5,8 @@ MAINTAINER Lion Krischer
 RUN yum -y update || true
 RUN yum install curl gcc bzip2 tar
 
-RUN curl https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86.sh -o miniconda.sh
+#RUN curl https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86.sh -o miniconda.sh
+RUN curl https://repo.continuum.io/miniconda/Miniconda3-3.19.0-Linux-x86.sh -o miniconda.sh
 
 ## Force installation.
 RUN yes yes | bash miniconda.sh -b -p /miniconda
