@@ -613,7 +613,7 @@ def __is_ims10_bulletin(fh, **kwargs):
     """
     Checks whether a file is ISF IMS1.0 bulletin format.
 
-    :type filename: str or file
+    :type fh: Open file or file-like object.
     :param filename: name of the file to be checked or open file-like object.
     :rtype: bool
     :return: ``True`` if ISF IMS1.0 bulletin file.
@@ -628,6 +628,6 @@ def __is_ims10_bulletin(fh, **kwargs):
     return False
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import doctest
     doctest.testmod(exclude_empty=True)
