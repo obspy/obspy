@@ -15,6 +15,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import io
 import warnings
 
 from obspy import UTCDateTime
@@ -597,23 +598,31 @@ def _is_ims10_bulletin(filename, **kwargs):
     :rtype: bool
     :return: ``True`` if ISF IMS1.0 bulletin file.
     """
+    # Small layer to handle open file(-like) objects and filenames the same.
     if all(hasattr(filename, attr) for attr in ['tell', 'seek', 'read']):
         # we got an open file
         pos = filename.tell()
-        filename.seek(0)
-        first_line = filename.readline()
+        ret_val = __is_ims10_bulletin(filename, **kwargs)
         filename.seek(pos)
-        if hasattr(first_line, 'decode'):
-            first_line = first_line.decode('UTF-8')
-    else:
-        try:
-            with open(filename, 'rb') as f:
-                first_line = f.readline().decode('UTF-8')
-        except Exception:
-            try:
-                first_line = filename.decode().decode('UTF-8')
-            except Exception:
-                first_line = str(filename)
+        return ret_val
+    with io.open(filename, "rb") as fh:
+        return __is_ims10_bulletin(fh, **kwargs)
+
+
+def __is_ims10_bulletin(fh, **kwargs):
+    """
+    Checks whether a file is ISF IMS1.0 bulletin format.
+
+    :type filename: str or file
+    :param filename: name of the file to be checked or open file-like object.
+    :rtype: bool
+    :return: ``True`` if ISF IMS1.0 bulletin file.
+    """
+    first_line = fh.readline()
+    try:
+        first_line = first_line.decode()
+    except:
+        pass
     if first_line.strip().upper() == 'DATA_TYPE BULLETIN IMS1.0:SHORT':
         return True
     return False

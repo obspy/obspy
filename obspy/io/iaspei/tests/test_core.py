@@ -118,6 +118,30 @@ class IASPEITestCase(unittest.TestCase):
         self.assertTrue(_is_ims10_bulletin(self.path_to_ims))
         self.assertFalse(_is_ims10_bulletin(path_to_quakeml))
 
+    def test_is_ims10_bulltin_open_file(self):
+        with open(self.path_to_ims, "rb") as fh:
+            self.assertTrue(_is_ims10_bulletin(fh))
+
+        with open(self.path_to_ims, "rt") as fh:
+            self.assertTrue(_is_ims10_bulletin(fh))
+
+        with open(path_to_quakeml, "rb") as fh:
+            self.assertFalse(_is_ims10_bulletin(fh))
+
+        with open(path_to_quakeml, "rt") as fh:
+            self.assertFalse(_is_ims10_bulletin(fh))
+
+    def test_is_ims10_bulltin_from_bytes_io(self):
+        with open(self.path_to_ims, "rb") as fh:
+            with io.BytesIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                self.assertTrue(_is_ims10_bulletin(buf))
+
+        with open(path_to_quakeml, "rb") as fh:
+            with io.BytesIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                self.assertFalse(_is_ims10_bulletin(buf))
+
 
 def suite():  # pragma: no cover
     return unittest.makeSuite(IASPEITestCase, 'test')
