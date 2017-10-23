@@ -23,7 +23,8 @@ import warnings
 import requests
 
 import obspy
-from obspy.core.compatibility import configparser, get_text_from_response
+from obspy.core.compatibility import (
+    configparser, get_text_from_response, urlparse)
 from obspy.core.inventory.util import _textwrap
 
 
@@ -45,7 +46,8 @@ class NRL(object):
     def __new__(cls, root=None):
         # root provided and it's no web URL
         if root:
-            if root.startwith('http://') or root.startwith('https://'):
+            scheme = urlparse(root).scheme
+            if scheme in ('http', 'https'):
                 return super(NRL, cls).__new__(RemoteNRL)
             # Check if it's really a folder on the file-system.
             if not os.path.isdir(root):
