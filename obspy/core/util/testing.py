@@ -462,7 +462,7 @@ class ImageComparison(NamedTemporaryFile):
                 raise ImageComparisonException(msg)
             raise
         # simply reraise on any other unhandled exceptions
-        except:
+        except Exception:
             failed = True
             raise
         # if image comparison not raises by itself, the test failed if we get a

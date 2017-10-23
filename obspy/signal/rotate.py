@@ -103,9 +103,9 @@ def rotate_zne_lqt(z, n, e, ba, inc):
         raise ValueError("Inclination should be between 0 and 360 degrees!")
     ba = radians(ba)
     inc = radians(inc)
-    l = z * cos(inc) - n * sin(inc) * cos(ba) - e * sin(inc) * sin(ba)
-    q = z * sin(inc) + n * cos(inc) * cos(ba) + e * cos(inc) * sin(ba)
-    t = n * sin(ba) - e * cos(ba)
+    l = z * cos(inc) - n * sin(inc) * cos(ba) - e * sin(inc) * sin(ba)  # NOQA
+    q = z * sin(inc) + n * cos(inc) * cos(ba) + e * cos(inc) * sin(ba)  # NOQA
+    t = n * sin(ba) - e * cos(ba)  # NOQA
     return l, q, t
 
 

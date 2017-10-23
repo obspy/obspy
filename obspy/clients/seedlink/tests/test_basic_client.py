@@ -39,13 +39,7 @@ class ClientTestCase(unittest.TestCase):
         # buffer stores data and how close to realtime the data is available,
         # so check some different offsets and see if we get some data
         for offset in (3600, 2000, 1000, 500):
-            try:
-                _test_offset_from_realtime(offset)
-            except:
-                continue
-            break
-        else:
-            raise
+            _test_offset_from_realtime(offset)
 
 
 def suite():
