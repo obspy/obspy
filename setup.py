@@ -88,18 +88,18 @@ KEYWORDS = [
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'win', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
-    'focal mechanism', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
-    'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
-    'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
-    'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS',
-    'PDAS', 'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime',
-    'REFTEK', 'REFTEK130', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
-    'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN',
-    'SeisHub', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
-    'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
-    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
-    'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston',
-    'XML-SEED', 'XSEED']
+    'focal mechanism', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'IASPEI',
+    'imaging', 'IMS', 'instrument correction', 'instrument simulation', 'IRIS',
+    'ISF', 'kinemetrics', 'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad',
+    'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'NRL',
+    'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
+    'real time', 'realtime', 'REFTEK', 'REFTEK130', 'RT-130', 'RESP',
+    'response file', 'RT', 'SAC', 'scardec', 'sc3ml', 'SDS', 'SEED',
+    'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
+    'seismology', 'seismogram', 'seismograms', 'shapefile', 'signal', 'slink',
+    'spectrogram', 'StationXML', 'taper', 'taup', 'travel time', 'trigger',
+    'VERCE', 'WAV', 'waveform', 'WaveServer', 'WaveServerV', 'WebDC',
+    'web service', 'Winston', 'XML-SEED', 'XSEED']
 
 # when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
 INSTALL_REQUIRES = [
@@ -295,7 +295,8 @@ ENTRY_POINTS = {
         'SHAPEFILE = obspy.io.shapefile.core',
         'KML = obspy.io.kml.core',
         'FNETMT = obspy.io.nied.fnetmt',
-        'GSE2 = obspy.io.gse2.bulletin'
+        'GSE2 = obspy.io.gse2.bulletin',
+        'IMS10BULLETIN = obspy.io.iaspei.core',
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -361,6 +362,10 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.event.KML': [
         'writeFormat = obspy.io.kml.core:_write_kml',
+        ],
+    'obspy.plugin.event.IMS10BULLETIN': [
+        'isFormat = obspy.io.iaspei.core:_is_ims10_bulletin',
+        'readFormat = obspy.io.iaspei.core:_read_ims10_bulletin',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',

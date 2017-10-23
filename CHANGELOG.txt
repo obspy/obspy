@@ -7,6 +7,8 @@ master: (doi: 10.5281/zenodo.165135)
    * Add Nordic format (s-file) read/write (see #1517)
    * Read and write support for events in the SCARDEC catlogue format
      (see #1391).
+   * Read support for IASPEI ISF ISM 1.0 Bulletin event data,
+     (see #1946)
    * Write support for AH (Ad Hoc version 1) format (see #1754)
    * Client to access the Nominal Response Library (NRL) (see #1185).
    * `obspy.read_inventory()` can now read dataless SEED and RESP files
