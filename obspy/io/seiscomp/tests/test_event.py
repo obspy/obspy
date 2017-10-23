@@ -62,9 +62,7 @@ class EventTestCase(unittest.TestCase):
             dat1 = tf.read().decode("utf-8").splitlines()
             with open(filepath_cmp, 'rb') as f:
                 dat2 = f.read().decode("utf-8").splitlines()
-            self.assertEqual(len(dat1), len(dat2))
-            for d1, d2 in zip(dat1, dat2):
-                self.assertEqual(d1, d2)
+            self.compare_list_of_lines(dat1, dat2)
 
     def cmp_write_xslt_file(self, quakeml_file, sc3ml_file, validate=True,
                             path=None):
@@ -88,9 +86,7 @@ class EventTestCase(unittest.TestCase):
             dat1 = tf.read().decode("utf-8").splitlines()
             with open(filepath_cmp, 'rb') as f:
                 dat2 = f.read().decode("utf-8").splitlines()
-            self.assertEqual(len(dat1), len(dat2))
-            for d1, d2 in zip(dat1, dat2):
-                self.assertEqual(d1, d2)
+            self.compare_list_of_lines(dat1, dat2)
 
     def test_sc3ml_versions(self):
         """
@@ -308,9 +304,7 @@ class EventTestCase(unittest.TestCase):
             dat1 = tf.read().decode("utf-8").splitlines()
             with open(filepath_cmp, 'rb') as f:
                 dat2 = f.read().decode("utf-8").splitlines()
-            self.assertEqual(len(dat1), len(dat2))
-            for d1, d2 in zip(dat1, dat2):
-                self.assertEqual(d1, d2)
+            self.compare_list_of_lines(dat1, dat2)
 
     def test_write_remove_events(self):
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
@@ -325,9 +319,7 @@ class EventTestCase(unittest.TestCase):
             dat1 = tf.read().decode("utf-8").splitlines()
             with open(filepath_cmp, 'rb') as f:
                 dat2 = f.read().decode("utf-8").splitlines()
-            self.assertEqual(len(dat1), len(dat2))
-            for d1, d2 in zip(dat1, dat2):
-                self.assertEqual(d1, d2)
+            self.compare_list_of_lines(dat1, dat2)
 
     def test_read_and_write(self):
         filename = os.path.join(self.path, 'qml-example-1.2-RC3_write.sc3ml')
@@ -339,10 +331,12 @@ class EventTestCase(unittest.TestCase):
             dat1 = tf.read().decode("utf-8").splitlines()
             with open(filename, 'rb') as f:
                 dat2 = f.read().decode("utf-8").splitlines()
-            self.assertEqual(len(dat1), len(dat2))
-            for d1, d2 in zip(dat1, dat2):
-                self.assertEqual(d1, d2)
+            self.compare_list_of_lines(dat1, dat2)
 
+    def compare_list_of_lines(self, list1, list2):
+        self.assertEqual(len(list1), len(list2))
+        for d1, d2 in zip(list1, list2):
+            self.assertEqual(d1, d2)
 
 def suite():
     return unittest.makeSuite(EventTestCase, "test")
