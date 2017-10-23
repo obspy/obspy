@@ -127,16 +127,6 @@ class IASPEITestCase(unittest.TestCase):
         self.assertEqual(len(cat), 1)
         _assert_catalog(cat)
 
-    def test_reading_failure(self):
-        """
-        A reading failure from an open file should not change the file pointer.
-        """
-        with io.BytesIO(b'asdjflasjfjasjfasldfjasdf') as buf:
-            buf.seek(3, 0)
-            with self.assertRaises(Exception):
-                _read_ims10_bulletin(buf, _no_uuid_hashes=True)
-            self.assertEqual(buf.tell(), 3)
-
     def test_reading_via_plugin(self):
         """
         Test reading IMS10 bulletin format

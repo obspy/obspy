@@ -15,7 +15,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import io
 import warnings
 
 from obspy import UTCDateTime
@@ -574,27 +573,51 @@ class ISFReader(object):
         return self._make_comment(line)
 
 
-def _read_ims10_bulletin(filename, **kwargs):
+def _buffer_proxy(filename_or_buf, function, reset_fp=True,
+                  file_mode="rb", *args, **kwargs):
+    """
+    Calls a function with an open file or file-like object as the first
+    argument. If the file originally was a filename, the file will be
+    opened, otherwise it will just be passed to the underlying function.
+
+    :param filename_or_buf: File to pass.
+    :type filename_or_buf: str, open file, or file-like object.
+    :param function: The function to call.
+    :param reset_fp: If True, the file pointer will be set to the initial
+        position after the function has been called.
+    :type reset_fp: bool
+    :param file_mode: Mode to open file in if necessary.
+    """
+    try:
+        position = filename_or_buf.tell()
+        is_buffer = True
+    except AttributeError:
+        is_buffer = False
+
+    if is_buffer is True:
+        ret_val = function(filename_or_buf, *args, **kwargs)
+        if reset_fp:
+            filename_or_buf.seek(position, 0)
+        return ret_val
+    else:
+        with open(filename_or_buf, file_mode) as fh:
+            return function(fh, *args, **kwargs)
+
+
+def _read_ims10_bulletin(filename_or_buf, **kwargs):
     """
     Reads an ISF IMS1.0 bulletin file to a :class:`~obspy.core.event.Catalog`
     object.
 
-    :param filename: File or file-like object.
+    :param filename_or_buf: File or file-like object.
     """
-    # Small layer to handle open file(-like) objects and filenames the same.
-    if hasattr(filename, "read"):
-        # we got an open file
-        pos = filename.tell()
-        try:
-            return __read_ims10_bulletin(filename, **kwargs)
-        except:
-            # In case reading files, reset the file position and raise the
-            # original error.
-            filename.seek(pos, 0)
-            raise
-    # Otherwise just open the file.
-    with io.open(filename, "rb") as fh:
-        return __read_ims10_bulletin(fh, **kwargs)
+    try:
+        return _buffer_proxy(filename_or_buf, __read_ims10_bulletin,
+                             reset_fp=False, **kwargs)
+    # Happens for example when passing the data as a string which would be
+    # interpreted as a filename.
+    except OSError:
+        return False
 
 
 def __read_ims10_bulletin(fh, **kwargs):  # NOQA
@@ -607,24 +630,23 @@ def __read_ims10_bulletin(fh, **kwargs):  # NOQA
     return ISFReader(fh, **kwargs).deserialize()
 
 
-def _is_ims10_bulletin(filename, **kwargs):
+def _is_ims10_bulletin(filename_or_buf, **kwargs):
     """
     Checks whether a file is ISF IMS1.0 bulletin format.
 
-    :type filename: str or file
-    :param filename: name of the file to be checked or open file-like object.
+    :type filename_or_buf: str or file
+    :param filename_or_buf: name of the file to be checked or open file-like
+        object.
     :rtype: bool
     :return: ``True`` if ISF IMS1.0 bulletin file.
     """
-    # Small layer to handle open file(-like) objects and filenames the same.
-    if all(hasattr(filename, attr) for attr in ['tell', 'seek', 'read']):
-        # we got an open file
-        pos = filename.tell()
-        ret_val = __is_ims10_bulletin(filename, **kwargs)
-        filename.seek(pos, 0)
-        return ret_val
-    with io.open(filename, "rb") as fh:
-        return __is_ims10_bulletin(fh, **kwargs)
+    try:
+        return _buffer_proxy(filename_or_buf, __is_ims10_bulletin,
+                             reset_fp=True, **kwargs)
+    # Happens for example when passing the data as a string which would be
+    # interpreted as a filename.
+    except OSError:
+        return False
 
 
 def __is_ims10_bulletin(fh, **kwargs):  # NOQA
