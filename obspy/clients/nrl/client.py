@@ -23,8 +23,7 @@ import warnings
 import requests
 
 import obspy
-from obspy.core.compatibility import (
-    configparser, get_text_from_response, urlparse)
+from obspy.core.compatibility import configparser, get_text_from_response
 from obspy.core.inventory.util import _textwrap
 
 
@@ -46,15 +45,15 @@ class NRL(object):
     def __new__(cls, root=None):
         # root provided and it's no web URL
         if root:
-            scheme = urlparse(root).scheme
-            if not scheme or scheme == 'file':
-                # Check if it's really a folder on the file-system.
-                if not os.path.isdir(root):
-                    msg = ("Provided path '{}' seems to be a local file path "
-                           "but directory does not exist.").format(
-                                root)
-                    raise OSError(msg)
-                return super(NRL, cls).__new__(LocalNRL)
+            if root.startwith('http://') or root.startwith('https://'):
+                return super(NRL, cls).__new__(RemoteNRL)
+            # Check if it's really a folder on the file-system.
+            if not os.path.isdir(root):
+                msg = ("Provided path '{}' seems to be a local file path "
+                       "but directory does not exist.").format(
+                            root)
+                raise OSError(msg)
+            return super(NRL, cls).__new__(LocalNRL)
         # Otherwise delegate to the remote NRL client to deal with all kinds
         # of remote resources (currently only HTTP).
         return super(NRL, cls).__new__(RemoteNRL)
