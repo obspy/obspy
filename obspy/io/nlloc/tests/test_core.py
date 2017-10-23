@@ -69,7 +69,7 @@ class NLLOCTestCase(unittest.TestCase):
             got = tf.read().decode().splitlines()
 
         self.assertEqual(len(expected), len(got))
-        for d1,d2 in zip(expected, got):
+        for d1, d2 in zip(expected, got):
             self.assertEqual(d1, d2)
 
         # write manually

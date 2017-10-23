@@ -92,7 +92,6 @@ class EventTestCase(unittest.TestCase):
             for d1, d2 in zip(dat1, dat2):
                 self.assertEqual(d1, d2)
 
-
     def test_sc3ml_versions(self):
         """
         Test multiple schema versions
