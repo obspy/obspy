@@ -16,8 +16,10 @@ import doctest
 import inspect
 import io
 import os
+import re
 import sys
 import tempfile
+import unicodedata
 from collections import OrderedDict
 
 import numpy as np
@@ -530,6 +532,24 @@ def _get_deprecated_argument_action(old_name, new_name, real_action='store'):
                 setattr(namespace, self.dest, False)
 
     return _Action
+
+
+def sanitize_filename(filename):
+    """
+    Modified by Django's slugify functions.
+
+    :param filename: The filename.
+    """
+    try:
+        filename = filename.decode()
+    except:
+        pass
+
+    value = unicodedata.normalize('NFKD', filename).encode(
+        'ascii', 'ignore').decode('ascii')
+    # In constrast to django we allow dots and don't lowercase.
+    value = re.sub(r'[^\w\.\s-]', '', value).strip()
+    return re.sub(r'[-\s]+', '-', value)
 
 
 def download_to_file(url, filename_or_buffer, chunk_size=1024):

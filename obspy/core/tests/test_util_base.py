@@ -9,7 +9,7 @@ import unittest
 
 from obspy.core.compatibility import mock
 from obspy.core.util.base import (NamedTemporaryFile, get_dependency_version,
-                                  download_to_file)
+                                  download_to_file, sanitize_filename)
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 
 from requests import HTTPError
@@ -108,6 +108,16 @@ class UtilBaseTestCase(unittest.TestCase):
                 self.assertEqual(e.exception.args[0],
                                  "%s HTTP Error: %s for url: %s" %
                                  (code, reason, url))
+
+    def test_sanitize_filename(self):
+        self.assertEqual(sanitize_filename("example.mseed"),
+                         "example.mseed")
+        self.assertEqual(sanitize_filename("Example.mseed"),
+                         "Example.mseed")
+        self.assertEqual(sanitize_filename("example.mseed?raw=True"),
+                         "example.mseedrawTrue")
+        self.assertEqual(sanitize_filename("Example.mseed?raw=true"),
+                         "Example.mseedrawtrue")
 
 
 def suite():
