@@ -542,7 +542,7 @@ def sanitize_filename(filename):
     """
     try:
         filename = filename.decode()
-    except:
+    except AttributeError:
         pass
 
     value = unicodedata.normalize('NFKD', filename).encode(
