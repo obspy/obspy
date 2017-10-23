@@ -25,7 +25,7 @@ from matplotlib import rcParams
 
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
-    _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage)
+    _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage, Response)
 from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
@@ -309,6 +309,20 @@ class ResponseTestCase(unittest.TestCase):
         np.testing.assert_allclose(
             out, [0 + 9869.2911771081963j, 0 + 19738.582354216393j,
                   0 + 39477.164708432785j])
+
+    def construct_response_from_paz_values(self):
+        poles = [1+2j, 1-2j, 2+2j, 2-2j]
+        zeros = [0, 0, 5]
+        resp = Response.from_paz(zeros, poles)
+
+    def construct_new_response_paz(self):
+        zeros = [0., 0., -9., -160.7, -3108.]
+        poles = [-0.03852+0.03658j, -0.03852-0.03658j, -178., -135.+160.j,
+                -135.-160.j, -671.+1514.j, -671.-1514.j]
+        gain = 3.08*(10**5)
+        sensitivity = 1201.*(2**26/40.)
+        resp = Response.from_paz(zeros, poles, stage_gain=gain,
+                                 response_sensitivity=sensitivity)
 
     def test_str_method_of_the_polynomial_response_stage(self):
         # First with gain and gain frequency.
