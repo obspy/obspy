@@ -22,7 +22,6 @@ from obspy.core.event import (
     Catalog, Event, Origin, Comment, EventDescription, OriginUncertainty,
     QuantityError, OriginQuality, CreationInfo, Magnitude, ResourceIdentifier,
     Pick, StationMagnitude, WaveformStreamID, Amplitude)
-from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.obspy_types import ObsPyReadingError
 from .util import (
     float_or_none, int_or_none, fixed_flag, evaluation_mode_and_status,
@@ -589,7 +588,6 @@ def _read_ims10_bulletin(filename, **kwargs):
             fh.close()
 
 
-@map_example_filename("filename")
 def _is_ims10_bulletin(filename, **kwargs):
     """
     Checks whether a file is ISF IMS1.0 bulletin format.
