@@ -62,12 +62,19 @@ class ISFEndOfFile(StopIteration):
     pass
 
 
+def _decode_if_possible(value, encoding="UTF-8"):
+    try:
+        return value.decode(encoding)
+    except:
+        return value
+
+
 class ISFReader(object):
     encoding = 'UTF-8'
     resource_id_prefix = 'smi:local'
 
     def __init__(self, fh, **kwargs):
-        self.lines = [line.decode(self.encoding).rstrip()
+        self.lines = [_decode_if_possible(line, self.encoding).rstrip()
                       for line in fh.readlines()
                       if line.strip()]
         self.cat = Catalog()
@@ -572,21 +579,32 @@ def _read_ims10_bulletin(filename, **kwargs):
     Reads an ISF IMS1.0 bulletin file to a :class:`~obspy.core.event.Catalog`
     object.
 
-    :param filename: File or file-like object in text mode.
+    :param filename: File or file-like object.
     """
-    # Open filehandler or use an existing file like object.
-    if not hasattr(filename, "read"):
-        file_opened = True
-        fh = open(filename, 'rb')
-    else:
-        file_opened = False
-        fh = filename
-    try:
-        catalog = ISFReader(fh, **kwargs).deserialize()
-        return catalog
-    finally:
-        if file_opened:
-            fh.close()
+    # Small layer to handle open file(-like) objects and filenames the same.
+    if hasattr(filename, "read"):
+        # we got an open file
+        pos = filename.tell()
+        try:
+            return __read_ims10_bulletin(filename, **kwargs)
+        except:
+            # In case reading files, reset the file position and raise the
+            # original error.
+            filename.seek(pos, 0)
+            raise
+    # Otherwise just open the file.
+    with io.open(filename, "rb") as fh:
+        return __read_ims10_bulletin(fh, **kwargs)
+
+
+def __read_ims10_bulletin(fh, **kwargs):
+    """
+    Reads an ISF IMS1.0 bulletin file to a :class:`~obspy.core.event.Catalog`
+    object.
+
+    :param fh: File or file-like object.
+    """
+    return ISFReader(fh, **kwargs).deserialize()
 
 
 def _is_ims10_bulletin(filename, **kwargs):
@@ -603,7 +621,7 @@ def _is_ims10_bulletin(filename, **kwargs):
         # we got an open file
         pos = filename.tell()
         ret_val = __is_ims10_bulletin(filename, **kwargs)
-        filename.seek(pos)
+        filename.seek(pos, 0)
         return ret_val
     with io.open(filename, "rb") as fh:
         return __is_ims10_bulletin(fh, **kwargs)

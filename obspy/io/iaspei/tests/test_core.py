@@ -102,6 +102,41 @@ class IASPEITestCase(unittest.TestCase):
         self.assertEqual(len(cat), 1)
         _assert_catalog(cat)
 
+    def test_reading_via_file(self):
+        """
+        Test reading IMS10 bulletin format from open files.
+        """
+        with io.open(self.path_to_ims, "rb") as fh:
+            cat = _read_ims10_bulletin(fh, _no_uuid_hashes=True)
+        self.assertEqual(len(cat), 1)
+        _assert_catalog(cat)
+
+        with io.open(self.path_to_ims, "rt") as fh:
+            cat = _read_ims10_bulletin(fh, _no_uuid_hashes=True)
+        self.assertEqual(len(cat), 1)
+        _assert_catalog(cat)
+
+    def test_reading_via_bytes_io(self):
+        """
+        Test reading IMS10 bulletin format from bytes io object.
+        """
+        with io.open(self.path_to_ims, "rb") as fh:
+            with io.BytesIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                cat = _read_ims10_bulletin(buf, _no_uuid_hashes=True)
+        self.assertEqual(len(cat), 1)
+        _assert_catalog(cat)
+
+    def test_reading_failure(self):
+        """
+        A reading failure from an open file should not change the file pointer.
+        """
+        with io.BytesIO(b'asdjflasjfjasjfasldfjasdf') as buf:
+            buf.seek(3, 0)
+            with self.assertRaises(Exception):
+                _read_ims10_bulletin(buf, _no_uuid_hashes=True)
+            self.assertEqual(buf.tell(), 3)
+
     def test_reading_via_plugin(self):
         """
         Test reading IMS10 bulletin format
