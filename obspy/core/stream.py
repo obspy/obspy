@@ -29,7 +29,8 @@ from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
-                                  _read_from_plugin, download_to_file)
+                                  _read_from_plugin, download_to_file,
+                                  sanitize_filename)
 from obspy.core.util.decorator import (map_example_filename,
                                        raise_if_masked, uncompress_file)
 from obspy.core.util.misc import get_window_times, buffered_load_entry_point
@@ -224,7 +225,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         # some URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
-        with NamedTemporaryFile(suffix=suffix) as fh:
+        with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
             download_to_file(url=pathname_or_url, filename_or_buffer=fh)
             st.extend(_read(fh.name, format, headonly, **kwargs).traces)
     else:
