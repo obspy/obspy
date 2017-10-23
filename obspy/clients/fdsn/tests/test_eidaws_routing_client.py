@@ -86,6 +86,21 @@ NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
                 "http://geofon.gfz-potsdam.de": (
                     "NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00")})
 
+    def test_response_splitting_fdsnws_subdomain(self):
+        data = """
+http://eida.gein.noa.gr/fdsnws/station/1/
+HP LTHK * * 2017-10-20T00:00:00 2599-12-31T23:59:59
+
+http://fdsnws.raspberryshakedata.com/fdsnws/station/1/
+AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
+        """
+        self.assertEqual(
+            EIDAWSRoutingClient._split_routing_response(data),
+            {"http://eida.gein.noa.gr":
+                 "HP LTHK * * 2017-10-20T00:00:00 2599-12-31T23:59:59",
+             "http://fdsnws.raspberryshakedata.com":
+                 "AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59"})
+
     def test_non_allowed_parameters(self):
         with self.assertRaises(ValueError) as e:
             self.client.get_waveforms(
