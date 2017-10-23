@@ -77,6 +77,26 @@ AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00
         self.assertEqual(e.exception.args[0],
                          "Service must be 'dataselect' or 'station'.")
 
+    def test_response_splitting_fdsnws_subdomain(self):
+        data = """
+DATACENTER=NOA,http://bbnet.gein.noa.gr/HL/
+DATASELECTSERVICE=http://eida.gein.noa.gr/fdsnws/dataselect/1/
+STATIONSERVICE=http://eida.gein.noa.gr/fdsnws/station/1/
+HP LTHK * * 2017-10-20T00:00:00 2599-12-31T23:59:59
+
+DATACENTER=RASPISHAKE,http://raspberryshake.net/
+DATASELECTSERVICE=http://fdsnws.raspberryshakedata.com/fdsnws/dataselect/1/
+STATIONSERVICE=http://fdsnws.raspberryshakedata.com/fdsnws/station/1/
+EVENTSERVICE=http://fdsnws.raspberryshakedata.com/fdsnws/event/1/
+AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
+        """
+        self.assertEqual(
+            FederatorRoutingClient._split_routing_response(data, "station"),
+            {"http://eida.gein.noa.gr":
+                "HP LTHK * * 2017-10-20T00:00:00 2599-12-31T23:59:59",
+             "http://fdsnws.raspberryshakedata.com":
+                 "AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59"})
+
     def test_get_waveforms(self):
         """
         This just dispatches to the get_waveforms_bulk() method - so no need
