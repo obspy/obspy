@@ -107,6 +107,14 @@ Select the sensor manufacturer (20 items):
   'REF TEK', 'Sercel/Mark Products', 'SolGeo',
   'Sprengnether (now Eentec)', 'Streckeisen'""".strip())
 
+    def test_error_handling_invalid_path(self):
+        with self.assertRaises(ValueError) as err:
+            NRL("/some/really/random/path")
+        self.assertEqual(
+            err.exception.args[0],
+            "Provided path '/some/really/random/path' seems to be a local "
+            "file path but the directory does not exist.")
+
 
 def suite():  # pragma: no cover
     return unittest.makeSuite(NRLTestCase, 'test')

@@ -52,7 +52,7 @@ class NRL(object):
             # Check if it's really a folder on the file-system.
             if not os.path.isdir(root):
                 msg = ("Provided path '{}' seems to be a local file path "
-                       "but directory does not exist.").format(
+                       "but the directory does not exist.").format(
                             root)
                 raise ValueError(msg)
             return super(NRL, cls).__new__(LocalNRL)
