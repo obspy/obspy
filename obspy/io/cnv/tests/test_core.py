@@ -33,23 +33,27 @@ class CNVTestCase(unittest.TestCase):
         # read expected OBS file output
         filename = os.path.join(self.datapath, "obspyck_20141020150701.cnv")
         with open(filename, "rb") as fh:
-            expected = fh.read().decode()
+            expected = fh.read().decode().splitlines()
 
         # write via plugin
         with NamedTemporaryFile() as tf:
             cat.write(tf, format="CNV")
             tf.seek(0)
-            got = tf.read().decode()
+            got = tf.read().decode().splitlines()
 
-        self.assertEqual(expected, got)
+        self.assertEqual(len(expected), len(got))
+        for d1, d2 in zip(expected, got):
+            self.assertEqual(d1, d2)
 
         # write manually
         with NamedTemporaryFile() as tf:
             _write_cnv(cat, tf)
             tf.seek(0)
-            got = tf.read().decode()
+            got = tf.read().decode().splitlines()
 
-        self.assertEqual(expected, got)
+        self.assertEqual(len(expected), len(got))
+        for d1, d2 in zip(expected, got):
+            self.assertEqual(d1, d2)
 
 
 def suite():

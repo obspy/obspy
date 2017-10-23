@@ -149,8 +149,9 @@ class FutureUsageTestCase(unittest.TestCase):
         for filename in get_all_py_files():
             if _match_exceptions(filename, exceptions):
                 continue
-            with codecs.open(filename, "r", encoding="utf-8") as fh:
-                content = fh.read()
+            with open(filename, "rb") as fh:
+                content = fh.read().decode("utf-8").splitlines()
+                content = "\n".join(content)
 
             if re.search(future_imports_pattern, content) is None:
                 failures.append("File '%s' misses imports: %s" %
