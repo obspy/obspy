@@ -23,7 +23,7 @@ import warnings
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
                                   _read_from_plugin, NamedTemporaryFile,
-                                  download_to_file)
+                                  download_to_file, sanitize_filename)
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
@@ -91,7 +91,7 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
         # extract extension if any
         suffix = \
             os.path.basename(path_or_file_object).partition('.')[2] or '.tmp'
-        with NamedTemporaryFile(suffix=suffix) as fh:
+        with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
             download_to_file(url=path_or_file_object, filename_or_buffer=fh)
             return read_inventory(fh.name, format=format)
     return _read_from_plugin("inventory", path_or_file_object,
