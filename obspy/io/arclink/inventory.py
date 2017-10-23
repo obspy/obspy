@@ -67,12 +67,8 @@ def _is_inventory_xml(path_or_file_object):
             except etree.XMLSyntaxError:
                 return False
         root = xmldoc.getroot()
-        try:
-            match = re.match(
-                r'{http://geofon.gfz-potsdam.de/ns/Inventory/'
-                '[0-9]*\.?[0-9]+/}', root.tag)
-            assert match is not None
-        except:
+        if re.match(r'{http://geofon.gfz-potsdam.de/ns/Inventory/'
+                    '[0-9]*\.?[0-9]+/}', root.tag) is None:
             return False
         # Match and convert schema number to a float to have positive
         # comparisons between, e.g "1" and "1.0".
@@ -86,7 +82,7 @@ def _is_inventory_xml(path_or_file_object):
         # Make sure to reset file pointer position.
         try:
             path_or_file_object.seek(current_position, 0)
-        except:
+        except Exception:
             pass
 
 
@@ -173,7 +169,7 @@ def _attr2obj(element, attribute, convert):
         elif element.get(attribute) == '':
             return None
         return convert(element.get(attribute))
-    except:
+    except Exception:
         None
 
 
@@ -189,7 +185,7 @@ def _tag2obj(element, tag, convert):
         if element.find(tag).text is None:
             return None
         return convert(element.find(tag).text)
-    except:
+    except Exception:
         None
 
 
@@ -882,7 +878,7 @@ def _read_float_var(elem, cls, unit=False, datum=False, additional_mapping={}):
     """
     try:
         convert = float(elem)
-    except:
+    except (ValueError, TypeError):
         warnings.warn(
             "Encountered a value '%s' which could not be converted to a "
             "float. Will be skipped. Please contact to report this "

@@ -395,7 +395,7 @@ class Inventory(ComparingObject):
                 continue
             try:
                 metadata.append(net.get_channel_metadata(seed_id, datetime))
-            except:
+            except Exception:
                 pass
         if len(metadata) > 1:
             msg = ("Found more than one matching channel metadata. "

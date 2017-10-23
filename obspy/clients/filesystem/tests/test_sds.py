@@ -217,9 +217,9 @@ class SDSTestCase(unittest.TestCase):
             failed = False  # XXX remove again
             for got, pattern in zip(got_lines, regex_patterns):
                 match = re.match(pattern.strip(), got.strip())
-                try:  # XXX remove again
+                try:
                     self.assertIsNotNone(match)
-                except:
+                except AssertionError:
                     failed = True
                     print(pattern.strip())
                     print(got.strip())

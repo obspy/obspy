@@ -2412,7 +2412,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 starttime, dt, npts, type=method, *args, **kwargs))
             self.stats.starttime = UTCDateTime(starttime)
             self.stats.delta = dt
-        except:
+        except Exception:
             # Revert the start time change if something went wrong.
             if time_shift:
                 self.stats.starttime -= time_shift

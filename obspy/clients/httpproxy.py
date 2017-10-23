@@ -112,12 +112,12 @@ def http_proxy_connect(address, proxy, auth=None):
     response_headers = {}
 
     while True:
-        l = fp.readline().rstrip('\r\n')
-        if l == '':
+        line = fp.readline().rstrip('\r\n')
+        if line == '':
             break
-        if ':' not in l:
+        if ':' not in line:
             continue
-        k, v = l.split(':', 1)
+        k, v = line.split(':', 1)
         response_headers[k.strip().lower()] = v.strip()
 
     fp.close()

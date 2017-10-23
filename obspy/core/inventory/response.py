@@ -816,7 +816,7 @@ class Response(ComparingObject):
                     sampling_rate = (stage.decimation_input_sample_rate /
                                      stage.decimation_factor)
                     break
-                except:
+                except Exception:
                     continue
             else:
                 sampling_rate = None

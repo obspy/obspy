@@ -110,7 +110,7 @@ def compare_seed(seed1, seed2):
     if seed1[15:19] == b'02.3':
         seed1 = seed1.replace(b'02.3', b' 2.4', 1)
     # check for missing '~' in blockette 10 (faulty dataless from BW network)
-    l = int(seed1[11:15])
+    l = int(seed1[11:15])   # NOQA
     temp = seed1[0:(l + 8)]
     if temp.count(b'~') == 4:
         # added a '~' and remove a space before the next record

@@ -142,7 +142,7 @@ class RecordAnalyser(object):
         year_raw = self.file.read(2)
         try:
             year = unpack(native_str('>H'), year_raw)[0]
-        except:
+        except Exception:
             if len(year_raw) == 0:
                 msg = "Unexpected end of file."
                 raise IOError(msg)
@@ -168,7 +168,7 @@ class RecordAnalyser(object):
         encoding = native_str('%s20c2H3Bx4H4Bl2H' % self.endian)
         try:
             header_item = unpack(encoding, fixed_header)
-        except:
+        except Exception:
             if len(fixed_header) == 0:
                 msg = "Unexpected end of file."
                 raise IOError(msg)
@@ -225,7 +225,7 @@ class RecordAnalyser(object):
             _tmp = self.file.read(4)
             try:
                 blkt_type, next_blockette = unpack(encoding, _tmp)
-            except:
+            except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
                     raise IOError(msg)
@@ -251,7 +251,7 @@ class RecordAnalyser(object):
             try:
                 unpack_values = unpack(native_str('%sfxxxx' % self.endian),
                                        _tmp)
-            except:
+            except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
                     raise IOError(msg)
@@ -262,7 +262,7 @@ class RecordAnalyser(object):
             try:
                 unpack_values = unpack(native_str('%sBBBx' % self.endian),
                                        _tmp)
-            except:
+            except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
                     raise IOError(msg)
@@ -275,7 +275,7 @@ class RecordAnalyser(object):
             try:
                 unpack_values = unpack(native_str('%sbbxb' % self.endian),
                                        _tmp)
-            except:
+            except Exception:
                 if len(_tmp) == 0:
                     msg = "Unexpected end of file."
                     raise IOError(msg)

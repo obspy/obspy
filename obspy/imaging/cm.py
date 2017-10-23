@@ -318,11 +318,10 @@ def _colormap_plot_overview(colormap_names=(
     a = np.outer(np.ones(1000), np.linspace(0, 1, 1000))
     fig = plt.figure(figsize=(12, 6))
     fig.subplots_adjust(top=0.9, bottom=0.15, left=0.11, right=0.89)
-    l = len(colormap_names)
     extent = (0, 1, 0, 1)
     for i, name in enumerate(colormap_names):
         cmap = getattr(cm, name)
-        ax = fig.add_subplot(l, 1, i + 1)
+        ax = fig.add_subplot(len(colormap_names), 1, i + 1)
         ax.imshow(a, aspect='auto', cmap=cmap, origin="lower", extent=extent,
                   interpolation="nearest")
         ax.set_ylabel(name, family="monospace", fontsize="large", ha="right",

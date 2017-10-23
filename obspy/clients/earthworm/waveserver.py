@@ -239,7 +239,7 @@ def get_menu(server, port, scnl=None, timeout=None):
             return []
         outlist = []
         for p in range(0, len(tokens), elen):
-            l = tokens[p:p + elen]
+            l = tokens[p:p + elen]  # NOQA
             if elen == 8:
                 outlist.append((int(l[0]), l[1], l[2], l[3], l[4],
                                 float(l[5]), float(l[6]), l[7]))
