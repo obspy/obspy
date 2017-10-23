@@ -338,6 +338,7 @@ class EventTestCase(unittest.TestCase):
         for d1, d2 in zip(list1, list2):
             self.assertEqual(d1, d2)
 
+
 def suite():
     return unittest.makeSuite(EventTestCase, "test")
 
