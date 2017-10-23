@@ -54,7 +54,7 @@ class NRL(object):
                 msg = ("Provided path '{}' seems to be a local file path "
                        "but directory does not exist.").format(
                             root)
-                raise OSError(msg)
+                raise ValueError(msg)
             return super(NRL, cls).__new__(LocalNRL)
         # Otherwise delegate to the remote NRL client to deal with all kinds
         # of remote resources (currently only HTTP).
