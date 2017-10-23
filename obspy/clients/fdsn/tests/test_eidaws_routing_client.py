@@ -97,9 +97,9 @@ AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
         self.assertEqual(
             EIDAWSRoutingClient._split_routing_response(data),
             {"http://eida.gein.noa.gr":
-                 "HP LTHK * * 2017-10-20T00:00:00 2599-12-31T23:59:59",
+                "HP LTHK * * 2017-10-20T00:00:00 2599-12-31T23:59:59",
              "http://fdsnws.raspberryshakedata.com":
-                 "AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59"})
+                "AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59"})
 
     def test_non_allowed_parameters(self):
         with self.assertRaises(ValueError) as e:
