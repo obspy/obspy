@@ -172,7 +172,7 @@ class FederatorRoutingClient(BaseRoutingClient):
             if "http://" in line:
                 if key not in line:
                     continue
-                current_key = line[len(key) + 1:line.find("/fdsnws")]
+                current_key = line[len(key) + 1:line.rfind("/fdsnws")]
                 continue
             # Anything before the first data center can be ignored.
             if current_key is None:
