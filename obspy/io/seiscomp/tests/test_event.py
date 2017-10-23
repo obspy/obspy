@@ -58,11 +58,7 @@ class EventTestCase(unittest.TestCase):
             if validate:
                 self.assertTrue(_validate_quakeml(tf.name))
             filepath_cmp = os.path.join(self.path, quakeml_file)
-            tf.seek(0)
-            dat1 = tf.read().decode("utf-8").splitlines()
-            with open(filepath_cmp, 'rb') as f:
-                dat2 = f.read().decode("utf-8").splitlines()
-            self.compare_list_of_lines(dat1, dat2)
+            self._compare(tf, filepath_cmp)
 
     def cmp_write_xslt_file(self, quakeml_file, sc3ml_file, validate=True,
                             path=None):
@@ -82,11 +78,7 @@ class EventTestCase(unittest.TestCase):
             if validate:
                 self.assertTrue(validate_sc3ml(tf.name))
             filepath_cmp = os.path.join(self.path, sc3ml_file)
-            tf.seek(0)
-            dat1 = tf.read().decode("utf-8").splitlines()
-            with open(filepath_cmp, 'rb') as f:
-                dat2 = f.read().decode("utf-8").splitlines()
-            self.compare_list_of_lines(dat1, dat2)
+            self._compare(tf, filepath_cmp)
 
     def test_sc3ml_versions(self):
         """
@@ -300,11 +292,7 @@ class EventTestCase(unittest.TestCase):
             catalog.write(tf, format='SC3ML', validate=True)
             filepath_cmp = \
                 os.path.join(self.path, 'qml-example-1.2-RC3_write.sc3ml')
-            tf.seek(0)
-            dat1 = tf.read().decode("utf-8").splitlines()
-            with open(filepath_cmp, 'rb') as f:
-                dat2 = f.read().decode("utf-8").splitlines()
-            self.compare_list_of_lines(dat1, dat2)
+            self._compare(tf, filepath_cmp)
 
     def test_write_remove_events(self):
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
@@ -315,11 +303,7 @@ class EventTestCase(unittest.TestCase):
                           event_removal=True)
             filepath_cmp = \
                 os.path.join(self.path, 'qml-example-1.2-RC3_no_events.sc3ml')
-            tf.seek(0)
-            dat1 = tf.read().decode("utf-8").splitlines()
-            with open(filepath_cmp, 'rb') as f:
-                dat2 = f.read().decode("utf-8").splitlines()
-            self.compare_list_of_lines(dat1, dat2)
+            self._compare(tf, filepath_cmp)
 
     def test_read_and_write(self):
         filename = os.path.join(self.path, 'qml-example-1.2-RC3_write.sc3ml')
@@ -327,15 +311,15 @@ class EventTestCase(unittest.TestCase):
 
         with NamedTemporaryFile() as tf:
             catalog.write(tf, format='SC3ML', validate=True)
-            tf.seek(0)
-            dat1 = tf.read().decode("utf-8").splitlines()
-            with open(filename, 'rb') as f:
-                dat2 = f.read().decode("utf-8").splitlines()
-            self.compare_list_of_lines(dat1, dat2)
+            self._compare(tf, filename)
 
-    def compare_list_of_lines(self, list1, list2):
-        self.assertEqual(len(list1), len(list2))
-        for d1, d2 in zip(list1, list2):
+    def _compare(self, tf, filename):
+        tf.seek(0)
+        dat1 = tf.read().decode("utf-8").splitlines()
+        with open(filename, 'rb') as f:
+            dat2 = f.read().decode("utf-8").splitlines()
+        self.assertEqual(len(dat1), len(dat2))
+        for d1, d2 in zip(dat1, dat2):
             self.assertEqual(d1, d2)
 
 
