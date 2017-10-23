@@ -536,7 +536,7 @@ def _get_deprecated_argument_action(old_name, new_name, real_action='store'):
 
 def sanitize_filename(filename):
     """
-    Modified by Django's slugify functions.
+    Adapted from Django's slugify functions.
 
     :param filename: The filename.
     """
