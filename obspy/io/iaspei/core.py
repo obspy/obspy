@@ -597,7 +597,7 @@ def _read_ims10_bulletin(filename, **kwargs):
         return __read_ims10_bulletin(fh, **kwargs)
 
 
-def __read_ims10_bulletin(fh, **kwargs):
+def __read_ims10_bulletin(fh, **kwargs):  # NOQA
     """
     Reads an ISF IMS1.0 bulletin file to a :class:`~obspy.core.event.Catalog`
     object.
@@ -627,7 +627,7 @@ def _is_ims10_bulletin(filename, **kwargs):
         return __is_ims10_bulletin(fh, **kwargs)
 
 
-def __is_ims10_bulletin(fh, **kwargs):
+def __is_ims10_bulletin(fh, **kwargs):  # NOQA
     """
     Checks whether a file is ISF IMS1.0 bulletin format.
 
