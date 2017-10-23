@@ -197,7 +197,7 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                     radii = rplanet - arrival.path['depth']
                     rmean = np.sqrt(radii[1:] * radii[:-1])
                     diff_dists = rmean * np.diff(arrival.path['dist'])
-                    npts_extra = np.floor(diff_dists / mindist).astype(int)
+                    npts_extra = np.floor(diff_dists / mindist).astype(np.int)
 
                     # count number of extra points and initialize array
                     npts_old = len(arrival.path)
