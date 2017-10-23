@@ -132,33 +132,33 @@ class FutureUsageTestCase(unittest.TestCase):
         exceptions = [os.path.join("*", "obspy", i) for i in exceptions]
 
         future_import_line = (
-            "from __future__ import (absolute_import, division, "
-            "print_function, unicode_literals)")
-        builtins_line = "from future.builtins import *  # NOQA"
+            b"from __future__ import (absolute_import, division, "
+            b"print_function, unicode_literals)")
+        builtins_line = b"from future.builtins import *  # NOQA"
 
         future_imports_pattern = re.compile(
-            r"^from __future__ import \(absolute_import,\s*"
-            r"division,\s*print_function,\s*unicode_literals\)$",
+            b"^from __future__ import \\(absolute_import,\s*"
+            b"division,\s*print_function,\s*unicode_literals\\)$",
             flags=re.MULTILINE)
 
         builtin_pattern = re.compile(
-            r"^from future\.builtins import \*  # NOQA",
+            b"^from future\.builtins import \\*  # NOQA",
             flags=re.MULTILINE)
 
         failures = []
         for filename in get_all_py_files():
             if _match_exceptions(filename, exceptions):
                 continue
-            with codecs.open(filename, "r", encoding="utf-8") as fh:
+            with open(filename, 'rb') as fh:
                 content = fh.read()
 
-            if re.search(future_imports_pattern, content) is None:
-                failures.append("File '%s' misses imports: %s" %
-                                (filename, future_import_line))
+                if re.search(future_imports_pattern, content) is None:
+                    failures.append("File '%s' misses imports: %s" %
+                                    (filename, future_import_line))
 
-            if re.search(builtin_pattern, content) is None:
-                failures.append("File '%s' misses imports: %s" %
-                                (filename, builtins_line))
+                if re.search(builtin_pattern, content) is None:
+                    failures.append("File '%s' misses imports: %s" %
+                                    (filename, builtins_line))
         self.assertEqual(len(failures), 0, "\n" + "\n".join(failures))
 
 
