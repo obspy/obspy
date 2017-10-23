@@ -28,17 +28,14 @@ def _assert_catalog(got):
     data, num_subs = re.subn(expected_id_prefix, got_id_prefix, data)
     # 49 resource id replacements should be done in the QuakeML file we compare
     # against
-    if num_subs != 49:
-        raise AssertionError()
+    assert num_subs == 49
     bio = io.BytesIO(data)
     expected = read_events(bio, format="QUAKEML")
     # now first check if we got the expected number of picks and station
     # magnitudes, because the quakeml file has been stripped of picks and
     # station magnitudes to save space and time
-    if len(got[0].picks) != 255:
-        raise AssertionError()
-    if len(got[0].station_magnitudes) != 15:
-        raise AssertionError()
+    assert len(got[0].picks) == 255
+    assert len(got[0].station_magnitudes) == 15
     # ok now crop the got catalog accordingly, afterwards it should compare
     # equal to our comparison catalog
     got[0].picks = got[0].picks[:4]
@@ -84,8 +81,7 @@ def _assert_catalog(got):
             for key in ['mag_errors']:
                 setattr(magnitude, key, None)
     # now finally these catalogs should compare equal
-    if got != expected:
-        raise AssertionError()
+    assert got == expected
 
 
 class IASPEITestCase(unittest.TestCase):
@@ -123,9 +119,9 @@ class IASPEITestCase(unittest.TestCase):
         self.assertFalse(_is_ims10_bulletin(path_to_quakeml))
 
 
-def suite():
+def suite():  # pragma: no cover
     return unittest.makeSuite(IASPEITestCase, 'test')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main(defaultTest='suite')
