@@ -111,7 +111,7 @@ class IASPEITestCase(unittest.TestCase):
         self.assertEqual(len(cat), 1)
         _assert_catalog(cat)
 
-        with io.open(self.path_to_ims, "rt") as fh:
+        with io.open(self.path_to_ims, "rt", encoding="UTF-8") as fh:
             cat = _read_ims10_bulletin(fh, _no_uuid_hashes=True)
         self.assertEqual(len(cat), 1)
         _assert_catalog(cat)
