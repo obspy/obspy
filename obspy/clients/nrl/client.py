@@ -23,7 +23,7 @@ import warnings
 import requests
 
 import obspy
-from obspy.core.compatibility import configparser
+from obspy.core.compatibility import configparser, get_text_from_response
 from obspy.core.inventory.util import _textwrap
 
 
@@ -289,8 +289,8 @@ class RemoteNRL(NRL):
         Download service with basic cache.
         """
         if url not in _remote_nrl_cache:
-            response = requests.get(url)
-            _remote_nrl_cache[url] = response.text
+            r = requests.get(url)
+            _remote_nrl_cache[url] = get_text_from_response(r)
         return _remote_nrl_cache[url]
 
     def _join(self, *paths):
