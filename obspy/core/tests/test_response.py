@@ -328,7 +328,6 @@ class ResponseTestCase(unittest.TestCase):
         zeros = [0., 0., -9., -160.7, -3108.]
         poles = [-0.03852+0.03658j, -0.03852-0.03658j, -178., -135.+160.j,
                 -135.-160.j, -671.+1514.j, -671.-1514.j]
-        #gain = 3.08*(10**5)
         sensitivity = 1201.*(2**26/40.)
         resp = Response.from_paz(zeros, poles, sensitivity)
         r_sens = resp.instrument_sensitivity.value
