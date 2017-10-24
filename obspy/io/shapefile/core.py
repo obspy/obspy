@@ -18,7 +18,7 @@ try:
 except ImportError as e:
     HAS_PYSHP = False
     PYSHP_VERSION = None
-    PYSHP_VERSION_AT_LEAST_1_2_12 = False
+    PYSHP_VERSION_AT_LEAST_1_2_11 = False
     IMPORTERROR_MSG = str(e) + (
         ". ObsPy's write support for shapefiles requires the 'pyshp' module "
         "to be installed in addition to the general ObsPy dependencies.")
@@ -29,9 +29,9 @@ else:
                                  shapefile.__version__.split('.')))
     except AttributeError:
         PYSHP_VERSION = None
-    PYSHP_VERSION_AT_LEAST_1_2_12 = PYSHP_VERSION >= [1, 2, 12]
+    PYSHP_VERSION_AT_LEAST_1_2_11 = PYSHP_VERSION >= [1, 2, 11]
 PYSHP_VERSION_WARNING = (
-    'pyshp versions < 1.2.12 are buggy, e.g. in writing numerical values to '
+    'pyshp versions < 1.2.11 are buggy, e.g. in writing numerical values to '
     'the dbf table, so e.g. timestamp float values might lack proper '
     'precision. You should update to a newer pyshp version.')
 
@@ -295,8 +295,8 @@ def _add_record(writer, feature):
     values = []
     for key, type_, width, precision in writer.fields:
         value = feature.get(key)
-        # various hacks for old pyshp < 1.2.12
-        if not PYSHP_VERSION_AT_LEAST_1_2_12:
+        # various hacks for old pyshp < 1.2.11
+        if not PYSHP_VERSION_AT_LEAST_1_2_11:
             if type_ == 'C':
                 # mimick pyshp 1.2.12 behavior of putting 'None' in string
                 # fields for value of `None`
