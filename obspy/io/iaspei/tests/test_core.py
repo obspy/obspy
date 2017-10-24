@@ -147,13 +147,13 @@ class IASPEITestCase(unittest.TestCase):
         with open(self.path_to_ims, "rb") as fh:
             self.assertTrue(_is_ims10_bulletin(fh))
 
-        with open(self.path_to_ims, "rt") as fh:
+        with open(self.path_to_ims, "rt", encoding="utf-8") as fh:
             self.assertTrue(_is_ims10_bulletin(fh))
 
         with open(path_to_quakeml, "rb") as fh:
             self.assertFalse(_is_ims10_bulletin(fh))
 
-        with open(path_to_quakeml, "rt") as fh:
+        with open(path_to_quakeml, "rt", encoding="utf-8") as fh:
             self.assertFalse(_is_ims10_bulletin(fh))
 
     def test_is_ims10_bulltin_from_bytes_io(self):
