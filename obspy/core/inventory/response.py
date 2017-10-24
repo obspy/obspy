@@ -1891,17 +1891,11 @@ class Response(ComparingObject):
         return paz_to_sacpz_string(paz, self.instrument_sensitivity)
 
     @staticmethod
-    def from_paz(zeros, poles, stage_sequence_number=1, stage_gain=1,
-                 stage_gain_frequency=1, input_units='COUNTS',
-                 output_units='M/S', normalization_frequency=1,
+    def from_paz(zeros, poles, stage_gain,
+                 stage_gain_frequency=1.0, input_units='VOLTS',
+                 output_units='M/S', normalization_frequency=None,
                  pz_transfer_function_type='LAPLACE (RADIANS/SECOND)',
-                 normalization_factor=1.0, resource_id=None, resource_id2=None,
-                 name=None, input_units_description=None,
-                 output_units_description=None, description=None,
-                 decimation_input_sample_rate=None, decimation_factor=None,
-                 decimation_offset=None, decimation_delay=None,
-                 decimation_correction=None, response_id=None,
-                 response_sensitivity=None, response_polynomial=None):
+                 normalization_factor=1.0):
         """
         Takes in lists of complex poles and zeros and returns a Response with
         those values defining its only stage.
@@ -1909,34 +1903,26 @@ class Response(ComparingObject):
         :param zeros: All zeros of the response to be defined.
         :type poles: list of complex
         :param poles: All poles of the response to be defined.
+        :type stage_gain: double
+        :param stage_gain: The gain value of the response [sensitivity]
 
         Most of the optional parameters defined here are from
         :class:`~obspy.core.inventory.response.PolesZerosResponseStage`
-        The exceptions are found in
-        :class:`~obspy.core.inventory.response.Response`
-        :type response_id: str
-        :param response_id: alias for returned response's resource_id parameter
-        :type response_sensitivity:
-            :class:`~obspy.core.inventory.response.InstrumentSensitivity`
-        :param response_sensitivity: alias for response's
-            instrument_sensitivity parameter
-        :type response_polynomial:
-            :class:`~obspy.core.inventory.response.InstrumentPolynomial`
-        :param response_polynomial: alias for response's instrument_polynomial
+        Note that if no value is specified for the normalization_frequency
+        parameter, the value assigned to stage_gain_frequency will be used.
         :returns: new Response instance with given P-Z values
         """
+        if normalization_frequency is None:
+            normalization_frequency = stage_gain_frequency
+        sequence = 1  # must be stage 1 because paz defines entire response
         pzstage = PolesZerosResponseStage(
-                    stage_sequence_number, stage_gain,
+                    sequence, stage_gain,
                     stage_gain_frequency, input_units, output_units,
                     pz_transfer_function_type, normalization_frequency, zeros,
-                    poles, normalization_factor, resource_id, resource_id2,
-                    name, input_units_description, output_units_description,
-                    description, decimation_input_sample_rate,
-                    decimation_factor, decimation_offset, decimation_delay,
-                    decimation_correction)
-        resp = Response(resource_id=response_id,
-                        instrument_sensitivity=response_sensitivity,
-                        instrument_polynomial=response_polynomial,
+                    poles, normalization_factor)
+        sensitivity = InstrumentSensitivity(stage_gain, stage_gain_frequency,
+                                            input_units, output_units)
+        resp = Response(instrument_sensitivity=sensitivity,
                         response_stages=[pzstage])
         return resp
 
