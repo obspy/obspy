@@ -64,7 +64,7 @@ class ISFEndOfFile(StopIteration):
 def _decode_if_possible(value, encoding="UTF-8"):
     try:
         return value.decode(encoding)
-    except:
+    except AttributeError:
         return value
 
 
@@ -661,7 +661,7 @@ def __is_ims10_bulletin(fh, **kwargs):  # NOQA
     first_line = fh.readline()
     try:
         first_line = first_line.decode()
-    except:
+    except AttributeError:
         pass
     if first_line.strip().upper() == 'DATA_TYPE BULLETIN IMS1.0:SHORT':
         return True
