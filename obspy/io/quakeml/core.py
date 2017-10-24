@@ -1107,10 +1107,11 @@ class Pickler(object):
             return
         subelement = etree.Element(tag)
         self._str(quantity, subelement, 'value')
-        self._str(error.uncertainty, subelement, 'uncertainty')
-        self._str(error.lower_uncertainty, subelement, 'lowerUncertainty')
-        self._str(error.upper_uncertainty, subelement, 'upperUncertainty')
-        self._str(error.confidence_level, subelement, 'confidenceLevel')
+        if error is not None:
+            self._str(error.uncertainty, subelement, 'uncertainty')
+            self._str(error.lower_uncertainty, subelement, 'lowerUncertainty')
+            self._str(error.upper_uncertainty, subelement, 'upperUncertainty')
+            self._str(error.confidence_level, subelement, 'confidenceLevel')
         element.append(subelement)
 
     def _waveform_id(self, obj, element, required=False):
