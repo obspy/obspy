@@ -15,7 +15,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import filecmp
 import os
 import unittest
 
@@ -59,7 +58,7 @@ class EventTestCase(unittest.TestCase):
             if validate:
                 self.assertTrue(_validate_quakeml(tf.name))
             filepath_cmp = os.path.join(self.path, quakeml_file)
-            self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
+            self._compare(tf, filepath_cmp)
 
     def cmp_write_xslt_file(self, quakeml_file, sc3ml_file, validate=True,
                             path=None):
@@ -79,7 +78,7 @@ class EventTestCase(unittest.TestCase):
             if validate:
                 self.assertTrue(validate_sc3ml(tf.name))
             filepath_cmp = os.path.join(self.path, sc3ml_file)
-            self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
+            self._compare(tf, filepath_cmp)
 
     def test_sc3ml_versions(self):
         """
@@ -293,7 +292,7 @@ class EventTestCase(unittest.TestCase):
             catalog.write(tf, format='SC3ML', validate=True)
             filepath_cmp = \
                 os.path.join(self.path, 'qml-example-1.2-RC3_write.sc3ml')
-            self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
+            self._compare(tf, filepath_cmp)
 
     def test_write_remove_events(self):
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
@@ -304,7 +303,7 @@ class EventTestCase(unittest.TestCase):
                           event_removal=True)
             filepath_cmp = \
                 os.path.join(self.path, 'qml-example-1.2-RC3_no_events.sc3ml')
-            self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
+            self._compare(tf, filepath_cmp)
 
     def test_read_and_write(self):
         filename = os.path.join(self.path, 'qml-example-1.2-RC3_write.sc3ml')
@@ -312,7 +311,16 @@ class EventTestCase(unittest.TestCase):
 
         with NamedTemporaryFile() as tf:
             catalog.write(tf, format='SC3ML', validate=True)
-            self.assertTrue(filecmp.cmp(filename, tf.name))
+            self._compare(tf, filename)
+
+    def _compare(self, tf, filename):
+        tf.seek(0)
+        dat1 = tf.read().decode("utf-8").splitlines()
+        with open(filename, 'rb') as f:
+            dat2 = f.read().decode("utf-8").splitlines()
+        self.assertEqual(len(dat1), len(dat2))
+        for d1, d2 in zip(dat1, dat2):
+            self.assertEqual(d1, d2)
 
 
 def suite():

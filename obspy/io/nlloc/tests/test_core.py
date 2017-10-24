@@ -60,23 +60,27 @@ class NLLOCTestCase(unittest.TestCase):
         # read expected OBS file output
         filename = get_example_file("nlloc.obs")
         with open(filename, "rb") as fh:
-            expected = fh.read().decode()
+            expected = fh.read().decode().splitlines()
 
         # write via plugin
         with NamedTemporaryFile() as tf:
             cat.write(tf, format="NLLOC_OBS")
             tf.seek(0)
-            got = tf.read().decode()
+            got = tf.read().decode().splitlines()
 
-        self.assertEqual(expected, got)
+        self.assertEqual(len(expected), len(got))
+        for d1, d2 in zip(expected, got):
+            self.assertEqual(d1, d2)
 
         # write manually
         with NamedTemporaryFile() as tf:
             write_nlloc_obs(cat, tf)
             tf.seek(0)
-            got = tf.read().decode()
+            got = tf.read().decode().splitlines()
 
-        self.assertEqual(expected, got)
+        self.assertEqual(len(expected), len(got))
+        for d1, d2 in zip(expected, got):
+            self.assertEqual(d1, d2)
 
     def test_read_nlloc_hyp(self):
         """
