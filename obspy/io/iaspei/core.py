@@ -169,6 +169,8 @@ class ISFReader(object):
                 event.picks[-1].comments.append(comment)
                 continue
             pick, amplitude, station_magnitude = self._parse_phase(line)
+            if (pick, amplitude, station_magnitude) == (None, None, None):
+                continue
             event.picks.append(pick)
             if amplitude:
                 event.amplitudes.append(amplitude)
@@ -408,6 +410,8 @@ class ISFReader(object):
         """
         Look up absolute time of pick including date, based on the time-of-day
         only representation in the phase line
+
+        Returns absolute pick time or None if it can not be determined safely.
         """
         if not my_string.strip():
             return None
@@ -456,7 +460,8 @@ class ISFReader(object):
             msg = ('Origin times in event differ by more than 5 hours, this '
                    'is currently not implemented as determining the date of '
                    'the pick might be tricky. Sorry.')
-            raise NotImplementedError(msg)
+            warnings.warn(msg)
+            return None
         # now try the date of the latest origin and raise if things seem fishy
         t = UTCDateTime(pick_date.year, pick_date.month, pick_date.day, hour,
                         minute, seconds)
@@ -465,7 +470,8 @@ class ISFReader(object):
                 msg = ('This pick would have a time more than 6 hours after '
                        'or before one of the origins in the event. This seems '
                        'fishy. Please report an issue on our github.')
-                raise NotImplementedError(msg)
+                warnings.warn(msg)
+                return None
         return t
 
     def _parse_phase(self, line):
@@ -488,6 +494,11 @@ class ISFReader(object):
         phase_hint = line[19:27].strip()
         # 29-40   i2,a1,i2,a1,f6.3        arrival time (hh:mm:ss.sss)
         time = self._get_pick_time(line[28:40])
+        if time is None:
+            msg = ('Could not determine absolute time of pick. This phase '
+                   'line will be ignored:\n{}').format(line)
+            warnings.warn(msg)
+            return None, None, None
         # 42-46   f5.1    time residual (seconds)
         comments.append('time residual (seconds): "{}"'.format(line[41:46]))
         # 48-52   f5.1    observed azimuth (degrees)
