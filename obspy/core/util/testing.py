@@ -357,11 +357,11 @@ class ImageComparison(NamedTemporaryFile):
                 self.tol *= 5.0
             # Matplotlib 2.0.0 has a bug with the tick placement. This is
             # fixed in 2.0.1 but the tolerance for 2.0.0 has to be much
-            # higher. 10 is an empiric value. The tick placement potentially
+            # higher. 12 is an empiric value. The tick placement potentially
             # influences the axis locations and then the misfit is really
             # quite high.
             elif [2, 0, 0] <= MATPLOTLIB_VERSION < [2, 0, 1]:
-                self.tol *= 10
+                self.tol *= 12
 
     def __enter__(self):
         """
