@@ -276,7 +276,7 @@ class ISFReader(object):
         #                       North (degrees)
         _uncertainty_major_azimuth = float_or_none(line[67:70])
         # 72-76   f5.1  depth (km)
-        depth = float_or_none(line[71:76])
+        depth = float_or_none(line[71:76], multiplier=1e3)
         # 77      a1    fixed flag (f = fixed depth station, d = depth phases,
         #                           blank if not a fixed depth)
         epicenter_fixed = fixed_flag(line[76])
