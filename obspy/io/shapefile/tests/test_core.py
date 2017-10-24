@@ -11,7 +11,7 @@ import warnings
 from obspy import read_events, read_inventory
 from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.io.shapefile.core import (
-    _write_shapefile, HAS_PYSHP, PYSHP_VERSION_AT_LEAST_1_2_12,
+    _write_shapefile, HAS_PYSHP, PYSHP_VERSION_AT_LEAST_1_2_11,
     PYSHP_VERSION_WARNING)
 
 if HAS_PYSHP:
@@ -104,7 +104,7 @@ def _assert_records_and_fields(got_fields, got_records, expected_fields,
             # on older pyshp <=1.2.10 date fields don't get cast to
             # datetime.date on reading..
             field_type = field[1]
-            if not PYSHP_VERSION_AT_LEAST_1_2_12:
+            if not PYSHP_VERSION_AT_LEAST_1_2_11:
                 if field_type == 'D':
                     if got == 'None':
                         got = None
@@ -249,7 +249,7 @@ class ShapefileTestCase(unittest.TestCase):
                     continue
                 break
             else:
-                if not PYSHP_VERSION_AT_LEAST_1_2_12:
+                if not PYSHP_VERSION_AT_LEAST_1_2_11:
                     raise AssertionError('pyshape version warning not shown')
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("inventory" + suffix))
@@ -279,7 +279,7 @@ class ShapefileTestCase(unittest.TestCase):
                     continue
                 break
             else:
-                if not PYSHP_VERSION_AT_LEAST_1_2_12:
+                if not PYSHP_VERSION_AT_LEAST_1_2_11:
                     raise AssertionError('pyshape version warning not shown')
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("inventory" + suffix))
