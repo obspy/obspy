@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import difflib
+from distutils.version import LooseVersion
 import doctest
 import glob
 import inspect
@@ -362,6 +363,18 @@ class ImageComparison(NamedTemporaryFile):
             # quite high.
             elif [2, 0, 0] <= MATPLOTLIB_VERSION < [2, 0, 1]:
                 self.tol *= 12
+
+            # One last pass depending on the freetype version.
+            # XXX: Should eventually be handled differently!
+            try:
+                from matplotlib import ft2font
+            except ImportError:
+                pass
+            else:
+                if hasattr(ft2font, "__freetype_version__"):
+                    if (LooseVersion(ft2font.__freetype_version__) >=
+                            LooseVersion("2.8.0")):
+                        self.tol *= 10
 
     def __enter__(self):
         """
