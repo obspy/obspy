@@ -14,8 +14,7 @@ import warnings
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from obspy.core.util import MATPLOTLIB_VERSION
-from obspy.core.util.testing import ImageComparison, ImageComparisonException
+from obspy.core.util.testing import ImageComparison
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.taup import TauPyModel, plot_travel_times
 
