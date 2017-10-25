@@ -1,4 +1,4 @@
-**GitHub should mainly be used for bug reports and code developments/discussions. For generic questions, please use either the [[obspy-users] mailing list](http://lists.swapbytes.de/mailman/listinfo/obspy-users) or our [gitter chat](https://gitter.im/obspy/obspy).**
+**GitHub should mainly be used for bug reports and code developments/discussions. For generic questions, please use either the [[obspy-users] mailing list](http://lists.swapbytes.de/mailman/listinfo/obspy-users) (for scientific questions to the general ObsPy community) or our [gitter chat](https://gitter.im/obspy/obspy) (for technical questions and direct contact to the developers).**
 
 ---
 
