@@ -1,3 +1,7 @@
+**GitHub should mainly be used for bug reports and code developments/discussions. For generic questions, please use either the [[obspy-users] mailing list](http://lists.swapbytes.de/mailman/listinfo/obspy-users) (for scientific questions to the general ObsPy community) or our [gitter chat](https://gitter.im/obspy/obspy) (for technical questions and direct contact to the developers).**
+
+---
+
 Before submitting an Issue, please review the [Issue Guidelines](https://github.com/obspy/obspy/blob/master/CONTRIBUTING.md#submitting-an-issue).
 
 * Please check whether the bug was already reported or fixed.
