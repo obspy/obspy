@@ -194,20 +194,12 @@ class TauPyPlottingTestCase(unittest.TestCase):
                 self.image_dir, "traveltimes_plot_all_False.png") as ic:
             _test_plot_all(plot_all=False)
             plt.savefig(ic.name)
-        # same test should fail if plot_all=True
-        tol = {}
-        # adjust tolerance on Travis minimum dependency build, tolerance is set
-        # so high for that build that image comparison can virtually never
-        # fail.. (also adjust for matplotlib 1.2.0 on centos)
-        if MATPLOTLIB_VERSION <= [1, 2]:
-            tol['reltol'] = 5
-            tol['adjust_tolerance'] = False
-        with self.assertRaises(ImageComparisonException):
-            with ImageComparison(
-                    self.image_dir, "traveltimes_plot_all_False.png",
-                    no_uploads=True, **tol) as ic:
-                _test_plot_all(plot_all=True)
-                plt.savefig(ic.name)
+
+        # Now with option plot_all=True
+        with ImageComparison(
+                self.image_dir, "traveltimes_plot_all_True.png") as ic:
+            _test_plot_all(plot_all=True)
+            plt.savefig(ic.name)
 
     def test_ray_plot_mismatching_axes_type_warnings(self):
         """
