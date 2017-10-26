@@ -338,13 +338,13 @@ class ResponseTestCase(unittest.TestCase):
         poles = [-4.443+4.443j, -4.443-4.443j]
         stime = UTCDateTime('2017-001T00:00:00.0')
         filename = 'RESP.XX.NS306..SHZ.GS13.1.2180'
-        evalrespResp = evalresp(.1, 2**6, filename, stime, units='VEL')
+        evalresp_resp = evalresp(.1, 2**6, filename, stime, units='VEL')
         resp = Response.from_paz(zeros, poles, 2180.,
                                  normalization_frequency=5.,
                                  normalization_factor=1.)
-        responseResp = resp.get_eval_resp_response(.1, 2**6, output='VEL',
+        response_resp = resp.get_eval_resp_response(.1, 2**6, output='VEL',
                                                    start_stage=1, end_stage=1)
-        np.testing.assert_all_close(responseResp, evalrespResp)
+        np.testing.assert_all_close(response_resp, evalresp_resp)
 
     def test_str_method_of_the_polynomial_response_stage(self):
         # First with gain and gain frequency.
