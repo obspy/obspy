@@ -313,14 +313,14 @@ class ResponseTestCase(unittest.TestCase):
     def test_paz_zero_values(self):
         poles = [1+2j, 1-2j, 2+2j, 2-2j]
         zeros = [0, 0, 5]
-        resp = Response.from_paz(zeros, poles)
+        resp = Response.from_paz(zeros, poles, 1.0)
         r_zeros = resp.response_stages[0].zeros
         np.testing.assert_equal(zeros, r_zeros)
 
     def test_paz_pole_values(self):
         poles = [1+2j, 1-2j, 2+2j, 2-2j]
         zeros = [0, 0, 5]
-        resp = Response.from_paz(zeros, poles)
+        resp = Response.from_paz(zeros, poles, 1.0)
         r_poles = resp.response_stages[0].poles
         np.testing.assert_equal(poles, r_poles)
 
@@ -343,7 +343,7 @@ class ResponseTestCase(unittest.TestCase):
                                  normalization_frequency=5.,
                                  normalization_factor=1.)
         response_resp = resp.get_eval_resp_response(.1, 2**6, output='VEL',
-                                                   start_stage=1, end_stage=1)
+                                                    start_stage=1, end_stage=1)
         np.testing.assert_all_close(response_resp, evalresp_resp)
 
     def test_str_method_of_the_polynomial_response_stage(self):
