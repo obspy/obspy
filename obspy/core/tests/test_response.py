@@ -310,39 +310,28 @@ class ResponseTestCase(unittest.TestCase):
             out, [0 + 9869.2911771081963j, 0 + 19738.582354216393j,
                   0 + 39477.164708432785j])
 
-    def test_paz_zero_values(self):
+    def test_resp_from_paz_setting_zeros_poles_and_sensitivity(self):
         poles = [1+2j, 1-2j, 2+2j, 2-2j]
         zeros = [0, 0, 5]
-        resp = Response.from_paz(zeros, poles, 1.0)
-        r_zeros = resp.response_stages[0].zeros
-        np.testing.assert_equal(zeros, r_zeros)
-
-    def test_paz_pole_values(self):
-        poles = [1+2j, 1-2j, 2+2j, 2-2j]
-        zeros = [0, 0, 5]
-        resp = Response.from_paz(zeros, poles, 1.0)
-        r_poles = resp.response_stages[0].poles
-        np.testing.assert_equal(poles, r_poles)
-
-    def test_paz_sensitivity(self):
-        zeros = [0., 0., -9., -160.7, -3108.]
-        poles = [-0.03852+0.03658j, -0.03852-0.03658j, -178., -135.+160.j,
-                 -135.-160.j, -671.+1514.j, -671.-1514.j]
         sensitivity = 1201.*(2**26/40.)
         resp = Response.from_paz(zeros, poles, sensitivity)
+        r_zeros = resp.response_stages[0].zeros
+        r_poles = resp.response_stages[0].poles
         r_sens = resp.instrument_sensitivity.value
+        np.testing.assert_array_equal(zeros, r_zeros)
+        np.testing.assert_array_equal(poles, r_poles)
         np.testing.assert_equal(sensitivity, r_sens)
 
-    def test_resp_loading_vs_evalresp(self):
+    def test_resp_from_paz_loading_vs_evalresp(self):
         zeros = [0., 0.]
         poles = [-4.443+4.443j, -4.443-4.443j]
         stime = UTCDateTime('2017-001T00:00:00.0')
-        filename = 'RESP.XX.NS306..SHZ.GS13.1.2180'
+        filename = self.data_dir + '/RESP.XX.NS306..SHZ.GS13.1.2180'
         evalresp_resp = evalresp(.1, 2**6, filename, stime, units='VEL')
         resp = Response.from_paz(zeros, poles, 2180.,
                                  normalization_frequency=5.,
                                  normalization_factor=1.)
-        response_resp = resp.get_eval_resp_response(.1, 2**6, output='VEL',
+        response_resp = resp.get_evalresp_response(.1, 2**6, output='VEL',
                                                     start_stage=1, end_stage=1)
         np.testing.assert_all_close(response_resp, evalresp_resp)
 
