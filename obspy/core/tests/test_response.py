@@ -317,23 +317,28 @@ class ResponseTestCase(unittest.TestCase):
         resp = Response.from_paz(zeros, poles, sensitivity)
         r_zeros = resp.response_stages[0].zeros
         r_poles = resp.response_stages[0].poles
+        r_stage_gain = resp.response_stages[0].stage_gain
         r_sens = resp.instrument_sensitivity.value
         np.testing.assert_array_equal(zeros, r_zeros)
         np.testing.assert_array_equal(poles, r_poles)
+        np.testing.assert_equal(sensitivity, r_stage_gain)
         np.testing.assert_equal(sensitivity, r_sens)
 
     def test_resp_from_paz_loading_vs_evalresp(self):
         zeros = [0., 0.]
         poles = [-4.443+4.443j, -4.443-4.443j]
         stime = UTCDateTime('2017-001T00:00:00.0')
-        filename = self.data_dir + '/RESP.XX.NS306..SHZ.GS13.1.2180'
-        evalresp_resp = evalresp(.1, 2**6, filename, stime, units='VEL')
+        filename = os.path.join(self.data_dir,
+                                'RESP.XX.NS306..SHZ.GS13.1.2180')
+        resp_er = read_inventory(filename)[0][0][0].response
+        loaded_resp = resp_er.get_evalresp_response(.1, 2**6, output='VEL')
         resp = Response.from_paz(zeros, poles, 2180.,
                                  normalization_frequency=5.,
-                                 normalization_factor=1.)
-        response_resp = resp.get_evalresp_response(.1, 2**6, output='VEL',
-                                                    start_stage=1, end_stage=1)
-        np.testing.assert_all_close(response_resp, evalresp_resp)
+                                 normalization_factor=3.)
+        paz_resp = resp.get_evalresp_response(.1, 2**6, output='VEL')
+        loaded_curve, _ = zip(loaded_resp)
+        paz_curve, _ = zip(paz_resp)
+        np.testing.assert_allclose(loaded_resp, paz_resp)
 
     def test_str_method_of_the_polynomial_response_stage(self):
         # First with gain and gain frequency.

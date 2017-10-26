@@ -1892,37 +1892,40 @@ class Response(ComparingObject):
 
     @staticmethod
     def from_paz(zeros, poles, stage_gain,
-                 stage_gain_frequency=1.0, input_units='VOLTS',
-                 output_units='M/S', normalization_frequency=None,
+                 stage_gain_frequency=1.0, input_units='M/S',
+                 output_units='VOLTS', normalization_frequency=1.0,
                  pz_transfer_function_type='LAPLACE (RADIANS/SECOND)',
                  normalization_factor=1.0):
         """
+        Convert poles and response lists into a one-stage response.
+
         Takes in lists of complex poles and zeros and returns a Response with
         those values defining its only stage.
         :type zeros: list of complex
         :param zeros: All zeros of the response to be defined.
         :type poles: list of complex
         :param poles: All poles of the response to be defined.
-        :type stage_gain: double
+        :type stage_gain: float
         :param stage_gain: The gain value of the response [sensitivity]
 
         Most of the optional parameters defined here are from
-        :class:`~obspy.core.inventory.response.PolesZerosResponseStage`
-        Note that if no value is specified for the normalization_frequency
-        parameter, the value assigned to stage_gain_frequency will be used.
+        :class:`~obspy.core.inventory.response.PolesZerosResponseStage`.
         :returns: new Response instance with given P-Z values
         """
-        if normalization_frequency is None:
-            normalization_frequency = stage_gain_frequency
-        sequence = 1  # must be stage 1 because paz defines entire response
+
         pzstage = PolesZerosResponseStage(
-                    sequence, stage_gain,
-                    stage_gain_frequency, input_units, output_units,
-                    pz_transfer_function_type, normalization_frequency, zeros,
-                    poles, normalization_factor)
-        sensitivity = InstrumentSensitivity(stage_gain, stage_gain_frequency,
-                                            input_units, output_units)
-        resp = Response(instrument_sensitivity=sensitivity,
+                    stage_sequence_number=1, stage_gain=stage_gain,
+                    stage_gain_frequency=stage_gain_frequency,
+                    input_units=input_units, output_units=output_units,
+                    pz_transfer_function_type=pz_transfer_function_type,
+                    normalization_frequency=normalization_frequency,
+                    zeros=zeros, poles=poles,
+                    normalization_factor=normalization_factor)
+        sens = InstrumentSensitivity(value=stage_gain,
+                                     frequency=stage_gain_frequency,
+                                     input_units=input_units,
+                                     output_units=output_units)
+        resp = Response(instrument_sensitivity=sens,
                         response_stages=[pzstage])
         resp.recalculate_overall_sensitivity()
         return resp
