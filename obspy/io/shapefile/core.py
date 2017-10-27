@@ -55,7 +55,7 @@ def _write_shapefile(obj, filename, **kwargs):
     """
     if not HAS_PYSHP:
         raise ImportError(IMPORTERROR_MSG)
-    if PYSHP_VERSION < [1, 2, 12]:
+    if not PYSHP_VERSION_AT_LEAST_1_2_11:
         warnings.warn(PYSHP_VERSION_WARNING)
     if not filename.endswith(".shp"):
         filename += ".shp"
