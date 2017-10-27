@@ -29,7 +29,9 @@ else:
                                  shapefile.__version__.split('.')))
     except AttributeError:
         PYSHP_VERSION = None
-    PYSHP_VERSION_AT_LEAST_1_2_11 = PYSHP_VERSION >= [1, 2, 11]
+        PYSHP_VERSION_AT_LEAST_1_2_11 = False
+    else:
+        PYSHP_VERSION_AT_LEAST_1_2_11 = PYSHP_VERSION >= [1, 2, 11]
 PYSHP_VERSION_WARNING = (
     'pyshp versions < 1.2.11 are buggy, e.g. in writing numerical values to '
     'the dbf table, so e.g. timestamp float values might lack proper '
