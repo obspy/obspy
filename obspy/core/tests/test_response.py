@@ -311,18 +311,22 @@ class ResponseTestCase(unittest.TestCase):
                   0 + 39477.164708432785j])
 
     def test_resp_from_paz_setting_zeros_poles_and_sensitivity(self):
-        poles = [1+2j, 1-2j, 2+2j, 2-2j]
+        poles = [1+2j, 1-2j, 2+1j, 2-1j]
         zeros = [0, 0, 5]
         sensitivity = 1201.*(2**26/40.)
+        # a0 normalization factor at 1Hz for these values
+        normalization = np.prod(2*pi*1j-np.array(zeros))
+        normalization /= np.prod(2*pi*1j-np.array(poles))
+        normalization = np.abs(normalization)
         resp = Response.from_paz(zeros, poles, sensitivity)
         r_zeros = resp.response_stages[0].zeros
         r_poles = resp.response_stages[0].poles
         r_stage_gain = resp.response_stages[0].stage_gain
         r_sens = resp.instrument_sensitivity.value
-        np.testing.assert_array_equal(zeros, r_zeros)
-        np.testing.assert_array_equal(poles, r_poles)
-        np.testing.assert_equal(sensitivity, r_stage_gain)
-        np.testing.assert_equal(sensitivity, r_sens)
+        np.testing.assert_array_equal(r_zeros, zeros)
+        np.testing.assert_array_equal(r_poles, poles)
+        np.testing.assert_equal(r_stage_gain, sensitivity)
+        np.testing.assert_equal(r_sens/normalization, sensitivity)
 
     def test_resp_from_paz_loading_vs_evalresp(self):
         zeros = [0., 0.]
@@ -333,12 +337,13 @@ class ResponseTestCase(unittest.TestCase):
         resp_er = read_inventory(filename)[0][0][0].response
         loaded_resp = resp_er.get_evalresp_response(.1, 2**6, output='VEL')
         resp = Response.from_paz(zeros, poles, 2180.,
+                                 stage_gain_frequency=5.,
                                  normalization_frequency=5.,
-                                 normalization_factor=3.)
+                                 normalization_factor=1.)
         paz_resp = resp.get_evalresp_response(.1, 2**6, output='VEL')
         loaded_curve, _ = zip(loaded_resp)
         paz_curve, _ = zip(paz_resp)
-        np.testing.assert_allclose(loaded_resp, paz_resp)
+        np.testing.assert_allclose(paz_resp, loaded_resp)
 
     def test_str_method_of_the_polynomial_response_stage(self):
         # First with gain and gain frequency.
