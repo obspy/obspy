@@ -1,4 +1,4 @@
-master: (doi: 10.5281/zenodo.165135)
+1.1.0: (doi: 10.5281/zenodo.165135)
  - General:
    * Read support for Guralp Compressed Format (GCF) waveform data,
      obspy.io.gcf (see #1449)
