@@ -331,7 +331,6 @@ class ResponseTestCase(unittest.TestCase):
     def test_resp_from_paz_loading_vs_evalresp(self):
         zeros = [0., 0.]
         poles = [-4.443+4.443j, -4.443-4.443j]
-        stime = UTCDateTime('2017-001T00:00:00.0')
         filename = os.path.join(self.data_dir,
                                 'RESP.XX.NS306..SHZ.GS13.1.2180')
         resp_er = read_inventory(filename)[0][0][0].response
