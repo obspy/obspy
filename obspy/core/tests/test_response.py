@@ -330,15 +330,15 @@ class ResponseTestCase(unittest.TestCase):
 
     def test_resp_from_paz_loading_vs_evalresp(self):
         zeros = [0., 0.]
-        poles = [-4.443+4.443j, -4.443-4.443j]
+        poles = [-8.443+1.443j, -8.443-1.443j]
         filename = os.path.join(self.data_dir,
                                 'RESP.XX.NS306..SHZ.GS13.1.2180')
         resp_er = read_inventory(filename)[0][0][0].response
         loaded_resp = resp_er.get_evalresp_response(.1, 2**6, output='VEL')
-        resp = Response.from_paz(zeros, poles, 2180.,
+        resp = Response.from_paz(zeros, poles, 22.,
                                  stage_gain_frequency=5.,
                                  normalization_frequency=5.,
-                                 normalization_factor=1.)
+                                 normalization_factor=1.070401)
         paz_resp = resp.get_evalresp_response(.1, 2**6, output='VEL')
         loaded_curve, _ = zip(loaded_resp)
         paz_curve, _ = zip(paz_resp)
