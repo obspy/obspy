@@ -41,40 +41,6 @@ B058F04     Gain:                                  2.200000e+01
 B058F05     Frequency of gain:                     5.000000e+00 HZ
 B058F06     Number of calibrations:                0
 #		
-#		+               +-------------------------------------------+                 +
-#		+               |   Response (Coefficients), NS306 ch SHZ   |                 +
-#		+               +-------------------------------------------+                 +
-#		
-B054F03     Transfer function type:                D
-B054F04     Stage sequence number:                 2
-B054F05     Response in units lookup:              V - Volts
-B054F06     Response out units lookup:             COUNTS - Digital Counts
-B054F07     Number of numerators:                  1
-B054F10     Number of denominators:                0
-#		Numerator coefficients:
-#		  i, coefficient,  error
-B054F08-09    0  1.000000e+00  0.000000E+00
-#		
-#		+                      +------------------------------+                       +
-#		+                      |   Decimation, NS306 ch SHZ   |                       +
-#		+                      +------------------------------+                       +
-#		
-B057F03     Stage sequence number:                 2
-B057F04     Input sample rate:                     4.000000e+01
-B057F05     Decimation factor:                     1
-B057F06     Decimation offset:                     0
-B057F07     Estimated delay (seconds):             0.00000E+00
-B057F08     Correction applied (seconds):          0.00000E+00
-#		
-#		+                  +---------------------------------------+                  +
-#		+                  |       Channel Gain, NS306 ch SHZ      |                  +
-#		+                  +---------------------------------------+                  +
-#		
-B058F03     Stage sequence number:                 2
-B058F04     Gain:                                  1.000000e+00
-B058F05     Frequency of gain:                     5.000000e+00 HZ
-B058F06     Number of calibrations:                0
-#		
 #		+                  +---------------------------------------+                  +
 #		+                  |       Channel Gain, NS306 ch SHZ      |                  +
 #		+                  +---------------------------------------+                  +
