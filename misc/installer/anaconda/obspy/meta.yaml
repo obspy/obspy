@@ -1,7 +1,5 @@
-{% set version = "1.1.0rc6" %}
-{% set sha256 = "0a09a198bd48b32b445d9a307202a26d12f8f057a67ee836f483c6a88b423b4e" %}
-#{% set version = "1.1.0rc7.post0+27.g04bbbf2540.obspy.read.isf" %}
-#{% set sha256 = "25e6f44e9e13cf194a3010f1792702ad8a13cfc9b07fe0219bb0daa1a12df36d" %}
+{% set version = "1.1.0" %}
+{% set sha256 = "ef48b4e52a8166c35c46775b523899ffaa00658018822103e1ad9f5008050d61" %}
 
 package:
   name: obspy
@@ -9,9 +7,7 @@ package:
 
 source:
   fn: obspy-{{ version }}.zip
-  # url: https://pypi.io/packages/source/o/obspy/obspy-1.0.3.zip
-  #url: https://www.geophysik.uni-muenchen.de/~megies/obspy-1.1.0rc7.post0+27.g04bbbf2540.obspy.read.isf.zip
-  url: https://github.com/obspy/obspy/files/1391402/obspy-1.1.0rc6.zip
+  url: https://pypi.io/packages/source/o/obspy/obspy-{{ version }}.zip
   sha256: {{ sha256 }}
 
 

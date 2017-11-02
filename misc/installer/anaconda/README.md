@@ -23,7 +23,11 @@ Once in a while its also a good idea to clean the `conda-bld` directory in the r
 
 ## For Linux Using Docker
 
-This must be done on a Linux with a fairly old `libc` version. We currently do it for `libc 2.12`, thus it is done in Docker containers.
+**NOTE:** Linux 64 bit conda packages are now in general built via conda-forge:
+https://github.com/conda-forge/obspy-feedstock/
+
+This must be done on a Linux with a fairly old `libc` version. We currently do
+it for `libc 2.5`, thus it is done in Docker containers (Centos5).
 
 Make sure Docker is installed and running (also that some space is left on your disc or boot2docker's VM!). Execute
 
@@ -31,7 +35,10 @@ Make sure Docker is installed and running (also that some space is left on your 
 $ ./build_conda_packages_linux.sh
 ```
 
-This will take a while but it will build packages for all Python versions on 64 and 32 bit. It will copy the final packages to `conda_builds` so as a last step you have to upload them from your local machine.
+This will take a while but it will build packages for all Python versions on 32
+bit (uncomment 64 bit section in build script if needed). It will copy the
+final packages to `conda_builds` so as a last step you have to upload them from
+your local machine.
 
 ```bash
 $ cd conda_builds
@@ -40,6 +47,9 @@ $ anaconda upload -u obspy linux-64/obspy*
 ```
 
 ## For OSX
+
+**NOTE:** OSX conda packages are now in general built via conda-forge:
+https://github.com/conda-forge/obspy-feedstock/
 
 On OSX just execute (from this directory)
 
@@ -56,4 +66,5 @@ $ anaconda upload -u obspy --channel docker --channel main obspy*
 
 ## For Windows
 
-Currently performed on AppVeyor using this: https://github.com/obspy/conda-builder
+**NOTE:** OSX conda packages are now in general built via conda-forge:
+https://github.com/conda-forge/obspy-feedstock/
