@@ -261,12 +261,12 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
                 \operatorname{sinc}(t)\, \cdot \frac{1}{2}
                 (1 + \cos(\pi\, t/a))
                     & \text{if } t \in [-a, a]
-                    \text{ and } \texttt{window} = \texttt{lanczos}\\
+                    \text{ and } \texttt{window} = \texttt{hanning}\\
                 \operatorname{sinc}(t)\, \cdot \left( \frac{21}{50} +
                 \frac{1}{2}
                 \cos(\pi\, t/a) + \frac{2}{25} \cos (2\pi\, t/a) \right)
                     & \text{if } t \in [-a, a]
-                    \text{ and } \texttt{window} = \texttt{lanczos}\\
+                    \text{ and } \texttt{window} = \texttt{blackman}\\
                 0                     & \text{else}
             \end{cases}
         \end{align}
