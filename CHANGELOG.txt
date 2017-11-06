@@ -2,6 +2,8 @@
  - General:
    * Tests pass with numpy 1.14 (see #2044).
  - obspy.core:
+   * UTCDateTime now raises a meaningful exceptions when passing
+     invalid or out-of-bounds 'julday' during initialization (see #1988)
    * Fix pickling of traces with a sampling rate of 0 (see #1990)
    * read_inventory() used with non-existing file path (e.g. typo in filename)
      now shows a proper "No such file or directory" error message (see #2062)
@@ -28,6 +30,8 @@
      (see #1981, #2057).
    * Fix util.get_start_and_end_time returning sample rate = 0 when
      sample rate = 1 (see #2069)
+   * Avoid showing invalid warnings when guessing endian during parsing
+     timestamps (see #1988)
  - obspy.io.nordic
    * Bug-fix for amplitudes without magnitude_hint (see #2021)
    * Bug-fix for wavefiles with full path stripping (see #2021)
