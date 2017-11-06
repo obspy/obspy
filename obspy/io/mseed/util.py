@@ -20,6 +20,7 @@ import numpy as np
 from obspy import UTCDateTime
 from obspy.core.compatibility import from_buffer
 from obspy.core.util.decorator import ObsPyDeprecationWarning
+from . import InternalMSEEDParseTimeError
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
                       FIXED_HEADER_DATA_QUAL_FLAGS,
                       FIXED_HEADER_IO_CLOCK_FLAGS, HPTMODULUS,
@@ -641,6 +642,10 @@ def _get_record_information(file_object, offset=0, endian=None):
         return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
 
     def _parse_time(values):
+        if not (0 <= values[1] <= 366):
+            msg = 'julday out of bounds (wrong endian?): {!s}'.format(
+                values[1])
+            raise InternalMSEEDParseTimeError(msg)
         # The spec says values[5] (.0001 seconds) must be between 0-9999 but
         # we've  encountered files which have a value of 10000. We interpret
         # this as an additional second. The approach here is general enough
@@ -663,7 +668,7 @@ def _get_record_information(file_object, offset=0, endian=None):
             endian = ">"
             values = unpack(fmt(endian), data)
             starttime = _parse_time(values)
-        except Exception:
+        except InternalMSEEDParseTimeError:
             endian = "<"
             values = unpack(fmt(endian), data)
             starttime = _parse_time(values)
@@ -671,7 +676,7 @@ def _get_record_information(file_object, offset=0, endian=None):
         values = unpack(fmt(endian), data)
         try:
             starttime = _parse_time(values)
-        except Exception:
+        except InternalMSEEDParseTimeError:
             msg = ("Invalid starttime found. The passed byte order is likely "
                    "wrong.")
             raise ValueError(msg)
