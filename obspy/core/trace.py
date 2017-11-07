@@ -158,7 +158,10 @@ class Stats(AttribDict):
             # ensure correct data type
             if key == 'delta':
                 key = 'sampling_rate'
-                value = 1.0 / float(value)
+                if value > 0.0:
+                    value = 1.0 / float(value)
+                else:
+                    value = 0.0
             elif key == 'sampling_rate':
                 value = float(value)
             elif key == 'starttime':

@@ -5,6 +5,7 @@ from future.builtins import *  # NOQA
 
 import math
 import os
+import pickle
 import unittest
 from copy import deepcopy
 import warnings
@@ -2712,6 +2713,33 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(tr2), 5)
         self.assertEqual(tr1.stats.npts, 2)
         self.assertEqual(tr2.stats.npts, 5)
+
+    def test_pickle(self):
+        """
+        Test that  Trace can be pickled
+        #1989
+        """
+        tr_orig = Trace()
+        tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=0))
+        self.assertEqual(tr_orig, tr_pickled)
+        tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=1))
+        self.assertEqual(tr_orig, tr_pickled)
+        tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=2))
+        self.assertEqual(tr_orig, tr_pickled)
+
+    def test_pickle_SOH(self):
+        """
+        Test that trace can be pickled with samplerate = 0
+        #1989
+        """
+        tr_orig = Trace()
+        tr_orig.stats.sampling_rate = 0
+        tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=0))
+        self.assertEqual(tr_orig, tr_pickled)
+        tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=1))
+        self.assertEqual(tr_orig, tr_pickled)
+        tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=2))
+        self.assertEqual(tr_orig, tr_pickled)
 
 
 def suite():
