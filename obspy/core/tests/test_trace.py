@@ -2716,8 +2716,7 @@ class TraceTestCase(unittest.TestCase):
 
     def test_pickle(self):
         """
-        Test that  Trace can be pickled
-        #1989
+        Test that  Trace can be pickled #1989
         """
         tr_orig = Trace()
         tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=0))
@@ -2727,10 +2726,9 @@ class TraceTestCase(unittest.TestCase):
         tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=2))
         self.assertEqual(tr_orig, tr_pickled)
 
-    def test_pickle_SOH(self):
+    def test_pickle_soh(self):
         """
-        Test that trace can be pickled with samplerate = 0
-        #1989
+        Test that trace can be pickled with samplerate = 0 #1989
         """
         tr_orig = Trace()
         tr_orig.stats.sampling_rate = 0
