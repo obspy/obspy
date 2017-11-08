@@ -158,9 +158,9 @@ class Stats(AttribDict):
             # ensure correct data type
             if key == 'delta':
                 key = 'sampling_rate'
-                if value > 0.0:
+                try:
                     value = 1.0 / float(value)
-                else:
+                except ZeroDivisionError:
                     value = 0.0
             elif key == 'sampling_rate':
                 value = float(value)
