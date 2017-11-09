@@ -1,6 +1,6 @@
 1.1.x:
  -obspy.core:
-   * Allow pickling of traces with sr=0 / setting delta =0 (see #1990)
+   * Fix pickling of traces with a sampling rate of 0 (see #1990)
 
 1.1.0: (doi: 10.5281/zenodo.165135)
  - General:
