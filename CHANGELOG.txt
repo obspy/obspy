@@ -1,3 +1,7 @@
+1.1.x:
+ -obspy.core:
+   * Fix pickling of traces with a sampling rate of 0 (see #1990)
+
 1.1.0: (doi: 10.5281/zenodo.165135)
  - General:
    * Read support for Guralp Compressed Format (GCF) waveform data,
