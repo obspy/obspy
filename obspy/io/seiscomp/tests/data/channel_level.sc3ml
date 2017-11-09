@@ -63,18 +63,14 @@
     </sensor>
     <datalogger publicID="Datalogger#20140909071419.913633.11" name="HGN.1993.307.BHE">
       <description>HGN.1993.307.BHE</description>
-      <gain>1</gain>
       <maxClockDrift>0</maxClockDrift>
     </datalogger>
     <datalogger publicID="Datalogger#20140909071419.913087.8" name="HGN.1993.307.BHN">
       <description>HGN.1993.307.BHN</description>
       <gain>1</gain>
-      <maxClockDrift>0</maxClockDrift>
     </datalogger>
     <datalogger publicID="Datalogger#20140909071419.911916.5" name="HGN.1993.307.BHZ">
       <description>HGN.1993.307.BHZ</description>
-      <gain>1</gain>
-      <maxClockDrift>0</maxClockDrift>
     </datalogger>
     <datalogger publicID="Datalogger#20140909071419.919902.27" name="HGN.2003.035.BHE00">
       <description>HGN.2003.035.BHE00</description>
