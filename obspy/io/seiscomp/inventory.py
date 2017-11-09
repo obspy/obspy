@@ -384,13 +384,15 @@ def _read_channel(inventory_root, cha_element, _ns):
         channel.data_logger = _read_datalogger(data_log_element, _ns)
         temp = _read_floattype(data_log_element, _ns("maxClockDrift"),
                                ClockDrift)
-        if channel.sample_rate != 0.0:
-            channel.clock_drift_in_seconds_per_sample = \
-                _read_float_var(temp / channel.sample_rate, ClockDrift)
-        else:
-            msg = "Clock drift division by sample rate of 0: using sec/sample"
-            warnings.warn(msg)
-            channel.sample_rate = temp
+        if temp is not None:
+            if channel.sample_rate != 0.0:
+                channel.clock_drift_in_seconds_per_sample = \
+                    _read_float_var(temp / channel.sample_rate, ClockDrift)
+            else:
+                msg = "Clock drift division by sample rate of 0: " \
+                      "using sec/sample"
+                warnings.warn(msg)
+                channel.sample_rate = temp
 
     channel.azimuth = _read_floattype(cha_element, _ns("azimuth"), Azimuth)
     channel.dip = _read_floattype(cha_element, _ns("dip"), Dip)
