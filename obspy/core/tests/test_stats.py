@@ -228,6 +228,24 @@ class StatsTestCase(unittest.TestCase):
         self.assertEqual(ad, adict)
         self.assertEqual(adict, ad)
 
+    def test_non_str_in_nscl_raise_warning(self):
+        """
+        Ensure assigning a non-str value to network, station, location, or
+        channel issues a warning, then casts value into str. See issue # 1995
+        """
+        stats = Stats()
+        for val in ['network', 'station', 'location', 'channel']:
+            with warnings.catch_warnings(record=True) as w:
+                setattr(stats, val, 42)
+            # make sure a warning was issued
+            self.assertEqual(len(w), 1)
+            self.assertIn('%s must be of type str' % val)
+            # make sure the value was cast to a str
+            new_val = getattr(stats, val)
+            self.assertEqual(new_val, '42')
+
+
+
 
 def suite():
     return unittest.makeSuite(StatsTestCase, 'test')
