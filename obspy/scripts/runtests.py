@@ -103,8 +103,10 @@ import warnings
 from argparse import ArgumentParser
 
 import numpy as np
+import requests
 
 import obspy
+from obspy.core.compatibility import urlparse
 from obspy.core.util import ALL_MODULES, DEFAULT_MODULES, NETWORK_MODULES
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
@@ -182,7 +184,6 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     from future import standard_library
     with standard_library.hooks():
         import urllib.parse
-        import http.client
     import codecs
     from xml.etree import ElementTree
     from xml.sax.saxutils import escape
@@ -353,24 +354,21 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     })
     headers = {"Content-type": "application/x-www-form-urlencoded",
                "Accept": "text/plain"}
-    conn = http.client.HTTPConnection(server)
-    conn.request("POST", "/", params, headers)
+    url = server
+    if not urlparse(url).scheme:
+        url = "http://" + url
+    response = requests.post(url=url, headers=headers, data=params)
     # get the response
-    response = conn.getresponse()
-    # handle redirect
-    if response.status == 301:
-        o = urllib.parse.urlparse(response.msg['location'])
-        conn = http.client.HTTPConnection(o.netloc)
-        conn.request("POST", o.path, params, headers)
-        # get the response
-        response = conn.getresponse()
+    if response.status_code == 200:
+        report_url = response.json().get('url', '')
+        if report_url:
+            report_url = ': {!s}'.format(report_url)
+        print("Test report has been sent to {}{} Thank you!".format(
+            server, report_url or '.'))
     # handle errors
-    if response.status == 200:
-        print("Test report has been sent to %s. Thank you!" % (server))
     else:
         print("Error: Could not sent a test report to %s." % (server))
         print(response.reason)
-    conn.close()
 
 
 class _TextTestResult(unittest.TextTestResult):
