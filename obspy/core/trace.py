@@ -150,10 +150,10 @@ class Stats(AttribDict):
     _refresh_keys = {'delta', 'sampling_rate', 'starttime', 'npts'}
     # dict of required types for certain attrs
     _types = {
-        'network': str,
-        'station': str,
-        'location': str,
-        'channel': str,
+        'network': (str, type(None)),
+        'station': (str, type(None)),
+        'location': (str, type(None)),
+        'channel': (str, type(None)),
     }
 
     def __init__(self, header={}):
