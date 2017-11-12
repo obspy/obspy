@@ -360,11 +360,9 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     response = requests.post(url=url, headers=headers, data=params)
     # get the response
     if response.status_code == 200:
-        report_url = response.json().get('url', '')
-        if report_url:
-            report_url = ': {!s}'.format(report_url)
-        print("Test report has been sent to {}{} Thank you!".format(
-            server, report_url or '.'))
+        report_url = response.json().get('url', server)
+        print('Your test results have been reported and are available at: '
+              '{}\nThank you!'.format(report_url))
     # handle errors
     else:
         print("Error: Could not sent a test report to %s." % (server))
