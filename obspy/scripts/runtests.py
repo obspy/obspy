@@ -180,6 +180,10 @@ def _get_suites(verbosity=1, names=[]):
 
 def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
                    ci_url=None, pr_url=None, import_failures=None):
+    """
+    If `server` is specified without URL scheme, 'https://' will be used as a
+    default.
+    """
     # import additional libraries here to speed up normal tests
     from future import standard_library
     with standard_library.hooks():
@@ -356,7 +360,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
                "Accept": "text/plain"}
     url = server
     if not urlparse(url).scheme:
-        url = "http://" + url
+        url = "https://" + url
     response = requests.post(url=url, headers=headers, data=params)
     # get the response
     if response.status_code == 200:
