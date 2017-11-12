@@ -241,7 +241,8 @@ class StatsTestCase(unittest.TestCase):
                 setattr(stats, val, 42)
             # make sure a warning was issued
             self.assertEqual(len(w), 1)
-            self.assertIn('%s must be of type ' % val, str(w[-1].message))
+            exp_str = 'Attribute "%s" must be of type ' % val
+            self.assertIn(exp_str, str(w[-1].message))
             # make sure the value was cast to a str
             new_val = getattr(stats, val)
             self.assertEqual(new_val, '42')
