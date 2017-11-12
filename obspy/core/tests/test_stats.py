@@ -247,7 +247,7 @@ class StatsTestCase(unittest.TestCase):
             new_val = getattr(stats, val)
             self.assertEqual(new_val, '42')
 
-    def test_nscl_can_be_None(self):
+    def test_nscl_can_be_none(self):
         """
         Ensure the nslc values can still be assigned to None without None
         getting converted to a str
