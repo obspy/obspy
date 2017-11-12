@@ -255,17 +255,13 @@ class ClientTestCase(unittest.TestCase):
         for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
                     u"", u" ", u"  ", u"--"]:
             with mock.patch("obspy.clients.fdsn.Client._download") as p:
-                try:
-                    self.client.get_stations(0, 0, location=loc)
-                except Exception:
-                    pass
+                self.client.get_stations(0, 0, location=loc,
+                                         filename=mock.Mock())
             self.assertEqual(p.call_count, 1)
             self.assertIn("location=--", p.call_args[0][0])
             with mock.patch("obspy.clients.fdsn.Client._download") as p:
-                try:
-                    self.client.get_waveforms(1, 2, loc, 4, 0, 0)
-                except Exception:
-                    pass
+                self.client.get_waveforms(1, 2, loc, 4, 0, 0,
+                                          filename=mock.Mock())
             self.assertEqual(p.call_count, 1)
             self.assertIn("location=--", p.call_args[0][0])
 
