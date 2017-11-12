@@ -234,17 +234,17 @@ class StatsTestCase(unittest.TestCase):
         channel issues a warning, then casts value into str. See issue # 1995
         """
         stats = Stats()
+
         for val in ['network', 'station', 'location', 'channel']:
             with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('default')
                 setattr(stats, val, 42)
             # make sure a warning was issued
             self.assertEqual(len(w), 1)
-            self.assertIn('%s must be of type str' % val)
+            self.assertIn('%s must be of type ' % val, str(w[-1].message))
             # make sure the value was cast to a str
             new_val = getattr(stats, val)
             self.assertEqual(new_val, '42')
-
-
 
 
 def suite():
