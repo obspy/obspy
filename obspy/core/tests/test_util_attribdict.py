@@ -295,7 +295,8 @@ class AttribDictTestCase(unittest.TestCase):
         Test that types are enforced with _types attribute
         """
         class AttrOcity(AttribDict):
-            _types = {'string': str, 'number': (float, int), 'int': int}
+            _types = {'string': str, 'number': (float, int), 'int': int,
+                      'another_number': (float, int)}
 
         ad = AttrOcity()
         with warnings.catch_warnings(record=True) as w:
@@ -304,11 +305,13 @@ class AttribDictTestCase(unittest.TestCase):
             ad.number = '1'
             ad.int = 1.0
             ad.not_type_controlled = 2
+            ad.another_number = 1
 
-        assert len(w) == 3
+        self.assertEqual(len(w), 3)
         self.assertIsInstance(ad.string, str)
         self.assertIsInstance(ad.number, float)
         self.assertIsInstance(ad.int, int)
+        self.assertIsInstance(ad.another_number, int)
 
 
 def suite():

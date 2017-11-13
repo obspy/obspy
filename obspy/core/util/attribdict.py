@@ -182,9 +182,10 @@ class AttribDict(collections.MutableMapping):
         :return:  value cast to correct type.
         """
         typ = self._types[key]
-        msg = 'Attribute "%s" must be of type %s, not %s'
-        warnings.warn(msg % (key, typ, type(value)))
         new_type = typ[0] if isinstance(typ, collections.Sequence) else typ
+        msg = ('Attribute "%s" must be of type %s, not %s. Attempting to '
+               'cast %s to %s')
+        warnings.warn(msg % (key, typ, type(value), value, new_type))
         return new_type(value)
 
     def __iter__(self):

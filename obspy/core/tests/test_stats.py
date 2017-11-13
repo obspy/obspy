@@ -4,11 +4,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import copy
+import io
 import pickle
 import unittest
 import warnings
 
-from obspy import Stream, Trace, UTCDateTime
+from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import Stats
 from obspy.core.util import AttribDict
 
@@ -247,15 +248,21 @@ class StatsTestCase(unittest.TestCase):
             new_val = getattr(stats, val)
             self.assertEqual(new_val, '42')
 
-    def test_nscl_can_be_none(self):
+    def test_nscl_cannot_be_none(self):
         """
-        Ensure the nslc values can still be assigned to None without None
-        getting converted to a str
+        Ensure the nslc values can't be assigned to None but rather None
+        gets converted to a str
         """
         stats = Stats()
 
-        stats.network = None
-        assert stats.network is None
+        for val in ['network', 'station', 'location', 'channel']:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('default')
+                setattr(stats, val, None)
+            # make sure no warning was issued
+            self.assertEqual(len(w), 1)
+            # make sure the value is still None
+            self.assertEqual(getattr(stats, val), 'None')
 
 
 def suite():
