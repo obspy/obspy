@@ -199,6 +199,11 @@ class StatsTestCase(unittest.TestCase):
         temp = pickle.dumps(stats, protocol=2)
         stats2 = pickle.loads(temp)
         self.assertEqual(stats, stats2)
+        # SOH channels sampling_rate & delta == 0. for #1989
+        stats.sampling_rate = 0
+        pickle.loads(pickle.dumps(stats, protocol=0))
+        pickle.loads(pickle.dumps(stats, protocol=1))
+        pickle.loads(pickle.dumps(stats, protocol=2))
 
     def test_set_calib(self):
         """
@@ -230,6 +235,13 @@ class StatsTestCase(unittest.TestCase):
         ad = Stats(adict)
         self.assertEqual(ad, adict)
         self.assertEqual(adict, ad)
+
+    def test_delta_zero(self):
+        """
+        Make sure you can set delta = 0. for #1989
+        """
+        stat = Stats()
+        stat.delta = 0
 
     def test_non_str_in_nscl_raise_warning(self):
         """
