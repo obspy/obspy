@@ -264,6 +264,27 @@ class StatsTestCase(unittest.TestCase):
             # make sure the value is still None
             self.assertEqual(getattr(stats, val), 'None')
 
+    def test_casted_stats_nscl_writes_to_mseed(self):
+        """
+        Ensure a Stream object that has had its nslc types cast to str can
+        still be written.
+        """
+        st = Stream(traces=read()[0])
+
+        # set new stats
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('default')
+            st[0].stats.network = 1
+            st[0].stats.station = 1.1
+            st[0].stats.location = b'23'
+            st[0].stats.channel = None
+
+        # try writing stream to io, tests pass if this doesn't raise
+        bio = io.BytesIO()
+        st.write(bio, 'mseed')
+        # cant read byteIO and compare because 'None' in channel gets
+        # truncated to 'Non'
+
 
 def suite():
     return unittest.makeSuite(StatsTestCase, 'test')
