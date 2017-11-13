@@ -2,6 +2,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str, native_bytes
 
 import copy
 import io
@@ -18,6 +19,7 @@ class StatsTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.Stats.
     """
+    nslc = ['network', 'station', 'location', 'channel']
 
     def test_init(self):
         """
@@ -236,7 +238,7 @@ class StatsTestCase(unittest.TestCase):
         """
         stats = Stats()
 
-        for val in ['network', 'station', 'location', 'channel']:
+        for val in self.nslc:
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter('default')
                 setattr(stats, val, 42)
@@ -255,7 +257,7 @@ class StatsTestCase(unittest.TestCase):
         """
         stats = Stats()
 
-        for val in ['network', 'station', 'location', 'channel']:
+        for val in self.nslc:
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter('default')
                 setattr(stats, val, None)
@@ -284,6 +286,19 @@ class StatsTestCase(unittest.TestCase):
         st.write(bio, 'mseed')
         # cant read byteIO and compare because 'None' in channel gets
         # truncated to 'Non'
+
+    def test_different_string_types(self):
+        """
+        Test the various types of strings found in the wild still work.
+        """
+        the_strs = [native_str('HHZ'), native_bytes('HHZ', 'utf8'), u'HHZ']
+
+        stats = Stats()
+
+        for a_str in the_strs:
+            for nslc in self.nslc:
+                setattr(stats, nslc, a_str)
+                self.assertIsInstance(getattr(stats, nslc), native_str)
 
 
 def suite():
