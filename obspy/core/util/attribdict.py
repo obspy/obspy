@@ -184,8 +184,8 @@ class AttribDict(collections.MutableMapping):
         typ = self._types[key]
         new_type = typ[0] if isinstance(typ, collections.Sequence) else typ
         msg = ('Attribute "%s" must be of type %s, not %s. Attempting to '
-               'cast %s to %s')
-        warnings.warn(msg % (key, typ, type(value), value, new_type))
+               'cast %s to %s') % (key, typ, type(value), value, new_type)
+        warnings.warn(msg)
         return new_type(value)
 
     def __iter__(self):

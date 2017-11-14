@@ -149,11 +149,18 @@ class Stats(AttribDict):
     # keys which need to refresh derived values
     _refresh_keys = {'delta', 'sampling_rate', 'starttime', 'npts'}
     # dict of required types for certain attrs
+    # _types = {
+    #     'network': native_str,
+    #     'station': native_str,
+    #     'location': native_str,
+    #     'channel': native_str,
+    # }
+
     _types = {
-        'network': native_str,
-        'station': native_str,
-        'location': native_str,
-        'channel': native_str,
+        'network': (str, native_str),
+        'station': (str, native_str),
+        'location': (str, native_str),
+        'channel': (str, native_str),
     }
 
     def __init__(self, header={}):
