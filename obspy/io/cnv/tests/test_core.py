@@ -51,6 +51,27 @@ class CNVTestCase(unittest.TestCase):
 
         self.assertEqual(expected, got)
 
+        # write via plugin and with phase_mapping
+        with NamedTemporaryFile() as tf:
+            cat.write(tf, format="CNV", phase_mapping={"P": "P", "S": "S"})
+            tf.seek(0)
+            got = tf.read().decode()
+
+        self.assertEqual(expected, got)
+
+        # write via plugin and with phase_mapping with only P
+        # read expected OBS file output
+        filename = os.path.join(self.datapath, "obspyck_20141020150701_P.cnv")
+        with open(filename, "rb") as fh:
+            expected = fh.read().decode()
+
+        with NamedTemporaryFile() as tf:
+            cat.write(tf, format="CNV", phase_mapping={"P": "P"})
+            tf.seek(0)
+            got = tf.read().decode()
+
+        self.assertEqual(expected, got)
+
 
 def suite():
     return unittest.makeSuite(CNVTestCase, "test")
