@@ -60,7 +60,8 @@ def _write_cnv(catalog, filename, phase_mapping=None, ifx_list=None,
                          's': "S", 'S': "S", 'Sg': "S", 'Sn': "S", 'Sm': "S"}
     else:
         values = set(phase_mapping.values())
-        if values.update(("P", "S")) != set(("P", "S")):
+        values.update(("P", "S"))
+        if values != set(("P", "S")):
             msg = ("Values of phase mapping should only be 'P' or 'S'")
             raise ValueError(msg)
     if ifx_list is None:
