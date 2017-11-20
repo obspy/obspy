@@ -211,10 +211,29 @@ class ShapefileTestCase(unittest.TestCase):
         cat = read_events('/path/to/mchedr.dat')
         cat += read_events('/path/to/nlloc.qml')
         extra_fields = [('Region', 'C', 50, None,
-                         ['SOUTHEAST OF HONSHU, JAPAN', 'GERMANY'])]
+                        ['SOUTHEAST OF HONSHU, JAPAN', 'GERMANY'])]
+        bad_extra_fields_wrong_length = [('Region', 'C', 50, None, ['ABC'])]
+        bad_extra_fields_name_clash = [('Magnitude', 'C', 50, None, ['ABC'])]
+
         with TemporaryWorkingDirectory():
             with warnings.catch_warnings(record=True) as w:
                 warnings.filterwarnings('always')
+                # test some bad calls that should raise an Exception
+                with self.assertRaises(ValueError) as cm:
+                    _write_shapefile(
+                        cat, "catalog.shp",
+                        extra_fields=bad_extra_fields_wrong_length)
+                self.assertEqual(
+                    str(cm.exception), "list of values for each item in "
+                    "'extra_fields' must have same length as Catalog object")
+                with self.assertRaises(ValueError) as cm:
+                    _write_shapefile(
+                        cat, "catalog.shp",
+                        extra_fields=bad_extra_fields_name_clash)
+                self.assertEqual(
+                    str(cm.exception), "Conflict with existing field named "
+                    "'Magnitude'.")
+                # now test a good call that should work
                 _write_shapefile(cat, "catalog.shp", extra_fields=extra_fields)
             for w_ in w:
                 try:
