@@ -3,6 +3,8 @@
    * Fix pickling of traces with a sampling rate of 0 (see #1990)
  -obspy.io.seiscomp:
    * Fix inventory read when maxClockDrift is unset in SC3ML (see #1993)
+ -obspy.signal:
+   * Allow singular COUNT units in evalresp (see #2003, #2011).
 
 1.1.0: (doi: 10.5281/zenodo.165135)
  - General:
