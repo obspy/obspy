@@ -58,7 +58,7 @@ def _write_shapefile(obj, filename, extra_fields=None, **kwargs):
         the shapefile table. Each item in the list has to be specified as a
         tuple of: field name (i.e. name of database column, ``str``), field
         type (single character as used by ``pyshp``: ``'C'`` for string
-        fields, ``'N'`` for integer/float fields -- use precision ``None`` for
+        fields, ``'N'`` for integer/float fields - use precision ``None`` for
         integer fields, ``'L'`` for boolean fields), field width (``int``),
         field precision (``int``) and field values (``list`` of individual
         values, must have same length as ``catalog``).
