@@ -2,6 +2,9 @@ master:
  - obspy.core:
    * Casting FDSN identifiers to strings upon setting in the stats dictionary
      (see #1997).
+ - obspy.io.shapefile:
+   * Add possibility to add custom database columns when writing catalog
+     objects to shapefile (see #2012)
 
 1.1.x:
  - obspy.core:

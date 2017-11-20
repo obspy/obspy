@@ -14,6 +14,19 @@ Write support works via the ObsPy plugin structure for
 >>> cat = read_events()  # load example data
 >>> cat.write("my_events.shp", format="SHAPEFILE")  # doctest: +SKIP
 
+Additional information for events can be written to the shapefile as custom
+database columns. In this toy example we add the Flinn Engdahl region as a
+database column (see :func:`obspy.io.shapefile.core._write_shapefile()`):
+
+>>> from obspy.geodetics.flinnengdahl import FlinnEngdahl
+>>> fe = FlinnEngdahl()
+>>> regions = [
+...     fe.get_region(event.origins[0].longitude, event.origins[0].latitude)
+...     for event in cat]
+>>> extra_fields = [('Region', 'C', 100, None, regions)]
+>>> cat.write("my_events.shp", format="SHAPEFILE",
+...           extra_fields=extra_fields)  # doctest: +SKIP
+
 .. seealso::
 
     The format definition can be found
