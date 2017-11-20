@@ -209,7 +209,7 @@ def _add_inventory_layer(writer, inventory):
     """
     :type writer: :class:`shapefile.Writer`.
     :param writer: pyshp Writer object
-    :type inventory: :class:`~obspy.core.inventory.Inventory`
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: Inventory data to add as a new layer.
     """
     # [name, type, width, precision]

@@ -6,7 +6,7 @@ This module provides write support for the ESRI shapefile format.
 
 Write support works via the ObsPy plugin structure for
 :class:`~obspy.core.event.Catalog` and
-:class:`~obspy.core.inventory.Inventory`:
+:class:`~obspy.core.inventory.inventory.Inventory`:
 
 >>> from obspy import read_inventory, read_events
 >>> inv = read_inventory()  # load example data
