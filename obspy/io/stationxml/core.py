@@ -1482,10 +1482,12 @@ def _obj2tag(parent, tag_name, tag_value):
 
 
 def _format_time(value):
+    # Piggy back on the __str__ implementation of our UTCDateTime objects as
+    # they work well also for years before 1900.
     if value.microsecond == 0:
-        return value.strftime("%Y-%m-%dT%H:%M:%S")
+        return str(value).split(".")[0]
     else:
-        return value.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        return str(value).rstrip("Z")
 
 
 def _read_element(prefix, ns, element, extra):
