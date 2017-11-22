@@ -365,6 +365,15 @@ class Channel(BaseNode):
             unwrap_phase=unwrap_phase, plot_degrees=plot_degrees, show=show,
             outfile=outfile)
 
+    def get_epoch_plottable_struct(self, y_offset=0):
+        plot_dict = {};
+        if self.start_date is not None:
+            end = self.end_date
+            if end is None:
+                end = obspy.core.utcdatetime.now()
+            plot_dict[y_offset] = (self.start_date, end, 0, self.location_code)
+        return plot_dict
+
 
 if __name__ == '__main__':
     import doctest

@@ -675,6 +675,24 @@ class Network(BaseNode):
 
         return fig
 
+    def get_epoch_plottable_struct(self, y_offset=0):
+        height = 0
+        plot_dict = {}
+        ch_y = y_offset + 1;
+        # get height of objects
+        for station in self.stations:
+            sta_dict = s.get_epoch_plottable_struct(y_offset=ch_y)
+            # +2 to represent value after top of bounding rectangle
+            height += len(sta_dict) + 2
+            plot_dict.update(sta_dict)
+            ch_y += height
+        if self.start_date is not None:
+            end = self.end_date
+            if self.end_date is None:
+                end = obspy.core.utcdatetime.now()
+            plot_dict[y_offset] = (start_date, end, height, self.code)
+        return plot_dict
+
 
 if __name__ == '__main__':
     import doctest

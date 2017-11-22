@@ -892,6 +892,19 @@ class Inventory(ComparingObject):
 
         return fig
 
+    def get_epoch_plottable_struct(self):
+        height = 0
+        plot_dict = {}
+        ch_y = 1;
+        # get height of objects
+        for station in self.stations:
+            sta_dict = s.get_epoch_plottable_struct(y_offset=ch_y)
+            # +2 to represent value after top of bounding rectangle
+            height += len(sta_dict) + 2
+            plot_dict.update(sta_dict)
+            ch_y += height
+        return plot_dict
+
 
 if __name__ == '__main__':
     import doctest
