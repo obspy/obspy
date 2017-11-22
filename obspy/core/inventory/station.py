@@ -507,6 +507,20 @@ class Station(BaseNode):
 
         return fig
 
+    def get_epoch_plottable_struct(self, y_offset=0):
+        height = len(self.channels) + 1;
+        plot_dict = {}
+        ch_y = y_offset + 1;
+        for channel in self.channels:
+            plot_dict.update(channel.get_epoch_plottable_struct(y_offset=ch_y))
+            ch_y += 1
+        if self.start_date is not None:
+            end = self.end_date
+            if self.end_date is None:
+                end = obspy.core.utcdatetime.now()
+            plot_dict[y_offset] = (start_date, end, height, self.code)
+        return plot_dict
+
 
 if __name__ == '__main__':
     import doctest
