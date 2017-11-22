@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA
 
 import copy
 import re
+import matplotlib.pyplot as plt
 from textwrap import TextWrapper
 
 from obspy import UTCDateTime
@@ -857,6 +858,32 @@ def _seed_id_keyfunction(x):
         x = [x, ]
 
     return x
+
+def plot_inventory_epochs(plot_dict, outfile=None):
+    y_ticks = []
+    y_tick_labels = []
+    min_y = min(plot_dict.keys())
+    max_y = max(plot_dict.keys())
+    for i in range(min_y, max_y):
+        if i in plot_dict.keys():
+            y_ticks.append(i)
+            (_,_,_,label) = plot_dict.get(i)
+            y_tick_labels.append(label)
+    plt.axes()
+    plt.yticks(y_ticks, y_tick_labels)
+    for y in plot_dict.keys():
+        (start, end, height, _) = plot_dict.get(i)
+        fill = False
+        if height == 0:
+            fill = True
+        # subtract end from start b/c we want the length of the side
+        rect = plt.rectangle((start, y), end-start, height, filled=fill)
+        plt.gca.add_patch(rect)
+    if outfile:
+        plt.savefig(outfile)
+    else:
+        plt.show()
+
 
 
 if __name__ == '__main__':

@@ -14,6 +14,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import python_2_unicode_compatible
 
+from obspy.core.inventory.util import plot_inventory_epochs
 from obspy.core.util.obspy_types import FloatWithUncertainties
 from . import BaseNode
 from .util import Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude
@@ -373,6 +374,10 @@ class Channel(BaseNode):
                 end = obspy.core.utcdatetime.now()
             plot_dict[y_offset] = (self.start_date, end, 0, self.location_code)
         return plot_dict
+
+    def plot_epochs(self, outfile=None):
+        plot_dict = self.get_epoch_plottable_structure()
+        plot_inventory_epochs(plot_dict, outfile)
 
 
 if __name__ == '__main__':

@@ -21,6 +21,7 @@ import textwrap
 import warnings
 
 import obspy
+from obspy.core.inventory.util import plot_inventory_epochs
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
                                   _read_from_plugin, NamedTemporaryFile,
                                   download_to_file, sanitize_filename)
@@ -897,13 +898,17 @@ class Inventory(ComparingObject):
         plot_dict = {}
         ch_y = 1;
         # get height of objects
-        for station in self.stations:
-            sta_dict = s.get_epoch_plottable_struct(y_offset=ch_y)
+        for network in self.networks:
+            sta_dict = network.get_epoch_plottable_struct(y_offset=ch_y)
             # +2 to represent value after top of bounding rectangle
             height += len(sta_dict) + 2
             plot_dict.update(sta_dict)
             ch_y += height
         return plot_dict
+
+    def plot_epochs(self, outfile=None):
+        plot_dict = self.get_epoch_plottable_structure()
+        plot_inventory_epochs(plot_dict, outfile)
 
 
 if __name__ == '__main__':
