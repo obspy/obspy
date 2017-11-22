@@ -21,6 +21,7 @@ import warnings
 import numpy as np
 
 from obspy import UTCDateTime
+from obspy.core.inventory.util import plot_inventory_epochs
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
@@ -520,6 +521,10 @@ class Station(BaseNode):
                 end = obspy.core.utcdatetime.now()
             plot_dict[y_offset] = (start_date, end, height, self.code)
         return plot_dict
+
+    def plot_epochs(self, outfile=None):
+        plot_dict = self.get_epoch_plottable_structure()
+        plot_inventory_epochs(plot_dict, outfile)
 
 
 if __name__ == '__main__':

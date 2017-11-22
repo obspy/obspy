@@ -18,6 +18,7 @@ import copy
 import fnmatch
 import warnings
 
+from obspy.core.inventory.util import plot_inventory_epochs
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .station import Station
@@ -681,7 +682,7 @@ class Network(BaseNode):
         ch_y = y_offset + 1;
         # get height of objects
         for station in self.stations:
-            sta_dict = s.get_epoch_plottable_struct(y_offset=ch_y)
+            sta_dict = station.get_epoch_plottable_struct(y_offset=ch_y)
             # +2 to represent value after top of bounding rectangle
             height += len(sta_dict) + 2
             plot_dict.update(sta_dict)
@@ -692,6 +693,10 @@ class Network(BaseNode):
                 end = obspy.core.utcdatetime.now()
             plot_dict[y_offset] = (start_date, end, height, self.code)
         return plot_dict
+
+    def plot_epochs(self, outfile=None):
+        plot_dict = self.get_epoch_plottable_structure()
+        plot_inventory_epochs(plot_dict, outfile)
 
 
 if __name__ == '__main__':
