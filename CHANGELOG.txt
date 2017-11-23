@@ -1,3 +1,8 @@
+master:
+ - obspy.core:
+   * Casting FDSN identifiers to strings upon setting in the stats dictionary
+     (see #1997).
+
 1.1.x:
  -obspy.core:
    * Fix pickling of traces with a sampling rate of 0 (see #1990)
