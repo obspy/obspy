@@ -855,7 +855,7 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         etree.SubElement(root, "Module").text = inventory.module
         etree.SubElement(root, "ModuleURI").text = inventory.module_uri
 
-    etree.SubElement(root, "Created").text = _format_time(inventory.created)
+    etree.SubElement(root, "Created").text = str(inventory.created)
 
     if level not in ["network", "station", "channel", "response"]:
         raise ValueError("Requested stationXML write level is unsupported.")
@@ -896,9 +896,9 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
 def _get_base_node_attributes(element):
     attributes = {"code": element.code}
     if element.start_date:
-        attributes["startDate"] = _format_time(element.start_date)
+        attributes["startDate"] = str(element.start_date)
     if element.end_date:
-        attributes["endDate"] = _format_time(element.end_date)
+        attributes["endDate"] = str(element.end_date)
     if element.restricted_status:
         attributes["restrictedStatus"] = element.restricted_status
     if element.alternate_code:
@@ -1062,10 +1062,10 @@ def _write_station(parent, station, level):
         _write_extra(operator_elem, operator)
 
     etree.SubElement(station_elem, "CreationDate").text = \
-        _format_time(station.creation_date)
+        str(station.creation_date)
     if station.termination_date:
         etree.SubElement(station_elem, "TerminationDate").text = \
-            _format_time(station.termination_date)
+            str(station.termination_date)
     # The next two tags are optional.
     _obj2tag(station_elem, "TotalNumberChannels",
              station.total_number_of_channels)
@@ -1092,8 +1092,8 @@ def _write_channel(parent, channel, level):
     if channel.data_availability is not None:
         da = etree.SubElement(channel_elem, "DataAvailability")
         etree.SubElement(da, "Extent", {
-            "start": _format_time(channel.data_availability.start),
-            "end": _format_time(channel.data_availability.end)
+            "start": str(channel.data_availability.start),
+            "end": str(channel.data_availability.end)
         })
         _write_extra(da, channel.data_availability)
 
@@ -1349,13 +1349,13 @@ def _write_equipment(parent, equipment, tag="Equipment"):
     _obj2tag(equipment_elem, "SerialNumber", equipment.serial_number)
     if equipment.installation_date:
         etree.SubElement(equipment_elem, "InstallationDate").text = \
-            _format_time(equipment.installation_date)
+            str(equipment.installation_date)
     if equipment.removal_date:
         etree.SubElement(equipment_elem, "RemovalDate").text = \
-            _format_time(equipment.removal_date)
+            str(equipment.removal_date)
     for calibration_date in equipment.calibration_dates:
         etree.SubElement(equipment_elem, "CalibrationDate").text = \
-            _format_time(calibration_date)
+            str(calibration_date)
     _write_extra(parent, equipment)
 
 
@@ -1379,10 +1379,10 @@ def _write_comment(parent, comment):
     etree.SubElement(comment_elem, "Value").text = comment.value
     if comment.begin_effective_time:
         etree.SubElement(comment_elem, "BeginEffectiveTime").text = \
-            _format_time(comment.begin_effective_time)
+            str(comment.begin_effective_time)
     if comment.end_effective_time:
         etree.SubElement(comment_elem, "EndEffectiveTime").text = \
-            _format_time(comment.end_effective_time)
+            str(comment.end_effective_time)
     for author in comment.authors:
         _write_person(comment_elem, author, "Author")
     _write_extra(parent, comment)
@@ -1479,13 +1479,6 @@ def _obj2tag(parent, tag_name, tag_value):
     else:
         text = str(tag_value)
     etree.SubElement(parent, tag_name).text = text
-
-
-def _format_time(value):
-    if value.microsecond == 0:
-        return value.strftime("%Y-%m-%dT%H:%M:%S")
-    else:
-        return value.strftime("%Y-%m-%dT%H:%M:%S.%f")
 
 
 def _read_element(prefix, ns, element, extra):
