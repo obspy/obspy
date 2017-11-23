@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
 import datetime
 import os
 import unittest
@@ -85,6 +86,12 @@ expected_inventory_records = [
      datetime.date(2007, 12, 17), '.EHZ,.EHN,.EHE'],
     ['BW', 'RJOB', 12.795714, 47.737167, 860.0, datetime.date(2007, 12, 17),
      None, '.EHZ,.EHN,.EHE']]
+# set up expected results with extra 'Region' field
+expected_catalog_fields_with_region = copy.deepcopy(expected_catalog_fields)
+expected_catalog_fields_with_region.append(['Region', 'C', 50, 0])
+expected_catalog_records_with_region = copy.deepcopy(expected_catalog_records)
+expected_catalog_records_with_region[0].append('SOUTHEAST OF HONSHU, JAPAN')
+expected_catalog_records_with_region[1].append('GERMANY')
 
 
 def _assert_records_and_fields(got_fields, got_records, expected_fields,
@@ -194,6 +201,65 @@ class ShapefileTestCase(unittest.TestCase):
                     got_fields=shp.fields, got_records=shp.records(),
                     expected_fields=expected_catalog_fields,
                     expected_records=expected_catalog_records)
+                self.assertEqual(shp.shapeType, shapefile.POINT)
+                _close_shapefile_reader(shp)
+
+    def test_write_catalog_shapefile_with_extra_field(self):
+        """
+        Tests writing a catalog with an additional custom database column
+        """
+        cat = read_events('/path/to/mchedr.dat')
+        cat += read_events('/path/to/nlloc.qml')
+        extra_fields = [('Region', 'C', 50, None,
+                        ['SOUTHEAST OF HONSHU, JAPAN', 'GERMANY'])]
+        bad_extra_fields_wrong_length = [('Region', 'C', 50, None, ['ABC'])]
+        bad_extra_fields_name_clash = [('Magnitude', 'C', 50, None, ['ABC'])]
+
+        with TemporaryWorkingDirectory():
+            with warnings.catch_warnings(record=True) as w:
+                warnings.filterwarnings('always')
+                # test some bad calls that should raise an Exception
+                with self.assertRaises(ValueError) as cm:
+                    _write_shapefile(
+                        cat, "catalog.shp",
+                        extra_fields=bad_extra_fields_wrong_length)
+                self.assertEqual(
+                    str(cm.exception), "list of values for each item in "
+                    "'extra_fields' must have same length as Catalog object")
+                with self.assertRaises(ValueError) as cm:
+                    _write_shapefile(
+                        cat, "catalog.shp",
+                        extra_fields=bad_extra_fields_name_clash)
+                self.assertEqual(
+                    str(cm.exception), "Conflict with existing field named "
+                    "'Magnitude'.")
+                # now test a good call that should work
+                _write_shapefile(cat, "catalog.shp", extra_fields=extra_fields)
+            for w_ in w:
+                try:
+                    self.assertEqual(
+                        str(w_.message),
+                        'Encountered an event with origin uncertainty '
+                        'description of type "confidence ellipsoid". This is '
+                        'not yet implemented for output as shapefile. No '
+                        'origin uncertainty will be added to shapefile for '
+                        'such events.')
+                except AssertionError:
+                    continue
+                break
+            else:
+                raise
+            for suffix in SHAPEFILE_SUFFIXES:
+                self.assertTrue(os.path.isfile("catalog" + suffix))
+            with open("catalog.shp", "rb") as fh_shp, \
+                    open("catalog.dbf", "rb") as fh_dbf, \
+                    open("catalog.shx", "rb") as fh_shx:
+                shp = shapefile.Reader(shp=fh_shp, shx=fh_shx, dbf=fh_dbf)
+                # check contents of shapefile that we just wrote
+                _assert_records_and_fields(
+                    got_fields=shp.fields, got_records=shp.records(),
+                    expected_fields=expected_catalog_fields_with_region,
+                    expected_records=expected_catalog_records_with_region)
                 self.assertEqual(shp.shapeType, shapefile.POINT)
                 _close_shapefile_reader(shp)
 
