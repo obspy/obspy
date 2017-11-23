@@ -131,7 +131,9 @@ class Stats(AttribDict):
         >>> trace.stats.npts
         4
     """
+    # set of read only attrs
     readonly = ['endtime']
+    # default values
     defaults = {
         'sampling_rate': 1.0,
         'delta': 1.0,
@@ -144,6 +146,15 @@ class Stats(AttribDict):
         'location': '',
         'channel': '',
     }
+    # keys which need to refresh derived values
+    _refresh_keys = {'delta', 'sampling_rate', 'starttime', 'npts'}
+    # dict of required types for certain attrs
+    _types = {
+        'network': (str, native_str),
+        'station': (str, native_str),
+        'location': (str, native_str),
+        'channel': (str, native_str),
+    }
 
     def __init__(self, header={}):
         """
@@ -153,8 +164,7 @@ class Stats(AttribDict):
     def __setitem__(self, key, value):
         """
         """
-        # keys which need to refresh derived values
-        if key in ['delta', 'sampling_rate', 'starttime', 'npts']:
+        if key in self._refresh_keys:
             # ensure correct data type
             if key == 'delta':
                 key = 'sampling_rate'
