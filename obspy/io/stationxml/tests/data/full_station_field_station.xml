@@ -4,14 +4,14 @@
   <Sender>The ObsPy Team</Sender>
   <Module>Some Random Module</Module>
   <ModuleURI>http://www.some-random.site</ModuleURI>
-  <Created>2013-01-01T00:00:00</Created>
+  <Created>2013-01-01T00:00:00.000000Z</Created>
   <Network code="PY">
-      <Station code="PY" startDate="2011-01-01T00:00:00" endDate="2012-01-01T00:00:00" restrictedStatus="open" alternateCode="PYY" historicalCode="YYP">
+      <Station code="PY" startDate="2011-01-01T00:00:00.000000Z" endDate="2012-01-01T00:00:00.000000Z" restrictedStatus="open" alternateCode="PYY" historicalCode="YYP">
           <Description>Some Description...</Description>
           <Comment id="0">
               <Value>Comment number 1</Value>
-              <BeginEffectiveTime>1990-05-05T00:00:00</BeginEffectiveTime>
-              <EndEffectiveTime>2008-02-03T00:00:00</EndEffectiveTime>
+              <BeginEffectiveTime>1990-05-05T00:00:00.000000Z</BeginEffectiveTime>
+              <EndEffectiveTime>2008-02-03T00:00:00.000000Z</EndEffectiveTime>
               <Author>
                 <Name>This person</Name>
                 <Name>has multiple names!</Name>
@@ -36,8 +36,8 @@
           </Comment>
           <Comment id="1">
               <Value>Comment number 2</Value>
-              <BeginEffectiveTime>1990-05-05T00:00:00</BeginEffectiveTime>
-              <EndEffectiveTime>2008-02-03T00:00:00</EndEffectiveTime>
+              <BeginEffectiveTime>1990-05-05T00:00:00.000000Z</BeginEffectiveTime>
+              <EndEffectiveTime>2008-02-03T00:00:00.000000Z</EndEffectiveTime>
               <Author>
                 <Name>Person 1</Name>
                 <Agency>Some agency</Agency>
@@ -89,10 +89,10 @@
               <Vendor>Some vendor</Vendor>
               <Model>Some model</Model>
               <SerialNumber>12345-ABC</SerialNumber>
-              <InstallationDate>1990-05-05T00:00:00</InstallationDate>
-              <RemovalDate>1999-05-05T00:00:00</RemovalDate>
-              <CalibrationDate>1990-05-05T00:00:00</CalibrationDate>
-              <CalibrationDate>1992-05-05T00:00:00</CalibrationDate>
+              <InstallationDate>1990-05-05T00:00:00.000000Z</InstallationDate>
+              <RemovalDate>1999-05-05T00:00:00.000000Z</RemovalDate>
+              <CalibrationDate>1990-05-05T00:00:00.000000Z</CalibrationDate>
+              <CalibrationDate>1992-05-05T00:00:00.000000Z</CalibrationDate>
           </Equipment>
           <Equipment resourceId="something_new">
               <Type>Some type</Type>
@@ -101,10 +101,10 @@
               <Vendor>Some vendor</Vendor>
               <Model>Some model</Model>
               <SerialNumber>12345-ABC</SerialNumber>
-              <InstallationDate>1990-05-05T00:00:00</InstallationDate>
-              <RemovalDate>1999-05-05T00:00:00</RemovalDate>
-              <CalibrationDate>1990-05-05T00:00:00</CalibrationDate>
-              <CalibrationDate>1992-05-05T00:00:00</CalibrationDate>
+              <InstallationDate>1990-05-05T00:00:00.000000Z</InstallationDate>
+              <RemovalDate>1999-05-05T00:00:00.000000Z</RemovalDate>
+              <CalibrationDate>1990-05-05T00:00:00.000000Z</CalibrationDate>
+              <CalibrationDate>1992-05-05T00:00:00.000000Z</CalibrationDate>
           </Equipment>
           <Operator>
               <Agency>Agency 1</Agency>
@@ -156,8 +156,8 @@
               </Contact>
               <WebSite>http://www.web.site</WebSite>
           </Operator>
-          <CreationDate>1990-05-05T00:00:00</CreationDate>
-          <TerminationDate>2009-05-05T00:00:00</TerminationDate>
+          <CreationDate>1990-05-05T00:00:00.000000Z</CreationDate>
+          <TerminationDate>2009-05-05T00:00:00.000000Z</TerminationDate>
           <TotalNumberChannels>100</TotalNumberChannels>
           <SelectedNumberChannels>1</SelectedNumberChannels>
           <ExternalReference>

@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 import os
 import unittest
 import warnings
@@ -215,6 +216,17 @@ class NetworkTestCase(unittest.TestCase):
             net.select(**select_kwargs)
 
         self.assertEqual(p.call_args[1], select_kwargs)
+
+    def test_writing_network_before_1990(self):
+        inv = obspy.Inventory(networks=[
+            Network(code="XX", start_date=obspy.UTCDateTime(1880, 1, 1))],
+            source="")
+        with io.BytesIO() as buf:
+            inv.write(buf, format="stationxml")
+            buf.seek(0, 0)
+            inv2 = read_inventory(buf)
+
+        self.assertEqual(inv.networks[0], inv2.networks[0])
 
     def test_network_select_with_empty_stations(self):
         """

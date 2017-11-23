@@ -607,7 +607,7 @@ int check_units(char *line) {
       unitScaleFact = 1.0e2;
     return(DIS);
   }
-  else if(string_match(line,"^COUNTS[^A-Z]?","-r") || string_match(line,"^DIGITAL[^A-Z]?","-r")) {
+  else if(string_match(line,"^COUNTS?[^A-Z]?","-r") || string_match(line,"^DIGITAL[^A-Z]?","-r")) {
     return(COUNTS);
   }
   else if(string_match(line,"^V[^A-Z]?","-r") || string_match(line,"^VOLTS[^A-Z]?","-r")) {
