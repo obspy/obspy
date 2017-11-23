@@ -5,6 +5,7 @@
    * Fix inventory read when maxClockDrift is unset in SC3ML (see #1993)
  - obspy.io.stationxml
    * Allow writing of dates before 1900 also on Python 2 (see #2013, #2015).
+   * Write the UTC time zone specifier to all times (see #2015).
  - obspy.signal:
    * Allow singular COUNT units in evalresp (see #2003, #2011).
 

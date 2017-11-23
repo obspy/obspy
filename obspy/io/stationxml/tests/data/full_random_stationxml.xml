@@ -4,13 +4,13 @@
     <Sender>Ia3zIdiZj</Sender>
     <Module>pZr</Module>
     <ModuleURI>http://mANaoYVB/</ModuleURI>
-    <Created>2013-12-11T16:29:13</Created>
-    <Network code="ebdz" startDate="2014-06-11T16:29:13" endDate="2014-05-09T16:29:13" restrictedStatus="closed" alternateCode="wBHfTN1Ypxh79.tE" historicalCode="OYD3xrgoG">
+    <Created>2013-12-11T16:29:13.000000Z</Created>
+    <Network code="ebdz" startDate="2014-06-11T16:29:13.000000Z" endDate="2014-05-09T16:29:13.000000Z" restrictedStatus="closed" alternateCode="wBHfTN1Ypxh79.tE" historicalCode="OYD3xrgoG">
         <Description>qEhqqijuc1XhCirqZl</Description>
         <Comment id="555942826">
             <Value>ihu3IUkxZ6pZG.f4Qcp</Value>
-            <BeginEffectiveTime>2014-11-16T16:29:13</BeginEffectiveTime>
-            <EndEffectiveTime>2015-11-01T16:29:13</EndEffectiveTime>
+            <BeginEffectiveTime>2014-11-16T16:29:13.000000Z</BeginEffectiveTime>
+            <EndEffectiveTime>2015-11-01T16:29:13.000000Z</EndEffectiveTime>
             <Author>
                 <Name>xVT</Name>
                 <Name>WHc04ibyg</Name>
@@ -50,8 +50,8 @@
         </Comment>
         <Comment id="153012848">
             <Value>OngEyPB0VrRmmo</Value>
-            <BeginEffectiveTime>2015-10-30T16:29:13</BeginEffectiveTime>
-            <EndEffectiveTime>2014-05-25T16:29:13</EndEffectiveTime>
+            <BeginEffectiveTime>2015-10-30T16:29:13.000000Z</BeginEffectiveTime>
+            <EndEffectiveTime>2014-05-25T16:29:13.000000Z</EndEffectiveTime>
             <Author>
                 <Name>dYiwYS2HVY</Name>
                 <Name>IE9.6Y1LMo8usetxY2XBWR</Name>
@@ -91,12 +91,12 @@
         </Comment>
         <TotalNumberStations>1664027705</TotalNumberStations>
         <SelectedNumberStations>472200261</SelectedNumberStations>
-        <Station code="rrkqyXsRMJtPa" startDate="2014-03-20T16:29:13" endDate="2014-06-08T16:29:13" restrictedStatus="closed" alternateCode="lmy.V_xYd85DTUQMfVcHftPZ7gIvEB" historicalCode="akTv">
+        <Station code="rrkqyXsRMJtPa" startDate="2014-03-20T16:29:13.000000Z" endDate="2014-06-08T16:29:13.000000Z" restrictedStatus="closed" alternateCode="lmy.V_xYd85DTUQMfVcHftPZ7gIvEB" historicalCode="akTv">
             <Description>ZnGUA9j2Ur</Description>
             <Comment id="848648951">
                 <Value>fKua5Y73n</Value>
-                <BeginEffectiveTime>2015-08-13T16:29:13</BeginEffectiveTime>
-                <EndEffectiveTime>2014-12-27T16:29:13</EndEffectiveTime>
+                <BeginEffectiveTime>2015-08-13T16:29:13.000000Z</BeginEffectiveTime>
+                <EndEffectiveTime>2014-12-27T16:29:13.000000Z</EndEffectiveTime>
                 <Author>
                     <Name>uzPz.giVq</Name>
                     <Name>bS2iLYTtGd92Hcx_i</Name>
@@ -136,8 +136,8 @@
             </Comment>
             <Comment id="780829474">
                 <Value>_rogYarCy3QcWwPzelWNG05B</Value>
-                <BeginEffectiveTime>2015-09-10T16:29:13</BeginEffectiveTime>
-                <EndEffectiveTime>2014-01-19T16:29:13</EndEffectiveTime>
+                <BeginEffectiveTime>2015-09-10T16:29:13.000000Z</BeginEffectiveTime>
+                <EndEffectiveTime>2014-01-19T16:29:13.000000Z</EndEffectiveTime>
                 <Author>
                     <Name>Bd5vvbu9VZkvvOuQ5503</Name>
                     <Name>sPme.Xa-_ADyneOjOz9RDwryedr</Name>
@@ -195,10 +195,10 @@
                 <Vendor>wBGsOuGJGDvAsz3grUnPGNiu1-</Vendor>
                 <Model>DMaOojH</Model>
                 <SerialNumber>VDAkEXKE-Qek</SerialNumber>
-                <InstallationDate>2014-04-25T16:29:13</InstallationDate>
-                <RemovalDate>2014-07-29T16:29:13</RemovalDate>
-                <CalibrationDate>2015-01-03T16:29:13</CalibrationDate>
-                <CalibrationDate>2014-04-01T16:29:13</CalibrationDate>
+                <InstallationDate>2014-04-25T16:29:13.000000Z</InstallationDate>
+                <RemovalDate>2014-07-29T16:29:13.000000Z</RemovalDate>
+                <CalibrationDate>2015-01-03T16:29:13.000000Z</CalibrationDate>
+                <CalibrationDate>2014-04-01T16:29:13.000000Z</CalibrationDate>
             </Equipment>
             <Equipment resourceId="kkfRoG">
                 <Type>__e6Ba-P-</Type>
@@ -207,10 +207,10 @@
                 <Vendor>CWyG596</Vendor>
                 <Model>h</Model>
                 <SerialNumber>uhWycntOkUh3</SerialNumber>
-                <InstallationDate>2014-08-12T16:29:13</InstallationDate>
-                <RemovalDate>2014-08-13T16:29:13</RemovalDate>
-                <CalibrationDate>2015-09-20T16:29:13</CalibrationDate>
-                <CalibrationDate>2015-08-19T16:29:13</CalibrationDate>
+                <InstallationDate>2014-08-12T16:29:13.000000Z</InstallationDate>
+                <RemovalDate>2014-08-13T16:29:13.000000Z</RemovalDate>
+                <CalibrationDate>2015-09-20T16:29:13.000000Z</CalibrationDate>
+                <CalibrationDate>2015-08-19T16:29:13.000000Z</CalibrationDate>
             </Equipment>
             <Operator>
                 <Agency>EEu0.oszQNsC4l66ieQFM</Agency>
@@ -294,8 +294,8 @@
                 </Contact>
                 <WebSite>http://UBdXgcoM/</WebSite>
             </Operator>
-            <CreationDate>2014-08-08T16:29:13</CreationDate>
-            <TerminationDate>2015-09-28T16:29:13</TerminationDate>
+            <CreationDate>2014-08-08T16:29:13.000000Z</CreationDate>
+            <TerminationDate>2015-09-28T16:29:13.000000Z</TerminationDate>
             <TotalNumberChannels>403693249</TotalNumberChannels>
             <SelectedNumberChannels>576107314</SelectedNumberChannels>
             <ExternalReference>
@@ -306,12 +306,12 @@
                 <URI>http://ciiKURCr/</URI>
                 <Description>sJtNcgoqxP3mpkEi</Description>
             </ExternalReference>
-            <Channel locationCode="mARsF" code="kepD5Hi47y" startDate="2014-08-28T16:29:13" endDate="2015-02-09T16:29:13" restrictedStatus="partial" alternateCode="FFOV_hPP7kIL7baO" historicalCode="R6.Qpri">
+            <Channel locationCode="mARsF" code="kepD5Hi47y" startDate="2014-08-28T16:29:13.000000Z" endDate="2015-02-09T16:29:13.000000Z" restrictedStatus="partial" alternateCode="FFOV_hPP7kIL7baO" historicalCode="R6.Qpri">
                 <Description>i_bqj3jjvk8h5sxte9Gf</Description>
                 <Comment id="1300736518">
                     <Value>UQyUzx3FRaV9wHg</Value>
-                    <BeginEffectiveTime>2014-11-02T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2014-08-20T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2014-11-02T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2014-08-20T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>S8HOmpyZUSefSGxoL8h8BuThb_0zA</Name>
                         <Name>NLVpWyZpS_F</Name>
@@ -351,8 +351,8 @@
                 </Comment>
                 <Comment id="1291387705">
                     <Value>Swu_dBDtrM9um</Value>
-                    <BeginEffectiveTime>2014-06-12T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2015-09-17T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2014-06-12T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2015-09-17T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>TJsOt-3wfMlCRWJ</Name>
                         <Name>o4vmbFBQXhPunKjCHs5s1H</Name>
@@ -424,10 +424,10 @@
                     <Vendor>A-RF1MhjOYZCF23YPsFV3ivlUg</Vendor>
                     <Model>RnPdBV2JC2Z7Y1re</Model>
                     <SerialNumber>ekiozUU3</SerialNumber>
-                    <InstallationDate>2014-11-17T16:29:13</InstallationDate>
-                    <RemovalDate>2014-12-06T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-10-18T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-08-02T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-11-17T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-12-06T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-10-18T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-08-02T16:29:13.000000Z</CalibrationDate>
                 </Sensor>
                 <PreAmplifier resourceId="UmaDyWK1a">
                     <Type>i20l8v28K3Q8PjkeE</Type>
@@ -436,10 +436,10 @@
                     <Vendor>y_BR3CPXLIX0x1MkdL</Vendor>
                     <Model>bYo1logM_YP7oNpFii8U9dwHQh.v</Model>
                     <SerialNumber>LKi1fWI6PFYShXHeMUIuu2PI4lMDxK</SerialNumber>
-                    <InstallationDate>2014-10-31T16:29:13</InstallationDate>
-                    <RemovalDate>2015-01-11T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-08-26T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-03-08T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-10-31T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-01-11T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-08-26T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-03-08T16:29:13.000000Z</CalibrationDate>
                 </PreAmplifier>
                 <DataLogger resourceId="Kvyi8">
                     <Type>Gtbpq</Type>
@@ -448,10 +448,10 @@
                     <Vendor>E768MpsUWsyvlh</Vendor>
                     <Model>_SS7lFK</Model>
                     <SerialNumber>EMsAW-pxc9A72q618aovYB3</SerialNumber>
-                    <InstallationDate>2015-07-20T16:29:13</InstallationDate>
-                    <RemovalDate>2015-11-07T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-01-02T16:29:13</CalibrationDate>
-                    <CalibrationDate>2013-12-25T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-07-20T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-11-07T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-01-02T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2013-12-25T16:29:13.000000Z</CalibrationDate>
                 </DataLogger>
                 <Equipment resourceId="e_mLa_uPbFJ">
                     <Type>NlU</Type>
@@ -460,10 +460,10 @@
                     <Vendor>L1r_dND-mMVi</Vendor>
                     <Model>F0</Model>
                     <SerialNumber>ut</SerialNumber>
-                    <InstallationDate>2015-09-06T16:29:13</InstallationDate>
-                    <RemovalDate>2015-09-21T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-11-05T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-08-28T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-09-06T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-09-21T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-11-05T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-08-28T16:29:13.000000Z</CalibrationDate>
                 </Equipment>
                 <Response resourceId="tgWhxj-6ZmE">
                         <InstrumentPolynomial resourceId="FGvGDgMhPkOlcb6IC6Zw" name="qHl9qj5KLLN0MOoYmXr1WwHSlZD">
@@ -615,12 +615,12 @@
                     </Stage>
                 </Response>
             </Channel>
-            <Channel locationCode="FHbQqUD" code="RIDSc" startDate="2015-08-30T16:29:13" endDate="2015-07-28T16:29:13" restrictedStatus="closed" alternateCode="PV4Su9qwIv.gG8H8g8lk" historicalCode="kWdQE">
+            <Channel locationCode="FHbQqUD" code="RIDSc" startDate="2015-08-30T16:29:13.000000Z" endDate="2015-07-28T16:29:13.000000Z" restrictedStatus="closed" alternateCode="PV4Su9qwIv.gG8H8g8lk" historicalCode="kWdQE">
                 <Description>m0ZszlAGcehbh</Description>
                 <Comment id="1761706580">
                     <Value>VGe3Qth4aBOHAEgetMt2th11iSZlu</Value>
-                    <BeginEffectiveTime>2015-09-30T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2015-05-06T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2015-09-30T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2015-05-06T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>GYK-W.xy_bYMtx</Name>
                         <Name>oY977</Name>
@@ -660,8 +660,8 @@
                 </Comment>
                 <Comment id="388692615">
                     <Value>oIg70Z</Value>
-                    <BeginEffectiveTime>2014-09-04T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2014-07-01T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2014-09-04T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2014-07-01T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>cUEOS</Name>
                         <Name>vw3NUmDJ</Name>
@@ -733,10 +733,10 @@
                     <Vendor>EJ0jvPTyUzqgXyllBt-ydnwlHEJe</Vendor>
                     <Model>K5j</Model>
                     <SerialNumber>xa8</SerialNumber>
-                    <InstallationDate>2014-06-13T16:29:13</InstallationDate>
-                    <RemovalDate>2015-03-26T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-08-10T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-01-28T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-06-13T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-03-26T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-08-10T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-01-28T16:29:13.000000Z</CalibrationDate>
                 </Sensor>
                 <PreAmplifier resourceId="RhZ5Z4ztWQY">
                     <Type>ZAj.0jUC0tYZEW30nF9cX</Type>
@@ -745,10 +745,10 @@
                     <Vendor>EAqoye6E</Vendor>
                     <Model>ih_NhBpH9xEo_gUFVDoyUnT9</Model>
                     <SerialNumber>fvlQyGftv</SerialNumber>
-                    <InstallationDate>2015-03-07T16:29:13</InstallationDate>
-                    <RemovalDate>2014-10-07T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-01-09T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-08-25T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-03-07T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-10-07T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-01-09T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-08-25T16:29:13.000000Z</CalibrationDate>
                 </PreAmplifier>
                 <DataLogger resourceId="V5D4dXH4TTpSQFK">
                     <Type>Chc38TDxVW2Zg6pQ_2Kk.MZK8Wpd</Type>
@@ -757,10 +757,10 @@
                     <Vendor>M6EW6zjXhst</Vendor>
                     <Model>lpnVflG</Model>
                     <SerialNumber>oPDsZHBrsqc-XCjQHSUqcyQz._s39</SerialNumber>
-                    <InstallationDate>2015-07-12T16:29:13</InstallationDate>
-                    <RemovalDate>2014-05-10T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-07-06T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-02-08T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-07-12T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-05-10T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-07-06T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-02-08T16:29:13.000000Z</CalibrationDate>
                 </DataLogger>
                 <Equipment resourceId="cvLojmlp-fWTbz4r">
                     <Type>PkWs</Type>
@@ -769,10 +769,10 @@
                     <Vendor>ry0nsjv</Vendor>
                     <Model>Dd3IoyA_5V6emn_</Model>
                     <SerialNumber>A3cZo0akNjkoFg</SerialNumber>
-                    <InstallationDate>2014-08-16T16:29:13</InstallationDate>
-                    <RemovalDate>2014-05-05T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-07-18T16:29:13</CalibrationDate>
-                    <CalibrationDate>2013-12-21T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-08-16T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-05-05T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-07-18T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2013-12-21T16:29:13.000000Z</CalibrationDate>
                 </Equipment>
                 <Response resourceId="aKQIBzYAVPVIlrOQB4ChsF9-1X.5O">
                         <InstrumentPolynomial resourceId="touyXcC-waSRamf90GKsPjTjuOKHOD" name="HCGK7hPXOj7S">
@@ -883,12 +883,12 @@
                 </Response>
             </Channel>
         </Station>
-        <Station code="ZQIatgoWMP7RvldEnG" startDate="2015-10-02T16:29:13" endDate="2015-06-21T16:29:13" restrictedStatus="closed" alternateCode="xDd-14o" historicalCode="J6ZsqgZR..Hk">
+        <Station code="ZQIatgoWMP7RvldEnG" startDate="2015-10-02T16:29:13.000000Z" endDate="2015-06-21T16:29:13.000000Z" restrictedStatus="closed" alternateCode="xDd-14o" historicalCode="J6ZsqgZR..Hk">
             <Description>rquV.ihPSuyL43IPs</Description>
             <Comment id="1804277905">
                 <Value>GTYtM0OyqRTZ1aYIJd</Value>
-                <BeginEffectiveTime>2014-06-26T16:29:13</BeginEffectiveTime>
-                <EndEffectiveTime>2014-11-22T16:29:13</EndEffectiveTime>
+                <BeginEffectiveTime>2014-06-26T16:29:13.000000Z</BeginEffectiveTime>
+                <EndEffectiveTime>2014-11-22T16:29:13.000000Z</EndEffectiveTime>
                 <Author>
                     <Name>lC.l2fMwJZERsWrcVmP2nla-Pak1-B</Name>
                     <Name>HOBaYKX1B</Name>
@@ -928,8 +928,8 @@
             </Comment>
             <Comment id="966021534">
                 <Value>HLgt1BHp</Value>
-                <BeginEffectiveTime>2015-09-24T16:29:13</BeginEffectiveTime>
-                <EndEffectiveTime>2015-06-01T16:29:13</EndEffectiveTime>
+                <BeginEffectiveTime>2015-09-24T16:29:13.000000Z</BeginEffectiveTime>
+                <EndEffectiveTime>2015-06-01T16:29:13.000000Z</EndEffectiveTime>
                 <Author>
                     <Name>kmPd4O9M</Name>
                     <Name>aOL_6tzPVohd</Name>
@@ -987,10 +987,10 @@
                 <Vendor>S6854pZk2XC2YaAD84E0Kepovd3Y2O</Vendor>
                 <Model>pChn6Va8RDEaglQ6z5av3Kiy82QX</Model>
                 <SerialNumber>dPrGaf.l6eDvK</SerialNumber>
-                <InstallationDate>2015-05-31T16:29:13</InstallationDate>
-                <RemovalDate>2013-12-14T16:29:13</RemovalDate>
-                <CalibrationDate>2015-06-03T16:29:13</CalibrationDate>
-                <CalibrationDate>2014-02-11T16:29:13</CalibrationDate>
+                <InstallationDate>2015-05-31T16:29:13.000000Z</InstallationDate>
+                <RemovalDate>2013-12-14T16:29:13.000000Z</RemovalDate>
+                <CalibrationDate>2015-06-03T16:29:13.000000Z</CalibrationDate>
+                <CalibrationDate>2014-02-11T16:29:13.000000Z</CalibrationDate>
             </Equipment>
             <Equipment resourceId="C">
                 <Type>XRI5HfDE_bZc9</Type>
@@ -999,10 +999,10 @@
                 <Vendor>L6.QR0GvtyMJpwez6</Vendor>
                 <Model>K91D3uUgxDKfBuyff</Model>
                 <SerialNumber>ZylIj0m0Q8</SerialNumber>
-                <InstallationDate>2014-09-17T16:29:13</InstallationDate>
-                <RemovalDate>2014-04-24T16:29:13</RemovalDate>
-                <CalibrationDate>2015-03-29T16:29:13</CalibrationDate>
-                <CalibrationDate>2013-12-11T16:29:13</CalibrationDate>
+                <InstallationDate>2014-09-17T16:29:13.000000Z</InstallationDate>
+                <RemovalDate>2014-04-24T16:29:13.000000Z</RemovalDate>
+                <CalibrationDate>2015-03-29T16:29:13.000000Z</CalibrationDate>
+                <CalibrationDate>2013-12-11T16:29:13.000000Z</CalibrationDate>
             </Equipment>
             <Operator>
                 <Agency>e74znVlJ5eViiTUSzltTmCXSBx4</Agency>
@@ -1086,8 +1086,8 @@
                 </Contact>
                 <WebSite>http://MtEUQqJE/</WebSite>
             </Operator>
-            <CreationDate>2014-06-05T16:29:13</CreationDate>
-            <TerminationDate>2015-05-13T16:29:13</TerminationDate>
+            <CreationDate>2014-06-05T16:29:13.000000Z</CreationDate>
+            <TerminationDate>2015-05-13T16:29:13.000000Z</TerminationDate>
             <TotalNumberChannels>1034106317</TotalNumberChannels>
             <SelectedNumberChannels>1571812888</SelectedNumberChannels>
             <ExternalReference>
@@ -1098,12 +1098,12 @@
                 <URI>http://eunxvglq/</URI>
                 <Description>W</Description>
             </ExternalReference>
-            <Channel locationCode="O98kVwGslP" code="KO8mmGtSB2RZGby-Z" startDate="2015-10-15T16:29:13" endDate="2015-11-18T16:29:13" restrictedStatus="open" alternateCode="NrRh5mjEFrDunWAK9" historicalCode="vhyRD-RYk805i.ocsN9CzFxi_ddFmP">
+            <Channel locationCode="O98kVwGslP" code="KO8mmGtSB2RZGby-Z" startDate="2015-10-15T16:29:13.000000Z" endDate="2015-11-18T16:29:13.000000Z" restrictedStatus="open" alternateCode="NrRh5mjEFrDunWAK9" historicalCode="vhyRD-RYk805i.ocsN9CzFxi_ddFmP">
                 <Description>E3fQ</Description>
                 <Comment id="1168481190">
                     <Value>kToq70b</Value>
-                    <BeginEffectiveTime>2015-07-21T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2015-06-28T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2015-07-21T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2015-06-28T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>l</Name>
                         <Name>wEBHbBt7-J2wv0SyQ1z.p609Lkn</Name>
@@ -1143,8 +1143,8 @@
                 </Comment>
                 <Comment id="1923011441">
                     <Value>kxliP7ZeuDztca</Value>
-                    <BeginEffectiveTime>2014-02-21T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2015-08-17T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2014-02-21T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2015-08-17T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>duMxWzJiy</Name>
                         <Name>aKJXJwrRLAtNDV4QT5u</Name>
@@ -1216,10 +1216,10 @@
                     <Vendor>uj</Vendor>
                     <Model>FNJtKzpNBeH4ZHV_l5IcBskcHdy_9</Model>
                     <SerialNumber>crGs1jz_Pl-3XVjYkR6h5LloNSp</SerialNumber>
-                    <InstallationDate>2015-08-07T16:29:13</InstallationDate>
-                    <RemovalDate>2014-11-12T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-11-21T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-02-01T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-08-07T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-11-12T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-11-21T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-02-01T16:29:13.000000Z</CalibrationDate>
                 </Sensor>
                 <PreAmplifier resourceId="O2ZcoZg_NUMIKYRs1HFCTh9WaV1WW5">
                     <Type>Tyq8oLgEq2goPNft4Jq9nzHOGwmx4</Type>
@@ -1228,10 +1228,10 @@
                     <Vendor>A5L.tg</Vendor>
                     <Model>x2F2wOroj1w3bjGKo0Qv</Model>
                     <SerialNumber>EBfa9o4LnotmsnO2gaedpgeR</SerialNumber>
-                    <InstallationDate>2014-09-28T16:29:13</InstallationDate>
-                    <RemovalDate>2014-06-05T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-11-14T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-09-18T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-09-28T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-06-05T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-11-14T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-09-18T16:29:13.000000Z</CalibrationDate>
                 </PreAmplifier>
                 <DataLogger resourceId="yrlZIpgIXST">
                     <Type>fgIzlaGTFO-1nFNGpaQMHMVPqpZy4</Type>
@@ -1240,10 +1240,10 @@
                     <Vendor>yyDEEWAn_1VSep_BLLMcgnHt8yP</Vendor>
                     <Model>Kr8pt3nFbxB</Model>
                     <SerialNumber>YZEZkqkLaM8ZfCeN4hjlKXDYEaMlYQ</SerialNumber>
-                    <InstallationDate>2014-05-26T16:29:13</InstallationDate>
-                    <RemovalDate>2015-03-31T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-01-08T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-08-18T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-05-26T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-03-31T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-01-08T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-08-18T16:29:13.000000Z</CalibrationDate>
                 </DataLogger>
                 <Equipment resourceId="C-oIprwdkityUcHZPyys0NU6EZOA">
                     <Type>Qlno71GB0a8yNHTctNJi</Type>
@@ -1252,10 +1252,10 @@
                     <Vendor>UWHf0HTDmTGUg</Vendor>
                     <Model>n38R</Model>
                     <SerialNumber>mXy3DZ</SerialNumber>
-                    <InstallationDate>2014-10-27T16:29:13</InstallationDate>
-                    <RemovalDate>2014-04-15T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-04-22T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-03-13T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-10-27T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-04-15T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-04-22T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-03-13T16:29:13.000000Z</CalibrationDate>
                 </Equipment>
                 <Response resourceId="XoAxwqEls85IrcBX12ASzLRF">
                     <InstrumentSensitivity>
@@ -1361,12 +1361,12 @@
                     </Stage>
                 </Response>
             </Channel>
-            <Channel locationCode="VyN51QtmCwTIkl4YyfHqegvcW3yg" code="a" startDate="2014-04-05T16:29:13" endDate="2014-05-26T16:29:13" restrictedStatus="closed" alternateCode="b1TgQDlTSXLv694eKroArTAgc" historicalCode="Yt_">
+            <Channel locationCode="VyN51QtmCwTIkl4YyfHqegvcW3yg" code="a" startDate="2014-04-05T16:29:13.000000Z" endDate="2014-05-26T16:29:13.000000Z" restrictedStatus="closed" alternateCode="b1TgQDlTSXLv694eKroArTAgc" historicalCode="Yt_">
                 <Description>MjtCIP8Z</Description>
                 <Comment id="1750788124">
                     <Value>QeqzJUd2</Value>
-                    <BeginEffectiveTime>2014-04-23T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2015-02-03T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2014-04-23T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2015-02-03T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>J6ZmL_pxZSxV2c.rBUZ0q3VRz51</Name>
                         <Name>FV2j32n</Name>
@@ -1406,8 +1406,8 @@
                 </Comment>
                 <Comment id="1855811178">
                     <Value>WQjBYCXJvjX</Value>
-                    <BeginEffectiveTime>2015-04-03T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2014-09-08T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2015-04-03T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2014-09-08T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>iMRkR</Name>
                         <Name>QbZuFx.1lRg7aRsN5oGlv9fD</Name>
@@ -1479,10 +1479,10 @@
                     <Vendor>prmKgx3yMzCL</Vendor>
                     <Model>p-zjGh.1JQ</Model>
                     <SerialNumber>kzZH</SerialNumber>
-                    <InstallationDate>2015-03-27T16:29:13</InstallationDate>
-                    <RemovalDate>2015-02-23T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-10-21T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-02-14T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-03-27T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-02-23T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-10-21T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-02-14T16:29:13.000000Z</CalibrationDate>
                 </Sensor>
                 <PreAmplifier resourceId="m6-IvEH0-oB5j7F">
                     <Type>XkxMKBSWvHx8N08oV43ZdBiQvwAs</Type>
@@ -1491,10 +1491,10 @@
                     <Vendor>MGj6LCakd_3ByPC0C5gq1VuULOj</Vendor>
                     <Model>UxO-kzNBlDk2Z4BNqQ</Model>
                     <SerialNumber>R3T</SerialNumber>
-                    <InstallationDate>2013-12-07T16:29:13</InstallationDate>
-                    <RemovalDate>2015-02-11T16:29:13</RemovalDate>
-                    <CalibrationDate>2013-12-15T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-04-30T16:29:13</CalibrationDate>
+                    <InstallationDate>2013-12-07T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-02-11T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2013-12-15T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-04-30T16:29:13.000000Z</CalibrationDate>
                 </PreAmplifier>
                 <DataLogger resourceId="fqUi">
                     <Type>Pd7w8</Type>
@@ -1503,10 +1503,10 @@
                     <Vendor>mcfr4dYWN2kblcs</Vendor>
                     <Model>Me15zMdSMxAIi2Kbatc7Wi5</Model>
                     <SerialNumber>dYGuTMuw</SerialNumber>
-                    <InstallationDate>2014-09-17T16:29:13</InstallationDate>
-                    <RemovalDate>2013-12-23T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-10-26T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-01-24T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-09-17T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2013-12-23T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-10-26T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-01-24T16:29:13.000000Z</CalibrationDate>
                 </DataLogger>
                 <Equipment resourceId="_MVT5-NM2E11mQeucu1l1okAP70At">
                     <Type>lkVG5X3Yrp24NQ8zJ</Type>
@@ -1515,10 +1515,10 @@
                     <Vendor>c3X5gjqVE.ah3mjpuOjAAmtM-PS</Vendor>
                     <Model>RcGxY</Model>
                     <SerialNumber>z6zgU7LF9ZQhLdOsB.2ZeV</SerialNumber>
-                    <InstallationDate>2015-09-02T16:29:13</InstallationDate>
-                    <RemovalDate>2014-01-17T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-03-06T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-05-02T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-09-02T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-01-17T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-03-06T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-05-02T16:29:13.000000Z</CalibrationDate>
                 </Equipment>
                 <Response resourceId="m2IDCPu">
                     <InstrumentSensitivity>
@@ -1612,12 +1612,12 @@
             </Channel>
         </Station>
     </Network>
-    <Network code="Cetn60ul" startDate="2014-07-28T16:29:13" endDate="2014-07-18T16:29:13" restrictedStatus="partial" alternateCode="sw8a5W5O5PdJEi8IOoEz15CfTQXPW" historicalCode="Fp0">
+    <Network code="Cetn60ul" startDate="2014-07-28T16:29:13.000000Z" endDate="2014-07-18T16:29:13.000000Z" restrictedStatus="partial" alternateCode="sw8a5W5O5PdJEi8IOoEz15CfTQXPW" historicalCode="Fp0">
         <Description>CGxqt-PQMOpAntIwC1</Description>
         <Comment id="2104283051">
             <Value>pebr4FXvQVaO22jS</Value>
-            <BeginEffectiveTime>2015-06-17T16:29:13</BeginEffectiveTime>
-            <EndEffectiveTime>2015-04-21T16:29:13</EndEffectiveTime>
+            <BeginEffectiveTime>2015-06-17T16:29:13.000000Z</BeginEffectiveTime>
+            <EndEffectiveTime>2015-04-21T16:29:13.000000Z</EndEffectiveTime>
             <Author>
                 <Name>HEl-BjZxmLNyCg9uTBeb4cug</Name>
                 <Name>K4FqhXgvPddm65salHsI</Name>
@@ -1657,8 +1657,8 @@
         </Comment>
         <Comment id="316121575">
             <Value>GupIhVi0U</Value>
-            <BeginEffectiveTime>2015-03-27T16:29:13</BeginEffectiveTime>
-            <EndEffectiveTime>2014-02-05T16:29:13</EndEffectiveTime>
+            <BeginEffectiveTime>2015-03-27T16:29:13.000000Z</BeginEffectiveTime>
+            <EndEffectiveTime>2014-02-05T16:29:13.000000Z</EndEffectiveTime>
             <Author>
                 <Name>p.SNAgxUjY</Name>
                 <Name>YVGW8AGNzfBDYO-WSt</Name>
@@ -1698,12 +1698,12 @@
         </Comment>
         <TotalNumberStations>1451848087</TotalNumberStations>
         <SelectedNumberStations>675740472</SelectedNumberStations>
-        <Station code="kz1hxjMxdEkTW" startDate="2014-02-07T16:29:13" endDate="2014-10-11T16:29:13" restrictedStatus="open" alternateCode="Eyhg2869" historicalCode="hnKxh0ASlQI3mF">
+        <Station code="kz1hxjMxdEkTW" startDate="2014-02-07T16:29:13.000000Z" endDate="2014-10-11T16:29:13.000000Z" restrictedStatus="open" alternateCode="Eyhg2869" historicalCode="hnKxh0ASlQI3mF">
             <Description>KIjQhNRVM5ePoWc-kSun96xQm</Description>
             <Comment id="1906449859">
                 <Value>KVSCPPpH7KkC9cu</Value>
-                <BeginEffectiveTime>2014-10-09T16:29:13</BeginEffectiveTime>
-                <EndEffectiveTime>2014-02-23T16:29:13</EndEffectiveTime>
+                <BeginEffectiveTime>2014-10-09T16:29:13.000000Z</BeginEffectiveTime>
+                <EndEffectiveTime>2014-02-23T16:29:13.000000Z</EndEffectiveTime>
                 <Author>
                     <Name>V91</Name>
                     <Name>p</Name>
@@ -1743,8 +1743,8 @@
             </Comment>
             <Comment id="531050970">
                 <Value>rkd</Value>
-                <BeginEffectiveTime>2015-08-16T16:29:13</BeginEffectiveTime>
-                <EndEffectiveTime>2014-04-08T16:29:13</EndEffectiveTime>
+                <BeginEffectiveTime>2015-08-16T16:29:13.000000Z</BeginEffectiveTime>
+                <EndEffectiveTime>2014-04-08T16:29:13.000000Z</EndEffectiveTime>
                 <Author>
                     <Name>tm5kEnkqt5sDbMP7uZ5Khsqtu</Name>
                     <Name>Rg-7-yL2OQ8_DuN.MBj9zFdfzRp3z</Name>
@@ -1802,10 +1802,10 @@
                 <Vendor>VUm7KVX6J9RYqPS4fa5Q9k5</Vendor>
                 <Model>YUc</Model>
                 <SerialNumber>VP</SerialNumber>
-                <InstallationDate>2014-11-24T16:29:13</InstallationDate>
-                <RemovalDate>2015-05-10T16:29:13</RemovalDate>
-                <CalibrationDate>2015-10-23T16:29:13</CalibrationDate>
-                <CalibrationDate>2015-09-13T16:29:13</CalibrationDate>
+                <InstallationDate>2014-11-24T16:29:13.000000Z</InstallationDate>
+                <RemovalDate>2015-05-10T16:29:13.000000Z</RemovalDate>
+                <CalibrationDate>2015-10-23T16:29:13.000000Z</CalibrationDate>
+                <CalibrationDate>2015-09-13T16:29:13.000000Z</CalibrationDate>
             </Equipment>
             <Equipment resourceId="yRHJ.VGdxk.51">
                 <Type>l8ycAWFP5vT</Type>
@@ -1814,10 +1814,10 @@
                 <Vendor>c4QnsbOda19OWeQv_v.aJqCSvlN6q</Vendor>
                 <Model>g0.OlCkqde4xwK.u-OiCdwMvGsEu1J</Model>
                 <SerialNumber>YB1N3M9ZbVkJFyHSLJcqkP6vkP</SerialNumber>
-                <InstallationDate>2015-02-06T16:29:13</InstallationDate>
-                <RemovalDate>2014-02-22T16:29:13</RemovalDate>
-                <CalibrationDate>2015-06-13T16:29:13</CalibrationDate>
-                <CalibrationDate>2014-02-13T16:29:13</CalibrationDate>
+                <InstallationDate>2015-02-06T16:29:13.000000Z</InstallationDate>
+                <RemovalDate>2014-02-22T16:29:13.000000Z</RemovalDate>
+                <CalibrationDate>2015-06-13T16:29:13.000000Z</CalibrationDate>
+                <CalibrationDate>2014-02-13T16:29:13.000000Z</CalibrationDate>
             </Equipment>
             <Operator>
                 <Agency>v</Agency>
@@ -1901,8 +1901,8 @@
                 </Contact>
                 <WebSite>http://kFrzKQlF/</WebSite>
             </Operator>
-            <CreationDate>2015-10-11T16:29:13</CreationDate>
-            <TerminationDate>2014-11-20T16:29:13</TerminationDate>
+            <CreationDate>2015-10-11T16:29:13.000000Z</CreationDate>
+            <TerminationDate>2014-11-20T16:29:13.000000Z</TerminationDate>
             <TotalNumberChannels>1529082597</TotalNumberChannels>
             <SelectedNumberChannels>1249292600</SelectedNumberChannels>
             <ExternalReference>
@@ -1913,12 +1913,12 @@
                 <URI>http://dgLGAuWi/</URI>
                 <Description>CwW0yQyr1Cd-3XTv</Description>
             </ExternalReference>
-            <Channel locationCode="ckz5Co74ynriqd1.1NK5zO2ZH60w8M" code="goKwhdQvL" startDate="2014-06-17T16:29:13" endDate="2014-06-18T16:29:13" restrictedStatus="partial" alternateCode="VkDWA_s0GtIHQH2" historicalCode="LpwScji2smN4s">
+            <Channel locationCode="ckz5Co74ynriqd1.1NK5zO2ZH60w8M" code="goKwhdQvL" startDate="2014-06-17T16:29:13.000000Z" endDate="2014-06-18T16:29:13.000000Z" restrictedStatus="partial" alternateCode="VkDWA_s0GtIHQH2" historicalCode="LpwScji2smN4s">
                 <Description>OU3tVOihhPtkr</Description>
                 <Comment id="236571175">
                     <Value>ViXyBAs</Value>
-                    <BeginEffectiveTime>2014-06-26T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2015-10-29T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2014-06-26T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2015-10-29T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>TPCiSluqHZ607dWn</Name>
                         <Name>n7daX9GFbOp.BaRzIV</Name>
@@ -1958,8 +1958,8 @@
                 </Comment>
                 <Comment id="1570647066">
                     <Value>NKOA</Value>
-                    <BeginEffectiveTime>2015-02-06T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2014-02-08T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2015-02-06T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2014-02-08T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>cJQp6DGW</Name>
                         <Name>JYbGCn</Name>
@@ -2031,10 +2031,10 @@
                     <Vendor>DMp9_</Vendor>
                     <Model>SQwc</Model>
                     <SerialNumber>_iX1dKRr</SerialNumber>
-                    <InstallationDate>2014-03-30T16:29:13</InstallationDate>
-                    <RemovalDate>2013-12-14T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-08-23T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-12-03T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-03-30T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2013-12-14T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-08-23T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-12-03T16:29:13.000000Z</CalibrationDate>
                 </Sensor>
                 <PreAmplifier resourceId="bF95Dgc7PmvJ">
                     <Type>UrkGN</Type>
@@ -2043,10 +2043,10 @@
                     <Vendor>KZi_dcw-Bxbc_NiW5NSjO</Vendor>
                     <Model>D_AsyL5</Model>
                     <SerialNumber>Z0BrhA5Tk4.vuGs</SerialNumber>
-                    <InstallationDate>2014-01-31T16:29:13</InstallationDate>
-                    <RemovalDate>2014-07-10T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-07-19T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-01-06T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-01-31T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-07-10T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-07-19T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-01-06T16:29:13.000000Z</CalibrationDate>
                 </PreAmplifier>
                 <DataLogger resourceId="Y1L.cNUjHVob">
                     <Type>lub5Y-Zjus_j4iFQyJ</Type>
@@ -2055,10 +2055,10 @@
                     <Vendor>pjV5wj.xeWuv</Vendor>
                     <Model>Z_tfBsU..jh</Model>
                     <SerialNumber>N</SerialNumber>
-                    <InstallationDate>2014-12-03T16:29:13</InstallationDate>
-                    <RemovalDate>2015-04-15T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-05-01T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-01-11T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-12-03T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-04-15T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-05-01T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-01-11T16:29:13.000000Z</CalibrationDate>
                 </DataLogger>
                 <Equipment resourceId="eUR4XTFbGqtFjODtGU">
                     <Type>oV.q8TIxD73CcG-U</Type>
@@ -2067,10 +2067,10 @@
                     <Vendor>jN9z</Vendor>
                     <Model>n1BTGsbJSu9itAe3EN</Model>
                     <SerialNumber>QYEQnLTwSX</SerialNumber>
-                    <InstallationDate>2015-07-05T16:29:13</InstallationDate>
-                    <RemovalDate>2015-01-11T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-08-24T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-08-19T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-07-05T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-01-11T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-08-24T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-08-19T16:29:13.000000Z</CalibrationDate>
                 </Equipment>
                 <Response resourceId="a_D6">
                         <InstrumentPolynomial resourceId="E" name="UJrTA">
@@ -2155,12 +2155,12 @@
                     </Stage>
                 </Response>
             </Channel>
-            <Channel locationCode="UvCFajpEgBJ3hGyzPQDpq" code="F-gqZVrRjJ8Cy86cY50" startDate="2014-11-01T16:29:13" endDate="2015-11-15T16:29:13" restrictedStatus="open" alternateCode="_SAHyORHnK8yJvR1pDQk-5Lr" historicalCode="N">
+            <Channel locationCode="UvCFajpEgBJ3hGyzPQDpq" code="F-gqZVrRjJ8Cy86cY50" startDate="2014-11-01T16:29:13.000000Z" endDate="2015-11-15T16:29:13.000000Z" restrictedStatus="open" alternateCode="_SAHyORHnK8yJvR1pDQk-5Lr" historicalCode="N">
                 <Description>iHKucvP3k8e8Y06UNZ8EuGpQJxrkP4</Description>
                 <Comment id="2083099490">
                     <Value>TF8lnOb</Value>
-                    <BeginEffectiveTime>2015-04-01T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2015-07-14T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2015-04-01T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2015-07-14T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>K</Name>
                         <Name>ogcqgZ</Name>
@@ -2200,8 +2200,8 @@
                 </Comment>
                 <Comment id="1722342926">
                     <Value>j</Value>
-                    <BeginEffectiveTime>2015-08-30T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2015-05-03T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2015-08-30T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2015-05-03T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>AlGMMtZb</Name>
                         <Name>suL_dLfHDWkF4v.X_MAe</Name>
@@ -2273,10 +2273,10 @@
                     <Vendor>VKWTXC.AM02iSHYqS4t9Ao</Vendor>
                     <Model>exyNuhGR56M8gZ1U5zp</Model>
                     <SerialNumber>F9ul7yNDpM8kzB294MhsiQ</SerialNumber>
-                    <InstallationDate>2015-11-19T16:29:13</InstallationDate>
-                    <RemovalDate>2014-12-25T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-06-14T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-03-13T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-11-19T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-12-25T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-06-14T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-03-13T16:29:13.000000Z</CalibrationDate>
                 </Sensor>
                 <PreAmplifier resourceId="iupk">
                     <Type>iUoo4TCEQxMAYVyb-dhhqM4mCt</Type>
@@ -2285,10 +2285,10 @@
                     <Vendor>f72caeEe_10vwZ</Vendor>
                     <Model>uOcY</Model>
                     <SerialNumber>BaDxJiQ-y07CXiqUt</SerialNumber>
-                    <InstallationDate>2013-12-29T16:29:13</InstallationDate>
-                    <RemovalDate>2015-04-11T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-02-17T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-03-26T16:29:13</CalibrationDate>
+                    <InstallationDate>2013-12-29T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-04-11T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-02-17T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-03-26T16:29:13.000000Z</CalibrationDate>
                 </PreAmplifier>
                 <DataLogger resourceId="K73t">
                     <Type>cccTRA.g_Gh.u</Type>
@@ -2297,10 +2297,10 @@
                     <Vendor>TOZt4oLWRDQubsgzK3u8T9G</Vendor>
                     <Model>ornOFslkPk_GG</Model>
                     <SerialNumber>fGHAlWdEFsdYqnDZ1RGR3</SerialNumber>
-                    <InstallationDate>2014-01-16T16:29:13</InstallationDate>
-                    <RemovalDate>2014-01-26T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-10-14T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-01-22T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-01-16T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-01-26T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-10-14T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-01-22T16:29:13.000000Z</CalibrationDate>
                 </DataLogger>
                 <Equipment resourceId="Fk8XdW7Xsf_G5">
                     <Type>zO.WBSlsk1Gy01BVs_TtzrrJdMEMrD</Type>
@@ -2309,10 +2309,10 @@
                     <Vendor>kX8ilzRO4g0Ez4oP9Z_68FH91P</Vendor>
                     <Model>ggvxe2zeHoIYQinX_djw</Model>
                     <SerialNumber>JZSR6ci</SerialNumber>
-                    <InstallationDate>2015-01-30T16:29:13</InstallationDate>
-                    <RemovalDate>2014-08-01T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-01-10T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-05-24T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-01-30T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-08-01T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-01-10T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-05-24T16:29:13.000000Z</CalibrationDate>
                 </Equipment>
                 <Response resourceId="o">
                         <InstrumentPolynomial resourceId="bsjY" name="O8HsNsWCxcSLThCdMewvR-uv.Xz">
@@ -2412,12 +2412,12 @@
                 </Response>
             </Channel>
         </Station>
-        <Station code="R7ZLYLMP" startDate="2014-05-06T16:29:13" endDate="2015-08-20T16:29:13" restrictedStatus="closed" alternateCode="E9kAEnyQ0oCnHnUkObxP8WE" historicalCode="RfNnCBTTJruQU9VqM9y_og5LnjfG">
+        <Station code="R7ZLYLMP" startDate="2014-05-06T16:29:13.000000Z" endDate="2015-08-20T16:29:13.000000Z" restrictedStatus="closed" alternateCode="E9kAEnyQ0oCnHnUkObxP8WE" historicalCode="RfNnCBTTJruQU9VqM9y_og5LnjfG">
             <Description>n</Description>
             <Comment id="2111166499">
                 <Value>Nx0Sw9w</Value>
-                <BeginEffectiveTime>2015-04-13T16:29:13</BeginEffectiveTime>
-                <EndEffectiveTime>2014-12-02T16:29:13</EndEffectiveTime>
+                <BeginEffectiveTime>2015-04-13T16:29:13.000000Z</BeginEffectiveTime>
+                <EndEffectiveTime>2014-12-02T16:29:13.000000Z</EndEffectiveTime>
                 <Author>
                     <Name>R_riI2sdKlngIte-B.3EhQ.</Name>
                     <Name>d9CrgpB_BdboSQ9CJzLWzN8a_pWiCO</Name>
@@ -2457,8 +2457,8 @@
             </Comment>
             <Comment id="776907915">
                 <Value>Cu8x_8ZzZmhOc</Value>
-                <BeginEffectiveTime>2015-03-24T16:29:13</BeginEffectiveTime>
-                <EndEffectiveTime>2015-09-27T16:29:13</EndEffectiveTime>
+                <BeginEffectiveTime>2015-03-24T16:29:13.000000Z</BeginEffectiveTime>
+                <EndEffectiveTime>2015-09-27T16:29:13.000000Z</EndEffectiveTime>
                 <Author>
                     <Name>C.OK</Name>
                     <Name>Q.</Name>
@@ -2516,10 +2516,10 @@
                 <Vendor>V9DI_XvzzRNXu3oy47qaU5_Yp</Vendor>
                 <Model>eLp95</Model>
                 <SerialNumber>auc1Os5ndS8SV-3ukUjYIKaq</SerialNumber>
-                <InstallationDate>2013-12-26T16:29:13</InstallationDate>
-                <RemovalDate>2014-03-16T16:29:13</RemovalDate>
-                <CalibrationDate>2014-10-08T16:29:13</CalibrationDate>
-                <CalibrationDate>2015-10-30T16:29:13</CalibrationDate>
+                <InstallationDate>2013-12-26T16:29:13.000000Z</InstallationDate>
+                <RemovalDate>2014-03-16T16:29:13.000000Z</RemovalDate>
+                <CalibrationDate>2014-10-08T16:29:13.000000Z</CalibrationDate>
+                <CalibrationDate>2015-10-30T16:29:13.000000Z</CalibrationDate>
             </Equipment>
             <Equipment resourceId="tl76.bLyZjnjRhKrf-gN904I8oHRpM">
                 <Type>WX</Type>
@@ -2528,10 +2528,10 @@
                 <Vendor>R-O8A7rR-1R7rsQS</Vendor>
                 <Model>gvAA908BhruSTOlqqr3wG</Model>
                 <SerialNumber>CTmuBlvK3Om</SerialNumber>
-                <InstallationDate>2015-10-06T16:29:13</InstallationDate>
-                <RemovalDate>2013-11-26T16:29:13</RemovalDate>
-                <CalibrationDate>2015-04-10T16:29:13</CalibrationDate>
-                <CalibrationDate>2015-10-05T16:29:13</CalibrationDate>
+                <InstallationDate>2015-10-06T16:29:13.000000Z</InstallationDate>
+                <RemovalDate>2013-11-26T16:29:13.000000Z</RemovalDate>
+                <CalibrationDate>2015-04-10T16:29:13.000000Z</CalibrationDate>
+                <CalibrationDate>2015-10-05T16:29:13.000000Z</CalibrationDate>
             </Equipment>
             <Operator>
                 <Agency>XSWm_gWKJeLHK</Agency>
@@ -2615,8 +2615,8 @@
                 </Contact>
                 <WebSite>http://LxqVNViM/</WebSite>
             </Operator>
-            <CreationDate>2015-04-21T16:29:13</CreationDate>
-            <TerminationDate>2014-10-09T16:29:13</TerminationDate>
+            <CreationDate>2015-04-21T16:29:13.000000Z</CreationDate>
+            <TerminationDate>2014-10-09T16:29:13.000000Z</TerminationDate>
             <TotalNumberChannels>1751280252</TotalNumberChannels>
             <SelectedNumberChannels>909753500</SelectedNumberChannels>
             <ExternalReference>
@@ -2627,12 +2627,12 @@
                 <URI>http://BfaXZnxQ/</URI>
                 <Description>s5kBHHzQjwNMQAPAJjwJVuwnZ6T</Description>
             </ExternalReference>
-            <Channel locationCode="J1Dtd0_uS60Vo" code="j30XlJTCNzxyoM19EmY7" startDate="2015-10-01T16:29:13" endDate="2015-09-04T16:29:13" restrictedStatus="partial" alternateCode="dvV48fK4BWJ-j-JmGuGID.6" historicalCode="V_jCbxjjffuKrrNij8V.">
+            <Channel locationCode="J1Dtd0_uS60Vo" code="j30XlJTCNzxyoM19EmY7" startDate="2015-10-01T16:29:13.000000Z" endDate="2015-09-04T16:29:13.000000Z" restrictedStatus="partial" alternateCode="dvV48fK4BWJ-j-JmGuGID.6" historicalCode="V_jCbxjjffuKrrNij8V.">
                 <Description>iZ6KV8yqlVIcDQaG3X78uJih5</Description>
                 <Comment id="1224695830">
                     <Value>YU0rIOYXBVQBjqSF</Value>
-                    <BeginEffectiveTime>2015-08-24T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2013-12-16T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2015-08-24T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2013-12-16T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>uBmbCl0LHY7A70aXjY</Name>
                         <Name>hMtC4pCsLN</Name>
@@ -2672,8 +2672,8 @@
                 </Comment>
                 <Comment id="99842746">
                     <Value>zeD5raNrB</Value>
-                    <BeginEffectiveTime>2014-07-16T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2014-02-16T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2014-07-16T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2014-02-16T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>CAjTxpN2-cr9fnFOJoY</Name>
                         <Name>XM8ST_K27sHXWkqO_Sb8lU7</Name>
@@ -2745,10 +2745,10 @@
                     <Vendor>EtALh8</Vendor>
                     <Model>RQDb8Dq4</Model>
                     <SerialNumber>p9pP2AXbVD-T-</SerialNumber>
-                    <InstallationDate>2015-06-12T16:29:13</InstallationDate>
-                    <RemovalDate>2013-12-18T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-05-25T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-04-03T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-06-12T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2013-12-18T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-05-25T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-04-03T16:29:13.000000Z</CalibrationDate>
                 </Sensor>
                 <PreAmplifier resourceId="WmT3DzgLl">
                     <Type>Pfi_sr</Type>
@@ -2757,10 +2757,10 @@
                     <Vendor>BH3tCaVtEO91XgxIUOH8</Vendor>
                     <Model>JubvC4ZYDc20g-</Model>
                     <SerialNumber>ryE.9lVAG_rdcDsaoUgpXKcdAw</SerialNumber>
-                    <InstallationDate>2015-04-08T16:29:13</InstallationDate>
-                    <RemovalDate>2014-02-22T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-01-26T16:29:13</CalibrationDate>
-                    <CalibrationDate>2013-12-23T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-04-08T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-02-22T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-01-26T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2013-12-23T16:29:13.000000Z</CalibrationDate>
                 </PreAmplifier>
                 <DataLogger resourceId="FAAcAw">
                     <Type>CL0CK-E7pwxKml90dc</Type>
@@ -2769,10 +2769,10 @@
                     <Vendor>x.pW.</Vendor>
                     <Model>ujgjq</Model>
                     <SerialNumber>MMriz0lI3j</SerialNumber>
-                    <InstallationDate>2015-08-23T16:29:13</InstallationDate>
-                    <RemovalDate>2015-11-05T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-10-31T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-04-07T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-08-23T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-11-05T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-10-31T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-04-07T16:29:13.000000Z</CalibrationDate>
                 </DataLogger>
                 <Equipment resourceId="ieitYiV">
                     <Type>cVI1jxWpPSerEtLQoAiMT9ot2</Type>
@@ -2781,10 +2781,10 @@
                     <Vendor>Pqv</Vendor>
                     <Model>P9nVuGVFx0RALMO</Model>
                     <SerialNumber>SjAwrsOUZU4eoSt4b</SerialNumber>
-                    <InstallationDate>2014-07-09T16:29:13</InstallationDate>
-                    <RemovalDate>2015-01-03T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-01-03T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-04-12T16:29:13</CalibrationDate>
+                    <InstallationDate>2014-07-09T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-01-03T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-01-03T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-04-12T16:29:13.000000Z</CalibrationDate>
                 </Equipment>
                 <Response resourceId="NUmOJnzGBCy_6w9m">
                     <InstrumentSensitivity>
@@ -2890,12 +2890,12 @@
                     </Stage>
                 </Response>
             </Channel>
-            <Channel locationCode="q-hbnCsliFMp" code="xdc.43-" startDate="2015-05-03T16:29:13" endDate="2014-09-28T16:29:13" restrictedStatus="partial" alternateCode="r" historicalCode="P91Emb_aap">
+            <Channel locationCode="q-hbnCsliFMp" code="xdc.43-" startDate="2015-05-03T16:29:13.000000Z" endDate="2014-09-28T16:29:13.000000Z" restrictedStatus="partial" alternateCode="r" historicalCode="P91Emb_aap">
                 <Description>FGdP</Description>
                 <Comment id="1169851660">
                     <Value>s5S</Value>
-                    <BeginEffectiveTime>2015-04-09T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2015-06-03T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2015-04-09T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2015-06-03T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>x4VXRT</Name>
                         <Name>V73IwNsEHxYAPZ6gQyHfy9Gv</Name>
@@ -2935,8 +2935,8 @@
                 </Comment>
                 <Comment id="2042218615">
                     <Value>jC2MBswWVqUDu3yfFCRWhQbmcDl</Value>
-                    <BeginEffectiveTime>2015-10-09T16:29:13</BeginEffectiveTime>
-                    <EndEffectiveTime>2013-11-27T16:29:13</EndEffectiveTime>
+                    <BeginEffectiveTime>2015-10-09T16:29:13.000000Z</BeginEffectiveTime>
+                    <EndEffectiveTime>2013-11-27T16:29:13.000000Z</EndEffectiveTime>
                     <Author>
                         <Name>YlddCWytSCmUO0O</Name>
                         <Name>fWgeF7JT-2RHs2mGgUnpQM2InNAu</Name>
@@ -3008,10 +3008,10 @@
                     <Vendor>pcmISc1C27r</Vendor>
                     <Model>SHt_.BlLkXtK0Z1nkfwckreV.L</Model>
                     <SerialNumber>wDK72UngXgnpsd</SerialNumber>
-                    <InstallationDate>2015-10-11T16:29:13</InstallationDate>
-                    <RemovalDate>2015-11-22T16:29:13</RemovalDate>
-                    <CalibrationDate>2014-01-15T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-07-08T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-10-11T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-11-22T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2014-01-15T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-07-08T16:29:13.000000Z</CalibrationDate>
                 </Sensor>
                 <PreAmplifier resourceId="vmHGknPXvxt.7xKl.">
                     <Type>htnPydiE48</Type>
@@ -3020,10 +3020,10 @@
                     <Vendor>hKHB4jT-eTj4z</Vendor>
                     <Model>N83L_VO.xtt</Model>
                     <SerialNumber>Hy1FSlRnX2lyvCnxA</SerialNumber>
-                    <InstallationDate>2013-11-24T16:29:13</InstallationDate>
-                    <RemovalDate>2015-08-17T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-10-11T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-04-03T16:29:13</CalibrationDate>
+                    <InstallationDate>2013-11-24T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-08-17T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-10-11T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-04-03T16:29:13.000000Z</CalibrationDate>
                 </PreAmplifier>
                 <DataLogger resourceId="KRs15j87VB.One_9xSzMeL3l.Ffqr">
                     <Type>FPLr2lzxQcq</Type>
@@ -3032,10 +3032,10 @@
                     <Vendor>l</Vendor>
                     <Model>zCxs9lQXJnSh</Model>
                     <SerialNumber>D6QhvJVAK</SerialNumber>
-                    <InstallationDate>2013-12-16T16:29:13</InstallationDate>
-                    <RemovalDate>2014-02-15T16:29:13</RemovalDate>
-                    <CalibrationDate>2013-11-24T16:29:13</CalibrationDate>
-                    <CalibrationDate>2015-07-05T16:29:13</CalibrationDate>
+                    <InstallationDate>2013-12-16T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2014-02-15T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2013-11-24T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2015-07-05T16:29:13.000000Z</CalibrationDate>
                 </DataLogger>
                 <Equipment resourceId="F2rJ-h9MoVu-d3">
                     <Type>fHUSz</Type>
@@ -3044,10 +3044,10 @@
                     <Vendor>wH.r2eLc8HXL9FKvqL6A</Vendor>
                     <Model>H1jZQHUt3</Model>
                     <SerialNumber>z</SerialNumber>
-                    <InstallationDate>2015-04-26T16:29:13</InstallationDate>
-                    <RemovalDate>2015-08-14T16:29:13</RemovalDate>
-                    <CalibrationDate>2015-06-05T16:29:13</CalibrationDate>
-                    <CalibrationDate>2014-06-29T16:29:13</CalibrationDate>
+                    <InstallationDate>2015-04-26T16:29:13.000000Z</InstallationDate>
+                    <RemovalDate>2015-08-14T16:29:13.000000Z</RemovalDate>
+                    <CalibrationDate>2015-06-05T16:29:13.000000Z</CalibrationDate>
+                    <CalibrationDate>2014-06-29T16:29:13.000000Z</CalibrationDate>
                 </Equipment>
                 <Response resourceId="AbxeAFyv9Kme5G7fr-k14zzS3RM">
                     <InstrumentSensitivity>
