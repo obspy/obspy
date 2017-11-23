@@ -161,6 +161,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import warnings
+
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+
+# Raise a deprecation warning. This has been requested by the EIDA management
+# board.
+msg = (
+    "The ArcLink protocol will be deprecated in the near future. Please, use "
+    "the client contacting the routing service provided by EIDA: "
+    "https://docs.obspy.org/packages/obspy.clients.fdsn.html#"
+    "basic-routing-clients-usage")
+warnings.warn(msg, category=ObsPyDeprecationWarning)
+
 from .client import Client  # NOQA
 
 
