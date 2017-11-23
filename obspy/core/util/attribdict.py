@@ -179,7 +179,7 @@ class AttribDict(collections.MutableMapping):
         :type key: str
         :param key: The key from __setattr__.
         :param value: The value being set to key.
-        :return:  value cast to correct type.
+        :return: value cast to correct type.
         """
         typ = self._types[key]
         new_type = typ[0] if isinstance(typ, collections.Sequence) else typ

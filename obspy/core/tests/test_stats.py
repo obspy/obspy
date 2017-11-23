@@ -269,15 +269,7 @@ class StatsTestCase(unittest.TestCase):
         """
         stats = Stats()
         for val in self.nslc:
-
-            with warnings.catch_warnings(record=True):
-                # warnings.simplefilter('ignore')
-                setattr(stats, val, None)
-
-            # Note: removed warning capture test due to unreliably capturing
-            # warnings on py27
-
-            # make sure the value is still None
+            setattr(stats, val, None)
             self.assertEqual(getattr(stats, val), 'None')
 
     def test_casted_stats_nscl_writes_to_mseed(self):
@@ -287,18 +279,24 @@ class StatsTestCase(unittest.TestCase):
         """
         st = Stream(traces=read()[0])
 
-        # set new stats
-        warnings.simplefilter('default')
-        st[0].stats.network = 1
-        st[0].stats.station = 1.1
-        st[0].stats.location = b'23'
-        st[0].stats.channel = None
-
-        # try writing stream to io, tests pass if this doesn't raise
+        # Get a new stats object with just the basic items in it
+        stats_items = set(Stats())
+        new_stats = Stats()
+        new_stats.__dict__.update({x: st[0].stats[x] for x in stats_items})
+        new_stats.network = 1
+        new_stats.station = 1.1
+        new_stats.channel = 'Non'
+        st[0].stats = new_stats
+        # try writing stream to bytes buffer
         bio = io.BytesIO()
         st.write(bio, 'mseed')
-        # cant read byteIO and compare because 'None' in channel gets
-        # truncated to 'Non'
+        bio.seek(0)
+        # read bytes and compare
+        stt = read(bio)
+        # remove _mseed so streams can compare equal
+        stt[0].stats.pop('mseed')
+        del stt[0].stats._format  # format gets added upon writing
+        self.assertEqual(st, stt)
 
     def test_different_string_types(self):
         """
