@@ -517,8 +517,8 @@ def _read_lines(line1, line2, line3, line4, line5):
     #         event, from Standard CMTs ("S-"), which are calculated later.
     if line3[0:9] != "CENTROID:":
         raise ObsPyNDKException("parse error")
-    numbers = [ line3[10:18], line3[18:22], line3[22:29], line3[29:34], \
-        line3[34:42], line3[42:47], line3[47:53], line3[53:58] ]
+    numbers = [line3[10:18], line3[18:22], line3[22:29], line3[29:34],
+               line3[34:42], line3[42:47], line3[47:53], line3[53:58]]
     rec["centroid_time"], rec["centroid_time_error"], \
         rec["centroid_latitude"], rec["centroid_latitude_error"], \
         rec["centroid_longitude"], rec["centroid_longitude_error"], \
