@@ -304,38 +304,38 @@ def confidence_ellipsoid_to_xyz(confidence_ellipsoid):
         matrix from:
         https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions
     """
+    from numpy import cos as c, sin as s
     try:
         phi = np.radians(confidence_ellipsoid.major_axis_plunge)
-        # rotation around x
+        # rotation around x''
         psi = np.radians(confidence_ellipsoid.major_axis_azimuth)
         # rotation around z
         theta = np.radians(confidence_ellipsoid.major_axis_rotation)
-        # rotation around y
+        # rotation around y'
     except Exception:
         raise NordicParsingError("Cannot parse rotation angles, incomplete "
                                  "confidenceEllipsoid?")
+    # Issues with left and right-handedness? Z1Y2X3
     rotation_matrix = np.array([
-        [np.cos(theta) * np.cos(psi),
-         np.sin(phi) * np.sin(theta) * np.cos(psi) - np.cos(phi) * np.sin(psi),
-         np.sin(phi) * np.sin(psi) + np.cos(phi) * np.sin(theta) * np.cos(psi)],
-        [np.cos(theta) * np.sin(psi),
-         np.cos(phi) * np.cos(psi) + np.sin(phi) * np.sin(theta) * np.sin(psi),
-         np.cos(phi) * np.sin(theta) * np.sin(psi) - np.sin(phi) * np.cos(psi)],
-        [-np.sin(theta), np.sin(phi) * np.cos(theta),
-         np.cos(phi) * np.cos(theta)]])
+        [c(theta) * c(psi), s(phi) * s(theta) * c(psi) - c(phi) * s(psi),
+         s(phi) * s(psi) + c(phi) * s(theta) * c(psi)],
+        [c(theta) * s(psi), c(phi) * c(psi) + s(phi) * s(theta) * s(psi),
+         c(phi) * s(theta) * s(psi) - s(phi) * c(psi)],
+        [-s(theta), s(phi) * c(theta), c(phi) * c(theta)]])
     eigenvalues = np.array([
         confidence_ellipsoid.semi_major_axis_length ** 2,
         confidence_ellipsoid.semi_intermediate_axis_length ** 2,
-        confidence_ellipsoid.semi_minor_axis_length ** 2])
+        confidence_ellipsoid.semi_minor_axis_length ** 2
+    ])
     covariance_matrix = np.dot(np.dot(rotation_matrix, np.diag(eigenvalues)),
                                np.linalg.inv(rotation_matrix))
-    errors = {'x_err': np.sqrt(covariance_matrix[0, 0]),
-              'y_err': np.sqrt(covariance_matrix[1, 1]),
-              'z_err': np.sqrt(covariance_matrix[2, 2]),
-              'xy_cov': covariance_matrix[0, 1],
-              'xz_cov': covariance_matrix[0, 2],
-              'yz_cov': covariance_matrix[1, 2]}
-    return errors
+    errors_out = {'x_err': np.sqrt(covariance_matrix[0, 0]),
+                  'y_err': np.sqrt(covariance_matrix[1, 1]),
+                  'z_err': np.sqrt(covariance_matrix[2, 2]),
+                  'xy_cov': np.round(covariance_matrix[0, 1], 6),
+                  'xz_cov': np.round(covariance_matrix[0, 2], 6),
+                  'yz_cov': np.round(covariance_matrix[1, 2], 6)}
+    return errors_out
 
 
 def readheader(sfile):

@@ -573,9 +573,10 @@ class TestNordicMethods(unittest.TestCase):
         """
         Test that we are able to map between xyz errors and ellipsoid
         """
-        errors = {'x_err': 640, 'y_err': 1300, 'z_err': 1700,
-                  'xy_cov': -990000, 'xz_cov': -405200, 'yz_cov': 239200}
+        errors = {'x_err': 1., 'y_err': 1.5, 'z_err': 2.0,
+                  'xy_cov': 0.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
         confidence_ellipsoid = xyz_to_confidence_ellipsoid(errors)
+        print(confidence_ellipsoid)
         errors_back = confidence_ellipsoid_to_xyz(confidence_ellipsoid)
         self.assertEqual(errors, errors_back)
         # TODO: Test mapping for known result.
