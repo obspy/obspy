@@ -105,6 +105,10 @@ class TestNordicMethods(unittest.TestCase):
                          test_ev.amplitudes[0].period)
         self.assertEqual(read_ev.amplitudes[0].snr,
                          test_ev.amplitudes[0].snr)
+        self.assertEqual(read_ev.amplitudes[2].period,
+                         test_ev.amplitudes[2].period)
+        self.assertEqual(read_ev.amplitudes[2].snr,
+                         test_ev.amplitudes[2].snr)
         # Check coda magnitude pick
         # Resource ids get overwritten because you can't have two the same in
         # memory
@@ -385,6 +389,25 @@ class TestNordicMethods(unittest.TestCase):
         testing_path = os.path.join(self.testing_path, '01-0411-15L.S201309')
         wavefiles = readwavename(testing_path)
         self.assertEqual(len(wavefiles), 1)
+        # Test that full paths are handled
+        test_event = full_test_event()
+        # Add the event to a catalogue which can be used for QuakeML testing
+        test_cat = Catalog()
+        test_cat += test_event
+        # Check the read-write s-file functionality
+        with TemporaryWorkingDirectory():
+            sfile = _write_nordic(
+                test_cat[0], filename=None, userid='TEST', evtype='L',
+                outdir='.', wavefiles=['walrus/test'], explosion=True,
+                overwrite=True)
+            self.assertEqual(readwavename(sfile), ['test'])
+        # Check that multiple wavefiles are read properly
+        with TemporaryWorkingDirectory():
+            sfile = _write_nordic(
+                test_cat[0], filename=None, userid='TEST', evtype='L',
+                outdir='.', wavefiles=['walrus/test', 'albert'],
+                explosion=True, overwrite=True)
+            self.assertEqual(readwavename(sfile), ['test', 'albert'])
 
     def test_read_event(self):
         """
@@ -709,6 +732,11 @@ def full_test_event():
         Pick(waveform_id=_waveform_id_1, onset='impulsive', phase_hint='PN',
              polarity='positive', time=UTCDateTime("2012-03-26") + 1.68,
              evaluation_mode="manual"))
+    # Pick to associate with amplitude-2
+    test_event.picks.append(
+        Pick(waveform_id=_waveform_id_1, phase_hint='IAML',
+             polarity='undecidable', time=UTCDateTime("2012-03-26") + 1.68,
+             evaluation_mode="manual"))
     # Unassociated pick
     test_event.picks.append(
         Pick(waveform_id=_waveform_id_2, onset='impulsive', phase_hint='SG',
@@ -732,6 +760,12 @@ def full_test_event():
                   waveform_id=test_event.picks[1].waveform_id, type='END',
                   category='duration', unit='s', magnitude_hint='Mc',
                   snr=2.3))
+    # Test a generic local magnitude amplitude pick without magnitude_hint
+    test_event.amplitudes.append(
+        Amplitude(generic_amplitude=2.0, period=0.4,
+                  pick_id=test_event.picks[2].resource_id,
+                  waveform_id=test_event.picks[0].waveform_id, unit='m',
+                  category='point', type='AML'))
     test_event.origins[0].arrivals.append(
         Arrival(time_weight=0, phase=test_event.picks[1].phase_hint,
                 pick_id=test_event.picks[1].resource_id))
