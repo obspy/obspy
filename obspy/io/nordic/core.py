@@ -957,7 +957,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     # Write line 3 of s-file
     for wavefile in wavefiles:
         sfile.write(' ' + os.path.basename(wavefile) +
-                    '6'.rjust(79 - len(wavefile)) + '\n')
+                    '6'.rjust(79 - len(os.path.basename(wavefile))) + '\n')
     # Write final line of s-file
     sfile.write(' STAT SP IPHASW D HRMM SECON CODA AMPLIT PERI AZIMU' +
                 ' VELO AIN AR TRES W  DIS CAZ7\n')
@@ -1109,7 +1109,8 @@ def nordpick(event):
                 else:
                     amp = None
                 coda = ' '
-                if amplitude.magnitude_hint.upper() == 'ML':
+                mag_hint = (amplitude.magnitude_hint or amplitude.type)
+                if mag_hint is not None and mag_hint.upper() in ['AML', 'ML']:
                     phase_hint = 'IAML'
                     impulsivity = ' '
             else:
