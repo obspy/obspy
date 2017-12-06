@@ -509,7 +509,7 @@ class Station(BaseNode):
 
         return fig
 
-    def get_epoch_plottable_struct(self):
+    def _get_epoch_plottable_struct_(self):
         sub_dict = {}
         plot_dict = {}
         name = str(self.code)
@@ -528,6 +528,12 @@ class Station(BaseNode):
         return plot_dict
 
     def plot_epochs(self, outfile=None):
+        """
+        Plot the epochs of this given inventory object.
+        :param outfile: If included, the plot will be saved to a file with the
+            given filename. (Otherwise it will be displayed in a window)
+        :type outfile: str
+        """
         plot_dict = self.get_epoch_plottable_structure()
         plot_inventory_epochs(plot_dict, outfile)
 
