@@ -21,7 +21,6 @@ import warnings
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.inventory.util import plot_inventory_epochs
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
@@ -518,7 +517,7 @@ class Station(BaseNode):
             for key in eps.keys():
                 if key not in sub_dict.keys():
                     sub_dict[key] = []
-                sub_dict[key]=eps[key]
+                sub_dict[key] = eps[key]
         start = self.start_date
         if self.end_date is None:
             end = UTCDateTime.now()

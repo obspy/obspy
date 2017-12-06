@@ -18,8 +18,6 @@ import copy
 import fnmatch
 import warnings
 
-import obspy.core.utcdatetime as utc
-
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .station import Station

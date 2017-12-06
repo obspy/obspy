@@ -15,7 +15,6 @@ from future.builtins import *  # NOQA
 from future.utils import python_2_unicode_compatible
 
 from obspy import UTCDateTime
-from obspy.core.inventory.util import plot_inventory_epochs
 from obspy.core.util.obspy_types import FloatWithUncertainties
 from . import BaseNode
 from .util import (Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude,
@@ -369,7 +368,7 @@ class Channel(BaseNode):
             outfile=outfile)
 
     def _get_epoch_plottable_struct_(self):
-        plot_dict = {};
+        plot_dict = {}
         name = str(self.code)
         if self.start_date is not None:
             if self.end_date is None:

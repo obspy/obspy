@@ -903,7 +903,7 @@ class Inventory(ComparingObject):
             for key in eps.keys():
                 if key not in sub_dict.keys():
                     sub_dict[key] = []
-                sub_dict[key]+=eps[key]
+                sub_dict[key] += eps[key]
         if hasattr(self, 'start_date'):
             start = self.start_date
             if self.end_time is None:
