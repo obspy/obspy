@@ -385,7 +385,7 @@ class Channel(BaseNode):
             given filename. (Otherwise it will be displayed in a window)
         :type outfile: str
         """
-        plot_dict = self.get_epoch_plottable_structure()
+        plot_dict = self._get_epoch_plottable_struct_()
         plot_inventory_epochs(plot_dict, outfile)
 
 
