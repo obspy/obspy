@@ -863,12 +863,25 @@ def _seed_id_keyfunction(x):
     return x
 
 def plot_inventory_epochs(plot_dict, outfile=None):
+    """
+    Creates a plot from inventory object's epoch plottable structure.
+    :param plot_dict: Dictionary of inventory epochs. A structure used and
+        created by the given inventory/station/network/channel object that
+        contains the epoch data for an inventory in a tuple with the format
+        (start_time, end_time, sub_dict) where sub_dict is a dictionary with
+        the same type of structure for any subcomponents.
+    :type plot_dict: dict
+    :param outfile: If this parameter is included, the plot will be saved to
+        a file with the given filename.
+    :type outfile: str
+    """
 
     # dictionary will hold plot component's initial y-value & height
     y_dict = {}
     # need to do tree traversal for getting appropriate y-axis variables
-    plot_traversal_helper(plot_dict, y_dict)
+    _plot_traversal_helper_(plot_dict, y_dict)
 
+    # get height of each inv. component data, color lines according to height
     y_tick_labels = []
     y_ticks = []
     y_min = float('inf')
@@ -884,16 +897,19 @@ def plot_inventory_epochs(plot_dict, outfile=None):
     clrs = iter(cm.Dark2(linspace(0,1,len(y_tick_labels))))
     for label in sorted(y_tick_labels):
         clr_dict[label] = next(clrs)
-    plt.figure()
 
+    plt.figure()
     ax = plt.gca()
+    # get the plot ranges
     xmax = 0
     xmin = float(UTCDateTime.now())
-    (xmin, xmax) = plot_builder(ax, plot_dict, y_dict, xmin, xmax, clr_dict)
+    # add the plottable data to the plot
+    (xmin, xmax) = _plot_builder_(ax, plot_dict, y_dict, xmin, xmax, clr_dict)
     xmax = min(xmax, float(UTCDateTime.now()))
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(y_min, y_max)
 
+    # label the x-axis according to given time data
     x_ticks = ax.get_xticks()
     x_tick_labels = []
     for tick in x_ticks:
@@ -908,9 +924,10 @@ def plot_inventory_epochs(plot_dict, outfile=None):
     else:
         plt.show()
 
-def plot_traversal_helper(plot_dict, y_dict, offset=0, prefix=''):
+def _plot_traversal_helper_(plot_dict, y_dict, offset=0, prefix=''):
     # recursively get proper spacing for given structure
     # using the sub-dictionaries for each
+    # sorting allows networks and stations to have their data be grouped
     sorted_keys = sorted(plot_dict.keys())
     for key in sorted_keys:
         # get the number of total sub-components
@@ -932,7 +949,7 @@ def plot_traversal_helper(plot_dict, y_dict, offset=0, prefix=''):
         epoch_list = plot_dict[key]
         for epoch_tuple in epoch_list:
             (start, end, sub_dict) = epoch_tuple
-            offset = plot_traversal_helper(sub_dict, y_dict, offset=offset,
+            offset = _plot_traversal_helper_(sub_dict, y_dict, offset=offset,
                                            prefix=label)
         #offset += 1 # used to determine height of current component
         if height == 0:
@@ -940,8 +957,8 @@ def plot_traversal_helper(plot_dict, y_dict, offset=0, prefix=''):
         y_dict[label] = (current_offset, height)
     return offset
 
-def plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
-    #print(y_dict)
+def _plot_builder_(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
+    # private method to add lines and rectangles to a given plot object
     sorted_keys = sorted(plot_dict.keys())
     for key in sorted_keys:
         # get the number of total sub-components
@@ -961,13 +978,14 @@ def plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
             xmax = max(xmax, end)
             (y, height) = y_dict[label]
             # get range of subcomponents
-            (temp_xmin, temp_xmax) = plot_builder(ax, sub_dict, y_dict, xmin,
-                                                  xmax, clrs, pfx=label)
+            (temp_xmin, temp_xmax) = _plot_builder_(ax, sub_dict, y_dict, xmin,
+                                                    xmax, clrs, pfx=label)
             if height == 1:
                 c = clrs[label]
                 line = ax.plot([start, end],[y,y], color=c)
                 # plt.gca().add_line(line)
-            elif start_date != -1 and end_date != -1:
+            elif not (start_date == -1 and end_date == -1):
+                # if network epoch not defined, don't bother drawing it
                 rect = plt.Rectangle((start, y), end-start, height, fill=False,
                                      lw=1.25, label=label)
                 ax.add_patch(rect)

@@ -892,11 +892,14 @@ class Inventory(ComparingObject):
 
         return fig
 
-    def get_epoch_plottable_struct(self):
+    def _get_epoch_plottable_struct_(self):
+        # get structure of inventory epoch's data in format
+        # {inventory: (start, end, subdictionary)}
+        # where subdictionary is recursively the same for netwk, stn, ch data
         plot_dict = {}
         sub_dict = {}
         for network in set(self.networks):
-            eps = network.get_epoch_plottable_struct()
+            eps = network._get_epoch_plottable_struct_()
             for key in eps.keys():
                 if key not in sub_dict.keys():
                     sub_dict[key] = []
@@ -914,6 +917,12 @@ class Inventory(ComparingObject):
         return plot_dict
 
     def plot_epochs(self, outfile=None):
+        """
+        Plot the epochs of this given inventory object.
+        :param outfile: If included, the plot will be saved to a file with the
+            given filename. (Otherwise it will be displayed in a window)
+        :type outfile: str
+        """
         plot_dict = self.get_epoch_plottable_struct()
         plot_inventory_epochs(plot_dict, outfile)
 
