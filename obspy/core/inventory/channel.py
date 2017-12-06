@@ -14,10 +14,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import python_2_unicode_compatible
 
+from obspy import UTCDateTime
 from obspy.core.inventory.util import plot_inventory_epochs
 from obspy.core.util.obspy_types import FloatWithUncertainties
 from . import BaseNode
-from .util import Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude
+from .util import (Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude,
+                   plot_inventory_epochs)
 
 
 @python_2_unicode_compatible
@@ -366,13 +368,15 @@ class Channel(BaseNode):
             unwrap_phase=unwrap_phase, plot_degrees=plot_degrees, show=show,
             outfile=outfile)
 
-    def get_epoch_plottable_struct(self, y_offset=0):
+    def get_epoch_plottable_struct(self):
         plot_dict = {};
+        name = str(self.code)
         if self.start_date is not None:
-            end = self.end_date
-            if end is None:
-                end = obspy.core.utcdatetime.now()
-            plot_dict[y_offset] = (self.start_date, end, 0, self.location_code)
+            if self.end_date is None:
+                end = UTCDateTime.now()
+            else:
+                end = min(self.end_date, UTCDateTime.now())
+            plot_dict[name] = [(self.start_date, end, {})]
         return plot_dict
 
     def plot_epochs(self, outfile=None):

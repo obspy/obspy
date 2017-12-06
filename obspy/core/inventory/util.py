@@ -16,6 +16,9 @@ from future.builtins import *  # NOQA
 import copy
 import re
 import matplotlib.pyplot as plt
+import matplotlib.dates as dts
+from numpy import linspace
+from matplotlib.pyplot import cm
 from textwrap import TextWrapper
 
 from obspy import UTCDateTime
@@ -860,31 +863,117 @@ def _seed_id_keyfunction(x):
     return x
 
 def plot_inventory_epochs(plot_dict, outfile=None):
-    y_ticks = []
+
+    # dictionary will hold plot component's initial y-value & height
+    y_dict = {}
+    # need to do tree traversal for getting appropriate y-axis variables
+    plot_traversal_helper(plot_dict, y_dict)
+
     y_tick_labels = []
-    min_y = min(plot_dict.keys())
-    max_y = max(plot_dict.keys())
-    for i in range(min_y, max_y):
-        if i in plot_dict.keys():
-            y_ticks.append(i)
-            (_,_,_,label) = plot_dict.get(i)
-            y_tick_labels.append(label)
-    plt.axes()
+    y_ticks = []
+    y_min = float('inf')
+    y_max = 0
+    clr_dict = {}
+    for key in y_dict.keys():
+        (tick, height) = y_dict[key]
+        if height == 1:
+            y_tick_labels.append(key)
+            y_ticks.append(tick)
+            y_min = min(tick-1, y_min)
+            y_max = max(tick+height, y_max)
+    clrs = iter(cm.Dark2(linspace(0,1,len(y_tick_labels))))
+    for label in sorted(y_tick_labels):
+        clr_dict[label] = next(clrs)
+    plt.figure()
+
+    ax = plt.gca()
+    xmax = 0
+    xmin = float(UTCDateTime.now())
+    (xmin, xmax) = plot_builder(ax, plot_dict, y_dict, xmin, xmax, clr_dict)
+    xmax = min(xmax, float(UTCDateTime.now()))
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(y_min, y_max)
+
+    x_ticks = ax.get_xticks()
+    x_tick_labels = []
+    for tick in x_ticks:
+        label = str(UTCDateTime(tick).date)
+        x_tick_labels.append(label)
     plt.yticks(y_ticks, y_tick_labels)
-    for y in plot_dict.keys():
-        (start, end, height, _) = plot_dict.get(i)
-        fill = False
-        if height == 0:
-            fill = True
-        # subtract end from start b/c we want the length of the side
-        rect = plt.rectangle((start, y), end-start, height, filled=fill)
-        plt.gca.add_patch(rect)
+    plt.xticks(x_ticks, x_tick_labels, rotation='45')
+    plt.grid()
+
     if outfile:
         plt.savefig(outfile)
     else:
         plt.show()
 
+def plot_traversal_helper(plot_dict, y_dict, offset=0, prefix=''):
+    # recursively get proper spacing for given structure
+    # using the sub-dictionaries for each
+    sorted_keys = sorted(plot_dict.keys())
+    for key in sorted_keys:
+        # get the number of total sub-components
+        # add 1 to get the height of the bounding
+        # then add 1 again to get the y_tick for the next key
+        label = ''
+        if len(prefix) > 0:
+            label = prefix + '.'
+        label += key
+        # assign the current data to an axis value if it isn't already
+        # (necessary because epoch boundaries can contain same data)
+        # and then prevent collisions on y-axis values
+        current_offset = offset # y-axis value to put the current key
+        height = 0
+        if label not in y_dict.keys():
+            offset += 1
+        else:
+            (current_offset, height) = y_dict.get(label)
+        epoch_list = plot_dict[key]
+        for epoch_tuple in epoch_list:
+            (start, end, sub_dict) = epoch_tuple
+            offset = plot_traversal_helper(sub_dict, y_dict, offset=offset,
+                                           prefix=label)
+        #offset += 1 # used to determine height of current component
+        if height == 0:
+            height = offset - current_offset
+        y_dict[label] = (current_offset, height)
+    return offset
 
+def plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
+    #print(y_dict)
+    sorted_keys = sorted(plot_dict.keys())
+    for key in sorted_keys:
+        # get the number of total sub-components
+        # add 1 to get the height of the bounding
+        # then add 1 again to get the y_tick for the next key
+        label = ''
+        if len(pfx) > 0:
+            label = pfx + '.'
+        label += key
+        epoch_list = plot_dict[key]
+        for epoch_tuple in epoch_list:
+            (start_date, end_date, sub_dict) = epoch_tuple
+            start = float(start_date)
+            end = float(end_date)
+            if start >= 0:
+                xmin = min(xmin, start)
+            xmax = max(xmax, end)
+            (y, height) = y_dict[label]
+            # get range of subcomponents
+            (temp_xmin, temp_xmax) = plot_builder(ax, sub_dict, y_dict, xmin,
+                                                  xmax, clrs, pfx=label)
+            if height == 1:
+                c = clrs[label]
+                line = ax.plot([start, end],[y,y], color=c)
+                # plt.gca().add_line(line)
+            elif start_date != -1 and end_date != -1:
+                rect = plt.Rectangle((start, y), end-start, height, fill=False,
+                                     lw=1.25, label=label)
+                ax.add_patch(rect)
+            xmin = min(xmin, temp_xmin)
+            xmax = max(xmax, temp_xmax)
+    return (xmin, xmax)
 
 if __name__ == '__main__':
     import doctest
