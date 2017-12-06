@@ -513,7 +513,7 @@ class Station(BaseNode):
         plot_dict = {}
         name = str(self.code)
         for channel in self.channels:
-            eps = channel.get_epoch_plottable_struct()
+            eps = channel._get_epoch_plottable_struct_()
             for key in eps.keys():
                 if key not in sub_dict.keys():
                     sub_dict[key] = []
@@ -533,7 +533,7 @@ class Station(BaseNode):
             given filename. (Otherwise it will be displayed in a window)
         :type outfile: str
         """
-        plot_dict = self.get_epoch_plottable_structure()
+        plot_dict = self._get_epoch_plottable_struct_()
         plot_inventory_epochs(plot_dict, outfile)
 
 
