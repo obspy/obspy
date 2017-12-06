@@ -21,7 +21,6 @@ import textwrap
 import warnings
 
 import obspy
-from obspy.core.inventory.util import plot_inventory_epochs
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
                                   _read_from_plugin, NamedTemporaryFile,
                                   download_to_file)
@@ -30,7 +29,7 @@ from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .network import Network
-from .util import _unified_content_strings, _textwrap
+from .util import _unified_content_strings, _textwrap, plot_inventory_epochs
 
 # Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
@@ -894,20 +893,28 @@ class Inventory(ComparingObject):
         return fig
 
     def get_epoch_plottable_struct(self):
-        height = 0
         plot_dict = {}
-        ch_y = 1;
-        # get height of objects
-        for network in self.networks:
-            sta_dict = network.get_epoch_plottable_struct(y_offset=ch_y)
-            # +2 to represent value after top of bounding rectangle
-            height += len(sta_dict) + 2
-            plot_dict.update(sta_dict)
-            ch_y += height
+        sub_dict = {}
+        for network in set(self.networks):
+            eps = network.get_epoch_plottable_struct()
+            for key in eps.keys():
+                if key not in sub_dict.keys():
+                    sub_dict[key] = []
+                sub_dict[key]+=eps[key]
+        if hasattr(self, 'start_date'):
+            start = self.start_date
+            if self.end_time is None:
+                end = UTCDateTime.now()
+            else:
+                end = min(self.end_time, UTCDateTime.now())
+        else:
+            start = -1
+            end = -1
+        plot_dict[str('')] = [(start, end, sub_dict)]
         return plot_dict
 
     def plot_epochs(self, outfile=None):
-        plot_dict = self.get_epoch_plottable_structure()
+        plot_dict = self.get_epoch_plottable_struct()
         plot_inventory_epochs(plot_dict, outfile)
 
 

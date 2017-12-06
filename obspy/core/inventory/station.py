@@ -25,7 +25,8 @@ from obspy.core.inventory.util import plot_inventory_epochs
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
-                   Longitude, _unified_content_strings, _textwrap)
+                   Longitude, _unified_content_strings, _textwrap,
+                   plot_inventory_epochs)
 
 
 @python_2_unicode_compatible
@@ -508,18 +509,22 @@ class Station(BaseNode):
 
         return fig
 
-    def get_epoch_plottable_struct(self, y_offset=0):
-        height = len(self.channels) + 1;
+    def get_epoch_plottable_struct(self):
+        sub_dict = {}
         plot_dict = {}
-        ch_y = y_offset + 1;
+        name = str(self.code)
         for channel in self.channels:
-            plot_dict.update(channel.get_epoch_plottable_struct(y_offset=ch_y))
-            ch_y += 1
-        if self.start_date is not None:
-            end = self.end_date
-            if self.end_date is None:
-                end = obspy.core.utcdatetime.now()
-            plot_dict[y_offset] = (start_date, end, height, self.code)
+            eps = channel.get_epoch_plottable_struct()
+            for key in eps.keys():
+                if key not in sub_dict.keys():
+                    sub_dict[key] = []
+                sub_dict[key]=eps[key]
+        start = self.start_date
+        if self.end_date is None:
+            end = UTCDateTime.now()
+        else:
+            end = min(self.end_date, UTCDateTime.now())
+        plot_dict[name] = [(start, end, sub_dict)]
         return plot_dict
 
     def plot_epochs(self, outfile=None):

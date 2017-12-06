@@ -18,11 +18,13 @@ import copy
 import fnmatch
 import warnings
 
-from obspy.core.inventory.util import plot_inventory_epochs
+import obspy.core.utcdatetime as utc
+
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .station import Station
-from .util import BaseNode, _unified_content_strings, _textwrap
+from .util import (BaseNode, _unified_content_strings, _textwrap,
+                   plot_inventory_epochs)
 
 
 @python_2_unicode_compatible
@@ -676,22 +678,26 @@ class Network(BaseNode):
 
         return fig
 
-    def get_epoch_plottable_struct(self, y_offset=0):
-        height = 0
+    def get_epoch_plottable_struct(self):
         plot_dict = {}
-        ch_y = y_offset + 1;
-        # get height of objects
+        sub_dict = {}
+        name = str(self.code)
         for station in self.stations:
-            sta_dict = station.get_epoch_plottable_struct(y_offset=ch_y)
-            # +2 to represent value after top of bounding rectangle
-            height += len(sta_dict) + 2
-            plot_dict.update(sta_dict)
-            ch_y += height
+            eps = station.get_epoch_plottable_struct()
+            for key in eps.keys():
+                if key not in sub_dict.keys():
+                    sub_dict[key] = []
+                sub_dict[key]+=eps[key]
         if self.start_date is not None:
-            end = self.end_date
+            start = self.start_date
             if self.end_date is None:
-                end = obspy.core.utcdatetime.now()
-            plot_dict[y_offset] = (start_date, end, height, self.code)
+                end = UTCDateTime.now()
+            else:
+                end = min(self.end_date, UTCDateTime.now())
+        else:
+            start = -1
+            end = -1
+        plot_dict[name] = [(start, end, sub_dict)]
         return plot_dict
 
     def plot_epochs(self, outfile=None):
