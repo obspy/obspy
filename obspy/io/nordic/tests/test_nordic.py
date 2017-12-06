@@ -452,7 +452,7 @@ class TestNordicMethods(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
-                _assert_similarity(event_1=event_1, event_2=event_2, verbose=True)
+                _assert_similarity(event_1=event_1, event_2=event_2)
 
     def test_inaccurate_picks(self):
         testing_path = os.path.join(self.testing_path, 'bad_picks.sfile')
