@@ -16,7 +16,6 @@ from future.builtins import *  # NOQA
 import copy
 import re
 import matplotlib.pyplot as plt
-import matplotlib.dates as dts
 from numpy import linspace
 from matplotlib.pyplot import cm
 from textwrap import TextWrapper
@@ -862,6 +861,7 @@ def _seed_id_keyfunction(x):
 
     return x
 
+
 def plot_inventory_epochs(plot_dict, outfile=None):
     """
     Creates a plot from inventory object's epoch plottable structure.
@@ -894,7 +894,7 @@ def plot_inventory_epochs(plot_dict, outfile=None):
             y_ticks.append(tick)
             y_min = min(tick-1, y_min)
             y_max = max(tick+height, y_max)
-    clrs = iter(cm.Dark2(linspace(0,1,len(y_tick_labels))))
+    clrs = iter(cm.Dark2(linspace(0, 1, len(y_tick_labels))))
     for label in sorted(y_tick_labels):
         clr_dict[label] = next(clrs)
 
@@ -924,6 +924,7 @@ def plot_inventory_epochs(plot_dict, outfile=None):
     else:
         plt.show()
 
+
 def _plot_traversal_helper_(plot_dict, y_dict, offset=0, prefix=''):
     # recursively get proper spacing for given structure
     # using the sub-dictionaries for each
@@ -940,7 +941,7 @@ def _plot_traversal_helper_(plot_dict, y_dict, offset=0, prefix=''):
         # assign the current data to an axis value if it isn't already
         # (necessary because epoch boundaries can contain same data)
         # and then prevent collisions on y-axis values
-        current_offset = offset # y-axis value to put the current key
+        current_offset = offset  # y-axis value to put the current key
         height = 0
         if label not in y_dict.keys():
             offset += 1
@@ -950,12 +951,12 @@ def _plot_traversal_helper_(plot_dict, y_dict, offset=0, prefix=''):
         for epoch_tuple in epoch_list:
             (start, end, sub_dict) = epoch_tuple
             offset = _plot_traversal_helper_(sub_dict, y_dict, offset=offset,
-                                           prefix=label)
-        #offset += 1 # used to determine height of current component
+                                             prefix=label)
         if height == 0:
             height = offset - current_offset
         y_dict[label] = (current_offset, height)
     return offset
+
 
 def _plot_builder_(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
     # private method to add lines and rectangles to a given plot object
@@ -982,7 +983,7 @@ def _plot_builder_(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
                                                     xmax, clrs, pfx=label)
             if height == 1:
                 c = clrs[label]
-                line = ax.plot([start, end],[y,y], color=c)
+                ax.plot([start, end], [y, y], color=c)
                 # plt.gca().add_line(line)
             elif not (start_date == -1 and end_date == -1):
                 # if network epoch not defined, don't bother drawing it
@@ -992,6 +993,7 @@ def _plot_builder_(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
             xmin = min(xmin, temp_xmin)
             xmax = max(xmax, temp_xmax)
     return (xmin, xmax)
+
 
 if __name__ == '__main__':
     import doctest
