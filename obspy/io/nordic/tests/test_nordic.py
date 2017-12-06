@@ -452,7 +452,7 @@ class TestNordicMethods(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
-                _assert_similarity(event_1=event_1, event_2=event_2)
+                _assert_similarity(event_1=event_1, event_2=event_2, verbose=True)
 
     def test_inaccurate_picks(self):
         testing_path = os.path.join(self.testing_path, 'bad_picks.sfile')
@@ -664,11 +664,14 @@ def _test_similarity(event_1, event_2, verbose=False):
     for amp_1, amp_2 in zip(event_1.amplitudes, event_2.amplitudes):
         # Assuming same ordering of amplitudes
         for key in amp_1.keys():
-            if key not in ["resource_id", "pick_id", "waveform_id", "snr"]:
+            if key not in ["resource_id", "pick_id", "waveform_id", "snr",
+                           "magnitude_hint", 'type']:
                 if not amp_1[key] == amp_2[key]:
                     if verbose:
                         print('%s is not the same as %s for key %s' %
                               (amp_1[key], amp_2[key], key))
+                        print(amp_1)
+                        print(amp_2)
                     return False
             elif key == "waveform_id":
                 if pick_1[key].station_code != pick_2[key].station_code:
@@ -684,6 +687,15 @@ def _test_similarity(event_1, event_2, verbose=False):
                     if verbose:
                         print('Channel codes do not match')
                     return False
+            elif key in ["magnitude_hint", "type"]:
+                # Reading back in will define both, but input event might have
+                # None
+                if amp_1[key] is not None:
+                    if not amp_1[key] == amp_2[key]:
+                        if verbose:
+                            print('%s is not the same as %s for key %s' %
+                                  (amp_1[key], amp_2[key], key))
+                        return False
     return True
 
 
@@ -722,63 +734,49 @@ def full_test_event():
                                       network_code='NZ')
     _waveform_id_2 = WaveformStreamID(station_code='WTSZ', channel_code='BH1',
                                       network_code=' ')
-    # Pick to associate with amplitude
-    test_event.picks.append(
+    # Pick to associate with amplitude - 0
+    test_event.picks = [
         Pick(waveform_id=_waveform_id_1, phase_hint='IAML',
              polarity='undecidable', time=UTCDateTime("2012-03-26") + 1.68,
-             evaluation_mode="manual"))
-    # Need a second pick for coda
-    test_event.picks.append(
+             evaluation_mode="manual"),
         Pick(waveform_id=_waveform_id_1, onset='impulsive', phase_hint='PN',
              polarity='positive', time=UTCDateTime("2012-03-26") + 1.68,
-             evaluation_mode="manual"))
-    # Pick to associate with amplitude-2
-    test_event.picks.append(
+             evaluation_mode="manual"),
         Pick(waveform_id=_waveform_id_1, phase_hint='IAML',
              polarity='undecidable', time=UTCDateTime("2012-03-26") + 1.68,
-             evaluation_mode="manual"))
-    # Unassociated pick
-    test_event.picks.append(
+             evaluation_mode="manual"),
         Pick(waveform_id=_waveform_id_2, onset='impulsive', phase_hint='SG',
              polarity='undecidable', time=UTCDateTime("2012-03-26") + 1.72,
-             evaluation_mode="manual"))
-    # Unassociated pick
-    test_event.picks.append(
+             evaluation_mode="manual"),
         Pick(waveform_id=_waveform_id_2, onset='impulsive', phase_hint='PN',
              polarity='undecidable', time=UTCDateTime("2012-03-26") + 1.62,
-             evaluation_mode="automatic"))
+             evaluation_mode="automatic")]
     # Test a generic local magnitude amplitude pick
-    test_event.amplitudes.append(
+    test_event.amplitudes = [
         Amplitude(generic_amplitude=2.0, period=0.4,
                   pick_id=test_event.picks[0].resource_id,
                   waveform_id=test_event.picks[0].waveform_id, unit='m',
-                  magnitude_hint='ML', category='point', type='AML'))
-    # Test a coda magnitude pick
-    test_event.amplitudes.append(
+                  magnitude_hint='ML', category='point', type='AML'),
         Amplitude(generic_amplitude=10,
                   pick_id=test_event.picks[1].resource_id,
                   waveform_id=test_event.picks[1].waveform_id, type='END',
                   category='duration', unit='s', magnitude_hint='Mc',
-                  snr=2.3))
-    # Test a generic local magnitude amplitude pick without magnitude_hint
-    test_event.amplitudes.append(
-        Amplitude(generic_amplitude=2.0, period=0.4,
+                  snr=2.3),
+        Amplitude(generic_amplitude=5.0, period=0.6,
                   pick_id=test_event.picks[2].resource_id,
                   waveform_id=test_event.picks[0].waveform_id, unit='m',
-                  category='point', type='AML'))
-    test_event.origins[0].arrivals.append(
+                  category='point', type='AML')]
+    test_event.origins[0].arrivals = [
         Arrival(time_weight=0, phase=test_event.picks[1].phase_hint,
-                pick_id=test_event.picks[1].resource_id))
-    test_event.origins[0].arrivals.append(
-        Arrival(time_weight=2, phase=test_event.picks[2].phase_hint,
-                pick_id=test_event.picks[2].resource_id,
-                backazimuth_residual=5, time_residual=0.2, distance=15,
-                azimuth=25))
-    test_event.origins[0].arrivals.append(
+                pick_id=test_event.picks[1].resource_id),
         Arrival(time_weight=2, phase=test_event.picks[3].phase_hint,
                 pick_id=test_event.picks[3].resource_id,
                 backazimuth_residual=5, time_residual=0.2, distance=15,
-                azimuth=25))
+                azimuth=25),
+        Arrival(time_weight=2, phase=test_event.picks[4].phase_hint,
+                pick_id=test_event.picks[4].resource_id,
+                backazimuth_residual=5, time_residual=0.2, distance=15,
+                azimuth=25)]
     return test_event
 
 
