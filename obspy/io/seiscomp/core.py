@@ -24,7 +24,7 @@ from obspy.io.quakeml.core import _xml_doc_from_anything
 
 
 # SC3ML version for which an XSD file is available
-SUPPORTED_XSD_VERSION = ['0.3', '0.5', '0.6', '0.7', '0.8', '0.9']
+SUPPORTED_XSD_VERSION = ['0.3', '0.5', '0.6', '0.7', '0.8', '0.9', '0.10']
 
 
 def _is_sc3ml(path_or_file_object):
@@ -73,7 +73,7 @@ def _is_sc3ml(path_or_file_object):
     return match is not None
 
 
-def validate(path_or_object, version='0.9', verbose=False):
+def validate(path_or_object, version=None, verbose=False):
     """
     Check if the given file is a valid SC3ML file.
 
@@ -87,6 +87,9 @@ def validate(path_or_object, version='0.9', verbose=False):
     :rtype: bool
     :return: `True` if SC3ML file is valid.
     """
+    if version is None:
+        version = SUPPORTED_XSD_VERSION[-1]
+
     if version not in SUPPORTED_XSD_VERSION:
         raise ValueError('%s is not a supported version. Use one of these '
                          'versions: [%s].'

@@ -48,8 +48,6 @@
         <pickID>smi:geonet.org.nz/pick/4965461</pickID>
         <phase>P*</phase>
         <timeUsed>true</timeUsed>
-        <horizontalSlownessUsed>true</horizontalSlownessUsed>
-        <backazimuthUsed>true</backazimuthUsed>
         <weight>0.48</weight>
       </arrival>
     </origin>

@@ -57,11 +57,11 @@
         <longitude>
           <value>142.373</value>
         </longitude>
-        <arrival publicID="smi:ch.ethz.sed/pick/117634#smi_ch.ethz.sed/event/historical/1165/origin/1">
+        <arrival publicID="smi:ch.ethz.sed/pick/117634_smi_ch.ethz.sed/event/historical/1165/origin/1">
           <pickID>smi:ch.ethz.sed/pick/117634</pickID>
           <phase>Pn</phase>
         </arrival>
-        <arrival publicID="smi:geonet.org.nz/pick/4965421#smi_ch.ethz.sed/event/historical/1165/origin/1">
+        <arrival publicID="smi:geonet.org.nz/pick/4965421_smi_ch.ethz.sed/event/historical/1165/origin/1">
           <pickID>smi:geonet.org.nz/pick/4965421</pickID>
           <phase>Pn</phase>
         </arrival>

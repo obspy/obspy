@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  *
- * SC3ML 0.9 to QuakeML 1.2 stylesheet converter
+ * SC3ML 0.10 to QuakeML 1.2 stylesheet converter
  * Author  : Stephan Herrnkind
  * Email   : stephan.herrnkind@gempa.de
  * Version : 2017.342.01
@@ -27,14 +27,14 @@
  * This stylesheet converts a SC3ML to a QuakeML document. It may be invoked
  * e.g. using xalan or xsltproc:
  *
- *   xalan -in sc3ml.xml -xsl sc3ml_0.9__quakeml_1.2.xsl -out quakeml.xml
- *   xsltproc -o quakeml.xml sc3ml_0.9__quakeml_1.2.xsl sc3ml.xml
+ *   xalan -in sc3ml.xml -xsl sc3ml_0.10__quakeml_1.2.xsl -out quakeml.xml
+ *   xsltproc -o quakeml.xml sc3ml_0.10__quakeml_1.2.xsl sc3ml.xml
  *
  * You can also modify the default ID prefix with the reverse DNS name of your
  * institute by setting the ID_PREFIX param:
  *
- *   xalan -param ID_PREFIX "'smi:org.gfz-potsdam.de/geofon/'" -in sc3ml.xml -xsl sc3ml_0.9__quakeml_1.2.xsl -out quakeml.xml
- *   xsltproc -stringparam ID_PREFIX smi:org.gfz-potsdam.de/geofon/ -o quakeml.xml sc3ml_0.9__quakeml_1.2.xsl sc3ml.xml
+ *   xalan -param ID_PREFIX "'smi:org.gfz-potsdam.de/geofon/'" -in sc3ml.xml -xsl sc3ml_0.10__quakeml_1.2.xsl -out quakeml.xml
+ *   xsltproc -stringparam ID_PREFIX smi:org.gfz-potsdam.de/geofon/ -o quakeml.xml sc3ml_0.10__quakeml_1.2.xsl sc3ml.xml
  *
  * ================
  * Transformation
@@ -171,7 +171,7 @@
  ********************************************************************** -->
 <xsl:stylesheet version="1.0"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-        xmlns:scs="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9"
+        xmlns:scs="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10"
         xmlns:qml="http://quakeml.org/xmlns/quakeml/1.0"
         xmlns="http://quakeml.org/xmlns/bed/1.2"
         xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"

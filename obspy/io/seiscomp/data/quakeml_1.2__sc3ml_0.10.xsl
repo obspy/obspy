@@ -2,7 +2,7 @@
 <!--
     ***************************************************************************
 
-QuakeML 1.2 to SC3ML 0.9 stylesheet converter
+QuakeML 1.2 to SC3ML 0.10 stylesheet converter
 
 Author:
     EOST (École et Observatoire des Sciences de la Terre)
@@ -18,8 +18,8 @@ Usage
 This stylesheet converts a QuakeML to a SC3ML document. It may be invoked using
 xalan or xsltproc:
 
-    xalan -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.9.xsl -out sc3ml.xml
-    xsltproc quakeml_1.2__sc3ml_0.9.xsl quakeml.xml -o sc3ml.xml
+    xalan -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.10.xsl -out sc3ml.xml
+    xsltproc quakeml_1.2__sc3ml_0.10.xsl quakeml.xml -o sc3ml.xml
 
 Transformation
 ==============
@@ -68,7 +68,10 @@ The following table lists the mapping of names between both schema:
 Parent              QuakeML name                SC3 name
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 seiscomp            eventParameters             EventParameters
-arrival             timeWeight                  weight
+arrival             [copied from following fields if true] weight
+                    timeUsed                    timeWeight
+                    horizontalSlownessUsed      horizontalSlownessWeight
+                    backazimuthUsed             backazimuthWeight
 arrival             takeoffAngle (RealQuantity) takeOffAngle (double)
 magnitude           mag                         magnitude
 stationMagnitude    mag                         magnitude
@@ -120,7 +123,7 @@ SC3ML. Unnecessary attributes must also be removed.
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
         xmlns:ext="http://exslt.org/common"
-        xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9"
+        xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10"
         xmlns:qml="http://quakeml.org/xmlns/bed/1.2"
         xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"
         exclude-result-prefixes="xsl xs ext q qml">
@@ -128,8 +131,8 @@ SC3ML. Unnecessary attributes must also be removed.
     <xsl:strip-space elements="*"/>
 
     <!-- Define some global variables -->
-    <xsl:variable name="version" select="0.9"/>
-    <xsl:variable name="schema" select="document('sc3ml_0.9.xsd')"/>
+    <xsl:variable name="version" select="'0.10'"/>
+    <xsl:variable name="schema" select="document('sc3ml_0.10.xsd')"/>
 
     <!-- Define key to remove duplicates-->
     <xsl:key name="pick_key" match="qml:pick" use="@publicID"/>
@@ -275,11 +278,28 @@ SC3ML. Unnecessary attributes must also be removed.
     ***************************************************************************
 -->
 
-    <!-- arrival/timeWeight -> arrival/weight -->
+    <!-- Manage arrival/weight -->
     <xsl:template match="qml:arrival/qml:timeWeight">
         <xsl:element name="weight">
             <xsl:apply-templates/>
         </xsl:element>
+        <xsl:element name="timeUsed">true</xsl:element>
+    </xsl:template>
+    <xsl:template match="qml:arrival/qml:horizontalSlownessWeight">
+        <xsl:if test="not(../qml:timeWeight)">
+            <xsl:element name="weight">
+                <xsl:apply-templates/>
+            </xsl:element>
+            <xsl:element name="horizontalSlownessUsed">true</xsl:element>
+        </xsl:if>
+    </xsl:template>
+    <xsl:template match="qml:arrival/qml:backazimuthWeight">
+        <xsl:if test="not(../qml:timeWeight) and not(../qml:horizontalSlownessWeight)">
+            <xsl:element name="weight">
+                <xsl:apply-templates/>
+            </xsl:element>
+            <xsl:element name="backazimuthUsed">true</xsl:element>
+        </xsl:if>
     </xsl:template>
 
     <!-- arrival/takeoffAngle -> arrival/takeOffAngle -->
@@ -355,35 +375,7 @@ SC3ML. Unnecessary attributes must also be removed.
         <xsl:element name="{local-name()}">
             <xsl:variable name="v" select="."/>
             <xsl:choose>
-                <xsl:when test="$v='not reported'">other</xsl:when>
-                <xsl:when test="$v='anthropogenic event'">other</xsl:when>
-                <xsl:when test="$v='collapse'">other</xsl:when>
-                <xsl:when test="$v='cavity collapse'">other</xsl:when>
-                <xsl:when test="$v='accidental explosion'">other</xsl:when>
-                <xsl:when test="$v='controlled explosion'">other</xsl:when>
-                <xsl:when test="$v='experimental explosion'">other</xsl:when>
-                <xsl:when test="$v='industrial explosion'">other</xsl:when>
-                <xsl:when test="$v='mining explosion'">other</xsl:when>
-                <xsl:when test="$v='road cut'">other</xsl:when>
-                <xsl:when test="$v='blasting levee'">other</xsl:when>
-                <xsl:when test="$v='induced or triggered event'">induced earthquake</xsl:when>
-                <xsl:when test="$v='rock burst'">other</xsl:when>
-                <xsl:when test="$v='reservoir loading'">other</xsl:when>
-                <xsl:when test="$v='fluid injection'">other</xsl:when>
-                <xsl:when test="$v='fluid extraction'">other</xsl:when>
-                <xsl:when test="$v='crash'">other</xsl:when>
-                <xsl:when test="$v='train crash'">other</xsl:when>
-                <xsl:when test="$v='boat crash'">other</xsl:when>
                 <xsl:when test="$v='other event'">other</xsl:when>
-                <xsl:when test="$v='atmospheric event'">other</xsl:when>
-                <xsl:when test="$v='sonic blast'">other</xsl:when>
-                <xsl:when test="$v='acoustic noise'">other</xsl:when>
-                <xsl:when test="$v='thunder'">other</xsl:when>
-                <xsl:when test="$v='avalanche'">other</xsl:when>
-                <xsl:when test="$v='hydroacoustic event'">other</xsl:when>
-                <xsl:when test="$v='ice quake'">other</xsl:when>
-                <xsl:when test="$v='slide'">other</xsl:when>
-                <xsl:when test="$v='meteorite'">meteor impact</xsl:when>
                 <xsl:otherwise><xsl:value-of select="$v"/></xsl:otherwise>
             </xsl:choose>
         </xsl:element>
@@ -450,8 +442,6 @@ SC3ML. Unnecessary attributes must also be removed.
     <xsl:template match="qml:magnitude/qml:evaluationMode"/>
     <xsl:template match="qml:originUncertainty/qml:confidenceLevel"/>
     <xsl:template match="qml:arrival/qml:comment"/>
-    <xsl:template match="qml:arrival/qml:horizontalSlownessWeight"/>
-    <xsl:template match="qml:arrival/qml:backazimuthWeight"/>
     <xsl:template match="qml:origin/qml:region"/>
     <xsl:template match="qml:dataUsed/qml:longestPeriod"/>
     <xsl:template match="qml:momentTensor/qml:inversionType"/>

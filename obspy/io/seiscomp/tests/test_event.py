@@ -41,9 +41,9 @@ class EventTestCase(unittest.TestCase):
             os.path.join(io_directory, 'quakeml', 'tests', 'data')
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         self.read_xslt_filename = os.path.join(
-            io_directory, 'seiscomp', 'data', 'sc3ml_0.9__quakeml_1.2.xsl')
+            io_directory, 'seiscomp', 'data', 'sc3ml_0.10__quakeml_1.2.xsl')
         self.write_xslt_filename = os.path.join(
-            io_directory, 'seiscomp', 'data', 'quakeml_1.2__sc3ml_0.9.xsl')
+            io_directory, 'seiscomp', 'data', 'quakeml_1.2__sc3ml_0.10.xsl')
 
     def cmp_read_xslt_file(self, sc3ml_file, quakeml_file, validate=True):
         """
@@ -85,7 +85,7 @@ class EventTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        for version in ['0.5', '0.6', '0.7', '0.8', '0.9']:
+        for version in ['0.5', '0.6', '0.7', '0.8', '0.10']:
             filename = os.path.join(self.path, 'version%s' % version)
             read_events(filename)
 
@@ -94,15 +94,15 @@ class EventTestCase(unittest.TestCase):
             read_events(filename)
 
         expected_message = ("Can't read SC3ML version 0.3, ObsPy can deal "
-                            "with versions [0.5, 0.6, 0.7, 0.8, 0.9].")
+                            "with versions [0.5, 0.6, 0.7, 0.8, 0.9, 0.10].")
         self.assertEqual(e.exception.args[0], expected_message)
 
-        filename = os.path.join(self.path, 'version0.10')
+        filename = os.path.join(self.path, 'version0.11')
         with self.assertRaises(ValueError) as e:
             read_events(filename)
 
-        expected_message = ("Can't read SC3ML version 0.10, ObsPy can deal "
-                            "with versions [0.5, 0.6, 0.7, 0.8, 0.9].")
+        expected_message = ("Can't read SC3ML version 0.11, ObsPy can deal "
+                            "with versions [0.5, 0.6, 0.7, 0.8, 0.9, 0.10].")
         self.assertEqual(e.exception.args[0], expected_message)
 
     def test_read_xslt_event(self):
@@ -132,7 +132,7 @@ class EventTestCase(unittest.TestCase):
 
     def test_read_xslt_arrival(self):
         self.cmp_read_xslt_file('quakeml_1.2_arrival.sc3ml',
-                                'quakeml_1.2_arrival_res.xml')
+                                'quakeml_1.2_arrival.xml')
 
     def test_read_xslt_pick(self):
         self.cmp_read_xslt_file('quakeml_1.2_pick.sc3ml',
@@ -211,6 +211,13 @@ class EventTestCase(unittest.TestCase):
         expected_message = "Not a SC3ML compatible file or string."
         self.assertEqual(e.exception.args[0], expected_message)
 
+    def test_read_field_sc3ml0_10(self):
+        """
+        Test new fields in SC3ML 0.10 which are not in the QuakeML 1.2.
+        """
+        self.cmp_read_xslt_file('field_sc3ml0.10.sc3ml',
+                                'field_sc3ml0.10_res.xml')
+
     def test_write_xslt_event(self):
         self.cmp_write_xslt_file('quakeml_1.2_event.xml',
                                  'quakeml_1.2_event.sc3ml',
@@ -243,8 +250,7 @@ class EventTestCase(unittest.TestCase):
 
     def test_write_xslt_arrival(self):
         self.cmp_write_xslt_file('quakeml_1.2_arrival.xml',
-                                 'quakeml_1.2_arrival.sc3ml',
-                                 path=self.quakeml_path)
+                                 'quakeml_1.2_arrival_res.sc3ml')
 
     def test_write_xslt_pick(self):
         self.cmp_write_xslt_file('quakeml_1.2_pick.xml',
