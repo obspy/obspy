@@ -367,7 +367,7 @@ class Channel(BaseNode):
             unwrap_phase=unwrap_phase, plot_degrees=plot_degrees, show=show,
             outfile=outfile)
 
-    def _get_epoch_plottable_struct_(self):
+    def _get_epoch_plottable_struct(self):
         plot_dict = {}
         name = str(self.code)
         if self.start_date is not None:
@@ -385,7 +385,7 @@ class Channel(BaseNode):
             given filename. (Otherwise it will be displayed in a window)
         :type outfile: str
         """
-        plot_dict = self._get_epoch_plottable_struct_()
+        plot_dict = self._get_epoch_plottable_struct()
         plot_inventory_epochs(plot_dict, outfile)
 
 
