@@ -676,16 +676,16 @@ class Network(BaseNode):
 
         return fig
 
-    def _get_epoch_plottable_struct_(self):
+    def _get_epoch_plottable_struct(self):
         plot_dict = {}
         sub_dict = {}
         name = str(self.code)
         for station in self.stations:
-            eps = station._get_epoch_plottable_struct_()
+            eps = station._get_epoch_plottable_struct()
             for key in eps.keys():
                 if key not in sub_dict.keys():
                     sub_dict[key] = []
-                sub_dict[key]+=eps[key]
+                sub_dict[key] += eps[key]
         if self.start_date is not None:
             start = self.start_date
             if self.end_date is None:
@@ -705,7 +705,7 @@ class Network(BaseNode):
             given filename. (Otherwise it will be displayed in a window)
         :type outfile: str
         """
-        plot_dict = self._get_epoch_plottable_struct_()
+        plot_dict = self._get_epoch_plottable_struct()
         plot_inventory_epochs(plot_dict, outfile)
 
 

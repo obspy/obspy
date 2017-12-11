@@ -879,7 +879,7 @@ def plot_inventory_epochs(plot_dict, outfile=None):
     # dictionary will hold plot component's initial y-value & height
     y_dict = {}
     # need to do tree traversal for getting appropriate y-axis variables
-    _plot_traversal_helper_(plot_dict, y_dict)
+    _plot_traversal_helper(plot_dict, y_dict)
 
     # get height of each inv. component data, color lines according to height
     y_tick_labels = []
@@ -904,7 +904,7 @@ def plot_inventory_epochs(plot_dict, outfile=None):
     xmax = 0
     xmin = float(UTCDateTime.now())
     # add the plottable data to the plot
-    (xmin, xmax) = _plot_builder_(ax, plot_dict, y_dict, xmin, xmax, clr_dict)
+    (xmin, xmax) = _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clr_dict)
     xmax = min(xmax, float(UTCDateTime.now()))
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(y_min, y_max)
@@ -925,7 +925,7 @@ def plot_inventory_epochs(plot_dict, outfile=None):
         plt.show()
 
 
-def _plot_traversal_helper_(plot_dict, y_dict, offset=0, prefix=''):
+def _plot_traversal_helper(plot_dict, y_dict, offset=0, prefix=''):
     # recursively get proper spacing for given structure
     # using the sub-dictionaries for each
     # sorting allows networks and stations to have their data be grouped
@@ -950,15 +950,15 @@ def _plot_traversal_helper_(plot_dict, y_dict, offset=0, prefix=''):
         epoch_list = plot_dict[key]
         for epoch_tuple in epoch_list:
             (start, end, sub_dict) = epoch_tuple
-            offset = _plot_traversal_helper_(sub_dict, y_dict, offset=offset,
-                                             prefix=label)
+            offset = _plot_traversal_helper(sub_dict, y_dict, offset=offset,
+                                            prefix=label)
         if height == 0:
             height = offset - current_offset
         y_dict[label] = (current_offset, height)
     return offset
 
 
-def _plot_builder_(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
+def _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
     # private method to add lines and rectangles to a given plot object
     sorted_keys = sorted(plot_dict.keys())
     for key in sorted_keys:
@@ -979,8 +979,8 @@ def _plot_builder_(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
             xmax = max(xmax, end)
             (y, height) = y_dict[label]
             # get range of subcomponents
-            (temp_xmin, temp_xmax) = _plot_builder_(ax, sub_dict, y_dict, xmin,
-                                                    xmax, clrs, pfx=label)
+            (temp_xmin, temp_xmax) = _plot_builder(ax, sub_dict, y_dict, xmin,
+                                                   xmax, clrs, pfx=label)
             if height == 1:
                 c = clrs[label]
                 ax.plot([start, end], [y, y], color=c)
