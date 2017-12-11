@@ -21,6 +21,7 @@ import textwrap
 import warnings
 
 import obspy
+from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
                                   _read_from_plugin, NamedTemporaryFile,
                                   download_to_file)
@@ -911,8 +912,8 @@ class Inventory(ComparingObject):
             else:
                 end = min(self.end_time, UTCDateTime.now())
         else:
-            start = -1
-            end = -1
+            start = UTCDateTime(0)
+            end = UTCDateTime(0)
         plot_dict[str('')] = [(start, end, 0, sub_dict)]
         return plot_dict
 

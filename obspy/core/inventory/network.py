@@ -18,6 +18,7 @@ import copy
 import fnmatch
 import warnings
 
+from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .station import Station
@@ -693,8 +694,8 @@ class Network(BaseNode):
             else:
                 end = min(self.end_date, UTCDateTime.now())
         else:
-            start = -1
-            end = -1
+            start = UTCDateTime(0)
+            end = UTCDateTime(0)
         # third value is sample_rate, not defined for network objects
         plot_dict[name] = [(start, end, 0, sub_dict)]
         return plot_dict
