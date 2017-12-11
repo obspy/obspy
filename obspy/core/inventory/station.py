@@ -523,7 +523,7 @@ class Station(BaseNode):
             end = UTCDateTime.now()
         else:
             end = min(self.end_date, UTCDateTime.now())
-        plot_dict[name] = [(start, end, sub_dict)]
+        plot_dict[name] = [(start, end, 0, sub_dict)]
         return plot_dict
 
     def plot_epochs(self, outfile=None):

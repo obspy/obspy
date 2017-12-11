@@ -913,7 +913,7 @@ class Inventory(ComparingObject):
         else:
             start = -1
             end = -1
-        plot_dict[str('')] = [(start, end, sub_dict)]
+        plot_dict[str('')] = [(start, end, 0, sub_dict)]
         return plot_dict
 
     def plot_epochs(self, outfile=None):

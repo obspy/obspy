@@ -695,7 +695,8 @@ class Network(BaseNode):
         else:
             start = -1
             end = -1
-        plot_dict[name] = [(start, end, sub_dict)]
+        # third value is sample_rate, not defined for network objects
+        plot_dict[name] = [(start, end, 0, sub_dict)]
         return plot_dict
 
     def plot_epochs(self, outfile=None):
