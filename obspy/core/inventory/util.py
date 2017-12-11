@@ -20,10 +20,11 @@ from numpy import linspace
 from matplotlib.pyplot import cm
 from textwrap import TextWrapper
 
-from obspy import UTCDateTime
+from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import (FloatWithUncertaintiesAndUnit,
                                          FloatWithUncertaintiesFixedUnit)
+from obspy.imaging.util import _set_xaxis_obspy_dates
 
 
 class BaseNode(ComparingObject):
@@ -900,23 +901,19 @@ def plot_inventory_epochs(plot_dict, outfile=None):
 
     plt.figure()
     ax = plt.gca()
+    now = UTCDateTime.now().matplotlib_date
     # get the plot ranges
     xmax = 0
-    xmin = float(UTCDateTime.now())
+    xmin = now
     # add the plottable data to the plot
     (xmin, xmax) = _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clr_dict)
-    xmax = min(xmax, float(UTCDateTime.now()))
+    xmax = min(xmax, now)
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(y_min, y_max)
 
-    # label the x-axis according to given time data
-    x_ticks = ax.get_xticks()
-    x_tick_labels = []
-    for tick in x_ticks:
-        label = str(UTCDateTime(tick).date)
-        x_tick_labels.append(label)
+    # set yticks according to plot dictionary, xaxis according to date objects
     plt.yticks(y_ticks, y_tick_labels)
-    plt.xticks(x_ticks, x_tick_labels, rotation='45')
+    _set_xaxis_obspy_dates(ax)
     plt.grid()
 
     if outfile:
@@ -972,9 +969,9 @@ def _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
         epoch_list = plot_dict[key]
         for epoch_tuple in epoch_list:
             (start_date, end_date, samp_rate, sub_dict) = epoch_tuple
-            start = float(start_date)
-            end = float(end_date)
-            if start >= 0:
+            start = start_date.matplotlib_date
+            end = end_date.matplotlib_date
+            if start != end:
                 xmin = min(xmin, start)
             xmax = max(xmax, end)
             (y, height) = y_dict[label]
@@ -982,15 +979,15 @@ def _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
             (temp_xmin, temp_xmax) = _plot_builder(ax, sub_dict, y_dict, xmin,
                                                    xmax, clrs, pfx=label)
             if height == 1:
-                line_len = 5
-                if samp_rate < 100 && samp_rate > 0:
+                line_len = 1
+                if samp_rate < 100 and samp_rate > 0:
                     line_len *= (100 / samp_rate)
-                dash = [line_len, 5]
+                dash = [line_len, 2]
                 c = clrs[label]
                 l, = ax.plot([start, end], [y, y], '--', color=c, lw=3)
                 l.set_dashes(dash)
                 # plt.gca().add_line(line)
-            elif not (start_date == -1 and end_date == -1):
+            elif not (start_date == end_date):
                 # if network epoch not defined, don't bother drawing it
                 rect = plt.Rectangle((start, y), end-start, height, fill=True,
                                      lw=2, alpha=0.2, label=label)

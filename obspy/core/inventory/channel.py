@@ -14,7 +14,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import python_2_unicode_compatible
 
-from obspy import UTCDateTime
+from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.obspy_types import FloatWithUncertainties
 from . import BaseNode
 from .util import (Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude,

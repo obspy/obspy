@@ -20,7 +20,7 @@ import warnings
 
 import numpy as np
 
-from obspy import UTCDateTime
+from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
