@@ -375,7 +375,7 @@ class Channel(BaseNode):
                 end = UTCDateTime.now()
             else:
                 end = min(self.end_date, UTCDateTime.now())
-            plot_dict[name] = [(self.start_date, end, {})]
+            plot_dict[name] = [(self.start_date, end, self.sample_rate, {})]
         return plot_dict
 
     def plot_epochs(self, outfile=None):

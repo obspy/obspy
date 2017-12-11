@@ -949,7 +949,7 @@ def _plot_traversal_helper(plot_dict, y_dict, offset=0, prefix=''):
             (current_offset, height) = y_dict.get(label)
         epoch_list = plot_dict[key]
         for epoch_tuple in epoch_list:
-            (start, end, sub_dict) = epoch_tuple
+            (start, end, _, sub_dict) = epoch_tuple
             offset = _plot_traversal_helper(sub_dict, y_dict, offset=offset,
                                             prefix=label)
         if height == 0:
@@ -971,7 +971,7 @@ def _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
         label += key
         epoch_list = plot_dict[key]
         for epoch_tuple in epoch_list:
-            (start_date, end_date, sub_dict) = epoch_tuple
+            (start_date, end_date, samp_rate, sub_dict) = epoch_tuple
             start = float(start_date)
             end = float(end_date)
             if start >= 0:
@@ -982,13 +982,18 @@ def _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
             (temp_xmin, temp_xmax) = _plot_builder(ax, sub_dict, y_dict, xmin,
                                                    xmax, clrs, pfx=label)
             if height == 1:
+                line_len = 5
+                if samp_rate < 100 && samp_rate > 0:
+                    line_len *= (100 / samp_rate)
+                dash = [line_len, 5]
                 c = clrs[label]
-                ax.plot([start, end], [y, y], color=c)
+                l, = ax.plot([start, end], [y, y], '--', color=c, lw=3)
+                l.set_dashes(dash)
                 # plt.gca().add_line(line)
             elif not (start_date == -1 and end_date == -1):
                 # if network epoch not defined, don't bother drawing it
-                rect = plt.Rectangle((start, y), end-start, height, fill=False,
-                                     lw=1.25, label=label)
+                rect = plt.Rectangle((start, y), end-start, height, fill=True,
+                                     lw=2, alpha=0.2, label=label)
                 ax.add_patch(rect)
             xmin = min(xmin, temp_xmin)
             xmax = max(xmax, temp_xmax)
