@@ -984,8 +984,9 @@ def _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
                     line_len *= (100 / samp_rate)
                 dash = [line_len, 2]
                 c = clrs[label]
-                l, = ax.plot([start, end], [y, y], '--', color=c, lw=3)
+                l, = ax.plot([start, end], [y, y], '--', lw=3, color=c)
                 l.set_dashes(dash)
+                l.set_marker('o')
                 # plt.gca().add_line(line)
             elif not (start_date == end_date):
                 # if network epoch not defined, don't bother drawing it
