@@ -1012,7 +1012,7 @@ def _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
             elif not (start_date == end_date):
                 # if network epoch not defined, don't bother drawing it
                 rect = plt.Rectangle((start, y), end-start, height, fill=True,
-                                     lw=2, alpha=0.2, label=label)
+                                     lw=2, color='k', alpha=0.2, label=label)
                 ax.add_patch(rect)
             xmin = min(xmin, temp_xmin)
             xmax = max(xmax, temp_xmax)
