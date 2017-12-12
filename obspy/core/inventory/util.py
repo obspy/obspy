@@ -863,7 +863,7 @@ def _seed_id_keyfunction(x):
     return x
 
 
-def plot_inventory_epochs(plot_dict, outfile=None):
+def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
     """
     Creates a plot from inventory object's epoch plottable structure.
     :param plot_dict: Dictionary of inventory epochs. A structure used and
@@ -888,16 +888,37 @@ def plot_inventory_epochs(plot_dict, outfile=None):
     y_min = float('inf')
     y_max = 0
     clr_dict = {}
-    for key in y_dict.keys():
+    clr_grps = []
+    grp_list = []
+    add_last = False
+    for key in sorted(y_dict.keys()):
         (tick, height) = y_dict[key]
         if height == 1:
             y_tick_labels.append(key)
             y_ticks.append(tick)
             y_min = min(tick-1, y_min)
             y_max = max(tick+height, y_max)
-    clrs = iter(cm.Dark2(linspace(0, 1, len(y_tick_labels))))
+            grp_list.append(key)
+            add_last = False
+        else:
+            if len(grp_list) > 0:
+                clr_grps.append(grp_list)
+            grp_list = []
+            add_last = True
+    if len(grp_list) > 0 and not add_last:
+        clr_grps.append(grp_list)
+    print(clr_grps)
+    """clrs = iter(cm.Dark2(linspace(0, 1, len(y_tick_labels))))
     for label in sorted(y_tick_labels):
-        clr_dict[label] = next(clrs)
+        clr_dict[label] = next(clrs)"""
+
+    if colorspace is None:
+        colorspace = cm.Dark2
+    clrs = iter(colorspace(linspace(0, 1, len(clr_grps))))
+    for grp in clr_grps:
+        c = next(clrs)
+        for y in grp:
+            clr_dict[y] = c
 
     plt.figure()
     ax = plt.gca()
