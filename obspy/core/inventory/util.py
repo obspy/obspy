@@ -889,8 +889,6 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
     y_max = 0
     clr_dict = {}
     clr_grps = []
-    grp_list = []
-    add_last = False
     for key in sorted(y_dict.keys()):
         (tick, height) = y_dict[key]
         if height == 1:
@@ -898,15 +896,10 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
             y_ticks.append(tick)
             y_min = min(tick-1, y_min)
             y_max = max(tick+height, y_max)
-            grp_list.append(key)
-            add_last = False
-        else:
-            if len(grp_list) > 0:
-                clr_grps.append(grp_list)
-            grp_list = []
-            add_last = True
-    if len(grp_list) > 0 and not add_last:
-        clr_grps.append(grp_list)
+        elif '.' in key:
+            # only color groupings one level above base (i.e., channel) level
+            clr_grps.append(key)
+
     print(clr_grps)
     """clrs = iter(cm.Dark2(linspace(0, 1, len(y_tick_labels))))
     for label in sorted(y_tick_labels):
@@ -917,11 +910,14 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
     clrs = iter(colorspace(linspace(0, 1, len(clr_grps))))
     for grp in clr_grps:
         c = next(clrs)
-        for y in grp:
-            clr_dict[y] = c
+        clr_dict[grp] = c
 
     plt.figure()
     ax = plt.gca()
+    for label in ax.get_yticklabels():
+        f = label.get_fontproperties()
+        f.set_family('monospace')
+    #ax.get_xticklabels().set_family('monospace')
     now = UTCDateTime.now().matplotlib_date
     # get the plot ranges
     xmax = 0
@@ -935,7 +931,8 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
     # set yticks according to plot dictionary, xaxis according to date objects
     plt.yticks(y_ticks, y_tick_labels)
     _set_xaxis_obspy_dates(ax)
-    plt.grid()
+    plt.tight_layout()
+    # plt.grid()
 
     if outfile:
         plt.savefig(outfile)
@@ -1004,15 +1001,16 @@ def _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
                 if samp_rate < 100 and samp_rate > 0:
                     line_len *= (100 / samp_rate)
                 dash = [line_len, 2]
-                c = clrs[label]
-                l, = ax.plot([start, end], [y, y], '--', lw=3, color=c)
+                # c = clrs[label]
+                l, = ax.plot([start, end], [y, y], '--', lw=3, color='k')
                 l.set_dashes(dash)
                 l.set_marker('o')
                 # plt.gca().add_line(line)
-            elif not (start_date == end_date):
+            elif label in clrs.keys() and not (start_date == end_date):
+                c = clrs[label]
                 # if network epoch not defined, don't bother drawing it
                 rect = plt.Rectangle((start, y), end-start, height, fill=True,
-                                     lw=2, color='k', alpha=0.2, label=label)
+                                     lw=2, color=c, alpha=0.2, label=label)
                 ax.add_patch(rect)
             xmin = min(xmin, temp_xmin)
             xmax = max(xmax, temp_xmax)
