@@ -61,6 +61,39 @@ class EventTestCase(unittest.TestCase):
             filepath_cmp = os.path.join(self.path, quakeml_file)
             self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
 
+    def cmp_read_xslt_file_old_version(self, sc3ml_file, quakeml_file, version,
+                                       validate=True):
+        """
+        Change the version of the sc3ml_file and check if the generated file
+        is the same than the QuakeML file.
+        """
+        xslt_filename = self.read_xslt_filename.replace(
+            'sc3ml_0.10__quakeml_1.2.xsl',
+            'sc3ml_%s__quakeml_1.2.xsl' % version,
+        )
+        transform = etree.XSLT(etree.parse(xslt_filename))
+        filename = os.path.join(self.path, sc3ml_file)
+
+        with open(filename, 'r') as f:
+            data = f.read()
+            # Remove encoding declaration otherwise lxml will not be
+            # able to read the file.
+            data = data.replace('<?xml version="1.0" encoding="UTF-8"?>\n', '')
+            data = data.replace(
+                'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10',
+                'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/%s'
+                % version)
+            sc3ml_doc = etree.fromstring(data)
+
+        quakeml_doc = transform(sc3ml_doc)
+
+        with NamedTemporaryFile() as tf:
+            tf.write(quakeml_doc)
+            if validate:
+                self.assertTrue(_validate_quakeml(tf.name))
+            filepath_cmp = os.path.join(self.path, quakeml_file)
+            self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
+
     def cmp_write_xslt_file(self, quakeml_file, sc3ml_file, validate=True,
                             path=None):
         """
@@ -217,6 +250,46 @@ class EventTestCase(unittest.TestCase):
         """
         self.cmp_read_xslt_file('field_sc3ml0.10.sc3ml',
                                 'field_sc3ml0.10_res.xml')
+
+    def test_read_0_5_file(self):
+        """
+        Test reading a file in version 0.5.
+        """
+        self.cmp_read_xslt_file_old_version('qml-example-1.2-RC3.sc3ml',
+                                            'qml-example-1.2-RC3.xml',
+                                            '0.5')
+
+    def test_read_0_6_file(self):
+        """
+        Test reading a file in version 0.6.
+        """
+        self.cmp_read_xslt_file_old_version('qml-example-1.2-RC3.sc3ml',
+                                            'qml-example-1.2-RC3.xml',
+                                            '0.6')
+
+    def test_read_0_7_file(self):
+        """
+        Test reading a file in version 0.7.
+        """
+        self.cmp_read_xslt_file_old_version('qml-example-1.2-RC3.sc3ml',
+                                            'qml-example-1.2-RC3.xml',
+                                            '0.7')
+
+    def test_read_0_8_file(self):
+        """
+        Test reading a file in version 0.8.
+        """
+        self.cmp_read_xslt_file_old_version('qml-example-1.2-RC3.sc3ml',
+                                            'qml-example-1.2-RC3.xml',
+                                            '0.8')
+
+    def test_read_0_9_file(self):
+        """
+        Test reading a file in version 0.9.
+        """
+        self.cmp_read_xslt_file_old_version('qml-example-1.2-RC3.sc3ml',
+                                            'qml-example-1.2-RC3.xml',
+                                            '0.9')
 
     def test_write_xslt_event(self):
         self.cmp_write_xslt_file('quakeml_1.2_event.xml',
