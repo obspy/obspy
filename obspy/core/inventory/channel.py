@@ -369,12 +369,12 @@ class Channel(BaseNode):
 
     def _get_epoch_plottable_struct(self):
         plot_dict = {}
-        name = str(self.code)
+        name = str(self.location_code) + "." + str(self.code)
         if self.start_date is not None:
             if self.end_date is None:
                 end = UTCDateTime.now()
             else:
-                end = min(self.end_date, UTCDateTime.now())
+                end = self.end_date
             plot_dict[name] = [(self.start_date, end, self.sample_rate, {})]
         return plot_dict
 

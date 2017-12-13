@@ -910,7 +910,7 @@ class Inventory(ComparingObject):
             if self.end_time is None:
                 end = UTCDateTime.now()
             else:
-                end = min(self.end_time, UTCDateTime.now())
+                end = self.end_time
         else:
             start = UTCDateTime(0)
             end = UTCDateTime(0)

@@ -522,7 +522,7 @@ class Station(BaseNode):
         if self.end_date is None:
             end = UTCDateTime.now()
         else:
-            end = min(self.end_date, UTCDateTime.now())
+            end = self.end_date
         plot_dict[name] = [(start, end, 0, sub_dict)]
         return plot_dict
 

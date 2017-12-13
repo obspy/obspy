@@ -692,7 +692,7 @@ class Network(BaseNode):
             if self.end_date is None:
                 end = UTCDateTime.now()
             else:
-                end = min(self.end_date, UTCDateTime.now())
+                end = self.end_date
         else:
             start = UTCDateTime(0)
             end = UTCDateTime(0)
