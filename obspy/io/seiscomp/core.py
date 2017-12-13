@@ -87,20 +87,6 @@ def validate(path_or_object, version=None, verbose=False):
     :rtype: bool
     :return: `True` if SC3ML file is valid.
     """
-    if version is None:
-        version = SUPPORTED_XSD_VERSION[-1]
-
-    if version not in SUPPORTED_XSD_VERSION:
-        raise ValueError('%s is not a supported version. Use one of these '
-                         'versions: [%s].'
-                         % (version, ', '.join(SUPPORTED_XSD_VERSION)))
-
-    # Get the schema location.
-    xsd_filename = 'sc3ml_%s.xsd' % version
-    schema_location = os.path.join(os.path.dirname(__file__), 'data',
-                                   xsd_filename)
-    xmlschema = etree.XMLSchema(etree.parse(schema_location))
-
     if hasattr(path_or_object, "tell") and hasattr(path_or_object, "seek"):
         current_position = path_or_object.tell()
 
@@ -117,6 +103,27 @@ def validate(path_or_object, version=None, verbose=False):
                 path_or_object.seek(current_position, 0)
             except Exception:
                 pass
+
+    # Read version number from file
+    if version is None:
+        match = re.match(
+            r'{http://geofon\.gfz-potsdam\.de/ns/seiscomp3-schema/([-+]?'
+            r'[0-9]*\.?[0-9]+)}', xmldoc.tag)
+        try:
+            version = match.group(1)
+        except AttributeError:
+            raise ValueError("Not a SC3ML compatible file or string.")
+
+    if version not in SUPPORTED_XSD_VERSION:
+        raise ValueError('%s is not a supported version. Use one of these '
+                         'versions: [%s].'
+                         % (version, ', '.join(SUPPORTED_XSD_VERSION)))
+
+    # Get the schema location.
+    xsd_filename = 'sc3ml_%s.xsd' % version
+    schema_location = os.path.join(os.path.dirname(__file__), 'data',
+                                   xsd_filename)
+    xmlschema = etree.XMLSchema(etree.parse(schema_location))
 
     valid = xmlschema.validate(xmldoc)
 
