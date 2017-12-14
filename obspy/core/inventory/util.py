@@ -17,6 +17,7 @@ import copy
 import re
 import matplotlib.pyplot as plt
 from numpy import linspace
+from matplotlib import transforms as tf
 from matplotlib.pyplot import cm
 from textwrap import TextWrapper
 
@@ -900,7 +901,14 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
             # only color groupings one level above base (i.e., channel) level
             clr_grps.append(key)
 
-    print(clr_grps)
+    # initialize plot parameters
+    fig = plt.figure()
+    ax = plt.gca()
+    # set yticks according to plot dictionary, xaxis according to date objects
+    plt.yticks(y_ticks, y_tick_labels)
+    _set_xaxis_obspy_dates(ax)
+    plt.tight_layout()
+
     """clrs = iter(cm.Dark2(linspace(0, 1, len(y_tick_labels))))
     for label in sorted(y_tick_labels):
         clr_dict[label] = next(clrs)"""
@@ -912,8 +920,6 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
         c = next(clrs)
         clr_dict[grp] = c
 
-    plt.figure()
-    ax = plt.gca()
     for label in ax.get_yticklabels():
         f = label.get_fontproperties()
         f.set_family('monospace')
@@ -923,15 +929,11 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
     xmax = 0
     xmin = now
     # add the plottable data to the plot
-    (xmin, xmax) = _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clr_dict)
+    (xmin, xmax) = _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clr_dict)
     xmax = min(xmax, now)
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(y_min, y_max)
 
-    # set yticks according to plot dictionary, xaxis according to date objects
-    plt.yticks(y_ticks, y_tick_labels)
-    _set_xaxis_obspy_dates(ax)
-    plt.tight_layout()
     # plt.grid()
 
     if outfile:
@@ -973,8 +975,16 @@ def _plot_traversal_helper(plot_dict, y_dict, offset=0, prefix=''):
     return offset
 
 
-def _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
+def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
     # private method to add lines and rectangles to a given plot object
+
+    # offsets to put the line markers' tips at ends of lines
+    ms = 10 # size of the line marker caps (arrows)
+    mark_align_left = tf.offset_copy(ax.transData, fig,
+                                     ms/2, units='points')
+    mark_align_right = tf.offset_copy(ax.transData, fig,
+                                      -ms/2, units='points')
+
     sorted_keys = sorted(plot_dict.keys())
     for key in sorted_keys:
         # get the number of total sub-components
@@ -994,7 +1004,7 @@ def _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
             xmax = max(xmax, end)
             (y, height) = y_dict[label]
             # get range of subcomponents
-            (temp_xmin, temp_xmax) = _plot_builder(ax, sub_dict, y_dict, xmin,
+            (temp_xmin, temp_xmax) = _plot_builder(fig, ax, sub_dict, y_dict, xmin,
                                                    xmax, clrs, pfx=label)
             if height == 1:
                 line_len = 1
@@ -1004,7 +1014,12 @@ def _plot_builder(ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
                 # c = clrs[label]
                 l, = ax.plot([start, end], [y, y], '--', lw=3, color='k')
                 l.set_dashes(dash)
-                l.set_marker('o')
+                # left-facing arrow at the start of the epoch
+                ax.plot(start, y, marker='<', markersize=ms, color='k',
+                        linestyle='none', transform=mark_align_left)
+                # right-facing arrow at the end of the epoch
+                ax.plot(end, y, marker='>', markersize=ms, color='k',
+                        linestyle='none', transform=mark_align_right)
                 # plt.gca().add_line(line)
             elif label in clrs.keys() and not (start_date == end_date):
                 c = clrs[label]
