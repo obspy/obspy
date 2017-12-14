@@ -923,13 +923,13 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
     for label in ax.get_yticklabels():
         f = label.get_fontproperties()
         f.set_family('monospace')
-    #ax.get_xticklabels().set_family('monospace')
     now = UTCDateTime.now().matplotlib_date
     # get the plot ranges
     xmax = 0
     xmin = now
     # add the plottable data to the plot
-    (xmin, xmax) = _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clr_dict)
+    (xmin, xmax) = _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax,
+                                 clr_dict)
     xmax = min(xmax, now)
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(y_min, y_max)
@@ -979,7 +979,7 @@ def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
     # private method to add lines and rectangles to a given plot object
 
     # offsets to put the line markers' tips at ends of lines
-    ms = 10 # size of the line marker caps (arrows)
+    ms = 10  # size of the line marker caps (arrows)
     mark_align_left = tf.offset_copy(ax.transData, fig,
                                      ms/2, units='points')
     mark_align_right = tf.offset_copy(ax.transData, fig,
@@ -1004,8 +1004,8 @@ def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
             xmax = max(xmax, end)
             (y, height) = y_dict[label]
             # get range of subcomponents
-            (temp_xmin, temp_xmax) = _plot_builder(fig, ax, sub_dict, y_dict, xmin,
-                                                   xmax, clrs, pfx=label)
+            (temp_xmin, temp_xmax) = _plot_builder(fig, ax, sub_dict, y_dict,
+                                                   xmin, xmax, clrs, pfx=label)
             if height == 1:
                 line_len = 1
                 if samp_rate < 100 and samp_rate > 0:
@@ -1015,10 +1015,10 @@ def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
                 l, = ax.plot([start, end], [y, y], '--', lw=3, color='k')
                 l.set_dashes(dash)
                 # left-facing arrow at the start of the epoch
-                ax.plot(start, y, marker='<', markersize=ms, color='k',
+                ax.plot(start, y, marker='>', markersize=ms, color='k',
                         linestyle='none', transform=mark_align_left)
                 # right-facing arrow at the end of the epoch
-                ax.plot(end, y, marker='>', markersize=ms, color='k',
+                ax.plot(end, y, marker='<', markersize=ms, color='k',
                         linestyle='none', transform=mark_align_right)
                 # plt.gca().add_line(line)
             elif label in clrs.keys() and not (start_date == end_date):
