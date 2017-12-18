@@ -30,7 +30,8 @@ from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .network import Network
-from .util import _unified_content_strings, _textwrap, plot_inventory_epochs
+from .util import (_unified_content_strings, _textwrap, plot_inventory_epochs,
+                   _merge_plottable_structs)
 
 # Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
@@ -901,10 +902,7 @@ class Inventory(ComparingObject):
         sub_dict = {}
         for network in set(self.networks):
             eps = network._get_epoch_plottable_struct()
-            for key in eps.keys():
-                if key not in sub_dict.keys():
-                    sub_dict[key] = []
-                sub_dict[key] += eps[key]
+            sub_dict = _merge_plottable_structs(sub_dict, eps)
         if hasattr(self, 'start_date'):
             start = self.start_date
             if self.end_time is None:
@@ -914,18 +912,25 @@ class Inventory(ComparingObject):
         else:
             start = UTCDateTime(0)
             end = UTCDateTime(0)
-        plot_dict[str('')] = [(start, end, 0, sub_dict)]
+        time_tuple = (start, end)
+        plot_dict[str('')] = ([time_tuple], 0, sub_dict)
         return plot_dict
 
-    def plot_epochs(self, outfile=None, colormap=None):
+    def plot_epochs(self, outfile=None, colormap=None, combine=True):
         """
         Plot the epochs of this given inventory object.
         :param outfile: If included, the plot will be saved to a file with the
             given filename. (Otherwise it will be displayed in a window)
         :type outfile: str
+        :param colormap: If this parameter is included, the plot will use the
+            given colorspace for inventory plotting
+        :type colormap: matplotlib.colors.LinearSegmentedColormap
+        :param combine: If set as true, channels with matching epochs will be
+            merged onto the same y-axis values
+        :type combine: boolean
         """
         plot_dict = self._get_epoch_plottable_struct()
-        plot_inventory_epochs(plot_dict, outfile, colormap)
+        plot_inventory_epochs(plot_dict, outfile, colormap, combine)
 
 
 if __name__ == '__main__':

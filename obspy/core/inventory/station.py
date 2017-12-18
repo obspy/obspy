@@ -25,7 +25,7 @@ from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
                    Longitude, _unified_content_strings, _textwrap,
-                   plot_inventory_epochs)
+                   plot_inventory_epochs, _merge_plottable_structs)
 
 
 @python_2_unicode_compatible
@@ -514,27 +514,31 @@ class Station(BaseNode):
         name = str(self.code)
         for channel in self.channels:
             eps = channel._get_epoch_plottable_struct()
-            for key in eps.keys():
-                if key not in sub_dict.keys():
-                    sub_dict[key] = []
-                sub_dict[key] = eps[key]
+            sub_dict = _merge_plottable_structs(sub_dict, eps)
         start = self.start_date
         if self.end_date is None:
             end = UTCDateTime.now()
         else:
             end = self.end_date
-        plot_dict[name] = [(start, end, 0, sub_dict)]
+        time_tuple = (start, end)
+        plot_dict[name] = ([time_tuple], 0, sub_dict)
         return plot_dict
 
-    def plot_epochs(self, outfile=None, colormap=None):
+    def plot_epochs(self, outfile=None, colormap=None, combine=True):
         """
         Plot the epochs of this given inventory object.
         :param outfile: If included, the plot will be saved to a file with the
             given filename. (Otherwise it will be displayed in a window)
         :type outfile: str
+        :param colormap: If this parameter is included, the plot will use the
+            given colorspace for inventory plotting
+        :type colormap: matplotlib.colors.LinearSegmentedColormap
+        :param combine: If set as true, channels with matching epochs will be
+            merged onto the same y-axis values
+        :type combine: boolean
         """
         plot_dict = self._get_epoch_plottable_struct()
-        plot_inventory_epochs(plot_dict, outfile, colormap)
+        plot_inventory_epochs(plot_dict, outfile, colormap, combine)
 
 
 if __name__ == '__main__':
