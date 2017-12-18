@@ -892,7 +892,6 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None,
     mg_dict = {}
     if combine:
         mg_dict = _combine_same_epochs(plot_dict)
-        print(mg_dict.keys())
     # need to do tree traversal for getting appropriate y-axis variables
     _plot_traversal_helper(plot_dict, y_dict, mg_dict)
 
@@ -928,7 +927,6 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None,
 
     if colorspace is None:
         colorspace = cm.Dark2
-    print(type(colorspace))
     clrs = iter(colorspace(linspace(0, 1, len(clr_grps))))
     for grp in clr_grps:
         c = next(clrs)
@@ -1038,7 +1036,6 @@ def _plot_traversal_helper(plot_dict, y_dict, mg_dict, offset=0, prefix=''):
             y_label = label
         if y_label not in y_dict.keys():
             offset += 1
-            print(y_label, offset)
         else:
             continue
             # print("PLOTTED?", y_label)
