@@ -375,18 +375,25 @@ class Channel(BaseNode):
                 end = UTCDateTime.now()
             else:
                 end = self.end_date
-            plot_dict[name] = [(self.start_date, end, self.sample_rate, {})]
+            time_tuple = (self.start_date, end)
+            plot_dict[name] = ([time_tuple], self.sample_rate, {})
         return plot_dict
 
-    def plot_epochs(self, outfile=None, colormap=None):
+    def plot_epochs(self, outfile=None, colormap=None, combine=True):
         """
         Plot the epochs of this given inventory object.
         :param outfile: If included, the plot will be saved to a file with the
             given filename. (Otherwise it will be displayed in a window)
         :type outfile: str
+        :param colormap: If this parameter is included, the plot will use the
+            given colorspace for inventory plotting
+        :type colormap: matplotlib.colors.LinearSegmentedColormap
+        :param combine: If set as true, channels with matching epochs will be
+            merged onto the same y-axis values
+        :type combine: boolean
         """
         plot_dict = self._get_epoch_plottable_struct()
-        plot_inventory_epochs(plot_dict, outfile, colormap)
+        plot_inventory_epochs(plot_dict, outfile, colormap, combine)
 
 
 if __name__ == '__main__':

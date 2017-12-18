@@ -17,6 +17,7 @@ import copy
 import re
 import matplotlib.pyplot as plt
 from numpy import linspace
+from os.path import commonprefix
 from matplotlib import transforms as tf
 from matplotlib.pyplot import cm
 from textwrap import TextWrapper
@@ -864,7 +865,8 @@ def _seed_id_keyfunction(x):
     return x
 
 
-def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
+def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None,
+                          combine=True):
     """
     Creates a plot from inventory object's epoch plottable structure.
     :param plot_dict: Dictionary of inventory epochs. A structure used and
@@ -876,12 +878,23 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
     :param outfile: If this parameter is included, the plot will be saved to
         a file with the given filename.
     :type outfile: str
+    :param colorspace: If this parameter is included, the plot will use the
+        given colorspace for inventory plotting
+    :type colorspace: matplotlib.colors.LinearSegmentedColormap
+    :param combine: If set as true, channels with matching epochs will be set
+        to use the same y-axis values
+    :type combine: boolean
     """
 
-    # dictionary will hold plot component's initial y-value & height
+    # y dictionary will hold plot component's initial y-value & height
     y_dict = {}
+    # used to combine y-axis values for data with matching epochs
+    mg_dict = {}
+    if combine:
+        mg_dict = _combine_same_epochs(plot_dict)
+        print(mg_dict.keys())
     # need to do tree traversal for getting appropriate y-axis variables
-    _plot_traversal_helper(plot_dict, y_dict)
+    _plot_traversal_helper(plot_dict, y_dict, mg_dict)
 
     # get height of each inv. component data, color lines according to height
     y_tick_labels = []
@@ -915,11 +928,11 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
 
     if colorspace is None:
         colorspace = cm.Dark2
+    print(type(colorspace))
     clrs = iter(colorspace(linspace(0, 1, len(clr_grps))))
     for grp in clr_grps:
         c = next(clrs)
         clr_dict[grp] = c
-
     for label in ax.get_yticklabels():
         f = label.get_fontproperties()
         f.set_family('monospace')
@@ -929,7 +942,7 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
     xmin = now
     # add the plottable data to the plot
     (xmin, xmax) = _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax,
-                                 clr_dict)
+                                 clr_dict, mg_dict)
     xmax = min(xmax, now)
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(y_min, y_max)
@@ -942,7 +955,66 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None):
         plt.show()
 
 
-def _plot_traversal_helper(plot_dict, y_dict, offset=0, prefix=''):
+def _combine_same_epochs(plot_dict, prefix=''):
+    merge_dict = {}
+    epochs_dict = {}
+    for key in plot_dict.keys():
+        label = ''
+        if len(prefix) > 0:
+            label = prefix + '.'
+        label += str(key)
+        # only combine at the station level
+        (epochs, samp, sub_dict) = plot_dict[key]
+        if len(sub_dict) > 0:
+            partial_merge = _combine_same_epochs(sub_dict, prefix=label)
+            # multiple stations should have different names
+            merge_dict.update(partial_merge)
+        else:
+            ep_tup = []
+            for (start, end) in sorted(epochs):
+                ep_tup + [start.datetime, end.datetime]
+            ep_tup = tuple(ep_tup)
+            if (ep_tup, samp) in epochs_dict.keys():
+                epochs_dict[(ep_tup, samp)].append(label)
+            else:
+                epochs_dict[(ep_tup, samp)] = [label]
+    for key in epochs_dict.keys():
+        merged = sorted(epochs_dict[key])
+        if len(merged) > 1:
+            match = str(commonprefix(merged))
+            start = len(match)
+            match += '['
+            for name in merged:
+                end = len(name)
+                # print(str(name[start:end]))
+                match += str(name[start:end])
+            match += ']'
+            for name in merged:
+                merge_dict[name] = match
+    return merge_dict
+
+
+def _merge_plottable_structs(eps1, eps2):
+    merged_dict = eps1
+    for key in eps2.keys():
+        if key not in merged_dict.keys():
+            merged_dict[key] = eps2[key]
+        else:
+            (epochs_1, samp_rate_1, sub_dict_1) = eps1[key]
+            (epochs_2, samp_rate_2, sub_dict_2) = eps2[key]
+            if samp_rate_1 == samp_rate_2:
+                epochs = epochs_1 + epochs_2
+                sub_dict = _merge_plottable_structs(sub_dict_1, sub_dict_2)
+                merged_dict[key] = (epochs, samp_rate_1, sub_dict)
+            else:
+                key_name_1 = key + "-" + samp_rate_1
+                key_name_2 = key + "-" + samp_rate_2
+                merged_dict[key_name_1] = merged_dict.pop(key)
+                merged_dict[key_name_2] = (epochs_2, samp_rate_2, sub_dict_2)
+    return merged_dict
+
+
+def _plot_traversal_helper(plot_dict, y_dict, mg_dict, offset=0, prefix=''):
     # recursively get proper spacing for given structure
     # using the sub-dictionaries for each
     # sorting allows networks and stations to have their data be grouped
@@ -960,22 +1032,27 @@ def _plot_traversal_helper(plot_dict, y_dict, offset=0, prefix=''):
         # and then prevent collisions on y-axis values
         current_offset = offset  # y-axis value to put the current key
         height = 0
-        if label not in y_dict.keys():
-            offset += 1
+        if label in mg_dict.keys():
+            y_label = mg_dict[label]
         else:
-            (current_offset, height) = y_dict.get(label)
-        epoch_list = plot_dict[key]
-        for epoch_tuple in epoch_list:
-            (start, end, _, sub_dict) = epoch_tuple
-            offset = _plot_traversal_helper(sub_dict, y_dict, offset=offset,
-                                            prefix=label)
+            y_label = label
+        if y_label not in y_dict.keys():
+            offset += 1
+            print(y_label, offset)
+        else:
+            continue
+            # print("PLOTTED?", y_label)
+            # (current_offset, height) = y_dict.get(y_label)
+        (_, _, sub_dict) = plot_dict[key]
+        offset = _plot_traversal_helper(sub_dict, y_dict, mg_dict,
+                                        offset=offset, prefix=y_label)
         if height == 0:
             height = offset - current_offset
-        y_dict[label] = (current_offset, height)
+        y_dict[y_label] = (current_offset, height)
     return offset
 
 
-def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
+def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, mg, pfx=''):
     # private method to add lines and rectangles to a given plot object
 
     # offsets to put the line markers' tips at ends of lines
@@ -985,8 +1062,9 @@ def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
     mark_align_right = tf.offset_copy(ax.transData, fig,
                                       -ms/2, units='points')
 
-    sorted_keys = sorted(plot_dict.keys())
-    for key in sorted_keys:
+    # sorted_keys = sorted(plot_dict.keys())
+    plotted_labels = set([])
+    for key in plot_dict.keys():
         # get the number of total sub-components
         # add 1 to get the height of the bounding
         # then add 1 again to get the y_tick for the next key
@@ -994,9 +1072,13 @@ def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
         if len(pfx) > 0:
             label = pfx + '.'
         label += key
-        epoch_list = plot_dict[key]
-        for epoch_tuple in epoch_list:
-            (start_date, end_date, samp_rate, sub_dict) = epoch_tuple
+        if label in mg.keys():
+            label = mg[label]
+        if label in plotted_labels:
+            continue
+        plotted_labels.add(label)
+        (epoch_list, samp_rate, sub_dict) = plot_dict[key]
+        for (start_date, end_date) in epoch_list:
             start = start_date.matplotlib_date
             end = end_date.matplotlib_date
             if start != end:
@@ -1005,7 +1087,8 @@ def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
             (y, height) = y_dict[label]
             # get range of subcomponents
             (temp_xmin, temp_xmax) = _plot_builder(fig, ax, sub_dict, y_dict,
-                                                   xmin, xmax, clrs, pfx=label)
+                                                   xmin, xmax, clrs, mg,
+                                                   pfx=label)
             if height == 1:
                 line_len = 1
                 if samp_rate < 100 and samp_rate > 0:
