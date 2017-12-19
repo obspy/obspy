@@ -993,6 +993,9 @@ def _combine_same_epochs(plot_dict, prefix=''):
 
 
 def _merge_plottable_structs(eps1, eps2):
+    # each epoch for a given channel, station, etc. is a distinct inventory
+    # object; this method merges all inventory epochs for a given name into
+    # a single list to (hopefully) make the plotting process more painless
     merged_dict = eps1
     for key in eps2.keys():
         if key not in merged_dict.keys():
@@ -1034,17 +1037,15 @@ def _plot_traversal_helper(plot_dict, y_dict, mg_dict, offset=0, prefix=''):
             y_label = mg_dict[label]
         else:
             y_label = label
+        # if current label has already been established, ignore
+        # since we've already merged separate epochs of inventory
         if y_label not in y_dict.keys():
             offset += 1
-        else:
-            continue
-            # print("PLOTTED?", y_label)
-            # (current_offset, height) = y_dict.get(y_label)
-        (_, _, sub_dict) = plot_dict[key]
-        offset = _plot_traversal_helper(sub_dict, y_dict, mg_dict,
-                                        offset=offset, prefix=y_label)
-        if height == 0:
-            height = offset - current_offset
+            (_, _, sub_dict) = plot_dict[key]
+            offset = _plot_traversal_helper(sub_dict, y_dict, mg_dict,
+                                            offset=offset, prefix=y_label)
+            if height == 0:
+                height = offset - current_offset
         y_dict[y_label] = (current_offset, height)
     return offset
 
