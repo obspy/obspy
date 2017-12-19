@@ -1046,7 +1046,7 @@ def _plot_traversal_helper(plot_dict, y_dict, mg_dict, offset=0, prefix=''):
                                             offset=offset, prefix=y_label)
             if height == 0:
                 height = offset - current_offset
-        y_dict[y_label] = (current_offset, height)
+            y_dict[y_label] = (current_offset, height)
     return offset
 
 
@@ -1059,7 +1059,6 @@ def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, mg, pfx=''):
                                      ms/2, units='points')
     mark_align_right = tf.offset_copy(ax.transData, fig,
                                       -ms/2, units='points')
-
     # sorted_keys = sorted(plot_dict.keys())
     plotted_labels = set([])
     for key in plot_dict.keys():
@@ -1073,8 +1072,8 @@ def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, mg, pfx=''):
         if label in mg.keys():
             label = mg[label]
         if label in plotted_labels:
+            # skip over the duplicated channels
             continue
-        plotted_labels.add(label)
         (epoch_list, samp_rate, sub_dict) = plot_dict[key]
         for (start_date, end_date) in epoch_list:
             start = start_date.matplotlib_date
@@ -1110,6 +1109,7 @@ def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, mg, pfx=''):
                 ax.add_patch(rect)
             xmin = min(xmin, temp_xmin)
             xmax = max(xmax, temp_xmax)
+            plotted_labels.add(label)
     return (xmin, xmax)
 
 
