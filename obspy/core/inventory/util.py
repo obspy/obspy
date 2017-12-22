@@ -953,7 +953,13 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None,
         plt.show()
 
 
-def _combine_same_epochs(plot_dict, prefix=''):
+def _combine_same_epochs(plot_dict):
+    # merge_dict = {}
+    # epochs_dict = {}
+    merge_dict, epochs_dict = _merge_epochs(plot_dict)
+    return _create_same_epochs_string(merge_dict, epochs_dict)
+
+def _merge_epochs(plot_dict, prefix=''):
     merge_dict = {}
     epochs_dict = {}
     for key in plot_dict.keys():
@@ -964,29 +970,67 @@ def _combine_same_epochs(plot_dict, prefix=''):
         # only combine at the station level
         (epochs, samp, sub_dict) = plot_dict[key]
         if len(sub_dict) > 0:
-            partial_merge = _combine_same_epochs(sub_dict, prefix=label)
-            # multiple stations should have different names
+            partial_merge, partial_epochs = _merge_epochs(sub_dict,
+                                                          prefix=label)
+            # multiple stations? different names
             merge_dict.update(partial_merge)
+
+            for key in partial_epochs.keys():
+                epochs_dict[key] = partial_epochs[key]
         else:
+            print(prefix)
             ep_tup = []
             for (start, end) in sorted(epochs):
                 ep_tup + [start.datetime, end.datetime]
             ep_tup = tuple(ep_tup)
-            if (ep_tup, samp) in epochs_dict.keys():
-                epochs_dict[(ep_tup, samp)].append(label)
+            key = (prefix, ep_tup, samp)
+            if key in epochs_dict.keys():
+                epochs_dict[key].append(label)
             else:
-                epochs_dict[(ep_tup, samp)] = [label]
+                epochs_dict[key] = [label]
+    return merge_dict, epochs_dict
+
+def _create_same_epochs_string(merge_dict, epochs_dict):
     for key in epochs_dict.keys():
+        print('EPOCHS SET FOR KEY: ',epochs_dict[key])
         merged = sorted(epochs_dict[key])
         if len(merged) > 1:
-            match = str(commonprefix(merged))
+            # common start of string
+            match = merged[0]
+            sep = '.'
+            print('split components: ', str(match.split(sep)[:-1]))
+            match = sep.join(match.split(sep)[:-1]) + '.'
+            print(match)
+            # match = str(commonprefix(merged))
+            # index to start scanning for new characters from
             start = len(match)
-            match += '['
+            # will assume channel code is [band], [inst], [orientation]
+            chars = [set([]),set([]),set([])]
+            for name in merged:
+                band = name[start]
+                inst = name[start+1]
+                ornt = name[start+2:]
+                print(band,inst,ornt)
+                chars[0].add(band)
+                chars[1].add(inst)
+                chars[2].add(ornt)
+            # redo this to read characters from list
+            for char_set in chars:
+                group = ''
+                if len(char_set) > 1:
+                    group = '['
+                for char in sorted(char_set):
+                    group += char
+                if len(char_set) > 1:
+                    group += ']'
+                match += group
+            """match += '['
             for name in merged:
                 end = len(name)
                 # print(str(name[start:end]))
                 match += str(name[start:end])
-            match += ']'
+            match += ']'"""
+            print(match)
             for name in merged:
                 merge_dict[name] = match
     return merge_dict
