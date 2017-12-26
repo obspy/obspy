@@ -16,6 +16,7 @@ from future.utils import native_str
 import datetime
 import math
 import time
+from copy import copy
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
@@ -1196,6 +1197,15 @@ class UTCDateTime(object):
         """
         # explicitly flag it as unhashable
         return None
+
+    def copy(self):
+        """
+        Return a copy of the UTCDateTime object.
+
+        :return: Copy of the UTCDateTime object.
+
+        """
+        return copy(self)
 
     def strftime(self, format):
         """
