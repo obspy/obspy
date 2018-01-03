@@ -17,7 +17,6 @@ import copy
 import re
 import matplotlib.pyplot as plt
 from numpy import linspace
-from os.path import commonprefix
 from matplotlib import transforms as tf
 from matplotlib.pyplot import cm
 from textwrap import TextWrapper
@@ -959,6 +958,7 @@ def _combine_same_epochs(plot_dict):
     merge_dict, epochs_dict = _merge_epochs(plot_dict)
     return _create_same_epochs_string(merge_dict, epochs_dict)
 
+
 def _merge_epochs(plot_dict, prefix=''):
     merge_dict = {}
     epochs_dict = {}
@@ -990,9 +990,10 @@ def _merge_epochs(plot_dict, prefix=''):
                 epochs_dict[key] = [label]
     return merge_dict, epochs_dict
 
+
 def _create_same_epochs_string(merge_dict, epochs_dict):
     for key in epochs_dict.keys():
-        print('EPOCHS SET FOR KEY: ',epochs_dict[key])
+        print('EPOCHS SET FOR KEY: ', epochs_dict[key])
         merged = sorted(epochs_dict[key])
         match = merged[0]
         if len(merged) > 1:
@@ -1000,7 +1001,7 @@ def _create_same_epochs_string(merge_dict, epochs_dict):
             # set of data for different locations ('00','10','',etc.)
             loc_chars = set([])
             # specific components for the characters in a channel
-            chars = [set([]),set([]),set([])]
+            chars = [set([]), set([]), set([])]
             for name in merged:
                 split = name.split(sep)
                 loc = split[2]
@@ -1065,7 +1066,8 @@ def _merge_plottable_structs(eps1, eps2):
                 key_name_1 = key + "-" + samp_rate_1
                 key_name_2 = key + "-" + samp_rate_2
                 merged_dict[key_name_1] = merged_dict.pop(key)
-                merged_dict[key_name_2] = (epochs_2, samp_rate_2, sub_dict_2)"""
+                merged_dict[key_name_2] = (epochs_2, samp_rate_2, sub_dict_2)
+            """
     return merged_dict
 
 
