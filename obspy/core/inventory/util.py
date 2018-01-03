@@ -994,27 +994,40 @@ def _create_same_epochs_string(merge_dict, epochs_dict):
     for key in epochs_dict.keys():
         print('EPOCHS SET FOR KEY: ',epochs_dict[key])
         merged = sorted(epochs_dict[key])
+        match = merged[0]
         if len(merged) > 1:
-            # common start of string
-            match = merged[0]
             sep = '.'
-            print('split components: ', str(match.split(sep)[:-1]))
-            match = sep.join(match.split(sep)[:-1]) + '.'
-            print(match)
-            # match = str(commonprefix(merged))
-            # index to start scanning for new characters from
-            start = len(match)
-            # will assume channel code is [band], [inst], [orientation]
+            # set of data for different locations ('00','10','',etc.)
+            loc_chars = set([])
+            # specific components for the characters in a channel
             chars = [set([]),set([]),set([])]
             for name in merged:
-                band = name[start]
-                inst = name[start+1]
-                ornt = name[start+2:]
-                print(band,inst,ornt)
+                split = name.split(sep)
+                loc = split[2]
+                if loc == '':
+                    loc_chars.add('_')
+                else:
+                    loc_chars.add(loc)
+                last = split[3]
+                band = last[0]
+                inst = last[1]
+                ornt = last[2:]
                 chars[0].add(band)
                 chars[1].add(inst)
                 chars[2].add(ornt)
-            # redo this to read characters from list
+            match = sep.join(name.split(sep)[:-2]) + '.'
+            loc_chars = sorted(list(loc_chars))
+            if len(loc_chars) == 1:
+                match += loc_chars[0]
+            else:
+                match += '['
+                for i in range(len(loc_chars)-1):
+                    match += loc_chars[i]
+                    match += '|'
+                match += loc_chars[len(loc_chars)-1]
+                match += ']'
+            match += '.'
+            # read in each character from the channel character set
             for char_set in chars:
                 group = ''
                 if len(char_set) > 1:
@@ -1024,12 +1037,6 @@ def _create_same_epochs_string(merge_dict, epochs_dict):
                 if len(char_set) > 1:
                     group += ']'
                 match += group
-            """match += '['
-            for name in merged:
-                end = len(name)
-                # print(str(name[start:end]))
-                match += str(name[start:end])
-            match += ']'"""
             print(match)
             for name in merged:
                 merge_dict[name] = match
@@ -1047,15 +1054,18 @@ def _merge_plottable_structs(eps1, eps2):
         else:
             (epochs_1, samp_rate_1, sub_dict_1) = eps1[key]
             (epochs_2, samp_rate_2, sub_dict_2) = eps2[key]
-            if samp_rate_1 == samp_rate_2:
-                epochs = epochs_1 + epochs_2
-                sub_dict = _merge_plottable_structs(sub_dict_1, sub_dict_2)
-                merged_dict[key] = (epochs, samp_rate_1, sub_dict)
+
+            # may want to refactor so sample rate is component in epoch ranges
+            epochs = epochs_1 + epochs_2
+            sub_dict = _merge_plottable_structs(sub_dict_1, sub_dict_2)
+            merged_dict[key] = (epochs, samp_rate_1, sub_dict)
+
+            """if samp_rate_1 == samp_rate_2:
             else:
                 key_name_1 = key + "-" + samp_rate_1
                 key_name_2 = key + "-" + samp_rate_2
                 merged_dict[key_name_1] = merged_dict.pop(key)
-                merged_dict[key_name_2] = (epochs_2, samp_rate_2, sub_dict_2)
+                merged_dict[key_name_2] = (epochs_2, samp_rate_2, sub_dict_2)"""
     return merged_dict
 
 
