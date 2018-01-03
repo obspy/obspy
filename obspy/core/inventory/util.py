@@ -899,6 +899,7 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None,
     y_ticks = []
     y_min = float('inf')
     y_max = 0
+    max_lbl_len = 0
     clr_dict = {}
     clr_grps = []
     for key in sorted(y_dict.keys()):
@@ -908,17 +909,17 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None,
             y_ticks.append(tick)
             y_min = min(tick-1, y_min)
             y_max = max(tick+height, y_max)
+            max_lbl_len = max(max_lbl_len, len(key))
         elif '.' in key:
             # only color groupings one level above base (i.e., channel) level
             clr_grps.append(key)
 
     # initialize plot parameters
-    fig = plt.figure()
+    fig = plt.figure(figsize=(5+(.1*max_lbl_len), .25 * y_max))
     ax = plt.gca()
     # set yticks according to plot dictionary, xaxis according to date objects
     plt.yticks(y_ticks, y_tick_labels)
     _set_xaxis_obspy_dates(ax)
-    plt.tight_layout()
 
     """clrs = iter(cm.Dark2(linspace(0, 1, len(y_tick_labels))))
     for label in sorted(y_tick_labels):
@@ -941,11 +942,13 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None,
     (xmin, xmax) = _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax,
                                  clr_dict, mg_dict)
     xmax = min(xmax, now)
+    ax.set_title("Inventory Epoch Plot")
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(y_min, y_max)
 
     # plt.grid()
 
+    plt.tight_layout()
     if outfile:
         plt.savefig(outfile)
     else:
@@ -978,7 +981,6 @@ def _merge_epochs(plot_dict, prefix=''):
             for key in partial_epochs.keys():
                 epochs_dict[key] = partial_epochs[key]
         else:
-            print(prefix)
             ep_tup = []
             for (start, end) in sorted(epochs):
                 ep_tup + [start.datetime, end.datetime]
@@ -993,7 +995,6 @@ def _merge_epochs(plot_dict, prefix=''):
 
 def _create_same_epochs_string(merge_dict, epochs_dict):
     for key in epochs_dict.keys():
-        print('EPOCHS SET FOR KEY: ', epochs_dict[key])
         merged = sorted(epochs_dict[key])
         match = merged[0]
         if len(merged) > 1:
@@ -1038,7 +1039,6 @@ def _create_same_epochs_string(merge_dict, epochs_dict):
                 if len(char_set) > 1:
                     group += ']'
                 match += group
-            print(match)
             for name in merged:
                 merge_dict[name] = match
     return merge_dict
