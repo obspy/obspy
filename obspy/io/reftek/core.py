@@ -257,6 +257,7 @@ class Reftek130(object):
                 "location": location, "sampling_rate": eh.sampling_rate,
                 "reftek130": eh._to_dict()}
             delta = 1.0 / eh.sampling_rate
+            delta_nanoseconds = int(delta * 1e9)
             for channel_number in np.unique(data['channel_number']):
                 inds = data['channel_number'] == channel_number
                 # channel number of EH/ET packets also equals zero (one of the
@@ -266,18 +267,17 @@ class Reftek130(object):
 
                 # split into contiguous blocks, i.e. find gaps. packet sequence
                 # was sorted already..
-                endtimes = (packets[:-1]["time"] +
-                            packets[:-1]["number_of_samples"] * delta)
+                endtimes = (
+                    packets[:-1]["time"] +
+                    packets[:-1]["number_of_samples"].astype(np.int64) *
+                    delta_nanoseconds)
                 # check if next starttime matches seamless to last chunk
-                # 1e-3 seconds == 1 millisecond is the smallest time difference
-                # reftek130 format can represent, so anything larger or equal
-                # means a gap/overlap.
-                # for now be conservative and check even more rigorous against
-                # 1e-4 to be on the safe side, but in the gapless data example
-                # the differences are always 0 or -2e-7 (for POSIX timestamps
-                # of order 1e9) which seems like a floating point accuracy
-                # issue for np.float64.
-                gaps = np.abs(packets[1:]["time"] - endtimes) > 1e-4
+                # 1e-3 seconds == 1e6 nanoseconds is the smallest time
+                # difference reftek130 format can represent, so anything larger
+                # or equal means a gap/overlap.
+                time_diffs_milliseconds_abs = np.abs(
+                    packets[1:]["time"] - endtimes) / 1000000
+                gaps = time_diffs_milliseconds_abs >= 1
                 if np.any(gaps):
                     gap_split_indices = np.nonzero(gaps)[0] + 1
                     contiguous = np.array_split(packets, gap_split_indices)
@@ -300,7 +300,7 @@ class Reftek130(object):
                     tr.stats.reftek130['channel_number'] = channel_number
                     if headonly:
                         tr.stats.npts = npts
-                    tr.stats.starttime = UTCDateTime(starttime)
+                    tr.stats.starttime = UTCDateTime(ns=starttime)
                     # if component codes were explicitly provided, use them
                     # together with the stream label
                     if component_codes is not None:
@@ -330,9 +330,9 @@ class Reftek130(object):
                             assert npts == len(sample_data)
                         if npts_last:
                             assert tr.stats.endtime == UTCDateTime(
-                                t_last + (npts_last - 1) * delta)
+                                ns=t_last) + (npts_last - 1) * delta
                         if npts:
-                            assert tr.stats.endtime == UTCDateTime(
+                            assert tr.stats.endtime == (
                                 tr.stats.starttime + (npts - 1) * delta)
                     except AssertionError:
                         msg = ("Reftek file has a trace with an inconsistent "
