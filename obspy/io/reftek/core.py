@@ -100,6 +100,7 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
             network=network, location=location,
             component_codes=component_codes, headonly=headonly,
             verbose=verbose)
+        st.merge(-1)
         return st
     except Reftek130UnpackPacketError:
         msg = ("Unable to read file '{}' as a Reftek130 file. Please contact "
