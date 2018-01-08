@@ -152,10 +152,13 @@ class Reftek130(object):
         packets.
         """
         diff = np.diff(self._data['packet_sequence'].astype(np.int16))
-        if np.any(diff < 1):
+        # rollover from 9999 to 0 is not a packet sequence jump..
+        jump = (diff < 1) & (diff != -9999)
+        if np.any(jump):
             msg = ("Detected permuted packet sequence, sorting.")
             warnings.warn(msg)
-            self._data.sort(order=native_str("packet_sequence"))
+            self._data.sort(order=[
+                native_str(key) for key in ("packet_sequence", "time")])
 
     def check_packet_sequence_contiguous(self):
         """
