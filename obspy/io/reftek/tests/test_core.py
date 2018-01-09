@@ -135,7 +135,8 @@ class ReftekTestCase(unittest.TestCase):
         """
         st_reftek = _read_reftek130(
             self.reftek_file, network="XX", location="01",
-            component_codes=["1", "2", "3"])
+            component_codes=["1", "2", "3"],
+            sort_permuted_package_sequence=True)
         self._assert_reftek130_test_stream(st_reftek)
 
     def test_read_reftek130_steim2(self):
@@ -147,7 +148,8 @@ class ReftekTestCase(unittest.TestCase):
         """
         st = _read_reftek130(
             self.reftek_file_steim2, network="XX", location="01",
-            component_codes=["1", "2", "3"])
+            component_codes=["1", "2", "3"],
+            sort_permuted_package_sequence=True)
         # note: test data has stream name defined as 'DS 1', so we end up with
         # non-SEED conforming channel codes which is expected
         self.assertEqual(len(st), 3)
@@ -175,7 +177,8 @@ class ReftekTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             st_reftek = _read_reftek130(
-                self.reftek_file, network="XX", location="01")
+                self.reftek_file, network="XX", location="01",
+                sort_permuted_package_sequence=True)
         self.assertEqual(len(w), 8)
         for w_ in w:
             self.assertEqual(
@@ -220,7 +223,8 @@ class ReftekTestCase(unittest.TestCase):
             self.assertRaises(Reftek130Exception, _read_reftek130, fh.name)
         # try to read mseed file, finding no packets
         self.assertRaises(Reftek130Exception, _read_reftek130,
-                          self.mseed_files[0])
+                          self.mseed_files[0],
+                          sort_permuted_package_sequence=True)
 
     def test_warning_disturbed_packet_sequence(self):
         """
@@ -239,7 +243,8 @@ class ReftekTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 _read_reftek130(fh.name, network="XX", location="01",
-                                component_codes=["1", "2", "3"])
+                                component_codes=["1", "2", "3"],
+                                sort_permuted_package_sequence=True)
         self.assertEqual(len(w), 1)
         self.assertEqual(str(w[0].message),
                          'Detected a non-contiguous packet sequence!')
@@ -273,7 +278,8 @@ class ReftekTestCase(unittest.TestCase):
                 warnings.simplefilter("always")
                 st_reftek = _read_reftek130(
                     fh.name, network="XX", location="01",
-                    component_codes=["1", "2", "3"])
+                    component_codes=["1", "2", "3"],
+                    sort_permuted_package_sequence=True)
         st_reftek.merge(-1)
         self.assertEqual(len(w), 1)
         self.assertEqual(str(w[0].message),
@@ -307,7 +313,8 @@ class ReftekTestCase(unittest.TestCase):
                 warnings.simplefilter("always")
                 _read_reftek130(
                     fh.name, network="XX", location="01",
-                    component_codes=["1", "2", "3"])
+                    component_codes=["1", "2", "3"],
+                    sort_permuted_package_sequence=True)
         self.assertEqual(len(w), 2)
         self.assertTrue(
             re.match(
@@ -338,7 +345,8 @@ class ReftekTestCase(unittest.TestCase):
                 warnings.simplefilter("always")
                 st_reftek = _read_reftek130(
                     fh.name, network="XX", location="01",
-                    component_codes=["1", "2", "3"])
+                    component_codes=["1", "2", "3"],
+                    sort_permuted_package_sequence=True)
         self.assertEqual(len(w), 1)
         self.assertEqual(
             str(w[0].message),
@@ -363,7 +371,8 @@ class ReftekTestCase(unittest.TestCase):
                 warnings.simplefilter("always")
                 st_reftek = _read_reftek130(
                     fh.name, network="XX", location="01",
-                    component_codes=["1", "2", "3"])
+                    component_codes=["1", "2", "3"],
+                    sort_permuted_package_sequence=True)
         self.assertEqual(len(w), 2)
         # we get two warnings, one about the truncated packet and one about the
         # missing last (ET) packet
@@ -392,7 +401,8 @@ class ReftekTestCase(unittest.TestCase):
             with self.assertRaises(Reftek130Exception) as context:
                 _read_reftek130(
                     fh.name, network="XX", location="01",
-                    component_codes=["1", "2", "3"])
+                    component_codes=["1", "2", "3"],
+                    sort_permuted_package_sequence=True)
         self.assertEqual(
             str(context.exception),
             "Reftek data contains data packets without corresponding header "
@@ -514,7 +524,8 @@ class ReftekTestCase(unittest.TestCase):
         # reading the file should work..
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            st = obspy.read(self.reftek_file_vpu)
+            st = obspy.read(self.reftek_file_vpu,
+                            sort_permuted_package_sequence=True)
         self.assertEqual(len(st), 2)
         self.assertEqual(len(st[0]), 890)
         self.assertEqual(len(st[1]), 890)
@@ -534,7 +545,8 @@ class ReftekTestCase(unittest.TestCase):
         bytes_ = io.BytesIO(data)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            st = obspy.read(bytes_, format='REFTEK130')
+            st = obspy.read(bytes_, format='REFTEK130',
+                            sort_permuted_package_sequence=True)
         self.assertEqual(len(st), 10)
         # we should have data from two different files/stations in there
         for tr in st[:8]:
