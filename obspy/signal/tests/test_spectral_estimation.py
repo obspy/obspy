@@ -692,13 +692,14 @@ class PsdTestCase(unittest.TestCase):
             tr.stats,
             read_inventory()
         )
-        
+
         ppsd.add(tr)
-        
+
         self.assertEqual(48, len(ppsd._times_processed))
 
         for i, time in enumerate(ppsd._times_processed):
-            self.assertTrue(UTCDateTime(time) == UTCDateTime("2017-01-01T00:00:00") + (i * 30 * 60))
+            current = UTCDateTime("2017-01-01T00:00:00") + (i * 30 * 60)
+            self.assertTrue(UTCDateTime(time) == current)
 
     def test_ppsd_spectrogram_plot(self):
         """
