@@ -677,6 +677,29 @@ class PsdTestCase(unittest.TestCase):
             ppsd.plot_temporal([0.1, 1, 10], filename=ic.name, show=False,
                                **restrictions)
 
+    def test_exclude_last_sample(self):
+
+        header = {
+            "starttime":  UTCDateTime("2017-01-01T00:00:00"),
+            "network": "GR",
+            "station": "FUR",
+            "channel": "BHZ"
+        }
+
+        tr = Trace(data=np.arange(30 * 60 * 49, dtype=np.int32), header=header)
+
+        ppsd = PPSD(
+            tr.stats,
+            read_inventory()
+        )
+        
+        ppsd.add(tr)
+        
+        self.assertEqual(48, len(ppsd._times_processed))
+
+        for i, time in enumerate(ppsd._times_processed):
+            self.assertTrue(UTCDateTime(time) == UTCDateTime("2017-01-01T00:00:00") + (i * 30 * 60))
+
     def test_ppsd_spectrogram_plot(self):
         """
         Test spectrogram type plot of PPSD

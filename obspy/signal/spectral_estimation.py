@@ -718,7 +718,7 @@ class PPSD(object):
                 continue
             t1 = tr.stats.starttime
             t2 = tr.stats.endtime
-            while t1 + self.ppsd_length <= t2:
+            while t1 + self.ppsd_length - tr.stats.delta <= t2:
                 if self.__check_time_present(t1):
                     msg = "Already covered time spans detected (e.g. %s), " + \
                           "skipping these slices."
@@ -727,7 +727,7 @@ class PPSD(object):
                 else:
                     # throw warnings if trace length is different
                     # than ppsd_length..!?!
-                    slice = tr.slice(t1, t1 + self.ppsd_length)
+                    slice = tr.slice(t1, t1 + self.ppsd_length - tr.stats.delta)
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?
                     success = self.__process(slice)
