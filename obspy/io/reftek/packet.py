@@ -172,8 +172,13 @@ class EHPacket(Packet):
                     value = value.decode()
                 info.append("{}: {}".format(key, value))
             info.append("-" * 20)
-            info += ["{}: {}".format(key, getattr(self, key))
-                     for key in sorted(EH_PAYLOAD.keys())]
+            for key in sorted(EH_PAYLOAD.keys()):
+                value = getattr(self, key)
+                if key in ("trigger_time", "detrigger_time",
+                           "first_sample_time", "last_sample_time"):
+                    if value is not None:
+                        value = UTCDateTime(ns=value)
+                info.append("{}: {}".format(key, value))
             info = "{} Packet\n\t{}".format(self.type.decode(),
                                             "\n\t".join(info))
         return info

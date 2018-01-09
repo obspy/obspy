@@ -63,7 +63,8 @@ def _is_reftek130(filename):
 
 
 def _read_reftek130(filename, network="", location="", component_codes=None,
-                    headonly=False, verbose=False, **kwargs):
+                    headonly=False, verbose=False,
+                    sort_permuted_package_sequence=False, **kwargs):
     """
     Read a REFTEK130 file into an ObsPy Stream.
 
@@ -84,6 +85,11 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
     :type headonly: bool
     :param headonly: Determines whether or not to unpack the data or just
         read the headers.
+    :type sort_permuted_package_sequence: bool
+    :param sort_permuted_package_sequence: Determines whether or not the
+        package list is sorted when a permuted package sequence is encountered.
+        This should only be used if problems occur with files that have a
+        permuted package sequence (showing the related warning message).
     :rtype: :class:`~obspy.core.stream.Stream`
     """
     # Reftek 130 data format stores only the last two digits of the year.  We
@@ -99,7 +105,8 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
         st = rt130.to_stream(
             network=network, location=location,
             component_codes=component_codes, headonly=headonly,
-            verbose=verbose)
+            verbose=verbose,
+            sort_permuted_package_sequence=sort_permuted_package_sequence)
         st.merge(-1)
         return st
     except Reftek130UnpackPacketError:
@@ -145,12 +152,12 @@ class Reftek130(object):
         rt._filename = filename
         return rt
 
-    def check_packet_sequence_and_sort(self):
+    def check_packet_sequence_and_sort(self, sort_permuted_package_sequence):
         """
         Checks if packet sequence is ordered. If not, shows a warning and sorts
-        packets by packet sequence. This should ensure that data (DT) packets
-        are properly enclosed by the appropriate event header/trailer (EH/ET)
-        packets.
+        packets by packet sequence if ``sort_permuted_package_sequence=True``.
+        This should ensure that data (DT) packets are properly enclosed by the
+        appropriate event header/trailer (EH/ET) packets.
         """
         diff = np.diff(self._data['packet_sequence'].astype(np.int16))
         # rollover from 9999 to 0 is not a packet sequence jump..
@@ -158,8 +165,9 @@ class Reftek130(object):
         if np.any(jump):
             msg = ("Detected permuted packet sequence, sorting.")
             warnings.warn(msg)
-            self._data.sort(order=[
-                native_str(key) for key in ("packet_sequence", "time")])
+            if sort_permuted_package_sequence:
+                self._data.sort(order=[
+                    native_str(key) for key in ("packet_sequence", "time")])
 
     def check_packet_sequence_contiguous(self):
         """
@@ -197,7 +205,8 @@ class Reftek130(object):
         self._data = self._data[is_implemented]
 
     def to_stream(self, network="", location="", component_codes=None,
-                  headonly=False, verbose=False):
+                  headonly=False, verbose=False,
+                  sort_permuted_package_sequence=False):
         """
         :type headonly: bool
         :param headonly: Determines whether or not to unpack the data or just
@@ -208,7 +217,7 @@ class Reftek130(object):
         if not len(self._data):
             msg = "No packet data in Reftek130 object (file: {})"
             raise Reftek130Exception(msg.format(self._filename))
-        self.check_packet_sequence_and_sort()
+        self.check_packet_sequence_and_sort(sort_permuted_package_sequence)
         self.check_packet_sequence_contiguous()
         self.drop_not_implemented_packet_types()
         if not len(self._data):
