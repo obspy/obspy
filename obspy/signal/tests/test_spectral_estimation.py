@@ -686,6 +686,7 @@ class PsdTestCase(unittest.TestCase):
             "channel": "BHZ"
         }
 
+        # 49 segments of 30 minutes to allow 30 minutes overlap in next day
         tr = Trace(data=np.arange(30 * 60 * 49, dtype=np.int32), header=header)
 
         ppsd = PPSD(
@@ -696,6 +697,7 @@ class PsdTestCase(unittest.TestCase):
         ppsd.add(tr)
 
         self.assertEqual(48, len(ppsd._times_processed))
+        self.assertEqual(3600, ppsd.len)
 
         for i, time in enumerate(ppsd._times_processed):
             current = UTCDateTime("2017-01-01T00:00:00") + (i * 30 * 60)
