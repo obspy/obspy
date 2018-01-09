@@ -108,6 +108,7 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
             verbose=verbose,
             sort_permuted_package_sequence=sort_permuted_package_sequence)
         st.merge(-1)
+        st.sort()
         return st
     except Reftek130UnpackPacketError:
         msg = ("Unable to read file '{}' as a Reftek130 file. Please contact "
