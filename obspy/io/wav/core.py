@@ -27,6 +27,7 @@ import wave
 import numpy as np
 
 from obspy import Stream, Trace
+from obspy.core.compatibility import from_buffer
 
 
 # WAVE data format is unsigned char up to 8bit, and signed int
@@ -102,7 +103,7 @@ def _read_wav(filename, headonly=False, **kwargs):  # @UnusedVariable
         if width not in WIDTH2DTYPE.keys():
             msg = "Unsupported Format Type, word width %dbytes" % width
             raise TypeError(msg)
-        data = np.fromstring(fh.readframes(length), dtype=WIDTH2DTYPE[width])
+        data = from_buffer(fh.readframes(length), dtype=WIDTH2DTYPE[width])
     finally:
         fh.close()
     return Stream([Trace(header=header, data=data)])
