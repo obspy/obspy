@@ -16,6 +16,7 @@ from struct import pack
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core.compatibility import from_buffer
 from obspy.core.util import NATIVE_BYTEORDER
 from . import (util, InternalMSEEDError, ObsPyMSEEDFilesizeTooSmallError,
                ObsPyMSEEDFilesizeTooLargeError)
@@ -309,7 +310,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         # Read to NumPy array which is used as a buffer.
         bfr_np = np.fromfile(mseed_object, dtype=np.int8)
     elif hasattr(mseed_object, 'read'):
-        bfr_np = np.fromstring(mseed_object.read(), dtype=np.int8)
+        bfr_np = from_buffer(mseed_object.read(), dtype=np.int8)
 
     # Search for data records and pass only the data part to the underlying C
     # routine.
