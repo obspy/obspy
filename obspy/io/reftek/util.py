@@ -10,6 +10,7 @@ import datetime
 import numpy as np
 
 from obspy import UTCDateTime
+from obspy.core.compatibility import from_buffer
 
 
 def bcd(_i):
@@ -24,7 +25,11 @@ def bcd_16bit_int(_i):
 def bcd_hex(_i):
     m = _i.shape[1]
     _bcd = codecs.encode(_i.ravel(), "hex_codec").decode("ASCII").upper()
-    return np.fromstring(_bcd, dtype="|S%d" % (m * 2))
+    try:
+        _bcd = _bcd.encode()
+    except AttributeError:
+        pass
+    return from_buffer(_bcd, dtype="|S%d" % (m * 2))
 
 
 def bcd_8bit_hex(_i):
