@@ -819,7 +819,7 @@ class UTCDateTime(object):
         >>> dt.microsecond
         345234
         """
-        return int(self._ns % 10**9 // 1000)
+        return int(round(self._ns % 10**9 / 1000))
 
     def _set_microsecond(self, value):
         """
