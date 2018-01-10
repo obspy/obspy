@@ -2446,7 +2446,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> from obspy import read, UTCDateTime
         >>> tr = read()[0]
 
-        >>> tr.times()
+        >>> tr.times()  # doctest: +NORMALIZE_WHITESPACE
         array([  0.00000000e+00,   1.00000000e-02,   2.00000000e-02, ...,
                  2.99700000e+01,   2.99800000e+01,   2.99900000e+01])
 
