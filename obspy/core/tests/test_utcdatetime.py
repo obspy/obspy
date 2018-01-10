@@ -16,6 +16,11 @@ class UTCDateTimeTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.utcdatetime.UTCDateTime.
     """
+
+    close_timestamps = [1515174511.1984465, 1515174511.1984463,
+                        1515174511.1984460, 1515174511.1984458]
+    close_utc = [UTCDateTime(x) for x in close_timestamps]
+
     def test_from_string(self):
         """
         Tests initialization from a given time string not ISO8601 compatible.
@@ -1226,6 +1231,37 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertTrue(e >= a)
         self.assertFalse(a == e)
         self.assertFalse(e == a)
+
+    def test_timestamp_can_serialize_with_time_attrs(self):
+        """
+        Test that the datetime attrs can be used to serialize UTCDateTime
+        objects inited from floats (with default precision) - see 2034
+        """
+        time_attrs = ('year', 'month', 'day', 'hour', 'minute', 'second',
+                      'microsecond')
+        for utc in self.close_utc:
+            utc2 = UTCDateTime(**{x: getattr(utc, x) for x in time_attrs})
+            self.assertEqual(utc, utc2)
+
+    def test_str_ms_equal_ms(self):
+        """
+        Test that the microseconds in the str representation are equal to
+        the microseconds attr - see 2034
+        """
+        for utc in self.close_utc:
+            str_ms = int(str(utc).split('.')[-1])
+            ms = utc.microsecond
+            self.assertEqual(str_ms, ms)
+
+    def test_close_utc_are_equal(self):
+        """
+        Ensure UTCs init'ed with floats that are very close together are
+        equal - see 2034
+        """
+        for num in range(len(self.close_utc) - 1):
+            utc1 = self.close_utc[num]
+            utc2 = self.close_utc[num + 1]
+            self.assertEqual(utc1, utc2)
 
 
 def suite():
