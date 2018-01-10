@@ -687,7 +687,7 @@ class PsdTestCase(unittest.TestCase):
         }
 
         # 49 segments of 30 minutes to allow 30 minutes overlap in next day
-        tr = Trace(data=np.arange(30 * 60 * 49, dtype=np.int32), header=header)
+        tr = Trace(data=np.arange(30 * 60 * 4, dtype=np.int32), header=header)
 
         ppsd = PPSD(
             tr.stats,
@@ -696,7 +696,7 @@ class PsdTestCase(unittest.TestCase):
 
         ppsd.add(tr)
 
-        self.assertEqual(48, len(ppsd._times_processed))
+        self.assertEqual(3, len(ppsd._times_processed))
         self.assertEqual(3600, ppsd.len)
 
         for i, time in enumerate(ppsd._times_processed):
