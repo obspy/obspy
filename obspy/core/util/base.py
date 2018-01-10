@@ -141,9 +141,6 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
     >>> create_empty_data_chunk(3, 'int', 10)
     array([10, 10, 10])
 
-    >>> create_empty_data_chunk(6, np.complex128, 0)
-    array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
-
     >>> create_empty_data_chunk(
     ...     3, 'f')  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     masked_array(data = [-- -- --],
