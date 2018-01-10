@@ -253,12 +253,16 @@ class UTCDateTime(object):
                     self._from_datetime(dt_)
                 return
             # check types
-            try:
-                # got a timestamp
-                self._from_timestamp(value.__float__())
-                return
-            except Exception:
-                pass
+            # The string instance check is mainly needed to not convert
+            # numpy strings as these can be converted to floats on
+            # numpy >= 1.14.
+            if not isinstance(value, (str, bytes)):
+                try:
+                    # got a timestamp
+                    self._from_timestamp(value.__float__())
+                    return
+                except Exception:
+                    pass
             if isinstance(value, datetime.datetime):
                 # got a Python datetime.datetime object
                 self._from_datetime(value)
