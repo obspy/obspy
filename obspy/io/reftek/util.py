@@ -25,10 +25,6 @@ def bcd_16bit_int(_i):
 def bcd_hex(_i):
     m = _i.shape[1]
     _bcd = codecs.encode(_i.ravel(), "hex_codec").decode("ASCII").upper()
-    try:
-        _bcd = _bcd.encode()
-    except AttributeError:
-        pass
     return from_buffer(_bcd, dtype="|S%d" % (m * 2))
 
 
