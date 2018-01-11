@@ -414,6 +414,19 @@ class UTCDateTime(object):
         """
         self._ns = int(round(value * 10**9))
 
+    def rounded_timestamp(self, precision=None):
+        """
+        Return a rounded timestamp to desired precision.
+
+        Handles some subtle rounding errors that can be introduced by large
+        floats.
+
+        :type precision: int
+        :param precision: optional, the required precision (<=9).
+        """
+        _precision = self.precision if precision is None else precision
+        return round(round(self._ns, _precision - 9) / 1e9, _precision)
+
     def _from_iso8601_string(self, value):
         """
         Parses an ISO8601:2004 date time string.
@@ -819,7 +832,7 @@ class UTCDateTime(object):
         >>> dt.microsecond
         345234
         """
-        return int(round(self._ns % 10**9 / 1000))
+        return int(round((self._ns % 10**9) / 1000))
 
     def _set_microsecond(self, value):
         """
@@ -984,10 +997,10 @@ class UTCDateTime(object):
 
     def _operate(self, other, op_func):
         if isinstance(other, UTCDateTime):
-            a = round(self._ns / 1e9, self.__precision)
-            b = round(other._ns / 1e9, self.__precision)
-        elif isinstance(other, float) or isinstance(other, int):
-            a = round(self.timestamp, self.__precision)
+            a = self.rounded_timestamp()
+            b = other.rounded_timestamp(precision=self.precision)
+        elif isinstance(other, (float, int)):
+            a = self.rounded_timestamp()
             b = round(float(other), self.__precision)
         elif isinstance(other, datetime.datetime):
             a = self.datetime

@@ -1231,7 +1231,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
     def test_timestamp_can_serialize_with_time_attrs(self):
         """
         Test that the datetime attrs can be used to serialize UTCDateTime
-        objects inited from floats (with default precision) - see 2034
+        objects inited from floats (given default precision of 6) - see 2034
         """
         time_attrs = ('year', 'month', 'day', 'hour', 'minute', 'second',
                       'microsecond')
@@ -1261,15 +1261,31 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         Ensure UTCs init'ed with floats that are very close together are
         equal - see 2034
+
+        Note: Due to the rounding nanosecond attribute before comparision
+        we can no longer guarantee equality based on the difference in
+        nanoseconds. This trade-off was made to ensure UTCDateTime objects
+        are always equal to their string representation when precision <= 6.
+        See issue #2034 and pr # 1766.
         """
-        close_timestamps = [1515174511.1984465, 1515174511.1984463,
-                            1515174511.1984460, 1515174511.1984458]
+        # get an array of floats as close together as possible
+        def yield_close_floats(start, length):
+            for _ in range(length):
+                start = np.nextafter(start, 0)
+                yield start
+
+        # convert to UTCDateTime objects
+        close_timestamps = list(yield_close_floats(1515174511.1984458, 10))
         close_utc = [UTCDateTime(x) for x in close_timestamps]
 
+        # if str are equal then objects should be equal and visa versa
         for num in range(len(close_utc) - 1):
             utc1 = close_utc[num]
             utc2 = close_utc[num + 1]
-            self.assertEqual(utc1, utc2)
+            if utc1 == utc2:
+                self.assertEqual(str(utc1), str(utc2))
+            if str(utc1) == str(utc2):
+                self.assertEqual(utc1, utc2)
 
 
 def suite():
