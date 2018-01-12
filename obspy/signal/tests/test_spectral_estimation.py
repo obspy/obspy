@@ -426,8 +426,10 @@ class PsdTestCase(unittest.TestCase):
         # of psd pieces, to facilitate testing the stack selection.
         ppsd = PPSD(stats=Stats(dict(sampling_rate=150)), metadata=None,
                     db_bins=(-200, -50, 20.), period_step_octaves=1.4)
-        ppsd._times_processed = np.load(
-            os.path.join(self.path, "ppsd_times_processed.npy")).tolist()
+        # change data to nowadays used nanoseconds POSIX timestamp
+        ppsd._times_processed = [
+            UTCDateTime(t)._ns for t in np.load(
+                os.path.join(self.path, "ppsd_times_processed.npy")).tolist()]
         np.random.seed(1234)
         ppsd._binned_psds = [
             arr for arr in np.random.uniform(
@@ -436,11 +438,11 @@ class PsdTestCase(unittest.TestCase):
 
         # Test callback function that selects a fixed random set of the
         # timestamps.  Also checks that we get passed the type we expect,
-        # which is 1D numpy ndarray of float type.
+        # which is 1D numpy ndarray of int type.
         def callback(t_array):
             self.assertIsInstance(t_array, np.ndarray)
             self.assertEqual(t_array.shape, (len(ppsd._times_processed),))
-            self.assertEqual(t_array.dtype, np.float64)
+            self.assertTrue(np.issubdtype(t_array.dtype, np.integer))
             np.random.seed(1234)
             res = np.random.randint(0, 2, len(t_array)).astype(np.bool)
             return res
@@ -540,6 +542,8 @@ class PsdTestCase(unittest.TestCase):
                     db_bins=(-200, -50, 20.), period_step_octaves=1.4)
         _times_processed = np.load(
             os.path.join(self.path, "ppsd_times_processed.npy")).tolist()
+        # change data to nowadays used nanoseconds POSIX timestamp
+        _times_processed = [UTCDateTime(t)._ns for t in _times_processed]
         np.random.seed(1234)
         _binned_psds = [
             arr for arr in np.random.uniform(

@@ -7,6 +7,10 @@ master:
      objects to shapefile (see #2012)
  - obspy.signal.PPSD:
    * Fixed exact trace cutting for PSD segments (see #2040).
+   * Timestamp representations internally and in npz I/O were changed to use
+     integer nanosecond POSIX timestamps to avoid any potential floating point
+     inaccuracies and since this is also what UTCDateTime is based on nowadays
+     (see #2045)
  - obspy.signal.cross_correlation:
    * Add new `correlate_template()` function with 'full' normalization option,
      required for correlations in template-matching
@@ -14,6 +18,7 @@ master:
    * 'domain' parameter in correlate function is deprecated in favour of new
      'method' parameter to be consistent with recent SciPy versions
      (see #2042).
+
 
 1.1.x:
  - General:
