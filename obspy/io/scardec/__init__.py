@@ -26,7 +26,7 @@ It works by utilizing ObsPy's :func:`~obspy.core.event.read_events` function.
 
 The event will contain one origins with a moment rate function.
 
->>> print(cat[0])  # doctest: +NORMALIZE_WHITESPACES +ELLIPSIS
+>>> print(cat[0])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
 Event:  2014-01-25T05:14:18.000000Z |  -7.985, +109.265 | 6.202 mw
 
                resource_id: ResourceIdentifier(id='...')
