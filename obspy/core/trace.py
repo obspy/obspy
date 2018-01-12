@@ -2111,7 +2111,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                                taper_sides[len(taper_sides) - wlen:]))
 
         # Convert data if it's not a floating point type.
-        if not np.issubdtype(self.data.dtype, float):
+        if not np.issubdtype(self.data.dtype, np.floating):
             self.data = np.require(self.data, dtype=np.float64)
 
         self.data *= taper
@@ -2176,7 +2176,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             return self
 
         # Convert data if it's not a floating point type.
-        if not np.issubdtype(self.data.dtype, float):
+        if not np.issubdtype(self.data.dtype, np.floating):
             self.data = np.require(self.data, dtype=np.float64)
 
         self.data /= abs(norm)
