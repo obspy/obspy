@@ -17,6 +17,8 @@ import datetime
 import math
 import time
 
+import numpy as np
+
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 
@@ -383,6 +385,16 @@ class UTCDateTime(object):
         return self.__ns
 
     def _set_ns(self, value):
+        # allow setting numpy integer types..
+        if isinstance(value, np.integer):
+            value_ = int(value)
+            # ..and be paranoid and check that it's still the same value after
+            # type casting
+            if value_ != value:
+                msg = ('Numpy integer value ({!s}) changed during casting to '
+                       'Python builtin integer ({!s}).').format(value, value_)
+                raise ValueError(msg)
+            value = value_
         if not isinstance(value, int):
             raise TypeError('nanoseconds must be set as int/long type')
         self.__ns = value
