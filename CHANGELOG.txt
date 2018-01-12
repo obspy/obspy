@@ -1,4 +1,6 @@
 1.1.x:
+ - General:
+   * Tests pass with numpy 1.14 (see #2044).
  - obspy.core:
    * Fix pickling of traces with a sampling rate of 0 (see #1990)
  - obspy.clients.arclink:
