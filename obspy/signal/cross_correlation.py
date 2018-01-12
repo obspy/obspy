@@ -76,7 +76,44 @@ def _xcorr_slice(a, b, shift, domain='freq'):
     return c[mid - shift:mid + shift + len(c) % 2]
 
 
-def correlate(a, b, shift, demean=True, normalize=True, domain='freq'):
+def _normxcorr(a, b, shift, domain='freq'):
+    """
+    Normalized cross-correlation
+    """
+    mid = (len(a) + len(b) - 1) // 2
+    if shift is None:
+        shift = mid
+    # Normalize short window before correlation
+    b = (b - b.mean()) / (b.std() * len(b))
+    # We HAVE to pad in this case
+    a = np.pad(a, pad_width=len(b), mode='constant', constant_values=0)
+    if domain == 'time':
+        c = scipy.signal.correlate(a, b, 'valid')
+    else:
+        c = scipy.signal.fftconvolve(a, b[::-1], 'valid')
+    # Calculate moving mean and moving standard deviation
+    # using cumulative sums.
+    c = c[1:-1]
+    move_mean = np.cumsum(a)
+    move_mean = move_mean[len(b):-1] - move_mean[:-len(b) - 1]
+    numerator = c - move_mean * b.mean()
+    denominator = np.cumsum(a ** 2)
+    denominator = denominator[len(b):-1] - denominator[:-len(b) - 1]
+    np.multiply(move_mean, move_mean, out=move_mean)
+    np.divide(move_mean, len(a), out=move_mean)
+    denominator -= move_mean
+    denominator *= b.std()
+    np.maximum(denominator, 0, out=denominator)
+    np.sqrt(denominator, out=denominator)
+    # Cope with zero divisions? - scikit uses a mask
+    response = np.zeros_like(c, dtype=np.float64)
+    mask = denominator > np.finfo(np.float64).eps
+    response[mask] = numerator[mask] / denominator[mask]
+    c = response
+    return c[mid - shift:mid + shift + len(c) % 2]
+
+
+def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
     """
     Cross-correlation of signals a and b with specified maximal shift.
 
@@ -88,8 +125,10 @@ def correlate(a, b, shift, demean=True, normalize=True, domain='freq'):
         The cross-correlation will consist of ``2*shift+1`` or
         ``2*shift`` samples. The sample with zero shift will be in the middle.
     :param bool demean: Demean data beforehand.
-    :param bool normalize: Normalize cross-correlation. A perfect
-        correlation will correspond to the value 1.
+    :param bool normalize: Method for normalization of cross-correlation.
+        Any one of 'naive', 'full', None, or True or False (True == 'naive').
+        'naive' normalizes by the overall standard deviation, whereas 'full'
+        normalizes every correlation properly.
     :param str domain: Correlation will be performed in frequency domain with
         :func:`scipy.signal.fftconvolve` for ``domain='freq'``
         and in time domain with :func:`scipy.signal.correlate` for
@@ -141,6 +180,10 @@ def correlate(a, b, shift, demean=True, normalize=True, domain='freq'):
     1.0
 
     """
+    if normalize is False:
+        normalize = None
+    elif normalize is True:
+        normalize = 'naive'
     # if we get Trace objects, use their data arrays
     if isinstance(a, Trace):
         a = a.data
@@ -148,10 +191,11 @@ def correlate(a, b, shift, demean=True, normalize=True, domain='freq'):
         b = b.data
     a = np.asarray(a)
     b = np.asarray(b)
-    if demean:
+    if demean or normalize == 'full':
         a = a - np.mean(a)
         b = b - np.mean(b)
-    if normalize:
+    # Set up for naive normalization
+    if normalize == 'naive':
         stdev = (np.sum(a ** 2)) ** 0.5 * (np.sum(b ** 2)) ** 0.5
         if stdev == 0:
             # set stdev to 1 to prevent division by 0
@@ -160,12 +204,15 @@ def correlate(a, b, shift, demean=True, normalize=True, domain='freq'):
     else:
         stdev = 1
     # choose the usually faster xcorr method for each domain
-    if domain == 'freq':
-        _xcorr = _xcorr_slice
-    elif domain == 'time':
-        _xcorr = _xcorr_padzeros
+    if normalize != 'full':
+        if domain == 'freq':
+            _xcorr = _xcorr_slice
+        elif domain == 'time':
+            _xcorr = _xcorr_padzeros
+        else:
+            raise ValueError("domain keyword has to be one of ('freq', 'time')")
     else:
-        raise ValueError("domain keyword has to be one of ('freq', 'time')")
+        _xcorr = _normxcorr
     return _xcorr(a, b, shift, domain=domain) / stdev
 
 

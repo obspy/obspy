@@ -271,6 +271,82 @@ class CrossCorrelationTestCase(unittest.TestCase):
             dt, coeff = xcorr_pick_correction(
                 t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True, filename=ic.name)
 
+    def test_template_matching(self):
+        """
+        Test for moving window correlations with "full" normalisation.
+
+        Comparison result is from EQcorrscan v.0.2.7.
+        """
+        result = [
+            -2.24548906e-01,  7.10350871e-02,  2.68642932e-01,  2.75941312e-01,
+            1.66854098e-01,  1.66086946e-02, -1.29057273e-01, -1.96172655e-01,
+            -1.41613603e-01, -6.83271606e-03,  1.45768464e-01,  2.42143899e-01,
+            1.98310092e-01,  2.16377302e-04, -2.41576880e-01, -4.00586188e-01,
+            -4.32240069e-01, -2.88735539e-01,  1.26461715e-01,  7.09268868e-01,
+            9.99999940e-01,  7.22769439e-01,  1.75955653e-01, -2.46459037e-01,
+            -4.34027880e-01, -4.32590246e-01, -2.67131507e-01, -6.78363896e-04,
+            2.08171085e-01,  2.32197508e-01,  8.64804164e-02, -1.14158235e-01,
+            -2.53621429e-01, -2.62945205e-01, -1.40505865e-01,  3.35594788e-02,
+            1.77415669e-01,  2.72263527e-01,  2.81718552e-01,  1.38080209e-01,
+            -1.27307668e-01]
+        data = read()[0].data
+        template = data[400:600]
+        data = data[380:620]
+        shift = 20
+        cc = correlate(data, template, shift, normalize="full", domain="freq")
+        np.testing.assert_allclose(cc, result, atol=0.01)
+        # This isn't really good enough, why?
+        shift, corr = xcorr_max(cc)
+        self.assertAlmostEqual(corr, 0.999, 2)
+        self.assertEqual(shift, 0)
+
+    def test_template_matching_time(self):
+        result = [
+            -2.24548906e-01,  7.10350871e-02,  2.68642932e-01,  2.75941312e-01,
+            1.66854098e-01,  1.66086946e-02, -1.29057273e-01, -1.96172655e-01,
+            -1.41613603e-01, -6.83271606e-03,  1.45768464e-01,  2.42143899e-01,
+            1.98310092e-01,  2.16377302e-04, -2.41576880e-01, -4.00586188e-01,
+            -4.32240069e-01, -2.88735539e-01,  1.26461715e-01,  7.09268868e-01,
+            9.99999940e-01,  7.22769439e-01,  1.75955653e-01, -2.46459037e-01,
+            -4.34027880e-01, -4.32590246e-01, -2.67131507e-01, -6.78363896e-04,
+            2.08171085e-01,  2.32197508e-01,  8.64804164e-02, -1.14158235e-01,
+            -2.53621429e-01, -2.62945205e-01, -1.40505865e-01,  3.35594788e-02,
+            1.77415669e-01,  2.72263527e-01,  2.81718552e-01,  1.38080209e-01,
+            -1.27307668e-01]
+        data = read()[0].data
+        template = data[400:600]
+        data = data[380:620]
+        shift = 20
+        cc = correlate(data, template, shift, normalize="full", domain="time")
+        np.testing.assert_allclose(cc, result, atol=0.01)
+        # This isn't really good enough, why?
+        shift, corr = xcorr_max(cc)
+        self.assertAlmostEqual(corr, 0.999, 2)
+        self.assertEqual(shift, 0)
+
+    """
+    We need a test that does this, but the only way to do it with long duration
+    data - EQcorrscan tests against Kaikoura data, which we know causes issues
+    for a lot of cross-correlation implementations.
+    """
+    # def test_normalisation_extreme_amplitudes(self):
+    #     """
+    #     Test full normalisation method with extreme amplitudes (e.g. large EQ)
+    #
+    #     Comparison result is from EQcorrscan v.0.2.7.
+    #     """
+    #     result =
+    #     data = read()[0].data
+    #     # Add a large amplitude thing in the data
+    #     template = data[400:600]
+    #     data = data[200:800]
+    #     shift = 1000
+    #     cc = correlate(data, template, shift, normalize="full")
+    #     np.testing.assert_allclose(cc, result)
+    #     shift, corr = xcorr_max(cc)
+    #     self.assertAlmostEqual(corr, 0.96516076)
+    #     self.assertEqual(shift, -5)
+
 
 def suite():
     return unittest.makeSuite(CrossCorrelationTestCase, 'test')
