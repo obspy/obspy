@@ -404,6 +404,7 @@ class UTCDateTime(object):
         self.__ns = value
 
     _ns = property(_get_ns, _set_ns)
+    ns = property(_get_ns, _set_ns)
 
     def _from_datetime(self, dt):
         """
