@@ -5,6 +5,9 @@ master:
  - obspy.io.shapefile:
    * Add possibility to add custom database columns when writing catalog
      objects to shapefile (see #2012)
+ - obspy.signal.cross_correlation:
+   * Add 'full' normalization option, required for correlations in
+     template-matching (see Issue #2035 and PR #2042).
 
 1.1.x:
  - obspy.core:
