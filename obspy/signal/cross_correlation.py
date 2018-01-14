@@ -210,7 +210,8 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
         elif domain == 'time':
             _xcorr = _xcorr_padzeros
         else:
-            raise ValueError("domain keyword has to be one of ('freq', 'time')")
+            raise ValueError(
+                "domain keyword has to be one of ('freq', 'time')")
     else:
         _xcorr = _normxcorr
     return _xcorr(a, b, shift, domain=domain) / stdev

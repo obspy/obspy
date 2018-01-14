@@ -331,7 +331,8 @@ class CrossCorrelationTestCase(unittest.TestCase):
     """
     # def test_normalisation_extreme_amplitudes(self):
     #     """
-    #     Test full normalisation method with extreme amplitudes (e.g. large EQ)
+    #     Test full normalisation method with extreme amplitudes
+    #     (e.g. large EQ)
     #
     #     Comparison result is from EQcorrscan v.0.2.7.
     #     """
