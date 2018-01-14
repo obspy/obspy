@@ -295,9 +295,8 @@ class CrossCorrelationTestCase(unittest.TestCase):
         shift = 20
         cc = correlate(data, template, shift, normalize="full", domain="freq")
         np.testing.assert_allclose(cc, result, atol=0.01)
-        # This isn't really good enough, why?
         shift, corr = xcorr_max(cc)
-        self.assertAlmostEqual(corr, 0.999, 2)
+        self.assertAlmostEqual(corr, 1.0, 2)
         self.assertEqual(shift, 0)
 
     def test_template_matching_time(self):
@@ -319,9 +318,8 @@ class CrossCorrelationTestCase(unittest.TestCase):
         shift = 20
         cc = correlate(data, template, shift, normalize="full", domain="time")
         np.testing.assert_allclose(cc, result, atol=0.01)
-        # This isn't really good enough, why?
         shift, corr = xcorr_max(cc)
-        self.assertAlmostEqual(corr, 0.999, 2)
+        self.assertAlmostEqual(corr, 1.0, 2)
         self.assertEqual(shift, 0)
 
     """

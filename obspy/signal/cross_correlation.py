@@ -162,6 +162,15 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
         consist of only ``2*shift`` samples because a shift of 0
         corresponds to the middle between two samples.
 
+    .. note::
+
+        For template-matching purposes, the option `normalize='full'` should
+        be used.  This will normalize every element of the returned correlation
+        array. The option `normalize='naive'` (or `normalize=True`) will divide
+        every element of the correlation array by the overall standard
+        deviation of the input data, for small shift-lengths and small changes
+        in standard deviation this can be a reasonable approximation.
+
     .. rubric:: Example
 
     >>> a = np.random.randn(10000).astype(np.float32)
