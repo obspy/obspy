@@ -15,6 +15,7 @@ from future.utils import native_str
 
 import datetime
 import math
+import operator
 import time
 
 import numpy as np
@@ -425,6 +426,19 @@ class UTCDateTime(object):
         """
         self._ns = int(round(value * 10**9))
 
+    def rounded_timestamp(self, precision=None):
+        """
+        Return a rounded timestamp to desired precision.
+
+        Handles some subtle rounding errors that can be introduced by large
+        floats.
+
+        :type precision: int
+        :param precision: optional, the required precision (<=9).
+        """
+        _precision = self.precision if precision is None else precision
+        return round(round(self._ns, _precision - 9) / 1e9, _precision)
+
     def _from_iso8601_string(self, value):
         """
         Parses an ISO8601:2004 date time string.
@@ -830,7 +844,7 @@ class UTCDateTime(object):
         >>> dt.microsecond
         345234
         """
-        return int(self._ns % 10**9 // 1000)
+        return int(round((self._ns % 10**9) / 1000))
 
     def _set_microsecond(self, value):
         """
@@ -950,7 +964,7 @@ class UTCDateTime(object):
         86400.0
         """
         if isinstance(value, UTCDateTime):
-            return round((self._ns - value._ns) / 1e9, self.__precision)
+            return self._operate(value, operator.sub)
         elif isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
@@ -993,6 +1007,20 @@ class UTCDateTime(object):
         """
         return str(self.__str__())
 
+    def _operate(self, other, op_func):
+        if isinstance(other, UTCDateTime):
+            a = self.rounded_timestamp()
+            b = other.rounded_timestamp(precision=self.precision)
+        elif isinstance(other, (float, int)):
+            a = self.rounded_timestamp()
+            b = round(float(other), self.__precision)
+        elif isinstance(other, datetime.datetime):
+            a = self.datetime
+            b = other
+        else:
+            return False
+        return op_func(a, b)
+
     def __eq__(self, other):
         """
         Rich comparison operator '=='.
@@ -1018,13 +1046,7 @@ class UTCDateTime(object):
         >>> t1 == t2
         False
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) == 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) == 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime == other
-        return False
+        return self._operate(other, operator.eq)
 
     def __ne__(self, other):
         """
@@ -1078,13 +1100,7 @@ class UTCDateTime(object):
         >>> t1 < t2
         True
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) < 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) < 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime < other
-        return False
+        return self._operate(other, operator.lt)
 
     def __le__(self, other):
         """
@@ -1111,13 +1127,7 @@ class UTCDateTime(object):
         >>> t1 <= t2
         False
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) <= 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) <= 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime <= other
-        return False
+        return self._operate(other, operator.le)
 
     def __gt__(self, other):
         """
@@ -1144,13 +1154,7 @@ class UTCDateTime(object):
         >>> t1 > t2
         True
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) > 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) > 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime > other
-        return False
+        return self._operate(other, operator.gt)
 
     def __ge__(self, other):
         """
@@ -1177,13 +1181,7 @@ class UTCDateTime(object):
         >>> t1 >= t2
         False
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) >= 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) >= 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime >= other
-        return False
+        return self._operate(other, operator.ge)
 
     def __repr__(self):
         """

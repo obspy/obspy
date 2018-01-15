@@ -16,6 +16,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.utcdatetime.UTCDateTime.
     """
+
     def test_from_string(self):
         """
         Tests initialization from a given time string not ISO8601 compatible.
@@ -302,7 +303,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         # 2
         start = UTCDateTime(1000, 1, 1, 0, 0, 0, 0)
         end = UTCDateTime(1000, 1, 1, 0, 0, 4, 0)
-        self.assertAlmostEqual(end - start, 4)
+        self.assertAlmostEqual(end - start, 4, 5)
         # 3
         start = UTCDateTime(0)
         td = datetime.timedelta(seconds=1)
@@ -861,6 +862,110 @@ class UTCDateTimeTestCase(unittest.TestCase):
             self.assertFalse(obj >= dt)
             self.assertFalse(obj > dt)
 
+    def test_rich_comparision_fuzzy(self):
+        """
+        UTCDateTime fuzzy comparisons break sorting, max, min - see #1765
+        """
+        # 1 - precision set to 6 - 3
+        for precision in [6, 5, 4, 3]:
+            dt1 = UTCDateTime(0.001, precision=precision)
+            dt2 = UTCDateTime(0.004, precision=precision)
+            dt3 = UTCDateTime(0.007, precision=precision)
+            # comparison
+            self.assertEqual(dt1 == dt2, False)
+            self.assertEqual(dt2 == dt3, False)
+            self.assertEqual(dt1 == dt3, False)
+            self.assertEqual(dt1 < dt2, True)
+            self.assertEqual(dt2 < dt3, True)
+            self.assertEqual(dt1 < dt3, True)
+            self.assertEqual(dt1 <= dt2, True)
+            self.assertEqual(dt2 <= dt3, True)
+            self.assertEqual(dt1 <= dt3, True)
+            self.assertEqual(dt1 > dt2, False)
+            self.assertEqual(dt2 > dt3, False)
+            self.assertEqual(dt1 > dt3, False)
+            self.assertEqual(dt1 >= dt2, False)
+            self.assertEqual(dt2 >= dt3, False)
+            self.assertEqual(dt1 >= dt3, False)
+            # sorting
+            times = [dt3, dt2, dt1]
+            sorted_times = sorted(times)
+            self.assertEqual(sorted_times[0] <= sorted_times[2], True)
+            self.assertEqual(sorted_times[0] < sorted_times[2], True)
+            self.assertEqual(sorted_times[0] == sorted_times[2], False)
+            self.assertEqual(sorted_times, [dt1, dt2, dt3])
+            # min, max
+            max_times = max(dt2, dt1, dt3)
+            self.assertEqual(max_times, dt3)
+            self.assertEqual(max_times._ns, 7000000)
+            max_times = max(dt1, dt2, dt3)
+            self.assertEqual(max_times, dt3)
+            self.assertEqual(max_times._ns, 7000000)
+            times = [dt2, dt1, dt3]
+            self.assertEqual(max(times), dt3)
+            self.assertEqual(max(times)._ns, 7000000)
+            self.assertEqual(min(times), dt1)
+            self.assertEqual(min(times)._ns, 1000000)
+            self.assertEqual(max(times) - min(times), 0.006)
+            times = [dt1, dt2, dt3]
+            self.assertEqual(max(times) - min(times), 0.006)
+
+        # 2 - precision set to 2
+        dt1 = UTCDateTime(0.001, precision=2)  # == 0.00
+        dt2 = UTCDateTime(0.004, precision=2)  # == 0.00
+        dt3 = UTCDateTime(0.007, precision=2)  # == 0.01
+        # comparison
+        self.assertEqual(dt1 == dt2, True)
+        self.assertEqual(dt2 == dt3, False)
+        self.assertEqual(dt1 == dt3, False)
+        self.assertEqual(dt1 < dt2, False)
+        self.assertEqual(dt2 < dt3, True)
+        self.assertEqual(dt1 < dt3, True)
+        self.assertEqual(dt1 <= dt2, True)
+        self.assertEqual(dt2 <= dt3, True)
+        self.assertEqual(dt1 <= dt3, True)
+        self.assertEqual(dt1 > dt2, False)
+        self.assertEqual(dt2 > dt3, False)
+        self.assertEqual(dt1 > dt3, False)
+        self.assertEqual(dt1 >= dt2, True)
+        self.assertEqual(dt2 >= dt3, False)
+        self.assertEqual(dt1 >= dt3, False)
+        # sorting
+        times = [dt3, dt2, dt1]
+        sorted_times = sorted(times)
+        self.assertEqual(sorted_times[0] <= sorted_times[2], True)
+        self.assertEqual(sorted_times[0] < sorted_times[2], True)
+        self.assertEqual(sorted_times[0] == sorted_times[2], False)
+        self.assertEqual(sorted_times[0] > sorted_times[2], False)
+        self.assertEqual(sorted_times[0] >= sorted_times[2], False)
+        self.assertEqual(sorted_times, [dt2, dt1, dt3])  # expected
+        self.assertEqual(sorted_times, [dt2, dt1, dt3])  # due to precision
+        # check correct sort order
+        self.assertEqual(sorted_times[0]._ns, dt2._ns)
+        self.assertEqual(sorted_times[2]._ns, dt3._ns)
+        # min, max
+        max_times = max(dt2, dt1, dt3)
+        self.assertEqual(max_times, dt3)
+        self.assertEqual(max_times._ns, 7000000)
+        max_times = max(dt1, dt2, dt3)
+        self.assertEqual(max_times, dt3)
+        self.assertEqual(max_times._ns, 7000000)
+        # min, max lists
+        times = [dt2, dt1, dt3]
+        self.assertEqual(max(times), dt3)
+        self.assertEqual(max(times)._ns, 7000000)
+        self.assertEqual(min(times), dt2)  # expected
+        self.assertEqual(min(times), dt1)  # due to precision
+        self.assertEqual(min(times)._ns, 4000000)  # due to given list order
+        self.assertEqual(max(times) - min(times), 0.01)
+        times = [dt1, dt2, dt3]
+        self.assertEqual(max(times), dt3)
+        self.assertEqual(max(times)._ns, 7000000)
+        self.assertEqual(min(times), dt1)  # expected
+        self.assertEqual(min(times), dt2)  # due to precision
+        self.assertEqual(min(times)._ns, 1000000)  # due to given list order
+        self.assertEqual(max(times) - min(times), 0.01)
+
     def test_datetime_with_timezone(self):
         """
         UTCDateTime from timezone-aware datetime.datetime
@@ -1122,6 +1227,65 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertTrue(e >= a)
         self.assertFalse(a == e)
         self.assertFalse(e == a)
+
+    def test_timestamp_can_serialize_with_time_attrs(self):
+        """
+        Test that the datetime attrs can be used to serialize UTCDateTime
+        objects inited from floats (given default precision of 6) - see 2034
+        """
+        time_attrs = ('year', 'month', 'day', 'hour', 'minute', 'second',
+                      'microsecond')
+        close_timestamps = [1515174511.1984465, 1515174511.1984463,
+                            1515174511.1984460, 1515174511.1984458]
+        close_utc = [UTCDateTime(x) for x in close_timestamps]
+
+        for utc in close_utc:
+            utc2 = UTCDateTime(**{x: getattr(utc, x) for x in time_attrs})
+            self.assertEqual(utc, utc2)
+
+    def test_str_ms_equal_ms(self):
+        """
+        Test that the microseconds in the str representation are equal to
+        the microseconds attr - see 2034
+        """
+        close_timestamps = [1515174511.1984465, 1515174511.1984463,
+                            1515174511.1984460, 1515174511.1984458]
+        close_utc = [UTCDateTime(x) for x in close_timestamps]
+
+        for utc in close_utc:
+            str_ms = int(str(utc).split('.')[-1][:-1])  # get ms from str rep
+            ms = utc.microsecond
+            self.assertEqual(str_ms, ms)
+
+    def test_close_utc_are_equal(self):
+        """
+        Ensure UTCs init'ed with floats that are very close together are
+        equal - see 2034
+
+        Note: Due to the rounding nanosecond attribute before comparision
+        we can no longer guarantee equality based on the difference in
+        nanoseconds. This trade-off was made to ensure UTCDateTime objects
+        are always equal to their string representation when precision <= 6.
+        See issue #2034 and pr # 1766.
+        """
+        # get an array of floats as close together as possible
+        def yield_close_floats(start, length):
+            for _ in range(length):
+                start = np.nextafter(start, 0)
+                yield start
+
+        # convert to UTCDateTime objects
+        close_timestamps = list(yield_close_floats(1515174511.1984458, 10))
+        close_utc = [UTCDateTime(x) for x in close_timestamps]
+
+        # if str are equal then objects should be equal and visa versa
+        for num in range(len(close_utc) - 1):
+            utc1 = close_utc[num]
+            utc2 = close_utc[num + 1]
+            if utc1 == utc2:
+                self.assertEqual(str(utc1), str(utc2))
+            if str(utc1) == str(utc2):
+                self.assertEqual(utc1, utc2)
 
 
 def suite():
