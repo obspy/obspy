@@ -10,7 +10,6 @@ Module containing a UTC-based datetime class.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
@@ -34,7 +33,7 @@ class UTCDateTime(object):
     instants in time, defined as the number of seconds elapsed since midnight
     Coordinated Universal Time (UTC) of Thursday, January 1, 1970. Internally,
     the POSIX time is represented in nanoseconds as an integer, which allows
-    higher precision as the default Python :class:`datetime.datetime` class.
+    higher precision than the default Python :class:`datetime.datetime` class.
     It features the full `ISO8601:2004`_ specification and some additional
     string patterns during object initialization.
 
@@ -854,7 +853,7 @@ class UTCDateTime(object):
         >>> dt.microsecond
         345234
         """
-        return py3_round(self._ns % 10**9, self.precision - 9) // 1000
+        return int(py3_round(self._ns % 10**9, self.precision - 9) // 1000)
 
     def _set_microsecond(self, value):
         """
@@ -944,7 +943,7 @@ class UTCDateTime(object):
         if isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
-                     86400) * 1e6) / 1e6
+                     86400) * 10**6) / 1e6
         elif isinstance(value, UTCDateTime):
             msg = ("unsupported operand type(s) for +: 'UTCDateTime' and "
                    "'UTCDateTime'")
@@ -978,7 +977,8 @@ class UTCDateTime(object):
         elif isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
-                     86400) * 1e6) / 1e6
+                     86400) * 10**6) / 1e6
+        # return UTCDateTime(ns=self._ns - int(round((value * 1e9))))
         return UTCDateTime(ns=self._ns - int(round((value * 1e9))))
 
     def __str__(self):
@@ -1083,7 +1083,7 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will always compare timestamps rounded
+        Comparing two UTCDateTime object will compare timestamps rounded
         to a precision of 6 digits by default.
 
         >>> t1 = UTCDateTime(123.000000012)
@@ -1106,7 +1106,7 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will always compare timestamps rounded
+        Comparing two UTCDateTime object will compare timestamps rounded
         to a precision of 6 digits by default.
 
         >>> t1 = UTCDateTime(123.000000099)
@@ -1129,7 +1129,7 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will always compare timestamps rounded
+        Comparing two UTCDateTime object will compare timestamps rounded
         to a precision of 6 digits by default.
 
         >>> t1 = UTCDateTime(123.000000099)
@@ -1152,7 +1152,7 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will always compare timestamps rounded
+        Comparing two UTCDateTime object will compare timestamps rounded
         to a precision of 6 digits by default.
 
         >>> t1 = UTCDateTime(123.000000012)

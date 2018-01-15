@@ -1188,8 +1188,6 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         see #1008
         """
-        utc = UTCDateTime("9999-12-31T23:59:59.9999")
-        str(utc)
         self.assertEqual(str(UTCDateTime("9999-12-31T23:59:59.9999")),
                          "9999-12-31T23:59:59.999900Z")
         self.assertEqual(str(UTCDateTime("9999-12-31T23:59:59.999999")),
