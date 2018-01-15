@@ -1227,7 +1227,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
     def test_timestamp_can_serialize_with_time_attrs(self):
         """
         Test that the datetime attrs can be used to serialize UTCDateTime
-        objects inited from floats (given default precision of 6) - see 2034
+        objects inited from floats (given default precision of 6) - see #2034
         """
         time_attrs = ('year', 'month', 'day', 'hour', 'minute', 'second',
                       'microsecond')
@@ -1242,7 +1242,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
     def test_str_ms_equal_ms(self):
         """
         Test that the microseconds in the str representation are equal to
-        the microseconds attr - see 2034
+        the microseconds attr - see #2034
         """
         close_timestamps = [1515174511.1984465, 1515174511.1984463,
                             1515174511.1984460, 1515174511.1984458]
@@ -1262,7 +1262,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         we can no longer guarantee equality based on the difference in
         nanoseconds. This trade-off was made to ensure UTCDateTime objects
         are always equal to their string representation when precision <= 6.
-        See issue #2034 and pr # 1766.
+        See issue #2034.
         """
         # get an array of floats as close together as possible
         def yield_close_floats(start, length):
