@@ -9,6 +9,7 @@ import datetime
 import itertools
 import unittest
 import warnings
+from operator import ge, eq, lt, le, gt, ne
 
 import numpy as np
 
@@ -1285,6 +1286,20 @@ class UTCDateTimeTestCase(unittest.TestCase):
                     self.assertEqual(str(utc1), str(utc2))
                 if str(utc1) == str(utc2):
                     self.assertEqual(utc1, utc2)
+
+    def test_comparing_different_precision_utcs_warns(self):
+        """
+        Comparing UTCDateTime instances with different precisions should
+        raise a warning.
+        """
+        utc1 = UTCDateTime(precision=9)
+        utc2 = UTCDateTime(precision=6)
+        for operator in [ge, eq, lt, le, gt, ne]:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                operator(utc1, utc2)
+            self.assertEqual(len(w), 1)
+            self.assertIn('different precision', str(w[-1].message))
 
 
 def suite():

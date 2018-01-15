@@ -20,7 +20,7 @@ import time
 import warnings
 
 import numpy as np
-from obspy.core.util.misc import py3_round
+from obspy.core.compatibility import py3_round
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 
@@ -978,7 +978,6 @@ class UTCDateTime(object):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
                      86400) * 10**6) / 1e6
-        # return UTCDateTime(ns=self._ns - int(round((value * 1e9))))
         return UTCDateTime(ns=self._ns - int(round((value * 1e9))))
 
     def __str__(self):
@@ -1019,8 +1018,13 @@ class UTCDateTime(object):
 
     def _operate(self, other, op_func):
         if isinstance(other, UTCDateTime):
-            a = py3_round(self._ns, self.precision - 9)
-            b = py3_round(other._ns, self.precision - 9)
+            ndigits = min(self.precision, other.precision) - 9
+            if self.precision != other.precision:
+                msg = ('Comparing UTCDateTime objects of different precision'
+                       ' is not defined and may lead to surpising behavior')
+                warnings.warn(msg)
+            a = py3_round(self._ns, ndigits)
+            b = py3_round(other._ns, ndigits)
         elif isinstance(other, (float, int)):
             a = round(self.timestamp, self.precision)
             b = round(float(other), self.__precision)
