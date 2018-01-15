@@ -46,7 +46,7 @@ if PY2:
         if data:
             try:
                 data = data.encode()
-            except AttributeError:
+            except Exception:
                 pass
             return np.frombuffer(data, dtype=dtype).copy()
         else:
@@ -56,7 +56,7 @@ else:
     def from_buffer(data, dtype):
         try:
             data = data.encode()
-        except AttributeError:
+        except Exception:
             pass
         return np.array(memoryview(data)).view(dtype).copy()  # NOQA
     import configparser  # NOQA
