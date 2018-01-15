@@ -1271,17 +1271,20 @@ class UTCDateTimeTestCase(unittest.TestCase):
                 yield start
 
         # convert to UTCDateTime objects
-        close_timestamps = list(yield_close_floats(1515174511.1984458, 10))
-        close_utc = [UTCDateTime(x) for x in close_timestamps]
+        float0 = 1515174511.1984458
+        for precision in range(1, 10):
+            close_timestamps = list(yield_close_floats(float0, 10))
+            close_utc = [UTCDateTime(x, precision=precision)
+                         for x in close_timestamps]
 
-        # if str are equal then objects should be equal and visa versa
-        for num in range(len(close_utc) - 1):
-            utc1 = close_utc[num]
-            utc2 = close_utc[num + 1]
-            if utc1 == utc2:
-                self.assertEqual(str(utc1), str(utc2))
-            if str(utc1) == str(utc2):
-                self.assertEqual(utc1, utc2)
+            # if str are equal then objects should be equal and visa versa
+            for num in range(len(close_utc) - 1):
+                utc1 = close_utc[num]
+                utc2 = close_utc[num + 1]
+                if utc1 == utc2:
+                    self.assertEqual(str(utc1), str(utc2))
+                if str(utc1) == str(utc2):
+                    self.assertEqual(utc1, utc2)
 
 
 def suite():
