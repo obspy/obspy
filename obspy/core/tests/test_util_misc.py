@@ -13,7 +13,7 @@ import warnings
 from obspy import UTCDateTime, read
 from obspy.core.compatibility import mock
 from obspy.core.util.misc import CatchOutput, get_window_times, \
-    _ENTRY_POINT_CACHE, py3_round
+    _ENTRY_POINT_CACHE
 
 
 class UtilMiscTestCase(unittest.TestCase):
@@ -261,25 +261,6 @@ class UtilMiscTestCase(unittest.TestCase):
                     st.write('temp.mseed', 'mseed')
             self.assertEqual(len(_ENTRY_POINT_CACHE), 3)
             self.assertEqual(p.call_count, 3)
-
-    def test_py3_round(self):
-        """
-        Ensure py3_round rounds correctly and returns expected data types.
-        """
-        # list of tuples; (input, ndigits, expected, excpected type)
-        test_list = [
-            (.222, 2, .22, float),
-            (1516047903968282880, -3, 1516047903968283000, int),
-            (1.499999999, None, 1, int),
-            (.0222, None, 0, int),
-            (12, -1, 10, int),
-            (15, -1, 20, int),
-            (15, -2, 0, int),
-        ]
-        for number, ndigits, expected, expected_type in test_list:
-            out = py3_round(number, ndigits)
-            self.assertEqual(out, expected)
-            self.assertIsInstance(out, expected_type)
 
 
 def suite():
