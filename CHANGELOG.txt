@@ -3,7 +3,7 @@ master:
    * Casting FDSN identifiers to strings upon setting in the stats dictionary
      (see #1997).
    * UTCDateTime objects will now always evaluate equal if their string
-     representations are equal.
+     representations are equal (see #2049).
  - obspy.io.shapefile:
    * Add possibility to add custom database columns when writing catalog
      objects to shapefile (see #2012)
