@@ -124,7 +124,9 @@ class UtilBaseTestCase(unittest.TestCase):
     def test_create_empty_data_chunk(self):
         out = create_empty_data_chunk(3, 'int', 10)
         self.assertIsInstance(out, np.ndarray)
-        self.assertEqual(out.dtype, np.int64)
+        # The default dtype for an integer (np.int_) is a `C long` which is
+        # only 32 bits on windows. Thus we have to allow both.
+        self.assertIn(out.dtype, (np.int32, np.int64))
         np.testing.assert_allclose(out, [10, 10, 10])
 
         out = create_empty_data_chunk(6, np.complex128, 0)
