@@ -42,6 +42,20 @@ def _pad_zeros(a, num):
 def _xcorr_padzeros(a, b, shift, domain='freq'):
     """
     Cross-correlation using SciPy with mode='valid' and precedent zero padding
+
+    :type a: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param a: first signal
+    :type b: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param b: second signal to correlate with first signal
+    :param int shift: Number of samples to shift for cross correlation.
+        The cross-correlation will consist of ``2*shift+1`` or
+        ``2*shift`` samples. The sample with zero shift will be in the middle.
+    :param str domain: Correlation will be performed in frequency domain with
+        :func:`scipy.signal.fftconvolve` for ``domain='freq'``
+        and in time domain with :func:`scipy.signal.correlate` for
+        ``domain='time'``.
+
+    :return: cross-correlation function.
     """
     assert domain in ('freq', 'time')
     if shift is None:
@@ -61,6 +75,20 @@ def _xcorr_padzeros(a, b, shift, domain='freq'):
 def _xcorr_slice(a, b, shift, domain='freq'):
     """
     Cross-correlation using SciPy with mode='full' and subsequent slicing
+
+    :type a: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param a: first signal
+    :type b: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param b: second signal to correlate with first signal
+    :param int shift: Number of samples to shift for cross correlation.
+        The cross-correlation will consist of ``2*shift+1`` or
+        ``2*shift`` samples. The sample with zero shift will be in the middle.
+    :param str domain: Correlation will be performed in frequency domain with
+        :func:`scipy.signal.fftconvolve` for ``domain='freq'``
+        and in time domain with :func:`scipy.signal.correlate` for
+        ``domain='time'``.
+
+    :return: cross-correlation function.
     """
     assert domain in ('freq', 'time')
     mid = (len(a) + len(b) - 1) // 2
@@ -78,7 +106,21 @@ def _xcorr_slice(a, b, shift, domain='freq'):
 
 def _normxcorr(a, b, shift, domain='freq'):
     """
-    Normalized cross-correlation
+    Normalized cross-correlation.
+
+    :type a: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param a: first signal
+    :type b: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param b: second signal to correlate with first signal
+    :param int shift: Number of samples to shift for cross correlation.
+        The cross-correlation will consist of ``2*shift+1`` or
+        ``2*shift`` samples. The sample with zero shift will be in the middle.
+    :param str domain: Correlation will be performed in frequency domain with
+        :func:`scipy.signal.fftconvolve` for ``domain='freq'``
+        and in time domain with :func:`scipy.signal.correlate` for
+        ``domain='time'``.
+
+    :return: cross-correlation function.
     """
     mid = (len(a) + len(b) - 1) // 2
     if shift is None:
