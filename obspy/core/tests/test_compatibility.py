@@ -24,7 +24,11 @@ class CompatibilityTestCase(unittest.TestCase):
             (15, -2, 0, int),
         ]
         for number, ndigits, expected, expected_type in test_list:
-            out = py3_round(number, ndigits)
+            # this is a fix for py3.4 which cannot take None as ndigits
+            if ndigits is not None:
+                out = py3_round(number, ndigits)
+            else:
+                out = py3_round(number)
             self.assertEqual(out, expected)
             self.assertIsInstance(out, expected_type)
 
