@@ -39,6 +39,7 @@ from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory
 from obspy.core.util import AttribDict
 from obspy.core.util.base import MATPLOTLIB_VERSION
+from obspy.core.util.obspy_types import ObsPyException
 from obspy.imaging.cm import obspy_sequential
 from obspy.imaging.util import _set_xaxis_obspy_dates
 from obspy.io.xseed import Parser
@@ -1231,6 +1232,19 @@ class PPSD(object):
         data = np.load(filename)
         # the information regarding stats is set from the npz
         ppsd = PPSD(Stats(), metadata=metadata)
+        # add some future-proofing and show a warning if older obspy
+        # versions should read a more recent ppsd npz file, since this is very
+        # like problematic
+        if data['ppsd_version'].item() > ppsd.ppsd_version:
+            msg = ("Trying to read a PPSD npz with 'ppsd_version={}'. This "
+                   "file was written on a more recent ObsPy version that very "
+                   "likely has incompatible changes in PPSD internal "
+                   "structure and npz serialization. It can not safely be "
+                   "read with this ObsPy version (current 'ppsd_version' is "
+                   "{}). Please consider updating your ObsPy "
+                   "installation.").format(data['ppsd_version'].item(),
+                                           ppsd.ppsd_version)
+            raise ObsPyException(msg)
         for key in ppsd.NPZ_STORE_KEYS:
             # data is stored as arrays in the npz.
             # we have to convert those back to lists (or simple types), so that
