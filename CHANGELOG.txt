@@ -26,6 +26,8 @@ master:
    * Write the UTC time zone specifier to all times (see #2015).
  - obspy.signal:
    * Allow singular COUNT units in evalresp (see #2003, #2011).
+ - obspy.signal.PPSD:
+   * Fixed exact trace cutting for PSD segments (see #2040).
 
 1.1.0: (doi: 10.5281/zenodo.165135)
  - General:
