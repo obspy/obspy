@@ -66,8 +66,10 @@ def _cplxreal(z, tol=None):
     --------
     >>> a = [4, 3, 1, 2-2j, 2+2j, 2-1j, 2+1j, 2-1j, 2+1j, 1+1j, 1-1j]
     >>> zc, zr = _cplxreal(a)
-    >>> print(zc)
-    [ 1.+1.j  2.+1.j  2.+1.j  2.+2.j]
+    >>> print(zc.real)
+    [ 1.  2.  2.  2.]
+    >>> print(zc.imag)
+    [ 1.  1.  1.  2.]
     >>> print(zr)
     [ 1.  3.  4.]
     """

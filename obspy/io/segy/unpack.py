@@ -23,6 +23,7 @@ import warnings
 
 import numpy as np
 
+from obspy.core.compatibility import from_buffer
 from .util import clibsegy
 
 
@@ -46,7 +47,7 @@ def unpack_4byte_ibm(file, count, endian='>'):
     Unpacks 4 byte IBM floating points.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 4), dtype=np.float32)
+    data = from_buffer(file.read(count * 4), dtype=np.float32)
     # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
@@ -92,7 +93,7 @@ def unpack_4byte_integer(file, count, endian='>'):
     Unpacks 4 byte integers.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 4), dtype=np.int32)
+    data = from_buffer(file.read(count * 4), dtype=np.int32)
     # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
@@ -104,7 +105,7 @@ def unpack_2byte_integer(file, count, endian='>'):
     Unpacks 2 byte integers.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 2), dtype=np.int16)
+    data = from_buffer(file.read(count * 2), dtype=np.int16)
     # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
@@ -120,7 +121,7 @@ def unpack_4byte_ieee(file, count, endian='>'):
     Unpacks 4 byte IEEE floating points.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 4), dtype=np.float32)
+    data = from_buffer(file.read(count * 4), dtype=np.float32)
     # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()

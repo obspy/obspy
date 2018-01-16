@@ -248,7 +248,7 @@ class TauPyPlottingTestCase(unittest.TestCase):
         arrivals = self.model.get_ray_paths(500, 20, phase_list=['P'])
         # polar plot attempted in cartesian axes
         expected_msg = "Plot type 'spam' is not a valid option."
-        with self.assertRaisesRegexp(ValueError, expected_msg):
+        with self.assertRaises(ValueError, msg=expected_msg):
             arrivals.plot_rays(plot_type="spam")
 
 

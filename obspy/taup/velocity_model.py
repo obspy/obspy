@@ -283,7 +283,7 @@ class VelocityModel(object):
         # Check for gaps
         gaps = self.layers[:-1]['bot_depth'] != self.layers[1:]['top_depth']
         gaps = np.where(gaps)[0]
-        if gaps:
+        if gaps.size:
             msg = ("There is a gap in the velocity model between layer(s) %s "
                    "and %s.\n%s" % (gaps, gaps + 1, self.layers[gaps]))
             raise ValueError(msg)
@@ -291,7 +291,7 @@ class VelocityModel(object):
         # Check for zero thickness
         probs = self.layers['bot_depth'] == self.layers['top_depth']
         probs = np.where(probs)[0]
-        if probs:
+        if probs.size:
             msg = ("There is a zero thickness layer in the velocity model at "
                    "layer(s) %s\n%s" % (probs, self.layers[probs]))
             raise ValueError(msg)
@@ -300,7 +300,7 @@ class VelocityModel(object):
         probs = np.logical_or(self.layers['top_p_velocity'] <= 0.0,
                               self.layers['bot_p_velocity'] <= 0.0)
         probs = np.where(probs)[0]
-        if probs:
+        if probs.size:
             msg = ("There is a negative P velocity layer in the velocity "
                    "model at layer(s) %s\n%s" % (probs, self.layers[probs]))
             raise ValueError(msg)
@@ -309,7 +309,7 @@ class VelocityModel(object):
         probs = np.logical_or(self.layers['top_s_velocity'] < 0.0,
                               self.layers['bot_s_velocity'] < 0.0)
         probs = np.where(probs)[0]
-        if probs:
+        if probs.size:
             msg = ("There is a negative S velocity layer in the velocity "
                    "model at layer(s) %s\n%s" % (probs, self.layers[probs]))
             raise ValueError(msg)
@@ -321,7 +321,7 @@ class VelocityModel(object):
             np.logical_and(self.layers['top_p_velocity'] == 0.0,
                            self.layers['bot_p_velocity'] != 0.0))
         probs = np.where(probs)[0]
-        if probs:
+        if probs.size:
             msg = ("There is a layer that goes to zero P velocity (top or "
                    "bottom) without a discontinuity in the velocity model at "
                    "layer(s) %s\nThis would cause a divide by zero within "
@@ -339,7 +339,7 @@ class VelocityModel(object):
         #  in IASP91, therefore ignore it.
         probs = np.logical_and(probs, self.layers['top_depth'] != 0)
         probs = np.where(probs)[0]
-        if probs:
+        if probs.size:
             msg = ("There is a layer that goes to zero S velocity (top or "
                    "bottom) without a discontinuity in the velocity model at "
                    "layer(s) %s\nThis would cause a divide by zero within "
