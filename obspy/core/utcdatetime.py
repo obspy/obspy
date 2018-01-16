@@ -1025,15 +1025,12 @@ class UTCDateTime(object):
                 warnings.warn(msg)
             a = py3_round(self._ns, ndigits)
             b = py3_round(other._ns, ndigits)
-        elif isinstance(other, (float, int)):
-            a = round(self.timestamp, self.precision)
-            b = round(float(other), self.__precision)
-        elif isinstance(other, datetime.datetime):
-            a = self.datetime
-            b = other
+            return op_func(a, b)
         else:
-            return False
-        return op_func(a, b)
+            try:
+                return self._operate(UTCDateTime(other), op_func)
+            except TypeError:
+                return False
 
     def __eq__(self, other):
         """
@@ -1041,8 +1038,9 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will compare timestamps rounded
-        to a precision of 6 digits by default.
+        Comparing two UTCDateTime objects will compare the nanoseconds integers
+        rounded to a number of significant digits determined by the precision
+        attribute.
 
         >>> t1 = UTCDateTime(123.000000012)
         >>> t2 = UTCDateTime(123.000000099)
@@ -1064,8 +1062,9 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will compare the integer nanoseconds
-        to a precision of 6 digits by default.
+        Comparing two UTCDateTime objects will compare the nanoseconds integers
+        rounded to a number of significant digits determined by the precision
+        attribute.
 
         >>> t1 = UTCDateTime(123.000000012)
         >>> t2 = UTCDateTime(123.000000099)
@@ -1087,8 +1086,9 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will compare timestamps rounded
-        to a precision of 6 digits by default.
+        Comparing two UTCDateTime objects will compare the nanoseconds integers
+        rounded to a number of significant digits determined by the precision
+        attribute.
 
         >>> t1 = UTCDateTime(123.000000012)
         >>> t2 = UTCDateTime(123.000000099)
@@ -1110,8 +1110,9 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will compare timestamps rounded
-        to a precision of 6 digits by default.
+        Comparing two UTCDateTime objects will compare the nanoseconds integers
+        rounded to a number of significant digits determined by the precision
+        attribute.
 
         >>> t1 = UTCDateTime(123.000000099)
         >>> t2 = UTCDateTime(123.000000012)
@@ -1133,8 +1134,9 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will compare timestamps rounded
-        to a precision of 6 digits by default.
+        Comparing two UTCDateTime objects will compare the nanoseconds integers
+        rounded to a number of significant digits determined by the precision
+        attribute.
 
         >>> t1 = UTCDateTime(123.000000099)
         >>> t2 = UTCDateTime(123.000000012)
@@ -1156,8 +1158,9 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will compare timestamps rounded
-        to a precision of 6 digits by default.
+        Comparing two UTCDateTime objects will compare the nanoseconds integers
+        rounded to a number of significant digits determined by the precision
+        attribute.
 
         >>> t1 = UTCDateTime(123.000000012)
         >>> t2 = UTCDateTime(123.000000099)

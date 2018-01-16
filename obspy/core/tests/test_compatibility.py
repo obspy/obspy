@@ -27,3 +27,11 @@ class CompatibilityTestCase(unittest.TestCase):
             out = py3_round(number, ndigits)
             self.assertEqual(out, expected)
             self.assertIsInstance(out, expected_type)
+
+
+def suite():
+    return unittest.makeSuite(CompatibilityTestCase, 'test')
+
+
+if __name__ == '__main__':
+    unittest.main(defaultTest='suite')
