@@ -18,6 +18,7 @@ from struct import pack, unpack
 import numpy as np
 
 from obspy import UTCDateTime
+from obspy.core.compatibility import from_buffer
 from obspy.core.util.decorator import ObsPyDeprecationWarning
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
                       FIXED_HEADER_DATA_QUAL_FLAGS,
@@ -234,7 +235,7 @@ def get_flags(files, starttime=None, endtime=None,
             # Read to NumPy array which is used as a buffer.
             bfr_np = np.fromfile(file, dtype=np.int8)
         elif hasattr(file, 'read'):
-            bfr_np = np.fromstring(file.read(), dtype=np.int8)
+            bfr_np = from_buffer(file.read(), dtype=np.int8)
 
         offset = 0
 
@@ -738,7 +739,7 @@ def _get_record_information(file_object, offset=0, endian=None):
     if "record_length" not in info:
         file_object.seek(record_start, 0)
         # Read 16 kb - should be a safe maximal record length.
-        buf = np.fromstring(file_object.read(2 ** 14), dtype=np.int8)
+        buf = from_buffer(file_object.read(2 ** 14), dtype=np.int8)
         # This is a messy check - we just delegate to libmseed.
         reclen = clibmseed.ms_detect(buf, len(buf))
         if reclen < 0:

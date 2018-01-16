@@ -251,7 +251,7 @@ def read_sac_ascii(source, headonly=False):
     hs, = init_header_arrays(arrays=('str',))
     for i, j in enumerate(range(0, 24, 3)):
         line = contents[14 + 8 + i]
-        hs[j:j + 3] = np.fromstring(line, dtype=native_str('|S8'), count=3)
+        hs[j:j + 3] = from_buffer(line[:24], dtype=native_str('|S8'))
     # --------------------------------------------------------------
     # read in the seismogram points
     # --------------------------------------------------------------

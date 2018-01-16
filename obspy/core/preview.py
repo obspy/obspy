@@ -66,7 +66,7 @@ def create_preview(trace, delta=60):
         # skip tailing samples
         last_diff = []
     # Fill NaN value with -1.
-    if np.isnan(last_diff):
+    if len(last_diff) and np.isnan(last_diff)[0]:
         last_diff = -1
     # reshape matrix
     data = trace.data[start:end].reshape([number_of_slices, samples_per_slice])

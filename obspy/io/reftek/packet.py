@@ -17,6 +17,7 @@ import warnings
 import numpy as np
 
 from obspy import UTCDateTime
+from obspy.core.compatibility import from_buffer
 from obspy.io.mseed.headers import clibmseed
 
 from .util import (
@@ -238,7 +239,7 @@ def _initial_unpack_packets(bytestring):
         msg = ("Length of data not a multiple of 1024. Data might be "
                "truncated. Dropping {:d} byte(s) at the end.").format(tail)
         warnings.warn(msg)
-    data = np.fromstring(
+    data = from_buffer(
         bytestring, dtype=PACKET_INITIAL_UNPACK_DTYPE)
     result = np.empty_like(data, dtype=PACKET_FINAL_DTYPE)
 

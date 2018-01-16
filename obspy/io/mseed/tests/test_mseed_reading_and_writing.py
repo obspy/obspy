@@ -18,6 +18,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import AttribDict
+from obspy.core.compatibility import from_buffer
 from obspy.core.util import CatchOutput, NamedTemporaryFile
 from obspy.io.mseed import (util, InternalMSEEDWarning,
                             InternalMSEEDError)
@@ -756,8 +757,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     # ObsPy
                     with open(tempfile, "rb") as fp:
                         s = fp.read()
-                    data = np.fromstring(s[56:256],
-                                         dtype=native_str(btype + dtype))
+                    data = from_buffer(s[56:256],
+                                       dtype=native_str(btype + dtype))
                     np.testing.assert_array_equal(data, st[0].data[:len(data)])
                     # Read the binary chunk of data with ObsPy
                     st2 = read(tempfile)
@@ -768,7 +769,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Tests writing small ASCII strings.
         """
         st = Stream()
-        st.append(Trace(data=np.fromstring("A" * 8, native_str("|S1"))))
+        st.append(Trace(data=from_buffer("A" * 8, native_str("|S1"))))
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             st.write(tempfile, format="MSEED")
@@ -829,10 +830,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         files = {
             os.path.join(path, "smallASCII.mseed"):
             (native_str('|S1'), 'a', 0,
-             np.fromstring('ABCDEFGH', dtype=native_str('|S1'))),
+             from_buffer('ABCDEFGH', dtype=native_str('|S1'))),
             # Tests all ASCII letters.
             os.path.join(path, "fullASCII.mseed"):
-            (native_str('|S1'), 'a', 0, np.fromstring(
+            (native_str('|S1'), 'a', 0, from_buffer(
                 """ !"#$%&'()*+,-./""" +
                 """0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" +
                 """abcdefghijklmnopqrstuvwxyz{|}~""",

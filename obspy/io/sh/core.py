@@ -20,6 +20,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
+from obspy.core.compatibility import from_buffer
 from obspy.core.util import loadtxt
 
 
@@ -464,7 +465,7 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
             # read data
             data = fh_data.read(npts * 4)
             dtype = native_str(byteorder + 'f4')
-            data = np.fromstring(data, dtype=dtype)
+            data = from_buffer(data, dtype=dtype)
             # convert to system byte order
             data = np.require(data, native_str('=f4'))
             stream.append(Trace(data=data, header=header))

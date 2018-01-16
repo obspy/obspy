@@ -12,6 +12,7 @@ import warnings
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core.compatibility import from_buffer
 
 
 def _is_win(filename, century="20"):  # @UnusedVariable
@@ -46,7 +47,7 @@ def _is_win(filename, century="20"):  # @UnusedVariable
             int('%x' % (ord(buff[2:3]) >> 4))
             ord(buff[3:4])
             idata00 = fpin.read(4)
-            np.fromstring(idata00, native_str('>i'))[0]
+            from_buffer(idata00, native_str('>i'))[0]
     except Exception:
         return False
     return True
@@ -83,7 +84,7 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
             if len(pklen) < 4:
                 break
             leng = 4
-            truelen = np.fromstring(pklen, native_str('>i'))[0]
+            truelen = from_buffer(pklen, native_str('>i'))[0]
             if truelen == 0:
                 break
             buff = fpin.read(6)
@@ -117,7 +118,7 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
 
                 idata00 = fpin.read(4)
                 leng += 4
-                idata22 = np.fromstring(idata00, native_str('>i'))[0]
+                idata22 = from_buffer(idata00, native_str('>i'))[0]
 
                 if chanum in output:
                     output[chanum].append(idata22)
@@ -136,34 +137,34 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
                 if datawide == 0.5:
                     for i in range(xlen):
                         idata2 = output[chanum][-1] + \
-                            np.fromstring(sdata[i:i + 1], np.int8)[0] >> 4
+                            from_buffer(sdata[i:i + 1], np.int8)[0] >> 4
                         output[chanum].append(idata2)
                         idata2 = idata2 +\
-                            (np.fromstring(sdata[i:i + 1],
-                                           np.int8)[0] << 4) >> 4
+                            (from_buffer(sdata[i:i + 1],
+                                         np.int8)[0] << 4) >> 4
                         output[chanum].append(idata2)
                 elif datawide == 1:
                     for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
-                            np.fromstring(sdata[i:i + 1], np.int8)[0]
+                            from_buffer(sdata[i:i + 1], np.int8)[0]
                         output[chanum].append(idata2)
                 elif datawide == 2:
                     for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
-                            np.fromstring(sdata[2 * i:2 * (i + 1)],
-                                          native_str('>h'))[0]
+                            from_buffer(sdata[2 * i:2 * (i + 1)],
+                                        native_str('>h'))[0]
                         output[chanum].append(idata2)
                 elif datawide == 3:
                     for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
-                            np.fromstring(sdata[3 * i:3 * (i + 1)] + b' ',
-                                          native_str('>i'))[0] >> 8
+                            from_buffer(sdata[3 * i:3 * (i + 1)] + b' ',
+                                        native_str('>i'))[0] >> 8
                         output[chanum].append(idata2)
                 elif datawide == 4:
                     for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
-                            np.fromstring(sdata[4 * i:4 * (i + 1)],
-                                          native_str('>i'))[0]
+                            from_buffer(sdata[4 * i:4 * (i + 1)],
+                                        native_str('>i'))[0]
                         output[chanum].append(idata2)
                 else:
                     msg = "DATAWIDE is %s " % datawide + \
