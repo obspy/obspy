@@ -294,12 +294,17 @@ class CrossCorrelationTestCase(unittest.TestCase):
         data = data[380:620]
         shift = 20
         cc = correlate(data, template, shift, normalize="full", domain="freq")
-        np.testing.assert_allclose(cc, result, atol=0.01)
+        # TODO: This doesn't match closely enough
+        np.testing.assert_allclose(cc, result, atol=0.00001)
         shift, corr = xcorr_max(cc)
-        self.assertAlmostEqual(corr, 1.0, 2)
+        # TODO: This is not close enough to 1.0
+        self.assertAlmostEqual(corr, 1.0, 7)
         self.assertEqual(shift, 0)
 
     def test_template_matching_time(self):
+        """
+        Test full normalization in time domain.
+        """
         result = [
             -2.24548906e-01,  7.10350871e-02,  2.68642932e-01,  2.75941312e-01,
             1.66854098e-01,  1.66086946e-02, -1.29057273e-01, -1.96172655e-01,
@@ -317,10 +322,29 @@ class CrossCorrelationTestCase(unittest.TestCase):
         data = data[380:620]
         shift = 20
         cc = correlate(data, template, shift, normalize="full", domain="time")
-        np.testing.assert_allclose(cc, result, atol=0.01)
+        # TODO: Not close enough
+        np.testing.assert_allclose(cc, result, atol=0.000001)
         shift, corr = xcorr_max(cc)
-        self.assertAlmostEqual(corr, 1.0, 2)
+        # TODO: Not close enough
+        self.assertAlmostEqual(corr, 1.0, 7)
         self.assertEqual(shift, 0)
+
+    def test_template_matching_normalization_equality(self):
+        """
+        Test that, for data of the same length, naive and full normalization
+        give the same result.
+        """
+        naive_xcorr = correlate(self.a, self.b, shift=15)
+        full_xcorr = correlate(self.a, self.b, shift=15, normalize='full')
+        self.assertEqual(naive_xcorr, full_xcorr)
+
+    def test_template_matching_reversed_order(self):
+        """
+        Check that arguments can be given in whichever order the user fancies.
+        """
+        forwards_xcorr = correlate(self.a, self.b[0:-20], normalize='full')
+        reversed_xcorr = correlate(self.b[0:-20], self.a, normalize='full')
+        self.assertEqual(forwards_xcorr, reversed_xcorr)
 
     """
     We need a test that does this, but the only way to do it with long duration

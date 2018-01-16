@@ -122,35 +122,45 @@ def _normxcorr(a, b, shift, domain='freq'):
 
     :return: cross-correlation function.
     """
-    mid = (len(a) + len(b) - 1) // 2
+    assert domain in ("freq", "time")
+    if len(b) > len(a):
+        long_data = b
+        short_data = a
+    else:
+        long_data = a
+        short_data = b
+    mid = (len(long_data) + len(short_data) - 1) // 2
     if shift is None:
         shift = mid
     # Normalize short window before correlation
-    b = (b - b.mean()) / (b.std() * len(b))
+    # TODO: Change this to allow non zero-normalized correlation
+    short_data = (short_data - short_data.mean()) / (
+            short_data.std() * len(short_data))
     # We HAVE to pad in this case
-    a = np.pad(a, pad_width=len(b), mode='constant', constant_values=0)
+    long_data = _pad_zeros(long_data, len(short_data))
     if domain == 'time':
-        c = scipy.signal.correlate(a, b, 'valid')
+        c = scipy.signal.correlate(long_data, short_data, 'valid')
     else:
-        c = scipy.signal.fftconvolve(a, b[::-1], 'valid')
+        c = scipy.signal.fftconvolve(long_data, short_data[::-1], 'valid')
     # Calculate moving mean and moving standard deviation
     # using cumulative sums.
     c = c[1:-1]
-    move_mean = np.cumsum(a)
-    move_mean = move_mean[len(b):-1] - move_mean[:-len(b) - 1]
-    numerator = c - move_mean * b.mean()
-    denominator = np.cumsum(a ** 2)
-    denominator = denominator[len(b):-1] - denominator[:-len(b) - 1]
+    move_mean = np.cumsum(long_data)
+    move_mean = move_mean[len(short_data):-1] - \
+        move_mean[:-len(short_data) - 1]
+    denominator = np.cumsum(long_data ** 2)
+    denominator = denominator[len(short_data):-1] - \
+        denominator[:-len(short_data) - 1]
     np.multiply(move_mean, move_mean, out=move_mean)
-    np.divide(move_mean, len(a), out=move_mean)
+    np.divide(move_mean, len(long_data), out=move_mean)
     denominator -= move_mean
-    denominator *= b.std()
+    denominator *= short_data.std()
     np.maximum(denominator, 0, out=denominator)
     np.sqrt(denominator, out=denominator)
     # Cope with zero divisions? - scikit uses a mask
     response = np.zeros_like(c, dtype=np.float64)
     mask = denominator > np.finfo(np.float64).eps
-    response[mask] = numerator[mask] / denominator[mask]
+    response[mask] = c[mask] / denominator[mask]
     c = response
     return c[mid - shift:mid + shift + len(c) % 2]
 
@@ -168,9 +178,9 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
         ``2*shift`` samples. The sample with zero shift will be in the middle.
     :param bool demean: Demean data beforehand.
     :param bool normalize: Method for normalization of cross-correlation.
-        Any one of 'naive', 'full', None, or True or False (True == 'naive').
-        'naive' normalizes by the overall standard deviation, whereas 'full'
-        normalizes every correlation properly.
+        Any one of ``'naive'``, ``'full'``, None, or ``True`` or ``False``
+         (``True == 'naive'``). ``'naive'`` normalizes by the overall standard
+         deviation, whereas ``'full'`` normalizes every correlation properly.
     :param str domain: Correlation will be performed in frequency domain with
         :func:`scipy.signal.fftconvolve` for ``domain='freq'``
         and in time domain with :func:`scipy.signal.correlate` for
