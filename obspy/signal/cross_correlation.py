@@ -109,7 +109,7 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
     .. note::
 
         For template-matching purposes, use the function `correlate_template`
-        which allows to perform a proper normalization.
+        which provides a full normalization.
 
     .. note::
 
