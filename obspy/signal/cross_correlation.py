@@ -230,9 +230,9 @@ def correlate_template(data, template, mode='valid', normalize='full',
         template = template.data
     data = np.asarray(data)
     template = np.asarray(template)
-    N = len(template)
-    if len(data) < N:
-        raise ValueError('Template has to be shorter than data.')
+    lent = len(template)
+    if len(data) < lent:
+        raise ValueError('Data must not be shorter than template.')
     if demean:
         template = template - np.mean(template)
         if normalize != 'full':
@@ -251,17 +251,17 @@ def correlate_template(data, template, mode='valid', normalize='full',
                 norm = 1
                 c[:] = 0
         elif normalize == 'full':
-            pad = len(c) - len(data) + N
+            pad = len(c) - len(data) + lent
             if mode == 'same':
                 pad1, pad2 = (pad + 2) // 2, (pad - 1) // 2
             else:
                 pad1, pad2 = (pad + 1) // 2, pad // 2
             data = _pad_zeros(data, pad1, pad2)
             if demean:
-                norm = ((_window_sum(data ** 2, N) -
-                         _window_sum(data, N) ** 2 / N) * norm) ** 0.5
+                norm = ((_window_sum(data ** 2, lent) -
+                         _window_sum(data, lent) ** 2 / lent) * norm) ** 0.5
             else:
-                norm = (_window_sum(data ** 2, N) * norm) ** 0.5
+                norm = (_window_sum(data ** 2, lent) * norm) ** 0.5
             mask = norm <= np.finfo(float).eps
             c[mask] = 0
             norm[mask] = 1
