@@ -90,7 +90,7 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
         The cross-correlation will consist of ``2*shift+1`` or
         ``2*shift`` samples. The sample with zero shift will be in the middle.
     :param bool demean: Demean data beforehand.
-    :param bool normalize: Method for normalization of cross-correlation.
+    :param normalize: Method for normalization of cross-correlation.
         One of ``'naive'`` or ``None``
         (``True`` and ``False`` are supported for backwards compatibility).
         ``'naive'`` normalizes by the overall standard deviation.
