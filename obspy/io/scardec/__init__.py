@@ -19,25 +19,27 @@ Example
 It works by utilizing ObsPy's :func:`~obspy.core.event.read_events` function.
 
 >>> import obspy
->>> cat = obspy.read_events("/path/to/SCARDEC_file")
+>>> cat = obspy.read_events("/path/to/test.scardec")
 >>> print(cat)
 1 Event(s) in Catalog:
-2003-12-26T01:56:58.129999Z | +29.100,  +58.240 | 6.54 mw
+2014-01-25T05:14:18.000000Z |  -7.985, +109.265 | 6.202 mw
 
 The event will contain one origins with a moment rate function.
 
->>> print(cat[0])  # doctest: +NORMALIZE_WHITESPACES +ELLIPSIS
+>>> print(cat[0])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
 Event:  2014-01-25T05:14:18.000000Z |  -7.985, +109.265 | 6.202 mw
-
-               resource_id: ResourceIdentifier(id='...')
-                event_type: 'earthquake'
-    ---------
-        event_descriptions: 1 Elements
-                  comments: 1 Elements
-          focal_mechanisms: 1 Elements
-                   origins: 1 Elements
-                magnitudes: 1 Elements
-     source_time_functions: 1 Elements
+<BLANKLINE>
+                     resource_id: ResourceIdentifier(id="...")
+                      event_type: 'earthquake'
+             preferred_origin_id: ResourceIdentifier(id="...")
+          preferred_magnitude_id: ResourceIdentifier(id="...")
+    preferred_focal_mechanism_id: ResourceIdentifier(id="...")
+                            ---------
+              event_descriptions: 1 Elements
+                        comments: 1 Elements
+                focal_mechanisms: 1 Elements
+                         origins: 1 Elements
+                      magnitudes: 1 Elements
 
 
 This module also offers write support for the SCARDEC format.

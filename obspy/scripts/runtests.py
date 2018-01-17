@@ -129,6 +129,14 @@ The following commands will produce the same output as shown above:
 Type "help" to see all available options.
 """
 
+# Set legacy printing for numpy so the doctests work regardless of the numpy
+# version.
+try:
+    np.set_printoptions(legacy='1.13')
+except TypeError:
+    pass
+
+
 HOSTNAME = platform.node().split('.', 1)[0]
 
 

@@ -44,12 +44,20 @@ if PY2:
         if isinstance(dtype, unicode):  # noqa
             dtype = str(dtype)
         if data:
+            try:
+                data = data.encode()
+            except Exception:
+                pass
             return np.frombuffer(data, dtype=dtype).copy()
         else:
             return np.array([], dtype=dtype)
     import ConfigParser as configparser  # NOQA
 else:
     def from_buffer(data, dtype):
+        try:
+            data = data.encode()
+        except Exception:
+            pass
         return np.array(memoryview(data)).view(dtype).copy()  # NOQA
     import configparser  # NOQA
 

@@ -17,12 +17,14 @@ import warnings
 import numpy as np
 
 from obspy import UTCDateTime
+from obspy.core.compatibility import from_buffer
 from obspy.io.mseed.headers import clibmseed
 
 from .util import (
     _decode_ascii, _parse_long_time, _16_tuple_ascii, _16_tuple_int,
-    _16_tuple_float, bcd, bcd_hex, bcd_julian_day_string_to_seconds_of_year,
-    bcd_16bit_int, bcd_8bit_hex, _get_timestamp_for_start_of_year)
+    _16_tuple_float, bcd, bcd_hex,
+    bcd_julian_day_string_to_nanoseconds_of_year, bcd_16bit_int, bcd_8bit_hex,
+    _get_nanoseconds_for_start_of_year)
 
 
 class Reftek130UnpackPacketError(ValueError):
@@ -45,8 +47,8 @@ PACKET = [
     ("experiment_number", np.uint8, bcd, np.uint8),
     ("year", np.uint8, bcd, np.uint8),
     ("unit_id", (np.uint8, 2), bcd_hex, native_str("S4")),
-    ("time", (np.uint8, 6), bcd_julian_day_string_to_seconds_of_year,
-     np.float64),
+    ("time", (np.uint8, 6), bcd_julian_day_string_to_nanoseconds_of_year,
+     np.int64),
     ("byte_count", (np.uint8, 2), bcd_16bit_int, np.uint16),
     ("packet_sequence", (np.uint8, 2), bcd_16bit_int, np.uint16),
     ("event_number", (np.uint8, 2), bcd_16bit_int, np.uint16),
@@ -119,12 +121,12 @@ class Packet(object):
             return self._data[name].item()
 
     @property
-    def timestamp(self):
+    def nanoseconds(self):
         return self._data['time'].item()
 
     @property
     def time(self):
-        return UTCDateTime(self._data['time'].item())
+        return UTCDateTime(ns=self._data['time'].item())
 
 
 class EHPacket(Packet):
@@ -171,8 +173,13 @@ class EHPacket(Packet):
                     value = value.decode()
                 info.append("{}: {}".format(key, value))
             info.append("-" * 20)
-            info += ["{}: {}".format(key, getattr(self, key))
-                     for key in sorted(EH_PAYLOAD.keys())]
+            for key in sorted(EH_PAYLOAD.keys()):
+                value = getattr(self, key)
+                if key in ("trigger_time", "detrigger_time",
+                           "first_sample_time", "last_sample_time"):
+                    if value is not None:
+                        value = UTCDateTime(ns=value)
+                info.append("{}: {}".format(key, value))
             info = "{} Packet\n\t{}".format(self.type.decode(),
                                             "\n\t".join(info))
         return info
@@ -232,7 +239,7 @@ def _initial_unpack_packets(bytestring):
         msg = ("Length of data not a multiple of 1024. Data might be "
                "truncated. Dropping {:d} byte(s) at the end.").format(tail)
         warnings.warn(msg)
-    data = np.fromstring(
+    data = from_buffer(
         bytestring, dtype=PACKET_INITIAL_UNPACK_DTYPE)
     result = np.empty_like(data, dtype=PACKET_FINAL_DTYPE)
 
@@ -247,7 +254,7 @@ def _initial_unpack_packets(bytestring):
     # time unpacking is special and needs some additional work.
     # we need to add the POSIX timestamp of the start of respective year to the
     # already unpacked seconds into the respective year..
-    result['time'][:] += [_get_timestamp_for_start_of_year(y)
+    result['time'][:] += [_get_nanoseconds_for_start_of_year(y)
                           for y in result['year']]
     return result
 

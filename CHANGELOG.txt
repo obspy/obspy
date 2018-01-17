@@ -13,8 +13,18 @@ master:
      (see Issue #2035 and PR #2042).
 
 1.1.x:
+ - General:
+   * Tests pass with numpy 1.14 (see #2044).
  - obspy.core:
    * Fix pickling of traces with a sampling rate of 0 (see #1990)
+ - obspy.clients.arclink:
+   * Raise a warning at import time that the ArcLink protocol will be
+     deprecated soon (see #1987).
+ - obspy.io.reftek:
+   * Fix problems reading some Reftek 130 files, presumably due to floating
+     point accuracy issues in comparing timestamps. Internal representation of
+     time stamps is changed to integer nanosecond POSIX timestamp (see #2036,
+     #2038)
  - obspy.io.seiscomp:
    * Fix inventory read when maxClockDrift is unset in SC3ML (see #1993)
  - obspy.io.stationxml

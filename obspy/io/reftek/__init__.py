@@ -56,14 +56,14 @@ Network, location and component codes can be specified during reading:
 <obspy.core.stream.Stream object at 0x...>
 >>> print(st)  # doctest: +ELLIPSIS
 8 Trace(s) in Stream:
-BW.KW1..EHZ | 2015-10-09T22:50:51.000000Z - ... | 200.0 Hz, 3165 samples
-BW.KW1..EHZ | 2015-10-09T22:51:06.215000Z - ... | 200.0 Hz, 892 samples
-BW.KW1..EHZ | 2015-10-09T22:51:11.675000Z - ... | 200.0 Hz, 2743 samples
+BW.KW1..EHE | 2015-10-09T22:50:51.000000Z - ... | 200.0 Hz, 3405 samples
+BW.KW1..EHE | 2015-10-09T22:51:08.415000Z - ... | 200.0 Hz, 3395 samples
 BW.KW1..EHN | 2015-10-09T22:50:51.000000Z - ... | 200.0 Hz, 3107 samples
 BW.KW1..EHN | 2015-10-09T22:51:05.925000Z - ... | 200.0 Hz, 768 samples
 BW.KW1..EHN | 2015-10-09T22:51:10.765000Z - ... | 200.0 Hz, 2925 samples
-BW.KW1..EHE | 2015-10-09T22:50:51.000000Z - ... | 200.0 Hz, 3405 samples
-BW.KW1..EHE | 2015-10-09T22:51:08.415000Z - ... | 200.0 Hz, 3395 samples
+BW.KW1..EHZ | 2015-10-09T22:50:51.000000Z - ... | 200.0 Hz, 3165 samples
+BW.KW1..EHZ | 2015-10-09T22:51:06.215000Z - ... | 200.0 Hz, 892 samples
+BW.KW1..EHZ | 2015-10-09T22:51:11.675000Z - ... | 200.0 Hz, 2743 samples
 
 Reftek 130 specific metadata (from event header packet) is stored
 in ``stats.reftek130``.
@@ -72,12 +72,12 @@ in ``stats.reftek130``.
          network: BW
          station: KW1
         location:
-         channel: EHZ
+         channel: EHE
        starttime: 2015-10-09T22:50:51.000000Z
-         endtime: 2015-10-09T22:51:06.820000Z
+         endtime: 2015-10-09T22:51:08.020000Z
    sampling_rate: 200.0
            delta: 0.005
-            npts: 3165
+            npts: 3405
            calib: 1.0
          _format: REFTEK130
        reftek130: ...

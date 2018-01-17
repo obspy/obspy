@@ -23,6 +23,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
+from obspy.core.compatibility import from_buffer
 from .header import MONTHS
 
 
@@ -246,7 +247,7 @@ class SEG2(object):
             header['calib'] = float(header['seg2']['DESCALING_FACTOR'])
 
         # Unpack the data.
-        data = np.fromstring(
+        data = from_buffer(
             self.file_pointer.read(number_of_samples_in_data_block *
                                    sample_size),
             dtype=dtype)

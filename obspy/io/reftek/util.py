@@ -3,13 +3,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import calendar
 import codecs
-import datetime
 
 import numpy as np
 
 from obspy import UTCDateTime
+from obspy.core.compatibility import from_buffer
 
 
 def bcd(_i):
@@ -24,22 +23,22 @@ def bcd_16bit_int(_i):
 def bcd_hex(_i):
     m = _i.shape[1]
     _bcd = codecs.encode(_i.ravel(), "hex_codec").decode("ASCII").upper()
-    return np.fromstring(_bcd, dtype="|S%d" % (m * 2))
+    return from_buffer(_bcd, dtype="|S%d" % (m * 2))
 
 
 def bcd_8bit_hex(_i):
     return np.array(["{:X}".format(int(x)) for x in _i], dtype="|S2")
 
 
-def bcd_julian_day_string_to_seconds_of_year(_i):
+def bcd_julian_day_string_to_nanoseconds_of_year(_i):
     timestrings = bcd_hex(_i)
-    return _timestrings_to_seconds(timestrings)
+    return _timestrings_to_nanoseconds(timestrings)
 
 
 _timegm_cache = {}
 
 
-def _get_timestamp_for_start_of_year(year):
+def _get_nanoseconds_for_start_of_year(year):
     # Reftek 130 data format stores only the last two digits of the year.
     # We currently assume that 00-49 are years 2000-2049 and 50-99 are years
     # 2050-2099. We deliberately raise an exception in the read routine if the
@@ -50,35 +49,37 @@ def _get_timestamp_for_start_of_year(year):
     else:
         year += 1900
     try:
-        t = _timegm_cache[year]
+        ns = _timegm_cache[year]
     except KeyError:
-        t = calendar.timegm(datetime.datetime(year, 1, 1).utctimetuple())
-        _timegm_cache[year] = t
-    return t
+        ns = UTCDateTime(year, 1, 1)._ns
+        _timegm_cache[year] = ns
+    return ns
 
 
-def _timestrings_to_seconds(timestrings):
+def _timestrings_to_nanoseconds(timestrings):
     """
     Helper routine to convert timestrings of form "DDDHHMMSSsss" to array of
-    floating point seconds.
+    integer nanosecond POSIX timestamp.
 
     :param timestring: numpy.ndarray
     :rtype: numpy.ndarray
     """
     # split up the time string into tuple of
     # (day of year, hours, minutes, seconds, milliseconds), still as string
-    seconds = [(string[:3], string[3:5], string[5:7],
-                string[7:9], string[9:]) for string in timestrings]
-    seconds = np.array(seconds, dtype="S3").astype(np.float64)
-    # now scale the columns of the array, so that everything is in seconds
-    seconds[:, 0] -= 1
-    seconds[:, 0] *= 86400
-    seconds[:, 1] *= 3600
-    seconds[:, 2] *= 60
-    seconds[:, 4] *= 1e-3
+    nanoseconds = [(string[:3], string[3:5], string[5:7],
+                    string[7:9], string[9:]) for string in timestrings]
+    nanoseconds = np.array(nanoseconds, dtype="S3").astype(np.int64)
+    # now scale the columns of the array, so that everything is in nanoseconds
+    to_nano = 1000000000
+    nanoseconds[:, 0] -= 1
+    nanoseconds[:, 0] *= 86400 * to_nano
+    nanoseconds[:, 1] *= 3600 * to_nano
+    nanoseconds[:, 2] *= 60 * to_nano
+    nanoseconds[:, 3] *= to_nano
+    nanoseconds[:, 4] *= 1000000
     # sum up days, hours, minutes etc. for every row of the array
-    seconds = seconds.sum(axis=1)
-    return seconds
+    nanoseconds = nanoseconds.sum(axis=1)
+    return nanoseconds
 
 
 def _decode_ascii(chars):
@@ -86,6 +87,9 @@ def _decode_ascii(chars):
 
 
 def _parse_long_time(time_bytestring, decode=True):
+    """
+    :returns: POSIX timestamp as integer nanoseconds
+    """
     if decode:
         time_string = time_bytestring.decode()
     else:
@@ -93,8 +97,10 @@ def _parse_long_time(time_bytestring, decode=True):
     if not time_string.strip():
         return None
     time_string, milliseconds = time_string[:-3], int(time_string[-3:])
-    return (UTCDateTime.strptime(time_string, '%Y%j%H%M%S') +
-            1e-3 * milliseconds)
+    t = UTCDateTime.strptime(time_string, '%Y%j%H%M%S')
+    nanoseconds = t._ns
+    nanoseconds += milliseconds * 1000000
+    return nanoseconds
 
 
 def _16_tuple_ascii(bytestring):
