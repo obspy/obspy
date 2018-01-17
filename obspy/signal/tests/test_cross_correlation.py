@@ -272,7 +272,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
             dt, coeff = xcorr_pick_correction(
                 t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True, filename=ic.name)
 
-    def test_correlate_template_EQcorrscan(self):
+    def test_correlate_template_eqcorrscan(self):
         """
         Test for moving window correlations with "full" normalisation.
 
@@ -299,7 +299,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.assertAlmostEqual(corr, 1.0)
         self.assertEqual(shift, 0)
 
-    def test_correlate_template_EQcorrscan_time(self):
+    def test_correlate_template_eqcorrscan_time(self):
         """
         Test full normalization in time domain.
         """
@@ -376,7 +376,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
         np.testing.assert_equal(xcorr, np.zeros(len(xcorr)))
 
     # TODO:
-#    def test_correlate_template_nodemean_FastMatchedFilter(self):
+#    def test_correlate_template_nodemean_fastmatchedfilter(self):
 #    def test_normalisation_extreme_amplitudes(self):
 
 
