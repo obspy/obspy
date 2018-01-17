@@ -63,7 +63,6 @@ def _xcorr_padzeros(a, b, shift, domain='freq'):
 def _xcorr_slice(a, b, shift, domain='freq'):
     """
     Cross-correlation using SciPy with mode='full' and subsequent slicing
-
     """
     assert domain in ('freq', 'time')
     mid = (len(a) + len(b) - 1) // 2
