@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='utf-8'?>
+<q:quakeml xmlns:iris="http://service.iris.edu/fdsnws/event/1/" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:xsi="http://www.w3.org/2000/10/XMLSchema-instance" xmlns="http://quakeml.org/xmlns/bed/1.2">
+  <eventParameters publicID="smi:service.iris.edu/fdsnws/event/1/query">
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3377518">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9877168</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16573169</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description iris:FEcode="663">
+        <text>SEA OF OKHOTSK</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9877168" iris:contributor="NEIC PDE-M" iris:catalog="NEIC PDE">
+        <time>
+          <value>2012-08-14T02:59:38.460000Z</value>
+        </time>
+        <latitude>
+          <value>49.8</value>
+        </latitude>
+        <longitude>
+          <value>145.064</value>
+        </longitude>
+        <depth>
+          <value>583200.0</value>
+        </depth>
+        <creationInfo>
+          <author>NEIC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16573169">
+        <mag>
+          <value>7.7</value>
+        </mag>
+        <type>MW</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9877168</originID>
+        <creationInfo>
+          <author>UCMT</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+  </eventParameters>
+</q:quakeml>

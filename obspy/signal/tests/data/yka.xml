@@ -1,0 +1,589 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0">
+  <Source>IRIS-DMC</Source>
+  <Sender>IRIS-DMC</Sender>
+  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.11</Module>
+  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?network=CN&amp;level=response&amp;station=YK%2A&amp;starttime=2012-08-14T01%3A30%3A00.000000&amp;endtime=2012-08-14T04%3A30%3A00.000000&amp;channel=SHZ</ModuleURI>
+  <Created>2014-02-13T17:31:55</Created>
+  <Network code="CN" endDate="2020-12-12T23:59:59" restrictedStatus="open" startDate="1982-01-01T00:00:00">
+    <Description>Canadian National Seismograph Network</Description>
+    <TotalNumberStations>161</TotalNumberStations>
+    <SelectedNumberStations>18</SelectedNumberStations>
+    <Station code="YKB0" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.6059</Latitude>
+      <Longitude unit="DEGREES">-114.606</Longitude>
+      <Elevation>194.2</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.6059</Latitude>
+        <Longitude unit="DEGREES">-114.606</Longitude>
+        <Elevation>194.2</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKB1" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.4023</Latitude>
+      <Longitude unit="DEGREES">-114.6063</Longitude>
+      <Elevation>145.1</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.4023</Latitude>
+        <Longitude unit="DEGREES">-114.6063</Longitude>
+        <Elevation>145.1</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKB2" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.4247</Latitude>
+      <Longitude unit="DEGREES">-114.6063</Longitude>
+      <Elevation>150.3</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.4247</Latitude>
+        <Longitude unit="DEGREES">-114.6063</Longitude>
+        <Elevation>150.3</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKB3" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.4485</Latitude>
+      <Longitude unit="DEGREES">-114.6061</Longitude>
+      <Elevation>158.2</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.4485</Latitude>
+        <Longitude unit="DEGREES">-114.6061</Longitude>
+        <Elevation>158.2</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKB4" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.4709</Latitude>
+      <Longitude unit="DEGREES">-114.6058</Longitude>
+      <Elevation>163.8</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.4709</Latitude>
+        <Longitude unit="DEGREES">-114.6058</Longitude>
+        <Elevation>163.8</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKB6" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.5164</Latitude>
+      <Longitude unit="DEGREES">-114.6057</Longitude>
+      <Elevation>173.6</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.5164</Latitude>
+        <Longitude unit="DEGREES">-114.6057</Longitude>
+        <Elevation>173.6</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKB7" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.5389</Latitude>
+      <Longitude unit="DEGREES">-114.6061</Longitude>
+      <Elevation>176.6</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.5389</Latitude>
+        <Longitude unit="DEGREES">-114.6061</Longitude>
+        <Elevation>176.6</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKB8" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.5615</Latitude>
+      <Longitude unit="DEGREES">-114.6055</Longitude>
+      <Elevation>171.0</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.5615</Latitude>
+        <Longitude unit="DEGREES">-114.6055</Longitude>
+        <Elevation>171.0</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKB9" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.583</Latitude>
+      <Longitude unit="DEGREES">-114.6039</Longitude>
+      <Elevation>213.1</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.583</Latitude>
+        <Longitude unit="DEGREES">-114.6039</Longitude>
+        <Elevation>213.1</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKR1" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.4928</Latitude>
+      <Longitude unit="DEGREES">-114.9445</Longitude>
+      <Elevation>141.1</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:01:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.4928</Latitude>
+        <Longitude unit="DEGREES">-114.9445</Longitude>
+        <Elevation>141.1</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKR2" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.4928</Latitude>
+      <Longitude unit="DEGREES">-114.8959</Longitude>
+      <Elevation>145.0</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:01:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.4928</Latitude>
+        <Longitude unit="DEGREES">-114.8959</Longitude>
+        <Elevation>145.0</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKR3" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.4929</Latitude>
+      <Longitude unit="DEGREES">-114.8476</Longitude>
+      <Elevation>146.2</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:01:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.4929</Latitude>
+        <Longitude unit="DEGREES">-114.8476</Longitude>
+        <Elevation>146.2</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKR4" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.4927</Latitude>
+      <Longitude unit="DEGREES">-114.7998</Longitude>
+      <Elevation>148.9</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:01:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.4927</Latitude>
+        <Longitude unit="DEGREES">-114.7998</Longitude>
+        <Elevation>148.9</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKR5" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.4932</Latitude>
+      <Longitude unit="DEGREES">-114.7504</Longitude>
+      <Elevation>154.2</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:01:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.4932</Latitude>
+        <Longitude unit="DEGREES">-114.7504</Longitude>
+        <Elevation>154.2</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKR6" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.4932</Latitude>
+      <Longitude unit="DEGREES">-114.702</Longitude>
+      <Elevation>161.0</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:01:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.4932</Latitude>
+        <Longitude unit="DEGREES">-114.702</Longitude>
+        <Elevation>161.0</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKR7" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.4932</Latitude>
+      <Longitude unit="DEGREES">-114.6544</Longitude>
+      <Elevation>167.5</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:01:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.4932</Latitude>
+        <Longitude unit="DEGREES">-114.6544</Longitude>
+        <Elevation>167.5</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKR8" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.4931</Latitude>
+      <Longitude unit="DEGREES">-114.6062</Longitude>
+      <Elevation>166.7</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:01:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.4931</Latitude>
+        <Longitude unit="DEGREES">-114.6062</Longitude>
+        <Elevation>166.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="YKR9" endDate="2020-12-31T23:59:59" restrictedStatus="open" startDate="1989-01-25T00:00:00">
+      <Latitude unit="DEGREES">62.493</Latitude>
+      <Longitude unit="DEGREES">-114.5565</Longitude>
+      <Elevation>171.7</Elevation>
+      <Site>
+        <Name>Yellowknife, NT</Name>
+      </Site>
+      <CreationDate>1989-01-25T00:00:00</CreationDate>
+      <TotalNumberChannels>3</TotalNumberChannels>
+      <SelectedNumberChannels>1</SelectedNumberChannels>
+      <Channel code="SHZ" endDate="2020-12-31T23:59:59" locationCode="" restrictedStatus="open" startDate="1989-01-25T00:01:00">
+        <Comment>
+          <Value>107 60</Value>
+        </Comment>
+        <Latitude unit="DEGREES">62.493</Latitude>
+        <Longitude unit="DEGREES">-114.5565</Longitude>
+        <Elevation>171.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0005</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>emf in volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Geotech S-13 short-period seismometer/CNSN Yellowk</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>
