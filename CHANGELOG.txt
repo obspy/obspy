@@ -5,6 +5,8 @@ master:
  - obspy.io.shapefile:
    * Add possibility to add custom database columns when writing catalog
      objects to shapefile (see #2012)
+ - obspy.signal.PPSD:
+   * Fixed exact trace cutting for PSD segments (see #2040).
  - obspy.signal.cross_correlation:
    * Add new correlate_template function with 'full' normalization option,
      required for correlations in template-matching
