@@ -16,7 +16,8 @@ from obspy import UTCDateTime, read
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.libnames import _load_cdll
 from obspy.core.util.testing import ImageComparison
-from obspy.signal.cross_correlation import (correlate, xcorr_pick_correction,
+from obspy.signal.cross_correlation import (correlate, correlate_template,
+                                            xcorr_pick_correction,
                                             xcorr_3c, xcorr_max, xcorr,
                                             _xcorr_padzeros, _xcorr_slice)
 
@@ -271,7 +272,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
             dt, coeff = xcorr_pick_correction(
                 t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True, filename=ic.name)
 
-    def test_template_matching(self):
+    def test_correlate_template_EQcorrscan(self):
         """
         Test for moving window correlations with "full" normalisation.
 
@@ -292,16 +293,13 @@ class CrossCorrelationTestCase(unittest.TestCase):
         data = read()[0].data
         template = data[400:600]
         data = data[380:620]
-        shift = 20
-        cc = correlate(data, template, shift, normalize="full", domain="freq")
-        # TODO: This doesn't match closely enough
-        np.testing.assert_allclose(cc, result, atol=0.00001)
+        cc = correlate_template(data, template)
+        np.testing.assert_allclose(cc, result, atol=1e-7)
         shift, corr = xcorr_max(cc)
-        # TODO: This is not close enough to 1.0
-        self.assertAlmostEqual(corr, 1.0, 7)
+        self.assertAlmostEqual(corr, 1.0)
         self.assertEqual(shift, 0)
 
-    def test_template_matching_time(self):
+    def test_correlate_template_EQcorrscan_time(self):
         """
         Test full normalization in time domain.
         """
@@ -320,55 +318,66 @@ class CrossCorrelationTestCase(unittest.TestCase):
         data = read()[0].data
         template = data[400:600]
         data = data[380:620]
-        shift = 20
-        cc = correlate(data, template, shift, normalize="full", domain="time")
-        # TODO: Not close enough
-        np.testing.assert_allclose(cc, result, atol=0.000001)
+        cc = correlate_template(data, template, domain='time')
+        np.testing.assert_allclose(cc, result, atol=1e-7)
         shift, corr = xcorr_max(cc)
-        # TODO: Not close enough
-        self.assertAlmostEqual(corr, 1.0, 7)
+        self.assertAlmostEqual(corr, 1.0)
         self.assertEqual(shift, 0)
 
-    def test_template_matching_normalization_equality(self):
-        """
-        Test that, for data of the same length, naive and full normalization
-        give the same result.
-        """
-        naive_xcorr = correlate(self.a, self.b, shift=15)
-        full_xcorr = correlate(self.a, self.b, shift=15, normalize='full')
-        self.assertEqual(naive_xcorr, full_xcorr)
+    def test_correlate_template_different_normalizations(self):
+        data = read()[0].data
+        template = data[400:600]
+        data = data[380:700]
+        max_index = 20
+        ct = correlate_template
+        full_xcorr = ct(data, template, demean=False)
+        naive_xcorr = ct(data, template, demean=False, normalize='naive')
+        nonorm_xcorr = ct(data, template, demean=False, normalize=None)
+        self.assertEqual(np.argmax(full_xcorr), max_index)
+        self.assertEqual(np.argmax(naive_xcorr), max_index)
+        self.assertEqual(np.argmax(nonorm_xcorr), max_index)
+        self.assertAlmostEqual(full_xcorr[max_index], 1.0)
+        self.assertLess(naive_xcorr[max_index], full_xcorr[max_index])
+        np.testing.assert_allclose(nonorm_xcorr, np.correlate(data, template))
 
-    def test_template_matching_reversed_order(self):
-        """
-        Check that arguments can be given in whichever order the user fancies.
-        """
-        forwards_xcorr = correlate(self.a, self.b[0:-20], normalize='full')
-        reversed_xcorr = correlate(self.b[0:-20], self.a, normalize='full')
-        self.assertEqual(forwards_xcorr, reversed_xcorr)
+    def test_correlate_template_correct_alignment_of_normalization(self):
+        data = read()[0].data
+        template = data[400:600]
+        data = data[380:620]
+        # test for all combinations of odd and even length input data
+        for i1, i2 in ((0, 0), (0, 1), (1, 1), (1, 0)):
+            for mode in ('valid', 'same', 'full'):
+                for demean in (True, False):
+                    xcorr = correlate_template(data[i1:], template[i2:],
+                                               mode=mode, demean=demean)
+                    self.assertAlmostEqual(np.max(xcorr), 1)
 
-    """
-    We need a test that does this, but the only way to do it with long duration
-    data - EQcorrscan tests against Kaikoura data, which we know causes issues
-    for a lot of cross-correlation implementations.
-    """
-    # def test_normalisation_extreme_amplitudes(self):
-    #     """
-    #     Test full normalisation method with extreme amplitudes
-    #     (e.g. large EQ)
-    #
-    #     Comparison result is from EQcorrscan v.0.2.7.
-    #     """
-    #     result =
-    #     data = read()[0].data
-    #     # Add a large amplitude thing in the data
-    #     template = data[400:600]
-    #     data = data[200:800]
-    #     shift = 1000
-    #     cc = correlate(data, template, shift, normalize="full")
-    #     np.testing.assert_allclose(cc, result)
-    #     shift, corr = xcorr_max(cc)
-    #     self.assertAlmostEqual(corr, 0.96516076)
-    #     self.assertEqual(shift, -5)
+    def test_correlate_template_versus_correlate(self):
+        data = read()[0].data
+        template = data[400:600]
+        data = data[380:620]
+        xcorr1 = correlate_template(data, template, normalize='naive')
+        xcorr2 = correlate(data, template, 20)
+        np.testing.assert_equal(xcorr1, xcorr2)
+
+    def test_correlate_template_zeros_in_input(self):
+        template = np.zeros(10)
+        data = read()[0].data[380:420]
+        xcorr = correlate_template(data, template)
+        np.testing.assert_equal(xcorr, np.zeros(len(xcorr)))
+        template[:] = data[:10]
+        data[5:20] = 0
+        xcorr = correlate_template(data, template)
+        np.testing.assert_equal(xcorr[5:11], np.zeros(6))
+        data[:] = 0
+        xcorr = correlate_template(data, template)
+        np.testing.assert_equal(xcorr, np.zeros(len(xcorr)))
+        xcorr = correlate_template(data, template, normalize='naive')
+        np.testing.assert_equal(xcorr, np.zeros(len(xcorr)))
+
+    # TODO:
+#    def test_correlate_template_nodemean_FastMatchedFilter(self):
+#    def test_normalisation_extreme_amplitudes(self):
 
 
 def suite():
