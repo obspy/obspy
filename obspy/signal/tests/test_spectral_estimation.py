@@ -704,6 +704,14 @@ class PsdTestCase(unittest.TestCase):
         a higher 'ppsd_version' number which is used to keep track of changes
         in PPSD and the npz file used for serialization).
         """
+        msg = ("Trying to read/add a PPSD npz with 'ppsd_version=100'. This "
+               "file was written on a more recent ObsPy version that very "
+               "likely has incompatible changes in PPSD internal structure "
+               "and npz serialization. It can not safely be read with this "
+               "ObsPy version (current 'ppsd_version' is {!s}). Please "
+               "consider updating your ObsPy installation.".format(
+                   PPSD(stats=Stats(), metadata=None).ppsd_version))
+        # 1 - loading a npz
         data = np.load(self.example_ppsd_npz)
         # we have to load, modify 'ppsd_version' and save the npz file for the
         # test..
@@ -717,15 +725,7 @@ class PsdTestCase(unittest.TestCase):
                 np.savez(fh, **items)
             with self.assertRaises(ObsPyException) as e:
                 PPSD.load_npz(filename)
-            self.assertEqual(
-                str(e.exception),
-                "Trying to read a PPSD npz with 'ppsd_version=100'. This "
-                "file was written on a more recent ObsPy version that very "
-                "likely has incompatible changes in PPSD internal structure "
-                "and npz serialization. It can not safely be read with this "
-                "ObsPy version (current 'ppsd_version' is {!s}). Please "
-                "consider updating your ObsPy installation.".format(
-                    PPSD(stats=Stats(), metadata=None).ppsd_version))
+            self.assertEqual(str(e.exception), msg)
 
 
 def suite():
