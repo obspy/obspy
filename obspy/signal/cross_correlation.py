@@ -33,29 +33,17 @@ from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
 
 
-def _pad_zeros(a, num):
+def _pad_zeros(a, num, num2=None):
     """Pad num zeros at both sides of array a"""
-    hstack = [np.zeros(num), a, np.zeros(num)]
+    if num2 is None:
+        num2 = num
+    hstack = [np.zeros(num), a, np.zeros(num2)]
     return np.hstack(hstack)
 
 
 def _xcorr_padzeros(a, b, shift, domain='freq'):
     """
     Cross-correlation using SciPy with mode='valid' and precedent zero padding
-
-    :type a: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
-    :param a: first signal
-    :type b: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
-    :param b: second signal to correlate with first signal
-    :param int shift: Number of samples to shift for cross correlation.
-        The cross-correlation will consist of ``2*shift+1`` or
-        ``2*shift`` samples. The sample with zero shift will be in the middle.
-    :param str domain: Correlation will be performed in frequency domain with
-        :func:`scipy.signal.fftconvolve` for ``domain='freq'``
-        and in time domain with :func:`scipy.signal.correlate` for
-        ``domain='time'``.
-
-    :return: cross-correlation function.
     """
     assert domain in ('freq', 'time')
     if shift is None:
@@ -76,19 +64,6 @@ def _xcorr_slice(a, b, shift, domain='freq'):
     """
     Cross-correlation using SciPy with mode='full' and subsequent slicing
 
-    :type a: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
-    :param a: first signal
-    :type b: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
-    :param b: second signal to correlate with first signal
-    :param int shift: Number of samples to shift for cross correlation.
-        The cross-correlation will consist of ``2*shift+1`` or
-        ``2*shift`` samples. The sample with zero shift will be in the middle.
-    :param str domain: Correlation will be performed in frequency domain with
-        :func:`scipy.signal.fftconvolve` for ``domain='freq'``
-        and in time domain with :func:`scipy.signal.correlate` for
-        ``domain='time'``.
-
-    :return: cross-correlation function.
     """
     assert domain in ('freq', 'time')
     mid = (len(a) + len(b) - 1) // 2
@@ -104,70 +79,9 @@ def _xcorr_slice(a, b, shift, domain='freq'):
     return c[mid - shift:mid + shift + len(c) % 2]
 
 
-def _normxcorr(a, b, shift, domain='freq'):
-    """
-    Normalized cross-correlation.
-
-    :type a: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
-    :param a: first signal
-    :type b: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
-    :param b: second signal to correlate with first signal
-    :param int shift: Number of samples to shift for cross correlation.
-        The cross-correlation will consist of ``2*shift+1`` or
-        ``2*shift`` samples. The sample with zero shift will be in the middle.
-    :param str domain: Correlation will be performed in frequency domain with
-        :func:`scipy.signal.fftconvolve` for ``domain='freq'``
-        and in time domain with :func:`scipy.signal.correlate` for
-        ``domain='time'``.
-
-    :return: cross-correlation function.
-    """
-    assert domain in ("freq", "time")
-    if len(b) > len(a):
-        long_data = b
-        short_data = a
-    else:
-        long_data = a
-        short_data = b
-    mid = (len(long_data) + len(short_data) - 1) // 2
-    if shift is None:
-        shift = mid
-    # Normalize short window before correlation
-    # TODO: Change this to allow non zero-normalized correlation
-    short_data = (short_data - short_data.mean()) / (
-            short_data.std() * len(short_data))
-    # We HAVE to pad in this case
-    long_data = _pad_zeros(long_data, len(short_data))
-    if domain == 'time':
-        c = scipy.signal.correlate(long_data, short_data, 'valid')
-    else:
-        c = scipy.signal.fftconvolve(long_data, short_data[::-1], 'valid')
-    # Calculate moving mean and moving standard deviation
-    # using cumulative sums.
-    c = c[1:-1]
-    move_mean = np.cumsum(long_data)
-    move_mean = move_mean[len(short_data):-1] - \
-        move_mean[:-len(short_data) - 1]
-    denominator = np.cumsum(long_data ** 2)
-    denominator = denominator[len(short_data):-1] - \
-        denominator[:-len(short_data) - 1]
-    np.multiply(move_mean, move_mean, out=move_mean)
-    np.divide(move_mean, len(long_data), out=move_mean)
-    denominator -= move_mean
-    denominator *= short_data.std()
-    np.maximum(denominator, 0, out=denominator)
-    np.sqrt(denominator, out=denominator)
-    # Cope with zero divisions? - scikit uses a mask
-    response = np.zeros_like(c, dtype=np.float64)
-    mask = denominator > np.finfo(np.float64).eps
-    response[mask] = c[mask] / denominator[mask]
-    c = response
-    return c[mid - shift:mid + shift + len(c) % 2]
-
-
 def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
     """
-    Cross-correlation of signals a and b with specified maximal shift.
+    Cross-correlation of two signals with specified maximal shift.
 
     :type a: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
     :param a: first signal
@@ -178,9 +92,10 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
         ``2*shift`` samples. The sample with zero shift will be in the middle.
     :param bool demean: Demean data beforehand.
     :param bool normalize: Method for normalization of cross-correlation.
-        Any one of ``'naive'``, ``'full'``, None, or ``True`` or ``False``
-         (``True == 'naive'``). ``'naive'`` normalizes by the overall standard
-         deviation, whereas ``'full'`` normalizes every correlation properly.
+        One of ``'naive'`` or ``None``
+        (``True`` and ``False`` are supported for backwards compatibility).
+        ``'naive'`` normalizes by the overall standard deviation.
+        ``None`` does not normalize.
     :param str domain: Correlation will be performed in frequency domain with
         :func:`scipy.signal.fftconvolve` for ``domain='freq'``
         and in time domain with :func:`scipy.signal.correlate` for
@@ -191,6 +106,11 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
     To calculate shift and value of the maximum of the returned
     cross-correlation function use
     :func:`~obspy.signal.cross_correlation.xcorr_max`.
+
+    .. note::
+
+        For template-matching purposes, use the function `correlate_template`
+        which allows to perform a proper normalization.
 
     .. note::
 
@@ -214,15 +134,6 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
         consist of only ``2*shift`` samples because a shift of 0
         corresponds to the middle between two samples.
 
-    .. note::
-
-        For template-matching purposes, the option `normalize='full'` should
-        be used.  This will normalize every element of the returned correlation
-        array. The option `normalize='naive'` (or `normalize=True`) will divide
-        every element of the correlation array by the overall standard
-        deviation of the input data, for small shift-lengths and small changes
-        in standard deviation this can be a reasonable approximation.
-
     .. rubric:: Example
 
     >>> a = np.random.randn(10000).astype(np.float32)
@@ -243,7 +154,7 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
     """
     if normalize is False:
         normalize = None
-    elif normalize is True:
+    if normalize is True:
         normalize = 'naive'
     # if we get Trace objects, use their data arrays
     if isinstance(a, Trace):
@@ -252,30 +163,107 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
         b = b.data
     a = np.asarray(a)
     b = np.asarray(b)
-    if demean or normalize == 'full':
+    if demean:
         a = a - np.mean(a)
         b = b - np.mean(b)
-    # Set up for naive normalization
     if normalize == 'naive':
-        stdev = (np.sum(a ** 2)) ** 0.5 * (np.sum(b ** 2)) ** 0.5
-        if stdev == 0:
-            # set stdev to 1 to prevent division by 0
+        norm = (np.sum(a ** 2) * np.sum(b ** 2)) ** 0.5
+        if norm == 0.:
+            # set norm to 1 to prevent division by 0
             # cross-correlation function will have only zeros anyway
-            stdev = 1
+            norm = 1
+    elif normalize is None:
+        norm = 1
     else:
-        stdev = 1
+        raise ValueError("normalize has to be one of (None, 'naive'))")
     # choose the usually faster xcorr method for each domain
-    if normalize != 'full':
-        if domain == 'freq':
-            _xcorr = _xcorr_slice
-        elif domain == 'time':
-            _xcorr = _xcorr_padzeros
-        else:
-            raise ValueError(
-                "domain keyword has to be one of ('freq', 'time')")
+    if domain == 'freq':
+        _xcorr = _xcorr_slice
+    elif domain == 'time':
+        _xcorr = _xcorr_padzeros
     else:
-        _xcorr = _normxcorr
-    return _xcorr(a, b, shift, domain=domain) / stdev
+        raise ValueError(
+            "domain keyword has to be one of ('freq', 'time')")
+    return _xcorr(a, b, shift, domain=domain) / norm
+
+
+def _window_sum(data, window_len):
+    """Rolling sum of data"""
+    window_sum = np.cumsum(data)
+    window_sum = window_sum[window_len:] - window_sum[:-window_len]
+    return window_sum
+
+
+def correlate_template(data, template, mode='valid', normalize='full',
+                       demean=True, domain='freq'):
+    """
+    Cross-correlation of two signals with specified mode.
+
+    :type data: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param data: first signal
+    :type template: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param template: second signal to correlate with first signal.
+        Its length must be smaller or equal to the length of ``data``.
+    :param mode: correlation mode to use.
+        It is passed to the used correlation function.
+        See :func:`scipy.signal.corrrelate` for possible options.
+        The parameter determines the length of the correlation function.
+    :param normalize:
+        One of ``'naive'``, ``'full'`` or ``None``.
+        ``'full'`` normalizes every correlation properly,
+        whereas ``'naive'`` normalizes by the overall standard.
+        ``None`` does not normalize.
+    :param demean: Demean data beforehand. For ``normalize='full'`` data is
+        demeaned in different windows for each correlation value.
+    :param str domain: Correlation will be performed in frequency domain with
+        :func:`scipy.signal.fftconvolve` for ``domain='freq'``
+        and in time domain with :func:`scipy.signal.correlate` for
+        ``domain='time'``.
+
+    :return: cross-correlation function.
+    """
+    # if we get Trace objects, use their data arrays
+    if isinstance(data, Trace):
+        data = data.data
+    if isinstance(template, Trace):
+        template = template.data
+    data = np.asarray(data)
+    template = np.asarray(template)
+    N = len(template)
+    if len(data) < N:
+        raise ValueError('Template has to be shorter than data.')
+    if demean:
+        template = template - np.mean(template)
+        data = data - np.mean(data)
+    if domain == 'time':
+        c = scipy.signal.correlate(data, template, mode=mode)
+    else:
+        c = scipy.signal.fftconvolve(data, template[::-1], mode=mode)
+    if normalize is None:
+        norm = 1
+    else:
+        norm = np.sum(template ** 2)
+        if normalize == 'naive':
+            norm = (norm * np.sum(data ** 2)) ** 0.5
+            if norm == 0.:
+                norm = 1
+        elif normalize == 'full':
+            pad = len(c) - len(data) + N
+            if mode == 'same':
+                pad1, pad2 = (pad + 2) // 2, (pad - 1) // 2
+            else:
+                pad1, pad2 = (pad + 1) // 2, pad // 2
+            data = _pad_zeros(data, pad1, pad2)
+            if demean:
+                norm = ((_window_sum(data ** 2, N) -
+                         _window_sum(data, N) ** 2 / N) * norm) ** 0.5
+            else:
+                norm = (_window_sum(data ** 2, N) * norm) ** 0.5
+            norm[norm == 0.] = 1
+        else:
+            msg = "normalize has to be one of (None, 'naive', 'full')"
+            raise ValueError(msg)
+    return c / norm
 
 
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):
