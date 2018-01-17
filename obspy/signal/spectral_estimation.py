@@ -1275,6 +1275,8 @@ class PPSD(object):
         See :meth:`PPSD.add_npz()`.
         """
         data = np.load(filename)
+        # check ppsd_version version and raise if higher than current
+        _check_npz_ppsd_version(self, data)
         # check if all metadata agree
         for key in self.NPZ_STORE_KEYS_SIMPLE_TYPES:
             if getattr(self, key) != data[key].item():

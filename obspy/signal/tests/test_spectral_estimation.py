@@ -726,6 +726,12 @@ class PsdTestCase(unittest.TestCase):
             with self.assertRaises(ObsPyException) as e:
                 PPSD.load_npz(filename)
             self.assertEqual(str(e.exception), msg)
+            # 2 - adding a npz
+            ppsd = PPSD.load_npz(self.example_ppsd_npz)
+            for method in (ppsd.add_npz, ppsd._add_npz):
+                with self.assertRaises(ObsPyException) as e:
+                    method(filename)
+                self.assertEqual(str(e.exception), msg)
 
 
 def suite():
