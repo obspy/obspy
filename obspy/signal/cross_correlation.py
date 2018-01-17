@@ -166,16 +166,6 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
     if demean:
         a = a - np.mean(a)
         b = b - np.mean(b)
-    if normalize == 'naive':
-        norm = (np.sum(a ** 2) * np.sum(b ** 2)) ** 0.5
-        if norm == 0.:
-            # set norm to 1 to prevent division by 0
-            # cross-correlation function will have only zeros anyway
-            norm = 1
-    elif normalize is None:
-        norm = 1
-    else:
-        raise ValueError("normalize has to be one of (None, 'naive'))")
     # choose the usually faster xcorr method for each domain
     if domain == 'freq':
         _xcorr = _xcorr_slice
@@ -184,7 +174,19 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
     else:
         raise ValueError(
             "domain keyword has to be one of ('freq', 'time')")
-    return _xcorr(a, b, shift, domain=domain) / norm
+    cc = _xcorr(a, b, shift, domain=domain)
+    if normalize == 'naive':
+        norm = (np.sum(a ** 2) * np.sum(b ** 2)) ** 0.5
+        if norm <= np.finfo(float).eps:
+            # set norm to 1 to prevent division by 0
+            # cross-correlation function will have only zeros anyway
+            norm = 1
+            cc[:] = 0
+    elif normalize is None:
+        norm = 1
+    else:
+        raise ValueError("normalize has to be one of (None, 'naive'))")
+    return cc / norm
 
 
 def _window_sum(data, window_len):
@@ -234,7 +236,8 @@ def correlate_template(data, template, mode='valid', normalize='full',
         raise ValueError('Template has to be shorter than data.')
     if demean:
         template = template - np.mean(template)
-        data = data - np.mean(data)
+        if normalize != 'full':
+            data = data - np.mean(data)
     if domain == 'time':
         c = scipy.signal.correlate(data, template, mode=mode)
     else:
@@ -245,8 +248,9 @@ def correlate_template(data, template, mode='valid', normalize='full',
         norm = np.sum(template ** 2)
         if normalize == 'naive':
             norm = (norm * np.sum(data ** 2)) ** 0.5
-            if norm == 0.:
+            if norm <= np.finfo(float).eps:
                 norm = 1
+                c[:] = 0
         elif normalize == 'full':
             pad = len(c) - len(data) + N
             if mode == 'same':
@@ -259,7 +263,9 @@ def correlate_template(data, template, mode='valid', normalize='full',
                          _window_sum(data, N) ** 2 / N) * norm) ** 0.5
             else:
                 norm = (_window_sum(data ** 2, N) * norm) ** 0.5
-            norm[norm == 0.] = 1
+            mask = norm <= np.finfo(float).eps
+            c[mask] = 0
+            norm[mask] = 1
         else:
             msg = "normalize has to be one of (None, 'naive', 'full')"
             raise ValueError(msg)
