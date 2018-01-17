@@ -1229,25 +1229,26 @@ class PPSD(object):
         :param metadata: Response information of instrument. See notes in
             :meth:`PPSD.__init__` for details.
         """
-        data = np.load(filename)
-        # the information regarding stats is set from the npz
-        ppsd = PPSD(Stats(), metadata=metadata)
-        # check ppsd_version version and raise if higher than current
-        _check_npz_ppsd_version(ppsd, data)
-        for key in ppsd.NPZ_STORE_KEYS:
-            # data is stored as arrays in the npz.
-            # we have to convert those back to lists (or simple types), so that
-            # additionally processed data can be appended/inserted later.
-            data_ = data[key]
-            if key in ppsd.NPZ_STORE_KEYS_LIST_TYPES:
-                if key in ['_times_data', '_times_gaps']:
-                    data_ = data_.tolist()
-                else:
-                    data_ = [d for d in data_]
-            elif key in (ppsd.NPZ_STORE_KEYS_SIMPLE_TYPES +
-                         ppsd.NPZ_STORE_KEYS_VERSION_NUMBERS):
-                data_ = data_.item()
-            setattr(ppsd, key, data_)
+        with np.load(filename) as data:
+            # the information regarding stats is set from the npz
+            ppsd = PPSD(Stats(), metadata=metadata)
+            # check ppsd_version version and raise if higher than current
+            _check_npz_ppsd_version(ppsd, data)
+            for key in ppsd.NPZ_STORE_KEYS:
+                # data is stored as arrays in the npz.
+                # we have to convert those back to lists (or simple types), so
+                # that additionally processed data can be appended/inserted
+                # later.
+                data_ = data[key]
+                if key in ppsd.NPZ_STORE_KEYS_LIST_TYPES:
+                    if key in ['_times_data', '_times_gaps']:
+                        data_ = data_.tolist()
+                    else:
+                        data_ = [d for d in data_]
+                elif key in (ppsd.NPZ_STORE_KEYS_SIMPLE_TYPES +
+                             ppsd.NPZ_STORE_KEYS_VERSION_NUMBERS):
+                    data_ = data_.item()
+                setattr(ppsd, key, data_)
         return ppsd
 
     def add_npz(self, filename):
@@ -1274,43 +1275,44 @@ class PPSD(object):
         """
         See :meth:`PPSD.add_npz()`.
         """
-        data = np.load(filename)
-        # check ppsd_version version and raise if higher than current
-        _check_npz_ppsd_version(self, data)
-        # check if all metadata agree
-        for key in self.NPZ_STORE_KEYS_SIMPLE_TYPES:
-            if getattr(self, key) != data[key].item():
-                msg = ("Mismatch in '%s' attribute.\n\tCurrent:\n\t%s\n\t"
-                       "Loaded:\n\t%s")
-                msg = msg % (key, getattr(self, key), data[key].item())
-                raise AssertionError(msg)
-        for key in self.NPZ_STORE_KEYS_ARRAY_TYPES:
-            try:
-                np.testing.assert_array_equal(getattr(self, key), data[key])
-            except AssertionError as e:
-                msg = ("Mismatch in '%s' attribute.\n") % key
-                raise AssertionError(msg + str(e))
-        # load new psd data
-        for key in self.NPZ_STORE_KEYS_VERSION_NUMBERS:
-            if getattr(self, key) != data[key].item():
-                msg = ("Mismatch in version numbers (%s) between current data "
-                       "(%s) and loaded data (%s).") % (
-                           key, getattr(self, key), data[key].item())
-                warnings.warn(msg)
-        _times_data = data["_times_data"].tolist()
-        _times_gaps = data["_times_gaps"].tolist()
-        _times_processed = [d_ for d_ in data["_times_processed"]]
-        _binned_psds = [d_ for d_ in data["_binned_psds"]]
-        # add new data
-        self._times_data.extend(_times_data)
-        self._times_gaps.extend(_times_gaps)
-        duplicates = 0
-        for t, psd in zip(_times_processed, _binned_psds):
-            t = UTCDateTime(t)
-            if self.__check_time_present(t):
-                duplicates += 1
-                continue
-            self.__insert_processed_data(t, psd)
+        with np.load(filename) as data:
+            # check ppsd_version version and raise if higher than current
+            _check_npz_ppsd_version(self, data)
+            # check if all metadata agree
+            for key in self.NPZ_STORE_KEYS_SIMPLE_TYPES:
+                if getattr(self, key) != data[key].item():
+                    msg = ("Mismatch in '%s' attribute.\n\tCurrent:\n\t%s\n\t"
+                           "Loaded:\n\t%s")
+                    msg = msg % (key, getattr(self, key), data[key].item())
+                    raise AssertionError(msg)
+            for key in self.NPZ_STORE_KEYS_ARRAY_TYPES:
+                try:
+                    np.testing.assert_array_equal(getattr(self, key),
+                                                  data[key])
+                except AssertionError as e:
+                    msg = ("Mismatch in '%s' attribute.\n") % key
+                    raise AssertionError(msg + str(e))
+            # load new psd data
+            for key in self.NPZ_STORE_KEYS_VERSION_NUMBERS:
+                if getattr(self, key) != data[key].item():
+                    msg = ("Mismatch in version numbers (%s) between current "
+                           "data (%s) and loaded data (%s).") % (
+                               key, getattr(self, key), data[key].item())
+                    warnings.warn(msg)
+            _times_data = data["_times_data"].tolist()
+            _times_gaps = data["_times_gaps"].tolist()
+            _times_processed = [d_ for d_ in data["_times_processed"]]
+            _binned_psds = [d_ for d_ in data["_binned_psds"]]
+            # add new data
+            self._times_data.extend(_times_data)
+            self._times_gaps.extend(_times_gaps)
+            duplicates = 0
+            for t, psd in zip(_times_processed, _binned_psds):
+                t = UTCDateTime(t)
+                if self.__check_time_present(t):
+                    duplicates += 1
+                    continue
+                self.__insert_processed_data(t, psd)
         # warn if some segments were omitted
         if duplicates:
             msg = ("%d/%d segments omitted in file '%s' "
