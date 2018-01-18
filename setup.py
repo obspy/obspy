@@ -102,6 +102,7 @@ KEYWORDS = [
     'web service', 'Winston', 'XML-SEED', 'XSEED']
 
 # when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
+# when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
 INSTALL_REQUIRES = [
     'future>=0.12.4',
     'numpy>=1.6.1',

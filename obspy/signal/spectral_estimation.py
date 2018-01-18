@@ -37,7 +37,7 @@ from obspy import Stream, Trace, UTCDateTime, __version__
 from obspy.core import Stats
 from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory
-from obspy.core.util import AttribDict
+from obspy.core.util import AttribDict, NUMPY_VERSION
 from obspy.core.util.base import MATPLOTLIB_VERSION
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.imaging.cm import obspy_sequential
@@ -1229,7 +1229,7 @@ class PPSD(object):
         :param metadata: Response information of instrument. See notes in
             :meth:`PPSD.__init__` for details.
         """
-        with np.load(filename) as data:
+        def _load(data):
             # the information regarding stats is set from the npz
             ppsd = PPSD(Stats(), metadata=metadata)
             # check ppsd_version version and raise if higher than current
@@ -1249,7 +1249,18 @@ class PPSD(object):
                              ppsd.NPZ_STORE_KEYS_VERSION_NUMBERS):
                     data_ = data_.item()
                 setattr(ppsd, key, data_)
-        return ppsd
+            return ppsd
+
+        # XXX get rid of if/else again when bumping minimal numpy to 1.7
+        if NUMPY_VERSION >= [1, 7]:
+            with np.load(filename) as data:
+                return _load(data)
+        else:
+            data = np.load(filename)
+            try:
+                return _load(data)
+            finally:
+                data.close()
 
     def add_npz(self, filename):
         """
@@ -1275,7 +1286,7 @@ class PPSD(object):
         """
         See :meth:`PPSD.add_npz()`.
         """
-        with np.load(filename) as data:
+        def _add(data):
             # check ppsd_version version and raise if higher than current
             _check_npz_ppsd_version(self, data)
             # check if all metadata agree
@@ -1313,12 +1324,24 @@ class PPSD(object):
                     duplicates += 1
                     continue
                 self.__insert_processed_data(t, psd)
-        # warn if some segments were omitted
-        if duplicates:
-            msg = ("%d/%d segments omitted in file '%s' "
-                   "(time ranges already covered).")
-            msg = msg % (duplicates, len(_times_processed), filename)
-            warnings.warn(msg)
+
+            # warn if some segments were omitted
+            if duplicates:
+                msg = ("%d/%d segments omitted in file '%s' "
+                       "(time ranges already covered).")
+                msg = msg % (duplicates, len(_times_processed), filename)
+                warnings.warn(msg)
+
+        # XXX get rid of if/else again when bumping minimal numpy to 1.7
+        if NUMPY_VERSION >= [1, 7]:
+            with np.load(filename) as data:
+                _add(data)
+        else:
+            data = np.load(filename)
+            try:
+                _add(data)
+            finally:
+                data.close()
 
     def _split_lists(self, times, psds):
         """
