@@ -195,8 +195,8 @@ def _window_sum(data, window_len):
     return window_sum
 
 
-def correlate_template(data, template, mode='valid', normalize='full',
-                       demean=True, domain='freq'):
+def correlate_template(data, template, mode='valid',
+                       normalize='zero-normalized', domain='freq'):
     """
     Cross-correlation of two signals with specified mode.
 
@@ -210,18 +210,25 @@ def correlate_template(data, template, mode='valid', normalize='full',
         See :func:`scipy.signal.corrrelate` for possible options.
         The parameter determines the length of the correlation function.
     :param normalize:
-        One of ``'naive'``, ``'full'`` or ``None``.
-        ``'full'`` normalizes every correlation properly,
-        whereas ``'naive'`` normalizes by the overall standard.
-        ``None`` does not normalize.
-    :param demean: Demean data beforehand. For ``normalize='full'`` data is
-        demeaned in different windows for each correlation value.
+        One of ``'naive'``, ``'zero-normalized'``, ``'normalized'`` or
+        ``None``.
+        ``'zero-normalized'`` normalizes for every time-step including removing
+        the local means, ``'naive'`` normalizes by the overall
+        standard-deviation of the data, ``'normalized'`` normalizes for every
+        time-step without removing the local means. ``None`` does not
+        normalize.  See note below on normalization.
     :param str domain: Correlation will be performed in frequency domain with
         :func:`scipy.signal.fftconvolve` for ``domain='freq'``
         and in time domain with :func:`scipy.signal.correlate` for
         ``domain='time'``.
 
     :return: cross-correlation function.
+
+    .. note::
+        Normalization strategies follow those described here:
+        https://en.wikipedia.org/wiki/Cross-correlation.
+        The default normalization is zero-normalized as this is the default for
+        template-matching.
     """
     # if we get Trace objects, use their data arrays
     if isinstance(data, Trace):
@@ -230,13 +237,12 @@ def correlate_template(data, template, mode='valid', normalize='full',
         template = template.data
     data = np.asarray(data)
     template = np.asarray(template)
+    template = template - np.mean(template)
     lent = len(template)
     if len(data) < lent:
         raise ValueError('Data must not be shorter than template.')
-    if demean:
-        template = template - np.mean(template)
-        if normalize != 'full':
-            data = data - np.mean(data)
+    if normalize not in ['zero-normalized', 'normalized']:
+        data = data - np.mean(data)
     if domain == 'time':
         c = scipy.signal.correlate(data, template, mode=mode)
     else:
@@ -250,14 +256,14 @@ def correlate_template(data, template, mode='valid', normalize='full',
             if norm <= np.finfo(float).eps:
                 norm = 1
                 c[:] = 0
-        elif normalize == 'full':
+        elif normalize in ['zero-normalized', 'normalized']:
             pad = len(c) - len(data) + lent
             if mode == 'same':
                 pad1, pad2 = (pad + 2) // 2, (pad - 1) // 2
             else:
                 pad1, pad2 = (pad + 1) // 2, pad // 2
             data = _pad_zeros(data, pad1, pad2)
-            if demean:
+            if normalize == 'zero-normalized':
                 norm = ((_window_sum(data ** 2, lent) -
                          _window_sum(data, lent) ** 2 / lent) * norm) ** 0.5
             else:
@@ -266,7 +272,8 @@ def correlate_template(data, template, mode='valid', normalize='full',
             c[mask] = 0
             norm[mask] = 1
         else:
-            msg = "normalize has to be one of (None, 'naive', 'full')"
+            msg = "normalize has to be one of (None, 'naive', " \
+                  "'zero-normalized', 'normalized')"
             raise ValueError(msg)
     return c / norm
 
