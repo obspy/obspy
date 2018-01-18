@@ -37,8 +37,9 @@ from obspy import Stream, Trace, UTCDateTime, __version__
 from obspy.core import Stats
 from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory
-from obspy.core.util import AttribDict
+from obspy.core.util import AttribDict, NUMPY_VERSION
 from obspy.core.util.base import MATPLOTLIB_VERSION
+from obspy.core.util.obspy_types import ObsPyException
 from obspy.imaging.cm import obspy_sequential
 from obspy.imaging.util import _set_xaxis_obspy_dates
 from obspy.io.xseed import Parser
@@ -1228,24 +1229,38 @@ class PPSD(object):
         :param metadata: Response information of instrument. See notes in
             :meth:`PPSD.__init__` for details.
         """
-        data = np.load(filename)
-        # the information regarding stats is set from the npz
-        ppsd = PPSD(Stats(), metadata=metadata)
-        for key in ppsd.NPZ_STORE_KEYS:
-            # data is stored as arrays in the npz.
-            # we have to convert those back to lists (or simple types), so that
-            # additionally processed data can be appended/inserted later.
-            data_ = data[key]
-            if key in ppsd.NPZ_STORE_KEYS_LIST_TYPES:
-                if key in ['_times_data', '_times_gaps']:
-                    data_ = data_.tolist()
-                else:
-                    data_ = [d for d in data_]
-            elif key in (ppsd.NPZ_STORE_KEYS_SIMPLE_TYPES +
-                         ppsd.NPZ_STORE_KEYS_VERSION_NUMBERS):
-                data_ = data_.item()
-            setattr(ppsd, key, data_)
-        return ppsd
+        def _load(data):
+            # the information regarding stats is set from the npz
+            ppsd = PPSD(Stats(), metadata=metadata)
+            # check ppsd_version version and raise if higher than current
+            _check_npz_ppsd_version(ppsd, data)
+            for key in ppsd.NPZ_STORE_KEYS:
+                # data is stored as arrays in the npz.
+                # we have to convert those back to lists (or simple types), so
+                # that additionally processed data can be appended/inserted
+                # later.
+                data_ = data[key]
+                if key in ppsd.NPZ_STORE_KEYS_LIST_TYPES:
+                    if key in ['_times_data', '_times_gaps']:
+                        data_ = data_.tolist()
+                    else:
+                        data_ = [d for d in data_]
+                elif key in (ppsd.NPZ_STORE_KEYS_SIMPLE_TYPES +
+                             ppsd.NPZ_STORE_KEYS_VERSION_NUMBERS):
+                    data_ = data_.item()
+                setattr(ppsd, key, data_)
+            return ppsd
+
+        # XXX get rid of if/else again when bumping minimal numpy to 1.7
+        if NUMPY_VERSION >= [1, 7]:
+            with np.load(filename) as data:
+                return _load(data)
+        else:
+            data = np.load(filename)
+            try:
+                return _load(data)
+            finally:
+                data.close()
 
     def add_npz(self, filename):
         """
@@ -1271,47 +1286,62 @@ class PPSD(object):
         """
         See :meth:`PPSD.add_npz()`.
         """
-        data = np.load(filename)
-        # check if all metadata agree
-        for key in self.NPZ_STORE_KEYS_SIMPLE_TYPES:
-            if getattr(self, key) != data[key].item():
-                msg = ("Mismatch in '%s' attribute.\n\tCurrent:\n\t%s\n\t"
-                       "Loaded:\n\t%s")
-                msg = msg % (key, getattr(self, key), data[key].item())
-                raise AssertionError(msg)
-        for key in self.NPZ_STORE_KEYS_ARRAY_TYPES:
-            try:
-                np.testing.assert_array_equal(getattr(self, key), data[key])
-            except AssertionError as e:
-                msg = ("Mismatch in '%s' attribute.\n") % key
-                raise AssertionError(msg + str(e))
-        # load new psd data
-        for key in self.NPZ_STORE_KEYS_VERSION_NUMBERS:
-            if getattr(self, key) != data[key].item():
-                msg = ("Mismatch in version numbers (%s) between current data "
-                       "(%s) and loaded data (%s).") % (
-                           key, getattr(self, key), data[key].item())
+        def _add(data):
+            # check ppsd_version version and raise if higher than current
+            _check_npz_ppsd_version(self, data)
+            # check if all metadata agree
+            for key in self.NPZ_STORE_KEYS_SIMPLE_TYPES:
+                if getattr(self, key) != data[key].item():
+                    msg = ("Mismatch in '%s' attribute.\n\tCurrent:\n\t%s\n\t"
+                           "Loaded:\n\t%s")
+                    msg = msg % (key, getattr(self, key), data[key].item())
+                    raise AssertionError(msg)
+            for key in self.NPZ_STORE_KEYS_ARRAY_TYPES:
+                try:
+                    np.testing.assert_array_equal(getattr(self, key),
+                                                  data[key])
+                except AssertionError as e:
+                    msg = ("Mismatch in '%s' attribute.\n") % key
+                    raise AssertionError(msg + str(e))
+            # load new psd data
+            for key in self.NPZ_STORE_KEYS_VERSION_NUMBERS:
+                if getattr(self, key) != data[key].item():
+                    msg = ("Mismatch in version numbers (%s) between current "
+                           "data (%s) and loaded data (%s).") % (
+                               key, getattr(self, key), data[key].item())
+                    warnings.warn(msg)
+            _times_data = data["_times_data"].tolist()
+            _times_gaps = data["_times_gaps"].tolist()
+            _times_processed = [d_ for d_ in data["_times_processed"]]
+            _binned_psds = [d_ for d_ in data["_binned_psds"]]
+            # add new data
+            self._times_data.extend(_times_data)
+            self._times_gaps.extend(_times_gaps)
+            duplicates = 0
+            for t, psd in zip(_times_processed, _binned_psds):
+                t = UTCDateTime(t)
+                if self.__check_time_present(t):
+                    duplicates += 1
+                    continue
+                self.__insert_processed_data(t, psd)
+
+            # warn if some segments were omitted
+            if duplicates:
+                msg = ("%d/%d segments omitted in file '%s' "
+                       "(time ranges already covered).")
+                msg = msg % (duplicates, len(_times_processed), filename)
                 warnings.warn(msg)
-        _times_data = data["_times_data"].tolist()
-        _times_gaps = data["_times_gaps"].tolist()
-        _times_processed = [d_ for d_ in data["_times_processed"]]
-        _binned_psds = [d_ for d_ in data["_binned_psds"]]
-        # add new data
-        self._times_data.extend(_times_data)
-        self._times_gaps.extend(_times_gaps)
-        duplicates = 0
-        for t, psd in zip(_times_processed, _binned_psds):
-            t = UTCDateTime(t)
-            if self.__check_time_present(t):
-                duplicates += 1
-                continue
-            self.__insert_processed_data(t, psd)
-        # warn if some segments were omitted
-        if duplicates:
-            msg = ("%d/%d segments omitted in file '%s' "
-                   "(time ranges already covered).")
-            msg = msg % (duplicates, len(_times_processed), filename)
-            warnings.warn(msg)
+
+        # XXX get rid of if/else again when bumping minimal numpy to 1.7
+        if NUMPY_VERSION >= [1, 7]:
+            with np.load(filename) as data:
+                _add(data)
+        else:
+            data = np.load(filename)
+            try:
+                _add(data)
+            finally:
+                data.close()
 
     def _split_lists(self, times, psds):
         """
@@ -1912,6 +1942,22 @@ def get_nhnm():
     periods = data['model_periods']
     nlnm = data['high_noise']
     return (periods, nlnm)
+
+
+def _check_npz_ppsd_version(ppsd, npzfile):
+    # add some future-proofing and show a warning if older obspy
+    # versions should read a more recent ppsd npz file, since this is very
+    # like problematic
+    if npzfile['ppsd_version'].item() > ppsd.ppsd_version:
+        msg = ("Trying to read/add a PPSD npz with 'ppsd_version={}'. This "
+               "file was written on a more recent ObsPy version that very "
+               "likely has incompatible changes in PPSD internal "
+               "structure and npz serialization. It can not safely be "
+               "read with this ObsPy version (current 'ppsd_version' is "
+               "{}). Please consider updating your ObsPy "
+               "installation.").format(npzfile['ppsd_version'].item(),
+                                       ppsd.ppsd_version)
+        raise ObsPyException(msg)
 
 
 if __name__ == '__main__':

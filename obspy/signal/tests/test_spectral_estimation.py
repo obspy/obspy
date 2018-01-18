@@ -19,6 +19,7 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core import Stats
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.obspy_types import ObsPyException
 from obspy.core.util.testing import (
     ImageComparison, ImageComparisonException, MATPLOTLIB_VERSION)
 from obspy.io.xseed import Parser
@@ -695,6 +696,46 @@ class PsdTestCase(unittest.TestCase):
         with ImageComparison(self.path_images, 'ppsd_spectrogram.png',
                              reltol=1.5) as ic:
             ppsd.plot_spectrogram(filename=ic.name, show=False)
+
+    def test_exception_reading_newer_npz(self):
+        """
+        Checks that an exception is properly raised when trying to read a npz
+        that was written on a more recent ObsPy version (specifically that has
+        a higher 'ppsd_version' number which is used to keep track of changes
+        in PPSD and the npz file used for serialization).
+        """
+        msg = ("Trying to read/add a PPSD npz with 'ppsd_version=100'. This "
+               "file was written on a more recent ObsPy version that very "
+               "likely has incompatible changes in PPSD internal structure "
+               "and npz serialization. It can not safely be read with this "
+               "ObsPy version (current 'ppsd_version' is {!s}). Please "
+               "consider updating your ObsPy installation.".format(
+                   PPSD(stats=Stats(), metadata=None).ppsd_version))
+        # 1 - loading a npz
+        data = np.load(self.example_ppsd_npz)
+        # we have to load, modify 'ppsd_version' and save the npz file for the
+        # test..
+        items = {key: data[key] for key in data.files}
+        # deliberately set a higher ppsd_version number
+        items['ppsd_version'] = items['ppsd_version'].copy()
+        items['ppsd_version'].fill(100)
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            with open(filename, 'wb') as fh:
+                np.savez(fh, **items)
+            with self.assertRaises(ObsPyException) as e:
+                PPSD.load_npz(filename)
+        self.assertEqual(str(e.exception), msg)
+        # 2 - adding a npz
+        ppsd = PPSD.load_npz(self.example_ppsd_npz)
+        for method in (ppsd.add_npz, ppsd._add_npz):
+            with NamedTemporaryFile() as tf:
+                filename = tf.name
+                with open(filename, 'wb') as fh:
+                    np.savez(fh, **items)
+                with self.assertRaises(ObsPyException) as e:
+                    method(filename)
+                self.assertEqual(str(e.exception), msg)
 
 
 def suite():
