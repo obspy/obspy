@@ -23,10 +23,6 @@ import numpy as np
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 
 
-ns_doc = ("POSIX timestamp as integer nanoseconds. This is the internal "
-          "representation of UTCDateTime objects.")
-
-
 class UTCDateTime(object):
     """
     A UTC-based datetime object.
@@ -390,9 +386,23 @@ class UTCDateTime(object):
                                    second, microsecond)._ns
 
     def _get_ns(self):
+        """
+        Returns POSIX timestamp as integer nanoseconds.
+
+        This is the internal representation of UTCDateTime objects.
+
+        :rtype: int
+        :returns: POSIX timestamp as integer nanoseconds
+        """
         return self.__ns
 
     def _set_ns(self, value):
+        """
+        Set UTCDateTime object from POSIX timestamp as integer nanoseconds.
+
+        :type value: int
+        :param value: POSIX timestamp as integer nanoseconds
+        """
         # allow setting numpy integer types..
         if isinstance(value, np.integer):
             value_ = int(value)
@@ -407,8 +417,8 @@ class UTCDateTime(object):
             raise TypeError('nanoseconds must be set as int/long type')
         self.__ns = value
 
-    _ns = property(_get_ns, _set_ns, doc=ns_doc)
-    ns = property(_get_ns, _set_ns, doc=ns_doc)
+    _ns = property(_get_ns, _set_ns)
+    ns = property(_get_ns, _set_ns)
 
     def _from_datetime(self, dt):
         """
