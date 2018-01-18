@@ -1123,6 +1123,20 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertFalse(a == e)
         self.assertFalse(e == a)
 
+    def test_ns_public_attribute(self):
+        """
+        Basic test for public ns interface to UTCDateTime
+        """
+        t = UTCDateTime('2018-01-17T12:34:56.789012Z')
+        # test getter
+        self.assertEqual(t.ns, 1516192496789012000)
+        # test setter
+        x = 1516426162899012123
+        t.ns = x
+        self.assertEqual(t.ns, x)
+        self.assertEqual(t.day, 20)
+        self.assertEqual(t.microsecond, 899012)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
