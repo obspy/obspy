@@ -341,19 +341,15 @@ class CrossCorrelationTestCase(unittest.TestCase):
         data = data[380:700]
         max_index = 20
         ct = correlate_template
-        full_xcorr = ct(data, template, normalize='zero-normalized')
-        norm_xcorr = ct(data, template, normalize='normalized')
-        naive_xcorr = ct(data, template, normalize='naive')
-        nonorm_xcorr = ct(data, template, normalize=None)
+        full_xcorr = ct(data, template, demean=False)
+        naive_xcorr = ct(data, template, demean=False, normalize='naive')
+        nonorm_xcorr = ct(data, template, demean=False, normalize=None)
         self.assertEqual(np.argmax(full_xcorr), max_index)
-        self.assertEqual(np.argmax(norm_xcorr), max_index)
         self.assertEqual(np.argmax(naive_xcorr), max_index)
         self.assertEqual(np.argmax(nonorm_xcorr), max_index)
         self.assertAlmostEqual(full_xcorr[max_index], 1.0)
         self.assertLess(naive_xcorr[max_index], full_xcorr[max_index])
-        demeaned_template = template - np.mean(template)
-        np.testing.assert_allclose(nonorm_xcorr,
-                                   np.correlate(data, demeaned_template))
+        np.testing.assert_allclose(nonorm_xcorr, np.correlate(data, template))
 
     def test_correlate_template_correct_alignment_of_normalization(self):
         data = read()[0].data
@@ -362,9 +358,10 @@ class CrossCorrelationTestCase(unittest.TestCase):
         # test for all combinations of odd and even length input data
         for i1, i2 in ((0, 0), (0, 1), (1, 1), (1, 0)):
             for mode in ('valid', 'same', 'full'):
-                xcorr = correlate_template(data[i1:], template[i2:],
-                                           mode=mode)
-                self.assertAlmostEqual(np.max(xcorr), 1)
+                for demean in (True, False):
+                    xcorr = correlate_template(data[i1:], template[i2:],
+                                               mode=mode, demean=demean)
+                    self.assertAlmostEqual(np.max(xcorr), 1)
 
     def test_correlate_template_versus_correlate(self):
         data = read()[0].data
@@ -411,12 +408,11 @@ class CrossCorrelationTestCase(unittest.TestCase):
         FMF result obtained by the following:
 
         import numpy as np
-        import copy
         from fast_matched_filter import matched_filter
         from obspy import read
 
         data = read()[0].data
-        template = copy.deepcopy(data[400:600])
+        template = data[400:600]
         data = data[380:620]
         result = matched_filter(
             templates=template.reshape(1, 1, 1, len(template)),
@@ -431,20 +427,14 @@ class CrossCorrelationTestCase(unittest.TestCase):
             in https://github.com/beridel/fast_matched_filter/pull/12
         """
         result = [
-            -1.48108244e-01,   4.71532270e-02,   1.82797655e-01,
-            1.92574233e-01,   1.18700281e-01,   1.18958903e-02,
-            -9.23405439e-02,  -1.40047163e-01,  -1.00863703e-01,
-            -4.86961426e-03,   1.04124829e-01,   1.72662303e-01,
-            1.41110823e-01,   1.53776666e-04,  -1.71214968e-01,
-            -2.83201426e-01,  -3.04899812e-01,  -2.03215942e-01,
-            8.88349637e-02,   5.00749528e-01,   7.18140483e-01,
-            5.29728174e-01,   1.30591258e-01,  -1.83402568e-01,
-            -3.22406143e-01,  -3.20676118e-01,  -1.98054180e-01,
-            -5.06028766e-04,   1.56253457e-01,   1.74580097e-01,
-            6.49696961e-02,  -8.56237561e-02,  -1.89858019e-01,
-            -1.96504310e-01,  -1.04968190e-01,   2.51029599e-02,
-            1.32686019e-01,   2.03692451e-01,   2.11983219e-01,
-            0.00000000e+00,   0.00000000e+00]
+            -0.24705982,  0.04737673,  0.24482295,  0.25345302,  0.14640047,
+            -0.00148253, -0.14522697, -0.21116269, -0.15630521, -0.02099023,
+            0.13208567,  0.22935374,  0.18697466, -0.00927479, -0.2493282,
+            -0.4067525, -0.43705064, -0.29256448,  0.12294818,  0.7071862,
+            1.,  0.7184969,  0.1595139, -0.27098235, -0.4538188,
+            -0.44262636, -0.2699564,  0.00241675,  0.21593907,  0.24235895,
+            0.10128213, -0.0899312, -0.2190511, -0.221968, -0.09630308,
+            0.07700331,  0.21279584,  0.29395315,  0.29004177,  0., 0.]
         eqcorrscan_result = [
             -2.24548906e-01,  7.10350871e-02,  2.68642932e-01,  2.75941312e-01,
             1.66854098e-01,  1.66086946e-02, -1.29057273e-01, -1.96172655e-01,
@@ -459,14 +449,16 @@ class CrossCorrelationTestCase(unittest.TestCase):
             -1.27307668e-01]
         data = read()[0].data
         template = data[400:600]
+        template -= template.mean()
         data = data[380:620]
-        cc = correlate_template(data, template, normalize="normalized")
+        cc = correlate_template(data, template, demean=False)
         # FMF misses the last two elements?
         np.testing.assert_allclose(cc[0:-2], result[0:-2], atol=1e-7)
         with self.assertRaises(AssertionError):
             np.testing.assert_allclose(
                 cc[0:-2], eqcorrscan_result[0:-2], atol=1e-7)
         shift, corr = xcorr_max(cc)
+        self.assertAlmostEqual(corr, 1.0)
         self.assertEqual(shift, 0)
 
     # TODO:
