@@ -28,6 +28,10 @@ master:
    * Write the UTC time zone specifier to all times (see #2015).
  - obspy.signal:
    * Allow singular COUNT units in evalresp (see #2003, #2011).
+   * PPSD: for safety reasons, raise an ObsPyException if trying to read a PPSD
+     npz file that was written with a newer version of the npz representation
+     than is used by current ObsPy version (see #2051)
+
 
 1.1.0: (doi: 10.5281/zenodo.165135)
  - General:
