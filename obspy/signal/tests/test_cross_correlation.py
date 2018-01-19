@@ -442,33 +442,17 @@ class CrossCorrelationTestCase(unittest.TestCase):
             -1.96504310e-01,  -1.04968190e-01,   2.51029599e-02,
             1.32686019e-01,   2.03692451e-01,   2.11983219e-01,
             0.00000000e+00,   0.00000000e+00]
-        eqcorrscan_result = [
-            -2.24548906e-01,  7.10350871e-02,  2.68642932e-01,  2.75941312e-01,
-            1.66854098e-01,  1.66086946e-02, -1.29057273e-01, -1.96172655e-01,
-            -1.41613603e-01, -6.83271606e-03,  1.45768464e-01,  2.42143899e-01,
-            1.98310092e-01,  2.16377302e-04, -2.41576880e-01, -4.00586188e-01,
-            -4.32240069e-01, -2.88735539e-01,  1.26461715e-01,  7.09268868e-01,
-            9.99999940e-01,  7.22769439e-01,  1.75955653e-01, -2.46459037e-01,
-            -4.34027880e-01, -4.32590246e-01, -2.67131507e-01, -6.78363896e-04,
-            2.08171085e-01,  2.32197508e-01,  8.64804164e-02, -1.14158235e-01,
-            -2.53621429e-01, -2.62945205e-01, -1.40505865e-01,  3.35594788e-02,
-            1.77415669e-01,  2.72263527e-01,  2.81718552e-01,  1.38080209e-01,
-            -1.27307668e-01]
         data = read()[0].data
         template = data[400:600]
-        template = template - template.mean()
         data = data[380:620]
+        # FMF demeans template but does not locally demean data for
+        # normalization
+        template = template - template.mean()
         cc = correlate_template(data, template, demean=False)
         # FMF misses the last two elements?
         np.testing.assert_allclose(cc[0:-2], result[0:-2], atol=1e-7)
-        with self.assertRaises(AssertionError):
-            np.testing.assert_allclose(
-                cc[0:-2], eqcorrscan_result[0:-2], atol=1e-7)
         shift, corr = xcorr_max(cc)
         self.assertEqual(shift, 0)
-
-    # TODO:
-#    def test_normalisation_extreme_amplitudes(self):
 
 
 def suite():
