@@ -76,7 +76,6 @@ class CrossCorrelationTestCase(unittest.TestCase):
             self.assertEqual(shift, 10)
             self.assertAlmostEqual(corr, 1, 2)
 
-
     def test_correlate_deprecated_domain_keyword(self):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always", category=ObsPyDeprecationWarning)
@@ -85,7 +84,6 @@ class CrossCorrelationTestCase(unittest.TestCase):
             correlate(a, b, 5, domain='freq')
             correlate(a, b, 5, domain='time')
             self.assertEqual(len(w), 2)
-
 
     def test_srl_xcorr(self):
         """
