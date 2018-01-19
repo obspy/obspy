@@ -683,30 +683,24 @@ class PsdTestCase(unittest.TestCase):
                                **restrictions)
 
     def test_exclude_last_sample(self):
-
+        start = UTCDateTime("2017-01-01T00:00:00")
         header = {
-            "starttime":  UTCDateTime("2017-01-01T00:00:00"),
+            "starttime": start,
             "network": "GR",
             "station": "FUR",
             "channel": "BHZ"
         }
-
         # 49 segments of 30 minutes to allow 30 minutes overlap in next day
         tr = Trace(data=np.arange(30 * 60 * 4, dtype=np.int32), header=header)
 
-        ppsd = PPSD(
-            tr.stats,
-            read_inventory()
-        )
-
+        ppsd = PPSD(tr.stats, read_inventory())
         ppsd.add(tr)
 
         self.assertEqual(3, len(ppsd._times_processed))
         self.assertEqual(3600, ppsd.len)
-
         for i, time in enumerate(ppsd._times_processed):
-            current = UTCDateTime("2017-01-01T00:00:00") + (i * 30 * 60)
-            self.assertTrue(UTCDateTime(time) == current)
+            current = start.ns + (i * 30 * 60) * 1e9
+            self.assertTrue(time == current)
 
     def test_ppsd_spectrogram_plot(self):
         """
