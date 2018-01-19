@@ -148,20 +148,16 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
 
     .. rubric:: Example
 
-    >>> a = np.random.randn(10000).astype(np.float32)
-    >>> cc = correlate(a, a, 1000)
+    >>> a = read()[0][450:550]
+    >>> b = np.roll(a, 1)  # shift a by 1 sample
+    >>> cc = correlate(a, b, 2)
+    >>> cc
+    array([ 0.61966762,  0.99547757,  0.62373672, -0.05767316, -0.41290559])
     >>> shift, value = xcorr_max(cc)
     >>> shift
-    0
-    >>> round(value, 5)
-    1.0
-    >>> b = np.roll(a, 20)  # shift a by 20 samples
-    >>> cc = correlate(a, b, 1000)
-    >>> shift, value = xcorr_max(cc)
-    >>> shift
-    -20
-    >>> round(value, 2)
-    1.0
+    -1
+    >>> round(value, 3)
+    0.995
 
     """
     if normalize is False:
@@ -243,6 +239,18 @@ def correlate_template(data, template, mode='valid', normalize='full',
          0.19. For older Scipy version method defaults to ``'fft'``.
 
     :return: cross-correlation function.
+
+    .. rubric:: Example
+
+    >>> data = read()[0]
+    >>> template = data[450:550]
+    >>> cc = correlate_template(data, template)
+    >>> index = np.argmax(cc)
+    >>> index
+    450
+    >>> round(cc[index], 9)
+    1.0
+
     """
     # if we get Trace objects, use their data arrays
     if isinstance(data, Trace):
