@@ -50,7 +50,7 @@ def _call_scipy_correlate(a, b, mode, method):
     elif method in ('fft', 'auto'):
         cc = scipy.signal.fftconvolve(a, b[::-1], mode=mode)
     elif method == 'direct':
-        cc = scipy.signal.correalte(a, b, mode=mode)
+        cc = scipy.signal.correlate(a, b, mode=mode)
     else:
         msg = "method keyword has to be one of ('auto', 'fft', 'direct')"
         raise ValueError(msg)
