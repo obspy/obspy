@@ -11,6 +11,8 @@ master:
    * Add new correlate_template function with 'full' normalization option,
      required for correlations in template-matching
      (see Issue #2035 and PR #2042).
+   * 'domain' parameter in correlate function is deprecated in favour of new
+     'method' parameter to be consistent with recent SciPy versions (see #2042)
 
 1.1.x:
  - General:

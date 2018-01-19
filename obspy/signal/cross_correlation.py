@@ -41,11 +41,26 @@ def _pad_zeros(a, num, num2=None):
     return np.hstack(hstack)
 
 
-def _xcorr_padzeros(a, b, shift, domain='freq'):
+def _call_scipy_correlate(a, b, mode, method):
+    """
+    Call the correct correlate function depending on Scipy version and method
+    """
+    if scipy.__version__ >= '0.19':
+        cc = scipy.signal.correlate(a, b, mode=mode, method=method)
+    elif method in ('fft', 'auto'):
+        cc = scipy.signal.fftconvolve(a, b[::-1], mode=mode)
+    elif method == 'direct':
+        cc = scipy.signal.correalte(a, b, mode=mode)
+    else:
+        msg = "method keyword has to be one of ('auto', 'fft', 'direct')"
+        raise ValueError(msg)
+    return cc
+
+
+def _xcorr_padzeros(a, b, shift, method):
     """
     Cross-correlation using SciPy with mode='valid' and precedent zero padding
     """
-    assert domain in ('freq', 'time')
     if shift is None:
         shift = (len(a) + len(b) - 1) // 2
     dif = len(a) - len(b) - 2 * shift
@@ -53,32 +68,25 @@ def _xcorr_padzeros(a, b, shift, domain='freq'):
         b = _pad_zeros(b, dif // 2)
     else:
         a = _pad_zeros(a, -dif // 2)
-    if domain == 'freq':
-        c = scipy.signal.fftconvolve(a, b[::-1], 'valid')
-    else:
-        c = scipy.signal.correlate(a, b, 'valid')
-    return c
+    return _call_scipy_correlate(a, b, 'valid', method)
 
 
-def _xcorr_slice(a, b, shift, domain='freq'):
+def _xcorr_slice(a, b, shift, method):
     """
     Cross-correlation using SciPy with mode='full' and subsequent slicing
     """
-    assert domain in ('freq', 'time')
     mid = (len(a) + len(b) - 1) // 2
     if shift is None:
         shift = mid
     if shift > mid:
         # Such a large shift is not possible without zero padding
-        return _xcorr_padzeros(a, b, shift, domain=domain)
-    if domain == 'freq':
-        c = scipy.signal.fftconvolve(a, b[::-1], 'full')
-    else:
-        c = scipy.signal.correlate(a, b, 'full')
-    return c[mid - shift:mid + shift + len(c) % 2]
+        return _xcorr_padzeros(a, b, shift, method)
+    cc = _call_scipy_correlate(a, b, 'full', method)
+    return cc[mid - shift:mid + shift + len(cc) % 2]
 
 
-def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
+def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
+              domain=None):
     """
     Cross-correlation of two signals with specified maximal shift.
 
@@ -95,10 +103,15 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
         (``True`` and ``False`` are supported for backwards compatibility).
         ``'naive'`` normalizes by the overall standard deviation.
         ``None`` does not normalize.
-    :param str domain: Correlation will be performed in frequency domain with
-        :func:`scipy.signal.fftconvolve` for ``domain='freq'``
-        and in time domain with :func:`scipy.signal.correlate` for
-        ``domain='time'``.
+    :param str method: Method to use to calculate the correlation.
+         ``'direct'``: The correlation is determined directly from sums,
+         the definition of correlation.
+         ``'fft'`` The Fast Fourier Transform is used to perform the
+         correlation more quickly
+         ``'auto'`` Automatically chooses direct or Fourier method based on an
+         estimate of which is faster. Only availlable for SciPy versions >=
+         0.19. For older Scipy version method defaults to ``'fft'``.
+    :param str domain: Deprecated. Please use the method argument.
 
     :return: cross-correlation function.
 
@@ -113,9 +126,9 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
 
     .. note::
 
-        For most input parameters cross-correlation in frequency domain is much
+        For most input parameters cross-correlation using the FFT is much
         faster.
-        Only for small values of ``shift`` (``⪅100``) time domain
+        Only for small values of ``shift`` (``⪅100``) direct time domain
         cross-correlation migth save some time.
 
     .. note::
@@ -155,6 +168,16 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
         normalize = None
     if normalize is True:
         normalize = 'naive'
+    if domain is not None:
+        if domain == 'freq':
+            method = 'fft'
+        elif domain == 'time':
+            method = 'direct'
+        from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+        msg = ('domain keyword of correlate function is deprecated and will '
+               'be removed in a subsequent ObsPy release. '
+               'Please use the method keyword.')
+        warnings.warn(msg, ObsPyDeprecationWarning)
     # if we get Trace objects, use their data arrays
     if isinstance(a, Trace):
         a = a.data
@@ -165,15 +188,9 @@ def correlate(a, b, shift, demean=True, normalize='naive', domain='freq'):
     if demean:
         a = a - np.mean(a)
         b = b - np.mean(b)
-    # choose the usually faster xcorr method for each domain
-    if domain == 'freq':
-        _xcorr = _xcorr_slice
-    elif domain == 'time':
-        _xcorr = _xcorr_padzeros
-    else:
-        raise ValueError(
-            "domain keyword has to be one of ('freq', 'time')")
-    cc = _xcorr(a, b, shift, domain=domain)
+    # choose the usually faster xcorr function for each method
+    _xcorr = _xcorr_padzeros if method == 'direct' else _xcorr_slice
+    cc = _xcorr(a, b, shift, method)
     if normalize == 'naive':
         norm = (np.sum(a ** 2) * np.sum(b ** 2)) ** 0.5
         if norm <= np.finfo(float).eps:
@@ -196,7 +213,7 @@ def _window_sum(data, window_len):
 
 
 def correlate_template(data, template, mode='valid', normalize='full',
-                       demean=True, domain='freq'):
+                       demean=True, method='auto'):
     """
     Cross-correlation of two signals with specified mode.
 
@@ -216,10 +233,14 @@ def correlate_template(data, template, mode='valid', normalize='full',
         ``None`` does not normalize.
     :param demean: Demean data beforehand. For ``normalize='full'`` data is
         demeaned in different windows for each correlation value.
-    :param str domain: Correlation will be performed in frequency domain with
-        :func:`scipy.signal.fftconvolve` for ``domain='freq'``
-        and in time domain with :func:`scipy.signal.correlate` for
-        ``domain='time'``.
+    :param str method: Method to use to calculate the correlation.
+         ``'direct'``: The correlation is determined directly from sums,
+         the definition of correlation.
+         ``'fft'`` The Fast Fourier Transform is used to perform the
+         correlation more quickly
+         ``'auto'`` Automatically chooses direct or Fourier method based on an
+         estimate of which is faster. Only availlable for SciPy versions >=
+         0.19. For older Scipy version method defaults to ``'fft'``.
 
     :return: cross-correlation function.
     """
@@ -237,10 +258,7 @@ def correlate_template(data, template, mode='valid', normalize='full',
         template = template - np.mean(template)
         if normalize != 'full':
             data = data - np.mean(data)
-    if domain == 'time':
-        c = scipy.signal.correlate(data, template, mode=mode)
-    else:
-        c = scipy.signal.fftconvolve(data, template[::-1], mode=mode)
+    cc = _call_scipy_correlate(data, template, mode, method)
     if normalize is None:
         norm = 1
     else:
@@ -249,9 +267,9 @@ def correlate_template(data, template, mode='valid', normalize='full',
             norm = (norm * np.sum(data ** 2)) ** 0.5
             if norm <= np.finfo(float).eps:
                 norm = 1
-                c[:] = 0
+                cc[:] = 0
         elif normalize == 'full':
-            pad = len(c) - len(data) + lent
+            pad = len(cc) - len(data) + lent
             if mode == 'same':
                 pad1, pad2 = (pad + 2) // 2, (pad - 1) // 2
             else:
@@ -263,12 +281,12 @@ def correlate_template(data, template, mode='valid', normalize='full',
             else:
                 norm = (_window_sum(data ** 2, lent) * norm) ** 0.5
             mask = norm <= np.finfo(float).eps
-            c[mask] = 0
             norm[mask] = 1
+            cc[mask] = 0
         else:
             msg = "normalize has to be one of (None, 'naive', 'full')"
             raise ValueError(msg)
-    return c / norm
+    return cc / norm
 
 
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):
@@ -560,7 +578,7 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
         slices.append(tr.slice(start, end))
     # cross correlate
     shift_len = int(cc_maxlag * samp_rate)
-    cc = correlate(slices[0].data, slices[1].data, shift_len, domain='time')
+    cc = correlate(slices[0].data, slices[1].data, shift_len, method='direct')
     _cc_shift, cc_max = xcorr_max(cc)
     cc_curvature = np.concatenate((np.zeros(1), np.diff(cc, 2), np.zeros(1)))
     cc_convex = np.ma.masked_where(np.sign(cc_curvature) >= 0, cc)

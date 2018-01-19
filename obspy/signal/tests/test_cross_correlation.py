@@ -76,6 +76,17 @@ class CrossCorrelationTestCase(unittest.TestCase):
             self.assertEqual(shift, 10)
             self.assertAlmostEqual(corr, 1, 2)
 
+
+    def test_correlate_deprecated_domain_keyword(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always", category=ObsPyDeprecationWarning)
+            a = [1, 2, 3]
+            b = [1, 2]
+            correlate(a, b, 5, domain='freq')
+            correlate(a, b, 5, domain='time')
+            self.assertEqual(len(w), 2)
+
+
     def test_srl_xcorr(self):
         """
         Tests if example in ObsPy paper submitted to the Electronic
@@ -139,10 +150,12 @@ class CrossCorrelationTestCase(unittest.TestCase):
         np.testing.assert_allclose(cc, [0., 10., 20.], atol=1e-14)
         # test symetry and different length of a and b
         a, b = [0, 1, 2], [20, 10]
-        cc1 = correlate(a, b, 1, demean=False, normalize=False)
-        cc2 = correlate(a, b, 1, demean=False, normalize=False, domain='time')
-        cc3 = correlate(b, a, 1, demean=False, normalize=False)
-        cc4 = correlate(b, a, 1, demean=False, normalize=False, domain='time')
+        cc1 = correlate(a, b, 1, demean=False, normalize=False, method='fft')
+        cc2 = correlate(a, b, 1, demean=False, normalize=False,
+                        method='direct')
+        cc3 = correlate(b, a, 1, demean=False, normalize=False, method='fft')
+        cc4 = correlate(b, a, 1, demean=False, normalize=False,
+                        method='direct')
         shift1, _ = xcorr_max(cc1)
         shift2, _ = xcorr_max(cc2)
         shift3, _ = xcorr_max(cc3)
@@ -154,10 +167,10 @@ class CrossCorrelationTestCase(unittest.TestCase):
         np.testing.assert_allclose(cc1, cc2)
         np.testing.assert_allclose(cc3, cc4)
         np.testing.assert_allclose(cc1, cc3[::-1])
-        # test sysmetry for domain='time' and len(a) - len(b) - 2 * num > 0
+        # test sysmetry for method='direct' and len(a) - len(b) - 2 * num > 0
         a, b = [0, 1, 2, 3, 4, 5, 6, 7], [20, 10]
-        cc1 = correlate(a, b, 2, domain='time')
-        cc2 = correlate(b, a, 2, domain='time')
+        cc1 = correlate(a, b, 2, method='direct')
+        cc2 = correlate(b, a, 2, method='direct')
         np.testing.assert_allclose(cc1, cc2[::-1])
 
     def test_correlate_different_implementations(self):
@@ -167,9 +180,9 @@ class CrossCorrelationTestCase(unittest.TestCase):
         xcorrs1 = []
         xcorrs2 = []
         for xcorr_func in (_xcorr_padzeros, _xcorr_slice):
-            for domain in ('freq', 'time'):
-                x = xcorr_func(self.a, self.b, 40, domain=domain)
-                y = xcorr_func(self.a, self.b[:-1], 40, domain=domain)
+            for method in ('auto', 'fft', 'direct'):
+                x = xcorr_func(self.a, self.b, 40, method)
+                y = xcorr_func(self.a, self.b[:-1], 40, method)
                 self.assertEqual((len(self.a) - len(self.b)) % 2, 0)
                 self.assertEqual(len(x), 2 * 40 + 1)
                 self.assertEqual(len(y), 2 * 40)
@@ -186,20 +199,20 @@ class CrossCorrelationTestCase(unittest.TestCase):
         """
         a, b = [1, 2, 3], [1, 2, 3]
         n = len(a) + len(b) - 1
-        cc1 = correlate(a, b, 2, domain='freq')
-        cc2 = correlate(a, b, 3, domain='freq')
-        cc3 = correlate(a, b, None, domain='freq')
-        cc4 = correlate(a, b, None, domain='time')
+        cc1 = correlate(a, b, 2, method='fft')
+        cc2 = correlate(a, b, 3, method='fft')
+        cc3 = correlate(a, b, None, method='fft')
+        cc4 = correlate(a, b, None, method='time')
         self.assertEqual(len(cc1), n)
         self.assertEqual(len(cc2), 2 + n)
         self.assertEqual(len(cc3), n)
         self.assertEqual(len(cc4), n)
         a, b = [1, 2, 3], [1, 2]
         n = len(a) + len(b) - 1
-        cc1 = correlate(a, b, 2, domain='freq')
-        cc2 = correlate(a, b, 3, domain='freq')
-        cc3 = correlate(a, b, None, domain='freq')
-        cc4 = correlate(a, b, None, domain='time')
+        cc1 = correlate(a, b, 2, method='fft')
+        cc2 = correlate(a, b, 3, method='fft')
+        cc3 = correlate(a, b, None, method='fft')
+        cc4 = correlate(a, b, None, method='direct')
         self.assertEqual(len(cc1), n)
         self.assertEqual(len(cc2), 2 + n)
         self.assertEqual(len(cc3), n)
@@ -312,7 +325,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
 
     def test_correlate_template_eqcorrscan_time(self):
         """
-        Test full normalization in time domain.
+        Test full normalization for method='direct'.
         """
         result = [
             -2.24548906e-01,  7.10350871e-02,  2.68642932e-01,  2.75941312e-01,
@@ -329,7 +342,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
         data = read()[0].data
         template = data[400:600]
         data = data[380:620]
-        cc = correlate_template(data, template, domain='time')
+        cc = correlate_template(data, template, method='direct')
         np.testing.assert_allclose(cc, result, atol=1e-7)
         shift, corr = xcorr_max(cc)
         self.assertAlmostEqual(corr, 1.0)
