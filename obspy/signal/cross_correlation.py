@@ -88,7 +88,15 @@ def _xcorr_slice(a, b, shift, method):
 def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
               domain=None):
     """
-    Cross-correlation of two signals with specified maximal shift.
+    Cross-correlation of two signals up to a specified maximal shift.
+
+    This function only allows 'naive' normalization with the overall
+    standard deviations. This is a reasonable approximation for signals of
+    similar length and a relatively small shift parameter
+    (e.g. noise cross-correlation).
+    If you are interested in the full cross-correlation function better use
+    :func:`~obspy.signal.cross_correlation.correlate_template` which also
+    provides correct normalization.
 
     :type a: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
     :param a: first signal
@@ -107,10 +115,10 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
          ``'direct'``: The correlation is determined directly from sums,
          the definition of correlation.
          ``'fft'`` The Fast Fourier Transform is used to perform the
-         correlation more quickly
+         correlation more quickly.
          ``'auto'`` Automatically chooses direct or Fourier method based on an
-         estimate of which is faster. Only availlable for SciPy versions >=
-         0.19. For older Scipy version method defaults to ``'fft'``.
+         estimate of which is faster. (Only availlable for SciPy versions >=
+         0.19. For older Scipy version method defaults to ``'fft'``.)
     :param str domain: Deprecated. Please use the method argument.
 
     :return: cross-correlation function.
@@ -118,11 +126,6 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
     To calculate shift and value of the maximum of the returned
     cross-correlation function use
     :func:`~obspy.signal.cross_correlation.xcorr_max`.
-
-    .. note::
-
-        For template-matching purposes, use the function `correlate_template`
-        which provides a full normalization.
 
     .. note::
 
@@ -148,6 +151,7 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
 
     .. rubric:: Example
 
+    >>> from obspy import read
     >>> a = read()[0][450:550]
     >>> b = np.roll(a, 1)  # shift a by 1 sample
     >>> cc = correlate(a, b, 2)
@@ -158,7 +162,6 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
     -1
     >>> round(value, 3)
     0.995
-
     """
     if normalize is False:
         normalize = None
@@ -211,7 +214,12 @@ def _window_sum(data, window_len):
 def correlate_template(data, template, mode='valid', normalize='full',
                        demean=True, method='auto'):
     """
-    Cross-correlation of two signals with specified mode.
+    Normalized cross-correlation of two signals with specified mode.
+
+    If you are interested only in a part of the cross-correlation function
+    around zero shift consider using function
+    :func:`~obspy.signal.cross_correlation.correlate` which allows to
+    explicetly specify the maximum shift.
 
     :type data: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
     :param data: first signal
@@ -220,12 +228,12 @@ def correlate_template(data, template, mode='valid', normalize='full',
         Its length must be smaller or equal to the length of ``data``.
     :param mode: correlation mode to use.
         It is passed to the used correlation function.
-        See :func:`scipy.signal.corrrelate` for possible options.
+        See :func:`scipy.signal.correlate` for possible options.
         The parameter determines the length of the correlation function.
     :param normalize:
         One of ``'naive'``, ``'full'`` or ``None``.
         ``'full'`` normalizes every correlation properly,
-        whereas ``'naive'`` normalizes by the overall standard.
+        whereas ``'naive'`` normalizes by the overall standard deviations.
         ``None`` does not normalize.
     :param demean: Demean data beforehand. For ``normalize='full'`` data is
         demeaned in different windows for each correlation value.
@@ -240,8 +248,15 @@ def correlate_template(data, template, mode='valid', normalize='full',
 
     :return: cross-correlation function.
 
+    .. note::
+        Calling the function with ``demean=True, normalize='full'`` (default)
+        returns the zero-normalized cross-correlation function.
+        Calling the function with ``demean=False, normalize='full'``
+        returns the normalized cross-correlation function.
+
     .. rubric:: Example
 
+    >>> from obspy import read
     >>> data = read()[0]
     >>> template = data[450:550]
     >>> cc = correlate_template(data, template)
@@ -250,7 +265,6 @@ def correlate_template(data, template, mode='valid', normalize='full',
     450
     >>> round(cc[index], 9)
     1.0
-
     """
     # if we get Trace objects, use their data arrays
     if isinstance(data, Trace):
