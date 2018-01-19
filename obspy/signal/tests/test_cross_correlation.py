@@ -200,7 +200,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
         cc1 = correlate(a, b, 2, method='fft')
         cc2 = correlate(a, b, 3, method='fft')
         cc3 = correlate(a, b, None, method='fft')
-        cc4 = correlate(a, b, None, method='time')
+        cc4 = correlate(a, b, None, method='direct')
         self.assertEqual(len(cc1), n)
         self.assertEqual(len(cc2), 2 + n)
         self.assertEqual(len(cc3), n)
