@@ -1238,8 +1238,9 @@ class PPSD(object):
             _check_npz_ppsd_version(ppsd, data)
             for key in ppsd.NPZ_STORE_KEYS:
                 # data is stored as arrays in the npz.
-                # we have to convert those back to lists (or simple types), so that
-                # additionally processed data can be appended/inserted later.
+                # we have to convert those back to lists (or simple types), so
+                # that additionally processed data can be appended/inserted
+                # later.
                 data_ = data[key]
                 if key in ppsd.NPZ_STORE_KEYS_LIST_TYPES:
                     if key in ['_times_data', '_times_gaps']:
@@ -1333,7 +1334,8 @@ class PPSD(object):
                                for start, end in _times_data]
                 _times_gaps = [[UTCDateTime(start)._ns, UTCDateTime(end)._ns]
                                for start, end in _times_gaps]
-                _times_processed = [UTCDateTime(t)._ns for t in _times_processed]
+                _times_processed = [
+                    UTCDateTime(t)._ns for t in _times_processed]
             # add new data
             self._times_data.extend(_times_data)
             self._times_gaps.extend(_times_gaps)
