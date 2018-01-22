@@ -477,14 +477,18 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.assertEqual(shift, 0)
 
     def test_integer_input(self):
-        a = [1, 2, 3]
-        b = [1, 2]
-        expected1 = [0., -0.5, 0.5, 0.5, -0.5, 0.]
-        expected2 = [1., 1.]
-        cc1 = correlate(a, b, 3, method='direct')
-        cc2 = correlate_template(a, b, method='direct')
+        a = [-3, 0, 4]
+        b = [-3, 4]
+        expected1 = [0., -0.48, 0.36, 0.64, -0.48, 0.]
+        expected2 = [0.6, 0.8]
+        expected3 = [0.36, 0.64]
+        cc1 = correlate(a, b, 3, demean=False, method='direct')
+        cc2 = correlate_template(a, b, demean=False, method='direct')
+        cc3 = correlate_template(a, b, demean=False, normalize='naive',
+                                 method='direct')
         np.testing.assert_equal(cc1, expected1)
         np.testing.assert_equal(cc2, expected2)
+        np.testing.assert_equal(cc3, expected3)
 
 
 def suite():

@@ -194,22 +194,26 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
     if normalize == 'naive':
         norm = (np.sum(a ** 2) * np.sum(b ** 2)) ** 0.5
         if norm <= np.finfo(float).eps:
-            # set norm to 1 to prevent division by 0
-            # cross-correlation function will have only zeros anyway
-            norm = 1
+            # norm is zero
+            # => cross-correlation function will have only zeros
             cc[:] = 0
-    elif normalize is None:
-        norm = 1
-    else:
+        else:
+            cc = cc.astype(float, copy=False)
+            cc /= norm
+    elif normalize is not None:
         raise ValueError("normalize has to be one of (None, 'naive'))")
-    return cc / norm
+    return cc
 
 
 def _window_sum(data, window_len):
     """Rolling sum of data"""
     window_sum = np.cumsum(data)
-    window_sum = window_sum[window_len:] - window_sum[:-window_len]
-    return window_sum
+    # in-place equivalent of
+    # window_sum = window_sum[window_len:] - window_sum[:-window_len]
+    # return window_um
+    np.subtract(window_sum[window_len:], window_sum[:-window_len],
+                out=window_sum[:-window_len])
+    return window_sum[:-window_len]
 
 
 def correlate_template(data, template, mode='valid', normalize='full',
@@ -282,15 +286,15 @@ def correlate_template(data, template, mode='valid', normalize='full',
         if normalize != 'full':
             data = data - np.mean(data)
     cc = _call_scipy_correlate(data, template, mode, method)
-    if normalize is None:
-        norm = 1
-    else:
-        norm = np.sum(template ** 2)
+    if normalize is not None:
+        tnorm = np.sum(template ** 2)
         if normalize == 'naive':
-            norm = (norm * np.sum(data ** 2)) ** 0.5
+            norm = (tnorm * np.sum(data ** 2)) ** 0.5
             if norm <= np.finfo(float).eps:
-                norm = 1
                 cc[:] = 0
+            else:
+                cc = cc.astype(float, copy=False)
+                cc /= norm
         elif normalize == 'full':
             pad = len(cc) - len(data) + lent
             if mode == 'same':
@@ -298,18 +302,29 @@ def correlate_template(data, template, mode='valid', normalize='full',
             else:
                 pad1, pad2 = (pad + 1) // 2, pad // 2
             data = _pad_zeros(data, pad1, pad2)
+            # in-place equivalent of
+            # if demean:
+            #     norm = ((_window_sum(data ** 2, lent) -
+            #              _window_sum(data, lent) ** 2 / lent) * tnorm) ** 0.5
+            # else:
+            #      norm = (_window_sum(data ** 2, lent) * tnorm) ** 0.5
             if demean:
-                norm = ((_window_sum(data ** 2, lent) -
-                         _window_sum(data, lent) ** 2 / lent) * norm) ** 0.5
+                norm = _window_sum(data, lent) ** 2
+                norm = norm.astype(np.result_type(norm, lent), copy=False)
+                norm /= lent
+                np.subtract(_window_sum(data ** 2, lent), norm, out=norm)
             else:
-                norm = (_window_sum(data ** 2, lent) * norm) ** 0.5
+                norm = _window_sum(data ** 2, lent)
+            norm *= tnorm
+            norm = np.sqrt(norm, out=norm if norm.dtype == float else None)
             mask = norm <= np.finfo(float).eps
-            norm[mask] = 1
             cc[mask] = 0
+            cc = cc.astype(float, copy=False)
+            cc[~mask] /= norm[~mask]
         else:
             msg = "normalize has to be one of (None, 'naive', 'full')"
             raise ValueError(msg)
-    return cc / norm
+    return cc
 
 
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):
