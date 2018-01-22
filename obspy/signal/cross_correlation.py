@@ -132,8 +132,8 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
 
         For most input parameters cross-correlation using the FFT is much
         faster.
-        Only for small values of ``shift`` (``⪅100``) direct time domain
-        cross-correlation migth save some time.
+        Only for small values of ``shift`` (approximately less than 100)
+        direct time domain cross-correlation migth save some time.
 
     .. note::
 
