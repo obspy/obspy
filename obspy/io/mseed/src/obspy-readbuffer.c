@@ -311,6 +311,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     LinkedRecordList *recordCurrent = NULL;
     int datasize;
     int record_count = 0;
+    int byte_num;
 
     if (header_byteorder >= 0) {
         // Enforce little endian.
@@ -368,7 +369,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         // Skip fully empty chunks that could make up a full record. This
         // (rarely but sometimes) happens for example when the digitizer
         // crashes unexpectedly.
-        int byte_num = 0;
+        byte_num = 0;
         while (byte_num < MINRECLEN) {
             // Break at first non-zero byte.
             if (*(mseed + offset + byte_num)) {
