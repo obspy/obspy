@@ -197,9 +197,10 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
             # norm is zero
             # => cross-correlation function will have only zeros
             cc[:] = 0
-        else:
-            cc = cc.astype(float, copy=False)
+        elif cc.dtype == float:
             cc /= norm
+        else:
+            cc = cc / norm
     elif normalize is not None:
         raise ValueError("normalize has to be one of (None, 'naive'))")
     return cc
@@ -292,9 +293,10 @@ def correlate_template(data, template, mode='valid', normalize='full',
             norm = (tnorm * np.sum(data ** 2)) ** 0.5
             if norm <= np.finfo(float).eps:
                 cc[:] = 0
-            else:
-                cc = cc.astype(float, copy=False)
+            elif cc.dtype == float:
                 cc /= norm
+            else:
+                cc = cc / norm
         elif normalize == 'full':
             pad = len(cc) - len(data) + lent
             if mode == 'same':
@@ -310,17 +312,19 @@ def correlate_template(data, template, mode='valid', normalize='full',
             #      norm = (_window_sum(data ** 2, lent) * tnorm) ** 0.5
             if demean:
                 norm = _window_sum(data, lent) ** 2
-                norm = norm.astype(np.result_type(norm, lent), copy=False)
-                norm /= lent
+                o_ = norm if norm.dtype == np.result_type(norm, lent) else None
+                norm = np.divide(norm, lent, out=o_)
                 np.subtract(_window_sum(data ** 2, lent), norm, out=norm)
             else:
                 norm = _window_sum(data ** 2, lent)
             norm *= tnorm
             norm = np.sqrt(norm, out=norm if norm.dtype == float else None)
             mask = norm <= np.finfo(float).eps
+            if cc.dtype == float:
+                cc[~mask] /= norm[~mask]
+            else:
+                cc = cc / norm
             cc[mask] = 0
-            cc = cc.astype(float, copy=False)
-            cc[~mask] /= norm[~mask]
         else:
             msg = "normalize has to be one of (None, 'naive', 'full')"
             raise ValueError(msg)
