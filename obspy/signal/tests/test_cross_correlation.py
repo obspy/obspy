@@ -85,7 +85,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
             correlate(a, b, 5, domain='time')
             self.assertEqual(len(w), 2)
 
-    def test_correlate_normalize_True_False(self):
+    def test_correlate_normalize_true_false(self):
         a = read()[0].data[500:]
         b = a[10:]
         shift = 100
