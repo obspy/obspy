@@ -476,6 +476,16 @@ class CrossCorrelationTestCase(unittest.TestCase):
         shift, corr = xcorr_max(cc)
         self.assertEqual(shift, 0)
 
+    def test_integer_input(self):
+        a = [1, 2, 3]
+        b = [1, 2]
+        expected1 = [0., -0.5, 0.5, 0.5, -0.5, 0.]
+        expected2 = [1., 1.]
+        cc1 = correlate(a, b, 3, method='direct')
+        cc2 = correlate_template(a, b, method='direct')
+        np.testing.assert_equal(cc1, expected1)
+        np.testing.assert_equal(cc2, expected2)
+
 
 def suite():
     return unittest.makeSuite(CrossCorrelationTestCase, 'test')
