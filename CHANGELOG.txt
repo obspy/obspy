@@ -8,11 +8,12 @@ master:
  - obspy.signal.PPSD:
    * Fixed exact trace cutting for PSD segments (see #2040).
  - obspy.signal.cross_correlation:
-   * Add new correlate_template function with 'full' normalization option,
+   * Add new `correlate_template()` function with 'full' normalization option,
      required for correlations in template-matching
-     (see Issue #2035 and PR #2042).
+     (see #2035 and #2042).
    * 'domain' parameter in correlate function is deprecated in favour of new
-     'method' parameter to be consistent with recent SciPy versions (see #2042)
+     'method' parameter to be consistent with recent SciPy versions
+     (see #2042).
 
 1.1.x:
  - General:

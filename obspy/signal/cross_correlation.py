@@ -22,6 +22,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import ctypes as C
+from distutils.version import LooseVersion
 import warnings
 
 import numpy as np
@@ -37,7 +38,7 @@ def _pad_zeros(a, num, num2=None):
     """Pad num zeros at both sides of array a"""
     if num2 is None:
         num2 = num
-    hstack = [np.zeros(num), a, np.zeros(num2)]
+    hstack = [np.zeros(num, dtype=a.dtype), a, np.zeros(num2, dtype=a.dtype)]
     return np.hstack(hstack)
 
 
@@ -45,7 +46,7 @@ def _call_scipy_correlate(a, b, mode, method):
     """
     Call the correct correlate function depending on Scipy version and method
     """
-    if scipy.__version__ >= '0.19':
+    if LooseVersion(scipy.__version__) >= LooseVersion('0.19'):
         cc = scipy.signal.correlate(a, b, mode=mode, method=method)
     elif method in ('fft', 'auto'):
         cc = scipy.signal.fftconvolve(a, b[::-1], mode=mode)
@@ -173,9 +174,9 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
         elif domain == 'time':
             method = 'direct'
         from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
-        msg = ('domain keyword of correlate function is deprecated and will '
-               'be removed in a subsequent ObsPy release. '
-               'Please use the method keyword.')
+        msg = ("'domain' keyword of correlate function is deprecated and will "
+               "be removed in a subsequent ObsPy release. "
+               "Please use the 'method' keyword.")
         warnings.warn(msg, ObsPyDeprecationWarning)
     # if we get Trace objects, use their data arrays
     if isinstance(a, Trace):
