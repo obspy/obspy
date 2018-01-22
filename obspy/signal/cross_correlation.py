@@ -226,7 +226,7 @@ def correlate_template(data, template, mode='valid', normalize='full',
     :type template: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
     :param template: second signal to correlate with first signal.
         Its length must be smaller or equal to the length of ``data``.
-    :param mode: correlation mode to use.
+    :param str mode: correlation mode to use.
         It is passed to the used correlation function.
         See :func:`scipy.signal.correlate` for possible options.
         The parameter determines the length of the correlation function.
@@ -241,10 +241,10 @@ def correlate_template(data, template, mode='valid', normalize='full',
          ``'direct'``: The correlation is determined directly from sums,
          the definition of correlation.
          ``'fft'`` The Fast Fourier Transform is used to perform the
-         correlation more quickly
+         correlation more quickly.
          ``'auto'`` Automatically chooses direct or Fourier method based on an
-         estimate of which is faster. Only availlable for SciPy versions >=
-         0.19. For older Scipy version method defaults to ``'fft'``.
+         estimate of which is faster. (Only availlable for SciPy versions >=
+         0.19. For older Scipy version method defaults to ``'fft'``.)
 
     :return: cross-correlation function.
 
