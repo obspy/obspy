@@ -85,6 +85,17 @@ class CrossCorrelationTestCase(unittest.TestCase):
             correlate(a, b, 5, domain='time')
             self.assertEqual(len(w), 2)
 
+    def test_correlate_normalize_True_False(self):
+        a = read()[0].data[500:]
+        b = a[10:]
+        shift = 100
+        cc1 = correlate(a, b, shift, normalize='naive')
+        cc2 = correlate(a, b, shift, normalize=True)
+        cc3 = correlate(a, b, shift, normalize=None)
+        cc4 = correlate(a, b, shift, normalize=False)
+        np.testing.assert_equal(cc1, cc2)
+        np.testing.assert_equal(cc3, cc4)
+
     def test_srl_xcorr(self):
         """
         Tests if example in ObsPy paper submitted to the Electronic
