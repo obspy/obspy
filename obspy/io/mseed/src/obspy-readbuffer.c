@@ -365,6 +365,22 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             continue;
         }
 
+        // Skip fully empty chunks that could make up a full record. This
+        // (rarely but sometimes) happens for example when the digitizer
+        // crashes unexpectedly.
+        int byte_num = 0;
+        while (byte_num < MINRECLEN) {
+            // Break at first non-zero byte.
+            if (*(mseed + offset + byte_num)) {
+                break;
+            }
+            byte_num += 1;
+        }
+        if (byte_num == MINRECLEN) {
+            offset += MINRECLEN;
+            continue;
+        }
+
         // Pass (buflen - offset) because msr_parse() expects only a single record. This
         // way libmseed can take care to not overstep bounds.
         // Return values:
