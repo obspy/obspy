@@ -153,15 +153,15 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
 
     >>> from obspy import read
     >>> a = read()[0][450:550]
-    >>> b = np.roll(a, 1)  # shift a by 1 sample
+    >>> b = a[:-2]
     >>> cc = correlate(a, b, 2)
     >>> cc
-    array([ 0.61966762,  0.99547757,  0.62373672, -0.05767316, -0.41290559])
+    array([ 0.62390515,  0.99630851,  0.62187106, -0.05864797, -0.41496995])
     >>> shift, value = xcorr_max(cc)
     >>> shift
     -1
     >>> round(value, 3)
-    0.995
+    0.996
     """
     if normalize is False:
         normalize = None
