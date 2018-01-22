@@ -1163,6 +1163,31 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             "read the file in chunks as documented here: "
             "https://github.com/obspy/obspy/pull/1419#issuecomment-221582369")
 
+    def test_read_file_with_empty_blocks_in_between(self):
+        """
+        Test reading MiniSEED files that have some empty blocks.
+        """
+        # This file has two 4096 bytes records.
+        filename = os.path.join(self.path, 'data', 'test.mseed')
+        with io.open(filename, "rb") as fh:
+            rec1 = fh.read(4096)
+            rec2 = fh.read(4096)
+
+        reference = _read_mseed(filename)
+        del reference[0].stats.mseed
+
+        for length in (128, 256, 512, 1024, 2048, 4096, 8192):
+            with io.BytesIO() as buf:
+                buf.write(rec1)
+                buf.write(b'\x00' * length)
+                buf.write(rec2)
+                buf.seek(0, 0)
+                st = _read_mseed(buf)
+
+            # Remove things like file-size and what not.
+            del st[0].stats.mseed
+            self.assertEqual(reference, st)
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
