@@ -476,19 +476,23 @@ class CrossCorrelationTestCase(unittest.TestCase):
         shift, corr = xcorr_max(cc)
         self.assertEqual(shift, 0)
 
-    def test_integer_input(self):
+    def test_integer_input_equals_float_input(self):
         a = [-3, 0, 4]
         b = [-3, 4]
-        expected1 = [0., -0.48, 0.36, 0.64, -0.48, 0.]
-        expected2 = [0.6, 0.8]
-        expected3 = [0.36, 0.64]
-        cc1 = correlate(a, b, 3, demean=False, method='direct')
-        cc2 = correlate_template(a, b, demean=False, method='direct')
-        cc3 = correlate_template(a, b, demean=False, normalize='naive',
-                                 method='direct')
-        np.testing.assert_equal(cc1, expected1)
-        np.testing.assert_equal(cc2, expected2)
-        np.testing.assert_equal(cc3, expected3)
+        c = np.array(a, dtype=float)
+        d = np.array(b, dtype=float)
+        for demean in (True, False):
+            for normalize in (None, 'naive'):
+                cc1 = correlate(a, b, 3, demean=demean, normalize=normalize,
+                                method='direct')
+                cc2 = correlate(c, d, 3, demean=demean, normalize=normalize)
+                np.testing.assert_equal(cc1, cc2)
+            for normalize in (None, 'naive', 'full'):
+                cc3 = correlate_template(a, b, demean=demean,
+                                         normalize=normalize, method='direct')
+                cc4 = correlate_template(c, d, demean=demean,
+                                         normalize=normalize)
+                np.testing.assert_equal(cc3, cc4)
 
 
 def suite():

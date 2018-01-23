@@ -211,7 +211,7 @@ def _window_sum(data, window_len):
     window_sum = np.cumsum(data)
     # in-place equivalent of
     # window_sum = window_sum[window_len:] - window_sum[:-window_len]
-    # return window_um
+    # return window_sum
     np.subtract(window_sum[window_len:], window_sum[:-window_len],
                 out=window_sum[:-window_len])
     return window_sum[:-window_len]
@@ -310,15 +310,21 @@ def correlate_template(data, template, mode='valid', normalize='full',
             #              _window_sum(data, lent) ** 2 / lent) * tnorm) ** 0.5
             # else:
             #      norm = (_window_sum(data ** 2, lent) * tnorm) ** 0.5
+            # cc = cc / norm
             if demean:
                 norm = _window_sum(data, lent) ** 2
-                o_ = norm if norm.dtype == np.result_type(norm, lent) else None
-                norm = np.divide(norm, lent, out=o_)
+                if norm.dtype == float:
+                    norm /= lent
+                else:
+                    norm = norm / lent
                 np.subtract(_window_sum(data ** 2, lent), norm, out=norm)
             else:
                 norm = _window_sum(data ** 2, lent)
             norm *= tnorm
-            norm = np.sqrt(norm, out=norm if norm.dtype == float else None)
+            if norm.dtype == float:
+                np.sqrt(norm, out=norm)
+            else:
+                norm = np.sqrt(norm)
             mask = norm <= np.finfo(float).eps
             if cc.dtype == float:
                 cc[~mask] /= norm[~mask]
