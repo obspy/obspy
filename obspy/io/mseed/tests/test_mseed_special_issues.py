@@ -143,7 +143,10 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             warnings.simplefilter("always")
             data_record = _read_mseed(file)[0].data
 
-        self.assertEqual(len(w), 1)
+        # This will raise 18 (!) warnings. It will skip 17 * 128 bytes due
+        # to it not being a SEED records and then complain that the remaining
+        # 30 bytes are not enough to constitute a full SEED record.
+        self.assertEqual(len(w), 18)
         self.assertEqual(w[0].category, InternalMSEEDWarning)
 
         # Test against reference data.
@@ -1163,9 +1166,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             "read the file in chunks as documented here: "
             "https://github.com/obspy/obspy/pull/1419#issuecomment-221582369")
 
-    def test_read_file_with_empty_blocks_in_between(self):
+    def test_read_file_with_non_valid_blocks_in_between(self):
         """
-        Test reading MiniSEED files that have some empty blocks.
+        Test reading MiniSEED files that have some non-valid blocks in-between.
         """
         # This file has two 4096 bytes records.
         filename = os.path.join(self.path, 'data', 'test.mseed')
@@ -1176,13 +1179,45 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         reference = _read_mseed(filename)
         del reference[0].stats.mseed
 
+        # Fill with zero bytes.
         for length in (128, 256, 512, 1024, 2048, 4096, 8192):
             with io.BytesIO() as buf:
                 buf.write(rec1)
                 buf.write(b'\x00' * length)
                 buf.write(rec2)
                 buf.seek(0, 0)
-                st = _read_mseed(buf)
+                # This will raise 1 warning per 128 bytes.
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter("always")
+                    st = _read_mseed(buf)
+                self.assertEqual(len(w), length // 128)
+
+            # Also explicitly test the first warning message which should be
+            # identical for all cases.
+            self.assertEqual(
+                w[0].message.args[0],
+                "readMSEEDBuffer(): Not a SEED record. Will skip bytes "
+                "4096 to 4223.")
+
+            # Remove things like file-size and what not.
+            del st[0].stats.mseed
+            self.assertEqual(reference, st)
+
+        # Try the same thing but fill with random bytes.
+        # The seed is not really needed but hopefully guards against the
+        # very very rare case of random bytes making up a valid SEED record.
+        np.random.seed(34980)
+        for length in (128, 256, 512, 1024, 2048, 4096, 8192):
+            with io.BytesIO() as buf:
+                buf.write(rec1)
+                buf.write(np.random.bytes(length))
+                buf.write(rec2)
+                buf.seek(0, 0)
+                # This will raise 1 warning per 128 bytes.
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter("always")
+                    st = _read_mseed(buf)
+                self.assertEqual(len(w), length // 128)
 
             # Remove things like file-size and what not.
             del st[0].stats.mseed
