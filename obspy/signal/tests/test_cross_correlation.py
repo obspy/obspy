@@ -486,13 +486,13 @@ class CrossCorrelationTestCase(unittest.TestCase):
                 cc1 = correlate(a, b, 3, demean=demean, normalize=normalize,
                                 method='direct')
                 cc2 = correlate(c, d, 3, demean=demean, normalize=normalize)
-                np.testing.assert_equal(cc1, cc2)
+                np.testing.assert_allclose(cc1, cc2)
             for normalize in (None, 'naive', 'full'):
                 cc3 = correlate_template(a, b, demean=demean,
                                          normalize=normalize, method='direct')
                 cc4 = correlate_template(c, d, demean=demean,
                                          normalize=normalize)
-                np.testing.assert_equal(cc3, cc4)
+                np.testing.assert_allclose(cc3, cc4)
 
 
 def suite():
