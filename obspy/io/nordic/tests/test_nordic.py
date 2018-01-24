@@ -810,7 +810,8 @@ def full_test_event():
             moment_magnitude_id=test_event.magnitudes[-1].resource_id,
             scalar_moment=100, tensor=Tensor(
                 m_rr=100, m_tt=100, m_pp=10, m_rt=1, m_rp=20, m_tp=15),
-            method_id=ResourceIdentifier('smi:nc.anss.org/momentTensor/BLAH'))))
+            method_id=ResourceIdentifier(
+                'smi:nc.anss.org/momentTensor/BLAH'))))
     return test_event
 
 

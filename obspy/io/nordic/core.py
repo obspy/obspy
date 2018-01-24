@@ -679,17 +679,17 @@ def _read_focal_mechanisms(tagged_lines, event):
         try:
             # Apparently these don't have to be filled.
             nodal_p.strike_errors = QuantityError(float(line[30:35]))
-            nodal_p.dip_errors=QuantityError(float(line[35:40]))
-            nodal_p.rake_errors=QuantityError(float(line[40:45]))
+            nodal_p.dip_errors = QuantityError(float(line[35:40]))
+            nodal_p.rake_errors = QuantityError(float(line[40:45]))
         except ValueError:
             pass
         fm = FocalMechanism(nodal_planes=NodalPlanes(nodal_plane_1=nodal_p))
         try:
-            fm.method_id=ResourceIdentifier(
+            fm.method_id = ResourceIdentifier(
                 "smi:nc.anss.org/focalMehcanism/" + line[70:77].strip())
-            fm.creation_info=CreationInfo(agency_id=line[66:69].strip)
-            fm.misfit=float(line[45:50])
-            fm.station_distribution_ratio=float(line[50:55])
+            fm.creation_info = CreationInfo(agency_id=line[66:69].strip)
+            fm.misfit = float(line[45:50])
+            fm.station_distribution_ratio = float(line[50:55])
         except ValueError:
             pass
         event.focal_mechanisms.append(fm)
@@ -739,7 +739,8 @@ def _read_moment_tensors(tagged_lines, event):
                 scalar_moment=float(mt_line_2[52:62]), tensor=Tensor(
                     m_rr=float(mt_line_2[3:9]), m_tt=float(mt_line_2[10:16]),
                     m_pp=float(mt_line_2[17:23]), m_rt=float(mt_line_2[24:30]),
-                    m_rp=float(mt_line_2[31:37]), m_tp=float(mt_line_2[38:44])),
+                    m_rp=float(mt_line_2[31:37]),
+                    m_tp=float(mt_line_2[38:44])),
                 method_id=ResourceIdentifier(
                     "smi:nc.anss.org/momentTensor/" + mt_line_1[70:77].strip()
                 ))))
@@ -765,8 +766,9 @@ def _read_picks(tagged_lines, new_event):
     tags = [' ', '4']
     for tag in tags:
         try:
-            pickline.extend([tup[0] for tup in
-                             sorted(tagged_lines[tag], key=lambda tup: tup[1])])
+            pickline.extend(
+                [tup[0] for tup in sorted(tagged_lines[tag],
+                                          key=lambda tup: tup[1])])
         except KeyError:
             pass
     header = sorted(tagged_lines['7'], key=lambda tup: tup[1])[0][0]
@@ -1237,7 +1239,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     if hasattr(event, 'focal_mechanisms') and len(event.focal_mechanisms) > 0:
         for focal_mechanism in event.focal_mechanisms:
             try:
-                sfile.write(_write_focal_mechanism_line(focal_mechanism) + '\n')
+                sfile.write(
+                    _write_focal_mechanism_line(focal_mechanism) + '\n')
             except AttributeError:
                 pass
         # Write moment tensor solution
@@ -1338,23 +1341,18 @@ def _write_focal_mechanism_line(focal_mechanism):
     """
     Get the line for a focal-mechanism
     """
+    nodal_plane = focal_mechanism.nodal_planes.nodal_plane_1
     line = list(' ' * 79 + 'F')
-    line[0:10] = (_str_conv(
-        focal_mechanism.nodal_planes.nodal_plane_1.strike, 1)).rjust(10)
-    line[10:20] = (_str_conv(
-        focal_mechanism.nodal_planes.nodal_plane_1.dip, 1)).rjust(10)
-    line[20:30] = (_str_conv(
-        focal_mechanism.nodal_planes.nodal_plane_1.rake, 1)).rjust(10)
+    line[0:10] = (_str_conv(nodal_plane.strike, 1)).rjust(10)
+    line[10:20] = (_str_conv(nodal_plane.dip, 1)).rjust(10)
+    line[20:30] = (_str_conv(nodal_plane.rake, 1)).rjust(10)
     try:
-        line[30:35] = (_str_conv(
-            focal_mechanism.nodal_planes.nodal_plane_1.
-                strike_errors.uncertainty, 1)).rjust(5)
-        line[35:40] = (_str_conv(
-            focal_mechanism.nodal_planes.nodal_plane_1.
-                dip_errors.uncertainty, 1)).rjust(5)
-        line[40:45] = (_str_conv(
-            focal_mechanism.nodal_planes.nodal_plane_1.
-                rake_errors.uncertainty, 1)).rjust(5)
+        line[30:35] = (_str_conv(nodal_plane.strike_errors.uncertainty,
+                                 1)).rjust(5)
+        line[35:40] = (_str_conv(nodal_plane.dip_errors.uncertainty,
+                                 1)).rjust(5)
+        line[40:45] = (_str_conv(nodal_plane.rake_errors.uncertainty,
+                                 1)).rjust(5)
     except AttributeError:
         pass
     if hasattr(focal_mechanism, 'misfit'):
@@ -1364,7 +1362,8 @@ def _write_focal_mechanism_line(focal_mechanism):
             focal_mechanism.station_distribution_ratio, 1)).rjust(5)
     if hasattr(focal_mechanism, 'creation_info') and hasattr(
             focal_mechanism.creation_info, 'agency_id'):
-        line[66:69] = (str(focal_mechanism.creation_info.agency_id)).rjust(3)[0:3]
+        line[66:69] = (str(
+            focal_mechanism.creation_info.agency_id)).rjust(3)[0:3]
     if hasattr(focal_mechanism, 'method_id'):
         line[70:77] = (str(focal_mechanism.method_id).split('/')[-1]).rjust(7)
     return ''.join(line)
