@@ -57,7 +57,7 @@ class NordicParsingError(Exception):
         self.value = value
 
 
-def _is_sfile(sfile):
+def _is_sfile(sfile, encoding='latin-1'):
     """
     Basic test of whether the file is nordic format or not.
 
@@ -65,11 +65,14 @@ def _is_sfile(sfile):
 
     :type sfile: str
     :param sfile: Path to sfile
+    :type encoding: str
+    :param encoding: Encoding for file, used to decode from bytes to string
+
     :rtype: bool
     """
     if not hasattr(sfile, "readline"):
         try:
-            with open(sfile, 'r', encoding="latin-1") as f:
+            with open(sfile, 'r', encoding=encoding) as f:
                 tags = _get_line_tags(f=f)
         except Exception:
             return False
@@ -338,16 +341,18 @@ def confidence_ellipsoid_to_xyz(confidence_ellipsoid):
     return errors_out
 
 
-def readheader(sfile):
+def readheader(sfile, encoding='latin-1'):
     """
     Read header information from a seisan nordic format S-file.
 
     :type sfile: str
     :param sfile: Path to the s-file
+    :type encoding: str
+    :param encoding: Encoding for file, used to decode from bytes to string
 
     :returns: :class:`~obspy.core.event.event.Event`
     """
-    with open(sfile, 'r', encoding="latin-1") as f:
+    with open(sfile, 'r', encoding=encoding) as f:
         tagged_lines = _get_line_tags(f)
         try:
             header = _readheader(head_lines=tagged_lines['1'])
@@ -473,18 +478,20 @@ def _read_mags(line, event):
     return magnitudes
 
 
-def read_spectral_info(sfile):
+def read_spectral_info(sfile, encoding='latin-1'):
     """
     Read spectral info from an sfile.
 
     :type sfile: str
     :param sfile: Sfile to read from.
+    :type encoding: str
+    :param encoding: Encoding for file, used to decode from bytes to string
 
     :returns:
         list of dictionaries of spectral information, units as in seisan
         manual, expect for logs which have been converted to floats.
     """
-    with open(sfile, 'r', encoding='latin1') as f:
+    with open(sfile, 'r', encoding=encoding) as f:
         tagged_lines = _get_line_tags(f=f)
         spec_inf = _read_spectral_info(tagged_lines=tagged_lines)
     return spec_inf
@@ -581,7 +588,7 @@ def _read_spectral_info(tagged_lines, event=None):
     return spec_inf
 
 
-def read_nordic(select_file, return_wavnames=False):
+def read_nordic(select_file, return_wavnames=False, encoding='latin-1'):
     """
     Read a catalog of events from a Nordic formatted select file.
 
@@ -593,6 +600,8 @@ def read_nordic(select_file, return_wavnames=False):
     :param return_wavnames:
         If True, will return the names of the waveforms that the events
         are associated with.
+    :type encoding: str
+    :param encoding: Encoding for file, used to decode from bytes to string
 
     :return: catalog of events
     :rtype: :class:`~obspy.core.event.event.Event`
@@ -601,10 +610,10 @@ def read_nordic(select_file, return_wavnames=False):
     event_str = []
     if not hasattr(select_file, "readline"):
         try:
-            f = open(select_file, 'r', encoding='latin-1')
+            f = open(select_file, 'r', encoding=encoding)
         except Exception:
             try:
-                f = select_file.decode("latin-1")
+                f = select_file.decode(encoding)
             except Exception:
                 f = str(select_file)
     else:
@@ -895,7 +904,7 @@ def _read_picks(tagged_lines, new_event):
     return new_event
 
 
-def readwavename(sfile):
+def readwavename(sfile, encoding='latin-1'):
     """
     Extract the waveform filename from the s-file.
 
@@ -904,11 +913,13 @@ def readwavename(sfile):
 
     :type sfile: str
     :param sfile: Path to the sfile
+    :type encoding: str
+    :param encoding: Encoding for file, used to decode from bytes to string
 
     :returns: List of strings of wave paths
     :rtype: list
     """
-    with open(sfile, 'r', encoding='latin-1') as f:
+    with open(sfile, 'r', encoding=encoding) as f:
         wavenames = _readwavename(f=f)
     return wavenames
 

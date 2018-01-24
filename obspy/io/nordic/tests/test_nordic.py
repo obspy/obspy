@@ -414,6 +414,8 @@ class TestNordicMethods(unittest.TestCase):
         spectral_info = read_spectral_info(dos_file)
         self.assertEqual(len(spectral_info.keys()), 10)
         self.assertEqual(spectral_info[('AVERAGE', '')]['stress_drop'], 27.7)
+        with self.assertRaises(UnicodeDecodeError):
+            readheader(dos_file, 'ASCII')
 
     def test_read_many_events(self):
         testing_path = os.path.join(self.testing_path, 'select.out')
