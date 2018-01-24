@@ -399,13 +399,21 @@ class TestNordicMethods(unittest.TestCase):
             event = read_nordic(testing_path)[0]
         self.assertEqual(len(event.origins), 2)
 
-    def test_read_dos(self):
+    def test_read_latin1(self):
         """
-        Check that we can read dos formatted files.
+        Check that we can read dos formatted, latin1 encoded files.
         """
         dos_file = os.path.join(self.testing_path, 'dos-file.sfile')
-        event = read_events(dos_file)
+        self.assertTrue(_is_sfile(dos_file))
+        event = readheader(dos_file)
         self.assertEqual(event.origins[0].latitude, 60.328)
+        cat = read_events(dos_file)
+        self.assertEqual(cat[0].origins[0].latitude, 60.328)
+        wavefiles = readwavename(dos_file)
+        self.assertEqual(wavefiles[0], "90121311.0851W41")
+        spectral_info = read_spectral_info(dos_file)
+        self.assertEqual(len(spectral_info.keys()), 10)
+        self.assertEqual(spectral_info[('AVERAGE', '')]['stress_drop'], 27.7)
 
     def test_read_many_events(self):
         testing_path = os.path.join(self.testing_path, 'select.out')

@@ -69,7 +69,7 @@ def _is_sfile(sfile):
     """
     if not hasattr(sfile, "readline"):
         try:
-            with open(sfile, 'r') as f:
+            with open(sfile, 'r', encoding="latin-1") as f:
                 tags = _get_line_tags(f=f)
         except Exception:
             return False
@@ -347,7 +347,7 @@ def readheader(sfile):
 
     :returns: :class:`~obspy.core.event.event.Event`
     """
-    with open(sfile, 'r') as f:
+    with open(sfile, 'r', encoding="latin-1") as f:
         tagged_lines = _get_line_tags(f)
         try:
             header = _readheader(head_lines=tagged_lines['1'])
@@ -386,7 +386,6 @@ def _readheader(head_lines):
                     matched = True
         new_event.magnitudes.extend(event.magnitudes)
         if not matched:
-            print(new_event.origins)
             new_event.origins.append(event.origins[0])
             new_event.event_descriptions.append(event.event_descriptions[0])
     # Set the useful things like preferred magnitude and preferred origin
@@ -485,7 +484,7 @@ def read_spectral_info(sfile):
         list of dictionaries of spectral information, units as in seisan
         manual, expect for logs which have been converted to floats.
     """
-    with open(sfile, 'r') as f:
+    with open(sfile, 'r', encoding='latin1') as f:
         tagged_lines = _get_line_tags(f=f)
         spec_inf = _read_spectral_info(tagged_lines=tagged_lines)
     return spec_inf
@@ -602,10 +601,10 @@ def read_nordic(select_file, return_wavnames=False):
     event_str = []
     if not hasattr(select_file, "readline"):
         try:
-            f = open(select_file, 'r')
+            f = open(select_file, 'r', encoding='latin-1')
         except Exception:
             try:
-                f = select_file.decode()
+                f = select_file.decode("latin-1")
             except Exception:
                 f = str(select_file)
     else:
@@ -909,7 +908,7 @@ def readwavename(sfile):
     :returns: List of strings of wave paths
     :rtype: list
     """
-    with open(sfile, 'r') as f:
+    with open(sfile, 'r', encoding='latin-1') as f:
         wavenames = _readwavename(f=f)
     return wavenames
 
