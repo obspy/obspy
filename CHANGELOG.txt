@@ -4,6 +4,9 @@ master:
      (see #1997).
    * UTCDateTime objects will now always evaluate equal if their string
      representations are equal (see #2049).
+ - obspy.io.reftek:
+   * Implement reading reftek encodings '16' and '32' (uncompressed data,
+     16/32bit integers, see #2058 and #2059)
  - obspy.io.shapefile:
    * Add possibility to add custom database columns when writing catalog
      objects to shapefile (see #2012)
