@@ -254,7 +254,7 @@ class Reftek130(object):
                 eh = EHPacket(eh_packets[0])
             else:
                 eh = EHPacket(et_packets[0])
-            # only "C0" encoding supported right now
+            # only C0, C2, 16, 32 encodings supported right now
             if eh.data_format == b"C0":
                 encoding = 'C0'
             elif eh.data_format == b"C2":
