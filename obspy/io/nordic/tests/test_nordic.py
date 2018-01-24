@@ -278,6 +278,7 @@ class TestNordicMethods(unittest.TestCase):
             warnings.simplefilter('ignore', UserWarning)
             test_event = read_nordic(testing_path)[0]
             header_event = read_nordic(not_extra_header)[0]
+        self.assertEqual(len(header_event.origins), 2)
         self.assertEqual(test_event.origins[0].time,
                          header_event.origins[0].time)
         self.assertEqual(test_event.origins[0].latitude,
@@ -396,7 +397,15 @@ class TestNordicMethods(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
             event = read_nordic(testing_path)[0]
-        self.assertEqual(len(event.origins), 1)
+        self.assertEqual(len(event.origins), 2)
+
+    def test_read_dos(self):
+        """
+        Check that we can read dos formatted files.
+        """
+        dos_file = os.path.join(self.testing_path, 'dos-file.sfile')
+        event = read_events(dos_file)
+        self.assertEqual(event.origins[0].latitude, 60.328)
 
     def test_read_many_events(self):
         testing_path = os.path.join(self.testing_path, 'select.out')
@@ -452,8 +461,7 @@ class TestNordicMethods(unittest.TestCase):
             for event_1, event_2 in zip(cat, cat_back):
                 self.assertTrue(
                     len(event_1.magnitudes) == len(event_2.magnitudes))
-                self.assertTrue(test_similarity(
-                    event_1=event_1, event_2=event_2))
+                _assert_similarity(event_1, event_2)
 
     def test_inaccurate_picks(self):
         testing_path = os.path.join(self.testing_path, 'bad_picks.sfile')

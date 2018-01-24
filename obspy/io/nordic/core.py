@@ -360,63 +360,35 @@ def _readheader(head_lines):
     """
     Internal header reader.
     :type head_lines: list
-    :param head_lines: List of up to two header lines
+    :param head_lines:
+        List of tuples of (strings, line-number) of the header lines.
 
     :returns: :class:`~obspy.core.event.event.Event`
     """
-    # Base populate to allow for empty parts of file
-    new_event = Event()
+    # There are two possible types of origin line, one with all info, and a
+    # subsequent one for additional magnitudes.
     head_lines.sort(key=lambda tup: tup[1])
-    if len(head_lines) > 2:
-        raise NordicParsingError("More than two type 1 lines found - "
-                                 "does not follow spec")
-    elif len(head_lines) == 2:
-        topline = head_lines[0][0]
-        add_mag_line = head_lines[1][0]
-    else:
-        topline = head_lines[0][0]
-        add_mag_line = None
-    try:
-        sfile_seconds = int(topline[16:18])
-        if sfile_seconds == 60:
-            sfile_seconds = 0
-            add_seconds = 60
-        else:
-            add_seconds = 0
-        new_event.origins.append(Origin())
-        new_event.origins[0].time = UTCDateTime(
-            int(topline[1:5]), int(topline[6:8]), int(topline[8:10]),
-            int(topline[11:13]), int(topline[13:15]), sfile_seconds,
-            int(topline[19:20]) * 100000) + add_seconds
-    except Exception:
-        NordicParsingError("Couldn't read a date from sfile")
-    # new_event.loc_mod_ind=topline[20]
-    new_event.event_descriptions.append(EventDescription())
-    new_event.event_descriptions[0].text = topline[21:23]
-    # new_event.ev_id=topline[22]
-    try:
-        new_event.origins[0].latitude = float(topline[23:30])
-        new_event.origins[0].longitude = float(topline[31:38])
-        new_event.origins[0].depth = float(topline[39:43]) * 1000
-    except ValueError:
-        # The origin 'requires' a lat & long
-        new_event.origins[0].latitude = None
-        new_event.origins[0].longitude = None
-        new_event.origins[0].depth = None
-    # new_event.depth_ind = topline[44]
-    # new_event.loc_ind = topline[45]
-    new_event.creation_info = CreationInfo(agency_id=topline[45:48].strip())
-    ksta = Comment(text='Number of stations=' + topline[49:51].strip())
-    new_event.origins[0].comments.append(ksta)
-    if _float_conv(topline[51:55]) is not None:
-        new_event.origins[0].quality = OriginQuality(
-            standard_error=_float_conv(topline[51:55]))
-    # Read in magnitudes if they are there.
-    magnitudes = []
-    magnitudes.extend(_read_mags(topline, new_event))
-    if add_mag_line:
-        magnitudes.extend(_read_mags(add_mag_line, new_event))
-    new_event.magnitudes = magnitudes
+    # Construct a rough catalog, then merge events together to cope with
+    # multiple origins
+    _cat = Catalog()
+    for line in head_lines:
+        _cat.append(_read_origin(line=line[0]))
+    new_event = _cat.events.pop(0)
+    for event in _cat:
+        matched = False
+        origin_times = [origin.time for origin in new_event.origins]
+        if event.origins[0].time in origin_times:
+            origin_index = origin_times.index(event.origins[0].time)
+            agency = new_event.origins[origin_index].creation_info.agency_id
+            if event.creation_info.agency_id == agency:
+                event_desc = new_event.event_descriptions[origin_index].text
+                if event.event_descriptions[0].text == event_desc:
+                    matched = True
+        new_event.magnitudes.extend(event.magnitudes)
+        if not matched:
+            print(new_event.origins)
+            new_event.origins.append(event.origins[0])
+            new_event.event_descriptions.append(event.event_descriptions[0])
     # Set the useful things like preferred magnitude and preferred origin
     new_event.preferred_origin_id = new_event.origins[0].resource_id
     try:
@@ -435,6 +407,54 @@ def _readheader(head_lines):
                 resource_id
         except IndexError:
             pass
+    return new_event
+
+
+def _read_origin(line):
+    """
+    Read one origin (type 1) line.
+
+    :param str line: Origin format (type 1) line
+    :return: `~obspy.core.event.Event`
+    """
+    new_event = Event()
+    try:
+        sfile_seconds = line[16:20].strip()
+        if len(sfile_seconds) == 0:
+            sfile_seconds = 0.0
+        else:
+            sfile_seconds = float(sfile_seconds)
+        new_event.origins.append(Origin())
+        new_event.origins[0].time = UTCDateTime(
+            int(line[1:5]), int(line[6:8]), int(line[8:10]),
+            int(line[11:13]), int(line[13:15]), 0, 0) + sfile_seconds
+    except Exception:
+        raise NordicParsingError("Couldn't read a date from sfile")
+    # new_event.loc_mod_ind=line[20]
+    new_event.event_descriptions.append(EventDescription(text=line[21:23]))
+    for key, _slice in [('latitude', slice(23, 30)),
+                        ('longitude', slice(30, 38)),
+                        ('depth', slice(38, 43))]:
+        try:
+            new_event.origins[0].__dict__[key] = float(line[_slice])
+        except ValueError:
+            new_event.origins[0].__dict__[key] = None
+    if new_event.origins[0].depth:
+        new_event.origins[0].depth *= 1000
+    # new_event.depth_ind = line[44]
+    # new_event.loc_ind = line[45]
+    new_event.creation_info = CreationInfo(agency_id=line[45:48].strip())
+    new_event.origins[0].creation_info = CreationInfo(
+        agency_id=line[45:48].strip())
+    ksta = Comment(text='Number of stations=' + line[49:51].strip())
+    new_event.origins[0].comments.append(ksta)
+    if _float_conv(line[51:55]) is not None:
+        new_event.origins[0].quality = OriginQuality(
+            standard_error=_float_conv(line[51:55]))
+    # Read in magnitudes if they are there.
+    magnitudes = []
+    magnitudes.extend(_read_mags(line, new_event))
+    new_event.magnitudes = magnitudes
     return new_event
 
 
@@ -654,18 +674,25 @@ def _read_focal_mechanisms(tagged_lines, event):
                 "number of bad polarities and number of bad amplitude ratios"
                 "is not implemented.")
     for line, line_num in tagged_lines['F']:
-        event.focal_mechanisms.append(FocalMechanism(
-            nodal_planes=NodalPlanes(nodal_plane_1=NodalPlane(
-                strike=float(line[0:10]), dip=float(line[10:20]),
-                rake=float(line[20:30]),
-                strike_errors=QuantityError(float(line[30:35])),
-                dip_errors=QuantityError(float(line[35:40])),
-                rake_errors=QuantityError(float(line[40:45])))),
-            method_id=ResourceIdentifier(
-                "smi:nc.anss.org/focalMehcanism/" + line[70:77].strip()),
-            creation_info=CreationInfo(agency_id=line[66:69].strip),
-            misfit=float(line[45:50]),
-            station_distribution_ratio=float(line[50:55])))
+        nodal_p = NodalPlane(strike=float(line[0:10]), dip=float(line[10:20]),
+                             rake=float(line[20:30]))
+        try:
+            # Apparently these don't have to be filled.
+            nodal_p.strike_errors = QuantityError(float(line[30:35]))
+            nodal_p.dip_errors=QuantityError(float(line[35:40]))
+            nodal_p.rake_errors=QuantityError(float(line[40:45]))
+        except ValueError:
+            pass
+        fm = FocalMechanism(nodal_planes=NodalPlanes(nodal_plane_1=nodal_p))
+        try:
+            fm.method_id=ResourceIdentifier(
+                "smi:nc.anss.org/focalMehcanism/" + line[70:77].strip())
+            fm.creation_info=CreationInfo(agency_id=line[66:69].strip)
+            fm.misfit=float(line[45:50])
+            fm.station_distribution_ratio=float(line[50:55])
+        except ValueError:
+            pass
+        event.focal_mechanisms.append(fm)
     return event
 
 
@@ -742,7 +769,7 @@ def _read_picks(tagged_lines, new_event):
                              sorted(tagged_lines[tag], key=lambda tup: tup[1])])
         except KeyError:
             pass
-    header = sorted(tagged_lines['1'], key=lambda tup: tup[1])[0][0]
+    header = sorted(tagged_lines['7'], key=lambda tup: tup[1])[0][0]
     for line in pickline:
         if line[18:28].strip() == '':  # If line is empty miss it
             continue
