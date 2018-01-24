@@ -28,7 +28,7 @@ def simple(data):
         case the dtype has to be changed.
     """
     # Convert data if it's not a floating point type.
-    if not np.issubdtype(data.dtype, float):
+    if not np.issubdtype(data.dtype, np.floating):
         data = np.require(data, dtype=np.float64)
     ndat = len(data)
     x1, x2 = data[0], data[-1]
@@ -107,7 +107,7 @@ def polynomial(data, order, plot=False):
         polynomial(tr.data, order=3, plot=True)
     """
     # Convert data if it's not a floating point type.
-    if not np.issubdtype(data.dtype, float):
+    if not np.issubdtype(data.dtype, np.floating):
         data = np.require(data, dtype=np.float64)
 
     x = np.arange(len(data))
@@ -170,7 +170,7 @@ def spline(data, order, dspline, plot=False):
         spline(tr.data, order=2, dspline=1000, plot=True)
     """
     # Convert data if it's not a floating point type.
-    if not np.issubdtype(data.dtype, float):
+    if not np.issubdtype(data.dtype, np.floating):
         data = np.require(data, dtype=np.float64)
 
     x = np.arange(len(data))

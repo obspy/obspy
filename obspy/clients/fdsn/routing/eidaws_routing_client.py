@@ -191,7 +191,7 @@ class EIDAWSRoutingClient(BaseRoutingClient):
             if not line:
                 continue
             if "http" in line and "fdsnws" in line:
-                current_key = line[:line.find("/fdsnws")]
+                current_key = line[:line.rfind("/fdsnws")]
                 continue
             split[current_key].append(line)
 

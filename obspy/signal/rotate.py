@@ -21,6 +21,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import warnings
 from math import cos, sin, radians
 
 import numpy as np
@@ -103,9 +104,9 @@ def rotate_zne_lqt(z, n, e, ba, inc):
         raise ValueError("Inclination should be between 0 and 360 degrees!")
     ba = radians(ba)
     inc = radians(inc)
-    l = z * cos(inc) - n * sin(inc) * cos(ba) - e * sin(inc) * sin(ba)
-    q = z * sin(inc) + n * cos(inc) * cos(ba) + e * cos(inc) * sin(ba)
-    t = n * sin(ba) - e * cos(ba)
+    l = z * cos(inc) - n * sin(inc) * cos(ba) - e * sin(inc) * sin(ba)  # NOQA
+    q = z * sin(inc) + n * cos(inc) * cos(ba) + e * cos(inc) * sin(ba)  # NOQA
+    t = n * sin(ba) - e * cos(ba)  # NOQA
     return l, q, t
 
 
@@ -216,10 +217,14 @@ def rotate2zne(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
     # Determinant gives the volume change of a unit cube going from one
     # basis to the next. It should neither be too small nor to large. These
     # here are arbitrary limits.
-    if not (1E-6 < abs(np.linalg.det(m)) < 1E6):
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore',
+                                '.*invalid value encountered in det.*')
+        det = np.linalg.det(m)
+    if not (1E-6 < abs(det) < 1E6):
         raise ValueError("The given directions are not linearly independent, "
                          "at least within numerical precision. Determinant "
-                         "of the base change matrix: %g" % np.linalg.det(m))
+                         "of the base change matrix: %g" % det)
 
     if not inverse:
         m = np.linalg.inv(m)

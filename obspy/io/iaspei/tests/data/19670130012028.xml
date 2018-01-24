@@ -1,0 +1,330 @@
+<?xml version='1.0' encoding='utf-8'?>
+<q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
+  <eventParameters publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13">
+    <description>ISC Bulletin</description>
+    <event publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/event/840268">
+      <type>earthquake</type>
+      <typeCertainty>known</typeCertainty>
+      <description>
+        <text>Western Caucasus</text>
+        <type>region name</type>
+      </description>
+      <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+        <text>2008    175   185   201 Geophys. J. Int.</text>
+      </comment>
+      <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+        <text>1970           29    31 Earthquakes in USSR</text>
+      </comment>
+      <origin publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/origin/1838610">
+        <time>
+          <value>1967-01-30T01:20:27.000000Z</value>
+        </time>
+        <latitude>
+          <value>41.0</value>
+        </latitude>
+        <longitude>
+          <value>44.2</value>
+        </longitude>
+        <depth>
+          <value>0.0</value>
+        </depth>
+        <timeFixed>false</timeFixed>
+        <epicenterFixed>false</epicenterFixed>
+        <creationInfo>
+          <author>BCIS</author>
+        </creationInfo>
+      </origin>
+      <origin publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/origin/1838611">
+        <time>
+          <value>1967-01-30T01:20:27.700000Z</value>
+        </time>
+        <latitude>
+          <value>41.038</value>
+        </latitude>
+        <longitude>
+          <value>44.335</value>
+        </longitude>
+        <depth>
+          <value>6.0</value>
+        </depth>
+        <timeFixed>false</timeFixed>
+        <epicenterFixed>false</epicenterFixed>
+        <creationInfo>
+          <author>USCGS</author>
+        </creationInfo>
+      </origin>
+      <origin publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/origin/9093437">
+        <time>
+          <value>1967-01-30T01:20:28.170000Z</value>
+        </time>
+        <latitude>
+          <value>41.0502</value>
+        </latitude>
+        <longitude>
+          <value>44.2685</value>
+        </longitude>
+        <depth>
+          <value>5.0</value>
+        </depth>
+        <timeFixed>false</timeFixed>
+        <epicenterFixed>true</epicenterFixed>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text> (Spitak, Armenia)</text>
+        </comment>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text> (GT5 produced by HDC-RCA methodology)</text>
+        </comment>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text> (Bondár, I., E. Bergman, E.R. Engdahl, B. Kohl, Y-L. Kung, and K. McLaughlin,  A hybrid multiple event location technique to obtain ground)</text>
+        </comment>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text> ( truth event locations,  Geophys. J. Int., 175, 185-201, doi: 10.1111/j.1365-246X.2008.03867.x, 2008.)</text>
+        </comment>
+        <creationInfo>
+          <author>IASPEI</author>
+        </creationInfo>
+        <originUncertainty>
+          <preferredDescription>uncertainty ellipse</preferredDescription>
+          <minHorizontalUncertainty>2.719</minHorizontalUncertainty>
+          <maxHorizontalUncertainty>4.091</maxHorizontalUncertainty>
+          <azimuthMaxHorizontalUncertainty>49.0</azimuthMaxHorizontalUncertainty>
+          <confidenceLevel>90.0</confidenceLevel>
+        </originUncertainty>
+      </origin>
+      <origin publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/origin/1838612">
+        <time>
+          <value>1967-01-30T01:20:30.000000Z</value>
+        </time>
+        <latitude>
+          <value>40.9</value>
+        </latitude>
+        <longitude>
+          <value>44.3</value>
+        </longitude>
+        <depth>
+          <value>33.0</value>
+        </depth>
+        <timeFixed>false</timeFixed>
+        <epicenterFixed>false</epicenterFixed>
+        <creationInfo>
+          <author>MOS</author>
+        </creationInfo>
+      </origin>
+      <origin publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/origin/9212463">
+        <time>
+          <value>1967-01-30T01:20:30.030000Z</value>
+        </time>
+        <latitude>
+          <value>41.034</value>
+        </latitude>
+        <longitude>
+          <value>44.267</value>
+        </longitude>
+        <depth>
+          <value>10.0</value>
+        </depth>
+        <timeFixed>false</timeFixed>
+        <epicenterFixed>true</epicenterFixed>
+        <creationInfo>
+          <author>EHB</author>
+        </creationInfo>
+        <originUncertainty>
+          <preferredDescription>uncertainty ellipse</preferredDescription>
+          <minHorizontalUncertainty>5.4</minHorizontalUncertainty>
+          <maxHorizontalUncertainty>7.1</maxHorizontalUncertainty>
+          <azimuthMaxHorizontalUncertainty>18.0</azimuthMaxHorizontalUncertainty>
+          <confidenceLevel>90.0</confidenceLevel>
+        </originUncertainty>
+      </origin>
+      <origin publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/origin/1838613">
+        <time>
+          <value>1967-01-30T01:20:28.700000Z</value>
+        </time>
+        <latitude>
+          <value>41.09</value>
+        </latitude>
+        <longitude>
+          <value>44.31</value>
+        </longitude>
+        <depth>
+          <value>11.0</value>
+        </depth>
+        <timeFixed>false</timeFixed>
+        <epicenterFixed>false</epicenterFixed>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text>location method: inversion</text>
+        </comment>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text> (#PRIME)</text>
+        </comment>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text> (Depth fixed to depth phase depth)</text>
+        </comment>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+        <originUncertainty>
+          <preferredDescription>uncertainty ellipse</preferredDescription>
+          <minHorizontalUncertainty>2.51</minHorizontalUncertainty>
+          <maxHorizontalUncertainty>3.7</maxHorizontalUncertainty>
+          <azimuthMaxHorizontalUncertainty>0.0</azimuthMaxHorizontalUncertainty>
+          <confidenceLevel>90.0</confidenceLevel>
+        </originUncertainty>
+      </origin>
+      <magnitude publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/magnitude">
+        <mag>
+          <value>4.5</value>
+        </mag>
+        <originID>smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/origin/1838610</originID>
+        <creationInfo>
+          <author>BCIS</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/magnitude">
+        <mag>
+          <value>5.1</value>
+        </mag>
+        <type>MB</type>
+        <originID>smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/origin/1838611</originID>
+        <stationCount>13</stationCount>
+        <creationInfo>
+          <author>USCGS</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/magnitude">
+        <mag>
+          <value>5.0</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/origin/9093437</originID>
+        <creationInfo>
+          <author>IASPEI</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/magnitude">
+        <mag>
+          <value>5.0</value>
+        </mag>
+        <originID>smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/origin/1838612</originID>
+        <creationInfo>
+          <author>MOS</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/magnitude">
+        <mag>
+          <value>5.0</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/origin/1838613</originID>
+        <stationCount>15</stationCount>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </magnitude>
+      <stationMagnitude publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/station_magnitude">
+        <originID>None</originID>
+        <mag>
+          <value>5.4</value>
+        </mag>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text>min max indicator (&lt;, &gt;, or blank):  </text>
+        </comment>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/station_magnitude">
+        <originID>None</originID>
+        <mag>
+          <value>5.5</value>
+        </mag>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text>min max indicator (&lt;, &gt;, or blank):  </text>
+        </comment>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/station_magnitude">
+        <originID>None</originID>
+        <mag>
+          <value>5.5</value>
+        </mag>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text>min max indicator (&lt;, &gt;, or blank):  </text>
+        </comment>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/station_magnitude">
+        <originID>None</originID>
+        <mag>
+          <value>4.9</value>
+        </mag>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text>min max indicator (&lt;, &gt;, or blank):  </text>
+        </comment>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/station_magnitude">
+        <originID>None</originID>
+        <mag>
+          <value>4.8</value>
+        </mag>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text>min max indicator (&lt;, &gt;, or blank):  </text>
+        </comment>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/station_magnitude">
+        <originID>None</originID>
+        <mag>
+          <value>4.8</value>
+        </mag>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text>min max indicator (&lt;, &gt;, or blank):  </text>
+        </comment>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/station_magnitude">
+        <originID>None</originID>
+        <mag>
+          <value>4.5</value>
+        </mag>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text>min max indicator (&lt;, &gt;, or blank):  </text>
+        </comment>
+      </stationMagnitude>
+      <pick publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/pick">
+        <time>
+          <value>1967-01-30T01:20:44.000000Z</value>
+        </time>
+        <waveformID stationCode="TIF"></waveformID>
+        <phaseHint>P*</phaseHint>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text>station-to-event distance (degrees): "  0.73", event-to-station azimuth (degrees): " 30.0", time residual (seconds): "  1.1", observed azimuth (degrees): "     ", azimuth residual (degrees): "     ", observed slowness (seconds/degree): "      ", slowness residual (seconds/degree): "     ", time defining flag (T or _): "T", azimuth defining flag (A or _): "_", slowness defining flag (S or _): "_", signal-to-noise ratio: "     "</text>
+        </comment>
+      </pick>
+      <pick publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/pick">
+        <time>
+          <value>1967-01-30T01:20:54.000000Z</value>
+        </time>
+        <waveformID stationCode="TIF"></waveformID>
+        <phaseHint>S</phaseHint>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text>station-to-event distance (degrees): "  0.73", event-to-station azimuth (degrees): "     ", time residual (seconds): "     ", observed azimuth (degrees): "     ", azimuth residual (degrees): "     ", observed slowness (seconds/degree): "      ", slowness residual (seconds/degree): "     ", time defining flag (T or _): "_", azimuth defining flag (A or _): "_", slowness defining flag (S or _): "_", signal-to-noise ratio: "     "</text>
+        </comment>
+      </pick>
+      <pick publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/pick">
+        <time>
+          <value>1967-01-30T01:20:44.000000Z</value>
+        </time>
+        <waveformID stationCode="BKR"></waveformID>
+        <onset>impulsive</onset>
+        <phaseHint>P*</phaseHint>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text>station-to-event distance (degrees): "  0.88", event-to-station azimuth (degrees): "317.0", time residual (seconds): " -1.5", observed azimuth (degrees): "     ", azimuth residual (degrees): "     ", observed slowness (seconds/degree): "      ", slowness residual (seconds/degree): "     ", time defining flag (T or _): "T", azimuth defining flag (A or _): "_", slowness defining flag (S or _): "_", signal-to-noise ratio: "     "</text>
+        </comment>
+      </pick>
+      <pick publicID="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/pick">
+        <time>
+          <value>1967-01-30T01:21:01.000000Z</value>
+        </time>
+        <waveformID stationCode="BKR"></waveformID>
+        <phaseHint>S</phaseHint>
+        <comment id="smi:local/bc358dfb-0751-4aed-a229-49ef5c524b13/comment">
+          <text>station-to-event distance (degrees): "  0.88", event-to-station azimuth (degrees): "     ", time residual (seconds): "     ", observed azimuth (degrees): "     ", azimuth residual (degrees): "     ", observed slowness (seconds/degree): "      ", slowness residual (seconds/degree): "     ", time defining flag (T or _): "_", azimuth defining flag (A or _): "_", slowness defining flag (S or _): "_", signal-to-noise ratio: "     "</text>
+        </comment>
+      </pick>
+    </event>
+  </eventParameters>
+</q:quakeml>

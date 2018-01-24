@@ -318,11 +318,10 @@ def _colormap_plot_overview(colormap_names=(
     a = np.outer(np.ones(1000), np.linspace(0, 1, 1000))
     fig = plt.figure(figsize=(12, 6))
     fig.subplots_adjust(top=0.9, bottom=0.15, left=0.11, right=0.89)
-    l = len(colormap_names)
     extent = (0, 1, 0, 1)
     for i, name in enumerate(colormap_names):
         cmap = getattr(cm, name)
-        ax = fig.add_subplot(l, 1, i + 1)
+        ax = fig.add_subplot(len(colormap_names), 1, i + 1)
         ax.imshow(a, aspect='auto', cmap=cmap, origin="lower", extent=extent,
                   interpolation="nearest")
         ax.set_ylabel(name, family="monospace", fontsize="large", ha="right",
@@ -347,9 +346,9 @@ def _colormap_plot_ppsd(cmaps):
     from obspy import read
     from obspy.signal import PPSD
     from obspy.io.xseed import Parser
-    st = read("http://examples.obspy.org/BW.KW1..EHZ.D.2011.037")
-    st += read("http://examples.obspy.org/BW.KW1..EHZ.D.2011.038")
-    parser = Parser("http://examples.obspy.org/dataless.seed.BW_KW1")
+    st = read("https://examples.obspy.org/BW.KW1..EHZ.D.2011.037")
+    st += read("https://examples.obspy.org/BW.KW1..EHZ.D.2011.038")
+    parser = Parser("https://examples.obspy.org/dataless.seed.BW_KW1")
     ppsd = PPSD(st[0].stats, metadata=parser)
     ppsd.add(st)
 
@@ -437,7 +436,7 @@ def _colormap_plot_similarity(cmaps):
     import io
     from urllib.request import urlopen
 
-    url = "http://examples.obspy.org/dissimilarities.npz"
+    url = "https://examples.obspy.org/dissimilarities.npz"
     with io.BytesIO(urlopen(url).read()) as fh, np.load(fh) as data:
         dissimilarity = data['dissimilarity']
 
@@ -457,7 +456,7 @@ def _get_beamforming_example_stream():
     from obspy import read
     from obspy.core.util import AttribDict
     from obspy.signal.invsim import corn_freq_2_paz
-    st = read("http://examples.obspy.org/agfa.mseed")
+    st = read("https://examples.obspy.org/agfa.mseed")
     # Set PAZ and coordinates for all 5 channels
     st[0].stats.paz = AttribDict({
         'poles': [(-0.03736 - 0.03617j), (-0.03736 + 0.03617j)],

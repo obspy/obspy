@@ -17,7 +17,7 @@ Reading
 Importing Q or ASC files is done similar to reading any other waveform data
 format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
 the :mod:`obspy.core` module. Examples seismograms files may be found at
-http://examples.obspy.org.
+https://examples.obspy.org.
 
 >>> from obspy import read
 >>> st = read("/path/to/QFILE-TEST-ASC.ASC")

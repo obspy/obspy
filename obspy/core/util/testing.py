@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import difflib
+from distutils.version import LooseVersion
 import doctest
 import glob
 import inspect
@@ -357,11 +358,23 @@ class ImageComparison(NamedTemporaryFile):
                 self.tol *= 5.0
             # Matplotlib 2.0.0 has a bug with the tick placement. This is
             # fixed in 2.0.1 but the tolerance for 2.0.0 has to be much
-            # higher. 10 is an empiric value. The tick placement potentially
+            # higher. 12 is an empiric value. The tick placement potentially
             # influences the axis locations and then the misfit is really
             # quite high.
             elif [2, 0, 0] <= MATPLOTLIB_VERSION < [2, 0, 1]:
-                self.tol *= 10
+                self.tol *= 12
+
+            # One last pass depending on the freetype version.
+            # XXX: Should eventually be handled differently!
+            try:
+                from matplotlib import ft2font
+            except ImportError:
+                pass
+            else:
+                if hasattr(ft2font, "__freetype_version__"):
+                    if (LooseVersion(ft2font.__freetype_version__) >=
+                            LooseVersion("2.8.0")):
+                        self.tol *= 10
 
     def __enter__(self):
         """
@@ -462,7 +475,7 @@ class ImageComparison(NamedTemporaryFile):
                 raise ImageComparisonException(msg)
             raise
         # simply reraise on any other unhandled exceptions
-        except:
+        except Exception:
             failed = True
             raise
         # if image comparison not raises by itself, the test failed if we get a
@@ -581,9 +594,23 @@ class ImageComparison(NamedTemporaryFile):
             # try to get imgur client id from environment
             imgur_clientid = \
                 os.environ.get("OBSPY_IMGUR_CLIENTID") or "53b182544dc5d89"
+            imgur_client_secret = \
+                os.environ.get("OBSPY_IMGUR_CLIENT_SECRET", None)
+            imgur_client_refresh_token = \
+                os.environ.get("OBSPY_IMGUR_REFRESH_TOKEN", None)
             # upload images and return urls
             links = {}
-            imgur = pyimgur.Imgur(imgur_clientid)
+            imgur = pyimgur.Imgur(imgur_clientid,
+                                  client_secret=imgur_client_secret,
+                                  refresh_token=imgur_client_refresh_token)
+            if imgur_client_secret and imgur_client_refresh_token:
+                try:
+                    imgur.refresh_access_token()
+                except Exception as e:
+                    msg = ('Refreshing access token for Imgur API failed '
+                           '(caught {}: {!s}).)').format(e.__class__.__name__,
+                                                         e)
+                    warnings.warn(msg)
             if os.path.exists(self.baseline_image):
                 up = imgur.upload_image(self.baseline_image, title=self.name)
                 links['expected'] = up.link

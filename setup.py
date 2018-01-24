@@ -88,20 +88,21 @@ KEYWORDS = [
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'win', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
-    'focal mechanism', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
-    'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
-    'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
-    'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS',
-    'PDAS', 'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime',
-    'REFTEK', 'REFTEK130', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
-    'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN',
-    'SeisHub', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
-    'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
-    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
-    'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston',
-    'XML-SEED', 'XSEED']
+    'focal mechanism', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'IASPEI',
+    'imaging', 'IMS', 'instrument correction', 'instrument simulation', 'IRIS',
+    'ISF', 'kinemetrics', 'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad',
+    'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'NRL',
+    'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
+    'real time', 'realtime', 'REFTEK', 'REFTEK130', 'RT-130', 'RESP',
+    'response file', 'RT', 'SAC', 'scardec', 'sc3ml', 'SDS', 'SEED',
+    'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
+    'seismology', 'seismogram', 'seismograms', 'shapefile', 'signal', 'slink',
+    'spectrogram', 'StationXML', 'taper', 'taup', 'travel time', 'trigger',
+    'VERCE', 'WAV', 'waveform', 'WaveServer', 'WaveServerV', 'WebDC',
+    'web service', 'Winston', 'XML-SEED', 'XSEED']
 
 # when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
+# when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
 INSTALL_REQUIRES = [
     'future>=0.12.4',
     'numpy>=1.6.1',
@@ -114,8 +115,8 @@ INSTALL_REQUIRES = [
     'requests']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur', 'pyproj', 'pep8-naming'],
-    # arclink decryption also works with: pycrypto, cryptography, pycryptodome
-    'arclink': ['m2crypto'],
+    # arclink decryption also works with: pycrypto, m2crypto, pycryptodome
+    'arclink': ['cryptography'],
     'io.shapefile': ['pyshp'],
     }
 # PY2
@@ -295,7 +296,8 @@ ENTRY_POINTS = {
         'SHAPEFILE = obspy.io.shapefile.core',
         'KML = obspy.io.kml.core',
         'FNETMT = obspy.io.nied.fnetmt',
-        'GSE2 = obspy.io.gse2.bulletin'
+        'GSE2 = obspy.io.gse2.bulletin',
+        'IMS10BULLETIN = obspy.io.iaspei.core',
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -361,6 +363,10 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.event.KML': [
         'writeFormat = obspy.io.kml.core:_write_kml',
+        ],
+    'obspy.plugin.event.IMS10BULLETIN': [
+        'isFormat = obspy.io.iaspei.core:_is_ims10_bulletin',
+        'readFormat = obspy.io.iaspei.core:_read_ims10_bulletin',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
@@ -769,7 +775,6 @@ def setupPackage():
             'Programming Language :: Python :: 2',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.3',
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',

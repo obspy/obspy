@@ -77,6 +77,26 @@ AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00
         self.assertEqual(e.exception.args[0],
                          "Service must be 'dataselect' or 'station'.")
 
+    def test_response_splitting_fdsnws_subdomain(self):
+        data = """
+DATACENTER=NOA,http://bbnet.gein.noa.gr/HL/
+DATASELECTSERVICE=http://eida.gein.noa.gr/fdsnws/dataselect/1/
+STATIONSERVICE=http://eida.gein.noa.gr/fdsnws/station/1/
+HP LTHK * * 2017-10-20T00:00:00 2599-12-31T23:59:59
+
+DATACENTER=RASPISHAKE,http://raspberryshake.net/
+DATASELECTSERVICE=http://fdsnws.raspberryshakedata.com/fdsnws/dataselect/1/
+STATIONSERVICE=http://fdsnws.raspberryshakedata.com/fdsnws/station/1/
+EVENTSERVICE=http://fdsnws.raspberryshakedata.com/fdsnws/event/1/
+AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
+        """
+        self.assertEqual(
+            FederatorRoutingClient._split_routing_response(data, "station"),
+            {"http://eida.gein.noa.gr":
+                "HP LTHK * * 2017-10-20T00:00:00 2599-12-31T23:59:59",
+             "http://fdsnws.raspberryshakedata.com":
+                 "AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59"})
+
     def test_get_waveforms(self):
         """
         This just dispatches to the get_waveforms_bulk() method - so no need
@@ -294,7 +314,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         st = self.client.get_waveforms(
             starttime=obspy.UTCDateTime(2017, 1, 1),
             endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
-            latitude=35.0, longitude=-120, maxradius=0.2,
+            latitude=35.0, longitude=-110, maxradius=0.3,
             channel="LHZ")
         # This yields 1 channel at the time of writing this test - I assume
         # it is unlikely to every yield less. So this test should be fairly
@@ -305,7 +325,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         st2 = self.client.get_waveforms_bulk(
             [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
               obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
-            latitude=35.0, longitude=-120, maxradius=0.2)
+            latitude=35.0, longitude=-110, maxradius=0.3)
         self.assertGreaterEqual(len(st2), 1)
 
         self.assertEqual(st, st2)
@@ -318,7 +338,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         inv = self.client.get_stations(
             starttime=obspy.UTCDateTime(2017, 1, 1),
             endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
-            latitude=35.0, longitude=-120, maxradius=0.2,
+            latitude=35.0, longitude=-110, maxradius=0.3,
             channel="LHZ", level="network")
         # This yields 1 network at the time of writing this test - I assume
         # it is unlikely to every yield less. So this test should be fairly
@@ -329,7 +349,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         inv2 = self.client.get_stations_bulk(
             [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
               obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
-            latitude=35.0, longitude=-120, maxradius=0.2,
+            latitude=35.0, longitude=-110, maxradius=0.3,
             level="network")
         self.assertGreaterEqual(len(inv2), 1)
 

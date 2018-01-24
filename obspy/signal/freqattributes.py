@@ -58,7 +58,7 @@ def spectrum(data, win, nfft, n1=0, n2=0):
     return px
 
 
-def welch(data, win, nfft, l=0, over=0):
+def welch(data, win, nfft, l=0, over=0):  # NOQA
     """
     Spectrum of a signal.
 
@@ -78,8 +78,8 @@ def welch(data, win, nfft, l=0, over=0):
     :param over: Overlap of windows to be averaged 0<over<1, defaults to ``0``.
     :return: Spectrum.
     """
-    if (l == 0):
-        l = len(data)
+    if (l == 0):  # NOQA
+        l = len(data)  # NOQA
     n1 = 0
     n2 = l
     n0 = (1. - float(over)) * l

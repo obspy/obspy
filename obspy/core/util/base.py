@@ -16,8 +16,10 @@ import doctest
 import inspect
 import io
 import os
+import re
 import sys
 import tempfile
+import unicodedata
 from collections import OrderedDict
 
 import numpy as np
@@ -32,14 +34,14 @@ from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
                    'io.ah', 'io.arclink', 'io.ascii', 'io.cmtsolution',
-                   'io.cnv', 'io.css', 'io.win', 'io.gcf', 'io.gse2',
-                   'io.json', 'io.kinemetrics', 'io.kml', 'io.mseed', 'io.ndk',
-                   'io.nied', 'io.nlloc', 'io.nordic', 'io.pdas', 'io.pde',
-                   'io.quakeml', 'io.reftek', 'io.sac', 'io.scardec',
-                   'io.seg2', 'io.segy', 'io.seisan', 'io.sh', 'io.shapefile',
-                   'io.seiscomp', 'io.stationtxt', 'io.stationxml', 'io.wav',
-                   'io.xseed', 'io.y', 'io.zmap', 'realtime', 'scripts',
-                   'signal', 'taup']
+                   'io.cnv', 'io.css', 'io.iaspei', 'io.win', 'io.gcf',
+                   'io.gse2', 'io.json', 'io.kinemetrics', 'io.kml',
+                   'io.mseed', 'io.ndk', 'io.nied', 'io.nlloc', 'io.nordic',
+                   'io.pdas', 'io.pde', 'io.quakeml', 'io.reftek', 'io.sac',
+                   'io.scardec', 'io.seg2', 'io.segy', 'io.seisan', 'io.sh',
+                   'io.shapefile', 'io.seiscomp', 'io.stationtxt',
+                   'io.stationxml', 'io.wav', 'io.xseed', 'io.y', 'io.zmap',
+                   'realtime', 'scripts', 'signal', 'taup']
 NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',
                    'clients.iris', 'clients.neic', 'clients.nrl',
                    'clients.seedlink', 'clients.seishub', 'clients.syngine']
@@ -138,9 +140,6 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
 
     >>> create_empty_data_chunk(3, 'int', 10)
     array([10, 10, 10])
-
-    >>> create_empty_data_chunk(6, np.complex128, 0)
-    array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
 
     >>> create_empty_data_chunk(
     ...     3, 'f')  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
@@ -530,6 +529,24 @@ def _get_deprecated_argument_action(old_name, new_name, real_action='store'):
                 setattr(namespace, self.dest, False)
 
     return _Action
+
+
+def sanitize_filename(filename):
+    """
+    Adapted from Django's slugify functions.
+
+    :param filename: The filename.
+    """
+    try:
+        filename = filename.decode()
+    except AttributeError:
+        pass
+
+    value = unicodedata.normalize('NFKD', filename).encode(
+        'ascii', 'ignore').decode('ascii')
+    # In constrast to django we allow dots and don't lowercase.
+    value = re.sub(r'[^\w\.\s-]', '', value).strip()
+    return re.sub(r'[-\s]+', '-', value)
 
 
 def download_to_file(url, filename_or_buffer, chunk_size=1024):

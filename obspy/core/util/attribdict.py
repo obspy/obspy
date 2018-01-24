@@ -46,6 +46,7 @@ class AttribDict(collections.MutableMapping):
     readonly = []
     warn_on_non_default_key = False
     do_not_warn_on = []
+    _types = {}
 
     def __init__(self, *args, **kwargs):
         """
@@ -83,21 +84,23 @@ class AttribDict(collections.MutableMapping):
         if key in self.readonly:
             msg = 'Attribute "%s" in %s object is read only!'
             raise AttributeError(msg % (key, self.__class__.__name__))
-        if self.warn_on_non_default_key:
+        if self.warn_on_non_default_key and key not in self.defaults:
             # issue warning if not a default key
             # (and not in the list of exceptions)
-            if key in self.defaults:
-                pass
-            elif key in self.do_not_warn_on:
+            if key in self.do_not_warn_on:
                 pass
             else:
                 msg = ('Setting attribute "{}" which is not a default '
                        'attribute ("{}").').format(
                     key, '", "'.join(self.defaults.keys()))
                 warnings.warn(msg)
+        # Type checking/warnings
+        if key in self._types and not isinstance(value, self._types[key]):
+            value = self._cast_type(key, value)
 
-        if isinstance(value, collections.Mapping) and \
-           not isinstance(value, AttribDict):
+        mapping_instance = isinstance(value, collections.Mapping)
+        attr_dict_instance = isinstance(value, AttribDict)
+        if mapping_instance and not attr_dict_instance:
             self.__dict__[key] = AttribDict(value)
         else:
             self.__dict__[key] = value
@@ -168,6 +171,22 @@ class AttribDict(collections.MutableMapping):
         keys = priorized_keys + sorted(other_keys)
         head = [pattern % (k, self.__dict__[k]) for k in keys]
         return "\n".join(head)
+
+    def _cast_type(self, key, value):
+        """
+        Cast type of value to type required in _types dict.
+
+        :type key: str
+        :param key: The key from __setattr__.
+        :param value: The value being set to key.
+        :return: value cast to correct type.
+        """
+        typ = self._types[key]
+        new_type = typ[0] if isinstance(typ, collections.Sequence) else typ
+        msg = ('Attribute "%s" must be of type %s, not %s. Attempting to '
+               'cast %s to %s') % (key, typ, type(value), value, new_type)
+        warnings.warn(msg)
+        return new_type(value)
 
     def __iter__(self):
         return iter(self.__dict__)

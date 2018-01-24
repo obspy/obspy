@@ -770,7 +770,13 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     ks = np.transpose(np.vstack((kxgrid.flatten(), kygrid.flatten())))
 
     # z coordinate is not used
-    k_dot_r = np.einsum('ni,mi->nm', ks, coords[:, :2])
+    # Bug with numpy 1.14.0 (https://github.com/numpy/numpy/issues/10343)
+    # Nothing we can do.
+    if np.__version__ == "1.14.0":  # pragma: no cover
+        k_dot_r = np.einsum('ni,mi->nm', ks, coords[:, :2], optimize=False)
+    else:
+        k_dot_r = np.einsum('ni,mi->nm', ks, coords[:, :2])
+
     transff = np.abs(np.sum(np.exp(1j * k_dot_r), axis=1))**2 / len(coords)**2
 
     return transff.reshape(nkx, nky)

@@ -55,7 +55,7 @@ Example
 A :class:`~obspy.core.stream.Stream` with an example seismogram can be created
 by calling :func:`~obspy.core.stream.read()` without any arguments.
 Local files can be read by specifying the filename, files stored on http
-servers (e.g. at http://examples.obspy.org) can be read by specifying their
+servers (e.g. at https://examples.obspy.org) can be read by specifying their
 URL. For details and supported formats see the documentation of
 :func:`~obspy.core.stream.read`.
 

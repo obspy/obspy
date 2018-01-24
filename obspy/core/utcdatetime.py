@@ -17,6 +17,8 @@ import datetime
 import math
 import time
 
+import numpy as np
+
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 
@@ -253,12 +255,16 @@ class UTCDateTime(object):
                     self._from_datetime(dt_)
                 return
             # check types
-            try:
-                # got a timestamp
-                self._from_timestamp(value.__float__())
-                return
-            except Exception:
-                pass
+            # The string instance check is mainly needed to not convert
+            # numpy strings as these can be converted to floats on
+            # numpy >= 1.14.
+            if not isinstance(value, (str, bytes)):
+                try:
+                    # got a timestamp
+                    self._from_timestamp(value.__float__())
+                    return
+                except Exception:
+                    pass
             if isinstance(value, datetime.datetime):
                 # got a Python datetime.datetime object
                 self._from_datetime(value)
@@ -380,14 +386,39 @@ class UTCDateTime(object):
                                    second, microsecond)._ns
 
     def _get_ns(self):
+        """
+        Returns POSIX timestamp as integer nanoseconds.
+
+        This is the internal representation of UTCDateTime objects.
+
+        :rtype: int
+        :returns: POSIX timestamp as integer nanoseconds
+        """
         return self.__ns
 
     def _set_ns(self, value):
+        """
+        Set UTCDateTime object from POSIX timestamp as integer nanoseconds.
+
+        :type value: int
+        :param value: POSIX timestamp as integer nanoseconds
+        """
+        # allow setting numpy integer types..
+        if isinstance(value, np.integer):
+            value_ = int(value)
+            # ..and be paranoid and check that it's still the same value after
+            # type casting
+            if value_ != value:
+                msg = ('Numpy integer value ({!s}) changed during casting to '
+                       'Python builtin integer ({!s}).').format(value, value_)
+                raise ValueError(msg)
+            value = value_
         if not isinstance(value, int):
             raise TypeError('nanoseconds must be set as int/long type')
         self.__ns = value
 
     _ns = property(_get_ns, _set_ns)
+    ns = property(_get_ns, _set_ns)
 
     def _from_datetime(self, dt):
         """

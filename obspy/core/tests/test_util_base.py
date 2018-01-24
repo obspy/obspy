@@ -9,9 +9,11 @@ import unittest
 
 from obspy.core.compatibility import mock
 from obspy.core.util.base import (NamedTemporaryFile, get_dependency_version,
-                                  download_to_file)
+                                  download_to_file, sanitize_filename,
+                                  create_empty_data_chunk)
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 
+import numpy as np
 from requests import HTTPError
 
 
@@ -108,6 +110,35 @@ class UtilBaseTestCase(unittest.TestCase):
                 self.assertEqual(e.exception.args[0],
                                  "%s HTTP Error: %s for url: %s" %
                                  (code, reason, url))
+
+    def test_sanitize_filename(self):
+        self.assertEqual(sanitize_filename("example.mseed"),
+                         "example.mseed")
+        self.assertEqual(sanitize_filename("Example.mseed"),
+                         "Example.mseed")
+        self.assertEqual(sanitize_filename("example.mseed?raw=True"),
+                         "example.mseedrawTrue")
+        self.assertEqual(sanitize_filename("Example.mseed?raw=true"),
+                         "Example.mseedrawtrue")
+
+    def test_create_empty_data_chunk(self):
+        out = create_empty_data_chunk(3, 'int', 10)
+        self.assertIsInstance(out, np.ndarray)
+        # The default dtype for an integer (np.int_) is a `C long` which is
+        # only 32 bits on windows. Thus we have to allow both.
+        self.assertIn(out.dtype, (np.int32, np.int64))
+        np.testing.assert_allclose(out, [10, 10, 10])
+
+        out = create_empty_data_chunk(6, np.complex128, 0)
+        self.assertIsInstance(out, np.ndarray)
+        self.assertEqual(out.dtype, np.complex128)
+        np.testing.assert_allclose(out, np.zeros(6, dtype=np.complex128))
+
+        # Fully masked output.
+        out = create_empty_data_chunk(3, 'f')
+        self.assertIsInstance(out, np.ma.MaskedArray)
+        self.assertEqual(out.dtype, np.float32)
+        np.testing.assert_allclose(out.mask, [True, True, True])
 
 
 def suite():

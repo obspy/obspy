@@ -23,7 +23,8 @@ import warnings
 import requests
 
 import obspy
-from obspy.core.compatibility import configparser
+from obspy.core.compatibility import (
+    configparser, get_text_from_response, urlparse)
 from obspy.core.inventory.util import _textwrap
 
 
@@ -43,8 +44,17 @@ class NRL(object):
     _index = 'index.txt'
 
     def __new__(cls, root=None):
-        # Check if its a folder on the file-system.
-        if root and os.path.isdir(root):
+        # root provided and it's no web URL
+        if root:
+            scheme = urlparse(root).scheme
+            if scheme in ('http', 'https'):
+                return super(NRL, cls).__new__(RemoteNRL)
+            # Check if it's really a folder on the file-system.
+            if not os.path.isdir(root):
+                msg = ("Provided path '{}' seems to be a local file path "
+                       "but the directory does not exist.").format(
+                            root)
+                raise ValueError(msg)
             return super(NRL, cls).__new__(LocalNRL)
         # Otherwise delegate to the remote NRL client to deal with all kinds
         # of remote resources (currently only HTTP).
@@ -289,8 +299,8 @@ class RemoteNRL(NRL):
         Download service with basic cache.
         """
         if url not in _remote_nrl_cache:
-            response = requests.get(url)
-            _remote_nrl_cache[url] = response.text
+            r = requests.get(url)
+            _remote_nrl_cache[url] = get_text_from_response(r)
         return _remote_nrl_cache[url]
 
     def _join(self, *paths):

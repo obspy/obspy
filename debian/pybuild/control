@@ -65,7 +65,7 @@ Depends: python3 (>= 3.2),
  python3-future (>= 0.12.4), python3-decorator, python3-requests
 Recommends: python-obspy-dbg (= ${binary:Version}),
  python3-mpltoolkits.basemap, python3-geographiclib,
- python3-imaging, python3-nose, python3-flake8, python3-mock, python3-pyshp,
+ python3-nose, python3-flake8, python3-mock, python3-pyshp,
  python3-cryptography
 Suggests: python3-pyproj, ipython3, ipython3-notebook
 Description: ObsPy: A Python Toolbox for seismology

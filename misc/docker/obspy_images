@@ -13,6 +13,7 @@ obspy/base-images:debian_9_stretch_32bit
 obspy/base-images:ubuntu_14_04_trusty_32bit
 obspy/base-images:ubuntu_16_04_xenial_32bit
 obspy/base-images:ubuntu_17_04_zesty_32bit
+obspy/base-images:ubuntu_17_10_artful_32bit
 obspy:centos_7
 obspy:debian_7_wheezy
 obspy:debian_7_wheezy_armhf
@@ -33,6 +34,8 @@ obspy:ubuntu_16_04_xenial
 obspy:ubuntu_16_04_xenial_32bit
 obspy:ubuntu_17_04_zesty
 obspy:ubuntu_17_04_zesty_32bit
+obspy:ubuntu_17_10_artful
+obspy:ubuntu_17_10_artful_32bit
 opensuse:42.2
 opensuse:42.3
 ubuntu:14.04

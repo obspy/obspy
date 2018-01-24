@@ -37,8 +37,9 @@ from obspy import Stream, Trace, UTCDateTime, __version__
 from obspy.core import Stats
 from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory
-from obspy.core.util import AttribDict
+from obspy.core.util import AttribDict, NUMPY_VERSION
 from obspy.core.util.base import MATPLOTLIB_VERSION
+from obspy.core.util.obspy_types import ObsPyException
 from obspy.imaging.cm import obspy_sequential
 from obspy.imaging.util import _set_xaxis_obspy_dates
 from obspy.io.xseed import Parser
@@ -325,7 +326,7 @@ class PPSD(object):
             raise ValueError(msg)
 
         # save version numbers
-        self.ppsd_version = 1
+        self.ppsd_version = 2
         self.obspy_version = __version__
         self.matplotlib_version = ".".join(map(str, MATPLOTLIB_VERSION))
         self.numpy_version = np.__version__
@@ -494,16 +495,16 @@ class PPSD(object):
 
     @property
     def times_processed(self):
-        return list(map(UTCDateTime, self._times_processed))
+        return [UTCDateTime(ns=ns) for ns in self._times_processed]
 
     @property
     def times_data(self):
-        return [(UTCDateTime(t1), UTCDateTime(t2))
+        return [(UTCDateTime(ns=t1), UTCDateTime(ns=t2))
                 for t1, t2 in self._times_data]
 
     @property
     def times_gaps(self):
-        return [(UTCDateTime(t1), UTCDateTime(t2))
+        return [(UTCDateTime(ns=t1), UTCDateTime(ns=t2))
                 for t1, t2 in self._times_gaps]
 
     @property
@@ -524,7 +525,7 @@ class PPSD(object):
     @property
     def current_times_used(self):
         self.__check_histogram()
-        return list(map(UTCDateTime, self._current_times_used))
+        return [UTCDateTime(ns=ns) for ns in self._current_times_used]
 
     def _setup_period_binning(self, period_smoothing_width_octaves,
                               period_step_octaves, period_limits):
@@ -607,8 +608,9 @@ class PPSD(object):
         :type utcdatetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :type spectrum: :class:`numpy.ndarray`
         """
-        ind = bisect.bisect(self._times_processed, utcdatetime.timestamp)
-        self._times_processed.insert(ind, utcdatetime.timestamp)
+        t = utcdatetime._ns
+        ind = bisect.bisect(self._times_processed, t)
+        self._times_processed.insert(ind, t)
         self._binned_psds.insert(ind, spectrum)
 
     def __insert_gap_times(self, stream):
@@ -618,7 +620,7 @@ class PPSD(object):
 
         :type stream: :class:`~obspy.core.stream.Stream`
         """
-        self._times_gaps += [[gap[4].timestamp, gap[5].timestamp]
+        self._times_gaps += [[gap[4]._ns, gap[5]._ns]
                              for gap in stream.get_gaps()]
 
     def __insert_data_times(self, stream):
@@ -629,7 +631,7 @@ class PPSD(object):
         :type stream: :class:`~obspy.core.stream.Stream`
         """
         self._times_data += \
-            [[tr.stats.starttime.timestamp, tr.stats.endtime.timestamp]
+            [[tr.stats.starttime._ns, tr.stats.endtime._ns]
              for tr in stream]
 
     def __check_time_present(self, utcdatetime):
@@ -642,9 +644,9 @@ class PPSD(object):
         insert this piece of data.
         """
         index1 = bisect.bisect_left(self._times_processed,
-                                    utcdatetime.timestamp)
+                                    utcdatetime._ns)
         index2 = bisect.bisect_right(self._times_processed,
-                                     utcdatetime.timestamp + self.ppsd_length)
+                                     utcdatetime._ns + self.ppsd_length * 1e9)
         if index1 != index2:
             return True
         else:
@@ -718,7 +720,7 @@ class PPSD(object):
                 continue
             t1 = tr.stats.starttime
             t2 = tr.stats.endtime
-            while t1 + self.ppsd_length <= t2:
+            while t1 + self.ppsd_length - tr.stats.delta <= t2:
                 if self.__check_time_present(t1):
                     msg = "Already covered time spans detected (e.g. %s), " + \
                           "skipping these slices."
@@ -727,7 +729,8 @@ class PPSD(object):
                 else:
                     # throw warnings if trace length is different
                     # than ppsd_length..!?!
-                    slice = tr.slice(t1, t1 + self.ppsd_length)
+                    slice = tr.slice(t1, t1 + self.ppsd_length
+                                     - tr.stats.delta)
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?
                     success = self.__process(slice)
@@ -858,7 +861,7 @@ class PPSD(object):
                               (native_str('month'), np.int8)])
             times_all_details = np.empty(shape=len(self._times_processed),
                                          dtype=dtype)
-            utc_times_all = [UTCDateTime(t) for t in self._times_processed]
+            utc_times_all = [UTCDateTime(ns=t) for t in self._times_processed]
             times_all_details['time_of_day'][:] = \
                 [t._get_hours_after_midnight() for t in utc_times_all]
             times_all_details['iso_weekday'][:] = \
@@ -884,9 +887,9 @@ class PPSD(object):
         times_all = np.array(self._times_processed)
         selected = np.ones(len(times_all), dtype=np.bool)
         if starttime is not None:
-            selected &= times_all > starttime.timestamp
+            selected &= times_all > starttime._ns
         if endtime is not None:
-            selected &= times_all < endtime.timestamp
+            selected &= times_all < endtime._ns
         if time_of_weekday is not None:
             times_all_details = self._get_times_all_details()
             # we need to do a logical OR over all different user specified time
@@ -1228,24 +1231,49 @@ class PPSD(object):
         :param metadata: Response information of instrument. See notes in
             :meth:`PPSD.__init__` for details.
         """
-        data = np.load(filename)
-        # the information regarding stats is set from the npz
-        ppsd = PPSD(Stats(), metadata=metadata)
-        for key in ppsd.NPZ_STORE_KEYS:
-            # data is stored as arrays in the npz.
-            # we have to convert those back to lists (or simple types), so that
-            # additionally processed data can be appended/inserted later.
-            data_ = data[key]
-            if key in ppsd.NPZ_STORE_KEYS_LIST_TYPES:
-                if key in ['_times_data', '_times_gaps']:
-                    data_ = data_.tolist()
-                else:
-                    data_ = [d for d in data_]
-            elif key in (ppsd.NPZ_STORE_KEYS_SIMPLE_TYPES +
-                         ppsd.NPZ_STORE_KEYS_VERSION_NUMBERS):
-                data_ = data_.item()
-            setattr(ppsd, key, data_)
-        return ppsd
+        def _load(data):
+            # the information regarding stats is set from the npz
+            ppsd = PPSD(Stats(), metadata=metadata)
+            # check ppsd_version version and raise if higher than current
+            _check_npz_ppsd_version(ppsd, data)
+            for key in ppsd.NPZ_STORE_KEYS:
+                # data is stored as arrays in the npz.
+                # we have to convert those back to lists (or simple types), so
+                # that additionally processed data can be appended/inserted
+                # later.
+                data_ = data[key]
+                if key in ppsd.NPZ_STORE_KEYS_LIST_TYPES:
+                    if key in ['_times_data', '_times_gaps']:
+                        data_ = data_.tolist()
+                    else:
+                        data_ = [d for d in data_]
+                elif key in (ppsd.NPZ_STORE_KEYS_SIMPLE_TYPES +
+                             ppsd.NPZ_STORE_KEYS_VERSION_NUMBERS):
+                    data_ = data_.item()
+                # convert floating point POSIX second timestamps from older npz
+                # files
+                if (key in ppsd.NPZ_STORE_KEYS_LIST_TYPES and
+                        data['ppsd_version'].item() == 1):
+                    if key in ['_times_data', '_times_gaps']:
+                        data_ = [[UTCDateTime(start)._ns, UTCDateTime(end)._ns]
+                                 for start, end in data_]
+                    elif key == '_times_processed':
+                        data_ = [UTCDateTime(t)._ns for t in data_]
+                setattr(ppsd, key, data_)
+            # we converted all data, so update ppsd version
+            ppsd.ppsd_version = 2
+            return ppsd
+
+        # XXX get rid of if/else again when bumping minimal numpy to 1.7
+        if NUMPY_VERSION >= [1, 7]:
+            with np.load(filename) as data:
+                return _load(data)
+        else:
+            data = np.load(filename)
+            try:
+                return _load(data)
+            finally:
+                data.close()
 
     def add_npz(self, filename):
         """
@@ -1271,52 +1299,75 @@ class PPSD(object):
         """
         See :meth:`PPSD.add_npz()`.
         """
-        data = np.load(filename)
-        # check if all metadata agree
-        for key in self.NPZ_STORE_KEYS_SIMPLE_TYPES:
-            if getattr(self, key) != data[key].item():
-                msg = ("Mismatch in '%s' attribute.\n\tCurrent:\n\t%s\n\t"
-                       "Loaded:\n\t%s")
-                msg = msg % (key, getattr(self, key), data[key].item())
-                raise AssertionError(msg)
-        for key in self.NPZ_STORE_KEYS_ARRAY_TYPES:
-            try:
-                np.testing.assert_array_equal(getattr(self, key), data[key])
-            except AssertionError as e:
-                msg = ("Mismatch in '%s' attribute.\n") % key
-                raise AssertionError(msg + str(e))
-        # load new psd data
-        for key in self.NPZ_STORE_KEYS_VERSION_NUMBERS:
-            if getattr(self, key) != data[key].item():
-                msg = ("Mismatch in version numbers (%s) between current data "
-                       "(%s) and loaded data (%s).") % (
-                           key, getattr(self, key), data[key].item())
+        def _add(data):
+            # check ppsd_version version and raise if higher than current
+            _check_npz_ppsd_version(self, data)
+            # check if all metadata agree
+            for key in self.NPZ_STORE_KEYS_SIMPLE_TYPES:
+                if getattr(self, key) != data[key].item():
+                    msg = ("Mismatch in '%s' attribute.\n\tCurrent:\n\t%s\n\t"
+                           "Loaded:\n\t%s")
+                    msg = msg % (key, getattr(self, key), data[key].item())
+                    raise AssertionError(msg)
+            for key in self.NPZ_STORE_KEYS_ARRAY_TYPES:
+                try:
+                    np.testing.assert_array_equal(getattr(self, key),
+                                                  data[key])
+                except AssertionError as e:
+                    msg = ("Mismatch in '%s' attribute.\n") % key
+                    raise AssertionError(msg + str(e))
+            # load new psd data
+            for key in self.NPZ_STORE_KEYS_VERSION_NUMBERS:
+                if getattr(self, key) != data[key].item():
+                    msg = ("Mismatch in version numbers (%s) between current "
+                           "data (%s) and loaded data (%s).") % (
+                               key, getattr(self, key), data[key].item())
+                    warnings.warn(msg)
+            _times_data = data["_times_data"].tolist()
+            _times_gaps = data["_times_gaps"].tolist()
+            _times_processed = [d_ for d_ in data["_times_processed"]]
+            _binned_psds = [d_ for d_ in data["_binned_psds"]]
+            # convert floating point POSIX second timestamps from older npz
+            # files
+            if data['ppsd_version'].item() == 1:
+                _times_data = [[UTCDateTime(start)._ns, UTCDateTime(end)._ns]
+                               for start, end in _times_data]
+                _times_gaps = [[UTCDateTime(start)._ns, UTCDateTime(end)._ns]
+                               for start, end in _times_gaps]
+                _times_processed = [
+                    UTCDateTime(t)._ns for t in _times_processed]
+            # add new data
+            self._times_data.extend(_times_data)
+            self._times_gaps.extend(_times_gaps)
+            duplicates = 0
+            for t, psd in zip(_times_processed, _binned_psds):
+                t = UTCDateTime(ns=t)
+                if self.__check_time_present(t):
+                    duplicates += 1
+                    continue
+                self.__insert_processed_data(t, psd)
+            # warn if some segments were omitted
+            if duplicates:
+                msg = ("%d/%d segments omitted in file '%s' "
+                       "(time ranges already covered).")
+                msg = msg % (duplicates, len(_times_processed), filename)
                 warnings.warn(msg)
-        _times_data = data["_times_data"].tolist()
-        _times_gaps = data["_times_gaps"].tolist()
-        _times_processed = [d_ for d_ in data["_times_processed"]]
-        _binned_psds = [d_ for d_ in data["_binned_psds"]]
-        # add new data
-        self._times_data.extend(_times_data)
-        self._times_gaps.extend(_times_gaps)
-        duplicates = 0
-        for t, psd in zip(_times_processed, _binned_psds):
-            t = UTCDateTime(t)
-            if self.__check_time_present(t):
-                duplicates += 1
-                continue
-            self.__insert_processed_data(t, psd)
-        # warn if some segments were omitted
-        if duplicates:
-            msg = ("%d/%d segments omitted in file '%s' "
-                   "(time ranges already covered).")
-            msg = msg % (duplicates, len(_times_processed), filename)
-            warnings.warn(msg)
+
+        # XXX get rid of if/else again when bumping minimal numpy to 1.7
+        if NUMPY_VERSION >= [1, 7]:
+            with np.load(filename) as data:
+                _add(data)
+        else:
+            data = np.load(filename)
+            try:
+                _add(data)
+            finally:
+                data.close()
 
     def _split_lists(self, times, psds):
         """
         """
-        t_diff_gapless = self.step
+        t_diff_gapless = self.step * 1e9
         gap_indices = np.argwhere(np.diff(times) - t_diff_gapless)
         gap_indices = (gap_indices.flatten() + 1).tolist()
 
@@ -1543,7 +1594,7 @@ class PPSD(object):
                         color_kwargs = {'color': cur_color}
                 else:
                     color_kwargs = {'color': color}
-                times_ = [UTCDateTime(t).matplotlib_date for t in times_]
+                times_ = [UTCDateTime(ns=t).matplotlib_date for t in times_]
                 line = ax.plot(times_, psd_values, label=label, ls=linestyle,
                                marker=marker, **color_kwargs)[0]
                 # plot the next lines with the same color (we can't easily
@@ -1823,8 +1874,8 @@ class PPSD(object):
     def _get_plot_title(self):
         title = "%s   %s -- %s  (%i/%i segments)"
         title = title % (self.id,
-                         UTCDateTime(self._times_processed[0]).date,
-                         UTCDateTime(self._times_processed[-1]).date,
+                         UTCDateTime(ns=self._times_processed[0]).date,
+                         UTCDateTime(ns=self._times_processed[-1]).date,
                          self.current_histogram_count,
                          len(self._times_processed))
         return title
@@ -1862,9 +1913,9 @@ class PPSD(object):
         ax.set_yticks([])
 
         # plot data used in histogram stack
-        used_times = [UTCDateTime(t) for t in self._times_processed
+        used_times = [UTCDateTime(ns=t) for t in self._times_processed
                       if t in self._current_times_used]
-        unused_times = [UTCDateTime(t) for t in self._times_processed
+        unused_times = [UTCDateTime(ns=t) for t in self._times_processed
                         if t not in self._current_times_used]
         for times, color in zip((used_times, unused_times), ("b", "0.6")):
             # skip on empty lists (i.e. all data used, or none used in stack)
@@ -1912,6 +1963,22 @@ def get_nhnm():
     periods = data['model_periods']
     nlnm = data['high_noise']
     return (periods, nlnm)
+
+
+def _check_npz_ppsd_version(ppsd, npzfile):
+    # add some future-proofing and show a warning if older obspy
+    # versions should read a more recent ppsd npz file, since this is very
+    # like problematic
+    if npzfile['ppsd_version'].item() > ppsd.ppsd_version:
+        msg = ("Trying to read/add a PPSD npz with 'ppsd_version={}'. This "
+               "file was written on a more recent ObsPy version that very "
+               "likely has incompatible changes in PPSD internal "
+               "structure and npz serialization. It can not safely be "
+               "read with this ObsPy version (current 'ppsd_version' is "
+               "{}). Please consider updating your ObsPy "
+               "installation.").format(npzfile['ppsd_version'].item(),
+                                       ppsd.ppsd_version)
+        raise ObsPyException(msg)
 
 
 if __name__ == '__main__':

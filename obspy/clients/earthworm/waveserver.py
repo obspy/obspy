@@ -21,6 +21,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
+from obspy.core.compatibility import from_buffer
 
 
 RETURNFLAG_KEY = {
@@ -102,7 +103,7 @@ class TraceBuf2(object):
         """
         Parse tracebuf char array data into self.data
         """
-        self.data = np.fromstring(dat, self.inputType)
+        self.data = from_buffer(dat, self.inputType)
         ndat = len(self.data)
         if self.ndata != ndat:
             msg = 'data count in header (%d) != data count (%d)'
@@ -239,7 +240,7 @@ def get_menu(server, port, scnl=None, timeout=None):
             return []
         outlist = []
         for p in range(0, len(tokens), elen):
-            l = tokens[p:p + elen]
+            l = tokens[p:p + elen]  # NOQA
             if elen == 8:
                 outlist.append((int(l[0]), l[1], l[2], l[3], l[4],
                                 float(l[5]), float(l[6]), l[7]))
@@ -298,7 +299,7 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None,
         if current_tb is not None:
             if cleanup and new_tb.start - current_tb.end == period:
                 buf = dat[p:p + nbytes]
-                bufs.append(np.fromstring(buf, current_tb.inputType))
+                bufs.append(from_buffer(buf, current_tb.inputType))
                 current_tb.end = new_tb.end
 
             else:
@@ -314,7 +315,7 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None,
             current_tb = new_tb
             tbl.append(current_tb)
             period = 1 / current_tb.rate
-            bufs = [np.fromstring(dat[p:p + nbytes], current_tb.inputType)]
+            bufs = [from_buffer(dat[p:p + nbytes], current_tb.inputType)]
 
         p += nbytes
 
