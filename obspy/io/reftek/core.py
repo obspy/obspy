@@ -260,6 +260,10 @@ class Reftek130(object):
             elif eh.data_format == b"C2":
                 encoding = 'C2'
             elif eh.data_format == b"16":
+                msg = ("Reftek130 encoding '16' is implemented but untested, "
+                       "please provide example data for testing at "
+                       "https://github.com/obspy/obspy/issues/new.")
+                warnings.warn(msg)
                 encoding = '16'
             elif eh.data_format == b"32":
                 encoding = '32'
