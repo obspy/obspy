@@ -1198,6 +1198,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 "readMSEEDBuffer(): Not a SEED record. Will skip bytes "
                 "4096 to 4223.")
 
+            # Should always be two records.
+            self.assertEqual(st[0].stats.mseed.number_of_records, 2)
+
             # Remove things like file-size and what not.
             del st[0].stats.mseed
             self.assertEqual(reference, st)
@@ -1216,6 +1219,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 with WarningsCapture() as w:
                     st = _read_mseed(buf)
                 self.assertEqual(len(w), length // 128)
+
+            # Should always be two records.
+            self.assertEqual(st[0].stats.mseed.number_of_records, 2)
 
             # Remove things like file-size and what not.
             del st[0].stats.mseed
