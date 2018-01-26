@@ -15,12 +15,16 @@ from future.utils import native_str
 
 import datetime
 import math
+import operator
 import time
+import warnings
 
 import numpy as np
-
+from obspy.core.compatibility import py3_round
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
+YMDHMS = ('year', 'month', 'day', 'hour', 'minute', 'second')
+YMDHMS_FORMAT = "%04d-%02d-%02dT%02d:%02d:%02d"
 
 
 class UTCDateTime(object):
@@ -29,11 +33,11 @@ class UTCDateTime(object):
 
     This datetime class is based on the POSIX time, a system for describing
     instants in time, defined as the number of seconds elapsed since midnight
-    Coordinated Universal Time (UTC) of Thursday, January 1, 1970. Using a
-    single float timestamp allows higher precision as the default Python
-    :class:`datetime.datetime` class. It features the full `ISO8601:2004`_
-    specification and some additional string patterns during object
-    initialization.
+    Coordinated Universal Time (UTC) of Thursday, January 1, 1970. Internally,
+    the POSIX time is represented in nanoseconds as an integer, which allows
+    higher precision than the default Python :class:`datetime.datetime` class.
+    It features the full `ISO8601:2004`_ specification and some additional
+    string patterns during object initialization.
 
     :type args: int, float, str, :class:`datetime.datetime`, optional
     :param args: The creation of a new `UTCDateTime` object depends from the
@@ -47,10 +51,12 @@ class UTCDateTime(object):
         Defaults to ``6`` digits after the decimal point. See also `Precision`_
         section below.
 
-    .. versionchanged:: 0.5.1
-        UTCDateTime is no longer based on Python's datetime.datetime class
-        instead uses timestamp as a single floating point value which allows
-        higher precision.
+    .. versionchanged:: 1.1.0
+        UTCDateTime is no longer based on a single floating point value but
+        rather an integer representing nanoseconds elapsed since midnight
+        Coordinated Universal Time (UTC) of Thursday, January 1, 1970.
+        An integer internal representation allows higher precision and more
+        predictable behavior than a float representation.
 
     .. rubric:: Supported Operations
 
@@ -849,7 +855,7 @@ class UTCDateTime(object):
         >>> dt.microsecond
         345234
         """
-        return int(self._ns % 10**9 // 1000)
+        return int(py3_round(self._ns % 10**9, self.precision - 9) // 1000)
 
     def _set_microsecond(self, value):
         """
@@ -974,7 +980,7 @@ class UTCDateTime(object):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
                      86400) * 10**6) / 1e6
-        return UTCDateTime(ns=self._ns - int(round(value * 1e9)))
+        return UTCDateTime(ns=self._ns - int(round((value * 1e9))))
 
     def __str__(self):
         """
@@ -989,11 +995,13 @@ class UTCDateTime(object):
         '2008-10-01T12:30:35.045020Z'
         """
         dt = self.datetime
-        pattern = "%%.%dlf" % (self.precision)
-        ns = pattern % ((self._ns % 10**9) / 1e9)
-        return "%04d-%02d-%02dT%02d:%02d:%02d.%sZ" % (
-            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
-            ns[2:self.precision + 2])
+        time_str = YMDHMS_FORMAT % tuple(getattr(dt, x) for x in YMDHMS)
+
+        if self.precision > 0:
+            ns = py3_round(self.ns, self.precision - 9)
+            ns_str = ('%09d' % (ns % 10 ** 9))[:self.precision]
+            time_str += ('.' + ns_str)
+        return time_str + 'Z'
 
     def _repr_pretty_(self, p, cycle):  # @UnusedVariable
         p.text(str(self))
@@ -1012,38 +1020,45 @@ class UTCDateTime(object):
         """
         return str(self.__str__())
 
+    def _operate(self, other, op_func):
+        if isinstance(other, UTCDateTime):
+            ndigits = min(self.precision, other.precision) - 9
+            if self.precision != other.precision:
+                msg = ('Comparing UTCDateTime objects of different precision'
+                       ' is not defined and may lead to surpising behavior')
+                warnings.warn(msg)
+            a = py3_round(self._ns, ndigits)
+            b = py3_round(other._ns, ndigits)
+            return op_func(a, b)
+        else:
+            try:
+                return self._operate(UTCDateTime(other), op_func)
+            except TypeError:
+                return False
+
     def __eq__(self, other):
         """
         Rich comparison operator '=='.
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will always compare timestamps rounded
-        to a precision of 6 digits by default.
+        Comparing two UTCDateTime objects will compare the nanoseconds integers
+        rounded to a number of significant digits determined by the precision
+        attribute.
 
         >>> t1 = UTCDateTime(123.000000012)
         >>> t2 = UTCDateTime(123.000000099)
         >>> t1 == t2
         True
 
-        But the actual timestamp differ
+        Defining a higher precision changes the behavior of the operator
 
-        >>> t1.timestamp == t2.timestamp
-        False
-
-        Resetting the precision changes the behavior of the operator
-
-        >>> t1.precision = 11
+        >>> t1 = UTCDateTime(123.000000012, precision=9)
+        >>> t2 = UTCDateTime(123.000000099, precision=9)
         >>> t1 == t2
         False
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) == 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) == 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime == other
-        return False
+        return self._operate(other, operator.eq)
 
     def __ne__(self, other):
         """
@@ -1051,24 +1066,21 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will always compare timestamps rounded
-        to a precision of 6 digits by default.
+        Comparing two UTCDateTime objects will compare the nanoseconds integers
+        rounded to a number of significant digits determined by the precision
+        attribute.
 
         >>> t1 = UTCDateTime(123.000000012)
         >>> t2 = UTCDateTime(123.000000099)
-        >>> t1 != t2
+        >>> t1 == t2
+        True
+
+        Defining a higher precision changes the behavior of the operator
+
+        >>> t1 = UTCDateTime(123.000000012, precision=9)
+        >>> t2 = UTCDateTime(123.000000099, precision=9)
+        >>> t1 == t2
         False
-
-        But the actual timestamp differ
-
-        >>> t1.timestamp != t2.timestamp
-        True
-
-        Resetting the precision changes the behavior of the operator
-
-        >>> t1.precision = 11
-        >>> t1 != t2
-        True
         """
         return not self.__eq__(other)
 
@@ -1078,32 +1090,23 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will always compare timestamps rounded
-        to a precision of 6 digits by default.
+        Comparing two UTCDateTime objects will compare the nanoseconds integers
+        rounded to a number of significant digits determined by the precision
+        attribute.
 
         >>> t1 = UTCDateTime(123.000000012)
         >>> t2 = UTCDateTime(123.000000099)
         >>> t1 < t2
         False
 
-        But the actual timestamp differ
+        Defining a higher precision changes the behavior of the operator
 
-        >>> t1.timestamp < t2.timestamp
-        True
-
-        Resetting the precision changes the behavior of the operator
-
-        >>> t1.precision = 11
+        >>> t1 = UTCDateTime(123.000000012, precision=9)
+        >>> t2 = UTCDateTime(123.000000099, precision=9)
         >>> t1 < t2
         True
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) < 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) < 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime < other
-        return False
+        return self._operate(other, operator.lt)
 
     def __le__(self, other):
         """
@@ -1111,32 +1114,23 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will always compare timestamps rounded
-        to a precision of 6 digits by default.
+        Comparing two UTCDateTime objects will compare the nanoseconds integers
+        rounded to a number of significant digits determined by the precision
+        attribute.
 
         >>> t1 = UTCDateTime(123.000000099)
         >>> t2 = UTCDateTime(123.000000012)
         >>> t1 <= t2
         True
 
-        But the actual timestamp differ
+        Defining a higher precision changes the behavior of the operator
 
-        >>> t1.timestamp <= t2.timestamp
-        False
-
-        Resetting the precision changes the behavior of the operator
-
-        >>> t1.precision = 11
+        >>> t1 = UTCDateTime(123.000000099, precision=9)
+        >>> t2 = UTCDateTime(123.000000012, precision=9)
         >>> t1 <= t2
         False
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) <= 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) <= 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime <= other
-        return False
+        return self._operate(other, operator.le)
 
     def __gt__(self, other):
         """
@@ -1144,32 +1138,23 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will always compare timestamps rounded
-        to a precision of 6 digits by default.
+        Comparing two UTCDateTime objects will compare the nanoseconds integers
+        rounded to a number of significant digits determined by the precision
+        attribute.
 
         >>> t1 = UTCDateTime(123.000000099)
         >>> t2 = UTCDateTime(123.000000012)
         >>> t1 > t2
         False
 
-        But the actual timestamp differ
+        Defining a higher precision changes the behavior of the operator
 
-        >>> t1.timestamp > t2.timestamp
-        True
-
-        Resetting the precision changes the behavior of the operator
-
-        >>> t1.precision = 11
+        >>> t1 = UTCDateTime(123.000000099, precision=9)
+        >>> t2 = UTCDateTime(123.000000012, precision=9)
         >>> t1 > t2
         True
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) > 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) > 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime > other
-        return False
+        return self._operate(other, operator.gt)
 
     def __ge__(self, other):
         """
@@ -1177,32 +1162,23 @@ class UTCDateTime(object):
 
         .. rubric: Example
 
-        Comparing two UTCDateTime object will always compare timestamps rounded
-        to a precision of 6 digits by default.
+        Comparing two UTCDateTime objects will compare the nanoseconds integers
+        rounded to a number of significant digits determined by the precision
+        attribute.
 
         >>> t1 = UTCDateTime(123.000000012)
         >>> t2 = UTCDateTime(123.000000099)
         >>> t1 >= t2
         True
 
-        But the actual timestamp differ
+        Defining a higher precision changes the behavior of the operator
 
-        >>> t1.timestamp >= t2.timestamp
-        False
-
-        Resetting the precision changes the behavior of the operator
-
-        >>> t1.precision = 11
+        >>> t1 = UTCDateTime(123.000000012, precision=9)
+        >>> t2 = UTCDateTime(123.000000099, precision=9)
         >>> t1 >= t2
         False
         """
-        if isinstance(other, UTCDateTime):
-            return round((self._ns - other._ns) / 1e9, self.__precision) >= 0
-        elif isinstance(other, float) or isinstance(other, int):
-            return round(self.timestamp - float(other), self.__precision) >= 0
-        elif isinstance(other, datetime.datetime):
-            return self.datetime >= other
-        return False
+        return self._operate(other, operator.ge)
 
     def __repr__(self):
         """
@@ -1514,10 +1490,14 @@ class UTCDateTime(object):
         (3) Set precision for an existing UTCDateTime object.
 
             >>> dt = UTCDateTime()
-            >>> dt.precision = 12
+            >>> dt.precision = 9
             >>> dt.precision
-            12
+            9
         """
+        if value > 9:
+            msg = 'UTCDateTime precision above 9 is not supported, using 9'
+            warnings.warn(msg)
+            value = 9
         self.__precision = int(value)
 
     precision = property(_get_precision, _set_precision)
