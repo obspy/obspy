@@ -23,6 +23,8 @@ import numpy as np
 from obspy.core.compatibility import py3_round
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
+YMDHMS = ('year', 'month', 'day', 'hour', 'minute', 'second')
+YMDHMS_FORMAT = "%04d-%02d-%02dT%02d:%02d:%02d"
 
 
 class UTCDateTime(object):
@@ -993,11 +995,13 @@ class UTCDateTime(object):
         '2008-10-01T12:30:35.045020Z'
         """
         dt = self.datetime
-        pattern = "%%.%dlf" % (self.precision)
-        ns = pattern % ((self._ns % 10**9) / 1e9)
-        return "%04d-%02d-%02dT%02d:%02d:%02d.%sZ" % (
-            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
-            ns[2:self.precision + 2])
+        time_str = YMDHMS_FORMAT % tuple(getattr(dt, x) for x in YMDHMS)
+
+        if self.precision > 0:
+            ns = py3_round(self.ns, self.precision - 9)
+            ns_str = ('%09d' % (ns % 10 ** 9))[:self.precision]
+            time_str += ('.' + ns_str)
+        return time_str + 'Z'
 
     def _repr_pretty_(self, p, cycle):  # @UnusedVariable
         p.text(str(self))

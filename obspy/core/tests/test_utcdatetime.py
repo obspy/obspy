@@ -1301,6 +1301,25 @@ class UTCDateTimeTestCase(unittest.TestCase):
             self.assertEqual(len(w), 1)
             self.assertIn('different precision', str(w[-1].message))
 
+    def test_string_representation_various_precisions(self):
+        """
+        Ensure string representation works for many different precisions
+        """
+        precisions = range(-9, 9)
+        for precision in precisions:
+            utc = UTCDateTime(0.0, precision=precision)
+            utc_str = str(utc)
+            self.assertEqual(UTCDateTime(utc_str, precision=precision), utc)
+            self.assertIsInstance(utc_str, str)
+
+    def test_zero_precision_doesnt_print_dot(self):
+        """
+        UTC with precision of 0 should not print a decimal in str rep.
+        """
+        utc = UTCDateTime(precision=0)
+        utc_str = str(utc)
+        self.assertNotIn('.', utc_str)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
