@@ -2249,6 +2249,24 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
         self.assertEqual([("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")],
                          sorted(c.stations.keys()))
 
+        # When 'channel' or 'location' are set they should override
+        # 'channel_priorities' and 'location_priorities'. If this isn't
+        # happening this test will fail, as we're requesting data
+        # with a channel and location what are not covered by the default
+        # priorities lists.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            channel="RST",
+            location="31")
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "uncommon_channel_location.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BAGL")], sorted(c.stations.keys()))
+
         # Excluding things that don't exists does not do anything.
         self.restrictions = Restrictions(
             starttime=obspy.UTCDateTime(2001, 1, 1),
