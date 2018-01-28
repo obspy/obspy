@@ -398,6 +398,7 @@ class TestNordicMethods(unittest.TestCase):
             warnings.simplefilter('ignore', UserWarning)
             event = read_nordic(testing_path)[0]
         self.assertEqual(len(event.origins), 2)
+        self.assertEqual(len(event.picks), 17)
 
     def test_read_latin1(self):
         """

@@ -114,7 +114,7 @@ def _get_line_tags(f):
     tags = {}
     for i, line in enumerate(f):
         try:
-            line_id = line[79]
+            line_id = line.rstrip()[79]
         except IndexError:
             line_id = ' '
         if line_id in tags.keys():
@@ -606,8 +606,6 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1'):
     :return: catalog of events
     :rtype: :class:`~obspy.core.event.event.Event`
     """
-    catalog = Catalog()
-    event_str = []
     if not hasattr(select_file, "readline"):
         try:
             f = open(select_file, 'r', encoding=encoding)
@@ -619,6 +617,8 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1'):
     else:
         f = select_file
     wav_names = []
+    event_str = []
+    catalog = Catalog()
     for line in f:
         if len(line.rstrip()) > 0:
             event_str.append(line)
