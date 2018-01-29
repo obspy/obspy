@@ -1237,6 +1237,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         filename = os.path.join(self.path, "data",
                                 "record_with_invalid_word_order.mseed")
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             info = util.get_record_information(filename)
 
         self.assertEqual(len(w), 1)
