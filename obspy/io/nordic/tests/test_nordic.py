@@ -588,17 +588,87 @@ class TestNordicMethods(unittest.TestCase):
             int([p for p in pick_strings if p.split()[0] == 'WZ11' and
                  p.split()[1] == 'HZ'][0].split()[-1]), 30)
 
-    def test_convert_xyz_error(self):
+    def test_convert_xyz_error_no_covariance(self):
         """
         Test that we are able to map between xyz errors and ellipsoid
         """
         errors = {'x_err': 1., 'y_err': 1.5, 'z_err': 2.0,
                   'xy_cov': 0.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
+        expected_ellipse = ConfidenceEllipsoid(
+            semi_major_axis_length=2.0, semi_minor_axis_length=1.0,
+            semi_intermediate_axis_length=1.5, major_axis_plunge=-90.0,
+            major_axis_azimuth=0.0, major_axis_rotation=0.0)
         confidence_ellipsoid = xyz_to_confidence_ellipsoid(errors)
-        print(confidence_ellipsoid)
+        self.assertEqual(confidence_ellipsoid, expected_ellipse)
         errors_back = confidence_ellipsoid_to_xyz(confidence_ellipsoid)
         self.assertEqual(errors, errors_back)
-        # TODO: Test mapping for known result.
+
+    def test_convert_xyz_error_no_covariance_xmax(self):
+        """
+        Test that we are able to map between xyz errors and ellipsoid
+        """
+        errors = {'x_err': 5., 'y_err': 2.5, 'z_err': 2.0,
+                  'xy_cov': 0.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
+        expected_ellipse = ConfidenceEllipsoid(
+            semi_major_axis_length=5.0, semi_minor_axis_length=2.0,
+            semi_intermediate_axis_length=2.5, major_axis_plunge=0.0,
+            major_axis_azimuth=0.0, major_axis_rotation=0.0)
+        confidence_ellipsoid = xyz_to_confidence_ellipsoid(errors)
+        self.assertEqual(confidence_ellipsoid, expected_ellipse)
+        errors_back = confidence_ellipsoid_to_xyz(confidence_ellipsoid)
+        self.assertEqual(errors, errors_back)
+
+    def test_convert_xyz_error_no_covariance_ymax(self):
+        """
+        Test that we are able to map between xyz errors and ellipsoid
+        """
+        errors = {'y_err': 5., 'x_err': 2.5, 'z_err': 2.0,
+                  'xy_cov': 0.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
+        expected_ellipse = ConfidenceEllipsoid(
+            semi_major_axis_length=5.0, semi_minor_axis_length=2.0,
+            semi_intermediate_axis_length=2.5, major_axis_plunge=0.0,
+            major_axis_azimuth=90.0, major_axis_rotation=0.0)
+        confidence_ellipsoid = xyz_to_confidence_ellipsoid(errors)
+        self.assertEqual(confidence_ellipsoid, expected_ellipse)
+        errors_back = confidence_ellipsoid_to_xyz(confidence_ellipsoid)
+        self.assertEqual(errors, errors_back)
+
+    def test_convert_xyz_to_confidence_nocovariance(self):
+        """
+        Test for a known case for xyz and covariance to ConfidenceEllipsoid
+        """
+        errors = {'x_err': 1., 'y_err': 1.5, 'z_err': 2.0,
+                  'xy_cov': 0.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
+        expected = ConfidenceEllipsoid(
+            semi_major_axis_length=2.0, semi_minor_axis_length=1.0,
+            semi_intermediate_axis_length=1.5, major_axis_plunge=-90.0,
+            major_axis_azimuth=0.0, major_axis_rotation=0.0)
+        self.assertEqual(expected, xyz_to_confidence_ellipsoid(errors=errors))
+
+    def test_convert_xyz_to_confidence_2d_covariance(self):
+        """
+        Test for a known case for xyz and covariance to ConfidenceEllipsoid
+        """
+        input = ConfidenceEllipsoid(
+            semi_major_axis_length=5.0, semi_minor_axis_length=0.0,
+            semi_intermediate_axis_length=0.5, major_axis_plunge=0.0,
+            major_axis_azimuth=45.0, major_axis_rotation=0.0)
+        errors = confidence_ellipsoid_to_xyz(input)
+        conf_back = xyz_to_confidence_ellipsoid(errors=errors)
+        self.assertEqual(input, conf_back)
+
+    def test_convert_confidence_to_xyz_2d_covariance(self):
+        """
+        Test for a known case for ConfidenceEllipsoid to xyz and covariance
+        """
+        input = {'x_err': 24.0, 'y_err': 12.0, 'z_err': 0.0,
+                 'xy_cov': 12.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
+        conf_back = xyz_to_confidence_ellipsoid(input)
+        errors = confidence_ellipsoid_to_xyz(conf_back)
+        for key in input.keys():
+            self.assertAlmostEqual(input[key], errors[key])
+
+    # TODO: Test for non-trivial case
 
 
 def _assert_similarity(event_1, event_2, verbose=False):

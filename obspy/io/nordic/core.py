@@ -303,28 +303,35 @@ def confidence_ellipsoid_to_xyz(confidence_ellipsoid):
     :return: dictionary of x_err, y_err, z_err, xy_cov, xz_cov, yz_cov in m
 
     .. Note::
-        Follows definition of Euler angles (z-y'-x'' intrinsic) to rotation
+        Follows definition of Euler angles (z-x'-y'' intrinsic) to rotation
         matrix from:
         https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions
     """
     from numpy import cos as c, sin as s
     try:
         phi = np.radians(confidence_ellipsoid.major_axis_plunge)
-        # rotation around x''
+        # rotation around x'' - phi is referred to interchangeably as:
+        #  "elevation", "pitch" or "attitude" - angle 2
         psi = np.radians(confidence_ellipsoid.major_axis_azimuth)
-        # rotation around z
+        # rotation around z - psi is referred to interchangeably as:
+        # "heading" or "yaw" - angle 1
         theta = np.radians(confidence_ellipsoid.major_axis_rotation)
-        # rotation around y'
+        # rotation around y' - theta is referred to interchangeably as:
+        # "bank" or "roll" - angle 3
     except Exception:
         raise NordicParsingError("Cannot parse rotation angles, incomplete "
                                  "confidenceEllipsoid?")
-    # Issues with left and right-handedness? Z1Y2X3
-    rotation_matrix = np.array([
-        [c(theta) * c(psi), s(phi) * s(theta) * c(psi) - c(phi) * s(psi),
-         s(phi) * s(psi) + c(phi) * s(theta) * c(psi)],
-        [c(theta) * s(psi), c(phi) * c(psi) + s(phi) * s(theta) * s(psi),
-         c(phi) * s(theta) * s(psi) - s(phi) * c(psi)],
-        [-s(theta), s(phi) * c(theta), c(phi) * c(theta)]])
+    # Issues with left and right-handedness? XYZ
+    rotation_matrix = np.empty((3, 3))
+    rotation_matrix[0][0] = c(psi) * c(phi)
+    rotation_matrix[0][1] = -c(phi) * s(psi)
+    rotation_matrix[0][2] = s(psi) * s(theta) - c(psi) * c(theta) * s(phi)
+    rotation_matrix[1][0] = c(theta) * s(psi) + c(psi) * s(phi) * s(theta)
+    rotation_matrix[1][1] = c(psi) * c(theta) - s(psi) * s(phi) * s(theta)
+    rotation_matrix[1][2] = c(psi) * s(theta) + c(theta) * s(psi) * s(phi)
+    rotation_matrix[2][0] = s(phi)
+    rotation_matrix[2][1] = -c(phi) * s(theta)
+    rotation_matrix[2][2] = c(phi) * c(theta)
     eigenvalues = np.array([
         confidence_ellipsoid.semi_major_axis_length ** 2,
         confidence_ellipsoid.semi_intermediate_axis_length ** 2,
@@ -334,7 +341,7 @@ def confidence_ellipsoid_to_xyz(confidence_ellipsoid):
                                np.linalg.inv(rotation_matrix))
     errors_out = {'x_err': np.sqrt(covariance_matrix[0, 0]),
                   'y_err': np.sqrt(covariance_matrix[1, 1]),
-                  'z_err': np.sqrt(covariance_matrix[2, 2]),
+                  'z_err': np.sqrt(abs(covariance_matrix[2, 2])),
                   'xy_cov': np.round(covariance_matrix[0, 1], 6),
                   'xz_cov': np.round(covariance_matrix[0, 2], 6),
                   'yz_cov': np.round(covariance_matrix[1, 2], 6)}
