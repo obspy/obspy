@@ -13,9 +13,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import python_2_unicode_compatible, native_str
-from future.utils import PY2
 
-import builtins
 import copy
 import fnmatch
 import os
@@ -37,10 +35,6 @@ from .util import _unified_content_strings, _textwrap
 # from there results in hard to resolve cyclic imports.
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "https://www.obspy.org"
-
-
-if PY2:
-    FileNotFoundError = getattr(builtins, 'IOError')
 
 
 def _create_example_inventory():
@@ -100,10 +94,6 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
         with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
             download_to_file(url=path_or_file_object, filename_or_buffer=fh)
             return read_inventory(fh.name, format=format)
-    if not os.path.exists(path_or_file_object):
-        msg = "[Errno 2] No such file or directory: '{}'".format(
-            path_or_file_object)
-        raise FileNotFoundError(msg)
     return _read_from_plugin("inventory", path_or_file_object,
                              format=format, *args, **kwargs)[0]
 
