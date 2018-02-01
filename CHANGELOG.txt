@@ -18,6 +18,11 @@ master:
    * 'domain' parameter in correlate function is deprecated in favour of new
      'method' parameter to be consistent with recent SciPy versions
      (see #2042).
+ - obspy.io.nordic:
+    * Add ability to read and write focal mechanisms, hypocentral errors and
+      moment tensor information
+    * Add explicit warnings regarding unsupported sections of Nordic files.
+    * Fix mapping of magnitude-types between MS to S and Ms to s.
 
 
 1.1.x:
@@ -151,11 +156,6 @@ master:
     * Also parse author information and COMMENT line (see #1484)
     * Fix reading hypocenter files created by NonLinLoc versions of the 6.0.x
       beta branch (see #1760 and #1783)
- - obspy.io.nordic:
-    * Add ability to read and write focal mechanism, hypocentral error, moment
-      tensor information
-    * Add explicit warnings about lines not yet able to read.
-    * Fix mapping of MS to S and Ms to s.
  - obspy.io.quakeml:
     * Read and write support for nested custom tags (see #1463)
     * Fix some minor bugs that could lead to empty stub elements, e.g. like

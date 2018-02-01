@@ -433,8 +433,7 @@ class TestNordicMethods(unittest.TestCase):
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 write_select(cat, filename=tf.name)
-            if not _is_sfile(tf.name):
-                raise(NordicParsingError("format is wrong somehow"))
+            self.assertTrue(_is_sfile(tf.name))
             cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
                 _assert_similarity(event_1=event_1, event_2=event_2)
@@ -649,26 +648,24 @@ class TestNordicMethods(unittest.TestCase):
         """
         Test for a known case for xyz and covariance to ConfidenceEllipsoid
         """
-        input = ConfidenceEllipsoid(
+        inp = ConfidenceEllipsoid(
             semi_major_axis_length=5.0, semi_minor_axis_length=0.0,
             semi_intermediate_axis_length=0.5, major_axis_plunge=0.0,
             major_axis_azimuth=45.0, major_axis_rotation=0.0)
-        errors = confidence_ellipsoid_to_xyz(input)
+        errors = confidence_ellipsoid_to_xyz(inp)
         conf_back = xyz_to_confidence_ellipsoid(errors=errors)
-        self.assertEqual(input, conf_back)
+        self.assertEqual(inp, conf_back)
 
     def test_convert_confidence_to_xyz_2d_covariance(self):
         """
         Test for a known case for ConfidenceEllipsoid to xyz and covariance
         """
-        input = {'x_err': 24.0, 'y_err': 12.0, 'z_err': 0.0,
-                 'xy_cov': 12.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
-        conf_back = xyz_to_confidence_ellipsoid(input)
+        inp = {'x_err': 24.0, 'y_err': 12.0, 'z_err': 0.0,
+               'xy_cov': 12.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
+        conf_back = xyz_to_confidence_ellipsoid(inp)
         errors = confidence_ellipsoid_to_xyz(conf_back)
-        for key in input.keys():
-            self.assertAlmostEqual(input[key], errors[key])
-
-    # TODO: Test for non-trivial case
+        for key in inp.keys():
+            self.assertAlmostEqual(inp[key], errors[key])
 
 
 def _assert_similarity(event_1, event_2, verbose=False):

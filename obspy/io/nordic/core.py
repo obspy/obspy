@@ -25,6 +25,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import warnings
+from collections import defaultdict
 import datetime
 import os
 import io
@@ -43,10 +44,9 @@ mag_mapping = {"ML": "L", "MLv": "L", "mB": "B", "Ms": "s", "MS": "S",
                "MW": "W", "MbLg": "G", "Mc": "C"}
 
 onsets = {'I': 'impulsive', 'E': 'emergent'}
-
-accepted_tags = ['1', '6', '7', 'E', ' ', 'F', 'M', '3']
 # List of currently implemented line-endings, which in Nordic mark what format
 # info in that line will be.
+accepted_tags = ['1', '6', '7', 'E', ' ', 'F', 'M', '3']
 
 
 class NordicParsingError(Exception):
@@ -66,7 +66,7 @@ def _is_sfile(sfile, encoding='latin-1'):
     :type sfile: str
     :param sfile: Path to sfile
     :type encoding: str
-    :param encoding: Encoding for file, used to decode from bytes to string
+    :param encoding: Encoding of the file.
 
     :rtype: bool
     """
@@ -77,13 +77,16 @@ def _is_sfile(sfile, encoding='latin-1'):
         except Exception:
             return False
     else:
-        tags = _get_line_tags(f=sfile)
+        try:
+            tags = _get_line_tags(f=sfile)
+        except Exception:
+            return False
     if tags is not None:
         # Note that there can be two origin lines, but only to allow more
         # magnitudes, not more origins.
         try:
             head_line = tags['1'][0][0]
-        except KeyError:
+        except IndexError:
             return False
         try:
             sfile_seconds = int(head_line[16:18])
@@ -106,24 +109,22 @@ def _is_sfile(sfile, encoding='latin-1'):
 def _get_line_tags(f):
     f.seek(0)
     line = f.readline()
-    if len(line.rstrip('\n').rstrip('\r')) != 80:
+    if len(line.rstrip()) != 80:
         # Cannot be Nordic
         raise NordicParsingError(
             "Lines are not 80 characters long: not a nordic file")
     f.seek(0)
-    tags = {}
+    tags = defaultdict(list)
     for i, line in enumerate(f):
         try:
             line_id = line.rstrip()[79]
         except IndexError:
             line_id = ' '
-        if line_id in tags.keys():
+        if line_id in accepted_tags:
             tags[line_id].append((line, i))
-        elif line_id in accepted_tags:
-            tags.update({line_id: [(line, i)]})
         else:
-            UserWarning("Lines of type %s have not been implemented yet, "
-                        "please submit a development request" % line_id)
+            warnings.warn("Lines of type %s have not been implemented yet, "
+                          "please submit a development request" % line_id)
     return tags
 
 
@@ -361,10 +362,9 @@ def readheader(sfile, encoding='latin-1'):
     """
     with open(sfile, 'r', encoding=encoding) as f:
         tagged_lines = _get_line_tags(f)
-        try:
-            header = _readheader(head_lines=tagged_lines['1'])
-        except KeyError:
+        if len(tagged_lines['1']) == 0:
             raise NordicParsingError("No header lines found")
+        header = _readheader(head_lines=tagged_lines['1'])
     return header
 
 
@@ -452,8 +452,12 @@ def _read_origin(line):
             new_event.origins[0].__dict__[key] = None
     if new_event.origins[0].depth:
         new_event.origins[0].depth *= 1000
-    # new_event.depth_ind = line[44]
-    # new_event.loc_ind = line[45]
+    if line[43].strip():
+        warnings.warn("Depth indicator {0} has not been mapped "
+                      "to the event".format(line[43]))
+    if line[44].strip():
+        warnings.warn("Origin location indicator {0} has not been mapped "
+                      "to the event".format(line[44]))
     new_event.creation_info = CreationInfo(agency_id=line[45:48].strip())
     new_event.origins[0].creation_info = CreationInfo(
         agency_id=line[45:48].strip())
@@ -1228,25 +1232,35 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         sfile = open(sfile_path, 'w')
     else:
         sfile = string_io
-    # Write a second line if more than three magnitudes...
-    line_one_begin = (
-        ' ' + str(evtime.year) + ' ' + str(evtime.month).rjust(2) +
-        str(evtime.day).rjust(2) + ' ' + str(evtime.hour).rjust(2) +
-        str(evtime.minute).rjust(2) + ' ' + str(evtime.second).rjust(2) + '.' +
-        str(evtime.microsecond).ljust(1)[0:1] + ' ' + evtype.ljust(2) +
-        lat.rjust(7) + ' ' + lon.rjust(7) + depth.rjust(5) + agency.rjust(5) +
-        ksta.rjust(3) + timerms.rjust(4))
-    sfile.write(line_one_begin)
-    for conv_mag in conv_mags[0:3]:
-        sfile.write(conv_mag['mag'].rjust(4) + conv_mag['type'].rjust(1) +
-                    conv_mag['agency'][0:3].rjust(3))
-    sfile.write('1\n')
+    sfile.write(
+        " {0} {1}{2} {3}{4} {5}.{6} {7}{8} {9}{10}  {11}{12}{13}{14}{15}{16}"
+        "{17}{18}{19}{20}{21}{22}1\n".format(
+            evtime.year, str(evtime.month).rjust(2), str(evtime.day).rjust(2),
+            str(evtime.hour).rjust(2), str(evtime.minute).rjust(2),
+            str(evtime.second).rjust(2), str(evtime.microsecond).ljust(1)[0:1],
+            evtype.ljust(2), lat.rjust(7), lon.rjust(7), depth.rjust(5),
+            agency.rjust(3)[0:3], ksta.rjust(3), timerms.rjust(4),
+            conv_mags[0]['mag'].rjust(4), conv_mags[0]['type'].rjust(1),
+            conv_mags[0]['agency'][0:3].rjust(3),
+            conv_mags[1]['mag'].rjust(4), conv_mags[1]['type'].rjust(1),
+            conv_mags[1]['agency'][0:3].rjust(3),
+            conv_mags[2]['mag'].rjust(4), conv_mags[2]['type'].rjust(1),
+            conv_mags[2]['agency'][0:3].rjust(3)))
     if len(conv_mags) > 3:
-        sfile.write(line_one_begin)
-        for conv_mag in conv_mags[3:6]:
-            sfile.write(conv_mag['mag'].rjust(4) + conv_mag['type'].rjust(1) +
-                        conv_mag['agency'][0:3].rjust(3))
-        sfile.write('1\n')
+        sfile.write(
+            " {0} {1}{2} {3}{4} {5}.{6} {7}                      {8}       "
+            "{9}{10}{11}{12}{13}{14}{15}{16}{17}1\n".format(
+                evtime.year, str(evtime.month).rjust(2),
+                str(evtime.day).rjust(2), str(evtime.hour).rjust(2),
+                str(evtime.minute).rjust(2), str(evtime.second).rjust(2),
+                str(evtime.microsecond).ljust(1)[0:1], evtype.ljust(2),
+                agency.rjust(3)[0:3],
+                conv_mags[3]['mag'].rjust(4), conv_mags[3]['type'].rjust(1),
+                conv_mags[3]['agency'][0:3].rjust(3),
+                conv_mags[4]['mag'].rjust(4), conv_mags[4]['type'].rjust(1),
+                conv_mags[4]['agency'][0:3].rjust(3),
+                conv_mags[5]['mag'].rjust(4), conv_mags[5]['type'].rjust(1),
+                conv_mags[5]['agency'][0:3].rjust(3)))
     # Write hyp error line
     try:
         sfile.write(_write_hyp_error_line(event.origins[0]) + '\n')
@@ -1269,15 +1283,9 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
                 pass
     # Write line 2 (type: I) of s-file
     sfile.write(
-        ' ACTION:ARG ' + str(datetime.datetime.now().year)[2:4] + '-' +
-        str(datetime.datetime.now().month).zfill(2) + '-' +
-        str(datetime.datetime.now().day).zfill(2) + ' ' +
-        str(datetime.datetime.now().hour).zfill(2) + ':' +
-        str(datetime.datetime.now().minute).zfill(2) + ' OP:' +
-        userid.ljust(4) + ' STATUS:' + 'ID:'.rjust(18) + str(evtime.year) +
-        str(evtime.month).zfill(2) + str(evtime.day).zfill(2) +
-        str(evtime.hour).zfill(2) + str(evtime.minute).zfill(2) +
-        str(evtime.second).zfill(2) + 'I'.rjust(6) + '\n')
+        " Action:ARG {0} OP:{1} STATUS:               ID:{2}     I\n".format(
+            datetime.datetime.now().strftime("%y-%m-%d %H:%M"),
+            userid.ljust(4)[0:4], evtime.strftime("%Y%m%d%H%M%S")))
     # Write line-type 6 of s-file
     for wavefile in wavefiles:
         sfile.write(' ' + os.path.basename(wavefile) +
@@ -1576,24 +1584,26 @@ def nordpick(event):
         else:
             warnings.warn("Evaluation mode %s is not supported"
                           % pick.evaluation_mode)
+            eval_mode = " "
         # Generate a print string and attach it to the list
         channel_code = pick.waveform_id.channel_code or '   '
         pick_strings.append(
-            ' ' + pick.waveform_id.station_code.ljust(5) + channel_code[0] +
-            channel_code[-1] + ' ' + impulsivity + phase_hint.ljust(4) +
-            _str_conv(weight).rjust(1) + eval_mode + polarity.rjust(1) + ' ' +
-            str(pick.time.hour).rjust(2) + str(pick.time.minute).rjust(2) +
-            str(pick.time.second).rjust(3) + '.' +
-            str(float(pick.time.microsecond) /
-                (10 ** 4)).split('.')[0].zfill(2) +
-            _str_conv(coda).rjust(5)[0:5] +
-            _str_conv(amp, rounded=1).rjust(7)[0:7] +
-            _str_conv(peri, rounded=peri_round).rjust(5) +
-            _str_conv(azimuth).rjust(6) + _str_conv(velocity).rjust(5) +
-            _str_conv(' ').rjust(4) + _str_conv(azimuthres).rjust(3) +
-            _str_conv(timeres, rounded=2).rjust(5)[0:5] +
-            _str_conv(' ').rjust(2) + distance.rjust(5) +
-            _str_conv(caz).rjust(4) + ' ')
+            " {0}{1}{2} {3}{4}{5}{6}{7} {8}{9}{10}.{11}{12}"
+            "{13}{14}{15}{16}    {17}{18}  {19}{20} ".format(
+                pick.waveform_id.station_code.ljust(5), channel_code[0],
+                channel_code[-1], impulsivity, phase_hint.ljust(4),
+                _str_conv(weight).rjust(1), eval_mode, polarity.rjust(1),
+                str(pick.time.hour).rjust(2), str(pick.time.minute).rjust(2),
+                str(pick.time.second).rjust(3),
+                str(float(pick.time.microsecond) /
+                    (10 ** 4)).split('.')[0].zfill(2),
+                _str_conv(coda).rjust(5)[0:5],
+                _str_conv(amp, rounded=1).rjust(7)[0:7],
+                _str_conv(peri, rounded=peri_round).rjust(5),
+                _str_conv(azimuth).rjust(6), _str_conv(velocity).rjust(5),
+                _str_conv(azimuthres).rjust(3),
+                _str_conv(timeres, rounded=2).rjust(5)[0:5], distance.rjust(5),
+                _str_conv(caz).rjust(4)))
         # Note that currently finalweight is unsupported, nor is velocity, or
         # angle of incidence.  This is because obspy.event stores slowness in
         # s/deg and takeoff angle, which would require computation from the
