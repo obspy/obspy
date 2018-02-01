@@ -3,6 +3,9 @@
    * Tests pass with numpy 1.14 (see #2044).
  - obspy.core:
    * Fix pickling of traces with a sampling rate of 0 (see #1990)
+ - obspy.core:
+   * read_inventory() used with non-existing file path (e.g. typo in filename)
+     now shows a proper "No such file or directory" error message (see #2062)
  - obspy.clients.arclink:
    * Raise a warning at import time that the ArcLink protocol will be
      deprecated soon (see #1987).
