@@ -12,7 +12,7 @@ Test suite for the inventory class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2
+from future.utils import PY2, native_str
 
 import builtins
 import os
@@ -447,6 +447,7 @@ class InventoryTestCase(unittest.TestCase):
             break
         else:
             self.fail('unable to get invalid file path')
+        doesnt_exist = native_str(doesnt_exist)
 
         if PY2:
             exception_type = getattr(builtins, 'IOError')
@@ -458,12 +459,12 @@ class InventoryTestCase(unittest.TestCase):
             'obspy.plugin.inventory', 'readFormat').keys()
         # try read_inventory() with invalid filename for all registered read
         # plugins and also for filetype autodiscovery
-        formats = [None] + formats
-        for format in formats:
+        formats = [None] + list(formats)
+        for format in formats[:1]:
             with self.assertRaises(exception_type) as e:
                 read_inventory(doesnt_exist, format=format)
             self.assertEqual(
-                e.exception.args[0], exception_msg.format(doesnt_exist))
+                str(e.exception), exception_msg.format(doesnt_exist))
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
