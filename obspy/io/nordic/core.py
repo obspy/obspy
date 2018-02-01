@@ -82,8 +82,6 @@ def _is_sfile(sfile, encoding='latin-1'):
         except Exception:
             return False
     if tags is not None:
-        # Note that there can be two origin lines, but only to allow more
-        # magnitudes, not more origins.
         try:
             head_line = tags['1'][0][0]
         except IndexError:

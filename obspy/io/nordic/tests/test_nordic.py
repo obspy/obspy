@@ -598,9 +598,12 @@ class TestNordicMethods(unittest.TestCase):
             semi_intermediate_axis_length=1.5, major_axis_plunge=-90.0,
             major_axis_azimuth=0.0, major_axis_rotation=0.0)
         confidence_ellipsoid = xyz_to_confidence_ellipsoid(errors)
-        self.assertEqual(confidence_ellipsoid, expected_ellipse)
+        for key in expected_ellipse.__dict__.keys():
+            self.assertAlmostEqual(expected_ellipse.__dict__[key],
+                                   confidence_ellipsoid.__dict__[key])
         errors_back = confidence_ellipsoid_to_xyz(confidence_ellipsoid)
-        self.assertEqual(errors, errors_back)
+        for key in errors.keys():
+            self.assertAlmostEqual(errors[key], errors_back[key])
 
     def test_convert_xyz_error_no_covariance_xmax(self):
         """
@@ -613,9 +616,12 @@ class TestNordicMethods(unittest.TestCase):
             semi_intermediate_axis_length=2.5, major_axis_plunge=0.0,
             major_axis_azimuth=0.0, major_axis_rotation=0.0)
         confidence_ellipsoid = xyz_to_confidence_ellipsoid(errors)
-        self.assertEqual(confidence_ellipsoid, expected_ellipse)
+        for key in expected_ellipse.__dict__.keys():
+            self.assertAlmostEqual(expected_ellipse.__dict__[key],
+                                   confidence_ellipsoid.__dict__[key])
         errors_back = confidence_ellipsoid_to_xyz(confidence_ellipsoid)
-        self.assertEqual(errors, errors_back)
+        for key in errors.keys():
+            self.assertAlmostEqual(errors[key], errors_back[key])
 
     def test_convert_xyz_error_no_covariance_ymax(self):
         """
@@ -628,9 +634,12 @@ class TestNordicMethods(unittest.TestCase):
             semi_intermediate_axis_length=2.5, major_axis_plunge=0.0,
             major_axis_azimuth=90.0, major_axis_rotation=0.0)
         confidence_ellipsoid = xyz_to_confidence_ellipsoid(errors)
-        self.assertEqual(confidence_ellipsoid, expected_ellipse)
+        for key in expected_ellipse.__dict__.keys():
+            self.assertAlmostEqual(expected_ellipse.__dict__[key],
+                                   confidence_ellipsoid.__dict__[key])
         errors_back = confidence_ellipsoid_to_xyz(confidence_ellipsoid)
-        self.assertEqual(errors, errors_back)
+        for key in errors.keys():
+            self.assertAlmostEqual(errors[key], errors_back[key])
 
     def test_convert_xyz_to_confidence_nocovariance(self):
         """
@@ -642,7 +651,10 @@ class TestNordicMethods(unittest.TestCase):
             semi_major_axis_length=2.0, semi_minor_axis_length=1.0,
             semi_intermediate_axis_length=1.5, major_axis_plunge=-90.0,
             major_axis_azimuth=0.0, major_axis_rotation=0.0)
-        self.assertEqual(expected, xyz_to_confidence_ellipsoid(errors=errors))
+        conf_back = xyz_to_confidence_ellipsoid(errors=errors)
+        for key in expected.__dict__.keys():
+            self.assertAlmostEqual(expected.__dict__[key],
+                                   conf_back.__dict__[key])
 
     def test_convert_xyz_to_confidence_2d_covariance(self):
         """
@@ -654,7 +666,9 @@ class TestNordicMethods(unittest.TestCase):
             major_axis_azimuth=45.0, major_axis_rotation=0.0)
         errors = confidence_ellipsoid_to_xyz(inp)
         conf_back = xyz_to_confidence_ellipsoid(errors=errors)
-        self.assertEqual(inp, conf_back)
+        for key in inp.__dict__.keys():
+            self.assertAlmostEqual(inp.__dict__[key],
+                                   conf_back.__dict__[key])
 
     def test_convert_confidence_to_xyz_2d_covariance(self):
         """
