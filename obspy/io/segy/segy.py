@@ -88,7 +88,6 @@ class SEGYFile(object):
     """
     Class that internally handles SEG Y files.
     """
-
     def __init__(self, file=None, endian=None, textual_header_encoding=None,
                  unpack_headers=False, headonly=False, read_traces=True):
         """
@@ -241,7 +240,7 @@ class SEGYFile(object):
         # which is not supported so far.
         if bfh.number_of_3200_byte_ext_file_header_records_following != 0:
             msg = 'Extended textual headers are not yet supported. ' + \
-                  'Please contact the developers.'
+                'Please contact the developers.'
             raise NotImplementedError(msg)
 
     def write(self, file, data_encoding=None, endian=None):
@@ -286,7 +285,7 @@ class SEGYFile(object):
         if len(set([len(tr.data) for tr in self.traces])) != 1:
             self.binary_file_header.fixed_length_trace_flag = 0
         # Extended textual headers are not supported by ObsPy so far.
-        self.binary_file_header. \
+        self.binary_file_header.\
             number_of_3200_byte_ext_file_header_records_following = 0
         # Enforce the encoding
         if data_encoding:
@@ -333,12 +332,12 @@ class SEGYFile(object):
         # warning but don't do anything.
 
         # Make sure the textual header has the required fields.
-        revision_number = textual_header[3200 - 160:3200 - 146].decode()
-        end_header_mark = textual_header[3200 - 80:3200 - 58]
+        revision_number = textual_header[3200-160:3200-146].decode()
+        end_header_mark = textual_header[3200-80:3200-58]
         if revision_number != "C39 SEG Y REV1":
             if revision_number.strip() in ("", "C", "C39"):
-                textual_header = textual_header[:3200 - 160] + \
-                                 b"C39 SEG Y REV1" + textual_header[3200 - 146:]
+                textual_header = textual_header[:3200-160] + \
+                    b"C39 SEG Y REV1" + textual_header[3200-146:]
             else:
                 # Raise warning but don't do anything.
                 msg = ("The revision number in the textual header should be "
@@ -353,8 +352,8 @@ class SEGYFile(object):
 
         if end_header_mark != desired_end_header_mark:
             if end_header_mark.strip() in (b"", b"C", b"C40"):
-                textual_header = textual_header[:3200 - 80] + \
-                                 desired_end_header_mark + textual_header[3200 - 58:]
+                textual_header = textual_header[:3200-80] + \
+                    desired_end_header_mark + textual_header[3200-58:]
             else:
                 # Raise warning but don't do anything.
                 msg = ("The end header mark in the textual header should be "
@@ -433,7 +432,6 @@ class SEGYBinaryFileHeader(object):
     """
     Parses the binary file header at the given starting position.
     """
-
     def __init__(self, header=None, endian='>'):
         """
         """
@@ -533,7 +531,6 @@ class SEGYTrace(object):
     """
     Convenience class that internally handles a single SEG Y trace.
     """
-
     def __init__(self, file=None, data_encoding=4, endian='>',
                  unpack_headers=False, filesize=None, headonly=False):
         """
@@ -628,7 +625,7 @@ class SEGYTrace(object):
         pos = self.file.tell()
         data_left = self.filesize - pos
         data_needed = DATA_SAMPLE_FORMAT_SAMPLE_SIZE[self.data_encoding] * \
-                      npts
+            npts
         if npts < 1 or data_needed > data_left:
             msg = """
                   Too little data left in the file to unpack it according to
@@ -683,12 +680,12 @@ class SEGYTrace(object):
         Print some information about the trace.
         """
         ret_val = 'Trace sequence number within line: %i\n' % \
-                  self.header.trace_sequence_number_within_line
+            self.header.trace_sequence_number_within_line
         ret_val += '%i samples, dtype=%s, %.2f Hz' % (
             len(self.data),
             self.data.dtype, 1.0 /
             (self.header.sample_interval_in_ms_for_this_trace /
-             float(1E6)))
+                float(1E6)))
         return ret_val
 
     def _repr_pretty_(self, p, cycle):
@@ -720,7 +717,6 @@ class SEGYTrace(object):
         Convert the current Trace to an ObsPy Trace object.
 
         :param unpack_trace_headers:
-        :param headonly:
         """
         # Import here to avoid circular imports.
         from .core import LazyTraceHeaderAttribDict  # NOQA
@@ -790,7 +786,6 @@ class SEGYTraceHeader(object):
     """
     Convenience class that handles reading and writing of the trace headers.
     """
-
     def __init__(self, header=None, endian='>', unpack_headers=False):
         """
         Will take the 240 byte of the trace header and unpack all values with
@@ -887,7 +882,7 @@ class SEGYTraceHeader(object):
         # If not found raise an attribute error.
         except ValueError:
             msg = "'%s' object has no attribute '%s'" % \
-                  (self.__class__.__name__, name)
+                (self.__class__.__name__, name)
             raise AttributeError(msg)
         # Unpack the one value and set the class attribute so it will does not
         # have to unpacked again if accessed in the future.
@@ -945,7 +940,7 @@ def _read_segy(file, endian=None, textual_header_encoding=None,
     :type headonly: bool
     :param headonly: Determines whether or not the actual data records will be
         read and unpacked. Has a huge impact on memory usage. Data
-        will not be unpackable on-the-fly after reading the file. Defaults to False.
+            will not be unpackable on-the-fly after reading the file. Defaults to False.
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
@@ -984,7 +979,7 @@ def _internal_read_segy(file, endian=None, textual_header_encoding=None,
     :type headonly: bool
     :param headonly: Determines whether or not the actual data records will be
         read and unpacked. Has a huge impact on memory usage. Data
-        will not be unpackable on-the-fly after reading the file. Defaults to False.
+            will not be unpackable on-the-fly after reading the file. Defaults to False.
     """
     return SEGYFile(file, endian=endian,
                     textual_header_encoding=textual_header_encoding,
@@ -1034,7 +1029,7 @@ def iread_segy(file, endian=None, textual_header_encoding=None,
     :type headonly: bool
     :param headonly: Determines whether or not the actual data records will be
         read and unpacked. Has a huge impact on memory usage. Data
-        will not be unpackable on-the-fly after reading the file. Defaults to False.
+            will not be unpackable on-the-fly after reading the file. Defaults to False.
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
@@ -1159,7 +1154,6 @@ class SUFile(object):
     Convenience class that internally handles Seismic Unix data files. It
     currently can only read IEEE 4 byte float encoded SU data files.
     """
-
     def __init__(self, file=None, endian=None, unpack_headers=False,
                  headonly=False, read_traces=True):
         """
