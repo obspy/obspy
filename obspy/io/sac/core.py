@@ -15,13 +15,10 @@ from future.utils import native_str
 
 import os
 import struct
-import sys
 
 from obspy import Stream
 
 from obspy.core.compatibility import is_bytes_buffer
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from .sactrace import SACTrace
 
 
@@ -110,7 +107,7 @@ def _internal_is_sac(buf):
             return False
         if lcalda != 0 and lcalda != 1 and lcalda != -12345:
             return False
-    except:
+    except Exception:
         return False
     finally:
         # Reset buffer head position after reading.
@@ -163,7 +160,7 @@ def _internal_is_sac_xy(buf):
             npts = int(hdcards[15].split()[-1])
             # read in the seismogram
             seis = buf.read(-1).split()
-        except:
+        except Exception:
             return False
         # check that npts header value and seismogram length are consistent
         if npts != len(seis):
@@ -383,10 +380,15 @@ def _internal_read_sac(buf, headonly=False, debug_headers=False, fsize=True,
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
+
+    # Extract encoding flag (default to ascii)
+    encoding_str = kwargs.get('encoding', 'ascii')
+
     # read SAC file
-    sac = SACTrace.read(buf, headonly=headonly, ascii=False, checksize=fsize)
+    sac = SACTrace.read(buf, headonly=headonly, ascii=False,
+                        checksize=fsize, encoding=encoding_str)
     # assign all header entries to a new dictionary compatible with an ObsPy
-    tr = sac.to_obspy_trace(debug_headers=debug_headers)
+    tr = sac.to_obspy_trace(debug_headers=debug_headers, encoding=encoding_str)
 
     return Stream([tr])
 
@@ -468,17 +470,3 @@ def _internal_write_sac(trace, buf, byteorder="<", **kwargs):
         raise ValueError(msg)
     sac = SACTrace.from_obspy_trace(trace)
     sac.write(buf, ascii=False, byteorder=byteorder)
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        "isSAC": "obspy.io.sac.core._is_sac",
-        "isSACXY": "obspy.io.sac.core._is_sac_xy",
-        "readSAC": "obspy.io.sac.core._read_sac",
-        "readSACXY": "obspy.io.sac.core._read_sac_xy",
-        "writeSAC": "obspy.io.sac.core._write_sac",
-        "writeSACXY": "obspy.io.sac.core._write_sac_xy"})

@@ -27,9 +27,9 @@ from future.builtins import *  # NOQA
 import inspect
 import io
 import os
-import sys
 import warnings
 
+from collections import Mapping
 from lxml import etree
 
 from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
@@ -44,8 +44,6 @@ from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               WaveformStreamID)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
@@ -71,14 +69,14 @@ def _xml_doc_from_anything(source):
     Will raise a ValueError if it fails.
     """
     try:
-        xml_doc = etree.parse(source)
-    except:
+        xml_doc = etree.parse(source).getroot()
+    except Exception:
         try:
             xml_doc = etree.fromstring(source)
-        except:
+        except Exception:
             try:
                 xml_doc = etree.fromstring(source.encode())
-            except:
+            except Exception:
                 raise ValueError("Could not parse '%s' to an etree element." %
                                  source)
     return xml_doc
@@ -107,7 +105,7 @@ def _is_quakeml(filename):
 
     try:
         xml_doc = _xml_doc_from_anything(filename)
-    except:
+    except Exception:
         return False
     finally:
         if file_like_object:
@@ -120,7 +118,7 @@ def _is_quakeml(filename):
         else:
             namespace = _get_first_child_namespace(xml_doc)
         xml_doc.xpath('q:eventParameters', namespaces={"q": namespace})[0]
-    except:
+    except Exception:
         return False
     return True
 
@@ -178,7 +176,7 @@ class Unpickler(object):
             return None
         try:
             return convert_to(text)
-        except:
+        except Exception:
             msg = "Could not convert %s to type %s. Returning None."
             warnings.warn(msg % (text, convert_to))
         return None
@@ -698,11 +696,11 @@ class Unpickler(object):
         :param name: tag name of sub nodal plane
         :rtype: :class:`~obspy.core.event.NodalPlane`
         """
-        obj = NodalPlane()
         try:
             sub_el = self._xpath(name, parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = NodalPlane()
         # required parameter
         obj.strike, obj.strike_errors = self._float_value(sub_el, 'strike')
         obj.dip, obj.dip_errors = self._float_value(sub_el, 'dip')
@@ -717,18 +715,18 @@ class Unpickler(object):
         :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.NodalPlanes`
         """
-        obj = NodalPlanes()
         try:
             sub_el = self._xpath('nodalPlanes', parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = NodalPlanes()
         # optional parameter
         obj.nodal_plane_1 = self._nodal_plane(sub_el, 'nodalPlane1')
         obj.nodal_plane_2 = self._nodal_plane(sub_el, 'nodalPlane2')
         # optional attribute
         try:
             obj.preferred_plane = int(sub_el.get('preferredPlane'))
-        except:
+        except Exception:
             obj.preferred_plane = None
         self._extra(sub_el, obj)
         return obj
@@ -740,11 +738,11 @@ class Unpickler(object):
         :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.SourceTimeFunction`
         """
-        obj = SourceTimeFunction()
         try:
             sub_el = self._xpath('sourceTimeFunction', parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = SourceTimeFunction()
         # required parameters
         obj.type = self._xpath2obj('type', sub_el)
         obj.duration = self._xpath2obj('duration', sub_el, float)
@@ -761,11 +759,11 @@ class Unpickler(object):
         :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.Tensor`
         """
-        obj = Tensor()
         try:
             sub_el = self._xpath('tensor', parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = Tensor()
         # required parameters
         obj.m_rr, obj.m_rr_errors = self._float_value(sub_el, 'Mrr')
         obj.m_tt, obj.m_tt_errors = self._float_value(sub_el, 'Mtt')
@@ -809,11 +807,11 @@ class Unpickler(object):
         :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.MomentTensor`
         """
-        obj = MomentTensor(force_resource_id=False)
         try:
             mt_el = self._xpath('momentTensor', parent)[0]
         except IndexError:
-            return obj
+            return None
+        obj = MomentTensor(force_resource_id=False)
         # required parameters
         obj.derived_origin_id = self._xpath2obj('derivedOriginID', mt_el)
         # optional parameter
@@ -998,7 +996,13 @@ class Unpickler(object):
             for el in element.iterfind("{%s}*" % ns):
                 # remove namespace from tag name
                 _, name = el.tag.split("}")
-                value = el.text
+                # check if element has children (nested tags)
+                if len(el):
+                    sub_obj = AttribDict()
+                    self._extra(el, sub_obj)
+                    value = sub_obj.extra
+                else:
+                    value = el.text
                 try:
                     extra = obj.setdefault("extra", AttribDict())
                 # Catalog object is not based on AttribDict..
@@ -1077,7 +1081,7 @@ class Pickler(object):
     def _id(self, obj):
         try:
             return obj.get_quakeml_uri()
-        except:
+        except Exception:
             return ResourceIdentifier().get_quakeml_uri()
 
     def _str(self, value, root, tag, always_create=False, attrib=None):
@@ -1103,10 +1107,11 @@ class Pickler(object):
             return
         subelement = etree.Element(tag)
         self._str(quantity, subelement, 'value')
-        self._str(error.uncertainty, subelement, 'uncertainty')
-        self._str(error.lower_uncertainty, subelement, 'lowerUncertainty')
-        self._str(error.upper_uncertainty, subelement, 'upperUncertainty')
-        self._str(error.confidence_level, subelement, 'confidenceLevel')
+        if error is not None:
+            self._str(error.uncertainty, subelement, 'uncertainty')
+            self._str(error.lower_uncertainty, subelement, 'lowerUncertainty')
+            self._str(error.upper_uncertainty, subelement, 'upperUncertainty')
+            self._str(error.confidence_level, subelement, 'confidenceLevel')
         element.append(subelement)
 
     def _waveform_id(self, obj, element, required=False):
@@ -1178,7 +1183,10 @@ class Pickler(object):
         """
         if not hasattr(obj, "extra"):
             return
-        for key, item in obj.extra.items():
+        self._custom(obj.extra, element)
+
+    def _custom(self, obj, element):
+        for key, item in obj.items():
             value = item["value"]
             ns = item["namespace"]
             attrib = item.get("attrib", {})
@@ -1189,7 +1197,11 @@ class Pickler(object):
             if type_.lower() in ("attribute", "attrib"):
                 element.attrib[tag] = str(value)
             elif type_.lower() == "element":
-                if isinstance(value, bool):
+                # check if value is dictionary-like
+                if isinstance(value, Mapping):
+                    subelement = etree.SubElement(element, tag, attrib=attrib)
+                    self._custom(value, subelement)
+                elif isinstance(value, bool):
                     self._bool(value, element, tag, attrib=attrib)
                 else:
                     self._str(value, element, tag, attrib=attrib)
@@ -1514,9 +1526,11 @@ class Pickler(object):
         """
         Converts a NodalPlanes into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.NodalPlanes`
+        :type obj: :class:`~obspy.core.event.NodalPlanes`
         :rtype: etree.Element
         """
+        if obj is None:
+            return
         subelement = etree.Element('nodalPlanes')
         # optional
         if obj.nodal_plane_1:
@@ -1550,7 +1564,7 @@ class Pickler(object):
         """
         Converts a PrincipalAxes into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.PrincipalAxes`
+        :type obj: :class:`~obspy.core.event.PrincipalAxes`
         :rtype: etree.Element
         """
         if obj is None:
@@ -1594,7 +1608,7 @@ class Pickler(object):
         """
         Converts a MomentTensor into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.MomentTensor`
+        :type moment_tensor: :class:`~obspy.core.event.MomentTensor`
         :rtype: etree.Element
         """
         if moment_tensor is None:
@@ -1660,9 +1674,11 @@ class Pickler(object):
         """
         Converts a FocalMechanism into etree.Element object.
 
-        :type pick: :class:`~obspy.core.event.FocalMechanism`
+        :type focal_mechanism: :class:`~obspy.core.event.FocalMechanism`
         :rtype: etree.Element
         """
+        if focal_mechanism is None:
+            return
         element = etree.Element(
             'focalMechanism',
             attrib={'publicID': self._id(focal_mechanism.resource_id)})
@@ -1677,10 +1693,8 @@ class Pickler(object):
         self._str(focal_mechanism.misfit, element, 'misfit')
         self._str(focal_mechanism.station_distribution_ratio, element,
                   'stationDistributionRatio')
-        if focal_mechanism.nodal_planes:
-            self._nodal_planes(focal_mechanism.nodal_planes, element)
-        if focal_mechanism.principal_axes:
-            self._principal_axes(focal_mechanism.principal_axes, element)
+        self._nodal_planes(focal_mechanism.nodal_planes, element)
+        self._principal_axes(focal_mechanism.principal_axes, element)
         self._str(focal_mechanism.method_id, element, 'methodID')
         self._moment_tensor(focal_mechanism.moment_tensor, element)
         self._str(focal_mechanism.evaluation_mode, element, 'evaluationMode')
@@ -1797,7 +1811,7 @@ def _write_quakeml(catalog, filename, validate=False, nsmap=None,
         the :meth:`~obspy.core.event.Catalog.write` method of an
         ObsPy :class:`~obspy.core.event.Catalog` object, call this instead.
 
-    :type catalog: :class:`~obspy.core.stream.Catalog`
+    :type catalog: :class:`~obspy.core.event.catalog.Catalog`
     :param catalog: The ObsPy Catalog object to write.
     :type filename: str or file
     :param filename: Filename to write or open file-like object.
@@ -1818,19 +1832,12 @@ def _write_quakeml(catalog, filename, validate=False, nsmap=None,
         raise AssertionError(
             "The final QuakeML file did not pass validation.")
 
-    # Open filehandler or use an existing file like object.
-    if not hasattr(filename, "write"):
-        file_opened = True
-        fh = open(filename, "wb")
-    else:
-        file_opened = False
-        fh = filename
-
-    fh.write(xml_doc)
-
-    # Close if a file has been opened by this function.
-    if file_opened is True:
-        fh.close()
+    # Open filehandler or use an existing file like object
+    try:
+        with open(filename, 'wb') as fh:
+            fh.write(xml_doc)
+    except TypeError:
+        filename.write(xml_doc)
 
 
 def _read_seishub_event_xml(filename):
@@ -1879,18 +1886,6 @@ def _validate(xml_file, verbose=False):
         for entry in relaxng.error_log:
             print("\t%s" % entry)
     return valid
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isQuakeML': 'obspy.io.quakeml.core._is_quakeml',
-        'readQuakeML': 'obspy.io.quakeml.core._read_quakeml',
-        'readSeisHubEventXML': 'obspy.io.quakeml.core._read_seishub_event_xml',
-        'writeQuakeML': 'obspy.io.quakeml.core._write_quakeml'})
 
 
 if __name__ == '__main__':

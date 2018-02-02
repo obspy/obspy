@@ -5,6 +5,8 @@ branches:
     - master
     - /^maintenance_[0-9]+\.[0-9]+\.x$/
 
+sudo: false
+
 matrix:
   include:
     # do one build run with our minimum dependencies
@@ -15,18 +17,30 @@ matrix:
     - os: linux
       env: PYTHON_VERSION=2.7
     - os: linux
-      env: PYTHON_VERSION=3.3
-    - os: linux
       env: PYTHON_VERSION=3.4
     - os: linux
       env: PYTHON_VERSION=3.5
-
+    - os: linux
+      env: PYTHON_VERSION=3.6
+    # - os: linux
+    #   env: PYTHON_VERSION=3.5 ARCHITECTURE_32BIT="True"
+    #   addons:
+    #     apt:
+    #       packages:
+    #         # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
+    #         - libstdc++6:i386
+    #         - gcc-multilib
     - os: osx
       env: PYTHON_VERSION=2.7
     - os: osx
-      env: PYTHON_VERSION=3.5
+      env: PYTHON_VERSION=3.6
 
-sudo: false
+# mimick travis fast fail and rolling build setup from:
+# https://github.com/JuliaLang/julia/blob/master/.travis.yml
+before_install:
+  - if [ `uname` = "Darwin" ]; then brew update; brew install -v jq; fi
+  - curl "https://raw.githubusercontent.com/JuliaLang/julia/master/contrib/travis_fastfail.sh" -o "/tmp/fastfail.sh" || echo "Failed to fetch travis_fastfail.sh"
+  - if [ -f /tmp/fastfail.sh ]; then chmod u+x /tmp/fastfail.sh; /tmp/fastfail.sh || exit 1; fi
 
 install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
@@ -34,10 +48,27 @@ install:
     else
       export OS="Linux";
     fi
+  # - |
+  # -   if [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
+  # -     export ARCH=""
+  # -     # OPT is used by setuptools patches contained in newer numpy versions
+  # -     # used by obspy when running pip install --no-deps .
+  # -     export OPT="-m32"
+  # -     # workaround for sudo dpkg --add-architecture i386
+  # -     # be sure multiarch is the only file in this directory
+  # -     ls /etc/dpkg/dpkg.cfg.d/
+  # -     # multiarch must contain foreign-architecture i386. If not it will
+  # -     # error later and you need to do the following and add sudo: true
+  # -     #sudo sh -c "echo 'foreign-architecture i386' > /etc/dpkg/dpkg.cfg.d/multiarch"
+  # -     cat /etc/dpkg/dpkg.cfg.d/multiarch
+  # -   else
+  # -     export ARCH="_64"
+  # -   fi
+  - export ARCH="_64"
   - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda-latest-${OS}-x86_64.sh -O miniconda.sh;
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
     else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-x86_64.sh -O miniconda.sh;
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-x86${ARCH}.sh -O miniconda.sh;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -48,9 +79,9 @@ install:
   - conda info -a
   - |
       if [[ "$MINIMUM_DEPENDENCIES" == 'True' ]]; then
-        NUMPY_VERSION=1.6.2
-        SCIPY_VERSION=0.11.0
-        MPL_VERSION=1.1.1
+        NUMPY="numpy=1.6.2"
+        SCIPY="scipy=0.11.0"
+        MATPLOTLIB="matplotlib=1.1.1"
         # no basemap version works with this old numpy, so leave out
         BASEMAP=""
         PYPROJ="pyproj"
@@ -59,62 +90,72 @@ install:
         # and hick-ups..
         mkdir -p $HOME/.matplotlib
         echo 'backend:AGG' > $HOME/.matplotlib/matplotlibrc
-      elif [[ "${PYTHON_VERSION}" == '3.3' ]]; then
-        # newer package versions for 3.3 not available via anaconda
-        NUMPY_VERSION=1.9.2
-        SCIPY_VERSION=0.16.0
-        MPL_VERSION=1.4.3
-        BASEMAP="basemap=1.0.7"
-        # anaconda doesn't provide pyproj for Python 3.3 anymore, looks like
-        PYPROJ=""
-      elif [[ "${PYTHON_VERSION:0:1}" == '3' ]]; then
-        NUMPY_VERSION=1.10.4
-        SCIPY_VERSION=0.17.0
-        MPL_VERSION=1.5.1
-        BASEMAP="basemap=1.0.7"
+      elif [[ "${PYTHON_VERSION}" == '3.4' ]]; then
+        # 3.4 apparently no longer get's updated packages.
+        # Let conda resolve to the latest versions.
+        NUMPY="numpy"
+        SCIPY="scipy"
+        MATPLOTLIB="matplotlib"
+        BASEMAP="basemap"
         PYPROJ="pyproj"
+      # elif [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
+      #   # Special packages for 32bit. Also let conda resolve to the latest
+      #   # versions.
+      #   NUMPY="numpy"
+      #   SCIPY="scipy"
+      #   MATPLOTLIB="matplotlib"
+      #   BASEMAP="basemap"
+      #   PYPROJ="pyproj"
+      # For anything else also let conda resolve, but force matplotlib 2.
       else
-        NUMPY_VERSION=1.10.4
-        SCIPY_VERSION=0.17.0
-        MPL_VERSION=1.5.1
-        BASEMAP="basemap=1.0.7"
+        NUMPY="numpy"
+        SCIPY="scipy"
+        MATPLOTLIB="matplotlib>=2.0.0"
+        BASEMAP="basemap"
         PYPROJ="pyproj"
       fi
-  # for now fix requests version, can be changed when a new requests is released (see #1599)
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
-        numpy=$NUMPY_VERSION
-        scipy=$SCIPY_VERSION
-        matplotlib=$MPL_VERSION
+        $NUMPY
+        $SCIPY
+        $MATPLOTLIB
         $BASEMAP
         $PYPROJ
-        future
-        lxml
+        coverage
         decorator
-        sqlalchemy
+        docopt
+        future
+        jsonschema
+        lxml
         mock
         nose
-        gdal
-        docopt
-        coverage
-        'requests<2.12'
-        jsonschema
+        requests
+        sqlalchemy
+        "freetype<2.8"
+        cryptography
   - source activate test-environment
   # additional, optional packages that run some more tests but are not
   # available for all archs. "--no-update-dependencies" keeps other packages at
   # already installed version (ideally we should handle package versions
   # through pinning or an environment file..)
-  - conda config --add channels conda-forge
-  - conda install --no-update-dependencies m2crypto || true
+  #- conda config --add channels conda-forge
+  # XXX for now don't try to install other optional dependencies so that at
+  # least our builds work..
+  # XXX - conda install --no-update-dependencies m2crypto || true
+  # XXX - conda install --no-update-dependencies cartopy || true
+  # pyshp is safe to install, it depends on no other packages and has a noarch
+  # py6 package
+  # not a clue why conda is trying to pull in other packages when doing
+  # "conda install -c conda-forge --no-update-dependencies pyshp", because the
+  # pyshp conda package lists 0 dependencies, anyway, so use "--no-deps" to
+  # really avoid installing/updating any other packages
+  - conda install -c conda-forge --no-update-dependencies --no-deps pyshp
   # install packages not available via conda
   - pip install codecov
   - pip install geographiclib
   # current pyimgur stable release has a py3 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py3.zip
-  # Always install the latest flake8 to get up-to-date formatting checks.
-  - pip install flake8
   - pip freeze
-  - pip install pep8-naming
   - pip install https://github.com/obspy/obspy_github_api/archive/0.7.0.zip
   - conda list
   # done installing dependencies
@@ -170,16 +211,14 @@ script:
   - export IFS=" "
   # if not on a PR, i.e. running on a push to master or maintenance_XXX: test *all* modules
   - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
-      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --all -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}";
+      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 --all -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}";
     else
-      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-url="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}" $MODULELISTSPACES;
+      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests --no-flake8 -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-url="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}" $MODULELISTSPACES;
     fi;
 
-after_success:
-  - mv .coverage ../.coverage.empty
-  - cd ..
-  - coverage combine
-  - codecov
+after_script:
+  # if coverage file was created, upload data to codecov
+  - ls .coverage && codecov
 
 notifications:
     email: false

@@ -87,7 +87,7 @@ class Enum(object):
     def __call__(self, enum):
         try:
             return self.get(enum)
-        except:
+        except Exception:
             return None
 
     def get(self, key):
@@ -303,6 +303,8 @@ class FloatWithUncertaintiesAndUnit(FloatWithUncertainties):
         super(FloatWithUncertaintiesAndUnit, self).__init__(
             value, lower_uncertainty=lower_uncertainty,
             upper_uncertainty=upper_uncertainty)
+        if unit is None and hasattr(value, "unit"):
+            unit = value.unit
         self.unit = unit
 
     @property
@@ -452,6 +454,10 @@ class ComplexWithUncertainties(CustomComplex):
 
 
 class ObsPyException(Exception):
+    pass
+
+
+class ObsPyReadingError(ObsPyException):
     pass
 
 

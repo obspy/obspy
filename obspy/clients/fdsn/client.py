@@ -20,14 +20,24 @@ import gzip
 import io
 import os
 import re
-import sys
 from socket import timeout as socket_timeout
 import textwrap
 import threading
 import warnings
 from collections import OrderedDict
 
-if sys.version_info.major == 2:
+from lxml import etree
+
+import obspy
+from obspy import UTCDateTime, read_inventory
+from obspy.core.compatibility import urlparse
+from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
+                     OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
+                     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
+                     FDSNRedirectException, FDSNNoDataException)
+from .wadl_parser import WADLParser
+
+if PY2:
     from urllib import urlencode
     import urllib2 as urllib_request
     import Queue as queue
@@ -35,16 +45,6 @@ else:
     from urllib.parse import urlencode
     import urllib.request as urllib_request
     import queue
-
-from lxml import etree
-
-import obspy
-from obspy import UTCDateTime, read_inventory
-from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
-                     OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
-                     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
-                     FDSNRedirectException)
-from .wadl_parser import WADLParser
 
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
@@ -107,27 +107,28 @@ class Client(object):
     # initializing a client with the same base URL is cheap.
     __service_discovery_cache = {}
 
-    RE_UINT8 = '(?:25[0-5]|2[0-4]\d|[0-1]?\d{1,2})'
-    RE_HEX4 = '(?:[\d,a-f]{4}|[1-9,a-f][0-9,a-f]{0,2}|0)'
+    RE_UINT8 = r'(?:25[0-5]|2[0-4]\d|[0-1]?\d{1,2})'
+    RE_HEX4 = r'(?:[\d,a-f]{4}|[1-9,a-f][0-9,a-f]{0,2}|0)'
 
-    RE_IPv4 = '(?:' + RE_UINT8 + '(?:\.' + RE_UINT8 + '){3})'
+    RE_IPv4 = r'(?:' + RE_UINT8 + r'(?:\.' + RE_UINT8 + r'){3})'
     RE_IPv6 = \
-        '(?:\[' + RE_HEX4 + '(?::' + RE_HEX4 + '){7}\]' + \
-        '|\[(?:' + RE_HEX4 + ':){0,5}' + RE_HEX4 + '::\]' + \
-        '|\[::' + RE_HEX4 + '(?::' + RE_HEX4 + '){0,5}\]' + \
-        '|\[::' + RE_HEX4 + '(?::' + RE_HEX4 + '){0,3}:' + RE_IPv4 + '\]' + \
-        '|\[' + RE_HEX4 + ':' + \
-        '(?:' + RE_HEX4 + ':|:' + RE_HEX4 + '){0,4}' + \
-        ':' + RE_HEX4 + '\])'
+        r'(?:\[' + RE_HEX4 + r'(?::' + RE_HEX4 + r'){7}\]' + \
+        r'|\[(?:' + RE_HEX4 + r':){0,5}' + RE_HEX4 + r'::\]' + \
+        r'|\[::' + RE_HEX4 + r'(?::' + RE_HEX4 + r'){0,5}\]' + \
+        r'|\[::' + RE_HEX4 + r'(?::' + RE_HEX4 + r'){0,3}:' + RE_IPv4 + \
+        r'\]' + \
+        r'|\[' + RE_HEX4 + r':' + \
+        r'(?:' + RE_HEX4 + r':|:' + RE_HEX4 + r'){0,4}' + \
+        r':' + RE_HEX4 + r'\])'
 
-    URL_REGEX = 'https?://' + \
-                '(' + RE_IPv4 + \
-                '|' + RE_IPv6 + \
-                '|localhost' + \
-                '|\w+' + \
-                '|(?:\w(?:[\w-]{0,61}[\w])?\.){1,}([a-z]{2,6}))' + \
-                '(?::\d{2,5})?' + \
-                '(/[\w\.-]+)*/?$'
+    URL_REGEX = r'https?://' + \
+                r'(' + RE_IPv4 + \
+                r'|' + RE_IPv6 + \
+                r'|localhost' + \
+                r'|\w+' + \
+                r'|(?:\w(?:[\w-]{0,61}[\w])?\.){1,}([a-z]{2,6}))' + \
+                r'(?::\d{2,5})?' + \
+                r'(/[\w\.-]+)*/?$'
 
     @classmethod
     def _validate_base_url(cls, base_url):
@@ -138,7 +139,8 @@ class Client(object):
 
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=120, service_mappings=None, force_redirect=False):
+                 timeout=120, service_mappings=None, force_redirect=False,
+                 eida_token=None):
         """
         Initializes an FDSN Web Service client.
 
@@ -193,37 +195,22 @@ class Client(object):
             when a redirect is discovered. This is done to improve security.
             Settings this flag to ``True`` will force all redirects to be
             followed even if credentials are given.
+        :type eida_token: str
+        :param eida_token: Token for EIDA authentication mechanism, see
+            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php. If a
+            token is provided, options ``user`` and ``password`` must not be
+            used. This mechanism is only available on select EIDA nodes. The
+            token can be provided in form of the PGP message as a string, or
+            the filename of a local file with the PGP message in it.
         """
         self.debug = debug
         self.user = user
         self.timeout = timeout
+        self._force_redirect = force_redirect
 
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
         self.__version_cache = {}
-
-        # handle switch of SCEC to SCEDC, see #998
-        if base_url.upper() == "SCEC":
-            base_url = "SCEDC"
-            msg = ("FDSN short-URL 'SCEC' has been replaced by 'SCEDC'. "
-                   "Please change to 'Client('SCEDC')'. This re-routing will "
-                   "be removed in a future release.")
-            warnings.warn(msg)
-        # NIEP was misspelled for a while.
-        elif base_url.upper() == "NEIP":
-            base_url = "NIEP"
-            msg = ("FDSN short-URL 'NEIP' has been replaced by 'NIEP'. "
-                   "Please change to 'Client('NIEP')'. This re-routing will "
-                   "be removed in a future release.")
-            warnings.warn(msg)
-        # Deprecate FDSN URL-shortcut 'NERIES' in favour of 'EMSC', see #1146.
-        # TODO: remove in 0.12.x or 1.x release
-        elif base_url.upper() == "NERIES":
-            base_url = "EMSC"
-            msg = ("FDSN short-URL 'NERIES' has been replaced by 'EMSC'. "
-                   "Please change to 'Client('EMSC')'. This re-routing will "
-                   "be removed in a future release.")
-            warnings.warn(msg)
 
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
@@ -243,23 +230,7 @@ class Client(object):
 
         self.base_url = base_url
 
-        # Only add the authentication handler if required.
-        handlers = []
-        if user is not None and password is not None:
-            # Create an OpenerDirector for HTTP Digest Authentication
-            password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
-            password_mgr.add_password(None, base_url, user, password)
-            handlers.append(urllib_request.HTTPDigestAuthHandler(password_mgr))
-
-        if (user is None and password is None) or force_redirect is True:
-            # Redirect if no credentials are given or the force_redirect
-            # flag is True.
-            handlers.append(CustomRedirectHandler())
-        else:
-            handlers.append(NoRedirectionHandler())
-
-        # Don't install globally to not mess with other codes.
-        self._url_opener = urllib_request.build_opener(*handlers)
+        self._set_opener(user, password)
 
         self.request_headers = {"User-Agent": user_agent}
         # Avoid mutable kwarg.
@@ -283,6 +254,129 @@ class Client(object):
             print("Request Headers: %s" % str(self.request_headers))
 
         self._discover_services()
+
+        # Use EIDA token if provided - this requires setting new url openers.
+        #
+        # This can only happen after the services have been discovered as
+        # the clients needs to know if the fdsnws implementation has support
+        # for the EIDA token system.
+        #
+        # This is a non-standard feature but we support it, given the number
+        # of EIDA nodes out there.
+        if eida_token is not None:
+            # Make sure user/pw are not also given.
+            if user is not None or password is not None:
+                msg = ("EIDA authentication token provided, but "
+                       "user and password are also given.")
+                raise FDSNException(msg)
+            self.set_eida_token(eida_token)
+
+    @property
+    def _has_eida_auth(self):
+        return self.services.get('eida-auth', False)
+
+    def set_credentials(self, user, password):
+        """
+        Set user and password resulting in subsequent web service
+        requests for waveforms being authenticated for potential access to
+        restricted data.
+
+        This will overwrite any previously set-up credentials/authentication.
+
+        :type user: str
+        :param user: User name of credentials.
+        :type password: str
+        :param password: Password for given user name.
+        """
+        self._set_opener(user, password)
+
+    def set_eida_token(self, token):
+        """
+        Fetch user and password from the server using the provided token,
+        resulting in subsequent web service requests for waveforms being
+        authenticated for potential access to restricted data.
+        This only works for select EIDA nodes and relies on the auth mechanism
+        described here:
+        http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php
+
+        This will overwrite any previously set-up credentials/authentication.
+
+        :type token: str
+        :param token: Token for EIDA authentication mechanism, see
+            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php.
+            This mechanism is only available on select EIDA nodes. The token
+            can be provided in form of the PGP message as a string, or the
+            filename of a local file with the PGP message in it.
+        """
+        user, password = self._resolve_eida_token(token)
+        self.set_credentials(user, password)
+
+    def _set_opener(self, user, password):
+        # Only add the authentication handler if required.
+        handlers = []
+        if user is not None and password is not None:
+            # Create an OpenerDirector for HTTP Digest Authentication
+            password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr.add_password(None, self.base_url, user, password)
+            handlers.append(urllib_request.HTTPDigestAuthHandler(password_mgr))
+
+        if (user is None and password is None) or self._force_redirect is True:
+            # Redirect if no credentials are given or the force_redirect
+            # flag is True.
+            handlers.append(CustomRedirectHandler())
+        else:
+            handlers.append(NoRedirectionHandler())
+
+        # Don't install globally to not mess with other codes.
+        self._url_opener = urllib_request.build_opener(*handlers)
+        if self.debug:
+            print('Installed new opener with handlers: {!s}'.format(handlers))
+
+    def _resolve_eida_token(self, token):
+        """
+        Use the token to get credentials.
+        """
+        if not self._has_eida_auth:
+            msg = ("EIDA token authentication requested but service at '{}' "
+                   "does not specify /dataselect/auth in the "
+                   "dataselect/application.wadl.").format(self.base_url)
+            raise FDSNException(msg)
+
+        token_file = None
+        # check if there's a local file that matches the provided string
+        if os.path.isfile(token):
+            token_file = token
+            with open(token_file, 'rb') as fh:
+                token = fh.read().decode()
+        # sanity check on the token
+        if not _validate_eida_token(token):
+            if token_file:
+                msg = ("Read EIDA token from file '{}' but it does not "
+                       "seem to contain a valid PGP message.").format(
+                            token_file)
+            else:
+                msg = ("EIDA token does not seem to be a valid PGP message. "
+                       "If you passed a filename, make sure the file "
+                       "actually exists.")
+            raise ValueError(msg)
+
+        # force https so that we don't send around tokens unsecurely
+        url = 'https://{}/fdsnws/dataselect/1/auth'.format(
+            urlparse(self.base_url).netloc + urlparse(self.base_url).path)
+        # paranoid: check again that we only send the token to https
+        if urlparse(url).scheme != "https":
+            msg = 'This should not happen, please file a bug report.'
+            raise Exception(msg)
+
+        # Already does the error checking with fdsnws semantics.
+        response = self._download(url=url, data=token.encode(),
+                                  use_gzip=True, return_string=True)
+
+        user, password = response.decode().split(':')
+        if self.debug:
+            print('Got temporary user/pw: {}/{}'.format(user, password))
+
+        return user, password
 
     def get_events(self, starttime=None, endtime=None, minlatitude=None,
                    maxlatitude=None, minlongitude=None, maxlongitude=None,
@@ -396,8 +490,8 @@ class Client(object):
         :param updatedafter: Limit to events updated after the specified time.
         :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
-            instead of being parse to an ObsPy object. Thus it will contain the
-            raw data from the webservices.
+            instead of being parsed to an ObsPy object. Thus it will contain
+            the raw data from the webservices.
 
 
         Any additional keyword arguments will be passed to the webservice as
@@ -434,7 +528,7 @@ class Client(object):
                      minradius=None, maxradius=None, level=None,
                      includerestricted=None, includeavailability=None,
                      updatedafter=None, matchtimeseries=None, filename=None,
-                     format="xml", **kwargs):
+                     format=None, **kwargs):
         """
         Query the station service of the FDSN client.
 
@@ -588,8 +682,8 @@ class Client(object):
             series data is available.
         :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
-            instead of being parse to an ObsPy object. Thus it will contain the
-            raw data from the webservices.
+            instead of being parsed to an ObsPy object. Thus it will contain
+            the raw data from the webservices.
         :type format: str
         :param format: The format in which to request station information.
             ``"xml"`` (StationXML) or ``"text"`` (FDSN station test format).
@@ -702,8 +796,8 @@ class Client(object):
             channel.
         :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
-            instead of being parse to an ObsPy object. Thus it will contain the
-            raw data from the webservices.
+            instead of being parsed to an ObsPy object. Thus it will contain
+            the raw data from the webservices.
         :type attach_response: bool
         :param attach_response: Specify whether the station web service should
             be used to automatically attach response information to each trace
@@ -743,6 +837,7 @@ class Client(object):
             data_stream.close()
             if attach_response:
                 self._attach_responses(st)
+            self._attach_dataselect_url_to_stream(st)
             return st
 
     def _attach_responses(self, st):
@@ -882,8 +977,8 @@ class Client(object):
             channel. Ignored when `bulk` is provided as a request string/file.
         :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
-            instead of being parse to an ObsPy object. Thus it will contain the
-            raw data from the webservices.
+            instead of being parsed to an ObsPy object. Thus it will contain
+            the raw data from the webservices.
         :type attach_response: bool
         :param attach_response: Specify whether the station web service should
             be used to automatically attach response information to each trace
@@ -906,12 +1001,12 @@ class Client(object):
             minimumlength=minimumlength,
             longestonly=longestonly
         )
-        bulk = self._get_bulk_string(bulk, arguments)
+        bulk = get_bulk_string(bulk, arguments)
 
         url = self._build_url("dataselect", "query")
 
         data_stream = self._download(url,
-                                     data=bulk.encode('ascii', 'strict'))
+                                     data=bulk)
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -921,6 +1016,7 @@ class Client(object):
             data_stream.close()
             if attach_response:
                 self._attach_responses(st)
+            self._attach_dataselect_url_to_stream(st)
             return st
 
     def get_stations_bulk(self, bulk, level=None, includerestricted=None,
@@ -963,8 +1059,7 @@ class Client(object):
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
-                    GR
-                    IU
+                    GR, IU
                 Stations (2):
                     GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
                     IU.ANMO (Albuquerque, New Mexico, USA)
@@ -994,13 +1089,12 @@ class Client(object):
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
-                    GR
-                    IU
+                    GR, IU
                 Stations (2):
                     GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
                     IU.ANMO (Albuquerque, New Mexico, USA)
                 Channels (5):
-                    GR.GRA1..BHE, GR.GRA1..BHN, GR.GRA1..BHZ, IU.ANMO.00.BHZ,
+                    GR.GRA1..BHZ, GR.GRA1..BHN, GR.GRA1..BHE, IU.ANMO.00.BHZ,
                     IU.ANMO.10.BHZ
         >>> inv = client.get_stations_bulk("/tmp/request.txt") \
         ...     # doctest: +SKIP
@@ -1023,27 +1117,20 @@ class Client(object):
         :type bulk: str, file or list of lists
         :param bulk: Information about the requested data. See above for
             details.
-        :type quality: str, optional
-        :param quality: Select a specific SEED quality indicator, handling is
-            data center dependent. Ignored when `bulk` is provided as a
-            request string/file.
-        :type minimumlength: float, optional
-        :param minimumlength: Limit results to continuous data segments of a
-            minimum length specified in seconds. Ignored when `bulk` is
-            provided as a request string/file.
-        :type longestonly: bool, optional
-        :param longestonly: Limit results to the longest continuous segment per
-            channel. Ignored when `bulk` is provided as a request string/file.
+        :type level: str
+        :param level: Specify the level of detail for the results ("network",
+            "station", "channel", "response"), e.g. specify "response" to get
+            full information including instrument response for each channel.
+        :type includerestricted: bool
+        :param includerestricted: Specify if results should include information
+            for restricted stations.
+        :type includeavailability: bool
+        :param includeavailability: Specify if results should include
+            information about time series data availability.
         :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
-            instead of being parse to an ObsPy object. Thus it will contain the
-            raw data from the webservices.
-        :type attach_response: bool
-        :param attach_response: Specify whether the station web service should
-            be used to automatically attach response information to each trace
-            in the result set. A warning will be shown if a response can not be
-            found for a channel. Does nothing if output to a file was
-            specified.
+            instead of being parsed to an ObsPy object. Thus it will contain
+            the raw data from the webservices.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the
@@ -1051,8 +1138,8 @@ class Client(object):
         non-default parameters that the webservice does not support will raise
         an error.
         """
-        if "dataselect" not in self.services:
-            msg = "The current client does not have a dataselect service."
+        if "station" not in self.services:
+            msg = "The current client does not have a station service."
             raise ValueError(msg)
 
         arguments = OrderedDict(
@@ -1060,57 +1147,22 @@ class Client(object):
             includerestriced=includerestricted,
             includeavailability=includeavailability
         )
-        bulk = self._get_bulk_string(bulk, arguments)
+        bulk = get_bulk_string(bulk, arguments)
 
         url = self._build_url("station", "query")
 
         data_stream = self._download(url,
-                                     data=bulk.encode('ascii', 'strict'))
+                                     data=bulk)
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
             data_stream.close()
             return
         else:
-            inv = obspy.read_inventory(data_stream, format="stationxml")
+            # Works with text and StationXML data.
+            inv = obspy.read_inventory(data_stream)
             data_stream.close()
             return inv
-
-    def _get_bulk_string(self, bulk, arguments):
-        # If its an iterable, we build up the query string from it
-        # StringIO objects also have __iter__ so check for 'read' as well
-        if isinstance(bulk, collections.Iterable) \
-                and not hasattr(bulk, "read") \
-                and not isinstance(bulk, (str, native_str)):
-            tmp = ["%s=%s" % (key, convert_to_string(value))
-                   for key, value in arguments.items() if value is not None]
-            # empty location codes have to be represented by two dashes
-            tmp += [" ".join((net, sta, loc or "--", cha,
-                              convert_to_string(t1), convert_to_string(t2)))
-                    for net, sta, loc, cha, t1, t2 in bulk]
-            bulk = "\n".join(tmp)
-        else:
-            if any([value is not None for value in arguments.values()]):
-                msg = ("Parameters %s are ignored when request data is "
-                       "provided as a string or file!")
-                warnings.warn(msg % arguments.keys())
-            # if it has a read method, read data from there
-            if hasattr(bulk, "read"):
-                bulk = bulk.read()
-            elif isinstance(bulk, (str, native_str)):
-                # check if bulk is a local file
-                if "\n" not in bulk and os.path.isfile(bulk):
-                    with open(bulk, 'r') as fh:
-                        tmp = fh.read()
-                    bulk = tmp
-                # just use bulk as input data
-                else:
-                    pass
-            else:
-                msg = ("Unrecognized input for 'bulk' argument. Please "
-                       "contact developers if you think this is a bug.")
-                raise NotImplementedError(msg)
-        return bulk
 
     def _write_to_file_object(self, filename_or_object, data_stream):
         if hasattr(filename_or_object, "write"):
@@ -1169,15 +1221,12 @@ class Client(object):
 
             try:
                 value = this_type(value)
-            except:
+            except Exception:
                 msg = "'%s' could not be converted to type '%s'." % (
                     str(value), this_type.__name__)
                 raise TypeError(msg)
             # Now convert to a string that is accepted by the webservice.
             value = convert_to_string(value)
-            if isinstance(value, (str, native_str)):
-                if not value and key != "location":
-                    continue
             final_parameter_set[key] = value
 
         return self._build_url(service, "query",
@@ -1330,48 +1379,7 @@ class Client(object):
             url, opener=self._url_opener, headers=self.request_headers,
             debug=self.debug, return_string=return_string, data=data,
             timeout=self.timeout, use_gzip=use_gzip)
-        # get detailed server response message
-        if code != 200:
-            try:
-                server_info = "\n".join([
-                    line for line in data.read().splitlines() if line])
-            except:
-                server_info = None
-        # No data.
-        if code == 204:
-            raise FDSNException("No data available for request.", server_info)
-        elif code == 400:
-            msg = ("Bad request. If you think your request was valid "
-                   "please contact the developers.")
-            raise FDSNException(msg, server_info)
-        elif code == 401:
-            raise FDSNException("Unauthorized, authentication required.",
-                                server_info)
-        elif code == 403:
-            raise FDSNException("Authentication failed.", server_info)
-        elif code == 413:
-            raise FDSNException("Request would result in too much data. "
-                                "Denied by the datacenter. Split the request "
-                                "in smaller parts", server_info)
-        # Request URI too large.
-        elif code == 414:
-            msg = ("The request URI is too large. Please contact the ObsPy "
-                   "developers.", server_info)
-            raise NotImplementedError(msg)
-        elif code == 500:
-            raise FDSNException("Service responds: Internal server error",
-                                server_info)
-        elif code == 503:
-            raise FDSNException("Service temporarily unavailable", server_info)
-        elif code is None:
-            if "timeout" in str(data).lower():
-                raise FDSNException("Timed Out")
-            else:
-                raise FDSNException("Unknown Error (%s): %s" % (
-                    (str(data.__class__.__name__), str(data))))
-        # Catch any non 200 codes.
-        elif code != 200:
-            raise FDSNException("Unknown HTTP code: %i" % code, server_info)
+        raise_on_error(code, data)
         return data
 
     def _build_url(self, service, resource_type, parameters={}):
@@ -1466,16 +1474,30 @@ class Client(object):
             item = wadl_queue.get()
             url, wadl = item
 
+            # Just a safety measure.
+            if hasattr(wadl, "decode"):
+                decoded_wadl = wadl.decode('utf-8')
+            else:
+                decoded_wadl = wadl
+
             if wadl is None:
                 continue
             elif isinstance(wadl, FDSNRedirectException):
                 redirect_messages.add(str(wadl))
                 continue
-            elif wadl == "timeout":
+            elif decoded_wadl == "timeout":
                 raise FDSNException("Timeout while requesting '%s'." % url)
 
             if "dataselect" in url:
-                self.services["dataselect"] = WADLParser(wadl).parameters
+                wadl_parser = WADLParser(wadl)
+                self.services["dataselect"] = wadl_parser.parameters
+                # check if EIDA auth endpoint is in wadl
+                # we need to attach it to the discovered services, as these are
+                # later loaded from cache and just attaching an attribute to
+                # this client won't help knowing later if EIDA auth is
+                # supported at the server. a bit ugly but can't be helped.
+                if wadl_parser._has_eida_auth:
+                    self.services["eida-auth"] = True
                 if self.debug is True:
                     print("Discovered dataselect service")
             elif "event" in url and "application.wadl" in url:
@@ -1493,7 +1515,6 @@ class Client(object):
                 except ValueError:
                     msg = "Could not parse the catalogs at '%s'." % url
                     warnings.warn(msg)
-
             elif "event" in url and "contributors" in url:
                 try:
                     self.services["available_event_contributors"] = \
@@ -1550,6 +1571,14 @@ class Client(object):
         """
         version = self.get_webservice_version(service)
         return ".".join(map(str, version))
+
+    def _attach_dataselect_url_to_stream(self, st):
+        """
+        Attaches the actually used dataselet URL to each Trace.
+        """
+        url = self._build_url("dataselect", "query")
+        for tr in st:
+            tr.stats._fdsnws_dataselect_url = url
 
 
 def convert_to_string(value):
@@ -1645,10 +1674,68 @@ def build_url(base_url, service, major_version, resource_type,
         for key, value in parameters.items():
             try:
                 parameters[key] = value.strip()
-            except:
+            except Exception:
                 pass
         url = "?".join((url, urlencode(parameters)))
     return url
+
+
+def raise_on_error(code, data):
+    """
+    Raise an error for non-200 HTTP response codes
+
+    :type code: int
+    :param code: HTTP response code
+    :type data: :class:`io.BytesIO`
+    :param data: Data returned by the server
+    """
+    # get detailed server response message
+    if code != 200:
+        try:
+            server_info = data.read()
+        except Exception:
+            server_info = None
+        else:
+            server_info = server_info.decode('ASCII', errors='ignore')
+        if server_info:
+            server_info = "\n".join(
+                line for line in server_info.splitlines() if line)
+    # No data.
+    if code == 204:
+        raise FDSNNoDataException("No data available for request.",
+                                  server_info)
+    elif code == 400:
+        msg = ("Bad request. If you think your request was valid "
+               "please contact the developers.")
+        raise FDSNException(msg, server_info)
+    elif code == 401:
+        raise FDSNException("Unauthorized, authentication required.",
+                            server_info)
+    elif code == 403:
+        raise FDSNException("Authentication failed.", server_info)
+    elif code == 413:
+        raise FDSNException("Request would result in too much data. "
+                            "Denied by the datacenter. Split the request "
+                            "in smaller parts", server_info)
+    # Request URI too large.
+    elif code == 414:
+        msg = ("The request URI is too large. Please contact the ObsPy "
+               "developers.", server_info)
+        raise NotImplementedError(msg)
+    elif code == 500:
+        raise FDSNException("Service responds: Internal server error",
+                            server_info)
+    elif code == 503:
+        raise FDSNException("Service temporarily unavailable", server_info)
+    elif code is None:
+        if "timeout" in str(data).lower():
+            raise FDSNException("Timed Out")
+        else:
+            raise FDSNException("Unknown Error (%s): %s" % (
+                (str(data.__class__.__name__), str(data))))
+    # Catch any non 200 codes.
+    elif code != 200:
+        raise FDSNException("Unknown HTTP code: %i" % code, server_info)
 
 
 def download_url(url, opener, timeout=10, headers={}, debug=False,
@@ -1771,6 +1858,57 @@ def parse_simple_xml(xml_string):
     children = [i.text for i in root if i.tag == child_tag]
 
     return {root.tag.lower(): set(children)}
+
+
+def get_bulk_string(bulk, arguments):
+    # If its an iterable, we build up the query string from it
+    # StringIO objects also have __iter__ so check for 'read' as well
+    if isinstance(bulk, collections.Iterable) \
+            and not hasattr(bulk, "read") \
+            and not isinstance(bulk, (str, native_str)):
+        tmp = ["%s=%s" % (key, convert_to_string(value))
+               for key, value in arguments.items() if value is not None]
+        # empty location codes have to be represented by two dashes
+        tmp += [" ".join((net, sta, loc or "--", cha,
+                          convert_to_string(t1), convert_to_string(t2)))
+                for net, sta, loc, cha, t1, t2 in bulk]
+        bulk = "\n".join(tmp)
+    else:
+        if any([value is not None for value in arguments.values()]):
+            msg = ("Parameters %s are ignored when request data is "
+                   "provided as a string or file!")
+            warnings.warn(msg % arguments.keys())
+        # if it has a read method, read data from there
+        if hasattr(bulk, "read"):
+            bulk = bulk.read()
+        elif isinstance(bulk, (str, native_str)):
+            # check if bulk is a local file
+            if "\n" not in bulk and os.path.isfile(bulk):
+                with open(bulk, 'r') as fh:
+                    tmp = fh.read()
+                bulk = tmp
+            # just use bulk as input data
+            else:
+                pass
+        else:
+            msg = ("Unrecognized input for 'bulk' argument. Please "
+                   "contact developers if you think this is a bug.")
+            raise NotImplementedError(msg)
+
+    if hasattr(bulk, "encode"):
+        bulk = bulk.encode("ascii")
+    return bulk
+
+
+def _validate_eida_token(token):
+    """
+    Just a basic check if the string contains something that looks like a PGP
+    message
+    """
+    if re.search(pattern='BEGIN PGP MESSAGE', string=token,
+                 flags=re.IGNORECASE):
+        return True
+    return False
 
 
 if __name__ == '__main__':

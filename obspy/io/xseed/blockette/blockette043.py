@@ -37,7 +37,7 @@ class Blockette043(Blockette):
         # REPEAT fields 16 — 19 for the Number of complex poles:
         Loop('Complex pole', "Number of complex poles", [
             Float(16, "Real pole", 12, mask='%+1.5e'),
-            Float(16, "Imaginary pole", 12, mask='%+1.5e'),
+            Float(17, "Imaginary pole", 12, mask='%+1.5e'),
             Float(18, "Real pole error", 12, mask='%+1.5e'),
             Float(19, "Imaginary pole error", 12, mask='%+1.5e')
         ])
@@ -124,4 +124,4 @@ class Blockette043(Blockette):
                     format_resp(self.real_pole_error, 6),
                     format_resp(self.imaginary_pole_error, 6))
         string += '#\t\t\n'
-        return string
+        return string.encode()

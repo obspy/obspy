@@ -22,7 +22,6 @@ from sqlalchemy.schema import UniqueConstraint
 import numpy as np
 
 from obspy import Trace, UTCDateTime
-from obspy.core.util.decorator import deprecated
 
 
 Base = declarative_base()
@@ -123,15 +122,10 @@ class WaveformChannel(Base):
     def __repr__(self):
         return "<WaveformChannel('%s')>" % (self.id)
 
-    @deprecated("'get_preview' has been renamed to 'get_preview'. Use that "
-                "instead.")  # noqa
-    def getPreview(self, apply_calibration=False):
-        return self.get_preview(apply_calibration)
-
     def get_preview(self, apply_calibration=False):
         try:
             data = np.loads(self.preview)
-        except:
+        except Exception:
             data = np.array([])
         if apply_calibration:
             data = data * self.calib

@@ -11,7 +11,6 @@ Decorator used in ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
 
 import functools
 import inspect
@@ -19,12 +18,14 @@ import os
 import re
 import socket
 import tarfile
+import threading
 import unittest
 import warnings
 import zipfile
 
 import numpy as np
 from decorator import decorator
+from future.utils import PY2, native_str
 
 from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile
@@ -144,6 +145,8 @@ def uncompress_file(func, filename, *args, **kwargs):
     """
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.
     """
+    if not kwargs.get('check_compression', True):
+        return func(filename, *args, **kwargs)
     if not isinstance(filename, (str, native_str)):
         return func(filename, *args, **kwargs)
     elif not os.path.exists(filename):
@@ -166,13 +169,13 @@ def uncompress_file(func, filename, *args, **kwargs):
                     if not data:
                         continue
                     obj_list.append(data)
-        except:
+        except Exception:
             pass
     elif zipfile.is_zipfile(filename):
         try:
             zip = zipfile.ZipFile(filename)
             obj_list = [zip.read(name) for name in zip.namelist()]
-        except:
+        except Exception:
             pass
     elif filename.endswith('.bz2'):
         # bz2 module
@@ -180,7 +183,7 @@ def uncompress_file(func, filename, *args, **kwargs):
             import bz2
             with open(filename, 'rb') as fp:
                 obj_list.append(bz2.decompress(fp.read()))
-        except:
+        except Exception:
             pass
     elif filename.endswith('.gz'):
         # gzip module
@@ -188,7 +191,7 @@ def uncompress_file(func, filename, *args, **kwargs):
             import gzip
             with gzip.open(filename, 'rb') as fp:
                 obj_list.append(fp.read())
-        except:
+        except Exception:
             pass
     # handle results
     if obj_list:
@@ -297,6 +300,40 @@ def map_example_filename(arg_kwarg_name):
                             pass
         return func(*args, **kwargs)
     return _map_example_filename
+
+
+def _decorate_polyfill(func, caller):
+    """
+    decorate(func, caller) decorates a function using a caller.
+    """
+    try:
+        from decorator import decorate
+        return decorate(func, caller)
+    except ImportError:
+        from decorator import FunctionMaker
+        evaldict = dict(_call_=caller, _func_=func)
+        fun = FunctionMaker.create(
+            func, "return _call_(_func_, %(shortsignature)s)",
+            evaldict, __wrapped__=func)
+        if hasattr(func, '__qualname__'):
+            fun.__qualname__ = func.__qualname__
+        return fun
+
+
+def rlock(func):
+    """
+    Place a threading recursive lock (Rlock) on the wrapped function.
+    """
+    # This lock will be instantiated at function creation time, i.e. at the
+    # time the Python interpreter sees the decorated function the very
+    # first time - this lock thus exists once for each decorated function.
+    _rlock = threading.RLock()
+
+    def _locked_f(f, *args, **kwargs):
+        with _rlock:
+            return func(*args, **kwargs)
+
+    return _decorate_polyfill(func, _locked_f)
 
 
 if __name__ == '__main__':

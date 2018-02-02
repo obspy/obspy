@@ -60,6 +60,8 @@ Introduction to ObsPy
    code_snippets/travel_time
    code_snippets/xcorr_pick_correction
    code_snippets/quakeml_custom_tags
+   code_snippets/stationxml_custom_tags
+   code_snippets/stationxml_file_from_scratch
    code_snippets/easyseedlink
 
 

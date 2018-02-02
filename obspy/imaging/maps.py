@@ -26,10 +26,11 @@ from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
                                MaxNLocator)
 
 from obspy import UTCDateTime
-from obspy.core.util.base import get_basemap_version, get_cartopy_version
+from obspy.core.util import (BASEMAP_VERSION, CARTOPY_VERSION,
+                             MATPLOTLIB_VERSION)
 from obspy.geodetics.base import mean_longitude
 
-BASEMAP_VERSION = get_basemap_version()
+
 if BASEMAP_VERSION:
     from mpl_toolkits.basemap import Basemap
     HAS_BASEMAP = True
@@ -41,7 +42,6 @@ if BASEMAP_VERSION:
 else:
     HAS_BASEMAP = False
 
-CARTOPY_VERSION = get_cartopy_version()
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
     import cartopy.crs as ccrs
     import cartopy.feature as cfeature
@@ -373,7 +373,7 @@ def _plot_basemap_into_axes(
                     delta = round(2. * dval / n, round_pos) / 2
                 new_val1 = np.ceil(val1 / delta) * delta
                 new_val2 = np.floor(val2 / delta) * delta
-                n = (new_val2 - new_val1) / delta + 1
+                n = int((new_val2 - new_val1) / delta + 1)
                 return np.linspace(new_val1, new_val2, n)
 
             n_1 = int(np.ceil(height / max(width, height) * 8))
@@ -399,7 +399,10 @@ def _plot_basemap_into_axes(
             raise ValueError(msg)
 
         # draw coast lines, country boundaries, fill continents.
-        ax.set_axis_bgcolor(water_fill_color)
+        if MATPLOTLIB_VERSION >= [2, 0, 0]:
+            ax.set_facecolor(water_fill_color)
+        else:
+            ax.set_axis_bgcolor(water_fill_color)
         bmap.drawcoastlines(color="0.4")
         bmap.drawcountries(color="0.75")
         bmap.fillcontinents(color=continent_fill_color,
@@ -676,7 +679,10 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         _CARTOPY_FEATURES[resolution] = (borders, land, ocean)
 
     # Draw coast lines, country boundaries, fill continents.
-    map_ax.set_axis_bgcolor(water_fill_color)
+    if MATPLOTLIB_VERSION >= [2, 0, 0]:
+        map_ax.set_facecolor(water_fill_color)
+    else:
+        map_ax.set_axis_bgcolor(water_fill_color)
     map_ax.add_feature(ocean, facecolor=water_fill_color)
     map_ax.add_feature(land, facecolor=continent_fill_color)
     map_ax.add_feature(borders, edgecolor='0.75')

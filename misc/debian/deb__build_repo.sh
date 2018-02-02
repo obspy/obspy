@@ -17,7 +17,18 @@ mkdir -p $DEBDIR/conf $DEBDIR/dists $DEBDIR/incoming
 cat > $DEBDIR/conf/distributions << EOF
 Origin: ObsPy Development Team
 Label: ObsPy Apt Repository
-Suite: testing
+Suite: stable
+Codename: stretch
+Version: 9.0
+Architectures: amd64 i386
+Components: main
+Description: ObsPy Apt Repository
+SignWith: 34811F05
+Contents: . .gz
+
+Origin: ObsPy Development Team
+Label: ObsPy Apt Repository
+Suite: oldstable
 Codename: jessie
 Version: 8.0
 Architectures: amd64 i386
@@ -28,21 +39,10 @@ Contents: . .gz
 
 Origin: ObsPy Development Team
 Label: ObsPy Apt Repository
-Suite: stable
+Suite: oldoldstable
 Codename: wheezy
 Version: 7.0
 Architectures: amd64 i386 armhf
-Components: main
-Description: ObsPy Apt Repository
-SignWith: 34811F05
-Contents: . .gz
-
-Origin: ObsPy Development Team
-Label: ObsPy Apt Repository
-Suite: oldstable
-Codename: squeeze
-Version: 6.0
-Architectures: amd64 i386
 Components: main
 Description: ObsPy Apt Repository
 SignWith: 34811F05
@@ -70,8 +70,28 @@ Contents: . .gz
 
 Origin: ObsPy Development Team
 Label: ObsPy Apt Repository
-Codename: utopic
-Version: 14.10
+Codename: xenial
+Version: 16.04 LTS
+Architectures: amd64 i386
+Components: main
+Description: ObsPy Apt Repository
+SignWith: 34811F05
+Contents: . .gz
+
+Origin: ObsPy Development Team
+Label: ObsPy Apt Repository
+Codename: zesty
+Version: 17.04
+Architectures: amd64 i386
+Components: main
+Description: ObsPy Apt Repository
+SignWith: 34811F05
+Contents: . .gz
+
+Origin: ObsPy Development Team
+Label: ObsPy Apt Repository
+Codename: artful
+Version: 17.10
 Architectures: amd64 i386
 Components: main
 Description: ObsPy Apt Repository

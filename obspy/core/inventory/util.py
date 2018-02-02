@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA
 
 import copy
 import re
+from textwrap import TextWrapper
 
 from obspy import UTCDateTime
 from obspy.core.util.base import ComparingObject
@@ -769,6 +770,93 @@ class Angle(FloatWithUncertaintiesFixedUnit):
     _minimum = -360
     _maximum = 360
     unit = "DEGREES"
+
+
+def _unified_content_strings(contents):
+    contents_unique = sorted(set(contents), key=_seed_id_keyfunction)
+    contents_counts = [
+        (item, contents.count(item)) for item in contents_unique]
+    items = [item if count == 1 else "{} ({}x)".format(item, count)
+             for item, count in contents_counts]
+    return items
+
+
+# make TextWrapper only split on colons, so that we avoid splitting in between
+# e.g. network code and network code occurence count (can be controlled with
+# class attributes).
+# Also avoid lines starting with ", " (need to patch the class for this)
+class InventoryTextWrapper(TextWrapper):
+    wordsep_re = re.compile(r'(, )')
+    wordsep_simple_re = re.compile(r'(, )')
+
+    def _wrap_chunks(self, *args, **kwargs):
+        # the following doesn't work somehow (likely because of future??)
+        # lines = super(InventoryTextWrapper, self)._wrap_chunks(
+        #     *args, **kwargs)
+        lines = TextWrapper._wrap_chunks(self, *args, **kwargs)
+        lines = [re.sub(r'([\b\s]+), (.*)', r'\1\2', line, count=1)
+                 for line in lines]
+        return lines
+
+
+def _textwrap(text, *args, **kwargs):
+    return InventoryTextWrapper(*args, **kwargs).wrap(text)
+
+
+def _seed_id_keyfunction(x):
+    """
+    Keyfunction to use in sorting two (partial) SEED IDs
+
+    Assumes that the last (or only) "."-separated part is a channel code.
+    Assumes the last character is a the component code and sorts it
+    "Z"-"N"-"E"-others_lexical.
+    """
+    # for comparison we build a list of 5 SEED code pieces:
+    # [network, station, location, band+instrument, component]
+    # with partial codes (i.e. not 4 fields after splitting at dots),
+    # we go with the following assumptions (these seem a bit random, but that's
+    # what can be encountered in string representations of the Inventory object
+    # hierarchy):
+    #  - no dot means network code only (e.g. "IU")
+    #  - one dot means network.station code only (e.g. "IU.ANMO")
+    #  - two dots means station.location.channel code only (e.g. "ANMO.10.BHZ")
+    #  - three dots: full SEED ID (e.g. "IU.ANMO.10.BHZ")
+    #  - more dots: sort after any of the previous, plain lexical sort
+    # if no "." in the string: assume it's a network code
+
+    # split to get rid of the description that that is added to networks and
+    # stations which might also contain dots.
+    number_of_dots = x.strip().split()[0].count(".")
+
+    x = x.upper()
+    if number_of_dots == 0:
+        x = [x] + [""] * 4
+    elif number_of_dots == 1:
+        x = x.split(".") + [""] * 3
+    elif number_of_dots in (2, 3):
+        x = x.split(".")
+        if number_of_dots == 2:
+            x = [""] + x
+        # split channel code into band+instrument code and component code
+        x = x[:-1] + [x[-1][:-1], x[-1] and x[-1][-1] or '']
+        # special comparison for component code, convert "ZNE" to integers
+        # which compare less than any character
+        comp = "ZNE".find(x[-1])
+        # last item is component code, either the original 1-char string, or an
+        # int from 0-2 if any of "ZNE". Python3 does not allow comparison of
+        # int and string anymore (Python 2 always compares ints smaller than
+        # any string), so we need to work around this by making this last item
+        # a tuple with first item False for ints and True for strings.
+        if comp >= 0:
+            x[-1] = (False, comp)
+        else:
+            x[-1] = (True, x[-1])
+    # all other cases, just convert the upper case string to a single item
+    # list - it will compare greater than any of the split lists.
+    else:
+        x = [x, ]
+
+    return x
 
 
 if __name__ == '__main__':

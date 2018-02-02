@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------
 # Filename: cross_correlation.py
-#   Author: Moritz Beyreuther, Tobias Megies
+#   Author: Moritz Beyreuther, Tobias Megies, Tom Eulenfeld
 #    Email: megies@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2012 Moritz Beyreuther, Tobias Megies
+# Copyright (C) 2008-2016 Moritz Beyreuther, Tobias Megies, Tom Eulenfeld
 # ------------------------------------------------------------------
 """
 Signal processing routines based on cross correlation techniques.
@@ -22,23 +22,328 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import ctypes as C
-import sys
+from distutils.version import LooseVersion
 import warnings
 
 import numpy as np
 import scipy
 
 from obspy import Stream, Trace
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
 
 
+def _pad_zeros(a, num, num2=None):
+    """Pad num zeros at both sides of array a"""
+    if num2 is None:
+        num2 = num
+    hstack = [np.zeros(num, dtype=a.dtype), a, np.zeros(num2, dtype=a.dtype)]
+    return np.hstack(hstack)
+
+
+def _call_scipy_correlate(a, b, mode, method):
+    """
+    Call the correct correlate function depending on Scipy version and method
+    """
+    if LooseVersion(scipy.__version__) >= LooseVersion('0.19'):
+        cc = scipy.signal.correlate(a, b, mode=mode, method=method)
+    elif method in ('fft', 'auto'):
+        cc = scipy.signal.fftconvolve(a, b[::-1], mode=mode)
+    elif method == 'direct':
+        cc = scipy.signal.correlate(a, b, mode=mode)
+    else:
+        msg = "method keyword has to be one of ('auto', 'fft', 'direct')"
+        raise ValueError(msg)
+    return cc
+
+
+def _xcorr_padzeros(a, b, shift, method):
+    """
+    Cross-correlation using SciPy with mode='valid' and precedent zero padding
+    """
+    if shift is None:
+        shift = (len(a) + len(b) - 1) // 2
+    dif = len(a) - len(b) - 2 * shift
+    if dif > 0:
+        b = _pad_zeros(b, dif // 2)
+    else:
+        a = _pad_zeros(a, -dif // 2)
+    return _call_scipy_correlate(a, b, 'valid', method)
+
+
+def _xcorr_slice(a, b, shift, method):
+    """
+    Cross-correlation using SciPy with mode='full' and subsequent slicing
+    """
+    mid = (len(a) + len(b) - 1) // 2
+    if shift is None:
+        shift = mid
+    if shift > mid:
+        # Such a large shift is not possible without zero padding
+        return _xcorr_padzeros(a, b, shift, method)
+    cc = _call_scipy_correlate(a, b, 'full', method)
+    return cc[mid - shift:mid + shift + len(cc) % 2]
+
+
+def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
+              domain=None):
+    """
+    Cross-correlation of two signals up to a specified maximal shift.
+
+    This function only allows 'naive' normalization with the overall
+    standard deviations. This is a reasonable approximation for signals of
+    similar length and a relatively small shift parameter
+    (e.g. noise cross-correlation).
+    If you are interested in the full cross-correlation function better use
+    :func:`~obspy.signal.cross_correlation.correlate_template` which also
+    provides correct normalization.
+
+    :type a: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param a: first signal
+    :type b: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param b: second signal to correlate with first signal
+    :param int shift: Number of samples to shift for cross correlation.
+        The cross-correlation will consist of ``2*shift+1`` or
+        ``2*shift`` samples. The sample with zero shift will be in the middle.
+    :param bool demean: Demean data beforehand.
+    :param normalize: Method for normalization of cross-correlation.
+        One of ``'naive'`` or ``None``
+        (``True`` and ``False`` are supported for backwards compatibility).
+        ``'naive'`` normalizes by the overall standard deviation.
+        ``None`` does not normalize.
+    :param str method: Method to use to calculate the correlation.
+         ``'direct'``: The correlation is determined directly from sums,
+         the definition of correlation.
+         ``'fft'`` The Fast Fourier Transform is used to perform the
+         correlation more quickly.
+         ``'auto'`` Automatically chooses direct or Fourier method based on an
+         estimate of which is faster. (Only availlable for SciPy versions >=
+         0.19. For older Scipy version method defaults to ``'fft'``.)
+    :param str domain: Deprecated. Please use the method argument.
+
+    :return: cross-correlation function.
+
+    To calculate shift and value of the maximum of the returned
+    cross-correlation function use
+    :func:`~obspy.signal.cross_correlation.xcorr_max`.
+
+    .. note::
+
+        For most input parameters cross-correlation using the FFT is much
+        faster.
+        Only for small values of ``shift`` (approximately less than 100)
+        direct time domain cross-correlation migth save some time.
+
+    .. note::
+
+        If the signals have different length, they will be aligned around
+        their middle. The sample with zero shift in the cross-correlation
+        function corresponds to this correlation:
+
+        ::
+
+            --aaaa--
+            bbbbbbbb
+
+        For odd ``len(a)-len(b)`` the cross-correlation function will
+        consist of only ``2*shift`` samples because a shift of 0
+        corresponds to the middle between two samples.
+
+    .. rubric:: Example
+
+    >>> from obspy import read
+    >>> a = read()[0][450:550]
+    >>> b = a[:-2]
+    >>> cc = correlate(a, b, 2)
+    >>> cc
+    array([ 0.62390515,  0.99630851,  0.62187106, -0.05864797, -0.41496995])
+    >>> shift, value = xcorr_max(cc)
+    >>> shift
+    -1
+    >>> round(value, 3)
+    0.996
+    """
+    if normalize is False:
+        normalize = None
+    if normalize is True:
+        normalize = 'naive'
+    if domain is not None:
+        if domain == 'freq':
+            method = 'fft'
+        elif domain == 'time':
+            method = 'direct'
+        from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+        msg = ("'domain' keyword of correlate function is deprecated and will "
+               "be removed in a subsequent ObsPy release. "
+               "Please use the 'method' keyword.")
+        warnings.warn(msg, ObsPyDeprecationWarning)
+    # if we get Trace objects, use their data arrays
+    if isinstance(a, Trace):
+        a = a.data
+    if isinstance(b, Trace):
+        b = b.data
+    a = np.asarray(a)
+    b = np.asarray(b)
+    if demean:
+        a = a - np.mean(a)
+        b = b - np.mean(b)
+    # choose the usually faster xcorr function for each method
+    _xcorr = _xcorr_padzeros if method == 'direct' else _xcorr_slice
+    cc = _xcorr(a, b, shift, method)
+    if normalize == 'naive':
+        norm = (np.sum(a ** 2) * np.sum(b ** 2)) ** 0.5
+        if norm <= np.finfo(float).eps:
+            # norm is zero
+            # => cross-correlation function will have only zeros
+            cc[:] = 0
+        elif cc.dtype == float:
+            cc /= norm
+        else:
+            cc = cc / norm
+    elif normalize is not None:
+        raise ValueError("normalize has to be one of (None, 'naive'))")
+    return cc
+
+
+def _window_sum(data, window_len):
+    """Rolling sum of data"""
+    window_sum = np.cumsum(data)
+    # in-place equivalent of
+    # window_sum = window_sum[window_len:] - window_sum[:-window_len]
+    # return window_sum
+    np.subtract(window_sum[window_len:], window_sum[:-window_len],
+                out=window_sum[:-window_len])
+    return window_sum[:-window_len]
+
+
+def correlate_template(data, template, mode='valid', normalize='full',
+                       demean=True, method='auto'):
+    """
+    Normalized cross-correlation of two signals with specified mode.
+
+    If you are interested only in a part of the cross-correlation function
+    around zero shift consider using function
+    :func:`~obspy.signal.cross_correlation.correlate` which allows to
+    explicetly specify the maximum shift.
+
+    :type data: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param data: first signal
+    :type template: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
+    :param template: second signal to correlate with first signal.
+        Its length must be smaller or equal to the length of ``data``.
+    :param str mode: correlation mode to use.
+        It is passed to the used correlation function.
+        See :func:`scipy.signal.correlate` for possible options.
+        The parameter determines the length of the correlation function.
+    :param normalize:
+        One of ``'naive'``, ``'full'`` or ``None``.
+        ``'full'`` normalizes every correlation properly,
+        whereas ``'naive'`` normalizes by the overall standard deviations.
+        ``None`` does not normalize.
+    :param demean: Demean data beforehand. For ``normalize='full'`` data is
+        demeaned in different windows for each correlation value.
+    :param str method: Method to use to calculate the correlation.
+         ``'direct'``: The correlation is determined directly from sums,
+         the definition of correlation.
+         ``'fft'`` The Fast Fourier Transform is used to perform the
+         correlation more quickly.
+         ``'auto'`` Automatically chooses direct or Fourier method based on an
+         estimate of which is faster. (Only availlable for SciPy versions >=
+         0.19. For older Scipy version method defaults to ``'fft'``.)
+
+    :return: cross-correlation function.
+
+    .. note::
+        Calling the function with ``demean=True, normalize='full'`` (default)
+        returns the zero-normalized cross-correlation function.
+        Calling the function with ``demean=False, normalize='full'``
+        returns the normalized cross-correlation function.
+
+    .. rubric:: Example
+
+    >>> from obspy import read
+    >>> data = read()[0]
+    >>> template = data[450:550]
+    >>> cc = correlate_template(data, template)
+    >>> index = np.argmax(cc)
+    >>> index
+    450
+    >>> round(cc[index], 9)
+    1.0
+    """
+    # if we get Trace objects, use their data arrays
+    if isinstance(data, Trace):
+        data = data.data
+    if isinstance(template, Trace):
+        template = template.data
+    data = np.asarray(data)
+    template = np.asarray(template)
+    lent = len(template)
+    if len(data) < lent:
+        raise ValueError('Data must not be shorter than template.')
+    if demean:
+        template = template - np.mean(template)
+        if normalize != 'full':
+            data = data - np.mean(data)
+    cc = _call_scipy_correlate(data, template, mode, method)
+    if normalize is not None:
+        tnorm = np.sum(template ** 2)
+        if normalize == 'naive':
+            norm = (tnorm * np.sum(data ** 2)) ** 0.5
+            if norm <= np.finfo(float).eps:
+                cc[:] = 0
+            elif cc.dtype == float:
+                cc /= norm
+            else:
+                cc = cc / norm
+        elif normalize == 'full':
+            pad = len(cc) - len(data) + lent
+            if mode == 'same':
+                pad1, pad2 = (pad + 2) // 2, (pad - 1) // 2
+            else:
+                pad1, pad2 = (pad + 1) // 2, pad // 2
+            data = _pad_zeros(data, pad1, pad2)
+            # in-place equivalent of
+            # if demean:
+            #     norm = ((_window_sum(data ** 2, lent) -
+            #              _window_sum(data, lent) ** 2 / lent) * tnorm) ** 0.5
+            # else:
+            #      norm = (_window_sum(data ** 2, lent) * tnorm) ** 0.5
+            # cc = cc / norm
+            if demean:
+                norm = _window_sum(data, lent) ** 2
+                if norm.dtype == float:
+                    norm /= lent
+                else:
+                    norm = norm / lent
+                np.subtract(_window_sum(data ** 2, lent), norm, out=norm)
+            else:
+                norm = _window_sum(data ** 2, lent)
+            norm *= tnorm
+            if norm.dtype == float:
+                np.sqrt(norm, out=norm)
+            else:
+                norm = np.sqrt(norm)
+            mask = norm <= np.finfo(float).eps
+            if cc.dtype == float:
+                cc[~mask] /= norm[~mask]
+            else:
+                cc = cc / norm
+            cc[mask] = 0
+        else:
+            msg = "normalize has to be one of (None, 'naive', 'full')"
+            raise ValueError(msg)
+    return cc
+
+
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     """
     Cross correlation of tr1 and tr2 in the time domain using window_len.
+
+    .. note::
+       Please use the :func:`~obspy.signal.cross_correlation.correlate`
+       function for new code.
 
     ::
 
@@ -76,17 +381,12 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
        `ObsPy-users mailing list
        <http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html>`_
        and `issue #249 <https://github.com/obspy/obspy/issues/249>`_.
-
-    .. rubric:: Example
-
-    >>> tr1 = np.random.randn(10000).astype(np.float32)
-    >>> tr2 = tr1.copy()
-    >>> a, b = xcorr(tr1, tr2, 1000)
-    >>> a
-    0
-    >>> round(b, 7)
-    1.0
     """
+    from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+    msg = ('Call to deprecated function xcorr(). Please use the correlate and '
+           'xcorr_max functions.')
+    warnings.warn(msg, ObsPyDeprecationWarning)
+
     # if we get Trace objects, use their data arrays
     for tr in [tr1, tr2]:
         if isinstance(tr, Trace):
@@ -146,6 +446,8 @@ def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
     :type full_xcorr: bool
     :param full_xcorr: If ``True``, the complete xcorr function will be
         returned as :class:`~numpy.ndarray`.
+    :param bool abs_max: *shift* will be calculated for maximum or
+        absolute maximum.
     :return: **index, value[, fct]** - index of maximum xcorr value and the
         value itself. The complete xcorr function is returned only if
         ``full_xcorr=True``.
@@ -166,17 +468,13 @@ def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
         raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
     corp = np.zeros(2 * shift_len + 1, dtype=np.float64, order='C')
-
     for component in components:
-        xx = xcorr(streams[0].select(component=component)[0],
-                   streams[1].select(component=component)[0],
-                   shift_len, full_xcorr=True)
-        corp += xx[2]
-
+        xx = correlate(streams[0].select(component=component)[0],
+                       streams[1].select(component=component)[0],
+                       shift_len)
+        corp += xx
     corp /= len(components)
-
     shift, value = xcorr_max(corp, abs_max=abs_max)
-
     if full_xcorr:
         return shift, value, corp
     else:
@@ -185,41 +483,41 @@ def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
 
 def xcorr_max(fct, abs_max=True):
     """
-    Return shift and value of maximum xcorr function
+    Return shift and value of the maximum of the cross-correlation function.
 
     :type fct: :class:`~numpy.ndarray`
-    :param fct: xcorr function e.g. returned by xcorr
-    :type abs_max: bool
-    :param abs_max: determines if the absolute maximum should be used.
-    :return: **shift, value** - Shift and value of maximum xcorr.
+    :param fct: Cross-correlation function e.g. returned by correlate.
+    :param bool abs_max: Determines if the absolute maximum should be used.
+    :return: **shift, value** - Shift and value of maximum of
+        cross-correlation.
 
     .. rubric:: Example
 
     >>> fct = np.zeros(101)
     >>> fct[50] = -1.0
     >>> xcorr_max(fct)
-    (0.0, -1.0)
+    (0, -1.0)
     >>> fct[50], fct[60] = 0.0, 1.0
     >>> xcorr_max(fct)
-    (10.0, 1.0)
+    (10, 1.0)
     >>> fct[60], fct[40] = 0.0, -1.0
     >>> xcorr_max(fct)
-    (-10.0, -1.0)
+    (-10, -1.0)
     >>> fct[60], fct[40] = 0.5, -1.0
     >>> xcorr_max(fct, abs_max=True)
-    (-10.0, -1.0)
+    (-10, -1.0)
     >>> xcorr_max(fct, abs_max=False)
-    (10.0, 0.5)
+    (10, 0.5)
+    >>> xcorr_max(fct[:-1], abs_max=False)
+    (10.5, 0.5)
     """
-    value = fct.max()
-    if abs_max:
-        _min = fct.min()
-        if abs(_min) > abs(value):
-            value = _min
-
     mid = (len(fct) - 1) / 2
-    shift = np.where(fct == value)[0][0] - mid
-    return float(shift), float(value)
+    if len(fct) % 2 == 1:
+        mid = int(mid)
+    index = np.argmax(np.abs(fct) if abs_max else fct)
+    # float() call is workaround for future package
+    # see https://travis-ci.org/obspy/obspy/jobs/174284750
+    return index - mid, float(fct[index])
 
 
 def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
@@ -328,8 +626,8 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
         slices.append(tr.slice(start, end))
     # cross correlate
     shift_len = int(cc_maxlag * samp_rate)
-    _cc_shift, cc_max, cc = xcorr(slices[0].data, slices[1].data,
-                                  shift_len, full_xcorr=True)
+    cc = correlate(slices[0].data, slices[1].data, shift_len, method='direct')
+    _cc_shift, cc_max = xcorr_max(cc)
     cc_curvature = np.concatenate((np.zeros(1), np.diff(cc, 2), np.zeros(1)))
     cc_convex = np.ma.masked_where(np.sign(cc_curvature) >= 0, cc)
     cc_concave = np.ma.masked_where(np.sign(cc_curvature) < 0, cc)
@@ -424,6 +722,7 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
             ax2.set_xlabel("%.2f at %.3f seconds correction" % (coeff, -dt))
             ax2.set_ylabel("correlation coefficient")
             ax2.set_ylim(-1, 1)
+            ax2.set_xlim(cc_t[0], cc_t[-1])
             ax2.legend(loc="lower right", prop={'size': "x-small"})
             # plt.legend(loc="lower left")
             if filename:
@@ -494,6 +793,14 @@ def templates_max_similarity(st, time, streams_templates):
                       "(not present in stream to check)."
                 warnings.warn(msg % id_)
                 ids.remove(id_)
+        if not ids:
+            msg = ("Skipping template(s) for station '{}': No common SEED IDs "
+                   "when comparing template ({}) and data streams ({}).")
+            warnings.warn(msg.format(
+                st_tmpl[0].stats.station,
+                ', '.join(sorted(set(tr.id for tr in st_tmpl))),
+                ', '.join(sorted(set(tr.id for tr in st_)))))
+            continue
         # determine best (combined) shift of multi-component data
         for id_ in ids:
             tr1 = st_.select(id=id_)[0]
@@ -518,7 +825,7 @@ def templates_max_similarity(st, time, streams_templates):
             msg = "Skipping template(s) for station %s due to problems in " + \
                   "three component correlation (gappy traces?)"
             warnings.warn(msg % st_tmpl[0].stats.station)
-            break
+            continue
         ind = cc.argmax()
         ind2 = ind + len(data_short)
         coef = 0.0
@@ -540,20 +847,6 @@ def templates_max_similarity(st, time, streams_templates):
         return max(values)
     else:
         return 0
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        "xcorrPickCorrection":
-            "obspy.signal.cross_correlation.xcorr_pick_correction",
-        "xcorr_3C": "obspy.signal.cross_correlation.xcorr_3c",
-        "templatesMaxSimilarity":
-            "obspy.signal.cross_correlation.templates_max_similarity"
-    })
 
 
 if __name__ == '__main__':

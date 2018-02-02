@@ -11,23 +11,18 @@ import unittest
 
 import numpy as np
 
-from obspy.clients.arclink import Client
+from obspy.clients.arclink import Client, decrypt
 from obspy.clients.arclink.client import DCID_KEY_FILE, ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 
-try:
-    from M2Crypto.EVP import EVPError
-    hasM2Crypto = True
-except ImportError:
-    hasM2Crypto = False
 
-
+@unittest.skipIf(not decrypt.HAS_CRYPTOLIB,
+                 'M2Crypto, PyCrypto or cryptography is not installed')
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for L{obspy.clients.arclink.client.Client}.
     """
-    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_get_waveform_with_dcid_key(self):
         """
         """
@@ -45,7 +40,6 @@ class ClientTestCase(unittest.TestCase):
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
-    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_get_waveform_with_dcid_key_file(self):
         """
         Tests various DCID key file formats (with space or equal sign). Also
@@ -92,7 +86,6 @@ class ClientTestCase(unittest.TestCase):
 
     @unittest.skipIf(os.path.isfile(DCID_KEY_FILE),
                      '$HOME/dcidpasswords.txt already exists')
-    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_get_waveform_with_default_dcid_key_file(self):
         """
         Use $HOME/dcidpasswords.txt.
@@ -116,7 +109,6 @@ class ClientTestCase(unittest.TestCase):
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
-    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_get_waveform_unknown_user(self):
         """
         Unknown user raises an ArcLinkException: DENIED.
@@ -128,31 +120,72 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.get_waveforms, 'GE', 'APE',
                           '', 'BHZ', start, end)
 
-    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_get_waveform_wrong_password(self):
         """
-        A wrong password password raises a "EVPError: bad decrypt".
+        A wrong password password raises exception.
         """
         client = Client(host="webdc.eu", port=36000, user="test@obspy.org",
                         dcid_keys={'BIA': 'WrongPassword'})
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        self.assertRaises(EVPError, client.get_waveforms, 'GE', 'APE', '',
-                          'BHZ', start, end)
+        self.assertRaises(Exception, client.get_waveforms,
+                          'GE', 'APE', '', 'BHZ', start, end)
 
-    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_get_waveform_no_password(self):
         """
-        No password raises a "EVPError: bad decrypt".
+        No password raises exception.
         """
         client = Client(host="webdc.eu", port=36000, user="test@obspy.org",
                         dcid_keys={'BIA': ''})
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        self.assertRaises(EVPError, client.get_waveforms, 'GE', 'APE', '',
-                          'BHZ', start, end)
+        self.assertRaises(Exception, client.get_waveforms,
+                          'GE', 'APE', '', 'BHZ', start, end)
+
+    @unittest.skipIf(not decrypt.HAS_CRYPTOGRAPHY,
+                     'cryptography is not installed')
+    def test_cryptography(self):
+        """
+        Test cryptography by temporarly disabling all other crypto libs
+        """
+        # monkey patch
+        backup = decrypt.HAS_M2CRYPTO, decrypt.HAS_PYCRYPTO
+        decrypt.HAS_M2CRYPTO = False
+        decrypt.HAS_PYCRYPTO = False
+        # run test
+        self.test_get_waveform_with_dcid_key()
+        # revert monkey patch
+        decrypt.HAS_M2CRYPTO, decrypt.HAS_PYCRYPTO = backup
+
+    @unittest.skipIf(not decrypt.HAS_PYCRYPTO, 'PyCrypto is not installed')
+    def test_pycrypto(self):
+        """
+        Test PyCrypto by temporarly disabling all other crypto libs
+        """
+        # monkey patch
+        backup = decrypt.HAS_M2CRYPTO, decrypt.HAS_CRYPTOGRAPHY
+        decrypt.HAS_M2CRYPTO = False
+        decrypt.HAS_CRYPTOGRAPHY = False
+        # run test
+        self.test_get_waveform_with_dcid_key()
+        # revert monkey patch
+        decrypt.HAS_M2CRYPTO, decrypt.HAS_CRYPTOGRAPHY = backup
+
+    @unittest.skipIf(not decrypt.HAS_M2CRYPTO, 'M2Crypto is not installed')
+    def test_m2crypto(self):
+        """
+        Test M2Crypto by temporarly disabling all other crypto libs
+        """
+        # monkey patch
+        backup = decrypt.HAS_CRYPTOGRAPHY, decrypt.HAS_PYCRYPTO
+        decrypt.HAS_CRYPTOGRAPHY = False
+        decrypt.HAS_PYCRYPTO = False
+        # run test
+        self.test_get_waveform_with_dcid_key()
+        # revert monkey patch
+        decrypt.HAS_CRYPTOGRAPHY, decrypt.HAS_PYCRYPTO = backup
 
 
 def suite():

@@ -78,6 +78,48 @@ class Restrictions(object):
     ...     # Guard against the same station having different names.
     ...     minimum_interstation_distance_in_m=100.0)
 
+    The ``network``, ``station``, ``location``, and ``channel`` codes are
+    directly passed to the `station` service of each fdsn-ws implementation
+    and can thus take comma separated string lists as arguments, i.e.
+
+    .. code-block:: python
+
+        restrictions = Restrictions(
+            ...
+            network="BW,G?", station="A*,B*",
+            ...
+            )
+
+    Not all fdsn-ws implementations support the direct exclusion of network
+    or station codes. The ``exclude_networks`` and ``exclude_stations``
+    arguments should thus be used for that purpose to ensure compatibility
+    across all data providers, e.g.
+
+    .. code-block:: python
+
+        restrictions = Restrictions(
+            ...
+            network="B*,G*", station="A*, B*",
+            exclude_networks=["BW", "GR"],
+            exclude_stations=["AL??", "*O"],
+            ...
+            )
+
+    It is also possible to restrict the downloaded stations to stations part of
+    an existing inventory object which can originate from a StationXML file or
+    from other sources. It will only keep stations that are part of the
+    inventory object. Channels are still selected dynamically based on the
+    other restrictions. Keep in mind that all other restrictions still apply -
+    passing an inventory will just further restrict the possibly downloaded
+    data.
+
+    .. code-block:: python
+
+        restrictions = Restrictions(
+            ...
+            limit_stations_to_inventory=inv,
+            ...
+            )
 
     :param starttime: The start time of the data to be downloaded.
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -106,6 +148,18 @@ class Restrictions(object):
     :type location: str
     :param channel: The channel code. Can contain wildcards.
     :type channel: str
+    :param exclude_networks: A list of potentially wildcarded networks that
+        should not be downloaded.
+    :type exclude_networks: list of str
+    :param exclude_stations: A list of potentially wildcarded stations that
+        should not be downloaded.
+    :type exclude_stations: list of str
+    :param limit_stations_to_inventory: If given, only stations part of the
+        this inventory object will be downloaded. All other restrictions
+        still apply - this just serves to further limit the set of stations
+        to download.
+    :type limit_stations_to_inventory:
+        :class:`~obspy.core.inventory.inventory.Inventory`
     :param reject_channels_with_gaps: If True (default), MiniSEED files with
         gaps and/or overlaps will be rejected.
     :type reject_channels_with_gaps: bool
@@ -137,13 +191,16 @@ class Restrictions(object):
                  station_starttime=None, station_endtime=None,
                  chunklength_in_sec=None,
                  network=None, station=None, location=None, channel=None,
+                 exclude_networks=tuple(), exclude_stations=tuple(),
+                 limit_stations_to_inventory=None,
                  reject_channels_with_gaps=True, minimum_length=0.9,
                  sanitize=True, minimum_interstation_distance_in_m=1000,
                  channel_priorities=("HH[ZNE12]", "BH[ZNE12]",
                                      "MH[ZNE12]", "EH[ZNE12]",
                                      "LH[ZNE12]", "HL[ZNE12]",
                                      "BL[ZNE12]", "ML[ZNE12]",
-                                     "EL[ZNE12]", "LL[ZNE12]"),
+                                     "EL[ZNE12]", "LL[ZNE12]",
+                                     "SH[ZNE12]"),
                  location_priorities=("", "00", "10")):
         self.starttime = obspy.UTCDateTime(starttime)
         self.endtime = obspy.UTCDateTime(endtime)
@@ -162,6 +219,8 @@ class Restrictions(object):
         self.station = station
         self.location = location
         self.channel = channel
+        self.exclude_networks = exclude_networks
+        self.exclude_stations = exclude_stations
         self.reject_channels_with_gaps = reject_channels_with_gaps
         self.minimum_length = minimum_length
         self.sanitize = bool(sanitize)
@@ -184,6 +243,16 @@ class Restrictions(object):
 
         self.minimum_interstation_distance_in_m = \
             float(minimum_interstation_distance_in_m)
+
+        # Further restrict the possibly downloaded networks and station to
+        # the one in the given inventory.
+        if limit_stations_to_inventory is not None:
+            self.limit_stations_to_inventory = set()
+            for net in limit_stations_to_inventory:
+                for sta in net:
+                    self.limit_stations_to_inventory.add((net.code, sta.code))
+        else:
+            self.limit_stations_to_inventory = None
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -210,7 +279,7 @@ class Restrictions(object):
             while starttime < endtime:
                 yield (starttime, min(starttime + chunklength, endtime))
                 starttime += chunklength
-            raise StopIteration
+            return
 
         return it()
 

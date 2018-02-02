@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import difflib
+from distutils.version import LooseVersion
 import doctest
 import glob
 import inspect
@@ -27,11 +28,10 @@ import warnings
 from lxml import etree
 import numpy as np
 
-from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
+from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
 from obspy.core.util.misc import MatplotlibBackend
 
 
-MATPLOTLIB_VERSION = get_matplotlib_version()
 # this dictionary contains the locations of checker routines that determine
 # whether the module's tests can be executed or not (e.g. because test server
 # is unreachable, necessary ports are blocked, etc.).
@@ -266,6 +266,18 @@ class ImageComparison(NamedTemporaryFile):
     :param plt_close_all_exit: Whether to call :func:`matplotlib.pyplot.close`
         with "all" as first argument (close all figures) or no arguments (close
         active figure). Has no effect if ``plt_close=False``.
+    :type style: str
+    :param style: The Matplotlib style to use to generate the figure. When
+        using matplotlib 1.5 or newer, the default will be ``'classic'`` to
+        ensure compatibility with older releases. On older releases, the
+        default will leave the style as is. You may wish to set it to
+        ``'default'`` to enable the new style from Matplotlib 2.0, or some
+        alternate style, which will work back to Matplotlib 1.4.0.
+    :type no_uploads: bool
+    :param no_uploads: If set to ``True`` no uploads to imgur are attempted, no
+        matter what (e.g. any options to ``obspy-runtests`` that would normally
+        cause an upload attempt). This can be used to forcibly deactivate
+        upload attempts in image tests that are expected to fail.
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing.
@@ -299,7 +311,8 @@ class ImageComparison(NamedTemporaryFile):
     """
     def __init__(self, image_path, image_name, reltol=1,
                  adjust_tolerance=True, plt_close_all_enter=True,
-                 plt_close_all_exit=True, *args, **kwargs):
+                 plt_close_all_exit=True, style=None, no_uploads=False, *args,
+                 **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
         super(ImageComparison, self).__init__(suffix=self.suffix, *args,
                                               **kwargs)
@@ -312,20 +325,56 @@ class ImageComparison(NamedTemporaryFile):
         self.tol = reltol * 3.0
         self.plt_close_all_enter = plt_close_all_enter
         self.plt_close_all_exit = plt_close_all_exit
+        self.no_uploads = no_uploads
 
-        # Higher tolerance for older matplotlib versions. This is pretty
-        # high but the pictures are at least guaranteed to be generated and
-        # look (roughly!) similar. Otherwise testing is just a pain and
-        # frankly not worth the effort!
+        if (MATPLOTLIB_VERSION < [1, 4, 0] or
+                (MATPLOTLIB_VERSION[:2] == [1, 4] and style is None)):
+            # No good style support.
+            self.style = None
+        else:
+            import matplotlib.style as mstyle
+            self.style = mstyle.context(style or 'classic')
+
+        # Adjust the tolerance based on the matplotlib version. This works
+        # well enough and otherwise testing is just a pain.
+        #
+        # The test images were generated with matplotlib tag 291091c6eb267
+        # which is after https://github.com/matplotlib/matplotlib/issues/7905
+        # has been fixed.
+        #
+        # Thus test images should accurate for matplotlib >= 2.0.1 anf
+        # fairly accurate for matplotlib 1.5.x.
         if adjust_tolerance:
+            # Really old versions.
             if MATPLOTLIB_VERSION < [1, 3, 0]:
                 self.tol *= 30
-            # Matplotlib 1.5 changes the text positioning a bit. This
-            # results in many tests failing. Instead of changing all baseline
-            # images (which we'll have to do for mpl 2.0 in any case) we
-            # just up the tolerance a bit.
-            elif MATPLOTLIB_VERSION[:2] == [1, 5]:
-                self.tol *= 17
+            # 1.3 + 1.4 have slightly different text positioning mostly.
+            elif [1, 3, 0] <= MATPLOTLIB_VERSION < [1, 5, 0]:
+                self.tol *= 15
+            # A few plots with mpl 1.5 have ticks and axis slightl shifted.
+            # This is especially true for ticks with exponential numbers.
+            # Thus the tolerance also has to be a bit higher here.
+            elif [1, 5, 0] <= MATPLOTLIB_VERSION < [2, 0, 0]:
+                self.tol *= 5.0
+            # Matplotlib 2.0.0 has a bug with the tick placement. This is
+            # fixed in 2.0.1 but the tolerance for 2.0.0 has to be much
+            # higher. 12 is an empiric value. The tick placement potentially
+            # influences the axis locations and then the misfit is really
+            # quite high.
+            elif [2, 0, 0] <= MATPLOTLIB_VERSION < [2, 0, 1]:
+                self.tol *= 12
+
+            # One last pass depending on the freetype version.
+            # XXX: Should eventually be handled differently!
+            try:
+                from matplotlib import ft2font
+            except ImportError:
+                pass
+            else:
+                if hasattr(ft2font, "__freetype_version__"):
+                    if (LooseVersion(ft2font.__freetype_version__) >=
+                            LooseVersion("2.8.0")):
+                        self.tol *= 10
 
     def __enter__(self):
         """
@@ -338,24 +387,30 @@ class ImageComparison(NamedTemporaryFile):
 
         try:
             locale.setlocale(locale.LC_ALL, native_str('en_US.UTF-8'))
-        except:
+        except Exception:
             try:
                 locale.setlocale(locale.LC_ALL,
                                  native_str('English_United States.1252'))
-            except:
+            except Exception:
                 msg = "Could not set locale to English/United States. " + \
                       "Some date-related tests may fail"
                 warnings.warn(msg)
 
         # set matplotlib builtin default settings for testing
         rcdefaults()
-        rcParams['font.family'] = 'Bitstream Vera Sans'
+        if self.style is not None:
+            self.style.__enter__()
+        if MATPLOTLIB_VERSION >= [2, 0, 0]:
+            default_font = 'DejaVu Sans'
+        else:
+            default_font = 'Bitstream Vera Sans'
+        rcParams['font.family'] = default_font
         with warnings.catch_warnings(record=True) as w:
             warnings.filterwarnings('always', 'findfont:.*')
-            font_manager.findfont('Bitstream Vera Sans')
-        if w:
-            warnings.warn('Unable to find the Bitstream Vera Sans font. '
-                          'Plotting tests will likely fail.')
+            font_manager.findfont(default_font)
+            if w:
+                warnings.warn('Unable to find the ' + default_font + ' font. '
+                              'Plotting tests will likely fail.')
         try:
             rcParams['text.hinting'] = False
         except KeyError:
@@ -369,11 +424,11 @@ class ImageComparison(NamedTemporaryFile):
             import matplotlib.pyplot as plt
             try:
                 plt.close("all")
-            except:
+            except Exception:
                 pass
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+    def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
         environment variable is set.
@@ -420,7 +475,7 @@ class ImageComparison(NamedTemporaryFile):
                 raise ImageComparisonException(msg)
             raise
         # simply reraise on any other unhandled exceptions
-        except:
+        except Exception:
             failed = True
             raise
         # if image comparison not raises by itself, the test failed if we get a
@@ -462,8 +517,10 @@ class ImageComparison(NamedTemporaryFile):
                 import matplotlib.pyplot as plt
                 try:
                     plt.close("all")
-                except:
+                except Exception:
                     pass
+            if self.style is not None:
+                self.style.__exit__(exc_type, exc_val, exc_tb)
             if self.keep_output:
                 if failed or not self.keep_only_failed:
                     self._copy_tempfiles()
@@ -524,19 +581,36 @@ class ImageComparison(NamedTemporaryFile):
 
     def _upload_images(self):
         """
-        Uploads images to imgur.
+        Uploads images to imgur unless explicitly deactivated with option
+        `no_uploads` (to speed up tests that are expected to fail).
 
         :returns: ``dict`` with links to uploaded images or ``str`` with
             message if upload failed
         """
+        if self.no_uploads:
+            return "Upload to imgur deactivated with option 'no_uploads'."
         try:
             import pyimgur
             # try to get imgur client id from environment
             imgur_clientid = \
                 os.environ.get("OBSPY_IMGUR_CLIENTID") or "53b182544dc5d89"
+            imgur_client_secret = \
+                os.environ.get("OBSPY_IMGUR_CLIENT_SECRET", None)
+            imgur_client_refresh_token = \
+                os.environ.get("OBSPY_IMGUR_REFRESH_TOKEN", None)
             # upload images and return urls
             links = {}
-            imgur = pyimgur.Imgur(imgur_clientid)
+            imgur = pyimgur.Imgur(imgur_clientid,
+                                  client_secret=imgur_client_secret,
+                                  refresh_token=imgur_client_refresh_token)
+            if imgur_client_secret and imgur_client_refresh_token:
+                try:
+                    imgur.refresh_access_token()
+                except Exception as e:
+                    msg = ('Refreshing access token for Imgur API failed '
+                           '(caught {}: {!s}).)').format(e.__class__.__name__,
+                                                         e)
+                    warnings.warn(msg)
             if os.path.exists(self.baseline_image):
                 up = imgur.upload_image(self.baseline_image, title=self.name)
                 links['expected'] = up.link
@@ -564,7 +638,7 @@ def compare_xml_strings(doc1, doc2):
     try:
         doc1 = doc1.encode()
         doc2 = doc2.encode()
-    except:
+    except Exception:
         pass
     obj1 = etree.fromstring(doc1).getroottree()
     obj2 = etree.fromstring(doc2).getroottree()

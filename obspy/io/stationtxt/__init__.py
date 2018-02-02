@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-obspy.io.stationtxt - Read support for the FDSNWS station text files
-====================================================================
+obspy.io.stationtxt - FDSNWS station text file read and write support for ObsPy
+===============================================================================
 
 This module provides read support for the station text files served by the FDSN
 web services.
@@ -29,15 +29,13 @@ Inventory created at ...
     Sending institution: None
     Contains:
         Networks (2):
-            AK
-            AZ
+            AK, AZ
         Stations (3):
             AK.BAGL ()
             AK.BWN ()
             AZ.BZN ()
         Channels (6):
-            AK.BAGL..LHZ, AK.BWN..LHZ, AK.BWN..LHZ, AZ.BZN..LHZ, AZ.BZN..LHZ,
-            AZ.BZN..LHZ
+            AK.BAGL..LHZ, AK.BWN..LHZ (2x), AZ.BZN..LHZ (3x)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

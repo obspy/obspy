@@ -1,0 +1,4 @@
+#!/bin/sh
+LD_LIBRARY_PATH=.. \
+DYLD_LIBRARY_PATH=.. \
+./lmtestparse data/Int32-128byte.mseed -D

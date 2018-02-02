@@ -1,0 +1,62 @@
+[Main]
+question = "Select the sensor manufacturer"
+
+[CEA-DASE]
+path = "dase/index.txt"
+
+[Chaparral Physics]
+path = "chaparral/index.txt"
+
+[CME]
+path = "cme/index.txt"
+
+[Eentec]
+path = "eentec/index.txt"
+
+[Geodevice]
+path = "geodevice/index.txt"
+
+[Geo Space/OYO]
+path = "oyo_geospace/index.txt"
+
+[Geotech]
+path = "geotech/index.txt"
+
+[Guralp]
+path = "guralp/index.txt"
+
+[IESE]
+path = "iese/index.txt"
+
+[Hyperion]
+path = "hyperion/index.txt"
+
+[Kinemetrics]
+path = "kinemetrics/index.txt"
+
+[Lennartz]
+path = "lennartz/index.txt"
+
+[Metrozet]
+path = "metrozet/index.txt"
+
+[Nanometrics]
+path = "nanometrics/index.txt"
+
+[REF TEK]
+path = "reftek/index.txt"
+
+[Sercel/Mark Products]
+path = "sercel/index.txt"
+
+[SolGeo]
+path = "solgeo/index.txt"
+
+[Sprengnether (now Eentec)]
+path = "sprengnether/index.txt"
+
+[Streckeisen]
+path = "streckeisen/index.txt"
+
+[Generic]
+path = "generic/index.txt"

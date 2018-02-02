@@ -47,7 +47,7 @@ void merge_lists(struct blkt *first_blkt, struct blkt **second_blkt) {
   /* set up some local pointers and values */
 
   ncoeffs1 = first_blkt->blkt_info.list.nresp;
-  
+
   amp1 = first_blkt->blkt_info.list.amp;
   phase1 = first_blkt->blkt_info.list.phase;
   freq1 = first_blkt->blkt_info.list.freq;
@@ -183,7 +183,8 @@ void check_channel(struct channel *chan) {
   struct blkt *filt_blkt, *deci_blkt, *gain_blkt, *ref_blkt;
   int stage_type;
   int  gain_flag, deci_flag, ref_flag;
-  int i, j, nc;
+  int i, j;
+  int nc = 0;
 
   /* first run a 'sanity-check' of the filter sequence, making sure
      that the units match and that the proper blockettes are found
@@ -219,6 +220,7 @@ void check_channel(struct channel *chan) {
     j = 0;
     next_stage = stage_ptr->next_stage;
     stage_type = gain_flag = deci_flag = ref_flag = 0;
+    filt_blkt = deci_blkt = gain_blkt = ref_blkt = NULL;
     blkt_ptr = stage_ptr->first_blkt;
     curr_seq_no = stage_ptr->sequence_no;
     while(blkt_ptr) {
@@ -401,25 +403,57 @@ void check_channel(struct channel *chan) {
       if(ref_flag && deci_flag) {
         stage_ptr->first_blkt = ref_blkt;
         ref_blkt->next_blkt = filt_blkt;
+        if (filt_blkt == NULL) {
+          error_return(ILLEGAL_RESP_FORMAT,
+                     "check_channel; filter blockette is missing");
+        }
         filt_blkt->next_blkt = deci_blkt;
         deci_blkt->next_blkt = gain_blkt;
+        if (gain_blkt == NULL) {
+          error_return(ILLEGAL_RESP_FORMAT,
+                     "check_channel; gain blockette is missing");
+        }
         gain_blkt->next_blkt = (struct blkt *)NULL;
       }
       else if(deci_flag) {
         stage_ptr->first_blkt = filt_blkt;
+        if (filt_blkt == NULL) {
+          error_return(ILLEGAL_RESP_FORMAT,
+                     "check_channel; filter blockette is missing");
+        }
         filt_blkt->next_blkt = deci_blkt;
         deci_blkt->next_blkt = gain_blkt;
+        if (gain_blkt == NULL) {
+          error_return(ILLEGAL_RESP_FORMAT,
+                     "check_channel; gain blockette is missing");
+        }
         gain_blkt->next_blkt = (struct blkt *)NULL;
       }
       else if(ref_flag) {
         stage_ptr->first_blkt = ref_blkt;
         ref_blkt->next_blkt = filt_blkt;
+        if (filt_blkt == NULL) {
+          error_return(ILLEGAL_RESP_FORMAT,
+                     "check_channel; filter blockette is missing");
+        }
         filt_blkt->next_blkt = gain_blkt;
+        if (gain_blkt == NULL) {
+          error_return(ILLEGAL_RESP_FORMAT,
+                     "check_channel; gain blockette is missing");
+        }
         gain_blkt->next_blkt = (struct blkt *)NULL;
       }
       else if(gain_flag) {
         stage_ptr->first_blkt = filt_blkt;
+        if (filt_blkt == NULL) {
+          error_return(ILLEGAL_RESP_FORMAT,
+                     "check_channel; filter blockette is missing");
+        }
         filt_blkt->next_blkt = gain_blkt;
+        if (gain_blkt == NULL) {
+          error_return(ILLEGAL_RESP_FORMAT,
+                     "check_channel; gain blockette is missing");
+        }
         gain_blkt->next_blkt = (struct blkt *)NULL;
       }
     }

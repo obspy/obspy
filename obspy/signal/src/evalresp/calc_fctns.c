@@ -1,7 +1,7 @@
 /* calc_fctns.c */
 
 /*
-    08/28/2008 -- [IGD] Fixed a bug which used calucalated delay instead of estimated in 
+    08/28/2008 -- [IGD] Fixed a bug which used calucalated delay instead of estimated in
                           computation of phase
     11/3/2005 -- [ET]  Added 'wrap_phase()' function; moved 'use_delay()'
                        function from 'calc_fctns.c' to 'evalresp.c'.
@@ -13,7 +13,7 @@
 
 
 /*------------------------------------------------------------------------------------*/
-/* LOG:                                                                               */                  
+/* LOG:                                                                               */
 /* Version 3.2.20:  iir_pz_trans()   modified IGD 09/20/01                            */
 /* Starting with version 3.2.17, evalresp supports IIR type blockettes 54             */
 /* Starting with version 3.2.17, evalresp supports blockette 55 of SEED               */
@@ -50,7 +50,7 @@ void calc_resp(struct channel *chan, double *freq, int nfreqs, struct complex *o
   int matching_stages = 0, has_stage0 = 0;
   struct complex of, val;
   double corr_applied, estim_delay, delay;
-  
+
 /*  if(start_stage && start_stage > chan->nstages) {
     error_return(NO_STAGE_MATCHED, "calc_resp: %s start_stage=%d, highest stage found=%d)",
                  "No Matching Stages Found (requested",start_stage, chan->nstages);
@@ -97,7 +97,7 @@ void calc_resp(struct channel *chan, double *freq, int nfreqs, struct complex *o
             eval_flag = 1;
           }
           break;
-        case FIR_SYM_1: 
+        case FIR_SYM_1:
         case FIR_SYM_2:
 	  if(blkt_ptr->type == FIR_SYM_1)
 	    nc = (double) blkt_ptr->blkt_info.fir.ncoeffs*2 - 1;
@@ -122,7 +122,7 @@ void calc_resp(struct channel *chan, double *freq, int nfreqs, struct complex *o
 	    /* IGD 08/27/08 Use estimated delay instead of calculated */
 	    estim_delay = (double) blkt_ptr->blkt_info.decimation.estim_delay;
 	    corr_applied = blkt_ptr->blkt_info.decimation.applied_corr;
-	    
+
 	    /* Asymmetric FIR coefficients require a delay correction */
 	    if ( sym_fir == -1 ) {
 	      if (TRUE == use_delay(QUERY_DELAY))
@@ -134,9 +134,9 @@ void calc_resp(struct channel *chan, double *freq, int nfreqs, struct complex *o
 	    else {
 	      delay = 0;
 	    }
-	    
+
 	    calc_time_shift (delay, w, &of);
-	    
+
 	    eval_flag = 1;
 	  }
           break;
@@ -478,7 +478,7 @@ void iir_pz_trans(struct blkt *blkt_ptr, double w, struct complex *out) {
   next_ptr = blkt_ptr->next_blkt;
   sint = next_ptr->blkt_info.decimation.sample_int;
   wsint = w * sint;
- 
+
   c = cos(wsint);
   s = sin(wsint);  /* IGD 10/21/02 instead of -: pointed by Sleeman */
   for (i = 0; i < nz; i++) {
@@ -524,16 +524,18 @@ double r, i;
 /*=================================================================
 *                   Normalize response
 *=================================================================*/
-void norm_resp(struct channel *chan, int start_stage, int stop_stage) {
+void norm_resp(struct channel *chan, int start_stage, int stop_stage,
+               int hide_sensitivity_mismatch_warning) {
+  // TODO - NULL assignments below made blindly to fix compiler warning.  bug?
   struct stage *stage_ptr;
-  struct blkt *fil, *last_fil, *main_filt;
+  struct blkt *fil, *last_fil = NULL, *main_filt = NULL;
   int i, main_type, reset_gain, skipped_stages = 0;
   double w,  f;
   double  percent_diff;
   struct complex of, df;
 
   /* -------- TEST 1 -------- */
-  /*  
+  /*
       A single stage response must specify a stage gain, a stage zero
       sensitivity, or both.  If the gain has been set, simply drop through
       to the next test. If the gain is zero, set the gain equal to the
@@ -717,7 +719,7 @@ void norm_resp(struct channel *chan, int start_stage, int stop_stage) {
 
             else
               reset_gain = 0;
-  
+
             if(reset_gain) {
               fil->blkt_info.gain.gain /= sqrt(df.real*df.real + df.imag*df.imag);
               fil->blkt_info.gain.gain *= sqrt(of.real*of.real + of.imag*of.imag);
@@ -753,7 +755,7 @@ void norm_resp(struct channel *chan, int start_stage, int stop_stage) {
   /* -------- TEST 3 -------- */
   /* Finally, print a warning, if necessary */
 
-  if(!skipped_stages && chan->sensit != 0.0) {
+  if(!hide_sensitivity_mismatch_warning && !skipped_stages && chan->sensit != 0.0) {
     percent_diff = fabs((chan->sensit - chan->calc_sensit) / chan->sensit);
 
     if (percent_diff >= 0.05) {
@@ -765,9 +767,9 @@ void norm_resp(struct channel *chan, int start_stage, int stop_stage) {
   }
 }
 
-/* IGD 04/05/04 Phase unwrapping function 
+/* IGD 04/05/04 Phase unwrapping function
  * It works only inside a loop over phases.
- * 
+ *
  */
 double
         unwrap_phase(double phase, double prev_phase, double range, double *added_value)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-JSON write support
+obspy.io.json - JSON write support for ObsPy
+============================================
 
 JavaScript Object Notation is a text-based open standard designed for
 human-readable data interchange. The JSON format is often used for serializing
@@ -17,19 +18,5 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
-
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
-
 from .default import Default
 from .core import get_dump_kwargs, _write_json
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'writeJSON': 'obspy.io.json._write_json'})

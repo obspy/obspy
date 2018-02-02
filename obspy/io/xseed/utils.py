@@ -13,12 +13,9 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
-import re
-import sys
+import warnings
 
 from obspy import UTCDateTime
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 # Ignore Attributes of Blockettes
@@ -28,6 +25,10 @@ IGNORE_ATTR = ['blockette_id', 'blockette_name', 'compact', 'debug',
 
 
 class SEEDParserException(Exception):
+    pass
+
+
+class SEEDAbbreviationNotFoundWarning(UserWarning):
     pass
 
 
@@ -63,7 +64,7 @@ def datetime_2_string(dt, compact=False):
     try:
         dt = UTCDateTime(dt)
         return dt.format_seed(compact)
-    except:
+    except Exception:
         raise Exception("Invalid datetime %s: %s" % (type(dt), str(dt)))
 
 
@@ -109,7 +110,7 @@ def compare_seed(seed1, seed2):
     if seed1[15:19] == b'02.3':
         seed1 = seed1.replace(b'02.3', b' 2.4', 1)
     # check for missing '~' in blockette 10 (faulty dataless from BW network)
-    l = int(seed1[11:15])
+    l = int(seed1[11:15])   # NOQA
     temp = seed1[0:(l + 8)]
     if temp.count(b'~') == 4:
         # added a '~' and remove a space before the next record
@@ -167,9 +168,9 @@ def blockette_34_lookup(abbr, lookup):
         l2 = lookup_code(abbr, 34, 'unit_description', 'unit_lookup_code',
                          lookup)
         return l1 + ' - ' + l2
-    except:
-        msg = '\nWarning: Abbreviation reference not found.'
-        sys.stdout.write(msg)
+    except Exception:
+        msg = 'Warning: Abbreviation reference for "%i" not found.' % lookup
+        warnings.warn(msg, SEEDAbbreviationNotFoundWarning)
         return 'No Abbreviation Referenced'
 
 
@@ -179,7 +180,7 @@ def set_xpath(blockette, identifier):
     """
     try:
         identifier = int(identifier)
-    except:
+    except Exception:
         msg = 'X-Path identifier needs to be an integer.'
         raise TypeError(msg)
     abbr_path = '/xseed/abbreviation_dictionary_control_header/'
@@ -222,56 +223,3 @@ def unique_list(seq):
     for e in seq:
         keys[e] = 1
     return list(keys.keys())
-
-
-def is_resp(filename):
-    """
-    Check if a file at the specified location appears to be a RESP file.
-
-    :type filename: str
-    :param filename: Path/filename of a local file to be checked.
-    :rtype: bool
-    :returns: `True` if file seems to be a RESP file, `False` otherwise.
-    """
-    try:
-        with open(filename, "rb") as fh:
-            try:
-                # lookup the first line that does not start with a hash sign
-                while True:
-                    # use splitlines to correctly detect e.g. mac formatted
-                    # files on Linux
-                    lines = fh.readline().splitlines()
-                    # end of file without finding an appropriate line
-                    if not lines:
-                        return False
-                    # check each line after splitting them
-                    for line in lines:
-                        if line.decode().startswith("#"):
-                            continue
-                        # do the regex check on the first non-comment line
-                        if re.match(r'[bB]0[1-6][0-9]F[0-9]{2} ',
-                                    line.decode()):
-                            return True
-                        return False
-            except UnicodeDecodeError:
-                return False
-    except IOError:
-        return False
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'Blockette34Lookup': 'obspy.io.xseed.utils.blockette_34_lookup',
-        'DateTime2String': 'obspy.io.xseed.utils.datetime_2_string',
-        'LookupCode': 'obspy.io.xseed.utils.lookup_code',
-        'compareSEED': 'obspy.io.xseed.utils.compare_seed',
-        'formatRESP': 'obspy.io.xseed.utils.format_resp',
-        'getXPath': 'obspy.io.xseed.utils.get_xpath',
-        'setXPath': 'obspy.io.xseed.utils.set_xpath',
-        'toString': 'obspy.io.xseed.utils.to_string',
-        'toTag': 'obspy.io.xseed.utils.to_tag',
-        'uniqueList': 'obspy.io.xseed.utils.unique_list'})

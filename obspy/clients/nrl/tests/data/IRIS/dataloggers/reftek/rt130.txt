@@ -1,0 +1,8 @@
+[Main]
+question = "Select the preamplifier gain setting"
+
+[1]
+path = "rt130.1.txt"
+
+[32]
+path = "rt130.32.txt"

@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 import os
 import unittest
 import warnings
@@ -23,14 +24,10 @@ from matplotlib import rcParams
 import obspy
 from obspy import UTCDateTime, read_inventory
 from obspy.core.compatibility import mock
-from obspy.core.util.base import get_basemap_version, get_cartopy_version
-from obspy.core.util.testing import ImageComparison, get_matplotlib_version
+from obspy.core.util import (
+    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION)
+from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory import Channel, Network, Response, Station
-
-
-BASEMAP_VERSION = get_basemap_version()
-CARTOPY_VERSION = get_cartopy_version()
-MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 class NetworkTestCase(unittest.TestCase):
@@ -220,6 +217,17 @@ class NetworkTestCase(unittest.TestCase):
 
         self.assertEqual(p.call_args[1], select_kwargs)
 
+    def test_writing_network_before_1990(self):
+        inv = obspy.Inventory(networks=[
+            Network(code="XX", start_date=obspy.UTCDateTime(1880, 1, 1))],
+            source="")
+        with io.BytesIO() as buf:
+            inv.write(buf, format="stationxml")
+            buf.seek(0, 0)
+            inv2 = read_inventory(buf)
+
+        self.assertEqual(inv.networks[0], inv2.networks[0])
+
     def test_network_select_with_empty_stations(self):
         """
         Tests the behaviour of the Network.select() method for empty stations.
@@ -270,7 +278,7 @@ class NetworkBasemapTestCase(unittest.TestCase):
         Basemap.
         """
         net = read_inventory()[0]
-        reltol = 1.0
+        reltol = 1.3
         # Coordinate lines might be slightly off, depending on the basemap
         # version.
         if BASEMAP_VERSION < [1, 0, 7]:
@@ -309,7 +317,7 @@ class NetworkBasemapTestCase(unittest.TestCase):
         with ImageComparison(self.image_dir, 'network_location-basemap3.png',
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
-            net.plot(method='basemap', projection='local', resolution='i',
+            net.plot(method='basemap', projection='local', resolution='l',
                      size=13**2, outfile=ic.name)
 
 

@@ -21,14 +21,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import sys
-
 import numpy as np
 
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.io.gse2.paz import read_paz
 from obspy.signal.invsim import paz_to_freq_resp
 from obspy.signal.konnoohmachismoothing import konno_ohmachi_smoothing
@@ -43,9 +39,10 @@ def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
 
     :param st1: Stream or Trace object, (known)
     :param st2: Stream or Trace object, (unknown)
-    :type calib_file: str
+    :type calib_file: str or dict
     :param calib_file: file name of calibration file containing the PAZ of the
-        known instrument in GSE2 standard.
+        known instrument in GSE2 standard or a dictionary with poles and zeros
+        information (with keys ``'poles'``, ``'zeros'`` and ``'sensitivity'``).
     :type window_len: float
     :param window_len: length of sliding window in seconds
     :type overlap_frac: float
@@ -76,7 +73,6 @@ def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
         msg = "Traces don't have the same sampling rate!"
         raise ValueError(msg)
     else:
-        ndat1 = st1[0].stats.npts
         sampfreq = st1[0].stats.sampling_rate
 
     # read waveforms
@@ -91,13 +87,15 @@ def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
     gg, _freq = _calc_resp(calib_file, nfft, sampfreq)
 
     # calculate number of windows and overlap
-    nwin = int(np.floor((ndat1 - nfft) / (nfft / 2)) + 1)
     noverlap = nfft * overlap_frac
 
     auto, _freq, _t = \
         spectral_helper(tr1, tr1, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
     cross, freq, _t = \
         spectral_helper(tr2, tr1, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
+
+    # get number of windows that were actually computed inside FFT routine
+    nwin = auto.shape[1]
 
     res = (cross / auto).sum(axis=1) * gg
 
@@ -148,13 +146,20 @@ def _calc_resp(calfile, nfft, sampfreq):
 
     :type calfile: str
     :param calfile: file containing poles, zeros and scale factor for known
-        system
+        system or a dictionary with poles and zeros information (with keys
+        ``'poles'``, ``'zeros'`` and ``'sensitivity'``).
     :returns: complex transfer function, array of frequencies
     """
+    # test if calfile is a paz dict
+    if isinstance(calfile, dict):
+        paz = calfile
+    # or read paz file if a filename is specified
+    else:
+        paz = dict()
+        paz['poles'], paz['zeros'], paz['sensitivity'] = read_paz(calfile)
     # calculate transfer function
-    poles, zeros, scale_fac = read_paz(calfile)
-    h, f = paz_to_freq_resp(poles, zeros, scale_fac, 1.0 / sampfreq,
-                            nfft, freq=True)
+    h, f = paz_to_freq_resp(paz['poles'], paz['zeros'], paz['sensitivity'],
+                            1.0 / sampfreq, nfft, freq=True)
     return h, f
 
 
@@ -251,13 +256,3 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,  # noqa
                               p_xy[:num_freqs // 2, :]), 0)
 
     return p_xy, freqs, t
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        "relcalstack": "obspy.signal.calibration.rel_calib_stack",
-        "_calcresp": "obspy.signal.calibration._calc_resp"})

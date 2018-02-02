@@ -19,12 +19,11 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core import Stats
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+from obspy.core.util.obspy_types import ObsPyException
 from obspy.core.util.testing import (
     ImageComparison, ImageComparisonException, MATPLOTLIB_VERSION)
 from obspy.io.xseed import Parser
-from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
-                                              welch_window)
+from obspy.signal.spectral_estimation import (PPSD, welch_taper, welch_window)
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -103,6 +102,15 @@ class PsdTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = PATH
         self.path_images = os.path.join(PATH, os.pardir, "images")
+        # some pre-computed ppsd used for plotting tests:
+        # (ppsd._psd_periods was downcast to np.float16 to save space)
+        self.example_ppsd_npz = os.path.join(PATH, "ppsd_kw1_ehz.npz")
+        # ignore some "RuntimeWarning: underflow encountered in multiply"
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
 
     def test_obspy_psd_vs_pitsa(self):
         """
@@ -119,6 +127,7 @@ class PsdTestCase(unittest.TestCase):
         point longer. I dont know were this can come from, for now this last
         sample in the psd is ignored.
         """
+        from matplotlib.mlab import psd
         sampling_rate = 100.0
         nfft = 512
         noverlap = 0
@@ -129,13 +138,9 @@ class PsdTestCase(unittest.TestCase):
         noise = np.load(file_noise)
         # in principle to mimic PITSA's results detrend should be specified as
         # some linear detrending (e.g. from matplotlib.mlab.detrend_linear)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always')
-            psd_obspy, _ = psd(noise, NFFT=nfft, Fs=sampling_rate,
-                               window=welch_taper, noverlap=noverlap)
-            self.assertEqual(len(w), 1)
-            self.assertTrue('This wrapper is no longer necessary.' in
-                            str(w[0].message))
+        psd_obspy, _ = psd(noise, NFFT=nfft, Fs=sampling_rate,
+                           window=welch_taper, noverlap=noverlap,
+                           sides="onesided", scale_by_freq=True)
 
         psd_pitsa = np.load(file_psd_pitsa)
 
@@ -180,7 +185,7 @@ class PsdTestCase(unittest.TestCase):
         file_mode_mean = os.path.join(
             self.path,
             'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mode_mean.npz')
-        tr, paz = _get_sample_data()
+        tr, _paz = _get_sample_data()
         st = Stream([tr])
         ppsd = _get_ppsd()
         # read results and compare
@@ -226,6 +231,39 @@ class PsdTestCase(unittest.TestCase):
                                           binning['spec_bins'])
             np.testing.assert_array_equal(ppsd_loaded.period_bin_centers,
                                           binning['period_bins'])
+
+    def test_ppsd_warnings(self):
+        """
+        Test some warning messages shown by PPSD routine
+        """
+        ppsd = _get_ppsd()
+        # test warning message if SEED ID is mismatched
+        for key in ('network', 'station', 'location', 'channel'):
+            tr, _ = _get_sample_data()
+            # change starttime, data could then be added if ID and sampling
+            # rate match
+            tr.stats.starttime += 24 * 3600
+            tr.stats[key] = 'XX'
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always', UserWarning)
+                self.assertEqual(ppsd.add(tr), False)
+            self.assertEqual(len(w), 1)
+            self.assertEqual(
+                str(w[0].message),
+                'No traces with matching SEED ID in provided stream object.')
+        # test warning message if sampling rate is mismatched
+        tr, _ = _get_sample_data()
+        # change starttime, data could then be added if ID and sampling
+        # rate match
+        tr.stats.starttime += 24 * 3600
+        tr.stats.sampling_rate = 123
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            self.assertEqual(ppsd.add(tr), False)
+        self.assertEqual(len(w), 1)
+        self.assertEqual(
+            str(w[0].message),
+            'No traces with matching sampling rate in provided stream object.')
 
     def test_ppsd_w_iris(self):
         # Bands to be used this is the upper and lower frequency band pairs
@@ -336,21 +374,7 @@ class PsdTestCase(unittest.TestCase):
                 continue
             self.assertEqual(getattr(ppsd, key), getattr(results_paz, key))
         # second: various methods for full response
-        # (also test various means of initialization, basically testing the
-        #  decorator that maps the deprecated keywords)
         for metadata in [parser, inv, resp]:
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
-                ppsd = PPSD(st[0].stats, paz=metadata)
-            self.assertEqual(len(w), 1)
-            self.assertIs(w[0].category, ObsPyDeprecationWarning)
-
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
-                ppsd = PPSD(st[0].stats, parser=metadata)
-            self.assertEqual(len(w), 1)
-            self.assertIs(w[0].category, ObsPyDeprecationWarning)
-
             ppsd = PPSD(st[0].stats, metadata)
             ppsd.add(st)
             # commented code to generate the test data:
@@ -402,8 +426,10 @@ class PsdTestCase(unittest.TestCase):
         # of psd pieces, to facilitate testing the stack selection.
         ppsd = PPSD(stats=Stats(dict(sampling_rate=150)), metadata=None,
                     db_bins=(-200, -50, 20.), period_step_octaves=1.4)
-        ppsd._times_processed = np.load(
-            os.path.join(self.path, "ppsd_times_processed.npy")).tolist()
+        # change data to nowadays used nanoseconds POSIX timestamp
+        ppsd._times_processed = [
+            UTCDateTime(t)._ns for t in np.load(
+                os.path.join(self.path, "ppsd_times_processed.npy")).tolist()]
         np.random.seed(1234)
         ppsd._binned_psds = [
             arr for arr in np.random.uniform(
@@ -412,13 +438,13 @@ class PsdTestCase(unittest.TestCase):
 
         # Test callback function that selects a fixed random set of the
         # timestamps.  Also checks that we get passed the type we expect,
-        # which is 1D numpy ndarray of float type.
+        # which is 1D numpy ndarray of int type.
         def callback(t_array):
             self.assertIsInstance(t_array, np.ndarray)
             self.assertEqual(t_array.shape, (len(ppsd._times_processed),))
-            self.assertEqual(t_array.dtype, np.float64)
+            self.assertTrue(np.issubdtype(t_array.dtype, np.integer))
             np.random.seed(1234)
-            res = np.random.random_integers(0, 1, len(t_array)).astype(np.bool)
+            res = np.random.randint(0, 2, len(t_array)).astype(np.bool)
             return res
 
         # test several different sets of stack criteria, should cover
@@ -455,12 +481,8 @@ class PsdTestCase(unittest.TestCase):
             # days, axis is in mpl days). See e.g.
             # https://tests.obspy.org/30657/#1
             fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
-            _t = np.geterr()
-            np.seterr(under="ignore")
-            try:
+            with np.errstate(under='ignore'):
                 fig.savefig(ic.name)
-            finally:
-                np.seterr(**_t)
 
         # test it again, checking that updating an existing plot with different
         # stack selection works..
@@ -477,12 +499,8 @@ class PsdTestCase(unittest.TestCase):
             # days, axis is in mpl days). See e.g.
             # https://tests.obspy.org/30657/#1
             fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
-            _t = np.geterr()
-            np.seterr(under="ignore")
-            try:
+            with np.errstate(under='ignore'):
                 fig.savefig(ic.name)
-            finally:
-                np.seterr(**_t)
         #  b) now reuse figure and set the histogram with a different stack,
         #     image test should fail:
         ppsd.calculate_histogram(**stack_criteria_list[3])
@@ -497,12 +515,8 @@ class PsdTestCase(unittest.TestCase):
                 if MATPLOTLIB_VERSION == [1, 1, 1]:
                     ic.tol = 33
                 ppsd._plot_histogram(fig=fig, draw=True)
-                _t = np.geterr()
-                np.seterr(under="ignore")
-                try:
+                with np.errstate(under='ignore'):
                     fig.savefig(ic.name)
-                except:
-                    np.seterr(**_t)
         except ImageComparisonException:
             pass
         else:
@@ -515,12 +529,8 @@ class PsdTestCase(unittest.TestCase):
                              'ppsd_restricted_stack.png', reltol=1.5,
                              plt_close_all_enter=False) as ic:
             ppsd._plot_histogram(fig=fig, draw=True)
-            _t = np.geterr()
-            np.seterr(under="ignore")
-            try:
+            with np.errstate(under='ignore'):
                 fig.savefig(ic.name)
-            except:
-                np.seterr(**_t)
 
     def test_ppsd_add_npz(self):
         """
@@ -532,6 +542,8 @@ class PsdTestCase(unittest.TestCase):
                     db_bins=(-200, -50, 20.), period_step_octaves=1.4)
         _times_processed = np.load(
             os.path.join(self.path, "ppsd_times_processed.npy")).tolist()
+        # change data to nowadays used nanoseconds POSIX timestamp
+        _times_processed = [UTCDateTime(t)._ns for t in _times_processed]
         np.random.seed(1234)
         _binned_psds = [
             arr for arr in np.random.uniform(
@@ -584,12 +596,26 @@ class PsdTestCase(unittest.TestCase):
         self.assertIsNotNone(ppsd.current_histogram)
         self.assertIsNotNone(ppsd._current_hist_stack)
         # Adding the same data again does not invalidate the internal stack
-        ppsd.add(st)
+        # but raises "UserWarning: Already covered time spans detected"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            ppsd.add(st)
+            self.assertEqual(len(w), 4)
+            for w_ in w:
+                self.assertTrue(str(w_.message).startswith(
+                    "Already covered time spans detected"))
         self.assertIsNotNone(ppsd._current_hist_stack)
         # Adding new data invalidates the internal stack
         tr.stats.starttime += 3600
         st2 = Stream([tr])
-        ppsd.add(st2)
+        # raises "UserWarning: Already covered time spans detected"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            ppsd.add(st2)
+            self.assertEqual(len(w), 2)
+            for w_ in w:
+                self.assertTrue(str(w_.message).startswith(
+                    "Already covered time spans detected"))
         self.assertIsNone(ppsd._current_hist_stack)
         # Accessing current_histogram again calculates the stack
         self.assertIsNotNone(ppsd.current_histogram)
@@ -600,7 +626,7 @@ class PsdTestCase(unittest.TestCase):
         Test that we get the expected warning message on waveform/metadata
         mismatch.
         """
-        tr, paz = _get_sample_data()
+        tr, _paz = _get_sample_data()
         inv = read_inventory(os.path.join(self.path, 'IUANMO.xml'))
         st = Stream([tr])
         ppsd = PPSD(tr.stats, inv)
@@ -617,6 +643,123 @@ class PsdTestCase(unittest.TestCase):
                     "Error getting response from provided metadata"))
         # should not add the data to the ppsd
         self.assertFalse(ret)
+
+    def test_ppsd_psd_values(self):
+        """
+        Test property psd values
+        """
+        ppsd = _get_ppsd()
+        # just test against existing low level data access
+        self.assertEqual(ppsd.psd_values, ppsd._binned_psds)
+        np.testing.assert_array_equal(ppsd.psd_values, ppsd._binned_psds)
+        # property can't be set
+        with self.assertRaises(AttributeError):
+            ppsd.psd_values = 123
+
+    def test_ppsd_temporal_plot(self):
+        """
+        Test plot of several period bins over time
+        """
+        ppsd = PPSD.load_npz(self.example_ppsd_npz)
+
+        restrictions = {'starttime': UTCDateTime(2011, 2, 6, 1, 1),
+                        'endtime': UTCDateTime(2011, 2, 7, 21, 12),
+                        'year': [2011],
+                        'time_of_weekday': [(-1, 2, 23)]}
+
+        # add some gaps in the middle
+        for i in sorted(list(range(30, 40)) + list(range(8, 18)) + [4])[::-1]:
+            ppsd._times_processed.pop(i)
+            ppsd._binned_psds.pop(i)
+
+        with ImageComparison(self.path_images, 'ppsd_temporal.png',
+                             reltol=1.5) as ic:
+            fig = ppsd.plot_temporal([0.1, 1, 10], filename=None, show=False,
+                                     **restrictions)
+            fig.savefig(ic.name)
+        with ImageComparison(self.path_images, 'ppsd_temporal.png',
+                             reltol=1.5) as ic:
+            ppsd.plot_temporal([0.1, 1, 10], filename=ic.name, show=False,
+                               **restrictions)
+
+    def test_exclude_last_sample(self):
+        start = UTCDateTime("2017-01-01T00:00:00")
+        header = {
+            "starttime": start,
+            "network": "GR",
+            "station": "FUR",
+            "channel": "BHZ"
+        }
+        # 49 segments of 30 minutes to allow 30 minutes overlap in next day
+        tr = Trace(data=np.arange(30 * 60 * 4, dtype=np.int32), header=header)
+
+        ppsd = PPSD(tr.stats, read_inventory())
+        ppsd.add(tr)
+
+        self.assertEqual(3, len(ppsd._times_processed))
+        self.assertEqual(3600, ppsd.len)
+        for i, time in enumerate(ppsd._times_processed):
+            current = start.ns + (i * 30 * 60) * 1e9
+            self.assertTrue(time == current)
+
+    def test_ppsd_spectrogram_plot(self):
+        """
+        Test spectrogram type plot of PPSD
+        """
+        ppsd = PPSD.load_npz(self.example_ppsd_npz)
+
+        # add some gaps in the middle
+        for i in sorted(list(range(30, 40)) + list(range(8, 18)) + [4])[::-1]:
+            ppsd._times_processed.pop(i)
+            ppsd._binned_psds.pop(i)
+
+        with ImageComparison(self.path_images, 'ppsd_spectrogram.png',
+                             reltol=1.5) as ic:
+            fig = ppsd.plot_spectrogram(filename=None, show=False)
+            fig.savefig(ic.name)
+        with ImageComparison(self.path_images, 'ppsd_spectrogram.png',
+                             reltol=1.5) as ic:
+            ppsd.plot_spectrogram(filename=ic.name, show=False)
+
+    def test_exception_reading_newer_npz(self):
+        """
+        Checks that an exception is properly raised when trying to read a npz
+        that was written on a more recent ObsPy version (specifically that has
+        a higher 'ppsd_version' number which is used to keep track of changes
+        in PPSD and the npz file used for serialization).
+        """
+        msg = ("Trying to read/add a PPSD npz with 'ppsd_version=100'. This "
+               "file was written on a more recent ObsPy version that very "
+               "likely has incompatible changes in PPSD internal structure "
+               "and npz serialization. It can not safely be read with this "
+               "ObsPy version (current 'ppsd_version' is {!s}). Please "
+               "consider updating your ObsPy installation.".format(
+                   PPSD(stats=Stats(), metadata=None).ppsd_version))
+        # 1 - loading a npz
+        data = np.load(self.example_ppsd_npz)
+        # we have to load, modify 'ppsd_version' and save the npz file for the
+        # test..
+        items = {key: data[key] for key in data.files}
+        # deliberately set a higher ppsd_version number
+        items['ppsd_version'] = items['ppsd_version'].copy()
+        items['ppsd_version'].fill(100)
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            with open(filename, 'wb') as fh:
+                np.savez(fh, **items)
+            with self.assertRaises(ObsPyException) as e:
+                PPSD.load_npz(filename)
+        self.assertEqual(str(e.exception), msg)
+        # 2 - adding a npz
+        ppsd = PPSD.load_npz(self.example_ppsd_npz)
+        for method in (ppsd.add_npz, ppsd._add_npz):
+            with NamedTemporaryFile() as tf:
+                filename = tf.name
+                with open(filename, 'wb') as fh:
+                    np.savez(fh, **items)
+                with self.assertRaises(ObsPyException) as e:
+                    method(filename)
+                self.assertEqual(str(e.exception), msg)
 
 
 def suite():

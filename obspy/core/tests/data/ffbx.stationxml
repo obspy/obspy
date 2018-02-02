@@ -1,0 +1,388 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML schemaVersion="1.0" xmlns="http://www.fdsn.org/xml/station/1">
+  <Source>Jane</Source>
+  <Sender>Jane</Sender>
+  <Module>JANE WEB SERVICE: fdsnws-station | Jane version: 0.0.0-gfb19</Module>
+  <ModuleURI>http://10.153.82.94/fdsnws/station/1/query?level=channel&amp;station=FFB%2A&amp;format=xml</ModuleURI>
+  <Created>2016-03-11T12:34:43+00:00</Created>
+  <Network code="BW" startDate="1999-01-01T00:00:00+00:00">
+    <Description>BayernNetz</Description>
+    <TotalNumberStations>78</TotalNumberStations>
+    <SelectedNumberStations>3</SelectedNumberStations>
+    <Station code="FFB1" startDate="2015-07-31T00:00:00+00:00">
+      <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.162904</Latitude>
+      <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.275065</Longitude>
+      <Elevation minusError="0.0" plusError="0.0">572.0</Elevation>
+      <Site>
+        <Name>FUR Borehole</Name>
+      </Site>
+      <CreationDate>2015-07-31T00:00:00+00:00</CreationDate>
+      <TotalNumberChannels>6</TotalNumberChannels>
+      <SelectedNumberChannels>6</SelectedNumberChannels>
+      <Channel code="BH1" locationCode="" startDate="2015-07-31T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.162904</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.275065</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">572.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">89.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">4.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>EMF in Volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium 120 Posthole, generation 3, 120 s, 1202 V</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="BH2" locationCode="" startDate="2015-07-31T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.162904</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.275065</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">572.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">89.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">94.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">-0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>EMF in Volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium 120 Posthole, generation 3, 120 s, 1202 V</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="BHZ" locationCode="" startDate="2015-07-31T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.162904</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.275065</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">572.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">89.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>EMF in Volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium 120 Posthole, generation 3, 120 s, 1202 V</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="HH1" locationCode="" startDate="2015-07-31T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.162904</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.275065</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">572.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">89.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">4.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">200.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>EMF in Volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium 120 Posthole, generation 3, 120 s, 1202 V</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="HH2" locationCode="" startDate="2015-07-31T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.162904</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.275065</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">572.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">89.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">94.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">200.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>EMF in Volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium 120 Posthole, generation 3, 120 s, 1202 V</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="HHZ" locationCode="" startDate="2015-07-31T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.162904</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.275065</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">572.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">89.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">200.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>EMF in Volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium 120 Posthole, generation 3, 120 s, 1202 V</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="FFB2" startDate="2015-06-12T00:00:00+00:00">
+      <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164357</Latitude>
+      <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.273684</Longitude>
+      <Elevation minusError="0.0" plusError="0.0">577.0</Elevation>
+      <Site>
+        <Name>Romy, Borehole</Name>
+      </Site>
+      <CreationDate>2015-06-12T00:00:00+00:00</CreationDate>
+      <TotalNumberChannels>6</TotalNumberChannels>
+      <SelectedNumberChannels>6</SelectedNumberChannels>
+      <Channel code="BH1" locationCode="" startDate="2015-06-12T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164357</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.273684</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">577.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">15.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">351.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>EMF in Volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium Compact, 120 s, 754 V/m/s-Centaur, 10 vpp</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="BH2" locationCode="" startDate="2015-06-12T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164357</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.273684</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">577.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">15.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">81.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>EMF in Volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium Compact, 120 s, 754 V/m/s-Centaur, 10 vpp</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="BHZ" locationCode="" startDate="2015-06-12T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164357</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.273684</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">577.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">15.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>EMF in Volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium Compact, 120 s, 754 V/m/s-Centaur, 10 vpp</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="HHZ" locationCode="" startDate="2015-06-12T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164357</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.273684</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">577.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">15.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">200.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>EMF in Volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium Compact, 120 s, 754 V/m/s-Centaur, 10 vpp</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="HH1" locationCode="" startDate="2015-06-12T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164357</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.273684</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">577.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">15.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">351.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">200.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>EMF in Volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium Compact, 120 s, 754 V/m/s-Centaur, 10 vpp</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="HH2" locationCode="" startDate="2015-06-12T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164357</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.273684</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">577.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">15.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">81.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">200.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>V</Name>
+          <Description>EMF in Volts</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium Compact, 120 s, 754 V/m/s-Centaur, 10 vpp</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+    <Station code="FFB3" startDate="2015-06-24T00:00:00+00:00">
+      <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164883</Latitude>
+      <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.276289</Longitude>
+      <Elevation minusError="0.0" plusError="0.0">562.0</Elevation>
+      <Site>
+        <Name>Romy, Borehole</Name>
+      </Site>
+      <CreationDate>2015-06-24T00:00:00+00:00</CreationDate>
+      <TotalNumberChannels>6</TotalNumberChannels>
+      <SelectedNumberChannels>6</SelectedNumberChannels>
+      <Channel code="BHZ" locationCode="" startDate="2015-06-24T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164883</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.276289</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">562.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">15.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>M/S**2</Name>
+          <Description>ACCELERATION in Meters Per Second Squared</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium Compact, 120 s, 754 V/m/s-Centaur, 10 vpp</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="HH1" locationCode="" startDate="2015-06-24T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164883</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.276289</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">562.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">15.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">356.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">200.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>M/S**2</Name>
+          <Description>ACCELERATION in Meters Per Second Squared</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium Compact, 120 s, 754 V/m/s-Centaur, 10 vpp</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="HH2" locationCode="" startDate="2015-06-24T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164883</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.276289</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">562.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">15.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">86.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">-0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">200.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>M/S**2</Name>
+          <Description>ACCELERATION in Meters Per Second Squared</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium Compact, 120 s, 754 V/m/s-Centaur, 10 vpp</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="BH1" locationCode="" startDate="2015-06-24T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164883</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.276289</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">562.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">15.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">356.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>M/S**2</Name>
+          <Description>ACCELERATION in Meters Per Second Squared</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium Compact, 120 s, 754 V/m/s-Centaur, 10 vpp</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="BH2" locationCode="" startDate="2015-06-24T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164883</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.276289</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">562.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">15.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">86.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>M/S**2</Name>
+          <Description>ACCELERATION in Meters Per Second Squared</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium Compact, 120 s, 754 V/m/s-Centaur, 10 vpp</Type>
+        </Sensor>
+      </Channel>
+      <Channel code="HHZ" locationCode="" startDate="2015-06-24T00:00:00+00:00">
+        <Latitude minusError="0.0" plusError="0.0" unit="DEGREES">48.164883</Latitude>
+        <Longitude minusError="0.0" plusError="0.0" unit="DEGREES">11.276289</Longitude>
+        <Elevation minusError="0.0" plusError="0.0">562.0</Elevation>
+        <Depth minusError="0.0" plusError="0.0">15.0</Depth>
+        <Azimuth minusError="0.0" plusError="0.0" unit="DEGREES">0.0</Azimuth>
+        <Dip minusError="0.0" plusError="0.0" unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate minusError="0.0" plusError="0.0" unit="SAMPLES/S">200.0</SampleRate>
+        <ClockDrift minusError="0.0" plusError="0.0" unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <CalibrationUnits>
+          <Name>M/S**2</Name>
+          <Description>ACCELERATION in Meters Per Second Squared</Description>
+        </CalibrationUnits>
+        <Sensor>
+          <Type>Trillium Compact, 120 s, 754 V/m/s-Centaur, 10 vpp</Type>
+        </Sensor>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>

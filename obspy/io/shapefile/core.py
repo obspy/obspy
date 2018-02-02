@@ -4,32 +4,41 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy import Catalog
+import datetime
+import re
+import warnings
+
+from obspy import Catalog, UTCDateTime
 from obspy.core.event import Origin, Magnitude
 from obspy.core.inventory import Inventory
-from obspy.core.util import to_int_or_zero
+from obspy.core.util.misc import to_int_or_zero
 
 try:
-    import gdal
-    from osgeo import ogr, osr
-    from osgeo.gdal import __version__ as __gdal_version__
+    import shapefile
 except ImportError as e:
-    HAS_GDAL = False
-    GDAL_VERSION_SUFFICIENT = False
+    HAS_PYSHP = False
+    PYSHP_VERSION = None
+    PYSHP_VERSION_AT_LEAST_1_2_11 = False
     IMPORTERROR_MSG = str(e) + (
-        ". ObsPy's write support for shapefiles requires the 'gdal' module "
+        ". ObsPy's write support for shapefiles requires the 'pyshp' module "
         "to be installed in addition to the general ObsPy dependencies.")
-    GDAL_TOO_OLD_MSG = str(e) + (
-        ". ObsPy's write support for shapefiles requires the 'gdal' module "
-        "to be installed in a more recent version.")
 else:
-    HAS_GDAL = True
-    GDAL_VERSION_SUFFICIENT = [1, 7, 3] < list(map(
-        to_int_or_zero, __gdal_version__.split(".")))
-    gdal.UseExceptions()
+    HAS_PYSHP = True
+    try:
+        PYSHP_VERSION = list(map(to_int_or_zero,
+                                 shapefile.__version__.split('.')))
+    except AttributeError:
+        PYSHP_VERSION = None
+        PYSHP_VERSION_AT_LEAST_1_2_11 = False
+    else:
+        PYSHP_VERSION_AT_LEAST_1_2_11 = PYSHP_VERSION >= [1, 2, 11]
+PYSHP_VERSION_WARNING = (
+    'pyshp versions < 1.2.11 are buggy, e.g. in writing numerical values to '
+    'the dbf table, so e.g. timestamp float values might lack proper '
+    'precision. You should update to a newer pyshp version.')
 
 
-def _write_shapefile(obj, filename, **kwargs):
+def _write_shapefile(obj, filename, extra_fields=None, **kwargs):
     """
     Write :class:`~obspy.core.inventory.inventory.Inventory` or
     :class:`~obspy.core.event.Catalog` object to a ESRI shapefile.
@@ -43,46 +52,51 @@ def _write_shapefile(obj, filename, **kwargs):
         ".shp", ".shx", ".dbj", ".prj". If filename does not end with ".shp",
         it will be appended. Other files will be created with respective
         suffixes accordingly.
+    :type extra_fields: list
+    :param extra_fields: Currently only implemented for ``obj`` of type
+        :class:`~obspy.core.event.Catalog`. List of extra fields to write to
+        the shapefile table. Each item in the list has to be specified as a
+        tuple of: field name (i.e. name of database column, ``str``), field
+        type (single character as used by ``pyshp``: ``'C'`` for string
+        fields, ``'N'`` for integer/float fields - use precision ``None`` for
+        integer fields, ``'L'`` for boolean fields), field width (``int``),
+        field precision (``int``) and field values (``list`` of individual
+        values, must have same length as ``catalog``).
     """
-    if not HAS_GDAL:
+    if not HAS_PYSHP:
         raise ImportError(IMPORTERROR_MSG)
-    if not GDAL_VERSION_SUFFICIENT:
-        raise ImportError(GDAL_TOO_OLD_MSG)
+    if not PYSHP_VERSION_AT_LEAST_1_2_11:
+        warnings.warn(PYSHP_VERSION_WARNING)
     if not filename.endswith(".shp"):
         filename += ".shp"
 
-    driver = ogr.GetDriverByName(native_str("ESRI Shapefile"))
+    writer = shapefile.Writer(shapefile.POINT)
+    writer.autoBalance = 1
 
-    driver.DeleteDataSource(filename)
-    data_source = driver.CreateDataSource(filename)
+    # create the layer
+    if isinstance(obj, Catalog):
+        _add_catalog_layer(writer, obj, extra_fields=extra_fields)
+    elif isinstance(obj, Inventory):
+        _add_inventory_layer(writer, obj)
+    else:
+        msg = ("Object for shapefile output must be "
+               "a Catalog or Inventory.")
+        raise TypeError(msg)
 
-    try:
-        # create the layer
-        if isinstance(obj, Catalog):
-            _add_catalog_layer(data_source, obj)
-        elif isinstance(obj, Inventory):
-            _add_inventory_layer(data_source, obj)
-        else:
-            msg = ("Object for shapefile output must be "
-                   "a Catalog or Inventory.")
-            raise TypeError(msg)
-    finally:
-        # Destroy the data source to free resources
-        data_source.Destroy()
+    writer.save(filename)
+    _save_projection_file(filename.rsplit('.', 1)[0] + '.prj')
 
 
-def _add_catalog_layer(data_source, catalog):
+def _add_catalog_layer(writer, catalog, extra_fields=None):
     """
-    :type data_source: :class:`osgeo.ogr.DataSource`.
-    :param data_source: OGR data source the layer is added to.
+    :type writer: :class:`shapefile.Writer`.
+    :param writer: pyshp Writer object
     :type catalog: :class:`~obspy.core.event.Catalog`
     :param catalog: Event data to add as a new layer.
+    :type extra_fields: list
+    :param extra_fields: List of extra fields to write to the shapefile table.
+        For details see :func:`_write_shapefile()`.
     """
-    if not HAS_GDAL:
-        raise ImportError(IMPORTERROR_MSG)
-    if not GDAL_VERSION_SUFFICIENT:
-        raise ImportError(GDAL_TOO_OLD_MSG)
-
     # [name, type, width, precision]
     # field name is 10 chars max
     # ESRI shapefile attributes are stored in dbf files, which can not
@@ -91,22 +105,32 @@ def _add_catalog_layer(data_source, catalog):
     # use POSIX timestamp for exact origin time, set time of first pick
     # for events with no origin
     field_definitions = [
-        ["EventID", ogr.OFTString, 100, None],
-        ["OriginID", ogr.OFTString, 100, None],
-        ["MagID", ogr.OFTString, 100, None],
-        ["Date", ogr.OFTDate, None, None],
-        ["OriginTime", ogr.OFTReal, 20, 6],
-        ["FirstPick", ogr.OFTReal, 20, 6],
-        ["Longitude", ogr.OFTReal, 16, 10],
-        ["Latitude", ogr.OFTReal, 16, 10],
-        ["Depth", ogr.OFTReal, 8, 3],
-        ["Magnitude", ogr.OFTReal, 8, 3]
+        ["EventID", 'C', 100, None],
+        ["OriginID", 'C', 100, None],
+        ["MagID", 'C', 100, None],
+        ["Date", 'D', None, None],
+        ["OriginTime", 'N', 20, 6],
+        ["FirstPick", 'N', 20, 6],
+        ["Longitude", 'N', 16, 10],
+        ["Latitude", 'N', 16, 10],
+        ["Depth", 'N', 8, 3],
+        ["MinHorUncM", 'N', 12, 3],
+        ["MaxHorUncM", 'N', 12, 3],
+        ["MaxHorAzi", 'N', 7, 3],
+        ["OriUncDesc", 'C', 40, None],
+        ["Magnitude", 'N', 8, 3],
     ]
 
-    layer = _create_layer(data_source, "earthquakes", field_definitions)
+    _create_layer(writer, field_definitions, extra_fields)
 
-    layer_definition = layer.GetLayerDefn()
-    for event in catalog:
+    if extra_fields:
+        for name, type_, width, precision, values in extra_fields:
+            if len(values) != len(catalog):
+                msg = ("list of values for each item in 'extra_fields' must "
+                       "have same length as Catalog object")
+                raise ValueError(msg)
+
+    for i, event in enumerate(catalog):
         # try to use preferred origin/magnitude, fall back to first or use
         # empty one with `None` values in it
         origin = (event.preferred_origin() or
@@ -121,67 +145,73 @@ def _add_catalog_layer(data_source, catalog):
         t_pick = pick_times and min(pick_times) or None
         date = t_origin or t_pick
 
-        feature = ogr.Feature(layer_definition)
+        feature = {}
 
-        try:
-            # setting fields with `None` results in values of `0.000`
-            # need to really omit setting values if they are `None`
-            if event.resource_id is not None:
-                feature.SetField(native_str("EventID"),
-                                 native_str(event.resource_id))
-            if origin.resource_id is not None:
-                feature.SetField(native_str("OriginID"),
-                                 native_str(origin.resource_id))
-            if t_origin is not None:
-                # Use timestamp for exact timing
-                feature.SetField(native_str("OriginTime"), t_origin.timestamp)
-            if t_pick is not None:
-                # Use timestamp for exact timing
-                feature.SetField(native_str("FirstPick"), t_pick.timestamp)
-            if date is not None:
-                # ESRI shapefile attributes are stored in dbf files, which can
-                # not store datetimes, only dates. We still need to use the
-                # GDAL API with precision up to seconds (aiming at other output
-                # drivers of GDAL; `100` stands for GMT)
-                feature.SetField(native_str("Date"), date.year, date.month,
-                                 date.day, date.hour, date.minute, date.second,
-                                 100)
-            if origin.latitude is not None:
-                feature.SetField(native_str("Latitude"), origin.latitude)
-            if origin.longitude is not None:
-                feature.SetField(native_str("Longitude"), origin.longitude)
-            if origin.depth is not None:
-                feature.SetField(native_str("Depth"), origin.depth / 1e3)
-            if magnitude.mag is not None:
-                feature.SetField(native_str("Magnitude"), magnitude.mag)
-            if magnitude.resource_id is not None:
-                feature.SetField(native_str("MagID"),
-                                 native_str(magnitude.resource_id))
+        # setting fields with `None` results in values of `0.000`
+        # need to really omit setting values if they are `None`
+        if event.resource_id is not None:
+            feature["EventID"] = str(event.resource_id)
+        if origin.resource_id is not None:
+            feature["OriginID"] = str(origin.resource_id)
+        if t_origin is not None:
+            # Use timestamp for exact timing
+            feature["OriginTime"] = t_origin.timestamp
+        if t_pick is not None:
+            # Use timestamp for exact timing
+            feature["FirstPick"] = t_pick.timestamp
+        if date is not None:
+            # ESRI shapefile attributes are stored in dbf files, which can
+            # not store datetimes, only dates. We still need to use the
+            # GDAL API with precision up to seconds (aiming at other output
+            # drivers of GDAL; `100` stands for GMT)
+            feature["Date"] = date.datetime
+        if origin.latitude is not None:
+            feature["Latitude"] = origin.latitude
+        if origin.longitude is not None:
+            feature["Longitude"] = origin.longitude
+        if origin.depth is not None:
+            feature["Depth"] = origin.depth / 1e3
+        if magnitude.mag is not None:
+            feature["Magnitude"] = magnitude.mag
+        if magnitude.resource_id is not None:
+            feature["MagID"] = str(magnitude.resource_id)
+        if origin.origin_uncertainty is not None:
+            ou = origin.origin_uncertainty
+            ou_description = ou.preferred_description
+            if ou_description == 'uncertainty ellipse':
+                feature["MinHorUncM"] = ou.min_horizontal_uncertainty
+                feature["MaxHorUncM"] = ou.max_horizontal_uncertainty
+                feature["MaxHorAzi"] = \
+                    ou.azimuth_max_horizontal_uncertainty
+                feature["OriUncDesc"] = ou_description
+            elif ou_description == 'horizontal uncertainty':
+                feature["MinHorUncM"] = ou.horizontal_uncertainty
+                feature["MaxHorUncM"] = ou.horizontal_uncertainty
+                feature["MaxHorAzi"] = 0.0
+                feature["OriUncDesc"] = ou_description
+            else:
+                msg = ('Encountered an event with origin uncertainty '
+                       'description of type "{}". This is not yet '
+                       'implemented for output as shapefile. No origin '
+                       'uncertainty will be added to shapefile for such '
+                       'events.').format(ou_description)
+                warnings.warn(msg)
 
-            if origin.latitude is not None and origin.longitude is not None:
-                point = ogr.Geometry(ogr.wkbPoint)
-                point.AddPoint(origin.longitude, origin.latitude)
-                feature.SetGeometry(point)
-
-            layer.CreateFeature(feature)
-
-        finally:
-            # Destroy the feature to free resources
-            feature.Destroy()
+        if origin.latitude is not None and origin.longitude is not None:
+            writer.point(origin.longitude, origin.latitude)
+            if extra_fields:
+                for name, _, _, _, values in extra_fields:
+                    feature[name] = values[i]
+            _add_record(writer, feature)
 
 
-def _add_inventory_layer(data_source, inventory):
+def _add_inventory_layer(writer, inventory):
     """
-    :type data_source: :class:`osgeo.ogr.DataSource`.
-    :param data_source: OGR data source the layer is added to.
-    :type inventory: :class:`~obspy.core.inventory.Inventory`
+    :type writer: :class:`shapefile.Writer`.
+    :param writer: pyshp Writer object
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: Inventory data to add as a new layer.
     """
-    if not HAS_GDAL:
-        raise ImportError(IMPORTERROR_MSG)
-    if not GDAL_VERSION_SUFFICIENT:
-        raise ImportError(GDAL_TOO_OLD_MSG)
-
     # [name, type, width, precision]
     # field name is 10 chars max
     # ESRI shapefile attributes are stored in dbf files, which can not
@@ -190,113 +220,161 @@ def _add_inventory_layer(data_source, inventory):
     # use POSIX timestamp for exact origin time, set time of first pick
     # for events with no origin
     field_definitions = [
-        ["Network", ogr.OFTString, 20, None],
-        ["Station", ogr.OFTString, 20, None],
-        ["Longitude", ogr.OFTReal, 16, 10],
-        ["Latitude", ogr.OFTReal, 16, 10],
-        ["Elevation", ogr.OFTReal, 9, 3],
-        ["StartDate", ogr.OFTDate, None, None],
-        ["EndDate", ogr.OFTDate, None, None],
-        ["Channels", ogr.OFTString, 254, None]
+        ["Network", 'C', 20, None],
+        ["Station", 'C', 20, None],
+        ["Longitude", 'N', 16, 10],
+        ["Latitude", 'N', 16, 10],
+        ["Elevation", 'N', 9, 3],
+        ["StartDate", 'D', None, None],
+        ["EndDate", 'D', None, None],
+        ["Channels", 'C', 254, None],
     ]
 
-    layer = _create_layer(data_source, "stations", field_definitions)
+    _create_layer(writer, field_definitions)
 
-    layer_definition = layer.GetLayerDefn()
     for net in inventory:
         for sta in net:
             channel_list = ",".join(["%s.%s" % (cha.location_code, cha.code)
                                      for cha in sta])
 
-            feature = ogr.Feature(layer_definition)
+            feature = {}
 
-            try:
-                # setting fields with `None` results in values of `0.000`
-                # need to really omit setting values if they are `None`
-                if net.code is not None:
-                    feature.SetField(native_str("Network"),
-                                     native_str(net.code))
-                if sta.code is not None:
-                    feature.SetField(native_str("Station"),
-                                     native_str(sta.code))
-                if sta.latitude is not None:
-                    feature.SetField(native_str("Latitude"), sta.latitude)
-                if sta.longitude is not None:
-                    feature.SetField(native_str("Longitude"), sta.longitude)
-                if sta.elevation is not None:
-                    feature.SetField(native_str("Elevation"), sta.elevation)
-                if sta.start_date is not None:
-                    date = sta.start_date
-                    # ESRI shapefile attributes are stored in dbf files, which
-                    # can not store datetimes, only dates. We still need to use
-                    # the GDAL API with precision up to seconds (aiming at
-                    # other output drivers of GDAL; `100` stands for GMT)
-                    feature.SetField(native_str("StartDate"), date.year,
-                                     date.month, date.day, date.hour,
-                                     date.minute, date.second, 100)
-                if sta.end_date is not None:
-                    date = sta.end_date
-                    # ESRI shapefile attributes are stored in dbf files, which
-                    # can not store datetimes, only dates. We still need to use
-                    # the GDAL API with precision up to seconds (aiming at
-                    # other output drivers of GDAL; `100` stands for GMT)
-                    feature.SetField(native_str("StartDate"), date.year,
-                                     date.month, date.day, date.hour,
-                                     date.minute, date.second, 100)
-                if channel_list:
-                    feature.SetField(native_str("Channels"),
-                                     native_str(channel_list))
+            # setting fields with `None` results in values of `0.000`
+            # need to really omit setting values if they are `None`
+            if net.code is not None:
+                feature["Network"] = net.code
+            if sta.code is not None:
+                feature["Station"] = sta.code
+            if sta.latitude is not None:
+                feature["Latitude"] = sta.latitude
+            if sta.longitude is not None:
+                feature["Longitude"] = sta.longitude
+            if sta.elevation is not None:
+                feature["Elevation"] = sta.elevation
+            if sta.start_date is not None:
+                # ESRI shapefile attributes are stored in dbf files, which
+                # can not store datetimes, only dates. We still need to use
+                # the GDAL API with precision up to seconds (aiming at
+                # other output drivers of GDAL; `100` stands for GMT)
+                feature["StartDate"] = sta.start_date.datetime
+            if sta.end_date is not None:
+                # ESRI shapefile attributes are stored in dbf files, which
+                # can not store datetimes, only dates. We still need to use
+                # the GDAL API with precision up to seconds (aiming at
+                # other output drivers of GDAL; `100` stands for GMT)
+                feature["EndDate"] = sta.end_date.datetime
+            if channel_list:
+                feature["Channels"] = channel_list
 
-                if sta.latitude is not None and sta.longitude is not None:
-                    point = ogr.Geometry(ogr.wkbPoint)
-                    point.AddPoint(sta.longitude, sta.latitude)
-                    feature.SetGeometry(point)
-
-                layer.CreateFeature(feature)
-
-            finally:
-                # Destroy the feature to free resources
-                feature.Destroy()
+            if sta.latitude is not None and sta.longitude is not None:
+                writer.point(sta.longitude, sta.latitude)
+                _add_record(writer, feature)
 
 
-def _get_wgs84_spatial_reference():
-    # create the spatial reference
-    sr = osr.SpatialReference()
-    # Simpler and feels cleaner to initialize by EPSG code but that depends on
-    # a csv file shipping with GDAL and some GDAL environment paths being set
-    # correctly which was not the case out of the box in anaconda, so better
-    # hardcode this bit.
-    # sr.ImportFromEPSG(4326)
-    wgs84_wkt = \
-        """
-        GEOGCS["WGS 84",
-            DATUM["WGS_1984",
-                SPHEROID["WGS 84",6378137,298.257223563,
-                    AUTHORITY["EPSG","7030"]],
-                AUTHORITY["EPSG","6326"]],
-            PRIMEM["Greenwich",0,
-                AUTHORITY["EPSG","8901"]],
-            UNIT["degree",0.0174532925199433,
-                AUTHORITY["EPSG","9122"]],
-            AUTHORITY["EPSG","4326"]]
-        """
-    sr.ImportFromWkt(wgs84_wkt)
-    return sr
+wgs84_wkt = \
+    """
+    GEOGCS["WGS 84",
+        DATUM["WGS_1984",
+            SPHEROID["WGS 84",6378137,298.257223563,
+                AUTHORITY["EPSG","7030"]],
+            AUTHORITY["EPSG","6326"]],
+        PRIMEM["Greenwich",0,
+            AUTHORITY["EPSG","8901"]],
+        UNIT["degree",0.0174532925199433,
+            AUTHORITY["EPSG","9122"]],
+        AUTHORITY["EPSG","4326"]]
+    """
+wgs84_wkt = re.sub(r'\s+', '', wgs84_wkt)
 
 
-def _create_layer(data_source, layer_name, field_definitions):
-    sr = _get_wgs84_spatial_reference()
-    layer = data_source.CreateLayer(native_str(layer_name), sr,
-                                    ogr.wkbPoint)
+def _save_projection_file(filename):
+    with open(filename, 'wt') as fh:
+        fh.write(wgs84_wkt)
+
+
+def _add_field(writer, name, type_, width, precision):
+    # default field width is not set correctly for dates and booleans in
+    # shapefile <=1.2.10, see
+    # GeospatialPython/pyshp@ba61854aa7161fd7d4cff12b0fd08b6ec7581bb7 and
+    # GeospatialPython/pyshp#71 so work around this
+    if type_ == 'D':
+        width = 8
+        precision = 0
+    elif type_ == 'L':
+        width = 1
+        precision = 0
+    type_ = native_str(type_)
+    name = native_str(name)
+    kwargs = dict(fieldType=type_, size=width, decimal=precision)
+    # remove None's because shapefile.Writer.field() doesn't use None as
+    # placeholder but the default values directly
+    for key in list(kwargs.keys()):
+        if kwargs[key] is None:
+            kwargs.pop(key)
+    writer.field(name, **kwargs)
+
+
+def _create_layer(writer, field_definitions, extra_fields=None):
     # Add the fields we're interested in
     for name, type_, width, precision in field_definitions:
-        field = ogr.FieldDefn(native_str(name), type_)
-        if width is not None:
-            field.SetWidth(width)
-        if precision is not None:
-            field.SetPrecision(precision)
-        layer.CreateField(field)
-    return layer
+        _add_field(writer, name, type_, width, precision)
+    field_names = [name for name, _, _, _ in field_definitions]
+    # add custom fields
+    if extra_fields is not None:
+        for name, type_, width, precision, _ in extra_fields:
+            if name in field_names:
+                msg = "Conflict with existing field named '{}'.".format(name)
+                raise ValueError(msg)
+            _add_field(writer, name, type_, width, precision)
+
+
+def _add_record(writer, feature):
+    values = []
+    for key, type_, width, precision in writer.fields:
+        value = feature.get(key)
+        # various hacks for old pyshp < 1.2.11
+        if not PYSHP_VERSION_AT_LEAST_1_2_11:
+            if type_ == 'C':
+                # mimick pyshp 1.2.12 behavior of putting 'None' in string
+                # fields for value of `None`
+                if value is None:
+                    value = 'None'
+                else:
+                    value = native_str(value)
+            # older pyshp is not correctly writing dates as thenowadays used
+            # '%Y%m%d' (8 chars), work around this
+            elif type_ == 'D':
+                if isinstance(value, (UTCDateTime, datetime.date)):
+                    value = value.strftime('%Y%m%d')
+            # work around issues with older pyshp, backport 1.2.12 behavior
+            elif type_ == 'L':
+                # logical: 1 byte - initialized to 0x20 (space)
+                # otherwise T or F
+                if value in [True, 1]:
+                    value = "T"
+                elif value in [False, 0]:
+                    value = "F"
+                else:
+                    value = ' '
+            # work around issues with older pyshp, backport 1.2.12 behavior
+            elif type_ in ('N', 'F'):
+                # numeric or float: number stored as a string, right justified,
+                # and padded with blanks to the width of the field.
+                if value in (None, ''):
+                    value = ' ' * width  # QGIS NULL
+                elif not precision:
+                    # caps the size if exceeds the field size
+                    value = format(value, "d")[:width].rjust(width)
+                else:
+                    # caps the size if exceeds the field size
+                    value = format(value, ".%sf" % precision)[:width].rjust(
+                        width)
+            # work around older pyshp not converting `None`s properly (e.g. for
+            # float fields)
+            elif value is None:
+                value = ''
+        values.append(value)
+    writer.record(*values)
 
 
 if __name__ == '__main__':

@@ -18,12 +18,12 @@ import warnings
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
-from obspy.core.compatibility import from_buffer
+from obspy.core.compatibility import from_buffer, mock
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
-from obspy.io.mseed import InternalMSEEDReadingError, \
-    InternalMSEEDReadingWarning
+from obspy.io.mseed import (InternalMSEEDError, InternalMSEEDWarning,
+                            ObsPyMSEEDFilesizeTooSmallError,
+                            ObsPyMSEEDFilesizeTooLargeError)
 from obspy.io.mseed import util
 from obspy.io.mseed.core import _read_mseed, _write_mseed
 from obspy.io.mseed.headers import clibmseed
@@ -34,7 +34,7 @@ from obspy.io.mseed.msstruct import _MSStruct
 NO_NEGATIVE_TIMESTAMPS = False
 try:
     UTCDateTime(-50000)
-except:
+except Exception:
     NO_NEGATIVE_TIMESTAMPS = True
 
 
@@ -46,7 +46,7 @@ def _test_function(filename):
         warnings.simplefilter("always")
         try:
             st = read(filename)  # noqa @UnusedVariable
-        except (ValueError, InternalMSEEDReadingError):
+        except (ValueError, InternalMSEEDError):
             # Should occur with broken files
             pass
 
@@ -132,20 +132,28 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         both methods, readMSTracesViaRecords and readMSTraces
         """
         file = os.path.join(self.path, "data", "brokenlastrecord.mseed")
-        # independent reading of the data
-        with open(file, 'rb') as fp:
-            data_string = fp.read()[128:]  # 128 Bytes header
-        data = util._unpack_steim_2(data_string, 5980, swapflag=self.swap,
+
+        # independent reading of the data, 128 Bytes header
+        d = np.fromfile(file, dtype=np.uint8)[128:]
+        data = util._unpack_steim_2(d, 5980, swapflag=self.swap,
                                     verbose=0)
+
         # test readMSTraces. Will raise an internal warning.
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             data_record = _read_mseed(file)[0].data
 
         self.assertEqual(len(w), 1)
-        self.assertEqual(w[0].category, InternalMSEEDReadingWarning)
+        self.assertEqual(w[0].category, InternalMSEEDWarning)
 
-        np.testing.assert_array_equal(data, data_record)
+        # Test against reference data.
+        self.assertEqual(len(data_record), 5980)
+        last10samples = [2862, 2856, 2844, 2843, 2851,
+                         2853, 2853, 2854, 2857, 2863]
+        np.testing.assert_array_equal(data_record[-10:], last10samples)
+
+        # Also test against independently unpacked data.
+        np.testing.assert_allclose(data_record, data)
 
     def test_one_sample_overlap(self):
         """
@@ -269,25 +277,18 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         Specifying a wrong record length should raise an error.
         """
-        file = os.path.join(self.path, 'data', 'libmseed',
+        file = os.path.join(self.path, 'data', 'encoding',
                             'float32_Float32_bigEndian.mseed')
-        self.assertRaises(Exception, read, file, reclen=4096)
-
-    def test_read_quality_information_warns(self):
-        """
-        Reading the quality information while reading the data files is no more
-        supported in newer obspy.io.mseed versions. Check that a warning is
-        raised.
-        Similar functionality is included in obspy.io.mseed.util.
-        """
-        timingqual = os.path.join(self.path, 'data', 'timingquality.mseed')
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter('error', ObsPyDeprecationWarning)
-            # This should not raise a warning.
-            read(timingqual)
-            # This should warn.
-            self.assertRaises(ObsPyDeprecationWarning, read, timingqual,
-                              quality=True)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            # invalid reclen
+            read(file, reclen=111)
+            self.assertTrue('Invalid record length' in str(w[0].message))
+            self.assertEqual(w[0].category, UserWarning)
+            # wrong reclen - raises and also displays a warning
+            self.assertRaises(Exception, read, file, reclen=4096)
+            self.assertTrue('reclen exceeds buflen' in str(w[1].message))
+            self.assertEqual(w[1].category, InternalMSEEDWarning)
 
     def test_read_with_missing_blockette010(self):
         """
@@ -702,50 +703,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 os.kill(process.pid, signal.SIGKILL)
         self.assertFalse(fail)
 
-    def test_writing_blockette_100(self):
-        """
-        Tests that blockette 100 is written correctly. It is only used if
-        the sampling rate is higher than 32727 Hz or smaller than 1.0 /
-        32727.0 Hz.
-        """
-        # Three traces, only the middle one needs it.
-        tr = Trace(data=np.linspace(0, 100, 101))
-        st = Stream(traces=[tr.copy(), tr.copy(), tr.copy()])
-
-        st[1].stats.sampling_rate = 60000.0
-
-        with io.BytesIO() as buf:
-            st.write(buf, format="mseed")
-            buf.seek(0, 0)
-            st2 = read(buf)
-
-        self.assertTrue(np.allclose(
-            st[0].stats.sampling_rate,
-            st2[0].stats.sampling_rate))
-        self.assertTrue(np.allclose(
-            st[1].stats.sampling_rate,
-            st2[1].stats.sampling_rate))
-        self.assertTrue(np.allclose(
-            st[2].stats.sampling_rate,
-            st2[2].stats.sampling_rate))
-
-        st[1].stats.sampling_rate = 1.0 / 60000.0
-
-        with io.BytesIO() as buf:
-            st.write(buf, format="mseed")
-            buf.seek(0, 0)
-            st2 = read(buf)
-
-        self.assertTrue(np.allclose(
-            st[0].stats.sampling_rate,
-            st2[0].stats.sampling_rate))
-        self.assertTrue(np.allclose(
-            st[1].stats.sampling_rate,
-            st2[1].stats.sampling_rate))
-        self.assertTrue(np.allclose(
-            st[2].stats.sampling_rate,
-            st2[2].stats.sampling_rate))
-
     def test_microsecond_accuracy_reading_and_writing_before_1970(self):
         """
         Tests that reading and writing data with microsecond accuracy and
@@ -1013,17 +970,34 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 np.float32(sr))
             self.assertTrue(has_blkt_100(tempfile))
 
-            # As does a very large one.
+            # A very large (but "clean") one does not need it.
             sr = 1E6
             tr.stats.sampling_rate = sr
             tr.write(tempfile, format="mseed")
             self.assertEqual(
                 np.float32(read(tempfile)[0].stats.sampling_rate),
                 np.float32(sr))
-            self.assertTrue(has_blkt_100(tempfile))
+            self.assertFalse(has_blkt_100(tempfile))
 
-            # And a very small one.
+            # Same for a very small but "clean" one.
             sr = 1E-6
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
+            # But small perturbations resulting in "unclean" sampling rates
+            # will cause blockette 100 to be written.
+            sr = 1E6 + 0.123456
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertTrue(has_blkt_100(tempfile))
+            sr = 1E-6 + 0.325247 * 1E-7
             tr.stats.sampling_rate = sr
             tr.write(tempfile, format="mseed")
             self.assertEqual(
@@ -1055,6 +1029,139 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 np.float32(read(tempfile)[0].stats.sampling_rate),
                 np.float32(sr))
             self.assertFalse(has_blkt_100(tempfile))
+
+    def test_reading_file_with_data_offset_of_48(self):
+        """
+        Tests reading a file which has a data offset of 48 bytes.
+
+        It thus does not have a single blockette.
+        """
+        file = os.path.join(
+            self.path, "data",
+            "mseed_not_a_single_blkt_48byte_data_offset.mseed")
+        st = read(file)
+
+        self.assertEqual(len(st), 1)
+        tr = st[0]
+        self.assertEqual(tr.stats.npts, 3632)
+        np.testing.assert_allclose(tr.stats.sampling_rate, 20.0)
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime(1995, 9, 22, 0, 0, 18, 238400))
+        self.assertEqual(tr.id, "XX.TEST..BHE")
+
+        np.testing.assert_equal(
+            st[0].data[:6],
+            [337, 396, 454, 503, 547, 581])
+
+    def test_reading_truncated_miniseed_files(self):
+        """
+        Regression test to guard against a segfault.
+        """
+        filename = os.path.join(self.path, 'data',
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+
+        with io.open(filename, 'rb') as fh:
+            data = fh.read()
+
+        data = data[:-257]
+        # This is the offset for the record that later has to be recorded in
+        # the warning.
+        self.assertEqual(len(data) - 255, 4608)
+
+        # The file now lacks information at the end. This will read the file
+        # until that point and raise a warning that some things are missing.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            with io.BytesIO(data) as buf:
+                st = _read_mseed(buf)
+        self.assertEqual(len(st), 1)
+        self.assertEqual(len(w), 1)
+        self.assertIs(w[0].category, InternalMSEEDWarning)
+        self.assertEqual("readMSEEDBuffer(): Unexpected end of file when "
+                         "parsing record starting at offset 4608. The rest of "
+                         "the file will not be read.", w[0].message.args[0])
+
+    def test_reading_truncated_miniseed_files_case_2(self):
+        """
+        Second test in the same vain as
+        test_reading_truncated_miniseed_files. Previously forgot a `<=` test.
+        """
+        filename = os.path.join(self.path, 'data',
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+
+        with io.open(filename, 'rb') as fh:
+            data = fh.read()
+
+        data = data[:-256]
+        # This is the offset for the record that later has to be recorded in
+        # the warning.
+        self.assertEqual(len(data) - 256, 4608)
+
+        # The file now lacks information at the end. This will read the file
+        # until that point and raise a warning that some things are missing.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            with io.BytesIO(data) as buf:
+                st = _read_mseed(buf)
+        self.assertEqual(len(st), 1)
+        self.assertEqual(len(w), 1)
+        self.assertIs(w[0].category, InternalMSEEDWarning)
+        self.assertEqual("readMSEEDBuffer(): Unexpected end of file when "
+                         "parsing record starting at offset 4608. The rest of "
+                         "the file will not be read.", w[0].message.args[0])
+
+    def test_reading_less_than_128_bytes(self):
+        """
+        128 bytes is the smallest possible MiniSEED record.
+
+        Reading anything smaller should result in an error.
+        """
+        filename = os.path.join(self.path, 'data',
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+
+        with io.open(filename, 'rb') as fh:
+            data = fh.read()
+
+        # Reading at exactly 128 bytes offset will result in a truncation
+        # warning.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            with io.BytesIO(data[:128]) as buf:
+                st = _read_mseed(buf)
+        self.assertEqual(len(st), 0)  # nothing is read here.
+        self.assertGreaterEqual(len(w), 1)
+        self.assertIs(w[-1].category, InternalMSEEDWarning)
+        self.assertEqual("readMSEEDBuffer(): Unexpected end of file when "
+                         "parsing record starting at offset 0. The rest of "
+                         "the file will not be read.", w[-1].message.args[0])
+
+        # Reading anything less result in an exception.
+        with self.assertRaises(ObsPyMSEEDFilesizeTooSmallError) as e:
+            with io.BytesIO(data[:127]) as buf:
+                _read_mseed(buf)
+        self.assertEqual(
+            e.exception.args[0],
+            "The smallest possible mini-SEED record is made up of 128 bytes. "
+            "The passed buffer or file contains only 127.")
+
+    @mock.patch("os.path.getsize")
+    def test_reading_file_larger_than_2048_mib(self, getsize_mock):
+        """
+        ObsPy can currently not directly read files that are larger than
+        2^31 bytes. This raises an exception with a description of how to
+        get around it.
+        """
+        getsize_mock.return_value = 2 ** 31 + 1
+        filename = os.path.join(self.path, 'data',
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        with self.assertRaises(ObsPyMSEEDFilesizeTooLargeError) as e:
+            _read_mseed(filename)
+        self.assertEqual(
+            e.exception.args[0],
+            "ObsPy can currently not directly read mini-SEED files that are "
+            "larger than 2^31 bytes (2048 MiB). To still read it, please "
+            "read the file in chunks as documented here: "
+            "https://github.com/obspy/obspy/pull/1419#issuecomment-221582369")
 
 
 def suite():

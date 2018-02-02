@@ -26,12 +26,12 @@ For more information visit https://www.obspy.org.
 # setuptools.
 try:
     import setuptools  # @UnusedImport # NOQA
-except:
+except ImportError:
     pass
 
 try:
     import numpy  # @UnusedImport # NOQA
-except:
+except ImportError:
     msg = ("No module named numpy. "
            "Please install numpy first, it is needed before installing ObsPy.")
     raise ImportError(msg)
@@ -79,26 +79,30 @@ else:
     IS_MSVC = False
 
 # Use system libraries? Set later...
-EXTERNAL_LIBS = False
+EXTERNAL_EVALRESP = False
+EXTERNAL_LIBMSEED = False
 
 # package specific settings
 KEYWORDS = [
     'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'beamforming', 'cross correlation', 'database', 'dataless',
-    'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
+    'Dataless SEED', 'win', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
-    'focal mechanism', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
-    'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
-    'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
-    'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS', 'PDAS', 'picker',
-    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
-    'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
-    'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML',
-    'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
-    'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED',
-    'XSEED']
+    'focal mechanism', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'IASPEI',
+    'imaging', 'IMS', 'instrument correction', 'instrument simulation', 'IRIS',
+    'ISF', 'kinemetrics', 'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad',
+    'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'NRL',
+    'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
+    'real time', 'realtime', 'REFTEK', 'REFTEK130', 'RT-130', 'RESP',
+    'response file', 'RT', 'SAC', 'scardec', 'sc3ml', 'SDS', 'SEED',
+    'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
+    'seismology', 'seismogram', 'seismograms', 'shapefile', 'signal', 'slink',
+    'spectrogram', 'StationXML', 'taper', 'taup', 'travel time', 'trigger',
+    'VERCE', 'WAV', 'waveform', 'WaveServer', 'WaveServerV', 'WebDC',
+    'web service', 'Winston', 'XML-SEED', 'XSEED']
 
+# when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
+# when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
 INSTALL_REQUIRES = [
     'future>=0.12.4',
     'numpy>=1.6.1',
@@ -111,8 +115,9 @@ INSTALL_REQUIRES = [
     'requests']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur', 'pyproj', 'pep8-naming'],
-    'arclink': ['m2crypto'],
-    'io.shapefile': ['gdal'],
+    # arclink decryption also works with: pycrypto, m2crypto, pycryptodome
+    'arclink': ['cryptography'],
+    'io.shapefile': ['pyshp'],
     }
 # PY2
 if sys.version_info[0] == 2:
@@ -140,11 +145,12 @@ ENTRY_POINTS = {
         'SLIST = obspy.io.ascii.core',
         'PICKLE = obspy.core.stream',
         'CSS = obspy.io.css.core',
-        'DATAMARK = obspy.io.datamark.core',
+        'WIN = obspy.io.win.core',
         'KINEMETRICS_EVT = obspy.io.kinemetrics.core',
         'GSE1 = obspy.io.gse2.core',
         'GSE2 = obspy.io.gse2.core',
         'MSEED = obspy.io.mseed.core',
+        'NNSA_KB_CORE = obspy.io.css.core',
         'PDAS = obspy.io.pdas.core',
         'SAC = obspy.io.sac.core',
         'SACXY = obspy.io.sac.core',
@@ -157,7 +163,9 @@ ENTRY_POINTS = {
         'SH_ASC = obspy.io.sh.core',
         'WAV = obspy.io.wav.core',
         'AH = obspy.io.ah.core',
-        'KNET = obspy.io.nied.knet'
+        'KNET = obspy.io.nied.knet',
+        'GCF = obspy.io.gcf.core',
+        'REFTEK130 = obspy.io.reftek.core',
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -178,9 +186,13 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.css.core:_is_css',
         'readFormat = obspy.io.css.core:_read_css',
         ],
-    'obspy.plugin.waveform.DATAMARK': [
-        'isFormat = obspy.io.datamark.core:_is_datamark',
-        'readFormat = obspy.io.datamark.core:_read_datamark',
+    'obspy.plugin.waveform.NNSA_KB_CORE': [
+        'isFormat = obspy.io.css.core:_is_nnsa_kb_core',
+        'readFormat = obspy.io.css.core:_read_nnsa_kb_core',
+        ],
+    'obspy.plugin.waveform.WIN': [
+        'isFormat = obspy.io.win.core:_is_win',
+        'readFormat = obspy.io.win.core:_read_win',
         ],
     'obspy.plugin.waveform.KINEMETRICS_EVT': [
         'isFormat = obspy.io.kinemetrics.core:is_evt',
@@ -254,29 +266,48 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.AH': [
         'isFormat = obspy.io.ah.core:_is_ah',
         'readFormat = obspy.io.ah.core:_read_ah',
+        'writeFormat = obspy.io.ah.core:_write_ah1'
         ],
     'obspy.plugin.waveform.KNET': [
         'isFormat = obspy.io.nied.knet:_is_knet_ascii',
         'readFormat = obspy.io.nied.knet:_read_knet_ascii',
         ],
+    'obspy.plugin.waveform.GCF': [
+        'isFormat = obspy.io.gcf.core:_is_gcf',
+        'readFormat = obspy.io.gcf.core:_read_gcf',
+        ],
+    'obspy.plugin.waveform.REFTEK130': [
+        'isFormat = obspy.io.reftek.core:_is_reftek130',
+        'readFormat = obspy.io.reftek.core:_read_reftek130',
+        ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
+        'SC3ML = obspy.io.seiscomp.event',
         'ZMAP = obspy.io.zmap.core',
         'MCHEDR = obspy.io.pde.mchedr',
         'JSON = obspy.io.json.core',
         'NDK = obspy.io.ndk.core',
         'NLLOC_HYP = obspy.io.nlloc.core',
         'NLLOC_OBS = obspy.io.nlloc.core',
+        'NORDIC = obspy.io.nordic.core',
         'CNV = obspy.io.cnv.core',
         'CMTSOLUTION = obspy.io.cmtsolution.core',
+        'SCARDEC = obspy.io.scardec.core',
         'SHAPEFILE = obspy.io.shapefile.core',
         'KML = obspy.io.kml.core',
-        'FNETMT = obspy.io.nied.fnetmt'
+        'FNETMT = obspy.io.nied.fnetmt',
+        'GSE2 = obspy.io.gse2.bulletin',
+        'IMS10BULLETIN = obspy.io.iaspei.core',
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
         'readFormat = obspy.io.quakeml.core:_read_quakeml',
         'writeFormat = obspy.io.quakeml.core:_write_quakeml',
+        ],
+    'obspy.plugin.event.SC3ML': [
+        'isFormat = obspy.io.seiscomp.core:_is_sc3ml',
+        'readFormat = obspy.io.seiscomp.event:_read_sc3ml',
+        'writeFormat = obspy.io.seiscomp.event:_write_sc3ml',
         ],
     'obspy.plugin.event.MCHEDR': [
         'isFormat = obspy.io.pde.mchedr:_is_mchedr',
@@ -304,14 +335,28 @@ ENTRY_POINTS = {
     'obspy.plugin.event.NLLOC_OBS': [
         'writeFormat = obspy.io.nlloc.core:write_nlloc_obs',
         ],
+    'obspy.plugin.event.NORDIC': [
+        'writeFormat = obspy.io.nordic.core:write_select',
+        'readFormat = obspy.io.nordic.core:read_nordic',
+        'isFormat = obspy.io.nordic.core:_is_sfile'
+        ],
     'obspy.plugin.event.CMTSOLUTION': [
         'isFormat = obspy.io.cmtsolution.core:_is_cmtsolution',
         'readFormat = obspy.io.cmtsolution.core:_read_cmtsolution',
         'writeFormat = obspy.io.cmtsolution.core:_write_cmtsolution'
         ],
+    'obspy.plugin.event.SCARDEC': [
+        'isFormat = obspy.io.scardec.core:_is_scardec',
+        'readFormat = obspy.io.scardec.core:_read_scardec',
+        'writeFormat = obspy.io.scardec.core:_write_scardec'
+        ],
     'obspy.plugin.event.FNETMT': [
         'isFormat = obspy.io.nied.fnetmt:_is_fnetmt_catalog',
         'readFormat = obspy.io.nied.fnetmt:_read_fnetmt_catalog',
+        ],
+    'obspy.plugin.event.GSE2': [
+        'isFormat = obspy.io.gse2.bulletin:_is_gse2',
+        'readFormat = obspy.io.gse2.bulletin:_read_gse2',
         ],
     'obspy.plugin.event.SHAPEFILE': [
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
@@ -319,23 +364,35 @@ ENTRY_POINTS = {
     'obspy.plugin.event.KML': [
         'writeFormat = obspy.io.kml.core:_write_kml',
         ],
+    'obspy.plugin.event.IMS10BULLETIN': [
+        'isFormat = obspy.io.iaspei.core:_is_ims10_bulletin',
+        'readFormat = obspy.io.iaspei.core:_read_ims10_bulletin',
+        ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
-        'SC3ML = obspy.io.seiscomp.sc3ml',
+        'INVENTORYXML = obspy.io.arclink.inventory',
+        'SC3ML = obspy.io.seiscomp.inventory',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
         'STATIONTXT = obspy.io.stationtxt.core',
-        'KML = obspy.io.kml.core'
+        'KML = obspy.io.kml.core',
+        'SEED = obspy.io.xseed.core',
+        'XSEED = obspy.io.xseed.core',
+        'RESP = obspy.io.xseed.core',
         ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
         'readFormat = obspy.io.stationxml.core:_read_stationxml',
         'writeFormat = obspy.io.stationxml.core:_write_stationxml',
         ],
+    'obspy.plugin.inventory.INVENTORYXML': [
+        'isFormat = obspy.io.arclink.inventory:_is_inventory_xml',
+        'readFormat = obspy.io.arclink.inventory:_read_inventory_xml',
+        ],
     'obspy.plugin.inventory.SC3ML': [
-        'isFormat = obspy.io.seiscomp.sc3ml:_is_sc3ml',
-        'readFormat = obspy.io.seiscomp.sc3ml:_read_sc3ml',
+        'isFormat = obspy.io.seiscomp.core:_is_sc3ml',
+        'readFormat = obspy.io.seiscomp.inventory:_read_sc3ml',
         ],
     'obspy.plugin.inventory.SACPZ': [
         'writeFormat = obspy.io.sac.sacpz:_write_sacpz',
@@ -350,10 +407,23 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.stationtxt.core:is_fdsn_station_text_file',
         'readFormat = '
         'obspy.io.stationtxt.core:read_fdsn_station_text_file',
+        'writeFormat = obspy.io.stationtxt.core:_write_stationtxt',
         ],
     'obspy.plugin.inventory.KML': [
         'writeFormat = obspy.io.kml.core:_write_kml',
         ],
+    'obspy.plugin.inventory.SEED': [
+        'isFormat = obspy.io.xseed.core:_is_seed',
+        'readFormat = obspy.io.xseed.core:_read_seed',
+    ],
+    'obspy.plugin.inventory.XSEED': [
+        'isFormat = obspy.io.xseed.core:_is_xseed',
+        'readFormat = obspy.io.xseed.core:_read_xseed',
+    ],
+    'obspy.plugin.inventory.RESP': [
+        'isFormat = obspy.io.xseed.core:_is_resp',
+        'readFormat = obspy.io.xseed.core:_read_resp',
+    ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
         'constant = scipy.signal:detrend',
@@ -471,19 +541,31 @@ def add_features():
         return {}
 
     class ExternalLibFeature(setuptools.Feature):
+        def __init__(self, *args, **kwargs):
+            self.name = kwargs['name']
+            setuptools.Feature.__init__(self, *args, **kwargs)
+
         def include_in(self, dist):
-            global EXTERNAL_LIBS
-            EXTERNAL_LIBS = True
+            globals()[self.name] = True
 
         def exclude_from(self, dist):
-            global EXTERNAL_LIBS
-            EXTERNAL_LIBS = False
+            globals()[self.name] = False
 
     return {
-        'system-libs': ExternalLibFeature(
+        'system-libs': setuptools.Feature(
             'use of system C libraries',
             standard=False,
-            EXTERNAL_LIBS=True
+            require_features=('system-evalresp', 'system-libmseed')
+        ),
+        'system-evalresp': ExternalLibFeature(
+            'use of system evalresp library',
+            standard=False,
+            name='EXTERNAL_EVALRESP'
+        ),
+        'system-libmseed': ExternalLibFeature(
+            'use of system libmseed library',
+            standard=False,
+            name='EXTERNAL_LIBMSEED'
         )
     }
 
@@ -508,7 +590,7 @@ def configuration(parent_package="", top_path=None):
     # LIBMSEED
     path = os.path.join("obspy", "io", "mseed", "src")
     files = [os.path.join(path, "obspy-readbuffer.c")]
-    if not EXTERNAL_LIBS:
+    if not EXTERNAL_LIBMSEED:
         files += glob.glob(os.path.join(path, "libmseed", "*.c"))
     # compiler specific options
     kwargs = {}
@@ -520,7 +602,7 @@ def configuration(parent_package="", top_path=None):
             export_symbols(path, 'libmseed', 'libmseed.def')
         kwargs['export_symbols'] += \
             export_symbols(path, 'obspy-readbuffer.def')
-    if EXTERNAL_LIBS:
+    if EXTERNAL_LIBMSEED:
         kwargs['libraries'] = ['mseed']
     config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
                          files, **kwargs)
@@ -549,7 +631,7 @@ def configuration(parent_package="", top_path=None):
 
     # EVALRESP
     path = os.path.join("obspy", "signal", "src")
-    if EXTERNAL_LIBS:
+    if EXTERNAL_EVALRESP:
         files = glob.glob(os.path.join(path, "evalresp", "_obspy*.c"))
     else:
         files = glob.glob(os.path.join(path, "evalresp", "*.c"))
@@ -560,7 +642,7 @@ def configuration(parent_package="", top_path=None):
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
-    if EXTERNAL_LIBS:
+    if EXTERNAL_EVALRESP:
         kwargs['libraries'] = ['evresp']
     config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
                          files, **kwargs)
@@ -599,6 +681,18 @@ def add_data_files(config):
         for folder in EXCLUDE_DIRS:
             if folder in dirs:
                 dirs.remove(folder)
+
+    # Force include the contents of some directories.
+    FORCE_INCLUDE_DIRS = [
+        os.path.join(SETUP_DIRECTORY, 'obspy', 'io', 'mseed', 'src',
+                     'libmseed', 'test')]
+
+    for folder in FORCE_INCLUDE_DIRS:
+        for root, _, files in os.walk(folder):
+            for filename in files:
+                config.add_data_files(
+                    os.path.relpath(os.path.join(root, filename),
+                                    SETUP_DIRECTORY))
 
 
 # Auto-generate man pages from --help output
@@ -681,9 +775,9 @@ def setupPackage():
             'Programming Language :: Python :: 2',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.3',
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
+            'Programming Language :: Python :: 3.6',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
@@ -714,24 +808,24 @@ if __name__ == '__main__':
         path = os.path.join(SETUP_DIRECTORY, 'build')
         try:
             shutil.rmtree(path)
-        except:
+        except Exception:
             pass
         # delete all shared libs from lib directory
         path = os.path.join(SETUP_DIRECTORY, 'obspy', 'lib')
         for filename in glob.glob(path + os.sep + '*.pyd'):
             try:
                 os.remove(filename)
-            except:
+            except Exception:
                 pass
         for filename in glob.glob(path + os.sep + '*.so'):
             try:
                 os.remove(filename)
-            except:
+            except Exception:
                 pass
         path = os.path.join(SETUP_DIRECTORY, 'obspy', 'taup', 'data', 'models')
         try:
             shutil.rmtree(path)
-        except:
+        except Exception:
             pass
     else:
         setupPackage()

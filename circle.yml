@@ -1,0 +1,16 @@
+# CircleCI is used exclusively to test code formatting.
+# Thus ObsPy does not even have to be installed.
+machine:
+  python:
+    version: 3.6.0
+dependencies:
+  override:
+   # Install latest versions of flake8 and pep8-naming.
+    - pip install -U flake8 pep8-naming
+compile:
+  override:
+    - pwd
+test:
+  override:
+    - flake8 --version
+    - flake8 --verbose --ignore=E402,$(python -c 'import pycodestyle; print(pycodestyle.DEFAULT_IGNORE)') --exclude=__init__.py obspy

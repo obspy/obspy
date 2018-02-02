@@ -23,15 +23,12 @@ from matplotlib import rcParams
 import obspy
 from obspy import UTCDateTime, read_inventory, read_events
 from obspy.core.compatibility import mock
-from obspy.core.util.base import get_basemap_version, get_cartopy_version
-from obspy.core.util.testing import ImageComparison, get_matplotlib_version
+from obspy.core.util import (
+    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION)
+from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
-
-
-MATPLOTLIB_VERSION = get_matplotlib_version()
-BASEMAP_VERSION = get_basemap_version()
-CARTOPY_VERSION = get_cartopy_version()
+from obspy.core.inventory.util import _unified_content_strings
 
 
 class InventoryTestCase(unittest.TestCase):
@@ -142,6 +139,38 @@ class InventoryTestCase(unittest.TestCase):
         self.assertEqual(sorted(coordinates.items()), sorted(expected.items()))
         # 3 - unknown SEED ID should raise exception
         self.assertRaises(Exception, inv.get_coordinates, 'BW.RJOB..XXX')
+
+    def test_get_orientation(self):
+        """
+        Test extracting orientation
+        """
+        expected = {u'azimuth': 90.0,
+                    u'dip': 0.0}
+        channels = [Channel(code='EHZ',
+                            location_code='',
+                            start_date=UTCDateTime('2007-01-01'),
+                            latitude=47.737166999999999,
+                            longitude=12.795714,
+                            elevation=860.0,
+                            depth=0.0,
+                            azimuth=90.0,
+                            dip=0.0)]
+        stations = [Station(code='RJOB',
+                            latitude=0.0,
+                            longitude=0.0,
+                            elevation=0.0,
+                            channels=channels)]
+        networks = [Network('BW', stations=stations)]
+        inv = Inventory(networks=networks, source='TEST')
+        # 1
+        orientation = inv.get_orientation('BW.RJOB..EHZ',
+                                          UTCDateTime('2010-01-01T12:00'))
+        self.assertEqual(sorted(orientation.items()), sorted(expected.items()))
+        # 2 - without datetime
+        orientation = inv.get_orientation('BW.RJOB..EHZ')
+        self.assertEqual(sorted(orientation.items()), sorted(expected.items()))
+        # 3 - unknown SEED ID should raise exception
+        self.assertRaises(Exception, inv.get_orientation, 'BW.RJOB..XXX')
 
     def test_response_plot(self):
         """
@@ -335,6 +364,73 @@ class InventoryTestCase(unittest.TestCase):
         # exist.
         self.assertEqual(len(inv.select(network="RR")), 0)
 
+    def test_util_unified_content_string(self):
+        """
+        Tests helper routine that compresses inventory content lists.
+        """
+        contents = (
+            [u'IU.ULN (Ulaanbaatar, Mongolia)',
+             u'IU.ULN (Ulaanbaatar, Mongolia)',
+             u'IU.ULN (Ulaanbaatar, Mongolia)'],
+            [u'IU.ULN.00.BH1', u'IU.ULN.00.BH2', u'IU.ULN.00.BHE',
+             u'IU.ULN.00.BHE', u'IU.ULN.00.BHE', u'IU.ULN.00.BHE',
+             u'IU.ULN.00.BHN', u'IU.ULN.00.BHN', u'IU.ULN.00.BHN',
+             u'IU.ULN.00.BHN', u'IU.ULN.00.BHZ', u'IU.ULN.00.BHZ',
+             u'IU.ULN.00.BHZ', u'IU.ULN.00.BHZ', u'IU.ULN.00.BHZ',
+             u'IU.ULN.00.LH1', u'IU.ULN.00.LH2', u'IU.ULN.00.LHE',
+             u'IU.ULN.00.LHE', u'IU.ULN.00.LHE', u'IU.ULN.00.LHE',
+             u'IU.ULN.00.LHN', u'IU.ULN.00.LHN', u'IU.ULN.00.LHN',
+             u'IU.ULN.00.LHN', u'IU.ULN.00.LHZ', u'IU.ULN.00.LHZ',
+             u'IU.ULN.00.LHZ', u'IU.ULN.00.LHZ', u'IU.ULN.00.LHZ',
+             u'IU.ULN.00.UHE', u'IU.ULN.00.UHE', u'IU.ULN.00.UHN',
+             u'IU.ULN.00.UHN', u'IU.ULN.00.UHZ', u'IU.ULN.00.UHZ',
+             u'IU.ULN.00.VE1', u'IU.ULN.00.VE1', u'IU.ULN.00.VH1',
+             u'IU.ULN.00.VH2', u'IU.ULN.00.VHE', u'IU.ULN.00.VHE',
+             u'IU.ULN.00.VHE', u'IU.ULN.00.VHE', u'IU.ULN.00.VHN',
+             u'IU.ULN.00.VHN', u'IU.ULN.00.VHN', u'IU.ULN.00.VHN',
+             u'IU.ULN.00.VHZ', u'IU.ULN.00.VHZ', u'IU.ULN.00.VHZ',
+             u'IU.ULN.00.VHZ', u'IU.ULN.00.VHZ', u'IU.ULN.00.VK1',
+             u'IU.ULN.00.VK1', u'IU.ULN.00.VM1', u'IU.ULN.00.VM2',
+             u'IU.ULN.00.VME', u'IU.ULN.00.VME', u'IU.ULN.00.VMN',
+             u'IU.ULN.00.VMN', u'IU.ULN.00.VMZ', u'IU.ULN.00.VMZ',
+             u'IU.ULN.00.VMZ'])
+        expected = (
+            [u'IU.ULN (Ulaanbaatar, Mongolia) (3x)'],
+            [u'IU.ULN.00.BHZ (5x)', u'IU.ULN.00.BHN (4x)',
+             u'IU.ULN.00.BHE (4x)', u'IU.ULN.00.BH1', u'IU.ULN.00.BH2',
+             u'IU.ULN.00.LHZ (5x)', u'IU.ULN.00.LHN (4x)',
+             u'IU.ULN.00.LHE (4x)', u'IU.ULN.00.LH1', u'IU.ULN.00.LH2',
+             u'IU.ULN.00.UHZ (2x)', u'IU.ULN.00.UHN (2x)',
+             u'IU.ULN.00.UHE (2x)', u'IU.ULN.00.VE1 (2x)',
+             u'IU.ULN.00.VHZ (5x)', u'IU.ULN.00.VHN (4x)',
+             u'IU.ULN.00.VHE (4x)', u'IU.ULN.00.VH1', u'IU.ULN.00.VH2',
+             u'IU.ULN.00.VK1 (2x)', u'IU.ULN.00.VMZ (3x)',
+             u'IU.ULN.00.VMN (2x)', u'IU.ULN.00.VME (2x)', u'IU.ULN.00.VM1',
+             u'IU.ULN.00.VM2'])
+        for contents_, expected_ in zip(contents, expected):
+            self.assertEqual(expected_, _unified_content_strings(contents_))
+
+    def test_util_unified_content_string_with_dots_in_description(self):
+        """
+        The unified content string might have dots in the station description.
+
+        Make sure it still works.
+        """
+        contents = (
+            ['II.ABKT (Alibek, Turkmenistan)',
+             'II.ALE (Alert, N.W.T., Canada)'],
+            [u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)',
+             u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)',
+             u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia)'],
+        )
+        expected = (
+            ['II.ABKT (Alibek, Turkmenistan)',
+             'II.ALE (Alert, N.W.T., Canada)'],
+            [u'IU.ULN (Ulaanbaatar, A.B.C., Mongolia) (3x)'],
+        )
+        for contents_, expected_ in zip(contents, expected):
+            self.assertEqual(expected_, _unified_content_strings(contents_))
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 class InventoryBasemapTestCase(unittest.TestCase):
@@ -355,7 +451,7 @@ class InventoryBasemapTestCase(unittest.TestCase):
         Basemap.
         """
         inv = read_inventory()
-        reltol = 1.0
+        reltol = 1.3
         # Coordinate lines might be slightly off, depending on the basemap
         # version.
         if BASEMAP_VERSION < [1, 0, 7]:
@@ -394,7 +490,7 @@ class InventoryBasemapTestCase(unittest.TestCase):
         with ImageComparison(self.image_dir, 'inventory_location-basemap3.png',
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
-            inv.plot(method='basemap', projection='local', resolution='i',
+            inv.plot(method='basemap', projection='local', resolution='l',
                      size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                      outfile=ic.name)
 
@@ -405,7 +501,7 @@ class InventoryBasemapTestCase(unittest.TestCase):
         """
         inv = read_inventory()
         cat = read_events()
-        reltol = 1.0
+        reltol = 1.1
         # Coordinate lines might be slightly off, depending on the basemap
         # version.
         if BASEMAP_VERSION < [1, 0, 7]:

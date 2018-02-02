@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Get Flinn-Engdahl region name from longitude and latitude
+Get the Flinn-Engdahl region name from longitude and latitude.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

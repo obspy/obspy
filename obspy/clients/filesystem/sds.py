@@ -50,6 +50,7 @@ import numpy as np
 from obspy import Stream, read, UTCDateTime
 from obspy.core.stream import _headonly_warning_msg
 from obspy.core.util.misc import BAND_CODE
+from obspy.io.mseed import ObsPyMSEEDFilesizeTooSmallError
 
 
 SDS_FMTSTR = os.path.join(
@@ -111,7 +112,7 @@ class Client(object):
             raise IOError(msg)
         self.sds_root = sds_root
         self.sds_type = sds_type
-        self.format = format
+        self.format = format and format.upper()
         self.fileborder_seconds = fileborder_seconds
         self.fileborder_samples = fileborder_samples
 
@@ -170,8 +171,15 @@ class Client(object):
             channel=channel, starttime=starttime, endtime=endtime,
             sds_type=sds_type)
         for full_path in full_paths:
-            st += read(full_path, format=self.format, starttime=starttime,
-                       endtime=endtime, sourcename=seed_pattern, **kwargs)
+            try:
+                st += read(full_path, format=self.format, starttime=starttime,
+                           endtime=endtime, sourcename=seed_pattern, **kwargs)
+            except ObsPyMSEEDFilesizeTooSmallError:
+                # just ignore small MSEED files, in use cases working with
+                # near-realtime data these are usually just being created right
+                # at request time, e.g. when fetching current data right after
+                # midnight
+                continue
 
         # make sure we only have the desired data, just in case the file
         # contents do not match the expected SEED id
@@ -389,10 +397,18 @@ class Client(object):
                 network=network, station=station, location=location,
                 channel=channel, time=time, sds_type=sds_type)
             if os.path.isfile(filename):
-                st = read(filename, format=self.format, headonly=True,
-                          sourcename=seed_pattern)
-                st = st.select(network=network, station=station,
-                               location=location, channel=channel)
+                try:
+                    st = read(filename, format=self.format, headonly=True,
+                              sourcename=seed_pattern)
+                except ObsPyMSEEDFilesizeTooSmallError:
+                    # just ignore small MSEED files, in use cases working with
+                    # near-realtime data these are usually just being created
+                    # right at request time, e.g. when fetching current data
+                    # right after midnight
+                    st = None
+                else:
+                    st = st.select(network=network, station=station,
+                                   location=location, channel=channel)
                 if st:
                     break
             time -= 24 * 3600
@@ -470,7 +486,7 @@ class Client(object):
         else:
             return False
 
-    def get_all_nslc(self, sds_type=None):
+    def get_all_nslc(self, sds_type=None, datetime=None):
         """
         Return information on what streams are included in archive.
 
@@ -481,6 +497,11 @@ class Client(object):
         :type sds_type: str
         :param sds_type: Override SDS data type identifier that was specified
             during client initialization.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param datetime: Only return all streams that have data at specified
+            time (checks if file exists that should have the data, i.e. streams
+            might be returned that have data on the same day but not at exactly
+            this point in time).
         :rtype: list
         :returns: List of (network, station, location, channel) 4-tuples of all
             available streams in archive.
@@ -488,11 +509,14 @@ class Client(object):
         sds_type = sds_type or self.sds_type
         result = set()
         # wildcarded pattern to match all files of interest
-        pattern = re.sub(
-            FORMAT_STR_PLACEHOLDER_REGEX,
-            _wildcarded_except(["sds_type"]),
-            self.FMTSTR).format(sds_type=sds_type)
-        pattern = os.path.join(self.sds_root, pattern)
+        if datetime is None:
+            pattern = re.sub(
+                FORMAT_STR_PLACEHOLDER_REGEX,
+                _wildcarded_except(["sds_type"]),
+                self.FMTSTR).format(sds_type=sds_type)
+            pattern = os.path.join(self.sds_root, pattern)
+        else:
+            pattern = self._get_filename("*", "*", "*", "*", datetime)
         all_files = glob.glob(pattern)
         # set up inverse regex to extract kwargs/values from full paths
         pattern_ = os.path.join(self.sds_root, self.FMTSTR)

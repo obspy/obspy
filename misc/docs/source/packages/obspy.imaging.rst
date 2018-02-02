@@ -3,6 +3,17 @@
 
     .. comment to end block
 
+    Classes & Functions
+    -------------------
+    .. autosummary::
+       :toctree: autogen
+       :nosignatures:
+
+       scripts.scan.Scanner
+       scripts.scan.scan
+
+    .. comment to end block
+
     Modules
     -------
     .. autosummary::

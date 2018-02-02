@@ -23,7 +23,7 @@ char *evr_spline(int num_points, double *t, double *y, double tension,
                                  double k, double *xvals_arr, int num_xvals,
                                  double **p_retvals_arr, int *p_num_retvals)
 {
-    unsigned int i;
+    int i;
     double tval;
     double yval;
     double * ypp;
@@ -63,7 +63,7 @@ char *evr_spline(int num_points, double *t, double *y, double tension,
 
     *p_num_retvals = 0;
 
-    for (i = 0u; i < num_xvals; ++i)
+    for (i = 0; i < num_xvals; ++i)
     {
         tval = xvals_arr[i];
         /* input must be strictly increasing */

@@ -1,0 +1,8 @@
+[Main]
+question = "Select the hardware category"
+
+[Sensor]
+path = "sensors/index.txt"
+
+[Datalogger]
+path = "dataloggers/index.txt"

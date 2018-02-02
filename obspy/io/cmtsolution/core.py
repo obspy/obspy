@@ -97,7 +97,7 @@ def _internal_is_cmtsolution(buf):
     try:
         _internal_read_single_cmtsolution(buf)
         return True
-    except:
+    except Exception:
         return False
 
 

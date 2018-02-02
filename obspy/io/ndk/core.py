@@ -33,8 +33,6 @@ from obspy.core.event import (Axis, Catalog, Comment, CreationInfo, DataUsed,
                               Magnitude, MomentTensor, NodalPlane, NodalPlanes,
                               Origin, PrincipalAxes, SourceTimeFunction,
                               Tensor)
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.geodetics import FlinnEngdahl
 
 
@@ -101,10 +99,10 @@ def _is_ndk(filename):
         try:
             with open(filename, "rt") as fh:
                 first_line = fh.readline()
-        except:
+        except Exception:
             try:
                 filename = filename.decode()
-            except:
+            except Exception:
                 filename = str(filename)
             filename = filename.strip()
             line_ending = filename.find("\n")
@@ -159,10 +157,10 @@ def _read_ndk(filename, *args, **kwargs):  # @UnusedVariable
         try:
             with open(filename, "rt") as fh:
                 data = fh.read()
-        except:
+        except Exception:
             try:
                 data = filename.decode()
-            except:
+            except Exception:
                 data = str(filename)
             data = data.strip()
     else:
@@ -611,16 +609,6 @@ def _read_lines(line1, line2, line3, line4, line5):
     }
 
     return rec
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'is_ndk': 'obspy.io.ndk.core._is_ndk',
-        'read_ndk': 'obspy.io.ndk.core._read_ndk'})
 
 
 if __name__ == '__main__':

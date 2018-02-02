@@ -347,235 +347,223 @@ from . import util as _ut
 from . import arrayio as _io
 
 
-# ------------- HEADER GETTER/SETTERS -----------------------------------------
+# ------------- HEADER DESCRIPTORS --------------------------------------------
 #
-# These are functions used to set up header properties on the SACTrace class.
-# Properties are accessed like class attributes, but use getter and/or setter
-# functions.  They're defined here, outside the class, b/c there are lots of
-# properties and we want to keep the class clean.
-#
-# getter/setter factories:
-# Property getters/setters must be defined for _each_ header, even if they work
-# the exact same way for similar headers, so we define function factories here
-# for groups of headers that will be gotten and set in a similar fashion.
-#
-# Usage: delta_getter = _floatgetter('delta')
-#        delta_setter = _floatsetter('delta')
-# These factories produce functions that simply index into their array to get
-# or set.  Use them for header values in hf, hi, and hs that need no special
-# handling. Values that depend on other values will need their own
-# getters/setters.
+# A descriptor is a class that manages an object attribute, using the
+# descriptor protocol.  A single instance of a descriptor class (FloatHeader,
+# for example) will exist for both the host class and all instances of that
+# host class (i.e. SACTrace and all its instances).  As a result, we must
+# implement logic that can tell if the methods are being called on the host
+# class or on an instance.  This looks like "if instance is None" on methods.
 #
 # See:
-# https://stackoverflow.com/q/2123585
-#
-# TODO: Replace all these factories and properties with Python Descriptors.
-#   http://nbviewer.jupyter.org/urls/gist.github.com/ChrisBeaumont/
-#       5758381/raw/descriptor_writeup.ipynb
-#   Also, don't forget to worry about access to __doc__ on both the class and
-#   the instances.
-#
-# floats
-def _floatgetter(hdr):
-    def get_float(self):
-        value = float(self._hf[HD.FLOATHDRS.index(hdr)])
-        if value == HD.FNULL:
-            value = None
-        return value
-    return get_float
+# https://docs.python.org/3.5/howto/descriptor.html
+# https://nbviewer.jupyter.org/urls/gist.github.com/ChrisBeaumont/
+#   5758381/raw/descriptor_writeup.ipynb
 
-
-def _floatsetter(hdr):
-    def set_float(self, value):
-        if value is None:
-            value = HD.FNULL
-        self._hf[HD.FLOATHDRS.index(hdr)] = value
-    return set_float
-
-
-# ints
-def _intgetter(hdr):
-    def get_int(self):
-        value = int(self._hi[HD.INTHDRS.index(hdr)])
-        if value == HD.INULL:
-            value = None
-        return value
-    return get_int
-
-
-def _intsetter(hdr):
-    def set_int(self, value):
-        if value % 1:
-            warnings.warn("Non-integers may be truncated. ({}: {})".format(
-                hdr, value))
-        if value is None:
-            value = HD.INULL
-        self._hi[HD.INTHDRS.index(hdr)] = value
-    return set_int
-
-
-# logicals/bools (subtype of ints)
-def _boolgetter(hdr):
-    def get_bool(self):
-        value = self._hi[HD.INTHDRS.index(hdr)]
-        return bool(value)
-    return get_bool
-
-
-def _boolsetter(hdr):
-    def set_bool(self, value):
-        if value not in (True, False, 1, 0):
-            msg = "Logical header values must be {True, False, 1, 0}"
-            raise ValueError(msg)
-        # booleans are subclasses of integers.  They will be set (cast)
-        # directly into an integer array as 0 or 1.
-        self._hi[HD.INTHDRS.index(hdr)] = value
-    return set_bool
-
-
-# enumerated values (stored as ints, represented by strings)
-def _enumgetter(hdr):
-    def get_enum(self):
-        value = self._hi[HD.INTHDRS.index(hdr)]
-        if value == HD.INULL:
-            name = None
-        elif _ut.is_valid_enum_int(hdr, value):
-            name = HD.ENUM_NAMES[value]
-        else:
-            msg = """Unrecognized enumerated value {} for header "{}".
-                     See .header for allowed values.""".format(value, hdr)
-            warnings.warn(msg)
-            name = None
-        return name
-    return get_enum
-
-
-def _enumsetter(hdr):
-    def set_enum(self, value):
-        if value is None:
-            value = HD.INULL
-        elif _ut.is_valid_enum_str(hdr, value):
-            value = HD.ENUM_VALS[value]
-        else:
-            msg = 'Unrecognized enumerated value "{}" for header "{}"'
-            raise ValueError(msg.format(value, hdr))
-        self._hi[HD.INTHDRS.index(hdr)] = value
-    return set_enum
-
-
-# strings
-def _strgetter(hdr):
-    def get_str(self):
+class SACHeader(object):
+    def __init__(self, name):
         try:
-            # value is a bytes
-            value = native_str(self._hs[HD.STRHDRS.index(hdr)].decode())
-        except AttributeError:
-            # value is a str
-            value = native_str(self._hs[HD.STRHDRS.index(hdr)])
-
-        if value == HD.SNULL:
-            value = None
-
-        try:
-            value = value.strip()
-        except AttributeError:
-            # it's None.  no .strip method
+            self.__doc__ = HD.DOC[name]
+        except KeyError:
+            # header doesn't have a docstring entry in HD.DOC
             pass
-        return value
-    return get_str
+        self.name = name
 
 
-def _strsetter(hdr):
-    def set_str(self, value):
-        if value is None:
-            value = HD.SNULL
-        elif len(value) > 8:
-            msg = "Alphanumeric headers longer than 8 characters are "\
-                  "right-truncated."
-            warnings.warn(msg)
-        # they will truncate themselves, since _hs is dtype '|S8'
-        try:
-            self._hs[HD.STRHDRS.index(hdr)] = value.encode('ascii', 'strict')
-        except AttributeError:
-            self._hs[HD.STRHDRS.index(hdr)] = value
-
-    return set_str
-
-
-# Factory for functions of .data (min, max, mean, len)
-def _make_data_func(func, hdr):
-    # returns a method that returns the value of func(self.data), or the
-    # corresponding array header value, if data is None
-    def do_data_func(self):
-        try:
-            value = func(self.data)
-            if not isinstance(value, int):
-                value = float(value)
-        except TypeError:
-            # data is None, get the value from header
-            try:
-                value = float(self._hf[HD.FLOATHDRS.index(hdr)])
-                null = HD.FNULL
-            except ValueError:
-                # hdr is 'npts', the only integer
-                # XXX: this also trip if a data-centric header is misspelled?
-                value = int(self._hi[HD.INTHDRS.index(hdr)])
-                null = HD.INULL
-            if value == null:
+class FloatHeader(SACHeader):
+    def __get__(self, instance, instance_type):
+        if instance is None:
+            # a FloatHeader on the owner class was requested.
+            # return the descriptor itself.
+            value = self
+        else:
+            # a FloatHeader on an instance was requested.
+            # return the descriptor value.
+            value = float(instance._hf[HD.FLOATHDRS.index(self.name)])
+            if value == HD.FNULL:
                 value = None
         return value
-    return do_data_func
 
-# TODO: a data setter the requires a float32 array
+    def __set__(self, instance, value):
+        if value is None:
+            value = HD.FNULL
+        instance._hf[HD.FLOATHDRS.index(self.name)] = value
 
 
-# Factory function for setting relative time headers with either a relative
+# Descriptor for setting relative time headers with either a relative
 # time float or an absolute UTCDateTime
 # used for: b, o, a, f, t0-t9
-def _reltime_setter(hdr):
-    def set_reltime(self, value):
+class RelativeTimeHeader(FloatHeader):
+    def __set__(self, instance, value):
+        """
+        Intercept the set value to make sure it is an offset from the SAC
+        reference time.
+
+        """
         if isinstance(value, UTCDateTime):
-            # get the offset from reftime
-            offset = value - self.reftime
+            offset = value - instance.reftime
         else:
-            # value is already a reftime offset.
             offset = value
-        # make and use a _floatsetter to actually set it
-        floatsetter = _floatsetter(hdr)
-        floatsetter(self, offset)
-    return set_reltime
+        # reuse the normal floatheader setter.
+        super(RelativeTimeHeader, self).__set__(instance, offset)
 
 
 # Factory function for setting geographic header values
 #   (evlo, evla, stalo, stalat)
 # that will check lcalda and calculate and set dist, az, baz, gcarc
-def _geosetter(hdr):
-    def set_geo(self, value):
-        # make and use a _floatsetter
-        set_geo_float = _floatsetter(hdr)
-        set_geo_float(self, value)
-        if self.lcalda:
-            # check and maybe set lcalda
+class GeographicHeader(FloatHeader):
+    def __set__(self, instance, value):
+        super(GeographicHeader, self).__set__(instance, value)
+        if instance.lcalda:
             try:
-                self._set_distances()
+                instance._set_distances()
             except SacHeaderError:
                 pass
-    return set_geo
+
+
+class IntHeader(SACHeader):
+    def __get__(self, instance, instance_type):
+        if instance is None:
+            value = self
+        else:
+            value = int(instance._hi[HD.INTHDRS.index(self.name)])
+            if value == HD.INULL:
+                value = None
+        return value
+
+    def __set__(self, instance, value):
+        if value is None:
+            value = HD.INULL
+        if value % 1:
+            warnings.warn("Non-integers may be truncated. ({}: {})".format(
+                self.name, value))
+        instance._hi[HD.INTHDRS.index(self.name)] = value
+
+
+class BoolHeader(IntHeader):
+    def __get__(self, instance, instance_type):
+        # value can be an int or None
+        value = super(BoolHeader, self).__get__(instance, instance_type)
+        return bool(value) if value in (0, 1) else value
+
+    def __set__(self, instance, value):
+        if value not in (True, False, 1, 0):
+            msg = "Logical header values must be {True, False, 1, 0}"
+            raise ValueError(msg)
+        # booleans are subclasses of integers.  They will be set (cast)
+        # directly into an integer array as 0 or 1.
+        super(BoolHeader, self).__set__(instance, value)
+        if self.name == 'lcalda':
+            if value:
+                try:
+                    instance._set_distances()
+                except SacHeaderError:
+                    pass
+
+
+class EnumHeader(IntHeader):
+    def __get__(self, instance, instance_type):
+        value = super(EnumHeader, self).__get__(instance, instance_type)
+        # value is int or None
+        if value is None:
+            name = None
+        elif _ut.is_valid_enum_int(self.name, value):
+            name = HD.ENUM_NAMES[value]
+        else:
+            msg = """Unrecognized enumerated value {} for header "{}".
+                     See .header for allowed values.""".format(value,
+                                                               self.name)
+            warnings.warn(msg)
+            name = None
+        return name
+
+    def __set__(self, instance, value):
+        if value is None:
+            value = HD.INULL
+        elif _ut.is_valid_enum_str(self.name, value):
+            if self.name == 'iztype':
+                reftime = _iztype_reftime(instance, value)
+                instance.reftime = reftime
+                # this also shifts all non-null relative times (instance._allt)
+            value = HD.ENUM_VALS[value]
+        else:
+            msg = 'Unrecognized enumerated value "{}" for header "{}"'
+            raise ValueError(msg.format(value, self.name))
+        super(EnumHeader, self).__set__(instance, value)
+
+
+class StringHeader(SACHeader):
+    def __get__(self, instance, instance_type):
+        if instance is None:
+            value = self
+        else:
+            value = instance._hs[HD.STRHDRS.index(self.name)]
+            try:
+                # value is a bytes
+                value = value.decode()
+            except AttributeError:
+                # value is a str
+                pass
+
+            if value == HD.SNULL:
+                value = None
+
+            try:
+                value = value.strip()
+            except AttributeError:
+                # it's None.  no .strip method
+                pass
+        return value
+
+    def __set__(self, instance, value):
+        if value is None:
+            value = HD.SNULL
+        elif len(value) > 8:
+            msg = ("Alphanumeric headers longer than 8 characters are "
+                   "right-truncated.")
+            warnings.warn(msg)
+        # values will truncate themselves, since _hs is dtype '|S8'
+        try:
+            instance._hs[HD.STRHDRS.index(self.name)] = value.encode('ascii',
+                                                                     'strict')
+        except AttributeError:
+            instance._hs[HD.STRHDRS.index(self.name)] = value
+
+
+# Headers for functions of .data (min, max, mean, len)
+class DataHeader(SACHeader):
+    def __init__(self, name, func):
+        self.func = func
+        super(DataHeader, self).__init__(name)
+
+    def __get__(self, instance, instance_type):
+        if instance is None:
+            value = self
+        else:
+            try:
+                value = self.func(instance.data)
+                # convert to native Python types
+                if self.name in HD.FLOATHDRS:
+                    value = float(value)
+                elif self.name in HD.INTHDRS:
+                    value = int(value)
+            except TypeError:
+                # instance.data is None, get value from header
+                if self.name in HD.FLOATHDRS:
+                    value = instance._hf[HD.FLOATHDRS.index(self.name)].item()
+                    value = None if value == HD.FNULL else value
+                elif self.name in HD.INTHDRS:
+                    value = instance._hi[HD.INTHDRS.index(self.name)].item()
+                    value = None if value == HD.INULL else value
+        return value
+
+    def __set__(self, instance, value):
+        msg = "{} is read-only".format(self.name)
+        raise AttributeError(msg)
 
 
 # OTHER GETTERS/SETTERS
-def _set_lcalda(self, value):
-    # make and use a bool setter for lcalda
-    lcalda_setter = _boolsetter('lcalda')
-    lcalda_setter(self, value)
-    # try to set set distances if "value" evaluates to True
-    if value:
-        try:
-            self._set_distances()
-        except SacHeaderError:
-            pass
-
-
 def _get_e(self):
     try:
         if self.npts:
@@ -589,9 +577,9 @@ def _get_e(self):
     return e
 
 
-def _set_iztype(self, iztype):
+def _iztype_reftime(sactrace, iztype):
     """
-    Set the iztype, which describes what the reftime is.
+    Get the new reftime for a given iztype.
 
     Setting the iztype will shift the relative time headers, such that the
     header that iztype points to is (near) zero, and all others are shifted
@@ -599,6 +587,8 @@ def _set_iztype(self, iztype):
 
     Affected headers: b, o, a, f, t0-t9
 
+    :param sactrace:
+    :type sactrace: SACTrace
     :param iztype: One of the following strings:
         'iunkn'
         'ib', begin time
@@ -607,6 +597,8 @@ def _set_iztype(self, iztype):
         'ia', first arrival time
         'it0'-'it9', user defined pick t0-t9.
     :type iztype: str
+    :rtype reftime: UTCDateTime
+    :return: The new SAC reference time.
 
     """
     # The Plan:
@@ -621,27 +613,24 @@ def _set_iztype(self, iztype):
         ref_val = 0.0
     elif iztype == 'iday':
         # seconds since midnight of reference day
-        reftime = self.reftime
+        reftime = sactrace.reftime
         ref_val = reftime - UTCDateTime(year=reftime.year,
                                         julday=reftime.julday)
     else:
         # a relative time header.
         # remove the 'i' (first character) in the iztype to get the header name
-        ref_val = getattr(self, iztype[1:])
+        ref_val = getattr(sactrace, iztype[1:])
         if ref_val is None:
             msg = "Reference header for iztype '{}' is not set".format(iztype)
             raise SacError(msg)
 
     # 2. set a new reference time,
-    # 3. which also shifts all non-null relative times (self._allt).
+    # 3. which also shifts all non-null relative times (sactrace._allt).
     #    remainder microseconds may be in the reference header value, because
     #    nzmsec can't hold them.
-    self.reftime = self.reftime + ref_val
+    new_reftime = sactrace.reftime + ref_val
 
-    # 4. no exceptions yet. actually set the iztype
-    #    make an _enumsetter for iztype and use it, for its enum checking.
-    izsetter = _enumsetter('iztype')
-    izsetter(self, iztype)
+    return new_reftime
 
 
 # kevnm is 16 characters, split into two 8-character fields
@@ -719,6 +708,121 @@ class SACTrace(object):
     access should be through instance attributes.
 
     """ + HD.HEADER_DOCSTRING
+
+    # ------------------------------- SAC HEADERS -----------------------------
+    # SAC header values are defined as managed attributes, either as
+    # descriptors or as properties, with getters and setters.
+    #
+    # Managed attributes are defined at the class leval, and therefore shared
+    # across all instances, not attribute data themselves.
+    #
+    # This section looks ugly, but it allows for the following:
+    # 1. Relationships/checks between header variables can be done in setters
+    # 2. The underlying header array structure is retained, for quick writing.
+    # 3. Header access looks like simple attribute-access syntax.
+    #    Looks funny to read here, but natural to use.
+    #
+    # FLOATS
+    delta = FloatHeader('delta')
+    depmin = DataHeader('depmin', min)
+    depmax = DataHeader('depmax', max)
+    scale = FloatHeader('scale')
+    odelta = FloatHeader('odelta')
+    b = RelativeTimeHeader('b')
+    e = property(_get_e, doc=HD.DOC['e'])
+    o = RelativeTimeHeader('o')
+    a = RelativeTimeHeader('a')
+    internal0 = FloatHeader('internal0')
+    t0 = RelativeTimeHeader('t0')
+    t1 = RelativeTimeHeader('t1')
+    t2 = RelativeTimeHeader('t2')
+    t3 = RelativeTimeHeader('t3')
+    t4 = RelativeTimeHeader('t4')
+    t5 = RelativeTimeHeader('t5')
+    t6 = RelativeTimeHeader('t6')
+    t7 = RelativeTimeHeader('t7')
+    t8 = RelativeTimeHeader('t8')
+    t9 = RelativeTimeHeader('t9')
+    f = RelativeTimeHeader('f')
+    stla = GeographicHeader('stla')
+    stlo = GeographicHeader('stlo')
+    stel = FloatHeader('stel')
+    stdp = FloatHeader('stdp')
+    evla = GeographicHeader('evla')
+    evlo = GeographicHeader('evlo')
+    evdp = FloatHeader('evdp')
+    mag = FloatHeader('mag')
+    user0 = FloatHeader('user0')
+    user1 = FloatHeader('user1')
+    user2 = FloatHeader('user2')
+    user3 = FloatHeader('user3')
+    user4 = FloatHeader('user4')
+    user5 = FloatHeader('user5')
+    user6 = FloatHeader('user6')
+    user7 = FloatHeader('user7')
+    user8 = FloatHeader('user8')
+    user9 = FloatHeader('user9')
+    dist = FloatHeader('dist')
+    az = FloatHeader('az')
+    baz = FloatHeader('baz')
+    gcarc = FloatHeader('gcarc')
+    depmen = DataHeader('depmen', np.mean)
+    cmpaz = FloatHeader('cmpaz')
+    cmpinc = FloatHeader('cmpinc')
+    #
+    # INTS
+    nzyear = IntHeader('nzyear')
+    nzjday = IntHeader('nzjday')
+    nzhour = IntHeader('nzhour')
+    nzmin = IntHeader('nzmin')
+    nzsec = IntHeader('nzsec')
+    nzmsec = IntHeader('nzmsec')
+    nvhdr = IntHeader('nvhdr')
+    norid = IntHeader('norid')
+    nevid = IntHeader('nevid')
+    npts = DataHeader('npts', len)
+    nwfid = IntHeader('nwfid')
+    iftype = EnumHeader('iftype')
+    idep = EnumHeader('idep')
+    iztype = EnumHeader('iztype')
+    iinst = IntHeader('iinst')
+    istreg = IntHeader('istreg')
+    ievreg = IntHeader('ievreg')
+    ievtyp = EnumHeader('ievtyp')
+    iqual = IntHeader('iqual')
+    isynth = EnumHeader('isynth')
+    imagtyp = EnumHeader('imagtyp')
+    imagsrc = EnumHeader('imagsrc')
+    leven = BoolHeader('leven')
+    lpspol = BoolHeader('lpspol')
+    lovrok = BoolHeader('lovrok')
+    lcalda = BoolHeader('lcalda')
+    unused23 = IntHeader('unused23')
+    #
+    # STRINGS
+    kstnm = StringHeader('kstnm')
+    kevnm = property(_get_kevnm, _set_kevnm, doc=HD.DOC['kevnm'])
+    khole = StringHeader('khole')
+    ko = StringHeader('ko')
+    ka = StringHeader('ka')
+    kt0 = StringHeader('kt0')
+    kt1 = StringHeader('kt1')
+    kt2 = StringHeader('kt2')
+    kt3 = StringHeader('kt3')
+    kt4 = StringHeader('kt4')
+    kt5 = StringHeader('kt5')
+    kt6 = StringHeader('kt6')
+    kt7 = StringHeader('kt7')
+    kt8 = StringHeader('kt8')
+    kt9 = StringHeader('kt9')
+    kf = StringHeader('kf')
+    kuser0 = StringHeader('kuser0')
+    kuser1 = StringHeader('kuser1')
+    kuser2 = StringHeader('kuser2')
+    kcmpnm = StringHeader('kcmpnm')
+    knetwk = StringHeader('knetwk')
+    kdatrd = StringHeader('kdatrd')
+    kinst = StringHeader('kinst')
 
     def __init__(self, leven=True, delta=1.0, b=0.0, e=0.0, iztype='ib',
                  nvhdr=6, npts=0, iftype='itime', nzyear=1970, nzjday=1,
@@ -809,179 +913,6 @@ class SACTrace(object):
         self.data = data
 
         self._set_distances()
-
-    # ---------------------------- SET UP HEADERS -----------------------------
-    # SAC header values are set up as attributes, with getters and setters
-    # format: header = property(getter_function, setter_function)
-    #
-    # Attributes are outside of __init__ b/c properties are just instructions
-    # about how to retrieve attributes (getters/setters), and therefore shared
-    # across all instances, not attribute data themselves.
-    #
-    # This section looks ugly, but it allows for the following:
-    # 1. Relationships/checks between header variables can be done in setters
-    # 2. The underlying header array structure is retained, for quick writing.
-    # 3. Header access looks like simple attribute-access syntax.
-    #    Looks funny to read here, but natural to use.
-
-    # NOTE: To make something read-only, omit second argument to "property".
-
-    # FLOATS
-    delta = property(_floatgetter('delta'), _floatsetter('delta'),
-                     doc=HD.DOC['delta'])
-    depmin = property(_make_data_func(min, 'depmin'), doc=HD.DOC['depmin'])
-    depmax = property(_make_data_func(max, 'depmax'), doc=HD.DOC['depmax'])
-    scale = property(_floatgetter('scale'), _floatsetter('scale'),
-                     doc=HD.DOC['scale'])
-    odelta = property(_floatgetter('odelta'), _floatsetter('odelta'),
-                      doc=HD.DOC['odelta'])
-    b = property(_floatgetter('b'), _reltime_setter('b'), doc=HD.DOC['b'])
-    e = property(_get_e, doc=HD.DOC['e'])
-    o = property(_floatgetter('o'), _reltime_setter('o'), doc=HD.DOC['o'])
-    a = property(_floatgetter('a'), _reltime_setter('a'), doc=HD.DOC['a'])
-    internal0 = property(_floatgetter('internal0'), _floatsetter('internal0'))
-    t0 = property(_floatgetter('t0'), _reltime_setter('t0'), doc=HD.DOC['t0'])
-    t1 = property(_floatgetter('t1'), _reltime_setter('t1'), doc=HD.DOC['t1'])
-    t2 = property(_floatgetter('t2'), _reltime_setter('t2'), doc=HD.DOC['t2'])
-    t3 = property(_floatgetter('t3'), _reltime_setter('t3'), doc=HD.DOC['t3'])
-    t4 = property(_floatgetter('t4'), _reltime_setter('t4'), doc=HD.DOC['t4'])
-    t5 = property(_floatgetter('t5'), _reltime_setter('t5'), doc=HD.DOC['t5'])
-    t6 = property(_floatgetter('t6'), _reltime_setter('t6'), doc=HD.DOC['t6'])
-    t7 = property(_floatgetter('t7'), _reltime_setter('t7'), doc=HD.DOC['t7'])
-    t8 = property(_floatgetter('t8'), _reltime_setter('t8'), doc=HD.DOC['t8'])
-    t9 = property(_floatgetter('t9'), _reltime_setter('t9'), doc=HD.DOC['t9'])
-    f = property(_floatgetter('f'), _reltime_setter('f'), doc=HD.DOC['f'])
-    stla = property(_floatgetter('stla'), _geosetter('stla'),
-                    doc=HD.DOC['stla'])
-    stlo = property(_floatgetter('stlo'), _geosetter('stlo'),
-                    doc=HD.DOC['stlo'])
-    stel = property(_floatgetter('stel'), _floatsetter('stel'),
-                    doc=HD.DOC['stel'])
-    stdp = property(_floatgetter('stdp'), _floatsetter('stdp'),
-                    doc=HD.DOC['stdp'])
-    evla = property(_floatgetter('evla'), _geosetter('evla'),
-                    doc=HD.DOC['evla'])
-    evlo = property(_floatgetter('evlo'), _geosetter('evlo'),
-                    doc=HD.DOC['evlo'])
-    evdp = property(_floatgetter('evdp'), _floatsetter('evdp'),
-                    doc=HD.DOC['evdp'])
-    mag = property(_floatgetter('mag'), _floatsetter('mag'), doc=HD.DOC['mag'])
-    user0 = property(_floatgetter('user0'), _floatsetter('user0'),
-                     doc=HD.DOC['user0'])
-    user1 = property(_floatgetter('user1'), _floatsetter('user1'),
-                     doc=HD.DOC['user1'])
-    user2 = property(_floatgetter('user2'), _floatsetter('user2'),
-                     doc=HD.DOC['user2'])
-    user3 = property(_floatgetter('user3'), _floatsetter('user3'),
-                     doc=HD.DOC['user3'])
-    user4 = property(_floatgetter('user4'), _floatsetter('user4'),
-                     doc=HD.DOC['user4'])
-    user5 = property(_floatgetter('user5'), _floatsetter('user5'),
-                     doc=HD.DOC['user5'])
-    user6 = property(_floatgetter('user6'), _floatsetter('user6'),
-                     doc=HD.DOC['user6'])
-    user7 = property(_floatgetter('user7'), _floatsetter('user7'),
-                     doc=HD.DOC['user7'])
-    user8 = property(_floatgetter('user8'), _floatsetter('user8'),
-                     doc=HD.DOC['user8'])
-    user9 = property(_floatgetter('user9'), _floatsetter('user9'),
-                     doc=HD.DOC['user9'])
-    dist = property(_floatgetter('dist'), _floatsetter('dist'),
-                    doc=HD.DOC['dist'])
-    az = property(_floatgetter('az'), _floatsetter('az'), doc=HD.DOC['az'])
-    baz = property(_floatgetter('baz'), _floatsetter('baz'), doc=HD.DOC['baz'])
-    gcarc = property(_floatgetter('gcarc'), _floatsetter('gcarc'),
-                     doc=HD.DOC['gcarc'])
-    depmen = property(_make_data_func(np.mean, 'depmen'), doc=HD.DOC['depmen'])
-    cmpaz = property(_floatgetter('cmpaz'), _floatsetter('cmpaz'),
-                     doc=HD.DOC['cmpaz'])
-    cmpinc = property(_floatgetter('cmpinc'), _floatsetter('cmpinc'),
-                      doc=HD.DOC['cmpinc'])
-    #
-    # INTS
-    nzyear = property(_intgetter('nzyear'), _intsetter('nzyear'),
-                      doc=HD.DOC['nzyear'])
-    nzjday = property(_intgetter('nzjday'), _intsetter('nzjday'),
-                      doc=HD.DOC['nzjday'])
-    nzhour = property(_intgetter('nzhour'), _intsetter('nzhour'),
-                      doc=HD.DOC['nzhour'])
-    nzmin = property(_intgetter('nzmin'), _intsetter('nzmin'),
-                     doc=HD.DOC['nzmin'])
-    nzsec = property(_intgetter('nzsec'), _intsetter('nzsec'),
-                     doc=HD.DOC['nzsec'])
-    nzmsec = property(_intgetter('nzmsec'), _intsetter('nzmsec'),
-                      doc=HD.DOC['nzmsec'])
-    nvhdr = property(_intgetter('nvhdr'), _intsetter('nvhdr'),
-                     doc=HD.DOC['nvhdr'])
-    norid = property(_intgetter('norid'), _intsetter('norid'),
-                     doc=HD.DOC['norid'])
-    nevid = property(_intgetter('nevid'), _intsetter('nevid'),
-                     doc=HD.DOC['nevid'])
-    npts = property(_make_data_func(len, 'npts'), doc=HD.DOC['npts'])
-    nwfid = property(_intgetter('nwfid'), _intsetter('nwfid'),
-                     doc=HD.DOC['nwfid'])
-    iftype = property(_enumgetter('iftype'), _enumsetter('iftype'),
-                      doc=HD.DOC['iftype'])
-    idep = property(_enumgetter('idep'), _enumsetter('idep'),
-                    doc=HD.DOC['idep'])
-    iztype = property(_enumgetter('iztype'), _set_iztype, doc=HD.DOC['iztype'])
-    iinst = property(_intgetter('iinst'), _intsetter('iinst'),
-                     doc=HD.DOC['iinst'])
-    istreg = property(_intgetter('istreg'), _intsetter('istreg'),
-                      doc=HD.DOC['istreg'])
-    ievreg = property(_intgetter('ievreg'), _intsetter('ievreg'),
-                      doc=HD.DOC['ievreg'])
-    ievtyp = property(_enumgetter('ievtyp'), _enumsetter('ievtyp'),
-                      doc=HD.DOC['ievtyp'])
-    iqual = property(_intgetter('iqual'), _intsetter('iqual'),
-                     doc=HD.DOC['iqual'])
-    isynth = property(_enumgetter('isynth'), _enumsetter('isynth'),
-                      doc=HD.DOC['isynth'])
-    imagtyp = property(_enumgetter('imagtyp'), _enumsetter('imagtyp'),
-                       doc=HD.DOC['imagtyp'])
-    imagsrc = property(_enumgetter('imagsrc'), _enumsetter('imagsrc'),
-                       doc=HD.DOC['imagsrc'])
-    leven = property(_boolgetter('leven'), _boolsetter('leven'),
-                     doc=HD.DOC['leven'])
-    lpspol = property(_boolgetter('lpspol'), _boolsetter('lpspol'),
-                      doc=HD.DOC['lpspol'])
-    lovrok = property(_boolgetter('lovrok'), _boolsetter('lovrok'),
-                      doc=HD.DOC['lovrok'])
-    lcalda = property(_boolgetter('lcalda'), _set_lcalda, doc=HD.DOC['lcalda'])
-    unused23 = property(_intgetter('unused23'), _intsetter('unused23'))
-    #
-    # STRINGS
-    kstnm = property(_strgetter('kstnm'), _strsetter('kstnm'),
-                     doc=HD.DOC['kstnm'])
-    kevnm = property(_get_kevnm, _set_kevnm, doc=HD.DOC['kevnm'])
-    khole = property(_strgetter('khole'), _strsetter('khole'),
-                     doc=HD.DOC['khole'])
-    ko = property(_strgetter('ko'), _strsetter('ko'), doc=HD.DOC['ko'])
-    ka = property(_strgetter('ka'), _strsetter('ka'), doc=HD.DOC['ka'])
-    kt0 = property(_strgetter('kt0'), _strsetter('kt0'), doc=HD.DOC['kt0'])
-    kt1 = property(_strgetter('kt1'), _strsetter('kt1'), doc=HD.DOC['kt1'])
-    kt2 = property(_strgetter('kt2'), _strsetter('kt2'), doc=HD.DOC['kt2'])
-    kt3 = property(_strgetter('kt3'), _strsetter('kt3'), doc=HD.DOC['kt3'])
-    kt4 = property(_strgetter('kt4'), _strsetter('kt4'), doc=HD.DOC['kt4'])
-    kt5 = property(_strgetter('kt5'), _strsetter('kt5'), doc=HD.DOC['kt5'])
-    kt6 = property(_strgetter('kt6'), _strsetter('kt6'), doc=HD.DOC['kt6'])
-    kt7 = property(_strgetter('kt7'), _strsetter('kt7'), doc=HD.DOC['kt7'])
-    kt8 = property(_strgetter('kt8'), _strsetter('kt8'), doc=HD.DOC['kt8'])
-    kt9 = property(_strgetter('kt9'), _strsetter('kt9'), doc=HD.DOC['kt9'])
-    kf = property(_strgetter('kf'), _strsetter('kf'), doc=HD.DOC['kf'])
-    kuser0 = property(_strgetter('kuser0'), _strsetter('kuser0'),
-                      doc=HD.DOC['kuser0'])
-    kuser1 = property(_strgetter('kuser1'), _strsetter('kuser1'),
-                      doc=HD.DOC['kuser1'])
-    kuser2 = property(_strgetter('kuser2'), _strsetter('kuser2'),
-                      doc=HD.DOC['kuser2'])
-    kcmpnm = property(_strgetter('kcmpnm'), _strsetter('kcmpnm'),
-                      doc=HD.DOC['kcmpnm'])
-    knetwk = property(_strgetter('knetwk'), _strsetter('knetwk'),
-                      doc=HD.DOC['knetwk'])
-    kdatrd = property(_strgetter('kdatrd'), _strsetter('kdatrd'))
-    kinst = property(_strgetter('kinst'), _strsetter('kinst'),
-                     doc=HD.DOC['kinst'])
 
     @property
     def _header(self):
@@ -1100,7 +1031,7 @@ class SACTrace(object):
     # --------------------------- I/O METHODS ---------------------------------
     @classmethod
     def read(cls, source, headonly=False, ascii=False, byteorder=None,
-             checksize=False, debug_strings=False):
+             checksize=False, debug_strings=False, encoding='ASCII'):
         """
         Construct an instance from a binary or ASCII file on disk.
 
@@ -1125,6 +1056,9 @@ class SACTrace(object):
             beginning with '-12345' are considered unset. If True, they
             are instead passed without modification.  Good for debugging.
         :type debug_strings: bool
+        :param encoding: Encoding string that passes the user specified
+        encoding scheme.
+        :type encoding: str
 
         :raises: :class:`SacIOError` if checksize failed, byteorder was wrong,
             or header arrays are wrong size.
@@ -1158,10 +1092,11 @@ class SACTrace(object):
                                             checksize=checksize)
         if not debug_strings:
             for i, val in enumerate(hs):
-                val = _ut._clean_str(val, strip_whitespace=False)
+                val = _ut._clean_str(val.decode(encoding, 'replace'),
+                                     strip_whitespace=False)
                 if val.startswith(native_str('-12345')):
                     val = HD.SNULL
-                hs[i] = val
+                hs[i] = val.encode(encoding, 'replace')
 
         sac = cls._from_arrays(hf, hi, hs, data)
         if sac.dist is None:
@@ -1231,7 +1166,7 @@ class SACTrace(object):
         .. rubric:: Example
 
         >>> sac = SACTrace._from_arrays()
-        >>> print(sac)  # doctest: +NORMALIZE_WHITESPACE
+        >>> print(sac)  # doctest: +NORMALIZE_WHITESPACE +SKIP
         Reference Time = XX/XX/XX (XXX) XX:XX:XX.XXXXXX
             iztype not set
         lcalda     = True
@@ -1312,7 +1247,7 @@ class SACTrace(object):
 
         return sac
 
-    def to_obspy_trace(self, debug_headers=False):
+    def to_obspy_trace(self, debug_headers=False, encoding='ASCII'):
         """
         Return an ObsPy Trace instance.
 
@@ -1322,6 +1257,9 @@ class SACTrace(object):
         :param debug_headers: Include _all_ SAC headers into the
             Trace.stats.sac dictionary.
         :type debug_headers: bool
+        :param encoding: Encoding string that passes the user specified
+        encoding scheme.
+        :type encoding: str
 
         .. rubric:: Example
 
@@ -1354,7 +1292,8 @@ class SACTrace(object):
             data = self.data
 
         sachdr = _io.header_arrays_to_dict(self._hf, self._hi, self._hs,
-                                           nulls=debug_headers)
+                                           nulls=debug_headers,
+                                           encoding=encoding)
         # TODO: logic to use debug_headers for real
 
         stats = _ut.sac_to_obspy_header(sachdr)

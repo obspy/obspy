@@ -16,26 +16,42 @@ from future.builtins import *  # NOQA
 
 import hashlib
 
+
+# M2Crypto - default choice - raises early if wrong password
 try:
     from M2Crypto import EVP
-    hasM2Crypto = True
+    HAS_M2CRYPTO = True
 except ImportError:
-    hasM2Crypto = False
+    HAS_M2CRYPTO = False
 
+# cryptography - a bit slower due to 3DES
+try:
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, \
+        modes
+    from cryptography.hazmat.backends import default_backend
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
+
+# PyCrypto - last fallback
 try:
     from Crypto.Cipher import DES
-    hasPyCrypto = True
+    HAS_PYCRYPTO = True
 except ImportError:
-    hasPyCrypto = False
+    HAS_PYCRYPTO = False
+
+
+HAS_CRYPTOLIB = HAS_M2CRYPTO or HAS_PYCRYPTO or HAS_CRYPTOGRAPHY
 
 
 class SSLWrapper:
     """
     """
     def __init__(self, password):
-        if not (hasM2Crypto or hasPyCrypto):
-            raise ImportError("Module M2Crypto or PyCrypto is needed.")
-        self._cypher = None
+        if not HAS_CRYPTOLIB:
+            raise ImportError(
+                'M2Crypto, PyCrypto or cryptography is not installed')
+        self._cipher = None
         self._password = None
         if password is None:
             raise Exception('Password should not be Empty')
@@ -43,27 +59,37 @@ class SSLWrapper:
             self._password = password
 
     def update(self, chunk):
-        if self._cypher is None:
+        if self._cipher is None:
             if len(chunk) < 16:
                 raise Exception('Invalid first chunk (Size < 16).')
             if chunk[0:8] != b"Salted__":
                 raise Exception('Invalid first chunk (expected: Salted__')
             [key, iv] = self._get_key_iv(self._password, chunk[8:16])
-            chunk = chunk[16:]
-            if len(chunk) <= 0:
-                return ''
-            if hasM2Crypto:
-                self._cypher = EVP.Cipher('des_cbc', key, iv, 0)
-                return self._cypher.update(chunk)
+            if HAS_M2CRYPTO:
+                self._cipher = EVP.Cipher('des_cbc', key, iv, 0)
+            elif HAS_CRYPTOGRAPHY:
+                self._cipher = Cipher(algorithms.TripleDES(key), modes.CBC(iv),
+                                      backend=default_backend()).decryptor()
             else:
-                self._cypher = DES.new(key, DES.MODE_CBC, iv)
-                return self._cypher.decrypt(chunk)
+                self._cipher = DES.new(key, DES.MODE_CBC, iv)
+            chunk = chunk[16:]
+        if len(chunk) > 0:
+            if HAS_M2CRYPTO:
+                return self._cipher.update(chunk)
+            elif HAS_CRYPTOGRAPHY:
+                return self._cipher.update(chunk)
+            else:
+                return self._cipher.decrypt(chunk)
+        else:
+            return b""
 
     def final(self):
-        if self._cypher is None:
+        if self._cipher is None:
             raise Exception('Wrapper has not started yet.')
-        if hasM2Crypto:
-            return self._cypher.final()
+        if HAS_M2CRYPTO:
+            return self._cipher.final()
+        elif HAS_CRYPTOGRAPHY:
+            return self._cipher.finalize()
         else:
             return b""
 

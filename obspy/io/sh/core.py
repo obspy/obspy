@@ -15,15 +15,13 @@ from future.utils import native_str
 
 import io
 import os
-import sys
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
+from obspy.core.compatibility import from_buffer
 from obspy.core.util import loadtxt
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP',
@@ -88,7 +86,7 @@ def _is_asc(filename):
     try:
         with open(filename, 'rb') as f:
             temp = f.read(6)
-    except:
+    except Exception:
         return False
     if temp != b'DELTA:':
         return False
@@ -318,7 +316,7 @@ def _is_q(filename):
     try:
         with open(filename, 'rb') as f:
             temp = f.read(5)
-    except:
+    except Exception:
         return False
     if temp != b'43981':
         return False
@@ -467,7 +465,7 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
             # read data
             data = fh_data.read(npts * 4)
             dtype = native_str(byteorder + 'f4')
-            data = np.fromstring(data, dtype=dtype)
+            data = from_buffer(data, dtype=dtype)
             # convert to system byte order
             data = np.require(data, native_str('=f4'))
             stream.append(Trace(data=data, header=header))
@@ -515,7 +513,7 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
             trcs = _read_q(filename_header, headonly=True)
             mode = 'ab'
             count_offset = len(trcs)
-        except:
+        except Exception:
             raise Exception("Target filename '%s' not readable!" % filename)
     else:
         append = False
@@ -573,7 +571,7 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
             try:
                 line = "%02d|%s\n" % ((i + 1 + count_offset) % 100, temp[j])
                 fh.write(line.encode('ascii', 'strict'))
-            except:
+            except Exception:
                 line = "%02d|\n" % ((i + 1 + count_offset) % 100)
                 fh.write(line.encode('ascii', 'strict'))
         # write data in given byte order
@@ -655,21 +653,6 @@ def from_utcdatetime(dt):
 
     return pattern % (dt.day, MONTHS[dt.month - 1], dt.year, dt.hour,
                       dt.minute, dt.second, dt.microsecond / 1000)
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'fromUTCDateTime': 'obspy.io.sh.core.from_utcdatetime',
-        'isASC': 'obspy.io.sh.core._is_asc',
-        'isQ': 'obspy.io.sh.core._is_q',
-        'readASC': 'obspy.io.sh.core._read_asc',
-        'readQ': 'obspy.io.sh.core._read_q',
-        'writeASC': 'obspy.io.sh.core._write_asc',
-        'writeQ': 'obspy.io.sh.core._write_q'})
 
 
 if __name__ == '__main__':

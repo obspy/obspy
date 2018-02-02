@@ -38,7 +38,7 @@ def is_nlloc_hyp(filename):
     try:
         with open(filename, 'rb') as fh:
             temp = fh.read(6)
-    except:
+    except Exception:
         return False
     if temp != b'NLLOC ':
         return False
@@ -86,10 +86,10 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
             with open(filename, "rb") as fh:
                 data = fh.read()
             data = data.decode("UTF-8")
-        except:
+        except Exception:
             try:
                 data = filename.decode("UTF-8")
-            except:
+            except Exception:
                 data = str(filename)
             data = data.strip()
     else:
@@ -145,7 +145,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         for line in lines[1:-1]:
             assert not line.startswith("NLLOC ")
             assert not line.startswith("END_NLLOC")
-    except:
+    except Exception:
         msg = ("This should not have happened, please report this as a bug at "
                "https://github.com/obspy/obspy/issues.")
         raise Exception(msg)
@@ -172,7 +172,11 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
 
     line = line.rstrip().split('"')[1]
     signature, version, date, time = line.rsplit(" ", 3)
-    creation_time = UTCDateTime().strptime(date + time, str("%d%b%Y%Hh%Mm%S"))
+    # new NLLoc > 6.0 seems to add prefix 'run:' before date
+    if date.startswith('run:'):
+        date = date[4:]
+    signature = signature.strip()
+    creation_time = UTCDateTime.strptime(date + time, str("%d%b%Y%Hh%Mm%S"))
 
     if coordinate_converter:
         # maximum likelihood origin location in km info line
@@ -216,6 +220,11 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
     # goto location quality info line
     line = lines["QML_OriginUncertainty"]
 
+    if "COMMENT" in lines:
+        comment = lines["COMMENT"].strip()
+        comment = comment.strip('\'"')
+        comment = comment.strip()
+
     hor_unc, min_hor_unc, max_hor_unc, hor_unc_azim = \
         map(float, line.split()[1:9:2])
 
@@ -223,17 +232,25 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
     event = Event()
     o = Origin()
     event.origins = [o]
+    event.preferred_origin_id = o.resource_id
     o.origin_uncertainty = OriginUncertainty()
     o.quality = OriginQuality()
     ou = o.origin_uncertainty
     oq = o.quality
-    o.comments.append(Comment(text=stats_info_string))
+    o.comments.append(Comment(text=stats_info_string, force_resource_id=False))
+    event.comments.append(Comment(text=comment, force_resource_id=False))
 
+    # SIGNATURE field's first item is LOCSIG, which is supposed to be
+    # 'Identification of an individual, institiution or other entity'
+    # according to
+    # http://alomax.free.fr/nlloc/soft6.00/control.html#_NLLoc_locsig_
+    # so use it as author in creation info
     event.creation_info = CreationInfo(creation_time=creation_time,
-                                       version=version)
-    event.creation_info.version = version
+                                       version=version,
+                                       author=signature)
     o.creation_info = CreationInfo(creation_time=creation_time,
-                                   version=version)
+                                   version=version,
+                                   author=signature)
 
     # negative values can appear on diagonal of covariance matrix due to a
     # precision problem in NLLoc implementation when location coordinates are
@@ -312,7 +329,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         # empty network code
         wid = WaveformStreamID(network_code="", station_code=station)
         date, hourmin, sec = map(str, line[6:9])
-        t = UTCDateTime().strptime(date + hourmin, "%Y%m%d%H%M") + float(sec)
+        t = UTCDateTime.strptime(date + hourmin, "%Y%m%d%H%M") + float(sec)
         pick.waveform_id = wid
         pick.time = t
         pick.time_errors.uncertainty = float(line[10])
@@ -389,7 +406,7 @@ def write_nlloc_obs(catalog, filename, **kwargs):
             try:
                 time_error = (pick.time_errors.upper_uncertainty +
                               pick.time_errors.lower_uncertainty) / 2.0
-            except:
+            except Exception:
                 pass
         info_ = fmt % (station.ljust(6), "?".ljust(4), component.ljust(4),
                        onset.ljust(1), phase_type.ljust(6), polarity.ljust(1),

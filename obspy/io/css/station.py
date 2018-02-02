@@ -13,10 +13,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import sys
-
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy import UTCDateTime
 
 
@@ -167,12 +163,3 @@ def _write_css(inventory, basename):
         with open(basename + '.sitechan', 'wt') as fh:
             fh.write('\n'.join(sitechan))
             fh.write('\n')
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'writeCSS': 'obspy.io.css.station._write_css'})

@@ -6,7 +6,12 @@
       <version>ObsPy 0.9.2-1209-g0e9965dae0-dirty</version>
     </creationInfo>
     <event publicID="smi:local/cd1f535c-e75e-4dc6-8170-82e47cb40501">
+      <preferredOriginID>smi:local/3cb10e44-6aeb-4279-8caa-235452e5c9b3</preferredOriginID>
+      <comment>
+        <text>NonLinLoc OctTree Location</text>
+      </comment>
       <creationInfo>
+        <author>Megies LMU Munich</author>
         <creationTime>2014-10-17T16:30:08.000000Z</creationTime>
         <version>NLLoc:v6.00.0</version>
       </creationInfo>
@@ -42,11 +47,12 @@
           <maximumDistance>0.0751741131744</maximumDistance>
           <medianDistance>0.030874699985</medianDistance>
         </quality>
-        <comment id="smi:local/93aa18a6-1ac9-4a65-b4cd-b8349ab1bc91">
+        <comment>
             <text>Note: Depth/Latitude/Longitude errors are calculated from covariance matrix as 1D marginal (Lon/Lat errors as great circle degrees) while OriginUncertainty min/max horizontal errors are calculated from 2D error ellipsoid and are therefore seemingly higher compared to 1D errors. Error estimates can be reconstructed from the following original NonLinLoc error statistics line:
 STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ 0.0043871 YY 0.0191034 YZ 0.00503624 ZZ 0.036713 EllAz1  206.782 Dip1  16.4026 Len1  0.227982 Az2  300.149 Dip2  11.2855 Len2  0.327468 Len3  3.709256e-01</text>
         </comment>
         <creationInfo>
+          <author>Megies LMU Munich</author>
           <creationTime>2014-10-17T16:30:08.000000Z</creationTime>
           <version>NLLoc:v6.00.0</version>
         </creationInfo>

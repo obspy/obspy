@@ -6,19 +6,23 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 import os
 import unittest
 from struct import unpack
+import warnings
 
 import numpy as np
 
 from obspy import UTCDateTime, read
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, AttribDict
 from obspy.io.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
                                 _is_segy, _is_su, _read_segy, _read_su,
                                 _write_segy, _write_su)
 from obspy.io.segy.segy import _read_segy as _read_segy_internal
-from obspy.io.segy.segy import SEGYError
+from obspy.io.segy.segy import SEGYError, SEGYFile, SEGYTrace, \
+    SEGYBinaryFileHeader
+from obspy.io.segy.tests import _patch_header
 from obspy.io.segy.tests.header import DTYPES, FILES
 
 
@@ -231,6 +235,11 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Save the header to compare it later on.
         with open(file, 'rb') as f:
             header = f.read(3200)
+
+        # All newly written header will have the file revision number and
+        # the end header mark set - just also set them in the old header.
+        header = _patch_header(header, ebcdic=True)
+
         # First write should remain EBCDIC.
         with NamedTemporaryFile() as tf:
             out_file = tf.name
@@ -239,7 +248,10 @@ class SEGYCoreTestCase(unittest.TestCase):
             # Compare header.
             with open(out_file, 'rb') as f:
                 new_header = f.read(3200)
-        self.assertEqual(header, new_header)
+        # re-encode both to ASCII to easily compare them.
+        self.assertEqual(
+            header.decode("EBCDIC-CP-BE").encode("ASCII"),
+            new_header.decode("EBCDIC-CP-BE").encode("ASCII"))
         self.assertEqual(st2.stats.textual_file_header_encoding,
                          'EBCDIC')
         # Do once again to enforce EBCDIC.
@@ -341,9 +353,10 @@ class SEGYCoreTestCase(unittest.TestCase):
                 out_file1 = tf1.name
                 with NamedTemporaryFile() as tf2:
                     out_file2 = tf2.name
-                    # Write twice.
-                    segy_file.write(out_file1)
-                    _write_segy(st, out_file2)
+                    # Write twice and catch header warnings
+                    with warnings.catch_warnings(record=True):
+                        segy_file.write(out_file1)
+                        _write_segy(st, out_file2)
                     # Read and delete files.
                     with open(out_file1, 'rb') as f1:
                         data1 = f1.read()
@@ -381,6 +394,8 @@ class SEGYCoreTestCase(unittest.TestCase):
         """
         file = os.path.join(self.path, '1.sgy_first_trace')
         segy = _read_segy(file)
+        segy.stats.textual_file_header = \
+            _patch_header(segy.stats.textual_file_header)
         segy[0].stats.sampling_rate = 20
         with NamedTemporaryFile() as tf:
             outfile = tf.name
@@ -418,6 +433,8 @@ class SEGYCoreTestCase(unittest.TestCase):
             # Test for SEG Y.
             file = os.path.join(self.path, '1.sgy_first_trace')
             segy = _read_segy(file)
+            segy.stats.textual_file_header = \
+                _patch_header(segy.stats.textual_file_header)
             # Set the largest possible delta value which should just work.
             segy[0].stats.delta = 0.065535
             _write_segy(segy, outfile)
@@ -507,6 +524,8 @@ class SEGYCoreTestCase(unittest.TestCase):
                           second == 54], 5 * [True])
         # Read and set zero time.
         segy = _read_segy(file)
+        segy.stats.textual_file_header = \
+            _patch_header(segy.stats.textual_file_header)
         segy[0].stats.starttime = UTCDateTime(0)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
@@ -577,9 +596,82 @@ class SEGYCoreTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'one_trace_year_11.sgy')
         st = _read_segy(filename)
         st[0].stats.segy.trace_header['source_coordinate_x'] = -1
+        st.stats.textual_file_header = \
+            _patch_header(st.stats.textual_file_header)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
             st.write(outfile, format='SEGY')
+
+    def test_comparing_still_packed_trace_headers(self):
+        """
+        Regression test to guard against an issue that caused an exception
+        to be raised when attempting to compare two still packed trace headers.
+
+        The exception only occured when reading the `obspy.read()`.
+        """
+        file = os.path.join(self.path, '1.sgy_first_trace')
+        # The exception was
+        header_a = read(file)[0].stats.segy.trace_header
+        header_b = read(file)[0].stats.segy.trace_header
+        self.assertEqual(header_a, header_b)
+
+    def test_reading_and_writing_with_unset_dates(self):
+        f = SEGYFile()
+        f.binary_file_header = SEGYBinaryFileHeader()
+        s = SEGYTrace()
+        f.traces = [s]
+        s.data = np.ones(10, dtype=np.float32)
+
+        # Create a dummy file with only the year set.
+        s.header.year_data_recorded = 2015
+        with io.BytesIO() as buf:
+            f.write(buf, data_encoding=5)
+            buf.seek(0, 0)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                st = read(buf, format="segy")
+        # Should result in the correct year.
+        self.assertEqual(st[0].stats.starttime, UTCDateTime(2015, 1, 1))
+        self.assertEqual(len(w), 1)
+        self.assertEqual(
+            w[0].message.args[0],
+            "Trace starttime does not store a proper date (day of year is "
+            "zero). Using January 1st 00:00 as trace start time.")
+
+        # No date set at all.
+        s.header.year_data_recorded = 0
+        with io.BytesIO() as buf:
+            f.write(buf, data_encoding=5)
+            buf.seek(0, 0)
+            st = read(buf, format="segy")
+        # Results in 1970, 1, 1
+        self.assertEqual(st[0].stats.starttime, UTCDateTime(0))
+
+    def test_writing_text_and_binary_textual_file_headers(self):
+        """
+        Make sure the textual file header can be written if has been passed
+        either as text or as a bytestring.
+        """
+        # Loop over bytes/text and the textual header encoding.
+        for textual_file_header in [b"12345", "12345"]:
+            for encoding in ["ASCII", "EBCDIC"]:
+                st = read()
+                for tr in st:
+                    tr.data = np.require(tr.data, dtype=np.float32)
+                st.stats = AttribDict()
+                st.stats.textual_file_header = textual_file_header
+                with io.BytesIO() as buf:
+                    # Warning raised to create a complete header.
+                    with warnings.catch_warnings(record=True):
+                        st.write(buf, format="SEGY", data_encoding=5,
+                                 textual_header_encoding=encoding)
+                    buf.seek(0, 0)
+                    # Read with SEG-Y to preserve the textual file header.
+                    st2 = _read_segy(buf)
+                self.assertEqual(
+                    # Ignore the auto-generated parts of the header.
+                    st2.stats.textual_file_header.decode().split()[0],
+                    "12345")
 
 
 def suite():

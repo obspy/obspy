@@ -10,11 +10,14 @@ import os
 import shutil
 import unittest
 from os.path import abspath, dirname, join, pardir
+import warnings
 
+from obspy import read
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.misc import TemporaryWorkingDirectory
+from obspy.core.util.misc import TemporaryWorkingDirectory, CatchOutput
 from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.scan import main as obspy_scan
+from obspy.imaging.scripts.scan import scan, Scanner
 
 
 class ScanTestCase(unittest.TestCase):
@@ -39,7 +42,7 @@ class ScanTestCase(unittest.TestCase):
                           for i in gse2_files])
         self.all_files = all_files
 
-    def test_scan(self):
+    def test_scan_main_method(self):
         """
         Run obspy-scan on selected tests/data directories
         """
@@ -49,7 +52,82 @@ class ScanTestCase(unittest.TestCase):
                 shutil.copy(filename, os.curdir)
 
             with ImageComparison(self.path, 'scan.png') as ic:
-                obspy_scan([os.curdir] + ['--output', ic.name, '--quiet'])
+                obspy_scan([os.curdir] + ['--output', ic.name])
+
+    def test_scan_function_and_scanner_class(self):
+        """
+        Test scan function and Scanner class (in one test to keep overhead of
+        copying files down)
+        """
+        scanner = Scanner()
+        # Copy files to a temp folder to avoid wildcard scans.
+        with TemporaryWorkingDirectory():
+            for filename in self.all_files:
+                shutil.copy(filename, os.curdir)
+
+            scanner.parse(os.curdir)
+
+            with ImageComparison(self.path, 'scan.png') as ic:
+                scan(paths=os.curdir, plot=ic.name)
+
+        with ImageComparison(self.path, 'scan.png') as ic:
+            scanner.plot(ic.name)
+
+    def test_scanner_manually_add_streams(self):
+        """
+        Test Scanner class, manually adding streams of read data files
+        """
+        scanner = Scanner()
+        # Copy files to a temp folder to avoid wildcard scans.
+        with TemporaryWorkingDirectory():
+            for filename in self.all_files:
+                shutil.copy(filename, os.curdir)
+
+            for file_ in os.listdir(os.curdir):
+                # some files used in the test cases actually can not
+                # be read with obspy..
+                if file_ in ('STA2.testlines_out', 'STA2.testlines',
+                             'seism-shorter.sac', 'seism-longer.sac'):
+                    continue
+                st = read(file_, headonly=True)
+                scanner.add_stream(st)
+
+        with ImageComparison(self.path, 'scan.png') as ic:
+            scanner.plot(ic.name)
+
+    def test_scan_save_load_npz(self):
+        """
+        Run obspy-scan on selected tests/data directories, saving/loading
+        to/from npz.
+
+        Tests both the command line script and the Scanner class.
+        """
+        scanner = Scanner()
+        # Copy files to a temp folder to avoid wildcard scans.
+        with TemporaryWorkingDirectory():
+            for filename in self.all_files:
+                shutil.copy(filename, os.curdir)
+
+            # save via command line
+            obspy_scan([os.curdir, '--write', 'scan.npz'])
+
+            # save via Python
+            scanner.parse(os.curdir)
+            scanner.save_npz('scanner.npz')
+            scanner = Scanner()
+
+            # version string of '0.0.0+archive' raises UserWarning - ignore
+            with warnings.catch_warnings(record=True):
+                warnings.simplefilter('ignore', UserWarning)
+
+                # load via Python
+                scanner.load_npz('scanner.npz')
+                with ImageComparison(self.path, 'scan.png') as ic:
+                    scanner.plot(ic.name)
+
+                # load via command line
+                with ImageComparison(self.path, 'scan.png') as ic:
+                    obspy_scan(['--load', 'scan.npz', '--output', ic.name])
 
     def test_scan_times(self):
         """
@@ -65,8 +143,7 @@ class ScanTestCase(unittest.TestCase):
                            ['--start-time', '2004-01-01'] +
                            ['--end-time', '2004-12-31'] +
                            ['--event-time', '2004-03-14T15:09:26'] +
-                           ['--event-time', '2004-02-07T18:28:18'] +
-                           ['--quiet'])
+                           ['--event-time', '2004-02-07T18:28:18'])
 
     def test_multiple_sampling_rates(self):
         """
@@ -76,12 +153,17 @@ class ScanTestCase(unittest.TestCase):
             "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, "
             "2008-01-15T00:00:00.000000, SLIST, INTEGER, Counts",
             "TIMESERIES XX_TEST__BHZ_R,  50 samples,  50 sps, "
-            "2008-01-15T00:00:01.000000, SLIST, INTEGER, Counts",
+            "2008-01-15T00:00:00.900000, SLIST, INTEGER, Counts",
             "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, "
             "2008-01-15T00:00:02.000000, SLIST, INTEGER, Counts",
         ]
-
         files = []
+        expected = [
+            "XX.TEST..BHZ 2008-01-15T00:00:01.000000Z "
+            "2008-01-15T00:00:00.899995Z -0.100",
+            "XX.TEST..BHZ 2008-01-15T00:00:01.899999Z "
+            "2008-01-15T00:00:02.000000Z 0.100"
+        ]
         with NamedTemporaryFile() as f1, NamedTemporaryFile() as f2, \
                 NamedTemporaryFile() as f3:
             for i, fp in enumerate([f1, f2, f3]):
@@ -92,7 +174,9 @@ class ScanTestCase(unittest.TestCase):
                 files.append(fp.name)
             with ImageComparison(self.path, 'scan_mult_sampl.png')\
                     as ic:
-                obspy_scan(files + ['--output', ic.name, '--quiet'])
+                with CatchOutput() as out:
+                    obspy_scan(files + ['--output', ic.name, '--print-gaps'])
+                self.assertEqual(expected, out.stdout.splitlines())
 
 
 def suite():

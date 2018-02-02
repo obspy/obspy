@@ -6,6 +6,7 @@ from future.builtins import *  # NOQA
 import math
 import unittest
 import warnings
+import numpy as np
 
 from obspy.geodetics import (calc_vincenty_inverse, degrees2kilometers,
                              gps2dist_azimuth, kilometer2degrees,
@@ -242,6 +243,49 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         assert_loc(0, 0, 0, 90, 10018)
         assert_loc(0, 0, 0, 180, 20004)
         assert_loc(11, 55, 11, 55, 0)
+
+        # test numpy inputs:
+        # Inline method to avoid messy code.
+        def assert_loc_np(lat1, long1, lat2, long2,
+                          approx_distance, expected_output_len):
+            loc2deg = locations2degrees(np.array(lat1),
+                                        np.array(long1),
+                                        np.array(lat2),
+                                        np.array(long2))
+            self.assertTrue((np.abs(np.radians(loc2deg) * 6371 -
+                                    approx_distance) <= 20).all())
+            self.assertTrue(np.isscalar(loc2deg)
+                            if expected_output_len == 0 else
+                            len(loc2deg) == expected_output_len)
+
+        # Test just with random location (combining scalars and arrays).
+        assert_loc_np(36.12, -86.67, 33.94, -118.40, 2893, 0)
+        assert_loc_np([36.12, 36.12], -86.67, 33.94, -118.40,
+                      2893, 2)
+        assert_loc_np(36.12, [-86.67, -86.67], 33.94, -118.40,
+                      2893, 2)
+        assert_loc_np(36.12, -86.67, [33.94, 33.94], -118.40,
+                      2893, 2)
+        assert_loc_np(36.12, -86.67, 33.94, [-118.40, -118.40],
+                      2893, 2)
+        assert_loc_np([36.12, 36.12], [-86.67, -86.67], 33.94, -118.40,
+                      2893, 2)
+        assert_loc_np([36.12, 36.12], -86.67, [33.94, 33.94], -118.40,
+                      2893, 2)
+        assert_loc_np([36.12, 36.12], -86.67, 33.94, [-118.40, -118.40],
+                      2893, 2)
+        assert_loc_np([36.12, 36.12], [-86.67, -86.67], [33.94, 33.94],
+                      -118.40, 2893, 2)
+        assert_loc_np([36.12, 36.12], -86.67, [33.94, 33.94],
+                      [-118.40, -118.40], 2893, 2)
+        assert_loc_np(36.12, [-86.67, -86.67], [33.94, 33.94],
+                      [-118.40, -118.40], 2893, 2)
+        assert_loc_np([36.12, 36.12], [-86.67, -86.67], [33.94, 33.94],
+                      [-118.40, -118.40], 2893, 2)
+
+        # test numpy broadcasting (bad shapes)
+        with self.assertRaises(ValueError):
+            locations2degrees(1, 2, [3, 4], [5, 6, 7])
 
     @unittest.skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not '
                                             'installed')

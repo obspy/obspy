@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ns0:inventory xmlns:ns0="http://geofon.gfz-potsdam.de/ns/Inventory/1.0/">
+	<ns0:network archive="ODC" code="BE" description="Belgian Seismic Network" end="" institutions="" netClass="p" publicID="Network#20151120131751.410592.2" region="" restricted="false" shared="true" start="1980-01-01T00:00:00.0000Z" type="">
+		<ns0:remark />
+		<ns0:station affiliation="Belgian Seismic Network" archive="ODC" archiveNetworkCode="" code="BEBN" country="Belgium" description="Eben-Emael, Belgium" elevation="80.0" end="" latitude="50.797" longitude="5.6778" place="Eben-Emael" publicID="Station#20151120131751.411348.3" restricted="false" shared="true" start="2005-06-24T00:00:00.0000Z" type="">
+			<ns0:remark />
+			<ns0:sensorLocation code="" elevation="80.0" end="" latitude="50.797" longitude="5.6778" publicID="SensorLocation#20151120131751.413203.4" start="2005-06-24T00:00:00.0000Z">
+				<ns0:stream azimuth="0.0" clockSerialNumber="" code="HHZ" datalogger="Datalogger#20151120131751.414.5" dataloggerChannel="0" dataloggerSerialNumber="xxxx" depth="0.0" dip="-90.0" end="" flags="G" format="Steim2" gain="3193610000.0" gainFrequency="1.0" gainUnit="M/S" restricted="false" sampleRateDenominator="1" sampleRateNumerator="125" sensor="Sensor#20151120131751.419499.13" sensorChannel="0" sensorSerialNumber="yyyy" shared="true" start="2005-06-24T00:00:00.0000Z" />
+			</ns0:sensorLocation>
+		</ns0:station>
+	</ns0:network>
+	<ns0:datalogger clockManufacturer="" clockModel="" clockType="" description="BEBN.2005.175.H" digitizerManufacturer="" digitizerModel="" gain="399201.0" maxClockDrift="0.0" name="BEBN.2005.175.H" publicID="Datalogger#20151120131751.414.5" recorderManufacturer="" recorderModel="">
+		<ns0:remark />
+		<ns0:decimation sampleRateDenominator="1" sampleRateNumerator="125">
+			<ns0:analogueFilterChain>ResponsePAZ#20151120131751.419251.12</ns0:analogueFilterChain>
+			<ns0:digitalFilterChain />
+		</ns0:decimation>
+	</ns0:datalogger>
+	<ns0:sensor description="CMG40T" highFrequency="" lowFrequency="" manufacturer="" model="CMG40T" name="BEBN.2005.175.HZ" publicID="Sensor#20151120131751.419499.13" response="ResponsePAZ#20151120131751.419624.14" type="" unit="M/S">
+		<ns0:remark />
+	</ns0:sensor>
+	<ns0:responsePAZ gain="10.0" gainFrequency="1.0" name="BEBN..HHZ.2005.175.stage_2" normalizationFactor="45637.0" normalizationFrequency="1.0" numberOfPoles="2" numberOfZeros="0" publicID="ResponsePAZ#20151120131751.419251.12" type="A">
+		<ns0:zeros />
+		<ns0:poles>(-151.058,151.058) (-151.058,-151.058)</ns0:poles>
+		<ns0:remark />
+	</ns0:responsePAZ>
+	<ns0:responsePAZ gain="800.0" gainFrequency="1.0" name="BEBN.2005.175.HZ" normalizationFactor="571508000.0" normalizationFrequency="1.0" numberOfPoles="5" numberOfZeros="2" publicID="ResponsePAZ#20151120131751.419624.14" type="A">
+		<ns0:zeros>(0.0,0.0) (0.0,0.0)</ns0:zeros>
+		<ns0:poles>(-0.148032,-0.148032) (-0.148032,0.148032) (-1130.97,0.0) (-1005.31,-0.0) (-502.655,-0.0)</ns0:poles>
+		<ns0:remark />
+	</ns0:responsePAZ>
+</ns0:inventory>

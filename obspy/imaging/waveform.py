@@ -23,24 +23,23 @@ from future.utils import native_str
 
 import io
 import warnings
+import functools
 from copy import copy
 from datetime import datetime
-from dateutil.rrule import MINUTELY, SECONDLY
 
 import numpy as np
 import matplotlib.lines as mlines
 import matplotlib.patches as patches
 from matplotlib.cm import get_cmap
-from matplotlib.dates import AutoDateLocator, date2num
+from matplotlib.dates import date2num
 from matplotlib.path import Path
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util import create_empty_data_chunk
-from obspy.core.util.decorator import deprecated
+from obspy.core.util import create_empty_data_chunk, MATPLOTLIB_VERSION
 from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
-from obspy.imaging.util import (ObsPyAutoDateFormatter, _id_key, _timestring)
+from obspy.imaging.util import (_set_xaxis_obspy_dates, _id_key, _timestring)
 
 
 MINMAX_ZOOMLEVEL_WARNING_TEXT = "Warning: Zooming into MinMax Plot!"
@@ -217,6 +216,8 @@ class WaveformPlotting(object):
         self.one_tick_per_line = kwargs.get('one_tick_per_line', False)
         self.show_y_UTC_label = kwargs.get('show_y_UTC_label', True)
         self.title = kwargs.get('title', self.stream[0].id)
+        self.fillcolor_pos, self.fillcolor_neg = \
+            kwargs.get('fillcolors', (None, None))
 
     def __del__(self):
         """
@@ -249,16 +250,6 @@ class WaveformPlotting(object):
         for tr in self.stream:
             ids.add(self.__get_merge_id(tr))
         return sorted(ids, key=_id_key)
-
-    @deprecated(
-        "'plotWaveform' has been renamed to "  # noqa
-        "'plot_waveform'. Use that instead.")
-    def plotWaveform(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'plotWaveform' has been renamed to
-        'plot_waveform'. Use that instead.
-        '''
-        return self.plot_waveform(*args, **kwargs)
 
     def plot_waveform(self, *args, **kwargs):
         """
@@ -332,7 +323,7 @@ class WaveformPlotting(object):
                     if not self.fig_obj and self.show:
                         try:
                             plt.show(block=self.block)
-                        except:
+                        except Exception:
                             plt.show()
 
     def plot(self, *args, **kwargs):
@@ -385,9 +376,14 @@ class WaveformPlotting(object):
                 sharex = None
             else:
                 sharex = self.axis[0]
+            # TODO remove once minimum required matplotlib version reaches 2.0
+            # see matplotlib/matplotlib#5501
+            if MATPLOTLIB_VERSION < [2, 0]:
+                axis_facecolor_kwargs = dict(axisbg=self.background_color)
+            else:
+                axis_facecolor_kwargs = dict(facecolor=self.background_color)
             ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
-                                      axisbg=self.background_color,
-                                      sharex=sharex)
+                                      sharex=sharex, **axis_facecolor_kwargs)
             self.axis.append(ax)
             # XXX: Also enable the minmax plotting for previews.
             method_ = self.plotting_method
@@ -412,16 +408,6 @@ class WaveformPlotting(object):
         xmax = self._time_to_xvalue(self.endtime)
         ax.set_xlim(xmin, xmax)
         self._draw_overlap_axvspan_legend()
-
-    @deprecated(
-        "'plotDay' has been renamed to "  # noqa
-        "'plot_day'. Use that instead.")
-    def plotDay(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'plotDay' has been renamed to
-        'plot_day'. Use that instead.
-        '''
-        return self.plot_day(*args, **kwargs)
 
     def plot_day(self, *args, **kwargs):
         """
@@ -457,7 +443,13 @@ class WaveformPlotting(object):
                 self.repeat = intervals
         # Create axis to plot on.
         if self.background_color:
-            ax = self.fig.add_subplot(1, 1, 1, axisbg=self.background_color)
+            # TODO remove once minimum required matplotlib version reaches 2.0
+            # see matplotlib/matplotlib#5501
+            if MATPLOTLIB_VERSION < [2, 0]:
+                axis_facecolor_kwargs = dict(axisbg=self.background_color)
+            else:
+                axis_facecolor_kwargs = dict(facecolor=self.background_color)
+            ax = self.fig.add_subplot(1, 1, 1, **axis_facecolor_kwargs)
         else:
             ax = self.fig.add_subplot(1, 1, 1)
         # Adjust the subplots
@@ -819,13 +811,9 @@ class WaveformPlotting(object):
         ax = self.axis[-1]
         if self.type == "relative":
             locator = MaxNLocator(5)
+            ax.xaxis.set_major_locator(locator)
         else:
-            ax.xaxis_date()
-            locator = AutoDateLocator(minticks=3, maxticks=6)
-            locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
-            locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
-            ax.xaxis.set_major_formatter(ObsPyAutoDateFormatter(locator))
-        ax.xaxis.set_major_locator(locator)
+            _set_xaxis_obspy_dates(ax)
         plt.setp(ax.get_xticklabels(), fontsize='small',
                  rotation=self.tick_rotation)
 
@@ -1091,16 +1079,6 @@ class WaveformPlotting(object):
             self.twin_x.set_yticklabels(y_ticklabels_twin,
                                         size=self.y_labels_size)
 
-    @deprecated(
-        "'plotSection' has been renamed to "  # noqa
-        "'plot_section'. Use that instead.")
-    def plotSection(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'plotSection' has been renamed to
-        'plot_section'. Use that instead.
-        '''
-        return self.plot_section(*args, **kwargs)
-
     def plot_section(self, *args, **kwargs):  # @UnusedVariable
         """
         Plots multiple waveforms as a record section on a single plot.
@@ -1195,7 +1173,7 @@ class WaveformPlotting(object):
             try:
                 for _i, tr in enumerate(self.stream):
                     self._tr_offsets[_i] = tr.stats.distance
-            except:
+            except Exception:
                 msg = 'trace.stats.distance undefined ' +\
                       '(set before plotting [in m], ' +\
                       'or use the ev_coords argument)'
@@ -1208,7 +1186,7 @@ class WaveformPlotting(object):
                         tr.stats.coordinates.latitude,
                         tr.stats.coordinates.longitude,
                         self.ev_coord[0], self.ev_coord[1])
-            except:
+            except Exception:
                 msg = 'Define latitude/longitude in trace.stats.' + \
                     'coordinates and ev_coord. See documentation.'
                 raise ValueError(msg)
@@ -1314,6 +1292,23 @@ class WaveformPlotting(object):
         self.plot_section()
         """
         ax = self.fig.gca()
+        # Matplotlib 1.5.x does not support interpolation on fill_betweenx
+        # Should be integrated by version 2.1
+        # (see https://github.com/matplotlib/matplotlib/pull/6560)
+        fill_kwargs = {"lw": 0}
+        # There's a strange problem with matplotlib 1.4.1 and 1.4.2.
+        # It seems to not render the filled PolyCollection
+        # objects if linewidth is set to 0 (see http://tests.obspy.org/48219/,
+        # #1502). To circumvent this, use a line color with alpha 0 (and a very
+        # small linewidth).
+        if [1, 4, 1] <= MATPLOTLIB_VERSION < [1, 4, 3]:
+            fill_kwargs = {"edgecolor": (0, 0, 0, 0), "lw": 0.01}
+
+        if self.sect_orientation == 'vertical':
+            self.fillfun = functools.partial(ax.fill_betweenx, **fill_kwargs)
+        else:
+            self.fillfun = functools.partial(ax.fill_between, interpolate=True,
+                                             **fill_kwargs)
         # Calculate normalizing factor
         self.__sect_normalize_traces()
         # Calculate scaling factor
@@ -1333,6 +1328,14 @@ class WaveformPlotting(object):
             else:
                 raise NotImplementedError("sect_orientiation '%s' is not "
                                           "valid." % self.sect_orientation)
+            if self.fillcolor_pos:
+                self.fillfun(time, data, self._tr_offsets[_tr],
+                             where=data > self._tr_offsets[_tr],
+                             facecolor=self.fillcolor_pos)
+            if self.fillcolor_neg:
+                self.fillfun(time, data, self._tr_offsets[_tr],
+                             where=data < self._tr_offsets[_tr],
+                             facecolor=self.fillcolor_neg)
 
         # Set correct axes orientation
         if self.sect_orientation == 'vertical':

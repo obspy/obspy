@@ -33,7 +33,7 @@ from lxml.etree import Element, SubElement, tostring
 
 from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guess_delta
-from obspy.core.util.decorator import deprecated, deprecated_keywords
+from obspy.core.util.decorator import deprecated_keywords
 from obspy.io.xseed import Parser
 
 
@@ -107,8 +107,9 @@ class Client(object):
     >>> t = UTCDateTime("2009-09-03 00:00:00")
     >>> client = Client(timeout=20)
     >>>
-    >>> st = client.waveform.get_waveforms("BW", "RTBE", "", "EHZ", t, t + 20)
-    >>> print(st)  # doctest: +ELLIPSIS
+    >>> st = client.waveform.get_waveforms(
+    ...     "BW", "RTBE", "", "EHZ", t, t + 20)  # doctest: +SKIP
+    >>> print(st)  # doctest: +ELLIPSIS +SKIP
     1 Trace(s) in Stream:
     BW.RTBE..EHZ | 2009-09-03T00:00:00.000000Z - ... | 200.0 Hz, 4001 samples
     """  # noqa
@@ -160,18 +161,8 @@ class Client(object):
             t1 = time.time()
             urllib_request.urlopen(self.base_url, timeout=self.timeout).read()
             return (time.time() - t1) * 1000.0
-        except:
+        except Exception:
             pass
-
-    @deprecated(
-        "'testAuth' has been renamed to "  # noqa
-        "'test_auth'. Use that instead.")
-    def testAuth(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'testAuth' has been renamed to
-        'test_auth'. Use that instead.
-        '''
-        return self.test_auth(*args, **kwargs)
 
     def test_auth(self):
         """
@@ -270,11 +261,6 @@ class _BaseRESTClient(object):
     def __init__(self, client):
         self.client = client
 
-    @deprecated("'getResource' has been renamed to 'get_resource'. Use "
-                "that instead.")  # noqa
-    def getResource(self, *args, **kwargs):
-        return self.get_resource(*args, **kwargs)
-
     def get_resource(self, resource_name, format=None, **kwargs):
         """
         Gets a resource.
@@ -293,11 +279,6 @@ class _BaseRESTClient(object):
               resource_name
         return self.client._fetch(url, **kwargs)
 
-    @deprecated("'getXMLResource' has been renamed to 'get_xml_resource'. Use "
-                "that instead.")  # noqa
-    def getXMLResource(self, *args, **kwargs):
-        return self.get_xml_resource(*args, **kwargs)
-
     def get_xml_resource(self, resource_name, **kwargs):
         """
         Gets a XML resource.
@@ -309,11 +290,6 @@ class _BaseRESTClient(object):
         url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
               resource_name
         return self.client._objectify(url, **kwargs)
-
-    @deprecated("'putResource' has been renamed to 'put_resource'. Use "
-                "that instead.")  # noqa
-    def putResource(self, *args, **kwargs):
-        return self.put_resource(*args, **kwargs)
 
     def put_resource(self, resource_name, xml_string, headers={}):
         """
@@ -341,11 +317,6 @@ class _BaseRESTClient(object):
                         self.resourcetype, resource_name])
         return self.client._http_request(
             url, method="PUT", xml_string=xml_string, headers=headers)
-
-    @deprecated("'deleteResource' has been renamed to 'delete_resource'. Use "
-                "that instead.")  # noqa
-    def deleteResource(self, *args, **kwargs):
-        return self.delete_resource(*args, **kwargs)
 
     def delete_resource(self, resource_name, headers={}):
         """
@@ -378,11 +349,6 @@ master/seishub/plugins/seismology/waveform.py
     def __init__(self, client):
         self.client = client
 
-    @deprecated("'getNetworkIds' has been renamed to 'get_network_ids'. Use "
-                "that instead.")  # noqa
-    def getNetworkIds(self, *args, **kwargs):
-        return self.get_network_ids(*args, **kwargs)
-
     def get_network_ids(self, **kwargs):
         """
         Gets a list of network ids.
@@ -393,11 +359,6 @@ master/seishub/plugins/seismology/waveform.py
         url = '/seismology/waveform/getNetworkIds'
         root = self.client._objectify(url, **kwargs)
         return [str(node['network']) for node in root.getchildren()]
-
-    @deprecated("'getStationIds' has been renamed to 'get_station_ids'. "
-                "Use that instead.")  # noqa
-    def getStationIds(self, *args, **kwargs):
-        return self.get_station_ids(*args, **kwargs)
 
     def get_station_ids(self, network=None, **kwargs):
         """
@@ -415,11 +376,6 @@ master/seishub/plugins/seismology/waveform.py
         url = '/seismology/waveform/getStationIds'
         root = self.client._objectify(url, **kwargs)
         return [str(node['station']) for node in root.getchildren()]
-
-    @deprecated("'getLocationIds' has been renamed to 'get_location_ids'. Use "
-                "that instead.")  # noqa
-    def getLocationIds(self, *args, **kwargs):
-        return self.get_location_ids(*args, **kwargs)
 
     def get_location_ids(self, network=None, station=None, **kwargs):
         """
@@ -439,11 +395,6 @@ master/seishub/plugins/seismology/waveform.py
         url = '/seismology/waveform/getLocationIds'
         root = self.client._objectify(url, **kwargs)
         return [str(node['location']) for node in root.getchildren()]
-
-    @deprecated("'getChannelIds' has been renamed to 'get_channel_ids'. Use "
-                "that instead.")  # noqa
-    def getChannelIds(self, *args, **kwargs):
-        return self.get_channel_ids(*args, **kwargs)
 
     def get_channel_ids(self, network=None, station=None, location=None,
                         **kwargs):
@@ -466,11 +417,6 @@ master/seishub/plugins/seismology/waveform.py
         url = '/seismology/waveform/getChannelIds'
         root = self.client._objectify(url, **kwargs)
         return [str(node['channel']) for node in root.getchildren()]
-
-    @deprecated("'getLatency' has been renamed to 'get_latency'. Use "
-                "that instead.")  # noqa
-    def getLatency(self, *args, **kwargs):
-        return self.get_latency(*args, **kwargs)
 
     def get_latency(self, network=None, station=None, location=None,
                     channel=None, **kwargs):
@@ -496,13 +442,6 @@ master/seishub/plugins/seismology/waveform.py
         root = self.client._objectify(url, **kwargs)
         return _objectify_result_to_dicts(root)
 
-    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. "
-                "Use that instead.")  # noqa
-    def getWaveform(self, *args, **kwargs):
-        return self.get_waveforms(*args, **kwargs)
-
-    @deprecated_keywords({
-        "getPAZ": "get_paz", "getCoordinates": "get_coordinates"})
     def get_waveforms(self, network, station, location=None, channel=None,
                       starttime=None, endtime=None, apply_filter=None,
                       get_paz=False, get_coordinates=False,
@@ -604,11 +543,6 @@ master/seishub/plugins/seismology/waveform.py
                 tr.stats['coordinates'] = coords.copy()
         return stream
 
-    @deprecated("'getPreview' has been renamed to 'get_previews'. Use "
-                "that instead.")  # noqa
-    def getPreview(self, *args, **kwargs):
-        return self.get_previews(*args, **kwargs)
-
     def get_previews(self, network, station, location=None, channel=None,
                      starttime=None, endtime=None, trace_ids=None, **kwargs):
         """
@@ -643,11 +577,6 @@ master/seishub/plugins/seismology/waveform.py
         stream = _unpickle(data)
         return stream
 
-    @deprecated("'getPreviewByIds' has been renamed to 'get_previews_by_ids'. "
-                "Use that instead.")  # noqa
-    def getPreviewByIds(self, *args, **kwargs):
-        return self.get_previews_by_ids(*args, **kwargs)
-
     def get_previews_by_ids(self, trace_ids=None, starttime=None, endtime=None,
                             **kwargs):
         """
@@ -666,6 +595,7 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
+
         # concatenate list of IDs into string
         if 'trace_ids' in kwargs:
             if isinstance(kwargs['trace_ids'], list):
@@ -693,11 +623,6 @@ master/seishub/plugins/seismology/waveform.py
     package = 'seismology'
     resourcetype = 'station'
 
-    @deprecated("'getList' has been renamed to 'get_list'. Use "
-                "that instead.")  # noqa
-    def getList(self, *args, **kwargs):
-        return self.get_list(*args, **kwargs)
-
     def get_list(self, network=None, station=None, **kwargs):
         """
         Gets a list of station information.
@@ -716,11 +641,6 @@ master/seishub/plugins/seismology/waveform.py
         url = '/seismology/station/getList'
         root = self.client._objectify(url, **kwargs)
         return _objectify_result_to_dicts(root)
-
-    @deprecated("'getCoordinates' has been renamed to 'get_coordinates'. Use "
-                "that instead.")  # noqa
-    def getCoordinates(self, *args, **kwargs):
-        return self.get_coordinates(*args, **kwargs)
 
     def get_coordinates(self, network, station, datetime, location=''):
         """
@@ -782,11 +702,6 @@ master/seishub/plugins/seismology/waveform.py
             coords[key] = metadata[key]
         return coords
 
-    @deprecated("'getPAZ' has been renamed to 'get_paz'. Use "
-                "that instead.")  # noqa
-    def getPAZ(self, *args, **kwargs):
-        return self.get_paz(*args, **kwargs)
-
     def get_paz(self, seed_id, datetime):
         """
         Get PAZ for a station at given time span. Gain is the A0 normalization
@@ -804,16 +719,17 @@ master/seishub/plugins/seismology/waveform.py
         .. rubric:: Example
 
         >>> c = Client(timeout=20)
-        >>> paz = c.station.get_paz('BW.MANZ..EHZ', '20090707')
-        >>> paz['zeros']
+        >>> paz = c.station.get_paz(
+        ...     'BW.MANZ..EHZ', '20090707')  # doctest: +SKIP
+        >>> paz['zeros']  # doctest: +SKIP
         [0j, 0j]
-        >>> len(paz['poles'])
+        >>> len(paz['poles'])  # doctest: +SKIP
         5
-        >>> print(paz['poles'][0])
+        >>> print(paz['poles'][0])  # doctest: +SKIP
         (-0.037004+0.037016j)
-        >>> paz['gain']
+        >>> paz['gain']  # doctest: +SKIP
         60077000.0
-        >>> paz['sensitivity']
+        >>> paz['sensitivity']  # doctest: +SKIP
         2516800000.0
         """
         # try to read PAZ from previously obtained XSEED data
@@ -823,7 +739,7 @@ master/seishub/plugins/seismology/waveform.py
                 paz = parser.get_paz(seed_id=seed_id,
                                      datetime=UTCDateTime(datetime))
                 return paz
-            except:
+            except Exception:
                 continue
         network, station, location, channel = seed_id.split(".")
         # request station information
@@ -863,11 +779,6 @@ master/seishub/plugins/seismology/event.py
     """
     package = 'seismology'
     resourcetype = 'event'
-
-    @deprecated("'getList' has been renamed to 'get_list'. Use "
-                "that instead.")  # noqa
-    def getList(self, *args, **kwargs):
-        return self.get_list(*args, **kwargs)
 
     @deprecated_keywords({
         "first_pick": None, "last_pick": None})
@@ -913,11 +824,6 @@ master/seishub/plugins/seismology/event.py
             warnings.warn(msg)
         return results
 
-    @deprecated("'getEvents' has been renamed to 'get_events'. Use "
-                "that instead.")  # noqa
-    def getEvents(self, *args, **kwargs):
-        return self.get_events(*args, **kwargs)
-
     def get_events(self, **kwargs):
         """
         Fetches a catalog with event information. Parameters to narrow down
@@ -941,11 +847,6 @@ master/seishub/plugins/seismology/event.py
         for resource_name in resource_names:
             cat.extend(read_events(self.get_resource(resource_name)))
         return cat
-
-    @deprecated("'getKML' has been renamed to 'get_kml'. Use "
-                "that instead.")  # noqa
-    def getKML(self, *args, **kwargs):
-        return self.get_kml(*args, **kwargs)
 
     def get_kml(self, nolabels=False, **kwargs):
         """
@@ -1054,11 +955,6 @@ master/seishub/plugins/seismology/event.py
 
         # generate and return KML string
         return tostring(kml, pretty_print=True, xml_declaration=True)
-
-    @deprecated("'saveKML' has been renamed to 'save_kml'. Use "
-                "that instead.")  # noqa
-    def saveKML(self, *args, **kwargs):
-        return self.save_kml(*args, **kwargs)
 
     def save_kml(self, filename, overwrite=False, **kwargs):
         """

@@ -6,6 +6,7 @@
       <version>ObsPy 1.0.1.post0+20.gbeb9f46723.dirty</version>
     </creationInfo>
     <event publicID="smi:local/0eee2e6f-064b-458a-934f-c5d3105e9529">
+      <preferredOriginID>smi:local/a2260002-95c6-42f7-8c44-f46124355228</preferredOriginID>
       <creationInfo>
         <creationTime>2013-06-21T12:53:34.000000Z</creationTime>
         <version>NLLoc:v6.02.07</version>

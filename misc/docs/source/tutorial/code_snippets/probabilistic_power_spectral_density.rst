@@ -114,3 +114,20 @@ lines.
    Providing metadata from e.g. a Dataless SEED or StationXML volume is safer
    than specifying static poles and zeros information (see
    :class:`~obspy.signal.spectral_estimation.PPSD`). 
+
+Time series of psd values can also be extracted from the PPSD by accessing the
+property :attr:`~obspy.signal.spectral_estimation.PPSD.psd_values` and
+plotted using the
+:meth:`~obspy.signal.spectral_estimation.PPSD.plot_temporal()` method (temporal
+restrictions can be used in the plot, see documentation):
+
+    >>> ppsd.plot_temporal([0.1, 1, 10])
+
+.. plot:: tutorial/code_snippets/probabilistic_power_spectral_density4.py
+
+Spectrogram-like plots can be done using the
+:meth:`~obspy.signal.spectral_estimation.PPSD.plot_spectrogram()` method:
+
+    >>> ppsd.plot_spectrogram()
+
+.. plot:: tutorial/code_snippets/probabilistic_power_spectral_density5.py

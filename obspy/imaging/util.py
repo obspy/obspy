@@ -14,15 +14,14 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import re
-import sys
+from dateutil.rrule import MINUTELY, SECONDLY
 
-from matplotlib.dates import AutoDateFormatter, DateFormatter, num2date
+from matplotlib.dates import (
+    AutoDateLocator, AutoDateFormatter, DateFormatter, num2date)
 from matplotlib.ticker import FuncFormatter
 
 from obspy import UTCDateTime
-from obspy.core.util.base import get_matplotlib_version
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
+from obspy.core.util import MATPLOTLIB_VERSION
 
 
 def _seconds_to_days(sec):
@@ -103,12 +102,19 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
     def __init__(self, *args, **kwargs):
         # the root class of AutoDateFormatter (TickHelper) is an old style
         # class prior to matplotlib version 1.2
-        if get_matplotlib_version() < [1, 2, 0]:
+        if MATPLOTLIB_VERSION < [1, 2, 0]:
             AutoDateFormatter.__init__(self, *args, **kwargs)
         else:
             super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
+        # Reset the scale to make it reproducible across matplotlib versions.
+        self.scaled = {}
+        self.scaled[1.0] = '%b %d %Y'
+        self.scaled[30.0] = '%b %Y'
+        self.scaled[365.0] = '%Y'
         self.scaled[1. / 24.] = FuncFormatter(format_hour_minute)
         self.scaled[1. / (24. * 60.)] = \
+            FuncFormatter(format_hour_minute_second)
+        self.scaled[_seconds_to_days(1)] = \
             FuncFormatter(format_hour_minute_second)
         self.scaled[_seconds_to_days(10)] = \
             FuncFormatter(decimal_seconds_format_x_decimals(1))
@@ -244,13 +250,29 @@ def _timestring(t):
     return str(t).rstrip("Z0").rstrip(".")
 
 
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        '_ID_key': 'obspy.imaging.util._id_key'})
+def _set_xaxis_obspy_dates(ax, ticklabels_small=True):
+    """
+    Set Formatter/Locator of x-Axis to use ObsPyAutoDateFormatter and do some
+    other tweaking.
+
+    In contrast to normal matplotlib ``AutoDateFormatter`` e.g. shows full
+    timestamp on first tick when zoomed in so far that matplotlib would only
+    show hours or minutes on all ticks (making it impossible to tell the date
+    from the axis labels) and also shows full timestamp in matplotlib figures
+    info line (mouse-over info of current cursor position).
+
+    :type ax: :class:`matplotlib.axes.Axes`
+    :rtype: None
+    """
+    ax.xaxis_date()
+    locator = AutoDateLocator(minticks=3, maxticks=6)
+    locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
+    locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
+    ax.xaxis.set_major_formatter(ObsPyAutoDateFormatter(locator))
+    ax.xaxis.set_major_locator(locator)
+    if ticklabels_small:
+        import matplotlib.pyplot as plt
+        plt.setp(ax.get_xticklabels(), fontsize='small')
 
 
 if __name__ == '__main__':

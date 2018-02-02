@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-obspy.clients.fdsn - FDSN Web service client for ObsPy
+obspy.clients.fdsn - FDSN web service client for ObsPy
 ======================================================
 The obspy.clients.fdsn package contains a client to access web servers that
-implement the FDSN web service definitions (https://www.fdsn.org/webservices/).
+implement the `FDSN web service definitions`_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -11,8 +11,13 @@ implement the FDSN web service definitions (https://www.fdsn.org/webservices/).
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 
-Basic Usage
------------
+
+.. contents:: Contents
+    :local:
+    :depth: 2
+
+Basic FDSN Client Usage
+-----------------------
 
 The first step is always to initialize a client object.
 
@@ -34,7 +39,8 @@ EMSC    http://www.seismicportal.eu
 ETH     http://eida.ethz.ch
 GEONET  http://service.geonet.org.nz
 GFZ     http://geofon.gfz-potsdam.de
-INGV    http://webservices.rm.ingv.it
+ICGC    http://ws.icgc.cat
+INGV    http://webservices.ingv.it
 IPGP    http://eida.ipgp.fr
 IRIS    http://service.iris.edu
 ISC     http://isc-mirror.iris.washington.edu
@@ -47,6 +53,7 @@ ODC     http://www.orfeus-eu.org
 ORFEUS  http://www.orfeus-eu.org
 RESIF   http://ws.resif.fr
 SCEDC   http://service.scedc.caltech.edu
+TEXNET  http://rtserve.beg.utexas.edu
 USGS    http://earthquake.usgs.gov
 USP     http://sismo.iag.usp.br
 
@@ -132,8 +139,99 @@ USP     http://sismo.iag.usp.br
                                         endtime=endtime)
         inventory.plot()
 
+
+Basic Routing Clients Usage
+---------------------------
+
+Routers are web services that can be queried for which data centers offer
+certain pieces of data. That information can then be used to get the actual
+data from various data center across the globe. All current routing services
+only support the ``dataselect`` and the ``station`` FDSNWS services.
+
+ObsPy has support for two routing services:
+
+(i) The `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_.
+(ii) The `EIDAWS Routing Service
+     <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_.
+
+To use them, call the
+:func:`~obspy.clients.fdsn.routing.routing_client.RoutingClient` function:
+
+
+>>> from obspy.clients.fdsn import RoutingClient
+
+Get an instance of a routing client using the IRIS Federator:
+
+>>> client = RoutingClient("iris-federator")
+>>> print(type(client))  # doctest: +ELLIPSIS
+<class '...fdsn.routing.federator_routing_client.FederatorRoutingClient'>
+
+Or get an instance of a routing client using the EIDAWS routing web service:
+
+>>> client = RoutingClient("eida-routing")
+>>> print(type(client))  # doctest: +ELLIPSIS
+<class '...fdsn.routing.eidaws_routing_client.EIDAWSRoutingClient'>
+
+They can be used like the normal FDSNWS clients, meaning the
+``get_(waveforms|stations)(_bulk)()`` functions should work as expected.
+
+To be able to do geographic waveform queries with the EIDA service,
+ObsPy will internally perform a station query before downloading the
+waveforms. This results in a similar usage between the EIDA and IRIS routing
+services from a user's perspective.
+
+The following snippet will call the IRIS federator to figure out who has
+waveform data for that particular query and subsequently call the individual
+data centers to actually get the data. This happens fully automatically -
+please note that the clients also supports non-standard waveform
+query parameters like geographical constraints.
+
+>>> from obspy import UTCDateTime
+>>> client = RoutingClient("iris-federator")
+>>> st = client.get_waveforms(
+...     channel="LHZ", starttime=UTCDateTime(2017, 1, 1),
+...     endtime=UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
+...     longitude=10, maxradius=25)  # doctest: +SKIP
+>>> print(st)  # doctest: +SKIP
+2 Trace(s) in Stream:
+II.MBAR.00.LHZ | 2017-01-01T00:00:00Z - ... | 1.0 Hz, 300 samples
+II.MBAR.10.LHZ | 2017-01-01T00:00:00Z - ... | 1.0 Hz, 300 samples
+
+The same works for stations:
+
+>>> client = RoutingClient("iris-federator")
+>>> inv = client.get_stations(
+...     channel="LHZ", starttime=UTCDateTime(2017, 1, 1),
+...     endtime=UTCDateTime(2017, 1, 1, 0, 5), latitude=10,
+...     level="channel", longitude=10, maxradius=25)  # doctest: +SKIP
+>>> print(inv)  # doctest: +SKIP
+Inventory created at 2017-10-09T14:26:28.466161Z
+    Created by: ObsPy 1.0.3.post0+1706.gef068de324.dirty
+                https://www.obspy.org
+    Sending institution: IRIS-DMC,ObsPy ..., SeisComP3 (GFZ,IPGP, IRIS-DMC)
+    Contains:
+        Networks (6):
+            AF, G, II, IU, TT, YY
+        Stations (10):
+            AF.EKNA (Ekona, Cameroon)
+            AF.KIG (Kigali, Rwanda)
+            G.TAM (Tamanrasset, Algeria)
+            II.MBAR (Mbarara, Uganda)
+            IU.KOWA (Kowa, Mali)
+            TT.TATN (Station Tataouine, Tunisia)
+            YY.GIDA (Health Center, Gidami, Ethiopia)
+            YY.GUBA (Police Station, Guba, Ethiopia)
+            YY.MEND (High School, Mendi, Ethiopia)
+            YY.SHER (Police Station, Sherkole, Ethiopia)
+        Channels (11):
+            AF.EKNA..LHZ, AF.KIG..LHZ, G.TAM.00.LHZ, II.MBAR.00.LHZ,
+            II.MBAR.10.LHZ, IU.KOWA.00.LHZ, TT.TATN.00.LHZ, YY.GIDA..LHZ,
+            YY.GUBA..LHZ, YY.MEND..LHZ, YY.SHER..LHZ
+
 Please see the documentation for each method for further information and
 examples.
+
+.. _FDSN web service definitions: https://www.fdsn.org/webservices/
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -141,6 +239,7 @@ from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
 from .client import Client  # NOQA
+from .routing.routing_client import RoutingClient  # NOQA
 from .header import URL_MAPPINGS  # NOQA
 
 
@@ -156,7 +255,7 @@ if r"%s" in Client.__init__.__doc__:
             Client.__init__.__doc__ % \
             str(sorted(URL_MAPPINGS.keys())).strip("[]")
 
-__all__ = [native_str("Client")]
+__all__ = [native_str(x) for x in ("Client", "RoutingClient")]
 
 
 if __name__ == '__main__':

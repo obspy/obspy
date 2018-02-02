@@ -7,6 +7,16 @@ Like most Python projects, we try to adhere to :pep:`8` (Style Guide for Python
 Code) and :pep:`257` (Docstring Conventions) with the modifications documented
 here. Be sure to read all documents if you intend to contribute code to ObsPy.
 
+We rely on flake8_ for code style checks, it can be installed using ``conda
+install`` or ``pip install`` and can also be used to `set up git pre-commit
+hooks <http://flake8.pycqa.org/en/latest/user/using-hooks.html>`_.
+That way, ``flake8`` will immediately complain about problems with the coding
+style and the changes staged for committing can be adapted accordingly
+(even with git commit hooks installed, they can be ignored on a per-commit
+basis using ``git commit -n``).
+
+.. _flake8: http://flake8.pycqa.org
+
 Import Conventions
 ------------------
 
@@ -65,7 +75,7 @@ Doc Strings / Comments
 
   .. code-block:: python
 
-      def someMethod():
+      def some_method():
           """
           This is a one line doc string.
           """
@@ -77,7 +87,7 @@ Doc Strings / Comments
 
   .. code-block:: python
 
-      def someMethod():
+      def some_method():
           """
           This is just the short story.
 
@@ -128,7 +138,7 @@ explained by an example:
 
 .. code-block:: python
 
-  def formatException(etype, value, tb, limit=None):
+  def format_exception(etype, value, tb, limit=None):
       """
       Format the exception with a traceback.
 
@@ -143,7 +153,7 @@ explained by an example:
 
 which renders like this:
 
-.. function:: formatException(etype, value, tb, limit=None)
+.. function:: format_exception(etype, value, tb, limit=None)
 
    Format the exception with a traceback.
 
@@ -181,8 +191,9 @@ Tests
 
   .. code-block:: python
 
-      def test_doSomething():
-          """XXX: This test does something.
+      def test_do_something():
+          """
+          XXX: This test does something.
 
           But fails badly. See ticket #number.
           """

@@ -1,0 +1,4 @@
+#!/bin/sh
+LD_LIBRARY_PATH=.. \
+DYLD_LIBRARY_PATH=.. \
+./lmtestparse data/Steim2-AllDifferences-BE.mseed -D

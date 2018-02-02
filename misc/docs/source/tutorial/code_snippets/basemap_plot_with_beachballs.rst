@@ -1,9 +1,28 @@
-============================
-Basemap Plot with Beachballs
-============================
+=============
+Basemap Plots
+=============
 
-Basemap Plot of a Local Area
-============================
+Basemap Plot with Custom Projection Setup
+=========================================
+
+Simple Basemap plots of e.g. :class:`~obspy.core.inventory.inventory.Inventory`
+or :class:`~obspy.core.event.catalog.Catalog` objects can be performed with
+builtin methods, see e.g.
+:meth:`Inventory.plot() <obspy.core.inventory.inventory.Inventory.plot>` or
+:meth:`Catalog.plot() <obspy.core.event.catalog.Catalog.plot>`.
+
+For full control over the projection and map extent, a custom basemap can be
+set up (e.g. following the examples in the
+`basemap documentation <http://matplotlib.org/basemap/users/index.html>`_),
+and then be reused for plots of
+e.g. :class:`~obspy.core.inventory.inventory.Inventory` or
+:class:`~obspy.core.event.catalog.Catalog` objects:
+
+.. plot:: tutorial/code_snippets/basemap_plot_custom.py
+   :include-source:
+
+Basemap Plot of a Local Area with Beachballs
+============================================
 
 The following example shows how to plot beachballs into a basemap plot together
 with some stations. The example requires the basemap_ package (download_ site)
@@ -45,8 +64,8 @@ our SRTM data file (from CGIAR_) look like this::
 .. _plotmap_shaded.py: https://github.com/matplotlib/basemap/blob/master/examples/plotmap_shaded.py?raw=true
 
 
-Basemap Plot of the Globe
-=========================
+Basemap Plot of the Globe with Beachballs
+=========================================
 
 .. plot:: tutorial/code_snippets/basemap_plot_with_beachballs2.py
    :include-source:

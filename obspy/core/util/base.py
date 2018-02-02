@@ -10,45 +10,49 @@ Base utilities and constants for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
+from future.builtins import *  # NOQA
 
 import doctest
 import inspect
 import io
 import os
+import re
 import sys
 import tempfile
+import unicodedata
 from collections import OrderedDict
 
-from pkg_resources import iter_entry_points, load_entry_point
 import numpy as np
-
+import pkg_resources
 import requests
+from future.utils import native_str
+from pkg_resources import iter_entry_points
 
-from obspy.core.util.misc import to_int_or_zero
+from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 
 
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
-                   'io.ah', 'io.ascii', 'io.cmtsolution', 'io.cnv', 'io.css',
-                   'io.datamark', 'io.gse2', 'io.json', 'io.kinemetrics',
-                   'io.kml', 'io.mseed', 'io.ndk', 'io.nied', 'io.nlloc',
-                   'io.pdas', 'io.pde', 'io.quakeml', 'io.sac', 'io.seg2',
-                   'io.segy', 'io.seisan', 'io.sh', 'io.shapefile',
-                   'io.seiscomp', 'io.stationtxt', 'io.stationxml', 'io.wav',
-                   'io.xseed', 'io.y', 'io.zmap', 'realtime', 'scripts',
-                   'signal', 'taup']
+                   'io.ah', 'io.arclink', 'io.ascii', 'io.cmtsolution',
+                   'io.cnv', 'io.css', 'io.iaspei', 'io.win', 'io.gcf',
+                   'io.gse2', 'io.json', 'io.kinemetrics', 'io.kml',
+                   'io.mseed', 'io.ndk', 'io.nied', 'io.nlloc', 'io.nordic',
+                   'io.pdas', 'io.pde', 'io.quakeml', 'io.reftek', 'io.sac',
+                   'io.scardec', 'io.seg2', 'io.segy', 'io.seisan', 'io.sh',
+                   'io.shapefile', 'io.seiscomp', 'io.stationtxt',
+                   'io.stationxml', 'io.wav', 'io.xseed', 'io.y', 'io.zmap',
+                   'realtime', 'scripts', 'signal', 'taup']
 NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',
-                   'clients.iris', 'clients.neic', 'clients.seedlink',
-                   'clients.seishub', 'clients.syngine']
+                   'clients.iris', 'clients.neic', 'clients.nrl',
+                   'clients.seedlink', 'clients.seishub', 'clients.syngine']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
-                            'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS',
-                            'AH', 'PDAS', 'KINEMETRICS_EVT']
+                            'SEGY', 'SU', 'SEG2', 'WAV', 'WIN', 'CSS',
+                            'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
+                            'GCF']
 EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
 # waveform plugins accepting a byteorder keyword
 WAVEFORM_ACCEPT_BYTEORDER = ['MSEED', 'Q', 'SAC', 'SEGY', 'SU']
@@ -136,9 +140,6 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
 
     >>> create_empty_data_chunk(3, 'int', 10)
     array([10, 10, 10])
-
-    >>> create_empty_data_chunk(6, np.complex128, 0)
-    array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
 
     >>> create_empty_data_chunk(
     ...     3, 'f')  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
@@ -249,7 +250,7 @@ def _get_ordered_entry_points(group, subgroup=None, order_list=[]):
     for name in order_list:
         try:
             entry_points[name] = ep_dict.pop(name)
-        except:
+        except Exception:
             # skip plug-ins which are not installed
             continue
     # extend entry points with any left over waveform plug-ins
@@ -317,17 +318,21 @@ def _get_function_from_entry_point(group, type):
     # import function point
     # any issue during import of entry point should be raised, so the user has
     # a chance to correct the problem
-    func = load_entry_point(entry_point.dist.key, 'obspy.plugin.%s' % (group),
-                            entry_point.name)
+    func = buffered_load_entry_point(entry_point.dist.key,
+                                     'obspy.plugin.%s' % (group),
+                                     entry_point.name)
     return func
 
 
-def get_matplotlib_version():
+def get_dependency_version(package_name, raw_string=False):
     """
-    Get matplotlib version information.
+    Get version information of a dependency package.
 
-    :returns: Matplotlib version as a list of three integers or ``None`` if
-        matplotlib import fails.
+    :type package_name: str
+    :param package_name: Name of package to return version info for
+    :returns: Package version as a list of three integers or ``None`` if
+        import fails. With option ``raw_string=True`` returns raw version
+        string instead (or ``None`` if import fails).
         The last version number can indicate different things like it being a
         version from the old svn trunk, the latest git repo, some release
         candidate version, ...
@@ -335,79 +340,21 @@ def get_matplotlib_version():
         0.
     """
     try:
-        import matplotlib
-        version = matplotlib.__version__
-        version = version.split("rc")[0].strip("~")
-        version = list(map(to_int_or_zero, version.split(".")))
-    except ImportError:
-        version = None
-    return version
+        version_string = pkg_resources.get_distribution(package_name).version
+    except pkg_resources.DistributionNotFound:
+        return None
+    if raw_string:
+        return version_string
+    version_list = version_string.split("rc")[0].strip("~")
+    version_list = list(map(to_int_or_zero, version_list.split(".")))
+    return version_list
 
 
-def get_basemap_version():
-    """
-    Get basemap version information.
-
-    :returns: basemap version as a list of three integers or ``None`` if
-        basemap import fails.
-        The last version number can indicate different things like it being a
-        version from the old svn trunk, the latest git repo, some release
-        candidate version, ...
-        If the last number cannot be converted to an integer it will be set to
-        0.
-    """
-    try:
-        from mpl_toolkits import basemap
-        version = basemap.__version__
-        version = version.split("rc")[0].strip("~")
-        version = list(map(to_int_or_zero, version.split(".")))
-    except ImportError:
-        version = None
-    return version
-
-
-def get_cartopy_version():
-    """
-    Get cartopy version information.
-
-    :returns: Cartopy version as a list of three integers or ``None`` if
-        cartopy import fails.
-        The last version number can indicate different things like it being a
-        version from the old svn trunk, the latest git repo, some release
-        candidate version, ...
-        If the last number cannot be converted to an integer it will be set to
-        0.
-    """
-    try:
-        import cartopy
-        version = cartopy.__version__
-        version = version.split("rc")[0].strip("~")
-        version = list(map(to_int_or_zero, version.split(".")))
-    except ImportError:
-        version = None
-    return version
-
-
-def get_scipy_version():
-    """
-    Get SciPy version information.
-
-    :returns: SciPy version as a list of three integers or ``None`` if scipy
-        import fails.
-        The last version number can indicate different things like it being a
-        version from the old svn trunk, the latest git repo, some release
-        candidate version, ...
-        If the last number cannot be converted to an integer it will be set to
-        0.
-    """
-    try:
-        import scipy
-        version = scipy.__version__
-        version = version.split("~rc")[0]
-        version = list(map(to_int_or_zero, version.split(".")))
-    except ImportError:
-        version = None
-    return version
+NUMPY_VERSION = get_dependency_version('numpy')
+SCIPY_VERSION = get_dependency_version('scipy')
+MATPLOTLIB_VERSION = get_dependency_version('matplotlib')
+BASEMAP_VERSION = get_dependency_version('basemap')
+CARTOPY_VERSION = get_dependency_version('cartopy')
 
 
 def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
@@ -421,7 +368,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
         # auto detect format - go through all known formats in given sort order
         for format_ep in eps.values():
             # search isFormat for given entry point
-            is_format = load_entry_point(
+            is_format = buffered_load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
@@ -451,7 +398,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     # file format should be known by now
     try:
         # search readFormat for given entry point
-        read_format = load_entry_point(
+        read_format = buffered_load_entry_point(
             format_ep.dist.key,
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
             'readFormat')
@@ -480,19 +427,23 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
     >>> print(table)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    ======... ===============... ========================================...
-    Format    Required Module    _`Linked Function Call`
-    ======... ===============... ========================================...
+    ======... ===========... ========================================...
+    Format    Used Module    _`Linked Function Call`
+    ======... ===========... ========================================...
     CMTSOLUTION  :mod:`...io.cmtsolution` :func:`..._write_cmtsolution`
     CNV       :mod:`...io.cnv`   :func:`obspy.io.cnv.core._write_cnv`
     JSON      :mod:`...io.json`  :func:`obspy.io.json.core._write_json`
     KML       :mod:`obspy.io.kml` :func:`obspy.io.kml.core._write_kml`
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
+    NORDIC    :mod:`obspy.io.nordic` :func:`obspy.io.nordic.core.write_select`
     QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
+    SC3ML   :mod:`...io.seiscomp` :func:`obspy.io.seiscomp.event._write_sc3ml`
+    SCARDEC   :mod:`obspy.io.scardec`
+                             :func:`obspy.io.scardec.core._write_scardec`
     SHAPEFILE :mod:`obspy.io.shapefile`
                              :func:`obspy.io.shapefile.core._write_shapefile`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`
-    ======... ===============... ========================================...
+    ======... ===========... ========================================...
 
     :type group: str
     :param group: Plugin group to search (e.g. "waveform" or "event").
@@ -516,13 +467,13 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     mod_list = []
     for name, ep in eps.items():
         module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
-        func = load_entry_point(ep.dist.key,
-                                "obspy.plugin.%s.%s" % (group, name), method)
+        ep_list = [ep.dist.key, "obspy.plugin.%s.%s" % (group, name), method]
+        func = buffered_load_entry_point(*ep_list)
         func_str = ':func:`%s`' % ".".join((ep.module_name, func.__name__))
         mod_list.append((name, module_short, func_str))
 
     mod_list = sorted(mod_list)
-    headers = ["Format", "Required Module", "_`Linked Function Call`"]
+    headers = ["Format", "Used Module", "_`Linked Function Call`"]
     maxlens = [max([len(x[0]) for x in mod_list] + [len(headers[0])]),
                max([len(x[1]) for x in mod_list] + [len(headers[1])]),
                max([len(x[2]) for x in mod_list] + [len(headers[2])])]
@@ -580,6 +531,24 @@ def _get_deprecated_argument_action(old_name, new_name, real_action='store'):
     return _Action
 
 
+def sanitize_filename(filename):
+    """
+    Adapted from Django's slugify functions.
+
+    :param filename: The filename.
+    """
+    try:
+        filename = filename.decode()
+    except AttributeError:
+        pass
+
+    value = unicodedata.normalize('NFKD', filename).encode(
+        'ascii', 'ignore').decode('ascii')
+    # In constrast to django we allow dots and don't lowercase.
+    value = re.sub(r'[^\w\.\s-]', '', value).strip()
+    return re.sub(r'[-\s]+', '-', value)
+
+
 def download_to_file(url, filename_or_buffer, chunk_size=1024):
     """
     Helper function to download a potentially large file.
@@ -598,7 +567,10 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
     except TypeError:
         r = requests.get(url)
 
-    r.raise_for_status()
+    # Raise anything except for 200
+    if r.status_code != 200:
+        raise requests.HTTPError('%s HTTP Error: %s for url: %s'
+                                 % (r.status_code, r.reason, url))
 
     if hasattr(filename_or_buffer, "write"):
         for chunk in r.iter_content(chunk_size=chunk_size):

@@ -8,18 +8,34 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import ctypes as C
+import warnings
 
 import numpy as np
 
+from . import InternalMSEEDError, InternalMSEEDWarning
 from obspy.core.util.libnames import _load_cdll
+
+
+# Load the shared library. Later on it is wrapped into another object that
+# correctly set's up error and warning handles - but information from the
+# library is already required at an earlier point.
+__clibmseed = _load_cdll("mseed")
+
+
+# Size of the off_t type.
+sizeoff_off_t = C.c_int.in_dll(__clibmseed, "LM_SIZEOF_OFF_T").value
+for _c in [C.c_long, C.c_longlong, C.c_int]:
+    if C.sizeof(_c) == sizeoff_off_t:
+        off_t_type = _c
+        break
+else:  # pragma: no cover
+    raise InternalMSEEDError("Could not determine corresponding ctypes "
+                             "datatype for off_t.")
 
 
 HPTERROR = -2145916800000000
 
 ENDIAN = {0: '<', 1: '>'}
-
-# Import shared libmseed
-clibmseed = _load_cdll("mseed")
 
 
 # XXX: Do we still support Python 2.4 ????
@@ -463,9 +479,9 @@ MsfileparamS._fields_ = [
     ('readlen', C.c_int),
     ('readoffset', C.c_int),
     ('packtype', C.c_int),
-    ('packhdroffset', C.c_long),
-    ('filepos', C.c_long),
-    ('filesize', C.c_long),
+    ('packhdroffset', off_t_type),
+    ('filepos', off_t_type),
+    ('filesize', off_t_type),
     ('recordcount', C.c_int),
 ]
 MSFileParam = MsfileparamS  # noqa
@@ -481,98 +497,6 @@ class UDIFF(C.Union):
         ("fw", C.c_int32),  # 1 fullword difference.
     ]
 
-
-class FRAME(C.Structure):
-    """
-    Frame in a seed data record.
-    """
-    _fields_ = [
-        ("ctrl", C.c_uint32),  # control word for frame.
-        ("w", UDIFF * 14),  # compressed data.
-    ]
-
-
-# Declare function of libmseed library, argument parsing
-clibmseed.mst_init.argtypes = [C.POINTER(MSTrace)]
-clibmseed.mst_init.restype = C.POINTER(MSTrace)
-
-clibmseed.mst_free.argtypes = [C.POINTER(C.POINTER(MSTrace))]
-clibmseed.mst_free.restype = C.c_void_p
-
-clibmseed.mst_initgroup.argtypes = [C.POINTER(MSTraceGroup)]
-clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
-
-clibmseed.mst_freegroup.argtypes = [C.POINTER(C.POINTER(MSTraceGroup))]
-clibmseed.mst_freegroup.restype = C.c_void_p
-
-clibmseed.msr_init.argtypes = [C.POINTER(MSRecord)]
-clibmseed.msr_init.restype = C.POINTER(MSRecord)
-
-clibmseed.ms_readmsr_r.argtypes = [
-    C.POINTER(C.POINTER(MSFileParam)), C.POINTER(C.POINTER(MSRecord)),
-    C.c_char_p, C.c_int, C.POINTER(Py_ssize_t), C.POINTER(C.c_int), C.c_short,
-    C.c_short, C.c_short]
-clibmseed.ms_readmsr_r.restypes = C.c_int
-
-clibmseed.ms_readtraces.argtypes = [
-    C.POINTER(C.POINTER(MSTraceGroup)), C.c_char_p, C.c_int, C.c_double,
-    C.c_double, C.c_short, C.c_short, C.c_short, C.c_short]
-clibmseed.ms_readtraces.restype = C.c_int
-
-clibmseed.ms_readtraces_timewin.argtypes = [
-    C.POINTER(C.POINTER(MSTraceGroup)), C.c_char_p, C.c_int, C.c_double,
-    C.c_double, C.c_int64, C.c_int64, C.c_short, C.c_short, C.c_short,
-    C.c_short]
-clibmseed.ms_readtraces_timewin.restype = C.c_int
-
-clibmseed.msr_starttime.argtypes = [C.POINTER(MSRecord)]
-clibmseed.msr_starttime.restype = C.c_int64
-
-clibmseed.msr_endtime.argtypes = [C.POINTER(MSRecord)]
-clibmseed.msr_endtime.restype = C.c_int64
-
-clibmseed.ms_detect.argtypes = [
-    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
-    C.c_int]
-clibmseed.ms_detect.restype = C.c_int
-
-clibmseed.msr_unpack_steim2.argtypes = [
-    C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
-    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
-    C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
-clibmseed.msr_unpack_steim2.restype = C.c_int
-
-clibmseed.msr_unpack_steim1.argtypes = [
-    C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
-    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
-    C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
-clibmseed.msr_unpack_steim2.restype = C.c_int
-
-# tricky, C.POINTER(C.c_char) is a pointer to single character fields
-# this is completely different to C.c_char_p which is a string
-clibmseed.mst_packgroup.argtypes = [
-    C.POINTER(MSTraceGroup), C.CFUNCTYPE(
-        C.c_void_p, C.POINTER(C.c_char), C.c_int, C.c_void_p),
-    C.c_void_p, C.c_int, C.c_short, C.c_short, C.POINTER(C.c_int), C.c_short,
-    C.c_short, C.POINTER(MSRecord)]
-clibmseed.mst_packgroup.restype = C.c_int
-
-clibmseed.msr_addblockette.argtypes = [C.POINTER(MSRecord),
-                                       C.POINTER(C.c_char),
-                                       C.c_int, C.c_int, C.c_int]
-clibmseed.msr_addblockette.restype = C.POINTER(BlktLink)
-
-clibmseed.msr_parse.argtypes = [C.POINTER(C.c_char), C.c_int,
-                                C.POINTER(C.POINTER(MSRecord)),
-                                C.c_int, C.c_int, C.c_int]
-clibmseed.msr_parse.restype = C.c_int
 
 #####################################
 # Define the C structures.
@@ -657,7 +581,7 @@ class Selections(C.Structure):
 
 Selections._fields_ = [
     ('srcname', C.c_char * 100),  # Matching (globbing) source name:
-                                  # Net_Sta_Loc_Chan_Qual
+    # Net_Sta_Loc_Chan_Qual
     ('timewindows', C.POINTER(SelectTime)),
     ('next', C.POINTER(Selections))
 ]
@@ -674,11 +598,15 @@ ContinuousSegment._fields_ = [
     ('samprate', C.c_double),
     ('sampletype', C.c_char),
     ('hpdelta', C.c_longlong),
+    ('recordcnt', C.c_int64),
     ('samplecnt', C.c_int64),
+    ('encoding', C.c_byte),
+    ('byteorder', C.c_byte),
+    ('reclen', C.c_int),
     ('timing_quality', C.c_uint8),
     ('calibration_type', C.c_int8),
     ('datasamples', C.c_void_p),  # Data samples, 'numsamples' of type
-                                  # 'sampletype'
+    # 'sampletype'
     ('firstRecord', C.c_void_p),
     ('lastRecord', C.c_void_p),
     ('next', C.POINTER(ContinuousSegment)),
@@ -708,12 +636,96 @@ LinkedIDList._fields_ = [
 ]
 
 
-#########################################
-# Done with the C structures definitions.
-#########################################
+##########################################################################
+# Define the argument and return types of all the used libmseed functions.
+##########################################################################
+
+# Declare function of libmseed library, argument parsing
+__clibmseed.mst_init.argtypes = [C.POINTER(MSTrace)]
+__clibmseed.mst_init.restype = C.POINTER(MSTrace)
+
+__clibmseed.mst_free.argtypes = [C.POINTER(C.POINTER(MSTrace))]
+__clibmseed.mst_free.restype = None
+
+__clibmseed.mst_initgroup.argtypes = [C.POINTER(MSTraceGroup)]
+__clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
+
+__clibmseed.mst_freegroup.argtypes = [C.POINTER(C.POINTER(MSTraceGroup))]
+__clibmseed.mst_freegroup.restype = None
+
+__clibmseed.msr_init.argtypes = [C.POINTER(MSRecord)]
+__clibmseed.msr_init.restype = C.POINTER(MSRecord)
+
+__clibmseed.ms_readmsr_r.argtypes = [
+    C.POINTER(C.POINTER(MSFileParam)), C.POINTER(C.POINTER(MSRecord)),
+    C.c_char_p, C.c_int, C.POINTER(off_t_type), C.POINTER(C.c_int), C.c_short,
+    C.c_short, C.c_short]
+__clibmseed.ms_readmsr_r.restypes = C.c_int
+
+__clibmseed.ms_readtraces.argtypes = [
+    C.POINTER(C.POINTER(MSTraceGroup)), C.c_char_p, C.c_int, C.c_double,
+    C.c_double, C.c_short, C.c_short, C.c_short, C.c_short]
+__clibmseed.ms_readtraces.restype = C.c_int
+
+__clibmseed.ms_readtraces_timewin.argtypes = [
+    C.POINTER(C.POINTER(MSTraceGroup)), C.c_char_p, C.c_int, C.c_double,
+    C.c_double, C.c_int64, C.c_int64, C.c_short, C.c_short, C.c_short,
+    C.c_short]
+__clibmseed.ms_readtraces_timewin.restype = C.c_int
+
+__clibmseed.msr_starttime.argtypes = [C.POINTER(MSRecord)]
+__clibmseed.msr_starttime.restype = C.c_int64
+
+__clibmseed.msr_endtime.argtypes = [C.POINTER(MSRecord)]
+__clibmseed.msr_endtime.restype = C.c_int64
+
+__clibmseed.ms_detect.argtypes = [
+    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    C.c_int]
+__clibmseed.ms_detect.restype = C.c_int
+
+__clibmseed.msr_decode_steim2.argtypes = [
+    C.c_void_p,
+    C.c_int,
+    C.c_int,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    C.c_int, C.c_char_p, C.c_int]
+__clibmseed.msr_decode_steim2.restype = C.c_int
+
+__clibmseed.msr_decode_steim1.argtypes = [
+    C.c_void_p,
+    C.c_int,
+    C.c_int,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    C.c_int, C.c_char_p, C.c_int]
+__clibmseed.msr_decode_steim1.restype = C.c_int
+
+# tricky, C.POINTER(C.c_char) is a pointer to single character fields
+# this is completely different to C.c_char_p which is a string
+__clibmseed.mst_packgroup.argtypes = [
+    C.POINTER(MSTraceGroup), C.CFUNCTYPE(
+        None, C.POINTER(C.c_char), C.c_int, C.c_void_p),
+    C.c_void_p, C.c_int, C.c_short, C.c_short, C.POINTER(C.c_int64), C.c_short,
+    C.c_short, C.POINTER(MSRecord)]
+__clibmseed.mst_packgroup.restype = C.c_int
+
+__clibmseed.msr_addblockette.argtypes = [C.POINTER(MSRecord),
+                                         C.POINTER(C.c_char),
+                                         C.c_int, C.c_int, C.c_int]
+__clibmseed.msr_addblockette.restype = C.POINTER(BlktLink)
+
+__clibmseed.msr_parse.argtypes = [
+    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1), C.c_int,
+    C.POINTER(C.POINTER(MSRecord)),
+    C.c_int, C.c_int, C.c_int]
+__clibmseed.msr_parse.restype = C.c_int
+
 
 # Set the necessary arg- and restypes.
-clibmseed.readMSEEDBuffer.argtypes = [
+__clibmseed.readMSEEDBuffer.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.int8, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int,
@@ -723,46 +735,103 @@ clibmseed.readMSEEDBuffer.argtypes = [
     C.c_int8,
     C.c_int8,
     C.c_int,
-    C.CFUNCTYPE(C.c_longlong, C.c_int, C.c_char),
-    C.CFUNCTYPE(C.c_void_p, C.c_char_p),
-    C.CFUNCTYPE(C.c_void_p, C.c_char_p)
+    C.CFUNCTYPE(C.c_longlong, C.c_int, C.c_char)
 ]
-
-clibmseed.readMSEEDBuffer.restype = C.POINTER(LinkedIDList)
-
-clibmseed.msr_free.argtypes = [C.POINTER(C.POINTER(MSRecord))]
-clibmseed.msr_free.restype = C.c_void_p
-
-clibmseed.mstl_init.restype = C.POINTER(MSTraceList)
-clibmseed.mstl_free.argtypes = [C.POINTER(C.POINTER(MSTraceList)), C.c_int]
+__clibmseed.readMSEEDBuffer.restype = C.POINTER(LinkedIDList)
 
 
-clibmseed.lil_free.argtypes = [C.POINTER(LinkedIDList)]
-clibmseed.lil_free.restype = C.c_void_p
+__clibmseed.setupLogging.argtpyes = [
+    C.c_int8,
+    C.CFUNCTYPE(C.c_void_p, C.c_char_p),
+    C.CFUNCTYPE(C.c_void_p, C.c_char_p)]
+__clibmseed.setupLogging.restype = None
 
 
-clibmseed.allocate_bytes.argtypes = (C.c_int,)
-clibmseed.allocate_bytes.restype = C.c_void_p
+__clibmseed.msr_free.argtypes = [C.POINTER(C.POINTER(MSRecord))]
+__clibmseed.msr_free.restype = None
 
 
-clibmseed.ms_genfactmult.argtypes = [
+__clibmseed.mstl_init.restype = C.POINTER(MSTraceList)
+__clibmseed.mstl_free.argtypes = [C.POINTER(C.POINTER(MSTraceList)), C.c_int]
+
+
+__clibmseed.lil_free.argtypes = [C.POINTER(LinkedIDList)]
+__clibmseed.lil_free.restype = None
+
+
+__clibmseed.allocate_bytes.argtypes = (C.c_int,)
+__clibmseed.allocate_bytes.restype = C.c_void_p
+
+
+__clibmseed.ms_genfactmult.argtypes = [
     C.c_double,
     C.POINTER(C.c_int16),
     C.POINTER(C.c_int16)
 ]
-clibmseed.ms_genfactmult.restype = C.c_int
+__clibmseed.ms_genfactmult.restype = C.c_int
 
 
-clibmseed.ms_nomsamprate.argtypes = [
+__clibmseed.ms_nomsamprate.argtypes = [
     C.c_int,
     C.c_int
 ]
-clibmseed.ms_nomsamprate.restype = C.c_double
+__clibmseed.ms_nomsamprate.restype = C.c_double
 
 
-# Python callback functions for C
-def _py_file_callback(_f):
-    return 1
+class _LibmseedWrapper(object):
+    """
+    Wrapper object around libmseed that tries to guarantee that all warnings
+    and errors within libmseed are properly converted to their Python
+    counterparts.
+
+    Might be a bit overengineered but it does the trick and is completely
+    transparent to the user.
+    """
+    def __init__(self, lib):
+        self.lib = lib
+        self.verbose = True
+
+    def __getattr__(self, item):
+        func = getattr(self.lib, item)
+
+        def _wrapper(*args):
+            # Collect exceptions. They cannot be raised in the callback as
+            # they could never be caught then. They are collected and raised
+            # later on.
+            _errs = []
+            _warns = []
+
+            def log_error_or_warning(msg):
+                msg = msg.decode()
+                if msg.startswith("ERROR: "):
+                    msg = msg[7:].strip()
+                    _errs.append(msg)
+                if msg.startswith("INFO: "):
+                    msg = msg[6:].strip()
+                    _warns.append(msg)
+
+            diag_print = \
+                C.CFUNCTYPE(None, C.c_char_p)(log_error_or_warning)
+
+            def log_message(msg):
+                if self.verbose:
+                    print(msg[6:].strip())
+            log_print = C.CFUNCTYPE(None, C.c_char_p)(log_message)
+
+            # Hookup libmseed's logging facilities to it's Python callbacks.
+            self.lib.setupLogging(diag_print, log_print)
+
+            try:
+                return func(*args)
+            finally:
+                for _w in _warns:
+                    warnings.warn(_w, InternalMSEEDWarning)
+                if _errs:
+                    msg = ("Encountered %i error(s) during a call to "
+                           "%s():\n%s" % (
+                            len(_errs), item, "\n".join(_errs)))
+                    raise InternalMSEEDError(msg)
+        return _wrapper
 
 
-_PyFile_callback = C.CFUNCTYPE(C.c_int, Py_ssize_t)(_py_file_callback)
+clibmseed = _LibmseedWrapper(lib=__clibmseed)

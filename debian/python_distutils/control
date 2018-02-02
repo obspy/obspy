@@ -38,7 +38,7 @@ Replaces: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
  python-obspy-wav, python-obspy-xseed
 Recommends: python-obspy-dbg (= ${binary:Version}),
  python-geographiclib, python-nose, python-flake8, python-imaging, python-mock,
- python-mpltoolkits.basemap, python-gdal
+ python-mpltoolkits.basemap, python-pyshp, python-m2crypto
 Suggests: python-mlpy, python-pyproj, ipython
 Description: ObsPy: A Python Toolbox for seismology seismological observatories
  ObsPy is an open-source project dedicated to provide a Python framework for

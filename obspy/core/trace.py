@@ -25,8 +25,7 @@ from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, create_empty_data_chunk
 from obspy.core.util.base import _get_function_from_entry_point
-from obspy.core.util.decorator import (
-    deprecated, raise_if_masked, skip_if_no_data)
+from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
 from obspy.core.util.misc import (flat_not_masked_contiguous, get_window_times,
                                   limit_numpy_fft_cache)
 
@@ -132,7 +131,9 @@ class Stats(AttribDict):
         >>> trace.stats.npts
         4
     """
+    # set of read only attrs
     readonly = ['endtime']
+    # default values
     defaults = {
         'sampling_rate': 1.0,
         'delta': 1.0,
@@ -145,6 +146,15 @@ class Stats(AttribDict):
         'location': '',
         'channel': '',
     }
+    # keys which need to refresh derived values
+    _refresh_keys = {'delta', 'sampling_rate', 'starttime', 'npts'}
+    # dict of required types for certain attrs
+    _types = {
+        'network': (str, native_str),
+        'station': (str, native_str),
+        'location': (str, native_str),
+        'channel': (str, native_str),
+    }
 
     def __init__(self, header={}):
         """
@@ -154,18 +164,21 @@ class Stats(AttribDict):
     def __setitem__(self, key, value):
         """
         """
-        # keys which need to refresh derived values
-        if key in ['delta', 'sampling_rate', 'starttime', 'npts']:
+        if key in self._refresh_keys:
             # ensure correct data type
             if key == 'delta':
                 key = 'sampling_rate'
-                value = 1.0 / float(value)
+                try:
+                    value = 1.0 / float(value)
+                except ZeroDivisionError:
+                    value = 0.0
             elif key == 'sampling_rate':
                 value = float(value)
             elif key == 'starttime':
                 value = UTCDateTime(value)
             elif key == 'npts':
-                value = int(value)
+                if not isinstance(value, int):
+                    value = int(value)
             # set current key
             super(Stats, self).__setitem__(key, value)
             # set derived value: delta
@@ -178,7 +191,7 @@ class Stats(AttribDict):
             if self.npts == 0:
                 timediff = 0
             else:
-                timediff = (self.npts - 1) * delta
+                timediff = float(self.npts - 1) * delta
             self.__dict__['endtime'] = self.starttime + timediff
             return
         # prevent a calibration factor of 0
@@ -251,6 +264,17 @@ class Trace(object):
     :var data: Data samples in a :class:`~numpy.ndarray` or
         :class:`~numpy.ma.MaskedArray`
 
+    .. note::
+
+        The ``.data`` attribute containing the time series samples as a
+        :class:`numpy.ndarray` will always be made contiguous in memory. This
+        way it is always safe to use ``.data`` in routines that internally pass
+        the array to C code. On the other hand this might result in some
+        unwanted copying of data in memory. Experts can opt-out by setting
+        ``Trace._always_contiguous = False``, in this case the user has to make
+        sure themselves that no C operations are performed on potentially
+        incontiguous data.
+
     .. rubric:: Supported Operations
 
     ``trace = traceA + traceB``
@@ -264,6 +288,7 @@ class Trace(object):
         Returns basic information about the trace object.
         See also: :meth:`Trace.__str__`.
     """
+    _always_contiguous = True
 
     def __init__(self, data=np.array([]), header=None):
         # make sure Trace gets initialized with suitable ndarray as self.data
@@ -272,6 +297,7 @@ class Trace(object):
         # set some defaults if not set yet
         if header is None:
             header = {}
+        header = deepcopy(header)
         header.setdefault('npts', len(data))
         self.stats = Stats(header)
         # set data without changing npts in stats object (for headonly option)
@@ -416,6 +442,8 @@ class Trace(object):
         # any change in Trace.data will dynamically set Trace.stats.npts
         if key == 'data':
             _data_sanity_checks(value)
+            if self._always_contiguous:
+                value = np.require(value, requirements=['C_CONTIGUOUS'])
             self.stats.npts = len(value)
         return super(Trace, self).__setattr__(key, value)
 
@@ -668,16 +696,21 @@ class Trace(object):
                 raise TypeError
             #  check id
             if self.get_id() != trace.get_id():
-                raise TypeError("Trace ID differs")
+                raise TypeError("Trace ID differs: %s vs %s" %
+                                (self.get_id(), trace.get_id()))
             #  check sample rate
             if self.stats.sampling_rate != trace.stats.sampling_rate:
-                raise TypeError("Sampling rate differs")
+                raise TypeError("Sampling rate differs: %s vs %s" %
+                                (self.stats.sampling_rate,
+                                 trace.stats.sampling_rate))
             #  check calibration factor
             if self.stats.calib != trace.stats.calib:
-                raise TypeError("Calibration factor differs")
+                raise TypeError("Calibration factor differs: %s vs %s" %
+                                (self.stats.calib, trace.stats.calib))
             # check data type
             if self.data.dtype != trace.data.dtype:
-                raise TypeError("Data type differs")
+                raise TypeError("Data type differs: %s vs %s" %
+                                (self.data.dtype, trace.data.dtype))
         # check times
         if self.stats.starttime <= trace.stats.starttime:
             lt = self
@@ -710,7 +743,7 @@ class Trace(object):
             elif method == 1 and interpolation_samples >= -1:
                 try:
                     ls = lt.data[-delta - 1]
-                except:
+                except Exception:
                     ls = lt.data[0]
                 if interpolation_samples == -1:
                     interpolation_samples = delta
@@ -785,16 +818,6 @@ class Trace(object):
         out.data = data
         return out
 
-    @deprecated(
-        "'getId' has been renamed to "  # noqa
-        "'get_id'. Use that instead.")
-    def getId(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getId' has been renamed to
-        'get_id'. Use that instead.
-        '''
-        return self.get_id(*args, **kwargs)
-
     def get_id(self):
         """
         Return a SEED compatible identifier of the trace.
@@ -818,6 +841,41 @@ class Trace(object):
         return out % (self.stats)
 
     id = property(get_id)
+
+    @id.setter
+    def id(self, value):
+        """
+        Set network, station, location and channel codes from a SEED ID.
+
+        Raises an Exception if the provided ID does not contain exactly three
+        dots (or is not of type `str`).
+
+        >>> from obspy import read
+        >>> tr = read()[0]
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> tr.id = "GR.FUR..HHZ"
+        >>> print(tr)  # doctest: +ELLIPSIS
+        GR.FUR..HHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+
+        :type value: str
+        :param value: SEED ID to use for setting `self.stats.network`,
+            `self.stats.station`, `self.stats.location` and
+            `self.stats.channel`.
+        """
+        try:
+            net, sta, loc, cha = value.split(".")
+        except AttributeError:
+            msg = ("Can only set a Trace's SEED ID from a string "
+                   "(and not from {})").format(type(value))
+            raise TypeError(msg)
+        except ValueError:
+            msg = ("Not a valid SEED ID: '{}'").format(value)
+            raise ValueError(msg)
+        self.stats.network = net
+        self.stats.station = sta
+        self.stats.location = loc
+        self.stats.channel = cha
 
     def plot(self, **kwargs):
         """
@@ -874,16 +932,17 @@ class Trace(object):
         from obspy.imaging.spectrogram import spectrogram
         return spectrogram(data=self.data, **kwargs)
 
-    def write(self, filename, format, **kwargs):
+    def write(self, filename, format=None, **kwargs):
         """
         Save current trace into a file.
 
         :type filename: str
         :param filename: The name of the file to write.
-        :type format: str
-        :param format: The format to write must be specified. See
+        :type format: str, optional
+        :param format: The format of the file to write. See
             :meth:`obspy.core.stream.Stream.write` method for possible
-            formats.
+            formats. If format is set to ``None`` it will be deduced
+            from file extension, whenever possible.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
@@ -891,6 +950,11 @@ class Trace(object):
 
         >>> tr = Trace()
         >>> tr.write("out.mseed", format="MSEED")  # doctest: +SKIP
+
+        The ``format`` argument can be omitted, and the file format will be
+        deduced from file extension, whenever possible.
+
+        >>> tr.write("out.mseed")  # doctest: +SKIP
         """
         # we need to import here in order to prevent a circular import of
         # Stream and Trace classes
@@ -1195,13 +1259,11 @@ class Trace(object):
             include_partial_windows=include_partial_windows)
 
         if len(windows) < 1:
-            raise StopIteration
+            return
 
         for start, stop in windows:
             yield self.slice(start, stop,
                              nearest_sample=nearest_sample)
-
-        raise StopIteration
 
     def verify(self):
         """
@@ -2059,7 +2121,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                                taper_sides[len(taper_sides) - wlen:]))
 
         # Convert data if it's not a floating point type.
-        if not np.issubdtype(self.data.dtype, float):
+        if not np.issubdtype(self.data.dtype, np.floating):
             self.data = np.require(self.data, dtype=np.float64)
 
         self.data *= taper
@@ -2124,7 +2186,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             return self
 
         # Convert data if it's not a floating point type.
-        if not np.issubdtype(self.data.dtype, float):
+        if not np.issubdtype(self.data.dtype, np.floating):
             self.data = np.require(self.data, dtype=np.float64)
 
         self.data /= abs(norm)
@@ -2323,7 +2385,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         try:
             method = method.lower()
-        except:
+        except Exception:
             pass
 
         dt = float(sampling_rate)
@@ -2363,7 +2425,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 starttime, dt, npts, type=method, *args, **kwargs))
             self.stats.starttime = UTCDateTime(starttime)
             self.stats.delta = dt
-        except:
+        except Exception:
             # Revert the start time change if something went wrong.
             if time_shift:
                 self.stats.starttime -= time_shift
@@ -2372,18 +2434,83 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         return self
 
-    def times(self):
+    def times(self, type="relative", reftime=None):
         """
-        For convenient plotting compute a NumPy array of seconds since
-        starttime corresponding to the samples in Trace.
+        For convenient plotting compute a NumPy array with timing information
+        of all samples in the Trace.
 
+        Time can be either:
+
+          * seconds relative to ``trace.stats.starttime``
+            (``type="relative"``) or to ``reftime``
+          * absolute time as
+            :class:`~obspy.core.utcdatetime.UTCDateTime` objects
+            (``type="utcdatetime"``)
+          * absolute time as POSIX timestamps (
+            :class:`UTCDateTime.timestamp <obspy.core.utcdatetime.UTCDateTime>`
+            ``type="timestamp"``)
+          * absolute time as matplotlib numeric datetime (for matplotlib
+            plotting with absolute time on axes, see :mod:`matplotlib.dates`
+            and :func:`matplotlib.dates.date2num`, ``type="matplotlib"``)
+
+        >>> from obspy import read, UTCDateTime
+        >>> tr = read()[0]
+
+        >>> tr.times()  # doctest: +NORMALIZE_WHITESPACE
+        array([  0.00000000e+00,   1.00000000e-02,   2.00000000e-02, ...,
+                 2.99700000e+01,   2.99800000e+01,   2.99900000e+01])
+
+        >>> tr.times(reftime=UTCDateTime("2009-01-01T00"))
+        array([ 20305203.  ,  20305203.01,  20305203.02, ...,  20305232.97,
+                20305232.98,  20305232.99])
+
+        >>> tr.times("utcdatetime")  # doctest: +SKIP
+        array([UTCDateTime(2009, 8, 24, 0, 20, 3),
+               UTCDateTime(2009, 8, 24, 0, 20, 3, 10000),
+               UTCDateTime(2009, 8, 24, 0, 20, 3, 20000), ...,
+               UTCDateTime(2009, 8, 24, 0, 20, 32, 970000),
+               UTCDateTime(2009, 8, 24, 0, 20, 32, 980000),
+               UTCDateTime(2009, 8, 24, 0, 20, 32, 990000)], dtype=object)
+
+        >>> tr.times("timestamp")
+        array([  1.25107320e+09,   1.25107320e+09,   1.25107320e+09, ...,
+                 1.25107323e+09,   1.25107323e+09,   1.25107323e+09])
+
+        >>> tr.times("matplotlib")
+        array([ 733643.01392361,  733643.01392373,  733643.01392384, ...,
+                733643.01427049,  733643.0142706 ,  733643.01427072])
+
+        :type type: str
+        :param type: Determines type of returned time array, see above for
+            valid values.
+        :type reftime: obspy.core.utcdatetime.UTCDateTime
+        :param reftime: When using a relative timing, the time used as the
+            reference for the zero point, i.e., the first sample will be at
+            ``trace.stats.starttime - reftime`` (in seconds).
         :rtype: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
         :returns: An array of time samples in an :class:`~numpy.ndarray` if
             the trace doesn't have any gaps or a :class:`~numpy.ma.MaskedArray`
-            otherwise.
+            otherwise (``dtype`` of array is either ``float`` or
+            :class:`~obspy.core.utcdatetime.UTCDateTime`).
         """
+        type = type.lower()
         time_array = np.arange(self.stats.npts)
         time_array = time_array / self.stats.sampling_rate
+        if type == "relative":
+            if reftime is not None:
+                time_array += (self.stats.starttime - reftime)
+        elif type == "timestamp":
+            time_array = time_array + self.stats.starttime.timestamp
+        elif type == "utcdatetime":
+            time_array = np.array(
+                [self.stats.starttime + t_ for t_ in time_array])
+        elif type == "matplotlib":
+            from matplotlib.dates import date2num
+            time_array = date2num([(self.stats.starttime + t_).datetime
+                                   for t_ in time_array])
+        else:
+            msg = "Invalid `type`: {}".format(type)
+            raise ValueError(msg)
         # Check if the data is a ma.maskedarray
         if isinstance(self.data, np.ma.masked_array):
             time_array = np.ma.array(time_array, mask=self.data.mask)
@@ -2425,7 +2552,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             try:
                 responses.append(inv.get_response(self.id,
                                                   self.stats.starttime))
-            except:
+            except Exception:
                 pass
         if len(responses) > 1:
             msg = "Found more than one matching response. Using first."
@@ -2601,16 +2728,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if plot:
             import matplotlib.pyplot as plt
 
-        if (isinstance(inventory, (str, native_str)) and
-                inventory.upper() in ("DISP", "VEL", "ACC")):
-            from obspy.core.util.deprecation_helpers import \
-                ObsPyDeprecationWarning
-            output = inventory
-            inventory = None
-            msg = ("The order of optional parameters in method "
-                   "remove_response has changed. 'output' is not accepted "
-                   "as first positional argument in the next release.")
-            warnings.warn(msg, category=ObsPyDeprecationWarning, stacklevel=3)
         response = self._get_response(inventory)
         # polynomial response using blockette 62 stage 0
         if not response.response_stages and response.instrument_polynomial:

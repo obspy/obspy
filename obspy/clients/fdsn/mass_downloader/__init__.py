@@ -18,6 +18,11 @@ component integrated into a bigger project.
     (https://www.gnu.org/copyleft/lesser.html)
 
 
+.. contents:: Contents
+    :local:
+    :depth: 2
+
+
 Why Would You Want to Use This?
 -------------------------------
 
@@ -467,7 +472,7 @@ and downloading whatever it offers. A bit more detail:
 
 
 Logging
-~~~~~~~
+-------
 
 The download helpers utilizes Python's `logging facilities
 <https://docs.python.org/2/library/logging.html>`__. By default it will log to
@@ -481,8 +486,23 @@ the corresponding logger after you import the download helpers module:
 >>> logger.setLevel(logging.DEBUG)  # doctest: +SKIP
 
 
+Authentication
+--------------
+
+To make the mass downloader work for restricted data, just initialize it
+with existing :class:`~obspy.clients.fdsn.client.Client` instances that have
+credentials. Note that you can mix already initialized clients with varying
+credientials and just passing the name of the FDSN services to query.
+
+>>> from obspy.clients.fdsn import Client
+>>> client_orfeus = Client("ORFEUS", user="random", password="some_pw")
+>>> client_eth = Client("ETH", user="from_me", password="to_you")
+>>> mdl = MassDownloader(providers=[client_orfeus, "IRIS", client_eth]) \
+    # doctest: +SKIP
+
+
 Further Documentation
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Further functionality of this module is documented at a couple of other places:
 
@@ -493,12 +513,26 @@ Further functionality of this module is documented at a couple of other places:
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
+import warnings
+
+from obspy.core.util.base import SCIPY_VERSION
 # Convenience imports.
 from .mass_downloader import MassDownloader  # NOQA
 from .restrictions import Restrictions  # NOQA
 from .domain import (Domain, RectangularDomain,  # NOQA
                      CircularDomain, GlobalDomain)  # NOQA
+
+
+__all__ = [native_str(i) for i in (
+    'MassDownloader', 'Restrictions', 'Domain', 'RectangularDomain',
+    'CircularDomain', 'GlobalDomain')]
+
+if SCIPY_VERSION < [0, 12]:
+    msg = ('At least some parts of FDSN Mass downloader might not '
+           'work with old scipy versions <0.12.0 (installed: {})')
+    warnings.warn(msg.format(SCIPY_VERSION))
 
 
 if __name__ == '__main__':

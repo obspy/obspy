@@ -22,14 +22,12 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import os
-import sys
 import wave
 
 import numpy as np
 
 from obspy import Stream, Trace
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
+from obspy.core.compatibility import from_buffer
 
 
 # WAVE data format is unsigned char up to 8bit, and signed int
@@ -62,7 +60,7 @@ def _is_wav(filename):
                 fh.getparams()
         finally:
             fh.close()
-    except:
+    except Exception:
         return False
     if width in [1, 2, 4]:
         return True
@@ -105,7 +103,7 @@ def _read_wav(filename, headonly=False, **kwargs):  # @UnusedVariable
         if width not in WIDTH2DTYPE.keys():
             msg = "Unsupported Format Type, word width %dbytes" % width
             raise TypeError(msg)
-        data = np.fromstring(fh.readframes(length), dtype=WIDTH2DTYPE[width])
+        data = from_buffer(fh.readframes(length), dtype=WIDTH2DTYPE[width])
     finally:
         fh.close()
     return Stream([Trace(header=header, data=data)])
@@ -173,17 +171,6 @@ def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
         finally:
             w.close()
         i += 1
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isWAV': 'obspy.io.wav.core._is_wav',
-        'readWAV': 'obspy.io.wav.core._read_wav',
-        'writeWAV': 'obspy.io.wav.core._write_wav'})
 
 
 if __name__ == '__main__':

@@ -11,11 +11,12 @@ import io
 import os
 import unittest
 from ctypes import ArgumentError
+import warnings
 
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.util import CatchOutput, NamedTemporaryFile
+from obspy.core.util import SuppressOutput, NamedTemporaryFile
 from obspy.io.gse2 import libgse2
 from obspy.io.gse2.libgse2 import (ChksumError, GSEUtiError, compile_sta2,
                                    parse_sta2)
@@ -76,7 +77,10 @@ class LibGSE2TestCase(unittest.TestCase):
         with open(gse2file, 'rb') as f:
             header, data = libgse2.read(f)
         with NamedTemporaryFile() as f:
-            libgse2.write(header, data, f)
+            # raises "UserWarning: Bad value in GSE2 header field"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                libgse2.write(header, data, f)
             f.flush()
             with open(f.name, 'rb') as f2:
                 newheader, newdata = libgse2.read(f2)
@@ -95,7 +99,10 @@ class LibGSE2TestCase(unittest.TestCase):
         self.assertEqual(12000, header['npts'])
         self.assertEqual(1, data[-1])
         fout = io.BytesIO()
-        libgse2.write(header, data, fout)
+        # raises "UserWarning: Bad value in GSE2 header field"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            libgse2.write(header, data, fout)
         fout.seek(0)
         newheader, newdata = libgse2.read(fout)
         self.assertEqual(header, newheader)
@@ -198,12 +205,9 @@ class LibGSE2TestCase(unittest.TestCase):
             lines = (l for l in fin if not l.startswith(b'DAT2'))
             fout.write(b"".join(lines))
         fout.seek(0)
-        # with CatchOutput() as out:
-        with CatchOutput():
+        with SuppressOutput():
+            # omit C level error "decomp_6b: Neither DAT2 or DAT1 found!"
             self.assertRaises(GSEUtiError, libgse2.read, fout)
-        # XXX: CatchOutput does not work on Py3k, skipping for now
-        # self.assertEqual(out.stdout,
-        #                 "decomp_6b: Neither DAT2 or DAT1 found!\n")
 
     def test_parse_sta2(self):
         """
@@ -249,7 +253,10 @@ class LibGSE2TestCase(unittest.TestCase):
             header = {}
             header['network'] = got.pop("network")
             header['gse2'] = got
-            got = compile_sta2(header)
+            # raises "UserWarning: Bad value in GSE2 header field"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                got = compile_sta2(header)
             self.assertEqual(got.decode(), line2)
 
 

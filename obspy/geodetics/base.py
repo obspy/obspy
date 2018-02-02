@@ -18,7 +18,6 @@ import warnings
 import numpy as np
 from scipy.stats import circmean
 
-from obspy.core.util.decorator import deprecated
 from obspy.core.util.misc import to_int_or_zero
 
 
@@ -39,12 +38,6 @@ except ImportError:
 
 WGS84_A = 6378137.0
 WGS84_F = 1 / 298.257223563
-
-
-@deprecated("'calcVincentyInverse' has been renamed to "
-            "'calc_vincenty_inverse'. Use that instead.")  # noqa
-def calcVincentyInverse(lat1, lon1, lat2, lon2):
-    return calc_vincenty_inverse(lat1, lon1, lat2, lon2)
 
 
 def calc_vincenty_inverse(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
@@ -209,12 +202,6 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
     return dist, alpha12, alpha21
 
 
-@deprecated("'gps2DistAzimuth' has been renamed to "
-            "'gps2dist_azimuth'. Use that instead.")  # noqa
-def gps2DistAzimuth(lat1, lon1, lat2, lon2):
-    return gps2dist_azimuth(lat1, lon1, lat2, lon2)
-
-
 def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
     """
     Computes the distance between two geographic points on the WGS84
@@ -274,7 +261,7 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
             raise e
 
 
-def kilometer2degrees(kilometer, radius=6371):
+def kilometers2degrees(kilometer, radius=6371):
     """
     Convenience function to convert kilometers to degrees assuming a perfectly
     spherical Earth.
@@ -288,11 +275,14 @@ def kilometer2degrees(kilometer, radius=6371):
 
     .. rubric:: Example
 
-    >>> from obspy.geodetics import kilometer2degrees
-    >>> kilometer2degrees(300)
+    >>> from obspy.geodetics import kilometers2degrees
+    >>> kilometers2degrees(300)
     2.6979648177561915
     """
     return kilometer / (2.0 * radius * math.pi / 360.0)
+
+
+kilometer2degrees = kilometers2degrees
 
 
 def degrees2kilometers(degrees, radius=6371):
@@ -325,16 +315,17 @@ def locations2degrees(lat1, long1, lat2, long2):
     Earth. For more accurate values use the geodesic distance calculations of
     geopy (https://github.com/geopy/geopy).
 
-    :type lat1: float
-    :param lat1: Latitude of point 1 in degrees
-    :type long1: float
-    :param long1: Longitude of point 1 in degrees
-    :type lat2: float
-    :param lat2: Latitude of point 2 in degrees
-    :type long2: float
-    :param long2: Longitude of point 2 in degrees
-    :rtype: float
-    :return: Distance in degrees as a floating point number.
+    :type lat1: float or :class:`numpy.ndarray`
+    :param lat1: Latitude(s) of point 1 in degrees
+    :type long1: float or :class:`numpy.ndarray`
+    :param long1: Longitude(s) of point 1 in degrees
+    :type lat2: float or :class:`numpy.ndarray`
+    :param lat2: Latitude(s) of point 2 in degrees
+    :type long2: float or :class:`numpy.ndarray`
+    :param long2: Longitude(s) of point 2 in degrees
+    :rtype: float or :class:`numpy.ndarray`
+    :return: Distance in degrees as a floating point number,
+        or numpy array of element-wise distances in degrees
 
     .. rubric:: Example
 
@@ -342,20 +333,24 @@ def locations2degrees(lat1, long1, lat2, long2):
     >>> locations2degrees(5, 5, 10, 10)
     7.0397014191753815
     """
+    # broadcast explicitly here so it raises once instead of somewhere in the
+    # middle if things can't be broadcast
+    lat1, lat2, long1, long2 = np.broadcast_arrays(lat1, lat2, long1, long2)
+
     # Convert to radians.
-    lat1 = math.radians(lat1)
-    lat2 = math.radians(lat2)
-    long1 = math.radians(long1)
-    long2 = math.radians(long2)
+    lat1 = np.radians(np.asarray(lat1))
+    lat2 = np.radians(np.asarray(lat2))
+    long1 = np.radians(np.asarray(long1))
+    long2 = np.radians(np.asarray(long2))
     long_diff = long2 - long1
-    gd = math.degrees(
-        math.atan2(
-            math.sqrt((
-                math.cos(lat2) * math.sin(long_diff)) ** 2 +
-                (math.cos(lat1) * math.sin(lat2) - math.sin(lat1) *
-                    math.cos(lat2) * math.cos(long_diff)) ** 2),
-            math.sin(lat1) * math.sin(lat2) + math.cos(lat1) * math.cos(lat2) *
-            math.cos(long_diff)))
+    gd = np.degrees(
+        np.arctan2(
+            np.sqrt((
+                np.cos(lat2) * np.sin(long_diff)) ** 2 +
+                (np.cos(lat1) * np.sin(lat2) - np.sin(lat1) *
+                    np.cos(lat2) * np.cos(long_diff)) ** 2),
+            np.sin(lat1) * np.sin(lat2) + np.cos(lat1) * np.cos(lat2) *
+            np.cos(long_diff)))
     return gd
 
 

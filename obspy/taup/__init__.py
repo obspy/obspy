@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.taup - Ray Theoretical Travel Times and Paths
+obspy.taup - Ray theoretical travel times and paths
 ===================================================
 
 :copyright:
@@ -140,53 +140,119 @@ Plotting
 --------
 
 If ray paths have been calculated, they can be plotted using the
-:meth:`~obspy.taup.tau.Arrivals.plot` method:
+:meth:`Arrivals.plot_rays() <obspy.taup.tau.Arrivals.plot_rays>` method:
 
->>> arrivals = model.get_ray_paths(source_depth_in_km=500,
-...                                distance_in_degree=130)
->>> arrivals.plot()  # doctest: +SKIP
+>>> arrivals = model.get_ray_paths(
+...     source_depth_in_km=500, distance_in_degree=130, phase_list=["ttbasic"])
+>>> ax = arrivals.plot_rays()
 
 .. plot::
     :width: 50%
     :align: center
 
     from obspy.taup import TauPyModel
-    TauPyModel().get_ray_paths(500, 130).plot()
+    TauPyModel().get_ray_paths(500, 130, phase_list=["ttbasic"]).plot_rays()
 
 Plotting will only show the requested phases:
 
->>> arrivals = model.get_ray_paths(
-...     source_depth_in_km=500,
-...     distance_in_degree=130,
-...     phase_list=["Pdiff", "Sdiff", "pPdiff", "sSdiff"])
->>> arrivals.plot()  # doctest: +SKIP
+>>> arrivals = model.get_ray_paths(source_depth_in_km=500,
+...                                distance_in_degree=130,
+...                                phase_list=["Pdiff", "Sdiff",
+...                                            "pPdiff", "sSdiff"])
+>>> ax = arrivals.plot_rays()
 
 .. plot::
     :width: 50%
     :align: center
 
     from obspy.taup import TauPyModel
-    TauPyModel().get_ray_paths(
-        500, 130,
-        phase_list=["Pdiff", "Sdiff", "pPdiff", "sSdiff"]).plot()
+    TauPyModel().get_ray_paths(500, 130,
+                               phase_list=["Pdiff", "Sdiff", "pPdiff",
+                                           "sSdiff"]).plot_rays()
 
 Additionally, Cartesian coordinates may be used instead of a polar grid:
 
 >>> arrivals = model.get_ray_paths(source_depth_in_km=500,
 ...                                distance_in_degree=130,
 ...                                phase_list=["ttbasic"])
->>> arrivals.plot(plot_type="cartesian")  # doctest: +SKIP
+>>> ax = arrivals.plot_rays(plot_type="cartesian")
 
 .. plot::
     :width: 75%
     :align: center
 
     from obspy.taup import TauPyModel
-    TauPyModel().get_ray_paths(
-        500, 130, phase_list=["ttbasic"]).plot(plot_type="cartesian")
+    TauPyModel().get_ray_paths(500, 130,
+                               phase_list=["ttbasic"]).plot_rays(plot_type=
+                                                                 "cartesian")
+
+Travel times for these ray paths can be plotted using the
+:meth:`Arrivals.plot_times() <obspy.taup.tau.Arrivals.plot_times>` method:
+
+>>> arrivals = model.get_ray_paths(source_depth_in_km=500,
+...                                distance_in_degree=130)
+>>> ax = arrivals.plot_times()
+
+.. plot::
+    :width: 50%
+    :align: center
+
+    from obspy.taup import TauPyModel
+    ax = TauPyModel().get_ray_paths(500, 130).plot_times()
+
+Alternatively, convenience wrapper functions plot the arrival times
+and the ray paths for a range of epicentral distances.
+
+The travel times wrapper function is :func:`obspy.taup.plot_travel_times()`,
+creating the figure and axes first is optional to have control over e.g. figure
+size or subplot setup:
+
+>>> from obspy.taup import plot_travel_times
+>>> import matplotlib.pyplot as plt
+>>> fig, ax = plt.subplots(figsize=(9, 9))
+>>> ax = plot_travel_times(source_depth=10, phase_list=["P", "S", "PP"],
+...                        ax=ax, fig=fig, verbose=True)
+There was 1 epicentral distance without an arrival
+
+.. plot::
+    :width: 50%
+    :align: center
+
+    from obspy.taup import plot_travel_times
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(9, 9))
+    ax = plot_travel_times(source_depth=10, ax=ax, phase_list=["P", "S", "PP"],
+                           fig=fig)
+
+The ray path plot wrapper function is :func:`obspy.taup.plot_ray_paths()`.
+Again, creating the figure and axes first is optional to have control over e.g.
+figure size or subplot setup (note that a polar axes has to be set up when
+aiming to do a plot with ``plot_type='spherical'`` and a normal matplotlib axes
+when aiming to do a plot with ``plot_type='cartesian'``. An error will be
+raised when mixing thw two options):
+
+>>> from obspy.taup import plot_ray_paths
+>>> import matplotlib.pyplot as plt
+>>> fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+>>> ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig, verbose=True)
+There were rays for all but the following epicentral distances:
+ [0.0, 360.0]
+
+.. plot::
+    :width: 50%
+    :align: center
+
+    from obspy.taup import plot_ray_paths
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplot(subplot_kw=dict(projection='polar'))
+    ax = plot_ray_paths(source_depth=100, ax=ax, fig=fig)
 
 More examples of plotting may be found in the :doc:`ObsPy tutorial
 </tutorial/code_snippets/travel_time>`.
+
+.. _`Phase naming in taup`:
 
 Phase naming in obspy.taup
 --------------------------
@@ -383,8 +449,8 @@ _DEFAULT_VALUES = {
 
 # Convenience imports.
 from .tau import TauPyModel  # NOQA
-from .taup import getTravelTimes, travelTimePlot  # NOQA
-
+from .tau import plot_travel_times  # NOQA
+from .tau import plot_ray_paths  # NOQA
 
 if __name__ == '__main__':
     import doctest

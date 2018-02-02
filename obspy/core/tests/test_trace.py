@@ -5,6 +5,7 @@ from future.builtins import *  # NOQA
 
 import math
 import os
+import pickle
 import unittest
 from copy import deepcopy
 import warnings
@@ -1333,13 +1334,27 @@ class TraceTestCase(unittest.TestCase):
         """
         data = np.ones(11)
         tr = Trace(data=data)
-        tr.taper(max_percentage=None, side="left")
+
+        # overlong taper - raises UserWarning - ignoring
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always", UserWarning)
+            tr.taper(max_percentage=None, side="left")
+        self.assertEqual(len(w), 1)
+        self.assertEqual(w[0].category, UserWarning)
+
         self.assertTrue(tr.data[:5].sum() < 5.)
         self.assertEqual(tr.data[6:].sum(), 5.)
 
         data = np.ones(11)
         tr = Trace(data=data)
-        tr.taper(max_percentage=None, side="right")
+
+        # overlong taper - raises UserWarning - ignoring
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always", UserWarning)
+            tr.taper(max_percentage=None, side="right")
+        self.assertEqual(len(w), 1)
+        self.assertEqual(w[0].category, UserWarning)
+
         self.assertEqual(tr.data[:5].sum(), 5.)
         self.assertTrue(tr.data[6:].sum() < 5.)
 
@@ -1349,8 +1364,13 @@ class TraceTestCase(unittest.TestCase):
 
         data = np.ones(npts)
         tr = Trace(data=data, header={'sampling': 1.})
-        # test an overlong taper request, should still work
-        tr.taper(max_percentage=0.7, max_length=int(npts / 2) + 1)
+
+        # test an overlong taper request, still works but raises UserWarning
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always", UserWarning)
+            tr.taper(max_percentage=0.7, max_length=int(npts / 2) + 1)
+        self.assertEqual(len(w), 1)
+        self.assertEqual(w[0].category, UserWarning)
 
         data = np.ones(npts)
         tr = Trace(data=data, header={'sampling': 1.})
@@ -1379,6 +1399,7 @@ class TraceTestCase(unittest.TestCase):
         """
         tr = Trace(data=np.ones(100))
         tr.stats.sampling_rate = 20
+        delta = tr.stats.delta
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr.stats.starttime = start
         tm = tr.times()
@@ -1387,6 +1408,35 @@ class TraceTestCase(unittest.TestCase):
         tr.data[30:40] = np.ma.masked
         tm = tr.times()
         self.assertTrue(np.alltrue(tr.data.mask == tm.mask))
+        # test relative with reftime
+        tr.data = np.ones(100)
+        shift = 9.5
+        reftime = start - shift
+        got = tr.times(reftime=reftime)
+        self.assertEqual(len(got), tr.stats.npts)
+        expected = np.arange(shift, shift + 4.5 * delta, delta)
+        np.testing.assert_allclose(got[:5], expected, rtol=1e-8)
+        # test other options
+        got = tr.times("utcdatetime")
+        expected = np.array([
+            UTCDateTime(2000, 1, 1, 0, 0),
+            UTCDateTime(2000, 1, 1, 0, 0, 0, 50000),
+            UTCDateTime(2000, 1, 1, 0, 0, 0, 100000),
+            UTCDateTime(2000, 1, 1, 0, 0, 0, 150000),
+            UTCDateTime(2000, 1, 1, 0, 0, 0, 200000)], dtype=UTCDateTime)
+        self.assertTrue(isinstance(got[0], UTCDateTime))
+        np.testing.assert_allclose(
+            [t_.timestamp for t_ in got[:5]],
+            [t_.timestamp for t_ in expected], rtol=1e-17)
+        got = tr.times("timestamp")
+        expected = np.arange(0, 4.5 * delta, delta) + 946684800.0
+        np.testing.assert_allclose(got[:5], expected, rtol=1e-17)
+        got = tr.times("matplotlib")
+        expected = np.array([
+            730120.00000000000000000000, 730120.00000057870056480169,
+            730120.00000115740112960339, 730120.00000173610169440508,
+            730120.00000231480225920677])
+        np.testing.assert_allclose(got[:5], expected, rtol=1e-17)
 
     def test_modulo_operation(self):
         """
@@ -1503,7 +1553,7 @@ class TraceTestCase(unittest.TestCase):
                 tr.simulate(seedresp={"filename": "RESP.dummy",
                                       "units": "VEL",
                                       "date": tr.stats.starttime})
-        except:
+        except Exception:
             pass
 
         self.assertEqual(patch.call_count, 1)
@@ -1694,7 +1744,13 @@ class TraceTestCase(unittest.TestCase):
         filename = os.path.join(path, 'data', 'stationxml_BK.CMB.__.LKS.xml')
         inv = read_inventory(filename, format='StationXML')
         tr.attach_response(inv)
-        tr.remove_response()
+
+        # raises UserWarning: Stage gain not defined - ignoring
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always", UserWarning)
+            tr.remove_response()
+        self.assertEqual(len(w), 1)
+        self.assertEqual(w[0].category, UserWarning)
 
     def test_processing_info_remove_response_and_sensitivity(self):
         """
@@ -2594,6 +2650,94 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(
             tr_float64.copy().interpolate(
                 1.0, method="lanczos", a=2).data.dtype, np.float64)
+
+    def test_set_trace_id(self):
+        """
+        Test setter of `id` property.
+        """
+        tr = Trace()
+        tr.stats.location = "00"
+        # check setting net/sta/loc/cha with an ID
+        tr.id = "GR.FUR..HHZ"
+        self.assertEqual(tr.stats.network, "GR")
+        self.assertEqual(tr.stats.station, "FUR")
+        self.assertEqual(tr.stats.location, "")
+        self.assertEqual(tr.stats.channel, "HHZ")
+        # check that invalid types will raise
+        invalid = (True, False, -10, 0, 1.0, [1, 4, 3, 2], np.ones(4))
+        for id_ in invalid:
+            with self.assertRaises(TypeError):
+                tr.id = id_
+        # check that invalid ID strings will raise
+        invalid = ("ABCD", "AB.CD", "AB.CD.00", "..EE", "....",
+                   "GR.FUR..HHZ.", "GR.FUR..HHZ...")
+        for id_ in invalid:
+            with self.assertRaises(ValueError):
+                tr.id = id_
+
+    def test_trace_contiguous(self):
+        """
+        Test that arbitrary operations on Trace.data will always result in
+        Trace.data being C- and F-contiguous, unless explicitly opted out.
+        """
+        tr_default = Trace(data=np.arange(5, dtype=np.int32))
+        tr_opt_out = Trace(data=np.arange(5, dtype=np.int32))
+        tr_opt_out._always_contiguous = False
+        # the following slicing operation only creates a view internally in
+        # numpy and thus leaves the array incontiguous
+        tr_default.data = tr_default.data[::2]
+        tr_opt_out.data = tr_opt_out.data[::2]
+        # by default it should have made contiguous, nevertheless
+        self.assertTrue(tr_default.data.flags['C_CONTIGUOUS'])
+        self.assertTrue(tr_default.data.flags['F_CONTIGUOUS'])
+        # if opted out explicitly, it should be incontiguous due to the slicing
+        # operation
+        self.assertFalse(tr_opt_out.data.flags['C_CONTIGUOUS'])
+        self.assertFalse(tr_opt_out.data.flags['F_CONTIGUOUS'])
+
+    def test_header_dict_copied(self):
+        """
+        Regression test for #1934 (collisions when using  the same header
+        dictionary for multiple Trace inits)
+        """
+        header = {'station': 'MS', 'starttime': 1}
+        original_header = deepcopy(header)
+
+        # Init two traces and make sure the original header did not change.
+        tr1 = Trace(data=np.ones(2), header=header)
+        self.assertEqual(header, original_header)
+        tr2 = Trace(data=np.zeros(5), header=header)
+        self.assertEqual(header, original_header)
+
+        self.assertEqual(len(tr1), 2)
+        self.assertEqual(len(tr2), 5)
+        self.assertEqual(tr1.stats.npts, 2)
+        self.assertEqual(tr2.stats.npts, 5)
+
+    def test_pickle(self):
+        """
+        Test that  Trace can be pickled #1989
+        """
+        tr_orig = Trace()
+        tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=0))
+        self.assertEqual(tr_orig, tr_pickled)
+        tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=1))
+        self.assertEqual(tr_orig, tr_pickled)
+        tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=2))
+        self.assertEqual(tr_orig, tr_pickled)
+
+    def test_pickle_soh(self):
+        """
+        Test that trace can be pickled with samplerate = 0 #1989
+        """
+        tr_orig = Trace()
+        tr_orig.stats.sampling_rate = 0
+        tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=0))
+        self.assertEqual(tr_orig, tr_pickled)
+        tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=1))
+        self.assertEqual(tr_orig, tr_pickled)
+        tr_pickled = pickle.loads(pickle.dumps(tr_orig, protocol=2))
+        self.assertEqual(tr_orig, tr_pickled)
 
 
 def suite():

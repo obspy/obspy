@@ -2,13 +2,15 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str, native_bytes
 
 import copy
+import io
 import pickle
 import unittest
 import warnings
 
-from obspy import Stream, Trace, UTCDateTime
+from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import Stats
 from obspy.core.util import AttribDict
 
@@ -17,6 +19,7 @@ class StatsTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.Stats.
     """
+    nslc = ['network', 'station', 'location', 'channel']
 
     def test_init(self):
         """
@@ -196,6 +199,11 @@ class StatsTestCase(unittest.TestCase):
         temp = pickle.dumps(stats, protocol=2)
         stats2 = pickle.loads(temp)
         self.assertEqual(stats, stats2)
+        # SOH channels sampling_rate & delta == 0. for #1989
+        stats.sampling_rate = 0
+        pickle.loads(pickle.dumps(stats, protocol=0))
+        pickle.loads(pickle.dumps(stats, protocol=1))
+        pickle.loads(pickle.dumps(stats, protocol=2))
 
     def test_set_calib(self):
         """
@@ -227,6 +235,87 @@ class StatsTestCase(unittest.TestCase):
         ad = Stats(adict)
         self.assertEqual(ad, adict)
         self.assertEqual(adict, ad)
+
+    def test_delta_zero(self):
+        """
+        Make sure you can set delta = 0. for #1989
+        """
+        stat = Stats()
+        stat.delta = 0
+
+    def test_non_str_in_nscl_raise_warning(self):
+        """
+        Ensure assigning a non-str value to network, station, location, or
+        channel issues a warning, then casts value into str. See issue # 1995
+        """
+        stats = Stats()
+
+        for val in self.nslc:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('default')
+                setattr(stats, val, 42)
+            # make sure a warning was issued
+            self.assertEqual(len(w), 1)
+            exp_str = 'Attribute "%s" must be of type ' % val
+            self.assertIn(exp_str, str(w[-1].message))
+            # make sure the value was cast to a str
+            new_val = getattr(stats, val)
+            self.assertEqual(new_val, '42')
+
+    def test_nscl_cannot_be_none(self):
+        """
+        Ensure the nslc values can't be assigned to None but rather None
+        gets converted to a str
+        """
+        stats = Stats()
+        for val in self.nslc:
+            setattr(stats, val, None)
+            self.assertEqual(getattr(stats, val), 'None')
+
+    def test_casted_stats_nscl_writes_to_mseed(self):
+        """
+        Ensure a Stream object that has had its nslc types cast to str can
+        still be written.
+        """
+        st = Stream(traces=read()[0])
+
+        # Get a new stats object with just the basic items in it
+        stats_items = set(Stats())
+        new_stats = Stats()
+        new_stats.__dict__.update({x: st[0].stats[x] for x in stats_items})
+        new_stats.network = 1
+        new_stats.station = 1.1
+        new_stats.channel = 'Non'
+        st[0].stats = new_stats
+        # try writing stream to bytes buffer
+        bio = io.BytesIO()
+        st.write(bio, 'mseed')
+        bio.seek(0)
+        # read bytes and compare
+        stt = read(bio)
+        # remove _mseed so streams can compare equal
+        stt[0].stats.pop('mseed')
+        del stt[0].stats._format  # format gets added upon writing
+        self.assertEqual(st, stt)
+
+    def test_different_string_types(self):
+        """
+        Test the various types of strings found in the wild get converted to
+        native_str type.
+        """
+        # get native bytes
+        try:  # this is required on python 3
+            nbytes = native_bytes('HHZ', 'utf8')
+        except TypeError:  # this works on py 2.7
+            nbytes = native_bytes('HHZ')
+        the_strs = [native_str('HHZ'), nbytes, u'HHZ']
+
+        stats = Stats()
+
+        for a_str in the_strs:
+            for nslc in self.nslc:
+                setattr(stats, nslc, a_str)
+                self.assertIsInstance(getattr(stats, nslc), (str, native_str))
 
 
 def suite():

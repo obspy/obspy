@@ -10,6 +10,7 @@ from future.builtins import *  # NOQA
 import copy
 import warnings
 
+import matplotlib as mpl
 import matplotlib.cbook
 from matplotlib.cm import get_cmap
 import matplotlib.text
@@ -22,8 +23,8 @@ from .taup_path import TauPPath
 from .taup_pierce import TauPPierce
 from .taup_time import TauPTime
 from .taup_geo import calc_dist, add_geo_to_arrivals
+from .utils import parse_phase_list
 import obspy.geodetics.base as geodetics
-
 
 # Pretty paired colors. Reorder to have saturated colors first and remove
 # some colors at the end.
@@ -165,10 +166,349 @@ class Arrivals(list):
         return self.__class__(super(Arrivals, self).copy(),
                               model=self.model)
 
+    def plot_times(self, phase_list=None, plot_all=True, legend=False,
+                   show=True, fig=None, ax=None):
+        """
+        Plot arrival times if any have been calculated.
+
+        :param phase_list: List of phases for which travel times are plotted,
+            if they exist. See `Phase naming in taup`_ for details on
+            phase naming and convenience keys like ``'ttbasic'``. Defaults to
+            ``'ttall'``.
+        :type phase_list: list of str
+        :param plot_all: By default all rays, even those travelling in the
+            other direction and thus arriving at a distance of *360 - x*
+            degrees are shown. Set this to ``False`` to only show rays
+            arriving at exactly *x* degrees.
+        :type plot_all: bool
+        :param legend: If boolean, specify whether or not to show the legend
+            (at the default location.) If a str, specify the location of the
+            legend.
+        :type legend: bool or str
+        :param show: Show the plot.
+        :type show: bool
+        :param fig: Figure instance to plot in. If not given, a new figure
+            will be created.
+        :type fig: :class:`matplotlib.figure.Figure`
+        :param ax: Axes to plot in. If not given, a new figure with an axes
+            will be created.
+        :type ax: :class:`matplotlib.axes.Axes`
+        :returns: Matplotlib axes with the plot
+        :rtype: :class:`matplotlib.axes.Axes`
+        """
+        import matplotlib.pyplot as plt
+
+        if not self:
+            raise ValueError("No travel times.")
+
+        if phase_list is None:
+            phase_list = ("ttall",)
+
+        phase_names = sorted(parse_phase_list(phase_list))
+
+        # create an axis/figure, if there is none yet:
+        if fig and ax:
+            pass
+        elif not fig and not ax:
+            fig, ax = plt.subplots()
+        elif not ax:
+            ax = fig.add_subplot(1, 1, 1)
+        elif not fig:
+            fig = ax.figure
+
+        # extract the time/distance for each phase, and for each distance:
+        for arrival in self:
+            if plot_all is False:
+                dist = arrival.purist_distance % 360.0
+                distance = arrival.distance
+                if distance < 0:
+                    distance = (distance % 360)
+                if abs(dist - distance) / dist > 1E-5:
+                    continue
+            if arrival.name in phase_names:
+                ax.plot(arrival.distance, arrival.time / 60, '.',
+                        label=arrival.name,
+                        color=COLORS[phase_names.index(arrival.name)
+                                     % len(COLORS)])
+            else:
+                ax.plot(arrival.distance, arrival.time / 60, '.',
+                        label=arrival.name, color='k')
+        if legend:
+            if isinstance(legend, bool):
+                if 0 <= arrival.distance <= 180.0:
+                    loc = "upper left"
+                else:
+                    loc = "upper right"
+            else:
+                loc = legend
+            ax.legend(loc=loc, prop=dict(size="small"), numpoints=1)
+
+        ax.grid()
+        ax.set_xlabel('Distance (degrees)')
+        ax.set_ylabel('Time (minutes)')
+        if show:
+            plt.show()
+        return ax
+
+    def plot_rays(self, phase_list=None, plot_type="spherical",
+                  plot_all=True, legend=False, label_arrivals=False,
+                  show=True, fig=None, ax=None):
+        """
+        Plot ray paths if any have been calculated.
+
+        :param phase_list: List of phases for which ray paths are plotted,
+            if they exist. See `Phase naming in taup`_ for details on
+            phase naming and convenience keys like ``'ttbasic'``. Defaults to
+            ``'ttall'``.
+        :type phase_list: list of str
+        :param plot_type: Either ``"spherical"`` or ``"cartesian"``.
+            A spherical plot is always global whereas a Cartesian one can
+            also be local.
+        :type plot_type: str
+        :param plot_all: By default all rays, even those travelling in the
+            other direction and thus arriving at a distance of *360 - x*
+            degrees are shown. Set this to ``False`` to only show rays
+            arriving at exactly *x* degrees.
+        :type plot_all: bool
+        :param legend: If boolean, specify whether or not to show the legend
+            (at the default location.) If a str, specify the location of the
+            legend. If you are plotting a single phase, you may consider using
+            the ``label_arrivals`` argument.
+        :type legend: bool or str
+        :param label_arrivals: Label the arrivals with their respective phase
+            names. This setting is only useful if you are plotting a single
+            phase as otherwise the names could be large and possibly overlap
+            or clip. Consider using the ``legend`` parameter instead if you
+            are plotting multiple phases.
+        :type label_arrivals: bool
+        :param show: Show the plot.
+        :type show: bool
+        :param fig: Figure to plot in. If not given, a new figure will be
+            created.
+        :type fig: :class:`matplotlib.figure.Figure`
+        :param ax: Axes to plot in. If not given, a new figure with an axes
+            will be created. Must be a polar axes for the spherical plot and
+            a regular one for the Cartesian plot.
+        :type ax: :class:`matplotlib.axes.Axes`
+        :returns: Matplotlib axes with the plot
+        :rtype: :class:`matplotlib.axes.Axes`
+        """
+        import matplotlib.pyplot as plt
+
+        # I don't get this, but without sorting, I get a different
+        # order each call:
+
+        if phase_list is None:
+            phase_list = ("ttall",)
+
+        phase_names = sorted(parse_phase_list(phase_list))
+        arrivals = []
+        for arrival in self:
+            if arrival.path is None:
+                continue
+            dist = arrival.purist_distance % 360.0
+            distance = arrival.distance
+            if distance < 0:
+                distance = (distance % 360)
+            if abs(dist - distance) / dist > 1E-5:
+                if plot_all is False:
+                    continue
+                # Mirror on axis.
+                arrival = copy.deepcopy(arrival)
+                arrival.path["dist"] *= -1.0
+            arrivals.append(arrival)
+
+        if not arrivals:
+            raise ValueError("Can only plot arrivals with calculated ray "
+                             "paths.")
+
+        # get the velocity discontinuities in your model, for plotting:
+        discons = self.model.s_mod.v_mod.get_discontinuity_depths()
+
+        if plot_type == "spherical":
+            if ax and not isinstance(ax, mpl.projections.polar.PolarAxes):
+                msg = ("Axes instance provided for plotting with "
+                       "`plot_type='spherical'` but it seems the axes is not "
+                       "a polar axes.")
+                warnings.warn(msg)
+            if fig and ax:
+                pass
+            elif not fig and not ax:
+                fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+            elif not ax:
+                ax = fig.add_subplot(1, 1, 1, polar=True)
+            elif not fig:
+                fig = ax.figure
+
+            ax.set_theta_zero_location('N')
+            ax.set_theta_direction(-1)
+            ax.set_xticks([])
+            ax.set_yticks([])
+
+            intp = matplotlib.cbook.simple_linear_interpolation
+            radius = self.model.radius_of_planet
+            for ray in arrivals:
+                if ray.name in phase_names:
+                    # Requires interpolation,or diffracted phases look funny.
+                    ax.plot(intp(ray.path["dist"], 100),
+                            radius - intp(ray.path["depth"], 100),
+                            color=COLORS[phase_names.index(ray.name) %
+                                         len(COLORS)], label=ray.name, lw=2.0)
+                else:
+                    ax.plot(intp(ray.path["dist"], 100),
+                            radius - intp(ray.path["depth"], 100),
+                            color='k', label=ray.name, lw=2.0)
+                ax.set_yticks(radius - discons)
+                ax.xaxis.set_major_formatter(plt.NullFormatter())
+                ax.yaxis.set_major_formatter(plt.NullFormatter())
+
+            # Pretty earthquake marker.
+            ax.plot([0], [radius - arrivals[0].source_depth],
+                    marker="*", color="#FEF215", markersize=20, zorder=10,
+                    markeredgewidth=1.5, markeredgecolor="0.3",
+                    clip_on=False)
+
+            # Pretty station marker.
+            arrowprops = dict(arrowstyle='-|>,head_length=0.8,'
+                              'head_width=0.5',
+                              color='#C95241', lw=1.5)
+            station_radius = radius - arrivals[0].receiver_depth
+            ax.annotate('',
+                        xy=(np.deg2rad(distance), station_radius),
+                        xycoords='data',
+                        xytext=(np.deg2rad(distance),
+                                station_radius + radius * 0.02),
+                        textcoords='data',
+                        arrowprops=arrowprops,
+                        clip_on=False)
+            arrowprops = dict(arrowstyle='-|>,head_length=1.0,'
+                              'head_width=0.6',
+                              color='0.3', lw=1.5, fill=False)
+            ax.annotate('',
+                        xy=(np.deg2rad(distance), station_radius),
+                        xycoords='data',
+                        xytext=(np.deg2rad(distance),
+                                station_radius + radius * 0.01),
+                        textcoords='data',
+                        arrowprops=arrowprops,
+                        clip_on=False)
+            if label_arrivals:
+                name = ','.join(sorted(set(ray.name for ray in arrivals)))
+                # We cannot just set the text of the annotations above because
+                # it changes the arrow path.
+                t = _SmartPolarText(np.deg2rad(distance),
+                                    station_radius + radius * 0.1,
+                                    name, clip_on=False)
+                ax.add_artist(t)
+
+            ax.set_rmax(radius)
+            ax.set_rmin(0.0)
+
+            if legend:
+                if isinstance(legend, bool):
+                    if 0 <= distance <= 180.0:
+                        loc = "upper left"
+                    else:
+                        loc = "upper right"
+                else:
+                    loc = legend
+                ax.legend(loc=loc, prop=dict(size="small"))
+
+        elif plot_type == "cartesian":
+            if ax and isinstance(ax, mpl.projections.polar.PolarAxes):
+                msg = ("Axes instance provided for plotting with "
+                       "`plot_type='cartesian'` but it seems the axes is "
+                       "a polar axes.")
+                warnings.warn(msg)
+            if fig and ax:
+                pass
+            elif not fig and not ax:
+                fig, ax = plt.subplots()
+                ax.invert_yaxis()
+            elif not ax:
+                ax = fig.add_subplot(1, 1, 1)
+                ax.invert_yaxis()
+            elif not fig:
+                fig = ax.figure
+
+            # Plot the ray paths:
+            for ray in arrivals:
+                if ray.name in phase_names:
+                    ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
+                            color=COLORS[phase_names.index(ray.name) %
+                                         len(COLORS)],
+                            label=ray.name, lw=2.0)
+                else:
+                    ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
+                            color='k', label=ray.name, lw=2.0)
+
+            # Pretty station marker:
+            ms = 14
+            station_marker_transform = matplotlib.transforms.offset_copy(
+                ax.transData,
+                fig=ax.get_figure(),
+                y=ms / 2.0,
+                units="points")
+            ax.plot([distance], [arrivals[0].receiver_depth],
+                    marker="v", color="#C95241",
+                    markersize=ms, zorder=10, markeredgewidth=1.5,
+                    markeredgecolor="0.3", clip_on=False,
+                    transform=station_marker_transform)
+            if label_arrivals:
+                name = ','.join(sorted(set(ray.name for ray in arrivals)))
+                ax.annotate(name,
+                            xy=(distance, arrivals[0].receiver_depth),
+                            xytext=(0, ms * 1.5),
+                            textcoords='offset points',
+                            ha='center', annotation_clip=False)
+
+            # Pretty earthquake marker.
+            ax.plot([0], [arrivals[0].source_depth], marker="*",
+                    color="#FEF215", markersize=20, zorder=10,
+                    markeredgewidth=1.5, markeredgecolor="0.3",
+                    clip_on=False)
+
+            # lines of major discontinuities:
+            x = ax.get_xlim()
+            y = ax.get_ylim()
+            for depth in discons:
+                if not (y[1] <= depth <= y[0]):
+                    continue
+                ax.hlines(depth, x[0], x[1], color="0.5", zorder=-1)
+
+            # Plot some more station markers if necessary.
+            possible_distances = [_i * (distance + 360.0)
+                                  for _i in range(1, 10)]
+            possible_distances += [-_i * (360.0 - distance) for _i in
+                                   range(1, 10)]
+            possible_distances = [_i for _i in possible_distances
+                                  if x[0] <= _i <= x[1]]
+            if possible_distances:
+                ax.plot(possible_distances, [arrivals[0].receiver_depth]
+                        * len(possible_distances),
+                        marker="v", color="#C95241",
+                        markersize=ms, zorder=10, markeredgewidth=1.5,
+                        markeredgecolor="0.3", clip_on=False, lw=0,
+                        transform=station_marker_transform)
+            if legend:
+                if isinstance(legend, bool):
+                    loc = "lower left"
+                else:
+                    loc = legend
+                ax.legend(loc=loc, prop=dict(size="small"))
+            ax.set_xlabel("Distance [deg]")
+            ax.set_ylabel("Depth [km]")
+        else:
+            msg = "Plot type '{}' is not a valid option.".format(plot_type)
+            raise ValueError(msg)
+        if show:
+            plt.show()
+        return ax
+
     def plot(self, plot_type="spherical", plot_all=True, legend=True,
              label_arrivals=False, ax=None, show=True):
         """
-        Plot the ray paths if any have been calculated.
+        Plot ray paths if any have been calculated.
 
         :param plot_type: Either ``"spherical"`` or ``"cartesian"``.
             A spherical plot is always global whereas a Cartesian one can
@@ -190,173 +530,41 @@ class Arrivals(list):
             or clip. Consider using the ``legend`` parameter instead if you
             are plotting multiple phases.
         :type label_arrivals: bool
-        :param ax: Axes to plot to. If not given, a new figure with an axes
+        :param show: Show the plot.
+        :type show: bool
+        :param fig: Figure to plot in. If not given, a new figure will be
+            created.
+        :type fig: :class:`matplotlib.figure.Figure`
+        :param ax: Axes to plot in. If not given, a new figure with an axes
             will be created. Must be a polar axes for the spherical plot and
             a regular one for the Cartesian plot.
         :type ax: :class:`matplotlib.axes.Axes`
-        :param show: Show the plot.
-        :type show: bool
-
-        :returns: The (possibly created) axes instance.
+        :returns: Matplotlib axes with the plot
         :rtype: :class:`matplotlib.axes.Axes`
+
+        .. versionchanged:: 1.1.0
+
+            Deprecated.
+
+            With the introduction of plot_times(), plot() has been renamed to
+            plot_rays()
         """
-        import matplotlib.pyplot as plt
-        arrivals = []
-        for _i in self:
-            if _i.path is None:
-                continue
-            dist = _i.purist_distance % 360.0
-            distance = _i.distance
-            if abs(dist - distance) / dist > 1E-5:
-                if plot_all is False:
-                    continue
-                # Mirror on axis.
-                _i = copy.deepcopy(_i)
-                _i.path["dist"] *= -1.0
-            arrivals.append(_i)
-        if not arrivals:
-            raise ValueError("Can only plot arrivals with calculated ray "
-                             "paths.")
-        discons = self.model.s_mod.v_mod.get_discontinuity_depths()
-        if plot_type == "spherical":
-            if not ax:
-                plt.figure(figsize=(10, 10))
-                ax = plt.subplot(111, polar=True)
-                ax.set_theta_zero_location('N')
-                ax.set_theta_direction(-1)
-            ax.set_xticks([])
-            ax.set_yticks([])
-            intp = matplotlib.cbook.simple_linear_interpolation
-            radius = self.model.radius_of_planet
-            for _i, ray in enumerate(arrivals):
-                # Requires interpolation otherwise diffracted phases look
-                # funny.
-                ax.plot(intp(ray.path["dist"], 100),
-                        radius - intp(ray.path["depth"], 100),
-                        color=COLORS[_i % len(COLORS)], label=ray.name,
-                        lw=2.0)
-            ax.set_yticks(radius - discons)
-            ax.xaxis.set_major_formatter(plt.NullFormatter())
-            ax.yaxis.set_major_formatter(plt.NullFormatter())
-            # Pretty earthquake marker.
-            ax.plot([0], [radius - arrivals[0].source_depth],
-                    marker="*", color="#FEF215", markersize=20, zorder=10,
-                    markeredgewidth=1.5, markeredgecolor="0.3", clip_on=False)
 
-            # Pretty station marker.
-            arrowprops = dict(arrowstyle='-|>,head_length=0.8,head_width=0.5',
-                              color='#C95241',
-                              lw=1.5)
-            station_radius = radius - arrivals[0].receiver_depth
-            ax.annotate('',
-                        xy=(np.deg2rad(distance), station_radius),
-                        xycoords='data',
-                        xytext=(np.deg2rad(distance),
-                                station_radius + radius * 0.02),
-                        textcoords='data',
-                        arrowprops=arrowprops,
-                        clip_on=False)
-            arrowprops = dict(arrowstyle='-|>,head_length=1.0,head_width=0.6',
-                              color='0.3',
-                              lw=1.5,
-                              fill=False)
-            ax.annotate('',
-                        xy=(np.deg2rad(distance), station_radius),
-                        xycoords='data',
-                        xytext=(np.deg2rad(distance),
-                                station_radius + radius * 0.01),
-                        textcoords='data',
-                        arrowprops=arrowprops,
-                        clip_on=False)
-            if label_arrivals:
-                name = ','.join(sorted(set(ray.name for ray in arrivals)))
-                # We cannot just set the text of the annotations above because
-                # it changes the arrow path.
-                t = _SmartPolarText(np.deg2rad(distance),
-                                    station_radius + radius * 0.07,
-                                    name, clip_on=False)
-                ax.add_artist(t)
+        # display warning
+        from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+        warnings.warn("The plot() function is deprecated. Please use "
+                      "arrivals.plot_rays()",
+                      ObsPyDeprecationWarning, stacklevel=2)
 
-            ax.set_rmax(radius)
-            ax.set_rmin(0.0)
-            if legend:
-                if isinstance(legend, bool):
-                    if 0 <= distance <= 180.0:
-                        loc = "upper left"
-                    else:
-                        loc = "upper right"
-                else:
-                    loc = legend
-                plt.legend(loc=loc, prop=dict(size="small"))
-
-        elif plot_type == "cartesian":
-            if not ax:
-                plt.figure(figsize=(12, 8))
-                ax = plt.gca()
-            ax.invert_yaxis()
-            for _i, ray in enumerate(arrivals):
-                ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
-                        color=COLORS[_i % len(COLORS)], label=ray.name,
-                        lw=2.0)
-            ax.set_ylabel("Depth [km]")
-            if legend:
-                if isinstance(legend, bool):
-                    loc = "lower left"
-                else:
-                    loc = legend
-                ax.legend(loc=loc, prop=dict(size="small"))
-            ax.set_xlabel("Distance [deg]")
-            # Pretty station marker.
-            ms = 14
-            station_marker_transform = matplotlib.transforms.offset_copy(
-                ax.transData,
-                fig=ax.get_figure(),
-                y=ms / 2.0,
-                units="points")
-            ax.plot([distance], [arrivals[0].receiver_depth],
-                    marker="v", color="#C95241",
-                    markersize=ms, zorder=10, markeredgewidth=1.5,
-                    markeredgecolor="0.3", clip_on=False,
-                    transform=station_marker_transform)
-            if label_arrivals:
-                name = ','.join(sorted(set(ray.name for ray in arrivals)))
-                ax.annotate(name, xy=(distance, arrivals[0].receiver_depth),
-                            xytext=(0, ms * 1.5), textcoords='offset points',
-                            ha='center', annotation_clip=False)
-
-            # Pretty earthquake marker.
-            ax.plot([0], [arrivals[0].source_depth],
-                    marker="*", color="#FEF215", markersize=20, zorder=10,
-                    markeredgewidth=1.5, markeredgecolor="0.3", clip_on=False)
-            x = ax.get_xlim()
-            x_range = x[1] - x[0]
-            ax.set_xlim(x[0] - x_range * 0.1, x[1] + x_range * 0.1)
-            x = ax.get_xlim()
-            y = ax.get_ylim()
-            for depth in discons:
-                if not (y[1] <= depth <= y[0]):
-                    continue
-                ax.hlines(depth, x[0], x[1], color="0.5", zorder=-1)
-            # Plot some more station markers if necessary.
-            possible_distances = [_i * (distance + 360.0)
-                                  for _i in range(1, 10)]
-            possible_distances += [-_i * (360.0 - distance) for _i in
-                                   range(1, 10)]
-            possible_distances = [_i for _i in possible_distances
-                                  if x[0] <= _i <= x[1]]
-            if possible_distances:
-                ax.plot(possible_distances,
-                        [arrivals[0].receiver_depth] * len(possible_distances),
-                        marker="v", color="#C95241",
-                        markersize=ms, zorder=10, markeredgewidth=1.5,
-                        markeredgecolor="0.3", clip_on=False, lw=0,
-                        transform=station_marker_transform)
-
-        else:
-            raise NotImplementedError
-        if show:
-            plt.show()
-        return ax
+        # call plot_rays, but with added fig and phase_list parameters:
+        return self.plot_rays(plot_type=plot_type,
+                              plot_all=plot_all,
+                              legend=legend,
+                              label_arrivals=label_arrivals,
+                              ax=ax,
+                              fig=None,
+                              show=show,
+                              phase_list=("ttall",))
 
 
 class TauPyModel(object):
@@ -413,7 +621,8 @@ class TauPyModel(object):
         :param distance_in_degree: Epicentral distance in degrees.
         :type distance_in_degree: float
         :param phase_list: List of phases for which travel times should be
-            calculated. If this is empty, all phases will be used.
+            calculated. If this is empty, all phases in arrivals object
+            will be used.
         :type phase_list: list of str
         :param receiver_depth_in_km: Receiver depth in km
         :type receiver_depth_in_km: float
@@ -442,7 +651,8 @@ class TauPyModel(object):
         :param distance_in_degree: Epicentral distance in degrees.
         :type distance_in_degree: float
         :param phase_list: List of phases for which travel times should be
-            calculated. If this is empty, all phases will be used.
+            calculated. If this is empty, all phases in arrivals object
+            will be used.
         :type phase_list: list of str
         :param receiver_depth_in_km: Receiver depth in km
         :type receiver_depth_in_km: float
@@ -468,7 +678,8 @@ class TauPyModel(object):
         :param distance_in_degree: Epicentral distance in degrees.
         :type distance_in_degree: float
         :param phase_list: List of phases for which travel times should be
-            calculated. If this is empty, all phases will be used.
+            calculated. If this is empty, all phases in arrivals object
+            will be used.
         :type phase_list: list of str
         :param receiver_depth_in_km: Receiver depth in km
         :type receiver_depth_in_km: float
@@ -510,7 +721,8 @@ class TauPyModel(object):
         :param receiver_longitude_in_deg: Receiver longitude in degrees
         :type receiver_longitude_in_deg: float
         :param phase_list: List of phases for which travel times should be
-            calculated. If this is empty, all phases will be used.
+            calculated. If this is empty, all phases in arrivals object
+            will be used.
         :type phase_list: list of str
 
         :return: List of ``Arrival`` objects, each of which has the time,
@@ -532,7 +744,8 @@ class TauPyModel(object):
                               source_longitude_in_deg,
                               receiver_latitude_in_deg,
                               receiver_longitude_in_deg,
-                              phase_list=("ttall",)):
+                              phase_list=("ttall",),
+                              resample=False):
         """
         Return ray paths of every given phase with geographical info.
 
@@ -556,8 +769,13 @@ class TauPyModel(object):
         :param receiver_longitude_in_deg: Receiver longitude in degrees
         :type receiver_longitude_in_deg: float
         :param phase_list: List of phases for which travel times should be
-            calculated. If this is empty, all phases will be used.
+            calculated. If this is empty, all phases in arrivals object
+            will be used.
         :type phase_list: list of str
+        :param resample: adds sample points to allow for easy cartesian
+                         interpolation. This is especially useful for phases
+                         like Pdiff.
+        :type resample: boolean
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
             attributes.
@@ -574,13 +792,13 @@ class TauPyModel(object):
                                           phase_list)
 
         if geodetics.HAS_GEOGRAPHICLIB:
-            try:
-                arrivals = add_geo_to_arrivals(
-                    arrivals, source_latitude_in_deg, source_longitude_in_deg,
-                    receiver_latitude_in_deg, receiver_longitude_in_deg,
-                    self.model.radius_of_planet, self.planet_flattening)
-            except ImportError as e:
-                warnings.warn("ImportError: " + str(e))
+            arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
+                                           source_longitude_in_deg,
+                                           receiver_latitude_in_deg,
+                                           receiver_longitude_in_deg,
+                                           self.model.radius_of_planet,
+                                           self.planet_flattening,
+                                           resample=resample)
         else:
             msg = "Not able to evaluate positions of pierce points. " + \
                   "Arrivals object will not be modified. " + \
@@ -592,7 +810,8 @@ class TauPyModel(object):
 
     def get_ray_paths_geo(self, source_depth_in_km, source_latitude_in_deg,
                           source_longitude_in_deg, receiver_latitude_in_deg,
-                          receiver_longitude_in_deg, phase_list=("ttall",)):
+                          receiver_longitude_in_deg, phase_list=("ttall",),
+                          resample=False):
         """
         Return ray paths of every given phase with geographical info.
 
@@ -616,7 +835,8 @@ class TauPyModel(object):
         :param receiver_longitude_in_deg: Receiver longitude in degrees
         :type receiver_longitude_in_deg: float
         :param phase_list: List of phases for which travel times should be
-            calculated. If this is empty, all phases will be used.
+            calculated. If this is empty, all phases in arrivals object
+            will be used.
         :type phase_list: list of str
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
@@ -634,13 +854,13 @@ class TauPyModel(object):
                                       phase_list)
 
         if geodetics.HAS_GEOGRAPHICLIB:
-            try:
-                arrivals = add_geo_to_arrivals(
-                    arrivals, source_latitude_in_deg, source_longitude_in_deg,
-                    receiver_latitude_in_deg, receiver_longitude_in_deg,
-                    self.model.radius_of_planet, self.planet_flattening)
-            except ImportError as e:
-                warnings.warn("ImportError: " + str(e))
+            arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
+                                           source_longitude_in_deg,
+                                           receiver_latitude_in_deg,
+                                           receiver_longitude_in_deg,
+                                           self.model.radius_of_planet,
+                                           self.planet_flattening,
+                                           resample=resample)
         else:
             msg = "Not able to evaluate positions of points on path. " + \
                   "Arrivals object will not be modified. " + \
@@ -663,3 +883,206 @@ def create_taup_model(model_name, output_dir, input_dir):
     else:
         model_file_name = model_name + ".tvel"
     TauPCreate.main(model_file_name, output_dir, input_dir)
+
+
+def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
+                      max_degrees=180, npoints=50, model='iasp91',
+                      plot_all=True, legend=True, verbose=False, fig=None,
+                      ax=None, show=True):
+    """
+    Returns a travel time plot and any created axis instance of this
+    plot.
+
+    :param source_depth: Source depth in kilometers.
+    :type source_depth: float
+    :param min_degrees: minimum distance from the source (in degrees)
+    :type min_degrees: float
+    :param max_degrees: maximum distance from the source (in degrees)
+    :type max_degrees: float
+    :param npoints: Number of points to plot.
+    :type npoints: int
+    :param phase_list: List of phase names to plot.
+    :type phase_list: list of str, optional
+    :param model: string containing the model to use.
+    :type model: str
+    :param plot_all: By default all rays, even those travelling in the
+        other direction and thus arriving at a distance of *360 - x*
+        degrees are shown. Set this to ``False`` to only show rays
+        arriving at exactly *x* degrees.
+    :type plot_all: bool
+    :param legend: Whether or not to show the legend
+    :type legend: bool
+    :param verbose: Whether to print information about epicentral distances
+        that did not have an arrival.
+    :type verbose: bool
+    :param fig: Figure to plot in. If not given, a new figure instance
+        will be created.
+    :type fig: :class:`matplotlib.axes.Axes
+    :param ax: Axes to plot in. If not given, a new figure with an axes
+        will be created.
+    param show: Show the plot.
+    type show: bool
+    :type ax: :class:`matplotlib.Figure.figure`
+    :returns: ax
+    :rtype: :class:`matplotlib.axes.Axes`
+
+    .. rubric:: Example
+
+    >>> from obspy.taup import plot_travel_times
+    >>> ax = plot_travel_times(source_depth=10, phase_list=['P', 'S', 'PP'])
+
+    .. plot::
+
+        from obspy.taup import plot_travel_times
+        ax = plot_travel_times(source_depth=10, phase_list=['P','S','PP'])
+    """
+    import matplotlib.pyplot as plt
+
+    # compute the requested arrivals:
+    model = TauPyModel(model)
+
+    # a list of epicentral distances without a travel time, and a flag:
+    notimes = []
+    plotted = False
+
+    # calculate the arrival times and plot vs. epicentral distance:
+    degrees = np.linspace(min_degrees, max_degrees, npoints)
+    for degree in degrees:
+        try:
+            arrivals = model.get_ray_paths(source_depth, degree,
+                                           phase_list=phase_list)
+            ax = arrivals.plot_times(phase_list=phase_list, show=False,
+                                     ax=ax, plot_all=plot_all)
+            plotted = True
+        except ValueError:
+            notimes.append(degree)
+
+    if plotted:
+        if verbose:
+            if len(notimes) == 1:
+                tmpl = "There was {} epicentral distance without an arrival"
+            else:
+                tmpl = "There were {} epicentral distances without an arrival"
+            print(tmpl.format(len(notimes)))
+    else:
+        raise ValueError("No arrival times to plot.")
+
+    if legend:
+        # merge all arrival labels of a certain phase:
+        handles, labels = ax.get_legend_handles_labels()
+        labels, ids = np.unique(labels, return_index=True)
+        handles = [handles[i] for i in ids]
+        ax.legend(handles, labels, loc=2, numpoints=1)
+
+    if show:
+        plt.show()
+    return ax
+
+
+def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
+                   plot_type='spherical', phase_list=['P', 'S', 'PP'],
+                   model='iasp91', plot_all=True, legend=False,
+                   label_arrivals=False, verbose=False, fig=None, show=True,
+                   ax=None):
+    """
+    Plot ray paths for seismic phases.
+
+    :param source_depth: Source depth in kilometers.
+    :type source_depth: float
+    :param min_degrees: minimum distance from the source (in degrees).
+    :type min_degrees: float
+    :param max_degrees: maximum distance from the source (in degrees).
+    :type max_degrees: float
+    :param npoints: Number of receivers to plot.
+    :type npoints: int
+    :param plot_type: type of plot to create.
+    :type plot_type: str
+    :param phase_list: List of phase names.
+    :type phase_list: list of str
+    :param model: Model name.
+    :type model: str
+    :param plot_all: By default all rays, even those travelling in the
+        other direction and thus arriving at a distance of *360 - x*
+        degrees are shown. Set this to ``False`` to only show rays
+        arriving at exactly *x* degrees.
+    :type plot_all: bool
+    :param legend: Whether or not to show the legend
+    :type legend: bool
+    :param label_arrivals: Label the arrivals with their respective phase
+        names. This setting is only useful if you are plotting a single
+        phase as otherwise the names could be large and possibly overlap
+        or clip. Consider using the ``legend`` parameter instead if you
+        are plotting multiple phases.
+    :type label_arrivals: bool
+    :param verbose: Whether to print information about selected phases that
+        were not encountered at individual epicentral distances.
+    :type verbose: bool
+    :param fig: Figure to plot into. If not given, a new figure instance
+        will be created.
+    :type fig: :class:`matplotlib.figure.Figure`
+    :param show: Show the plot.
+    :type show: bool
+    :param ax: Axes to plot in. If not given, a new figure with an axes
+        will be created.
+    :type ax: :class:`matplotlib.axes.Axes`
+    :returns: Matplotlib axes with the plot
+    :rtype: :class:`matplotlib.axes.Axes`
+
+    .. rubric:: Example
+
+    >>> from obspy.taup.tau import plot_ray_paths
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
+    >>> ax = plot_ray_paths(source_depth=10, plot_type="spherical",
+    ...                     ax=ax, fig=fig, legend=True,
+    ...                     phase_list=['P', 'S', 'PP'], verbose=True)
+    There were rays for all but the following epicentral distances:
+     [0.0, 360.0]
+
+    .. plot::
+
+    from obspy.taup.tau import plot_ray_paths
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
+    ax = plot_ray_paths(source_depth=10, plot_type="spherical",
+                        ax=ax, fig=fig, legend=True,
+                        phase_list=['P','S','PP'])
+    """
+    import matplotlib.pyplot as plt
+    model = TauPyModel(model)
+
+    # set up a list of epicentral distances without a ray, and a flag:
+    norays = []
+    plotted = False
+
+    # calculate the arrival times and plot vs. epicentral distance:
+    degrees = np.linspace(min_degrees, max_degrees, npoints)
+    for degree in degrees:
+        try:
+            arrivals = model.get_ray_paths(source_depth, degree,
+                                           phase_list=phase_list)
+            ax = arrivals.plot_rays(phase_list=phase_list, show=False,
+                                    ax=ax, plot_type=plot_type,
+                                    plot_all=plot_all, legend=False)
+            plotted = True
+        except ValueError:
+            norays.append(degree)
+
+    if plotted:
+        if verbose:
+            print("There were rays for all but the following epicentral "
+                  "distances:\n", norays)
+    else:
+        raise ValueError("No ray paths to plot.")
+
+    if legend:
+        # merge all arrival labels of a certain phase:
+        handles, labels = ax.get_legend_handles_labels()
+        labels, ids = np.unique(labels, return_index=True)
+        handles = [handles[i] for i in ids]
+        ax.legend(handles, labels, loc=2, numpoints=1)
+
+    if show:
+        plt.show()
+    return ax

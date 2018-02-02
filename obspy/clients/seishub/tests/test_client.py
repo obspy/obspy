@@ -33,7 +33,7 @@ def _check_server_availability():
     try:
         code = urlopen(TESTSERVER, timeout=3).getcode()
         assert(code == 200)
-    except:
+    except Exception:
         return TESTSERVER_UNREACHABLE_MSG
     return ""
 
@@ -54,6 +54,7 @@ class ClientTestCase(unittest.TestCase):
         t = UTCDateTime(2012, 1, 1, 12)
         st = self.client.waveform.get_waveforms('GR', 'FUR', '', 'BH*',
                                                 t, t + 5)
+        st.sort(reverse=True)
         self.assertEqual(len(st), 3)
         for tr, cha in zip(st, ('BHZ', 'BHN', 'BHE')):
             self.assertEqual(tr.stats.network, 'GR')

@@ -147,6 +147,7 @@ class TriggerTestCase(unittest.TestCase):
             st += read(filename)
         # some prefiltering used for UH network
         st.filter('bandpass', freqmin=10, freqmax=20)
+
         # 1. no weighting, no stations specified, good settings
         # => 3 events, no false triggers
         # for the first test we make some additional tests regarding types
@@ -177,27 +178,31 @@ class TriggerTestCase(unittest.TestCase):
         self.assertTrue(4.2 < res[2]['duration'] < 4.4)
         self.assertEqual(res[2]['stations'], ['UH3', 'UH2', 'UH1', 'UH4'])
         self.assertEqual(res[2]['coincidence_sum'], 4)
+
         # 2. no weighting, station selection
         # => 2 events, no false triggers
         trace_ids = ['BW.UH1..SHZ', 'BW.UH3..SHZ', 'BW.UH4..EHZ']
-        # ignore UserWarnings
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter('ignore', UserWarning)
+        # raises "UserWarning: At least one trace's ID was not found"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
             re = coincidence_trigger("recstalta", 3.5, 1, st.copy(), 3,
                                      trace_ids=trace_ids, sta=0.5, lta=10)
-            self.assertEqual(len(re), 2)
-            self.assertGreater(re[0]['time'],
-                               UTCDateTime("2010-05-27T16:24:31"))
-            self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
-            self.assertTrue(4.2 < re[0]['duration'] < 4.8)
-            self.assertEqual(re[0]['stations'], ['UH3', 'UH1', 'UH4'])
-            self.assertEqual(re[0]['coincidence_sum'], 3)
-            self.assertGreater(re[1]['time'],
-                               UTCDateTime("2010-05-27T16:27:27"))
-            self.assertTrue(re[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
-            self.assertTrue(4.2 < re[1]['duration'] < 4.4)
-            self.assertEqual(re[1]['stations'], ['UH3', 'UH1', 'UH4'])
-            self.assertEqual(re[1]['coincidence_sum'], 3)
+            self.assertEqual(len(w), 1)
+            self.assertIn("At least one trace's ID was not", str(w[0]))
+        self.assertEqual(len(re), 2)
+        self.assertGreater(re[0]['time'],
+                           UTCDateTime("2010-05-27T16:24:31"))
+        self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
+        self.assertTrue(4.2 < re[0]['duration'] < 4.8)
+        self.assertEqual(re[0]['stations'], ['UH3', 'UH1', 'UH4'])
+        self.assertEqual(re[0]['coincidence_sum'], 3)
+        self.assertGreater(re[1]['time'],
+                           UTCDateTime("2010-05-27T16:27:27"))
+        self.assertTrue(re[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
+        self.assertTrue(4.2 < re[1]['duration'] < 4.4)
+        self.assertEqual(re[1]['stations'], ['UH3', 'UH1', 'UH4'])
+        self.assertEqual(re[1]['coincidence_sum'], 3)
+
         # 3. weighting, station selection
         # => 3 events, no false triggers
         trace_ids = {'BW.UH1..SHZ': 0.4, 'BW.UH2..SHZ': 0.35,
@@ -220,39 +225,51 @@ class TriggerTestCase(unittest.TestCase):
         self.assertTrue(4.2 < res[2]['duration'] < 4.4)
         self.assertEqual(res[2]['stations'], ['UH3', 'UH2', 'UH1', 'UH4'])
         self.assertEqual(res[2]['coincidence_sum'], 1.4)
+
         # 4. weighting, station selection, max_len
         # => 2 events, no false triggers, small event does not overlap anymore
         trace_ids = {'BW.UH1..SHZ': 0.6, 'BW.UH2..SHZ': 0.6}
-        # ignore UserWarnings
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter('ignore', UserWarning)
+        # raises "UserWarning: At least one trace's ID was not found"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
             re = coincidence_trigger("recstalta", 3.5, 1, st.copy(), 1.2,
                                      trace_ids=trace_ids,
                                      max_trigger_length=0.13, sta=0.5, lta=10)
-            self.assertEqual(len(re), 2)
-            self.assertGreater(re[0]['time'],
-                               UTCDateTime("2010-05-27T16:24:31"))
-            self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
-            self.assertTrue(0.2 < re[0]['duration'] < 0.3)
-            self.assertEqual(re[0]['stations'], ['UH2', 'UH1'])
-            self.assertEqual(re[0]['coincidence_sum'], 1.2)
-            self.assertGreater(re[1]['time'],
-                               UTCDateTime("2010-05-27T16:27:27"))
-            self.assertTrue(re[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
-            self.assertTrue(0.18 < re[1]['duration'] < 0.2)
-            self.assertEqual(re[1]['stations'], ['UH2', 'UH1'])
-            self.assertEqual(re[1]['coincidence_sum'], 1.2)
+            self.assertEqual(len(w), 2)
+            self.assertIn("At least one trace's ID was not", str(w[0]))
+            self.assertIn("At least one trace's ID was not", str(w[1]))
+        self.assertEqual(len(re), 2)
+        self.assertGreater(re[0]['time'],
+                           UTCDateTime("2010-05-27T16:24:31"))
+        self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
+        self.assertTrue(0.2 < re[0]['duration'] < 0.3)
+        self.assertEqual(re[0]['stations'], ['UH2', 'UH1'])
+        self.assertEqual(re[0]['coincidence_sum'], 1.2)
+        self.assertGreater(re[1]['time'],
+                           UTCDateTime("2010-05-27T16:27:27"))
+        self.assertTrue(re[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
+        self.assertTrue(0.18 < re[1]['duration'] < 0.2)
+        self.assertEqual(re[1]['stations'], ['UH2', 'UH1'])
+        self.assertEqual(re[1]['coincidence_sum'], 1.2)
+
         # 5. station selection, extremely sensitive settings
         # => 4 events, 1 false triggers
-        res = coincidence_trigger("recstalta", 2.5, 1, st.copy(), 2,
-                                  trace_ids=['BW.UH1..SHZ', 'BW.UH3..SHZ'],
-                                  sta=0.3, lta=5)
+        # raises "UserWarning: At least one trace's ID was not found"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            res = coincidence_trigger("recstalta", 2.5, 1, st.copy(), 2,
+                                      trace_ids=['BW.UH1..SHZ', 'BW.UH3..SHZ'],
+                                      sta=0.3, lta=5)
+            self.assertEqual(len(w), 2)
+            self.assertIn("At least one trace's ID was not", str(w[0]))
+            self.assertIn("At least one trace's ID was not", str(w[1]))
         self.assertEqual(len(res), 5)
         self.assertGreater(res[3]['time'], UTCDateTime("2010-05-27T16:27:01"))
         self.assertTrue(res[3]['time'] < UTCDateTime("2010-05-27T16:27:02"))
         self.assertTrue(1.5 < res[3]['duration'] < 1.7)
         self.assertEqual(res[3]['stations'], ['UH3', 'UH1'])
         self.assertEqual(res[3]['coincidence_sum'], 2.0)
+
         # 6. same as 5, gappy stream
         # => same as 5 (almost, duration of 1 event changes by 0.02s)
         st2 = st.copy()
@@ -264,15 +281,21 @@ class TriggerTestCase(unittest.TestCase):
         tr1b = tr1.slice(starttime=t1 + 0.6 * td, endtime=t1 + 0.94 * td)
         st2.insert(1, tr1a)
         st2.insert(3, tr1b)
-        res = coincidence_trigger("recstalta", 2.5, 1, st2, 2,
-                                  trace_ids=['BW.UH1..SHZ', 'BW.UH3..SHZ'],
-                                  sta=0.3, lta=5)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            res = coincidence_trigger("recstalta", 2.5, 1, st2, 2,
+                                      trace_ids=['BW.UH1..SHZ', 'BW.UH3..SHZ'],
+                                      sta=0.3, lta=5)
+            self.assertEqual(len(w), 2)
+            self.assertIn("At least one trace's ID was not", str(w[0]))
+            self.assertIn("At least one trace's ID was not", str(w[1]))
         self.assertEqual(len(res), 5)
         self.assertGreater(res[3]['time'], UTCDateTime("2010-05-27T16:27:01"))
         self.assertTrue(res[3]['time'] < UTCDateTime("2010-05-27T16:27:02"))
         self.assertTrue(1.5 < res[3]['duration'] < 1.7)
         self.assertEqual(res[3]['stations'], ['UH3', 'UH1'])
         self.assertEqual(res[3]['coincidence_sum'], 2.0)
+
         # 7. same as 3 but modify input trace ids and check output of trace_ids
         # and other additional information with ``details=True``
         st2 = st.copy()
@@ -326,16 +349,26 @@ class TriggerTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(item[key], _type))
         # check some of the detailed info
         ev = res[-1]
-        self.assertAlmostEqual(ev['cft_peak_wmean'], 18.101139518271076)
-        self.assertAlmostEqual(ev['cft_std_wmean'], 4.800051726246676)
-        self.assertAlmostEqual(ev['cft_peaks'][0], 18.985548683223936)
-        self.assertAlmostEqual(ev['cft_peaks'][1], 16.852175794415011)
-        self.assertAlmostEqual(ev['cft_peaks'][2], 18.64005853900883)
-        self.assertAlmostEqual(ev['cft_peaks'][3], 17.572363634564621)
-        self.assertAlmostEqual(ev['cft_stds'][0], 4.8909448258821362)
-        self.assertAlmostEqual(ev['cft_stds'][1], 4.4446373508521804)
-        self.assertAlmostEqual(ev['cft_stds'][2], 5.3499401252675964)
-        self.assertAlmostEqual(ev['cft_stds'][3], 4.2723814539487703)
+        self.assertAlmostEqual(ev['cft_peak_wmean'], 18.101139518271076,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_std_wmean'], 4.800051726246676,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_peaks'][0], 18.985548683223936,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_peaks'][1], 16.852175794415011,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_peaks'][2], 18.64005853900883,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_peaks'][3], 17.572363634564621,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_stds'][0], 4.8909448258821362,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_stds'][1], 4.4446373508521804,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_stds'][2], 5.3499401252675964,
+                               places=5)
+        self.assertAlmostEqual(ev['cft_stds'][3], 4.2723814539487703,
+                               places=5)
 
     def test_coincidence_trigger_with_similarity_checking(self):
         """
@@ -366,6 +399,13 @@ class TriggerTestCase(unittest.TestCase):
             t = UTCDateTime(t)
             st_ = st.select(station="UH1").slice(t, t + 2.5).copy()
             templ.setdefault("UH1", []).append(st_)
+        # add another template with different SEED ID, it should be ignored
+        # (this can happen when using many templates over a long time period
+        # and instrument changes over time)
+        st_ = st_.copy()
+        for tr in st_:
+            tr.stats.channel = 'X' + tr.stats.channel[1:]
+        templ['UH1'].insert(0, st_)
         trace_ids = {"BW.UH1..SHZ": 1,
                      "BW.UH2..SHZ": 1,
                      "BW.UH3..SHZ": 1,
@@ -380,21 +420,47 @@ class TriggerTestCase(unittest.TestCase):
                 "classicstalta", 5, 1, st.copy(), 4, sta=0.5, lta=10,
                 trace_ids=trace_ids, event_templates=templ,
                 similarity_threshold=similarity_thresholds)
-            # two warnings get raised
-            self.assertEqual(len(w), 2)
+        # four warnings get raised
+        self.assertEqual(len(w), 4)
+        self.assertEqual(
+            str(w[0].message),
+            "At least one trace's ID was not found in the trace ID list and "
+            "was disregarded (BW.UH3..SHN)")
+        self.assertEqual(
+            str(w[1].message),
+            "At least one trace's ID was not found in the trace ID list and "
+            "was disregarded (BW.UH3..SHE)")
+        self.assertEqual(
+            str(w[2].message),
+            'Skipping trace BW.UH1..XHZ in template correlation (not present '
+            'in stream to check).')
+        self.assertEqual(
+            str(w[3].message),
+            "Skipping template(s) for station 'UH1': No common SEED IDs when "
+            "comparing template (BW.UH1..XHZ) and data streams (BW.UH1..SHZ, "
+            "BW.UH2..SHZ, BW.UH3..SHE, BW.UH3..SHN, BW.UH3..SHZ, "
+            "BW.UH4..EHZ).")
         # check floats in resulting dictionary separately
-        self.assertAlmostEqual(trig[0].pop('duration'), 3.9600000381469727)
-        self.assertAlmostEqual(trig[1].pop('duration'), 1.9900000095367432)
-        self.assertAlmostEqual(trig[2].pop('duration'), 1.9200000762939453)
-        self.assertAlmostEqual(trig[3].pop('duration'), 3.9200000762939453)
-        self.assertAlmostEqual(trig[0]['similarity'].pop('UH1'), 0.94149447384)
-        self.assertAlmostEqual(trig[0]['similarity'].pop('UH3'), 1)
-        self.assertAlmostEqual(trig[1]['similarity'].pop('UH1'), 0.65228204570)
-        self.assertAlmostEqual(trig[1]['similarity'].pop('UH3'), 0.72679293429)
-        self.assertAlmostEqual(trig[2]['similarity'].pop('UH1'), 0.89404458774)
-        self.assertAlmostEqual(trig[2]['similarity'].pop('UH3'), 0.74581409371)
-        self.assertAlmostEqual(trig[3]['similarity'].pop('UH1'), 1)
-        self.assertAlmostEqual(trig[3]['similarity'].pop('UH3'), 1)
+        self.assertAlmostEqual(trig[0].pop('duration'), 3.96, places=6)
+        self.assertAlmostEqual(trig[1].pop('duration'), 1.99, places=6)
+        self.assertAlmostEqual(trig[2].pop('duration'), 1.92, places=6)
+        self.assertAlmostEqual(trig[3].pop('duration'), 3.92, places=6)
+        self.assertAlmostEqual(trig[0]['similarity'].pop('UH1'),
+                               0.94149447384, places=6)
+        self.assertAlmostEqual(trig[0]['similarity'].pop('UH3'), 1,
+                               places=6)
+        self.assertAlmostEqual(trig[1]['similarity'].pop('UH1'),
+                               0.65228204570, places=6)
+        self.assertAlmostEqual(trig[1]['similarity'].pop('UH3'),
+                               0.72679293429, places=6)
+        self.assertAlmostEqual(trig[2]['similarity'].pop('UH1'),
+                               0.89404458774, places=6)
+        self.assertAlmostEqual(trig[2]['similarity'].pop('UH3'),
+                               0.74581409371, places=6)
+        self.assertAlmostEqual(trig[3]['similarity'].pop('UH1'), 1,
+                               places=6)
+        self.assertAlmostEqual(trig[3]['similarity'].pop('UH3'), 1,
+                               places=6)
         remaining_results = \
             [{'coincidence_sum': 4.0,
               'similarity': {},

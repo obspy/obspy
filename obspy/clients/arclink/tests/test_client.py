@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import io
 import operator
 import unittest
+import warnings
 
 import numpy as np
 
@@ -178,8 +179,9 @@ class ClientTestCase(unittest.TestCase):
         self.assertIn('BW.MANZ', result)
         self.assertIn('BW.MANZ..EHE', result)
         # 5 - unknown network 00 via webdc.eu:18002
-        self.assertRaises(ArcLinkException, client.get_inventory, '00', '',
-                          starttime=dt, endtime=dt + 1)
+        result = client.get_inventory('00', '', starttime=dt, endtime=dt + 1)
+        self.assertIsInstance(result, AttribDict)
+        self.assertEqual(result, AttribDict({}))
         # 6 - get channel gain without PAZ
         start = UTCDateTime("1970-01-01 00:00:00")
         end = UTCDateTime("2020-10-19 00:00:00")
@@ -212,6 +214,37 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(channel[2].starttime, UTCDateTime("2003-01-10"))
         self.assertEqual(channel[2].endtime, UTCDateTime(2011, 1, 15, 9, 56))
         self.assertEqual(channel[2].gain, 588000000.0)
+
+    def test_get_inventory_stationgroup(self):
+        """
+        Tests get_inventory method for StationGroup, issue #1756.
+        """
+        client = Client(user='test@obspy.org')
+        # 1 - defined @INGV
+        with warnings.catch_warnings(record=True) as w:
+            warnings.filterwarnings("always")
+            result = client.get_inventory(network="_NFOTABOO", route=True)
+        self.assertEqual(len(w), 1)
+        self.assertEqual(
+            str(w[0].message),
+            "Routing was requested but parameter 'network' is '_NFOTABOO' "
+            "and therefore routing is disabled.")
+        self.assertIn('IV', result)
+        self.assertIn('IV.ATBU', result)
+        self.assertIn('IV.SSFR', result)
+        # 2 - defined @NIEP
+        result = client.get_inventory(network="_NFOVRANC", route=False)
+        self.assertIn('RO', result)
+        self.assertIn('RO.BISRR', result)
+        self.assertIn('RO.VRI', result)
+        # 3 - defined @ETH
+        result = client.get_inventory(network="_NFOVALAIS")
+        self.assertIn('CH', result)
+        self.assertIn('S', result)
+        self.assertIn('7H', result)
+        self.assertIn('CH.AIGLE', result)
+        self.assertIn('CH.VANNI', result)
+        self.assertIn('S.ESION', result)
 
     def test_get_inventory_twice(self):
         """
@@ -258,7 +291,7 @@ class ClientTestCase(unittest.TestCase):
                 'encoding': 'STEIM1',
                 'filesize': 30720,
                 'dataquality': 'D',
-                'number_of_records': 60,
+                'number_of_records': 4,
                 'byteorder': '>'}),
             'coordinates': AttribDict({
                 'latitude': 47.737167,
@@ -376,8 +409,50 @@ class ClientTestCase(unittest.TestCase):
                         'restricted': False, 'archive_net': '',
                         'longitude': 12.729887, 'affiliation': 'BayernNetz',
                         'depth': None, 'place': 'Wildenmoos',
-                        'country': ' BW-Net', 'latitude': 47.744171,
+                        'country': 'BW-Net', 'latitude': 47.744171,
                         'end': None}) in result)
+        # example 2
+        expected = AttribDict(
+            {'code': 'WDD', 'description': 'Wied Dalam',
+             'affiliation': '', 'country': '', 'place': '', 'remark': '',
+             'restricted': False, 'archive_net': '',
+             'latitude': 35.8373, 'longitude': 14.5242,
+             'elevation': 44.0, 'depth': None,
+             'start': UTCDateTime(1995, 7, 6, 0, 0), 'end': None})
+        # routing default
+        result = client.get_stations(start, end, 'MN')
+        self.assertTrue(expected in result)
+        # w/o routing
+        result = client.get_stations(start, end, 'MN', route=False)
+        self.assertTrue(expected in result)
+        # w/ routing
+        result = client.get_stations(start, end, 'MN', route=True)
+        self.assertTrue(expected in result)
+
+    @unittest.expectedFailure
+    def test_get_stations_inconsistency(self):
+        """
+        """
+        # initialize client
+        client = Client(user='test@obspy.org')
+        # example 1
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        result_origin = AttribDict(
+            {'remark': '', 'code': 'RWMO', 'elevation': 763.0,
+             'description': 'Wildenmoos, Bavaria, BW-Net',
+             'start': UTCDateTime(2006, 7, 4, 0, 0),
+             'restricted': False, 'archive_net': '',
+             'longitude': 12.729887, 'affiliation': 'BayernNetz',
+             'depth': None, 'place': 'Wildenmoos',
+             'country': ' BW-Net', 'latitude': 47.744171,
+             'end': None})
+        # OK: from origin node
+        result = client.get_stations(start, end, 'BW', route=True)
+        self.assertTrue(result_origin in result)
+        # BUT: this one from a different node was modified and fails
+        result = client.get_stations(start, end, 'BW')
+        self.assertTrue(result_origin in result)
 
     def test_save_waveform(self):
         """

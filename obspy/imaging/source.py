@@ -18,16 +18,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D  # NOQA
 from matplotlib.cm import get_cmap
 
-from obspy.core.util.base import get_matplotlib_version
+from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.event.source import farfield
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import beach
-
-
-MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0):
@@ -45,6 +41,10 @@ def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0):
         :meth:`obspy.core.event.event.Event.plot`, parameter `kind`).
     """
     import matplotlib.pyplot as plt
+    # restrict potential fails on matplotlib 1.5.1 (e.g. Ubuntu xenial) owed to
+    # matplotlib/matplotlib#6537 to routines that actually use Axes3D, for that
+    # reason do the Axes3D import inside this routine.
+    from mpl_toolkits.mplot3d import Axes3D  # NOQA
     # make 2d layout of kind parameter
     if isinstance(kind[0], (list, tuple)):
         nrows = len(kind)
@@ -84,27 +84,24 @@ def plot_radiation_pattern(
         Harvard/Global CMT convention). The relation to [Aki1980]_
         x,y,z equals North,East,Down convention is as follows: Mrr=Mzz,
         Mtt=Mxx, Mpp=Myy, Mrt=Mxz, Mrp=-Myz, Mtp=-Mxy.
+    :param kind: One of:
 
-    :param kind: One of the following three options:
-        * A list of strings or nested list of strings for a matplotlib plot
-          (for details see :meth:`obspy.core.event.event.Event.plot`)
-        * 'mayavi': uses the mayavi library (not yet available under Python 3
-          and problematic with anaconda)
-        * 'vtk': This vtk option writes two vtk files to the current working
-          directory. rpattern.vtk contains the p and s wave farfield vector
-          field. beachlines.vtk contains the nodal lines of the radiation
-          pattern. A vtk glyph filter should be applied to the vector field
-          (e.g. in ParaView) to visualize it.
+        * **(A)** A list of strings or nested list of strings for a matplotlib
+          plot (for details see :meth:`obspy.core.event.event.Event.plot`).
+        * **(B)** ``"mayavi"``: uses the mayavi library.
+        * **(C)** ``"vtk"``: This vtk option writes two vtk files to the
+          current working directory. ``rpattern.vtk`` contains the p and s
+          wave farfield vector field. ``beachlines.vtk`` contains the nodal
+          lines of the radiation pattern. A vtk glyph filter should be applied
+          to the vector field (e.g. in ParaView) to visualize it.
 
-    :param coordinate_system: the only implemented option so far is 'RTP' (also
-        called 'USE'). Should be extended to support NED, DSE, NED in the
-        future.
     :type fig: :class:`matplotlib.figure.Figure`
     :param fig: Figure instance to use.
     :type show: bool
     :param show: Whether to show the figure after plotting or not. Can be
         used to do further customization of the plot before showing it.
-    :returns: Matplotlib figure or None (if `kind` is "mayavi" or "vtk")
+    :returns: Matplotlib figure or ``None`` (if ``kind`` is ``"mayavi"`` or
+        ``"vtk"``)
     """
     import matplotlib.pyplot as plt
 

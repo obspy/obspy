@@ -1,0 +1,30 @@
+Delivery-Date: Mon, 25 Jun 2012 09:45:50 +0200
+To: barsch@egu.eu
+Cc: support@hakusan.co.jp
+Subject: Re: DataMark format description
+From: Akiko Hakamada <hakamada@hakusan.co.jp>
+
+
+
+Dear Sir
+
+Thank you for your inquiry.
+
+We send a part of DATAMARK LS-7000XT user's manual as a format 
+description document.
+Attached file name: E-MAN_LS-7000XT_7_format.pdf
+
+Some of our products uses two kind of data format, type A0 and A1.
+Type A0 is also called "win format", and A1 is extended version of it.
+We recommend you to support type A0, because type A0 conforms to the 
+data format of the WIN system developed by Earthquake Research Institute 
+(ERI), the University of Tokyo, but type A1 is not recently used in most 
+our product.
+
+Please see the web page of ERI.
+　http://eoc.eri.u-tokyo.ac.jp/cgi-bin/show_man_en?winformat
+
+Best Regards,
+-------------------
+Akiko Hakamada
+Hakusan Corporation

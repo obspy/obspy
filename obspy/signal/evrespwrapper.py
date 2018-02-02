@@ -115,6 +115,10 @@ class FIRType(C.Structure):
 
 class ListType(C.Structure):
     _fields_ = [
+        ("nresp", C.c_int),
+        ("freq", C.POINTER(C.c_double)),
+        ("amp", C.POINTER(C.c_double)),
+        ("phase", C.POINTER(C.c_double))
     ]
 
 
@@ -149,6 +153,7 @@ class BlktInfoUnion(C.Union):
     _fields_ = [
         ("pole_zero", PoleZeroType),
         ("fir", FIRType),
+        ("list", ListType),
         ("decimation", DecimationType),
         ("gain", GainType),
         ("coeff", CoeffType)
@@ -252,7 +257,8 @@ clibevresp._obspy_check_channel.restype = C.c_int
 
 
 # int _obspy_norm_resp(struct channel *chan, int start_stage, int stop_stage)
-clibevresp._obspy_norm_resp.argtypes = [C.POINTER(Channel), C.c_int, C.c_int]
+clibevresp._obspy_norm_resp.argtypes = [C.POINTER(Channel), C.c_int, C.c_int,
+                                        C.c_int]
 clibevresp._obspy_norm_resp.restype = C.c_int
 
 

@@ -12,13 +12,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import sys
-
 import numpy as np
 
 from obspy.core import Stream, Trace, UTCDateTime
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
+from obspy.core.compatibility import from_buffer
 
 
 def _is_pdas(filename):
@@ -41,7 +38,7 @@ def _is_pdas(filename):
             return True
         else:
             return False
-    except:
+    except Exception:
         return False
 
 
@@ -87,9 +84,9 @@ def _read_pdas(filename, **kwargs):
     sampling_rate = 1.0 / float(items[6][1].decode())
     dtype = items[1][1].decode()
     if dtype.upper() == "LONG":
-        data = np.fromstring(data, dtype=np.int16)
+        data = from_buffer(data, dtype=np.int16)
     elif dtype.upper() == "SHORT":
-        data = np.fromstring(data, dtype=np.int8)
+        data = from_buffer(data, dtype=np.int8)
     else:
         raise NotImplementedError()
 
@@ -100,13 +97,3 @@ def _read_pdas(filename, **kwargs):
     tr.stats.pdas = extra_headers
     st = Stream(traces=[tr])
     return st
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isPDAS': 'obspy.io.pdas.core._is_pdas',
-        'readPDAS': 'obspy.io.pdas.core._read_pdas'})

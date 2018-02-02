@@ -115,7 +115,7 @@ HARD_DEPENDENCIES = [
     "future", "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
     "sqlalchemy", "decorator", "requests"]
 OPTIONAL_DEPENDENCIES = [
-    "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "osgeo.gdal",
+    "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "shapefile",
     "mpl_toolkits.basemap", "mock", "pyflakes", "geographiclib", "cartopy"]
 DEPENDENCIES = HARD_DEPENDENCIES + OPTIONAL_DEPENDENCIES
 
@@ -129,31 +129,15 @@ The following commands will produce the same output as shown above:
 Type "help" to see all available options.
 """
 
+# Set legacy printing for numpy so the doctests work regardless of the numpy
+# version.
+try:
+    np.set_printoptions(legacy='1.13')
+except TypeError:
+    pass
+
+
 HOSTNAME = platform.node().split('.', 1)[0]
-
-
-# XXX: start of ugly monkey patch for Python 2.7
-# classes _TextTestRunner and _WritelnDecorator have been marked as depreciated
-class _WritelnDecorator(object):
-    """
-    Used to decorate file-like objects with a handy 'writeln' method
-    """
-    def __init__(self, stream):
-        self.stream = stream
-
-    def __getattr__(self, attr):
-        if attr in ('stream', '__getstate__'):
-            raise AttributeError(attr)
-        return getattr(self.stream, attr)
-
-    def writeln(self, arg=None):
-        if arg:
-            self.write(arg)
-        self.write('\n')  # text-mode streams translate to \r\n if needed
-
-
-unittest._WritelnDecorator = _WritelnDecorator
-# XXX: end of ugly monkey patch
 
 
 def _get_suites(verbosity=1, names=[]):
@@ -221,7 +205,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
         try:
             data = codecs.open(log, 'r', encoding='UTF-8').read()
             result['install_log'] = escape(data)
-        except:
+        except Exception:
             print("Cannot open log file %s" % log)
     # get ObsPy module versions
     result['obspy'] = {}
@@ -231,7 +215,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     skipped = 0
     try:
         installed = get_git_version()
-    except:
+    except Exception:
         installed = ''
     result['obspy']['installed'] = installed
     for module in sorted(ALL_MODULES):
@@ -258,13 +242,8 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
         result['obspy'][module]['timetaken'] = ttr.__dict__['timetaken']
         result['obspy'][module]['tested'] = True
         result['obspy'][module]['tests'] = ttr.testsRun
-        # skipped is not supported for Python < 2.7
-        try:
-            skipped += len(ttr.skipped)
-            result['obspy'][module]['skipped'] = len(ttr.skipped)
-        except AttributeError:
-            skipped = ''
-            result['obspy'][module]['skipped'] = ''
+        skipped += len(ttr.skipped)
+        result['obspy'][module]['skipped'] = len(ttr.skipped)
         tests += ttr.testsRun
         # depending on module type either use failure (network related modules)
         # or errors (all others)
@@ -313,14 +292,14 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
             if isinstance(temp, tuple):
                 temp = temp[0]
             result['platform'][func] = temp
-        except:
+        except Exception:
             result['platform'][func] = ''
     # set node name to hostname if set
     result['platform']['node'] = hostname
     # post only the first part of the node name (only applies to MacOS X)
     try:
         result['platform']['node'] = result['platform']['node'].split('.')[0]
-    except:
+    except Exception:
         pass
     # test results
     result['tests'] = tests
@@ -337,7 +316,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
                         (module, skipped_test.__module__,
                          skipped_test.__class__.__name__,
                          skipped_test._testMethodName, skip_message))
-    except:
+    except Exception:
         exc_type, exc_value, exc_tb = sys.exc_info()
         print("\n".join(traceback.format_exception(exc_type, exc_value,
                                                    exc_tb)))
@@ -399,12 +378,12 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     else:
         print("Error: Could not sent a test report to %s." % (server))
         print(response.reason)
+    conn.close()
 
 
-class _TextTestResult(unittest._TextTestResult):
+class _TextTestResult(unittest.TextTestResult):
     """
-    A custom test result class that can print formatted text results to a
-    stream. Used by TextTestRunner.
+    A test result class that can print formatted text results to a stream.
     """
     timer = []
 
@@ -417,19 +396,6 @@ class _TextTestResult(unittest._TextTestResult):
         self.timer.append((test, time.time() - self.start))
 
 
-def _skip_test(test_case, msg):
-    """
-    Helper method intended to be bound to a `unittest.TestCase`
-    instance overwriting the `setUp()` method to immediately and
-    unconditionally skip the test when executed.
-
-    :type test_case: unittest.TestCase
-    :type msg: str
-    :param msg: Reason for unconditionally skipping the test.
-    """
-    test_case.skipTest(msg)
-
-
 def _recursive_skip(test_suite, msg):
     """
     Helper method to recursively skip all tests aggregated in `test_suite`
@@ -439,8 +405,8 @@ def _recursive_skip(test_suite, msg):
     :type msg: str
     :param msg: Reason for unconditionally skipping the tests.
     """
-    def _custom_skip_test(testcase):
-        _skip_test(testcase, msg)
+    def _custom_skip_test(test_case):
+        test_case.skipTest(msg)
 
     if isinstance(test_suite, unittest.TestSuite):
         for obj in test_suite:
@@ -452,16 +418,15 @@ def _recursive_skip(test_suite, msg):
         raise NotImplementedError()
 
 
-class _TextTestRunner:
-    def __init__(self, stream=sys.stderr, descriptions=1, verbosity=1,
-                 timeit=False):
-        self.stream = unittest._WritelnDecorator(stream)  # @UndefinedVariable
-        self.descriptions = descriptions
-        self.verbosity = verbosity
-        self.timeit = timeit
+class _TextTestRunner(unittest.TextTestRunner):
+    """
+    A test runner class that displays results in textual form.
+    """
+    resultclass = _TextTestResult
 
-    def _make_result(self):
-        return _TextTestResult(self.stream, self.descriptions, self.verbosity)
+    def __init__(self, timeit=False, *args, **kwargs):
+        super(_TextTestRunner, self).__init__(*args, **kwargs)
+        self.timeit = timeit
 
     def run(self, suites):
         """
@@ -470,8 +435,8 @@ class _TextTestRunner:
         results = {}
         time_taken = 0
         keys = sorted(suites.keys())
-        for id in keys:
-            test = suites[id]
+        for key in keys:
+            test = suites[key]
             # run checker routine if any,
             # to see if module's tests can be executed
             msg = None
@@ -485,20 +450,20 @@ class _TextTestRunner:
             # message
             if msg:
                 _recursive_skip(test, msg)
-            result = self._make_result()
+            result = self._makeResult()
             start = time.time()
             test(result)
             stop = time.time()
-            results[id] = result
+            results[key] = result
             total = stop - start
-            results[id].__dict__['timetaken'] = total
+            results[key].__dict__['timetaken'] = total
             if self.timeit:
                 self.stream.writeln('')
-                self.stream.write("obspy.%s: " % (id))
+                self.stream.write("obspy.%s: " % (key))
                 num = test.countTestCases()
                 try:
                     avg = float(total) / num
-                except:
+                except Exception:
                     avg = 0
                 msg = '%d tests in %.3fs (average of %.4fs per test)'
                 self.stream.writeln(msg % (num, total, avg))
@@ -519,7 +484,7 @@ class _TextTestRunner:
                 result.printErrors()
             runs += result.testsRun
         if self.verbosity:
-            self.stream.writeln(unittest._TextTestResult.separator2)
+            self.stream.writeln(unittest.TextTestResult.separator2)
             self.stream.writeln("Ran %d test%s in %.3fs" %
                                 (runs, runs != 1 and "s" or "", time_taken))
             self.stream.writeln()
@@ -537,8 +502,8 @@ class _TextTestRunner:
         return results, time_taken, (faileds + erroreds)
 
 
-def run_tests(verbosity=1, tests=[], report=False, log=None,
-              server="tests.obspy.org", all=False, timeit=False,
+def run_tests(verbosity=1, tests=None, report=False, log=None,
+              server="tests.obspy.org", test_all_modules=False, timeit=False,
               interactive=False, slowest=0, exclude=[], tutorial=False,
               hostname=HOSTNAME, ci_url=None, pr_url=None):
     """
@@ -547,10 +512,10 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
     :type verbosity: int, optional
     :param verbosity: Run tests in verbose mode (``0``=quiet, ``1``=normal,
         ``2``=verbose, default is ``1``).
-    :type tests: list of str, optional
-    :param tests: Test suites to run. If no suite is given all installed tests
-        suites will be started (default is a empty list).
-        Example ``['obspy.core.tests.suite']``.
+    :type tests: list of str
+    :param tests: List of submodules for which test suites should be run
+        (e.g. ``['io.mseed', 'io.sac']``).  If no suites are specified, all
+        non-networking submodules' test suites will be run.
     :type report: bool, optional
     :param report: Submits a test report if enabled (default is ``False``).
     :type log: str, optional
@@ -558,8 +523,10 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
     :type server: str, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
+    if tests is None:
+        tests = []
     print("Running {}, ObsPy version '{}'".format(__file__, obspy.__version__))
-    if all:
+    if test_all_modules:
         tests = copy.copy(ALL_MODULES)
     elif not tests:
         tests = copy.copy(DEFAULT_MODULES)
@@ -584,7 +551,7 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
                 filesuite = doctest.DocFileSuite(file, module_relative=False)
                 tut_suite.addTest(filesuite)
             suites['tutorial'] = tut_suite
-        except:
+        except Exception:
             msg = "Could not add tutorial files to tests."
             warnings.warn(msg)
     # run test suites
@@ -610,7 +577,7 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
     if interactive and not report:
         msg = "Do you want to report this to %s? [n]: " % (server)
         var = input(msg).lower()
-        if var in ('y', 'yes', 'yoah', 'hell yeah!'):
+        if 'y' in var:
             report = True
     if report:
         _create_report(ttr, total_time, log, server, hostname, sorted_tests,
@@ -644,6 +611,7 @@ def run(argv=None, interactive=True):
                                        'ObsPy modules which do not require an '
                                        'active network connection.')
     filter.add_argument('-a', '--all', action='store_true',
+                        dest='test_all_modules',
                         help='test all modules (including network modules)')
     filter.add_argument('-x', '--exclude', action='append',
                         help='exclude given module from test')
@@ -734,8 +702,13 @@ def run(argv=None, interactive=True):
         os.environ['OBSPY_KEEP_ONLY_FAILED_IMAGES'] = ""
     if args.no_flake8:
         os.environ['OBSPY_NO_FLAKE8'] = ""
+
+    # All arguments are used by the test runner and should not interfere
+    # with any other module that might also parse them, e.g. flake8.
+    sys.argv = sys.argv[:1]
+
     return run_tests(verbosity, args.tests, report, args.log, args.server,
-                     args.all, args.timeit, interactive, args.n,
+                     args.test_all_modules, args.timeit, interactive, args.n,
                      exclude=args.exclude, tutorial=args.tutorial,
                      hostname=args.hostname, ci_url=args.ci_url,
                      pr_url=args.pr_url)

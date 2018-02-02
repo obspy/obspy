@@ -25,7 +25,6 @@ import numpy as np
 
 from obspy import UTCDateTime, read
 from obspy.core.util import AttribDict, complexify_string
-from obspy.core.util.decorator import deprecated
 
 
 DCID_KEY_FILE = os.path.join(os.getenv('HOME') or '', 'dcidpasswords.txt')
@@ -142,7 +141,7 @@ class Client(object):
         try:
             with open(dcid_key_file, 'rt') as fp:
                 lines = fp.readlines()
-        except:
+        except Exception:
             pass
         else:
             for line in lines:
@@ -168,7 +167,7 @@ class Client(object):
             self._client.open(native_str(self._client.host),
                               self._client.port,
                               self._client.timeout)
-        except:
+        except Exception:
             # old Python 2.7: port needs to be native int or string -> not long
             self._client.open(native_str(self._client.host),
                               native_str(self._client.port),
@@ -282,7 +281,7 @@ class Client(object):
             status = self._read_ln()
             try:
                 req_id = int(status)
-            except:
+            except Exception:
                 if 'ERROR' in status:
                     self._bye()
                     raise ArcLinkException('Error requesting status id')
@@ -341,26 +340,9 @@ class Client(object):
             self._bye()
             msg = "Uncovered status message - contact a developer to fix this"
             raise ArcLinkException(msg)
-        self._write_ln('DOWNLOAD %d' % req_id)
-        try:
-            fd = self._client.get_socket().makefile('rb')
-            length = int(fd.readline(100).strip())
-            data = b''
-            while len(data) < length:
-                buf = fd.read(min(4096, length - len(data)))
-                data += buf
-            buf = fd.readline(100).strip()
-            if buf != b"END" or len(data) != length:
-                raise Exception('Wrong length!')
-            if self.debug:
-                if data.startswith(b'<?xml'):
-                    print(data)
-                else:
-                    print("%d bytes of data read" % len(data))
-        finally:
-            self._write_ln('PURGE %d' % req_id)
-            self._bye()
+
         # check for encryption
+        decryptor = None
         if b'encrypted="true"' in xml_doc:
             # extract dcid
             xml_doc = objectify.fromstring(xml_doc[:-3])
@@ -369,18 +351,40 @@ class Client(object):
             if dcid in self.dcid_keys:
                 # call decrypt routine
                 from obspy.clients.arclink.decrypt import SSLWrapper
-                decryptor = SSLWrapper(self.dcid_keys[dcid])
-                data = decryptor.update(data)
-                data += decryptor.final()
+                decryptor = SSLWrapper(password=self.dcid_keys[dcid])
             else:
                 msg = "Could not decrypt waveform data for dcid %s."
                 warnings.warn(msg % (dcid))
-        return data
 
-    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
-                "that instead.")  # noqa
-    def getWaveform(self, *args, **kwargs):
-        return self.get_waveforms(*args, **kwargs)
+        # download
+        self._write_ln('DOWNLOAD %d' % req_id)
+        try:
+            fd = self._client.get_socket().makefile('rb')
+            length = int(fd.readline(100).strip())
+            data = b''
+            bytes_read = 0
+            while bytes_read < length:
+                buf = fd.read(min(4096, length - bytes_read))
+                bytes_read += len(buf)
+                if decryptor is not None:
+                    # decrypt on the fly
+                    data += decryptor.update(buf)
+                else:
+                    data += buf
+            if decryptor is not None:
+                data += decryptor.final()
+            buf = fd.readline(100).strip()
+            if buf != b"END" or bytes_read != length:
+                raise Exception('Wrong length!')
+            if self.debug:
+                if data.startswith(b'<?xml'):
+                    print(data)
+                else:
+                    print("%d bytes of data read" % bytes_read)
+        finally:
+            self._write_ln('PURGE %d' % req_id)
+            self._bye()
+        return data
 
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime, format="MSEED", compressed=True, metadata=False,
@@ -434,8 +438,6 @@ class Client(object):
             st = client.get_waveforms("BW", "RJOB", "", "EH*", t - 3, t + 15)
             st.plot()
         """
-        # handle deprecated keywords - one must be True to enable metadata
-        metadata = metadata
         file_stream = io.BytesIO()
         self.save_waveforms(file_stream, network, station, location, channel,
                             starttime, endtime, format=format,
@@ -448,6 +450,8 @@ class Client(object):
         # fetching PAZ and coordinates
         if metadata:
             # fetch metadata only once
+            # NOTE: The routing step here is not strictly necessary
+            # TODO: Routing should preferably be done only once
             inv = self.get_inventory(network=network, station=station,
                                      location=location, channel=channel,
                                      starttime=starttime, endtime=endtime,
@@ -482,11 +486,6 @@ class Client(object):
                         raise ArcLinkException(MSG_NOPAZ)
                     tr.stats['paz'] = entry.paz
         return stream
-
-    @deprecated("'saveWaveform' has been renamed to 'save_waveforms'. Use "
-                "that instead.")  # noqa
-    def saveWaveform(self, *args, **kwargs):
-        return self.save_waveforms(*args, **kwargs)
 
     def save_waveforms(self, filename, network, station, location, channel,
                        starttime, endtime, format="MSEED", compressed=True,
@@ -556,7 +555,7 @@ class Client(object):
         if compressed:
             try:
                 import bz2
-            except:
+            except Exception:
                 compressed = False
             else:
                 rtype += " compression=bzip2"
@@ -593,11 +592,6 @@ class Client(object):
         if is_name:
             fh.close()
 
-    @deprecated("'getRouting' has been renamed to 'get_routing'. Use "
-                "that instead.")  # noqa
-    def getRouting(self, *args, **kwargs):
-        return self.get_routing(*args, **kwargs)
-
     def get_routing(self, network, station, starttime, endtime,
                     modified_after=None):
         """
@@ -624,6 +618,7 @@ class Client(object):
         # request data
         rdata = [starttime, endtime, network, station]
         # fetch plain XML document
+        # TODO: A simpler "routing-less" methods, check _request
         result = self._fetch(rtype, rdata, route=False)
         # parse XML document
         xml_doc = etree.fromstring(result)
@@ -651,7 +646,7 @@ class Client(object):
                 temp = {}
                 try:
                     temp['priority'] = int(node.get('priority'))
-                except:
+                except Exception:
                     temp['priority'] = -1
                 temp['start'] = UTCDateTime(node.get('start'))
                 if node.get('end'):
@@ -699,11 +694,6 @@ class Client(object):
         # sort by priority
         out = sorted(out, key=lambda x: x.get('priority', 1000))
         return out
-
-    @deprecated("'getQC' has been renamed to 'get_qc'. Use "
-                "that instead.")  # noqa
-    def getQC(self, *args, **kwargs):
-        return self.get_qc(*args, **kwargs)
 
     def get_qc(self, network, station, location, channel, starttime,
                endtime, parameters='*', outages=True, logs=True):
@@ -757,13 +747,8 @@ class Client(object):
         result = self._fetch(rtype, rdata, route=False)
         return result
 
-    @deprecated("'getMetadata' has been renamed to 'get_metadata'. Use "
-                "that instead.")  # noqa
-    def getMetadata(self, *args, **kwargs):
-        return self.get_metadata(*args, **kwargs)
-
     def get_metadata(self, network, station, location, channel, time,
-                     route=True):
+                     route=False):
         """
         Returns poles, zeros, normalization factor and sensitivity and station
         coordinates for a single channel at a given time.
@@ -844,7 +829,7 @@ class Client(object):
         # Response type: A=Laplace(rad/s), B=Analog(Hz), C, D
         try:
             paz['response_type'] = xml_doc.get('type')
-        except:
+        except Exception:
             paz['response_type'] = None
 
         # normalization factor
@@ -854,7 +839,7 @@ class Client(object):
                     float(xml_doc.get('normalizationFactor'))
             else:
                 paz['normalization_factor'] = float(xml_doc.get('norm_fac'))
-        except:
+        except Exception:
             paz['normalization_factor'] = None
 
         try:
@@ -864,7 +849,7 @@ class Client(object):
             else:
                 paz['normalization_frequency'] = \
                     float(xml_doc.get('norm_freq'))
-        except:
+        except Exception:
             paz['normalization_frequency'] = None
 
         # for backwards compatibility (but this is wrong naming!)
@@ -882,7 +867,7 @@ class Client(object):
             temp = zeros.strip().replace(' ', '').replace(')(', ') (')
             for zeros in temp.split():
                 paz['zeros'].append(complexify_string(zeros))
-        except:
+        except Exception:
             pass
         # check number of zeros
         if len(paz['zeros']) != nzeros:
@@ -899,20 +884,15 @@ class Client(object):
             temp = poles.strip().replace(' ', '').replace(')(', ') (')
             for poles in temp.split():
                 paz['poles'].append(complexify_string(poles))
-        except:
+        except Exception:
             pass
         # check number of poles
         if len(paz['poles']) != npoles:
             raise ArcLinkException('Could not parse all poles')
         return paz
 
-    @deprecated("'getPAZ' has been renamed to 'get_paz'. Use "
-                "that instead.")  # noqa
-    def getPAZ(self, *args, **kwargs):
-        return self.get_paz(*args, **kwargs)
-
     def get_paz(self, network, station, location, channel, time,
-                route=True):
+                route=False):
         """
         Returns poles, zeros, normalization factor and sensitivity for a
         single channel at a given time.
@@ -977,17 +957,12 @@ class Client(object):
             else:
                 # new schema
                 return result[id][0].paz
-        except:
+        except Exception:
             msg = 'Could not find PAZ for channel %s' % id
             raise ArcLinkException(msg)
 
-    @deprecated("'saveResponse' has been renamed to 'save_response'. Use "
-                "that instead.")  # noqa
-    def saveResponse(self, *args, **kwargs):
-        return self.save_response(*args, **kwargs)
-
     def save_response(self, filename, network, station, location, channel,
-                      starttime, endtime, format='SEED'):
+                      starttime, endtime, format='SEED', route=False):
         """
         Writes response information into a file.
 
@@ -1008,6 +983,8 @@ class Client(object):
         :type format: str, optional
         :param format: Output format. Currently only Dataless SEED (``'SEED'``)
             is supported.
+        :type route: bool, optional
+        :param route: Enables ArcLink routing (default is ``False``).
         :return: None
 
         .. rubric:: Example
@@ -1028,7 +1005,7 @@ class Client(object):
             # request data
             rdata = [starttime, endtime, network, station, channel, location]
             # fetch dataless
-            data = self._fetch(rtype, rdata)
+            data = self._fetch(rtype, rdata, route=route)
         else:
             raise ValueError("Unsupported format %s" % format)
         if hasattr(filename, "write") and hasattr(filename.write, "__call__"):
@@ -1037,14 +1014,9 @@ class Client(object):
             with open(filename, "wb") as fp:
                 fp.write(data)
 
-    @deprecated("'getInventory' has been renamed to 'get_inventory'. Use "
-                "that instead.")  # noqa
-    def getInventory(self, *args, **kwargs):
-        return self.get_inventory(*args, **kwargs)
-
     def get_inventory(self, network, station='*', location='*', channel='*',
                       starttime=UTCDateTime(), endtime=UTCDateTime(),
-                      instruments=False, route=True, sensortype='',
+                      instruments=False, route=False, sensortype='',
                       min_latitude=None, max_latitude=None,
                       min_longitude=None, max_longitude=None,
                       restricted=None, permanent=None, modified_after=None):
@@ -1070,7 +1042,7 @@ class Client(object):
         :type instruments: bool, optional
         :param instruments: Include instrument data (default is ``False``).
         :type route: bool, optional
-        :param route: Enables ArcLink routing (default is ``True``).
+        :param route: Enables ArcLink routing (default is ``False``).
         :type sensortype: str, optional
         :param sensortype: Limit streams to those using specific sensor types:
             ``"VBB"``, ``"BB"``, ``"SM"``, ``"OBS"``, etc. Can be also a
@@ -1136,15 +1108,23 @@ class Client(object):
             rdata.append('lonmin=%f' % min_longitude)
         if max_longitude:
             rdata.append('lonmax=%f' % max_longitude)
+
         # fetch plain XML document
-        if network == '*':
-            # set route to False if not network id is given
+        if network == '*' or network[0] == '_':
+            # To not use routing if
+            #  (1) not network id is given,
+            #  (2) virtual network (Station group) is requested
+            if route:
+                msg = ("Routing was requested but parameter 'network' is '{}' "
+                       "and therefore routing is disabled.").format(network)
+                warnings.warn(msg)
             result = self._fetch(rtype, rdata, route=False)
         else:
             result = self._fetch(rtype, rdata, route=route)
+
         # parse XML document
         xml_doc = etree.fromstring(result)
-        # get routing version
+        # get inventory version
         if _INVENTORY_NS_1_0 in xml_doc.nsmap.values():
             xml_ns = _INVENTORY_NS_1_0
             stream_ns = 'sensorLocation'
@@ -1187,17 +1167,17 @@ class Client(object):
             # date / times
             try:
                 net.start = UTCDateTime(network.get('start'))
-            except:
+            except Exception:
                 net.start = None
             try:
                 net.end = UTCDateTime(network.get('end'))
-            except:
+            except Exception:
                 net.end = None
             # remark
             try:
                 net.remark = network.xpath(
                     'ns:remark', namespaces={'ns': xml_ns})[0].text or ''
-            except:
+            except Exception:
                 net.remark = ''
             # write network entries
             data[net.code] = net
@@ -1213,7 +1193,7 @@ class Client(object):
                 for key in ['elevation', 'longitude', 'depth', 'latitude']:
                     try:
                         sta[key] = float(station.get(key))
-                    except:
+                    except Exception:
                         sta[key] = None
                 # restricted
                 if station.get('restricted', '') == 'false':
@@ -1223,17 +1203,17 @@ class Client(object):
                 # date / times
                 try:
                     sta.start = UTCDateTime(station.get('start'))
-                except:
+                except Exception:
                     sta.start = None
                 try:
                     sta.end = UTCDateTime(station.get('end'))
-                except:
+                except Exception:
                     sta.end = None
                 # remark
                 try:
                     sta.remark = station.xpath(
                         'ns:remark', namespaces={'ns': xml_ns})[0].text or ''
-                except:
+                except Exception:
                     sta.remark = ''
                 # write station entry
                 data[net.code + '.' + sta.code] = sta
@@ -1246,11 +1226,11 @@ class Client(object):
                         # date / times
                         try:
                             start = UTCDateTime(comp.get('start'))
-                        except:
+                        except Exception:
                             start = None
                         try:
                             end = UTCDateTime(comp.get('end'))
-                        except:
+                        except Exception:
                             end = None
                         # check date/time boundaries
                         if start > endtime:
@@ -1281,28 +1261,28 @@ class Client(object):
                         # fetch sensitivity etc
                         try:
                             temp['sensitivity'] = float(comp.get('gain'))
-                        except:
+                        except Exception:
                             temp['sensitivity'] = None
                         # again keep it backwards compatible
                         temp['gain'] = temp['sensitivity']
                         try:
                             temp['sensitivity_frequency'] = \
                                 float(comp.get('gainFrequency'))
-                        except:
+                        except Exception:
                             temp['sensitivity_frequency'] = None
                         try:
                             temp['sensitivity_unit'] = comp.get('gainUnit')
-                        except:
+                        except Exception:
                             temp['sensitivity_unit'] = None
 
                         # date / times
                         try:
                             temp['starttime'] = UTCDateTime(comp.get('start'))
-                        except:
+                        except Exception:
                             temp['starttime'] = None
                         try:
                             temp['endtime'] = UTCDateTime(comp.get('end'))
-                        except:
+                        except Exception:
                             temp['endtime'] = None
                         if not instruments or not seismometer_id:
                             continue
@@ -1352,18 +1332,13 @@ class Client(object):
                             paz['sensor_manufacturer'] = \
                                 sensors[public_id]['manufacturer']
                             paz['sensor_model'] = sensors[public_id]['model']
-                        except:
+                        except Exception:
                             paz['sensor_manufacturer'] = None
                             paz['sensor_model'] = None
 
         return data
 
-    @deprecated("'getNetworks' has been renamed to 'get_networks'. Use "
-                "that instead.")  # noqa
-    def getNetworks(self, *args, **kwargs):
-        return self.get_networks(*args, **kwargs)
-
-    def get_networks(self, starttime, endtime, route=True):
+    def get_networks(self, starttime, endtime, route=False):
         """
         Returns a dictionary of available networks within the given time span.
 
@@ -1382,12 +1357,7 @@ class Client(object):
         return self.get_inventory(network='*', starttime=starttime,
                                   endtime=endtime, route=route)
 
-    @deprecated("'getStations' has been renamed to 'get_stations'. Use "
-                "that instead.")  # noqa
-    def getStations(self, *args, **kwargs):
-        return self.get_stations(*args, **kwargs)
-
-    def get_stations(self, starttime, endtime, network, route=True):
+    def get_stations(self, starttime, endtime, network, route=False):
         """
         Returns a dictionary of available stations in the given network(s).
 
@@ -1403,7 +1373,7 @@ class Client(object):
         :param network: Network code, e.g. ``'BW'``.
         :return: Dictionary of station data.
         :type route: bool, optional
-        :param route: Enables ArcLink routing (default is ``True``).
+        :param route: Enables ArcLink routing (default is ``False``).
         """
         data = self.get_inventory(network=network, starttime=starttime,
                                   endtime=endtime, route=route)

@@ -15,14 +15,11 @@ from future.builtins import *  # NOQA
 import warnings
 from copy import deepcopy
 from struct import unpack
-import sys
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from .header import (BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_CODE_DTYPE,
                      ENDIAN, TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
 from .segy import _read_segy as _read_segyrev1
@@ -83,12 +80,12 @@ def _is_segy(filename):
             _format_number = fp.read(2)
             _fixed_length = fp.read(2)
             _extended_number = fp.read(2)
-    except:
+    except Exception:
         return False
     # Unpack using big endian first and check if it is valid.
     try:
         format = unpack(b'>h', data_format_code)[0]
-    except:
+    except Exception:
         return False
     if format in VALID_FORMATS:
         _endian = '>'
@@ -108,15 +105,23 @@ def _is_segy(filename):
     _number_of_data_traces = unpack(fmt, _number_of_data_traces)[0]
     _number_of_auxiliary_traces = unpack(fmt,
                                          _number_of_auxiliary_traces)[0]
+
     _format_number = unpack(fmt, _format_number)[0]
+    # Test the version number. The only really supported version number in
+    # ObsPy is 1.0 which is encoded as 0100_16. Many file have version
+    # number zero which is used to indicate "traditional SEG-Y" conforming
+    # to the 1975 standard.
+    # Also allow 0010_16 and 0001_16 as the definition is honestly awkward
+    # and I image many writers get it wrong.
+    if _format_number not in (0x0000, 0x0100, 0x0010, 0x0001):
+        return False
+
     _fixed_length = unpack(fmt, _fixed_length)[0]
     _extended_number = unpack(fmt, _extended_number)[0]
     # Make some sanity checks and return False if they fail.
-    # Unfortunately the format number is 0 in many files so it cannot be truly
-    # tested.
     if _sample_interval <= 0 or _samples_per_trace <= 0 \
-       or _number_of_data_traces < 0 or _number_of_auxiliary_traces < 0 \
-       or _format_number < 0 or _fixed_length < 0 or _extended_number < 0:
+            or _number_of_data_traces < 0 or _number_of_auxiliary_traces < 0 \
+            or _fixed_length < 0 or _extended_number < 0:
         return False
     return True
 
@@ -193,59 +198,13 @@ def _read_segy(filename, headonly=False, byteorder=None,
     stream.stats.endian = endian
     stream.stats.textual_file_header_encoding = \
         textual_file_header_encoding
-    # Loop over all traces.
+
+    # Convert traces to ObsPy Trace objects.
     for tr in segy_object.traces:
-        # Create new Trace object for every segy trace and append to the Stream
-        # object.
-        trace = Trace()
-        stream.append(trace)
-        # skip data if headonly is set
-        if headonly:
-            trace.stats.npts = tr.npts
-        else:
-            trace.data = tr.data
-        trace.stats.segy = AttribDict()
-        # If all values will be unpacked create a normal dictionary.
-        if unpack_trace_headers:
-            # Add the trace header as a new attrib dictionary.
-            header = AttribDict()
-            for key, value in tr.header.__dict__.items():
-                setattr(header, key, value)
-        # Otherwise use the LazyTraceHeaderAttribDict.
-        else:
-            # Add the trace header as a new lazy attrib dictionary.
-            header = LazyTraceHeaderAttribDict(tr.header.unpacked_header,
-                                               tr.header.endian)
-        trace.stats.segy.trace_header = header
-        # The sampling rate should be set for every trace. It is a sample
-        # interval in microseconds. The only sanity check is that is should be
-        # larger than 0.
-        tr_header = trace.stats.segy.trace_header
-        if tr_header.sample_interval_in_ms_for_this_trace > 0:
-            trace.stats.delta = \
-                float(tr.header.sample_interval_in_ms_for_this_trace) / \
-                1E6
-        # If the year is not zero, calculate the start time. The end time is
-        # then calculated from the start time and the sampling rate.
-        if tr_header.year_data_recorded > 0:
-            year = tr_header.year_data_recorded
-            # The SEG Y rev 0 standard specifies the year to be a 4 digit
-            # number.  Before that it was unclear if it should be a 2 or 4
-            # digit number. Old or wrong software might still write 2 digit
-            # years. Every number <30 will be mapped to 2000-2029 and every
-            # number between 30 and 99 will be mapped to 1930-1999.
-            if year < 100:
-                if year < 30:
-                    year += 2000
-                else:
-                    year += 1900
-            julday = tr_header.day_of_year
-            hour = tr_header.hour_of_day
-            minute = tr_header.minute_of_hour
-            second = tr_header.second_of_minute
-            trace.stats.starttime = UTCDateTime(
-                year=year, julday=julday, hour=hour, minute=minute,
-                second=second)
+        stream.append(tr.to_obspy_trace(
+            headonly=headonly,
+            unpack_trace_headers=unpack_trace_headers))
+
     return stream
 
 
@@ -705,7 +664,7 @@ class LazyTraceHeaderAttribDict(AttribDict):
 
     This version is used for the SEGY/SU trace headers.
     """
-    readonly = []
+    readonly = ["unpacked_header", "endian"]
 
     def __init__(self, unpacked_header, unpacked_header_endian, data={}):
         dict.__init__(data)
@@ -716,9 +675,7 @@ class LazyTraceHeaderAttribDict(AttribDict):
     def __getitem__(self, name):
         # Return if already set.
         if name in self.__dict__:
-            if name in self.readonly:
-                return self.__dict__[name]
-            return super(AttribDict, self).__getitem__(name)
+            return self.__dict__[name]
         # Otherwise try to unpack them.
         try:
             index = TRACE_HEADER_KEYS.index(name)
@@ -743,7 +700,7 @@ class LazyTraceHeaderAttribDict(AttribDict):
             unpacked_header=deepcopy(self.__dict__['unpacked_header']),
             unpacked_header_endian=deepcopy(self.__dict__['endian']),
             data=dict((k, deepcopy(v)) for k, v in self.__dict__.items()
-                      if k not in ('unpacked_data', 'endian')))
+                      if k not in self.readonly))
         return ad
 
 
@@ -758,19 +715,3 @@ if __name__ == '__main__':
 # instance did not reliably work.
 setattr(Trace, '__original_str__', Trace.__str__)
 setattr(Trace, '__str__', _segy_trace_str_)
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isSEGY': 'obspy.io.segy.core._is_segy',
-        'isSU': 'obspy.io.segy.core._is_su',
-        'readSEGY': 'obspy.io.segy.core._read_segy',
-        'readSEGYrev1': 'obspy.io.segy.segy._read_segy',
-        'readSU': 'obspy.io.segy.core._read_su',
-        'readSUFile': 'obspy.io.segy.core._read_su',
-        'writeSEGY': 'obspy.io.segy.core._write_segy',
-        'writeSU': 'obspy.io.segy.core._write_su'})

@@ -18,6 +18,7 @@ from obspy.io.xseed.blockette.blockette010 import Blockette010
 from obspy.io.xseed.blockette.blockette051 import Blockette051
 from obspy.io.xseed.blockette.blockette053 import Blockette053
 from obspy.io.xseed.blockette.blockette054 import Blockette054
+import obspy.io.xseed.parser
 from obspy.io.xseed.parser import Parser
 from obspy.io.xseed.utils import SEEDParserException, compare_seed
 
@@ -474,7 +475,8 @@ class ParserTestCase(unittest.TestCase):
         # SEED
         sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
         result = {'elevation': 860.0, 'latitude': 47.737166999999999,
-                  'longitude': 12.795714, 'local_depth': 0}
+                  'longitude': 12.795714, 'local_depth': 0,
+                  'azimuth': 0.0, 'local_depth': 0, 'dip': -90.0}
         paz = sp.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
@@ -484,6 +486,13 @@ class ParserTestCase(unittest.TestCase):
         paz = sp2.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp2.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
+        # Additional test with non-trivial azimuth
+        sp = Parser(os.path.join(self.path, 'dataless.seed.II_COCO'))
+        result = {'elevation': 1.0, 'latitude': -12.1901,
+                  'longitude': 96.8349, 'local_depth': 1.3,
+                  'azimuth': 92.0, 'local_depth': 1.3, 'dip': 0.0}
+        paz = sp.get_coordinates("II.COCO.10.BH2", UTCDateTime("2010-11-11"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
     def test_select_does_not_change_the_parser_format(self):
@@ -524,6 +533,80 @@ class ParserTestCase(unittest.TestCase):
             sp2 = Parser(tempfile)
             # create RESP files
             sp2.get_resp()
+
+    def test_read_resp(self):
+        """
+        Tests reading a respfile by calling Parser(filename)
+        """
+        sts2_resp_file = os.path.join(self.path,
+                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        p = Parser(sts2_resp_file)
+        # Weak but at least tests that something has been read.
+        assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
+
+        rt130_resp_file = os.path.join(self.path,
+                                       'RESP.XX.NR008..HHZ.130.1.100')
+        p = Parser(rt130_resp_file)
+        # Weak but at least tests that something has been read.
+        assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
+
+    def test_read_resp_data(self):
+        """
+        Tests reading a resp string by calling Parser(string)
+        """
+        sts2_resp_file = os.path.join(self.path,
+                                      'RESP.XX.NS085..BHZ.STS2_gen3.120.1500')
+        with open(sts2_resp_file, "rt") as fh:
+            p = Parser(fh.read())
+        # Weak but at least tests that something has been read.
+        assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
+
+        rt130_resp_file = os.path.join(self.path,
+                                       'RESP.XX.NR008..HHZ.130.1.100')
+        with open(rt130_resp_file, "rt") as fh:
+            p = Parser(fh.read())
+        # Weak but at least tests that something has been read.
+        assert set(p.blockettes.keys()) == {34, 50, 52, 53, 54, 57, 58}
+
+    def clean_unit_string(self, string):
+        """
+        Returns a list of cleaned strings
+        """
+        # Strip out string constants that differ.
+        # Unit descriptions, and case
+        dirty_fields = ['B054F05', 'B054F06', 'B053F05', 'B053F06']
+        ret = list()
+
+        for line in string.split(b'\n'):
+            line = line.decode('ascii')
+            if line[:7] not in dirty_fields:
+                line = line.upper()
+            else:
+                line = line.split('-')[0].upper()
+            ret.append(line)
+        return ret
+
+    def test_resp_round_trip(self):
+        single_seed = os.path.join(
+            self.path,
+            '../../../../',
+            'core/tests/data/IRIS_single_channel_with_response.seed')
+        # Make parser and get resp from SEED
+        seed_p = Parser(single_seed)
+        resp_from_seed = seed_p.get_resp()[0][1]
+        resp_from_seed.seek(0)
+        resp_from_seed = resp_from_seed.read()
+        seed_list = self.clean_unit_string(resp_from_seed)
+
+        # make parser from resp made above and make a resp from it
+        resp_p = Parser(resp_from_seed.decode('ascii'))
+        resp_from_resp = resp_p.get_resp()[0][1]
+        resp_from_resp.seek(0)
+        resp_from_resp = resp_from_resp.read()
+        resp_list = self.clean_unit_string(resp_from_resp)
+
+        # compare
+        self.assertEqual(seed_list, resp_list)
 
     def test_compare_blockettes(self):
         """
@@ -569,9 +652,11 @@ class ParserTestCase(unittest.TestCase):
         self.assertRaises(SEEDParserException, blockette.parse_seed, b010)
         # non-strict
         blockette = Blockette010()
-        # The warning cannot be tested due to being issued only once.
-        # A similar case is tested in test_bug165.
-        blockette.parse_seed(b010)
+        # The warning cannot be tested due to being issued only once, but will
+        # be ignored - a similar case is tested in test_bug165.
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore", UserWarning)
+            blockette.parse_seed(b010)
         self.assertEqual(b010, blockette.get_seed())
 
     def test_issue_298a(self):
@@ -594,22 +679,29 @@ class ParserTestCase(unittest.TestCase):
         """
         Test case for issue #319: multiple abbreviation dictionaries.
         """
+        # We have to clear the warnings registry here as some other tests
+        # also trigger the warning.
+        if hasattr(obspy.io.xseed.parser, "__warningregistry__"):
+            obspy.io.xseed.parser.__warningregistry__.clear()
+
         filename = os.path.join(self.path, 'BN.LPW._.BHE.dataless')
         # raises a UserWarning: More than one Abbreviation Dictionary Control
         # Headers found!
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("error", UserWarning)
-            self.assertRaises(UserWarning, Parser, filename)
-            warnings.simplefilter("ignore", UserWarning)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             parser = Parser(filename)
-            self.assertEqual(parser.version, 2.3)
+        self.assertEqual(
+            w[0].message.args[0],
+            "More than one Abbreviation Dictionary Control Headers found!")
+        self.assertEqual(parser.version, 2.3)
 
     def test_issue_157(self):
         """
         Test case for issue #157: re-using parser object.
         """
         expected = {'latitude': 48.162899, 'elevation': 565.0,
-                    'longitude': 11.2752, 'local_depth': 0.0}
+                    'longitude': 11.2752, 'local_depth': 0.0,
+                    'azimuth': 0.0, 'dip': -90.0}
         filename1 = os.path.join(self.path, 'dataless.seed.BW_FURT')
         filename2 = os.path.join(self.path, 'dataless.seed.BW_MANZ')
         t = UTCDateTime("2010-07-01")
@@ -704,7 +796,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(energy_before, energy_after))
 
         # The vertical channel should not have changed at all.
-        np.testing.assert_array_equal(tr_z.data, tr_r_z.data)
+        np.testing.assert_allclose(tr_z.data, tr_r_z.data, rtol=1e-10)
         # The other two are only rotated by 2 degree so should also not have
         # changed much but at least a little bit. And the components should be
         # renamed.
@@ -714,6 +806,17 @@ class ParserTestCase(unittest.TestCase):
         # rotation. The energy comparison should still ensure a sensible
         # result.
         self.assertTrue(np.allclose(tr_2, tr_r_e, atol=tr_r_e.max() / 4.0))
+
+    def test_underline_in_site_name(self):
+        """
+        Test case for issue #1893.
+        """
+        filename = os.path.join(self.path, 'UP_BACU_HH.dataless')
+        parser = Parser()
+        parser.read(filename)
+        # value given by pdcc
+        self.assertEqual(parser.blockettes[50][0].site_name,
+                         'T3930_b A6689 3930')
 
 
 def suite():

@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.xseed - Dataless SEED, RESP and XML-SEED read and write support
-========================================================================
+obspy.io.xseed - (X)SEED and RESP support for ObsPy
+===================================================
 `XML-SEED` was introduced by Tsuboi, Tromp and Komatitsch (2004), it is a XML
 representation of `Dataless SEED`. This module contains converters from
 `Dataless SEED` to `XML-SEED` and vice versa as well as a converter from
 `Dataless SEED` to `RESP` files. The :mod:`~obspy.io.xseed` module is tested
 against the complete ORFEUS Dataless SEED archive, the IRIS (US) Dataless SEED
 archive and against ArcLink response requests.
+
+All files can be converted to ObsPy's internal inventory objects at which
+point they can be written out to any format ObsPy supports. In the case of
+RESP files these are potentially incomplete as RESP files lack vital
+information like geographical coordinates.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -76,6 +81,16 @@ from future.builtins import *  # NOQA
 
 # needs to stay above import statements
 DEFAULT_XSEED_VERSION = '1.1'
+
+
+class InvalidResponseError(Exception):
+    """
+    Raised when a response is clearly invalid.
+
+    The error message should give a clearer idea of why.
+    """
+    pass
+
 
 from .parser import Parser
 

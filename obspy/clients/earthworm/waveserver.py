@@ -21,9 +21,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
-from obspy.core.util.decorator import deprecated
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
+from obspy.core.compatibility import from_buffer
 
 
 RETURNFLAG_KEY = {
@@ -62,16 +60,6 @@ class TraceBuf2(object):
     ndata = 0           # number of samples in instance
     inputType = None    # NumPy data type
 
-    @deprecated(
-        "'readTB2' has been renamed to "  # noqa
-        "'read_tb2'. Use that instead.")
-    def readTB2(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'readTB2' has been renamed to
-        'read_tb2'. Use that instead.
-        '''
-        return self.read_tb2(*args, **kwargs)
-
     def read_tb2(self, tb2):
         """
         Reads single TraceBuf2 packet from beginning of input byte array tb.
@@ -87,16 +75,6 @@ class TraceBuf2(object):
         dat = tb2[64:nbytes]
         self.parse_data(dat)
         return nbytes
-
-    @deprecated(
-        "'parseHeader' has been renamed to "  # noqa
-        "'parse_header'. Use that instead.")
-    def parseHeader(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'parseHeader' has been renamed to
-        'parse_header'. Use that instead.
-        '''
-        return self.parse_header(*args, **kwargs)
 
     def parse_header(self, head):
         """
@@ -121,37 +99,17 @@ class TraceBuf2(object):
         self.end = UTCDateTime(te)
         return
 
-    @deprecated(
-        "'parseData' has been renamed to "  # noqa
-        "'parse_data'. Use that instead.")
-    def parseData(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'parseData' has been renamed to
-        'parse_data'. Use that instead.
-        '''
-        return self.parse_data(*args, **kwargs)
-
     def parse_data(self, dat):
         """
         Parse tracebuf char array data into self.data
         """
-        self.data = np.fromstring(dat, self.inputType)
+        self.data = from_buffer(dat, self.inputType)
         ndat = len(self.data)
         if self.ndata != ndat:
             msg = 'data count in header (%d) != data count (%d)'
             print(msg % (self.nsamp, ndat), file=sys.stderr)
             self.ndata = ndat
         return
-
-    @deprecated(
-        "'getObspyTrace' has been renamed to "  # noqa
-        "'get_obspy_trace'. Use that instead.")
-    def getObspyTrace(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getObspyTrace' has been renamed to
-        'get_obspy_trace'. Use that instead.
-        '''
-        return self.get_obspy_trace(*args, **kwargs)
 
     def get_obspy_trace(self):
         """
@@ -180,10 +138,19 @@ def send_sock_req(server, port, req_str, timeout=None):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(timeout)
     s.connect((server, port))
-    if req_str[-1:] == b'\n':
-        s.send(req_str)
-    else:
-        s.send(req_str + b'\n')
+
+    full_req = req_str
+    if not full_req.endswith(b'\n'):
+        full_req += b'\n'
+
+    req_len = len(full_req)
+    totalsent = 0
+
+    while totalsent < req_len:
+        sent = s.send(full_req[totalsent:])
+        if sent == 0:
+            raise RuntimeError("socket connection broken")
+        totalsent = totalsent + sent
     return s
 
 
@@ -273,7 +240,7 @@ def get_menu(server, port, scnl=None, timeout=None):
             return []
         outlist = []
         for p in range(0, len(tokens), elen):
-            l = tokens[p:p + elen]
+            l = tokens[p:p + elen]  # NOQA
             if elen == 8:
                 outlist.append((int(l[0]), l[1], l[2], l[3], l[4],
                                 float(l[5]), float(l[6]), l[7]))
@@ -284,7 +251,8 @@ def get_menu(server, port, scnl=None, timeout=None):
     return []
 
 
-def read_wave_server_v(server, port, scnl, start, end, timeout=None):
+def read_wave_server_v(server, port, scnl, start, end, timeout=None,
+                       cleanup=False):
     """
     Reads data for specified time interval and scnl on specified waveserverV.
 
@@ -307,26 +275,57 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None):
     nbytes = int(tokens[-1])
     dat = get_sock_bytes(sock, nbytes, timeout=timeout)
     sock.close()
+
     tbl = []
-    new = TraceBuf2()  # empty..filled below
     bytesread = 1
     p = 0
-    while bytesread and p < len(dat):
-        if len(dat) > p + 64:
-            head = dat[p:p + 64]
-            p += 64
-            new.parse_header(head)
-            nbytes = new.ndata * new.inputType.itemsize
+    dat_len = len(dat)
+    current_tb = None
+    period = None
+    bufs = None
 
-            if len(dat) < p + nbytes:
-                break   # not enough array to hold data specified in header
+    while bytesread and p < dat_len:
+        if not dat_len > p + 64:
+            break  # no tracebufs left
 
-            tbd = dat[p:p + nbytes]
-            p += nbytes
-            new.parse_data(tbd)
+        new_tb = TraceBuf2()
+        new_tb.parse_header(dat[p:p + 64])
+        p += 64
+        nbytes = new_tb.ndata * new_tb.inputType.itemsize
 
-            tbl.append(new)
-            new = TraceBuf2()  # empty..filled on next iteration
+        if dat_len < p + nbytes:
+            break   # not enough array to hold data specified in header
+
+        if current_tb is not None:
+            if cleanup and new_tb.start - current_tb.end == period:
+                buf = dat[p:p + nbytes]
+                bufs.append(from_buffer(buf, current_tb.inputType))
+                current_tb.end = new_tb.end
+
+            else:
+                if len(bufs) > 1:
+                    current_tb.data = np.concatenate(bufs)
+                else:
+                    current_tb.data = bufs[0]
+
+                current_tb.ndata = len(current_tb.data)
+                current_tb = None
+
+        if current_tb is None:
+            current_tb = new_tb
+            tbl.append(current_tb)
+            period = 1 / current_tb.rate
+            bufs = [from_buffer(dat[p:p + nbytes], current_tb.inputType)]
+
+        p += nbytes
+
+    if len(bufs) > 1:
+        current_tb.data = np.concatenate(bufs)
+    else:
+        current_tb.data = bufs[0]
+
+    current_tb.ndata = len(current_tb.data)
+
     return tbl
 
 
@@ -341,22 +340,3 @@ def trace_bufs2obspy_stream(tbuflist):
         tlist.append(tb.get_obspy_trace())
     strm = Stream(tlist)
     return strm
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'getMenu': 'obspy.clients.earthworm.waveserver.get_menu',
-        'getNumpyType': 'obspy.clients.earthworm.waveserver.get_numpy_type',
-        'getSockBytes': 'obspy.clients.earthworm.waveserver.get_sock_bytes',
-        'getSockCharLine':
-            'obspy.clients.earthworm.waveserver.get_sock_char_line',
-        'readWaveServerV':
-            'obspy.clients.earthworm.waveserver.read_wave_server_v',
-        'sendSockReq': 'obspy.clients.earthworm.waveserver.send_sock_req',
-        'tracebuf2': 'obspy.clients.earthworm.waveserver.TraceBuf2',
-        'tracebufs2obspyStream':
-            'obspy.clients.earthworm.waveserver.trace_bufs2obspy_stream'})

@@ -21,6 +21,7 @@
 
        c_wrappers
        helper_classes
+       ray_paths
        seismic_phase
        slowness_layer
        slowness_model
@@ -30,7 +31,6 @@
        taup_geo
        taup_path
        taup_pierce
-       taup
        taup_time
        tau
        utils

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.clients.filesystem - read support for local filesystem archives
-=====================================================================
+obspy.clients.filesystem - Local filesystem (e.g. SDS) client for ObsPy
+=======================================================================
 This module provides read support for some ordered local directory structures
 (e.g. SeisComP Data Structure 'SDS'), storing data in filetypes readable by one
 of ObsPy's I/O plugins (e.g. MiniSEED).

@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import inspect
 import os
 import pickle
 import unittest
@@ -11,15 +12,12 @@ from copy import deepcopy
 
 import numpy as np
 
-from obspy import Stream, Trace, UTCDateTime, read
+from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.stream import _is_pickle, _read_pickle, _write_pickle
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import NamedTemporaryFile, get_scipy_version
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.xseed import Parser
-
-
-SCIPY_VERSION = get_scipy_version()
 
 
 class StreamTestCase(unittest.TestCase):
@@ -57,6 +55,8 @@ class StreamTestCase(unittest.TestCase):
             data=np.random.randint(0, 1000, 12000).astype(np.float64),
             header=header)
         self.gse2_stream = Stream(traces=[trace])
+        self.data_path = os.path.join(os.path.dirname(os.path.abspath(
+            inspect.getfile(inspect.currentframe()))), "data")
 
     @staticmethod
     def __remove_processing(st):
@@ -658,6 +658,22 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(stream2), 1)
         self.assertIn(stream[4], stream2)
 
+    def test_select_on_single_letter_channels(self):
+        st = read()
+        st[0].stats.channel = "Z"
+        st[1].stats.channel = "N"
+        st[2].stats.channel = "E"
+
+        self.assertEqual([tr.stats.channel for tr in st], ["Z", "N", "E"])
+
+        self.assertEqual(st.select(component="Z")[0], st[0])
+        self.assertEqual(st.select(component="N")[0], st[1])
+        self.assertEqual(st.select(component="E")[0], st[2])
+
+        self.assertEqual(len(st.select(component="Z")), 1)
+        self.assertEqual(len(st.select(component="N")), 1)
+        self.assertEqual(len(st.select(component="E")), 1)
+
     def test_sort(self):
         """
         Tests the sort method of the Stream object.
@@ -766,7 +782,10 @@ class StreamTestCase(unittest.TestCase):
         tr2 = Trace(data=np.zeros(5))
         tr2.stats.calib = 2.0
         st = Stream([tr1, tr2])
-        self.assertRaises(Exception, st.merge)
+        # this also emits an UserWarning
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            self.assertRaises(Exception, st.merge)
         # 2 - different calibration factors for the different channels is ok
         tr1 = Trace(data=np.zeros(5))
         tr1.stats.calib = 2.00
@@ -793,7 +812,10 @@ class StreamTestCase(unittest.TestCase):
         tr2 = Trace(data=np.zeros(5))
         tr2.stats.sampling_rate = 50
         st = Stream([tr1, tr2])
-        self.assertRaises(Exception, st.merge)
+        # this also emits an UserWarning
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            self.assertRaises(Exception, st.merge)
         # 2 - different sampling rates for the different channels is ok
         tr1 = Trace(data=np.zeros(5))
         tr1.stats.sampling_rate = 200
@@ -818,7 +840,10 @@ class StreamTestCase(unittest.TestCase):
         tr1 = Trace(data=np.zeros(5, dtype=np.int32))
         tr2 = Trace(data=np.zeros(5, dtype=np.float32))
         st = Stream([tr1, tr2])
-        self.assertRaises(Exception, st.merge)
+        # this also emits an UserWarning
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            self.assertRaises(Exception, st.merge)
         # 2 - different sampling rates for the different channels is ok
         tr1 = Trace(data=np.zeros(5, dtype=np.int32))
         tr1.stats.channel = 'EHE'
@@ -1323,6 +1348,59 @@ class StreamTestCase(unittest.TestCase):
             st2 = read(tf.name)
             self.assertEqual(len(st2), 3)
             np.testing.assert_array_equal(st2[0].data, st[0].data)
+
+    def test_read_pickle(self):
+        """
+        Testing _read_pickle function.
+
+        Example pickles were written using obspy 1.0.3 on Py2 and Py3
+        respectively.
+        """
+        for filename in ('example_py2.pickle', 'example_py3.pickle'):
+            pickle_file = os.path.join(self.data_path, filename)
+            st = read(pickle_file, format='PICKLE')
+            self.assertEqual(len(st), 3)
+            self.assertEqual(len(st[0]), 114)
+            self.assertEqual(len(st[1]), 110)
+            self.assertEqual(len(st[2]), 105)
+            for tr, comp in zip(st, 'ZNE'):
+                self.assertEqual(tr.stats.network, 'BW')
+                self.assertEqual(tr.stats.station, 'RJOB')
+                self.assertEqual(tr.stats.location, '')
+                self.assertEqual(tr.stats.channel, 'EH' + comp)
+                self.assertEqual(tr.stats.sampling_rate, 100.0)
+            self.assertEqual(st[0].stats.starttime,
+                             UTCDateTime('2009-08-24T00:20:03.000000Z'))
+            self.assertEqual(st[1].stats.starttime,
+                             UTCDateTime('2009-08-24T00:20:03.040000Z'))
+            self.assertEqual(st[2].stats.starttime,
+                             UTCDateTime('2009-08-24T00:20:03.090000Z'))
+            self.assertEqual(st[0].stats.endtime,
+                             UTCDateTime('2009-08-24T00:20:04.130000Z'))
+            self.assertEqual(st[1].stats.endtime,
+                             UTCDateTime('2009-08-24T00:20:04.130000Z'))
+            self.assertEqual(st[2].stats.endtime,
+                             UTCDateTime('2009-08-24T00:20:04.130000Z'))
+            np.testing.assert_array_equal(
+                st[0].data[:10], [0, 6, 75, 262, 549, 943, 1442, 1785, 2147,
+                                  3029])
+            np.testing.assert_array_equal(
+                st[1].data[:10], [624, 1125, 1647, 2607, 3320, 4389, 5764,
+                                  7078, 8063, 9458])
+            np.testing.assert_array_equal(
+                st[2].data[:10], [-9573, -11576, -14450, -16754, -20348,
+                                  -23220, -28837, -30811, -36024, -40052])
+            np.testing.assert_array_equal(
+                st[0].data[-10:], [-283742, -305558, -302737, -317144, -310056,
+                                   -308462, -302752, -304243, -296202,
+                                   -313968])
+            np.testing.assert_array_equal(
+                st[1].data[-10:], [90493, 105062, 100721, 98631, 100355,
+                                   106287, 115356, 117989, 97907, 113225])
+            np.testing.assert_array_equal(
+                st[2].data[-10:], [-144765, -149205, -123622, -139548, -137160,
+                                   -154283, -103584, -138578, -128339,
+                                   -125707])
 
     def test_get_gaps_2(self):
         """
@@ -1904,9 +1982,9 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(ct[0].stats.mseed.dataquality, 'A')
 
     def test_write(self):
-        # writing in unknown format raises TypeError
+        # writing in unknown format raises ValueError
         st = read()
-        self.assertRaises(TypeError, st.write, 'file.ext', format="UNKNOWN")
+        self.assertRaises(ValueError, st.write, 'file.ext', format="UNKNOWN")
 
     def test_detrend(self):
         """
@@ -2116,22 +2194,6 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st.select(station=""), st2)
         self.assertEqual(st.select(channel=""), st2)
         self.assertEqual(st.select(npts=0), st2)
-
-    def test_select_short_channel_code(self):
-        """
-        Test that select by component only checks channel codes longer than two
-        characters.
-        """
-        st = Stream([Trace(), Trace(), Trace(), Trace(), Trace(), Trace()])
-        st[0].stats.channel = "EHZ"
-        st[1].stats.channel = "HZ"
-        st[2].stats.channel = "Z"
-        st[3].stats.channel = "E"
-        st[4].stats.channel = "N"
-        st[5].stats.channel = "EHN"
-        self.assertEqual(len(st.select(component="Z")), 1)
-        self.assertEqual(len(st.select(component="N")), 1)
-        self.assertEqual(len(st.select(component="E")), 0)
 
     def test_remove_response(self):
         """
@@ -2432,6 +2494,59 @@ class StreamTestCase(unittest.TestCase):
         for arg in patch.call_args_list:
             self.assertEqual(arg[1]["order"], 2)
             self.assertEqual(arg[1]["plot"], True)
+
+    def test_read_check_compression(self):
+        """
+        Test to ensure calling read with check_compression=False does not
+        call expensive tar or zip functions.
+        """
+        with mock.patch("tarfile.is_tarfile") as tar_p:
+            with mock.patch("zipfile.is_zipfile") as zip_p:
+                read('/path/to/slist.ascii', format='SLIST',
+                     check_compression=False)
+
+        # assert neither compression check function was called.
+        self.assertEqual(tar_p.call_count, 0)
+        self.assertEqual(zip_p.call_count, 0)
+
+        # ensure compression checks get called when check_compression is True
+        with mock.patch("tarfile.is_tarfile", return_value=0) as tar_p:
+            with mock.patch("zipfile.is_zipfile", return_value=0) as zip_p:
+                read('/path/to/slist.ascii', format='SLIST',
+                     check_compression=True)
+        self.assertEqual(tar_p.call_count, 1)
+        self.assertGreaterEqual(zip_p.call_count, 1)
+
+    def test_rotate_to_zne(self):
+        """
+        Tests rotating all traces in stream to ZNE given an inventory object.
+        """
+        inv = read_inventory("/path/to/ffbx.stationxml", format="STATIONXML")
+        parser = Parser("/path/to/ffbx.dataless")
+        st_expected = read('/path/to/ffbx_rotated.slist', format='SLIST')
+        for tr in st_expected:
+            # ignore format specific keys and processing which also holds
+            # version number
+            tr.stats.pop('ascii')
+            tr.stats.pop('_format')
+        # check rotation using both Inventory and Parser as metadata input
+        for metadata in (inv, parser):
+            st = read("/path/to/ffbx_unrotated_gaps.mseed", format="MSEED")
+            st.rotate("->ZNE", inventory=metadata)
+            # do some checks on results
+            self.assertEqual(len(st), 30)
+            # compare data
+            for tr_got, tr_expected in zip(st, st_expected):
+                np.testing.assert_allclose(tr_got.data, tr_expected.data,
+                                           rtol=1e-7)
+            # compare stats
+            for tr_expected, tr_got in zip(st_expected, st):
+                # ignore format specific keys and processing which also holds
+                # version number
+                tr_got.stats.pop('mseed')
+                tr_got.stats.pop('_format')
+                tr_got.stats.pop('processing')
+                self.assertEqual(tr_got.stats, tr_expected.stats)
 
 
 def suite():

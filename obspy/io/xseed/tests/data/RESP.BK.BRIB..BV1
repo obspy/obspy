@@ -1,0 +1,273 @@
+#
+#		<< obspy, Version 1.0.3.post0+1204.gbb25ba4f09.dirty >>
+#
+#		======== CHANNEL RESPONSE DATA ========
+B050F03     Station:     BRIB
+B050F16     Network:     BK
+B052F03     Location:    ??
+B052F04     Channel:     BV1
+B052F22     Start date:  2004,167
+B052F23     End date:    2010,056,20:00:00.0000
+#		=======================================
+#		+               +--------------------------------------------+                +
+#		+               |   Response (Poles & Zeros),  BRIB ch BV1   |                +
+#		+               +--------------------------------------------+                +
+#
+B053F03     Transfer function type:                A [Laplace Transform (Rad/sec)]
+B053F04     Stage sequence number:                 1
+B053F05     Response in units lookup:              M**3/M**3 - Volumetric Strain
+B053F06     Response out units lookup:             V - Volts
+B053F07     A0 normalization factor:               1
+B053F08     Normalization frequency:               0
+B053F09     Number of zeroes:                      0
+B053F14     Number of poles:                       0
+#		Complex zeroes:
+#		  i  real          imag          real_error    imag_error
+#		Complex poles:
+#		  i  real          imag          real_error    imag_error
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  BRIB ch BV1      |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 1
+B058F04     Gain:                                  4.139200E+06
+B058F05     Frequency of gain:                     1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#
+#		+               +-------------------------------------------+                 +
+#		+               |   Response (Coefficients),  BRIB ch BV1   |                 +
+#		+               +-------------------------------------------+                 +
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 2
+B054F05     Response in units lookup:              V - Volts
+B054F06     Response out units lookup:             COUNTS - Digital Counts
+B054F07     Number of numerators:                  0
+B054F10     Number of denominators:                0
+#
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,  BRIB ch BV1   |                       +
+#		+                      +------------------------------+                       +
+#
+B057F03     Stage sequence number:                 2
+B057F04     Input sample rate:                     5.120000E+03
+B057F05     Decimation factor:                     1
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             0.000000E+00
+B057F08     Correction applied (seconds):          0.000000E+00
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  BRIB ch BV1      |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 2
+B058F04     Gain:                                  4.130480E+05
+B058F05     Frequency of gain:                     1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#
+#		+                     +--------------------------------+                      +
+#		+                     |   FIR response,  BRIB ch BV1   |                      +
+#		+                     +--------------------------------+                      +
+#
+B061F03     Stage sequence number:                 3
+B061F05     Symmetry type:                         C
+B061F06     Response in units lookup:              COUNTS - Digital Counts
+B061F07     Response out units lookup:             COUNTS - Digital Counts
+B061F08     Number of numerators:                  32
+#		Numerator coefficients:
+#		  i, coefficient
+B061F09       0 -1.113281E-03
+B061F09       1 -1.008002E-03
+B061F09       2 -1.352861E-03
+B061F09       3 -1.730454E-03
+B061F09       4 -2.084180E-03
+B061F09       5 -2.385377E-03
+B061F09       6 -2.609556E-03
+B061F09       7 -2.733523E-03
+B061F09       8 -2.733162E-03
+B061F09       9 -2.584724E-03
+B061F09      10 -2.264117E-03
+B061F09      11 -1.748468E-03
+B061F09      12 -1.014033E-03
+B061F09      13 -3.516817E-05
+B061F09      14  1.237820E-03
+B061F09      15  3.159832E-03
+B061F09      16  6.999450E-03
+B061F09      17  9.099599E-03
+B061F09      18  1.254236E-02
+B061F09      19  1.631230E-02
+B061F09      20  2.026324E-02
+B061F09      21  2.431726E-02
+B061F09      22  2.840511E-02
+B061F09      23  3.246041E-02
+B061F09      24  3.641428E-02
+B061F09      25  4.019874E-02
+B061F09      26  4.374505E-02
+B061F09      27  4.698733E-02
+B061F09      28  4.985729E-02
+B061F09      29  5.227957E-02
+B061F09      30  5.411396E-02
+B061F09      31  5.439028E-02
+#
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,  BRIB ch BV1   |                       +
+#		+                      +------------------------------+                       +
+#
+B057F03     Stage sequence number:                 3
+B057F04     Input sample rate:                     5.120000E+03
+B057F05     Decimation factor:                     16
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             6.152000E-03
+B057F08     Correction applied (seconds):          6.250000E-03
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  BRIB ch BV1      |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 3
+B058F04     Gain:                                  1.014770E+00
+B058F05     Frequency of gain:                     0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#
+#		+                     +--------------------------------+                      +
+#		+                     |   FIR response,  BRIB ch BV1   |                      +
+#		+                     +--------------------------------+                      +
+#
+B061F03     Stage sequence number:                 4
+B061F05     Symmetry type:                         C
+B061F06     Response in units lookup:              COUNTS - Digital Counts
+B061F07     Response out units lookup:             COUNTS - Digital Counts
+B061F08     Number of numerators:                  36
+#		Numerator coefficients:
+#		  i, coefficient
+B061F09       0  1.504873E-04
+B061F09       1  3.059242E-04
+B061F09       2  4.429487E-04
+B061F09       3  3.871174E-04
+B061F09       4 -4.737869E-05
+B061F09       5 -9.707718E-04
+B061F09       6 -2.303171E-03
+B061F09       7 -3.706377E-03
+B061F09       8 -4.625047E-03
+B061F09       9 -4.464801E-03
+B061F09      10 -2.869845E-03
+B061F09      11  7.008609E-06
+B061F09      12  3.385199E-03
+B061F09      13  6.003528E-03
+B061F09      14  6.550936E-03
+B061F09      15  4.259952E-03
+B061F09      16 -5.760239E-04
+B061F09      17 -6.434164E-03
+B061F09      18 -1.092138E-02
+B061F09      19 -1.163641E-02
+B061F09      20 -7.265152E-03
+B061F09      21  1.537275E-03
+B061F09      22  1.193310E-02
+B061F09      23  1.961570E-02
+B061F09      24  2.035163E-02
+B061F09      25  1.186803E-02
+B061F09      26 -4.643690E-03
+B061F09      27 -2.411254E-02
+B061F09      28 -3.863829E-02
+B061F09      29 -3.984992E-02
+B061F09      30 -2.186839E-02
+B061F09      31  1.616123E-02
+B061F09      32  6.896236E-02
+B061F09      33  1.260033E-01
+B061F09      34  1.742294E-01
+B061F09      35  2.018342E-01
+#
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,  BRIB ch BV1   |                       +
+#		+                      +------------------------------+                       +
+#
+B057F03     Stage sequence number:                 4
+B057F04     Input sample rate:                     3.200000E+02
+B057F05     Decimation factor:                     4
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             9.861100E-02
+B057F08     Correction applied (seconds):          1.000000E-01
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  BRIB ch BV1      |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 4
+B058F04     Gain:                                  9.781120E-01
+B058F05     Frequency of gain:                     0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#
+#		+                     +--------------------------------+                      +
+#		+                     |   FIR response,  BRIB ch BV1   |                      +
+#		+                     +--------------------------------+                      +
+#
+B061F03     Stage sequence number:                 5
+B061F05     Symmetry type:                         C
+B061F06     Response in units lookup:              COUNTS - Digital Counts
+B061F07     Response out units lookup:             COUNTS - Digital Counts
+B061F08     Number of numerators:                  32
+#		Numerator coefficients:
+#		  i, coefficient
+B061F09       0  2.880495E-04
+B061F09       1  1.553140E-03
+B061F09       2  2.982305E-03
+B061F09       3  2.517145E-03
+B061F09       4 -5.029268E-04
+B061F09       5 -2.812058E-03
+B061F09       6 -8.087084E-04
+B061F09       7  3.215430E-03
+B061F09       8  2.712660E-03
+B061F09       9 -2.915503E-03
+B061F09      10 -5.094291E-03
+B061F09      11  1.339330E-03
+B061F09      12  7.400344E-03
+B061F09      13  1.827965E-03
+B061F09      14 -8.819583E-03
+B061F09      15 -6.567193E-03
+B061F09      16  8.386086E-03
+B061F09      17  1.242687E-02
+B061F09      18 -5.129789E-03
+B061F09      19 -1.848686E-02
+B061F09      20 -1.792368E-03
+B061F09      21  2.336042E-02
+B061F09      22  1.304773E-02
+B061F09      23 -2.517095E-02
+B061F09      24 -2.931348E-02
+B061F09      25  2.126693E-02
+B061F09      26  5.218990E-02
+B061F09      27 -6.615173E-03
+B061F09      28 -8.835352E-02
+B061F09      29 -3.660624E-02
+B061F09      30  1.862733E-01
+B061F09      31  4.037645E-01
+#
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,  BRIB ch BV1   |                       +
+#		+                      +------------------------------+                       +
+#
+B057F03     Stage sequence number:                 5
+B057F04     Input sample rate:                     8.000000E+01
+B057F05     Decimation factor:                     2
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             3.937500E-01
+B057F08     Correction applied (seconds):          4.000000E-01
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  BRIB ch BV1      |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 5
+B058F04     Gain:                                  1.011130E+00
+B058F05     Frequency of gain:                     0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity,  BRIB ch BV1   |                  +
+#		+                  +---------------------------------------+                  +
+#
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           1.715850E+12
+B058F05     Frequency of sensitivity:              1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#

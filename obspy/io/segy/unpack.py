@@ -23,9 +23,7 @@ import warnings
 
 import numpy as np
 
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
-
+from obspy.core.compatibility import from_buffer
 from .util import clibsegy
 
 
@@ -49,7 +47,7 @@ def unpack_4byte_ibm(file, count, endian='>'):
     Unpacks 4 byte IBM floating points.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 4), dtype=np.float32)
+    data = from_buffer(file.read(count * 4), dtype=np.float32)
     # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
@@ -95,7 +93,7 @@ def unpack_4byte_integer(file, count, endian='>'):
     Unpacks 4 byte integers.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 4), dtype=np.int32)
+    data = from_buffer(file.read(count * 4), dtype=np.int32)
     # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
@@ -107,7 +105,7 @@ def unpack_2byte_integer(file, count, endian='>'):
     Unpacks 2 byte integers.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 2), dtype=np.int16)
+    data = from_buffer(file.read(count * 2), dtype=np.int16)
     # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
@@ -123,7 +121,7 @@ def unpack_4byte_ieee(file, count, endian='>'):
     Unpacks 4 byte IEEE floating points.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 4), dtype=np.float32)
+    data = from_buffer(file.read(count * 4), dtype=np.float32)
     # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
@@ -162,23 +160,3 @@ class OnTheFlyDataUnpacker:
             fp.seek(self.seek)
             raw = self.unpack_function(fp, self.count, endian=self.endian)
         return raw
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'unpack_1byte_Integer':
-            'obspy.io.segy.unpack.unpack_1byte_integer',
-        'unpack_2byte_Integer':
-            'obspy.io.segy.unpack.unpack_2byte_integer',
-        'unpack_4byte_Integer':
-            'obspy.io.segy.unpack.unpack_4byte_integer',
-        'unpack_4byte_IBM':
-            'obspy.io.segy.unpack.unpack_4byte_ibm',
-        'unpack_4byte_IEEE':
-            'obspy.io.segy.unpack.unpack_4byte_ieee',
-        'unpack_4byte_Fixed_point':
-            'obspy.io.segy.unpack.unpack_4byte_fixed_point'})

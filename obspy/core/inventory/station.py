@@ -16,7 +16,6 @@ from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
-import textwrap
 import warnings
 
 import numpy as np
@@ -24,7 +23,8 @@ import numpy as np
 from obspy import UTCDateTime
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
-from .util import BaseNode, Equipment, Operator, Distance, Latitude, Longitude
+from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
+                   Longitude, _unified_content_strings, _textwrap)
 
 
 @python_2_unicode_compatible
@@ -46,6 +46,8 @@ class Station(BaseNode):
         """
         :type channels: list of :class:`~obspy.core.inventory.channel.Channel`
         :param channels: All channels belonging to this station.
+        :type site: :class:`~obspy.core.inventory.util.Site`
+        :param site: The lexical description of the site
         :type latitude: :class:`~obspy.core.inventory.util.Latitude`
         :param latitude: The latitude of the station
         :type longitude: :class:`~obspy.core.inventory.util.Longitude`
@@ -168,9 +170,10 @@ class Station(BaseNode):
             historical_code="historical Code: %s " % self.historical_code if
             self.historical_code else "")
         ret += "\tAvailable Channels:\n"
-        ret += "\n".join(textwrap.wrap(
-            ", ".join(contents["channels"]), initial_indent="\t\t",
-            subsequent_indent="\t\t", expand_tabs=False))
+        ret += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["channels"])),
+            initial_indent="\t\t", subsequent_indent="\t\t",
+            expand_tabs=False))
         return ret
 
     def _repr_pretty_(self, p, cycle):
@@ -379,7 +382,7 @@ class Station(BaseNode):
                                        channel.upper()):
                     continue
             if sampling_rate is not None:
-                if not cha.sample_rate:
+                if cha.sample_rate is None:
                     msg = ("Omitting channel that has no sampling rate "
                            "specified.")
                     warnings.warn(msg)
@@ -399,7 +402,7 @@ class Station(BaseNode):
 
     def plot(self, min_freq, output="VEL", location="*", channel="*",
              time=None, starttime=None, endtime=None, axes=None,
-             unwrap_phase=False, show=True, outfile=None):
+             unwrap_phase=False, plot_degrees=False, show=True, outfile=None):
         """
         Show bode plot of instrument response of all (or a subset of) the
         station's channels.
@@ -437,6 +440,8 @@ class Station(BaseNode):
             opened.
         :type unwrap_phase: bool
         :param unwrap_phase: Set optional phase unwrapping using NumPy.
+        :type plot_degrees: bool
+        :param plot_degrees: if ``True`` plot bode in degrees
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.
@@ -478,7 +483,8 @@ class Station(BaseNode):
                 cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
                          label=".".join((self.code, cha.location_code,
                                          cha.code)),
-                         unwrap_phase=unwrap_phase, show=False, outfile=None)
+                         unwrap_phase=unwrap_phase, plot_degrees=plot_degrees,
+                         show=False, outfile=None)
             except ZeroSamplingRate:
                 msg = ("Skipping plot of channel with zero "
                        "sampling rate:\n%s")
@@ -490,7 +496,8 @@ class Station(BaseNode):
         # final adjustments to plot if we created the figure in here
         if not axes:
             from obspy.core.inventory.response import _adjust_bode_plot_figure
-            _adjust_bode_plot_figure(fig, show=False)
+            _adjust_bode_plot_figure(fig, plot_degrees=plot_degrees,
+                                     show=False)
 
         if outfile:
             fig.savefig(outfile)

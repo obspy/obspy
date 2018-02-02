@@ -19,10 +19,11 @@ Basic Example
 
 >>> client = Client(timeout=20)
 >>> t = UTCDateTime('2010-01-01T10:00:00')
->>> st = client.waveform.get_waveforms("BW", "MANZ", "", "EH*", t, t+20)
->>> st.sort()  # doctest: +ELLIPSIS
+>>> st = client.waveform.get_waveforms(
+...     "BW", "MANZ", "", "EH*", t, t+20)  # doctest: +SKIP
+>>> st.sort()  # doctest: +ELLIPSIS +SKIP
 <obspy.core.stream.Stream object at ...>
->>> print(st)  # doctest: +ELLIPSIS
+>>> print(st)  # doctest: +ELLIPSIS +SKIP
 3 Trace(s) in Stream:
 BW.MANZ..EHE | 2010-01-01T10:00:00.000000Z - ... | 200.0 Hz, 4001 samples
 BW.MANZ..EHN | 2010-01-01T10:00:00.000000Z - ... | 200.0 Hz, 4001 samples
@@ -31,20 +32,22 @@ BW.MANZ..EHZ | 2010-01-01T10:00:00.000000Z - ... | 200.0 Hz, 4001 samples
 Advanced Examples
 -----------------
 
->>> client.waveform.get_network_ids()     #doctest: +SKIP
+>>> client.waveform.get_network_ids()  #doctest: +SKIP
 ['KT', 'BW', 'NZ', 'GR', ...]
 
->>> sta_ids = client.waveform.get_station_ids(network='BW')
+>>> sta_ids = client.waveform.get_station_ids(network='BW')  # doctest: +SKIP
 >>> sorted(sta_ids)  # doctest: +SKIP
 ['ALTM', 'BGLD', 'BW01',..., 'WETR', 'ZUGS']
 
->>> cha_ids = client.waveform.get_channel_ids(network='BW', station='MANZ')
->>> sorted(cha_ids)  # doctest: +NORMALIZE_WHITESPACE
-['AEX', 'AEY', 'BHE', 'BHN', 'BHZ', 'EHE', 'EHN', 'EHZ', 'HHE', 'HHN', 'HHZ',
- 'LOG', 'SHE', 'SHN', 'SHZ']
+>>> cha_ids = client.waveform.get_channel_ids(
+...     network='BW', station='MANZ')  # doctest: +SKIP
+>>> sorted(cha_ids)  # doctest: +NORMALIZE_WHITESPACE +SKIP
+['AEX', 'AEY', 'BHE', 'BHN', 'BHZ', 'E', 'EHE', 'EHN', 'EHZ', 'HHE', 'HHN',
+ 'HHZ', 'LOG', 'N', 'SHE', 'SHN', 'SHZ', 'Z']
 
->>> paz = client.station.get_paz('BW.MANZ..EHZ', UTCDateTime('20090808'))
->>> paz = paz.items()
+>>> paz = client.station.get_paz(
+...     'BW.MANZ..EHZ', UTCDateTime('20090808'))  # doctest: +SKIP
+>>> paz = paz.items()  # doctest: +SKIP
 >>> sorted(paz)  # doctest: +SKIP
 [('gain', 60077000.0),
  ('poles', [(-0.037004+0.037016j), (-0.037004-0.037016j), (-251.33+0j),

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.clients.iris - IRIS Web service client for ObsPy
+obspy.clients.iris - IRIS web service client for ObsPy
 ======================================================
 The obspy.clients.iris package contains a client for the DMC Web services
 provided by IRIS (https://service.iris.edu/irisws/).
@@ -10,6 +10,22 @@ provided by IRIS (https://service.iris.edu/irisws/).
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
+
+Local Alternatives
+------------------
+
+ObsPy contains local alternatives to some of the calculation tools offered by
+the IRIS web services. Consider using them when working within ObsPy:
+
++---------------------------------------------------------+--------------------------------------------------------------+
+| IRIS Web Service                                        | Equivalent ObsPy Function/Module                             |
++=========================================================+==============================================================+
+| :meth:`obspy.clients.iris.client.Client.traveltime()`   | :mod:`obspy.taup`                                            |
++---------------------------------------------------------+--------------------------------------------------------------+
+| :meth:`obspy.clients.iris.client.Client.distaz()`       | :mod:`obspy.geodetics`                                       |
++---------------------------------------------------------+--------------------------------------------------------------+
+| :meth:`obspy.clients.iris.client.Client.flinnengdahl()` | :class:`obspy.geodetics.flinnengdahl.FlinnEngdahl`           |
++---------------------------------------------------------+--------------------------------------------------------------+
 
 Web service Interfaces
 ----------------------

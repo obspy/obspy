@@ -66,7 +66,8 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         to 1. High overlaps take a long time to compute.
     :type wlen: int or float
     :param wlen: Window length for fft in seconds. If this parameter is too
-        small, the calculation will take forever.
+        small, the calculation will take forever. If None, it defaults to
+        (samp_rate/100.0).
     :type log: bool
     :param log: Logarithmic frequency axis if True, linear frequency axis
         otherwise.
@@ -196,10 +197,8 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
 
     if not sphinx:
         # ignoring all NumPy warnings during plot
-        temp = np.geterr()
-        np.seterr(all='ignore')
-        plt.draw()
-        np.seterr(**temp)
+        with np.errstate(all='ignore'):
+            plt.draw()
     if outfile:
         if fmt:
             fig.savefig(outfile, format=fmt)

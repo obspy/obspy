@@ -20,10 +20,13 @@ This class hierarchy is closely modelled after the de-facto standard format
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+import copy
 
 from obspy.core.event.header import (
     EventType, EventTypeCertainty, EventDescriptionType)
+from obspy.core.util.decorator import rlock
 from obspy.imaging.source import plot_radiation_pattern, _setup_figure_and_axes
+
 
 from .base import (_event_type_class_factory,
                    CreationInfo, ResourceIdentifier)
@@ -170,17 +173,19 @@ class Event(__Event):
         :param kind: A list of strings (for a 1-row plot) or a nested list of
             strings (one list of strings per row), with the following keywords
             to generate a matplotlib figure:
-                * 'ortho' (Orthographic plot of event location,
-                  see :meth:`~obspy.core.event.catalog.Catalog.plot`),
-                * 'global' (Global plot of event location,
-                  see :meth:`~obspy.core.event.catalog.Catalog.plot`),
-                * 'local' (Local plot of event location,
-                  see :meth:`~obspy.core.event.catalog.Catalog.plot`),
-                * 'beachball' (Beachball of preferred focal mechanism),
-                * 'p_quiver' (quiver plot of p wave farfield),
-                * 's_quiver' (quiver plot of s wave farfield),
-                * 'p_sphere' (surface plot of p wave farfield),
-                * 's_sphere' (surface plot of s wave farfield).
+
+            * ``'ortho'`` (Orthographic plot of event location
+              see :meth:`~obspy.core.event.catalog.Catalog.plot`)
+            * ``'global'`` (Global plot of event location
+              see :meth:`~obspy.core.event.catalog.Catalog.plot`)
+            * ``'local'`` (Local plot of event location
+              see :meth:`~obspy.core.event.catalog.Catalog.plot`)
+            * ``'beachball'`` (Beachball of preferred focal mechanism)
+            * ``'p_quiver'`` (quiver plot of p wave farfield)
+            * ``'s_quiver'`` (quiver plot of s wave farfield)
+            * ``'p_sphere'`` (surface plot of p wave farfield)
+            * ``'s_sphere'`` (surface plot of s wave farfield)
+
         :type subplot_size: float
         :param subplot_size: Width/height of one single subplot cell in inches.
         :type show: bool
@@ -267,6 +272,21 @@ class Event(__Event):
                 plt.show()
 
         return fig
+
+    @rlock
+    def __deepcopy__(self, memodict=None):
+        """
+        reset resource_id's object_id after deep copy to allow the
+        object specific behavior of get_referred_object
+        """
+        memodict = memodict or {}
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memodict[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, copy.deepcopy(v, memodict))
+        result.resource_id.bind_resource_ids()  # bind all resource_ids
+        return result
 
     def write(self, filename, format, **kwargs):
         """
