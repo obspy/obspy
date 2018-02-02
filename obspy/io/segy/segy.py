@@ -89,7 +89,8 @@ class SEGYFile(object):
     Class that internally handles SEG Y files.
     """
     def __init__(self, file=None, endian=None, textual_header_encoding=None,
-                 unpack_headers=False, headonly=False, read_traces=True):
+                 unpack_headers=False, headonly=False, read_traces=True,
+                 map_header=False):
         """
         Class that internally handles SEG Y files.
 
@@ -116,6 +117,16 @@ class SEGYFile(object):
         :param read_traces: Data traces will only be read if this is set to
             ``True``. The data will be completely ignored if this is set to
             ``False``.
+        :type map_header: list
+        :param non map_header: List of lists with headerwords that have been
+            reassigned. Formatting should be as follows
+                [[length, name_1, special_type, start_byte],
+                ...
+                [length, name_2, special_type, start_byte]]
+            Example:
+                [[4, 'delay', False, 180],
+                [[4, 'vessel_speed', False, 184]]]
+            Defaults to False.
         """
         if file is None:
             self._create_empty_segy_file_object()
@@ -142,7 +153,9 @@ class SEGYFile(object):
         # Read the actual traces.
         if read_traces:
             [i for i in self._read_traces(
-                unpack_headers=unpack_headers, headonly=headonly)]
+                unpack_headers=unpack_headers,
+                headonly=headonly,
+                map_header=map_header])]
 
     def __str__(self):
         """
@@ -244,20 +257,33 @@ class SEGYFile(object):
                 'Please contact the developers.'
             raise NotImplementedError(msg)
 
-    def write(self, file, data_encoding=None, endian=None):
+    def write(self, file, data_encoding=None, endian=None, map_header=False):
         """
         Write a SEG Y file to file which is either a file like object with a
         write method or a filename string.
 
         If data_encoding or endian is set, these values will be enforced.
+
+        :type map_header: list
+        :param non map_header: List of lists with headerwords that have been
+            reassigned. Formatting should be as follows
+                [[length, name_1, special_type, start_byte],
+                ...
+                [length, name_2, special_type, start_byte]]
+            Example:
+                [[4, 'delay', False, 180],
+                [[4, 'vessel_speed', False, 184]]]
+            Defaults to False.
         """
         if not hasattr(file, 'write'):
             with open(file, 'wb') as file:
-                self._write(file, data_encoding=data_encoding, endian=endian)
+                self._write(file, data_encoding=data_encoding,
+                            endian=endian, map_header=map_header)
             return
-        self._write(file, data_encoding=data_encoding, endian=endian)
+        self._write(file, data_encoding=data_encoding,
+                    endian=endian, map_header=map_header)
 
-    def _write(self, file, data_encoding=None, endian=None):
+    def _write(self, file, data_encoding=None, endian=None, map_header=False):
         """
         Writes SEG Y to a file like object.
 
@@ -293,7 +319,7 @@ class SEGYFile(object):
             self.binary_file_header.data_sample_format_code = data_encoding
 
         # Write the binary header.
-        self.binary_file_header.write(file, endian=endian)
+        self.binary_file_header.write(file, endian=endian, map_header=map_header)
         # Write all traces.
         for trace in self.traces:
             trace.write(file, data_encoding=data_encoding, endian=endian)
@@ -404,6 +430,17 @@ class SEGYFile(object):
             streaming interface to read SEG-Y files. Read traces will no
             longer be collected in ``self.traces`` list if this is set to
             ``True``.
+
+        :type map_header: list
+        :param non map_header: List of lists with headerwords that have been
+            reassigned. Formatting should be as follows
+                [[length, name_1, special_type, start_byte],
+                ...
+                [length, name_2, special_type, start_byte]]
+            Example:
+                [[4, 'delay', False, 180],
+                [[4, 'vessel_speed', False, 184]]]
+            Defaults to False.
         """
         self.traces = []
         # Determine the filesize once.
@@ -420,7 +457,8 @@ class SEGYFile(object):
             try:
                 trace = SEGYTrace(self.file, self.data_encoding, self.endian,
                                   unpack_headers=unpack_headers,
-                                  filesize=filesize, headonly=headonly)
+                                  filesize=filesize, headonly=headonly,
+                                  map_header=map_header)
                 if yield_each_trace:
                     yield trace
                 else:
@@ -533,7 +571,8 @@ class SEGYTrace(object):
     Convenience class that internally handles a single SEG Y trace.
     """
     def __init__(self, file=None, data_encoding=4, endian='>',
-                 unpack_headers=False, filesize=None, headonly=False):
+                 unpack_headers=False, filesize=None, headonly=False,
+                 map_header=False):
         """
         Convenience class that internally handles a single SEG Y trace.
 
@@ -573,6 +612,16 @@ class SEGYTrace(object):
             will be read and unpacked. Has a huge impact on memory usage. Data
             can be read and unpacked on-the-fly after reading the file.
             Defaults to False.
+        :type map_header: list
+        :param non map_header: List of lists with headerwords that have been
+            reassigned. Formatting should be as follows
+                [[length, name_1, special_type, start_byte],
+                ...
+                [length, name_2, special_type, start_byte]]
+            Example:
+                [[4, 'delay', False, 180],
+                [[4, 'vessel_speed', False, 184]]]
+            Defaults to False.
         """
         self.endian = endian
         self.data_encoding = data_encoding
@@ -593,9 +642,9 @@ class SEGYTrace(object):
             else:
                 self.filesize = os.fstat(self.file.fileno())[6]
         # Otherwise read the file.
-        self._read_trace(unpack_headers=unpack_headers, headonly=headonly)
+        self._read_trace(unpack_headers=unpack_headers, headonly=headonly, map_header=map_header)
 
-    def _read_trace(self, unpack_headers=False, headonly=False):
+    def _read_trace(self, unpack_headers=False, headonly=False, map_header=False):
         """
         Reads the complete next header starting at the file pointer at
         self.file.
@@ -610,6 +659,16 @@ class SEGYTrace(object):
             will be read and unpacked. Has a huge impact on memory usage. Data
             can be read and unpacked on-the-fly after reading the file.
             Defaults to False.
+        :type map_header: list
+        :param non map_header: List of lists with headerwords that have been
+            reassigned. Formatting should be as follows
+                [[length, name_1, special_type, start_byte],
+                ...
+                [length, name_2, special_type, start_byte]]
+            Example:
+                [[4, 'delay', False, 180],
+                [[4, 'vessel_speed', False, 184]]]
+            Defaults to False.
         """
         trace_header = self.file.read(240)
         # Check if it is smaller than 240 byte.
@@ -618,7 +677,8 @@ class SEGYTrace(object):
             raise SEGYTraceHeaderTooSmallError(msg)
         self.header = SEGYTraceHeader(trace_header,
                                       endian=self.endian,
-                                      unpack_headers=unpack_headers)
+                                      unpack_headers=unpack_headers,
+                                      map_header=map_header)
         # The number of samples in the current trace.
         npts = self.header.number_of_samples_in_this_trace
         self.npts = npts
@@ -646,7 +706,7 @@ class SEGYTrace(object):
             self.data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[
                 self.data_encoding](self.file, npts, endian=self.endian)
 
-    def write(self, file, data_encoding=None, endian=None):
+    def write(self, file, data_encoding=None, endian=None, map_header=False):
         """
         Writes the Trace to a file like object.
 
@@ -657,7 +717,7 @@ class SEGYTrace(object):
         self.header.number_of_samples_in_this_trace = len(self.data)
 
         # Write the header.
-        self.header.write(file, endian=endian)
+        self.header.write(file, endian=endian, map_header=map_header)
         if data_encoding is None:
             data_encoding = self.data_encoding
         if endian is None:
@@ -787,7 +847,7 @@ class SEGYTraceHeader(object):
     """
     Convenience class that handles reading and writing of the trace headers.
     """
-    def __init__(self, header=None, endian='>', unpack_headers=False):
+    def __init__(self, header=None, endian='>', unpack_headers=False, map_header=False):
         """
         Will take the 240 byte of the trace header and unpack all values with
         the given endianness.
@@ -804,6 +864,16 @@ class SEGYTraceHeader(object):
             unpacked during reading the file. Has a huge impact on the memory
             usage and the performance. They can be unpacked on-the-fly after
             being read. Defaults to False.
+        :type map_header: list
+        :param non map_header: List of lists with headerwords that have been
+            reassigned. Formatting should be as follows
+                [[length, name_1, special_type, start_byte],
+                ...
+                [length, name_2, special_type, start_byte]]
+            Example:
+                [[4, 'delay', False, 180],
+                [[4, 'vessel_speed', False, 184]]]
+            Defaults to False.
         """
         self.endian = endian
         if header is None:
@@ -819,32 +889,76 @@ class SEGYTraceHeader(object):
             self.unpacked_header = header
         else:
             self.unpacked_header = None
-            self._read_trace_header(header)
+            self._read_trace_header(header, map_header=map_header)
 
-    def _read_trace_header(self, header):
+    def _read_trace_header(self, header, map_header=False):
         """
         Reads the 240 byte long header and unpacks all values into
         corresponding class attributes.
+        :type map_header: list
+        :param non map_header: List of lists with headerwords that have been
+            reassigned. Formatting should be as follows
+                [[length, name_1, special_type, start_byte],
+                ...
+                [length, name_2, special_type, start_byte]]
+            Example:
+                [[4, 'delay', False, 180],
+                [[4, 'vessel_speed', False, 184]]]
+            Defaults to False.
         """
         # Set the start position.
         pos = 0
         # Loop over all items in the TRACE_HEADER_FORMAT list which is supposed
         # to be in the correct order.
+        if map_header!=False:
+            rep_index = []
+            for nonstd_item in map_header:
+                _, _, _, nonstd_pos = nonstd_item
+                rep_index.append(nonstd_pos)
+
         for item in TRACE_HEADER_FORMAT:
-            length, name, special_format, _ = item
+            if map_header == False:
+                length, name, special_format, _ = item
+            else:
+                if pos in rep_index:
+                    length, name, special_format, _ = map_header[rep_index.index(pos)]
+                else:
+                    length, name, special_format, _ = item
             string = header[pos: pos + length]
             pos += length
             setattr(self, name, unpack_header_value(self.endian, string,
                                                     length, special_format))
 
-    def write(self, file, endian=None):
+    def write(self, file, endian=None, map_header=False):
         """
         Writes the header to an open file like object.
+        :type map_header: list
+        :param non map_header: List of lists with headerwords that have been
+            reassigned. Formatting should be as follows
+                [[length, name_1, special_type, start_byte],
+                ...
+                [length, name_2, special_type, start_byte]]
+            Example:
+                [[4, 'delay', False, 180],
+                [[4, 'vessel_speed', False, 184]]]
+            Defaults to False.
         """
         if endian is None:
             endian = self.endian
+        if map_header!=False:
+            rep_index = []
+            for nonstd_item in map_header:
+                _, _, _, nonstd_pos = nonstd_item
+                rep_index.append(nonstd_pos)
+
         for item in TRACE_HEADER_FORMAT:
-            length, name, special_format, _ = item
+            if map_header == False:
+                length, name, special_format, _ = item
+            else:
+                if pos in rep_index:
+                    length, name, special_format, _ = map_header[rep_index.index(pos)]
+                else:
+                    length, name, special_format, _ = item
             # Use special format if necessary.
             if special_format:
                 format = ('%s%s' % (endian,
@@ -919,7 +1033,8 @@ class SEGYTraceHeader(object):
 
 
 def _read_segy(file, endian=None, textual_header_encoding=None,
-               unpack_headers=False, headonly=False):
+               unpack_headers=False, headonly=False,
+               map_header=False):
     """
     Reads a SEG Y file and returns a SEGYFile object.
 
@@ -942,6 +1057,16 @@ def _read_segy(file, endian=None, textual_header_encoding=None,
     :param headonly: Determines whether or not the actual data records will be
         read and unpacked. Has a huge impact on memory usage. Data can be read
         and unpacked on-the-fly after reading the file. Defaults to False.
+    :type map_header: list
+    :param non map_header: List of lists with headerwords that have been
+        reassigned. Formatting should be as follows
+            [[length, name_1, special_type, start_byte],
+            ...
+            [length, name_2, special_type, start_byte]]
+        Example:
+            [[4, 'delay', False, 180],
+            [[4, 'vessel_speed', False, 184]]]
+            Defaults to False.
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
@@ -950,16 +1075,19 @@ def _read_segy(file, endian=None, textual_header_encoding=None,
             return _internal_read_segy(
                 open_file, endian=endian,
                 textual_header_encoding=textual_header_encoding,
-                unpack_headers=unpack_headers, headonly=headonly)
+                unpack_headers=unpack_headers, headonly=headonly,
+                map_header=map_header)
     # Otherwise just read it.
     return _internal_read_segy(file, endian=endian,
                                textual_header_encoding=textual_header_encoding,
                                unpack_headers=unpack_headers,
-                               headonly=headonly)
+                               headonly=headonly,
+                               map_header=map_header)
 
 
 def _internal_read_segy(file, endian=None, textual_header_encoding=None,
-                        unpack_headers=False, headonly=False):
+                        unpack_headers=False, headonly=False,
+                        map_header=False):
     """
     Reads on open file object and returns a SEGYFile object.
 
@@ -981,14 +1109,25 @@ def _internal_read_segy(file, endian=None, textual_header_encoding=None,
     :param headonly: Determines whether or not the actual data records will be
         read and unpacked. Has a huge impact on memory usage. Data can be read
         and unpacked on-the-fly after reading the file. Defaults to False.
+    :type map_header: list
+    :param non map_header: List of lists with headerwords that have been
+        reassigned. Formatting should be as follows
+            [[length, name_1, special_type, start_byte],
+            ...
+            [length, name_2, special_type, start_byte]]
+        Example:
+            [[4, 'delay', False, 180],
+            [[4, 'vessel_speed', False, 184]]]
+            Defaults to False.
     """
     return SEGYFile(file, endian=endian,
                     textual_header_encoding=textual_header_encoding,
-                    unpack_headers=unpack_headers, headonly=headonly)
+                    unpack_headers=unpack_headers, headonly=headonly,
+                    map_header=map_header)
 
 
 def iread_segy(file, endian=None, textual_header_encoding=None,
-               unpack_headers=False, headonly=False):
+               unpack_headers=False, headonly=False, map_header=False):
     """
     Iteratively read a SEG-Y field and yield single ObsPy Traces.
 
@@ -1031,6 +1170,16 @@ def iread_segy(file, endian=None, textual_header_encoding=None,
     :param headonly: Determines whether or not the actual data records will be
         read and unpacked. Has a huge impact on memory usage. Data can be read
         and unpacked on-the-fly after reading the file. Defaults to False.
+    :type map_header: list
+    :param non map_header: List of lists with headerwords that have been
+        reassigned. Formatting should be as follows
+            [[length, name_1, special_type, start_byte],
+            ...
+            [length, name_2, special_type, start_byte]]
+        Example:
+            [[4, 'delay', False, 180],
+            [[4, 'vessel_speed', False, 184]]]
+            Defaults to False.
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
@@ -1039,19 +1188,21 @@ def iread_segy(file, endian=None, textual_header_encoding=None,
             for tr in _internal_iread_segy(
                     open_file, endian=endian,
                     textual_header_encoding=textual_header_encoding,
-                    unpack_headers=unpack_headers, headonly=headonly):
+                    unpack_headers=unpack_headers, headonly=headonly,
+                    map_header=map_header):
                 yield tr
             return
     # Otherwise just read it.
     for tr in _internal_iread_segy(
             file, endian=endian,
             textual_header_encoding=textual_header_encoding,
-            unpack_headers=unpack_headers, headonly=headonly):
+            unpack_headers=unpack_headers, headonly=headonly,
+            map_header=map_header):
         yield tr
 
 
 def _internal_iread_segy(file, endian=None, textual_header_encoding=None,
-                         unpack_headers=False, headonly=False):
+                         unpack_headers=False, headonly=False, map_header=False):
     """
     Iteratively read a SEG-Y field and yield single ObsPy Traces.
     """
@@ -1060,7 +1211,8 @@ def _internal_iread_segy(file, endian=None, textual_header_encoding=None,
         unpack_headers=unpack_headers, headonly=headonly, read_traces=False)
     for trace in segy_file._read_traces(unpack_headers=unpack_headers,
                                         headonly=headonly,
-                                        yield_each_trace=True):
+                                        yield_each_trace=True,
+                                        map_header=map_header):
         tr = trace.to_obspy_trace(unpack_trace_headers=unpack_headers,
                                   headonly=headonly)
         # Fill stats that are normally attached to the stream stats.
