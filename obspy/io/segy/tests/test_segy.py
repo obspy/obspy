@@ -348,7 +348,7 @@ class SEGYTestCase(unittest.TestCase):
             # Assert the actual header.
             self.assertEqual(org_header, new_header)
 
-    def test_read_and_write_segy(self, headonly=False):
+    def test_read_and_write_segy(self, headonly=False, map_header=False):
         """
         Reading and writing again should not change a file.
         """
@@ -358,7 +358,7 @@ class SEGYTestCase(unittest.TestCase):
             # Read the file.
             with open(file, 'rb') as f:
                 org_data = f.read()
-            segy_file = _read_segy(file, headonly=headonly)
+            segy_file = _read_segy(file, headonly=headonly, map_header=map_header)
             with NamedTemporaryFile() as tf:
                 out_file = tf.name
                 with warnings.catch_warnings(record=True):
@@ -396,6 +396,12 @@ class SEGYTestCase(unittest.TestCase):
         Reading with headonly=True and writing again should not change a file.
         """
         self.test_read_and_write_segy(headonly=True)
+
+    def test_read_and_write_segy_map_header(self):
+        """
+        Reading with headonly=True and writing again should not change a file.
+        """
+        self.test_read_and_write_segy(map_header=[[4, 'new test', False, 180]])
 
     def test_unpack_binary_file_header(self):
         """
@@ -555,6 +561,17 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.source_measurement_mantissa, 0)
         self.assertEqual(header.source_measurement_exponent, 0)
         self.assertEqual(header.source_measurement_unit, 0)
+
+    def test_unpack_remapped_trace_header(self):
+        """
+        Compares some values of the first trace header with values read with
+        SeisView 2 by the DMNG.
+        """
+        file = os.path.join(self.path, '1.sgy_first_trace')
+        segy = _read_segy(file,map_header=[[4, 'remap_test', False, 156]])
+        header = segy.traces[0].header
+        # Compare the values.
+        self.assertEqual(header.remap_test, 2005)
 
     def test_read_bytes_io(self):
         """
