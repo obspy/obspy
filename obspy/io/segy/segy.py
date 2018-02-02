@@ -1236,8 +1236,8 @@ class SUFile(object):
             being read. Defaults to False.
         :type headonly: bool
         :param headonly: Determines whether or not the actual data records
-            will be unpacked. Useful if one is just interested in the headers. Data
-            will will not be unpackable on-the-fly after reading the file.
+            will be unpacked. Useful if one is just interested in the headers.
+            Data will not be unpackable on-the-fly after reading the file.
             Defaults to False.
         :type yield_each_trace: bool
         :param yield_each_trace: If True, it will yield each trace after it
