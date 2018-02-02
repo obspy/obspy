@@ -787,7 +787,7 @@ class SEGYTraceHeader(object):
     """
     Convenience class that handles reading and writing of the trace headers.
     """
-    def __init__(self, header=None, endian='>', unpack_headers=False):
+    def __init__(self, header=None, endian='>', unpack_headers=False, non_standard=False):
         """
         Will take the 240 byte of the trace header and unpack all values with
         the given endianness.
@@ -826,12 +826,14 @@ class SEGYTraceHeader(object):
         Reads the 240 byte long header and unpacks all values into
         corresponding class attributes.
         """
+        # modify header words if non standard byte-locations are used
         # Set the start position.
         pos = 0
         # Loop over all items in the TRACE_HEADER_FORMAT list which is supposed
         # to be in the correct order.
         for item in TRACE_HEADER_FORMAT:
             length, name, special_format, _ = item
+            if non_standard != False:
             string = header[pos: pos + length]
             pos += length
             setattr(self, name, unpack_header_value(self.endian, string,
@@ -940,8 +942,8 @@ def _read_segy(file, endian=None, textual_header_encoding=None,
         Defaults to False.
     :type headonly: bool
     :param headonly: Determines whether or not the actual data records will be
-        read and unpacked. Has a huge impact on memory usage. Data can be read
-        and unpacked on-the-fly after reading the file. Defaults to False.
+        read and unpacked. Has a huge impact on memory usage. Data is completely
+        ignored. Defaults to False.
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
@@ -979,8 +981,8 @@ def _internal_read_segy(file, endian=None, textual_header_encoding=None,
         Defaults to False.
     :type headonly: bool
     :param headonly: Determines whether or not the actual data records will be
-        read and unpacked. Has a huge impact on memory usage. Data can be read
-        and unpacked on-the-fly after reading the file. Defaults to False.
+        read and unpacked. Has a huge impact on memory usage. Data is completely
+        ignored. Defaults to False.
     """
     return SEGYFile(file, endian=endian,
                     textual_header_encoding=textual_header_encoding,
@@ -1029,8 +1031,8 @@ def iread_segy(file, endian=None, textual_header_encoding=None,
         Defaults to False.
     :type headonly: bool
     :param headonly: Determines whether or not the actual data records will be
-        read and unpacked. Has a huge impact on memory usage. Data can be read
-        and unpacked on-the-fly after reading the file. Defaults to False.
+        read and unpacked. Has a huge impact on memory usage. Data is completely
+        ignored. Defaults to False.
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
@@ -1109,8 +1111,8 @@ def iread_su(file, endian=None, unpack_headers=False, headonly=False):
         Defaults to False.
     :type headonly: bool
     :param headonly: Determines whether or not the actual data records will be
-        read and unpacked. Has a huge impact on memory usage. Data can be read
-        and unpacked on-the-fly after reading the file. Defaults to False.
+        read and unpacked. Has a huge impact on memory usage. Data is completely
+        ignored. Defaults to False.
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
@@ -1170,10 +1172,9 @@ class SUFile(object):
             usage and the performance. They can be unpacked on-the-fly after
             being read. Defaults to False.
         :type headonly: bool
-        :param headonly: Determines whether or not the actual data records
-            will be read and unpacked. Has a huge impact on memory usage. Data
-            can be read and unpacked on-the-fly after reading the file.
-            Defaults to False.
+        :param headonly: Determines whether or not the actual data records will be
+            read and unpacked. Has a huge impact on memory usage. Data is completely
+            ignored. Defaults to False.
         :type read_traces: bool
         :param read_traces: Data traces will only be read if this is set to
             ``True``. The data will be completely ignored if this is set to
