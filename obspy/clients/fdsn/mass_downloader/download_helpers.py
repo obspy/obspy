@@ -1173,25 +1173,27 @@ class ClientDownloadHelper(object):
                         location=channel.location_code, channel=channel.code,
                         intervals=copy.deepcopy(intervals)))
 
-                # Group by locations and apply the channel priority filter to
-                # each.
-                filtered_channels = []
+                if self.restrictions.channel is None:
+                    # Group by locations and apply the channel priority filter
+                    # to each.
+                    filtered_channels = []
 
-                def get_loc(x):
-                    return x.location
+                    def get_loc(x):
+                        return x.location
 
-                for location, _channels in itertools.groupby(
-                        sorted(channels, key=get_loc), get_loc):
-                    filtered_channels.extend(utils.filter_channel_priority(
-                        list(_channels), key="channel",
-                        priorities=self.restrictions.channel_priorities))
-                channels = filtered_channels
+                    for location, _channels in itertools.groupby(
+                            sorted(channels, key=get_loc), get_loc):
+                        filtered_channels.extend(utils.filter_channel_priority(
+                            list(_channels), key="channel",
+                            priorities=self.restrictions.channel_priorities))
+                    channels = filtered_channels
 
-                # Filter to remove unwanted locations according to the priority
-                # list.
-                channels = utils.filter_channel_priority(
-                    channels, key="location",
-                    priorities=self.restrictions.location_priorities)
+                if self.restrictions.location is None:
+                    # Filter to remove unwanted locations according to the
+                    # priority list.
+                    channels = utils.filter_channel_priority(
+                        channels, key="location",
+                        priorities=self.restrictions.location_priorities)
 
                 if not channels:
                     continue

@@ -850,7 +850,7 @@ class Inventory(ComparingObject):
         """
         import matplotlib.pyplot as plt
 
-        if axes:
+        if axes is not None:
             ax1, ax2 = axes
             fig = ax1.figure
         else:
@@ -881,7 +881,7 @@ class Inventory(ComparingObject):
                         msg = "Skipping plot of channel (%s):\n%s"
                         warnings.warn(msg % (str(e), str(cha)), UserWarning)
         # final adjustments to plot if we created the figure in here
-        if not axes:
+        if axes is None:
             from obspy.core.inventory.response import _adjust_bode_plot_figure
             _adjust_bode_plot_figure(fig, plot_degrees, show=False)
         if outfile:
