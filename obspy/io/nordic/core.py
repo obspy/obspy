@@ -218,8 +218,7 @@ def _evmagtonor(mag_type):
     <BLANKLINE>
     """
     if mag_type == 'M':
-        msg = ('Converting generic magnitude to moment magnitude')
-        warnings.warn(msg)
+        warnings.warn('Converting generic magnitude to moment magnitude')
         return "W"
     try:
         mag = mag_mapping[mag_type]
@@ -309,13 +308,13 @@ def confidence_ellipsoid_to_xyz(confidence_ellipsoid):
     from numpy import cos as c, sin as s
     try:
         phi = np.radians(confidence_ellipsoid.major_axis_plunge)
-        # rotation around x'' - phi is referred to interchangeably as:
+        # rotation around y' - phi is referred to interchangeably as:
         #  "elevation", "pitch" or "attitude" - angle 2
         psi = np.radians(confidence_ellipsoid.major_axis_azimuth)
-        # rotation around z - psi is referred to interchangeably as:
+        # rotation around z'' - psi is referred to interchangeably as:
         # "heading" or "yaw" - angle 3
         theta = np.radians(confidence_ellipsoid.major_axis_rotation)
-        # rotation around y' - theta is referred to interchangeably as:
+        # rotation around x - theta is referred to interchangeably as:
         # "bank" or "roll" - angle 1
     except Exception:
         raise NordicParsingError("Cannot parse rotation angles, incomplete "
