@@ -10,11 +10,6 @@ Nordic file format support for ObsPy
 
 .. note::
 
-    Currently does not read nor write moment tensors or focal mechanism
-    solutions from/to Nordic files.
-
-.. note::
-
     Pick time-residuals are handled in event.origins[0].arrivals, with
     the arrival.pick_id linking the arrival (which contain calculated
     information) with the pick.resource_id (where the pick contains only
@@ -313,10 +308,10 @@ def confidence_ellipsoid_to_xyz(confidence_ellipsoid):
         #  "elevation", "pitch" or "attitude" - angle 2
         psi = np.radians(confidence_ellipsoid.major_axis_azimuth)
         # rotation around z - psi is referred to interchangeably as:
-        # "heading" or "yaw" - angle 1
+        # "heading" or "yaw" - angle 3
         theta = np.radians(confidence_ellipsoid.major_axis_rotation)
         # rotation around y' - theta is referred to interchangeably as:
-        # "bank" or "roll" - angle 3
+        # "bank" or "roll" - angle 1
     except Exception:
         raise NordicParsingError("Cannot parse rotation angles, incomplete "
                                  "confidenceEllipsoid?")
@@ -324,12 +319,12 @@ def confidence_ellipsoid_to_xyz(confidence_ellipsoid):
     rotation_matrix = np.empty((3, 3))
     rotation_matrix[0][0] = c(psi) * c(phi)
     rotation_matrix[0][1] = -c(phi) * s(psi)
-    rotation_matrix[0][2] = s(psi) * s(theta) - c(psi) * c(theta) * s(phi)
+    rotation_matrix[0][2] = s(phi)
     rotation_matrix[1][0] = c(theta) * s(psi) + c(psi) * s(phi) * s(theta)
     rotation_matrix[1][1] = c(psi) * c(theta) - s(psi) * s(phi) * s(theta)
-    rotation_matrix[1][2] = c(psi) * s(theta) + c(theta) * s(psi) * s(phi)
-    rotation_matrix[2][0] = s(phi)
-    rotation_matrix[2][1] = -c(phi) * s(theta)
+    rotation_matrix[1][2] = -c(phi) * s(theta)
+    rotation_matrix[2][0] = s(psi) * s(theta) - c(psi) * c(theta) * s(phi)
+    rotation_matrix[2][1] = c(psi) * s(theta) + c(theta) * s(psi) * s(phi)
     rotation_matrix[2][2] = c(phi) * c(theta)
     eigenvalues = np.array([
         confidence_ellipsoid.semi_major_axis_length ** 2,
