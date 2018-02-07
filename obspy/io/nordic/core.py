@@ -68,12 +68,12 @@ def _is_sfile(sfile, encoding='latin-1'):
     if not hasattr(sfile, "readline"):
         try:
             with open(sfile, 'r', encoding=encoding) as f:
-                tags = _get_line_tags(f=f)
+                tags = _get_line_tags(f=f, report=False)
         except Exception:
             return False
     else:
         try:
-            tags = _get_line_tags(f=sfile)
+            tags = _get_line_tags(f=sfile, report=False)
         except Exception:
             return False
     if tags is not None:
@@ -99,7 +99,12 @@ def _is_sfile(sfile, encoding='latin-1'):
         return False
 
 
-def _get_line_tags(f):
+def _get_line_tags(f, report=True):
+    """
+    Associate lines with a known line-type
+    :param f: File open in read
+    :param report: Whether to report warnings about lines not implemented
+    """
     f.seek(0)
     line = f.readline()
     if len(line.rstrip()) != 80:
@@ -115,7 +120,7 @@ def _get_line_tags(f):
             line_id = ' '
         if line_id in accepted_tags:
             tags[line_id].append((line, i))
-        else:
+        elif report:
             warnings.warn("Lines of type %s have not been implemented yet, "
                           "please submit a development request" % line_id)
     return tags
