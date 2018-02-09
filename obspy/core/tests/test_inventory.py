@@ -513,6 +513,19 @@ class InventoryBasemapTestCase(unittest.TestCase):
             fig = inv.plot(show=False)
             cat.plot(outfile=ic.name, fig=fig)
 
+    def test_inventory_epoch_plot(self):
+        """
+        Tests the plotting of epochs defined in inventory objects as time series
+        """
+        inv = read_inventory()
+        with ImageComparison(self.image_dir,
+                             'inventory-epoch-plot.png',
+                             reltol=reltol) as ic:
+            rcParams['savefig.dpi'] = 72
+            fig = inv.plot_epochs(show=False)
+            cat.plot(outfile=ic.name, fig=fig)
+
+
 
 @unittest.skipIf(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),
                  'cartopy not installed')

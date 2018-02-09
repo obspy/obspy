@@ -698,7 +698,7 @@ class Network(BaseNode):
         plot_dict[name] = ([time_tuple], 0, sub_dict)
         return plot_dict
 
-    def plot_epochs(self, outfile=None, colormap=None, combine=True):
+    def plot_epochs(self, outfile=None, colormap=None, show=True, combine=True):
         """
         Plot the epochs of this given inventory object.
         :param outfile: If included, the plot will be saved to a file with the
@@ -707,12 +707,15 @@ class Network(BaseNode):
         :param colormap: If this parameter is included, the plot will use the
             given colorspace for inventory plotting
         :type colormap: matplotlib.colors.LinearSegmentedColormap
+        :param show: If set as true, will display the plot in a window
+        :type show: boolean
         :param combine: If set as true, channels with matching epochs will be
             merged onto the same y-axis values
         :type combine: boolean
         """
         plot_dict = self._get_epoch_plottable_struct()
-        plot_inventory_epochs(plot_dict, outfile, colormap, combine)
+        fig = plot_inventory_epochs(plot_dict, outfile, colormap, show, combine)
+        return fig
 
 
 if __name__ == '__main__':

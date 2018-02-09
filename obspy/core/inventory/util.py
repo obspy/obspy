@@ -864,7 +864,7 @@ def _seed_id_keyfunction(x):
     return x
 
 
-def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None,
+def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None, show=True
                           combine=True):
     """
     Creates a plot from inventory object's epoch plottable structure.
@@ -880,6 +880,8 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None,
     :param colorspace: If this parameter is included, the plot will use the
         given colorspace for inventory plotting
     :type colorspace: matplotlib.colors.LinearSegmentedColormap
+    :param show: If set as true, will display the plot in a window
+    :type show: boolean
     :param combine: If set as true, channels with matching epochs will be set
         to use the same y-axis values
     :type combine: boolean
@@ -921,10 +923,6 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None,
     plt.yticks(y_ticks, y_tick_labels)
     _set_xaxis_obspy_dates(ax)
 
-    """clrs = iter(cm.Dark2(linspace(0, 1, len(y_tick_labels))))
-    for label in sorted(y_tick_labels):
-        clr_dict[label] = next(clrs)"""
-
     if colorspace is None:
         colorspace = cm.Dark2
     clrs = iter(colorspace(linspace(0, 1, len(clr_grps))))
@@ -951,8 +949,9 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None,
     plt.tight_layout()
     if outfile:
         plt.savefig(outfile)
-    else:
+    if show:
         plt.show()
+    return fig
 
 
 def _combine_same_epochs(plot_dict):
