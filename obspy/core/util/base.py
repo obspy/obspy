@@ -39,7 +39,7 @@ DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
                    'io.mseed', 'io.ndk', 'io.nied', 'io.nlloc', 'io.nordic',
                    'io.pdas', 'io.pde', 'io.quakeml', 'io.reftek', 'io.sac',
                    'io.scardec', 'io.seg2', 'io.segy', 'io.seisan', 'io.sh',
-                   'io.shapefile', 'io.seiscomp', 'io.stationtxt',
+                   'io.shapefile', 'io.seiscomp', 'io.stationtxt', 'io.rg16',
                    'io.stationxml', 'io.wav', 'io.xseed', 'io.y', 'io.zmap',
                    'realtime', 'scripts', 'signal', 'taup']
 NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',

@@ -166,6 +166,7 @@ ENTRY_POINTS = {
         'KNET = obspy.io.nied.knet',
         'GCF = obspy.io.gcf.core',
         'REFTEK130 = obspy.io.reftek.core',
+        'RG16 = obspy.io.rg16.core',
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -280,6 +281,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.reftek.core:_is_reftek130',
         'readFormat = obspy.io.reftek.core:_read_reftek130',
         ],
+    'obspy.plugin.waveform.RG16': [
+        'isFormat = obspy.io.rg16.core:is_rg16',
+        'readFormat = obspy.io.rg16.core:read_rg16',
+    ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
         'SC3ML = obspy.io.seiscomp.event',
