@@ -99,7 +99,7 @@ KEYWORDS = [
     'seismology', 'seismogram', 'seismograms', 'shapefile', 'signal', 'slink',
     'spectrogram', 'StationXML', 'taper', 'taup', 'travel time', 'trigger',
     'VERCE', 'WAV', 'waveform', 'WaveServer', 'WaveServerV', 'WebDC',
-    'web service', 'Winston', 'XML-SEED', 'XSEED']
+    'web service', 'Winston', 'XML-SEED', 'XSEED', 'RG-1.6']
 
 # when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
 # when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
