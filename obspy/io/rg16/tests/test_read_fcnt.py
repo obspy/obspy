@@ -11,7 +11,7 @@ import unittest
 from os.path import join, dirname
 
 import obspy
-from obspy.io.rg16.core import read_rg16, is_rg16
+from obspy.io.rg16.core import read_rg16, is_rg16, COMPONENT_MAP
 
 TEST_FCNT_DIRECTORY = join(dirname(__file__), 'data')
 FCNT_FILES = glob.glob(join(TEST_FCNT_DIRECTORY, '*'))
@@ -23,7 +23,7 @@ assert len(FCNT_FILES), 'No test files found'
 class TestReadRG16(unittest.TestCase):
 
     supported_samps = {250, 500, 1000, 2000}
-    supported_components = {1, 3}
+    supported_component_number = {1, 3}
 
     def test_rg16_files_identified(self):
         """
@@ -47,13 +47,40 @@ class TestReadRG16(unittest.TestCase):
             for tr in fcnt_stream:
                 self.assertIn(tr.stats.sampling_rate, self.supported_samps)
 
-    def test_components(self):
+    def test_component_number(self):
         """
         Ensure there are either 1 type of channel or 3.
         """
         for fcnt_stream in FCNT_STREAMS:
             seed_ids = len({tr.id for tr in fcnt_stream})
-            self.assertIn(seed_ids, self.supported_components)
+            self.assertIn(seed_ids, self.supported_component_number)
+
+    def test_channel_code(self):
+        """
+        Ensure the channel code is seed compliant.
+        """
+        expected_components = set(COMPONENT_MAP.values())
+
+        for fcnt_stream in FCNT_STREAMS:
+            for tr in fcnt_stream:
+                channel = tr.stats.channel
+                component = channel[-1]
+                self.assertEqual(len(channel), 3)
+                self.assertIn(component, expected_components)
+            seed_ids = len({tr.id for tr in fcnt_stream})
+            self.assertIn(seed_ids, self.supported_component_number)
+
+    def test_custom_component_mapping(self):
+        """
+        Ensure a custom component mapping works
+        """
+        fcnt = FCNT_FILES[0]
+        component_map = {2: 'Z', 3: 'E', 4: 'N'}
+        expected_comonents = set(component_map.values())
+
+        st = read_rg16(fcnt, component_map=component_map)
+        for tr in st:
+            assert tr.stats.channel[-1] in expected_comonents
 
     def test_can_write(self):
         """
