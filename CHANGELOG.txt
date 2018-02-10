@@ -7,6 +7,8 @@ master:
  - obspy.io.shapefile:
    * Add possibility to add custom database columns when writing catalog
      objects to shapefile (see #2012)
+ - obspy.io
+    * added read support for receiver gather format v. 1.6 (see #2070)
  - obspy.signal.PPSD:
    * Fixed exact trace cutting for PSD segments (see #2040).
    * Timestamp representations internally and in npz I/O were changed to use
