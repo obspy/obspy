@@ -165,8 +165,8 @@ def quick_merge(traces, small_number=.000001):
     """
     Specialized function for merging traces produced by read_rg16.
 
-    Requires that are of the same datatype, have the same sampling_rate,
-    and dont have data overlaps.
+    Requires that traces are of the same datatype, have the same
+    sampling_rate, and dont have data overlaps.
 
     :param traces: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
     :param small_number:
@@ -186,9 +186,8 @@ def quick_merge(traces, small_number=.000001):
     group_numbers = np.unique(group)
     out = [None] * len(group_numbers)  # init output list
     for index, gnum in enumerate(group_numbers):
-        # ar_to_merge = ar[group == gnum]
         trace_ar_to_merge = trace_ar[group == gnum]
-        new_data = np.concatenate(trace_ar_to_merge['data'])
+        new_data = np.concatenate(list(trace_ar_to_merge['data']))
         # get updated stats object
         new_stats = copy.deepcopy(trace_ar_to_merge['stats'][0])
         new_stats.npts = len(new_data)
