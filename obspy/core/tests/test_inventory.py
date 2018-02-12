@@ -518,13 +518,17 @@ class InventoryBasemapTestCase(unittest.TestCase):
         Tests the plotting of epochs defined in inventory objects as time series
         """
         inv = read_inventory()
+        reltol = 1.1
+        # Coordinate lines might be slightly off, depending on the basemap
+        # version.
+        if BASEMAP_VERSION < [1, 0, 7]:
+            reltol = 3.0
         with ImageComparison(self.image_dir,
                              'inventory-epoch-plot.png',
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
             fig = inv.plot_epochs(show=False)
-            cat.plot(outfile=ic.name, fig=fig)
-
+            fig.savefig(ic.name)
 
 
 @unittest.skipIf(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),

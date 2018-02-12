@@ -916,7 +916,8 @@ class Inventory(ComparingObject):
         plot_dict[str('')] = ([time_tuple], 0, sub_dict)
         return plot_dict
 
-    def plot_epochs(self, outfile=None, colormap=None, show=True, combine=True):
+    def plot_epochs(self, outfile=None, colormap=None, show=True,
+                    combine=True):
         """
         Plot the epochs of this given inventory object.
         :param outfile: If included, the plot will be saved to a file with the
