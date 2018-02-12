@@ -524,7 +524,8 @@ class Station(BaseNode):
         plot_dict[name] = ([time_tuple], 0, sub_dict)
         return plot_dict
 
-    def plot_epochs(self, outfile=None, colormap=None, show=True, combine=True):
+    def plot_epochs(self, outfile=None, colormap=None, show=True,
+                    combine=True):
         """
         Plot the epochs of this given inventory object.
         :param outfile: If included, the plot will be saved to a file with the
@@ -540,7 +541,8 @@ class Station(BaseNode):
         :type combine: boolean
         """
         plot_dict = self._get_epoch_plottable_struct()
-        fig = plot_inventory_epochs(plot_dict, outfile, colormap, show, combine)
+        fig = plot_inventory_epochs(plot_dict, outfile, colormap, show,
+                                    combine)
         return fig
 
 
