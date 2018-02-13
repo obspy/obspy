@@ -10,6 +10,7 @@ import io
 import unittest
 from os.path import join, dirname
 
+import numpy as np
 import obspy
 from obspy.io.rg16.core import read_rg16, is_rg16
 
@@ -69,6 +70,24 @@ class TestReadRG16(unittest.TestCase):
                 self.assertIn(component, expected_components)
             seed_ids = len({tr.id for tr in fcnt_stream})
             self.assertIn(seed_ids, self.supported_component_number)
+
+    def test_standard_orientation(self):
+        """
+        Ensure the standard orientation maps channels and flips Z trace data.
+        """
+        components = {'Z', 'N', 'E'}
+        for filename, st_default in zip(FCNT_FILES, FCNT_STREAMS):
+            st_mapped = read_rg16(filename, standard_orientation=True)
+            # make sure components have been mapped to principal directions
+            for tr in st_mapped:
+                self.assertIn(tr.stats.channel[-1], components)
+            # make sure z component is reverse of 2
+            tr_2 = st_default.select(component='2')
+            tr_z = st_mapped.select(component='Z')
+            # apparently the one component test file only has channel 3 so
+            # we need to make sure a z component is found in each
+            if len(tr_2) and len(tr_z):
+                self.assertTrue(np.all(tr_2[0].data == -tr_z[0].data))
 
     def test_can_write(self):
         """

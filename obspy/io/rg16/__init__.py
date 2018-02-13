@@ -47,18 +47,34 @@ read):
    type. If you are reading a rg16 file that is several GB in size and that
    contains many traces it may be beneficial to use this parameter.
 
+2. The parameters "starttime" and "endtime" can be used to only load slices of
+   the file at a time, avoiding the need to store the whole file in memory at
+   one time.
+
+3. Setting the parameter "standard_orientation" to True indicates the file
+   either contains 1C instruments or that the nodes were deployed with the
+   gold contact terminals facing north. It will then map the components to
+   Z, N, and E (if 3C) as well as correct the polarity for the Z component.
+
 >>> import obspy
 >>> from obspy.io.rg16.core import read_rg16
 >>> from obspy.core.util import get_example_file
 >>> filename = get_example_file('three_chans_six_traces.fcnt')
->>> # these are all equivalent, from slowest to fastest:
+>>> # these are all equivalent:
 >>> st = obspy.read(filename)
 >>> st = obspy.read(filename, format='rg16')
 >>> st = read_rg16(filename)
 
-If the file was very large using the merge parameter is advisable.
+If the file was very large using the merge parameter may speed up downstream
+processing.
 
 >>> st = obspy.read(filename, merge=True)
+
+If the instruments were single component, or if the gold contact terminals
+were deployed facing north, setting standard_orientation to True will result
+in a stream with seed compliant channel codes with components Z, N, E.
+
+>>> st = obspy.read(filename, standard_orientation=True)
 
 """
 from __future__ import (absolute_import, division, print_function,

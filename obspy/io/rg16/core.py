@@ -66,17 +66,20 @@ BIG_TS = UTCDateTime('3000-01-01').timestamp
 # map sampling rate to band code according to seed standard
 BAND_MAP = {2000: 'G', 1000: 'G', 500: 'D', 250: 'D'}
 
+# geophone instrument code
 INSTRUMENT_CODE = 'P'
 
+# mapping for "standard_orientation"
+STANDARD_COMPONENT_MAP = {'2': 'Z', '3': 'N', '4': 'E'}
 
 # ------------------- read and format check functions
 
 
 @open_file
 def read_rg16(fi, headonly=False, starttime=None, endtime=None, merge=False,
-              **kwargs):
+              standard_orientation=False, **kwargs):
     """
-    Read fairfield nodal's Receiver Gather File Format version 1.6-1.
+    Read Fairfield Nodal's Receiver Gather File Format version 1.6-1.
 
     :param fi: A path to the file to read or a buffer of an opened file.
     :type fi: str, buffer
@@ -91,14 +94,18 @@ def read_rg16(fi, headonly=False, starttime=None, endtime=None, merge=False,
         continuous data files having 100,000+ traces this will create
         more manageable streams.
     :type merge: bool
+    :param standard_orientation:
+        Setting the parameter "standard_orientation" to True indicates the
+        file either contains 1C instruments or that the nodes were deployed
+        with the gold contact terminals facing north. It will then map the
+        components to Z, N, and E (if 3C) as well as correct the polarity for
+        the Z component.
+    :type standard_orientation: bool
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
-    :param component_map:
-        A mapping from the component codes used in rg16 (2, 3, 4) to desired
-        component code based on deployment orientation.
-        The default is (Z, 1, 2). See https://imgur.com/a/4aneG.
+
     """
     if not is_rg16(fi):
-        raise #ValueError('read_fcnt was not passed a Fairfield RG 1.6 file')
+        raise ValueError('read_fcnt was not passed a Fairfield RG 1.6 file')
     # get timestamps
     time1 = UTCDateTime(starttime).timestamp if starttime else 0
     time2 = UTCDateTime(endtime).timestamp if endtime else BIG_TS
@@ -114,7 +121,8 @@ def read_rg16(fi, headonly=False, starttime=None, endtime=None, merge=False,
     theader_start = eheader_start + (ex_headers * 32)
     # get traces and return stream
     traces = _make_traces(fi, theader_start, gheader, head_only=headonly,
-                          starttime=time1, endtime=time2, merge=merge)
+                          starttime=time1, endtime=time2, merge=merge,
+                          standard_orientation=standard_orientation)
     return Stream(traces=traces)
 
 
@@ -142,7 +150,8 @@ def is_rg16(fi, **kwargs):
 
 
 def _make_traces(fi, data_block_start, gheader, head_only=False,
-                 starttime=None, endtime=None, merge=False):
+                 starttime=None, endtime=None, merge=False,
+                 standard_orientation=False):
     """ make obspy traces from trace blocks and headers """
     traces = []  # list to store traces
     trace_position = data_block_start
@@ -152,7 +161,7 @@ def _make_traces(fi, data_block_start, gheader, head_only=False,
         except ValueError:  # this is the end, my only friend, the end
             break
         # get stats
-        stats = _make_stats(theader, gheader)
+        stats = _make_stats(theader, gheader, standard_orientation)
         # expected jump to next start position
         jumps = stats.npts * 4 + theader['num_ext_blocks'] * 32 + 20
         # if wrong starttime / endtime just keep going and update position
@@ -164,6 +173,8 @@ def _make_traces(fi, data_block_start, gheader, head_only=False,
         else:  # else read data
             data_start = trace_position + 20 + theader['num_ext_blocks'] * 32
             data = _read(fi, data_start, theader['samples'] * 4, '>f4')
+            if standard_orientation and stats.channel[-1] == 'Z':
+                data = -data
         traces.append(Trace(data=data, header=stats))
         trace_position += jumps
     if merge:
@@ -171,12 +182,14 @@ def _make_traces(fi, data_block_start, gheader, head_only=False,
     return traces
 
 
-def _make_stats(theader, gheader):
+def _make_stats(theader, gheader, standard_orientation):
     """ make Stats object """
     sampling_rate = int(1000. / (gheader['base_scan'] / 16.))
 
     # get channel code
     component = str(theader['channel_code'])
+    if standard_orientation:
+        component = STANDARD_COMPONENT_MAP[component]
     chan = BAND_MAP[sampling_rate] + INSTRUMENT_CODE + component
 
     statsdict = dict(
