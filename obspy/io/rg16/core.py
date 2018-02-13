@@ -6,7 +6,7 @@ from future.builtins import *  # NOQA
 import numpy as np
 from obspy.core import Stream, Trace, Stats, UTCDateTime
 
-from .util import read, open_file, read_block, quick_merge
+from .util import _read, open_file, _read_block, _quick_merge
 
 # --------------------- define specs of needed blocks
 
@@ -106,7 +106,7 @@ def read_rg16(fi, headonly=False, starttime=None, endtime=None, merge=False,
     time1 = UTCDateTime(starttime).timestamp if starttime else 0
     time2 = UTCDateTime(endtime).timestamp if endtime else BIG_TS
     # read general header information
-    gheader = read_block(fi, general_header_block)
+    gheader = _read_block(fi, general_header_block)
     # byte number channel sets start at in file
     chan_set_start = (gheader['num_additional_headers'] + 1) * 32
     # get the byte number the extended headers start
@@ -134,9 +134,9 @@ def is_rg16(fi, **kwargs):
     """
     try:
         fi.seek(0)
-        sample_format = read(fi, 2, 2, 'bcd')
-        manufacturer_code = read(fi, 16, 1, 'bcd')
-        version = read(fi, 42, 2, None)
+        sample_format = _read(fi, 2, 2, 'bcd')
+        manufacturer_code = _read(fi, 16, 1, 'bcd')
+        version = _read(fi, 42, 2, None)
     except ValueError:  # if file too small
         return False
     con1 = version == b'\x01\x06' and sample_format == 8058
@@ -154,7 +154,7 @@ def _make_traces(fi, data_block_start, gheader, head_only=False,
     trace_position = data_block_start
     while True:  # read traces until parser falls of the end of file
         try:
-            theader = read_block(fi, trace_header_block, trace_position)
+            theader = _read_block(fi, trace_header_block, trace_position)
         except ValueError:  # this is the end, my only friend, the end
             break
         # get stats
@@ -169,11 +169,11 @@ def _make_traces(fi, data_block_start, gheader, head_only=False,
             data = np.array([])
         else:  # else read data
             data_start = trace_position + 20 + theader['num_ext_blocks'] * 32
-            data = read(fi, data_start, theader['samples'] * 4, '>f4')
+            data = _read(fi, data_start, theader['samples'] * 4, '>f4')
         traces.append(Trace(data=data, header=stats))
         trace_position += jumps
     if merge:
-        traces = quick_merge(traces)
+        traces = _quick_merge(traces)
     return traces
 
 

@@ -53,7 +53,7 @@ def open_file(func):
 READ_FUNCS = {}
 
 
-def register_read_func(dtype):
+def _register_read_func(dtype):
     def _wrap(func):
         READ_FUNCS[dtype] = func
         return func
@@ -61,14 +61,14 @@ def register_read_func(dtype):
     return _wrap
 
 
-def read_block(fi, spec, start_bit=0):
+def _read_block(fi, spec, start_bit=0):
     out = {}
     for name, start, length, fmt in spec:
-        out[name] = read(fi, start_bit + np.array(start), length, fmt)
+        out[name] = _read(fi, start_bit + np.array(start), length, fmt)
     return out
 
 
-def read(fi, position, length, dtype):
+def _read(fi, position, length, dtype):
     """
     Read one or more bytes using provided datatype.
 
@@ -91,7 +91,7 @@ def read(fi, position, length, dtype):
         assert len(position) == len(length) == len(dtype)
         for pos, leng, dty in zip(position, length, dtype):
             try:
-                return read(fi, pos, leng, dty)
+                return _read(fi, pos, leng, dty)
             except ValueError:
                 pass
         else:
@@ -106,8 +106,8 @@ def read(fi, position, length, dtype):
         return data[0] if len(data) == 1 else data
 
 
-@register_read_func('bcd')
-def read_bcd(fi, length):
+@_register_read_func('bcd')
+def _read_bcd(fi, length):
     """
     Interprets a byte string as binary coded decimals. See:
     https://en.wikipedia.org/wiki/Binary-coded_decimal#Basics
@@ -122,36 +122,36 @@ def read_bcd(fi, length):
     return np.dot(TENS[-len(bits):], bits)[0]
 
 
-@register_read_func(None)
-def read_bytes(fi, length):
+@_register_read_func(None)
+def _read_bytes(fi, length):
     """ simply read raw bytes """
     return fi.read(length)
 
 
-@register_read_func('<i3')
-def read_24_bit_little(fi, length):
+@_register_read_func('<i3')
+def _read_24_bit_little(fi, length):
     """ read a 3 byte int, little endian """
     chunk = fi.read(length)
     return struct.unpack('<I', chunk + b'\x00')[0]
 
 
-@register_read_func('>i3')
-def read_24_bit_big(fi, length):
+@_register_read_func('>i3')
+def _read_24_bit_big(fi, length):
     """ read a 3 byte int, big endian """
     chunk = fi.read(length)
     return struct.unpack('>I', b'\x00' + chunk)[0]
 
 
-@register_read_func('>i.')
-def read_4_bit_left(fi, length):
+@_register_read_func('>i.')
+def _read_4_bit_left(fi, length):
     """ read the four bits on the left """
     assert length == 1, 'half byte reads only support 1 byte length'
     ints = np.fromstring(fi.read(length), dtype='<u1')[0]
     return np.bitwise_and(ints >> 4, 0x0f)
 
 
-@register_read_func('<i.')
-def read_4_bit_right(fi, length):
+@_register_read_func('<i.')
+def _read_4_bit_right(fi, length):
     """ read the four bits on the right """
     assert length == 1, 'half byte reads only support 1 byte length'
     ints = np.fromstring(fi.read(length), dtype='<u1')[0]
@@ -161,7 +161,7 @@ def read_4_bit_right(fi, length):
 # ---------------------- stream manipulation stuff
 
 
-def quick_merge(traces, small_number=.000001):
+def _quick_merge(traces, small_number=.000001):
     """
     Specialized function for merging traces produced by read_rg16.
 

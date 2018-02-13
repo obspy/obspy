@@ -8,7 +8,7 @@ from future.builtins import *  # NOQA
 import unittest
 from io import BytesIO
 
-from obspy.io.rg16.util import read
+from obspy.io.rg16.util import _read
 
 
 def byte_io(byte_str):
@@ -36,7 +36,7 @@ class TestRG16Util(unittest.TestCase):
         Ensure bcd encoding returns expected values.
         """
         for byte, length, answer in self.bcd:
-            out = read(byte_io(byte), 0, length, 'bcd')
+            out = _read(byte_io(byte), 0, length, 'bcd')
             self.assertEqual(out, answer)
 
     def test_ff_raises(self):
@@ -44,7 +44,7 @@ class TestRG16Util(unittest.TestCase):
         Ensure FF raises. BCD values for any half byte past 9 should raise.
         """
         with self.assertRaises(ValueError) as e:
-            read(byte_io(b'\xFF'), 0, 1, 'bcd')
+            _read(byte_io(b'\xFF'), 0, 1, 'bcd')
         assert 'invalid bcd values' in str(e.exception)
 
     # --- test half byte reads
@@ -61,7 +61,7 @@ class TestRG16Util(unittest.TestCase):
         Ensure reading half bytes (4 bit) works.
         """
         for byte, format, answer in self.halfsies:
-            self.assertEqual(read(byte_io(byte), 0, 1, format), answer)
+            self.assertEqual(_read(byte_io(byte), 0, 1, format), answer)
 
     # --- test 24 bit (3 byte) reads
 
@@ -77,7 +77,7 @@ class TestRG16Util(unittest.TestCase):
         Ensure 3 byte chunks are correctly read.
         """
         for byte, format, answer in self.why_use_3_bytes:
-            self.assertEqual(read(byte_io(byte), 0, 3, format), answer)
+            self.assertEqual(_read(byte_io(byte), 0, 3, format), answer)
 
     # --- test backup
 
@@ -87,7 +87,7 @@ class TestRG16Util(unittest.TestCase):
         if the first read attempt raises.
         """
         fi = byte_io(b'\xff\x98')
-        self.assertEqual(read(fi, [0, 1], [1, 1], ['bcd', 'bcd']), 98)
+        self.assertEqual(_read(fi, [0, 1], [1, 1], ['bcd', 'bcd']), 98)
 
     def test_read_raises_when_all_fail(self):
         """
@@ -95,7 +95,7 @@ class TestRG16Util(unittest.TestCase):
         """
         fi = byte_io(b'\xff\xff')
         with self.assertRaises(ValueError):
-            read(fi, [0, 1], [1, 1], ['bcd', 'bcd'])
+            _read(fi, [0, 1], [1, 1], ['bcd', 'bcd'])
 
 
 def suite():
