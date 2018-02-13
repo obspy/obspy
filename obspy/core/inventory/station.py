@@ -509,6 +509,9 @@ class Station(BaseNode):
         return fig
 
     def _get_epoch_plottable_struct(self):
+        # list epochs of this inventory sub-object, sample rate (0 / undefined)
+        # and the epochs of sub-objects (channels)
+        # see same method in inventory.py for more details
         sub_dict = {}
         plot_dict = {}
         name = str(self.code)

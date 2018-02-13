@@ -368,6 +368,9 @@ class Channel(BaseNode):
             outfile=outfile)
 
     def _get_epoch_plottable_struct(self):
+        # channel is leaf object of inventory tree -- has no sub-dictionary
+        # but does have a sample rate defined
+        # for more information see same-name method in inventory.py
         plot_dict = {}
         name = str(self.location_code) + "." + str(self.code)
         if self.start_date is not None:

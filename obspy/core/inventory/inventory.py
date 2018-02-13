@@ -896,8 +896,13 @@ class Inventory(ComparingObject):
 
     def _get_epoch_plottable_struct(self):
         # get structure of inventory epoch's data in format
-        # {inventory: (start, end, subdictionary)}
+        # {inventory: ([(start, end)...], sample_rate, subdictionary)}
         # where subdictionary is recursively the same for netwk, stn, ch data
+        # note that sample rate is only defined for the station level
+        # and subdictionary of inventory is network objects
+        # the conistent formatting at each level means that each level can be
+        # concatenated together -- i.e., each network epoch is a diff. object
+        # in obspy, but here they have their times merged together by name
         plot_dict = {}
         sub_dict = {}
         for network in set(self.networks):

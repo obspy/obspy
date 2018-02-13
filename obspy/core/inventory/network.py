@@ -678,6 +678,7 @@ class Network(BaseNode):
         return fig
 
     def _get_epoch_plottable_struct(self):
+        # see the description for same-named method in inventory.py
         plot_dict = {}
         sub_dict = {}
         name = str(self.code)
@@ -693,7 +694,7 @@ class Network(BaseNode):
         else:
             start = UTCDateTime(0)
             end = UTCDateTime(0)
-        # third value is sample_rate, not defined for network objects
+        # time tuple is just start, end times (does not include sample rates)
         time_tuple = (start, end)
         plot_dict[name] = ([time_tuple], 0, sub_dict)
         return plot_dict

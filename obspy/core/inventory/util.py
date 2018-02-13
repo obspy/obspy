@@ -955,13 +955,15 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None, show=True,
 
 
 def _combine_same_epochs(plot_dict):
-    # merge_dict = {}
-    # epochs_dict = {}
+    # if multiple inventory objects at station level have matching epochs,
+    # merge them into a single line to be plotted and produce new label that
+    # identifies all possible subcomponents based on that
     merge_dict, epochs_dict = _merge_epochs(plot_dict)
     return _create_same_epochs_string(merge_dict, epochs_dict)
 
 
 def _merge_epochs(plot_dict, prefix=''):
+    # merges stations that have the same epochs into a single plot axis
     merge_dict = {}
     epochs_dict = {}
     for key in plot_dict.keys():
@@ -976,10 +978,10 @@ def _merge_epochs(plot_dict, prefix=''):
                                                           prefix=label)
             # multiple stations? different names
             merge_dict.update(partial_merge)
-
             for key in partial_epochs.keys():
                 epochs_dict[key] = partial_epochs[key]
         else:
+            # append the epoch of current objects
             ep_tup = []
             for (start, end) in sorted(epochs):
                 ep_tup + [start.datetime, end.datetime]
@@ -993,6 +995,7 @@ def _merge_epochs(plot_dict, prefix=''):
 
 
 def _create_same_epochs_string(merge_dict, epochs_dict):
+    # used to collect data with matching epochs to abbreviate large inv. plots
     for key in epochs_dict.keys():
         merged = sorted(epochs_dict[key])
         match = merged[0]
@@ -1005,6 +1008,7 @@ def _create_same_epochs_string(merge_dict, epochs_dict):
             for name in merged:
                 split = name.split(sep)
                 loc = split[2]
+                # location may be blank, use '_' to identify in merged list
                 if loc == '':
                     loc_chars.add('_')
                 else:
@@ -1055,7 +1059,9 @@ def _merge_plottable_structs(eps1, eps2):
             (epochs_1, samp_rate_1, sub_dict_1) = eps1[key]
             (epochs_2, samp_rate_2, sub_dict_2) = eps2[key]
 
-            # may want to refactor so sample rate is component in epoch ranges
+            # sample rate isn't TOO important, though it may vary by epoch
+            # we just use the first as a matter of convention for dashing lines
+            # (otherwise we wouldn't need to keep track of it)
             epochs = epochs_1 + epochs_2
             sub_dict = _merge_plottable_structs(sub_dict_1, sub_dict_2)
             merged_dict[key] = (epochs, samp_rate_1, sub_dict)
