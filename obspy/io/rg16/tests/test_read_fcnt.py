@@ -11,7 +11,7 @@ import unittest
 from os.path import join, dirname
 
 import obspy
-from obspy.io.rg16.core import read_rg16, is_rg16, COMPONENT_MAP
+from obspy.io.rg16.core import read_rg16, is_rg16
 
 TEST_FCNT_DIRECTORY = join(dirname(__file__), 'data')
 FCNT_FILES = glob.glob(join(TEST_FCNT_DIRECTORY, '*'))
@@ -59,7 +59,7 @@ class TestReadRG16(unittest.TestCase):
         """
         Ensure the channel code is seed compliant.
         """
-        expected_components = set(COMPONENT_MAP.values())
+        expected_components = {'2', '3', '4'}
 
         for fcnt_stream in FCNT_STREAMS:
             for tr in fcnt_stream:
@@ -69,18 +69,6 @@ class TestReadRG16(unittest.TestCase):
                 self.assertIn(component, expected_components)
             seed_ids = len({tr.id for tr in fcnt_stream})
             self.assertIn(seed_ids, self.supported_component_number)
-
-    def test_custom_component_mapping(self):
-        """
-        Ensure a custom component mapping works
-        """
-        fcnt = FCNT_FILES[0]
-        component_map = {2: 'Z', 3: 'E', 4: 'N'}
-        expected_comonents = set(component_map.values())
-
-        st = read_rg16(fcnt, component_map=component_map)
-        for tr in st:
-            assert tr.stats.channel[-1] in expected_comonents
 
     def test_can_write(self):
         """
