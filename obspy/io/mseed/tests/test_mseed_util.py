@@ -212,17 +212,17 @@ class MSEEDUtilTestCase(unittest.TestCase):
         fmt = '>HHBBBxHHhhBBBxlxxH'
         with open(filename, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
-                buf.seek(20,0)
+                buf.seek(20, 0)
                 data = buf.read(28)
                 values = list(unpack(fmt, data))
                 values[7] = 0
                 values[8] = 0
                 data = pack(fmt, *values)
-                buf.seek(20,0)
+                buf.seek(20, 0)
                 buf.write(data)
-                buf.seek(0,0)
+                buf.seek(0, 0)
                 info = util.get_record_information(buf)
-                self.assertEqual(info['samp_rate'],0)
+                self.assertEqual(info['samp_rate'], 0)
 
     def test_get_data_quality(self):
         """
