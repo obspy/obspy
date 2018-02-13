@@ -1,6 +1,6 @@
 """
 obspy.io.rg16 - receiver gather v1.6 read support for ObsPy
-=============================================================
+===========================================================
 
 Functions to read waveform data from Receiver Gather 1.6-1 format.
 This format is used for continuous data by
@@ -74,7 +74,7 @@ If the file was very large using the merge parameter is advisable.
 
 If three component instruments were deployed with the interface terminals
 facing south, using a custom component mapping and reversing the polarity of
-each trace is advisable.
+each trace can be used to get accurate Z, N, E components.
 
 >>> component_map = {2: 'Z', 3: 'N', 4: 'E'}
 >>> st = obspy.read(filename, component_map=component_map)
