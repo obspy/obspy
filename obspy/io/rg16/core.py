@@ -174,7 +174,10 @@ def _make_traces(fi, data_block_start, gheader, head_only=False,
 def _make_stats(theader, gheader):
     """ make Stats object """
     sampling_rate = int(1000. / (gheader['base_scan'] / 16.))
-    channel_code = _get_channel_code(theader['channel_code'], sampling_rate)
+
+    # get channel code
+    component = str(theader['channel_code'])
+    chan = BAND_MAP[sampling_rate] + INSTRUMENT_CODE + component
 
     statsdict = dict(
         starttime=UTCDateTime(theader['time'] / 1000000.),
@@ -183,16 +186,9 @@ def _make_stats(theader, gheader):
         network=str(theader['line_number']),
         station=str(theader['point']),
         location=str(theader['index']),
-        channel=channel_code,
+        channel=chan,
     )
     return Stats(statsdict)
-
-
-def _get_channel_code(code, sampling_rate):
-    """ return a seed compliant (almost) channel code """
-    component = str(code)
-    band_code = BAND_MAP[sampling_rate]
-    return band_code + INSTRUMENT_CODE + component
 
 
 # Note: I am leaving this function in the code as it may be needed if the
