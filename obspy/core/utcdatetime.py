@@ -24,7 +24,10 @@ from obspy.core.compatibility import py3_round
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
+
+# common attributes
 YMDHMS = ('year', 'month', 'day', 'hour', 'minute', 'second')
+YJHMS = ('year', 'julday', 'hour', 'minute', 'second')
 YMDHMS_FORMAT = "%04d-%02d-%02dT%02d:%02d:%02d"
 
 
@@ -219,6 +222,7 @@ class UTCDateTime(object):
     """
     DEFAULT_PRECISION = 6
     _initialized = False
+    _has_warned = False
 
     def __init__(self, *args, **kwargs):
         """
@@ -424,7 +428,7 @@ class UTCDateTime(object):
         if not isinstance(value, int):
             raise TypeError('nanoseconds must be set as int/long type')
         self.__ns = value
-        # instance should be fully initialized after setting ns
+        # flag that this instance has been initialized; any changes will warn
         self._initialized = True
 
     _ns = property(_get_ns, _set_ns)
@@ -973,8 +977,9 @@ class UTCDateTime(object):
             ndigits = min(self.precision, other.precision) - 9
             if self.precision != other.precision:
                 msg = ('Comparing UTCDateTime objects of different precision'
-                       ' is not defined and may lead to surpising behavior')
-                warnings.warn(msg)
+                       ' is not defined will raise an Exception in a future'
+                       ' version of obspy')
+                warnings.warn(msg, ObsPyDeprecationWarning)
             a = py3_round(self._ns, ndigits)
             b = py3_round(other._ns, ndigits)
             return op_func(a, b)
@@ -1153,10 +1158,13 @@ class UTCDateTime(object):
         return None
 
     def __setattr__(self, key, value):
-        if self._initialized:
+        # raise a warning if overwriting previous ns (see #2072)
+        if self._initialized and not self._has_warned:
             msg = ('Setting attributes on UTCDateTime instances will raise an'
                    ' Exception in a future version of Obspy.')
             warnings.warn(msg, ObsPyDeprecationWarning)
+            # only issue the warning once per object
+            self.__dict__['_has_warned'] = True
         super(UTCDateTime, self).__setattr__(key, value)
 
     def strftime(self, format):
@@ -1449,6 +1457,35 @@ class UTCDateTime(object):
         self.__precision = int(value)
 
     precision = property(_get_precision, _set_precision)
+
+    def replace(self, **kwargs):
+        """
+        Replace one time parameter and return a new UTCDateTime object.
+
+        The following parameters are supported: year, month, day, julday,
+        hour, minue second, microsecond.
+        """
+        # check parameters, raise Value error if any are unsupported
+        supported_args = set(YMDHMS) | set(YJHMS) | {'microsecond'}
+        if not set(kwargs).issubset(supported_args):
+            unsupported_args = set(kwargs) - supported_args
+            msg = ('%s are not supported arguments for replace, supported '
+                   'arguments are %s') % (unsupported_args, supported_args)
+            raise ValueError(msg)
+        # ensure julday is used correctly if used
+        if kwargs.get('julday') is not None:
+            if 'month' in kwargs or 'day' in kwargs:
+                msg = 'If julday is used month and day cannot be used.'
+                raise ValueError(msg)
+            time_paramters = YJHMS  # use julday
+
+        else:
+            time_paramters = YMDHMS  # use month and day
+        # get a dict of time parameters to pass to UTCDateTime constructor
+        new_dict = {x: getattr(self, x) for x in time_paramters}
+        new_dict['microsecond'] = self.microsecond
+        new_dict.update(kwargs)
+        return UTCDateTime(**new_dict)
 
     def toordinal(self):
         """
