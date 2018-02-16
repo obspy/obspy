@@ -1154,7 +1154,6 @@ class UTCDateTime(object):
 
     def __setattr__(self, key, value):
         if self._initialized:
-            import pdb; pdb.set_trace()
             msg = ('Setting attributes on UTCDateTime instances will raise an'
                    ' Exception in a future version of Obspy.')
             warnings.warn(msg, ObsPyDeprecationWarning)
