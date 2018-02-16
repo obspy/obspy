@@ -633,13 +633,6 @@ class UTCDateTime(object):
 
         :param value: Year
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12)
-        >>> dt.year = 2010
-        >>> dt
-        UTCDateTime(2010, 2, 11, 10, 11, 12)
         """
         self._set(year=value)
 
@@ -667,13 +660,6 @@ class UTCDateTime(object):
 
         :param value: Month
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12)
-        >>> dt.month = 10
-        >>> dt
-        UTCDateTime(2012, 10, 11, 10, 11, 12)
         """
         self._set(month=value)
 
@@ -700,13 +686,6 @@ class UTCDateTime(object):
 
         :param value: Day
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12)
-        >>> dt.day = 20
-        >>> dt
-        UTCDateTime(2012, 2, 20, 10, 11, 12)
         """
         self._set(day=value)
 
@@ -768,13 +747,6 @@ class UTCDateTime(object):
 
         :param value: Hours
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12)
-        >>> dt.hour = 20
-        >>> dt
-        UTCDateTime(2012, 2, 11, 20, 11, 12)
         """
         self._set(hour=value)
 
@@ -801,13 +773,6 @@ class UTCDateTime(object):
 
         :param value: Minutes
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12)
-        >>> dt.minute = 20
-        >>> dt
-        UTCDateTime(2012, 2, 11, 10, 20, 12)
         """
         self._set(minute=value)
 
@@ -834,13 +799,6 @@ class UTCDateTime(object):
 
         :param value: Seconds
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12)
-        >>> dt.second = 20
-        >>> dt
-        UTCDateTime(2012, 2, 11, 10, 11, 20)
         """
         self._set(second=value)
 
@@ -867,13 +825,6 @@ class UTCDateTime(object):
 
         :param value: Microseconds
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12, 345234)
-        >>> dt.microsecond = 999123
-        >>> dt
-        UTCDateTime(2012, 2, 11, 10, 11, 12, 999123)
         """
         self._set(microsecond=value)
 
@@ -900,13 +851,6 @@ class UTCDateTime(object):
 
         :param value: Julian day
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2008, 12, 5, 12, 30, 35, 45020)
-        >>> dt.julday = 275
-        >>> dt
-        UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         """
         self._set(julday=value)
 
@@ -1497,13 +1441,6 @@ class UTCDateTime(object):
             >>> dt = UTCDateTime(precision=5)
             >>> dt.precision
             5
-
-        (3) Set precision for an existing UTCDateTime object.
-
-            >>> dt = UTCDateTime()
-            >>> dt.precision = 9
-            >>> dt.precision
-            9
         """
         if value > 9:
             msg = 'UTCDateTime precision above 9 is not supported, using 9'
