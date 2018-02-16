@@ -21,6 +21,7 @@ import warnings
 
 import numpy as np
 from obspy.core.compatibility import py3_round
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 YMDHMS = ('year', 'month', 'day', 'hour', 'minute', 'second')
@@ -217,6 +218,7 @@ class UTCDateTime(object):
     .. _ISO8601:2004: https://en.wikipedia.org/wiki/ISO_8601
     """
     DEFAULT_PRECISION = 6
+    _initialized = False
 
     def __init__(self, *args, **kwargs):
         """
@@ -422,6 +424,8 @@ class UTCDateTime(object):
         if not isinstance(value, int):
             raise TypeError('nanoseconds must be set as int/long type')
         self.__ns = value
+        # instance should be fully initialized after setting ns
+        self._initialized = True
 
     _ns = property(_get_ns, _set_ns)
     ns = property(_get_ns, _set_ns)
@@ -1203,6 +1207,13 @@ class UTCDateTime(object):
         """
         # explicitly flag it as unhashable
         return None
+
+    def __setattr__(self, key, value):
+        if self._initialized:
+            msg = ('Setting attributes on UTCDateTime instances will raise an'
+                   ' Exception in a future version of Obspy.')
+            warnings.warn(msg, ObsPyDeprecationWarning)
+        super(UTCDateTime, self).__setattr__(key, value)
 
     def strftime(self, format):
         """

@@ -1218,9 +1218,9 @@ class UTCDateTimeTestCase(unittest.TestCase):
         t = UTCDateTime('2018-01-17T12:34:56.789012Z')
         # test getter
         self.assertEqual(t.ns, 1516192496789012000)
-        # test setter
+        # test init with ns (set attr is depreciated)
         x = 1516426162899012123
-        t.ns = x
+        t = UTCDateTime(ns=x)
         self.assertEqual(t.ns, x)
         self.assertEqual(t.day, 20)
         self.assertEqual(t.microsecond, 899012)
