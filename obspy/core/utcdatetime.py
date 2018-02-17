@@ -1460,10 +1460,28 @@ class UTCDateTime(object):
 
     def replace(self, **kwargs):
         """
-        Replace one time parameter and return a new UTCDateTime object.
+        Return a new UTCDateTime object with one or more parameters replaced.
 
         The following parameters are supported: year, month, day, julday,
-        hour, minue second, microsecond.
+        hour, minute second, microsecond.
+
+        .. rubric:: Example
+
+        (1) Get time of the 15th day of the same month to which a timestamp
+            belongs.
+
+            >>> dt = UTCDateTime(999999999)
+            >>> dt2 = dt.replace(day=15)
+            >>> print(dt2)
+            2001-09-15T01:46:39.000000Z
+
+
+        (2) Determine day of the week 2 months before Guy Fawkes day.
+
+            >>> dt = UTCDateTime('1605-11-05')
+            >>> dt.replace(month=9).weekday
+            0
+
         """
         # check parameters, raise Value error if any are unsupported
         supported_args = set(YMDHMS) | set(YJHMS) | {'microsecond'}
