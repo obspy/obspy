@@ -77,7 +77,7 @@ STANDARD_COMPONENT_MAP = {'2': 'Z', '3': 'N', '4': 'E'}
 
 @open_file
 def read_rg16(fi, headonly=False, starttime=None, endtime=None, merge=False,
-              standard_orientation=False, **kwargs):
+              contacts_north=False, **kwargs):
     """
     Read Fairfield Nodal's Receiver Gather File Format version 1.6-1.
 
@@ -94,13 +94,13 @@ def read_rg16(fi, headonly=False, starttime=None, endtime=None, merge=False,
         continuous data files having 100,000+ traces this will create
         more manageable streams.
     :type merge: bool
-    :param standard_orientation:
-        Setting the parameter "standard_orientation" to True indicates the
-        file either contains 1C instruments or that the nodes were deployed
-        with the gold contact terminals facing north. It will then map the
+    :param contacts_north:
+        Setting this parameter to True indicates the file either contains 1C
+        traces or that the instruments were deployed with the gold contact
+        terminals facing north. If this parameter is used, it will map the
         components to Z, N, and E (if 3C) as well as correct the polarity for
-        the Z component.
-    :type standard_orientation: bool
+        the vertical component.
+    :type contacts_north: bool
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
 
     """
@@ -122,7 +122,7 @@ def read_rg16(fi, headonly=False, starttime=None, endtime=None, merge=False,
     # get traces and return stream
     traces = _make_traces(fi, theader_start, gheader, head_only=headonly,
                           starttime=time1, endtime=time2, merge=merge,
-                          standard_orientation=standard_orientation)
+                          standard_orientation=contacts_north)
     return Stream(traces=traces)
 
 

@@ -77,7 +77,7 @@ class TestReadRG16(unittest.TestCase):
         """
         components = {'Z', 'N', 'E'}
         for filename, st_default in zip(FCNT_FILES, FCNT_STREAMS):
-            st_mapped = read_rg16(filename, standard_orientation=True)
+            st_mapped = read_rg16(filename, contacts_north=True)
             # make sure components have been mapped to principal directions
             for tr in st_mapped:
                 self.assertIn(tr.stats.channel[-1], components)
