@@ -231,5 +231,4 @@ def _get_trace_groups(ar, diff):
 
 if __name__ == '__main__':
     import doctest
-
     doctest.testmod(exclude_empty=True)

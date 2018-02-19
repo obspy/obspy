@@ -76,13 +76,13 @@ STANDARD_COMPONENT_MAP = {'2': 'Z', '3': 'N', '4': 'E'}
 
 
 @open_file
-def read_rg16(fi, headonly=False, starttime=None, endtime=None, merge=False,
-              contacts_north=False, **kwargs):
+def read_rg16(filename, headonly=False, starttime=None, endtime=None,
+              merge=False, contacts_north=False, **kwargs):
     """
     Read Fairfield Nodal's Receiver Gather File Format version 1.6-1.
 
-    :param fi: A path to the file to read or a buffer of an opened file.
-    :type fi: str, buffer
+    :param filename: A path to the file or a buffer of an opened file.
+    :type filename: str, buffer
     :param headonly: If True don't read data, only header information.
     :type headonly: bool
     :param starttime: If not None dont read traces that end before starttime.
@@ -104,13 +104,13 @@ def read_rg16(fi, headonly=False, starttime=None, endtime=None, merge=False,
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
 
     """
-    if not is_rg16(fi):
+    if not is_rg16(filename):
         raise ValueError('read_fcnt was not passed a Fairfield RG 1.6 file')
     # get timestamps
     time1 = UTCDateTime(starttime).timestamp if starttime else 0
     time2 = UTCDateTime(endtime).timestamp if endtime else BIG_TS
     # read general header information
-    gheader = _read_block(fi, general_header_block)
+    gheader = _read_block(filename, general_header_block)
     # byte number channel sets start at in file
     chan_set_start = (gheader['num_additional_headers'] + 1) * 32
     # get the byte number the extended headers start
@@ -120,26 +120,26 @@ def read_rg16(fi, headonly=False, starttime=None, endtime=None, merge=False,
     # get byte number trace headers start
     theader_start = eheader_start + (ex_headers * 32)
     # get traces and return stream
-    traces = _make_traces(fi, theader_start, gheader, head_only=headonly,
+    traces = _make_traces(filename, theader_start, gheader, head_only=headonly,
                           starttime=time1, endtime=time2, merge=merge,
                           standard_orientation=contacts_north)
     return Stream(traces=traces)
 
 
 @open_file
-def is_rg16(fi, **kwargs):
+def is_rg16(filename, **kwargs):
     """
     Determine if a file or buffer contains an rg16 file.
 
-    :param fi: A path to the file to read or a buffer of an opened file.
-    :type fi: str, buffer
+    :param filename: A path to the file or a buffer of an opened file.
+    :type filename: str, buffer
     :return: bool
     """
     try:
-        fi.seek(0)
-        sample_format = _read(fi, 2, 2, 'bcd')
-        manufacturer_code = _read(fi, 16, 1, 'bcd')
-        version = _read(fi, 42, 2, None)
+        filename.seek(0)
+        sample_format = _read(filename, 2, 2, 'bcd')
+        manufacturer_code = _read(filename, 16, 1, 'bcd')
+        version = _read(filename, 42, 2, None)
     except ValueError:  # if file too small
         return False
     con1 = version == b'\x01\x06' and sample_format == 8058
