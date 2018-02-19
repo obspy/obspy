@@ -42,10 +42,10 @@ The rg16 format can be read using two methods:
 Noteworthy parameters of  :func:`obspy.io.rg16.core.read_rg16`,
 which can also be passed as kwargs to :func:`~obspy.core.stream.read`:
 
-*  merge: If True will merge traces belonging to the same channel
-   into a single trace. This is much more efficient than the
-   :func: `obspy.core.Steam.merge` when there are many (thousands) of traces
-   because assumptions about data continuity and type can be made.
+* merge: If True will merge traces belonging to the same channel
+  into a single trace. This is much more efficient than other merge methods
+  when there are many (thousands) of traces because assumptions about data
+  continuity and type can be made.
 
 * starttime and enditme: Can be passed
   :class:`~obspy.core.utcdatetime.UTCDateTime` instances in order to only
@@ -55,7 +55,8 @@ which can also be passed as kwargs to :func:`~obspy.core.stream.read`:
 * contacts_north: If True indicates the file either contains single component
   traces or that the instruments were deployed with the gold contact terminals
   facing north. If this parameter is used, it will map the components to Z, N,
-  and E (if 3C) as well as correct the polarity for the vertical component.
+  and E (if 3 component) as well as correct the polarity for the vertical
+  component.
 
 >>> import obspy
 >>> from obspy.io.rg16.core import read_rg16
