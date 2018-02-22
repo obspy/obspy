@@ -204,9 +204,11 @@ class MSEEDUtilTestCase(unittest.TestCase):
     def test_issue2069(self):
         """
         Tests the util._get_ms_file_info method with sample rate of 0.
-        Reads a datafile and sets sr factor and multipier to 0 to avoid
-        adding a test file with sr=0
+        Reads a datafile and sets sr factor and multipier to 0 and and mseed
+        ASCII LOG file with a sample rate of 0.
         """
+
+        # Test with a file by setting sr = 0
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         fmt = '>HHBBBxHHhhBBBxlxxH'
@@ -223,6 +225,11 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 buf.seek(0, 0)
                 info = util.get_record_information(buf)
                 self.assertEqual(info['samp_rate'], 0)
+
+        # Test with an actual sr = 0 file
+        filename = os.path.join(self.path, 'data', 'rt130_sr0_cropped.mseed')
+        info = util.get_record_information(filename)
+        self.assertEqual(info['samp_rate'], 0)
 
     def test_get_data_quality(self):
         """
