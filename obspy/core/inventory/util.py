@@ -1112,6 +1112,7 @@ def _plot_traversal_helper(plot_dict, y_dict, mg_dict, offset=0, prefix=''):
 
 
 def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, mg, pfx=''):
+
     # private method to add lines and rectangles to a given plot object
 
     # offsets to put the line markers' tips at ends of lines
