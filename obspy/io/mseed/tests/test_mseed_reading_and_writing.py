@@ -236,7 +236,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_records',
                            'gaps.mseed', 'qualityflags.mseed', 'test.mseed',
                            'timingquality.mseed', 'blockette008.mseed',
-                           'fullseed.mseed', 'various_noise_records.mseed']
+                           'fullseed.mseed', 'various_noise_records.mseed',
+                           'rt130_sr0_cropped.mseed']
 
         # Non Mini-SEED file names.
         non_mseed_filenames = ['test_mseed_reading_and_writing.py',
@@ -1546,6 +1547,24 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             'filesize': 14336,
             'number_of_records': 10,
             'record_length': 512})
+
+    def test_read_mseed_sr0(self):
+        """
+        Test reading a small mseed ASCII LOG file.
+        """
+        filename = os.path.join(self.path, 'data', 'rt130_sr0_cropped.mseed')
+        st = read(filename)
+        tr = st[0]
+        self.assertEqual(0.0, tr.stats.sampling_rate)
+        self.assertEqual(tr.stats.mseed,
+                         {'dataquality': 'D',
+                          'number_of_records': 1,
+                          'encoding': 'ASCII',
+                          'byteorder': '>',
+                          'record_length': 512,
+                          'filesize': 2560})
+        self.assertEqual(''.join(tr.data.astype(str)),
+                         '001:00:00:00 REF TEK 130\r\n')
 
 
 def suite():

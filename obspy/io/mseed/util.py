@@ -764,14 +764,17 @@ def _get_record_information(file_object, offset=0, endian=None):
         elif (samp_rate_factor < 0) and (samp_rate_mult) < 0:
             samp_rate = -1.0 / float(samp_rate_factor * samp_rate_mult)
         else:
-            # if everything is unset or 0 set sample rate to 1
-            samp_rate = 1
+            samp_rate = 0
 
     info['samp_rate'] = samp_rate
 
     info['starttime'] = starttime
+    # If sample rate is zero set endtime to startime
+    if samp_rate == 0:
+        info['endtime'] = starttime
     # Endtime is the time of the last sample.
-    info['endtime'] = starttime + (npts - 1) / samp_rate
+    else:
+        info['endtime'] = starttime + (npts - 1) / samp_rate
     info['byteorder'] = endian
 
     info['number_of_records'] = int(info['filesize'] //

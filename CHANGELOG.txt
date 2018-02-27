@@ -12,6 +12,8 @@
  - obspy.io.mseed:
    * Ability to read files that have embedded chunks of non SEED data.
      (see #1981, #2057).
+   * Fix util.get_start_and_end_time returning sample rate = 0 when
+     sample rate = 1 (see #2069)
  - obspy.io.reftek:
    * Fix problems reading some Reftek 130 files, presumably due to floating
      point accuracy issues in comparing timestamps. Internal representation of
