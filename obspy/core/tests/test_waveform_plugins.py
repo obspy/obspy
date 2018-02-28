@@ -2,7 +2,9 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY2, native_str
 
+import builtins
 import io
 import os
 import threading
@@ -514,6 +516,38 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         st = read("/path/to/tarfile_impostor.mseed")
         self.assertEqual(st[0].id, "10.864.1B.004")
+
+    def test_read_invalid_filename(self):
+        """
+        Tests that we get a sane error message when calling read()
+        with a filename that doesn't exist
+        """
+        doesnt_exist = 'dsfhjkfs'
+        for i in range(10):
+            if os.path.exists(doesnt_exist):
+                doesnt_exist += doesnt_exist
+                continue
+            break
+        else:
+            self.fail('unable to get invalid file path')
+        doesnt_exist = native_str(doesnt_exist)
+
+        if PY2:
+            exception_type = getattr(builtins, 'IOError')
+        else:
+            exception_type = getattr(builtins, 'FileNotFoundError')
+        exception_msg = "[Errno 2] No such file or directory: '{}'"
+
+        formats = _get_entry_points(
+            'obspy.plugin.catalog', 'readFormat').keys()
+        # try read_inventory() with invalid filename for all registered read
+        # plugins and also for filetype autodiscovery
+        formats = [None] + list(formats)
+        for format in formats:
+            with self.assertRaises(exception_type) as e:
+                read(doesnt_exist, format=format)
+            self.assertEqual(
+                str(e.exception), exception_msg.format(doesnt_exist))
 
 
 def suite():
