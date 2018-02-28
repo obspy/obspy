@@ -361,7 +361,8 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     url = server
     if not urlparse(url).scheme:
         url = "https://" + url
-    response = requests.post(url=url, headers=headers, data=params)
+    response = requests.post(url=url, headers=headers,
+                             data=params.encode('UTF-8'))
     # get the response
     if response.status_code == 200:
         report_url = response.json().get('url', server)
