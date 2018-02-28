@@ -44,6 +44,10 @@ class ReftekTestCase(unittest.TestCase):
         self.reftek_file = os.path.join(self.datapath, self.reftek_filename)
         self.reftek_file_steim2 = os.path.join(self.datapath,
                                                '104800000_000093F8')
+        self.reftek_file_32 = os.path.join(
+            self.datapath, '230000005_0036EE80_cropped.rt130')
+        self.reftek_file_32_npz = os.path.join(
+            self.datapath, '230000005_0036EE80_cropped.npz')
         self.mseed_filenames = [
             "2015282_225051_0ae4c_1_1.msd",
             "2015282_225051_0ae4c_1_2.msd", "2015282_225051_0ae4c_1_3.msd"]
@@ -553,6 +557,23 @@ class ReftekTestCase(unittest.TestCase):
             self.assertEqual(tr.stats.station, 'KW1')
         for tr in st[8:]:
             self.assertEqual(tr.stats.station, 'TL02')
+
+    def test_reading_file_with_encoding_32(self):
+        """
+        Test reading a file with encoding '32' (uncompressed 32 bit integer)
+
+        Only tests unpacked sample data, everything else should be covered by
+        existing tests.
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            st = _read_reftek130(self.reftek_file_32)
+        # read expected data
+        npz = np.load(self.reftek_file_32_npz)
+        # compare it
+        self.assertEqual(len(st), 3)
+        for tr, (_, expected) in zip(st, sorted(npz.items())):
+            np.testing.assert_array_equal(expected, tr.data)
 
 
 def suite():

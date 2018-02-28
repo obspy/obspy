@@ -254,11 +254,19 @@ class Reftek130(object):
                 eh = EHPacket(eh_packets[0])
             else:
                 eh = EHPacket(et_packets[0])
-            # only "C0" encoding supported right now
+            # only C0, C2, 16, 32 encodings supported right now
             if eh.data_format == b"C0":
                 encoding = 'C0'
             elif eh.data_format == b"C2":
                 encoding = 'C2'
+            elif eh.data_format == b"16":
+                msg = ("Reftek130 encoding '16' is implemented but untested, "
+                       "please provide example data for testing at "
+                       "https://github.com/obspy/obspy/issues/new.")
+                warnings.warn(msg)
+                encoding = '16'
+            elif eh.data_format == b"32":
+                encoding = '32'
             else:
                 msg = ("Reftek data encoding '{}' not implemented yet. Please "
                        "open an issue on GitHub and provide a small (< 50kb) "
@@ -305,7 +313,19 @@ class Reftek130(object):
                         sample_data = np.array([], dtype=np.int32)
                         npts = packets_["number_of_samples"].sum()
                     else:
-                        sample_data = _unpack_C0_C2_data(packets_, encoding)
+                        if encoding in ('C0', 'C2'):
+                            sample_data = _unpack_C0_C2_data(packets_,
+                                                             encoding)
+                        elif encoding in ('16', '32'):
+                            dtype = {'16': np.int16, '32': np.int32}[encoding]
+                            # just fix endianness and use correct dtype
+                            sample_data = np.require(
+                                packets_['payload'],
+                                requirements=['C_CONTIGUOUS'])
+                            # either int16 or int32
+                            sample_data = sample_data.flatten().view(dtype)
+                            # switch endianness, rt130 stores in big endian
+                            sample_data = sample_data.byteswap()
                         npts = len(sample_data)
 
                     tr = Trace(data=sample_data, header=copy.deepcopy(header))
