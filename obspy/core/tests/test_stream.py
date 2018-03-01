@@ -2524,6 +2524,8 @@ class StreamTestCase(unittest.TestCase):
         inv = read_inventory("/path/to/ffbx.stationxml", format="STATIONXML")
         parser = Parser("/path/to/ffbx.dataless")
         st_expected = read('/path/to/ffbx_rotated.slist', format='SLIST')
+        st_unrotated = read("/path/to/ffbx_unrotated_gaps.mseed",
+                            format="MSEED")
         for tr in st_expected:
             # ignore format specific keys and processing which also holds
             # version number
@@ -2531,7 +2533,7 @@ class StreamTestCase(unittest.TestCase):
             tr.stats.pop('_format')
         # check rotation using both Inventory and Parser as metadata input
         for metadata in (inv, parser):
-            st = read("/path/to/ffbx_unrotated_gaps.mseed", format="MSEED")
+            st = st_unrotated.copy()
             st.rotate("->ZNE", inventory=metadata)
             # do some checks on results
             self.assertEqual(len(st), 30)
@@ -2547,6 +2549,33 @@ class StreamTestCase(unittest.TestCase):
                 tr_got.stats.pop('_format')
                 tr_got.stats.pop('processing')
                 self.assertEqual(tr_got.stats, tr_expected.stats)
+        # check that using something like `components="Z12"` also works,
+        # although that's not what is expected for input but it might be a too
+        # easy to make mistake that people will likely do it again in the
+        # future anyway..
+        components = 'Z12'
+        with warnings.catch_warnings(record=True) as w:
+            warnings.filterwarnings('always')
+            st = st_unrotated.copy()
+            result = st.rotate("->ZNE", inventory=inv,
+                               components=components)
+        # check that rotation to ZNE worked..
+        self.assertEqual(set(tr.stats.channel[-1] for tr in result),
+                         set('ZNE'))
+        # check emitted warning message
+        self.assertTrue(len(w) >= 1)
+        msg = ("'components' is expected to be a list of one or more "
+               "component code combinations (e.g. `components=['Z12']` or "
+               "`components=['Z12', '123']`)")
+        for w_ in w:
+            try:
+                self.assertEqual(str(w_.message), msg)
+            except AssertionError:
+                continue
+            else:
+                break
+        else:
+            self.fail(msg='Expected warning message not shown.')
 
 
 def suite():

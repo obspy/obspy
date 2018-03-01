@@ -3223,6 +3223,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             would rotate sets of "BHZ", "BH1", "BH2" (and "HHZ", "HH1", "HH2",
             etc.) channels at the same station.
         """
+        # be nice to users that specify e.g. ``components='ZNE'``..
+        # compare http://lists.swapbytes.de/archives/obspy-users/
+        # 2018-March/002692.html
+        if isinstance(components, (str, native_str)):
+            msg = ("'components' is expected to be a list of one or more "
+                   "component code combinations (e.g. `components=['Z12']` or "
+                   "`components=['Z12', '123']`)")
+            warnings.warn(msg)
+            components = [components]
+
         for component_pair in components:
             st = self.select(component="[{}]".format(component_pair))
             netstaloc = sorted(set(
