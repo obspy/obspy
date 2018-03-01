@@ -176,7 +176,9 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
                 else:
                     candidates = [second]
         elif len(candidates) >= 2:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "Please contact the developers. candidates: %s" %
+                str(candidates))
 
         # Finally found the correct chunk
         ret_val = candidates[0]
