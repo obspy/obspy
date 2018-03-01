@@ -1195,7 +1195,9 @@ class ClientDownloadHelper(object):
                     new_channel = Channel(
                         location=channel.location_code, channel=channel.code,
                         intervals=copy.deepcopy(intervals))
-                    # Get rid of duplicated entries in the availability.
+                    # Multiple channel epochs would result in duplicate
+                    # channels which we don't want. Bit of a silly logic here
+                    # to get rid of them.
                     if new_channel not in channels:
                         channels.append(new_channel)
 
