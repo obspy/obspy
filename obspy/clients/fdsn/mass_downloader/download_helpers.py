@@ -599,7 +599,7 @@ class ClientDownloadHelper(object):
                 if st not in rejected_stations:
                     rejected_stations.append(st)
 
-        # Otherwise it will add new stations approximating a Poisson disk
+            # Otherwise it will add new stations approximating a Poisson disk
         # distribution.
         else:
             while stations:
@@ -1192,9 +1192,12 @@ class ClientDownloadHelper(object):
                     if (channel.start_date > self.restrictions.endtime) or \
                             (channel.end_date < self.restrictions.starttime):
                         continue
-                    channels.append(Channel(
+                    new_channel = Channel(
                         location=channel.location_code, channel=channel.code,
-                        intervals=copy.deepcopy(intervals)))
+                        intervals=copy.deepcopy(intervals))
+                    # Get rid of duplicated entries in the availability.
+                    if new_channel not in channels:
+                        channels.append(new_channel)
 
                 if self.restrictions.channel is None:
                     # Group by locations and apply the channel priority filter
