@@ -102,12 +102,15 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
     # intervals, each of which will end up in a separate file.
     filenames = collections.defaultdict(list)
     for chunk in chunks:
-        filenames[tuple(chunk[:4])].append({
+        key = tuple(chunk[:4])
+        filename = {
             "starttime": chunk[4],
             "endtime": chunk[5],
             "filename": chunk[6],
             "current_latest_endtime": None,
-            "sequence_number": None})
+            "sequence_number": None}
+        if filename not in filenames[key]:
+            filenames[key].append(filename)
 
     sequence_number = [0]
 
