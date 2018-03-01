@@ -60,6 +60,8 @@ master:
  - obspy.clients.fdsn:
    * Mass downloader: Priority lists are now correctly overwritten if `channel`
      and/or `location` are set (see #1810, #2031, #2047).
+   * A few fixes and stability improvements for the mass downloader
+     (see #2081).
  - obspy.io.mseed:
    * Ability to read files that have embedded chunks of non SEED data.
      (see #1981, #2057).
