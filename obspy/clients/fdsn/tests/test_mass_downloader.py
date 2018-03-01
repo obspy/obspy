@@ -2237,6 +2237,21 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
 
+    def test_get_availability_with_multiple_channel_epochs(self):
+        """
+        Make sure to get rid of du
+        """
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data,
+                         "channel_level_fdsn_with_multiple_epochs.txt"))
+        c.get_availability()
+        self.assertEqual(list(c.stations.keys()), [("TA", "857A")])
+        self.assertEqual(len(c.stations[("TA", "857A")].channels), 1)
+        chan = c.stations[("TA", "857A")].channels[0]
+        self.assertEqual(chan.intervals[0].start, c.restrictions.starttime)
+        self.assertEqual(chan.intervals[0].end, c.restrictions.endtime)
+
     def test_excluding_networks_and_stations(self):
         """
         Tests the excluding of networks and stations.
