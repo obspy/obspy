@@ -3214,15 +3214,23 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type inventory: :class:`~obspy.core.inventory.inventory.Inventory` or
             :class:`~obspy.io.xseed.parser.Parser`
         :param inventory: Inventory or Parser with metadata of channels.
-        :type components: list or tuple
+        :type components: list or tuple or str
         :param components: List of combinations of three (case sensitive)
             component characters. Rotations are executed in this order, so
             order might matter in very strange cases (e.g. if traces with more
             than three component codes are present for the same SEED ID down to
             the component code). For example, specifying components ``"Z12"``
             would rotate sets of "BHZ", "BH1", "BH2" (and "HHZ", "HH1", "HH2",
-            etc.) channels at the same station.
+            etc.) channels at the same station. If only a single set of
+            component codes is used, this option can also be specified as a
+            string (e.g. ``components='Z12'``).
         """
+        # be nice to users that specify e.g. ``components='ZNE'``..
+        # compare http://lists.swapbytes.de/archives/obspy-users/
+        # 2018-March/002692.html
+        if isinstance(components, (str, native_str)):
+            components = [components]
+
         for component_pair in components:
             st = self.select(component="[{}]".format(component_pair))
             netstaloc = sorted(set(

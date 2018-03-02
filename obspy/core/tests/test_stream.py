@@ -2524,6 +2524,8 @@ class StreamTestCase(unittest.TestCase):
         inv = read_inventory("/path/to/ffbx.stationxml", format="STATIONXML")
         parser = Parser("/path/to/ffbx.dataless")
         st_expected = read('/path/to/ffbx_rotated.slist', format='SLIST')
+        st_unrotated = read("/path/to/ffbx_unrotated_gaps.mseed",
+                            format="MSEED")
         for tr in st_expected:
             # ignore format specific keys and processing which also holds
             # version number
@@ -2531,7 +2533,7 @@ class StreamTestCase(unittest.TestCase):
             tr.stats.pop('_format')
         # check rotation using both Inventory and Parser as metadata input
         for metadata in (inv, parser):
-            st = read("/path/to/ffbx_unrotated_gaps.mseed", format="MSEED")
+            st = st_unrotated.copy()
             st.rotate("->ZNE", inventory=metadata)
             # do some checks on results
             self.assertEqual(len(st), 30)
@@ -2547,6 +2549,14 @@ class StreamTestCase(unittest.TestCase):
                 tr_got.stats.pop('_format')
                 tr_got.stats.pop('processing')
                 self.assertEqual(tr_got.stats, tr_expected.stats)
+
+        # check that using something like `components="Z12"` also works,
+        st = st_unrotated.copy()
+        result = st.rotate("->ZNE", inventory=inv,
+                           components='Z12')
+        # check that rotation to ZNE worked..
+        self.assertEqual(set(tr.stats.channel[-1] for tr in result),
+                         set('ZNE'))
 
 
 def suite():
