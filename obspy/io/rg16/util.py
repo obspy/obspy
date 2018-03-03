@@ -6,9 +6,9 @@ from future.utils import native_str as nstr
 
 import collections
 import copy
-import functools
 import struct
 
+import decorator
 import numpy as np
 
 from obspy import Trace
@@ -18,7 +18,8 @@ BITMAP = np.array([1, 2, 4, 8])[::-1].reshape(4, 1)
 TENS = np.power(10, range(12))[::-1]
 
 
-def open_file(func):
+@decorator.decorator
+def _open_file(func, *args, **kwargs):
     """
     Decorator to ensure a file buffer is passed as first argument to the
     decorated function.
@@ -28,23 +29,17 @@ def open_file(func):
         be treated as a buffer.
     :return: callable
     """
-
-    @functools.wraps(func)
-    def _wrap(*args, **kwargs):
-        first_arg = args[0]
-        try:
-            with open(first_arg, 'rb') as fi:
-                args = tuple([fi] + list(args[1:]))
-                return func(*args, **kwargs)
-        except TypeError:  # assume we have been passed a buffer
-            if not hasattr(args[0], 'read'):
-                raise  # type error was in function call, not in opening file
+    first_arg = args[0]
+    try:
+        with open(first_arg, 'rb') as fi:
+            args = tuple([fi] + list(args[1:]))
             return func(*args, **kwargs)
-
-    return _wrap
-
-
-# -------------------- functions for byte chunk reads
+    except TypeError:  # assume we have been passed a buffer
+        if not hasattr(args[0], 'read'):
+            raise  # type error was in function call, not in opening file
+        out = func(*args, **kwargs)
+        first_arg.seek(0)  # reset position to start of file
+        return out
 
 
 READ_FUNCS = {}
@@ -153,9 +148,6 @@ def _read_4_bit_right(fi, length):
     assert length == 1, 'half byte reads only support 1 byte length'
     ints = np.fromstring(fi.read(length), dtype='<u1')[0]
     return np.bitwise_and(ints, 0x0f)
-
-
-# ---------------------- stream manipulation stuff
 
 
 def _quick_merge(traces, small_number=.000001):

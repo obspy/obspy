@@ -93,13 +93,13 @@ KEYWORDS = [
     'ISF', 'kinemetrics', 'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad',
     'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'NRL',
     'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
-    'real time', 'realtime', 'REFTEK', 'REFTEK130', 'RT-130', 'RESP',
+    'real time', 'realtime', 'REFTEK', 'REFTEK130', 'RG-1.6', 'RT-130', 'RESP',
     'response file', 'RT', 'SAC', 'scardec', 'sc3ml', 'SDS', 'SEED',
     'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
     'seismology', 'seismogram', 'seismograms', 'shapefile', 'signal', 'slink',
     'spectrogram', 'StationXML', 'taper', 'taup', 'travel time', 'trigger',
     'VERCE', 'WAV', 'waveform', 'WaveServer', 'WaveServerV', 'WebDC',
-    'web service', 'Winston', 'XML-SEED', 'XSEED', 'RG-1.6']
+    'web service', 'Winston', 'XML-SEED', 'XSEED', ]
 
 # when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
 # when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
@@ -282,8 +282,8 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.reftek.core:_read_reftek130',
         ],
     'obspy.plugin.waveform.RG16': [
-        'isFormat = obspy.io.rg16.core:is_rg16',
-        'readFormat = obspy.io.rg16.core:read_rg16',
+        'isFormat = obspy.io.rg16.core:_is_rg16',
+        'readFormat = obspy.io.rg16.core:_read_rg16',
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',

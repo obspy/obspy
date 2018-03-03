@@ -24,8 +24,6 @@ class TestRG16Util(unittest.TestCase):
     formats used in rg16.
     """
 
-    # --- tests bcd
-
     bcd = [
         (b'\x99', 1, 99),
         (b'\x99\x01', 2, 9901),
@@ -47,8 +45,6 @@ class TestRG16Util(unittest.TestCase):
             _read(byte_io(b'\xFF'), 0, 1, 'bcd')
         assert 'invalid bcd values' in str(e.exception)
 
-    # --- test half byte reads
-
     halfsies = [
         (b'\x45', '>i.', 4),
         (b'\x45', '<i.', 5),
@@ -63,8 +59,6 @@ class TestRG16Util(unittest.TestCase):
         for byte, format, answer in self.halfsies:
             self.assertEqual(_read(byte_io(byte), 0, 1, format), answer)
 
-    # --- test 24 bit (3 byte) reads
-
     why_use_3_bytes = [  # seriously, how expensive is one extra byte!?
         (b'\x00\x00\x00', '<i3', 0),
         (b'\x00\x00\x00', '>i3', 0),
@@ -78,8 +72,6 @@ class TestRG16Util(unittest.TestCase):
         """
         for byte, format, answer in self.why_use_3_bytes:
             self.assertEqual(_read(byte_io(byte), 0, 3, format), answer)
-
-    # --- test backup
 
     def test_backup(self):
         """

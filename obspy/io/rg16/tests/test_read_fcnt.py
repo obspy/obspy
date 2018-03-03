@@ -8,15 +8,16 @@ from future.builtins import *  # NOQA
 import glob
 import io
 import unittest
-from os.path import join, dirname
+from os.path import dirname, join, basename
 
 import numpy as np
 import obspy
-from obspy.io.rg16.core import read_rg16, is_rg16
+from obspy.io.rg16.core import _read_rg16, _is_rg16
 
 TEST_FCNT_DIRECTORY = join(dirname(__file__), 'data')
 FCNT_FILES = glob.glob(join(TEST_FCNT_DIRECTORY, '*'))
-FCNT_STREAMS = [read_rg16(x) for x in FCNT_FILES]
+FCNT_DICT = {basename(x): _read_rg16(x) for x in FCNT_FILES}
+FCNT_STREAMS = list(FCNT_DICT.values())
 
 assert len(FCNT_FILES), 'No test files found'
 
@@ -31,14 +32,14 @@ class TestReadRG16(unittest.TestCase):
         Ensure the rg16 files are correctly labeled as such.
         """
         for fcnt_file in FCNT_FILES:
-            self.assertTrue(is_rg16(fcnt_file))
+            self.assertTrue(_is_rg16(fcnt_file))
 
     def test_empty_buffer(self):
         """
         Ensure an empty buffer returns false.
         """
         buff = io.BytesIO()
-        self.assertFalse(is_rg16(buff))
+        self.assertFalse(_is_rg16(buff))
 
     def test_supported_samps(self):
         """
@@ -77,7 +78,7 @@ class TestReadRG16(unittest.TestCase):
         """
         components = {'Z', 'N', 'E'}
         for filename, st_default in zip(FCNT_FILES, FCNT_STREAMS):
-            st_mapped = read_rg16(filename, contacts_north=True)
+            st_mapped = _read_rg16(filename, contacts_north=True)
             # make sure components have been mapped to principal directions
             for tr in st_mapped:
                 self.assertIn(tr.stats.channel[-1], components)
@@ -110,7 +111,7 @@ class TestReadRG16(unittest.TestCase):
                 buff = io.BytesIO(fi.read())
             buff.seek(0)
             try:
-                read_rg16(buff, 'mseed')
+                _read_rg16(buff, 'mseed')
             except Exception:
                 self.fail('failed to read from bytesIO')
 
@@ -127,7 +128,7 @@ class TestReadRG16(unittest.TestCase):
         Ensure no data is returned when the option is used.
         """
         for fcnt_file in FCNT_FILES:
-            st = read_rg16(fcnt_file, headonly=True)
+            st = _read_rg16(fcnt_file, headonly=True)
             for tr in st:
                 self.assertEqual(len(tr.data), 0)
                 self.assertNotEqual(tr.stats.npts, 0)
@@ -138,12 +139,12 @@ class TestReadRG16(unittest.TestCase):
         """
         for fcnt_file in FCNT_FILES:
             # get good times to filter on
-            st = read_rg16(fcnt_file, headonly=True)
+            st = _read_rg16(fcnt_file, headonly=True)
             stats = st[0].stats
             t1, t2 = stats.starttime.timestamp, stats.endtime.timestamp
             tpoint = obspy.UTCDateTime((t1 + t2) / 2.)
             # this should only return one trace for each channel
-            st = read_rg16(fcnt_file, starttime=tpoint, endtime=tpoint)
+            st = _read_rg16(fcnt_file, starttime=tpoint, endtime=tpoint)
             ids = {tr.id for tr in st}
             self.assertEqual(len(st), len(ids))
             # make sure tpoint is in the time range
@@ -158,10 +159,23 @@ class TestReadRG16(unittest.TestCase):
         together.
         """
         for fcnt_file in FCNT_FILES:
-            st_merged = read_rg16(fcnt_file, merge=True)
-            st = read_rg16(fcnt_file).merge()
+            st_merged = _read_rg16(fcnt_file, merge=True)
+            st = _read_rg16(fcnt_file).merge()
             self.assertEqual(len(st), len(st_merged))
             self.assertEqual(st, st_merged)
+
+    def test_values(self):
+        """
+        Test the first few values of one of the files.
+        """
+        st = FCNT_DICT['one_channel_many_traces.fcnt']
+        expected = np.array([
+            -0.00163913, -0.00409782, -0.00834465, -0.00439584, -0.00394881,
+            -0.00238419, -0.0013411, 0.00052154, 0.00789762, 0.00841916,
+            0.00670552, 0.00655651, 0.00759959, 0.00685454, 0.00715256
+        ])
+        all_close = np.allclose(st[0].data[:len(expected)], expected)
+        self.assertTrue(all_close)
 
 
 def suite():

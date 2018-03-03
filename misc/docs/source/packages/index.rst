@@ -100,6 +100,7 @@ categories.*
     obspy.io.nied.knet
     obspy.io.pdas
     obspy.io.reftek
+    obspy.io.rg16
     obspy.io.sac
     obspy.io.seisan
     obspy.io.seg2
@@ -108,7 +109,6 @@ categories.*
     obspy.io.wav
     obspy.io.win
     obspy.io.y
-    obspy.io.rg16
 
 .. rubric:: Event Data Import/Export Plug-ins
 

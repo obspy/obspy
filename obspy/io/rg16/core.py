@@ -6,10 +6,7 @@ from future.builtins import *  # NOQA
 import numpy as np
 from obspy.core import Stream, Trace, Stats, UTCDateTime
 
-from .util import _read, open_file, _read_block, _quick_merge
-
-# --------------------- define specs of needed blocks
-
+from .util import _read, _open_file, _read_block, _quick_merge
 
 # blocks are specified as a list of tuples. Each tuple contains the following:
 # (name, startbyte, length, format), explanation as follows:
@@ -72,12 +69,10 @@ INSTRUMENT_CODE = 'P'
 # mapping for "standard_orientation"
 STANDARD_COMPONENT_MAP = {'2': 'Z', '3': 'N', '4': 'E'}
 
-# ------------------- read and format check functions
 
-
-@open_file
-def read_rg16(filename, headonly=False, starttime=None, endtime=None,
-              merge=False, contacts_north=False, **kwargs):
+@_open_file
+def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
+               merge=False, contacts_north=False, **kwargs):
     """
     Read Fairfield Nodal's Receiver Gather File Format version 1.6-1.
 
@@ -102,10 +97,7 @@ def read_rg16(filename, headonly=False, starttime=None, endtime=None,
         the vertical component.
     :type contacts_north: bool
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
-
     """
-    if not is_rg16(filename):
-        raise ValueError('read_fcnt was not passed a Fairfield RG 1.6 file')
     # get timestamps
     time1 = UTCDateTime(starttime).timestamp if starttime else 0
     time2 = UTCDateTime(endtime).timestamp if endtime else BIG_TS
@@ -126,8 +118,8 @@ def read_rg16(filename, headonly=False, starttime=None, endtime=None,
     return Stream(traces=traces)
 
 
-@open_file
-def is_rg16(filename, **kwargs):
+@_open_file
+def _is_rg16(filename, **kwargs):
     """
     Determine if a file or buffer contains an rg16 file.
 
@@ -136,7 +128,6 @@ def is_rg16(filename, **kwargs):
     :return: bool
     """
     try:
-        filename.seek(0)
         sample_format = _read(filename, 2, 2, 'bcd')
         manufacturer_code = _read(filename, 16, 1, 'bcd')
         version = _read(filename, 42, 2, None)
@@ -146,13 +137,12 @@ def is_rg16(filename, **kwargs):
     return con1 and manufacturer_code == 20
 
 
-# ------------ helper functions for formatting specific blocks
-
-
 def _make_traces(fi, data_block_start, gheader, head_only=False,
                  starttime=None, endtime=None, merge=False,
                  standard_orientation=False):
-    """ make obspy traces from trace blocks and headers """
+    """
+    Make obspy traces from trace blocks and headers.
+    """
     traces = []  # list to store traces
     trace_position = data_block_start
     while True:  # read traces until parser falls of the end of file
@@ -164,6 +154,7 @@ def _make_traces(fi, data_block_start, gheader, head_only=False,
         stats = _make_stats(theader, gheader, standard_orientation)
         # expected jump to next start position
         jumps = stats.npts * 4 + theader['num_ext_blocks'] * 32 + 20
+        assert jumps != 0
         # if wrong starttime / endtime just keep going and update position
         if stats.endtime < starttime or stats.starttime > endtime:
             trace_position += jumps
@@ -183,7 +174,9 @@ def _make_traces(fi, data_block_start, gheader, head_only=False,
 
 
 def _make_stats(theader, gheader, standard_orientation):
-    """ make Stats object """
+    """
+    Make Stats object from information from several blocks.
+    """
     sampling_rate = int(1000. / (gheader['base_scan'] / 16.))
 
     # get channel code
@@ -232,6 +225,7 @@ def _make_stats(theader, gheader, standard_orientation):
 #     num_traces2 = channel_sets * num_records
 #
 #     return max(num_traces1, num_traces2)
+
 
 if __name__ == '__main__':
     import doctest
