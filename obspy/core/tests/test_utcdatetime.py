@@ -1420,7 +1420,6 @@ class UTCDateTimeTestCase(unittest.TestCase):
         utc = UTCDateTime(0)
         with self.assertRaises(ValueError) as e:
             utc.replace(zweite=22)
-
         self.assertIn('zweite', str(e.exception))
 
 

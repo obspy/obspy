@@ -1462,6 +1462,11 @@ class UTCDateTime(object):
         """
         Return a new UTCDateTime object with one or more parameters replaced.
 
+        Replace is useful for substituting parameters that depend on other
+        parameters (eg hour depends on the current day for meaning). In order
+        to replace independent parameters, such as timestamp, ns, or
+        precision, simply create a new UTCDateTime instance.
+
         The following parameters are supported: year, month, day, julday,
         hour, minute second, microsecond.
 
@@ -1476,12 +1481,11 @@ class UTCDateTime(object):
             2001-09-15T01:46:39.000000Z
 
 
-        (2) Determine day of the week 2 months before Guy Fawkes day.
+        (2) Determine the day of the week 2 months before Guy Fawkes day.
 
             >>> dt = UTCDateTime('1605-11-05')
             >>> dt.replace(month=9).weekday
             0
-
         """
         # check parameters, raise Value error if any are unsupported
         supported_args = set(YMDHMS) | set(YJHMS) | {'microsecond'}
