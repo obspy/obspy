@@ -222,7 +222,7 @@ class UTCDateTime(object):
     """
     DEFAULT_PRECISION = 6
     _initialized = False
-    _has_warned = False
+    _has_warned = False  # this is a temporary, it will be removed soon
 
     def __init__(self, *args, **kwargs):
         """

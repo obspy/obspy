@@ -1382,7 +1382,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
 
         utc = UTCDateTime(**test_dict)
 
-        # iterate over each settable paramter and change
+        # iterate over each settable parameter and change
         for attr in test_dict:
             new_value = test_dict[attr] + 1
             utc2 = utc.replace(**{attr: new_value})
@@ -1396,7 +1396,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
                 else:
                     self.assertEqual(current, default)
 
-        # test juldain day
+        # test julian day
         utc2 = utc.replace(julday=utc.julday + 1)
         self.assertEqual(utc2.julday, utc.julday + 1)
 

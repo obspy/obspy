@@ -1007,17 +1007,17 @@ class SACTrace(object):
             # snap the new reftime to the most recent milliseconds
             # (subtract the leftover microseconds)
             ns = new_reftime.ns
-            time = UTCDateTime(ns=(ns - ns % 1000000))
+            utc = UTCDateTime(ns=(ns - ns % 1000000))
 
-            self.nzyear = time.year
-            self.nzjday = time.julday
-            self.nzhour = time.hour
-            self.nzmin = time.minute
-            self.nzsec = time.second
-            self.nzmsec = time.microsecond / 1000
+            self.nzyear = utc.year
+            self.nzjday = utc.julday
+            self.nzhour = utc.hour
+            self.nzmin = utc.minute
+            self.nzsec = utc.second
+            self.nzmsec = utc.microsecond / 1000
 
             # get the float seconds between the old and new reftimes
-            shift = old_reftime - time
+            shift = old_reftime - utc
 
             # shift the relative time headers
             self._allt(np.float32(shift))

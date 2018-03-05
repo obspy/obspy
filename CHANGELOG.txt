@@ -6,8 +6,8 @@ master:
      representations are equal (see #2049).
    * UTCDateTime objects now issue depreciation warnings when setting any
      attributes outside of init, or comparing UTCDateTime objects with
-     different precisions (see  #2077).
-   * Added replace method to UTCDateTime class (see  #2077).
+     different precisions (see #2077).
+   * Added replace method to UTCDateTime class (see #2077).
  - obspy.io.reftek:
    * Implement reading reftek encodings '16' and '32' (uncompressed data,
      16/32bit integers, see #2058 and #2059)
