@@ -905,7 +905,7 @@ class Inventory(ComparingObject):
         # in obspy, but here they have their times merged together by name
         plot_dict = {}
         sub_dict = {}
-        for network in set(self.networks):
+        for network in self.networks:
             eps = network._get_epoch_plottable_struct()
             sub_dict = _merge_plottable_structs(sub_dict, eps)
         if hasattr(self, 'start_date'):
@@ -938,7 +938,8 @@ class Inventory(ComparingObject):
         :type combine: boolean
         """
         plot_dict = self._get_epoch_plottable_struct()
-        fig = plot_inventory_epochs(plot_dict, outfile, colormap, combine)
+        fig = plot_inventory_epochs(plot_dict, outfile, colormap, show,
+                                    combine)
         return fig
 
 
