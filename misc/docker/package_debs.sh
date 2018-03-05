@@ -43,9 +43,6 @@ DOCKER=`which docker.io || which docker`
 rm -rf $TEMP_PATH
 mkdir -p $TEMP_PATH
 
-# Deb packaging is always performed using the deb build script from misc/debian
-# from the current state of the local repository.
-cp -a $OBSPY_PATH/misc/debian/deb__build_debs.sh $TEMP_PATH/
 # but we need to find out the SHA of the git target (e.g. if a branch name was
 # specified..)
 git clone git://github.com/$REPO/obspy $TEMP_PATH/obspy
@@ -53,11 +50,14 @@ cd $TEMP_PATH/obspy
 git checkout $GITTARGET
 SHA=`git log -1 --pretty=format:'%H'`
 cd $CURDIR
+# Deb packaging is always performed using the deb build script from misc/debian
+# of the target branch
+cp -a $TEMP_PATH/obspy/misc/debian/deb__build_debs.sh $TEMP_PATH/
 rm -rf $TEMP_PATH/obspy
 
 cd $CURDIR
 
-# Copy the install script.
+# Copy the install script. Use current version (on master)
 cp scripts/package_debs.sh $TEMP_PATH/package_debs.sh
 
 
