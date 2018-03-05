@@ -222,6 +222,16 @@ $ docker login  # docker hub user needs write access to "obspy/base-images" of o
 $ docker push obspy/base-images:${DISTRO_FULL}
 ```
 
+To run ``armhf`` docker images/containers built this way on non-ARM Linux machines,
+it seems that it's necessary to install ``qemu``, ``qemu-user-static`` and
+``qemu-system-arm`` packages (Debian/Ubuntu).
+Furthermore, qemu multiarch support has to be registered with docker (see
+https://hub.docker.com/r/multiarch/qemu-user-static/):
+
+```bash
+$ docker run --rm --privileged multiarch/qemu-user-static:register --reset
+```
+
 ### Setting up `docker-testbot` to automatically test PRs and branches and send commit statuses
 
 ##### Install docker
