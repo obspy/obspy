@@ -15,7 +15,8 @@ import numpy as np
 
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               Pick, ResourceIdentifier, WaveformStreamID,
-                              read_events, Magnitude, FocalMechanism, Arrival)
+                              read_events, Magnitude, FocalMechanism, Arrival,
+                              ConfidenceEllipsoid)
 from obspy.core.event.source import farfield
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import BASEMAP_VERSION, CARTOPY_VERSION
@@ -234,6 +235,140 @@ class OriginTestCase(unittest.TestCase):
         self.assertEqual(origin2.latitude, 13.4)
         self.assertEqual(origin2.latitude_errors.confidence_level, None)
         self.assertEqual(origin2.longitude, None)
+
+
+class OriginUncertaintyTestCase(unittest.TestCase):
+    def test_convert_xyz_error_no_covariance(self):
+        """
+        Test that we are able to map between xyz errors and ellipsoid
+
+        Simple-case with no covariance
+        """
+        errors = {'x_err': 1., 'y_err': 1.5, 'z_err': 2.0,
+                  'xy_cov': 0.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
+        expected_ellipse = ConfidenceEllipsoid(
+            semi_major_axis_length=2.0, semi_minor_axis_length=1.0,
+            semi_intermediate_axis_length=1.5, major_axis_plunge=-90.0,
+            major_axis_azimuth=0.0, major_axis_rotation=0.0)
+        confidence_ellipsoid = \
+            ConfidenceEllipsoid.xyz_to_confidence_ellipsoid(errors)
+        for key in expected_ellipse.__dict__.keys():
+            self.assertAlmostEqual(expected_ellipse.__dict__[key],
+                                   confidence_ellipsoid.__dict__[key])
+        errors_back = confidence_ellipsoid.confidence_ellipsoid_to_xyz()
+        for key in errors.keys():
+            self.assertAlmostEqual(errors[key], errors_back[key])
+
+    def test_convert_xyz_error_no_covariance_xmax(self):
+        """
+        Test that we are able to map between xyz errors and ellipsoid
+
+        Simple-case with no covariance, but X at maximum
+        """
+        errors = {'x_err': 5., 'y_err': 2.5, 'z_err': 2.0,
+                  'xy_cov': 0.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
+        expected_ellipse = ConfidenceEllipsoid(
+            semi_major_axis_length=5.0, semi_minor_axis_length=2.0,
+            semi_intermediate_axis_length=2.5, major_axis_plunge=0.0,
+            major_axis_azimuth=0.0, major_axis_rotation=0.0)
+        confidence_ellipsoid = \
+            ConfidenceEllipsoid.xyz_to_confidence_ellipsoid(errors)
+        for key in expected_ellipse.__dict__.keys():
+            self.assertAlmostEqual(expected_ellipse.__dict__[key],
+                                   confidence_ellipsoid.__dict__[key])
+        errors_back = confidence_ellipsoid.confidence_ellipsoid_to_xyz()
+        for key in errors.keys():
+            self.assertAlmostEqual(errors[key], errors_back[key])
+
+    def test_convert_xyz_error_no_covariance_ymax(self):
+        """
+        Test that we are able to map between xyz errors and ellipsoid
+
+        Simple-case with no covariance, but Y at maximum
+        """
+        errors = {'y_err': 5., 'x_err': 2.5, 'z_err': 2.0,
+                  'xy_cov': 0.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
+        expected_ellipse = ConfidenceEllipsoid(
+            semi_major_axis_length=5.0, semi_minor_axis_length=2.0,
+            semi_intermediate_axis_length=2.5, major_axis_plunge=0.0,
+            major_axis_azimuth=90.0, major_axis_rotation=0.0)
+        confidence_ellipsoid = \
+            ConfidenceEllipsoid.xyz_to_confidence_ellipsoid(errors)
+        for key in expected_ellipse.__dict__.keys():
+            self.assertAlmostEqual(expected_ellipse.__dict__[key],
+                                   confidence_ellipsoid.__dict__[key])
+        errors_back = confidence_ellipsoid.confidence_ellipsoid_to_xyz()
+        for key in errors.keys():
+            self.assertAlmostEqual(errors[key], errors_back[key])
+
+    def test_convert_xyz_to_confidence_nocovariance(self):
+        """
+        Test for a known case for xyz and covariance to ConfidenceEllipsoid
+
+        Simple-case with no covariance
+        """
+        errors = {'x_err': 1., 'y_err': 1.5, 'z_err': 2.0,
+                  'xy_cov': 0.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
+        expected = ConfidenceEllipsoid(
+            semi_major_axis_length=2.0, semi_minor_axis_length=1.0,
+            semi_intermediate_axis_length=1.5, major_axis_plunge=-90.0,
+            major_axis_azimuth=0.0, major_axis_rotation=0.0)
+        conf_back = ConfidenceEllipsoid.xyz_to_confidence_ellipsoid(errors)
+        for key in expected.__dict__.keys():
+            self.assertAlmostEqual(expected.__dict__[key],
+                                   conf_back.__dict__[key])
+
+    def test_convert_xyz_to_confidence_2d_covariance(self):
+        """
+        Test for a known case for xyz and covariance to ConfidenceEllipsoid
+
+        Case with 2d covariance
+        """
+        inp = ConfidenceEllipsoid(
+            semi_major_axis_length=5.0, semi_minor_axis_length=0.0,
+            semi_intermediate_axis_length=0.5, major_axis_plunge=0.0,
+            major_axis_azimuth=45.0, major_axis_rotation=0.0)
+        errors = inp.confidence_ellipsoid_to_xyz()
+        conf_back = ConfidenceEllipsoid.xyz_to_confidence_ellipsoid(errors)
+        for key in inp.__dict__.keys():
+            self.assertAlmostEqual(inp.__dict__[key],
+                                   conf_back.__dict__[key])
+
+    def test_convert_confidence_to_xyz_2d_covariance(self):
+        """
+        Test for a known case for ConfidenceEllipsoid to xyz and covariance
+        """
+        inp = {'x_err': 24.0, 'y_err': 12.0, 'z_err': 0.0,
+               'xy_cov': 12.0, 'xz_cov': 0.0, 'yz_cov': 0.0}
+        conf_back = ConfidenceEllipsoid.xyz_to_confidence_ellipsoid(inp)
+        errors = conf_back.confidence_ellipsoid_to_xyz()
+        for key in inp.keys():
+            self.assertAlmostEqual(inp[key], errors[key])
+
+    def test_convert_xyz_to_confidence_3d_covariance(self):
+        """
+        Test full conversion reciprocity.
+        """
+        inp = ConfidenceEllipsoid(
+            semi_major_axis_length=5.0, semi_minor_axis_length=0.5,
+            semi_intermediate_axis_length=1.5, major_axis_plunge=20.0,
+            major_axis_azimuth=45.0, major_axis_rotation=5.0)
+        errors = inp.confidence_ellipsoid_to_xyz()
+        conf_back = ConfidenceEllipsoid.xyz_to_confidence_ellipsoid(errors)
+        for key in inp.__dict__.keys():
+            self.assertAlmostEqual(inp.__dict__[key],
+                                   conf_back.__dict__[key])
+
+    def test_convert_confidence_to_xyz_3d_covariance(self):
+        """
+        Test for a known case for ConfidenceEllipsoid to xyz and covariance
+        """
+        inp = {'x_err': 24.0, 'y_err': 12.0, 'z_err': 40.0,
+               'xy_cov': 12.0, 'xz_cov': 3.0, 'yz_cov': 3.0}
+        conf_back = ConfidenceEllipsoid.xyz_to_confidence_ellipsoid(inp)
+        errors = conf_back.confidence_ellipsoid_to_xyz()
+        for key in inp.keys():
+            self.assertAlmostEqual(inp[key], errors[key])
 
 
 class CatalogTestCase(unittest.TestCase):
@@ -1157,6 +1292,7 @@ def suite():
     suite.addTest(unittest.makeSuite(CatalogBasemapTestCase, 'test'))
     suite.addTest(unittest.makeSuite(CatalogCartopyTestCase, 'test'))
     suite.addTest(unittest.makeSuite(EventTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(OriginUncertaintyTestCase, 'test'))
     suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
     suite.addTest(unittest.makeSuite(WaveformStreamIDTestCase, 'test'))
     suite.addTest(unittest.makeSuite(ResourceIdentifierTestCase, 'test'))

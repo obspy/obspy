@@ -248,104 +248,6 @@ def _nortoevmag(mag_type):
     return mag
 
 
-def xyz_to_confidence_ellipsoid(errors):
-    """
-    Convert from errors and covariance in x, y, z to error ellipse axes.
-
-    Forms a covariance matrix and finds the eigenvalues and eigenvectors. Units
-    should be m for everything, which means that the covariances are m * m
-
-    :type errors: dict
-    :param errors: Dictionary of x_err, y_err, z_err, xy_cov, xz_cov, yz_cov
-    :return: :class:`~obspy.core.event.ConfidenceEllipsoid`
-
-    .. Note::
-        Definitions of used angles are given here:
-        https://quake.ethz.ch/quakeml/QuakeML2.0/BasicEventDescriptionTypes\
-        Discussion#class_ConfidenceEllipsoid
-    """
-    covariance_matrix = np.array([
-        [errors['x_err'] ** 2, errors['xy_cov'], errors['xz_cov']],
-        [errors['xy_cov'], errors['y_err'] ** 2, errors['yz_cov']],
-        [errors['xz_cov'], errors['yz_cov'], errors['z_err'] ** 2]])
-    eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
-    # Columns in eigenvectors correspond to eigenvalues
-    lengths = np.abs(eigenvalues) ** 0.5
-    major_ind = np.argmax(lengths)
-    minor_ind = np.argmin(lengths)
-    inter_ind = [i for i in range(3) if i not in [major_ind, minor_ind]][0]
-    # Reorder eigenvectors
-    eigenvectors = np.array(
-        [eigenvectors[:, major_ind], eigenvectors[:, inter_ind],
-         eigenvectors[:, minor_ind]]).T
-    psi = np.arctan2(eigenvectors[1, 0], eigenvectors[0, 0])
-    theta = np.arctan2(eigenvectors[2, 1], eigenvectors[2, 2])
-    phi = np.arctan2(-eigenvectors[2, 0], np.sqrt(eigenvectors[0, 0] ** 2 +
-                                                  eigenvectors[1, 0] ** 2))
-    confidence_ellipsoid = ConfidenceEllipsoid(
-        semi_major_axis_length=lengths[major_ind],
-        semi_minor_axis_length=lengths[minor_ind],
-        semi_intermediate_axis_length=lengths[inter_ind],
-        major_axis_plunge=np.degrees(phi),
-        major_axis_azimuth=np.degrees(psi),
-        major_axis_rotation=np.degrees(theta))
-    return confidence_ellipsoid
-
-
-def confidence_ellipsoid_to_xyz(confidence_ellipsoid):
-    """
-    Convert from confidence ellipsoid to errors in x, y, z and covariance.
-
-    :type confidence_ellipsoid: :class:`~obspy.core.event.confidenceEllipsoid`
-    :param confidence_ellipsoid: Full input covariance ellipsoid
-    :return: dictionary of x_err, y_err, z_err, xy_cov, xz_cov, yz_cov in m
-
-    .. Note::
-        Follows definition of Euler angles (z-x'-y'' intrinsic) to rotation
-        matrix from:
-        https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions
-    """
-    from numpy import cos as c, sin as s
-    try:
-        phi = np.radians(confidence_ellipsoid.major_axis_plunge)
-        # rotation around y' - phi is referred to interchangeably as:
-        #  "elevation", "pitch" or "attitude" - angle 2
-        psi = np.radians(confidence_ellipsoid.major_axis_azimuth)
-        # rotation around z'' - psi is referred to interchangeably as:
-        # "heading" or "yaw" - angle 3
-        theta = np.radians(confidence_ellipsoid.major_axis_rotation)
-        # rotation around x - theta is referred to interchangeably as:
-        # "bank" or "roll" - angle 1
-    except Exception:
-        raise NordicParsingError("Cannot parse rotation angles, incomplete "
-                                 "confidenceEllipsoid?")
-    # Issues with left and right-handedness? XYZ
-    rotation_matrix = np.empty((3, 3))
-    rotation_matrix[0][0] = c(psi) * c(phi)
-    rotation_matrix[0][1] = -c(phi) * s(psi)
-    rotation_matrix[0][2] = s(phi)
-    rotation_matrix[1][0] = c(theta) * s(psi) + c(psi) * s(phi) * s(theta)
-    rotation_matrix[1][1] = c(psi) * c(theta) - s(psi) * s(phi) * s(theta)
-    rotation_matrix[1][2] = -c(phi) * s(theta)
-    rotation_matrix[2][0] = s(psi) * s(theta) - c(psi) * c(theta) * s(phi)
-    rotation_matrix[2][1] = c(psi) * s(theta) + c(theta) * s(psi) * s(phi)
-    rotation_matrix[2][2] = c(phi) * c(theta)
-    eigenvalues = np.array([
-        confidence_ellipsoid.semi_major_axis_length ** 2,
-        confidence_ellipsoid.semi_intermediate_axis_length ** 2,
-        confidence_ellipsoid.semi_minor_axis_length ** 2
-    ])
-    covariance_matrix = np.dot(np.dot(rotation_matrix, np.diag(eigenvalues)),
-                               np.linalg.inv(rotation_matrix))
-    errors_out = {'x_err': np.sqrt(covariance_matrix[0, 0]),
-                  'y_err': np.sqrt(covariance_matrix[1, 1]),
-                  'z_err': np.sqrt(abs(covariance_matrix[2, 2])),
-                  'xy_cov': np.round(covariance_matrix[0, 1], 6),
-                  'xz_cov': np.round(covariance_matrix[0, 2], 6),
-                  'yz_cov': np.round(covariance_matrix[1, 2], 6)}
-    return errors_out
-
-
 def readheader(sfile, encoding='latin-1'):
     """
     Read header information from a seisan nordic format S-file.
@@ -669,7 +571,8 @@ def _read_uncertainty(tagged_lines, event):
                   'z_err': float(line[38:43]), 'xy_cov': float(line[43:55]),
                   'xz_cov': float(line[55:67]), 'yz_cov': float(line[67:79])}
         event.origins[0].origin_uncertainty = OriginUncertainty(
-            confidence_ellipsoid=xyz_to_confidence_ellipsoid(errors))
+            confidence_ellipsoid=ConfidenceEllipsoid.
+            xyz_to_confidence_ellipsoid(errors))
     except ValueError:
         pass
     try:
@@ -713,12 +616,6 @@ def _read_focal_mechanisms(tagged_lines, event):
 
 
 def _read_moment_tensors(tagged_lines, event):
-    """
-
-    :param tagged_lines:
-    :param event:
-    :return:
-    """
     if 'M' not in tagged_lines.keys():
         return event
     # Group moment tensor lines together
@@ -1407,9 +1304,9 @@ def _write_hyp_error_line(origin):
     error_line[14:20] = (_str_conv(
         origin.quality['standard_error'], 2)).rjust(6)
     try:
-        errors = confidence_ellipsoid_to_xyz(
-            origin.origin_uncertainty['confidence_ellipsoid'])
-    except NordicParsingError:
+        errors = origin.origin_uncertainty[
+            'confidence_ellipsoid'].confidence_ellipsoid_to_xyz()
+    except AttributeError:
         return ''.join(error_line)
     error_line[24:30] = (_str_conv(errors['y_err'] / 1000.0, 1)).rjust(6)
     error_line[32:38] = (_str_conv(errors['x_err'] / 1000.0, 1)).rjust(6)

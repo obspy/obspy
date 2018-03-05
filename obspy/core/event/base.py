@@ -1254,6 +1254,100 @@ class ConfidenceEllipsoid(__ConfidenceEllipsoid):
         standard and how to output it to QuakeML see the
         :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
+    @staticmethod
+    def xyz_to_confidence_ellipsoid(errors):
+        """
+        Convert from errors and covariance in x, y, z to error ellipse axes.
+
+        Forms a covariance matrix and finds the eigenvalues and eigenvectors. Units
+        should be m for everything, which means that the covariances are m * m
+
+        :type errors: dict
+        :param errors: Dictionary of x_err, y_err, z_err, xy_cov, xz_cov, yz_cov
+        :return: :class:`~obspy.core.event.ConfidenceEllipsoid`
+
+        .. Note::
+            Definitions of used angles are given here:
+            https://quake.ethz.ch/quakeml/QuakeML2.0/BasicEventDescriptionTypes\
+            Discussion#class_ConfidenceEllipsoid
+        """
+        covariance_matrix = np.array([
+            [errors['x_err'] ** 2, errors['xy_cov'], errors['xz_cov']],
+            [errors['xy_cov'], errors['y_err'] ** 2, errors['yz_cov']],
+            [errors['xz_cov'], errors['yz_cov'], errors['z_err'] ** 2]])
+        eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
+        # Columns in eigenvectors correspond to eigenvalues
+        lengths = np.abs(eigenvalues) ** 0.5
+        major_ind = np.argmax(lengths)
+        minor_ind = np.argmin(lengths)
+        inter_ind = [i for i in range(3) if i not in [major_ind, minor_ind]][0]
+        # Reorder eigenvectors
+        eigenvectors = np.array(
+            [eigenvectors[:, major_ind], eigenvectors[:, inter_ind],
+             eigenvectors[:, minor_ind]]).T
+        psi = np.arctan2(eigenvectors[1, 0], eigenvectors[0, 0])
+        theta = np.arctan2(eigenvectors[2, 1], eigenvectors[2, 2])
+        phi = np.arctan2(-eigenvectors[2, 0], np.sqrt(eigenvectors[0, 0] ** 2 +
+                                                      eigenvectors[1, 0] ** 2))
+        confidence_ellipsoid = ConfidenceEllipsoid(
+            semi_major_axis_length=lengths[major_ind],
+            semi_minor_axis_length=lengths[minor_ind],
+            semi_intermediate_axis_length=lengths[inter_ind],
+            major_axis_plunge=np.degrees(phi),
+            major_axis_azimuth=np.degrees(psi),
+            major_axis_rotation=np.degrees(theta))
+        return confidence_ellipsoid
+
+    def confidence_ellipsoid_to_xyz(self):
+        """
+        Convert from confidence ellipsoid to errors in x, y, z and covariance.
+
+        :return: dictionary of x_err, y_err, z_err, xy_cov, xz_cov, yz_cov in m
+
+        .. Note::
+            Follows definition of Euler angles (z-x'-y'' intrinsic) to rotation
+            matrix from:
+            https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions
+        """
+        from numpy import cos as c, sin as s
+        try:
+            phi = np.radians(self.major_axis_plunge)
+            # rotation around y' - phi is referred to interchangeably as:
+            #  "elevation", "pitch" or "attitude" - angle 2
+            psi = np.radians(self.major_axis_azimuth)
+            # rotation around z'' - psi is referred to interchangeably as:
+            # "heading" or "yaw" - angle 3
+            theta = np.radians(self.major_axis_rotation)
+            # rotation around x - theta is referred to interchangeably as:
+            # "bank" or "roll" - angle 1
+            eigenvalues = np.array([
+                self.semi_major_axis_length ** 2,
+                self.semi_intermediate_axis_length ** 2,
+                self.semi_minor_axis_length ** 2])
+        except Exception:
+            raise AttributeError("Cannot parse rotation angles, incomplete "
+                                 "confidenceEllipsoid?")
+        # Issues with left and right-handedness? XYZ
+        rotation_matrix = np.empty((3, 3))
+        rotation_matrix[0][0] = c(psi) * c(phi)
+        rotation_matrix[0][1] = -c(phi) * s(psi)
+        rotation_matrix[0][2] = s(phi)
+        rotation_matrix[1][0] = c(theta) * s(psi) + c(psi) * s(phi) * s(theta)
+        rotation_matrix[1][1] = c(psi) * c(theta) - s(psi) * s(phi) * s(theta)
+        rotation_matrix[1][2] = -c(phi) * s(theta)
+        rotation_matrix[2][0] = s(psi) * s(theta) - c(psi) * c(theta) * s(phi)
+        rotation_matrix[2][1] = c(psi) * s(theta) + c(theta) * s(psi) * s(phi)
+        rotation_matrix[2][2] = c(phi) * c(theta)
+        covariance_matrix = np.dot(
+            np.dot(rotation_matrix, np.diag(eigenvalues)),
+            np.linalg.inv(rotation_matrix))
+        errors_out = {'x_err': np.sqrt(covariance_matrix[0, 0]),
+                      'y_err': np.sqrt(covariance_matrix[1, 1]),
+                      'z_err': np.sqrt(abs(covariance_matrix[2, 2])),
+                      'xy_cov': np.round(covariance_matrix[0, 1], 6),
+                      'xz_cov': np.round(covariance_matrix[0, 2], 6),
+                      'yz_cov': np.round(covariance_matrix[1, 2], 6)}
+        return errors_out
 
 
 __DataUsed = _event_type_class_factory(
