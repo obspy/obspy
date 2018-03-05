@@ -15,7 +15,6 @@ from future.builtins import *  # NOQA
 
 import copy
 import re
-import matplotlib.pyplot as plt
 from numpy import linspace
 from matplotlib import transforms as tf
 from matplotlib.pyplot import cm
@@ -887,6 +886,8 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None, show=True,
     :type combine: boolean
     """
 
+    import matplotlib.pyplot as plt
+
     # y dictionary will hold plot component's initial y-value & height
     y_dict = {}
     # used to combine y-axis values for data with matching epochs
@@ -1114,6 +1115,7 @@ def _plot_traversal_helper(plot_dict, y_dict, mg_dict, offset=0, prefix=''):
 def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, mg, pfx=''):
 
     # private method to add lines and rectangles to a given plot object
+    import matplotlib.pyplot as plt
 
     # offsets to put the line markers' tips at ends of lines
     ms = 10  # size of the line marker caps (arrows)
