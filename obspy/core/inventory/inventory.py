@@ -925,6 +925,7 @@ class Inventory(ComparingObject):
                     combine=True):
         """
         Plot the epochs of this given inventory object.
+        Returns a pyplot figure which can be saved to file.
         :param outfile: If included, the plot will be saved to a file with the
             given filename. (Otherwise it will be displayed in a window)
         :type outfile: str
@@ -936,6 +937,16 @@ class Inventory(ComparingObject):
         :param combine: If set as true, channels with matching epochs will be
             merged onto the same y-axis values
         :type combine: boolean
+
+        .. rubric:: Example
+
+        >>> inv = read_inventory()
+        >>> inv.plot_epochs(show=True) # doctest: +SKIP
+
+        .. plot::
+            inv = read_inventory()
+            inv.plot_epochs(show=True)
+
         """
         plot_dict = self._get_epoch_plottable_struct()
         fig = plot_inventory_epochs(plot_dict, outfile, colormap, show,

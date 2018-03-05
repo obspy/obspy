@@ -531,6 +531,7 @@ class Station(BaseNode):
                     combine=True):
         """
         Plot the epochs of this given inventory object.
+        Returns a pyplot figure which can be saved to file.
         :param outfile: If included, the plot will be saved to a file with the
             given filename. (Otherwise it will be displayed in a window)
         :type outfile: str
