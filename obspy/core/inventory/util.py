@@ -863,7 +863,7 @@ def _seed_id_keyfunction(x):
     return x
 
 
-def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None, show=False,
+def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None, show=True,
                           combine=True):
     """
     Creates a plot from inventory object's epoch plottable structure.
