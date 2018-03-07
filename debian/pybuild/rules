@@ -39,9 +39,16 @@ override_dh_auto_install:
 	#  - https://sources.debian.net/src/python-setuptools/5.5.1-1/debian/patches/multiarch-extname.diff/
 	#  - http://metadata.ftp-master.debian.org/changelogs/main/p/python-setuptools/unstable_changelog
 	#  - https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=733128
-	# Update 2018-03: This patch is also present in Debian 9 Stretch and the
-	#   current testing "Buster", so do it for any Python 3 unconditionally
-	sh -x debian/_rename_lib_extensions.sh
+	# Update 2018-03: This patch is also present in Debian 9 'stretch' and the
+	#   current testing "Buster", but at least on "stretch" the complex suffix
+	#   is set in the system (see `sysconfig.get_config_var("EXT_SUFFIX")`), so
+	#   that is what obspy looks up in the end and we must not strip that
+	#   suffix like on Debian 8 'jessie'.
+	#   We can keep to distinguish by Python version.. 'jessie' has Python 3.4,
+	#   'stretch' has Python 3.5
+	if [ `py3versions -d` = "python3.3" ] || [ `py3versions -d` = "python3.4" ]; then \
+		sh -x debian/_rename_lib_extensions.sh; \
+	fi;
 	########## lib naming hack end
 	sh -x debian/_copy_lib_extensions_to_source_tree.sh
 	python2 setup.py build_man
