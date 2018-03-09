@@ -24,7 +24,6 @@ from collections import defaultdict
 import datetime
 import os
 import io
-import numpy as np
 
 from obspy import UTCDateTime, read
 from obspy.geodetics import kilometers2degrees, degrees2kilometers
@@ -533,28 +532,49 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1'):
         if len(line.rstrip()) > 0:
             event_str.append(line)
         elif len(event_str) > 0:
-            tmp_sfile = io.StringIO()
-            for event_line in event_str:
-                tmp_sfile.write(event_line)
-            tagged_lines = _get_line_tags(f=tmp_sfile)
-            # Get basic event info
-            new_event = _readheader(head_lines=tagged_lines['1'])
-            # Get uncertainty info
-            new_event = _read_uncertainty(tagged_lines, new_event)
-            # Get focal mechanisms
-            new_event = _read_focal_mechanisms(tagged_lines, new_event)
-            # Get moment tensors
-            new_event = _read_moment_tensors(tagged_lines, new_event)
-            if return_wavnames:
-                wav_names.append(_readwavename(f=tmp_sfile))
-            new_event = _read_picks(tagged_lines=tagged_lines,
-                                    new_event=new_event)
-            catalog += new_event
+            catalog, wav_names = _extract_event(
+                event_str=event_str, catalog=catalog, wav_names=wav_names,
+                return_wavnames=return_wavnames)
             event_str = []
     f.close()
+    if len(event_str) > 0:
+        # May occur if the last line of the file is not blank as it should be
+        catalog, wav_names = _extract_event(
+            event_str=event_str, catalog=catalog, wav_names=wav_names,
+            return_wavnames=return_wavnames)
     if return_wavnames:
         return catalog, wav_names
     return catalog
+
+
+def _extract_event(event_str, catalog, wav_names, return_wavnames=False):
+    """
+    Helper to extract event info from a list of line strings.
+
+    :param event_str: List of lines from sfile
+    :type event_str: list of str
+    :param catalog: Catalog to append the event to
+    :type catalog: `obspy.core.event.Catalog`
+    :param wav_names: List of waveform names
+    :type wav_names: list
+    :param return_wavnames: Whether to extract the waveform name or not.
+    :type return_wavnames: bool
+
+    :return: Adds event to catalog and returns. Works in place on catalog.
+    """
+    tmp_sfile = io.StringIO()
+    for event_line in event_str:
+        tmp_sfile.write(event_line)
+    tagged_lines = _get_line_tags(f=tmp_sfile)
+    new_event = _readheader(head_lines=tagged_lines['1'])
+    new_event = _read_uncertainty(tagged_lines, new_event)
+    new_event = _read_focal_mechanisms(tagged_lines, new_event)
+    new_event = _read_moment_tensors(tagged_lines, new_event)
+    if return_wavnames:
+        wav_names.append(_readwavename(f=tmp_sfile))
+    new_event = _read_picks(tagged_lines=tagged_lines, new_event=new_event)
+    catalog += new_event
+    return catalog, wav_names
 
 
 def _read_uncertainty(tagged_lines, event):
@@ -680,14 +700,16 @@ def _read_picks(tagged_lines, new_event):
     for tag in tags:
         try:
             pickline.extend(
-                [tup[0] for tup in sorted(tagged_lines[tag],
-                                          key=lambda tup: tup[1])])
+                [tup[0] for tup in sorted(
+                    tagged_lines[tag], key=lambda tup: tup[1])])
         except KeyError:
             pass
     header = sorted(tagged_lines['7'], key=lambda tup: tup[1])[0][0]
     for line in pickline:
         if line[18:28].strip() == '':  # If line is empty miss it
             continue
+        if len(line) < 80:
+            line = line.ljust(80)  # Pick-lines without a tag may be short.
         weight = line[14]
         if weight == '_':
             phase = line[10:17]
