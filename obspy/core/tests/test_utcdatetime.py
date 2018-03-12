@@ -14,6 +14,7 @@ from operator import ge, eq, lt, le, gt, ne
 import numpy as np
 
 from obspy import UTCDateTime
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 
 class UTCDateTimeTestCase(unittest.TestCase):
@@ -1218,9 +1219,9 @@ class UTCDateTimeTestCase(unittest.TestCase):
         t = UTCDateTime('2018-01-17T12:34:56.789012Z')
         # test getter
         self.assertEqual(t.ns, 1516192496789012000)
-        # test setter
+        # test init with ns (set attr is depreciated)
         x = 1516426162899012123
-        t.ns = x
+        t = UTCDateTime(ns=x)
         self.assertEqual(t.ns, x)
         self.assertEqual(t.day, 20)
         self.assertEqual(t.microsecond, 899012)
@@ -1319,6 +1320,107 @@ class UTCDateTimeTestCase(unittest.TestCase):
         utc = UTCDateTime(precision=0)
         utc_str = str(utc)
         self.assertNotIn('.', utc_str)
+
+    def test_change_time_attr_raises_warning(self):
+        """
+        Changing the time representation on the UTCDateTime instances should
+        raise a depreciation warning as a path towards immutability
+        (see #2072).
+        """
+        utc = UTCDateTime()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            utc.hour = 2
+        self.assertEqual(len(w), 1)
+        warn = w[0]
+        self.assertIn('will raise an Exception', str(warn.message))
+        self.assertIsInstance(warn.message, ObsPyDeprecationWarning)
+
+    def test_change_precision_raises_warning(self):
+        """
+        Changing the precision on the UTCDateTime instances should raise a
+        depreciation warning as a path towards immutability (see #2072).
+        """
+        utc = UTCDateTime()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            utc.precision = 2
+        self.assertEqual(len(w), 1)
+        warn = w[0]
+        self.assertIn('will raise an Exception', str(warn.message))
+        self.assertIsInstance(warn.message, ObsPyDeprecationWarning)
+
+    def test_compare_utc_different_precision_raises_warning(self):
+        """
+        Comparing UTCDateTime objects of different precisions should raise a
+        depreciation warning (see #2072)
+        """
+        utc1 = UTCDateTime(0, precision=2)
+        utc2 = UTCDateTime(0, precision=3)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            utc_equals = utc1 == utc2
+        self.assertEqual(utc_equals, True)
+        self.assertEqual(len(w), 1)
+        warn = w[0]
+        self.assertIn('will raise an Exception', str(warn.message))
+        self.assertIsInstance(warn.message, ObsPyDeprecationWarning)
+
+    def test_replace(self):
+        """
+        Tests for the replace method of UTCDateTime
+        """
+        test_dict = dict(
+            year=2017,
+            month=9,
+            day=18,
+            hour=18,
+            minute=30,
+            second=11,
+            microsecond=122255,
+        )
+
+        utc = UTCDateTime(**test_dict)
+
+        # iterate over each settable parameter and change
+        for attr in test_dict:
+            new_value = test_dict[attr] + 1
+            utc2 = utc.replace(**{attr: new_value})
+            self.assertIsInstance(utc2, UTCDateTime)
+            # make sure only the settable parameter changed in utc2
+            for time_attribute in test_dict:
+                default = getattr(utc, time_attribute)
+                current = getattr(utc2, time_attribute)
+                if time_attribute == attr:
+                    self.assertEqual(current, default + 1)
+                else:
+                    self.assertEqual(current, default)
+
+        # test julian day
+        utc2 = utc.replace(julday=utc.julday + 1)
+        self.assertEqual(utc2.julday, utc.julday + 1)
+
+    def test_replace_with_julday_and_month_raises(self):
+        """
+        The replace method cannot use julday with either day or month.
+        """
+        utc = UTCDateTime(0)
+        with self.assertRaises(ValueError):
+            utc.replace(julday=100, day=2)
+        with self.assertRaises(ValueError):
+            utc.replace(julday=100, month=2)
+        with self.assertRaises(ValueError):
+            utc.replace(julday=100, day=2, month=2)
+
+    def test_unsupported_replace_argument_raises(self):
+        """
+        The replace method should raise a value error if any unsupported
+        arguments are passed to it.
+        """
+        utc = UTCDateTime(0)
+        with self.assertRaises(ValueError) as e:
+            utc.replace(zweite=22)
+        self.assertIn('zweite', str(e.exception))
 
 
 def suite():
