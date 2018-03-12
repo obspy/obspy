@@ -21,6 +21,7 @@ import textwrap
 import warnings
 
 import obspy
+from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
                                   _read_from_plugin, NamedTemporaryFile,
                                   download_to_file, sanitize_filename)
@@ -29,7 +30,8 @@ from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .network import Network
-from .util import _unified_content_strings, _textwrap
+from .util import (_unified_content_strings, _textwrap, plot_inventory_epochs,
+                   _merge_plottable_structs)
 
 # Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
@@ -890,6 +892,65 @@ class Inventory(ComparingObject):
             if show:
                 plt.show()
 
+        return fig
+
+    def _get_epoch_plottable_struct(self):
+        # get structure of inventory epoch's data in format
+        # {inventory: ([(start, end)...], sample_rate, subdictionary)}
+        # where subdictionary is recursively the same for netwk, stn, ch data
+        # note that sample rate is only defined for the station level
+        # and subdictionary of inventory is network objects
+        # the conistent formatting at each level means that each level can be
+        # concatenated together -- i.e., each network epoch is a diff. object
+        # in obspy, but here they have their times merged together by name
+        plot_dict = {}
+        sub_dict = {}
+        for network in self.networks:
+            eps = network._get_epoch_plottable_struct()
+            sub_dict = _merge_plottable_structs(sub_dict, eps)
+        if hasattr(self, 'start_date'):
+            start = self.start_date
+            if self.end_time is None:
+                end = UTCDateTime.now()
+            else:
+                end = self.end_time
+        else:
+            start = UTCDateTime(0)
+            end = UTCDateTime(0)
+        time_tuple = (start, end)
+        plot_dict[str('')] = ([time_tuple], 0, sub_dict)
+        return plot_dict
+
+    def plot_epochs(self, outfile=None, colormap=None, show=True,
+                    combine=True):
+        """
+        Plot the epochs of this given inventory object.
+        Returns a pyplot figure which can be saved to file.
+        :param outfile: If included, the plot will be saved to a file with the
+            given filename. (Otherwise it will be displayed in a window)
+        :type outfile: str
+        :param colormap: If this parameter is included, the plot will use the
+            given colorspace for inventory plotting
+        :type colormap: matplotlib.colors.LinearSegmentedColormap
+        :param show: If set as true, will display the plot in a window
+        :type show: boolean
+        :param combine: If set as true, channels with matching epochs will be
+            merged onto the same y-axis values
+        :type combine: boolean
+
+        .. rubric:: Example
+
+        >>> inv = read_inventory()
+        >>> inv.plot_epochs(show=True) # doctest: +SKIP
+
+        .. plot::
+            inv = read_inventory()
+            inv.plot_epochs(show=True)
+
+        """
+        plot_dict = self._get_epoch_plottable_struct()
+        fig = plot_inventory_epochs(plot_dict, outfile, colormap, show,
+                                    combine)
         return fig
 
 

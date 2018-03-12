@@ -14,9 +14,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import python_2_unicode_compatible
 
+from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.obspy_types import FloatWithUncertainties
 from . import BaseNode
-from .util import Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude
+from .util import (Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude,
+                   plot_inventory_epochs)
 
 
 @python_2_unicode_compatible
@@ -364,6 +366,43 @@ class Channel(BaseNode):
             axes=axes, sampling_rate=self.sample_rate,
             unwrap_phase=unwrap_phase, plot_degrees=plot_degrees, show=show,
             outfile=outfile)
+
+    def _get_epoch_plottable_struct(self):
+        # channel is leaf object of inventory tree -- has no sub-dictionary
+        # but does have a sample rate defined
+        # for more information see same-name method in inventory.py
+        plot_dict = {}
+        name = str(self.location_code) + "." + str(self.code)
+        if self.start_date is not None:
+            if self.end_date is None:
+                end = UTCDateTime.now()
+            else:
+                end = self.end_date
+            time_tuple = (self.start_date, end)
+            plot_dict[name] = ([time_tuple], self.sample_rate, {})
+        return plot_dict
+
+    def plot_epochs(self, outfile=None, colormap=None, show=True,
+                    combine=True):
+        """
+        Plot the epochs of this given inventory object.
+        Returns a pyplot figure which can be saved to file.
+        :param outfile: If included, the plot will be saved to a file with the
+            given filename. (Otherwise it will be displayed in a window)
+        :type outfile: str
+        :param colormap: If this parameter is included, the plot will use the
+            given colorspace for inventory plotting
+        :type colormap: matplotlib.colors.LinearSegmentedColormap
+        :param show: If set as true, will display the plot in a window
+        :type show: boolean
+        :param combine: If set as true, channels with matching epochs will be
+            merged onto the same y-axis values
+        :type combine: boolean
+        """
+        plot_dict = self._get_epoch_plottable_struct()
+        fig = plot_inventory_epochs(plot_dict, outfile, colormap, show,
+                                    combine)
+        return fig
 
 
 if __name__ == '__main__':
