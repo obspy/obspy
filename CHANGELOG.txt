@@ -34,6 +34,9 @@ master:
    * Tests pass with numpy 1.14 (see #2044).
  - obspy.core:
    * Fix pickling of traces with a sampling rate of 0 (see #1990)
+ - obspy.core:
+   * read_inventory() used with non-existing file path (e.g. typo in filename)
+     now shows a proper "No such file or directory" error message (see #2062)
  - obspy.clients.arclink:
    * Raise a warning at import time that the ArcLink protocol will be
      deprecated soon (see #1987).
@@ -43,6 +46,8 @@ master:
  - obspy.io.mseed:
    * Ability to read files that have embedded chunks of non SEED data.
      (see #1981, #2057).
+   * Fix util.get_start_and_end_time returning sample rate = 0 when
+     sample rate = 1 (see #2069)
  - obspy.io.reftek:
    * Fix problems reading some Reftek 130 files, presumably due to floating
      point accuracy issues in comparing timestamps. Internal representation of

@@ -12,7 +12,9 @@ Test suite for the inventory class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY2, native_str
 
+import builtins
 import os
 import unittest
 import warnings
@@ -25,6 +27,7 @@ from obspy import UTCDateTime, read_inventory, read_events
 from obspy.core.compatibility import mock
 from obspy.core.util import (
     BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION)
+from obspy.core.util.base import _get_entry_points
 from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
@@ -430,6 +433,38 @@ class InventoryTestCase(unittest.TestCase):
         )
         for contents_, expected_ in zip(contents, expected):
             self.assertEqual(expected_, _unified_content_strings(contents_))
+
+    def test_read_invalid_filename(self):
+        """
+        Tests that we get a sane error message when calling read_inventory()
+        with a filename that doesn't exist
+        """
+        doesnt_exist = 'dsfhjkfs'
+        for i in range(10):
+            if os.path.exists(doesnt_exist):
+                doesnt_exist += doesnt_exist
+                continue
+            break
+        else:
+            self.fail('unable to get invalid file path')
+        doesnt_exist = native_str(doesnt_exist)
+
+        if PY2:
+            exception_type = getattr(builtins, 'IOError')
+        else:
+            exception_type = getattr(builtins, 'FileNotFoundError')
+        exception_msg = "[Errno 2] No such file or directory: '{}'"
+
+        formats = _get_entry_points(
+            'obspy.plugin.inventory', 'readFormat').keys()
+        # try read_inventory() with invalid filename for all registered read
+        # plugins and also for filetype autodiscovery
+        formats = [None] + list(formats)
+        for format in formats[:1]:
+            with self.assertRaises(exception_type) as e:
+                read_inventory(doesnt_exist, format=format)
+            self.assertEqual(
+                str(e.exception), exception_msg.format(doesnt_exist))
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')

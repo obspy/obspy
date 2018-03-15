@@ -201,6 +201,36 @@ class MSEEDUtilTestCase(unittest.TestCase):
         self.assertEqual(info['number_of_records'], 2)
         self.assertEqual(info['excess_bytes'], 0)
 
+    def test_issue2069(self):
+        """
+        Tests the util._get_ms_file_info method with sample rate of 0.
+        Reads a datafile and sets sr factor and multipier to 0 and and mseed
+        ASCII LOG file with a sample rate of 0.
+        """
+
+        # Test with a file by setting sr = 0
+        filename = os.path.join(self.path, 'data',
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        fmt = '>HHBBBxHHhhBBBxlxxH'
+        with open(filename, "rb") as fh:
+            with io.BytesIO(fh.read()) as buf:
+                buf.seek(20, 0)
+                data = buf.read(28)
+                values = list(unpack(fmt, data))
+                values[7] = 0
+                values[8] = 0
+                data = pack(fmt, *values)
+                buf.seek(20, 0)
+                buf.write(data)
+                buf.seek(0, 0)
+                info = util.get_record_information(buf)
+                self.assertEqual(info['samp_rate'], 0)
+
+        # Test with an actual sr = 0 file
+        filename = os.path.join(self.path, 'data', 'rt130_sr0_cropped.mseed')
+        info = util.get_record_information(filename)
+        self.assertEqual(info['samp_rate'], 0)
+
     def test_get_data_quality(self):
         """
         This test reads a self-made Mini-SEED file with set Data Quality Bits.
