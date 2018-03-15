@@ -556,6 +556,143 @@ class Inventory(ComparingObject):
         inv.networks = networks
         return inv
 
+    def remove(self, network=None, station=None, location=None, channel=None,
+               keep_empty=False):
+        """
+        Returns the :class:`Inventory` object that excluding the
+        :class:`~obspy.core.inventory.network.Network`\ s /
+        :class:`~obspy.core.inventory.station.Station`\ s /
+        :class:`~obspy.core.inventory.channel.Channel`\ s that match the given
+        criteria (e.g. all channels with ``channel="EHZ"``).
+
+        .. warning::
+            The returned object is based on a shallow copy of the original
+            object. That means that modifying any mutable child elements will
+            also modify the original object
+            (see https://docs.python.org/2/library/copy.html).
+            Use :meth:`copy()` afterwards to make a new copy of the data in
+            memory.
+
+        .. rubric:: Example
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> inv = read_inventory()
+        >>> inv_new = inv.remove(network='BW')
+        >>> print(inv_new)  # doctest: +NORMALIZE_WHITESPACE
+        Inventory created at 2014-03-03T11:07:06.198000Z
+            Created by: fdsn-stationxml-converter/1.0.0
+                    http://www.iris.edu/fdsnstationconverter
+            Sending institution: Erdbebendienst Bayern
+            Contains:
+                Networks (1):
+                    GR
+                Stations (2):
+                    GR.FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
+                    GR.WET (Wettzell, Bavaria, GR-Net)
+                Channels (21):
+                    GR.FUR..BHZ, GR.FUR..BHN, GR.FUR..BHE, GR.FUR..HHZ,
+                    GR.FUR..HHN, GR.FUR..HHE, GR.FUR..LHZ, GR.FUR..LHN,
+                    GR.FUR..LHE, GR.FUR..VHZ, GR.FUR..VHN, GR.FUR..VHE,
+                    GR.WET..BHZ, GR.WET..BHN, GR.WET..BHE, GR.WET..HHZ,
+                    GR.WET..HHN, GR.WET..HHE, GR.WET..LHZ, GR.WET..LHN,
+                    GR.WET..LHE
+        >>> inv_new = inv.remove(network='BW', channel="[EH]*")
+        >>> print(inv_new)  # doctest: +NORMALIZE_WHITESPACE
+        Inventory created at 2014-03-03T11:07:06.198000Z
+            Created by: fdsn-stationxml-converter/1.0.0
+                    http://www.iris.edu/fdsnstationconverter
+            Sending institution: Erdbebendienst Bayern
+            Contains:
+                Networks (1):
+                    GR
+                Stations (2):
+                    GR.FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
+                    GR.WET (Wettzell, Bavaria, GR-Net)
+                Channels (21):
+                    GR.FUR..BHZ, GR.FUR..BHN, GR.FUR..BHE, GR.FUR..HHZ,
+                    GR.FUR..HHN, GR.FUR..HHE, GR.FUR..LHZ, GR.FUR..LHN,
+                    GR.FUR..LHE, GR.FUR..VHZ, GR.FUR..VHN, GR.FUR..VHE,
+                    GR.WET..BHZ, GR.WET..BHN, GR.WET..BHE, GR.WET..HHZ,
+                    GR.WET..HHN, GR.WET..HHE, GR.WET..LHZ, GR.WET..LHN,
+                    GR.WET..LHE
+        >>> inv_new = inv.remove(network='BW', channel="[EH]*",
+        ...                      keep_empty=True)
+        >>> print(inv_new)  # doctest: +NORMALIZE_WHITESPACE
+        Inventory created at 2014-03-03T11:07:06.198000Z
+            Created by: fdsn-stationxml-converter/1.0.0
+                    http://www.iris.edu/fdsnstationconverter
+            Sending institution: Erdbebendienst Bayern
+            Contains:
+                Networks (2):
+                    BW, GR
+                Stations (5):
+                    BW.RJOB (Jochberg, Bavaria, BW-Net) (3x)
+                    GR.FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
+                    GR.WET (Wettzell, Bavaria, GR-Net)
+                Channels (21):
+                    GR.FUR..BHZ, GR.FUR..BHN, GR.FUR..BHE, GR.FUR..HHZ,
+                    GR.FUR..HHN, GR.FUR..HHE, GR.FUR..LHZ, GR.FUR..LHN,
+                    GR.FUR..LHE, GR.FUR..VHZ, GR.FUR..VHN, GR.FUR..VHE,
+                    GR.WET..BHZ, GR.WET..BHN, GR.WET..BHE, GR.WET..HHZ,
+                    GR.WET..HHN, GR.WET..HHE, GR.WET..LHZ, GR.WET..LHN,
+                    GR.WET..LHE
+
+        The `network`, `station`, `location` and `channel` selection criteria
+        may also contain UNIX style wildcards (e.g. ``*``, ``?``, ...; see
+        :func:`~fnmatch.fnmatch`).
+
+        :type network: str
+        :param network: Potentially wildcarded network code. If not given,
+            all network codes will be accepted.
+        :type station: str
+        :param station: Potentially wildcarded station code. If not given,
+            all station codes will be accepted.
+        :type location: str
+        :param location: Potentially wildcarded location code. If not given,
+            all location codes will be accepted.
+        :type channel: str
+        :param channel: Potentially wildcarded channel code. If not given,
+            all channel codes will be accepted.
+        :type keep_empty: bool
+        :param keep_empty: If set to `True`, networks/stations that are left
+            without child elements (stations/channels) will be included in the
+            result.
+        """
+        selected = self.select(network=network, station=station,
+                               location=location, channel=channel)
+        selected_networks = [net for net in selected]
+        selected_stations = [sta for net in selected_networks for sta in net]
+        selected_channels = [cha for net in selected_networks
+                             for sta in net for cha in sta]
+        networks = []
+        for net in self:
+            if net in selected_networks and station is None and \
+                    location is None and channel is None:
+                continue
+            stations = []
+            for sta in net:
+                if sta in selected_stations and location is None \
+                        and channel is None:
+                    continue
+                channels = []
+                for cha in sta:
+                    if cha in selected_channels:
+                        continue
+                    channels.append(cha)
+                if not channels and not keep_empty:
+                    continue
+                sta = copy.copy(sta)
+                sta.channels = channels
+                stations.append(sta)
+            if not stations and not keep_empty:
+                continue
+            net = copy.copy(net)
+            net.stations = stations
+            networks.append(net)
+        inv = copy.copy(self)
+        inv.networks = networks
+        return inv
+
     def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
              size=15**2, label=True, color='#b15928', color_per_network=False,
