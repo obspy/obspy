@@ -23,8 +23,9 @@ from future.builtins import *  # NOQA
 
 from obspy import UTCDateTime
 from obspy.core.event.base import (
-    _event_type_class_factory, ResourceIdentifier, CreationInfo,
+    _event_type_class_factory, CreationInfo,
     WaveformStreamID, ConfidenceEllipsoid)
+from obspy.core.event import ResourceIdentifier
 from obspy.core.event.header import (
     EvaluationMode, EvaluationStatus, OriginDepthType, OriginType,
     OriginUncertaintyDescription, PickOnset, PickPolarity,
@@ -326,7 +327,7 @@ class Pick(__Pick):
     A pick is the observation of an amplitude anomaly in a seismogram at a
     specific point in time. It is not necessarily related to a seismic event.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Pick.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -423,12 +424,12 @@ class Arrival(__Arrival):
     slowness and backazimuth of the observed wave—especially if derived from
     array data—may further constrain the nature of the arrival.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Arrival.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type pick_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type pick_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param pick_id: Refers to the resource_id of a Pick.
     :type phase: str
     :param phase: Phase identification. For possible values, please refer to

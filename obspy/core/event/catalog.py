@@ -39,7 +39,8 @@ from obspy.core.util.decorator import (map_example_filename, rlock,
 from obspy.core.util.misc import buffered_load_entry_point
 from obspy.imaging.cm import obspy_sequential
 
-from .base import CreationInfo, ResourceIdentifier
+from .base import CreationInfo
+from obspy.core.event import ResourceIdentifier
 
 from .event import Event
 
@@ -53,7 +54,7 @@ class Catalog(object):
 
     :type events: list of :class:`~obspy.core.event.event.Event`, optional
     :param events: List of events
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of the catalog.
     :type description: str, optional
     :param description: Description string that can be assigned to the

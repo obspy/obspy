@@ -23,8 +23,9 @@ from future.builtins import *  # NOQA
 
 from obspy import UTCDateTime
 from obspy.core.event.base import (
-    _event_type_class_factory, ResourceIdentifier, CreationInfo,
+    _event_type_class_factory, CreationInfo,
     WaveformStreamID, TimeWindow)
+from obspy.core.event import ResourceIdentifier
 from obspy.core.event.header import (
     AmplitudeCategory, AmplitudeUnit, EvaluationMode, EvaluationStatus,
     ATTRIBUTE_HAS_ERRORS)
@@ -54,7 +55,7 @@ class Magnitude(__Magnitude):
     originID. It is either a combination of different magnitude estimations, or
     it represents the reported magnitude for the given event.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Magnitude.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -244,7 +245,7 @@ class Amplitude(__Amplitude):
     single amplitude measurement or a measurement of the visible signal
     duration for duration magnitudes.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Amplitude.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of

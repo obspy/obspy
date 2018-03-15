@@ -22,6 +22,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 import copy
 
+from obspy.core.event import ResourceIdentifier
 from obspy.core.event.header import (
     EventType, EventTypeCertainty, EventDescriptionType)
 from obspy.core.util.decorator import rlock
@@ -57,7 +58,7 @@ class Event(__Event):
     event is usually associated with one or more magnitudes, and with one or
     more focal mechanism determinations.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Event.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -101,6 +102,10 @@ class Event(__Event):
         :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
     do_not_warn_on = ["_format", "extra"]
+
+    def __init__(self, *args, **kwargs):
+        super(Event, self).__init__(*args, **kwargs)
+        ResourceIdentifier.bind_resource_ids()
 
     def short_str(self):
         """

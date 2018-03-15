@@ -26,7 +26,8 @@ from future.builtins import *  # NOQA
 import numpy as np
 
 from obspy.core.event.base import (
-    _event_type_class_factory, ResourceIdentifier, CreationInfo)
+    _event_type_class_factory, CreationInfo)
+from obspy.core.event import ResourceIdentifier
 from obspy.core.event.header import (
     EvaluationMode, EvaluationStatus, MomentTensorCategory, MTInversionType,
     SourceTimeFunctionType, ATTRIBUTE_HAS_ERRORS)
@@ -269,12 +270,12 @@ class MomentTensor(__MomentTensor):
     This class represents a moment tensor solution for an event. It is an
     optional part of a FocalMechanism description.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of MomentTensor.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type derived_origin_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type derived_origin_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param derived_origin_id: Refers to the resource_id of the Origin derived
         in the moment tensor inversion.
     :type moment_magnitude_id:
@@ -368,7 +369,7 @@ class FocalMechanism(__FocalMechanism):
     moment tensor description is provided by objects of the class MomentTensor
     which can be specified as child elements of FocalMechanism.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of FocalMechanism.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
