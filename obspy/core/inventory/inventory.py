@@ -556,14 +556,14 @@ class Inventory(ComparingObject):
         inv.networks = networks
         return inv
 
-    def remove(self, network=None, station=None, location=None, channel=None,
+    def remove(self, network='*', station='*', location='*', channel='*',
                keep_empty=False):
         """
-        Returns the :class:`Inventory` object that excluding the
+        Returns the :class:`Inventory` object but excluding the
         :class:`~obspy.core.inventory.network.Network`\ s /
         :class:`~obspy.core.inventory.station.Station`\ s /
         :class:`~obspy.core.inventory.channel.Channel`\ s that match the given
-        criteria (e.g. all channels with ``channel="EHZ"``).
+        criteria (e.g. remove all ``EHZ`` channels with ``channel="EHZ"``).
 
         .. warning::
             The returned object is based on a shallow copy of the original
@@ -642,21 +642,25 @@ class Inventory(ComparingObject):
         :func:`~fnmatch.fnmatch`).
 
         :type network: str
-        :param network: Potentially wildcarded network code. If not given,
-            all network codes will be accepted.
+        :param network: Potentially wildcarded network code. If not specified,
+            then all network codes will be matched for removal (combined with
+            other options).
         :type station: str
-        :param station: Potentially wildcarded station code. If not given,
-            all station codes will be accepted.
+        :param station: Potentially wildcarded station code. If not specified,
+            then all station codes will be matched for removal (combined with
+            other options).
         :type location: str
-        :param location: Potentially wildcarded location code. If not given,
-            all location codes will be accepted.
+        :param location: Potentially wildcarded location code. If not
+            specified, then all location codes will be matched for removal
+            (combined with other options).
         :type channel: str
-        :param channel: Potentially wildcarded channel code. If not given,
-            all channel codes will be accepted.
+        :param channel: Potentially wildcarded channel code. If not specified,
+            then all channel codes will be matched for removal (combined with
+            other options).
         :type keep_empty: bool
         :param keep_empty: If set to `True`, networks/stations that are left
-            without child elements (stations/channels) will be included in the
-            result.
+            without child elements (stations/channels) will still be included
+            in the result.
         """
         selected = self.select(network=network, station=station,
                                location=location, channel=channel)
@@ -666,13 +670,13 @@ class Inventory(ComparingObject):
                              for sta in net for cha in sta]
         networks = []
         for net in self:
-            if net in selected_networks and station is None and \
-                    location is None and channel is None:
+            if net in selected_networks and station == '*' and \
+                    location == '*' and channel == '*':
                 continue
             stations = []
             for sta in net:
-                if sta in selected_stations and location is None \
-                        and channel is None:
+                if sta in selected_stations and location == '*' \
+                        and channel == '*':
                     continue
                 channels = []
                 for cha in sta:
