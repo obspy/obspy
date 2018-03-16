@@ -8,6 +8,7 @@ master:
      attributes outside of init, or comparing UTCDateTime objects with
      different precisions (see #2077).
    * Added replace method to UTCDateTime class (see #2077).
+   * Added remove method to Inventory class (see #2088).
  - obspy.io.reftek:
    * Implement reading reftek encodings '16' and '32' (uncompressed data,
      16/32bit integers, see #2058 and #2059)
