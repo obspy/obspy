@@ -30,7 +30,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from obspy.core.event.resource_id import ResourceIdentifier
+from obspy.core.event.resourceid import ResourceIdentifier
 from obspy.core.event.header import DataUsedWaveType, ATTRIBUTE_HAS_ERRORS
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
@@ -407,7 +407,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
 
         def __deepcopy__(self, memodict=None):
             """
-            reset resource_id's object_id after deep copy to allow the
+            Reset resource_id's object_id after deep copy to allow the
             object specific behavior of get_referred_object
             """
             memodict = memodict or {}

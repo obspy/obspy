@@ -3,21 +3,18 @@ Tests for the resource identifier
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
+from future.builtins import *  # NOQA
 
-import gc
+import io
 import itertools
-import os
 import sys
-import tempfile
 import unittest
 import warnings
 
-from future.builtins import str, list, object, dict
-
-import obspy.core.event as ev
-from obspy import UTCDateTime, read_events, Catalog
-from obspy.core.event import ResourceIdentifier
+import obspy.core.util.testing
+from obspy import UTCDateTime, read_events
+from obspy.core import event as ev
+from obspy.core.event.resourceid import ResourceIdentifier, _ResourceSingleton
 
 
 class ResourceIdentifierTestCase(unittest.TestCase):
@@ -25,11 +22,17 @@ class ResourceIdentifierTestCase(unittest.TestCase):
     Test suite for obspy.core.event.ResourceIdentifier.
     """
     def setUp(self):
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
+        """
+        Setup code to run before each test. Temporary replaces the
+        resource_id_weak_dict and unbound_resource_id on the
+        ResourceIdentifier class level and binds the new dicts to self with
+        keys 'r_dict' and 'unbound'.
+        """
+        # setup temporary id dict for tests in this case and bind to self
+        context = ResourceIdentifier._debug_class_state()
+        state = setup_with_context_manager(self, context)
+        self.r_dict = state['rdict']  # the weak resource dict
+        self.unbound = state['unbound']  # the ubound resource ids
 
     def test_same_resource_id_different_referred_object(self):
         """
@@ -83,9 +86,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         Only those ResourceIdentifiers that have a reference to an object that
         is referred to somewhere else should stay in the dictionary.
         """
-        r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
         _r1 = ResourceIdentifier()  # NOQA
-        self.assertEqual(len(list(r_dict.keys())), 0)
+        self.assertEqual(len(list(self.r_dict.keys())), 0)
         # Adding a ResourceIdentifier with an object that does not have a
         # reference will result in a dict that contains None, but that will
         # get removed when the resource_id goes out of scope
@@ -98,7 +100,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         # Give it a reference and it will stick around.
         obj = UTCDateTime()
         _r3 = ResourceIdentifier(referred_object=obj)  # NOQA
-        self.assertEqual(len(list(r_dict.keys())), 1)
+        self.assertEqual(len(list(self.r_dict.keys())), 1)
 
     def test_adding_a_referred_object_after_creation(self):
         """
@@ -173,8 +175,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         res1 = ResourceIdentifier(referred_object=obj_a)
         res2 = ResourceIdentifier(referred_object=obj_b)
         # Now two keys should be in the global dict.
-        rdict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        self.assertEqual(len(list(rdict.keys())), 2)
+        self.assertEqual(len(list(self.r_dict.keys())), 2)
         del obj_a, obj_b
         # raises UserWarnings
         with warnings.catch_warnings():
@@ -224,70 +225,37 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         rid = ResourceIdentifier()
         self.assertEqual(rid.id, rid.get_quakeml_uri())
 
-    def test_resource_id_tracking(self):
-        """
-        The class keeps track of all instances.
-        """
-        # Create a couple of lightweight objects for testing purposes.
-        t1 = UTCDateTime(2013, 1, 1)
-        t2 = UTCDateTime(2013, 1, 2)
-        t3 = UTCDateTime(2013, 1, 3)
-
-        # First assert, that all ResourceIds are tracked correctly.
-        r1 = ResourceIdentifier("a", referred_object=t1)
-        r2 = ResourceIdentifier("b", referred_object=t2)
-        r3 = ResourceIdentifier("c", referred_object=t3)
-
-        self.assertEqual(
-            ResourceIdentifier._ResourceIdentifier__resource_id_tracker,
-            {"a": 1, "b": 1, "c": 1})
-
-        # Create a new instance, similar to the first one.
-        r4 = ResourceIdentifier("a", referred_object=t1)
-        self.assertEqual(
-            ResourceIdentifier._ResourceIdentifier__resource_id_tracker,
-            {"a": 2, "b": 1, "c": 1})
-
-        # Now delete r2 and r4. They should not be tracked anymore.
-        del r2
-        del r4
-        self.assertEqual(
-            ResourceIdentifier._ResourceIdentifier__resource_id_tracker,
-            {"a": 1, "c": 1})
-
-        # Delete the two others. Nothing should be tracked any more.
-        del r1
-        del r3
-        self.assertEqual(
-            ResourceIdentifier._ResourceIdentifier__resource_id_tracker, {})
-
     def test_automatic_dereferring_if_resource_id_goes_out_of_scope(self):
         """
         Tests that objects that have no more referrer are no longer stored in
         the reference dictionary.
         """
-        t1 = UTCDateTime(2010, 1, 1)  # test object
-        r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        rid = 'a'  # test resource id
+        with ResourceIdentifier._debug_class_state() as id_state:
+            r_dict = id_state['rdict']
+            t1 = UTCDateTime(2010, 1, 1)  # test object
+            rid = 'a'  # test resource id
 
-        # Create object and assert the reference has been created.
-        r1 = ResourceIdentifier(rid, referred_object=t1)
-        self.assertEqual(r1.get_referred_object(), t1)
-        self.assertTrue(rid in r_dict)
-        # Deleting the object should remove the reference.
-        del r1
-        self.assertFalse(rid in r_dict)
-        # Now create two equal references.
-        r1 = ResourceIdentifier(rid, referred_object=t1)
-        r2 = ResourceIdentifier(rid, referred_object=t1)
-        self.assertEqual(r1.get_referred_object(), t1)
-        # Deleting one should not remove the reference.
-        del r1
-        self.assertEqual(r2.get_referred_object(), t1)
-        self.assertTrue(rid in r_dict)
-        # Deleting the second one should
-        del r2
-        self.assertFalse(rid in r_dict)
+            # Create object and assert the reference has been created.
+            r1 = ResourceIdentifier(rid, referred_object=t1)
+            self.assertEqual(r1.get_referred_object(), t1)
+            self.assertTrue(r1._id_key in r_dict)
+            # Deleting the object should remove the reference.
+            r_dict_len = len(r_dict)
+            del r1
+            self.assertEqual(len(r_dict), r_dict_len - 1)
+            # Now create two equal references.
+            r1 = ResourceIdentifier(rid, referred_object=t1)
+            r2 = ResourceIdentifier(rid, referred_object=t1)
+            self.assertEqual(r1.get_referred_object(), t1)
+            # Deleting one should not remove the reference.
+            del r1
+            self.assertEqual(r2.get_referred_object(), t1)
+            self.assertIn(r2._id_key, r_dict)
+            # Deleting the second one should (r_dict should not be empty)
+            del r2
+            self.assertEqual(len(r_dict), 0)
+            r3 = ResourceIdentifier(rid)
+            self.assertNotIn(r3._id_key, r_dict)
 
     def test_initialize_with_resource_identifier(self):
         """
@@ -336,179 +304,217 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         rdict1 = current_rdict()
         rid1 = make_resouce_id()
 
-        self.assertIn(rid1.id, rdict1)
+        self.assertIn(rid1._id_key, rdict1)
 
         with ResourceIdentifier._debug_class_state():
             # rdict state should have been replaced
-            self.assertNotIn(rid1.id, current_rdict())
+            self.assertNotIn(rid1._id_key, current_rdict())
             rid2 = make_resouce_id()
-            self.assertIn(rid2.id, current_rdict())
+            self.assertIn(rid2._id_key, current_rdict())
 
             with ResourceIdentifier._debug_class_state():
-                self.assertNotIn(rid1.id, current_rdict())
-                self.assertNotIn(rid2.id, current_rdict())
+                self.assertNotIn(rid1._id_key, current_rdict())
+                self.assertNotIn(rid2._id_key, current_rdict())
                 rid3 = make_resouce_id()
-                self.assertIn(rid3.id, current_rdict())
+                self.assertIn(rid3._id_key, current_rdict())
 
-            self.assertNotIn(rid3.id, current_rdict())
-            self.assertIn(rid2.id, current_rdict())
+            self.assertNotIn(rid3._id_key, current_rdict())
+            self.assertIn(rid2._id_key, current_rdict())
 
-        self.assertNotIn(rid2.id, current_rdict())
-        self.assertIn(rid1.id, current_rdict())
+        self.assertNotIn(rid2._id_key, current_rdict())
+        self.assertIn(rid1._id_key, current_rdict())
 
-
-class ResourceIDEventScopeTestCase(unittest.TestCase):
-    """
-    Test suit for ensuring event scoping of objects bound to
-    ResourceIdentifier instances
-    """
-
-    def run(self, result=None):
-        with ResourceIdentifier._debug_class_state() as state:
-            self.state = state
-            super(ResourceIDEventScopeTestCase, self).run(result)
-
-    def setUp(self):
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        # context = ResourceIdentifier._debug_class_state
-        # self.state = setup_with_context_manager(self, context)
-        # import pdb; pdb.set_trace()
-        # ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        # ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
-        # set the test catalog as an attr for test access
-        self.catalog = MegaCat().catalog
-        # save the catalog to a temp file for testing reading in the catalog
-        self.catalog_path = tempfile.mkstemp()[1]
-        self.catalog.write(self.catalog_path, 'quakeml')
-        # copying then deleting seems to affect other copied catalogs
-
-        r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        count = ResourceIdentifier._ResourceIdentifier__resource_id_tracker
-        unbound = ResourceIdentifier._ResourceIdentifier__unbound_resource_id
-
-        from pprint import pprint
-        import pdb; pdb.set_trace()
-
-        pprint(r_dict)
-        pprint(count)
-        pprint(unbound)
-
-        old = self.catalog.copy()
-
-        pprint(r_dict)
-        pprint(count)
-        pprint(unbound)
-
-        del old
-
-        pprint(r_dict)
-        pprint(count)
-        pprint(unbound)
-
-        # create a list of equal catalogs/events created with read and copy
-        self.event_list = [
-            self.catalog[0],
-            read_events(self.catalog_path)[0],
-            read_events(self.catalog_path)[0],
-            self.catalog.copy()[0],
-            self.catalog.copy()[0],
-        ]
+    def test_copy_catalog(self):
+        """
+        Test that the number of the object ids in each resource id dict value
+        ticks up once for each copy of the catalog made.
+        """
+        # generate some catalogs
+        cat_list = self.make_mega_catalog_list()
+        # list of dicts containing referred object ids
+        id_list = list(self.r_dict.values())
+        for id_dict in id_list:
+            # get the length of living weak refs in id_dict
+            alive_len = len([x for _, x in id_dict.items()
+                             if x() is not None])
+            self.assertEqual(alive_len, len(cat_list))
 
     def test_preferred_origin(self):
         """
         Test preferred_origin is set and event scoped.
         """
-        for ev in self.event_list:
-            preferred_origin = ev.preferred_origin()
+        for ev in self.make_mega_catalog_list():
+            preferred_origin = ev[0].preferred_origin()
             self.assertIsNotNone(preferred_origin)
-            self.assertIs(preferred_origin, ev.origins[-1])
+            self.assertIs(preferred_origin, ev[0].origins[-1])
 
     def test_preferred_magnitude(self):
         """
         Test preferred_magnitude is set and event scoped.
         """
-        for ev in self.event_list:
-            preferred_magnitude = ev.preferred_magnitude()
+        for ev in self.make_mega_catalog_list():
+            preferred_magnitude = ev[0].preferred_magnitude()
             self.assertIsNotNone(preferred_magnitude)
-            self.assertIs(preferred_magnitude, ev.magnitudes[-1])
+            self.assertIs(preferred_magnitude, ev[0].magnitudes[-1])
 
     def test_preferred_focal_mechanism(self):
         """
         Test preferred_focal_mechanism is set and event scoped.
         """
-        for ev in self.event_list:
-            preferred_focal_mech = ev.preferred_focal_mechanism()
+        for ev in self.make_mega_catalog_list():
+            preferred_focal_mech = ev[0].preferred_focal_mechanism()
             self.assertIsNotNone(preferred_focal_mech)
-            self.assertIs(preferred_focal_mech, ev.focal_mechanisms[-1])
+            self.assertIs(preferred_focal_mech, ev[0].focal_mechanisms[-1])
 
     def test_arrivals_refer_to_picks_in_same_event(self):
         """
         Ensure the pick_ids of the arrivals refer to the pick belonging
         to the same event.
         """
-        for ev in self.event_list:
-            pick_id = ev.picks[0].resource_id
-            arrival_pick_id = ev.origins[0].arrivals[0].pick_id
+        for ev in self.make_mega_catalog_list():
+            pick_id = ev[0].picks[0].resource_id
+            arrival_pick_id = ev[0].origins[0].arrivals[0].pick_id
             self.assertEqual(pick_id, arrival_pick_id)
-            pick = ev.picks[0]
+            pick = ev[0].picks[0]
             arrival_pick = arrival_pick_id.get_referred_object()
             self.assertIs(pick, arrival_pick)
 
-    def test_all_referred_objects_in_event(self):
+    def test_all_referred_objects_in_catalog(self):
         """
-        All the referred object should be members of the current event.
+        All the referred object should be members of the current one event
+        catalog.
         """
-        for ev in self.event_list:
-            self.assertTrue(all_resource_ids_in_event(ev))
+        for ev in self.make_mega_catalog_list():
+            ev_ids = get_object_id_dict(ev)  # all ids containe in dict
+            for rid in get_instances(ev, ResourceIdentifier):
+                referred_object = rid.get_referred_object()
+                if referred_object is None:
+                    continue
+                self.assertIn(id(referred_object), ev_ids)
+
+    def test_all_resource_id_attrs_are_attached(self):
+        """
+        Find all objects that have a resource_id attribute and ensure it
+        is an instance of ResourceIdentifier and refers to the object.
+        """
+        catalogs = self.make_mega_catalog_list()
+        for cat in catalogs:  # iterate the test catalog
+            for obj in get_instances(cat, has_attr='resource_id'):
+                if isinstance(obj, ResourceIdentifier):
+                    continue
+                rid = obj.resource_id
+                self.assertIsInstance(rid, ResourceIdentifier)
+                referred_object = rid.get_referred_object()
+                self.assertIsNotNone(referred_object)
+                # the attached resource id should refer to parent object
+                self.assertIs(obj, referred_object)
 
     def test_no_overlapping_objects(self):
         """
-        Each event should share no objects (only copies) with other events.
+        Each event should share no objects, except the id_key singletons, with
+        copies of the same event.
         """
-        # get a dict of all ids found in objects in each event
-        ids = [get_object_id_dict(ev) for ev in self.event_list]
-        # iterate all combinations and make sure there is no overlap
-        for id_set1, id_set2 in itertools.combinations(ids, 2):
-            shared_objects = set(id_set1) & set(id_set2)
-            self.assertEqual(len(shared_objects), 0)
+        catalogs =  self.make_mega_catalog_list()
+        for cat1, cat2 in itertools.combinations(catalogs, 2):
+            # get a dict of object id: object reference
+            ids1 = get_object_id_dict(cat1)
+            ids2 = get_object_id_dict(cat2)
+            # get a dict of all singleton resource keys
+            singleton_ids1 = get_object_id_dict(cat1, _ResourceSingleton)
+            singleton_ids2 = get_object_id_dict(cat2, _ResourceSingleton)
+            # get a dict of all objects that are not singleton resource keys
+            non_singleton1 = set(ids1) - set(singleton_ids1)
+            non_singleton2 = set(ids2) - set(singleton_ids2)
+            # find any overlap between events that are not resource keys
+            overlap = non_singleton1 & non_singleton2
+            self.assertEqual(len(overlap), 0)  # assert no overlap
 
-    def tearDown(self):
-        # remove the temp file
-        os.remove(self.catalog_path)
+    # utility method for tests
+
+    def print_state(self):
+        """
+        Print the current resource_id state, very useful for debugging
+        """
+        from pprint import pprint
+        print('-' * 79)
+        print('resource_dict:')
+        pprint(dict(self.r_dict))
+        print('-' * 79)
+        print('unbound:')
+        pprint(dict(self.unbound))
+        print('-' * 79)
+
+    def make_mega_catalog_list(self):
+        """
+        Make a list of complex catalogs (and copies) and return it.
+        """
+        # create a complex catalog
+        cat1 = obspy.core.util.testing.MegaCatalog().catalog
+        # ResourceIdentifier.bind_resource_ids()
+        bytes_io = io.BytesIO()
+        cat1.write(bytes_io, 'quakeml')
+        # get a few copies from reading from bytes
+        cat2 = read_events(bytes_io)
+        cat3 = read_events(bytes_io)
+        # make more catalogs with copy method
+        cat4 = cat1.copy()
+        cat5 = cat4.copy()
+        # ensure creating a copying and deleting doesnt mess up id tracking
+        cat6 = cat2.copy()
+        del cat6
+        return [cat1, cat2, cat3, cat4, cat5]
 
 
-def get_instances(obj, cls=None):
+def get_instances(obj, cls=None, is_attr=None, has_attr=None):
     """
-    Recurse obj return a list of all instances of cls.
+    Recurse object, return a list of instances of meeting search criteria.
 
-    If cls is None, return all python instances (that have a __dict__ attr)
+    :param obj:
+        The object to recurse through attributes of lists, tuples, and other
+        instances.
+    :param cls:
+        Only return instances of cls if not None, else return all instances.
+    :param is_attr:
+        Only return objects stored as attr_name, if None return all.
+    :param has_attr:
+        Only return objects that have attribute has_attr, if None return all.
     """
     instance_cache = {}
 
-    def _get_instances(obj, cls, ids=None):
+    def _get_instances(obj, cls, ids=None, attr=None):
         out = []
-        ids = ids or set()
+        ids = ids or set()  # id cache to avoid circular references
         if id(obj) in ids:
             return []
         if (id(obj), cls) in instance_cache:
             return instance_cache[(id(obj), cls)]
         ids.add(id(obj))
-        dict_or_slots = hasattr(obj, '__dict__') or hasattr(obj, '__slots__')
         if cls is None or isinstance(obj, cls):
-            if dict_or_slots and cls is None:
+            # filter out built-ins by looking for __dict__ or __slots__
+            not_bultin = hasattr(obj, '__dict__') or hasattr(obj, '__slots__')
+            # check if this object is stored as the desired attribute
+            is_attribute = is_attr is None or attr == is_attr
+            # check if object has desired attribute
+            has_attribute = has_attr is None or hasattr(obj, has_attr)
+            if not_bultin and is_attribute and has_attribute:
                 out.append(obj)
         if hasattr(obj, '__dict__'):
             for item, val in obj.__dict__.items():
-                out += _get_instances(val, cls, ids)
+                out += _get_instances(val, cls, ids, attr=item)
         if isinstance(obj, (list, tuple)):
             for val in obj:
-                out += _get_instances(val, cls, ids)
+                out += _get_instances(val, cls, ids, attr=attr)
         instance_cache[(id(obj), cls)] = out
         return out
 
     return _get_instances(obj, cls)
+
+
+def get_object_id_dict(obj, cls=None):
+    """
+    Recurse an object and return a dict of id: object
+    """
+    return {id(x): x for x in get_instances(obj, cls)}
 
 
 def setup_with_context_manager(testcase, cm):
@@ -518,310 +524,9 @@ def setup_with_context_manager(testcase, cm):
     return val
 
 
-def get_object_id_dict(obj):
-    """
-    Recurse an object and return a dict of id: object
-    """
-    return {id(x): x for x in get_instances(obj)}
-
-
-def all_resource_ids_in_event(event):
-    """
-    Return True if all the objects referred to by resource_ids are in
-    contained in the event.
-    """
-    object_ids = {id(x) for x in get_instances(event)}
-    # iterate resource ids and ensure referred objects are in event
-    for resource_id in get_instances(event, ResourceIdentifier):
-        referred = resource_id.get_referred_object()
-        if referred is None:
-            continue
-        if not id(referred) in object_ids:
-            return False
-    return True
-
-
-class MegaCat(object):
-    """
-    Create a catalog with a single event that has many features.
-    """
-
-    def __init__(self):
-        self.time = UTCDateTime('2016-05-04T12:00:01')
-        events = [self._create_event()]
-        self.catalog = Catalog(events=events)
-
-    def _create_event(self):
-        event = ev.Event(
-            event_type='mining explosion',
-            event_descriptions=[self._get_event_description()],
-            picks=[self._create_pick()],
-            origins=[self._create_origins()],
-            station_magnitudes=[self._get_station_mag()],
-            magnitudes=[self._create_magnitudes()],
-            amplitudes=[self._get_amplitudes()],
-            focal_mechanisms=[self._get_focal_mechanisms()],
-        )
-        # set preferred origin, focal mech, magnitude
-        preferred_objects = dict(
-            origin=event.origins[-1].resource_id,
-            focal_mechanism=event.focal_mechanisms[-1].resource_id,
-            magnitude=event.magnitudes[-1].resource_id,
-        )
-        for item, value in preferred_objects.items():
-            setattr(event, 'preferred_' + item + '_id', value)
-
-        return event
-
-    def _create_pick(self):
-        # setup some of the classes
-        creation = ev.CreationInfo(
-            agency='SwanCo',
-            author='Indago',
-            creation_time=UTCDateTime(),
-            version='10.10',
-            author_url=ResourceIdentifier('me.com'),
-        )
-
-        pick = ev.Pick(
-            time=self.time,
-            comments=[ev.Comment(x) for x in 'BOB'],
-            evaluation_mode='manual',
-            evaluation_status='final',
-            creation_info=creation,
-            phase_hint='P',
-            polarity='positive',
-            onset='emergent',
-            back_azimith_errors={"uncertainty": 10},
-            slowness_method_id=ResourceIdentifier('something_very_slow'),
-            backazimuth=122.1,
-            horizontal_slowness=12,
-            method_id=ResourceIdentifier('pick.com'),
-            horizontal_slowness_errors={'uncertainty': 12},
-            filter_id=ResourceIdentifier('bandpass0_10'),
-            waveform_id=ev.WaveformStreamID('UU', 'FOO', '--', 'HHZ'),
-        )
-        self.pick_id = pick.resource_id
-        return pick
-
-    def _create_origins(self):
-        ori = ev.Origin(
-            resource_id=ResourceIdentifier('First'),
-            time=UTCDateTime('2016-05-04T12:00:00'),
-            time_errors={'uncertainty': .01},
-            longitude=-111.12525,
-            longitude_errors={'uncertainty': .020},
-            latitude=47.48589325,
-            latitude_errors={'uncertainty': .021},
-            depth=2.123,
-            depth_errors={'uncertainty': 1.22},
-            depth_type='from location',
-            time_fixed=False,
-            epicenter_fixed=False,
-            reference_system_id=ResourceIdentifier('AWS'),
-            method_id=ResourceIdentifier('HYPOINVERSE'),
-            earth_model_id=ResourceIdentifier('First'),
-            arrivals=[self._get_arrival()],
-            composite_times=[self._get_composite_times()],
-            quality=self._get_origin_quality(),
-            origin_type='hypocenter',
-            origin_uncertainty=self._get_origin_uncertainty(),
-            region='US',
-            evaluation_mode='manual',
-            evaluation_status='final',
-        )
-        self.origin_id = ori.resource_id
-        return ori
-
-    def _get_arrival(self):
-        return ev.Arrival(
-            resource_id=ResourceIdentifier('Ar1'),
-            pick_id=self.pick_id,
-            phase='P',
-            time_correction=.2,
-            azimuth=12,
-            distance=10,
-            takeoff_angle=15,
-            takeoff_angle_errors={'uncertainty': 10.2},
-            time_residual=.02,
-            horizontal_slowness_residual=12.2,
-            backazimuth_residual=12.2,
-            time_weight=.23,
-            horizontal_slowness_weight=12,
-            backazimuth_weight=12,
-            earth_model_id=ResourceIdentifier('1232'),
-            commens=[ev.Comment(x) for x in 'Nothing'],
-        )
-
-    def _get_composite_times(self):
-        return ev.CompositeTime(
-            year=2016,
-            year_errors={'uncertainty': 0},
-            month=5,
-            month_errors={'uncertainty': 0},
-            day=4,
-            day_errors={'uncertainty': 0},
-            hour=0,
-            hour_errors={'uncertainty': 0},
-            minute=0,
-            minute_errors={'uncertainty': 0},
-            second=0,
-            second_errors={'uncertainty': .01}
-        )
-
-    def _get_origin_quality(self):
-        return ev.OriginQuality(
-            associate_phase_count=1,
-            used_phase_count=1,
-            associated_station_count=1,
-            used_station_count=1,
-            depth_phase_count=1,
-            standard_error=.02,
-            azimuthal_gap=.12,
-            ground_truth_level='GT0',
-        )
-
-    def _get_origin_uncertainty(self):
-        return ev.OriginUncertainty(
-            horizontal_uncertainty=1.2,
-            min_horizontal_uncertainty=.12,
-            max_horizontal_uncertainty=2.2,
-            confidence_ellipsoid=self._get_confidence_ellipsoid(),
-            preferred_description="uncertainty ellipse",
-        )
-
-    def _get_confidence_ellipsoid(self):
-        return ev.ConfidenceEllipsoid(
-            semi_major_axis_length=12,
-            semi_minor_axis_length=12,
-            major_axis_plunge=12,
-            major_axis_rotation=12,
-        )
-
-    def _create_magnitudes(self):
-        return ev.Magnitude(
-            resource_id=ResourceIdentifier(),
-            mag=5.5,
-            mag_errors={'uncertainty': .01},
-            magnitude_type='Mw',
-            origin_id=self.origin_id,
-            station_count=1,
-            station_magnitude_contributions=[self._get_station_mag_contrib()],
-        )
-
-    def _get_station_mag(self):
-        station_mag = ev.StationMagnitude(
-            mag=2.24,
-        )
-        self.station_mag_id = station_mag.resource_id
-        return station_mag
-
-    def _get_station_mag_contrib(self):
-        return ev.StationMagnitudeContribution(
-            station_magnitude_id=self.station_mag_id,
-        )
-
-    def _get_event_description(self):
-        return ev.EventDescription(
-            text='some text about the EQ',
-            type='earthquake name',
-        )
-
-    def _get_amplitudes(self):
-        return ev.Amplitude(
-            generic_amplitude=.0012,
-            type='A',
-            unit='m',
-            period=1,
-            time_window=self._get_timewindow(),
-            pick_id=self.pick_id,
-            scalling_time=self.time,
-            mangitude_hint='ML',
-        )
-
-    def _get_timewindow(self):
-        return ev.TimeWindow(
-            begin=1.2,
-            end=2.2,
-            reference=UTCDateTime('2016-05-04T12:00:00'),
-        )
-
-    def _get_focal_mechanisms(self):
-        return ev.FocalMechanism(
-            nodal_planes=self._get_nodal_planes(),
-            principal_axis=self._get_principal_axis(),
-            azimuthal_gap=12,
-            station_polarity_count=12,
-            misfit=.12,
-            station_distribution_ratio=.12,
-            moment_tensor=self._get_moment_tensor(),
-        )
-
-    def _get_nodal_planes(self):
-        return ev.NodalPlanes(
-            nodal_plane_1=ev.NodalPlane(strike=12, dip=2, rake=12),
-            nodal_plane_2=ev.NodalPlane(strike=12, dip=2, rake=12),
-            preferred_plane=2,
-        )
-
-    def _get_principal_axis(self):
-        return ev.PrincipalAxes(
-            t_axis=15,
-            p_axis=15,
-            n_axis=15,
-        )
-
-    def _get_moment_tensor(self):
-        return ev.MomentTensor(
-            scalar_moment=12213,
-            tensor=self._get_tensor(),
-            variance=12.23,
-            variance_reduction=98,
-            double_couple=.22,
-            clvd=.55,
-            iso=.33,
-            source_time_function=self._get_source_time_function(),
-            data_used=[self._get_data_used()],
-            method_id=ResourceIdentifier(),
-            inversion_type='general',
-        )
-
-    def _get_tensor(self):
-        return ev.Tensor(
-            m_rr=12,
-            m_rr_errors={'uncertainty': .01},
-            m_tt=12,
-            m_pp=12,
-            m_rt=12,
-            m_rp=12,
-            m_tp=12,
-        )
-
-    def _get_source_time_function(self):
-        return ev.SourceTimeFunction(
-            type='triangle',
-            duration=.12,
-            rise_time=.33,
-            decay_time=.23,
-        )
-
-    def _get_data_used(self):
-        return ev.DataUsed(
-            wave_type='body waves',
-            station_count=12,
-            component_count=12,
-            shortest_period=1,
-            longest_period=20,
-        )
-
-    def __call__(self):
-        return self.catalog
-
-
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(ResourceIdentifierTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(ResourceIDEventScopeTestCase, 'test'))
     return suite
 
 

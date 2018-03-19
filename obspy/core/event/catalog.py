@@ -80,16 +80,31 @@ class Catalog(object):
         self._set_resource_id(kwargs.get("resource_id", None))
         self.description = kwargs.get("description", "")
         self._set_creation_info(kwargs.get("creation_info", None))
+        ResourceIdentifier.bind_resource_ids()
 
     def _get_resource_id(self):
         return self.__dict__['resource_id']
 
     def _set_resource_id(self, value):
-        if type(value) == dict:
+        if isinstance(value, dict):
             value = ResourceIdentifier(**value)
         elif type(value) != ResourceIdentifier:
             value = ResourceIdentifier(value)
+        value.set_referred_object(self, warn=False)
         self.__dict__['resource_id'] = value
+
+    def __deepcopy__(self, memodict=None):
+        """
+        reset resource_id's object_id after deep copy to allow the
+        object specific behavior of get_referred_object.
+        """
+        memodict = memodict or {}
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memodict[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, copy.deepcopy(v, memodict))
+        return result
 
     resource_id = property(_get_resource_id, _set_resource_id)
 

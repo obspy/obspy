@@ -19,6 +19,45 @@ from copy import deepcopy
 from uuid import uuid4
 
 
+class _ResourceSingleton(object):
+    """
+    A private singleton class used to refer id strings to objects.
+
+    This class allows python gc to handle cleanup of the
+    _resource_id_weak_dict attribute of the ResourceIdentifier rather than
+    manual (and brittle) reference counting.
+    """
+    # define a mapping from a resource string to a singleton instance
+    _str2singleton = weakref.WeakValueDictionary()
+
+    def __new__(cls, id_str):
+        try:
+            return cls._str2singleton[id_str]
+        except KeyError:
+            return super(_ResourceSingleton, cls).__new__(cls)
+
+    def __init__(self, id_str):
+        self.id_str = id_str
+        # add instance to class dict
+        self.__class__._str2singleton[id_str] = self
+
+    def __hash__(self):
+        return hash(self.id_str) + hash('_ResourceSingleton')
+
+    def __str__(self):
+        return self.id_str
+
+    def __repr__(self):
+        return self.id_str
+
+    def __deepcopy__(self, memodict={}):
+        memodict[id(self)] = self
+        return self
+
+    def __copy__(self):
+        return self
+
+
 class ResourceIdentifier(object):
     """
     Unique identifier of any resource so it can be referred to.
@@ -179,11 +218,13 @@ class ResourceIdentifier(object):
     # identifier throughout one Python run. Will only store weak references
     # and therefore does not interfere with the garbage collection.
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
-    __resource_id_weak_dict = {}  # a nested dict for weak object references
+    # a nested dict with _ResourceSingletons as keys, and default dicts with
+    # ids as keys and weakrefs as values.
+    __resource_id_weak_dict = weakref.WeakKeyDictionary()
     # Use an additional dictionary to track all resource ids.
-    __resource_id_tracker = collections.defaultdict(int)
-    # yet another dictionary for keep track of resources id that are not bound
-    # keys are the id and values are a weak ref to the resource identifier
+    # __resource_id_tracker = collections.defaultdict(int)
+    # yet another dictionary for keep track of resources id that are not bound.
+    # keys are the id and values are a weak ref to the resource identifier.
     __unbound_resource_id = weakref.WeakValueDictionary()
 
     def __init__(self, id=None, prefix="smi:local",
@@ -199,28 +240,28 @@ class ResourceIdentifier(object):
         else:
             self.fixed = True
             self.id = id
+        # get resource singleton
+        self._id_key = _ResourceSingleton(self.id)
+
         # Append the referred object in case one is given to the class level
         # reference dictionary.
         self._object_id = None  # the object specific ID
         if referred_object is not None:
             self.set_referred_object(referred_object)
 
-        # Increment the counter for the current resource id.
-        ResourceIdentifier.__resource_id_tracker[self.id] += 1
-
-    def __del__(self):
-        if self.id not in ResourceIdentifier.__resource_id_tracker:
-            return
-        # Decrement the resource id counter.
-        ResourceIdentifier.__resource_id_tracker[self.id] -= 1
-        # If below or equal to zero, delete it and also delete it from the weak
-        # value dictionary.
-        if ResourceIdentifier.__resource_id_tracker[self.id] <= 0:
-            del ResourceIdentifier.__resource_id_tracker[self.id]
-            try:
-                del ResourceIdentifier.__resource_id_weak_dict[self.id]
-            except KeyError:
-                pass
+    @classmethod
+    def print_state(cls):
+        """
+        Print the current resource_id state, very useful for debugging
+        """
+        from pprint import pprint
+        print('-' * 79)
+        print('resource_dict:')
+        pprint(dict(cls.__resource_id_weak_dict))
+        print('-' * 79)
+        print('unbound:')
+        pprint(dict(cls.__unbound_resource_id))
+        print('-' * 79)
 
     @classmethod
     def bind_resource_ids(cls):
@@ -244,7 +285,7 @@ class ResourceIdentifier(object):
         Will return None if no object could be found.
         """
         try:
-            rdic = ResourceIdentifier.__resource_id_weak_dict[self.id]
+            rdic = ResourceIdentifier.__resource_id_weak_dict[self._id_key]
         except KeyError:
             return None
         else:
@@ -259,7 +300,7 @@ class ResourceIdentifier(object):
         return it. Also pop all keys that have None values in the
         __resource_id_weak_dict
         """
-        rdic = ResourceIdentifier.__resource_id_weak_dict[self.id]
+        rdic = ResourceIdentifier.__resource_id_weak_dict[self._id_key]
         if self._object_id is not None:
             msg = ("The object with identity of: %d no longer exists, "
                    "returning the most recently created object with a"
@@ -272,12 +313,12 @@ class ResourceIdentifier(object):
         for key in list(reversed(rdic)):
             obj = rdic[key]()
             if obj is not None:
-                self._object_id = id(obj)  # bind object ID
+                self.set_referred_object(obj)
                 return obj
             else:  # remove references that are None
                 rdic.pop(key)
         else:  # if iter runs out all objects are none; pop rid, return None
-            ResourceIdentifier.__resource_id_weak_dict.pop(self.id)
+            ResourceIdentifier.__resource_id_weak_dict.pop(self._id_key)
             msg = ('no object found with resource id %s, returning None'
                    % self.id)
             line_number = inspect.currentframe().f_back.f_lineno
@@ -295,9 +336,12 @@ class ResourceIdentifier(object):
         """
         self._object_id = id(referred_object)  # identity of object
         rdic = ResourceIdentifier.__resource_id_weak_dict
-        # if the resource_id is in the rid_dict
-        if self.id in rdic and self._object_id not in rdic[self.id]:
-            last_obj = rdic[self.id][next(reversed(rdic[self.id]))]()
+        # if the resource_id is in the rid_dict but object_id is not
+        if self._id_key in rdic and self._object_id not in rdic[self._id_key]:
+            # get the most recently defined object with this id
+            object_dict = rdic[self._id_key]
+            object_list = list(object_dict.values())
+            last_obj = next(reversed(object_list))()
             if warn and last_obj is not None and last_obj != referred_object:
                 msg = ('Warning, binding object to resource ID %s which '
                        'is not equal to the last object bound to this '
@@ -305,10 +349,11 @@ class ResourceIdentifier(object):
                 line_number = inspect.currentframe().f_back.f_lineno
                 warnings.warn_explicit(msg, UserWarning, __file__,
                                        line_number)
-            rdic[self.id][self._object_id] = weakref.ref(referred_object)
-        else:
-            rdic[self.id] = collections.OrderedDict()
-            rdic[self.id][self._object_id] = weakref.ref(referred_object)
+            rdic[self._id_key][self._object_id] = weakref.ref(referred_object)
+        # if there is no entry for the id key yet make one
+        elif self._id_key not in rdic:
+            rdic[self._id_key] = collections.OrderedDict()
+            rdic[self._id_key][self._object_id] = weakref.ref(referred_object)
 
     def convert_id_to_quakeml_uri(self, authority_id="local"):
         """
@@ -371,6 +416,14 @@ class ResourceIdentifier(object):
         True
         """
         return deepcopy(self)
+
+    def __deepcopy__(self, memodict={}):
+        new = ResourceIdentifier.__new__(ResourceIdentifier)
+        new.__dict__.update(self.__dict__)
+        # clear object_id upon copying resource_ids
+        new._object_id = None
+        memodict[id(self)] = new
+        return new
 
     @property
     def _object_id(self):
@@ -500,12 +553,11 @@ class ResourceIdentifier(object):
         self._uuid = str(uuid4())
 
     @classmethod
-    def _bind_resource_id_state(cls, state_dict):
+    def _bind_class_state(cls, state_dict):
         """
         Bind the state contained in state_dict to ResourceIdentifier class.
         """
         cls.__resource_id_weak_dict = state_dict['rdict']
-        cls.__resource_id_tracker = state_dict['tracker']
         cls.__unbound_resource_id = state_dict['unbound']
 
     @classmethod
@@ -514,24 +566,22 @@ class ResourceIdentifier(object):
         """
         Context manager for debugging the class level state for Resource Ids.
 
-        Replaces the current resource_id, tracker, and unbound mappings returning
-        a dictionary with the new mappings as values and "rdict", "tracker",
-        and "unbound" as keys. This function restores original mappings upon exit.
+        Replaces the current resource_id and unbound mappings returning
+        a dictionary with the new mappings as values and "rdict", and
+        "unbound" as keys. This function restores original mappings upon exit.
         """
         # get current class state
         old_state = dict(
             rdict=cls.__resource_id_weak_dict,
-            tracker=cls.__resource_id_tracker,
             unbound=cls.__unbound_resource_id,
         )
         # init new class state
         new_state = dict(
-            rdict={},
-            tracker=collections.defaultdict(int),
+            rdict=weakref.WeakKeyDictionary(),
             unbound=weakref.WeakValueDictionary(),
         )
         # bind new state and return dict
-        cls._bind_resource_id_state(new_state)
+        cls._bind_class_state(new_state)
         yield new_state
         # reset prior state
-        cls._bind_resource_id_state(old_state)
+        cls._bind_class_state(old_state)
