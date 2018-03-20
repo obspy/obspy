@@ -22,15 +22,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 import copy
 
-from obspy.core.event import ResourceIdentifier
 from obspy.core.event.header import (
     EventType, EventTypeCertainty, EventDescriptionType)
+from obspy.core.event.resourceid import ResourceIdentifier
 from obspy.core.util.decorator import rlock
 from obspy.imaging.source import plot_radiation_pattern, _setup_figure_and_axes
 
 
-from .base import (_event_type_class_factory,
-                   CreationInfo, ResourceIdentifier)
+from .base import _event_type_class_factory, CreationInfo
 
 
 __Event = _event_type_class_factory(

@@ -21,7 +21,7 @@ from uuid import uuid4
 
 class _ResourceSingleton(object):
     """
-    A private singleton class used to refer id strings to objects.
+    A private semi-singleton class used to refer id strings to objects.
 
     This class allows python gc to handle cleanup of the
     _resource_id_weak_dict attribute of the ResourceIdentifier rather than
@@ -61,18 +61,26 @@ class _ResourceSingleton(object):
 class ResourceIdentifier(object):
     """
     Unique identifier of any resource so it can be referred to.
+
     In QuakeML many elements and types can have a unique id that other elements
     use to refer to it. This is called a ResourceIdentifier and it is used for
     the same purpose in the obspy.core.event classes.
+
     In QuakeML it has to be of the following regex form::
+
         (smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\.\*\(\)_~']
         [\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*
+
     e.g.
+
     * ``smi:sub.website.org/event/12345678``
     * ``quakeml:google.org/pick/unique_pick_id``
+
     smi stands for "seismological meta-information".
+
     In this class it can be any hashable object, e.g. most immutable objects
     like numbers and strings.
+
     :type id: str, optional
     :param id: A unique identifier of the element it refers to. It is
         not verified, that it actually is unique. The user has to take care of
@@ -95,7 +103,9 @@ class ResourceIdentifier(object):
         different referred_objects will still return the referred object,
         provided it doesn't get garbage collected. If the referred object no
         longer exists any object with the same id will be returned.
+
     .. rubric:: General Usage
+
     >>> ResourceIdentifier('2012-04-11--385392')
     ResourceIdentifier(id="2012-04-11--385392")
     >>> # If 'id' is not specified it will be generated automatically.
@@ -104,10 +114,12 @@ class ResourceIdentifier(object):
     >>> # Supplying a prefix will simply prefix the automatically generated ID
     >>> ResourceIdentifier(prefix='event')  # doctest: +ELLIPSIS
     ResourceIdentifier(id="event/...")
+
     ResourceIdentifiers can, and oftentimes should, carry a reference to the
     object they refer to. This is a weak reference which means that if the
     object get deleted or runs out of scope, e.g. gets garbage collected, the
     reference will cease to exist.
+
     >>> from obspy.core.event import Event
     >>> event = Event()
     >>> import sys
@@ -124,6 +136,7 @@ class ResourceIdentifier(object):
     >>> del event
     >>> print(res_id.get_referred_object())  # doctest: +SKIP
     None
+
     The most powerful ability (and reason why one would want to use a resource
     identifier class in the first place) is that once a ResourceIdentifier with
     an attached referred object has been created, any other ResourceIdentifier
@@ -132,6 +145,7 @@ class ResourceIdentifier(object):
     Python run.
     This enables, e.g. the resource references between the different QuakeML
     elements to work in a rather natural way.
+
     >>> event_object = Event()
     >>> obj_id = id(event_object)
     >>> res_id = "obspy.org/event/test"
@@ -144,16 +158,19 @@ class ResourceIdentifier(object):
     >>> ref_b = ResourceIdentifier(res_id, referred_object=event_object)
     >>> ref_c = ResourceIdentifier(res_id)
     >>> # All ResourceIdentifiers will refer to the same object.
-    >>> assert(id(ref_a.get_referred_object()) == obj_id)
-    >>> assert(id(ref_b.get_referred_object()) == obj_id)
-    >>> assert(id(ref_c.get_referred_object()) == obj_id)
+    >>> assert ref_a.get_referred_object() is event_object
+    >>> assert ref_b.get_referred_object() is event_object
+    >>> assert ref_c.get_referred_object() is event_object
+
     Resource identifiers are bound to an object once the get_referred_object
-    method has been called. The results is that  get_referred_object will
+    method has been called. The results is that get_referred_object will
     always return the same object it did on the first call as long as the
     object still exists. If the bound object gets garage collected a warning
     will be issued and another object with the same resource_id will be
-    returned if one exists. If no other object has the same resource_id, an
-    additional warning will be issued and None returned.
+    returned if one exists. If no other object is associated with the same
+    resource_id, an additional warning will be issued and None returned.
+
+    >>> from obspy import UTCDateTime
     >>> res_id = 'obspy.org/tests/test_resource_doc_example'
     >>> obj_a = UTCDateTime(10)
     >>> obj_b = UTCDateTime(10)
@@ -163,14 +180,16 @@ class ResourceIdentifier(object):
     >>> assert ref_a.get_referred_object() is not ref_b.get_referred_object()
     >>> assert ref_a.get_referred_object() is obj_a
     >>> assert ref_b.get_referred_object() is obj_b
-    >>> del obj_b  # if obj_b gets garbage collected
+    >>> del obj_b  # obj_b gets garbage collected
     >>> assert ref_b.get_referred_object() is obj_a  # doctest: +SKIP
     >>> del obj_a  # now no object with res_id exists
     >>> assert ref_b.get_referred_object() is None  # doctest: +SKIP
+
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convert_id_to_quakeml_uri() method. The resulting id will be of the
     form::
         smi:authority_id/prefix/id
+
     >>> res_id = ResourceIdentifier(prefix='origin')
     >>> res_id.convert_id_to_quakeml_uri(authority_id="obspy.org")
     >>> res_id  # doctest: +ELLIPSIS
@@ -193,16 +212,19 @@ class ResourceIdentifier(object):
     >>> res_id.convert_id_to_quakeml_uri()
     >>> res_id
     ResourceIdentifier(id="smi:test.org/subdir/id")
+
     ResourceIdentifiers are considered identical if the IDs are
     the same.
+
     >>> # Create two different resource identifiers.
     >>> res_id_1 = ResourceIdentifier()
     >>> res_id_2 = ResourceIdentifier()
-    >>> assert(res_id_1 != res_id_2)
-    >>> # Equalize the IDs. NEVER do this. This just an example.
-    >>> res_id_2.id = res_id_1.id = "smi:local/abcde"
-    >>> assert(res_id_1 == res_id_2)
+    >>> res_id_3 = ResourceIdentifier(id=res_id_2.id)
+    >>> assert res_id_1 != res_id_2
+    >>> assert res_id_2 == res_id_3
+
     ResourceIdentifier instances can be used as dictionary keys.
+
     >>> dictionary = {}
     >>> res_id = ResourceIdentifier(id="foo")
     >>> dictionary[res_id] = "bar1"
@@ -213,6 +235,11 @@ class ResourceIdentifier(object):
     ...     print(repr(k), v)
     ResourceIdentifier(id="foo") bar1
     ...'foo' bar2
+
+    Because ResourceIdentifier instances are hashed based on their id
+    attribute, you should never change it once it has been set. Create a new
+    ResourceIdentifer object instead.
+
     """
     # Class (not instance) attribute that keeps track of all resource
     # identifier throughout one Python run. Will only store weak references
@@ -250,23 +277,10 @@ class ResourceIdentifier(object):
             self.set_referred_object(referred_object)
 
     @classmethod
-    def print_state(cls):
-        """
-        Print the current resource_id state, very useful for debugging
-        """
-        from pprint import pprint
-        print('-' * 79)
-        print('resource_dict:')
-        pprint(dict(cls.__resource_id_weak_dict))
-        print('-' * 79)
-        print('unbound:')
-        pprint(dict(cls.__unbound_resource_id))
-        print('-' * 79)
-
-    @classmethod
     def bind_resource_ids(cls):
         """
         Bind the unbound ResourceIdentifier instances to referred objects.
+
         Binds all of the unbound ResourceIdentifier instances to the most
         recent object assigned to the resource_id. This ensures that all
         resource identifiers will return the same object they are bound to
@@ -280,9 +294,10 @@ class ResourceIdentifier(object):
     def get_referred_object(self):
         """
         Returns the object associated with the resource identifier.
+
         This works as long as at least one ResourceIdentifier with the same
-        ID as this instance has an associate object.
-        Will return None if no object could be found.
+        ID as this instance has an associate object. If not, this method will
+        return None.
         """
         try:
             rdic = ResourceIdentifier.__resource_id_weak_dict[self._id_key]
@@ -328,8 +343,10 @@ class ResourceIdentifier(object):
     def set_referred_object(self, referred_object, warn=True):
         """
         Binds a ResourceIdentifier instance to an object.
+
         If it already a weak reference it will be used, otherwise one will be
         created. If the object is None, None will be set.
+
         Will also append self again to the global class level reference list
         so everything stays consistent. Warning can be ignored by setting
         the warn parameter to False.
@@ -358,6 +375,7 @@ class ResourceIdentifier(object):
     def convert_id_to_quakeml_uri(self, authority_id="local"):
         """
         Converts the current ID to a valid QuakeML URI.
+
         Only an invalid QuakeML ResourceIdentifier string it will be converted
         to a valid one.  Otherwise nothing will happen but after calling this
         method the user can be sure that the ID is a valid QuakeML URI.
@@ -585,3 +603,8 @@ class ResourceIdentifier(object):
         yield new_state
         # reset prior state
         cls._bind_class_state(old_state)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

@@ -11,16 +11,19 @@ import sys
 import unittest
 import warnings
 
-import obspy.core.util.testing
 from obspy import UTCDateTime, read_events
-from obspy.core import event as ev
+from obspy.core import event as event
 from obspy.core.event.resourceid import ResourceIdentifier, _ResourceSingleton
+from obspy.core.util.testing import MegaCatalog, setup_context_testcase
 
 
 class ResourceIdentifierTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.event.ResourceIdentifier.
     """
+
+    # setup and utility function for tests
+
     def setUp(self):
         """
         Setup code to run before each test. Temporary replaces the
@@ -30,9 +33,24 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         # setup temporary id dict for tests in this case and bind to self
         context = ResourceIdentifier._debug_class_state()
-        state = setup_with_context_manager(self, context)
+        state = setup_context_testcase(self, context)
         self.r_dict = state['rdict']  # the weak resource dict
         self.unbound = state['unbound']  # the ubound resource ids
+
+    def print_state(self):
+        """
+        Print the current resource_id state, very useful for debugging
+        """
+        from pprint import pprint
+        print('-' * 79)
+        print('resource_dict:')
+        pprint(dict(self.r_dict))
+        print('-' * 79)
+        print('unbound:')
+        pprint(dict(self.unbound))
+        print('-' * 79)
+
+    # tests
 
     def test_same_resource_id_different_referred_object(self):
         """
@@ -298,7 +316,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             return RI._ResourceIdentifier__resource_id_weak_dict
 
         def make_resouce_id():
-            some_obj = ev.Event()
+            some_obj = event.Event()
             return ResourceIdentifier(referred_object=some_obj)
 
         rdict1 = current_rdict()
@@ -330,7 +348,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         ticks up once for each copy of the catalog made.
         """
         # generate some catalogs
-        cat_list = self.make_mega_catalog_list()
+        cat_list = make_mega_catalog_list()
         # list of dicts containing referred object ids
         id_list = list(self.r_dict.values())
         for id_dict in id_list:
@@ -343,7 +361,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         Test preferred_origin is set and event scoped.
         """
-        for ev in self.make_mega_catalog_list():
+        for ev in make_mega_catalog_list():
             preferred_origin = ev[0].preferred_origin()
             self.assertIsNotNone(preferred_origin)
             self.assertIs(preferred_origin, ev[0].origins[-1])
@@ -352,7 +370,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         Test preferred_magnitude is set and event scoped.
         """
-        for ev in self.make_mega_catalog_list():
+        for ev in make_mega_catalog_list():
             preferred_magnitude = ev[0].preferred_magnitude()
             self.assertIsNotNone(preferred_magnitude)
             self.assertIs(preferred_magnitude, ev[0].magnitudes[-1])
@@ -361,7 +379,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         Test preferred_focal_mechanism is set and event scoped.
         """
-        for ev in self.make_mega_catalog_list():
+        for ev in make_mega_catalog_list():
             preferred_focal_mech = ev[0].preferred_focal_mechanism()
             self.assertIsNotNone(preferred_focal_mech)
             self.assertIs(preferred_focal_mech, ev[0].focal_mechanisms[-1])
@@ -371,7 +389,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         Ensure the pick_ids of the arrivals refer to the pick belonging
         to the same event.
         """
-        for ev in self.make_mega_catalog_list():
+        for ev in make_mega_catalog_list():
             pick_id = ev[0].picks[0].resource_id
             arrival_pick_id = ev[0].origins[0].arrivals[0].pick_id
             self.assertEqual(pick_id, arrival_pick_id)
@@ -384,7 +402,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         All the referred object should be members of the current one event
         catalog.
         """
-        for ev in self.make_mega_catalog_list():
+        for ev in make_mega_catalog_list():
             ev_ids = get_object_id_dict(ev)  # all ids containe in dict
             for rid in get_instances(ev, ResourceIdentifier):
                 referred_object = rid.get_referred_object()
@@ -397,7 +415,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         Find all objects that have a resource_id attribute and ensure it
         is an instance of ResourceIdentifier and refers to the object.
         """
-        catalogs = self.make_mega_catalog_list()
+        catalogs = make_mega_catalog_list()
         for cat in catalogs:  # iterate the test catalog
             for obj in get_instances(cat, has_attr='resource_id'):
                 if isinstance(obj, ResourceIdentifier):
@@ -414,7 +432,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         Each event should share no objects, except the id_key singletons, with
         copies of the same event.
         """
-        catalogs =  self.make_mega_catalog_list()
+        catalogs = make_mega_catalog_list()
         for cat1, cat2 in itertools.combinations(catalogs, 2):
             # get a dict of object id: object reference
             ids1 = get_object_id_dict(cat1)
@@ -429,40 +447,18 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             overlap = non_singleton1 & non_singleton2
             self.assertEqual(len(overlap), 0)  # assert no overlap
 
-    # utility method for tests
+    def test_resetting_id_warns(self):
+        """
+        Because the ResourceIdentifier class hashes on the id attribute, it
+        should warn if it is being changed.
+        """
+        rid = ResourceIdentifier()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('default')
+            rid.id = 'Another string that will mess up the hash. Bad.'
 
-    def print_state(self):
-        """
-        Print the current resource_id state, very useful for debugging
-        """
-        from pprint import pprint
-        print('-' * 79)
-        print('resource_dict:')
-        pprint(dict(self.r_dict))
-        print('-' * 79)
-        print('unbound:')
-        pprint(dict(self.unbound))
-        print('-' * 79)
-
-    def make_mega_catalog_list(self):
-        """
-        Make a list of complex catalogs (and copies) and return it.
-        """
-        # create a complex catalog
-        cat1 = obspy.core.util.testing.MegaCatalog().catalog
-        # ResourceIdentifier.bind_resource_ids()
-        bytes_io = io.BytesIO()
-        cat1.write(bytes_io, 'quakeml')
-        # get a few copies from reading from bytes
-        cat2 = read_events(bytes_io)
-        cat3 = read_events(bytes_io)
-        # make more catalogs with copy method
-        cat4 = cat1.copy()
-        cat5 = cat4.copy()
-        # ensure creating a copying and deleting doesnt mess up id tracking
-        cat6 = cat2.copy()
-        del cat6
-        return [cat1, cat2, cat3, cat4, cat5]
+        self.assertEqual(len(w), 1)
+        self.assertIn('id should not be set', str(w[0]))
 
 
 def get_instances(obj, cls=None, is_attr=None, has_attr=None):
@@ -510,18 +506,32 @@ def get_instances(obj, cls=None, is_attr=None, has_attr=None):
     return _get_instances(obj, cls)
 
 
+def make_mega_catalog_list():
+    """
+    Make a list of complex catalogs (and copies) and return it.
+    """
+    # create a complex catalog
+    cat1 = MegaCatalog().catalog
+    # ResourceIdentifier.bind_resource_ids()
+    bytes_io = io.BytesIO()
+    cat1.write(bytes_io, 'quakeml')
+    # get a few copies from reading from bytes
+    cat2 = read_events(bytes_io)
+    cat3 = read_events(bytes_io)
+    # make more catalogs with copy method
+    cat4 = cat1.copy()
+    cat5 = cat4.copy()
+    # ensure creating a copying and deleting doesnt mess up id tracking
+    cat6 = cat2.copy()
+    del cat6
+    return [cat1, cat2, cat3, cat4, cat5]
+
+
 def get_object_id_dict(obj, cls=None):
     """
     Recurse an object and return a dict of id: object
     """
     return {id(x): x for x in get_instances(obj, cls)}
-
-
-def setup_with_context_manager(testcase, cm):
-    """Use a contextmanager to setUp a test case."""
-    val = cm.__enter__()
-    testcase.addCleanup(cm.__exit__, None, None, None)
-    return val
 
 
 def suite():

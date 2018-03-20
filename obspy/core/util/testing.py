@@ -10,6 +10,8 @@ Testing utilities for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import difflib
 import doctest
@@ -24,8 +26,6 @@ import warnings
 from distutils.version import LooseVersion
 
 import numpy as np
-from future.builtins import object, dict
-from future.utils import native_str
 from lxml import etree
 
 from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
@@ -1035,6 +1035,22 @@ class MegaCatalog(object):
 
     def __call__(self):
         return self.catalog
+
+
+def setup_context_testcase(testcase, cm):
+    """
+    Use a contextmanager to set up a unittest test case.
+
+    :param testcase:
+        An instance of unittest.TestCase
+    :param cm:
+        Any instances which implements the context manager protocol,
+        ie its class definition implements __enter__ and __exit__ methods.
+    """
+    val = cm.__enter__()
+    testcase.addCleanup(cm.__exit__, None, None, None)
+    return val
+
 
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)
