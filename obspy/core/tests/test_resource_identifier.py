@@ -14,7 +14,8 @@ import warnings
 from obspy import UTCDateTime, read_events
 from obspy.core import event as event
 from obspy.core.event.resourceid import ResourceIdentifier, _ResourceSingleton
-from obspy.core.util.testing import MegaCatalog, setup_context_testcase
+from obspy.core.util.testing import (MegaCatalog, setup_context_testcase,
+                                     WarningsCapture)
 
 
 class ResourceIdentifierTestCase(unittest.TestCase):
@@ -440,25 +441,45 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             # get a dict of all singleton resource keys
             singleton_ids1 = get_object_id_dict(cat1, _ResourceSingleton)
             singleton_ids2 = get_object_id_dict(cat2, _ResourceSingleton)
+            # get a dict of strings (needed for py2 due to futures module)
+            str_ids1 = get_object_id_dict(cat1, str)
+            str_ids2 = get_object_id_dict(cat2, str)
             # get a dict of all objects that are not singleton resource keys
-            non_singleton1 = set(ids1) - set(singleton_ids1)
-            non_singleton2 = set(ids2) - set(singleton_ids2)
+            non_singleton1 = set(ids1) - set(singleton_ids1) - set(str_ids1)
+            non_singleton2 = set(ids2) - set(singleton_ids2) - set(str_ids2)
             # find any overlap between events that are not resource keys
             overlap = non_singleton1 & non_singleton2
             self.assertEqual(len(overlap), 0)  # assert no overlap
 
-    def test_resetting_id_warns(self):
+    def test_resetting_id_warns_on_default_id(self):
         """
         Because the ResourceIdentifier class hashes on the id attribute, it
-        should warn if it is being changed.
+        should warn if it is being changed. This tests the case were an id is
+        not specified and the default uuid is used.
         """
+        # test
         rid = ResourceIdentifier()
-        with warnings.catch_warnings(record=True) as w:
+        with WarningsCapture() as w:
             warnings.simplefilter('default')
             rid.id = 'Another string that will mess up the hash. Bad.'
 
         self.assertEqual(len(w), 1)
-        self.assertIn('id should not be set', str(w[0]))
+        self.assertIn('overwritting the id attribute', str(w[0]))
+
+    def test_resetting_id_warns_on_set_id(self):
+        """
+        Because the ResourceIdentifier class hashes on the id attribute, it
+        should warn if it is being changed. This tests the case were an id is
+        manually specified.
+        """
+        # test
+        rid = ResourceIdentifier('a very unique string indeed')
+        with WarningsCapture() as w:
+            warnings.simplefilter('default')
+            rid.id = 'Another string that will mess up the hash. Bad.'
+
+        self.assertEqual(len(w), 1)
+        self.assertIn('overwritting the id attribute', str(w[0].message))
 
 
 def get_instances(obj, cls=None, is_attr=None, has_attr=None):

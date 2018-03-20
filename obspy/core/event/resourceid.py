@@ -23,6 +23,10 @@ class _ResourceSingleton(object):
     """
     A private semi-singleton class used to refer id strings to objects.
 
+    Only one instance will ever be created for each unique string, unless
+    all reference are garbage collect, in which case a new instance may be
+    created.
+
     This class allows python gc to handle cleanup of the
     _resource_id_weak_dict attribute of the ResourceIdentifier rather than
     manual (and brittle) reference counting.
@@ -64,7 +68,7 @@ class ResourceIdentifier(object):
 
     In QuakeML many elements and types can have a unique id that other elements
     use to refer to it. This is called a ResourceIdentifier and it is used for
-    the same purpose in the obspy.core.event classes.
+    the same purpose in the obspy.core.event classes. The id must be a string.
 
     In QuakeML it has to be of the following regex form::
 
@@ -77,9 +81,6 @@ class ResourceIdentifier(object):
     * ``quakeml:google.org/pick/unique_pick_id``
 
     smi stands for "seismological meta-information".
-
-    In this class it can be any hashable object, e.g. most immutable objects
-    like numbers and strings.
 
     :type id: str, optional
     :param id: A unique identifier of the element it refers to. It is
@@ -238,20 +239,20 @@ class ResourceIdentifier(object):
 
     Because ResourceIdentifier instances are hashed based on their id
     attribute, you should never change it once it has been set. Create a new
-    ResourceIdentifer object instead.
+    ResourceIdentifier object instead.
 
     """
     # Class (not instance) attribute that keeps track of all resource
     # identifier throughout one Python run. Will only store weak references
     # and therefore does not interfere with the garbage collection.
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
-    # a nested dict with _ResourceSingletons as keys, and default dicts with
+
+    # A nested dict with _ResourceSingletons as keys, and default dicts with
     # ids as keys and weakrefs as values.
     __resource_id_weak_dict = weakref.WeakKeyDictionary()
-    # Use an additional dictionary to track all resource ids.
-    # __resource_id_tracker = collections.defaultdict(int)
-    # yet another dictionary for keep track of resources id that are not bound.
-    # keys are the id and values are a weak ref to the resource identifier.
+
+    # A dictionary for keep track of resources id that are not bound.
+    # Keys are the id and values are a weak ref to the resource identifier.
     __unbound_resource_id = weakref.WeakValueDictionary()
 
     def __init__(self, id=None, prefix="smi:local",
@@ -481,6 +482,11 @@ class ResourceIdentifier(object):
         if not isinstance(value, (str, bytes)):
             msg = "attribute id needs to be a string."
             raise TypeError(msg)
+        if '_id_key' in self.__dict__:
+            msg = ('overwritting the id attribute of a ResourceIdentifier'
+                   'object is very dangerous and will raise an exception in '
+                   'a future version of obspy')
+            warnings.warn(msg, UserWarning)
         self.__dict__["id"] = value
 
     @property
