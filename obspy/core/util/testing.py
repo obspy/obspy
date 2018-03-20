@@ -753,7 +753,10 @@ class WarningsCapture(object):
 
 class MegaCatalog(object):
     """
-    Create a catalog with a single event that has many features.
+    A class to Create a catalog with a single event that has many features.
+
+    Uses most (maybe all) the event related classes. The catalog can be
+    accessed as the catalog attribute of a MegaCatalog instance.
     """
 
     def __init__(self):
@@ -1033,22 +1036,19 @@ class MegaCatalog(object):
             longest_period=20,
         )
 
-    def __call__(self):
-        return self.catalog
 
-
-def setup_context_testcase(testcase, cm):
+def setup_context_testcase(test_case, cm):
     """
     Use a contextmanager to set up a unittest test case.
 
-    :param testcase:
+    :param test_case:
         An instance of unittest.TestCase
     :param cm:
         Any instances which implements the context manager protocol,
         ie its class definition implements __enter__ and __exit__ methods.
     """
     val = cm.__enter__()
-    testcase.addCleanup(cm.__exit__, None, None, None)
+    test_case.addCleanup(cm.__exit__, None, None, None)
     return val
 
 

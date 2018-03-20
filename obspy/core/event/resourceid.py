@@ -1,6 +1,6 @@
 """
-obspy.core.event.resource_id - ResourceIdentifier and Friends
-=============================================================
+obspy.core.event.resourceid - ResourceIdentifier
+================================================
 This module defines the ResourceIdentifier class and associated code.
 """
 
@@ -27,9 +27,9 @@ class _ResourceSingleton(object):
     all reference are garbage collect, in which case a new instance may be
     created.
 
-    This class allows python gc to handle cleanup of the
+    This class allows the python gc to handle cleanup of the
     _resource_id_weak_dict attribute of the ResourceIdentifier rather than
-    manual (and brittle) reference counting.
+    manual reference counting as was implemented before.
     """
     # define a mapping from a resource string to a singleton instance
     _str2singleton = weakref.WeakValueDictionary()
