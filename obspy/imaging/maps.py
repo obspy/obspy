@@ -17,9 +17,7 @@ import datetime
 import warnings
 
 import numpy as np
-from matplotlib.cm import ScalarMappable
 from matplotlib.colorbar import Colorbar
-from matplotlib.colors import Normalize
 from matplotlib.dates import AutoDateFormatter, AutoDateLocator, date2num
 import matplotlib.patheffects as PathEffects
 from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
@@ -163,8 +161,6 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
         event plot (with colorbar) together should work well.
     """
     import matplotlib.pyplot as plt
-    min_color = min(color)
-    max_color = max(color)
 
     if any([isinstance(c, (datetime.datetime, UTCDateTime)) for c in color]):
         datetimeplot = True
@@ -175,10 +171,6 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
             for t in color]
     else:
         datetimeplot = False
-
-    scal_map = ScalarMappable(norm=Normalize(min_color, max_color),
-                              cmap=colormap)
-    scal_map.set_array(np.linspace(0, 1, 1))
 
     # The colorbar should only be plotted if more then one event is
     # present.
@@ -299,13 +291,6 @@ def _plot_basemap_into_axes(
     :rtype: :class:`matplotlib.collections.PathCollection`
     :returns: Matplotlib path collection (e.g. to reuse for colorbars).
     """
-    min_color = min(color)
-    max_color = max(color)
-
-    scal_map = ScalarMappable(norm=Normalize(min_color, max_color),
-                              cmap=colormap)
-    scal_map.set_array(np.linspace(0, 1, 1))
-
     fig = ax.figure
     if bmap is None:
 
@@ -541,18 +526,12 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         built-in ``projection`` choices.
     """
     import matplotlib.pyplot as plt
-    min_color = min(color)
-    max_color = max(color)
 
     if isinstance(color[0], (datetime.datetime, UTCDateTime)):
         datetimeplot = True
         color = [date2num(getattr(t, 'datetime', t)) for t in color]
     else:
         datetimeplot = False
-
-    scal_map = ScalarMappable(norm=Normalize(min_color, max_color),
-                              cmap=colormap)
-    scal_map.set_array(np.linspace(0, 1, 1))
 
     fig = plt.figure()
 
