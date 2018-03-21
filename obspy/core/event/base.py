@@ -1259,17 +1259,19 @@ class ConfidenceEllipsoid(__ConfidenceEllipsoid):
         """
         Convert from errors and covariance in x, y, z to error ellipse axes.
 
-        Forms a covariance matrix and finds the eigenvalues and eigenvectors. Units
-        should be m for everything, which means that the covariances are m * m
+        Forms a covariance matrix and finds the eigenvalues and eigenvectors.
+        Units should be m for everything, which means that the covariances
+        are m * m
 
         :type errors: dict
-        :param errors: Dictionary of x_err, y_err, z_err, xy_cov, xz_cov, yz_cov
+        :param errors:
+            Dictionary of x_err, y_err, z_err, xy_cov, xz_cov, yz_cov
         :return: :class:`~obspy.core.event.ConfidenceEllipsoid`
 
         .. Note::
             Definitions of used angles are given here:
-            https://quake.ethz.ch/quakeml/QuakeML2.0/BasicEventDescriptionTypes\
-            Discussion#class_ConfidenceEllipsoid
+            https://quake.ethz.ch/quakeml/QuakeML2.0/BasicEventDescription\
+            TypesDiscussion#class_ConfidenceEllipsoid
         """
         covariance_matrix = np.array([
             [errors['x_err'] ** 2, errors['xy_cov'], errors['xz_cov']],
@@ -1307,7 +1309,8 @@ class ConfidenceEllipsoid(__ConfidenceEllipsoid):
         .. Note::
             Follows definition of Euler angles (z-x'-y'' intrinsic) to rotation
             matrix from:
-            https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions
+            https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_\
+            dimensions
         """
         from numpy import cos as c, sin as s
         try:
@@ -1327,7 +1330,7 @@ class ConfidenceEllipsoid(__ConfidenceEllipsoid):
         except Exception:
             raise AttributeError("Cannot parse rotation angles, incomplete "
                                  "confidenceEllipsoid?")
-        # Issues with left and right-handedness? XYZ
+        # XYZ - incorrect?
         rotation_matrix = np.empty((3, 3))
         rotation_matrix[0][0] = c(psi) * c(phi)
         rotation_matrix[0][1] = -c(phi) * s(psi)
@@ -1338,6 +1341,19 @@ class ConfidenceEllipsoid(__ConfidenceEllipsoid):
         rotation_matrix[2][0] = s(psi) * s(theta) - c(psi) * c(theta) * s(phi)
         rotation_matrix[2][1] = c(psi) * s(theta) + c(theta) * s(psi) * s(phi)
         rotation_matrix[2][2] = c(phi) * c(theta)
+
+        # YXZ - incorrect
+        # rotation_matrix = np.empty((3, 3))
+        # rotation_matrix[0][0] = c(phi) * c(psi) + s(phi) * s(theta) * s(psi)
+        # rotation_matrix[0][1] = c(psi) * s(phi) * s(theta) - c(phi) * s(psi)
+        # rotation_matrix[0][2] = c(theta) * s(phi)
+        # rotation_matrix[1][0] = c(theta) * s(psi)
+        # rotation_matrix[1][1] = c(theta) * s(psi)
+        # rotation_matrix[1][2] = -s(theta)
+        # rotation_matrix[2][0] = c(phi) * s(theta) * s(psi) - c(psi) * s(phi)
+        # rotation_matrix[2][1] = c(phi) * c(psi) * s(theta) + s(phi) * s(psi)
+        # rotation_matrix[2][2] = c(phi) * s(theta)
+
         covariance_matrix = np.dot(
             np.dot(rotation_matrix, np.diag(eigenvalues)),
             np.linalg.inv(rotation_matrix))
