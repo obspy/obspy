@@ -383,7 +383,17 @@ class ImageComparison(NamedTemporaryFile):
         MatplotlibBackend.switch_backend("AGG", sloppy=False)
 
         from matplotlib import font_manager, rcParams, rcdefaults
+        from matplotlib.cbook import MatplotlibDeprecationWarning
         import locale
+
+        # suppress a matplotlib DeprecationWarning issued inside basemap
+        # see matplotlib/basemap#382
+        # XXX can be removed maybe a year or so after basemap 1.1.1 or 1.2.0 is
+        # released
+        warnings.filterwarnings(
+            'ignore', message='The axesPatch function was deprecated in '
+            'version 2.1. Use Axes.patch instead.',
+            category=MatplotlibDeprecationWarning, module='.*basemap.*')
 
         try:
             locale.setlocale(locale.LC_ALL, native_str('en_US.UTF-8'))
