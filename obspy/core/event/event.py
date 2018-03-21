@@ -294,6 +294,11 @@ class Event(__Event):
         result.resource_id.bind_resource_ids()  # bind all resource_ids
         return result
 
+    @rlock
+    def __setstate__(self, state_dict):
+        super(Event, self).__setstate__(state_dict)
+        ResourceIdentifier.bind_resource_ids()
+
     def write(self, filename, format, **kwargs):
         """
         Saves event information into a file.

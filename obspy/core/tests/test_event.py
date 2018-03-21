@@ -8,6 +8,7 @@ import builtins
 import copy
 import io
 import os
+import pickle
 import unittest
 import warnings
 
@@ -578,6 +579,16 @@ class CatalogTestCase(unittest.TestCase):
         event2 = read_events(bio)[0]
         # saved and loaded event should be equal
         self.assertEqual(event1, event2)
+
+    def test_can_pickle(self):
+        """
+        Ensure a catalog can be pickled and unpickled and that the results are
+        equal.
+        """
+        cat = read_events()
+        cat_bytes = pickle.dumps(cat)
+        cat2 = pickle.loads(cat_bytes)
+        self.assertEqual(cat, cat2)
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')

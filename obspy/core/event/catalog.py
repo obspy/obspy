@@ -106,6 +106,14 @@ class Catalog(object):
             setattr(result, k, copy.deepcopy(v, memodict))
         return result
 
+    def __setstate__(self, state):
+        """
+        Reset the resource id after being unpickled to ensure they are
+        bound to the correct object.
+        """
+        state['resource_id'].set_referred_object(self, warn=False)
+        self.__dict__.update(state)
+
     resource_id = property(_get_resource_id, _set_resource_id)
 
     def _get_creation_info(self):

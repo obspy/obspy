@@ -7,13 +7,14 @@ from future.builtins import *  # NOQA
 
 import io
 import itertools
+import pickle
 import sys
 import unittest
 import warnings
 
 from obspy import UTCDateTime, read_events
 from obspy.core import event as event
-from obspy.core.event.resourceid import ResourceIdentifier, _ResourceSingleton
+from obspy.core.event.resourceid import ResourceIdentifier, _ResourceKey
 from obspy.core.util.testing import (MegaCatalog, setup_context_testcase,
                                      WarningsCapture)
 
@@ -439,8 +440,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             ids1 = get_object_id_dict(cat1)
             ids2 = get_object_id_dict(cat2)
             # get a dict of all singleton resource keys
-            singleton_ids1 = get_object_id_dict(cat1, _ResourceSingleton)
-            singleton_ids2 = get_object_id_dict(cat2, _ResourceSingleton)
+            singleton_ids1 = get_object_id_dict(cat1, _ResourceKey)
+            singleton_ids2 = get_object_id_dict(cat2, _ResourceKey)
             # get a dict of strings (needed for py2 due to futures module)
             str_ids1 = get_object_id_dict(cat1, str)
             str_ids2 = get_object_id_dict(cat2, str)
@@ -543,9 +544,12 @@ def make_mega_catalog_list():
     cat4 = cat1.copy()
     cat5 = cat4.copy()
     # ensure creating a copying and deleting doesnt mess up id tracking
-    cat6 = cat2.copy()
-    del cat6
-    return [cat1, cat2, cat3, cat4, cat5]
+    cat_to_delete = cat2.copy()
+    del cat_to_delete
+    # pickle and unpickle catalog
+    cat_bytes = pickle.dumps(cat4)
+    cat6 = pickle.loads(cat_bytes)
+    return [cat1, cat2, cat3, cat4, cat5, cat6]
 
 
 def get_object_id_dict(obj, cls=None):

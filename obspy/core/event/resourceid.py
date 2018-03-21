@@ -19,7 +19,7 @@ from copy import deepcopy
 from uuid import uuid4
 
 
-class _ResourceSingleton(object):
+class _ResourceKey(object):
     """
     A private semi-singleton class used to refer id strings to objects.
 
@@ -34,32 +34,19 @@ class _ResourceSingleton(object):
     # define a mapping from a resource string to a singleton instance
     _str2singleton = weakref.WeakValueDictionary()
 
-    def __new__(cls, id_str):
-        try:
-            return cls._str2singleton[id_str]
-        except KeyError:
-            return super(_ResourceSingleton, cls).__new__(cls)
-
-    def __init__(self, id_str):
-        self.id_str = id_str
-        # add instance to class dict
-        self.__class__._str2singleton[id_str] = self
-
-    def __hash__(self):
-        return hash(self.id_str) + hash('_ResourceSingleton')
-
-    def __str__(self):
-        return self.id_str
-
-    def __repr__(self):
-        return self.id_str
-
     def __deepcopy__(self, memodict={}):
         memodict[id(self)] = self
         return self
 
     def __copy__(self):
         return self
+
+    @classmethod
+    def get_resource_key(cls, id_str):
+        if id_str not in _ResourceKey._str2singleton:
+            single = _ResourceKey()
+            _ResourceKey._str2singleton[id_str] = single
+        return _ResourceKey._str2singleton[id_str]
 
 
 class ResourceIdentifier(object):
@@ -269,7 +256,7 @@ class ResourceIdentifier(object):
             self.fixed = True
             self.id = id
         # get resource singleton
-        self._id_key = _ResourceSingleton(self.id)
+        self._id_key = _ResourceKey.get_resource_key(self.id)
 
         # Append the referred object in case one is given to the class level
         # reference dictionary.
@@ -443,6 +430,14 @@ class ResourceIdentifier(object):
         new._object_id = None
         memodict[id(self)] = new
         return new
+
+    def __setstate__(self, state):
+        """
+        Make sure the resource_key follows the singleton pattern.
+        """
+        self.__dict__ = state
+        self._object_id = None
+        self._id_key = _ResourceKey.get_resource_key(self.id)
 
     @property
     def _object_id(self):

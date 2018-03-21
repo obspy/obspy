@@ -418,6 +418,14 @@ def _event_type_class_factory(class_name, class_attributes=[],
                 setattr(result, k, deepcopy(v, memodict))
             return result
 
+        def __setstate__(self, state):
+            """
+            Reset the resource ids after being unpickled to ensure they are
+            bound to the correct object.
+            """
+            state['resource_id'].set_referred_object(self, warn=False)
+            self.__dict__.update(state)
+
     if "resource_id" in [item[0] for item in class_attributes]:
         base_class = AbstractEventTypeWithResourceID
     else:
