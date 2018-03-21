@@ -393,7 +393,24 @@ def _plot_basemap_into_axes(
         bmap.fillcontinents(color=continent_fill_color,
                             lake_color=water_fill_color)
         # draw the edge of the bmap projection region (the projection limb)
-        bmap.drawmapboundary(fill_color=water_fill_color)
+        # this will break with basemap 1.1.0 together with matplotlib >=2.3
+        # (see matplotlib/basemap#382) so better safe-guard by try/excepting
+        # XXX can be removed maybe a year or so after basemap 1.1.1 or 1.2.0 is
+        # released
+        from matplotlib.cbook import MatplotlibDeprecationWarning
+        try:
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    'ignore', message='The axesPatch function was deprecated '
+                    'in version 2.1. Use Axes.patch instead.',
+                    category=MatplotlibDeprecationWarning,
+                    module='.*basemap.*')
+                bmap.drawmapboundary(fill_color=water_fill_color)
+        except AttributeError:
+            msg = ('Could not draw map boundary due to a problem of '
+                   'matplotlib >=2.3 together with basemap <=1.1.0 (see '
+                   'https://github.com/matplotlib/basemap/issues/382)')
+            warnings.warn(msg)
         # draw lat/lon grid lines every 30 degrees.
         bmap.drawmeridians(np.arange(-180, 180, 30))
         bmap.drawparallels(np.arange(-90, 90, 30))
