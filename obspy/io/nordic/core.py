@@ -30,8 +30,8 @@ from obspy.geodetics import kilometers2degrees, degrees2kilometers
 from obspy.core.event import (
     Event, Origin, Magnitude, Comment, Catalog, EventDescription, CreationInfo,
     OriginQuality, Pick, WaveformStreamID, Arrival, Amplitude,
-    ConfidenceEllipsoid, OriginUncertainty, FocalMechanism, MomentTensor,
-    NodalPlane, NodalPlanes, QuantityError, Tensor, ResourceIdentifier)
+    FocalMechanism, MomentTensor, NodalPlane, NodalPlanes, QuantityError,
+    Tensor, ResourceIdentifier)
 
 
 mag_mapping = {"ML": "L", "MLv": "L", "mB": "B", "Ms": "s", "MS": "S",
@@ -586,15 +586,16 @@ def _read_uncertainty(tagged_lines, event):
     # In principle there shouldn't be more than one error line, but I think
     # there can be - need to associate the correct error
     line = tagged_lines['E'][0][0]
+    # TODO: Convert this to ConfidenceEllipsoid
+    errors = {'x_err': None}
     try:
         errors = {'x_err': float(line[24:30]), 'y_err': float(line[32:38]),
                   'z_err': float(line[38:43]), 'xy_cov': float(line[43:55]),
                   'xz_cov': float(line[55:67]), 'yz_cov': float(line[67:79])}
-        event.origins[0].origin_uncertainty = OriginUncertainty(
-            confidence_ellipsoid=ConfidenceEllipsoid.
-            xyz_to_confidence_ellipsoid(errors))
     except ValueError:
         pass
+    if errors['x_err']:
+        warnings.warn("Hypocentral Error estimates found, but not converted.")
     try:
         event.origins[0].quality = OriginQuality(
             azimuthal_gap=int(line[5:8]), standard_error=float(line[14:20]))
