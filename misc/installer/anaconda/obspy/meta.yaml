@@ -1,5 +1,5 @@
-{% set version = "1.0.3" %}
-{% set sha256 = "7170c7427471f978f7a7b0fe61c2bfb7094c59b3859cd8d5d5bbae6380cc20a5" %}
+{% set version = "1.1.0" %}
+{% set sha256 = "ef48b4e52a8166c35c46775b523899ffaa00658018822103e1ad9f5008050d61" %}
 
 package:
   name: obspy
@@ -7,8 +7,7 @@ package:
 
 source:
   fn: obspy-{{ version }}.zip
-  url: https://pypi.io/packages/source/o/obspy/obspy-1.0.3.zip
-  # url: https://github.com/obspy/obspy/files/796697/obspy-1.0.3rc1.zip
+  url: https://pypi.io/packages/source/o/obspy/obspy-{{ version }}.zip
   sha256: {{ sha256 }}
 
 
@@ -27,7 +26,7 @@ requirements:
     - scipy
     # the pinning of matplotlib for tests should be removed for later commits
     # after merging obspy/obspy#1616
-    - matplotlib 1.5.*
+    - matplotlib
     - lxml
     - sqlalchemy
     - requests
@@ -42,7 +41,7 @@ requirements:
     - scipy
     # the pinning of matplotlib for tests should be removed for later commits
     # after merging obspy/obspy#1616
-    - matplotlib 1.5.*
+    - matplotlib
     - lxml
     - sqlalchemy
     - requests
@@ -56,7 +55,7 @@ test:
     - flake8
     # the pinning of matplotlib for tests should be removed for later commits
     # after merging obspy/obspy#1616
-    - matplotlib 1.5.*
+    - matplotlib
     # there's a packaging problem with icu, see obspy/obspy#1677
     #- icu 58.*
   imports:

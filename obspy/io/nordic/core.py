@@ -274,8 +274,8 @@ def _readheader(f):
     # new_event.ev_id=topline[22]
     try:
         new_event.origins[0].latitude = float(topline[23:30])
-        new_event.origins[0].longitude = float(topline[31:38])
-        new_event.origins[0].depth = float(topline[39:43]) * 1000
+        new_event.origins[0].longitude = float(topline[30:38])
+        new_event.origins[0].depth = float(topline[38:43]) * 1000
     except ValueError:
         # The origin 'requires' a lat & long
         new_event.origins[0].latitude = None
