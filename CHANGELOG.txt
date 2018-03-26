@@ -27,6 +27,11 @@ master:
    * 'domain' parameter in correlate function is deprecated in favour of new
      'method' parameter to be consistent with recent SciPy versions
      (see #2042).
+ - obspy.io.nordic:
+    * Add ability to read and write focal mechanisms and moment tensor
+      information.
+    * Add explicit warnings regarding unsupported sections of Nordic files.
+    * Fix mapping of magnitude-types between MS to S and Ms to s.
 
 
 1.1.x:
