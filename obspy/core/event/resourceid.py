@@ -25,7 +25,8 @@ class _ResourceKey(object):
 
     Only one instance will ever be created for each unique string, unless
     all reference are garbage collect, in which case a new instance may be
-    created.
+    created. Constructing instances through the get_resource_key class method
+    is required to ensure this behavior.
 
     This class allows the python gc to handle cleanup of the
     _resource_id_weak_dict attribute of the ResourceIdentifier rather than

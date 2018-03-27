@@ -39,7 +39,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         self.r_dict = state['rdict']  # the weak resource dict
         self.unbound = state['unbound']  # the ubound resource ids
 
-    def print_state(self):
+    def print_state(self):  # pragma: nocover
         """
         Print the current resource_id state, very useful for debugging
         """
@@ -102,7 +102,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
     def test_id_without_reference_not_in_global_list(self):
         """
         This tests some internal workings of the ResourceIdentifier class.
-        NEVER modify the __resource_id_weak_dict!
         Only those ResourceIdentifiers that have a reference to an object that
         is referred to somewhere else should stay in the dictionary.
         """
@@ -306,7 +305,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             "specified in the QuakeML manual section 3.1 and in particular "
             "exclude colons for the final part.")
 
-    def test_dubug_class_state(self):
+    def test_debug_class_state(self):
         """
         Ensure the debug_class_state method juggles the state within context
         manager.
