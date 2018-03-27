@@ -12,7 +12,9 @@ import unittest
 from os.path import abspath, dirname, join, pardir
 import warnings
 
-from obspy import read
+from numpy import isclose
+
+from obspy import read, UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import TemporaryWorkingDirectory, CatchOutput
 from obspy.core.util.testing import ImageComparison
@@ -174,8 +176,29 @@ class ScanTestCase(unittest.TestCase):
                 files.append(fp.name)
             with ImageComparison(self.path, 'scan_mult_sampl.png')\
                     as ic:
+
+                obspy_scan(files + ['--output', ic.name, '--print-gaps'])
+
                 with CatchOutput() as out:
                     obspy_scan(files + ['--output', ic.name, '--print-gaps'])
+
+                # read output and compare with expected
+                # only check if datetime objects are close, not exact
+                output = out.stdout.splitlines()
+                for ex_line, out_line in zip(expected, output):
+                    ex_split = ex_line.split(' ')
+                    out_split = out_line.split(' ')
+                    for ex_str, out_str in zip(ex_split, out_split):
+                        try:
+                            utc1 = UTCDateTime(ex_str)
+                            utc2 = UTCDateTime(out_str)
+                        except (ValueError, TypeError):
+                            # if str is not a datetime it should be equal
+                            self.assertEqual(ex_str, out_str)
+                        else:
+                            # datetimes just need to be close
+                            t1, t2 = utc1.timestamp, utc2.timestamp
+                            self.assertTrue(isclose(t1, t2))
                 self.assertEqual(expected, out.stdout.splitlines())
 
 
