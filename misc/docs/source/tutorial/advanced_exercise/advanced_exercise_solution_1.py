@@ -4,7 +4,7 @@ import obspy
 import obspy.clients.fdsn
 
 
-client = obspy.clients.fdsn.Client("neries")
+client = obspy.clients.fdsn.Client("EMSC")
 
 events = client.get_events(minlatitude=46.1, maxlatitude=46.3,
                            minlongitude=7.6, maxlongitude=7.8,
