@@ -14,13 +14,13 @@ will give you a good idea of the library’s flavor and style.
 A pdf version of the Tutorial is available :download:`here <ObsPyTutorial.pdf>`.
 
 There are also IPython notebooks available online with an
-`introduction to Python <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2015-08-03_iris/01_Python_Crash_Course.ipynb>`__
-(`with solutions/output <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2015-08-03_iris/01_Python_Crash_Course_with_output_and_solutions.ipynb>`__),
+`introduction to Python <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2017-10-25_iris_stcu/Python Introduction/Python_Crash_Course.ipynb>`__
+(`with solutions/output <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2017-10-25_iris_stcu/Python Introduction/Python_Crash_Course-with_solutions.ipynb>`__),
 an
-`introduction to ObsPy <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2015-08-03_iris/02_ObsPy_Introduction.ipynb>`__
-(`with solutions/output <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2015-08-03_iris/02_ObsPy_Introduction_with_output_and_solutions.ipynb>`__)
-and an
+`introduction to ObsPy split up in multiple chapters <http://nbviewer.jupyter.org/github/obspy/docs/blob/master/workshops/2017-10-25_iris_stcu/ObsPy%20Tutorial/00_Introduction.ipynb>`__ (again, versions with/without solutions available)
+and a
 `brief primer on data center access and visualization with ObsPy <https://nbviewer.jupyter.org/github/obspy/docs/blob/master/notebooks/Direct_Access_to_Seismological_Data_using_Python_and_ObsPy.ipynb>`__.
+There are also nice `Jupyter notebooks with an introduction to matplotlib <http://nbviewer.jupyter.org/github/matplotlib/AnatomyOfMatplotlib/tree/master/>`__.
 
 Introduction to ObsPy
 ---------------------
