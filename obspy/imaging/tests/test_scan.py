@@ -174,8 +174,8 @@ class ScanTestCase(unittest.TestCase):
                 fp.flush()
                 fp.seek(0)
                 files.append(fp.name)
-            with ImageComparison(self.path, 'scan_mult_sampl.png')\
-                    as ic:
+            with ImageComparison(self.path, 'scan_mult_sampl.png',
+                                 reltol=1.2) as ic:
 
                 obspy_scan(files + ['--output', ic.name, '--print-gaps'])
 
@@ -199,7 +199,6 @@ class ScanTestCase(unittest.TestCase):
                             # datetimes just need to be close
                             t1, t2 = utc1.timestamp, utc2.timestamp
                             self.assertTrue(isclose(t1, t2))
-                self.assertEqual(expected, out.stdout.splitlines())
 
 
 def suite():
