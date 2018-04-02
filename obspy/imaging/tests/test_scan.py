@@ -12,8 +12,6 @@ import unittest
 from os.path import abspath, dirname, join, pardir
 import warnings
 
-from numpy import isclose
-
 from obspy import read, UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import TemporaryWorkingDirectory, CatchOutput
@@ -198,7 +196,7 @@ class ScanTestCase(unittest.TestCase):
                         else:
                             # datetimes just need to be close
                             t1, t2 = utc1.timestamp, utc2.timestamp
-                            self.assertTrue(isclose(t1, t2))
+                            self.assertTrue(abs(t1 - t2) < .001)
 
 
 def suite():
