@@ -175,7 +175,7 @@ class ScanTestCase(unittest.TestCase):
                 fp.seek(0)
                 files.append(fp.name)
             with ImageComparison(self.path, 'scan_mult_sampl.png',
-                                 reltol=1.2) as ic:
+                                 reltol=1.5) as ic:
 
                 obspy_scan(files + ['--output', ic.name, '--print-gaps'])
 
