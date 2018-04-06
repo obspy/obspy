@@ -7,6 +7,7 @@ from future.builtins import *  # NOQA
 
 import io
 import itertools
+import multiprocessing.pool
 import pickle
 import sys
 import unittest
@@ -358,52 +359,52 @@ class ResourceIdentifierTestCase(unittest.TestCase):
                              if x() is not None])
             self.assertEqual(alive_len, len(cat_list))
 
-    def test_preferred_origin(self):
+    def test_preferred_origin(self, catalog=None):
         """
         Test preferred_origin is set and event scoped.
         """
-        for ev in make_mega_catalog_list():
-            preferred_origin = ev[0].preferred_origin()
+        for cat in catalog or make_mega_catalog_list():
+            preferred_origin = cat[0].preferred_origin()
             self.assertIsNotNone(preferred_origin)
-            self.assertIs(preferred_origin, ev[0].origins[-1])
+            self.assertIs(preferred_origin, cat[0].origins[-1])
 
-    def test_preferred_magnitude(self):
+    def test_preferred_magnitude(self, catalog=None):
         """
         Test preferred_magnitude is set and event scoped.
         """
-        for ev in make_mega_catalog_list():
-            preferred_magnitude = ev[0].preferred_magnitude()
+        for cat in catalog or make_mega_catalog_list():
+            preferred_magnitude = cat[0].preferred_magnitude()
             self.assertIsNotNone(preferred_magnitude)
-            self.assertIs(preferred_magnitude, ev[0].magnitudes[-1])
+            self.assertIs(preferred_magnitude, cat[0].magnitudes[-1])
 
-    def test_preferred_focal_mechanism(self):
+    def test_preferred_focal_mechanism(self, catalog=None):
         """
         Test preferred_focal_mechanism is set and event scoped.
         """
-        for ev in make_mega_catalog_list():
-            preferred_focal_mech = ev[0].preferred_focal_mechanism()
+        for cat in catalog or make_mega_catalog_list():
+            preferred_focal_mech = cat[0].preferred_focal_mechanism()
             self.assertIsNotNone(preferred_focal_mech)
-            self.assertIs(preferred_focal_mech, ev[0].focal_mechanisms[-1])
+            self.assertIs(preferred_focal_mech, cat[0].focal_mechanisms[-1])
 
-    def test_arrivals_refer_to_picks_in_same_event(self):
+    def test_arrivals_refer_to_picks_in_same_event(self, catalog=None):
         """
         Ensure the pick_ids of the arrivals refer to the pick belonging
         to the same event.
         """
-        for ev in make_mega_catalog_list():
-            pick_id = ev[0].picks[0].resource_id
-            arrival_pick_id = ev[0].origins[0].arrivals[0].pick_id
+        for cat in catalog or make_mega_catalog_list():
+            pick_id = cat[0].picks[0].resource_id
+            arrival_pick_id = cat[0].origins[0].arrivals[0].pick_id
             self.assertEqual(pick_id, arrival_pick_id)
-            pick = ev[0].picks[0]
+            pick = cat[0].picks[0]
             arrival_pick = arrival_pick_id.get_referred_object()
             self.assertIs(pick, arrival_pick)
 
-    def test_all_referred_objects_in_catalog(self):
+    def test_all_referred_objects_in_catalog(self, catalog=None):
         """
         All the referred object should be members of the current one event
         catalog.
         """
-        for ev in make_mega_catalog_list():
+        for ev in catalog or make_mega_catalog_list():
             ev_ids = get_object_id_dict(ev)  # all ids containe in dict
             for rid in get_instances(ev, ResourceIdentifier):
                 referred_object = rid.get_referred_object()
@@ -411,13 +412,12 @@ class ResourceIdentifierTestCase(unittest.TestCase):
                     continue
                 self.assertIn(id(referred_object), ev_ids)
 
-    def test_all_resource_id_attrs_are_attached(self):
+    def test_all_resource_id_attrs_are_attached(self, catalog=None):
         """
         Find all objects that have a resource_id attribute and ensure it
         is an instance of ResourceIdentifier and refers to the object.
         """
-        catalogs = make_mega_catalog_list()
-        for cat in catalogs:  # iterate the test catalog
+        for cat in catalog or make_mega_catalog_list():
             for obj in get_instances(cat, has_attr='resource_id'):
                 if isinstance(obj, ResourceIdentifier):
                     continue
@@ -428,12 +428,12 @@ class ResourceIdentifierTestCase(unittest.TestCase):
                 # the attached resource id should refer to parent object
                 self.assertIs(obj, referred_object)
 
-    def test_no_overlapping_objects(self):
+    def test_no_overlapping_objects(self, catalog=None):
         """
         Each event should share no objects, except the id_key singletons, with
         copies of the same event.
         """
-        catalogs = make_mega_catalog_list()
+        catalogs = catalog or make_mega_catalog_list()
         for cat1, cat2 in itertools.combinations(catalogs, 2):
             # get a dict of object id: object reference
             ids1 = get_object_id_dict(cat1)
@@ -450,6 +450,23 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             # find any overlap between events that are not resource keys
             overlap = non_singleton1 & non_singleton2
             self.assertEqual(len(overlap), 0)  # assert no overlap
+
+    def test_event_scoped_resource_id_many_threads(self):
+        """
+        Test that event-scoping of resource IDs still works when many
+        threads are used to generate catalogs via various methods.
+        """
+        pool = multiprocessing.pool.ThreadPool()
+        nested_catalogs = pool.map(make_mega_catalog_list, range(10))
+        catalogs = itertools.chain.from_iterable(nested_catalogs)
+        for catalog in catalogs:
+            self.test_all_referred_objects_in_catalog(catalog)
+            self.test_all_resource_id_attrs_are_attached(catalog)
+            self.test_no_overlapping_objects(catalog)
+            self.test_arrivals_refer_to_picks_in_same_event(catalog)
+            self.test_preferred_focal_mechanism(catalog)
+            self.test_preferred_magnitude(catalog)
+            self.test_preferred_origin(catalog)
 
     def test_resetting_id_warns_on_default_id(self):
         """
@@ -527,7 +544,7 @@ def get_instances(obj, cls=None, is_attr=None, has_attr=None):
     return _get_instances(obj, cls)
 
 
-def make_mega_catalog_list():
+def make_mega_catalog_list(*args):
     """
     Make a list of complex catalogs (and copies) and return it.
     """
