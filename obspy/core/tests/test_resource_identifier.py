@@ -172,7 +172,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         rid2 = ResourceIdentifier(uri, referred_object=obj2)
         self.assertFalse(rid1.get_referred_object() is
                          rid2.get_referred_object())
-        self.assertNotEqual(rid1._object_id, rid2._object_id)
+        self.assertNotEqual(rid1._parent_key, rid2._parent_key)
         del obj1
         warnings.simplefilter('default')
         with warnings.catch_warnings(record=True) as w:
@@ -182,7 +182,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         # now both rids should return the same object
         self.assertIs(rid1.get_referred_object(), rid2.get_referred_object())
         # the object id should now be bound to obj2
-        self.assertEqual(rid1._object_id, rid2._object_id)
+        self.assertEqual(rid1._parent_key, rid2._parent_key)
 
     def test_resources_in_global_dict_get_garbage_collected(self):
         """
@@ -258,7 +258,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             # Create object and assert the reference has been created.
             r1 = ResourceIdentifier(rid, referred_object=t1)
             self.assertEqual(r1.get_referred_object(), t1)
-            self.assertTrue(r1._id_key in r_dict)
+            self.assertTrue(r1._resource_key in r_dict)
             # Deleting the object should remove the reference.
             r_dict_len = len(r_dict)
             del r1
@@ -270,12 +270,12 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             # Deleting one should not remove the reference.
             del r1
             self.assertEqual(r2.get_referred_object(), t1)
-            self.assertIn(r2._id_key, r_dict)
+            self.assertIn(r2._resource_key, r_dict)
             # Deleting the second one should (r_dict should not be empty)
             del r2
             self.assertEqual(len(r_dict), 0)
             r3 = ResourceIdentifier(rid)
-            self.assertNotIn(r3._id_key, r_dict)
+            self.assertNotIn(r3._resource_key, r_dict)
 
     def test_initialize_with_resource_identifier(self):
         """
@@ -324,25 +324,25 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         rdict1 = current_rdict()
         rid1 = make_resouce_id()
 
-        self.assertIn(rid1._id_key, rdict1)
+        self.assertIn(rid1._resource_key, rdict1)
 
         with ResourceIdentifier._debug_class_state():
             # rdict state should have been replaced
-            self.assertNotIn(rid1._id_key, current_rdict())
+            self.assertNotIn(rid1._resource_key, current_rdict())
             rid2 = make_resouce_id()
-            self.assertIn(rid2._id_key, current_rdict())
+            self.assertIn(rid2._resource_key, current_rdict())
 
             with ResourceIdentifier._debug_class_state():
-                self.assertNotIn(rid1._id_key, current_rdict())
-                self.assertNotIn(rid2._id_key, current_rdict())
+                self.assertNotIn(rid1._resource_key, current_rdict())
+                self.assertNotIn(rid2._resource_key, current_rdict())
                 rid3 = make_resouce_id()
-                self.assertIn(rid3._id_key, current_rdict())
+                self.assertIn(rid3._resource_key, current_rdict())
 
-            self.assertNotIn(rid3._id_key, current_rdict())
-            self.assertIn(rid2._id_key, current_rdict())
+            self.assertNotIn(rid3._resource_key, current_rdict())
+            self.assertIn(rid2._resource_key, current_rdict())
 
-        self.assertNotIn(rid2._id_key, current_rdict())
-        self.assertIn(rid1._id_key, current_rdict())
+        self.assertNotIn(rid2._resource_key, current_rdict())
+        self.assertIn(rid1._resource_key, current_rdict())
 
     def test_copy_catalog(self):
         """

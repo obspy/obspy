@@ -152,8 +152,8 @@ class EventTestCase(unittest.TestCase):
         self.assertIsNot(rid1, rid3)
         self.assertEqual(rid1, rid3)
         # make sure the object_id on the resource_ids are not the same
-        self.assertEqual(rid1._object_id, rid2._object_id)
-        self.assertNotEqual(rid1._object_id, rid3._object_id)
+        self.assertEqual(rid1._parent_key, rid2._parent_key)
+        self.assertNotEqual(rid1._parent_key, rid3._parent_key)
         # copy should point to the same object, deep copy should not
         self.assertIs(rob1, rob2)
         self.assertIsNot(rob1, rob3)

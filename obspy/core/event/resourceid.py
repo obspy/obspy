@@ -14,9 +14,11 @@ import inspect
 import re
 import warnings
 import weakref
+import queue
 from contextlib import contextmanager
 from copy import deepcopy
 from uuid import uuid4
+from weakref import ref, WeakKeyDictionary, WeakValueDictionary
 
 
 class _ResourceKey(object):
@@ -48,6 +50,53 @@ class _ResourceKey(object):
             single = _ResourceKey()
             _ResourceKey._str2singleton[id_str] = single
         return _ResourceKey._str2singleton[id_str]
+
+
+class _OrderedWeakValueDict(object):
+    """
+    An ordered weak value dictionary.
+    """
+    def __init__(self):
+        self.ordered = collections.OrderedDict()
+
+    def __setitem__(self, key, value):
+        self.ordered[key] = ref(value)
+
+    def __getitem__(self, item):
+        obj = self.ordered[item]()
+        if obj is not None:
+            return obj
+        else:
+            raise KeyError(item)
+
+    def get_last(self):
+        """
+        Return the last item in the ordered dictionary that contains a live
+        reference, if None are found raise an IndexError.
+        """
+        while True:
+            last_key = list(self.ordered.values())[-1]
+            try:
+                return self[last_key]
+            except KeyError:
+                pass
+
+
+class _ResourceKeyDescriptor(object):
+    """
+    A descriptor for setting resource_ids
+    """
+    def __init__(self, name, default=_ResourceKey.get_resource_key(id(None))):
+        self.name = name + '__'
+        self.default = default
+
+    def __get__(self, instance, owner):
+        getattr(instance, self.name)
+
+    def __set__(self, instance, value):
+        if value is None:
+            return
+        setattr(instance, self.name, value)
 
 
 class ResourceIdentifier(object):
@@ -233,11 +282,28 @@ class ResourceIdentifier(object):
     # Class (not instance) attribute that keeps track of all resource
     # identifier throughout one Python run. Will only store weak references
     # and therefore does not interfere with the garbage collection.
-    # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
+    # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS. Use the _debug_class_state
+    # method for temporarily altering these in tests or debugging.
 
-    # A nested dict with _ResourceSingletons as keys, and default dicts with
+    # The default _ResourceKey
+    __parent_key = _ResourceKey.get_resource_key(id(None))
+
+    # resource ids
+    _object_id = None
+
+    # A dict for keeping track of parent/object specific references.
+    # weak_key, weak_key, weak_value
+    # {parent_key: {resource_key: {object_id: object}}}
+    __id_tree = WeakKeyDictionary({__parent_key: WeakValueDictionary()})
+
+    # Dict of list to keep track of the order in which resource_ids are
+    # assigned to objects.
+    # weak key dict with weak list {resource_id: [object, object, ...]
+    __resource_id_object_list = WeakKeyDictionary()
+
+    # A nested dict with _ResourceSingletons as keys, and ordered dicts with
     # ids as keys and weakrefs as values.
-    __resource_id_weak_dict = weakref.WeakKeyDictionary()
+    __resource_id_weak_dict = WeakKeyDictionary()
 
     # A dictionary for keep track of resources id that are not bound.
     # Keys are the id and values are a weak ref to the resource identifier.
@@ -257,28 +323,25 @@ class ResourceIdentifier(object):
             self.fixed = True
             self.id = id
         # get resource singleton
-        self._id_key = _ResourceKey.get_resource_key(self.id)
+        self._resource_key = _ResourceKey.get_resource_key(self.id)
 
         # Append the referred object in case one is given to the class level
         # reference dictionary.
-        self._object_id = None  # the object specific ID
+        # self._object_id = None  # the object specific ID
         if referred_object is not None:
             self.set_referred_object(referred_object)
 
-    @classmethod
-    def bind_resource_ids(cls):
-        """
-        Bind the unbound ResourceIdentifier instances to referred objects.
 
-        Binds all of the unbound ResourceIdentifier instances to the most
-        recent object assigned to the resource_id. This ensures that all
-        resource identifiers will return the same object they are bound to
-        until the object goes out of scope.
-        """
-        for rid_id in list(cls.__unbound_resource_id):
-            rid = cls.__unbound_resource_id.pop(rid_id, None)
-            if rid is not None:  # if the resource id still exists
-                rid.get_referred_object()  # will bind rid to referred object
+    @property
+    def _parent_key(self):
+        return self._parent_id_key
+
+    @_parent_key.setter
+    def _parent_key(self, obj):
+        # an object id was passed
+        if obj is not None:
+            rkey = obj if isinstance(obj, int) else id(obj)
+            self._parent_key = _ResourceKey.get_resource_key(rkey)
 
     def get_referred_object(self):
         """
@@ -288,15 +351,15 @@ class ResourceIdentifier(object):
         ID as this instance has an associate object. If not, this method will
         return None.
         """
-        try:
-            rdic = ResourceIdentifier.__resource_id_weak_dict[self._id_key]
-        except KeyError:
-            return None
-        else:
-            if self._object_id in rdic and rdic[self._object_id]() is not None:
-                return rdic[self._object_id]()
-            else:  # find last added obj that is not None
-                return self._get_similar_referred_object()
+        # try to find the object reference in the event_id_map
+        parent_tree = ResourceIdentifier.__id_tree[self._parent_key]
+        if self._resource_key in parent_tree:
+            try:
+                return parent_tree[self._resource_key][self._object_id]
+            except (KeyError, IndexError):
+                pass
+        # if it isn't found, try to find another object with same id
+        return self._get_similar_referred_object()
 
     def _get_similar_referred_object(self):
         """
@@ -304,62 +367,54 @@ class ResourceIdentifier(object):
         return it. Also pop all keys that have None values in the
         __resource_id_weak_dict
         """
-        rdic = ResourceIdentifier.__resource_id_weak_dict[self._id_key]
+        # Warn if resource_id was bound but its object got gc'ed.
         if self._object_id is not None:
             msg = ("The object with identity of: %d no longer exists, "
                    "returning the most recently created object with a"
-                   " resource id of: %s") % (self._object_id, self.id)
-            line_number = inspect.currentframe().f_back.f_lineno
-            warnings.warn_explicit(msg, UserWarning, __file__,
-                                   line_number)
-            self._object_id = None  # reset object id
-        # find a obj that is not None starting at last in ordered dict
-        for key in list(reversed(rdic)):
-            obj = rdic[key]()
-            if obj is not None:
-                self.set_referred_object(obj)
-                return obj
-            else:  # remove references that are None
-                rdic.pop(key)
-        else:  # if iter runs out all objects are none; pop rid, return None
-            ResourceIdentifier.__resource_id_weak_dict.pop(self._id_key)
-            msg = ('no object found with resource id %s, returning None'
-                   % self.id)
-            line_number = inspect.currentframe().f_back.f_lineno
-            warnings.warn_explicit(msg, UserWarning, __file__, line_number)
+                   " resource id of: %s") % (self._parent_key, self.id)
+            warnings.warn(msg, UserWarning)
+        # return last defined object
+        try:
+            obj = ResourceIdentifier.__resource_id_object_list.get_last()
+        except IndexError:
             return None
+        else:
+            self.set_referred_object(obj)
+            return obj
 
-    def set_referred_object(self, referred_object, warn=True):
+
+    def set_referred_object(self, referred_object, warn=True, parent=None):
         """
-        Binds a ResourceIdentifier instance to an object.
+        Bind an object to the ResourceIdentifier instance.
 
-        If it already a weak reference it will be used, otherwise one will be
-        created. If the object is None, None will be set.
-
-        Will also append self again to the global class level reference list
-        so everything stays consistent. Warning can be ignored by setting
-        the warn parameter to False.
+        :param referred_object: The object to which the resource id refers.
+        :type referred_object: object
+        :param warn:
+            If True, issue a warning if the referred_object is not equal to
+            the last object assigned the same resource_id.
+        :type warn: bool
+        :param parent:
+            An object or int (id) to which the resource_id should be scoped.
+            Used, for example, to ensure the all resource ids belonging to an
+            event object are event-scoped.
+        :type parent: object, int
         """
-        self._object_id = id(referred_object)  # identity of object
-        rdic = ResourceIdentifier.__resource_id_weak_dict
-        # if the resource_id is in the rid_dict but object_id is not
-        if self._id_key in rdic and self._object_id not in rdic[self._id_key]:
-            # get the most recently defined object with this id
-            object_dict = rdic[self._id_key]
-            object_list = list(object_dict.values())
-            last_obj = next(reversed(object_list))()
-            if warn and last_obj is not None and last_obj != referred_object:
-                msg = ('Warning, binding object to resource ID %s which '
-                       'is not equal to the last object bound to this '
-                       'resource_id') % self.id
-                line_number = inspect.currentframe().f_back.f_lineno
-                warnings.warn_explicit(msg, UserWarning, __file__,
-                                       line_number)
-            rdic[self._id_key][self._object_id] = weakref.ref(referred_object)
-        # if there is no entry for the id key yet make one
-        elif self._id_key not in rdic:
-            rdic[self._id_key] = collections.OrderedDict()
-            rdic[self._id_key][self._object_id] = weakref.ref(referred_object)
+        self._object_id = id(referred_object)
+        self._parent_key = parent
+        parent_tree = ResourceIdentifier.__id_tree[self._parent_key]
+
+        # If there are no objects with this resource id yet create a dict
+        if self._resource_key not in parent_tree:
+            parent_tree[self._resource_key] = _OrderedWeakValueDict()
+        else:  # else check if this and old object are equal, if not warn
+            if parent_tree[self._resource_key].get_last() != referred_object:
+                if warn:
+                    msg = ('Warning, binding object to resource ID %s which '
+                           'is not equal to the last object bound to this'
+                           'resource_id') % self.id
+                    warnings.warn(msg, UserWarning)
+        # assign
+        parent_tree[self._resource_key][self._object_id] = referred_object
 
     def convert_id_to_quakeml_uri(self, authority_id="local"):
         """
@@ -428,7 +483,7 @@ class ResourceIdentifier(object):
         new = ResourceIdentifier.__new__(ResourceIdentifier)
         new.__dict__.update(self.__dict__)
         # clear object_id upon copying resource_ids
-        new._object_id = None
+        new._parent_key = None
         memodict[id(self)] = new
         return new
 
@@ -437,20 +492,8 @@ class ResourceIdentifier(object):
         Make sure the resource_key follows the singleton pattern.
         """
         self.__dict__ = state
-        self._object_id = None
-        self._id_key = _ResourceKey.get_resource_key(self.id)
-
-    @property
-    def _object_id(self):
-        return self.__dict__['_object_id']
-
-    @_object_id.setter
-    def _object_id(self, value):
-        if value is None:  # add instance to unbound dict
-            self.__class__.__unbound_resource_id[id(self)] = self
-        else:  # binding to object, remove instance from unbound dict
-            self.__class__.__unbound_resource_id.pop(id(self), None)
-        self.__dict__['_object_id'] = value
+        self._parent_key = None
+        self._resource_key = _ResourceKey.get_resource_key(self.id)
 
     @property
     def id(self):

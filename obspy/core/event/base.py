@@ -397,7 +397,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
                 if name == "resource_id":  # bind the resource_id to self
                     self.resource_id.set_referred_object(self, warn=False)
                 else:  # else unbind to allow event scoping later
-                    value._object_id = None
+                    value._parent_key = None
 
     class AbstractEventTypeWithResourceID(AbstractEventType):
         def __init__(self, force_resource_id=True, *args, **kwargs):
