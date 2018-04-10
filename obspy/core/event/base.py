@@ -405,27 +405,6 @@ def _event_type_class_factory(class_name, class_attributes=[],
             super(AbstractEventTypeWithResourceID, self).__init__(*args,
                                                                   **kwargs)
 
-        def __deepcopy__(self, memodict=None):
-            """
-            Reset resource_id's object_id after deep copy to allow the
-            object specific behavior of get_referred_object
-            """
-            memodict = memodict or {}
-            cls = self.__class__
-            result = cls.__new__(cls)
-            memodict[id(self)] = result
-            for k, v in self.__dict__.items():
-                setattr(result, k, deepcopy(v, memodict))
-            return result
-
-        def __setstate__(self, state):
-            """
-            Reset the resource ids after being unpickled to ensure they are
-            bound to the correct object.
-            """
-            state['resource_id'].set_referred_object(self, warn=False)
-            self.__dict__.update(state)
-
     if "resource_id" in [item[0] for item in class_attributes]:
         base_class = AbstractEventTypeWithResourceID
     else:

@@ -20,12 +20,13 @@ This class hierarchy is closely modelled after the de-facto standard format
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+
 import copy
 
 from obspy.core.event.header import (
     EventType, EventTypeCertainty, EventDescriptionType)
 from obspy.core.event.resourceid import ResourceIdentifier
-from obspy.core.util.decorator import rlock
+from obspy.core.util.misc import yield_obj_parent_attr
 from obspy.imaging.source import plot_radiation_pattern, _setup_figure_and_axes
 
 
@@ -104,7 +105,7 @@ class Event(__Event):
 
     def __init__(self, *args, **kwargs):
         super(Event, self).__init__(*args, **kwargs)
-        ResourceIdentifier.bind_resource_ids()
+        self.scope_resource_ids()
 
     def short_str(self):
         """
@@ -279,7 +280,6 @@ class Event(__Event):
 
         return fig
 
-    @rlock
     def __deepcopy__(self, memodict=None):
         """
         reset resource_id's object_id after deep copy to allow the
@@ -291,13 +291,12 @@ class Event(__Event):
         memodict[id(self)] = result
         for k, v in self.__dict__.items():
             setattr(result, k, copy.deepcopy(v, memodict))
-        result.resource_id.bind_resource_ids()  # bind all resource_ids
+        result.scope_resource_ids()
         return result
 
-    @rlock
     def __setstate__(self, state_dict):
         super(Event, self).__setstate__(state_dict)
-        ResourceIdentifier.bind_resource_ids()
+        self.scope_resource_ids()
 
     def write(self, filename, format, **kwargs):
         """
@@ -319,6 +318,24 @@ class Event(__Event):
         """
         from .catalog import Catalog
         Catalog(events=[self]).write(filename, format, **kwargs)
+
+    def scope_resource_ids(self):
+        """
+        Ensure all resource_ids in event instance are event-scoped.
+
+        This will ensure the resource_ids refer to objects in the event
+        structure when possible.
+        """
+
+        gen = yield_obj_parent_attr(self, ResourceIdentifier)
+
+        for resource_id, parent, attr in gen:
+            if attr == 'resource_id':
+                resource_id.set_referred_object(parent, parent=self,
+                                                warn=False)
+            else:
+                resource_id._parent_key = self
+                resource_id._object_id = None
 
 
 __EventDescription = _event_type_class_factory(

@@ -10,6 +10,7 @@ Various additional utilities for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import PY2
 
 import contextlib
@@ -20,16 +21,14 @@ import locale
 import math
 import os
 import shutil
-from subprocess import STDOUT, CalledProcessError, check_output
 import sys
 import tempfile
 import warnings
-from pkg_resources import load_entry_point
+from subprocess import STDOUT, CalledProcessError, check_output
 
-from future.builtins import *  # NOQA
 
 import numpy as np
-
+from pkg_resources import load_entry_point
 
 WIN32 = sys.platform.startswith('win32')
 
@@ -637,6 +636,54 @@ def buffered_load_entry_point(dist, group, name):
     if hash_str not in _ENTRY_POINT_CACHE:
         _ENTRY_POINT_CACHE[hash_str] = load_entry_point(dist, group, name)
     return _ENTRY_POINT_CACHE[hash_str]
+
+
+def yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
+    """
+    Recurse a Catalog like object, yield a tuple of object, parent, attr.
+
+    :param obj:
+        The object to recurse through attributes of lists, tuples, and other
+        instances.
+    :param cls:
+        Only return instances of cls if not None, else return all instances.
+    :param is_attr:
+        Only return objects stored as attr_name, if None return all.
+    :param has_attr:
+        Only return objects that have attribute has_attr, if None return all.
+    """
+    instance_cache = {}
+
+    def func(obj, ids=None, attr=None, parent=None):
+        ids = ids or set()  # id cache to avoid circular references
+        id_tuple = (id(obj), id(parent))
+
+        # if object/parent combo have not been yielded
+        if id_tuple not in ids:
+            if id_tuple in instance_cache:
+                yield instance_cache[id_tuple]
+            ids.add(id_tuple)
+            # filter out built-ins by looking for __dict__ or __slots__
+            not_bultin = hasattr(obj, '__dict__') or hasattr(obj, '__slots__')
+            # check if this object is stored as the desired attribute
+            is_attribute = is_attr is None or attr == is_attr
+            # check if object has desired attribute
+            has_attribute = has_attr is None or hasattr(obj, has_attr)
+            # check if isinstance
+            is_instance = cls is None or isinstance(obj, cls)
+            if not_bultin and is_attribute and has_attribute and is_instance:
+                instance_cache[id_tuple] = (obj, parent, attr)
+                yield (obj, parent, attr)
+            if hasattr(obj, '__dict__'):
+                for item, val in obj.__dict__.items():
+                    for out in func(val, ids, attr=item, parent=obj):
+                        yield out
+            if isinstance(obj, (list, tuple)):
+                for val in obj:
+                    for out in func(val, ids, attr=attr, parent=obj):
+                        yield out
+
+    return func(obj)
 
 
 if __name__ == '__main__':

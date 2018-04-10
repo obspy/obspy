@@ -792,6 +792,7 @@ class MegaCatalog(object):
         for item, value in preferred_objects.items():
             setattr(event, 'preferred_' + item + '_id', value)
 
+        event.scope_resource_ids()
         return event
 
     def _create_pick(self):

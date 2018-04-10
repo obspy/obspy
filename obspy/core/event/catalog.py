@@ -80,7 +80,6 @@ class Catalog(object):
         self._set_resource_id(kwargs.get("resource_id", None))
         self.description = kwargs.get("description", "")
         self._set_creation_info(kwargs.get("creation_info", None))
-        ResourceIdentifier.bind_resource_ids()
 
     def _get_resource_id(self):
         return self.__dict__['resource_id']
@@ -93,25 +92,13 @@ class Catalog(object):
         value.set_referred_object(self, warn=False)
         self.__dict__['resource_id'] = value
 
-    def __deepcopy__(self, memodict=None):
-        """
-        reset resource_id's object_id after deep copy to allow the
-        object specific behavior of get_referred_object.
-        """
-        memodict = memodict or {}
-        cls = self.__class__
-        result = cls.__new__(cls)
-        memodict[id(self)] = result
-        for k, v in self.__dict__.items():
-            setattr(result, k, copy.deepcopy(v, memodict))
-        return result
-
     def __setstate__(self, state):
         """
         Reset the resource id after being unpickled to ensure they are
         bound to the correct object.
         """
-        state['resource_id'].set_referred_object(self, warn=False)
+        state['resource_id'].set_referred_object(self, warn=False,
+                                                 parent=self)
         self.__dict__.update(state)
 
     resource_id = property(_get_resource_id, _set_resource_id)
@@ -789,7 +776,6 @@ class Catalog(object):
         return fig
 
 
-@rlock
 @map_example_filename("pathname_or_url")
 def read_events(pathname_or_url=None, format=None, **kwargs):
     """
@@ -869,7 +855,6 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
         if len(pathnames) > 1:
             for filename in pathnames[1:]:
                 catalog.extend(_read(filename, format, **kwargs).events)
-        ResourceIdentifier.bind_resource_ids()
         return catalog
 
 

@@ -37,15 +37,17 @@ class EventTestCase(unittest.TestCase):
     Test suite for obspy.core.event.Event
     """
     def setUp(self):
-        # directory where the test files are located
-        path = os.path.join(os.path.dirname(__file__), 'data')
-        self.path = path
-        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        """
+        Setup code to run before each test. Temporary replaces the state on
+        the ResourceIdentifier class level to reset the ResourceID mechanisms
+        before each run.
+        """
         # setup temporary id dict for tests in this case and bind to self
         context = ResourceIdentifier._debug_class_state()
         state = setup_context_testcase(self, context)
-        self.r_dict = state['rdict']  # the weak resource dict
-        self.unbound = state['unbound']  # the ubound resource ids
+        self.parent_id_tree = state['parent_id_tree']
+        self.id_order = state['id_order']
+        self.id_object_map = state['id_object_map']
 
     def test_str(self):
         """
@@ -147,13 +149,10 @@ class EventTestCase(unittest.TestCase):
         rob2 = rid2.get_referred_object()
         rob3 = rid3.get_referred_object()
         # A shallow copy should just use the exact same resource identifier,
-        # while a deep copy should not, although they should be qual.
+        # while a deep copy should not, although they should be equal.
         self.assertIs(rid1, rid2)
         self.assertIsNot(rid1, rid3)
         self.assertEqual(rid1, rid3)
-        # make sure the object_id on the resource_ids are not the same
-        self.assertEqual(rid1._parent_key, rid2._parent_key)
-        self.assertNotEqual(rid1._parent_key, rid3._parent_key)
         # copy should point to the same object, deep copy should not
         self.assertIs(rob1, rob2)
         self.assertIsNot(rob1, rob3)
@@ -195,13 +194,6 @@ class OriginTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.event.Origin
     """
-    def setUp(self):
-        # setup temporary id dict for tests in this case and bind to self
-        context = ResourceIdentifier._debug_class_state()
-        state = setup_context_testcase(self, context)
-        self.r_dict = state['rdict']  # the weak resource dict
-        self.unbound = state['unbound']  # the ubound resource ids
-
     def test_creation_info(self):
         # 1 - empty Origin class will set creation_info to None
         orig = Origin()
@@ -260,11 +252,6 @@ class CatalogTestCase(unittest.TestCase):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.iris_xml = os.path.join(path, 'iris_events.xml')
         self.neries_xml = os.path.join(path, 'neries_events.xml')
-        # setup temporary id dict for tests in this case and bind to self
-        context = ResourceIdentifier._debug_class_state()
-        state = setup_context_testcase(self, context)
-        self.r_dict = state['rdict']  # the weak resource dict
-        self.unbound = state['unbound']  # the ubound resource ids
 
     def test_read_invalid_filename(self):
         """
@@ -532,38 +519,39 @@ class CatalogTestCase(unittest.TestCase):
         cat = read_events(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
-    def test_latest_in_scope_object_returned(self):
+    def test_catalog_resource_ids(self):
         """
         Test that the most recently defined object with the same resource_id,
         that is still in scope, is returned from the get_referred_object
-        method
+        method.
         """
-        cat1 = read_events()
-        # The resource_id attached to the first event is self-pointing
-        self.assertIs(cat1[0], cat1[0].resource_id.get_referred_object())
-        # make a copy and re-read catalog
-        cat2 = cat1.copy()
-        cat3 = read_events()
-        # the resource_id on the new catalogs point to their attached objects
-        self.assertIs(cat1[0], cat1[0].resource_id.get_referred_object())
-        self.assertIs(cat2[0], cat2[0].resource_id.get_referred_object())
-        self.assertIs(cat3[0], cat3[0].resource_id.get_referred_object())
-        # now delete cat1 and make sure cat2 and cat3 still work
-        del cat1
-        self.assertIs(cat2[0], cat2[0].resource_id.get_referred_object())
-        self.assertIs(cat3[0], cat3[0].resource_id.get_referred_object())
-        # create a resource_id with the same id as the last defined object
-        # with the same resource id (that is still in scope) is returned
-        new_id = cat2[0].resource_id.id
-        rid = ResourceIdentifier(new_id)
-        self.assertIs(rid.get_referred_object(), cat3[0])
-        del cat3
-        # raises UserWarning
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", UserWarning)
-            self.assertIs(rid.get_referred_object(), cat2[0])
-        del cat2
-        self.assertIs(rid.get_referred_object(), None)
+        with ResourceIdentifier._debug_class_state():
+            cat1 = read_events()
+            # The resource_id attached to the first event is self-pointing
+            self.assertIs(cat1[0], cat1[0].resource_id.get_referred_object())
+            # make a copy and re-read catalog
+            cat2 = cat1.copy()
+            cat3 = read_events()
+            # the resource_id on the new catalogs point to attached objects
+            self.assertIs(cat1[0], cat1[0].resource_id.get_referred_object())
+            self.assertIs(cat2[0], cat2[0].resource_id.get_referred_object())
+            self.assertIs(cat3[0], cat3[0].resource_id.get_referred_object())
+            # now delete cat1 and make sure cat2 and cat3 still work
+            del cat1
+            self.assertIs(cat2[0], cat2[0].resource_id.get_referred_object())
+            self.assertIs(cat3[0], cat3[0].resource_id.get_referred_object())
+            # create a resource_id with the same id as the last defined object
+            # with the same resource id (that is still in scope) is returned
+            new_id = cat2[0].resource_id.id
+            rid = ResourceIdentifier(new_id)
+            self.assertIs(rid.get_referred_object(), cat3[0])
+            del cat3
+            # raises UserWarning
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UserWarning)
+                self.assertIs(rid.get_referred_object(), cat2[0])
+            del cat2
+            self.assertIs(rid.get_referred_object(), None)
 
     def test_issue_2173(self):
         """
@@ -599,11 +587,6 @@ class CatalogBasemapTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        # setup temporary id dict for tests in this case and bind to self
-        context = ResourceIdentifier._debug_class_state()
-        state = setup_context_testcase(self, context)
-        self.r_dict = state['rdict']  # the weak resource dict
-        self.unbound = state['unbound']  # the ubound resource ids
 
     def test_catalog_plot_global(self):
         """
@@ -672,11 +655,6 @@ class CatalogCartopyTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        # setup temporary id dict for tests in this case and bind to self
-        context = ResourceIdentifier._debug_class_state()
-        state = setup_context_testcase(self, context)
-        self.r_dict = state['rdict']  # the weak resource dict
-        self.unbound = state['unbound']  # the ubound resource ids
 
     def test_catalog_plot_global(self):
         """
