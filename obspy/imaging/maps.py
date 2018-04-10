@@ -17,9 +17,7 @@ import datetime
 import warnings
 
 import numpy as np
-from matplotlib.cm import ScalarMappable
 from matplotlib.colorbar import Colorbar
-from matplotlib.colors import Normalize
 from matplotlib.dates import AutoDateFormatter, AutoDateLocator, date2num
 import matplotlib.patheffects as PathEffects
 from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
@@ -163,8 +161,6 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
         event plot (with colorbar) together should work well.
     """
     import matplotlib.pyplot as plt
-    min_color = min(color)
-    max_color = max(color)
 
     if any([isinstance(c, (datetime.datetime, UTCDateTime)) for c in color]):
         datetimeplot = True
@@ -175,10 +171,6 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
             for t in color]
     else:
         datetimeplot = False
-
-    scal_map = ScalarMappable(norm=Normalize(min_color, max_color),
-                              cmap=colormap)
-    scal_map.set_array(np.linspace(0, 1, 1))
 
     # The colorbar should only be plotted if more then one event is
     # present.
@@ -227,12 +219,36 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
                            list(e.args[1:]))
             raise
 
-    scatter = _plot_basemap_into_axes(
-        ax=map_ax, lons=lons, lats=lats, size=size, color=color, bmap=bmap,
-        labels=labels, projection=projection, resolution=resolution,
-        continent_fill_color=continent_fill_color,
-        water_fill_color=water_fill_color, colormap=colormap, marker=marker,
-        title="", adjust_aspect_to_colorbar=colorbar, **kwargs)
+    # basemap plots will break with basemap 1.1.0 together with matplotlib
+    # >=2.3 (see matplotlib/basemap#382) so only thing we can do is show a
+    # nicer message.
+    # XXX can be removed maybe a year or so after basemap
+    # 1.1.1 or 1.2.0 is released
+    from matplotlib.cbook import MatplotlibDeprecationWarning
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                'ignore', message='The axesPatch function was deprecated '
+                'in version 2.1. Use Axes.patch instead.',
+                category=MatplotlibDeprecationWarning,
+                module='.*basemap.*')
+            scatter = _plot_basemap_into_axes(
+                ax=map_ax, lons=lons, lats=lats, size=size, color=color,
+                bmap=bmap, labels=labels, projection=projection,
+                resolution=resolution,
+                continent_fill_color=continent_fill_color,
+                water_fill_color=water_fill_color, colormap=colormap,
+                marker=marker, title="", adjust_aspect_to_colorbar=colorbar,
+                **kwargs)
+    except AttributeError as e:
+        if 'axesPatch' not in str(e):
+            raise
+        msg = ('Encountered a problem doing the basemap plot due to a known '
+               'issue of matplotlib >=2.3 together with basemap <=1.1.0 (see '
+               'https://github.com/matplotlib/basemap/issues/382). Please '
+               'update basemap to a version >1.1.0 if available or downgrade '
+               'matplotlib to a version <2.3.')
+        raise Exception(msg)
 
     if title:
         plt.suptitle(title)
@@ -299,13 +315,6 @@ def _plot_basemap_into_axes(
     :rtype: :class:`matplotlib.collections.PathCollection`
     :returns: Matplotlib path collection (e.g. to reuse for colorbars).
     """
-    min_color = min(color)
-    max_color = max(color)
-
-    scal_map = ScalarMappable(norm=Normalize(min_color, max_color),
-                              cmap=colormap)
-    scal_map.set_array(np.linspace(0, 1, 1))
-
     fig = ax.figure
     if bmap is None:
 
@@ -541,18 +550,12 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         built-in ``projection`` choices.
     """
     import matplotlib.pyplot as plt
-    min_color = min(color)
-    max_color = max(color)
 
     if isinstance(color[0], (datetime.datetime, UTCDateTime)):
         datetimeplot = True
         color = [date2num(getattr(t, 'datetime', t)) for t in color]
     else:
         datetimeplot = False
-
-    scal_map = ScalarMappable(norm=Normalize(min_color, max_color),
-                              cmap=colormap)
-    scal_map.set_array(np.linspace(0, 1, 1))
 
     fig = plt.figure()
 
