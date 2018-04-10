@@ -1078,7 +1078,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 warnings.simplefilter("always")
                 cat.write(tf.name, format="quakeml")
                 cat2 = read_events(tf.name)
-        self.assertEqual(len(w), 1)
+        self.assertEqual(len(w), 19)
         self.assertEqual(
             w[0].message.args[0],
             "'smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)' "

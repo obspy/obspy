@@ -1090,7 +1090,7 @@ class Pickler(object):
 
     def _str(self, value, root, tag, always_create=False, attrib=None):
         if isinstance(value, ResourceIdentifier):
-            value = value.get_quakeml_uri()
+            value = self._id(value)
         if always_create is False and value is None:
             return
         etree.SubElement(root, tag, attrib=attrib).text = "%s" % value
