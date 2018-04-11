@@ -272,7 +272,9 @@ class Reftek130(object):
                 "reftek130": eh._to_dict()}
             delta = 1.0 / eh.sampling_rate
             delta_nanoseconds = int(delta * 1e9)
-            for channel_number in np.unique(data['channel_number']):
+            inds_dt = data['packet_type'] == b"DT"
+            data_channels = np.unique(data[inds_dt]['channel_number'])
+            for channel_number in data_channels:
                 inds = data['channel_number'] == channel_number
                 # channel number of EH/ET packets also equals zero (one of the
                 # three unused bytes in the extended header of EH/ET packets)
