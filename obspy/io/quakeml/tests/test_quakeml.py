@@ -1088,6 +1088,24 @@ class QuakeMLTestCase(unittest.TestCase):
             cat2[0].resource_id.id,
             "smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)")
 
+    def test_reading_invalid_enums(self):
+        """
+        Raise a warning when an invalid enum value is attempted to be read.
+        """
+        filename = os.path.join(self.path, "invalid_enum.xml")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat = read_events(filename)
+        self.assertEqual(len(w), 1)
+        self.assertEqual(
+            w[0].message.args[0],
+            'Setting attribute "depth_type" failed. Value "randomized" could '
+            'not be converted to type "Enum(["from location", "from moment '
+            'tensor inversion", ..., "operator assigned", "other"])". Will be '
+            'ignored.')
+        # It should of course not be set.
+        self.assertIsNone(cat[0].origins[0].depth_type)
+
 
 def suite():
     return unittest.makeSuite(QuakeMLTestCase, 'test')

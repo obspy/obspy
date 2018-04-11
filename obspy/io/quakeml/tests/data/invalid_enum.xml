@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2"
+  xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
+  <eventParameters publicID="smi:eu.emsc/unid">
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
+        <time>
+          <value>2011-03-11T05:46:24.120000Z</value>
+        </time>
+        <latitude>
+          <value>38.297</value>
+        </latitude>
+        <longitude>
+          <value>142.373</value>
+        </longitude>
+        <depth>
+          <value>29.0</value>
+          <confidenceLevel>50.0</confidenceLevel>
+        </depth>
+        <depthType>randomized</depthType>
+      </origin>
+    </event>
+  </eventParameters>
+</q:quakeml>
