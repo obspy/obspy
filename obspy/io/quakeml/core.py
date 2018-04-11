@@ -189,7 +189,8 @@ class Unpickler(object):
         try:
             setattr(obj, key, value)
         except ValueError as e:
-            msg = "%s. Will be ignored." % e.args[0]
+            msg = ('%s. The attribute "%s" will not be set and will be missing'
+                   ' in the resulting object.' % (e.args[0], key))
             warnings.warn(msg)
 
     def _xpath(self, xpath, element=None, namespace=None):

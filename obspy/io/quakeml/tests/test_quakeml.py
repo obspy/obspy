@@ -1101,8 +1101,9 @@ class QuakeMLTestCase(unittest.TestCase):
             w[0].message.args[0],
             'Setting attribute "depth_type" failed. Value "randomized" could '
             'not be converted to type "Enum(["from location", "from moment '
-            'tensor inversion", ..., "operator assigned", "other"])". Will be '
-            'ignored.')
+            'tensor inversion", ..., "operator assigned", "other"])". The '
+            'attribute "depth_type" will not be set and will be missing in '
+            'the resulting object.')
         # It should of course not be set.
         self.assertIsNone(cat[0].origins[0].depth_type)
 
