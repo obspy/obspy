@@ -438,7 +438,7 @@ class ResourceIdentifier(object):
     In QuakeML it has to be of the following regex form::
 
         (smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\.\*\(\)_~']
-        [\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*
+        [\w\d\-\.\*\(\)\+\?_~'=,;#/&]*
 
     e.g.
 
