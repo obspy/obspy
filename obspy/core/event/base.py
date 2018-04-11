@@ -780,7 +780,7 @@ class ResourceIdentifier(object):
             id = str(uuid4())
 
         regex = r"^(smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\." + \
-                r"\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*$"
+                r"\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&]*$"
         result = re.match(regex, str(id))
         if result is not None:
             return id
