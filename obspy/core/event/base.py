@@ -779,8 +779,10 @@ class ResourceIdentifier(object):
         if str(id).strip() == "":
             id = str(uuid4())
 
+        # Note: the characters "&", ">" and "<" are allowed here since
+        # they are HTML-escaped when serializing to XML
         regex = r"^(smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\." + \
-                r"\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*$"
+                r"\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&><]*$"
         result = re.match(regex, str(id))
         if result is not None:
             return id
