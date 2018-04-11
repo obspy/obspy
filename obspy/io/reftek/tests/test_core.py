@@ -554,6 +554,29 @@ class ReftekTestCase(unittest.TestCase):
         for tr in st[8:]:
             self.assertEqual(tr.stats.station, 'TL02')
 
+    def test_reading_file_with_no_data_in_channel_zero(self):
+        """
+        Test reading a file that has no data packets in channel zero (e.g.
+        6-channel Reftek and only recording on channels 4-6)
+
+        Simply reuse the existing test data omitting the data packet that has
+        channel zero.
+        """
+        with open(self.reftek_file_vpu, 'rb') as fh:
+            data = fh.read()
+        # only use first packet (the EH packet) and last packet (a DT packet
+        # for channel number 1, i.e. channel 2)
+        data = data[:1024] + data[-1024:]
+        bio = io.BytesIO(data)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            st = obspy.read(bio, format='REFTEK130')
+        self.assertEqual(len(st), 1)
+        # just a few basic checks, reading data is covered in other tests
+        tr = st[0]
+        self.assertEqual(tr.id, ".TL02..DS 11")
+        self.assertEqual(len(tr), 890)
+
 
 def suite():
     return unittest.makeSuite(ReftekTestCase, "test")
