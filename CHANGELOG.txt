@@ -21,7 +21,9 @@
    * Fix problems reading some Reftek 130 files, presumably due to floating
      point accuracy issues in comparing timestamps. Internal representation of
      time stamps is changed to integer nanosecond POSIX timestamp (see #2036,
-     #2038)
+     #2038, #2105)
+   * Fix a bug that prevents reading files that have no data in first channel
+     (see #2101)
  - obspy.io.seiscomp:
    * Fix inventory read when maxClockDrift is unset in SC3ML (see #1993)
  - obspy.io.stationxml
