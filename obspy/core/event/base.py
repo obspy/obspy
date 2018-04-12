@@ -26,7 +26,6 @@ from future.utils import native_str
 
 import copy
 import warnings
-from copy import deepcopy
 
 import numpy as np
 

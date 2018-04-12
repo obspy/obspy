@@ -137,12 +137,12 @@ class ResourceIdentifier(object):
     >>> print(ref_count == sys.getrefcount(event))
     True
     >>> # It actually is the same object.
-    >>> print(event is res_id.get_referred_object())
+    >>> print(event is res_id.get_referred_object)
     True
     >>> # Deleting it, or letting the garbage collector handle the object will
     >>> # invalidate the reference.
     >>> del event
-    >>> print(res_id.get_referred_object())  # doctest: +SKIP
+    >>> print(res_id.get_referred_object)  # doctest: +SKIP
     None
 
     The most powerful ability (and reason why one would want to use a resource
@@ -160,15 +160,15 @@ class ResourceIdentifier(object):
     >>> ref_a = ResourceIdentifier(res_id)
     >>> # The object is refers to cannot be found yet. Because no instance that
     >>> # an attached object has been created so far.
-    >>> print(ref_a.get_referred_object())
+    >>> print(ref_a.get_referred_object)
     None
     >>> # This instance has an attached object.
     >>> ref_b = ResourceIdentifier(res_id, referred_object=event_object)
     >>> ref_c = ResourceIdentifier(res_id)
     >>> # All ResourceIdentifiers will refer to the same object.
-    >>> assert ref_a.get_referred_object() is event_object
-    >>> assert ref_b.get_referred_object() is event_object
-    >>> assert ref_c.get_referred_object() is event_object
+    >>> assert ref_a.get_referred_object is event_object
+    >>> assert ref_b.get_referred_object is event_object
+    >>> assert ref_c.get_referred_object is event_object
 
     Resource identifiers are bound to an object once the get_referred_object
     method has been called. The results is that get_referred_object will
@@ -184,14 +184,14 @@ class ResourceIdentifier(object):
     >>> obj_b = UTCDateTime(10)
     >>> ref_a = ResourceIdentifier(res_id, referred_object=obj_a)
     >>> ref_b = ResourceIdentifier(res_id, referred_object=obj_b)
-    >>> assert ref_a.get_referred_object() == ref_b.get_referred_object()
-    >>> assert ref_a.get_referred_object() is not ref_b.get_referred_object()
-    >>> assert ref_a.get_referred_object() is obj_a
-    >>> assert ref_b.get_referred_object() is obj_b
+    >>> assert ref_a.get_referred_object == ref_b.get_referred_object
+    >>> assert ref_a.get_referred_object is not ref_b.get_referred_object
+    >>> assert ref_a.get_referred_object is obj_a
+    >>> assert ref_b.get_referred_object is obj_b
     >>> del obj_b  # obj_b gets garbage collected
-    >>> assert ref_b.get_referred_object() is obj_a  # doctest: +SKIP
+    >>> assert ref_b.get_referred_object is obj_a  # doctest: +SKIP
     >>> del obj_a  # now no object with res_id exists
-    >>> assert ref_b.get_referred_object() is None  # doctest: +SKIP
+    >>> assert ref_b.get_referred_object is None  # doctest: +SKIP
 
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convert_id_to_quakeml_uri() method. The resulting id will be of the
@@ -274,9 +274,8 @@ class ResourceIdentifier(object):
     _resource_key = _ResourceKeyDescriptor('_resource_key')
     _object_id = None
 
-
-    def __init__(self, id=None, prefix="smi:local",
-                 referred_object=None, parent=None):
+    def __init__(self, id=None, prefix="smi:local", referred_object=None,
+                 parent=None):
         # Create a resource id if None is given and possibly use a prefix.
         if id is None:
             self.fixed = False
@@ -300,7 +299,7 @@ class ResourceIdentifier(object):
         Returns the object associated with the resource identifier.
 
         This works as long as at least one ResourceIdentifier with the same
-        ID as this instance has an associate object. If not, this method will
+        ID as this instance has an associated object. If not, this method will
         return None.
         """
         try:
@@ -378,7 +377,7 @@ class ResourceIdentifier(object):
         if parent is not None:
             self._parent_key = parent
             id_tree = ResourceIdentifier._parent_id_tree
-            if not self._parent_key in id_tree:
+            if self._parent_key not in id_tree:
                 id_tree[self._parent_key] = WeakKeyDictionary()
             id_tree[self._parent_key][self._resource_key] = self._object_id
         # Set weakref to object_id.
@@ -399,6 +398,7 @@ class ResourceIdentifier(object):
                        'is not equal to the last object bound to this'
                        'resource_id') % self.id
                 warnings.warn(msg, UserWarning)
+        # only add this to the id_order if it is the resource_ids first object
         id_order[self._resource_key].append(self._object_id)
 
     def convert_id_to_quakeml_uri(self, authority_id="local"):
@@ -644,5 +644,4 @@ class ResourceIdentifier(object):
 
 if __name__ == '__main__':
     import doctest
-
     doctest.testmod(exclude_empty=True)

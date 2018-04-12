@@ -5,7 +5,6 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import PY2, native_str
 
 import builtins
-import copy
 import io
 import os
 import pickle
@@ -22,7 +21,7 @@ from obspy.core.event import (Catalog, Comment, CreationInfo, Event,
 from obspy.core.event.source import farfield
 from obspy.core.util import BASEMAP_VERSION, CARTOPY_VERSION
 from obspy.core.util.base import _get_entry_points
-from obspy.core.util.testing import ImageComparison, setup_context_testcase
+from obspy.core.util.testing import ImageComparison
 from obspy.core.event.base import QuantityError
 
 
@@ -42,12 +41,10 @@ class EventTestCase(unittest.TestCase):
         the ResourceIdentifier class level to reset the ResourceID mechanisms
         before each run.
         """
-        # setup temporary id dict for tests in this case and bind to self
-        context = ResourceIdentifier._debug_class_state()
-        state = setup_context_testcase(self, context)
-        self.parent_id_tree = state['parent_id_tree']
-        self.id_order = state['id_order']
-        self.id_object_map = state['id_object_map']
+        # directory where the test files are located
+        path = os.path.join(os.path.dirname(__file__), 'data')
+        self.path = path
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
     def test_str(self):
         """
@@ -125,39 +122,6 @@ class EventTestCase(unittest.TestCase):
         self.assertEqual(p.phase_hint, None)
         self.assertFalse(hasattr(p, "test_1"))
         self.assertFalse(hasattr(p, "test_2"))
-
-    def test_event_copying_does_not_raise_duplicate_resource_id_warning(self):
-        """
-        Tests that copying an event does not raise a duplicate resource id
-        warning.
-        """
-        ev = read_events()[0]
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            ev2 = copy.copy(ev)
-            self.assertEqual(len(w), 0)
-            ev3 = copy.deepcopy(ev)
-            self.assertEqual(len(w), 0)
-        # The two events should compare equal.
-        self.assertEqual(ev, ev2)
-        self.assertEqual(ev, ev3)
-        # get resource_ids and referred objects from each of the events
-        rid1 = ev.resource_id
-        rid2 = ev2.resource_id
-        rid3 = ev3.resource_id
-        rob1 = rid1.get_referred_object()
-        rob2 = rid2.get_referred_object()
-        rob3 = rid3.get_referred_object()
-        # A shallow copy should just use the exact same resource identifier,
-        # while a deep copy should not, although they should be equal.
-        self.assertIs(rid1, rid2)
-        self.assertIsNot(rid1, rid3)
-        self.assertEqual(rid1, rid3)
-        # copy should point to the same object, deep copy should not
-        self.assertIs(rob1, rob2)
-        self.assertIsNot(rob1, rob3)
-        # although the referred objects should be equal
-        self.assertEqual(rob1, rob3)
 
     @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_plot_farfield_without_quiver_with_maps(self):
@@ -519,55 +483,6 @@ class CatalogTestCase(unittest.TestCase):
         cat = read_events(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
-    def test_catalog_resource_ids(self):
-        """
-        Test that the most recently defined object with the same resource_id,
-        that is still in scope, is returned from the get_referred_object
-        method.
-        """
-        with ResourceIdentifier._debug_class_state():
-            cat1 = read_events()
-            # The resource_id attached to the first event is self-pointing
-            self.assertIs(cat1[0], cat1[0].resource_id.get_referred_object())
-            # make a copy and re-read catalog
-            cat2 = cat1.copy()
-            cat3 = read_events()
-            # the resource_id on the new catalogs point to attached objects
-            self.assertIs(cat1[0], cat1[0].resource_id.get_referred_object())
-            self.assertIs(cat2[0], cat2[0].resource_id.get_referred_object())
-            self.assertIs(cat3[0], cat3[0].resource_id.get_referred_object())
-            # now delete cat1 and make sure cat2 and cat3 still work
-            del cat1
-            self.assertIs(cat2[0], cat2[0].resource_id.get_referred_object())
-            self.assertIs(cat3[0], cat3[0].resource_id.get_referred_object())
-            # create a resource_id with the same id as the last defined object
-            # with the same resource id (that is still in scope) is returned
-            new_id = cat2[0].resource_id.id
-            rid = ResourceIdentifier(new_id)
-            self.assertIs(rid.get_referred_object(), cat3[0])
-            del cat3
-            # raises UserWarning
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", UserWarning)
-                self.assertIs(rid.get_referred_object(), cat2[0])
-            del cat2
-            self.assertIs(rid.get_referred_object(), None)
-
-    def test_issue_2173(self):
-        """
-        Ensure events with empty origins are equal after round-trip to disk.
-        See #2173.
-        """
-        # create event and save to disk
-        origin = Origin(time=UTCDateTime('2016-01-01'))
-        event1 = Event(origins=[origin])
-        bio = io.BytesIO()
-        event1.write(bio, 'quakeml')
-        # read from disk
-        event2 = read_events(bio)[0]
-        # saved and loaded event should be equal
-        self.assertEqual(event1, event2)
-
     def test_can_pickle(self):
         """
         Ensure a catalog can be pickled and unpickled and that the results are
@@ -830,22 +745,6 @@ class BaseTestCase(unittest.TestCase):
             e.exception.args[0],
             "On Origin object: Value '-inf' for 'latitude' is "
             "not a finite floating point value.")
-
-    def test_resource_ids_refer_to_newest_object(self):
-        """
-        Tests that resource ids which are assigned multiple times but point to
-        identical objects always point to the newest object. This prevents some
-        odd behaviour.
-        """
-        t1 = UTCDateTime(2010, 1, 1)
-        t2 = UTCDateTime(2010, 1, 1)
-
-        rid = ResourceIdentifier("a", referred_object=t1)  # @UnusedVariable
-        rid = ResourceIdentifier("a", referred_object=t2)
-
-        del t1
-
-        self.assertIs(rid.get_referred_object(), t2)
 
 
 def suite():

@@ -326,7 +326,6 @@ class Event(__Event):
         This will ensure the resource_ids refer to objects in the event
         structure when possible.
         """
-
         gen = yield_obj_parent_attr(self, ResourceIdentifier)
 
         for resource_id, parent, attr in gen:

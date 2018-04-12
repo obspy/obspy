@@ -5,6 +5,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
+import gc
 import io
 import itertools
 import multiprocessing.pool
@@ -111,7 +113,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
 
     def test_getting_gc_no_shared_resource_id(self):
         """
-        Test that calling get_referred_object on a resource id whose object
+        Test that calling get_referred_object() on a resource id whose object
         has been garbage collected, and whose resource_id is unique,
         returns None
         """
@@ -139,8 +141,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         self.assertFalse(rid1.get_referred_object() is
                          rid2.get_referred_object())
         del obj1
-        # warnings.simplefilter('default')
-        with warnings.catch_warnings(record=True) as w:
+        with WarningsCapture() as w:
             rid1.get_referred_object()
             self.assertEqual(len(w), 1)
             self.assertIn('The object with identity', str(w[0]))
@@ -279,8 +280,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
 
         def get_id_object_list():
             """ return the current _id_object_list """
-            RI = ResourceIdentifier
-            return RI._id_order
+            return ResourceIdentifier._id_order
 
         def make_resouce_id():
             some_obj = event.Event()
@@ -361,9 +361,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
                 referred_object = rid.get_referred_object()
                 if referred_object is None:
                     continue
-                if id(referred_object) not in ev_ids:
-                    import pdb; pdb.set_trace()
-                    rid.get_referred_object()
                 self.assertIn(id(referred_object), ev_ids)
 
     def test_all_resource_id_attrs_are_attached(self, catalogs=None):
@@ -404,6 +401,71 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             # find any overlap between events that are not resource keys
             overlap = non_singleton1 & non_singleton2
             self.assertEqual(len(overlap), 0)  # assert no overlap
+
+    def test_event_copying_does_not_raise_duplicate_resource_id_warning(self):
+        """
+        Tests that copying an event does not raise a duplicate resource id
+        warning.
+        """
+        ev = read_events()[0]
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            ev2 = copy.copy(ev)
+            self.assertEqual(len(w), 0)
+            ev3 = copy.deepcopy(ev)
+            self.assertEqual(len(w), 0)
+        # The two events should compare equal.
+        self.assertEqual(ev, ev2)
+        self.assertEqual(ev, ev3)
+        # get resource_ids and referred objects from each of the events
+        rid1 = ev.resource_id
+        rid2 = ev2.resource_id
+        rid3 = ev3.resource_id
+        rob1 = rid1.get_referred_object()
+        rob2 = rid2.get_referred_object()
+        rob3 = rid3.get_referred_object()
+        # A shallow copy should just use the exact same resource identifier,
+        # while a deep copy should not, although they should be equal.
+        self.assertIs(rid1, rid2)
+        self.assertIsNot(rid1, rid3)
+        self.assertEqual(rid1, rid3)
+        # copy should point to the same object, deep copy should not
+        self.assertIs(rob1, rob2)
+        self.assertIsNot(rob1, rob3)
+        # although the referred objects should be equal
+        self.assertEqual(rob1, rob3)
+
+    def test_catalog_resource_ids(self):
+        """
+        Basic tests on the catalog resource ids.
+        """
+        cat1 = read_events()
+        # The resource_id attached to the first event is self-pointing
+        self.assertIs(cat1[0], cat1[0].resource_id.get_referred_object())
+        # make a copy and re-read catalog
+        cat2 = cat1.copy()
+        cat3 = read_events()
+        # the resource_id on the new catalogs point to attached objects
+        self.assertIs(cat1[0], cat1[0].resource_id.get_referred_object())
+        self.assertIs(cat2[0], cat2[0].resource_id.get_referred_object())
+        self.assertIs(cat3[0], cat3[0].resource_id.get_referred_object())
+        # now delete cat1 and make sure cat2 and cat3 still work
+        del cat1
+        self.assertIs(cat2[0], cat2[0].resource_id.get_referred_object())
+        self.assertIs(cat3[0], cat3[0].resource_id.get_referred_object())
+        # create a resource_id with the same id as the last defined object
+        # with the same resource id (that is still in scope) is returned
+        new_id = cat2[0].resource_id.id
+        rid = ResourceIdentifier(new_id)
+        self.assertIs(rid.get_referred_object(), cat3[0])
+        del cat3
+
+        gc.collect()  # Call gc to ensure WeakValueDict works
+        # raises UserWarning, suppress to keep std out cleaner
+        with WarningsCapture():
+            self.assertIs(rid.get_referred_object(), cat2[0])
+            del cat2
+            self.assertIs(rid.get_referred_object(), None)
 
     def test_event_scoped_resource_id_many_threads(self):
         """
@@ -456,6 +518,21 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         self.assertEqual(len(w), 1)
         self.assertIn('overwritting the id attribute', str(w[0].message))
 
+    def test_resource_ids_refer_to_newest_object(self):
+        """
+        Tests that resource ids which are assigned multiple times but point to
+        identical objects always point to the newest object.
+        """
+        t1 = UTCDateTime(2010, 1, 1)
+        t2 = UTCDateTime(2010, 1, 1)
+
+        _ = ResourceIdentifier("a", referred_object=t1)  # @UnusedVariable
+        rid = ResourceIdentifier("a", referred_object=t2)
+
+        del t1
+
+        self.assertIs(rid.get_referred_object, t2)
+
 
 def get_instances(obj, cls=None, is_attr=None, has_attr=None):
     """
@@ -482,7 +559,7 @@ def get_object_id_dict(obj, cls=None):
     return {id(x[0]): x[0] for x in yield_obj_parent_attr(obj, cls)}
 
 
-def make_mega_catalog_list(*args):
+def make_mega_catalog_list(*args):  # NOQA
     """
     Make a list of complex catalogs (and copies) and return it.
     """
