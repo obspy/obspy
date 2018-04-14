@@ -19,7 +19,8 @@ from obspy import UTCDateTime, read_events
 from obspy.core import event as event
 from obspy.core.event.resourceid import ResourceIdentifier, _ResourceKey
 from obspy.core.util.misc import yield_obj_parent_attr
-from obspy.core.util.testing import (MegaCatalog, setup_context_testcase,
+from obspy.core.util.testing import (create_diverse_catalog,
+                                     setup_context_testcase,
                                      WarningsCapture)
 
 
@@ -313,7 +314,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         Test preferred_origin is set and event scoped.
         """
-        for cat in catalogs or make_mega_catalog_list():
+        for cat in catalogs or make_diverse_catalog_list():
             preferred_origin = cat[0].preferred_origin()
             self.assertIsNotNone(preferred_origin)
             self.assertIs(preferred_origin, cat[0].origins[-1])
@@ -322,7 +323,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         Test preferred_magnitude is set and event scoped.
         """
-        for cat in catalogs or make_mega_catalog_list():
+        for cat in catalogs or make_diverse_catalog_list():
             preferred_magnitude = cat[0].preferred_magnitude()
             self.assertIsNotNone(preferred_magnitude)
             self.assertIs(preferred_magnitude, cat[0].magnitudes[-1])
@@ -331,7 +332,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         Test preferred_focal_mechanism is set and event scoped.
         """
-        for cat in catalogs or make_mega_catalog_list():
+        for cat in catalogs or make_diverse_catalog_list():
             preferred_focal_mech = cat[0].preferred_focal_mechanism()
             self.assertIsNotNone(preferred_focal_mech)
             self.assertIs(preferred_focal_mech, cat[0].focal_mechanisms[-1])
@@ -341,7 +342,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         Ensure the pick_ids of the arrivals refer to the pick belonging
         to the same event.
         """
-        for cat in catalogs or make_mega_catalog_list():
+        for cat in catalogs or make_diverse_catalog_list():
             pick_id = cat[0].picks[0].resource_id
             arrival_pick_id = cat[0].origins[0].arrivals[0].pick_id
             self.assertEqual(pick_id, arrival_pick_id)
@@ -354,7 +355,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         All the referred object should be members of the current one event
         catalog.
         """
-        for ev in catalogs or make_mega_catalog_list():
+        for ev in catalogs or make_diverse_catalog_list():
             ev_ids = get_object_id_dict(ev)  # all ids containe in dict
             gen = yield_obj_parent_attr(ev, ResourceIdentifier)
             for rid, parent, attr in gen:
@@ -368,7 +369,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         Find all objects that have a resource_id attribute and ensure it
         is an instance of ResourceIdentifier and refers to the object.
         """
-        for cat in catalogs or make_mega_catalog_list():
+        for cat in catalogs or make_diverse_catalog_list():
             for obj in get_instances(cat, has_attr='resource_id'):
                 if isinstance(obj, ResourceIdentifier):
                     continue
@@ -384,7 +385,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         Each event should share no objects, except the id_key singletons, with
         copies of the same event.
         """
-        catalogs = catalogs or make_mega_catalog_list()
+        catalogs = catalogs or make_diverse_catalog_list()
         for cat1, cat2 in itertools.combinations(catalogs, 2):
             # get a dict of object id: object reference
             ids1 = get_object_id_dict(cat1)
@@ -475,7 +476,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         pool = multiprocessing.pool.ThreadPool()
         # currently it is not possible to avoid warnings with many threads
         with warnings.catch_warnings(record=True):
-            nested_catalogs = pool.map(make_mega_catalog_list, range(5))
+            nested_catalogs = pool.map(make_diverse_catalog_list, range(5))
         pool.close()
         # get a flat list of catalogs
         catalogs = list(itertools.chain.from_iterable(nested_catalogs))
@@ -559,12 +560,19 @@ def get_object_id_dict(obj, cls=None):
     return {id(x[0]): x[0] for x in yield_obj_parent_attr(obj, cls)}
 
 
-def make_mega_catalog_list(*args):  # NOQA
+def make_diverse_catalog_list(*args):  # NOQA
     """
-    Make a list of complex catalogs (and copies) and return it.
+    Make a list of diverse catalogs.
+
+    Creates several copies of the diverse catalog, which is returned from
+    :func:`~obspy.core.util.testing.create_diverse_catalog`. Copies are
+    created with the copy method and reading a quakeml representation from
+    a byte string.
+
+    The unused args is necessary for thread-pool mapping.
     """
     # create a complex catalog
-    cat1 = MegaCatalog().catalog
+    cat1 = create_diverse_catalog()
     bytes_io = io.BytesIO()
     cat1.write(bytes_io, 'quakeml')
     # get a few copies from reading from bytes
@@ -579,7 +587,6 @@ def make_mega_catalog_list(*args):  # NOQA
     # pickle and unpickle catalog
     cat_bytes = pickle.dumps(cat4)
     cat6 = pickle.loads(cat_bytes)
-    # return [cat1, cat2, cat3, cat6]
     return [cat1, cat2, cat3, cat4, cat5, cat6]
 
 
