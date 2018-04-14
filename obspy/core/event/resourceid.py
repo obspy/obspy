@@ -137,12 +137,12 @@ class ResourceIdentifier(object):
     >>> print(ref_count == sys.getrefcount(event))
     True
     >>> # It actually is the same object.
-    >>> print(event is res_id.get_referred_object)
+    >>> print(event is res_id.get_referred_object())
     True
     >>> # Deleting it, or letting the garbage collector handle the object will
     >>> # invalidate the reference.
     >>> del event
-    >>> print(res_id.get_referred_object)  # doctest: +SKIP
+    >>> print(res_id.get_referred_object())  # doctest: +SKIP
     None
 
     The most powerful ability (and reason why one would want to use a resource
@@ -160,15 +160,15 @@ class ResourceIdentifier(object):
     >>> ref_a = ResourceIdentifier(res_id)
     >>> # The object is refers to cannot be found yet. Because no instance that
     >>> # an attached object has been created so far.
-    >>> print(ref_a.get_referred_object)
+    >>> print(ref_a.get_referred_object())
     None
     >>> # This instance has an attached object.
     >>> ref_b = ResourceIdentifier(res_id, referred_object=event_object)
     >>> ref_c = ResourceIdentifier(res_id)
     >>> # All ResourceIdentifiers will refer to the same object.
-    >>> assert ref_a.get_referred_object is event_object
-    >>> assert ref_b.get_referred_object is event_object
-    >>> assert ref_c.get_referred_object is event_object
+    >>> assert ref_a.get_referred_object() is event_object
+    >>> assert ref_b.get_referred_object() is event_object
+    >>> assert ref_c.get_referred_object() is event_object
 
     Resource identifiers are bound to an object once the get_referred_object
     method has been called. The results is that get_referred_object will
@@ -184,14 +184,14 @@ class ResourceIdentifier(object):
     >>> obj_b = UTCDateTime(10)
     >>> ref_a = ResourceIdentifier(res_id, referred_object=obj_a)
     >>> ref_b = ResourceIdentifier(res_id, referred_object=obj_b)
-    >>> assert ref_a.get_referred_object == ref_b.get_referred_object
-    >>> assert ref_a.get_referred_object is not ref_b.get_referred_object
-    >>> assert ref_a.get_referred_object is obj_a
-    >>> assert ref_b.get_referred_object is obj_b
+    >>> assert ref_a.get_referred_object() == ref_b.get_referred_object()
+    >>> assert ref_a.get_referred_object() is not ref_b.get_referred_object()
+    >>> assert ref_a.get_referred_object() is obj_a
+    >>> assert ref_b.get_referred_object() is obj_b
     >>> del obj_b  # obj_b gets garbage collected
-    >>> assert ref_b.get_referred_object is obj_a  # doctest: +SKIP
+    >>> assert ref_b.get_referred_object() is obj_a  # doctest: +SKIP
     >>> del obj_a  # now no object with res_id exists
-    >>> assert ref_b.get_referred_object is None  # doctest: +SKIP
+    >>> assert ref_b.get_referred_object() is None  # doctest: +SKIP
 
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convert_id_to_quakeml_uri() method. The resulting id will be of the

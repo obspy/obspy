@@ -184,23 +184,23 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         self.assertEqual(res_id, res.get_quakeml_uri())
         # The id has to valid from start to end. Due to the spaces this cannot
         # automatically be converted to a correct one.
-        res_id = ("something_before smi:local/something  something_after")
+        res_id = "something_before smi:local/something  something_after"
         res = ResourceIdentifier(res_id)
         self.assertRaises(ValueError, res.get_quakeml_uri)
         # A colon is an invalid character.
-        res_id = ("smi:local/hello:yea")
+        res_id = "smi:local/hello:yea"
         res = ResourceIdentifier(res_id)
         self.assertRaises(ValueError, res.get_quakeml_uri)
         # Space as well
-        res_id = ("smi:local/hello yea")
+        res_id = "smi:local/hello yea"
         res = ResourceIdentifier(res_id)
         self.assertRaises(ValueError, res.get_quakeml_uri)
         # Dots are fine
-        res_id = ("smi:local/hello....yea")
+        res_id = "smi:local/hello....yea"
         res = ResourceIdentifier(res_id)
         self.assertEqual(res_id, res.get_quakeml_uri())
         # Hats not
-        res_id = ("smi:local/hello^^yea")
+        res_id = "smi:local/hello^^yea"
         res = ResourceIdentifier(res_id)
         self.assertRaises(ValueError, res.get_quakeml_uri)
 
@@ -526,12 +526,12 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         t1 = UTCDateTime(2010, 1, 1)
         t2 = UTCDateTime(2010, 1, 1)
 
-        _ = ResourceIdentifier("a", referred_object=t1)  # @UnusedVariable
+        ResourceIdentifier("a", referred_object=t1)
         rid = ResourceIdentifier("a", referred_object=t2)
 
         del t1
 
-        self.assertIs(rid.get_referred_object, t2)
+        self.assertIs(rid.get_referred_object(), t2)
 
 
 def get_instances(obj, cls=None, is_attr=None, has_attr=None):
