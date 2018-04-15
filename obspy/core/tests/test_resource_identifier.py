@@ -382,14 +382,14 @@ class ResourceIdentifierTestCase(unittest.TestCase):
 
     def test_no_overlapping_objects(self, catalogs=None):
         """
-        Each event should share no objects, except the id_key singletons, with
-        copies of the same event.
+        Each event should share no objects, except the id_key singletons, or
+        built-ins (such as str or int) with copies of the same event.
         """
         catalogs = catalogs or make_diverse_catalog_list()
         for cat1, cat2 in itertools.combinations(catalogs, 2):
             # get a dict of object id: object reference
-            ids1 = get_object_id_dict(cat1)
-            ids2 = get_object_id_dict(cat2)
+            ids1 = get_non_built_in_id_dict(cat1)
+            ids2 = get_non_built_in_id_dict(cat2)
             # get a dict of all singleton resource keys
             singleton_ids1 = get_object_id_dict(cat1, _ResourceKey)
             singleton_ids2 = get_object_id_dict(cat2, _ResourceKey)
@@ -537,7 +537,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
 
 def get_instances(obj, cls=None, is_attr=None, has_attr=None):
     """
-    Recurse object, return a list of instances of meeting search criteria.
+    Recurse object, return a list of instances meeting search criteria.
 
     :param obj:
         The object to recurse through attributes of lists, tuples, and other
@@ -555,9 +555,19 @@ def get_instances(obj, cls=None, is_attr=None, has_attr=None):
 
 def get_object_id_dict(obj, cls=None):
     """
-    Recurse an object and return a dict of id: object
+    Recurse an object and return a dict in the form of {id: object}.
     """
     return {id(x[0]): x[0] for x in yield_obj_parent_attr(obj, cls)}
+
+
+def get_non_built_in_id_dict(obj, cls=None):
+    """
+    Same as get_object_id_dict but exclude built-in data types.
+    """
+
+    obj_dict = get_object_id_dict(obj, cls=cls)
+    return {item: val for item, val in obj_dict.items()
+            if hasattr(val, '__dict__') or hasattr(val, '__slots__')}
 
 
 def make_diverse_catalog_list(*args):  # NOQA
