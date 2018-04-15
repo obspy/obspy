@@ -12,8 +12,9 @@ import warnings
 
 from obspy import UTCDateTime, read
 from obspy.core.compatibility import mock
+from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.misc import CatchOutput, get_window_times, \
-    _ENTRY_POINT_CACHE
+    _ENTRY_POINT_CACHE, yield_obj_parent_attr
 
 
 class UtilMiscTestCase(unittest.TestCase):
@@ -261,6 +262,37 @@ class UtilMiscTestCase(unittest.TestCase):
                     st.write('temp.mseed', 'mseed')
             self.assertEqual(len(_ENTRY_POINT_CACHE), 3)
             self.assertEqual(p.call_count, 3)
+
+    def test_yield_obj_parent_attr(self):
+        """
+        Setup a complex data structure and ensure recursive search function
+        finds all target objects.
+        """
+        class Slots(object):
+            """
+            A simple class with slots
+            """
+            __slots__ = ('right', )
+
+            def __init__(self, init):
+                self.right = init
+
+        slotted = Slots((AttribDict(), AttributeError, [AttribDict()]))
+        nested = {
+            'not_right': 'nope',
+            'good': {'right': AttribDict(), 'wrong': [1, [(())]]},
+            'right': [[[[[[[[AttribDict()]]], AttribDict()]]]]],
+        }
+
+        base = dict(right=AttribDict(), slotted=slotted, nested=nested)
+
+        out = list(yield_obj_parent_attr(base, AttribDict))
+
+        self.assertEqual(len(out), 6)
+
+        for obj, parent, attr in out:
+            self.assertEqual(attr, 'right')
+            self.assertIsInstance(obj, AttribDict)
 
 
 def suite():

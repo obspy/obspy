@@ -640,7 +640,12 @@ def buffered_load_entry_point(dist, group, name):
 
 def yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
     """
-    Recurse a Catalog like object, yield a tuple of object, parent, attr.
+    Recurse an object, yield a tuple of object, parent, attr.
+
+    Can be used, for example, to yield all ResourceIdentifier instances
+    contained in any obspy.core.event class instances and attached instances,
+    as well as the objects they are attached to (parents) and the attribute
+    name in which they are stored (attr).
 
     :param obj:
         The object to recurse through attributes of lists, tuples, and other
@@ -651,36 +656,53 @@ def yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
         Only return objects stored as attr_name, if None return all.
     :param has_attr:
         Only return objects that have attribute has_attr, if None return all.
+
+    .. rubric:: General Usage
+
+    Get a list of all resource_ids contained in an event, the objects they
+    are attached to, and the attribute name on the parent object.
+
+    >>> import obspy
+    >>> from obspy.core.event import ResourceIdentifier
+    >>> cat = obspy.read_events()
+    >>> resource_tuple = list(yield_obj_parent_attr(cat, ResourceIdentifier))
+
     """
-    instance_cache = {}
 
     def func(obj, ids=None, attr=None, parent=None):
         ids = ids or set()  # id cache to avoid circular references
         id_tuple = (id(obj), id(parent))
 
-        # if object/parent combo have not been yielded
+        # If object/parent combo have not been yielded continue.
         if id_tuple not in ids:
-            if id_tuple in instance_cache:
-                yield instance_cache[id_tuple]
             ids.add(id_tuple)
-            # filter out built-ins by looking for __dict__ or __slots__
-            not_bultin = hasattr(obj, '__dict__') or hasattr(obj, '__slots__')
-            # check if this object is stored as the desired attribute
+            # Check if this object is stored as the desired attribute.
             is_attribute = is_attr is None or attr == is_attr
-            # check if object has desired attribute
+            # Check if the object has the desired attribute.
             has_attribute = has_attr is None or hasattr(obj, has_attr)
-            # check if isinstance
+            # Check if isinstance of desired class.
             is_instance = cls is None or isinstance(obj, cls)
-            if not_bultin and is_attribute and has_attribute and is_instance:
-                instance_cache[id_tuple] = (obj, parent, attr)
+            # Yield object, parent, and attr if desired conditions are met.
+            if is_attribute and has_attribute and is_instance:
                 yield (obj, parent, attr)
+            # Iterate through non built-in object attributes.
             if hasattr(obj, '__dict__'):
                 for item, val in obj.__dict__.items():
                     for out in func(val, ids, attr=item, parent=obj):
                         yield out
+            elif hasattr(obj, '__slots__'):
+                for attr in obj.__slots__:
+                    val = getattr(obj, attr)
+                    for out in func(val, attr=attr, parent=obj):
+                        yield out
+            # Iterate through basic built-in types.
             if isinstance(obj, (list, tuple)):
                 for val in obj:
                     for out in func(val, ids, attr=attr, parent=obj):
+                        yield out
+            elif isinstance(obj, dict):
+                for item, val in obj.items():
+                    for out in func(val, ids, attr=item, parent=obj):
                         yield out
 
     return func(obj)
