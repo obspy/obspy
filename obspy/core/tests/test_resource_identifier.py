@@ -350,19 +350,19 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             arrival_pick = arrival_pick_id.get_referred_object()
             self.assertIs(pick, arrival_pick)
 
-    def test_all_referred_objects_in_catalog(self, catalogs=None):
+    def test_all_referred_objects_in_events(self, catalogs=None):
         """
-        All the referred object should be members of the current one event
-        catalog.
+        All the referred object should be members of the current event.
         """
-        for ev in catalogs or make_diverse_catalog_list():
-            ev_ids = get_object_id_dict(ev)  # all ids containe in dict
-            gen = yield_obj_parent_attr(ev, ResourceIdentifier)
-            for rid, parent, attr in gen:
-                referred_object = rid.get_referred_object()
-                if referred_object is None:
-                    continue
-                self.assertIn(id(referred_object), ev_ids)
+        for num, cat in enumerate(catalogs or make_diverse_catalog_list()):
+            for ev in cat:
+                ev_ids = get_object_id_dict(ev)
+                gen = yield_obj_parent_attr(ev, ResourceIdentifier)
+                for rid, parent, attr in gen:
+                    referred_object = rid.get_referred_object()
+                    if referred_object is None:
+                        continue
+                    self.assertIn(id(referred_object), ev_ids)
 
     def test_all_resource_id_attrs_are_attached(self, catalogs=None):
         """
@@ -458,6 +458,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         # with the same resource id (that is still in scope) is returned
         new_id = cat2[0].resource_id.id
         rid = ResourceIdentifier(new_id)
+
         self.assertIs(rid.get_referred_object(), cat3[0])
         del cat3
 
@@ -481,7 +482,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         # get a flat list of catalogs
         catalogs = list(itertools.chain.from_iterable(nested_catalogs))
         # run catalogs through previous tests
-        self.test_all_referred_objects_in_catalog(catalogs)
+        self.test_all_referred_objects_in_events(catalogs)
         self.test_all_resource_id_attrs_are_attached(catalogs)
         self.test_no_overlapping_objects(catalogs)
         self.test_arrivals_refer_to_picks_in_same_event(catalogs)

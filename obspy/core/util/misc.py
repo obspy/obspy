@@ -685,23 +685,23 @@ def yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
             # Yield object, parent, and attr if desired conditions are met.
             if is_attribute and has_attribute and is_instance:
                 yield (obj, parent, attr)
-            # Iterate through non built-in object attributes.
-            if hasattr(obj, '__dict__'):
-                for item, val in obj.__dict__.items():
-                    for out in func(val, attr=item, parent=obj):
-                        yield out
-            elif hasattr(obj, '__slots__'):
-                for attr in obj.__slots__:
-                    val = getattr(obj, attr)
-                    for out in func(val, attr=attr, parent=obj):
-                        yield out
             # Iterate through basic built-in types.
-            elif isinstance(obj, (list, tuple)):
+            if isinstance(obj, (list, tuple)):
                 for val in obj:
                     for out in func(val, attr=attr, parent=obj):
                         yield out
             elif isinstance(obj, dict):
                 for item, val in obj.items():
+                    for out in func(val, attr=item, parent=obj):
+                        yield out
+            # Iterate through non built-in object attributes.
+            elif hasattr(obj, '__slots__'):
+                for attr in obj.__slots__:
+                    val = getattr(obj, attr)
+                    for out in func(val, attr=attr, parent=obj):
+                        yield out
+            elif hasattr(obj, '__dict__'):
+                for item, val in obj.__dict__.items():
                     for out in func(val, attr=item, parent=obj):
                         yield out
 
@@ -729,15 +729,15 @@ def _yield_resource_id_parent_attr(obj):
                 # Yield object, parent, and attr if desired conditions are met
                 if isinstance(obj, ResourceIdentifier):
                     yield (obj, parent, attr)
-                # Iterate through non built-in object attributes.
-                elif hasattr(obj, '__dict__'):
-                    for item, val in obj.__dict__.items():
-                        for out in func(val, item, obj):
-                            yield out
                 # Iterate through basic built-in types.
                 elif isinstance(obj, (list, tuple)):
                     for val in obj:
                         for out in func(val, attr, obj):
+                            yield out
+                # Iterate through non built-in object attributes.
+                elif hasattr(obj, '__dict__'):
+                    for item, val in obj.__dict__.items():
+                        for out in func(val, item, obj):
                             yield out
 
     return func(obj)
