@@ -12,7 +12,7 @@ import warnings
 
 from obspy import UTCDateTime, read
 from obspy.core.compatibility import mock
-from obspy.core.event import ResourceIdentifier as RI
+from obspy.core.event import ResourceIdentifier as ri
 from obspy.core.util.misc import CatchOutput, get_window_times, \
     _ENTRY_POINT_CACHE, yield_obj_parent_attr
 
@@ -277,22 +277,22 @@ class UtilMiscTestCase(unittest.TestCase):
             def __init__(self, init):
                 self.right = init
 
-        slotted = Slots((RI('1'), AttributeError, [RI('2')]))
+        slotted = Slots((ri('1'), AttributeError, [ri('2')]))
         nested = {
             'not_right': 'nope',
-            'good': {'right': RI('3'), 'wrong': [1, [(())]]},
-            'right': [[[[[[[[RI('4')]]], RI('5')]]]]],
+            'good': {'right': ri('3'), 'wrong': [1, [(())]]},
+            'right': [[[[[[[[ri('4')]]], ri('5')]]]]],
         }
 
-        base = dict(right=RI('6'), slotted=slotted, nested=nested)
+        base = dict(right=ri('6'), slotted=slotted, nested=nested)
 
-        out = list(yield_obj_parent_attr(base, RI))
+        out = list(yield_obj_parent_attr(base, ri))
 
         self.assertEqual(len(out), 6)
 
         for obj, parent, attr in out:
             self.assertEqual(attr, 'right')
-            self.assertIsInstance(obj, RI)
+            self.assertIsInstance(obj, ri)
 
 
 def suite():
