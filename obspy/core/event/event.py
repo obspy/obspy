@@ -26,7 +26,7 @@ import copy
 from obspy.core.event.header import (
     EventType, EventTypeCertainty, EventDescriptionType)
 from obspy.core.event.resourceid import ResourceIdentifier
-from obspy.core.util.misc import yield_obj_parent_attr
+from obspy.core.util.misc import _yield_resource_id_parent_attr
 from obspy.imaging.source import plot_radiation_pattern, _setup_figure_and_axes
 
 
@@ -326,7 +326,7 @@ class Event(__Event):
         This will ensure the resource_ids refer to objects in the event
         structure when possible.
         """
-        gen = yield_obj_parent_attr(self, ResourceIdentifier)
+        gen = _yield_resource_id_parent_attr(self)
 
         for resource_id, parent, attr in gen:
             if attr == 'resource_id':

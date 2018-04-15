@@ -666,11 +666,11 @@ def yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
     >>> from obspy.core.event import ResourceIdentifier
     >>> cat = obspy.read_events()
     >>> resource_tuple = list(yield_obj_parent_attr(cat, ResourceIdentifier))
-
     """
 
-    def func(obj, ids=None, attr=None, parent=None):
-        ids = ids or set()  # id cache to avoid circular references
+    ids = set()  # id cache to avoid circular references
+
+    def func(obj, attr=None, parent=None):
         id_tuple = (id(obj), id(parent))
 
         # If object/parent combo have not been yielded continue.
@@ -688,7 +688,7 @@ def yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
             # Iterate through non built-in object attributes.
             if hasattr(obj, '__dict__'):
                 for item, val in obj.__dict__.items():
-                    for out in func(val, ids, attr=item, parent=obj):
+                    for out in func(val, attr=item, parent=obj):
                         yield out
             elif hasattr(obj, '__slots__'):
                 for attr in obj.__slots__:
@@ -696,14 +696,49 @@ def yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
                     for out in func(val, attr=attr, parent=obj):
                         yield out
             # Iterate through basic built-in types.
-            if isinstance(obj, (list, tuple)):
+            elif isinstance(obj, (list, tuple)):
                 for val in obj:
-                    for out in func(val, ids, attr=attr, parent=obj):
+                    for out in func(val, attr=attr, parent=obj):
                         yield out
             elif isinstance(obj, dict):
                 for item, val in obj.items():
-                    for out in func(val, ids, attr=item, parent=obj):
+                    for out in func(val, attr=item, parent=obj):
                         yield out
+
+    return func(obj)
+
+
+def _yield_resource_id_parent_attr(obj):
+    """
+    Specialized form of yield_obj_parent_attr for getting ResourceIdentifiers.
+
+    This function makes some assumptions because only resource_identifiers are
+    being sought in order to improve efficiency.
+    """
+    from obspy.core.event import ResourceIdentifier
+
+    ids = set()  # id cache to avoid circular references
+
+    def func(obj, attr=None, parent=None):
+
+        if obj is not None and (hasattr(obj, '__dict__') or
+                                isinstance(obj, (list, tuple))):
+            id_tuple = (id(obj), id(parent))
+            if id_tuple not in ids:
+                ids.add(id_tuple)
+                # Yield object, parent, and attr if desired conditions are met
+                if isinstance(obj, ResourceIdentifier):
+                    yield (obj, parent, attr)
+                # Iterate through non built-in object attributes.
+                elif hasattr(obj, '__dict__'):
+                    for item, val in obj.__dict__.items():
+                        for out in func(val, item, obj):
+                            yield out
+                # Iterate through basic built-in types.
+                elif isinstance(obj, (list, tuple)):
+                    for val in obj:
+                        for out in func(val, attr, obj):
+                            yield out
 
     return func(obj)
 
