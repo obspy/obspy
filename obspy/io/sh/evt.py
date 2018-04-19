@@ -19,7 +19,8 @@ from warnings import warn
 
 from obspy.core.event import (Arrival, Catalog, Event,
                               Magnitude, Origin, OriginQuality,
-                              Pick, ResourceIdentifier, StationMagnitude)
+                              OriginUncertainty, Pick, ResourceIdentifier,
+                              StationMagnitude, WaveformStreamID)
 from obspy.core.event.header import EvaluationMode, EventType, PickOnset
 from obspy.io.sh.core import to_utcdatetime
 
@@ -35,45 +36,38 @@ def _is_evt(filename):
 
 MAP = {
     'pick': {
-        'Onset time': 'time',
-        'Phase Flags': 'phase_hint',
-        'Onset Type': 'onset',
-        'Pick Type': 'evaluation_mode',
-        'Applied filter': 'filter_id'
-        # not used:
-        # Quality number         : 2
+        'onset time': 'time',
+        'phase flags': 'phase_hint',
+        'onset type': 'onset',
+        'pick type': 'evaluation_mode',
+        'applied filter': 'filter_id',
+        'sign': 'polarity'
     },
     'arrival': {
-        'Phase name': 'phase',
-        'Distance (deg)': 'distance',
-        'Theo. Azimuth (deg)': 'azimuth',
-        'Weight': 'time weight',
-        # not used:
-        # Distance (km)
-        # Theo. Backazimuth (deg)
+        'phase name': 'phase',
+        'distance (deg)': 'distance',
+        'theo. azimuth (deg)': 'azimuth',
+        'weight': 'time weight'
     },
     'origin': {
-        'Origin time': 'time',
-        'Latitude': 'latitude',
-        'Longitude': 'longitude',
-        'Depth (km)': 'depth',
-        'Error in Origin Time': 'time_errors',
-        'Error in Latitude (km)': 'latitude_errors',
-        'Error in Longitude (km)': 'longitude_errors',
-        'Error in Depth (km)': 'depth_errors',
-        'No. of Stations used': 'quality',
-        'Source region': 'region'
-        # not used:
-        # Depth type             : ( ) free
-        # Region Table           : GEO_REG
-        # Region ID              : 5538
-        # Reference Location Name: CENTRE
-        # Error Ellipse Major    :   0.02
-        # Error Ellipse Minor    :   0.01
-        # Error Ellipse Strike   :  68.60
+        'origin time': 'time',
+        'latitude': 'latitude',
+        'longitude': 'longitude',
+        'depth (km)': 'depth',
+        'error in origin time': 'time_errors',
+        'error in latitude (km)': 'latitude_errors',
+        'error in longitude (km)': 'longitude_errors',
+        'error in depth (km)': 'depth_errors',
+        'no. of stations used': 'quality',
+        'source region': 'region'
+    },
+    'origin_uncertainty': {
+        'error ellipse major': 'max_horizontal_uncertainty',
+        'error ellipse minor': 'min_horizontal_uncertainty',
+        'error ellipse strike': 'azimuth_max_horizontal_uncertainty'
     },
     'event': {
-        'Event type': 'event_type'
+        'event type': 'event_type'
     }
     # no dict for magnitudes, these are handled by function _mag
 }
@@ -93,35 +87,44 @@ def _event_type(et):
     return EventType(et)
 
 
+MAG_MAP = {'ml': 'ML',
+           'ms': 'MS',
+           'mb': 'Mb',
+           'mw': 'Mw'}
+
+
 CONVERT = {
     # pick
-    'Onset time': to_utcdatetime,
-    'Theo. Backazimuth (deg)': float,
-    'Phase Flags': str,
-    'Onset Type': PickOnset,
-    'Pick Type': EvaluationMode,
-    'Applied filter ': ResourceIdentifier,
+    'onset time': to_utcdatetime,
+    'theo. backazimuth (deg)': float,
+    'phase flags': str,
+    'onset type': PickOnset,
+    'pick type': EvaluationMode,
+    'applied filter': ResourceIdentifier,
+    'sign': str,
     # arrival
-    'Phase name': str,
-    'Distance (deg)': float,
-    'Theo. Azimuth (deg)': float,
-    'Weight': float,
-    # station magnitudes
-    'Magnitude ml': float,
+    'phase name': str,
+    'distance (deg)': float,
+    'theo. azimuth (deg)': float,
+    'weight': float,
     # origin
-    'Origin time': to_utcdatetime,
-    'Latitude': float,
-    'Longitude': float,
-    'Depth (km)': _km2m,
-    'Error in Origin Time': float,
-    'Error in Latitude (km)': _km2deg,
-    'Error in Longitude (km)': _km2deg,  # still needs correction for lat
-    'Error in Depth (km)': _km2m,
-    'No. of Stations used': lambda x: OriginQuality(
+    'origin time': to_utcdatetime,
+    'latitude': float,
+    'longitude': float,
+    'depth (km)': _km2m,
+    'error in origin time': float,
+    'error in latitude (km)': _km2deg,
+    'error in longitude (km)': _km2deg,  # correction for lat in _read_evt
+    'error in depth (km)': _km2m,
+    'no. of stations used': lambda x: OriginQuality(
         used_station_count=int(x)),
-    'Source region': str,
+    'source region': str,
+    # Origin uncertainty'
+    'error ellipse major': _km2m,
+    'error ellipse minor': _km2m,
+    'error ellipse strike': float,
     # event
-    'Event type': _event_type
+    'event type': _event_type
 }
 
 
@@ -139,35 +142,87 @@ def _kw(obj, obj_name):
     return kws
 
 
-def _mag(obj, evid, stamag=False):
-    magkey = 'Mean ' * (not stamag) + 'Magnitude ml'
-    if magkey in obj:
-        magv = obj[magkey]
-        if 'inf' in magv:
-            warn('invalid value for magnitude: %s (event id %s)'
-                 % (magv, evid))
-        else:
-            mag = StationMagnitude if stamag else Magnitude
-            return mag(magnitude_type='ML', mag=float(magv))
+def _mags(obj, evid, stamag=False):
+    mags = []
+    pm = None
+    for magtype1, magtype2 in MAG_MAP.items():
+        magkey = 'mean ' * (not stamag) + 'magnitude ' + magtype1
+        if magkey in obj:
+            magv = obj[magkey]
+            if 'inf' in magv:
+                warn('invalid value for magnitude: %s (event id %s)'
+                     % (magv, evid))
+            else:
+                mag = StationMagnitude if stamag else Magnitude
+                mags.append(mag(magnitude_type=magtype2, mag=float(magv)))
+    if len(mags) == 1:
+        pm = mags[0].resource_id
+    return mags, pm
 
 
-def _read_evt(filename, waveform_id='.{}..{}'):
-    # first create phases and phases_o dictionaries for different phases
-    # and phases with origin information
+def _seed_id_map(inventory=None, id_map=None, id_default='.{}..{}'):
+    ret = {}
+    if id_map is None:
+        id_map = {}
+    if inventory is not None:
+        for net in inventory:
+            for sta in net:
+                if len(sta) == 0:
+                    temp = id_map.get(sta.code, id_default)
+                    temp.split('.', 2)[-1]
+                else:
+                    cha = sta[0]
+                    temp = cha.location_code + '.' + cha.code[:-1] + '{}'
+                ret[sta.code] = net.code + '.{}.' + temp
+    return ret
+
+
+def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}'):
+    """
+    Read a SeismicHandler EVT file and returns an ObsPy Catalog object.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.event.read_events` function, call this
+        instead.
+
+    See http://www.seismic-handler.org/wiki/ShmDocFileEvt
+
+    :type filename: str
+    :param filename: File or file-like object in text mode.
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+    :param inventory: Inventory used to retrieve network code, location code
+        and channel code of stations (SEED id).
+    :type id_map: dict
+    :param id_map: If channel information was not found in inventory,
+        it will be looked up in this dictionary
+        (example: `id_map={'MOX': 'GR.{}..HH{}'`).
+        The values must contain three dots and two `{}` which are
+        substituted by station code and component.
+    :type id_default: str
+    :param id_default: Default SEED id expression.
+        The value must contain three dots and two `{}` which are
+        substituted by station code and component.
+
+    :rtype: :class:`~obspy.core.event.Catalog`
+    :return: An ObsPy Catalog object.
+    """
+    seed_map = _seed_id_map(inventory, id_map, id_default)
     with open(filename, 'r') as f:
         temp = f.read()
+    # first create phases and phases_o dictionaries for different phases
+    # and phases with origin information
     phases = defaultdict(list)
     phases_o = {}
     phase = {}
     evid = None
     for line in temp.splitlines():
         if 'End of Phase' in line:
-            if 'Origin time' in phase.keys():
+            if 'origin time' in phase.keys():
                 if evid in phases_o:
-                    warn(('Found two or more origins for event %s '
-                          '-> take first') % evid)
-                else:
-                    phases_o[evid] = phase
+                    # found more than one origin
+                    pass
+                phases_o[evid] = phase
             phases[evid].append(phase)
             phase = {}
             evid = None
@@ -176,9 +231,9 @@ def _read_evt(filename, waveform_id='.{}..{}'):
                 key, value = line.split(':', 1)
             except ValueError:
                 continue
-            key = key.strip()
+            key = key.strip().lower()
             value = value.strip()
-            if key == 'Event ID':
+            if key == 'event id':
                 evid = value
             elif value != '':
                 phase[key] = value
@@ -196,27 +251,29 @@ def _read_evt(filename, waveform_id='.{}..{}'):
         pm = None
         for p in phases[evid]:
             try:
-                sta = p['Station code']
+                sta = p['station code']
             except KeyError:
                 sta = ''
             try:
-                comp = p['Component']
+                comp = p['component']
             except KeyError:
                 comp = ''
             try:
-                wid = waveform_id[sta]
-            except TypeError:
-                wid = waveform_id
-            pick = Pick(waceform_id=wid.format(sta, comp), **_kw(p, 'pick'))
+                wid = seed_map[sta]
+            except KeyError:
+                wid = id_default
+            wid = WaveformStreamID(seed_string=wid.format(sta, comp))
+            pick = Pick(waveform_id=wid, **_kw(p, 'pick'))
             arrival = Arrival(pick_id=pick.resource_id, **_kw(p, 'arrival'))
             picks.append(pick)
             arrivals.append(arrival)
-            stamag = _mag(p, evid, stamag=True)
-            if stamag is not None:
-                stamags.append(stamag)
+            stamags_temp, _ = _mags(p, evid, stamag=True)
+            stamags.extend(stamags_temp)
         if evid in phases_o:
             o = phases_o[evid]
-            origin = Origin(arrivals=arrivals, **_kw(o, 'origin'))
+            uncertainty = OriginUncertainty(**_kw(o, 'origin_uncertainty'))
+            origin = Origin(arrivals=arrivals, origin_uncertainty=uncertainty,
+                            **_kw(o, 'origin'))
             if origin.latitude is None or origin.longitude is None:
                 warn('latitude or longitude not set for event %s' % evid)
             else:
@@ -225,10 +282,7 @@ def _read_evt(filename, waveform_id='.{}..{}'):
                         origin.latitude / 180 * pi)
                 origins = [origin]
                 po = origin.resource_id
-            mag = _mag(o, evid)
-            if mag is not None:
-                magnitudes = [mag]
-                pm = mag.resource_id
+            magnitudes, pm = _mags(o, evid)
         else:
             o = p
         event = Event(resource_id=ResourceIdentifier(evid),
