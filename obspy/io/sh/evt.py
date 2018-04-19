@@ -79,11 +79,11 @@ MAP = {
 }
 
 
-def KM2M(km):
+def _km2m(km):
     return 1000 * float(km)
 
 
-def KM2DEG(km):
+def _km2deg(km):
     return float(km) / 111.195
 
 
@@ -112,11 +112,11 @@ CONVERT = {
     'Origin time': to_utcdatetime,
     'Latitude': float,
     'Longitude': float,
-    'Depth (km)': KM2M,
+    'Depth (km)': _km2m,
     'Error in Origin Time': float,
-    'Error in Latitude (km)': KM2DEG,
-    'Error in Longitude (km)': KM2DEG,  # still needs correction for lat
-    'Error in Depth (km)': KM2M,
+    'Error in Latitude (km)': _km2deg,
+    'Error in Longitude (km)': _km2deg,  # still needs correction for lat
+    'Error in Depth (km)': _km2m,
     'No. of Stations used': lambda x: OriginQuality(
         used_station_count=int(x)),
     'Source region': str,
@@ -147,8 +147,8 @@ def _mag(obj, evid, stamag=False):
             warn('invalid value for magnitude: %s (event id %s)'
                  % (magv, evid))
         else:
-            Mag = StationMagnitude if stamag else Magnitude
-            return Mag(magnitude_type='ML', mag=float(magv))
+            mag = StationMagnitude if stamag else Magnitude
+            return mag(magnitude_type='ML', mag=float(magv))
 
 
 def _read_evt(filename, waveform_id='.{}..{}'):
