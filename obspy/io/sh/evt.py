@@ -164,8 +164,6 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}'):
         ObsPy :func:`~obspy.core.event.read_events` function, call this
         instead.
 
-    See http://www.seismic-handler.org/wiki/ShmDocFileEvt
-
     :type filename: str
     :param filename: File or file-like object in text mode.
     :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
@@ -186,7 +184,9 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}'):
     :return: An ObsPy Catalog object.
 
     .. note::
-        The following fields are supported by this function: ``%s``
+        The following fields are supported by this function: `%s.
+
+        Compare with http://www.seismic-handler.org/wiki/ShmDocFileEvt
     """
     seed_map = _seed_id_map(inventory, id_map, id_default)
     with open(filename, 'r') as f:

@@ -25,8 +25,6 @@ class EvtTestCase(unittest.TestCase):
         fname = os.path.join(self.path, 'data', 'local1.evt')
         cat = read_events(fname)
         self.assertEqual(len(cat), 2)
-        origin = cat[0].preferred_origin()
-        self.assertEqual(origin.longitude, 12.156)
 
     def test_local_event2(self):
         fname = os.path.join(self.path, 'data', 'local2.evt')
