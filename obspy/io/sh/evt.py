@@ -14,6 +14,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from collections import defaultdict
+from copy import copy
 from math import cos, pi
 from warnings import warn
 
@@ -34,45 +35,6 @@ def _is_evt(filename):
     return b'Event ID' in temp
 
 
-MAP = {
-    'pick': {
-        'onset time': 'time',
-        'phase flags': 'phase_hint',
-        'onset type': 'onset',
-        'pick type': 'evaluation_mode',
-        'applied filter': 'filter_id',
-        'sign': 'polarity'
-    },
-    'arrival': {
-        'phase name': 'phase',
-        'distance (deg)': 'distance',
-        'theo. azimuth (deg)': 'azimuth',
-        'weight': 'time weight'
-    },
-    'origin': {
-        'origin time': 'time',
-        'latitude': 'latitude',
-        'longitude': 'longitude',
-        'depth (km)': 'depth',
-        'error in origin time': 'time_errors',
-        'error in latitude (km)': 'latitude_errors',
-        'error in longitude (km)': 'longitude_errors',
-        'error in depth (km)': 'depth_errors',
-        'no. of stations used': 'quality',
-        'source region': 'region'
-    },
-    'origin_uncertainty': {
-        'error ellipse major': 'max_horizontal_uncertainty',
-        'error ellipse minor': 'min_horizontal_uncertainty',
-        'error ellipse strike': 'azimuth_max_horizontal_uncertainty'
-    },
-    'event': {
-        'event type': 'event_type'
-    }
-    # no dict for magnitudes, these are handled by function _mag
-}
-
-
 def _km2m(km):
     return 1000 * float(km)
 
@@ -82,7 +44,7 @@ def _km2deg(km):
 
 
 def _event_type(et):
-    if et == 'local_quake':
+    if 'quake' in et:
         et = 'earthquake'
     return EventType(et)
 
@@ -93,47 +55,60 @@ MAG_MAP = {'ml': 'ML',
            'mw': 'Mw'}
 
 
-CONVERT = {
-    # pick
-    'onset time': to_utcdatetime,
-    'theo. backazimuth (deg)': float,
-    'phase flags': str,
-    'onset type': PickOnset,
-    'pick type': EvaluationMode,
-    'applied filter': ResourceIdentifier,
-    'sign': str,
-    # arrival
-    'phase name': str,
-    'distance (deg)': float,
-    'theo. azimuth (deg)': float,
-    'weight': float,
-    # origin
-    'origin time': to_utcdatetime,
-    'latitude': float,
-    'longitude': float,
-    'depth (km)': _km2m,
-    'error in origin time': float,
-    'error in latitude (km)': _km2deg,
-    'error in longitude (km)': _km2deg,  # correction for lat in _read_evt
-    'error in depth (km)': _km2m,
-    'no. of stations used': lambda x: OriginQuality(
-        used_station_count=int(x)),
-    'source region': str,
-    # Origin uncertainty'
-    'error ellipse major': _km2m,
-    'error ellipse minor': _km2m,
-    'error ellipse strike': float,
-    # event
-    'event type': _event_type
+MAP = {
+    'pick': {
+        'onset time': ('time', to_utcdatetime),
+        'phase flags': ('phase_hint', str),
+        'onset type': ('onset', PickOnset),
+        'pick type': ('evaluation_mode', EvaluationMode),
+        'applied filter': ('filter_id', ResourceIdentifier),
+        'sign': ('polarity', str)
+    },
+    'arrival': {
+        'phase name': ('phase', str),
+        'distance (deg)': ('distance', float),
+        'theo. azimuth (deg)': ('azimuth', float),
+        'weight': ('time_weight', float),
+    },
+    'origin': {
+        'origin time': ('time', to_utcdatetime),
+        'latitude': ('latitude', float),
+        'longitude': ('longitude', float),
+        'depth (km)': ('depth', _km2m),
+        'error in origin time': ('time_errors', float),
+        'error in latitude (km)': ('latitude_errors', _km2deg),
+        'error in longitude (km)': ('longitude_errors', _km2deg),
+        # (correction for lat in _read_evt)
+        'error in depth (km)': ('depth_errors', _km2m),
+        'no. of stations used': (
+            'quality', lambda x: OriginQuality(used_station_count=int(x))),
+        'source region': ('region', str)
+    },
+    'origin_uncertainty': {
+        'error ellipse major': ('max_horizontal_uncertainty', _km2m),
+        'error ellipse minor': ('min_horizontal_uncertainty', _km2m),
+        'error ellipse strike': ('azimuth_max_horizontal_uncertainty', float)
+    },
+    'event': {
+        'event type': ('event_type', _event_type)
+    }
+    # no dict for magnitudes, these are handled by function _mag
 }
+
+
+# define supported keys just for documentation
+SUPPORTED_KEYS = ['event id', 'station code', 'component', 'magnitude (M?)',
+                  'mean magnitude (M?)']
+SUPPORTED_KEYS = sorted([key for obj in MAP.values() for key in obj] +
+                        SUPPORTED_KEYS)
 
 
 def _kw(obj, obj_name):
     kws = {}
-    for source_key, dest_key in MAP[obj_name].items():
+    for source_key, (dest_key, convert) in MAP[obj_name].items():
         try:
-            val = CONVERT[source_key](obj[source_key])
-        except KeyError:
+            val = convert(obj[source_key])
+        except KeyError as ex:
             pass
         except ValueError as ex:
             warn(str(ex))
@@ -153,23 +128,26 @@ def _mags(obj, evid, stamag=False):
                 warn('invalid value for magnitude: %s (event id %s)'
                      % (magv, evid))
             else:
-                mag = StationMagnitude if stamag else Magnitude
-                mags.append(mag(magnitude_type=magtype2, mag=float(magv)))
+                magv = float(magv)
+                mag = (StationMagnitude(station_magnitude_type=magtype2,
+                                        mag=magv) if stamag else
+                       Magnitude(magnitude_type=magtype2, mag=magv))
+                mags.append(mag)
     if len(mags) == 1:
         pm = mags[0].resource_id
     return mags, pm
 
 
 def _seed_id_map(inventory=None, id_map=None, id_default='.{}..{}'):
-    ret = {}
     if id_map is None:
         id_map = {}
+    ret = copy(id_map)
     if inventory is not None:
         for net in inventory:
             for sta in net:
                 if len(sta) == 0:
                     temp = id_map.get(sta.code, id_default)
-                    temp.split('.', 2)[-1]
+                    temp = temp.split('.', 2)[-1]
                 else:
                     cha = sta[0]
                     temp = cha.location_code + '.' + cha.code[:-1] + '{}'
@@ -206,6 +184,9 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}'):
 
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: An ObsPy Catalog object.
+
+    .. note::
+        The following fields are supported by this function: ``%s``
     """
     seed_map = _seed_id_map(inventory, id_map, id_default)
     with open(filename, 'r') as f:
@@ -297,3 +278,6 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}'):
         events.append(event)
     return Catalog(events,
                    description='Created from SeismicHandler EVT format')
+
+
+_read_evt.__doc__ = _read_evt.__doc__ % (SUPPORTED_KEYS,)
