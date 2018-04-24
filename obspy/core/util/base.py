@@ -272,7 +272,8 @@ ENTRY_POINTS = {
         'obspy.plugin.waveform', 'readFormat', WAVEFORM_PREFERRED_ORDER),
     'waveform_write': _get_ordered_entry_points(
         'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
-    'event': _get_entry_points('obspy.plugin.event', 'readFormat'),
+    'event': _get_ordered_entry_points('obspy.plugin.event', 'readFormat',
+                                       EVENT_PREFERRED_ORDER),
     'event_write': _get_entry_points('obspy.plugin.event', 'writeFormat'),
     'taper': _get_entry_points('obspy.plugin.taper'),
     'inventory': _get_entry_points('obspy.plugin.inventory', 'readFormat'),
