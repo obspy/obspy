@@ -14,6 +14,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from collections import defaultdict
+import io
 from math import cos, pi
 from warnings import warn
 
@@ -154,7 +155,8 @@ def _seed_id_map(inventory=None, id_map=None, id_default='.{}..{}'):
     return ret
 
 
-def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}'):
+def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}',
+              encoding='utf-8'):
     """
     Read a SeismicHandler EVT file and returns an ObsPy Catalog object.
 
@@ -178,6 +180,7 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}'):
     :param id_default: Default SEED id expression.
         The value must contain three dots and two `{}` which are
         substituted by station code and component.
+    :param str encoding: encoding used (default: utf-8)
 
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: An ObsPy Catalog object.
@@ -188,7 +191,7 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}'):
         Compare with http://www.seismic-handler.org/wiki/ShmDocFileEvt
     """
     seed_map = _seed_id_map(inventory, id_map, id_default)
-    with open(filename, 'r') as f:
+    with io.open(filename, 'r', encoding=encoding) as f:
         temp = f.read()
     # first create phases and phases_o dictionaries for different phases
     # and phases with origin information
