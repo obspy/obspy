@@ -39,7 +39,7 @@ master:
     * Add explicit warnings regarding unsupported sections of Nordic files.
     * Fix mapping of magnitude-types between MS to S and Ms to s.
  - obspy.io.sh:
-    * Add read support for SeismicHandler EVT event files
+    * Add read support for SeismicHandler EVT event files (see #2109)
 
 
 1.1.x:

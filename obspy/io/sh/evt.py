@@ -14,7 +14,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from collections import defaultdict
-from copy import copy
 from math import cos, pi
 from warnings import warn
 
@@ -141,7 +140,7 @@ def _mags(obj, evid, stamag=False):
 def _seed_id_map(inventory=None, id_map=None, id_default='.{}..{}'):
     if id_map is None:
         id_map = {}
-    ret = copy(id_map)
+    ret = id_map.copy()
     if inventory is not None:
         for net in inventory:
             for sta in net:
@@ -184,7 +183,7 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}'):
     :return: An ObsPy Catalog object.
 
     .. note::
-        The following fields are supported by this function: `%s.
+        The following fields are supported by this function: %s.
 
         Compare with http://www.seismic-handler.org/wiki/ShmDocFileEvt
     """
