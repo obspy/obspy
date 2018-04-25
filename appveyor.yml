@@ -104,6 +104,7 @@ install:
   - "conda create -q --yes -n test python=%PYTHON_VERSION%"
   - "activate test"
   # Install default dependencies
+  # pip 10.0.1 seems buggy and breaks all our appveyor builds
   - "conda install -q --yes \"pip<10\" numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema pyshp cryptography"
   # additional dependencies
   - "pip install pyimgur"
