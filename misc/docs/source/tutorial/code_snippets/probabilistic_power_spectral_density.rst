@@ -23,17 +23,20 @@ Read data and select a trace with the desired station/channel combination:
 
 Metadata can be provided as an
 :class:`~obspy.core.inventory.inventory.Inventory` (e.g. from a StationXML file
-or from a request to a FDSN web service), a
-:class:`~obspy.io.xseed.parser.Parser` (e.g. from a dataless SEED file), a
-filename of a local RESP file (or a legacy poles and zeros dictionary). Then we
+or from a request to a FDSN web service -- be sure to use `level='response'`),
+a :class:`~obspy.io.xseed.parser.Parser` (mostly legacy, dataless SEED files
+can be read into `Inventory` objects using
+:func:`~obspy.core.inventory.inventory.read_inventory()`), a filename of a
+local RESP file (also legacy, RESP files can be parsed into `Inventory`
+objects; or a legacy poles and zeros dictionary). Then we
 initialize a new :class:`~obspy.signal.spectral_estimation.PPSD` instance. The
 ppsd object will then make sure that only appropriate data go into the
 probabilistic psd statistics.
 
 .. doctest::
 
-    >>> parser = Parser("https://examples.obspy.org/dataless.seed.BW_KW1")
-    >>> ppsd = PPSD(tr.stats, metadata=parser)
+    >>> inv = read_inventory("https://examples.obspy.org/BW_KW1.xml")
+    >>> ppsd = PPSD(tr.stats, metadata=inv)
 
 Now we can add data (either trace or stream objects) to the ppsd estimate. This
 step may take a while. The return value ``True`` indicates that the data was
