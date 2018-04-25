@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import unittest
+import warnings
 
 from obspy.core import AttribDict
 
@@ -288,6 +289,29 @@ class AttribDictTestCase(unittest.TestCase):
         ad = AttribDict({'test1': 1, 'test2': 2})
         out = ' test1: 1\n test2: 2'
         self.assertEqual(ad._pretty_str(min_label_length=6), out)
+
+    def test_types(self):
+        """
+        Test that types are enforced with _types attribute
+        """
+        class AttrOcity(AttribDict):
+            _types = {'string': str, 'number': (float, int), 'int': int,
+                      'another_number': (float, int)}
+
+        ad = AttrOcity()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('default')
+            ad.string = int
+            ad.number = '1'
+            ad.int = 1.0
+            ad.not_type_controlled = 2
+            ad.another_number = 1
+
+        self.assertEqual(len(w), 3)
+        self.assertIsInstance(ad.string, str)
+        self.assertIsInstance(ad.number, float)
+        self.assertIsInstance(ad.int, int)
+        self.assertIsInstance(ad.another_number, int)
 
 
 def suite():

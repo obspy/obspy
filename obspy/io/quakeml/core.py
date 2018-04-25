@@ -43,7 +43,7 @@ from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               StationMagnitudeContribution, Tensor, TimeWindow,
                               WaveformStreamID)
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict
+from obspy.core.util import AttribDict, Enum
 
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
@@ -181,6 +181,18 @@ class Unpickler(object):
             warnings.warn(msg % (text, convert_to))
         return None
 
+    def _set_enum(self, xpath, element, obj, key):
+        obj_type = obj._property_dict[key]
+        if not isinstance(obj_type, Enum):  # pragma: no cover
+            raise ValueError
+        value = self._xpath2obj(xpath, element)
+        try:
+            setattr(obj, key, value)
+        except ValueError as e:
+            msg = ('%s. The attribute "%s" will not be set and will be missing'
+                   ' in the resulting object.' % (e.args[0], key))
+            warnings.warn(msg)
+
     def _xpath(self, xpath, element=None, namespace=None):
         if element is None:
             element = self.xml_root
@@ -278,9 +290,10 @@ class Unpickler(object):
     def _event_description(self, parent):
         out = []
         for el in self._xpath('description', parent):
-            text = self._xpath2obj('text', el)
-            type = self._xpath2obj('type', el)
-            out.append(EventDescription(text=text, type=type))
+            desc = EventDescription()
+            desc.text = self._xpath2obj('text', el)
+            self._set_enum('type', el, desc, 'type')
+            out.append(desc)
             self._extra(el, out[-1])
         return out
 
@@ -368,8 +381,8 @@ class Unpickler(object):
             return None
         element = elements[0]
         obj = OriginUncertainty()
-        obj.preferred_description = self._xpath2obj(
-            'preferredDescription', element)
+        self._set_enum('preferredDescription', element,
+                       obj, 'preferred_description')
         obj.horizontal_uncertainty = self._xpath2obj(
             'horizontalUncertainty', element, float)
         obj.min_horizontal_uncertainty = self._xpath2obj(
@@ -461,11 +474,11 @@ class Unpickler(object):
         obj.backazimuth, obj.backazimuth_errors = \
             self._float_value(element, 'backazimuth')
         obj.slowness_method_id = self._xpath2obj('slownessMethodID', element)
-        obj.onset = self._xpath2obj('onset', element)
+        self._set_enum('onset', element, obj, 'onset')
         obj.phase_hint = self._xpath2obj('phaseHint', element)
-        obj.polarity = self._xpath2obj('polarity', element)
-        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
-        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
+        self._set_enum('polarity', element, obj, 'polarity')
+        self._set_enum('evaluationMode', element, obj, 'evaluation_mode')
+        self._set_enum('evaluationStatus', element, obj, 'evaluation_status')
         obj.comments = self._comments(element)
         obj.creation_info = self._creation_info(element)
         obj.resource_id = element.get('publicID')
@@ -501,8 +514,8 @@ class Unpickler(object):
             self._float_value(element, 'genericAmplitude')
         # optional parameter
         obj.type = self._xpath2obj('type', element)
-        obj.category = self._xpath2obj('category', element)
-        obj.unit = self._xpath2obj('unit', element)
+        self._set_enum('category', element, obj, 'category')
+        self._set_enum('unit', element, obj, 'unit')
         obj.method_id = self._xpath2obj('methodID', element)
         obj.period, obj.period_errors = self._float_value(element, 'period')
         obj.snr = self._xpath2obj('snr', element)
@@ -515,8 +528,8 @@ class Unpickler(object):
         obj.scaling_time, obj.scaling_time_errors = \
             self._time_value(element, 'scalingTime')
         obj.magnitude_hint = self._xpath2obj('magnitudeHint', element)
-        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
-        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
+        self._set_enum('evaluationMode', element, obj, 'evaluation_mode')
+        self._set_enum('evaluationStatus', element, obj, 'evaluation_status')
         obj.comments = self._comments(element)
         obj.creation_info = self._creation_info(element)
         obj.resource_id = element.get('publicID')
@@ -552,7 +565,7 @@ class Unpickler(object):
             self._float_value(element, 'longitude')
         # optional parameter
         obj.depth, obj.depth_errors = self._float_value(element, 'depth')
-        obj.depth_type = self._xpath2obj('depthType', element)
+        self._set_enum('depthType', element, obj, 'depth_type')
         obj.time_fixed = self._xpath2obj('timeFixed', element, bool)
         obj.epicenter_fixed = self._xpath2obj('epicenterFixed', element, bool)
         obj.reference_system_id = self._xpath2obj('referenceSystemID', element)
@@ -560,10 +573,10 @@ class Unpickler(object):
         obj.earth_model_id = self._xpath2obj('earthModelID', element)
         obj.composite_times = self._composite_times(element)
         obj.quality = self._origin_quality(element)
-        obj.origin_type = self._xpath2obj('type', element)
+        self._set_enum('type', element, obj, 'origin_type')
         obj.region = self._xpath2obj('region', element)
-        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
-        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
+        self._set_enum('evaluationMode', element, obj, 'evaluation_mode')
+        self._set_enum('evaluationStatus', element, obj, 'evaluation_status')
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         obj.origin_uncertainty = self._origin_uncertainty(element)
@@ -601,8 +614,8 @@ class Unpickler(object):
         obj.method_id = self._xpath2obj('methodID', element)
         obj.station_count = self._xpath2obj('stationCount', element, int)
         obj.azimuthal_gap = self._xpath2obj('azimuthalGap', element, float)
-        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
-        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
+        self._set_enum('evaluationMode', element, obj, 'evaluation_mode')
+        self._set_enum('evaluationStatus', element, obj, 'evaluation_status')
         obj.creation_info = self._creation_info(element)
         obj.station_magnitude_contributions = \
             self._station_magnitude_contributions(element)
@@ -744,7 +757,7 @@ class Unpickler(object):
             return None
         obj = SourceTimeFunction()
         # required parameters
-        obj.type = self._xpath2obj('type', sub_el)
+        self._set_enum('type', sub_el, obj, 'type')
         obj.duration = self._xpath2obj('duration', sub_el, float)
         # optional parameter
         obj.rise_time = self._xpath2obj('riseTime', sub_el, float)
@@ -785,7 +798,7 @@ class Unpickler(object):
         for el in self._xpath('dataUsed', parent):
             data_used = DataUsed()
             # required parameters
-            data_used.wave_type = self._xpath2obj('waveType', el)
+            self._set_enum('waveType', el, data_used, 'wave_type')
             # optional parameter
             data_used.station_count = \
                 self._xpath2obj('stationCount', el, int)
@@ -830,8 +843,8 @@ class Unpickler(object):
         obj.source_time_function = self._source_time_function(mt_el)
         obj.data_used = self._data_used(mt_el)
         obj.method_id = self._xpath2obj('methodID', mt_el)
-        obj.category = self._xpath2obj('category', mt_el)
-        obj.inversion_type = self._xpath2obj('inversionType', mt_el)
+        self._set_enum('category', mt_el, obj, 'category')
+        self._set_enum('inversionType', mt_el, obj, 'inversion_type')
         obj.creation_info = self._creation_info(mt_el)
         obj.comments = self._comments(mt_el)
         obj.resource_id = mt_el.get('publicID')
@@ -874,8 +887,8 @@ class Unpickler(object):
         obj.moment_tensor = self._moment_tensor(element)
         obj.nodal_planes = self._nodal_planes(element)
         obj.principal_axes = self._principal_axes(element)
-        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
-        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
+        self._set_enum('evaluationMode', element, obj, 'evaluation_mode')
+        self._set_enum('evaluationStatus', element, obj, 'evaluation_status')
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         obj.resource_id = element.get('publicID')
@@ -927,8 +940,8 @@ class Unpickler(object):
                 msg += "with QuakeML standard -- event will be ignored."
                 warnings.warn(msg, UserWarning)
                 continue
-            event.event_type_certainty = self._xpath2obj(
-                'typeCertainty', event_el)
+            self._set_enum('typeCertainty', event_el,
+                           event, 'event_type_certainty')
             event.creation_info = self._creation_info(event_el)
             event.event_descriptions = self._event_description(event_el)
             event.comments = self._comments(event_el)
@@ -1082,11 +1095,15 @@ class Pickler(object):
         try:
             return obj.get_quakeml_uri()
         except Exception:
-            return ResourceIdentifier().get_quakeml_uri()
+            msg = ("'%s' is not a valid QuakeML URI. It will be in the final "
+                   "file but note that the file will not be a valid QuakeML "
+                   "file.")
+            warnings.warn(msg % obj.id)
+            return obj.id
 
     def _str(self, value, root, tag, always_create=False, attrib=None):
         if isinstance(value, ResourceIdentifier):
-            value = value.get_quakeml_uri()
+            value = self._id(value)
         if always_create is False and value is None:
             return
         etree.SubElement(root, tag, attrib=attrib).text = "%s" % value

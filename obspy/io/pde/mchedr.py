@@ -1012,7 +1012,9 @@ class Unpickler(object):
 
     def _deserialize(self):
         catalog = Catalog()
-        res_id = '/'.join((res_id_prefix, self.filename))
+        res_id = '/'.join((res_id_prefix,
+                           self.filename.replace(':', '/')))\
+            .replace('\\', '/').replace('//', '/')
         catalog.resource_id = ResourceIdentifier(id=res_id)
         catalog.description = 'Created from NEIC PDE mchedr format'
         catalog.comments = ''

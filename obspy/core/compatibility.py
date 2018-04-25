@@ -9,6 +9,7 @@ from future.utils import PY2
 
 import io
 import json
+import sys
 
 import numpy as np
 
@@ -138,6 +139,34 @@ def round_away(number):
         return int(int(number) + int(np.sign(number)))
     else:
         return int(np.round(number))
+
+
+if sys.version_info[0] < 3:
+    def py3_round(number, ndigits=None):
+        """
+        Similar function to python 3's built-in round function.
+
+        Returns a float if ndigits is greater than 0, else returns an integer.
+
+        Note:
+        This function should be replace by the builtin round when obspy
+        drops support for python 2.7.
+        Unlike python'3 rounding, this function always rounds up on half
+        increments rather than implementing banker's rounding.
+
+        :type number: int or float
+        :param number: A real number to be rounded
+        :type ndigits: int
+        :param ndigits: number of digits
+        :return: An int if ndigites <= 0, else a float rounded to ndigits.
+        """
+        if ndigits is None or ndigits <= 0:
+            mult = 10 ** -(ndigits or 0)
+            return ((int(number) + mult // 2) // mult) * mult
+        else:
+            return round(number, ndigits)
+else:
+    py3_round = round
 
 
 def get_json_from_response(r):

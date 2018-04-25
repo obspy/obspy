@@ -10,6 +10,7 @@
 *.pyo
 .cache
 .DS_Store
+.idea
 .project
 .pydevproject
 /.settings

@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2"
+  xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
+  <eventParameters publicID="smi:eu.emsc/unid/123456">
+    <event publicID="smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,15)">
+      <magnitude publicID="smi:ch.ethz.sed/magnitude/37465">
+        <mag>
+          <value>5.5</value>
+          <uncertainty>0.1</uncertainty>
+        </mag>
+        <type>MS</type>
+        <originID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,26)</originID>
+        <methodID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,27)</methodID>
+      </magnitude>
+      <pick publicID="smi:org.gfz-potsdam.de/geofon/Pick#20160627194457.143264.18834">
+        <phaseHint>P</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+        <creationInfo>
+          <agencyID>OVSM</agencyID>
+          <author>clouard</author>
+          <creationTime>2016-06-27T19:44:57.14344Z</creationTime>
+        </creationInfo>
+        <time>
+          <value>2016-01-04T01:48:01.560346Z</value>
+          <lowerUncertainty>0.05000000075</lowerUncertainty>
+          <upperUncertainty>0.05000000075</upperUncertainty>
+        </time>
+        <waveformID networkCode="MQ" stationCode="CPM" locationCode="91" channelCode="EHZ"/>
+        <filterID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,16)</filterID>
+        <methodID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,28)</methodID>
+        <slownessMethodID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,29)</slownessMethodID>
+      </pick>
+      <amplitude publicID="smi:nz.org.geonet/event/2806038g/amplitude/1/modified">
+        <genericAmplitude>
+          <value>1.0e-08</value>
+        </genericAmplitude>
+        <filterID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,20)</filterID>
+        <methodID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,17)</methodID>
+        <pickID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,18)</pickID>
+        <creationInfo>
+          <agencyID>EMSC</agencyID>
+          <agencyURI>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,30)</agencyURI>
+          <author>Erika Mustermann</author>
+          <authorURI>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,31)</authorURI>
+          <creationTime>2012-04-04T16:40:50.000000Z</creationTime>
+          <version>1.0.1</version>
+        </creationInfo>
+      </amplitude>
+      <stationMagnitude publicID="smi:ch.ethz.sed/magnitude/station/881342">
+        <originID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,21)</originID>
+        <amplitudeID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,22)</amplitudeID>
+        <methodID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,23)</methodID>
+        <mag>
+          <value>6.5</value>
+          <uncertainty>0.2</uncertainty>
+        </mag>
+      </stationMagnitude>
+      <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
+        <time>
+          <value>2011-03-11T05:46:24.120000Z</value>
+        </time>
+        <latitude>
+          <value>38.297</value>
+        </latitude>
+        <longitude>
+          <value>142.373</value>
+        </longitude>
+        <arrival publicID="smi:some/arrival/id">
+          <pickID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,32)</pickID>
+          <phase>Pn</phase>
+          <azimuth>12.0</azimuth>
+          <distance>0.5</distance>
+          <takeoffAngle>
+            <value>11.0</value>
+            <uncertainty>0.2</uncertainty>
+          </takeoffAngle>
+          <timeResidual>1.6</timeResidual>
+          <horizontalSlownessResidual>1.7</horizontalSlownessResidual>
+          <backazimuthResidual>1.8</backazimuthResidual>
+          <timeWeight>0.48</timeWeight>
+          <horizontalSlownessWeight>0.49</horizontalSlownessWeight>
+          <backazimuthWeight>0.5</backazimuthWeight>
+          <earthModelID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,33)</earthModelID>
+        </arrival>
+        <referenceSystemID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,34)</referenceSystemID>
+        <methodID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,35)</methodID>
+        <earthModelID>smi:org.gfz-potsdam.de/geofon/RMHP(60)&gt;&gt;ITAPER(3)&gt;&gt;BW(4,5,36)</earthModelID>
+      </origin>
+    </event>
+  </eventParameters>
+</q:quakeml>

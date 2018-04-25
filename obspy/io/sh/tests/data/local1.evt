@@ -1,0 +1,74 @@
+Event ID               : 10827001
+Station code           : MOX
+Onset time             : 27-AUG-2001_05:33:52.120
+Onset type             : emergent
+Phase name             : Pg
+Event Type             : local quake
+Applied filter         : 
+Component              : Z
+Residual Time          :   0.3
+Quality number         : 
+Pick Type              : manual
+Weight                 : 
+Theo. Azimuth (deg)    :  297.9
+Theo. Backazimuth (deg):   
+Distance (deg)         :  0.40
+Distance (km)          : 44.51
+Mean Magnitude ml      : 1.6
+Latitude               : +50.4640
+Longitude              :  +12.1560
+Depth (km)             :  1.7
+Depth type             : ( ) free
+Origin time            : 27-AUG-2001_05:33:44.91
+Region Table           : GEO_REG
+Region ID              : 5538
+Source region          : Plauen/S Saxony
+No. of Stations used   : 2
+Reference Location Name: CENTRE
+Error in Latitude (km) :   
+Error in Longitude (km):   
+Error in Depth (km)    :  
+Error in Origin Time   :  
+Error Ellipse Major    :  
+Error Ellipse Minor    :  
+Error Ellipse Strike   :  
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 10827001
+Station code           : MOX
+Onset time             : 27-AUG-2001_05:33:57.156
+Onset type             : 
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : 
+Component              : N
+Quality number         : 
+Pick Type              : manual
+Weight                 : 
+Theo. Azimuth (deg)    :  297.9
+Theo. Backazimuth (deg):  
+Distance (deg)         :  0.40
+Distance (km)          : 44.51
+Phase Flags            : L
+--- End of Phase ---
+
+
+Event ID               : 10604007
+Station code           : CLL
+Onset time             : 27-AUG-2001_05:34:16.088
+Onset type             : 
+Phase name             : Sg
+Event Type             : local quake
+Applied filter         : 
+Component              : N
+Quality number         : 
+Pick Type              : manual
+Weight                 : 
+Theo. Azimuth (deg)    :  31.5
+Theo. Backazimuth (deg):  
+Distance (deg)         :  1.0
+Distance (km)          : 111.25
+Phase Flags            : L
+--- End of Phase ---

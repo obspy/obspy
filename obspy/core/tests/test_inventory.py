@@ -254,6 +254,95 @@ class InventoryTestCase(unittest.TestCase):
         self.assertEqual(len(inv), len(inv.networks))
         self.assertEqual(len(inv), 2)
 
+    def test_inventory_remove(self):
+        """
+        Test for the Inventory.remove() method.
+        """
+        inv = read_inventory()
+
+        # Currently contains 30 channels.
+        self.assertEqual(sum(len(sta) for net in inv for sta in net), 30)
+
+        # No arguments, everything should be removed, as `None` values left in
+        # network/station/location/channel are interpreted as wildcards.
+        inv_ = inv.remove()
+        self.assertEqual(len(inv_), 0)
+
+        # remove one entire network code
+        for network in ['GR', 'G?', 'G*', '?R']:
+            inv_ = inv.remove(network=network)
+            self.assertEqual(len(inv_), 1)
+            self.assertEqual(inv_[0].code, 'BW')
+            self.assertEqual(len(inv_[0]), 3)
+            for sta in inv_[0]:
+                self.assertEqual(len(sta), 3)
+
+        # remove one specific network/station
+        for network in ['GR', 'G?', 'G*', '?R']:
+            for station in ['FUR', 'F*', 'F??', '*R']:
+                inv_ = inv.remove(network=network, station=station)
+                self.assertEqual(len(inv_), 2)
+                self.assertEqual(inv_[0].code, 'GR')
+                self.assertEqual(len(inv_[0]), 1)
+                for sta in inv_[0]:
+                    self.assertEqual(len(sta), 9)
+                    self.assertEqual(sta.code, 'WET')
+                self.assertEqual(inv_[1].code, 'BW')
+                self.assertEqual(len(inv_[1]), 3)
+                for sta in inv_[1]:
+                    self.assertEqual(len(sta), 3)
+                    self.assertEqual(sta.code, 'RJOB')
+
+        # remove one specific channel
+        inv_ = inv.remove(channel='*Z')
+        self.assertEqual(len(inv_), 2)
+        self.assertEqual(inv_[0].code, 'GR')
+        self.assertEqual(len(inv_[0]), 2)
+        self.assertEqual(len(inv_[0][0]), 8)
+        self.assertEqual(len(inv_[0][1]), 6)
+        self.assertEqual(inv_[0][0].code, 'FUR')
+        self.assertEqual(inv_[0][1].code, 'WET')
+        self.assertEqual(inv_[1].code, 'BW')
+        self.assertEqual(len(inv_[1]), 3)
+        for sta in inv_[1]:
+            self.assertEqual(len(sta), 2)
+            self.assertEqual(sta.code, 'RJOB')
+        for net in inv_:
+            for sta in net:
+                for cha in sta:
+                    self.assertTrue(cha.code[2] != 'Z')
+
+        # check keep_empty kwarg
+        inv_ = inv.remove(station='R*')
+        self.assertEqual(len(inv_), 1)
+        self.assertEqual(inv_[0].code, 'GR')
+        inv_ = inv.remove(station='R*', keep_empty=True)
+        self.assertEqual(len(inv_), 2)
+        self.assertEqual(inv_[0].code, 'GR')
+        self.assertEqual(inv_[1].code, 'BW')
+        self.assertEqual(len(inv_[1]), 0)
+
+        inv_ = inv.remove(channel='EH*')
+        self.assertEqual(len(inv_), 1)
+        self.assertEqual(inv_[0].code, 'GR')
+        inv_ = inv.remove(channel='EH*', keep_empty=True)
+        self.assertEqual(len(inv_), 2)
+        self.assertEqual(inv_[0].code, 'GR')
+        self.assertEqual(inv_[1].code, 'BW')
+        self.assertEqual(len(inv_[1]), 3)
+        for sta in inv_[1]:
+            self.assertEqual(sta.code, 'RJOB')
+            self.assertEqual(len(sta), 0)
+
+        # some remove calls that don't match anything and should not do
+        # anything
+        for kwargs in [dict(network='AA'),
+                       dict(network='AA', station='FUR'),
+                       dict(network='GR', station='ABCD'),
+                       dict(network='GR', channel='EHZ')]:
+            inv_ = inv.remove(**kwargs)
+            self.assertEqual(inv_, inv)
+
     def test_inventory_select(self):
         """
         Test for the Inventory.select() method.

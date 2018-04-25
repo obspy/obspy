@@ -1062,6 +1062,51 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(cat[0].focal_mechanisms[0].nodal_planes, None)
         self.assertEqual(cat[0].focal_mechanisms[0].principal_axes, None)
 
+    def test_writing_invalid_quakeml_id(self):
+        """
+        Some ids might be invalid. We still want to write them to not mess
+        with any external tools relying on the ids. But we also raise a
+        warning of course.
+        """
+        filename = os.path.join(self.path, 'invalid_id.xml')
+        cat = read_events(filename)
+        self.assertEqual(
+            cat[0].resource_id.id,
+            "smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)")
+        with NamedTemporaryFile() as tf:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                cat.write(tf.name, format="quakeml")
+                cat2 = read_events(tf.name)
+        self.assertEqual(len(w), 19)
+        self.assertEqual(
+            w[0].message.args[0],
+            "'smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)' "
+            "is not a valid QuakeML URI. It will be in the final file but "
+            "note that the file will not be a valid QuakeML file.")
+        self.assertEqual(
+            cat2[0].resource_id.id,
+            "smi:org.gfz-potsdam.de/geofon/RMHP(60)>>ITAPER(3)>>BW(4,5,15)")
+
+    def test_reading_invalid_enums(self):
+        """
+        Raise a warning when an invalid enum value is attempted to be read.
+        """
+        filename = os.path.join(self.path, "invalid_enum.xml")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat = read_events(filename)
+        self.assertEqual(len(w), 1)
+        self.assertEqual(
+            w[0].message.args[0],
+            'Setting attribute "depth_type" failed. Value "randomized" could '
+            'not be converted to type "Enum(["from location", "from moment '
+            'tensor inversion", ..., "operator assigned", "other"])". The '
+            'attribute "depth_type" will not be set and will be missing in '
+            'the resulting object.')
+        # It should of course not be set.
+        self.assertIsNone(cat[0].origins[0].depth_type)
+
 
 def suite():
     return unittest.makeSuite(QuakeMLTestCase, 'test')

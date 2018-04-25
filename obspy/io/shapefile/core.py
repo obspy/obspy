@@ -38,7 +38,7 @@ PYSHP_VERSION_WARNING = (
     'precision. You should update to a newer pyshp version.')
 
 
-def _write_shapefile(obj, filename, **kwargs):
+def _write_shapefile(obj, filename, extra_fields=None, **kwargs):
     """
     Write :class:`~obspy.core.inventory.inventory.Inventory` or
     :class:`~obspy.core.event.Catalog` object to a ESRI shapefile.
@@ -52,6 +52,16 @@ def _write_shapefile(obj, filename, **kwargs):
         ".shp", ".shx", ".dbj", ".prj". If filename does not end with ".shp",
         it will be appended. Other files will be created with respective
         suffixes accordingly.
+    :type extra_fields: list
+    :param extra_fields: Currently only implemented for ``obj`` of type
+        :class:`~obspy.core.event.Catalog`. List of extra fields to write to
+        the shapefile table. Each item in the list has to be specified as a
+        tuple of: field name (i.e. name of database column, ``str``), field
+        type (single character as used by ``pyshp``: ``'C'`` for string
+        fields, ``'N'`` for integer/float fields - use precision ``None`` for
+        integer fields, ``'L'`` for boolean fields), field width (``int``),
+        field precision (``int``) and field values (``list`` of individual
+        values, must have same length as ``catalog``).
     """
     if not HAS_PYSHP:
         raise ImportError(IMPORTERROR_MSG)
@@ -65,7 +75,7 @@ def _write_shapefile(obj, filename, **kwargs):
 
     # create the layer
     if isinstance(obj, Catalog):
-        _add_catalog_layer(writer, obj)
+        _add_catalog_layer(writer, obj, extra_fields=extra_fields)
     elif isinstance(obj, Inventory):
         _add_inventory_layer(writer, obj)
     else:
@@ -77,12 +87,15 @@ def _write_shapefile(obj, filename, **kwargs):
     _save_projection_file(filename.rsplit('.', 1)[0] + '.prj')
 
 
-def _add_catalog_layer(writer, catalog):
+def _add_catalog_layer(writer, catalog, extra_fields=None):
     """
     :type writer: :class:`shapefile.Writer`.
     :param writer: pyshp Writer object
     :type catalog: :class:`~obspy.core.event.Catalog`
     :param catalog: Event data to add as a new layer.
+    :type extra_fields: list
+    :param extra_fields: List of extra fields to write to the shapefile table.
+        For details see :func:`_write_shapefile()`.
     """
     # [name, type, width, precision]
     # field name is 10 chars max
@@ -108,9 +121,16 @@ def _add_catalog_layer(writer, catalog):
         ["Magnitude", 'N', 8, 3],
     ]
 
-    _create_layer(writer, field_definitions)
+    _create_layer(writer, field_definitions, extra_fields)
 
-    for event in catalog:
+    if extra_fields:
+        for name, type_, width, precision, values in extra_fields:
+            if len(values) != len(catalog):
+                msg = ("list of values for each item in 'extra_fields' must "
+                       "have same length as Catalog object")
+                raise ValueError(msg)
+
+    for i, event in enumerate(catalog):
         # try to use preferred origin/magnitude, fall back to first or use
         # empty one with `None` values in it
         origin = (event.preferred_origin() or
@@ -179,6 +199,9 @@ def _add_catalog_layer(writer, catalog):
 
         if origin.latitude is not None and origin.longitude is not None:
             writer.point(origin.longitude, origin.latitude)
+            if extra_fields:
+                for name, _, _, _, values in extra_fields:
+                    feature[name] = values[i]
             _add_record(writer, feature)
 
 
@@ -186,7 +209,7 @@ def _add_inventory_layer(writer, inventory):
     """
     :type writer: :class:`shapefile.Writer`.
     :param writer: pyshp Writer object
-    :type inventory: :class:`~obspy.core.inventory.Inventory`
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: Inventory data to add as a new layer.
     """
     # [name, type, width, precision]
@@ -269,28 +292,40 @@ def _save_projection_file(filename):
         fh.write(wgs84_wkt)
 
 
-def _create_layer(writer, field_definitions):
+def _add_field(writer, name, type_, width, precision):
+    # default field width is not set correctly for dates and booleans in
+    # shapefile <=1.2.10, see
+    # GeospatialPython/pyshp@ba61854aa7161fd7d4cff12b0fd08b6ec7581bb7 and
+    # GeospatialPython/pyshp#71 so work around this
+    if type_ == 'D':
+        width = 8
+        precision = 0
+    elif type_ == 'L':
+        width = 1
+        precision = 0
+    type_ = native_str(type_)
+    name = native_str(name)
+    kwargs = dict(fieldType=type_, size=width, decimal=precision)
+    # remove None's because shapefile.Writer.field() doesn't use None as
+    # placeholder but the default values directly
+    for key in list(kwargs.keys()):
+        if kwargs[key] is None:
+            kwargs.pop(key)
+    writer.field(name, **kwargs)
+
+
+def _create_layer(writer, field_definitions, extra_fields=None):
     # Add the fields we're interested in
     for name, type_, width, precision in field_definitions:
-        # default field width is not set correctly for dates and booleans in
-        # shapefile <=1.2.10, see
-        # GeospatialPython/pyshp@ba61854aa7161fd7d4cff12b0fd08b6ec7581bb7 and
-        # GeospatialPython/pyshp#71 so work around this
-        if type_ == 'D':
-            width = 8
-            precision = 0
-        elif type_ == 'L':
-            width = 1
-            precision = 0
-        type_ = native_str(type_)
-        name = native_str(name)
-        kwargs = dict(fieldType=type_, size=width, decimal=precision)
-        # remove None's because shapefile.Writer.field() doesn't use None as
-        # placeholder but the default values directly
-        for key in list(kwargs.keys()):
-            if kwargs[key] is None:
-                kwargs.pop(key)
-        writer.field(name, **kwargs)
+        _add_field(writer, name, type_, width, precision)
+    field_names = [name for name, _, _, _ in field_definitions]
+    # add custom fields
+    if extra_fields is not None:
+        for name, type_, width, precision, _ in extra_fields:
+            if name in field_names:
+                msg = "Conflict with existing field named '{}'.".format(name)
+                raise ValueError(msg)
+            _add_field(writer, name, type_, width, precision)
 
 
 def _add_record(writer, feature):

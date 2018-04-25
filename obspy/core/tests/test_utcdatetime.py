@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import copy
 import datetime
+import itertools
 import unittest
+import warnings
+from operator import ge, eq, lt, le, gt, ne
 
 import numpy as np
 
 from obspy import UTCDateTime
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 
 class UTCDateTimeTestCase(unittest.TestCase):
@@ -270,11 +275,11 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(str(dt), '1970-01-01T00:00:00.000000Z')
 
     def test_deepcopy(self):
-        dt = UTCDateTime(1240561632.0050001)
+        dt = UTCDateTime(1240561632.005001)
         dt2 = copy.deepcopy(dt)
         dt += 68
-        self.assertEqual(dt2.timestamp, 1240561632.0050001)
-        self.assertEqual(dt.timestamp, 1240561700.0050001)
+        self.assertEqual(dt2.timestamp, 1240561632.005001)
+        self.assertEqual(dt.timestamp, 1240561700.005001)
 
     def test_add(self):
         a = UTCDateTime(0.0)
@@ -355,9 +360,9 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertAlmostEqual(dt.timestamp, -0.000001, 6)
         self.assertEqual(str(dt), "1969-12-31T23:59:59.999999Z")
         # -0.000000001 - max precision is nanosecond!
-        dt = UTCDateTime(-0.000000001)
+        dt = UTCDateTime(-0.000000001, precision=9)
         self.assertEqual(dt.timestamp, -0.000000001)
-        self.assertEqual(str(dt), "1969-12-31T23:59:59.000000Z")
+        self.assertEqual(str(dt), "1969-12-31T23:59:59.999999999Z")
         # -1000.1
         dt = UTCDateTime("1969-12-31T23:43:19.900000Z")
         self.assertEqual(dt.timestamp, -1000.1)
@@ -805,6 +810,17 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime(1980, 2, 3, 12, 23, 34, 444999, precision=3)
         self.assertEqual(str(dt), '1980-02-03T12:23:34.445Z')
 
+    def test_precision_above_9_issues_warning(self):
+        """
+        Precisions above 9 should raise a warning as they cannot be
+        represented internally as a int of nanoseconds.
+        """
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            UTCDateTime(precision=10)
+        self.assertEqual(len(w), 1)
+        self.assertIn('precision above 9', str(w[-1].message))
+
     def test_rich_comparision_numeric_objects(self):
         """
         Tests basic rich comparison operations against numeric objects.
@@ -860,6 +876,79 @@ class UTCDateTimeTestCase(unittest.TestCase):
             self.assertFalse(obj < dt)
             self.assertFalse(obj >= dt)
             self.assertFalse(obj > dt)
+
+    def test_rich_comparision_fuzzy(self):
+        """
+        UTCDateTime fuzzy comparisons break sorting, max, min - see #1765
+        """
+        # 1 - precision set to 6 - 3
+        for precision in [6, 5, 4, 3]:
+            dt1 = UTCDateTime(0.001, precision=precision)
+            dt2 = UTCDateTime(0.004, precision=precision)
+            dt3 = UTCDateTime(0.007, precision=precision)
+            sorted_times = [dt1, dt2, dt3]
+            # comparison
+            for utc1, utc2 in itertools.combinations(sorted_times, 2):
+                self.assertNotEqual(utc1, utc2)
+                self.assertNotEqual(utc2, utc1)
+                self.assertLess(utc1, utc2)
+                self.assertLessEqual(utc1, utc2)
+                self.assertGreater(utc2, utc1)
+                self.assertGreaterEqual(utc2, utc1)
+            # sorting
+            for unsorted_times in itertools.permutations(sorted_times):
+                self.assertListEqual(sorted(unsorted_times), sorted_times)
+                # min, max
+                self.assertEqual(max(unsorted_times), dt3)
+                self.assertEqual(min(unsorted_times), dt1)
+
+        # 2 - precision set to 2
+        dt1 = UTCDateTime(0.001, precision=2)  # == 0.00
+        dt2 = UTCDateTime(0.004, precision=2)  # == 0.00
+        dt3 = UTCDateTime(0.007, precision=2)  # == 0.01
+        # comparison
+        self.assertEqual(dt1 == dt2, True)
+        self.assertEqual(dt2 == dt3, False)
+        self.assertEqual(dt1 == dt3, False)
+        self.assertEqual(dt1 < dt2, False)
+        self.assertEqual(dt2 < dt3, True)
+        self.assertEqual(dt1 < dt3, True)
+        self.assertEqual(dt1 <= dt2, True)
+        self.assertEqual(dt2 <= dt3, True)
+        self.assertEqual(dt1 <= dt3, True)
+        self.assertEqual(dt1 > dt2, False)
+        self.assertEqual(dt2 > dt3, False)
+        self.assertEqual(dt1 > dt3, False)
+        self.assertEqual(dt1 >= dt2, True)
+        self.assertEqual(dt2 >= dt3, False)
+        self.assertEqual(dt1 >= dt3, False)
+        # sorting
+        times = [dt3, dt2, dt1]
+        sorted_times = sorted(times)
+        self.assertEqual(sorted_times[0] <= sorted_times[2], True)
+        self.assertEqual(sorted_times[0] < sorted_times[2], True)
+        self.assertEqual(sorted_times[0] == sorted_times[2], False)
+        self.assertEqual(sorted_times[0] > sorted_times[2], False)
+        self.assertEqual(sorted_times[0] >= sorted_times[2], False)
+        self.assertEqual(sorted_times, [dt2, dt1, dt3])  # expected
+        self.assertEqual(sorted_times, [dt2, dt1, dt3])  # due to precision
+        # check correct sort order
+        self.assertEqual(sorted_times[0]._ns, dt2._ns)
+        self.assertEqual(sorted_times[2]._ns, dt3._ns)
+        # min, max
+        max_times = max(dt2, dt1, dt3)
+        self.assertEqual(max_times, dt3)
+        max_times = max(dt1, dt2, dt3)
+        self.assertEqual(max_times, dt3)
+        # min, max lists
+        times = [dt2, dt1, dt3]
+        self.assertEqual(max(times), dt3)
+        self.assertEqual(min(times), dt2)  # expected
+        self.assertEqual(min(times), dt1)  # due to precision
+        times = [dt1, dt2, dt3]
+        self.assertEqual(max(times), dt3)
+        self.assertEqual(min(times), dt1)  # expected
+        self.assertEqual(min(times), dt2)  # due to precision
 
     def test_datetime_with_timezone(self):
         """
@@ -1122,6 +1211,216 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertTrue(e >= a)
         self.assertFalse(a == e)
         self.assertFalse(e == a)
+
+    def test_ns_public_attribute(self):
+        """
+        Basic test for public ns interface to UTCDateTime
+        """
+        t = UTCDateTime('2018-01-17T12:34:56.789012Z')
+        # test getter
+        self.assertEqual(t.ns, 1516192496789012000)
+        # test init with ns (set attr is depreciated)
+        x = 1516426162899012123
+        t = UTCDateTime(ns=x)
+        self.assertEqual(t.ns, x)
+        self.assertEqual(t.day, 20)
+        self.assertEqual(t.microsecond, 899012)
+
+    def test_timestamp_can_serialize_with_time_attrs(self):
+        """
+        Test that the datetime attrs can be used to serialize UTCDateTime
+        objects inited from floats (given default precision of 6) - see #2034
+        """
+        time_attrs = ('year', 'month', 'day', 'hour', 'minute', 'second',
+                      'microsecond')
+        close_timestamps = [1515174511.1984465, 1515174511.1984463,
+                            1515174511.1984460, 1515174511.1984458]
+        close_utc = [UTCDateTime(x) for x in close_timestamps]
+
+        for utc in close_utc:
+            utc2 = UTCDateTime(**{x: getattr(utc, x) for x in time_attrs})
+            self.assertEqual(utc, utc2)
+
+    def test_str_ms_equal_ms(self):
+        """
+        Test that the microseconds in the str representation are equal to
+        the microseconds attr - see #2034
+        """
+        close_timestamps = [1515174511.1984465, 1515174511.1984463,
+                            1515174511.1984460, 1515174511.1984458]
+        close_utc = [UTCDateTime(x) for x in close_timestamps]
+
+        for utc in close_utc:
+            str_ms = int(str(utc).split('.')[-1][:-1])  # get ms from str rep
+            ms = utc.microsecond
+            self.assertEqual(str_ms, ms)
+
+    def test_close_utc_are_equal(self):
+        """
+        Ensure UTCs init'ed with floats that are very close together are
+        equal - see 2034
+
+        Note: Due to the rounding nanosecond attribute before comparision
+        we can no longer guarantee equality based on the difference in
+        nanoseconds. This trade-off was made to ensure UTCDateTime objects
+        are always equal to their string representation when precision <= 6.
+        See issue #2034.
+        """
+        # get an array of floats as close together as possible
+        def yield_close_floats(start, length):
+            for _ in range(length):
+                start = np.nextafter(start, 0)
+                yield start
+
+        # convert to UTCDateTime objects
+        float0 = 1515174511.1984458
+        for precision in range(1, 10):
+            close_timestamps = list(yield_close_floats(float0, 10))
+            close_utc = [UTCDateTime(x, precision=precision)
+                         for x in close_timestamps]
+
+            # if str are equal then objects should be equal and visa versa
+            for num in range(len(close_utc) - 1):
+                utc1 = close_utc[num]
+                utc2 = close_utc[num + 1]
+                if utc1 == utc2:
+                    self.assertEqual(str(utc1), str(utc2))
+                if str(utc1) == str(utc2):
+                    self.assertEqual(utc1, utc2)
+
+    def test_comparing_different_precision_utcs_warns(self):
+        """
+        Comparing UTCDateTime instances with different precisions should
+        raise a warning.
+        """
+        utc1 = UTCDateTime(precision=9)
+        utc2 = UTCDateTime(precision=6)
+        for operator in [ge, eq, lt, le, gt, ne]:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                operator(utc1, utc2)
+            self.assertEqual(len(w), 1)
+            self.assertIn('different precision', str(w[-1].message))
+
+    def test_string_representation_various_precisions(self):
+        """
+        Ensure string representation works for many different precisions
+        """
+        precisions = range(-9, 9)
+        for precision in precisions:
+            utc = UTCDateTime(0.0, precision=precision)
+            utc_str = str(utc)
+            self.assertEqual(UTCDateTime(utc_str, precision=precision), utc)
+            self.assertIsInstance(utc_str, str)
+
+    def test_zero_precision_doesnt_print_dot(self):
+        """
+        UTC with precision of 0 should not print a decimal in str rep.
+        """
+        utc = UTCDateTime(precision=0)
+        utc_str = str(utc)
+        self.assertNotIn('.', utc_str)
+
+    def test_change_time_attr_raises_warning(self):
+        """
+        Changing the time representation on the UTCDateTime instances should
+        raise a depreciation warning as a path towards immutability
+        (see #2072).
+        """
+        utc = UTCDateTime()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            utc.hour = 2
+        self.assertEqual(len(w), 1)
+        warn = w[0]
+        self.assertIn('will raise an Exception', str(warn.message))
+        self.assertIsInstance(warn.message, ObsPyDeprecationWarning)
+
+    def test_change_precision_raises_warning(self):
+        """
+        Changing the precision on the UTCDateTime instances should raise a
+        depreciation warning as a path towards immutability (see #2072).
+        """
+        utc = UTCDateTime()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            utc.precision = 2
+        self.assertEqual(len(w), 1)
+        warn = w[0]
+        self.assertIn('will raise an Exception', str(warn.message))
+        self.assertIsInstance(warn.message, ObsPyDeprecationWarning)
+
+    def test_compare_utc_different_precision_raises_warning(self):
+        """
+        Comparing UTCDateTime objects of different precisions should raise a
+        depreciation warning (see #2072)
+        """
+        utc1 = UTCDateTime(0, precision=2)
+        utc2 = UTCDateTime(0, precision=3)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            utc_equals = utc1 == utc2
+        self.assertEqual(utc_equals, True)
+        self.assertEqual(len(w), 1)
+        warn = w[0]
+        self.assertIn('will raise an Exception', str(warn.message))
+        self.assertIsInstance(warn.message, ObsPyDeprecationWarning)
+
+    def test_replace(self):
+        """
+        Tests for the replace method of UTCDateTime
+        """
+        test_dict = dict(
+            year=2017,
+            month=9,
+            day=18,
+            hour=18,
+            minute=30,
+            second=11,
+            microsecond=122255,
+        )
+
+        utc = UTCDateTime(**test_dict)
+
+        # iterate over each settable parameter and change
+        for attr in test_dict:
+            new_value = test_dict[attr] + 1
+            utc2 = utc.replace(**{attr: new_value})
+            self.assertIsInstance(utc2, UTCDateTime)
+            # make sure only the settable parameter changed in utc2
+            for time_attribute in test_dict:
+                default = getattr(utc, time_attribute)
+                current = getattr(utc2, time_attribute)
+                if time_attribute == attr:
+                    self.assertEqual(current, default + 1)
+                else:
+                    self.assertEqual(current, default)
+
+        # test julian day
+        utc2 = utc.replace(julday=utc.julday + 1)
+        self.assertEqual(utc2.julday, utc.julday + 1)
+
+    def test_replace_with_julday_and_month_raises(self):
+        """
+        The replace method cannot use julday with either day or month.
+        """
+        utc = UTCDateTime(0)
+        with self.assertRaises(ValueError):
+            utc.replace(julday=100, day=2)
+        with self.assertRaises(ValueError):
+            utc.replace(julday=100, month=2)
+        with self.assertRaises(ValueError):
+            utc.replace(julday=100, day=2, month=2)
+
+    def test_unsupported_replace_argument_raises(self):
+        """
+        The replace method should raise a value error if any unsupported
+        arguments are passed to it.
+        """
+        utc = UTCDateTime(0)
+        with self.assertRaises(ValueError) as e:
+            utc.replace(zweite=22)
+        self.assertIn('zweite', str(e.exception))
 
 
 def suite():
