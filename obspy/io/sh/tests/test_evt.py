@@ -88,6 +88,7 @@ class EvtTestCase(unittest.TestCase):
         self.assertEqual(mag.magnitude_type, 'Mb')
         self.assertEqual(sta_mag.mag, 6.2)
         self.assertEqual(sta_mag.station_magnitude_type, 'Mb')
+        self.assertEqual(sta_mag.waveform_id.get_seed_string(), '.AHRW..Z')
 
     def test_populate_waveform_id(self):
         fname = os.path.join(self.path, 'data', 'tele2.evt')

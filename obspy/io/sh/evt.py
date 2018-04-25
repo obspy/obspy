@@ -117,7 +117,7 @@ def _kw(obj, obj_name):
     return kws
 
 
-def _mags(obj, evid, stamag=False):
+def _mags(obj, evid, stamag=False, wid=None):
     mags = []
     pm = None
     for magtype1, magtype2 in MAG_MAP.items():
@@ -130,7 +130,8 @@ def _mags(obj, evid, stamag=False):
             else:
                 magv = float(magv)
                 mag = (StationMagnitude(station_magnitude_type=magtype2,
-                                        mag=magv) if stamag else
+                                        mag=magv, waveform_id=wid)
+                       if stamag else
                        Magnitude(magnitude_type=magtype2, mag=magv))
                 mags.append(mag)
     if len(mags) == 1:
@@ -250,7 +251,7 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}',
             arrival = Arrival(pick_id=pick.resource_id, **_kw(p, 'arrival'))
             picks.append(pick)
             arrivals.append(arrival)
-            stamags_temp, _ = _mags(p, evid, stamag=True)
+            stamags_temp, _ = _mags(p, evid, stamag=True, wid=wid)
             stamags.extend(stamags_temp)
         if evid in phases_o:
             o = phases_o[evid]
