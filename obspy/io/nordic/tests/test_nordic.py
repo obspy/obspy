@@ -798,7 +798,7 @@ def full_test_event():
                   pick_id=test_event.picks[2].resource_id,
                   waveform_id=test_event.picks[0].waveform_id, unit='m',
                   category='point', type='AML')]
-  test_event.origins[0].arrivals = [
+    test_event.origins[0].arrivals = [
         Arrival(time_weight=0, phase=test_event.picks[1].phase_hint,
                 pick_id=test_event.picks[1].resource_id),
         Arrival(time_weight=2, phase=test_event.picks[3].phase_hint,
