@@ -6,6 +6,8 @@
  - obspy.core:
    * read_inventory() used with non-existing file path (e.g. typo in filename)
      now shows a proper "No such file or directory" error message (see #2062)
+ - obspy.core:
+   * Speed up Trace.times() for type="matplotlib" (see #2112)
  - obspy.clients.arclink:
    * Raise a warning at import time that the ArcLink protocol will be
      deprecated soon (see #1987).
