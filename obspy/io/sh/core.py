@@ -27,6 +27,9 @@ from obspy.core.util import loadtxt
 MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP',
           'OCT', 'NOV', 'DEC']
 
+MONTHS_DE = ['JAN', 'FEB', 'MAR', 'APR', 'MAI', 'JUN', 'JUL', 'AUG', 'SEP',
+             'OKT', 'NOV', 'DEZ']
+
 SH_IDX = {
     'LENGTH': 'L001',
     'SIGN': 'I011',
@@ -621,7 +624,10 @@ def to_utcdatetime(value):
         if len(time) == 2:
             mins = time[1]
     day = int(day)
-    month = MONTHS.index(month.upper()) + 1
+    try:
+        month = MONTHS.index(month.upper()) + 1
+    except ValueError:
+        month = MONTHS_DE.index(month.upper()) + 1
     if len(year) == 2:
         if int(year) < 70:
             year = "20" + year

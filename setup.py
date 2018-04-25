@@ -303,6 +303,7 @@ ENTRY_POINTS = {
         'FNETMT = obspy.io.nied.fnetmt',
         'GSE2 = obspy.io.gse2.bulletin',
         'IMS10BULLETIN = obspy.io.iaspei.core',
+        'EVT = obspy.io.sh.evt'
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -372,6 +373,10 @@ ENTRY_POINTS = {
     'obspy.plugin.event.IMS10BULLETIN': [
         'isFormat = obspy.io.iaspei.core:_is_ims10_bulletin',
         'readFormat = obspy.io.iaspei.core:_read_ims10_bulletin',
+        ],
+    'obspy.plugin.event.EVT': [
+        'isFormat = obspy.io.sh.evt:_is_evt',
+        'readFormat = obspy.io.sh.evt:_read_evt',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
