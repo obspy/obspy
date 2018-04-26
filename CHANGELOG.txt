@@ -17,6 +17,9 @@
      and/or `location` are set (see #1810, #2031, #2047).
    * A few fixes and stability improvements for the mass downloader
      (see #2081).
+ - obspy.imaging:
+   * Normalize moment tensors prior to plotting in the mopad wrapper to
+     stabilize the algorithm (see #2114, #2125).
  - obspy.io.mseed:
    * Ability to read files that have embedded chunks of non SEED data.
      (see #1981, #2057).
