@@ -52,6 +52,8 @@ master:
  - obspy.core:
    * read_inventory() used with non-existing file path (e.g. typo in filename)
      now shows a proper "No such file or directory" error message (see #2062)
+ - obspy.core:
+   * Fix Trace.times(type='matplotlib') being slow (see #2112)
  - obspy.clients.arclink:
    * Raise a warning at import time that the ArcLink protocol will be
      deprecated soon (see #1987).
@@ -63,11 +65,16 @@ master:
      (see #1981, #2057).
    * Fix util.get_start_and_end_time returning sample rate = 0 when
      sample rate = 1 (see #2069)
+ - obspy.io.nordic
+   * Bug-fix for amplitudes without magnitude_hint (see #2021)
+   * Bug-fix for wavefiles with full path stripping (see #2021)
  - obspy.io.reftek:
    * Fix problems reading some Reftek 130 files, presumably due to floating
      point accuracy issues in comparing timestamps. Internal representation of
      time stamps is changed to integer nanosecond POSIX timestamp (see #2036,
-     #2038)
+     #2038, #2105)
+   * Fix a bug that prevents reading files that have no data in first channel
+     (see #2101)
  - obspy.io.seiscomp:
    * Fix inventory read when maxClockDrift is unset in SC3ML (see #1993)
  - obspy.io.stationxml
@@ -78,7 +85,6 @@ master:
    * PPSD: for safety reasons, raise an ObsPyException if trying to read a PPSD
      npz file that was written with a newer version of the npz representation
      than is used by current ObsPy version (see #2051)
-
 
 1.1.0: (doi: 10.5281/zenodo.165135)
  - General:

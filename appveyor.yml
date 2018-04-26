@@ -95,10 +95,6 @@ install:
   # Check that we have the expected version and architecture for Python
   - "python -c \"import sys; print(sys.version)\""
 
-  # Upgrade to the latest version of pip to avoid it displaying warnings
-  # about it being out of date.
-  - "pip install --disable-pip-version-check --user --upgrade pip"
-
   # Install the build and runtime dependencies of the project.
   - "conda update -q --yes conda"
   - "conda config --add channels conda-forge"
@@ -108,7 +104,8 @@ install:
   - "conda create -q --yes -n test python=%PYTHON_VERSION%"
   - "activate test"
   # Install default dependencies
-  - "conda install -q --yes pip numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema pyshp cryptography"
+  # pip 10.0.1 seems buggy and breaks all our appveyor builds
+  - "conda install -q --yes \"pip<10\" numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema pyshp cryptography"
   # additional dependencies
   - "pip install pyimgur"
   - "pip install -U future"
