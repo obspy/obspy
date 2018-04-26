@@ -141,8 +141,8 @@ install:
   #- conda config --add channels conda-forge
   # XXX for now don't try to install other optional dependencies so that at
   # least our builds work..
-  # XXX - conda install --no-update-dependencies m2crypto || true
-  # XXX - conda install --no-update-dependencies cartopy || true
+  - conda install --no-update-dependencies m2crypto || true
+  - conda install --no-update-dependencies cartopy || true
   # pyshp is safe to install, it depends on no other packages and has a noarch
   # py6 package
   # not a clue why conda is trying to pull in other packages when doing
