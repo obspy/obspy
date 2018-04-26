@@ -345,7 +345,7 @@ class UTCDateTime(object):
                 msg = "Failed to convert 'julday' to int: {!s}".format(
                     kwargs['julday'])
                 raise TypeError(msg)
-            if not (0 <= int(kwargs['julday']) <= 366):
+            if not (1 <= int(kwargs['julday']) <= 366):
                 msg = "'julday' out of bounds: {!s}".format(kwargs['julday'])
                 raise ValueError(msg)
             if 'year' in kwargs:

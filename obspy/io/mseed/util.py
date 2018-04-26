@@ -642,7 +642,7 @@ def _get_record_information(file_object, offset=0, endian=None):
         return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
 
     def _parse_time(values):
-        if not (0 <= values[1] <= 366):
+        if not (1 <= values[1] <= 366):
             msg = 'julday out of bounds (wrong endian?): {!s}'.format(
                 values[1])
             raise InternalMSEEDParseTimeError(msg)
