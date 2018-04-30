@@ -368,6 +368,77 @@ class ResponseTestCase(unittest.TestCase):
             "\tNumber of coefficients: 0"
         )
 
+    def test_get_sampling_rates(self):
+        """
+        Tests for the get_sampling_rates() method.
+        """
+        # Test for the default inventory.
+        resp = read_inventory()[0][0][0].response
+        self.assertEqual(
+            resp.get_sampling_rates(),
+            {1: {'decimation_factor': 1,
+                 'input_sampling_rate': 200.0,
+                 'output_sampling_rate': 200.0},
+             2: {'decimation_factor': 1,
+                 'input_sampling_rate': 200.0,
+                 'output_sampling_rate': 200.0}})
+
+        # Another, well behaved file.
+        inv = read_inventory(os.path.join(self.data_dir, "AU.MEEK.xml"))
+        self.assertEqual(
+            inv[0][0][0].response.get_sampling_rates(),
+            {1: {'decimation_factor': 1,
+                 'input_sampling_rate': 600.0,
+                 'output_sampling_rate': 600.0},
+             2: {'decimation_factor': 1,
+                 'input_sampling_rate': 600.0,
+                 'output_sampling_rate': 600.0},
+             3: {'decimation_factor': 1,
+                 'input_sampling_rate': 600.0,
+                 'output_sampling_rate': 600.0},
+             4: {'decimation_factor': 3,
+                 'input_sampling_rate': 600.0,
+                 'output_sampling_rate': 200.0},
+             5: {'decimation_factor': 10,
+                 'input_sampling_rate': 200.0,
+                 'output_sampling_rate': 20.0}})
+
+        # This file lacks decimation attributes for the first two stages as
+        # well as one of the later ones. These thus have to be inferred.
+        inv = read_inventory(os.path.join(self.data_dir, "DK.BSD..BHZ.xml"))
+        self.assertEqual(
+            inv[0][0][0].response.get_sampling_rates(),
+            {1: {'decimation_factor': 1,
+                 'input_sampling_rate': 30000.0,
+                 'output_sampling_rate': 30000.0},
+             2: {'decimation_factor': 1,
+                 'input_sampling_rate': 30000.0,
+                 'output_sampling_rate': 30000.0},
+             3: {'decimation_factor': 1,
+                 'input_sampling_rate': 30000.0,
+                 'output_sampling_rate': 30000.0},
+             4: {'decimation_factor': 5,
+                 'input_sampling_rate': 30000.0,
+                 'output_sampling_rate': 6000.0},
+             5: {'decimation_factor': 3,
+                 'input_sampling_rate': 6000.0,
+                 'output_sampling_rate': 2000.0},
+             6: {'decimation_factor': 2,
+                 'input_sampling_rate': 2000.0,
+                 'output_sampling_rate': 1000.0},
+             7: {'decimation_factor': 5,
+                 'input_sampling_rate': 1000.0,
+                 'output_sampling_rate': 200.0},
+             8: {'decimation_factor': 2,
+                 'input_sampling_rate': 200.0,
+                 'output_sampling_rate': 100.0},
+             9: {'decimation_factor': 1,
+                 'input_sampling_rate': 100.0,
+                 'output_sampling_rate': 100.0},
+             10: {'decimation_factor': 5,
+                  'input_sampling_rate': 100.0,
+                  'output_sampling_rate': 20.0}})
+
 
 def suite():
     return unittest.makeSuite(ResponseTestCase, 'test')
