@@ -114,9 +114,11 @@ class Event(__Event):
         origin = None
         if self.origins:
             origin = self.preferred_origin() or self.origins[0]
-            out += '%s | %+7.3f, %+8.3f' % (origin.time,
-                                            origin.latitude,
-                                            origin.longitude)
+            # get lat, lon, time and handle if any are None (#2119)
+            lat, lon, time = origin.latitude, origin.longitude, origin.time
+            lat_str = '%+7.3f' % lat if lat is not None else ''
+            lon_str = '%+8.3f' % lon if lon is not None else ''
+            out += '%s | %s, %s' % (time, lat_str, lon_str)
         if self.magnitudes:
             magnitude = self.preferred_magnitude() or self.magnitudes[0]
             out += ' | %s %-2s' % (magnitude.mag,
