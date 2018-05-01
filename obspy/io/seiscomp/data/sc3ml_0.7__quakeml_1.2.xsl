@@ -18,7 +18,7 @@
  * SC3ML 0.7 to QuakeML 1.2 stylesheet converter
  * Author  : Stephan Herrnkind
  * Email   : stephan.herrnkind@gempa.de
- * Version : 2014.251.01
+ * Version : 2017.342.01
  *
  * ================
  * Usage
@@ -71,18 +71,21 @@
  *  - Renaming of nodes: The following table lists the mapping of names between
  *    both schema:
  *
- *    Parent (SC3)        SC3 name           QuakeML name
- *    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
- *    seiscomp            EventParameters    eventParameters
- *    arrival             weight             timeWeight
- *                        takeOffAngle       takeoffAngle
- *    magnitude           magnitude          mag
- *    stationMagnitude    magnitude          mag
- *    amplitude           amplitude          genericAmplitude
- *    origin              uncertainty        originUncertainty
- *    momentTensor        method             category
- *    waveformID          resourceURI        CDATA
- *    comment             id                 id (attribute)
+ *    Parent (SC3)     SC3 name                 QuakeML name
+ *    """""""""""""""""""""""""""""""""""""""""""""""""""""""
+ *    seiscomp         EventParameters          eventParameters
+ *    arrival          weight [copied to following fields if true]
+ *                       timeUsed               timeWeight
+ *                       horizontalSlownessUsed horizontalSlownessWeight
+ *                       backazimuthUsed        backazimuthWeight
+ *                     takeOffAngle             takeoffAngle
+ *    magnitude        magnitude                mag
+ *    stationMagnitude magnitude                mag
+ *    amplitude        amplitude                genericAmplitude
+ *    origin           uncertainty              originUncertainty
+ *    momentTensor     method                   category
+ *    waveformID       resourceURI              CDATA
+ *    comment          id                       id (attribute)
  *
  *  - Enumerations: Both schema use enumerations. Numerous mappings are applied.
  *
@@ -95,9 +98,6 @@
  *    Parent          Element lost
  *    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
  *    creationInfo    modificationTime
- *    arrival         timeUsed
- *                    horizontalSlownessUsed
- *                    backazimuthUsed
  *    momentTensor    method
  *                    stationMomentTensorContribution
  *                    status
@@ -105,6 +105,10 @@
  *                    cmtVersion
  *                    phaseSetting
  *    eventParameters reading
+ *    comment         start
+ *    comment         end
+ *    RealQuantity    pdf
+ *    TimeQuality     pdf
  *
  *  - Mandatory nodes: The following nodes is mandatory in QuakeML but not in
  *    SC3ML:
@@ -153,6 +157,16 @@
  *    - Fix amplitude/unit (enumeration in QuakeML, not in SC3ML)
  *    - Don't modify id if it starts with 'smi:' or 'quakeml:'
  *    - Fix Arrival publicID generation
+ *
+ *  * 27.09.2017:
+ *    - Use '_' instead of '#' in arrival publicID generation
+ *    - Map SC3 arrival weight to timeWeight, horizontalSlownessWeight and
+ *      backazimuthWeight depending on timeUsed, horizontalUsed and
+ *      backzimuthUsed values
+ *
+ *  * 08.12.2017:
+ *    - Remove unmapped nodes
+ *    - Fix arrival weight mapping
  *
  ********************************************************************** -->
 <xsl:stylesheet version="1.0"
@@ -258,6 +272,9 @@
     <xsl:template match="scs:event/scs:focalMechanismReference"/>
     <xsl:template match="scs:creationInfo/scs:modificationTime"/>
     <xsl:template match="scs:comment/scs:id"/>
+    <xsl:template match="scs:comment/scs:start"/>
+    <xsl:template match="scs:comment/scs:end"/>
+    <xsl:template match="scs:arrival/scs:weight"/>
     <xsl:template match="scs:arrival/scs:timeUsed"/>
     <xsl:template match="scs:arrival/scs:horizontalSlownessUsed"/>
     <xsl:template match="scs:arrival/scs:backazimuthUsed"/>
@@ -269,6 +286,7 @@
     <xsl:template match="scs:momentTensor/scs:cmtName"/>
     <xsl:template match="scs:momentTensor/scs:cmtVersion"/>
     <xsl:template match="scs:momentTensor/scs:phaseSetting"/>
+    <xsl:template match="scs:pdf"/>
 
     <!-- Converts a scs magnitude/stationMagnitude to a qml
          magnitude/stationMagnitude -->
@@ -383,15 +401,54 @@
         </xsl:element>
     </xsl:template>
 
-    <!-- origin arrival, since SC3ML does not include a publicID it is generated from pick and origin id -->
+    <!-- origin arrival -->
     <xsl:template match="scs:arrival">
         <xsl:element name="{local-name()}">
+            <!-- since SC3ML does not include a publicID it is generated from pick and origin id -->
             <xsl:attribute name="{$PID}">
                 <xsl:call-template name="convertID">
-                    <xsl:with-param name="id" select="concat(scs:pickID, '#', translate(../@publicID, ' :', '__'))"/>
+                    <xsl:with-param name="id" select="concat(scs:pickID, '_', translate(../@publicID, ' :', '__'))"/>
                 </xsl:call-template>
             </xsl:attribute>
-            <!--comment/-->
+            <!-- mapping of weight to timeWeight, horizontalSlownessWeight and backazimuthWeight
+                 depending on timeUsed, horizontalSlownessUsed and backazimuthUsed values -->
+            <xsl:choose>
+                <xsl:when test="scs:weight">
+                    <xsl:if test="((scs:timeUsed='true') or (scs:timeUsed='1'))
+                                  or (not(scs:timeUsed|scs:horizontalSlownessUsed|scs:backazimuthUsed))">
+                        <xsl:element name="timeWeight">
+                            <xsl:value-of select="scs:weight"/>
+                        </xsl:element>
+                    </xsl:if>
+                    <xsl:if test="((scs:horizontalSlownessUsed='true') or (scs:horizontalSlownessUsed='1'))">
+                        <xsl:element name="horizontalSlownessWeight">
+                            <xsl:value-of select="scs:weight"/>
+                        </xsl:element>
+                    </xsl:if>
+                    <xsl:if test="((scs:backazimuthUsed='true') or (scs:backazimuthUsed='1'))">
+                        <xsl:element name="backazimuthWeight">
+                            <xsl:value-of select="scs:weight"/>
+                        </xsl:element>
+                    </xsl:if>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:if test="((scs:timeUsed='true') or (scs:timeUsed='1'))">
+                        <xsl:element name="timeWeight">
+                            <xsl:value-of select="'1'"/>
+                        </xsl:element>
+                    </xsl:if>
+                    <xsl:if test="((scs:horizontalSlownessUsed='true') or (scs:horizontalSlownessUsed='1'))">
+                        <xsl:element name="horizontalSlownessWeight">
+                            <xsl:value-of select="'1'"/>
+                        </xsl:element>
+                    </xsl:if>
+                    <xsl:if test="((scs:backazimuthUsed='true') or (scs:backazimuthUsed='1'))">
+                        <xsl:element name="backazimuthWeight">
+                            <xsl:value-of select="'1'"/>
+                        </xsl:element>
+                    </xsl:if>
+                </xsl:otherwise>
+            </xsl:choose>
             <xsl:apply-templates/>
         </xsl:element>
     </xsl:template>
@@ -402,13 +459,6 @@
             <xsl:apply-templates select="@*"/>
             <xsl:call-template name="valueOfIDNode"/>
         </xsl:element>
-    </xsl:template>
-
-    <!-- arrival/weight -> arrival/timeWeight-->
-    <xsl:template match="scs:arrival/scs:weight">
-        <xsl:call-template name="genericNode">
-            <xsl:with-param name="name" select="'timeWeight'"/>
-        </xsl:call-template>
     </xsl:template>
 
     <!-- arrival/takeOffAngle -> arrival/takeoffAngle -->

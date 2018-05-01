@@ -46,10 +46,10 @@ class CoreTestCase(unittest.TestCase):
         self.assertFalse(validate(filename, version='0.8'))
 
         with self.assertRaises(ValueError) as e:
-            validate(filename, version='0.10')
+            validate(filename, version='0.11')
 
-        expected_error = ("0.10 is not a supported version. Use one of these "
-                          "versions: [0.3, 0.5, 0.6, 0.7, 0.8, 0.9].")
+        expected_error = ("0.11 is not a supported version. Use one of these "
+                          "versions: [0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 0.10].")
         self.assertEqual(e.exception.args[0], expected_error)
 
 

@@ -12,7 +12,8 @@
         <longitude>
           <value>142.373</value>
         </longitude>
-        <arrival publicID="smi:ch.ethz.sed/pick/117634#smi_www.iris.edu/ws/event/query?originId=7680412">
+        <arrival publicID="smi:ch.ethz.sed/pick/117634_smi_www.iris.edu/ws/event/query?originId=7680412">
+          <timeWeight>0.48</timeWeight>
           <pickID>smi:ch.ethz.sed/pick/117634</pickID>
           <phase>Pn</phase>
           <azimuth>12.0</azimuth>
@@ -23,7 +24,6 @@
           <timeResidual>1.6</timeResidual>
           <horizontalSlownessResidual>1.7</horizontalSlownessResidual>
           <backazimuthResidual>1.8</backazimuthResidual>
-          <timeWeight>0.48</timeWeight>
           <earthModelID>smi:ch.ethz.sed/earthmodel/U21</earthModelID>
           <creationInfo>
             <agencyID>EMSC</agencyID>
@@ -34,13 +34,22 @@
             <version>1.0.1</version>
           </creationInfo>
         </arrival>
-        <arrival publicID="smi:geonet.org.nz/pick/4965459#smi_www.iris.edu/ws/event/query?originId=7680412">
+        <arrival publicID="smi:geonet.org.nz/pick/4965459_smi_www.iris.edu/ws/event/query?originId=7680412">
+          <horizontalSlownessWeight>0.48</horizontalSlownessWeight>
           <pickID>smi:geonet.org.nz/pick/4965459</pickID>
           <phase>P*</phase>
-          <azimuth>356.0</azimuth>
-          <distance>45.036</distance>
-          <horizontalSlownessResidual>-0.736</horizontalSlownessResidual>
+        </arrival>
+        <arrival publicID="smi:geonet.org.nz/pick/4965460_smi_www.iris.edu/ws/event/query?originId=7680412">
+          <backazimuthWeight>0.48</backazimuthWeight>
+          <pickID>smi:geonet.org.nz/pick/4965460</pickID>
+          <phase>P*</phase>
+        </arrival>
+        <arrival publicID="smi:geonet.org.nz/pick/4965461_smi_www.iris.edu/ws/event/query?originId=7680412">
           <timeWeight>0.48</timeWeight>
+          <horizontalSlownessWeight>0.48</horizontalSlownessWeight>
+          <backazimuthWeight>0.48</backazimuthWeight>
+          <pickID>smi:geonet.org.nz/pick/4965461</pickID>
+          <phase>P*</phase>
         </arrival>
       </origin>
     </event>
