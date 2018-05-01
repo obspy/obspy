@@ -15,10 +15,11 @@ from future.builtins import *  # NOQA
 
 import copy
 import ctypes as C
-import warnings
 from collections import defaultdict, Iterable
 from copy import deepcopy
+import itertools
 from math import pi
+import warnings
 
 import numpy as np
 import scipy.interpolate
@@ -824,6 +825,11 @@ class Response(ComparingObject):
                 "output_sampling_rate": output_sr,
                 "decimation_factor": factor}
 
+        # Nothing might be set - just return in that case.
+        if set(itertools.chain.from_iterable(v.values()
+               for v in sampling_rates.values())) == {None}:
+            return sampling_rates
+
         # Find the first set input sampling rate. The output sampling rate
         # cannot be set without it. Set all prior input and output sampling
         # rates to it.
@@ -1373,13 +1379,15 @@ class Response(ComparingObject):
                 blockette.decimation_factor = 1
                 blockette.decimation_offset = 0
                 sr = self.get_sampling_rates()
-                if sr:
+                if sr and blockette.stage_sequence_number in sr and \
+                        sr[blockette.stage_sequence_number][
+                            "input_sampling_rate"]:
                     blockette.decimation_input_sample_rate = \
                         self.get_sampling_rates()[
                             blockette.stage_sequence_number][
                             "input_sampling_rate"]
                 # This branch get's large called for responses that only have a
-                # stage 0.
+                # a single stage.
                 else:
                     blockette.decimation_input_sample_rate = 1.0
 
