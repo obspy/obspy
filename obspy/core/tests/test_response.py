@@ -439,6 +439,21 @@ class ResponseTestCase(unittest.TestCase):
                   'input_sampling_rate': 100.0,
                   'output_sampling_rate': 20.0}})
 
+    def test_response_calculation_paz_without_decimation(self):
+        """
+        This test files has two PAZ stages with no decimation attributes.
+
+        Evalresp does not like this so we have to add dummy decimation
+        attributes before calling it.
+        """
+        inv = read_inventory(os.path.join(self.data_dir, "DK.BSD..BHZ.xml"))
+        np.testing.assert_allclose(
+            inv[0][0][0].response.get_evalresp_response_for_frequencies(
+                [0.1, 1.0, 10.0]),
+            [6.27191825e+08 + 1.38925202e+08j,
+             6.51826202e+08 + 1.28404787e+07j,
+             2.00067263e+04 - 2.63711751e+03j])
+
 
 def suite():
     return unittest.makeSuite(ResponseTestCase, 'test')

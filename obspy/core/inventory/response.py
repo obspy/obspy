@@ -1328,6 +1328,26 @@ class Response(ComparingObject):
             if blkt is not None:
                 stage_blkts.append(blkt)
 
+            # Evalresp requires FIR and IIR blockettes to have decimation
+            # values. Set the "unit decimation" values in case they are not
+            # set.
+            if isinstance(blockette, PolesZerosResponseStage) and \
+                    None in set([
+                        blockette.decimation_correction,
+                        blockette.decimation_delay,
+                        blockette.decimation_factor,
+                        blockette.decimation_input_sample_rate,
+                        blockette.decimation_offset]):
+                # Don't modify the original object.
+                blockette = copy.deepcopy(blockette)
+                blockette.decimation_correction = 0.0
+                blockette.decimation_delay = 0.0
+                blockette.decimation_factor = 1
+                blockette.decimation_offset = 0
+                blockette.decimation_input_sample_rate = \
+                    self.get_sampling_rates()[
+                        blockette.stage_sequence_number]["input_sampling_rate"]
+
             # Parse the decimation if is given.
             decimation_values = set([
                 blockette.decimation_correction,
