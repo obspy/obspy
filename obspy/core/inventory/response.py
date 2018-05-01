@@ -1365,7 +1365,11 @@ class Response(ComparingObject):
             # Evalresp requires FIR and IIR blockettes to have decimation
             # values. Set the "unit decimation" values in case they are not
             # set.
+            #
+            # Only set it if there is a stage gain - otherwise evalresp
+            # complains again.
             if isinstance(blockette, PolesZerosResponseStage) and \
+                    blockette.stage_gain and \
                     None in set([
                         blockette.decimation_correction,
                         blockette.decimation_delay,
