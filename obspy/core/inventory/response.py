@@ -769,11 +769,34 @@ class Response(ComparingObject):
 
     def get_sampling_rates(self):
         """
-        Computes the input and output sampling rate of each stage.
+        Computes the input and output sampling rates of each stage.
 
         For well defined files this will just read the decimation attributes
         of each stage. For others it will attempt to infer missing values
         from the surrounding stages.
+
+        :returns: A nested dictionary detailing the sampling rates of each
+            response stage.
+        :rtype: dict
+
+        >>> import obspy
+        >>> inv = obspy.read_inventory("AU.MEEK.xml")  # doctest: +SKIP
+        >>> inv[0][0][0].response.get_sampling_rates()  # doctest: +SKIP
+        {1: {'decimation_factor': 1,
+             'input_sampling_rate': 600.0,
+             'output_sampling_rate': 600.0},
+         2: {'decimation_factor': 1,
+             'input_sampling_rate': 600.0,
+             'output_sampling_rate': 600.0},
+         3: {'decimation_factor': 1,
+             'input_sampling_rate': 600.0,
+             'output_sampling_rate': 600.0},
+         4: {'decimation_factor': 3,
+             'input_sampling_rate': 600.0,
+             'output_sampling_rate': 200.0},
+         5: {'decimation_factor': 10,
+             'input_sampling_rate': 200.0,
+             'output_sampling_rate': 20.0}}
         """
         stages = [_i.stage_sequence_number for _i in self.response_stages]
         if list(range(1, len(stages) + 1)) != stages:
