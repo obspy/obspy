@@ -22,6 +22,8 @@ master:
      (see #2104, #2090, #2093, #1872).
    * Skip invalid enumeration values during reading but raise a warning.
      (see #2106, #2098, #2095)
+ - obspy.io.seiscomp:
+   * Adding support for SC3ML 0.10 (see #2024).
  - obspy.io.sh:
    * Add read support for SeismicHandler EVT event files (see #2109)
  - obspy.io.shapefile:
