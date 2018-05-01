@@ -798,7 +798,12 @@ class Response(ComparingObject):
              'input_sampling_rate': 200.0,
              'output_sampling_rate': 20.0}}
         """
-        stages = [_i.stage_sequence_number for _i in self.response_stages]
+        # Get all stages, but skip stage 0.
+        stages = [_i.stage_sequence_number for _i in self.response_stages
+                  if _i.stage_sequence_number]
+        if not stages:
+            return {}
+
         if list(range(1, len(stages) + 1)) != stages:
             raise ValueError("Can only determine sampling rates if response "
                              "stages are in order.")
@@ -1367,9 +1372,16 @@ class Response(ComparingObject):
                 blockette.decimation_delay = 0.0
                 blockette.decimation_factor = 1
                 blockette.decimation_offset = 0
-                blockette.decimation_input_sample_rate = \
-                    self.get_sampling_rates()[
-                        blockette.stage_sequence_number]["input_sampling_rate"]
+                sr = self.get_sampling_rates()
+                if sr:
+                    blockette.decimation_input_sample_rate = \
+                        self.get_sampling_rates()[
+                            blockette.stage_sequence_number][
+                            "input_sampling_rate"]
+                # This branch get's large called for responses that only have a
+                # stage 0.
+                else:
+                    blockette.decimation_input_sample_rate = 1.0
 
             # Parse the decimation if is given.
             decimation_values = set([
