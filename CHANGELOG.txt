@@ -9,6 +9,7 @@ master:
      different precisions (see #2077).
    * Added replace method to UTCDateTime class (see #2077).
    * Added remove method to Inventory class (see #2088).
+   * Added id property to WaveformStreamID (see #2131).
  - obspy.io.nordic:
    * Add ability to read and write focal mechanisms and moment tensor
      information.

@@ -739,6 +739,14 @@ class WaveformStreamIDTestCase(unittest.TestCase):
             self.assertEqual(waveform_id.location_code, None)
             self.assertEqual(waveform_id.channel_code, None)
 
+    def test_id_property(self):
+        """
+        Enure the `id` property of WaveformStreamID returns the same as
+        `get_seed_string`"
+        """
+        waveform_id = WaveformStreamID(seed_string="BW.FUR.01.EHZ")
+        self.assertEqual(waveform_id.id, waveform_id.get_seed_string())
+
 
 class ResourceIdentifierTestCase(unittest.TestCase):
     """
