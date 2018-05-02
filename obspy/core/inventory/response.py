@@ -15,10 +15,11 @@ from future.builtins import *  # NOQA
 
 import copy
 import ctypes as C
-import warnings
 from collections import defaultdict, Iterable
 from copy import deepcopy
+import itertools
 from math import pi
+import warnings
 
 import numpy as np
 import scipy.interpolate
@@ -767,6 +768,124 @@ class Response(ComparingObject):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
+    def get_sampling_rates(self):
+        """
+        Computes the input and output sampling rates of each stage.
+
+        For well defined files this will just read the decimation attributes
+        of each stage. For others it will attempt to infer missing values
+        from the surrounding stages.
+
+        :returns: A nested dictionary detailing the sampling rates of each
+            response stage.
+        :rtype: dict
+
+        >>> import obspy
+        >>> inv = obspy.read_inventory("AU.MEEK.xml")  # doctest: +SKIP
+        >>> inv[0][0][0].response.get_sampling_rates()  # doctest: +SKIP
+        {1: {'decimation_factor': 1,
+             'input_sampling_rate': 600.0,
+             'output_sampling_rate': 600.0},
+         2: {'decimation_factor': 1,
+             'input_sampling_rate': 600.0,
+             'output_sampling_rate': 600.0},
+         3: {'decimation_factor': 1,
+             'input_sampling_rate': 600.0,
+             'output_sampling_rate': 600.0},
+         4: {'decimation_factor': 3,
+             'input_sampling_rate': 600.0,
+             'output_sampling_rate': 200.0},
+         5: {'decimation_factor': 10,
+             'input_sampling_rate': 200.0,
+             'output_sampling_rate': 20.0}}
+        """
+        # Get all stages, but skip stage 0.
+        stages = [_i.stage_sequence_number for _i in self.response_stages
+                  if _i.stage_sequence_number]
+        if not stages:
+            return {}
+
+        if list(range(1, len(stages) + 1)) != stages:
+            raise ValueError("Can only determine sampling rates if response "
+                             "stages are in order.")
+
+        # First fill in all the set values.
+        sampling_rates = {}
+        for stage in self.response_stages:
+            input_sr = None
+            output_sr = None
+            factor = None
+            if stage.decimation_input_sample_rate:
+                input_sr = stage.decimation_input_sample_rate
+                if stage.decimation_factor:
+                    factor = stage.decimation_factor
+                    output_sr = input_sr / float(factor)
+            sampling_rates[stage.stage_sequence_number] = {
+                "input_sampling_rate": input_sr,
+                "output_sampling_rate": output_sr,
+                "decimation_factor": factor}
+
+        # Nothing might be set - just return in that case.
+        if set(itertools.chain.from_iterable(v.values()
+               for v in sampling_rates.values())) == {None}:
+            return sampling_rates
+
+        # Find the first set input sampling rate. The output sampling rate
+        # cannot be set without it. Set all prior input and output sampling
+        # rates to it.
+        for i in stages:
+            sr = sampling_rates[i]["input_sampling_rate"]
+            if sr:
+                for j in range(1, i):
+                    sampling_rates[j]["input_sampling_rate"] = sr
+                    sampling_rates[j]["output_sampling_rate"] = sr
+                    sampling_rates[j]["decimation_factor"] = 1
+                break
+
+        # This should guarantee that the input and output sampling rate of the
+        # the first stage are set.
+        output_sr = sampling_rates[1]["output_sampling_rate"]
+        if not output_sr:  # pragma: no cover
+            raise NotImplementedError
+
+        for i in stages:
+            si = sampling_rates[i]
+            if not si["input_sampling_rate"]:
+                si["input_sampling_rate"] = output_sr
+            if not si["output_sampling_rate"]:
+                if not si["decimation_factor"]:
+                    si["output_sampling_rate"] = si["input_sampling_rate"]
+                    si["decimation_factor"] = 1
+                else:
+                    si["output_sampling_rate"] = si["input_sampling_rate"] / \
+                        float(si["decimation_factor"])
+            if not si["decimation_factor"]:
+                si["decimation_factor"] = int(round(
+                    si["input_sampling_rate"] / si["output_sampling_rate"]))
+            output_sr = si["output_sampling_rate"]
+
+        def is_close(a, b):
+            return abs(a - b) < 1e-5
+
+        # Final consistency checks.
+        sr = sampling_rates[stages[0]]["input_sampling_rate"]
+        for i in stages:
+            si = sampling_rates[i]
+            if not is_close(si["input_sampling_rate"], sr):  # pragma: no cover
+                msg = ("Input sampling rate of stage %i is inconsistent "
+                       "with the previous stages' output sampling rate")
+                warnings.warn(msg % i)
+
+            if not is_close(
+                    si["input_sampling_rate"] / si["output_sampling_rate"],
+                    si["decimation_factor"]):  # pragma: no cover
+                msg = ("Decimation factor in stage %i is inconsistent with "
+                       "input and output sampling rates.")
+                warnings.warn(msg % i)
+            sr = si["output_sampling_rate"]
+
+        return sampling_rates
+
     def recalculate_overall_sensitivity(self, frequency=None):
         """
         Recalculates the overall sensitivity.
@@ -1242,6 +1361,39 @@ class Response(ComparingObject):
 
             if blkt is not None:
                 stage_blkts.append(blkt)
+
+            # Evalresp requires FIR and IIR blockettes to have decimation
+            # values. Set the "unit decimation" values in case they are not
+            # set.
+            #
+            # Only set it if there is a stage gain - otherwise evalresp
+            # complains again.
+            if isinstance(blockette, PolesZerosResponseStage) and \
+                    blockette.stage_gain and \
+                    None in set([
+                        blockette.decimation_correction,
+                        blockette.decimation_delay,
+                        blockette.decimation_factor,
+                        blockette.decimation_input_sample_rate,
+                        blockette.decimation_offset]):
+                # Don't modify the original object.
+                blockette = copy.deepcopy(blockette)
+                blockette.decimation_correction = 0.0
+                blockette.decimation_delay = 0.0
+                blockette.decimation_factor = 1
+                blockette.decimation_offset = 0
+                sr = self.get_sampling_rates()
+                if sr and blockette.stage_sequence_number in sr and \
+                        sr[blockette.stage_sequence_number][
+                            "input_sampling_rate"]:
+                    blockette.decimation_input_sample_rate = \
+                        self.get_sampling_rates()[
+                            blockette.stage_sequence_number][
+                            "input_sampling_rate"]
+                # This branch get's large called for responses that only have a
+                # a single stage.
+                else:
+                    blockette.decimation_input_sample_rate = 1.0
 
             # Parse the decimation if is given.
             decimation_values = set([
