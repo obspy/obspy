@@ -56,6 +56,7 @@ WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
                             'GCF']
 EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
+INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP']
 # waveform plugins accepting a byteorder keyword
 WAVEFORM_ACCEPT_BYTEORDER = ['MSEED', 'Q', 'SAC', 'SEGY', 'SU']
 
@@ -272,10 +273,12 @@ ENTRY_POINTS = {
         'obspy.plugin.waveform', 'readFormat', WAVEFORM_PREFERRED_ORDER),
     'waveform_write': _get_ordered_entry_points(
         'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
-    'event': _get_entry_points('obspy.plugin.event', 'readFormat'),
+    'event': _get_ordered_entry_points('obspy.plugin.event', 'readFormat',
+                                       EVENT_PREFERRED_ORDER),
     'event_write': _get_entry_points('obspy.plugin.event', 'writeFormat'),
     'taper': _get_entry_points('obspy.plugin.taper'),
-    'inventory': _get_entry_points('obspy.plugin.inventory', 'readFormat'),
+    'inventory': _get_ordered_entry_points(
+        'obspy.plugin.inventory', 'readFormat', INVENTORY_PREFERRED_ORDER),
     'inventory_write': _get_entry_points(
         'obspy.plugin.inventory', 'writeFormat'),
 }

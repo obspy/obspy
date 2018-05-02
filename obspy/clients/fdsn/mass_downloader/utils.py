@@ -36,8 +36,17 @@ from obspy.io.mseed.util import get_record_information
 
 # Different types of errors that can happen when downloading data via the
 # FDSN clients.
-ERRORS = (FDSNException, HTTPError, URLError, socket_timeout)
+ERRORS = [FDSNException, HTTPError, URLError, socket_timeout]
 
+# Python 2 does have special classes for connection errors.
+if sys.version_info.major == 2:
+    # Use the base OS error on Python 2.
+    ERRORS.append(OSError)
+else:
+    # All other connection errors inherit from it.
+    ERRORS.append(ConnectionError)
+
+ERRORS = tuple(ERRORS)
 
 # mean earth radius in meter as defined by the International Union of
 # Geodesy and Geophysics. Used for the spherical kd-tree.
@@ -102,12 +111,17 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
     # intervals, each of which will end up in a separate file.
     filenames = collections.defaultdict(list)
     for chunk in chunks:
-        filenames[tuple(chunk[:4])].append({
+        candidate = {
             "starttime": chunk[4],
             "endtime": chunk[5],
             "filename": chunk[6],
             "current_latest_endtime": None,
-            "sequence_number": None})
+            "sequence_number": None}
+        # Should not be necessary if chunks have been deduplicated before but
+        # better safe than sorry.
+        if candidate in filenames[tuple(chunk[:4])]:
+            continue
+        filenames[tuple(chunk[:4])].append(candidate)
 
     sequence_number = [0]
 
@@ -171,7 +185,9 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
                 else:
                     candidates = [second]
         elif len(candidates) >= 2:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "Please contact the developers. candidates: %s" %
+                str(candidates))
 
         # Finally found the correct chunk
         ret_val = candidates[0]

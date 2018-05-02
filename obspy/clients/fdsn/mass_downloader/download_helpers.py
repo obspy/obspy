@@ -46,7 +46,21 @@ STATUS = Enum(["none", "needs_downloading", "downloaded", "ignore", "exists",
                "download_partially_failed"])
 
 
-class Station(object):
+class _SlotsEqualityComparisionObject(object):
+    """
+    Helper object with an equality comparision method simply comparing all
+    slotted attributes.
+    """
+    __slots__ = []
+
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return all([getattr(self, _i) == getattr(other, _i)
+                    for _i in self.__slots__])
+
+
+class Station(_SlotsEqualityComparisionObject):
     """
     Object representing a seismic station within the download helper classes.
 
@@ -386,7 +400,7 @@ class Station(object):
                         time_interval.status = STATUS.DOWNLOAD_REJECTED
 
 
-class Channel(object):
+class Channel(_SlotsEqualityComparisionObject):
     """
     Object representing a Channel. Each time interval should end up in one
     MiniSEED file.
@@ -427,7 +441,7 @@ class Channel(object):
             intervals="\n\t".join([str(i) for i in self.intervals]))
 
 
-class TimeInterval(object):
+class TimeInterval(_SlotsEqualityComparisionObject):
     """
     Simple object representing a time interval of a channel.
 
@@ -570,13 +584,22 @@ class ClientDownloadHelper(object):
 
             # Remove these indices this results in a set of stations we wish to
             # keep.
-            remaining_stations.extend(set(
-                _i[1] for _i in enumerate(stations)
-                if _i[0] not in indexes_to_remove))
-            rejected_stations.extend(set(
-                _i[1] for _i in enumerate(stations)
-                if _i[0] in indexes_to_remove))
-        # Otherwise it will add new stations approximating a Poisson disk
+            new_remaining_stations = [_i[1] for _i in enumerate(stations)
+                                      if _i[0] not in indexes_to_remove]
+            new_rejected_stations = [_i[1] for _i in enumerate(stations)
+                                     if _i[0] in indexes_to_remove]
+
+            # Station objects are not hashable thus we have to go the long
+            # route.
+            for st in new_remaining_stations:
+                if st not in remaining_stations:
+                    remaining_stations.append(st)
+
+            for st in new_rejected_stations:
+                if st not in rejected_stations:
+                    rejected_stations.append(st)
+
+            # Otherwise it will add new stations approximating a Poisson disk
         # distribution.
         else:
             while stations:
@@ -1169,9 +1192,14 @@ class ClientDownloadHelper(object):
                     if (channel.start_date > self.restrictions.endtime) or \
                             (channel.end_date < self.restrictions.starttime):
                         continue
-                    channels.append(Channel(
+                    new_channel = Channel(
                         location=channel.location_code, channel=channel.code,
-                        intervals=copy.deepcopy(intervals)))
+                        intervals=copy.deepcopy(intervals))
+                    # Multiple channel epochs would result in duplicate
+                    # channels which we don't want. Bit of a silly logic here
+                    # to get rid of them.
+                    if new_channel not in channels:
+                        channels.append(new_channel)
 
                 if self.restrictions.channel is None:
                     # Group by locations and apply the channel priority filter

@@ -51,17 +51,20 @@ master:
    * Tests pass with numpy 1.14 (see #2044).
  - obspy.core:
    * Fix pickling of traces with a sampling rate of 0 (see #1990)
- - obspy.core:
    * read_inventory() used with non-existing file path (e.g. typo in filename)
      now shows a proper "No such file or directory" error message (see #2062)
- - obspy.core:
    * Fix Trace.times(type='matplotlib') being slow (see #2112)
+   * read_events() and read_inventory() now trial most common plugins first
+     (QuakeML/StationXML, ...) in case of automatic file format detection (i.e.
+     when file type was not explicitly specified, see #2113)
  - obspy.clients.arclink:
    * Raise a warning at import time that the ArcLink protocol will be
      deprecated soon (see #1987).
  - obspy.clients.fdsn:
    * Mass downloader: Priority lists are now correctly overwritten if `channel`
      and/or `location` are set (see #1810, #2031, #2047).
+   * A few fixes and stability improvements for the mass downloader
+     (see #2081).
  - obspy.io.mseed:
    * Ability to read files that have embedded chunks of non SEED data.
      (see #1981, #2057).
