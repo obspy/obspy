@@ -1209,11 +1209,24 @@ class WaveformStreamID(__WaveformStreamID):
                                                resource_uri=resource_uri)
 
     def get_seed_string(self):
+        """
+        Return the seed string representation.
+
+        The seed string is of the form:
+            network.station.location.channel
+        """
         return "%s.%s.%s.%s" % (
             self.network_code if self.network_code else "",
             self.station_code if self.station_code else "",
             self.location_code if self.location_code else "",
             self.channel_code if self.channel_code else "")
+
+    @property
+    def id(self):
+        """
+        Return the seed string representation.
+        """
+        return self.get_seed_string()
 
 
 __ConfidenceEllipsoid = _event_type_class_factory(
