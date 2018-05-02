@@ -338,8 +338,8 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         inv = self.client.get_stations(
             starttime=obspy.UTCDateTime(2017, 1, 1),
             endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
-            latitude=35.0, longitude=-110, maxradius=0.3,
-            channel="LHZ", level="network")
+            latitude=35.0, longitude=-110, maxradius=0.3, network="TA",
+            channel="LHZ", level="station")
         # This yields 1 network at the time of writing this test - I assume
         # it is unlikely to every yield less. So this test should be fairly
         # stable.
@@ -350,8 +350,9 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
             [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
               obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
             latitude=35.0, longitude=-110, maxradius=0.3,
-            level="network")
+            level="station")
         self.assertGreaterEqual(len(inv2), 1)
+        inv2 = inv2.select(network="TA")
 
         # The results should be basically identical - they will still differ
         # because times stamps and also order might change slightly.
