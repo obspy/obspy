@@ -267,12 +267,19 @@ def evaluate_at_bullen(layer, depth, radius_of_planet):
     elif depth == bot_depth:
         return bot_p
     else:
-        b = np.divide(math.log(np.divide(top_p, bot_p)),
-                      math.log(np.divide((radius_of_planet - top_depth),
-                                         (radius_of_planet - bot_depth))))
-        a_denominator = pow((radius_of_planet - top_depth), b)
-        a = top_p / a_denominator
-        answer = a * pow((radius_of_planet - depth), b)
+        try:
+            # The power law calculation has some stability issues with very
+            # small layers. Catch them here to trigger the fallback
+            # computations later on.
+            with np.errstate(all="raise"):
+                b = math.log(top_p / bot_p) / \
+                    math.log((radius_of_planet - top_depth) /
+                             (radius_of_planet - bot_depth))
+                a_denominator = pow((radius_of_planet - top_depth), b)
+                a = top_p / a_denominator
+                answer = a * pow((radius_of_planet - depth), b)
+        except FloatingPointError:
+            answer = math.nan
         if answer < 0 or math.isnan(answer) or math.isinf(answer):
             # numerical instability in power law calculation???
             # try a linear interpolation if the layer is small ( <2 km)
