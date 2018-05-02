@@ -9,6 +9,9 @@
    * read_events() and read_inventory() now trial most common plugins first
      (QuakeML/StationXML, ...) in case of automatic file format detection (i.e.
      when file type was not explicitly specified, see #2113)
+   * Event instances with Origin instances that have do not have defined
+     latitude/longitude attributes will no longer raise a TypeError when
+     creating a string representation (see #2119 and #2127).
  - obspy.clients.arclink:
    * Raise a warning at import time that the ArcLink protocol will be
      deprecated soon (see #1987).
