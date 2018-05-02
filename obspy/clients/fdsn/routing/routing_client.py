@@ -18,6 +18,7 @@ from future.builtins import *  # NOQA
 from multiprocessing.dummy import Pool as ThreadPool
 
 import decorator
+import io
 import warnings
 
 from obspy.core.compatibility import (urlparse, string_types,
@@ -277,7 +278,16 @@ class BaseRoutingClient(HTTPClient):
 
         Please overwrite this method in a child class if necessary.
         """
-        raise_on_error(r.status_code, get_reason_from_response(r))
+        reason = get_reason_from_response(r)
+        if hasattr(r, "content"):
+            c = r.content
+            try:
+                c = c.encode()
+            except Exception:
+                pass
+            reason += b" -- " + c
+        with io.BytesIO(reason) as buf:
+            raise_on_error(r.status_code, buf)
 
     @_assert_filename_not_in_kwargs
     @_assert_attach_response_not_in_kwargs
