@@ -58,6 +58,9 @@ master:
    * read_events() and read_inventory() now trial most common plugins first
      (QuakeML/StationXML, ...) in case of automatic file format detection (i.e.
      when file type was not explicitly specified, see #2113)
+   * Event instances with Origin instances that have do not have defined
+     latitude/longitude attributes will no longer raise a TypeError when
+     creating a string representation (see #2119 and #2127).
  - obspy.clients.arclink:
    * Raise a warning at import time that the ArcLink protocol will be
      deprecated soon (see #1987).
@@ -66,6 +69,9 @@ master:
      and/or `location` are set (see #1810, #2031, #2047).
    * A few fixes and stability improvements for the mass downloader
      (see #2081).
+ - obspy.imaging:
+   * Normalize moment tensors prior to plotting in the mopad wrapper to
+     stabilize the algorithm (see #2114, #2125).
  - obspy.io.mseed:
    * Ability to read files that have embedded chunks of non SEED data.
      (see #1981, #2057).

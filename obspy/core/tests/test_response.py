@@ -368,6 +368,92 @@ class ResponseTestCase(unittest.TestCase):
             "\tNumber of coefficients: 0"
         )
 
+    def test_get_sampling_rates(self):
+        """
+        Tests for the get_sampling_rates() method.
+        """
+        # Test for the default inventory.
+        resp = read_inventory()[0][0][0].response
+        self.assertEqual(
+            resp.get_sampling_rates(),
+            {1: {'decimation_factor': 1,
+                 'input_sampling_rate': 200.0,
+                 'output_sampling_rate': 200.0},
+             2: {'decimation_factor': 1,
+                 'input_sampling_rate': 200.0,
+                 'output_sampling_rate': 200.0}})
+
+        # Another, well behaved file.
+        inv = read_inventory(os.path.join(self.data_dir, "AU.MEEK.xml"))
+        self.assertEqual(
+            inv[0][0][0].response.get_sampling_rates(),
+            {1: {'decimation_factor': 1,
+                 'input_sampling_rate': 600.0,
+                 'output_sampling_rate': 600.0},
+             2: {'decimation_factor': 1,
+                 'input_sampling_rate': 600.0,
+                 'output_sampling_rate': 600.0},
+             3: {'decimation_factor': 1,
+                 'input_sampling_rate': 600.0,
+                 'output_sampling_rate': 600.0},
+             4: {'decimation_factor': 3,
+                 'input_sampling_rate': 600.0,
+                 'output_sampling_rate': 200.0},
+             5: {'decimation_factor': 10,
+                 'input_sampling_rate': 200.0,
+                 'output_sampling_rate': 20.0}})
+
+        # This file lacks decimation attributes for the first two stages as
+        # well as one of the later ones. These thus have to be inferred.
+        inv = read_inventory(os.path.join(self.data_dir, "DK.BSD..BHZ.xml"))
+        self.assertEqual(
+            inv[0][0][0].response.get_sampling_rates(),
+            {1: {'decimation_factor': 1,
+                 'input_sampling_rate': 30000.0,
+                 'output_sampling_rate': 30000.0},
+             2: {'decimation_factor': 1,
+                 'input_sampling_rate': 30000.0,
+                 'output_sampling_rate': 30000.0},
+             3: {'decimation_factor': 1,
+                 'input_sampling_rate': 30000.0,
+                 'output_sampling_rate': 30000.0},
+             4: {'decimation_factor': 5,
+                 'input_sampling_rate': 30000.0,
+                 'output_sampling_rate': 6000.0},
+             5: {'decimation_factor': 3,
+                 'input_sampling_rate': 6000.0,
+                 'output_sampling_rate': 2000.0},
+             6: {'decimation_factor': 2,
+                 'input_sampling_rate': 2000.0,
+                 'output_sampling_rate': 1000.0},
+             7: {'decimation_factor': 5,
+                 'input_sampling_rate': 1000.0,
+                 'output_sampling_rate': 200.0},
+             8: {'decimation_factor': 2,
+                 'input_sampling_rate': 200.0,
+                 'output_sampling_rate': 100.0},
+             9: {'decimation_factor': 1,
+                 'input_sampling_rate': 100.0,
+                 'output_sampling_rate': 100.0},
+             10: {'decimation_factor': 5,
+                  'input_sampling_rate': 100.0,
+                  'output_sampling_rate': 20.0}})
+
+    def test_response_calculation_paz_without_decimation(self):
+        """
+        This test files has two PAZ stages with no decimation attributes.
+
+        Evalresp does not like this so we have to add dummy decimation
+        attributes before calling it.
+        """
+        inv = read_inventory(os.path.join(self.data_dir, "DK.BSD..BHZ.xml"))
+        np.testing.assert_allclose(
+            inv[0][0][0].response.get_evalresp_response_for_frequencies(
+                [0.1, 1.0, 10.0]),
+            [6.27191825e+08 + 1.38925202e+08j,
+             6.51826202e+08 + 1.28404787e+07j,
+             2.00067263e+04 - 2.63711751e+03j])
+
 
 def suite():
     return unittest.makeSuite(ResponseTestCase, 'test')

@@ -52,6 +52,19 @@ KWARG_MAP = {
 }
 
 
+def _normalize_focmec(fm):
+    """
+    Improve stability of plots by normalizing the moment tensors. The scale
+    does not matter for the beachballs.
+    """
+    # Only normalize 6 component tensors.
+    if len(fm) != 6:
+        return fm
+    fm = np.array(fm, dtype=np.float64)
+    fm /= np.linalg.norm(fm)
+    return fm
+
+
 def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
           zorder=100, mopad_basis='USE', axes=None):
@@ -113,6 +126,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     ``'NWU'`` North, West, Up     Stein and Wysession 2003
     ========= =================== =============================================
     """
+    fm = _normalize_focmec(fm)
     # initialize beachball
     mt = mopad_MomentTensor(fm, system=mopad_basis)
     bb = mopad_BeachBall(mt, npoints=size)
@@ -279,6 +293,7 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
             mt = [1, 2, 3, -4, -5, -10]
             beachball(mt, mopad_basis='NED')
     """
+    fm = _normalize_focmec(fm)
     mopad_kwargs = {}
     loc = locals()
     # map to kwargs used in mopad
