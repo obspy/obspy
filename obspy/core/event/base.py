@@ -1221,12 +1221,7 @@ class WaveformStreamID(__WaveformStreamID):
             self.location_code if self.location_code else "",
             self.channel_code if self.channel_code else "")
 
-    @property
-    def id(self):
-        """
-        Return the seed string representation.
-        """
-        return self.get_seed_string()
+    id = property(get_seed_string)
 
 
 __ConfidenceEllipsoid = _event_type_class_factory(
