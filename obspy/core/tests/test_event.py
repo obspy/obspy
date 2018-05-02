@@ -61,8 +61,10 @@ class EventTestCase(unittest.TestCase):
         Ensure an event with an empty origin returns a str without raising a
         TypeError (#2119).
         """
-        out = str(Event(origins=[Origin()]))
+        event = Event(origins=[Origin()])
+        out = event.short_str()
         self.assertIsInstance(out, str)
+        self.assertEqual(out, 'None | None, None')
 
     def test_eq(self):
         """
