@@ -28,7 +28,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-flake8 \
     python-future \
     python-geographiclib \
-    python-imaging \
+    python-pil \
     python-jsonschema \
     python-lxml \
     python-m2crypto \
