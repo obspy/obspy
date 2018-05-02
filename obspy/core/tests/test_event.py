@@ -56,6 +56,16 @@ class EventTestCase(unittest.TestCase):
         self.assertEqual("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
                          " | 4.3 ML | manual", s)
 
+    def test_str_empty_origin(self):
+        """
+        Ensure an event with an empty origin returns a str without raising a
+        TypeError (#2119).
+        """
+        event = Event(origins=[Origin()])
+        out = event.short_str()
+        self.assertIsInstance(out, str)
+        self.assertEqual(out, 'None | None, None')
+
     def test_eq(self):
         """
         Testing the __eq__ method of the Event object.
