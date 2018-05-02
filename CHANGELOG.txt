@@ -48,6 +48,9 @@
    * PPSD: for safety reasons, raise an ObsPyException if trying to read a PPSD
      npz file that was written with a newer version of the npz representation
      than is used by current ObsPy version (see #2051)
+ - obspy.taup:
+   * Fallback to linear slowness interpolation for very small and
+     shallow layers (see #2126, #2129).
 
 1.1.0: (doi: 10.5281/zenodo.165135)
  - General:
