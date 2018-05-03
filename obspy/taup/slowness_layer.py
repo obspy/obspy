@@ -279,7 +279,7 @@ def evaluate_at_bullen(layer, depth, radius_of_planet):
                 a = top_p / a_denominator
                 answer = a * pow((radius_of_planet - depth), b)
         except FloatingPointError:
-            answer = math.nan
+            answer = np.nan
         if answer < 0 or math.isnan(answer) or math.isinf(answer):
             # numerical instability in power law calculation???
             # try a linear interpolation if the layer is small ( <2 km)
