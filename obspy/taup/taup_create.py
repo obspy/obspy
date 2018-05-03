@@ -165,7 +165,7 @@ def build_taup_model(filename, output_folder=None, verbose=True):
     :type output_folder: str
     :param output_folder: Directory in which the built
         :class:`~obspy.taup.tau_model.TauModel` will be stored. Defaults to
-        directory of input file.
+        the `taup/data` directory of the current obspy installation.
     """
     if output_folder is None:
         output_folder = __DATA_DIR
