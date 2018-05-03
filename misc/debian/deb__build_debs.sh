@@ -56,7 +56,6 @@ then
     git checkout $GITTARGET
 fi
 git clean -fxd
-cp -a debian/pybuild/* debian/
 
 # remove dependencies of distribute for obspy.core
 # distribute is not packed for python2.5 in Debian
