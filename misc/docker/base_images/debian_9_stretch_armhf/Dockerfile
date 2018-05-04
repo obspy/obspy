@@ -39,7 +39,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-flake8 \
     python-future \
     python-geographiclib \
-    python-imaging \
     python-jsonschema \
     python-lxml \
     python-m2crypto \
@@ -49,6 +48,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-mpltoolkits.basemap-data \
     python-nose \
     python-numpy \
+    python-pil \
     python-pip \
     python-pyproj \
     python-pyshp \
@@ -72,6 +72,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-mpltoolkits.basemap \
     python3-nose \
     python3-numpy \
+    python3-pil \
     python3-pip \
     python3-pyproj \
     python3-pyshp \
