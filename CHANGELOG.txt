@@ -10,6 +10,7 @@ master:
    * Added replace method to UTCDateTime class (see #2077).
    * Added remove method to Inventory class (see #2088).
    * Added id property to WaveformStreamID (see #2131).
+   * Added __str__ and _repr_pretty_ method for Comment class (see #2115)
  - obspy.io.nordic:
    * Add ability to read and write focal mechanisms and moment tensor
      information.
@@ -45,7 +46,6 @@ master:
    * 'domain' parameter in correlate function is deprecated in favour of new
      'method' parameter to be consistent with recent SciPy versions
      (see #2042).
-
 
 1.1.x:
  - General:

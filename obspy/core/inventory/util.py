@@ -556,6 +556,21 @@ class Comment(ComparingObject):
             raise ValueError(msg)
         self._authors = values
 
+    def __str__(self):
+        ret = ("Comment:\t{value}\n"
+               "\tBegin Effective Time:\t{begin_effective_time}\n"
+               "\tEnd Effective Time:\t{end_effective_time}\n"
+               "\tAuthors:\t\t{authors}\n"
+               "\tId:\t\t\t{id}")
+        ret = ret.format(
+            value=self.value, begin_effective_time=self.begin_effective_time,
+            end_effective_time=self.end_effective_time, authors=self.authors,
+            id=self.id)
+        return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 class Site(ComparingObject):
     """
