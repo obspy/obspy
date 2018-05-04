@@ -658,10 +658,15 @@ def _get_record_information(file_object, offset=0, endian=None):
                 "the maximum strictly allowed value is 9999. It will be "
                 "interpreted as one or more additional seconds." % values[5],
                 category=UserWarning)
-        return UTCDateTime(
-            year=values[0], julday=values[1],
-            hour=values[2], minute=values[3], second=values[4],
-            microsecond=msec % 1000000) + offset
+        try:
+            t = UTCDateTime(
+                year=values[0], julday=values[1],
+                hour=values[2], minute=values[3], second=values[4],
+                microsecond=msec % 1000000) + offset
+        except TypeError:
+            msg = 'Problem decoding time (wrong endian?)'
+            raise InternalMSEEDParseTimeError(msg)
+        return t
 
     if endian is None:
         try:
