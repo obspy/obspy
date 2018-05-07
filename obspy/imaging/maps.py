@@ -230,15 +230,15 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
         # matplotlib 1.2.0 does not have that warning class yet
         # XXX can be removed when minimum matplotlib version gets bumped to
         # XXX 1.3.0
-        category = None
+        category = {}
     else:
-        category = MatplotlibDeprecationWarning
+        category = {'category': MatplotlibDeprecationWarning}
     try:
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 'ignore', message='The axesPatch function was deprecated '
                 'in version 2.1. Use Axes.patch instead.',
-                category=category, module='.*basemap.*')
+                module='.*basemap.*', **category)
             scatter = _plot_basemap_into_axes(
                 ax=map_ax, lons=lons, lats=lats, size=size, color=color,
                 bmap=bmap, labels=labels, projection=projection,
