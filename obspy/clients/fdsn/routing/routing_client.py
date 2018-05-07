@@ -18,6 +18,9 @@ from future.builtins import *  # NOQA
 from multiprocessing.dummy import Pool as ThreadPool
 
 import decorator
+import io
+import sys
+import traceback
 import warnings
 
 from obspy.core.compatibility import (urlparse, string_types,
@@ -84,6 +87,17 @@ def _assert_attach_response_not_in_kwargs(f, *args, **kwargs):
     if "attach_response" in kwargs:
         raise ValueError("The `attach_response` argument is not supported")
     return f(*args, **kwargs)
+
+
+def _try_download_bulk(r):
+    try:
+        return _download_bulk(r)
+    except Exception:
+        reason = "".join(traceback.format_exception(*sys.exc_info()))
+        warnings.warn(
+            "Failed to download data of type '%s' from '%s' due to: \n%s" % (
+                r["data_type"], r["endpoint"], reason))
+        return None
 
 
 def _download_bulk(r):
@@ -251,7 +265,7 @@ class BaseRoutingClient(HTTPClient):
                 "kwargs": kwargs,
                 "credentials": self.credentials})
         pool = ThreadPool(processes=len(dl_requests))
-        results = pool.map(_download_bulk, dl_requests)
+        results = pool.map(_try_download_bulk, dl_requests)
 
         # Merge all results into a single object.
         if data_type == "waveform":
@@ -277,7 +291,16 @@ class BaseRoutingClient(HTTPClient):
 
         Please overwrite this method in a child class if necessary.
         """
-        raise_on_error(r.status_code, get_reason_from_response(r))
+        reason = get_reason_from_response(r)
+        if hasattr(r, "content"):
+            c = r.content
+            try:
+                c = c.encode()
+            except Exception:
+                pass
+            reason += b" -- " + c
+        with io.BytesIO(reason) as buf:
+            raise_on_error(r.status_code, buf)
 
     @_assert_filename_not_in_kwargs
     @_assert_attach_response_not_in_kwargs
