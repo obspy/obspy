@@ -175,7 +175,7 @@ class ScanTestCase(unittest.TestCase):
 
             # make image comparison instance and set manual rms (see #2089)
             image_comp = ImageComparison(self.path, 'scan_mult_sampl.png')
-            image_comp.tol = 40
+            image_comp.tol = 50
 
             with image_comp as ic:
 
