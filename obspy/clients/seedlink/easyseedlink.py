@@ -57,14 +57,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import sys
-
-if sys.version_info.major == 2:
-    from urlparse import urlparse
-else:
-    from urllib.parse import urlparse
-
 import lxml
+from requests.compat import urlparse
 
 from .client.seedlinkconnection import SeedLinkConnection
 from .client.slstate import SLState

@@ -193,9 +193,6 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     default.
     """
     # import additional libraries here to speed up normal tests
-    from future import standard_library
-    with standard_library.hooks():
-        import urllib.parse
     import codecs
     from xml.etree import ElementTree
     from xml.sax.saxutils import escape
@@ -353,7 +350,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     xml_doc = ElementTree.tostring(root)
     print()
     # send result to report server
-    params = urllib.parse.urlencode({
+    params = requests.compat.urlencode({
         'timestamp': timestamp,
         'system': result['platform']['system'],
         'python_version': result['platform']['python_version'],
