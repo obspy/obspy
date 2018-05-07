@@ -325,6 +325,9 @@ class WaveformPlotting(object):
                             plt.show(block=self.block)
                         except Exception:
                             plt.show()
+                    # Also return the figure to make it work the jupyter
+                    # notebooks.
+                    return self.fig
 
     def plot(self, *args, **kwargs):
         """

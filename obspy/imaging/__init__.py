@@ -32,9 +32,10 @@ Examples files may be retrieved via https://examples.obspy.org.
 BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
 BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
 BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
->>> st.plot(color='gray', tick_format='%I:%M %p',
+>>> st.plot(color='gray', tick_format='%I:%M %p',  # doctest: +ELLIPSIS
 ...         starttime=st[0].stats.starttime,
 ...         endtime=st[0].stats.starttime+20)
+<...Figure ...>
 
 .. plot::
 
@@ -54,7 +55,7 @@ size of 4096 points. For more info see
 
 >>> from obspy import read
 >>> st = read()
->>> st[0].spectrogram(log=True) #doctest: +SKIP
+>>> st[0].spectrogram(log=True)  # doctest: +SKIP
 
 .. plot::
 
