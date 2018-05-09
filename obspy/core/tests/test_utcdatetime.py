@@ -463,7 +463,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertRaises(ValueError, UTCDateTime, 2010, 9, 31)
         self.assertRaises(ValueError, UTCDateTime, '2010-09-31')
         # invalid julday
-        self.assertRaises(TypeError, UTCDateTime, year=2010, julday=999)
+        self.assertRaises(ValueError, UTCDateTime, year=2010, julday=999)
         # testing some strange patterns
         self.assertRaises(TypeError, UTCDateTime, "ABC")
         self.assertRaises(TypeError, UTCDateTime, "12X3T")
