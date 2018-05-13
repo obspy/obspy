@@ -184,7 +184,7 @@ class EasySeedLinkClient(object):
 
         Available info levels depend on the server implementation. Usually one
         of ``ID``, ``CAPABILITIES``, ``STATIONS``, ``STREAMS``, ``GAPS``,
-        ``CONNNECTIONS``, ``ALL``.
+        ``CONNECTIONS``, ``ALL``.
 
         As a convenience, the server's ``CAPABILITIES`` can be accessed through
         the client's :attr:`~.EasySeedLinkClient.capabilities` attribute.
