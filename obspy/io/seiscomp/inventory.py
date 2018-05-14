@@ -664,19 +664,20 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
     # Since 0.10 ResponsePAZ can have a decimation attributes
     if output_units != "V":
 
-      # Get element or default value
-      decimation["factor"] = _tag2obj(stage, _ns("decimationFactor"), int) or 1
-      decimation["delay"] = _tag2obj(stage, _ns("delay"), float)  or 0
-      decimation["correction"] = _tag2obj(stage, _ns("correction"), float) or 0
-      decimation["offset"] = _tag2obj(stage, _ns("offset"), float) or 0
-      decimation["rate"] = _read_float_var(rate, Frequency)
+        # Get element or default value
+        decimation["factor"] = _tag2obj(stage, _ns("decimationFactor"), int) or 1
+        decimation["delay"] = _tag2obj(stage, _ns("delay"), float) or 0
+        decimation["correction"] = _tag2obj(stage, _ns("correction"), float) or 0
+        decimation["offset"] = _tag2obj(stage, _ns("offset"), float) or 0
+        decimation["rate"] = _read_float_var(rate, Frequency)
 
     # Decimation delay/correction need to be normalized
     if rate != 0.0:
         if decimation["delay"] is not None:
-            decimation["delay"] = _read_float_var(decimation["delay"] / rate,
-                                                  FloatWithUncertaintiesAndUnit,
-                                                  unit=True)
+            decimation["delay"] = _read_float_var(
+                                      decimation["delay"] / rate,
+                                      FloatWithUncertaintiesAndUnit,
+                                      unit=True)
         if decimation["correction"] is not None:
             decimation["correction"] = _read_float_var(
                                            decimation["correction"] / rate,
