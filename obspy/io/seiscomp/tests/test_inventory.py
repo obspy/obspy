@@ -47,11 +47,11 @@ class SC3MLTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        for version in ['0.5', '0.6', '0.7', '0.8', '0.9']:
+        for version in ['0.5', '0.6', '0.7', '0.8', '0.9', '0.10']:
             filename = os.path.join(self.data_dir, 'version%s' % version)
             read_inventory(filename)
 
-        for version in ['0.3', '0.10']:
+        for version in ['0.3', '0.11']:
             filename = os.path.join(self.data_dir, 'version%s' % version)
 
             with self.assertRaises(ValueError) as e:
@@ -139,6 +139,47 @@ class SC3MLTestCase(unittest.TestCase):
         sc3ml_content = self.sc3ml_inventory.get_contents()
         for sc3ml, stationxml in zip(stationxml_content, sc3ml_content):
             self.assertEqual(sc3ml, stationxml)
+
+    def test_sc3ml_v010(self):
+        """
+        Test reading SC3ML schema version 0.10
+        """
+        data_file = os.path.join(self.data_dir, "sc3ml_010.xml")
+        with warnings.catch_warnings(record=True) as w:
+            inv = read_inventory(data_file)
+            self.assertEqual(str(w[0].message), "ResponseIIR is not fully "
+                                                "tested in ObsPy. Please be "
+                                                "cautious")
+
+        stages = inv[0][0][0].response.response_stages
+
+        # Instrument PAZ
+        self.assertEqual(stages[0].stage_gain, -120.948)
+        self.assertEqual(stages[0].normalization_factor, 1.37972)
+
+        # Analogue chain
+        self.assertEqual(stages[1].stage_gain, 1.0)
+        self.assertEqual(stages[1].normalization_factor, 1)
+
+        # Analogue chain
+        self.assertEqual(stages[2].stage_gain, 0.99917)
+        self.assertEqual(stages[2].normalization_factor, 1.04963e+14)
+
+        # Datalogger element
+        self.assertEqual(stages[3].stage_gain, 1000000)
+        self.assertEqual(stages[3].cf_transfer_function_type, "DIGITAL")
+
+        # FIR 
+        self.assertEqual(stages[4].stage_gain, 1000000)
+        self.assertEqual(stages[4].decimation_delay, 90.0)
+        self.assertEqual(stages[4].decimation_correction, 90.0)
+
+        # PAZ with decimation attributes
+        self.assertEqual(stages[5].stage_gain, 1.0)
+        self.assertEqual(stages[5].decimation_factor, 1.0)
+        self.assertEqual(stages[5].pz_transfer_function_type, "DIGITAL (Z-TRANSFORM)")
+
+        # XXX TODO: test IIR stages 6
 
     def test_compare_response(self):
         """

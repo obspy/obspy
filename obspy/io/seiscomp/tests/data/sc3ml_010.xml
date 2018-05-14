@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
+  <Inventory>
+    <sensor publicID="Sensor/20171214124152.521321.7" name="PF.BOR1.00EHE.2001.281.11.23.59" response="ResponsePAZ/20171214124152.521351.8">
+      <description>MARCK PRODUCT L4C 1Hz</description>
+      <unit>M/S</unit>
+      <remark>{"unit":"VELOCITY in Meters Per Second"}</remark>
+    </sensor>
+    <sensor publicID="Sensor/20171214124152.522269.16" name="PF.BOR1.00EHN.2001.281.11.24.00" response="ResponsePAZ/20171214124152.522283.17">
+      <description>MARCK PRODUCT L4C 1Hz</description>
+      <unit>M/S</unit>
+      <remark>{"unit":"VELOCITY in Meters Per Second"}</remark>
+    </sensor>
+    <sensor publicID="Sensor/20171214124152.522828.24" name="PF.BOR1.00EHZ.2001.281.11.24.00" response="ResponsePAZ/20171214124152.522283.17">
+      <description>MARCK PRODUCT L4C 1Hz</description>
+      <unit>M/S</unit>
+      <remark>{"unit":"VELOCITY in Meters Per Second"}</remark>
+    </sensor>
+    <datalogger publicID="Datalogger/20171214124152.521158.6" name="PF.BOR1.00EHE.2001.281.11.23.59">
+      <gain>1000000</gain>
+      <maxClockDrift>0.0025</maxClockDrift>
+      <decimation sampleRateNumerator="100" sampleRateDenominator="1">
+        <analogueFilterChain>ResponsePAZ/20171214124152.521612.9 ResponsePAZ/20171214124152.521697.10</analogueFilterChain>
+        <digitalFilterChain>ResponseFIR/20171214124152.521788.11 ResponsePAZ/20171214124152.521912.12 ResponseIIR/20171214124152.521971.13</digitalFilterChain>
+      </decimation>
+    </datalogger>
+    <datalogger publicID="Datalogger/20171214124152.522207.15" name="PF.BOR1.00EHN.2001.281.11.24.00">
+      <gain>1000000</gain>
+      <maxClockDrift>0.0025</maxClockDrift>
+      <decimation sampleRateNumerator="100" sampleRateDenominator="1">
+        <analogueFilterChain>ResponsePAZ/20171214124152.522421.18 ResponsePAZ/20171214124152.521697.10</analogueFilterChain>
+        <digitalFilterChain>ResponseFIR/20171214124152.521788.11 ResponsePAZ/20171214124152.521912.12</digitalFilterChain>
+      </decimation>
+    </datalogger>
+    <datalogger publicID="Datalogger/20171214124152.522772.23" name="PF.BOR1.00EHZ.2001.281.11.24.00">
+      <gain>2000000</gain>
+      <maxClockDrift>0.0025</maxClockDrift>
+      <decimation sampleRateNumerator="100" sampleRateDenominator="1">
+        <analogueFilterChain>ResponsePAZ/20171214124152.521697.10</analogueFilterChain>
+        <digitalFilterChain>ResponseFIR/20171214124152.521788.11 ResponsePAZ/20171214124152.521912.12</digitalFilterChain>
+      </decimation>
+    </datalogger>
+    <responsePAZ publicID="ResponsePAZ/20171214124152.521351.8" name="ResponsePAZ/20171214124152.521351.8">
+      <type>A</type>
+      <gain>-120.948</gain>
+      <gainFrequency>1</gainFrequency>
+      <normalizationFactor>1.37972</normalizationFactor>
+      <normalizationFrequency>1</normalizationFrequency>
+      <numberOfZeros>2</numberOfZeros>
+      <numberOfPoles>2</numberOfPoles>
+      <zeros>(0,0) (0,0)</zeros>
+      <poles>(-4.33452,-4.54866) (-4.33452,4.54866)</poles>
+    </responsePAZ>
+    <responsePAZ publicID="ResponsePAZ/20171214124152.521612.9" name="ResponsePAZ/20171214124152.521612.9">
+      <type>A</type>
+      <gain>1</gain>
+      <gainFrequency>1</gainFrequency>
+      <normalizationFactor>1</normalizationFactor>
+      <normalizationFrequency>1</normalizationFrequency>
+      <numberOfZeros>0</numberOfZeros>
+      <numberOfPoles>0</numberOfPoles>
+      <zeros/>
+      <poles/>
+    </responsePAZ>
+    <responsePAZ publicID="ResponsePAZ/20171214124152.521697.10" name="ResponsePAZ/20171214124152.521697.10">
+      <type>A</type>
+      <gain>0.99917</gain>
+      <gainFrequency>1</gainFrequency>
+      <normalizationFactor>1.04963e+14</normalizationFactor>
+      <normalizationFrequency>1</normalizationFrequency>
+      <numberOfZeros>0</numberOfZeros>
+      <numberOfPoles>6</numberOfPoles>
+      <zeros/>
+      <poles>(-197.483,40.3303) (-197.483,-40.3303) (-173.635,122.085) (-173.635,-122.085) (-116.978,208.841) (-116.978,-208.841)</poles>
+    </responsePAZ>
+    <responsePAZ publicID="ResponsePAZ/20171214124152.521912.12" name="ResponsePAZ/20171214124152.521912.12">
+      <type>D</type>
+      <gain>1</gain>
+      <gainFrequency>1</gainFrequency>
+      <normalizationFactor>0.999999</normalizationFactor>
+      <normalizationFrequency>1</normalizationFrequency>
+      <numberOfZeros>1</numberOfZeros>
+      <numberOfPoles>1</numberOfPoles>
+      <zeros>(1,0)</zeros>
+      <poles>(0.999999,0)</poles>
+      <decimationFactor>1</decimationFactor>
+      <delay>0</delay>
+      <correction>0</correction>
+    </responsePAZ>
+    <responsePAZ publicID="ResponsePAZ/20171214124152.522283.17" name="ResponsePAZ/20171214124152.522283.17">
+      <type>A</type>
+      <gain>120.948</gain>
+      <gainFrequency>1</gainFrequency>
+      <normalizationFactor>1.37972</normalizationFactor>
+      <normalizationFrequency>1</normalizationFrequency>
+      <numberOfZeros>2</numberOfZeros>
+      <numberOfPoles>2</numberOfPoles>
+      <zeros>(0,0) (0,0)</zeros>
+      <poles>(-4.33452,-4.54866) (-4.33452,4.54866)</poles>
+    </responsePAZ>
+    <responsePAZ publicID="ResponsePAZ/20171214124152.522421.18" name="ResponsePAZ/20171214124152.522421.18">
+      <type>A</type>
+      <gain>2</gain>
+      <gainFrequency>1</gainFrequency>
+      <normalizationFactor>1</normalizationFactor>
+      <normalizationFrequency>1</normalizationFrequency>
+      <numberOfZeros>0</numberOfZeros>
+      <numberOfPoles>0</numberOfPoles>
+      <zeros/>
+      <poles/>
+    </responsePAZ>
+    <responseFIR publicID="ResponseFIR/20171214124152.521788.11" name="ResponseFIR/20171214124152.521788.11">
+      <gain>1000000</gain>
+      <gainFrequency>1</gainFrequency>
+      <decimationFactor>1</decimationFactor>
+      <delay>9000</delay>
+      <correction>9000</correction>
+      <numberOfCoefficients>0</numberOfCoefficients>
+      <symmetry>A</symmetry>
+      <coefficients/>
+    </responseFIR>
+    <responseIIR publicID="ResponseIIR/20171214124152.521971.13" name="ResponseIIR/20171214124152.521971.13">
+      <type>D</type>
+      <gain>1</gain>
+      <gainFrequency>1</gainFrequency>
+      <decimationFactor>0</decimationFactor>
+      <delay>0</delay>
+      <correction>0</correction>
+      <numberOfNumerators>1</numberOfNumerators>
+      <numberOfDenominators>1</numberOfDenominators>
+      <numerators>1</numerators>
+      <denominators>0.999999</denominators>
+    </responseIIR>
+    <network publicID="NET/PF/20171214124152.520386.294" code="PF">
+      <start>1980-01-01T00:00:00.0000Z</start>
+      <description>OBS VOLCANOLOGIQUE DU PITON DE LA FOURNAISE</description>
+      <shared>true</shared>
+      <station publicID="STA/PF/BOR1/20171214124152.520617.295" code="BOR1">
+        <start>1989-01-01T00:00:00.0000Z</start>
+        <description>Station Sismologique de Cratere Bory</description>
+        <latitude>-21.246882</latitude>
+        <longitude>55.706053</longitude>
+        <elevation>2540</elevation>
+        <shared>true</shared>
+        <comment>
+          <text>Seismometer orientation may be in error</text>
+          <id>1</id>
+          <start>2001-10-08T11:24:00.0000Z</start>
+          <end>2013-03-14T07:00:00.0000Z</end>
+        </comment>
+        <comment>
+          <text>Station is down</text>
+          <id>2</id>
+          <start>2013-02-17T00:00:00.0000Z</start>
+          <end>2013-03-04T23:59:59.0000Z</end>
+        </comment>
+        <comment>
+          <text>Digitizer replacement</text>
+          <id>3</id>
+          <start>2013-03-14T07:00:00.0000Z</start>
+          <end>2013-03-14T10:00:00.0000Z</end>
+        </comment>
+        <sensorLocation publicID="LOC/PF/BOR1/00/20171214124152.52088.299" code="00">
+          <start>2001-10-08T11:23:59.999Z</start>
+          <end>2004-01-26T10:58:59.999Z</end>
+          <latitude>-21.246882</latitude>
+          <longitude>55.706053</longitude>
+          <elevation>2540</elevation>
+          <stream publicID="Stream/20171214124152.521023.5" code="EHE" datalogger="Datalogger/20171214124152.521158.6" sensor="Sensor/20171214124152.521321.7">
+            <start>2001-10-08T11:23:59.999Z</start>
+            <end>2004-01-26T10:58:59.999Z</end>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>2</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>2</sensorChannel>
+            <sampleRateNumerator>100</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>90</azimuth>
+            <dip>0</dip>
+            <gain>-120848000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <flags>CG</flags>
+          </stream>
+          <stream publicID="Stream/20171214124152.522118.14" code="EHN" datalogger="Datalogger/20171214124152.522207.15" sensor="Sensor/20171214124152.522269.16">
+            <start>2001-10-08T11:24:00.0000Z</start>
+            <end>2004-01-26T10:58:59.999Z</end>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>1</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>1</sensorChannel>
+            <sampleRateNumerator>100</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <dip>0</dip>
+            <gain>241695000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <flags>CG</flags>
+          </stream>
+          <stream publicID="Stream/20171214124152.522685.22" code="EHZ" datalogger="Datalogger/20171214124152.522772.23" sensor="Sensor/20171214124152.522828.24">
+            <start>2001-10-08T11:24:00.0000Z</start>
+            <end>2004-01-26T10:58:59.999Z</end>
+            <dataloggerSerialNumber>xxxx</dataloggerSerialNumber>
+            <dataloggerChannel>0</dataloggerChannel>
+            <sensorSerialNumber>yyyy</sensorSerialNumber>
+            <sensorChannel>0</sensorChannel>
+            <sampleRateNumerator>100</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <dip>-90</dip>
+            <gain>241695000</gain>
+            <gainFrequency>1</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <flags>CG</flags>
+          </stream>
+        </sensorLocation>
+      </station>
+    </network>
+  </Inventory>
+</seiscomp>
