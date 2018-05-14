@@ -22,7 +22,7 @@ from future.builtins import *  # NOQA
 #
 # See https://bugs.python.org/issue7980
 import time
-time.strptime("30 Nov 00", "%d %b %y")
+time.strptime("2000/11/30", "%Y/%m/%d")
 
 
 if __name__ == '__main__':  # pragma: no cover
