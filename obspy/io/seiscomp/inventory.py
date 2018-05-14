@@ -83,7 +83,7 @@ def _read_sc3ml(path_or_file_object):
     """
     root = etree.parse(path_or_file_object).getroot()
 
-    # Code can be used for version 0.5 - 0.10 
+    # Code can be used for version 0.5 - 0.10
     basespace = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema"
     for version in SCHEMA_VERSION:
         namespace = "%s/%s" % (basespace, version)
@@ -374,13 +374,6 @@ def _read_channel(inventory_root, cha_element, _ns):
        sensor_element.get("response") is not None):
         response_id = sensor_element.get("response")
         if response_id is not None:
-
-            # Change in v0.10 the way identifiers are delimited (# -> /)
-            if len(response_id.split("#")) == 1:
-              resp_type = response_id.split("/")[0]
-            else:
-              resp_type = response_id.split("#")[0]
-
             # Generic search for publicID
             search = "*[@publicID='" + response_id + "']"
             response_element = inventory_root.find(_ns(search))
@@ -680,10 +673,15 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
 
     # Decimation delay/correction need to be normalized
     if rate != 0.0:
-      if decimation["delay"] is not None:
-        decimation["delay"] = _read_float_var(decimation["delay"] / rate, FloatWithUncertaintiesAndUnit, unit=True)
-      if decimation["correction"] is not None:
-        decimation["correction"] = _read_float_var(decimation["correction"] / rate, FloatWithUncertaintiesAndUnit, unit=True)
+        if decimation["delay"] is not None:
+            decimation["delay"] = _read_float_var(decimation["delay"] / rate,
+                                                  FloatWithUncertaintiesAndUnit,
+                                                  unit=True)
+        if decimation["correction"] is not None:
+            decimation["correction"] = _read_float_var(
+                                           decimation["correction"] / rate,
+                                           FloatWithUncertaintiesAndUnit,
+                                           unit=True)
 
     # Set up list of for this stage arguments
     kwargs = {
