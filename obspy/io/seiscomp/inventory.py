@@ -665,9 +665,11 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
     if output_units != "V":
 
         # Get element or default value
-        decimation["factor"] = _tag2obj(stage, _ns("decimationFactor"), int) or 1
+        decimation["factor"] = _tag2obj(stage, _ns("decimationFactor"),
+                                        int) or 1
         decimation["delay"] = _tag2obj(stage, _ns("delay"), float) or 0
-        decimation["correction"] = _tag2obj(stage, _ns("correction"), float) or 0
+        decimation["correction"] = _tag2obj(stage, _ns("correction"),
+                                            float) or 0
         decimation["offset"] = _tag2obj(stage, _ns("offset"), float) or 0
         decimation["rate"] = _read_float_var(rate, Frequency)
 
@@ -721,8 +723,8 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         # A: Laplace (rad)
         # B: Laplace (Hz)
         # D: digital (z-transform)
-        pz_transfer_function_type = _tag2obj(stage, _ns("type"), str)
-        pz_transfer_function_type = _map_transfer_type(pz_transfer_function_type)
+        pz_type = _tag2obj(stage, _ns("type"), str)
+        pz_transfer_function_type = _map_transfer_type(pz_type)
 
         # Parse string of poles and zeros
         # paz are stored as a string in sc3ml
@@ -758,8 +760,8 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
 
     # For IIR filters reuse the PolesZerosResponseStage
     elif(elem_type == 'responseIIR'):
-        pz_transfer_function_type = _tag2obj(stage, _ns("type"), str)
-        pz_transfer_function_type = _map_transfer_type(pz_transfer_function_type)
+        pz_type = _tag2obj(stage, _ns("type"), str)
+        pz_transfer_function_type = _map_transfer_type(pz_type)
 
         numerators = stage.find(_ns("numerators")).text.split(" ")
         denominators = stage.find(_ns("denominators")).text.split(" ")
