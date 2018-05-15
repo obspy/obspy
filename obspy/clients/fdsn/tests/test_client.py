@@ -291,11 +291,17 @@ class ClientTestCase(unittest.TestCase):
         "queryauth" endpoint.
         """
         client = Client(base_url="IRIS", user_agent=USER_AGENT)
-        client.set_credentials(user="nobody@iris.edu", password="anonymous")
+        user = "nobody@iris.edu"
+        password = "anonymous"
+        client.set_credentials(user=user, password=password)
         got = client._build_url("dataselect", "query", {'net': "BW"})
         expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
                     "queryauth?net=BW")
         self.assertEqual(got, expected)
+        # more basic test: check that set_credentials has set Client.user
+        # (which is tested when checking which endpoint to use, query or
+        # queryauth)
+        self.assertEqual(client.user, user)
 
     def test_service_discovery_iris(self):
         """
