@@ -305,7 +305,7 @@ def log_spaced_filterbank_matrix(p, n, fs, w):
     b1 = int(np.floor(bl[0])) + 1
     b4 = int(min(fn2, np.ceil(bl[3]))) - 1
     pf = np.log(np.arange(b1 - 1, b4 + 1, dtype=np.float64) / n * fs / fl) / lr
-    fp = np.floor(pf)
+    fp = np.floor(pf).astype(np.int64)
     pm = pf - fp
     k2 = b2 - b1 + 1
     k3 = b3 - b1 + 1
