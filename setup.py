@@ -88,18 +88,18 @@ KEYWORDS = [
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'win', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
-    'focal mechanism', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'IASPEI',
-    'imaging', 'IMS', 'instrument correction', 'instrument simulation', 'IRIS',
-    'ISF', 'kinemetrics', 'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad',
-    'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC', 'Nordic', 'NRL',
-    'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
-    'real time', 'realtime', 'REFTEK', 'REFTEK130', 'RG-1.6', 'RT-130', 'RESP',
-    'response file', 'RT', 'SAC', 'scardec', 'sc3ml', 'SDS', 'SEED',
-    'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
-    'seismology', 'seismogram', 'seismograms', 'shapefile', 'signal', 'slink',
-    'spectrogram', 'StationXML', 'taper', 'taup', 'travel time', 'trigger',
-    'VERCE', 'WAV', 'waveform', 'WaveServer', 'WaveServerV', 'WebDC',
-    'web service', 'Winston', 'XML-SEED', 'XSEED', ]
+    'focal mechanism', 'FOCMEC', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P',
+    'IASPEI', 'imaging', 'IMS', 'instrument correction',
+    'instrument simulation', 'IRIS', 'ISF', 'kinemetrics', 'KML', 'magnitude',
+    'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES',
+    'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS', 'PDAS',
+    'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
+    'REFTEK130', 'RG-1.6', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
+    'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN',
+    'SeisHub', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
+    'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
+    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
+    'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED', ]
 
 # when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
 # when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
@@ -303,7 +303,8 @@ ENTRY_POINTS = {
         'FNETMT = obspy.io.nied.fnetmt',
         'GSE2 = obspy.io.gse2.bulletin',
         'IMS10BULLETIN = obspy.io.iaspei.core',
-        'EVT = obspy.io.sh.evt'
+        'EVT = obspy.io.sh.evt',
+        'FOCMEC = obspy.io.focmec.core',
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -377,6 +378,10 @@ ENTRY_POINTS = {
     'obspy.plugin.event.EVT': [
         'isFormat = obspy.io.sh.evt:_is_evt',
         'readFormat = obspy.io.sh.evt:_read_evt',
+        ],
+    'obspy.plugin.event.FOCMEC': [
+        'isFormat = obspy.io.focmec.core:_is_focmec',
+        'readFormat = obspy.io.focmec.core:_read_focmec',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
