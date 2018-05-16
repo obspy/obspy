@@ -282,6 +282,27 @@ class ClientTestCase(unittest.TestCase):
                     "queryauth?net=BW")
         self.assertEqual(got, expected)
 
+    def test_set_credentials(self):
+        """
+        Test for issue #2146
+
+        When setting credentials not during `__init__` but using
+        `set_credentials`, waveform queries should still properly go to
+        "queryauth" endpoint.
+        """
+        client = Client(base_url="IRIS", user_agent=USER_AGENT)
+        user = "nobody@iris.edu"
+        password = "anonymous"
+        client.set_credentials(user=user, password=password)
+        got = client._build_url("dataselect", "query", {'net': "BW"})
+        expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
+                    "queryauth?net=BW")
+        self.assertEqual(got, expected)
+        # more basic test: check that set_credentials has set Client.user
+        # (which is tested when checking which endpoint to use, query or
+        # queryauth)
+        self.assertEqual(client.user, user)
+
     def test_service_discovery_iris(self):
         """
         Tests the automatic discovery of services with the IRIS endpoint. The

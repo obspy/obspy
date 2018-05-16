@@ -288,6 +288,7 @@ class Client(object):
         :type password: str
         :param password: Password for given user name.
         """
+        self.user = user
         self._set_opener(user, password)
 
     def set_eida_token(self, token):
