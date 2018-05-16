@@ -1,4 +1,4 @@
-1.1.x:
+1.1.1rc1:
  - General:
    * Tests pass with numpy 1.14 (see #2044).
  - obspy.core:
