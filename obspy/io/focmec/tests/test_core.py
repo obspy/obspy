@@ -34,6 +34,18 @@ class FOCMECTestCase(unittest.TestCase):
             '0.16 cut-off\nInput from a file focmec_8sta.inp\n12-MAY-90 '
             'Sakhalin Island event:  161221 disp picks')
         self.assertEqual(len(event.focal_mechanisms), 4)
+        expected_dip_strike_rake = (
+            (76.43, 59.08, -64.23),
+            (77.05, 54.08, -59.13),
+            (77.05, 59.89, -59.13),
+            (77.76, 54.50, -54.06))
+        for focmec, (dip, strike, rake) in zip(
+                event.focal_mechanisms, expected_dip_strike_rake):
+            plane1 = focmec.nodal_planes.nodal_plane_1
+            self.assertEqual(plane1.strike, strike)
+            self.assertEqual(plane1.dip, dip)
+            self.assertEqual(plane1.rake, rake)
+            self.assertEqual(focmec.nodal_planes.preferred_plane, 1)
 
     def _assert_cat_out(self, cat):
         self._assert_cat_common_parts(cat)

@@ -15,7 +15,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 from obspy import UTCDateTime, Catalog, __version__
 from obspy.core.event import (
-    Event, Comment, CreationInfo)
+    Event, FocalMechanism, NodalPlanes, NodalPlane, Comment, CreationInfo)
 
 
 # XXX some current PR was doing similar, should be merged to
@@ -124,6 +124,18 @@ def _read_focmec(filename, **kwargs):
     return cat
 
 
+def _is_lst_block_start(line):
+    if line.strip().startswith('+' * 20):
+        return True
+    return False
+
+
+def _go_to_next_lst_block(lines):
+    while lines and not _is_lst_block_start(lines[0]):
+        lines.pop(0)
+    return lines
+
+
 def _read_focmec_lst(lines):
     """
     Read given data into an :class:`~obspy.core.event.Event` object.
@@ -133,8 +145,32 @@ def _read_focmec_lst(lines):
         file.
     """
     event, lines = _read_common_header(lines)
-    event.focal_mechanisms = []
+    while lines:
+        lines = _go_to_next_lst_block(lines)
+        focmec, lines = _read_focmec_lst_one_block(lines)
+        if focmec is None:
+            break
+        event.focal_mechanisms.append(focmec)
     return event
+
+
+def _read_focmec_lst_one_block(lines):
+    while lines and not lines[0].lstrip().startswith('Dip,Strike,Rake'):
+        lines.pop(0)
+    # the last block does not contain a focmec but only a short comment how
+    # many solutions there were overall, so we hit a block that will not have
+    # the above line and we exhaust the lines list
+    if not lines:
+        return None, []
+    dip, strike, rake = [float(x) for x in lines[0].split()[1:4]]
+    plane1 = NodalPlane(strike=strike, dip=dip, rake=rake)
+    lines.pop(0)
+    dip, strike, rake = [float(x) for x in lines[0].split()[1:4]]
+    plane2 = NodalPlane(strike=strike, dip=dip, rake=rake)
+    planes = NodalPlanes(nodal_plane_1=plane1, nodal_plane_2=plane2,
+                         preferred_plane=1)
+    focmec = FocalMechanism(nodal_planes=planes)
+    return focmec, lines
 
 
 def _read_focmec_out(lines):
@@ -146,7 +182,19 @@ def _read_focmec_out(lines):
         file.
     """
     event, lines = _read_common_header(lines)
-    event.focal_mechanisms = []
+    # now move to first line with a focal mechanism
+    while lines and lines[0].split()[:3] != ['Dip', 'Strike', 'Rake']:
+        lines.pop(0)
+    for line in lines[1:]:
+        # allow for empty lines (maybe they can happen at the end sometimes..)
+        if not line.strip():
+            continue
+        dip, strike, rake = [float(x) for x in line.split()[:3]]
+        plane = NodalPlane(strike=strike, dip=dip, rake=rake)
+        planes = NodalPlanes(nodal_plane_1=plane, preferred_plane=1)
+        # XXX ideally should compute the auxilliary plane..
+        focmec = FocalMechanism(nodal_planes=planes)
+        event.focal_mechanisms.append(focmec)
     return event
 
 
