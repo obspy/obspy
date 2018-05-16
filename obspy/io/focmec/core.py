@@ -13,6 +13,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import re
+
 from obspy import UTCDateTime, Catalog, __version__
 from obspy.core.event import (
     Event, FocalMechanism, NodalPlanes, NodalPlane, Comment, CreationInfo)
@@ -145,16 +147,27 @@ def _read_focmec_lst(lines):
         file.
     """
     event, lines = _read_common_header(lines)
+    # now count how many polarities are used
+    pattern_polarity_summary = re.compile(
+        r'^ *([0-9])+ P Pol\. +([0-9])+ SV Pol\. +([0-9])+ SH Pol\. ')
+    polarity_count = None
+    for line in lines:
+        if _is_lst_block_start(line):
+            break
+        match = re.match(pattern_polarity_summary, line)
+        if match:
+            polarity_count = sum(int(x) for x in match.groups())
+            break
     while lines:
         lines = _go_to_next_lst_block(lines)
-        focmec, lines = _read_focmec_lst_one_block(lines)
+        focmec, lines = _read_focmec_lst_one_block(lines, polarity_count)
         if focmec is None:
             break
         event.focal_mechanisms.append(focmec)
     return event
 
 
-def _read_focmec_lst_one_block(lines):
+def _read_focmec_lst_one_block(lines, polarity_count=None):
     while lines and not lines[0].lstrip().startswith('Dip,Strike,Rake'):
         lines.pop(0)
     # the last block does not contain a focmec but only a short comment how
@@ -170,6 +183,16 @@ def _read_focmec_lst_one_block(lines):
     planes = NodalPlanes(nodal_plane_1=plane1, nodal_plane_2=plane2,
                          preferred_plane=1)
     focmec = FocalMechanism(nodal_planes=planes)
+    if polarity_count is not None:
+        pattern = re.compile(r'^ *(P|S[HV]) Polarity error at *[a-zA-Z]+')
+        polarity_errors = 0
+        for line in lines:
+            if _is_lst_block_start(line):
+                break
+            if re.match(pattern, line):
+                polarity_errors += 1
+        focmec.station_polarity_count = polarity_count
+        focmec.misfit = float(polarity_errors) / polarity_count
     return focmec, lines
 
 

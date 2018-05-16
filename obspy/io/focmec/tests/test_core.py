@@ -52,6 +52,9 @@ class FOCMECTestCase(unittest.TestCase):
 
     def _assert_cat_lst(self, cat):
         self._assert_cat_common_parts(cat)
+        for focmec in cat[0].focal_mechanisms:
+            self.assertEqual(focmec.misfit, 0.0)
+            self.assertEqual(focmec.station_polarity_count, 23)
 
     def test_is_focmec(self):
         for file_ in (self.lst_file, self.out_file):
