@@ -6,7 +6,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import os
 import unittest
 
-from obspy import read_events, Catalog
+from obspy import read_events, Catalog, UTCDateTime
 from obspy.core.event import Event
 from obspy.io.focmec.core import _is_focmec, _read_focmec
 
@@ -26,6 +26,13 @@ class FOCMECTestCase(unittest.TestCase):
         self.assertEqual(len(cat), 1)
         event = cat[0]
         self.assertTrue(isinstance(event, Event))
+        self.assertEqual(event.creation_info.creation_time,
+                         UTCDateTime(2017, 9, 8, 14, 54, 58))
+        self.assertEqual(
+            event.comments[0].text,
+            'Sakhalin:  8 BB stations 0.2 polarity errors 1 ratio error:  '
+            '0.16 cut-off\nInput from a file focmec_8sta.inp\n12-MAY-90 '
+            'Sakhalin Island event:  161221 disp picks')
         self.assertEqual(len(event.focal_mechanisms), 4)
 
     def _assert_cat_out(self, cat):

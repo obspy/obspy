@@ -14,7 +14,25 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 from obspy import UTCDateTime, Catalog, __version__
-from obspy.core.event import Event
+from obspy.core.event import (
+    Event, Comment, CreationInfo)
+
+
+# XXX some current PR was doing similar, should be merged to
+# XXX core/utcdatetime.py eventually..
+months = {
+    'jan': 1,
+    'feb': 2,
+    'mar': 3,
+    'apr': 4,
+    'may': 5,
+    'jun': 6,
+    'jul': 7,
+    'aug': 8,
+    'sep': 9,
+    'oct': 10,
+    'nov': 11,
+    'dec': 12}
 
 
 def _is_focmec(filename):
@@ -114,7 +132,7 @@ def _read_focmec_lst(lines):
     :param lines: List of decoded unicode strings with data from a FOCMEC lst
         file.
     """
-    event = _read_common_header(lines)
+    event, lines = _read_common_header(lines)
     event.focal_mechanisms = []
     return event
 
@@ -127,7 +145,7 @@ def _read_focmec_out(lines):
     :param lines: List of decoded unicode strings with data from a FOCMEC out
         file.
     """
-    event = _read_common_header(lines)
+    event, lines = _read_common_header(lines)
     event.focal_mechanisms = []
     return event
 
@@ -144,7 +162,23 @@ def _read_common_header(lines):
         file.
     """
     event = Event()
-    return event
+    # parse time.. too much bother to mess around with switching locales, so do
+    # it manually.. example:
+    # "  Fri Sep  8 14:54:58 2017 for program Focmec"
+    month, day, time_of_day, year = lines[0].split()[1:5]
+    year = int(year)
+    day = int(day)
+    month = int(months[month.lower()])
+    hour, minute, second = [int(x) for x in time_of_day.split(':')]
+    event.creation_info = CreationInfo()
+    event.creation_info.creation_time = UTCDateTime(
+        year, month, day, hour, minute, second)
+    # parse comments given in the next lines
+    text = '\n'.join([l.strip() for l in lines[1:4]])
+    event.comments.append(Comment(text=text))
+    # get rid of those common lines already parsed
+    lines = lines[4:]
+    return event, lines
 
 
 if __name__ == '__main__':
