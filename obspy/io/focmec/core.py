@@ -138,6 +138,20 @@ def _go_to_next_lst_block(lines):
     return lines
 
 
+def _get_polarity_count(lines):
+    pattern_polarity_summary = re.compile(
+        r'^ *([0-9])+ P Pol\. +([0-9])+ SV Pol\. +([0-9])+ SH Pol\. ')
+    for line in lines:
+        match = re.match(pattern_polarity_summary, line)
+        if match:
+            polarity_count = sum(int(x) for x in match.groups())
+            break
+    else:
+        polarity_count = None
+    weighted = '(weighted)' in line
+    return polarity_count, weighted
+
+
 def _read_focmec_lst(lines):
     """
     Read given data into an :class:`~obspy.core.event.Event` object.
@@ -147,9 +161,6 @@ def _read_focmec_lst(lines):
         file.
     """
     event, _ = _read_common_header(lines)
-    # now count how many polarities are used
-    pattern_polarity_summary = re.compile(
-        r'^ *([0-9])+ P Pol\. +([0-9])+ SV Pol\. +([0-9])+ SH Pol\. ')
     # don't regard separator lines at end of file
     separator_indices = [i for i, line in enumerate(lines) if
                          _is_lst_block_start(line) and i < len(lines) - 1]
@@ -162,15 +173,11 @@ def _read_focmec_lst(lines):
         blocks.append(lines[i + 1:])
         lines = lines[:i]
     blocks = blocks[::-1]
-    for line in header:
-        match = re.match(pattern_polarity_summary, line)
-        if match:
-            polarity_count = sum(int(x) for x in match.groups())
-            break
-    else:
-        polarity_count = None
+    # now get how many polarities are used
+    polarity_count, _ = _get_polarity_count(header)
     for block in blocks:
-        focmec, lines = _read_focmec_lst_one_block(block, polarity_count)
+        focmec, lines = _read_focmec_lst_one_block(
+            block, polarity_count)
         if focmec is not None:
             event.focal_mechanisms.append(focmec)
     return event
@@ -223,6 +230,7 @@ def _read_focmec_out(lines):
     else:
         return event
     header = lines[:i]
+    polarity_count, weighted = _get_polarity_count(header)
     focmec_list_header = lines[i]
     event.comments.append(Comment(text='\n'.join(header)))
     try:
@@ -233,13 +241,18 @@ def _read_focmec_out(lines):
         # allow for empty lines (maybe they can happen at the end sometimes..)
         if not line.strip():
             continue
-        dip, strike, rake = [float(x) for x in line.split()[:3]]
+        comment = Comment(text='\n'.join((focmec_list_header, line)))
+        items = line.split()
+        dip, strike, rake = [float(x) for x in items[:3]]
         plane = NodalPlane(strike=strike, dip=dip, rake=rake)
         planes = NodalPlanes(nodal_plane_1=plane, preferred_plane=1)
         # XXX ideally should compute the auxilliary plane..
         focmec = FocalMechanism(nodal_planes=planes)
-        focmec.comments.append(
-            Comment(text='\n'.join((focmec_list_header, line))))
+        focmec.station_polarity_count = polarity_count
+        if not weighted:
+            errors = sum([int(x) for x in items[3:6]])
+            focmec.misfit = float(errors) / polarity_count
+        focmec.comments.append(comment)
         event.focal_mechanisms.append(focmec)
     return event
 

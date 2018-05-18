@@ -96,21 +96,29 @@ class FOCMECTestCase(unittest.TestCase):
             self.assertEqual(plane1.dip, dip)
             self.assertEqual(plane1.rake, rake)
             self.assertEqual(focmec.nodal_planes.preferred_plane, 1)
+        for focmec in cat[0].focal_mechanisms:
+            self.assertEqual(focmec.station_polarity_count, 23)
 
     def _assert_cat_out(self, cat):
         self._assert_cat_common_parts(cat)
         self.assertEqual(cat[0].comments[0].text, self.out_file_header)
         self.assertEqual(cat[0].focal_mechanisms[0].comments[0].text,
                          out_file_first_comment)
+        for focmec in cat[0].focal_mechanisms:
+            # misfit should be None, because the file specifies that polarity
+            # errors are weighted and in the out file format we can't know how
+            # many individual errors there are
+            self.assertEqual(focmec.misfit, None)
 
     def _assert_cat_lst(self, cat):
         self._assert_cat_common_parts(cat)
-        for focmec in cat[0].focal_mechanisms:
-            self.assertEqual(focmec.misfit, 0.0)
-            self.assertEqual(focmec.station_polarity_count, 23)
         self.assertEqual(cat[0].comments[0].text, self.lst_file_header)
         self.assertEqual(cat[0].focal_mechanisms[0].comments[0].text,
                          lst_file_first_comment)
+        for focmec in cat[0].focal_mechanisms:
+            # misfit should be 0.0, because in the lst file we can count the
+            # number of individual errors
+            self.assertEqual(focmec.misfit, 0.0)
 
     def test_is_focmec(self):
         for file_ in (self.lst_file, self.out_file):
