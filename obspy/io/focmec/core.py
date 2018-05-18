@@ -212,11 +212,18 @@ def _read_focmec_out(lines):
     :param lines: List of decoded unicode strings with data from a FOCMEC out
         file.
     """
-    event, lines = _read_common_header(lines)
+    event, _ = _read_common_header(lines)
     # now move to first line with a focal mechanism
-    while lines and lines[0].split()[:3] != ['Dip', 'Strike', 'Rake']:
-        lines.pop(0)
-    for line in lines[1:]:
+    for i, line in enumerate(lines):
+        if line.split()[:3] == ['Dip', 'Strike', 'Rake']:
+            break
+    else:
+        return event
+    try:
+        lines = lines[i + 1:]
+    except IndexError:
+        return event
+    for line in lines:
         # allow for empty lines (maybe they can happen at the end sometimes..)
         if not line.strip():
             continue
