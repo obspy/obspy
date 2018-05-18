@@ -177,6 +177,7 @@ def _read_focmec_lst(lines):
 
 
 def _read_focmec_lst_one_block(lines, polarity_count=None):
+    comment = Comment(text='\n'.join(lines))
     while lines and not lines[0].lstrip().startswith('Dip,Strike,Rake'):
         lines.pop(0)
     # the last block does not contain a focmec but only a short comment how
@@ -192,6 +193,7 @@ def _read_focmec_lst_one_block(lines, polarity_count=None):
     planes = NodalPlanes(nodal_plane_1=plane1, nodal_plane_2=plane2,
                          preferred_plane=1)
     focmec = FocalMechanism(nodal_planes=planes)
+    focmec.comments.append(comment)
     if polarity_count is not None:
         pattern = re.compile(r'^ *(P|S[HV]) Polarity error at *[a-zA-Z]+')
         polarity_errors = 0
@@ -221,6 +223,7 @@ def _read_focmec_out(lines):
     else:
         return event
     header = lines[:i]
+    focmec_list_header = lines[i]
     event.comments.append(Comment(text='\n'.join(header)))
     try:
         lines = lines[i + 1:]
@@ -235,6 +238,8 @@ def _read_focmec_out(lines):
         planes = NodalPlanes(nodal_plane_1=plane, preferred_plane=1)
         # XXX ideally should compute the auxilliary plane..
         focmec = FocalMechanism(nodal_planes=planes)
+        focmec.comments.append(
+            Comment(text='\n'.join((focmec_list_header, line))))
         event.focal_mechanisms.append(focmec)
     return event
 
