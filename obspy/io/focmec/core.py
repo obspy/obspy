@@ -146,24 +146,32 @@ def _read_focmec_lst(lines):
     :param lines: List of decoded unicode strings with data from a FOCMEC lst
         file.
     """
-    event, lines = _read_common_header(lines)
+    event, _ = _read_common_header(lines)
     # now count how many polarities are used
     pattern_polarity_summary = re.compile(
         r'^ *([0-9])+ P Pol\. +([0-9])+ SV Pol\. +([0-9])+ SH Pol\. ')
-    polarity_count = None
-    for line in lines:
-        if _is_lst_block_start(line):
-            break
+    # don't regard separator lines at end of file
+    separator_indices = [i for i, line in enumerate(lines) if
+                         _is_lst_block_start(line) and i < len(lines) - 1]
+    if not separator_indices:
+        return event
+    header = lines[:separator_indices[0]]
+    blocks = []
+    for i in separator_indices[::-1]:
+        blocks.append(lines[i + 1:])
+        lines = lines[:i]
+    blocks = blocks[::-1]
+    for line in header:
         match = re.match(pattern_polarity_summary, line)
         if match:
             polarity_count = sum(int(x) for x in match.groups())
             break
-    while lines:
-        lines = _go_to_next_lst_block(lines)
-        focmec, lines = _read_focmec_lst_one_block(lines, polarity_count)
-        if focmec is None:
-            break
-        event.focal_mechanisms.append(focmec)
+    else:
+        polarity_count = None
+    for block in blocks:
+        focmec, lines = _read_focmec_lst_one_block(block, polarity_count)
+        if focmec is not None:
+            event.focal_mechanisms.append(focmec)
     return event
 
 
