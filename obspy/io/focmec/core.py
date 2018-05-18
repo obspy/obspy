@@ -156,6 +156,7 @@ def _read_focmec_lst(lines):
     if not separator_indices:
         return event
     header = lines[:separator_indices[0]]
+    event.comments.append(Comment(text='\n'.join(header)))
     blocks = []
     for i in separator_indices[::-1]:
         blocks.append(lines[i + 1:])
@@ -219,6 +220,8 @@ def _read_focmec_out(lines):
             break
     else:
         return event
+    header = lines[:i]
+    event.comments.append(Comment(text='\n'.join(header)))
     try:
         lines = lines[i + 1:]
     except IndexError:
@@ -259,9 +262,6 @@ def _read_common_header(lines):
     event.creation_info = CreationInfo()
     event.creation_info.creation_time = UTCDateTime(
         year, month, day, hour, minute, second)
-    # parse comments given in the next lines
-    text = '\n'.join([l.strip() for l in lines[1:4]])
-    event.comments.append(Comment(text=text))
     # get rid of those common lines already parsed
     lines = lines[4:]
     return event, lines
