@@ -61,6 +61,7 @@ master:
      objects to shapefile (see #2012)
  - obspy.io
     * added read support for receiver gather format v. 1.6 (see #2070)
+    * added read support for FOCMEC 'out' and 'lst' files (see #2156)
  - obspy.signal.trigger:
     * fix a bug in AR picker (see #2157)
  - obspy.signal.PPSD:
