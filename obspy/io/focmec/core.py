@@ -14,6 +14,9 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import re
+import warnings
+
+import numpy as np
 
 from obspy import UTCDateTime, Catalog, __version__
 from obspy.core.event import (
@@ -138,11 +141,16 @@ def _go_to_next_lst_block(lines):
     return lines
 
 
-def _get_polarity_count(lines):
+def _match_polarity_summary_line(line):
     pattern_polarity_summary = re.compile(
         r'^ *([0-9])+ P Pol\. +([0-9])+ SV Pol\. +([0-9])+ SH Pol\. ')
+    match = re.match(pattern_polarity_summary, line)
+    return match
+
+
+def _get_polarity_count(lines):
     for line in lines:
-        match = re.match(pattern_polarity_summary, line)
+        match = _match_polarity_summary_line(line)
         if match:
             polarity_count = sum(int(x) for x in match.groups())
             break
@@ -167,18 +175,52 @@ def _read_focmec_lst(lines):
     if not separator_indices:
         return event
     header = lines[:separator_indices[0]]
+    # get how many polarities are used
+    polarity_count, _ = _get_polarity_count(header)
+    # compute azimuthal gap
+    for i, line in enumerate(header):
+        if line.split()[:3] == ['Statn', 'Azimuth', 'TOA']:
+            break
+    azimuths = []
+    try:
+        for line in header[i + 1:]:
+            # at the end of the polarity info block is the polarity summary
+            # line..
+            if _match_polarity_summary_line(line):
+                break
+            sta, azimuth, takeoff_angle, key = line.split()[:4]
+            # these are all keys that identify a station polarity in FOCMEC,
+            # because here we do not take into account amplitude ratios for the
+            # azimuthal gap
+            if key.upper() in 'CUD+-<>LRFB':
+                azimuths.append(float(azimuth))
+    except IndexError:
+        pass
+    if len(azimuths) != polarity_count:
+        msg = ('Unexpected mismatch in number of polarity lines found ({:d}) '
+               'and used polarities indicated by header ({:d})').format(
+                   len(azimuths), polarity_count)
+        warnings.warn(msg)
+    if len(azimuths) > 1:
+        azimuths = sorted(azimuths)
+        # numpy diff on the azimuth list is missing to compare first and last
+        # entry (going through North), so add that manually
+        azimuthal_gap = np.diff(azimuths).max()
+        azimuthal_gap = max(azimuthal_gap, azimuths[0] + 360 - azimuths[-1])
+    else:
+        azimuthal_gap = None
+
     event.comments.append(Comment(text='\n'.join(header)))
     blocks = []
     for i in separator_indices[::-1]:
         blocks.append(lines[i + 1:])
         lines = lines[:i]
     blocks = blocks[::-1]
-    # now get how many polarities are used
-    polarity_count, _ = _get_polarity_count(header)
     for block in blocks:
         focmec, lines = _read_focmec_lst_one_block(
             block, polarity_count)
         if focmec is not None:
+            focmec.azimuthal_gap = azimuthal_gap
             event.focal_mechanisms.append(focmec)
     return event
 

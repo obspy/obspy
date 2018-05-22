@@ -109,6 +109,8 @@ class FOCMECTestCase(unittest.TestCase):
             # errors are weighted and in the out file format we can't know how
             # many individual errors there are
             self.assertEqual(focmec.misfit, None)
+            # we can't tell the gap from the out format
+            self.assertEqual(focmec.azimuthal_gap, None)
 
     def _assert_cat_lst(self, cat):
         self._assert_cat_common_parts(cat)
@@ -117,8 +119,10 @@ class FOCMECTestCase(unittest.TestCase):
                          lst_file_first_comment)
         for focmec in cat[0].focal_mechanisms:
             # misfit should be 0.0, because in the lst file we can count the
-            # number of individual errors
+            # number of individual errors (and there's no polarity errors)
             self.assertEqual(focmec.misfit, 0.0)
+            # we can't tell the gap from the out format
+            self.assertEqual(focmec.azimuthal_gap, 236.7)
 
     def test_is_focmec(self):
         for file_ in (self.lst_file, self.out_file):
