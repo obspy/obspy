@@ -219,9 +219,12 @@ def _read_focmec_lst(lines):
     for block in blocks:
         focmec, lines = _read_focmec_lst_one_block(
             block, polarity_count)
-        if focmec is not None:
-            focmec.azimuthal_gap = azimuthal_gap
-            event.focal_mechanisms.append(focmec)
+        if focmec is None:
+            continue
+        focmec.azimuthal_gap = azimuthal_gap
+        focmec.creation_info = CreationInfo(
+            version='FOCMEC', creation_time=event.creation_info.creation_time)
+        event.focal_mechanisms.append(focmec)
     return event
 
 
@@ -291,6 +294,8 @@ def _read_focmec_out(lines):
         # XXX ideally should compute the auxilliary plane..
         focmec = FocalMechanism(nodal_planes=planes)
         focmec.station_polarity_count = polarity_count
+        focmec.creation_info = CreationInfo(
+            version='FOCMEC', creation_time=event.creation_info.creation_time)
         if not weighted:
             errors = sum([int(x) for x in items[3:6]])
             focmec.misfit = float(errors) / polarity_count

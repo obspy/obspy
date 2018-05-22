@@ -54,6 +54,7 @@ out_file_first_comment = (
     "    Dip   Strike   Rake    Pol: P     SV    SH  AccR/TotR  RMS RErr  "
     "AbsMaxDiff\n   76.43   59.08  -64.23       0.00  0.00  0.00    11/11    "
     "0.0852    0.1543")
+creation_time = UTCDateTime(2017, 9, 8, 14, 54, 58)
 
 
 class FOCMECTestCase(unittest.TestCase):
@@ -98,6 +99,10 @@ class FOCMECTestCase(unittest.TestCase):
             self.assertEqual(focmec.nodal_planes.preferred_plane, 1)
         for focmec in cat[0].focal_mechanisms:
             self.assertEqual(focmec.station_polarity_count, 23)
+            # check creation time
+            self.assertEqual(focmec.creation_info.creation_time, creation_time)
+            # check creation info version
+            self.assertEqual(focmec.creation_info.version, 'FOCMEC')
 
     def _assert_cat_out(self, cat):
         self._assert_cat_common_parts(cat)
