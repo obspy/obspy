@@ -53,7 +53,7 @@ def _is_focmec(filename):
     #   Fri Sep  8 14:54:58 2017 for program Focmec
     try:
         line = line.decode('ASCII')
-    except:
+    except Exception:
         return False
     line = line.split()
     # program name 'focmec' at the end is written slightly differently
