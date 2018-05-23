@@ -8,7 +8,6 @@ from future.builtins import *  # NOQA
 
 import os
 import unittest
-import warnings
 
 import numpy as np
 
@@ -195,13 +194,8 @@ class CoreTestCase(unittest.TestCase):
         # 1 - little endian, 32 bit, version 7
         st1 = read(os.path.join(self.path,
                                 '2011-09-06-1311-36S.A1032_001BH_Z'))
-        # raises "UserWarning: Record contains a fractional seconds" - ignore
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always', UserWarning)
-            st2 = read(os.path.join(self.path,
-                                    '2011-09-06-1311-36S.A1032_001BH_Z.mseed'))
-            self.assertEqual(len(w), 1)
-            self.assertEqual(w[0].category, UserWarning)
+        st2 = read(os.path.join(self.path,
+                                '2011-09-06-1311-36S.A1032_001BH_Z.mseed'))
         self.assertEqual(len(st1), len(st2))
         self.assertTrue(np.allclose(st1[0].data, st2[0].data))
 

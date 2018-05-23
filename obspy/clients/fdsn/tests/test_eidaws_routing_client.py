@@ -146,8 +146,8 @@ AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
                 network="XX", station="XXXXX", location="XX", channel="XXX",
                 starttime=obspy.UTCDateTime(2017, 1, 1),
                 endtime=obspy.UTCDateTime(2017, 1, 2))
-        self.assertEqual(e.exception.args[0],
-                         "No data available for request.")
+        self.assertTrue(e.exception.args[0].startswith(
+            "No data available for request."))
 
     def test_get_waveforms(self):
         """

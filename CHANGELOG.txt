@@ -47,10 +47,12 @@ master:
      'method' parameter to be consistent with recent SciPy versions
      (see #2042).
 
-1.1.x:
+1.1.1rc1:
  - General:
    * Tests pass with numpy 1.14 (see #2044).
  - obspy.core:
+   * UTCDateTime now raises a meaningful exceptions when passing
+     invalid or out-of-bounds 'julday' during initialization (see #1988)
    * Fix pickling of traces with a sampling rate of 0 (see #1990)
    * read_inventory() used with non-existing file path (e.g. typo in filename)
      now shows a proper "No such file or directory" error message (see #2062)
@@ -69,6 +71,7 @@ master:
      and/or `location` are set (see #1810, #2031, #2047).
    * A few fixes and stability improvements for the mass downloader
      (see #2081).
+   * Fixed routing startup error when running under certain locales (see #2147)
  - obspy.imaging:
    * Normalize moment tensors prior to plotting in the mopad wrapper to
      stabilize the algorithm (see #2114, #2125).
@@ -77,6 +80,8 @@ master:
      (see #1981, #2057).
    * Fix util.get_start_and_end_time returning sample rate = 0 when
      sample rate = 1 (see #2069)
+   * Avoid showing invalid warnings when guessing endian during parsing
+     timestamps (see #1988)
  - obspy.io.nordic
    * Bug-fix for amplitudes without magnitude_hint (see #2021)
    * Bug-fix for wavefiles with full path stripping (see #2021)
@@ -97,6 +102,9 @@ master:
    * PPSD: for safety reasons, raise an ObsPyException if trying to read a PPSD
      npz file that was written with a newer version of the npz representation
      than is used by current ObsPy version (see #2051)
+ - obspy.taup:
+   * Fallback to linear slowness interpolation for very small and
+     shallow layers (see #2126, #2129).
 
 1.1.0: (doi: 10.5281/zenodo.165135)
  - General:
@@ -181,6 +189,8 @@ master:
    * The functionality behind the `obspy-scan` command line script has been
      refactored into a `Scanner` class so that it can be reused in custom
      workflows. (see #1444)
+   * Almost always return the figure handle for the plots to make it work with
+     the jupyter notebooks (see #1615).
  - obspy.imaging.cm:
    * new colormap: viridis_white. This is a modification of viridis that
      goes to white instead of yellow but remains perceptually uniform. It
