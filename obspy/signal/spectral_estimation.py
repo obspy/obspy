@@ -1841,8 +1841,9 @@ class PPSD(object):
 
         if "meshgrid" not in fig.ppsd:
             fig.ppsd.meshgrid = np.meshgrid(xedges, self.db_bin_edges)
-        X, Y = fig.ppsd.meshgrid
-        ppsd = ax.pcolormesh(X, Y, data.T, cmap=fig.ppsd.cmap, zorder=-1)
+        ppsd = ax.pcolormesh(
+            fig.ppsd.meshgrid[0], fig.ppsd.meshgrid[1], data.T,
+            cmap=fig.ppsd.cmap, zorder=-1)
         fig.ppsd.quadmesh = ppsd
 
         if "colorbar" not in fig.ppsd:
