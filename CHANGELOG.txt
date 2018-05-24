@@ -33,6 +33,8 @@ master:
      objects to shapefile (see #2012)
  - obspy.io
     * added read support for receiver gather format v. 1.6 (see #2070)
+ - obspy.signal.trigger:
+    * fix a bug in AR picker (see #2157)
  - obspy.signal.PPSD:
    * Fixed exact trace cutting for PSD segments (see #2040).
    * Timestamp representations internally and in npz I/O were changed to use

@@ -95,8 +95,8 @@ class TriggerTestCase(unittest.TestCase):
                                lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
         self.assertAlmostEqual(ptime, 30.6350002289)
         # seems to be strongly machine dependent, go for int for 64 bit
-        # self.assertAlmostEqual(stime, 31.2800006866)
-        self.assertEqual(int(stime + 0.5), 31)
+        # self.assertEqual(int(stime + 0.5), 31)
+        self.assertAlmostEqual(stime, 31.165, delta=0.05)
 
     def test_trigger_onset(self):
         """
