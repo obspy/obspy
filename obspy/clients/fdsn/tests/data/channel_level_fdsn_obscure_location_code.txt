@@ -1,0 +1,2 @@
+#Network | Station | Location | Channel | Latitude | Longitude | Elevation | Depth | Azimuth | Dip | SensorDescription | Scale | ScaleFreq | ScaleUnits |  SampleRate | StartTime | EndTime
+AK|BAGL|XY|LHZ|60.4896|-142.0915|1470.0|0.0|0.0|-90.0|Nanometrics Trillium 240 Sec Response sn 400 and a|4.88233E8|0.02|M/S|1.0|2013-01-01T00:00:00|2599-12-31T23:59:59

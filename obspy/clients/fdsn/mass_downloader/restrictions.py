@@ -201,7 +201,21 @@ class Restrictions(object):
                                      "BL[ZNE12]", "ML[ZNE12]",
                                      "EL[ZNE12]", "LL[ZNE12]",
                                      "SH[ZNE12]"),
-                 location_priorities=("", "00", "10")):
+                 location_priorities=("", "00", "10", "01", "20", "02", "30",
+                                      "03", "40", "04", "50", "05", "60",
+                                      "06", "70", "07", "80", "08", "90",
+                                      "09")):
+        # Awkward logic to keep track whether or not the location priorities
+        # are equal to the default values. This "solution" keeps the function
+        # signature intact and it also located close to where the location
+        # priorities are set.
+        if location_priorities == (
+                "", "00", "10", "01", "20", "02", "30", "03", "40", "04", "50",
+                "05", "60", "06", "70", "07", "80", "08", "90", "09"):
+            self._loc_prios_are_default_values = True
+        else:
+            self._loc_prios_are_default_values = False
+
         self.starttime = obspy.UTCDateTime(starttime)
         self.endtime = obspy.UTCDateTime(endtime)
         self.station_starttime = station_starttime and \

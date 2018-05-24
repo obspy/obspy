@@ -2571,6 +2571,37 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             with open(filename, "w") as buf:
                 buf.write("obspy")
 
+    def test_warning_when_location_prios_excludes_all_channels(self):
+        """
+        Tests that the logger raises a warning when the location_priorities
+        settings excludes all channels.
+        """
+        # No warning should have been raised yet.
+        self.assertEqual(self.logger.warning.call_count, 0)
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data,
+                         "channel_level_fdsn_obscure_location_code.txt"))
+        c.get_availability()
+        # Nothing should have been selected.
+        self.assertEqual(c.stations, {})
+        # But a warning should have been raised.
+        self.assertEqual(self.logger.warning.call_count, 1)
+        self.assertEqual(
+            self.logger.warning.call_args[0][0],
+            "Client 'Test' - No channel at station AK.BAGL has been selected "
+            "due to the `location_priorities` settings.")
+
+        self.logger.warning.reset_mock()
+        self.assertEqual(self.logger.warning.call_count, 0)
+        # Having non-default location priorities should not warn.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            location_priorities=["00"])
+        self.assertEqual(c.stations, {})
+        self.assertEqual(self.logger.warning.call_count, 0)
+
 
 class DownloadHelperTestCase(unittest.TestCase):
     """

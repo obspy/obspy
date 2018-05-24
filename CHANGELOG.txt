@@ -11,6 +11,13 @@ master:
    * Added remove method to Inventory class (see #2088).
    * Added id property to WaveformStreamID (see #2131).
    * Added __str__ and _repr_pretty_ method for Comment class (see #2115)
+ - obspy.clients.fdsn:
+   * Adding more location codes to the default priority list in the mass
+     downloader (see #2155, #2159).
+   * The mass downloader now raises a warning if all channels from a station
+     have been deselected due to the default location priorities setting. This
+     is a pure usability improvement as it has been confusing users
+     (see #2159).
  - obspy.io.nordic:
    * Add ability to read and write focal mechanisms and moment tensor
      information.
