@@ -184,16 +184,16 @@ class BeachballTestCase(unittest.TestCase):
         """
         # https://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         mt = MomentTensor((0.91, -0.89, -0.02, 1.78, -1.55, 0.47), 0)
-        (T, N, P) = mt2axes(mt)
-        self.assertAlmostEqual(T.val, 2.52461359)
-        self.assertAlmostEqual(T.dip, 55.33018576)
-        self.assertAlmostEqual(T.strike, 49.53656116)
-        self.assertAlmostEqual(N.val, 0.08745048)
-        self.assertAlmostEqual(N.dip, 7.62624529)
-        self.assertAlmostEqual(N.strike, 308.37440488)
-        self.assertAlmostEqual(P.val, -2.61206406)
-        self.assertAlmostEqual(P.dip, 33.5833323)
-        self.assertAlmostEqual(P.strike, 213.273886)
+        (t, n, p) = mt2axes(mt)
+        self.assertAlmostEqual(t.val, 2.52461359)
+        self.assertAlmostEqual(t.dip, 55.33018576)
+        self.assertAlmostEqual(t.strike, 49.53656116)
+        self.assertAlmostEqual(n.val, 0.08745048)
+        self.assertAlmostEqual(n.dip, 7.62624529)
+        self.assertAlmostEqual(n.strike, 308.37440488)
+        self.assertAlmostEqual(p.val, -2.61206406)
+        self.assertAlmostEqual(p.dip, 33.5833323)
+        self.assertAlmostEqual(p.strike, 213.273886)
 
     def test_collection(self):
         """

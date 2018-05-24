@@ -57,16 +57,16 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         units of the station coordinates or ground motions, but the units of vp
         and vs must be the SAME because only their ratio is used.
     :type array_coords: numpy.ndarray
-    :param array_coords: array of dimension Na x 3, where Na is the number of
-        stations in the array.  array_coords[i,j], i in arange(Na), j in
+    :param array_coords: array of dimension na x 3, where na is the number of
+        stations in the array.  array_coords[i,j], i in arange(na), j in
         arange(3) is j coordinate of station i.  units of array_coords may be
         anything, but see the "Discussion of input and output units" above.
         The origin of coordinates is arbitrary and does not affect the
         calculated strains and rotations.  Stations may be entered in any
         order.
     :type ts1: numpy.ndarray
-    :param ts1: array of x1-component seismograms, dimension nt x Na.
-        ts1[j,k], j in arange(nt), k in arange(Na) contains the k'th time
+    :param ts1: array of x1-component seismograms, dimension nt x na.
+        ts1[j,k], j in arange(nt), k in arange(na) contains the k'th time
         sample of the x1 component ground motion at station k. NOTE that the
         seismogram in column k must correspond to the station whose coordinates
         are in row k of in.array_coords. nt is the number of time samples in
@@ -84,10 +84,10 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
 
         * If sigmau is a scalar, it will be used for all components of all
           stations.
-        * If sigmau is a 1D array of length Na, sigmau[i] will be the noise
+        * If sigmau is a 1D array of length na, sigmau[i] will be the noise
           assigned to all components of the station corresponding to
           array_coords[i,:]
-        * If sigmau is a 2D array of dimension  Na x 3, then sigmau[i,j] is
+        * If sigmau is a 2D array of dimension  na x 3, then sigmau[i,j] is
           used as the noise of station i, component j.
 
         In all cases, this routine assumes that the noise covariance between
@@ -98,7 +98,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         be used, and only ground motion time series in the first, fourth, and
         tenth columns of ts1 will be used. Nplus1 is the number of elements in
         the subarray vector, and N is set to Nplus1 - 1. To use all stations in
-        the array, set in.subarray = arange(Na), where Na is the total number
+        the array, set in.subarray = arange(na), where na is the total number
         of stations in the array (equal to the number of rows of
         in.array_coords. Sequence of stations in the subarray vector is
         unimportant; i.e.  subarray = array([1, 4, 10]) will yield essentially
@@ -205,9 +205,9 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     (1) Note On Specifying Input Array And Selecting Subarrays
 
         This routine allows the user to input the coordinates and ground
-        motion time series of all stations in a seismic array having Na
+        motion time series of all stations in a seismic array having na
         stations and the user may select for analysis a subarray of Nplus1
-        <= Na stations.
+        <= na stations.
 
     (2) Discussion Of Physical Units Of Input And Output
 
@@ -230,7 +230,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     # start the code -------------------------------------------------
     # This assumes that all stations and components have the same number of
     # time samples, nt
-    [nt, Na] = np.shape(ts1)
+    [nt, na] = np.shape(ts1)
 
     # check to ensure all components have same duration
     if ts1.shape != ts2.shape:
@@ -241,16 +241,16 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     # check to verify that the number of stations in ts1 agrees with the number
     # of stations in array_coords
     [nrac, _ncac] = array_coords.shape
-    if nrac != Na:
-        msg = 'ts1 has %s columns(stations) but array_coords has ' % Na + \
+    if nrac != na:
+        msg = 'ts1 has %s columns(stations) but array_coords has ' % na + \
               '%s rows(stations)' % nrac
         raise ValueError(msg)
 
     # check stations in subarray exist
     if min(subarray) < 0:
         raise ValueError('Station number < 0 in subarray')
-    if max(subarray) > Na:
-        raise ValueError('Station number > Na in subarray')
+    if max(subarray) > na:
+        raise ValueError('Station number > na in subarray')
 
     # extract the stations of the subarray to be used
     subarraycoords = array_coords[subarray, :]
@@ -308,11 +308,11 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     elif np.shape(sigmau) == (np.size(sigmau),):
         # sigmau is a row or column vector
         # check dimension is okay
-        if np.size(sigmau) != Na:
-            raise ValueError('sigmau must have %s elements' % Na)
+        if np.size(sigmau) != na:
+            raise ValueError('sigmau must have %s elements' % na)
         junk = (np.c_[sigmau, sigmau, sigmau]) ** 2  # matrix of variances
         cu = np.diag(np.reshape(junk[subarray, :], (3 * n_plus_1)))
-    elif sigmau.shape == (Na, 3):
+    elif sigmau.shape == (na, 3):
         cu = np.diag(np.reshape(((sigmau[subarray, :]) ** 2).transpose(),
                      (3 * n_plus_1)))
     else:
