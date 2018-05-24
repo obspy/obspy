@@ -1219,9 +1219,20 @@ class ClientDownloadHelper(object):
                 if self.restrictions.location is None:
                     # Filter to remove unwanted locations according to the
                     # priority list.
+                    has_channels_before_filtering = bool(channels)
                     channels = utils.filter_channel_priority(
                         channels, key="location",
                         priorities=self.restrictions.location_priorities)
+                    # This has been a point of confusion for users so raise a
+                    # warning in case this removed all channels and is still
+                    # using the default settings.
+                    if not channels and has_channels_before_filtering and \
+                            self.restrictions._loc_prios_are_default_values:
+                        self.logger.warning(
+                            "Client '%s' - No channel at station %s.%s has "
+                            "been selected due to the `location_priorities` "
+                            "settings." % (self.client_name, network.code,
+                                           station.code))
 
                 if not channels:
                     continue
