@@ -138,9 +138,21 @@ class FOCMECTestCase(unittest.TestCase):
         cat = _read_focmec(self.out_file)
         self._assert_cat_out(cat)
 
+    def test_read_focmec_out_open_file(self):
+        for mode in ('rb', 'rt'):
+            with open(self.out_file, mode) as fh:
+                cat = _read_focmec(fh)
+            self._assert_cat_out(cat)
+
     def test_read_focmec_lst(self):
         cat = _read_focmec(self.lst_file)
         self._assert_cat_lst(cat)
+
+    def test_read_focmec_lst_open_file(self):
+        for mode in ('rb', 'rt'):
+            with open(self.lst_file, mode) as fh:
+                cat = _read_focmec(fh)
+            self._assert_cat_lst(cat)
 
     def test_read_focmec_out_through_plugin(self):
         cat = read_events(self.out_file)
