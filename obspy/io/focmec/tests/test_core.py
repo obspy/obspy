@@ -64,8 +64,9 @@ class FOCMECTestCase(unittest.TestCase):
     def setUp(self):
         # Directory where the test files are located
         self.path = os.path.dirname(__file__)
-        self.lst_file = os.path.join(self.path, 'data', 'focmec_8sta.lst')
-        self.out_file = os.path.join(self.path, 'data', 'focmec_8sta.out')
+        self.datapath = os.path.join(self.path, 'data')
+        self.lst_file = os.path.join(self.datapath, 'focmec_8sta.lst')
+        self.out_file = os.path.join(self.datapath, 'focmec_8sta.out')
         with open(self.out_file, 'rb') as fh:
             header = []
             for i in range(15):
@@ -148,6 +149,66 @@ class FOCMECTestCase(unittest.TestCase):
     def test_read_focmec_lst_through_plugin(self):
         cat = read_events(self.lst_file)
         self._assert_cat_lst(cat)
+
+    def test_read_focmec_lst_other_flavors(self):
+        """
+        This tests some additional files. lst files have a pretty free format
+        unfortunately. It depends on focmec program version and on input data /
+        program options what lines get printed and also how specific lines we
+        look for look like..
+
+        For these files just test a few things, in general reading should be
+        covered by basic tests above
+        """
+        # 1: focmec_qedUWne.lst
+        cat = read_events(os.path.join(self.datapath, 'focmec_qedUWne.lst'))
+        self.assertEqual(len(cat), 1)
+        focmecs = cat[0].focal_mechanisms
+        self.assertEqual(len(focmecs), 5)
+        focmec = focmecs[0]
+        plane = focmec.nodal_planes.nodal_plane_1
+        self.assertEqual(plane.strike, 308.43)
+        self.assertEqual(plane.dip, 58.68)
+        self.assertEqual(plane.rake, 16.48)
+        for focmec in focmecs:
+            self.assertEqual(focmec.azimuthal_gap, 79.5)
+        for focmec in focmecs[:-1]:
+            self.assertEqual(focmec.station_polarity_count, 190)
+            self.assertEqual(focmec.misfit, 21.0 / 190)
+        # last solution has one less polarity error
+        self.assertEqual(focmecs[-1].station_polarity_count, 190)
+        self.assertEqual(focmecs[-1].misfit, 20.0 / 190)
+
+        # 2: focmec_all.lst
+        cat = read_events(os.path.join(self.datapath, 'focmec_all.lst'))
+        self.assertEqual(len(cat), 1)
+        focmecs = cat[0].focal_mechanisms
+        self.assertEqual(len(focmecs), 3)
+        focmec = focmecs[0]
+        plane = focmec.nodal_planes.nodal_plane_1
+        self.assertEqual(plane.strike, 66.98)
+        self.assertEqual(plane.dip, 80.61)
+        self.assertEqual(plane.rake, -69.72)
+        for focmec, errors in zip(focmecs, (25, 29, 26)):
+            self.assertEqual(focmec.azimuthal_gap, 44.7)
+            self.assertEqual(focmec.station_polarity_count, 212)
+            self.assertEqual(focmec.misfit, float(errors) / 212)
+
+        # 3: focmec_8sta-noratios.lst
+        cat = read_events(os.path.join(self.datapath,
+                                       'focmec_8sta-noratios.lst'))
+        self.assertEqual(len(cat), 1)
+        focmecs = cat[0].focal_mechanisms
+        self.assertEqual(len(focmecs), 184)
+        focmec = focmecs[2]
+        plane = focmec.nodal_planes.nodal_plane_1
+        self.assertEqual(plane.strike, 255.00)
+        self.assertEqual(plane.dip, 10.0)
+        self.assertEqual(plane.rake, -90.00)
+        for focmec in focmecs:
+            self.assertEqual(focmec.azimuthal_gap, 236.7)
+            self.assertEqual(focmec.station_polarity_count, 23)
+            self.assertEqual(focmec.misfit, 0.0)
 
 
 def suite():
