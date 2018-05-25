@@ -25,7 +25,7 @@ from obspy.core.event import (
 
 # XXX some current PR was doing similar, should be merged to
 # XXX core/utcdatetime.py eventually..
-months = {
+MONTHS = {
     'jan': 1,
     'feb': 2,
     'mar': 3,
@@ -38,6 +38,9 @@ months = {
     'oct': 10,
     'nov': 11,
     'dec': 12}
+POLARITIES_IMPULSIVE = 'CUD<>LRFB'
+POLARITIES_EMERGENT = '+-lrfb'
+POLARITIES = POLARITIES_IMPULSIVE + POLARITIES_EMERGENT
 
 
 def _is_focmec(filename):
@@ -192,7 +195,7 @@ def _read_focmec_lst(lines):
             # these are all keys that identify a station polarity in FOCMEC,
             # because here we do not take into account amplitude ratios for the
             # azimuthal gap
-            if key.upper() in 'CUD+-<>LRFB':
+            if key in POLARITIES:
                 azimuths.append(float(azimuth))
     except IndexError:
         pass
@@ -322,7 +325,7 @@ def _read_common_header(lines):
     month, day, time_of_day, year = lines[0].split()[1:5]
     year = int(year)
     day = int(day)
-    month = int(months[month.lower()])
+    month = int(MONTHS[month.lower()])
     hour, minute, second = [int(x) for x in time_of_day.split(':')]
     event.creation_info = CreationInfo()
     event.creation_info.creation_time = UTCDateTime(
