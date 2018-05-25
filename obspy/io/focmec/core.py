@@ -201,8 +201,14 @@ def _read_focmec_lst(lines):
         if line.split()[:3] == ['Statn', 'Azimuth', 'TOA']:
             break
     azimuths = []
+    emergent_ignored = False
     try:
         for line in header[i + 1:]:
+            # some lst files have some comments on not using emergent
+            # polarities right in the middle of the polarity block..
+            if line.strip().lower() == 'not including emergent polarity picks':
+                emergent_ignored = True
+                continue
             # at the end of the polarity info block is the polarity summary
             # line..
             if _match_polarity_summary_line(line):
@@ -212,16 +218,19 @@ def _read_focmec_lst(lines):
             # because here we do not take into account amplitude ratios for the
             # azimuthal gap
             if key in POLARITIES:
-                azimuths.append(float(azimuth))
+                azimuths.append((float(azimuth), key))
     except IndexError:
         pass
-    if len(azimuths) != polarity_count:
+    # if specified in output, only regard impulsive polarities
+    azimuths = sorted(azimuths)
+    azimuths = [azimuth_ for azimuth_, key_ in azimuths if
+                not emergent_ignored or key_ in POLARITIES_IMPULSIVE]
+    if polarity_count is not None and len(azimuths) != polarity_count:
         msg = ('Unexpected mismatch in number of polarity lines found ({:d}) '
                'and used polarities indicated by header ({:d})').format(
                    len(azimuths), polarity_count)
         warnings.warn(msg)
     if len(azimuths) > 1:
-        azimuths = sorted(azimuths)
         # numpy diff on the azimuth list is missing to compare first and last
         # entry (going through North), so add that manually
         azimuthal_gap = np.diff(azimuths).max()
