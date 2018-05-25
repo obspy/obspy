@@ -145,9 +145,19 @@ def _go_to_next_lst_block(lines):
 
 
 def _match_polarity_summary_line(line):
-    pattern_polarity_summary = re.compile(
-        r'^ *([0-9])+ P Pol\. +([0-9])+ SV Pol\. +([0-9])+ SH Pol\. ')
-    match = re.match(pattern_polarity_summary, line)
+    # there seem to be (at least) two flavors of lst files..
+    # one has lines like this for polarity count summary:
+    # "   8 P Pol.  7 SV Pol.  8 SH Pol.  0.2 allowed (weighted) errors"
+    # .. the other one has lines like this:
+    # " Polarities/Errors:  P 190/21  SV 000/00  SH 000/00"
+    patterns_polarity_summary = (
+        r'^ *([0-9]+) P Pol\. +([0-9]+) SV Pol\. +([0-9]+) SH Pol\. ',
+        r'^ Polarities/Errors:  P +([0-9]+)/ *[0-9\.]+ +'
+        r'SV +([0-9]+)/ *[0-9\.]+ +SH +([0-9]+)/ *[0-9\.]')
+    for pattern_polarity_summary in patterns_polarity_summary:
+        match = re.match(pattern_polarity_summary, line)
+        if match:
+            break
     return match
 
 
@@ -166,6 +176,12 @@ def _get_polarity_count(lines):
 def _read_focmec_lst(lines):
     """
     Read given data into an :class:`~obspy.core.event.Event` object.
+
+    Unfortunately, "lst" is not a well defined file format but what it outputs
+    depends on input data, program parameters, program version and also
+    resulting focal mechanisms. But it has way more information than the "out"
+    format, so it's worth the additional effort to try and parse all flavors of
+    it.
 
     :type lines: list
     :param lines: List of decoded unicode strings with data from a FOCMEC lst
@@ -250,16 +266,35 @@ def _read_focmec_lst_one_block(lines, polarity_count=None):
     focmec = FocalMechanism(nodal_planes=planes)
     focmec.comments.append(comment)
     if polarity_count is not None:
-        pattern = re.compile(r'^ *(P|S[HV]) Polarity error at *[a-zA-Z]+')
-        polarity_errors = 0
-        for line in lines:
-            if _is_lst_block_start(line):
-                break
-            if re.match(pattern, line):
-                polarity_errors += 1
+        polarity_errors = _get_polarity_error_count_lst_block(lines)
         focmec.station_polarity_count = polarity_count
         focmec.misfit = float(polarity_errors) / polarity_count
     return focmec, lines
+
+
+def _get_polarity_error_count_lst_block(lines):
+    # counting polarity errors is a bit tedious, as sometimes it's multiple
+    # lines with station codes intersparsed with error weights and the error
+    # summary lines sometimes only have the weighted sum and sometimes also
+    # have the integer polarity error count, but we can't rely on it and thus
+    # have to count station codes..
+    pattern = re.compile(r'^ *(P|S[HV]) Polarity error at *([a-zA-Z]+.*)')
+    pattern_summary = re.compile(r'^ *Total (P|S[HV]) polarity weight is')
+    polarity_errors = 0
+    for i, line in enumerate(lines):
+        match = re.match(pattern, line)
+        if match:
+            polarity_errors += len(match.group(2).strip().split())
+            # there's always two lines together, station codes and then weights
+            # below it. there can be more than one 2-line tuple if there's many
+            # polarity errors and at the end comes a summary line
+            for j, line in enumerate(lines[i + 2:]):
+                if re.match(pattern_summary, line) or not line.strip():
+                    break
+                if j % 2:
+                    continue
+                polarity_errors += len(line.strip().split())
+    return polarity_errors
 
 
 def _read_focmec_out(lines):
