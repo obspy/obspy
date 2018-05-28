@@ -1,4 +1,4 @@
-1.1.1rc1:
+1.1.1rc1.post0:
  - General:
    * Tests pass with numpy 1.14 (see #2044).
  - obspy.core:
@@ -28,6 +28,8 @@
      stabilize the algorithm (see #2114, #2125).
  - obspy.io.ascii:
    * Fixes an issue with the time representation (see #2165, #2179).
+ - obspy.io.css:
+   * Fix automatic filetype detection (see #2160 and #2162)
  - obspy.io.mseed:
    * Ability to read files that have embedded chunks of non SEED data.
      (see #1981, #2057).
