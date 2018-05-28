@@ -62,9 +62,9 @@ def _is_css(filename):
             # check every line
             for line in lines:
                 assert(len(line.rstrip(b"\n\r")) == 283)
-                assert(line[26:27] == b".")
+                assert(b"." in line[26:28])
                 UTCDateTime(float(line[16:33]))
-                assert(line[71:72] == b".")
+                assert(b"." in line[71:73])
                 UTCDateTime(float(line[61:78]))
                 assert(line[143:145] in DTYPE)
     except Exception:
