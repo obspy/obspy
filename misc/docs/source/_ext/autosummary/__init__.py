@@ -62,13 +62,12 @@ import inspect
 import posixpath
 
 from six import text_type
-from docutils.parsers.rst import directives
+from docutils.parsers.rst import Directive, directives
 from docutils.statemachine import ViewList
 from docutils import nodes
 
 import sphinx
 from sphinx import addnodes
-from sphinx.util.compat import Directive
 
 
 # -- autosummary_toc node -----------------------------------------------------
