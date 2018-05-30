@@ -124,14 +124,14 @@ def _read_bytes(fi, length):
 def _read_24_bit_little(fi, length):
     """ read a 3 byte int, little endian """
     chunk = fi.read(length)
-    return struct.unpack('<I', chunk + b'\x00')[0]
+    return struct.unpack(nstr('<I'), chunk + b'\x00')[0]
 
 
 @_register_read_func('>i3')
 def _read_24_bit_big(fi, length):
     """ read a 3 byte int, big endian """
     chunk = fi.read(length)
-    return struct.unpack('>I', b'\x00' + chunk)[0]
+    return struct.unpack(nstr('>I'), b'\x00' + chunk)[0]
 
 
 @_register_read_func('>i.')
