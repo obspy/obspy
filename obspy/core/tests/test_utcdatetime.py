@@ -1123,6 +1123,17 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertFalse(a == e)
         self.assertFalse(e == a)
 
+    def test_strftime_with_years_less_than_1900(self):
+        """
+        Try that some strftime commands we use (e.g. in plotting) work even
+        with years less than 1900 (underlying datetime.datetime.strftime raises
+        ValueError if year <1900.
+        """
+        t = UTCDateTime(1888, 1, 2, 1, 39, 37)
+        self.assertEqual(t.strftime('%Y-%m-%d'), '1888-01-02')
+        t = UTCDateTime(998, 11, 9, 1, 39, 37)
+        self.assertEqual(t.strftime('%Y-%m-%d'), '0998-11-09')
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
