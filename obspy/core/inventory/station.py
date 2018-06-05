@@ -533,46 +533,6 @@ class Station(BaseNode):
         plot_dict[name] = ([time_tuple], channel_epoch_dict)
         return plot_dict
 
-    @staticmethod
-    def _group_by_epochs(plot_dict):
-        # if we're just plotting a single station's data
-        # then we can do a simple means of combining epochs
-        # (we don't have to check channels' consistency over multiple epochs)
-        # since (lists of) tuples of immutable objects can be made as sets
-        # we will exploit that in order to create matching epochs
-        epoch_dict = {}  # keys here will be epoch lists made into sets
-        for key in plot_dict.keys():
-            (channel_epochs, _) = set(plot_dict[key])
-            if channel_epochs not in epoch_dict.keys():
-                epoch_dict[channel_epochs] = [key]
-            else:
-                epoch_dict[channel_epochs].append(key)
-        # now epoch_dict has lists of all channels matching a given epoch
-        # we can simplify the plotted dict by merging them
-        # note that these are strings of form "[location].[channel]"
-        # we will set strings like "loc1: (ch1, ch2, ch3), loc2:..." etc.
-        # to be the keys for these matching epochs instead
-        new_plot_dict = {}
-        for epoch_set in epoch_dict.keys():
-            channel_strings = epoch_dict[epoch_set]
-            location_channel_map = {}
-            for channel_name in channel_strings:
-                split_string = channel_name.split('.')
-                location = split_string[0]
-                channel = split_string[1]
-                if location not in location_channel_map.keys():
-                    location_channel_map[location] = channel
-                else:
-                    location_channel_map[location].append(channel)
-            # now that the epoch listing exists, convert into a single string for plot dict key
-            combined_name = '['
-            for location in location_channel_map.keys():
-                combined_name += channel + ': ' + str(location_channel_map[location])
-                combined_name += ", "
-            combined_name = combined_name.rstrip(', ') + ']'
-            new_plot_dict[combined_name] = (list(epoch_set), {})
-        return new_plot_dict
-
     def plot_epochs(self, outfile=None, colormap=None, show=True,
                     combine=True):
         """
@@ -594,11 +554,50 @@ class Station(BaseNode):
         if combine:
             for key in plot_dict.keys():
                 (station_epoch, sub_dict) = plot_dict[key]
-                sub_dict = self._group_by_epochs(sub_dict)
+                sub_dict = _group_by_epochs(sub_dict)
                 plot_dict[key] = (station_epoch, sub_dict)
         fig = plot_inventory_epochs(plot_dict, outfile, colormap, show)
         return fig
 
+
+def _group_by_epochs(plot_dict):
+    # if we're just plotting a single station's data
+    # then we can do a simple means of combining epochs
+    # (we don't have to check channels' consistency over multiple epochs)
+    # since (lists of) tuples of immutable objects can be made as sets
+    # we will exploit that in order to create matching epochs
+    epoch_dict = {}  # keys here will be epoch lists made into sets
+    for key in plot_dict.keys():
+        (channel_epochs, _) = set(plot_dict[key])
+        if channel_epochs not in epoch_dict.keys():
+            epoch_dict[channel_epochs] = [key]
+        else:
+            epoch_dict[channel_epochs].append(key)
+    # now epoch_dict has lists of all channels matching a given epoch
+    # we can simplify the plotted dict by merging them
+    # note that these are strings of form "[location].[channel]"
+    # we will set strings like "loc1: (ch1, ch2, ch3), loc2:..." etc.
+    # to be the keys for these matching epochs instead
+    new_plot_dict = {}
+    for epoch_set in epoch_dict.keys():
+        channel_strings = epoch_dict[epoch_set]
+        location_channel_map = {}
+        for channel_name in channel_strings:
+            split_string = channel_name.split('.')
+            location = split_string[0]
+            channel = split_string[1]
+            if location not in location_channel_map.keys():
+                location_channel_map[location] = channel
+            else:
+                location_channel_map[location].append(channel)
+        # now that the epoch listing exists, convert into a single string for plot dict key
+        combined_name = '['
+        for location in location_channel_map.keys():
+            combined_name += channel + ': ' + str(location_channel_map[location])
+            combined_name += ", "
+        combined_name = combined_name.rstrip(', ') + ']'
+        new_plot_dict[combined_name] = (list(epoch_set), {})
+    return new_plot_dict
 
 if __name__ == '__main__':
     import doctest
