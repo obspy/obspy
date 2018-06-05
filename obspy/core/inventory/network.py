@@ -21,7 +21,7 @@ import warnings
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
-from .station import Station
+from .station import (Station, _group_by_epochs)
 from .util import (BaseNode, _unified_content_strings, _textwrap,
                    plot_inventory_epochs, _merge_plottable_structs)
 
@@ -677,7 +677,9 @@ class Network(BaseNode):
 
         return fig
 
-    def _get_epoch_plottable_struct(self):
+    def _get_epoch_plottable_struct(self, combine):
+        # combine is boolean controlling whether or not to merge channels
+        # with matching epochs for any given station
         # see the description for same-named method in inventory.py
         plot_dict = {}
         sub_dict = {}
@@ -685,6 +687,12 @@ class Network(BaseNode):
         for station in self.stations:
             eps = station._get_epoch_plottable_struct()
             sub_dict = _merge_plottable_structs(sub_dict, eps)
+        #
+        if combine:
+            for station_key in sub_dict.keys():
+                (station_epoch, channel_dict) = sub_dict[station_key]
+                channel_dict = _group_by_epochs(channel_dict)
+                sub_dict[station_key] = (station_epoch, channel_dict)
         if self.start_date is not None:
             start = self.start_date
             if self.end_date is None:
@@ -696,7 +704,7 @@ class Network(BaseNode):
             end = UTCDateTime(0)
         # time tuple is just start, end times (does not include sample rates)
         time_tuple = (start, end)
-        plot_dict[name] = ([time_tuple], 0, sub_dict)
+        plot_dict[name] = ([time_tuple], sub_dict)
         return plot_dict
 
     def plot_epochs(self, outfile=None, colormap=None, show=True,
@@ -716,9 +724,8 @@ class Network(BaseNode):
             merged onto the same y-axis values
         :type combine: boolean
         """
-        plot_dict = self._get_epoch_plottable_struct()
-        fig = plot_inventory_epochs(plot_dict, outfile, colormap, show,
-                                    combine)
+        plot_dict = self._get_epoch_plottable_struct(combine=combine)
+        fig = plot_inventory_epochs(plot_dict, outfile, colormap, show)
         return fig
 
 

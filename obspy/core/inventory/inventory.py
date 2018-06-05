@@ -894,7 +894,7 @@ class Inventory(ComparingObject):
 
         return fig
 
-    def _get_epoch_plottable_struct(self):
+    def _get_epoch_plottable_struct(self, combine):
         # get structure of inventory epoch's data in format
         # {inventory: ([(start, end)...], sample_rate, subdictionary)}
         # where subdictionary is recursively the same for netwk, stn, ch data
@@ -906,7 +906,7 @@ class Inventory(ComparingObject):
         plot_dict = {}
         sub_dict = {}
         for network in self.networks:
-            eps = network._get_epoch_plottable_struct()
+            eps = network._get_epoch_plottable_struct(combine)
             sub_dict = _merge_plottable_structs(sub_dict, eps)
         if hasattr(self, 'start_date'):
             start = self.start_date
@@ -918,7 +918,7 @@ class Inventory(ComparingObject):
             start = UTCDateTime(0)
             end = UTCDateTime(0)
         time_tuple = (start, end)
-        plot_dict[str('')] = ([time_tuple], 0, sub_dict)
+        plot_dict[str('')] = ([time_tuple], sub_dict)
         return plot_dict
 
     def plot_epochs(self, outfile=None, colormap=None, show=True,
@@ -948,9 +948,8 @@ class Inventory(ComparingObject):
             inv.plot_epochs(show=True)
 
         """
-        plot_dict = self._get_epoch_plottable_struct()
-        fig = plot_inventory_epochs(plot_dict, outfile, colormap, show,
-                                    combine)
+        plot_dict = self._get_epoch_plottable_struct(combine=combine)
+        fig = plot_inventory_epochs(plot_dict, outfile, colormap, show)
         return fig
 
 

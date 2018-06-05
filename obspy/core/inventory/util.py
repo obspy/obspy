@@ -863,8 +863,7 @@ def _seed_id_keyfunction(x):
     return x
 
 
-def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None, show=True,
-                          combine=True):
+def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None, show=True):
     """
     Creates a plot from inventory object's epoch plottable structure.
     :param plot_dict: Dictionary of inventory epochs. A structure used and
@@ -890,12 +889,8 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None, show=True,
 
     # y dictionary will hold plot component's initial y-value & height
     y_dict = {}
-    # used to combine y-axis values for data with matching epochs
-    mg_dict = {}
-    if combine:
-        mg_dict = _combine_same_epochs(plot_dict)
     # need to do tree traversal for getting appropriate y-axis variables
-    _plot_traversal_helper(plot_dict, y_dict, mg_dict)
+    _plot_traversal_helper(plot_dict, y_dict)
 
     # get height of each inv. component data, color lines according to height
     y_tick_labels = []
@@ -939,7 +934,7 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None, show=True,
     xmin = now
     # add the plottable data to the plot
     (xmin, xmax) = _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax,
-                                 clr_dict, mg_dict)
+                                 clr_dict)
     xmax = min(xmax, now)
     ax.set_title("Inventory Epoch Plot")
     ax.set_xlim(xmin, xmax)
@@ -955,99 +950,6 @@ def plot_inventory_epochs(plot_dict, outfile=None, colorspace=None, show=True,
     return fig
 
 
-def _combine_same_epochs(plot_dict):
-    # if multiple inventory objects at station level have matching epochs,
-    # merge them into a single line to be plotted and produce new label that
-    # identifies all possible subcomponents based on that
-    merge_dict, epochs_dict = _merge_epochs(plot_dict)
-    return _create_same_epochs_string(merge_dict, epochs_dict)
-
-
-def _merge_epochs(plot_dict, prefix=''):
-    # merges stations that have the same epochs into a single plot axis
-    merge_dict = {}
-    epochs_dict = {}
-    for key in plot_dict.keys():
-        label = ''
-        if len(prefix) > 0:
-            label = prefix + '.'
-        label += str(key)
-        # only combine at the station level
-        (epochs, samp, sub_dict) = plot_dict[key]
-        if len(sub_dict) > 0:
-            partial_merge, partial_epochs = _merge_epochs(sub_dict,
-                                                          prefix=label)
-            # multiple stations? different names
-            merge_dict.update(partial_merge)
-            for key in partial_epochs.keys():
-                epochs_dict[key] = partial_epochs[key]
-        else:
-            # append the epoch of current objects
-            ep_tup = []
-            for (start, end) in sorted(epochs):
-                ep_tup + [start.datetime, end.datetime]
-            ep_tup = tuple(ep_tup)
-            key = (prefix, ep_tup, samp)
-            if key in epochs_dict.keys():
-                epochs_dict[key].append(label)
-            else:
-                epochs_dict[key] = [label]
-    return merge_dict, epochs_dict
-
-
-def _create_same_epochs_string(merge_dict, epochs_dict):
-    # used to collect data with matching epochs to abbreviate large inv. plots
-    for key in epochs_dict.keys():
-        merged = sorted(epochs_dict[key])
-        match = merged[0]
-        if len(merged) > 1:
-            sep = '.'
-            # set of data for different locations ('00','10','',etc.)
-            loc_chars = set([])
-            # specific components for the characters in a channel
-            chars = [set([]), set([]), set([])]
-            for name in merged:
-                split = name.split(sep)
-                loc = split[2]
-                # location may be blank, use '_' to identify in merged list
-                if loc == '':
-                    loc_chars.add('_')
-                else:
-                    loc_chars.add(loc)
-                last = split[3]
-                band = last[0]
-                inst = last[1]
-                ornt = last[2:]
-                chars[0].add(band)
-                chars[1].add(inst)
-                chars[2].add(ornt)
-            match = sep.join(name.split(sep)[:-2]) + '.'
-            loc_chars = sorted(list(loc_chars))
-            if len(loc_chars) == 1:
-                match += loc_chars[0]
-            else:
-                match += '['
-                for i in range(len(loc_chars)-1):
-                    match += loc_chars[i]
-                    match += '|'
-                match += loc_chars[len(loc_chars)-1]
-                match += ']'
-            match += '.'
-            # read in each character from the channel character set
-            for char_set in chars:
-                group = ''
-                if len(char_set) > 1:
-                    group = '['
-                for char in sorted(char_set):
-                    group += char
-                if len(char_set) > 1:
-                    group += ']'
-                match += group
-            for name in merged:
-                merge_dict[name] = match
-    return merge_dict
-
-
 def _merge_plottable_structs(eps1, eps2):
     # each epoch for a given channel, station, etc. is a distinct inventory
     # object; this method merges all inventory epochs for a given name into
@@ -1057,15 +959,11 @@ def _merge_plottable_structs(eps1, eps2):
         if key not in merged_dict.keys():
             merged_dict[key] = eps2[key]
         else:
-            (epochs_1, samp_rate_1, sub_dict_1) = eps1[key]
-            (epochs_2, samp_rate_2, sub_dict_2) = eps2[key]
-
-            # sample rate isn't TOO important, though it may vary by epoch
-            # we just use the first as a matter of convention for dashing lines
-            # (otherwise we wouldn't need to keep track of it)
+            (epochs_1, sub_dict_1) = eps1[key]
+            (epochs_2, sub_dict_2) = eps2[key]
             epochs = epochs_1 + epochs_2
             sub_dict = _merge_plottable_structs(sub_dict_1, sub_dict_2)
-            merged_dict[key] = (epochs, samp_rate_1, sub_dict)
+            merged_dict[key] = (epochs, sub_dict)
 
             """if samp_rate_1 == samp_rate_2:
             else:
@@ -1077,7 +975,7 @@ def _merge_plottable_structs(eps1, eps2):
     return merged_dict
 
 
-def _plot_traversal_helper(plot_dict, y_dict, mg_dict, offset=0, prefix=''):
+def _plot_traversal_helper(plot_dict, y_dict, offset=0, prefix=''):
     # recursively get proper spacing for given structure
     # using the sub-dictionaries for each
     # sorting allows networks and stations to have their data be grouped
@@ -1095,24 +993,20 @@ def _plot_traversal_helper(plot_dict, y_dict, mg_dict, offset=0, prefix=''):
         # and then prevent collisions on y-axis values
         current_offset = offset  # y-axis value to put the current key
         height = 0
-        if label in mg_dict.keys():
-            y_label = mg_dict[label]
-        else:
-            y_label = label
+        y_label = label
         # if current label has already been established, ignore
         # since we've already merged separate epochs of inventory
         if y_label not in y_dict.keys():
             offset += 1
-            (_, _, sub_dict) = plot_dict[key]
-            offset = _plot_traversal_helper(sub_dict, y_dict, mg_dict,
-                                            offset=offset, prefix=y_label)
+            (_, sub_dict) = plot_dict[key]
+            offset = _plot_traversal_helper(sub_dict, y_dict, offset=offset, prefix=y_label)
             if height == 0:
                 height = offset - current_offset
             y_dict[y_label] = (current_offset, height)
     return offset
 
 
-def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, mg, pfx=''):
+def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, pfx=''):
 
     # private method to add lines and rectangles to a given plot object
     import matplotlib.pyplot as plt
@@ -1133,12 +1027,10 @@ def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, mg, pfx=''):
         if len(pfx) > 0:
             label = pfx + '.'
         label += key
-        if label in mg.keys():
-            label = mg[label]
         if label in plotted_labels:
             # skip over the duplicated channels
             continue
-        (epoch_list, samp_rate, sub_dict) = plot_dict[key]
+        (epoch_list, sub_dict) = plot_dict[key]
         for (start_date, end_date) in epoch_list:
             start = start_date.matplotlib_date
             end = end_date.matplotlib_date
@@ -1148,16 +1040,9 @@ def _plot_builder(fig, ax, plot_dict, y_dict, xmin, xmax, clrs, mg, pfx=''):
             (y, height) = y_dict[label]
             # get range of subcomponents
             (temp_xmin, temp_xmax) = _plot_builder(fig, ax, sub_dict, y_dict,
-                                                   xmin, xmax, clrs, mg,
-                                                   pfx=label)
+                                                   xmin, xmax, clrs, pfx=label)
             if height == 1:
-                line_len = 1
-                if samp_rate < 100 and samp_rate > 0:
-                    line_len *= (100 / samp_rate)
-                dash = [line_len, 2]
-                # c = clrs[label]
-                l, = ax.plot([start, end], [y, y], '--', lw=3, color='k')
-                l.set_dashes(dash)
+                ax.plot([start, end], [y, y], '--', lw=3, color='k')
                 # left-facing arrow at the start of the epoch
                 ax.plot(start, y, marker='>', markersize=ms, color='k',
                         linestyle='none', transform=mark_align_left)

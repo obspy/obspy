@@ -25,7 +25,7 @@ from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
                    Longitude, _unified_content_strings, _textwrap,
-                   plot_inventory_epochs, _merge_plottable_structs)
+                   plot_inventory_epochs)
 
 
 @python_2_unicode_compatible
@@ -509,23 +509,68 @@ class Station(BaseNode):
         return fig
 
     def _get_epoch_plottable_struct(self):
-        # list epochs of this inventory sub-object, sample rate (0 / undefined)
+        # list epochs of this inventory sub-object
         # and the epochs of sub-objects (channels)
         # see same method in inventory.py for more details
-        sub_dict = {}
+        channel_epoch_dict = {}
         plot_dict = {}
         name = str(self.code)
         for channel in self.channels:
-            eps = channel._get_epoch_plottable_struct()
-            sub_dict = _merge_plottable_structs(sub_dict, eps)
+            single_channel_dict = channel._get_epoch_plottable_struct()
+            for key in single_channel_dict.keys():
+                # though we use an iterator here we expect only one key
+                if key not in channel_epoch_dict:
+                    channel_epoch_dict[key] = single_channel_dict[key]
+                else:
+                    # if station epoch contains a channel w/ multiple epochs
+                    channel_epoch_dict[key].extend(single_channel_dict[key])
         start = self.start_date
         if self.end_date is None:
             end = UTCDateTime.now()
         else:
             end = self.end_date
         time_tuple = (start, end)
-        plot_dict[name] = ([time_tuple], 0, sub_dict)
+        plot_dict[name] = ([time_tuple], channel_epoch_dict)
         return plot_dict
+
+    @staticmethod
+    def _group_by_epochs(plot_dict):
+        # if we're just plotting a single station's data
+        # then we can do a simple means of combining epochs
+        # (we don't have to check channels' consistency over multiple epochs)
+        # since (lists of) tuples of immutable objects can be made as sets
+        # we will exploit that in order to create matching epochs
+        epoch_dict = {}  # keys here will be epoch lists made into sets
+        for key in plot_dict.keys():
+            (channel_epochs, _) = set(plot_dict[key])
+            if channel_epochs not in epoch_dict.keys():
+                epoch_dict[channel_epochs] = [key]
+            else:
+                epoch_dict[channel_epochs].append(key)
+        # now epoch_dict has lists of all channels matching a given epoch
+        # we can simplify the plotted dict by merging them
+        # note that these are strings of form "[location].[channel]"
+        # we will set strings like "loc1: (ch1, ch2, ch3), loc2:..." etc.
+        # to be the keys for these matching epochs instead
+        new_plot_dict = {}
+        for epoch_set in epoch_dict.keys():
+            channel_strings = epoch_dict[epoch_set]
+            location_channel_map = {}
+            for channel_name in channel_strings:
+                split_string = channel_name.split('.')
+                location = split_string[0]
+                channel = split_string[1]
+                if location not in location_channel_map.keys():
+                    location_channel_map[location] = channel
+                else:
+                    location_channel_map[location].append(channel)
+            # now that the epoch listing exists, convert into a single string for plot dict key
+            combined_name = '['
+            for location in location_channel_map.keys():
+                combined_name += channel + ': ' + str(location_channel_map[location])
+            combined_name = combined_name.rstrip(',') + ']'
+            new_plot_dict[combined_name] = (list(epoch_set), {})
+        return new_plot_dict
 
     def plot_epochs(self, outfile=None, colormap=None, show=True,
                     combine=True):
@@ -545,8 +590,12 @@ class Station(BaseNode):
         :type combine: boolean
         """
         plot_dict = self._get_epoch_plottable_struct()
-        fig = plot_inventory_epochs(plot_dict, outfile, colormap, show,
-                                    combine)
+        if combine:
+            for key in plot_dict.keys():
+                (station_epoch, sub_dict) = plot_dict[key]
+                sub_dict = self._group_by_epochs(sub_dict)
+                plot_dict[key] = (station_epoch, sub_dict)
+        fig = plot_inventory_epochs(plot_dict, outfile, colormap, show)
         return fig
 
 
