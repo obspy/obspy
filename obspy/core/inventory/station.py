@@ -569,7 +569,7 @@ class Station(BaseNode):
             for location in location_channel_map.keys():
                 combined_name += channel + ': ' + str(location_channel_map[location])
                 combined_name += ", "
-            combined_name = combined_name.rstrip(',') + ']'
+            combined_name = combined_name.rstrip(', ') + ']'
             new_plot_dict[combined_name] = (list(epoch_set), {})
         return new_plot_dict
 
