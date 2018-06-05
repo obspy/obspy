@@ -21,6 +21,15 @@ import numpy as np
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
+# could be extended to include all strftime items that can easily
+# be replaced by year-independent formatting.
+# Furthermore it could be improved by adding e.g. cutting off characters like
+# for 2-digit year strftime commands
+STRFTIME_MAPPING = (
+    ('%Y', '04d', 'year'),
+    ('%m', '02d', 'month'),
+    ('%d', '02d', 'day'),
+    )
 
 
 class UTCDateTime(object):
@@ -1235,7 +1244,36 @@ class UTCDateTime(object):
         See methods :meth:`~datetime.datetime.strftime()` and
         :meth:`~datetime.datetime.strptime()` for more information.
         """
-        return self.datetime.strftime(format)
+        try:
+            ret = self.datetime.strftime(format)
+        # this is trying to work around strftime refusing to work with years
+        # <1900
+        except ValueError as e:
+            # some other error? just raise it..
+            if 'the datetime strftime() methods require year' not in str(e):
+                raise
+            # otherwise, try to do replace all strftime '%' commands with
+            # simple string formatting
+            format_ = self._strftime_replacement(format)
+            # if there's still some strftime commands in there, we have a
+            # problem still ('%%' is a %-sign literal)
+            if '%' in format_.replace('%%', ''):
+                raise
+            ret = format_
+        return ret
+
+    def _strftime_replacement(self, strftime_string):
+        """
+        Replace all simple, year-independent strftime commands
+        """
+        for strftime_key, format_spec, property_name in STRFTIME_MAPPING:
+            if strftime_key not in strftime_string:
+                continue
+            strftime_string = strftime_string.replace(
+                    strftime_key, '{%s:%s}' % (property_name, format_spec))
+            strftime_string = strftime_string.format(
+                **{property_name: getattr(self, property_name)})
+        return strftime_string
 
     @staticmethod
     def strptime(date_string, format):
