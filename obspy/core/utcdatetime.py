@@ -21,14 +21,17 @@ import numpy as np
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
-# could be extended to include all strftime items that can easily
-# be replaced by year-independent formatting.
-# Furthermore it could be improved by adding e.g. cutting off characters like
-# for 2-digit year strftime commands
+# XXX the strftime problem seems to be specific to Python < 3.2
+# XXX so this can be removed after dropping Python 2 support
 STRFTIME_MAPPING = (
-    ('%Y', '04d', 'year'),
-    ('%m', '02d', 'month'),
-    ('%d', '02d', 'day'),
+    ('%Y', '04d', 'year', None),
+    ('%m', '02d', 'month', None),
+    ('%d', '02d', 'day', None),
+    ('%H', '02d', 'hour', None),
+    ('%M', '02d', 'minute', None),
+    ('%S', '02d', 'second', None),
+    ('%f', '06d', 'microsecond', None),
+    ('%y', '02d', 'year', lambda x: x % 100),
     )
 
 
@@ -1248,6 +1251,8 @@ class UTCDateTime(object):
             ret = self.datetime.strftime(format)
         # this is trying to work around strftime refusing to work with years
         # <1900
+        # XXX this problem seems to be specific to Python < 3.2
+        # XXX so this can be removed after dropping Python 2 support
         except ValueError as e:
             # some other error? just raise it..
             if 'the datetime strftime() methods require year' not in str(e):
@@ -1265,14 +1270,21 @@ class UTCDateTime(object):
     def _strftime_replacement(self, strftime_string):
         """
         Replace all simple, year-independent strftime commands
+
+        >>> t = UTCDateTime(1813, 10, 30, 12, 34, 56, 789012)
+        >>> print(t._strftime_replacement('"%Y-%m-%dT%H:%M:%S.%f %y"'))
+        "1813-10-30T12:34:56.789012 13"
         """
-        for strftime_key, format_spec, property_name in STRFTIME_MAPPING:
+        for strftime_key, format_spec, property_name, func in STRFTIME_MAPPING:
             if strftime_key not in strftime_string:
                 continue
             strftime_string = strftime_string.replace(
                     strftime_key, '{%s:%s}' % (property_name, format_spec))
+            replacement = getattr(self, property_name)
+            if func is not None:
+                replacement = func(replacement)
             strftime_string = strftime_string.format(
-                **{property_name: getattr(self, property_name)})
+                **{property_name: replacement})
         return strftime_string
 
     @staticmethod
