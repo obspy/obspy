@@ -235,8 +235,7 @@ def _get_cmap(file_name, lut=None, reverse=False):
     """
     file_name = file_name.strip()
     name, suffix = os.path.splitext(file_name)
-    directory = os.path.dirname(os.path.abspath(
-        inspect.getfile(inspect.currentframe())))
+    directory = os.path.dirname(os.path.abspath(__file__))
     directory = os.path.join(directory, "data")
     full_path = os.path.join(directory, file_name)
     # check if it is npz -> segmented colormap or npy -> listed colormap
@@ -278,11 +277,13 @@ def _get_all_cmaps():
     """
     cmaps = {}
     cm_file_pattern = os.path.join(
-        os.path.abspath(os.path.dirname(
-            inspect.getfile(inspect.currentframe()))),
+        os.path.abspath(os.path.dirname(__file__)),
         "data", "*.np[yz]")
+    print(__file__)
+    print(cm_file_pattern)
     for filename in glob.glob(cm_file_pattern):
         filename = os.path.basename(filename)
+        print(filename)
         for reverse in (True, False):
             # don't add a reversed version for PQLX colormap
             if filename == "pqlx.npz" and reverse:

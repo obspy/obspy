@@ -45,8 +45,8 @@ __all__ = ("get_git_version")
 script_dir = os.path.abspath(os.path.dirname(inspect.getfile(
                                              inspect.currentframe())))
 OBSPY_ROOT = os.path.abspath(os.path.join(script_dir, os.pardir,
-                                          os.pardir, os.pardir))
-VERSION_FILE = os.path.join(OBSPY_ROOT, "obspy", "RELEASE-VERSION")
+                                          os.pardir))
+VERSION_FILE = os.path.join(OBSPY_ROOT, "RELEASE-VERSION")
 
 
 def call_git_describe(abbrev=10, dirty=True,
