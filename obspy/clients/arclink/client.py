@@ -99,7 +99,7 @@ class Client(object):
     * INGV:  --
     * ETHZ:  eida.ethz.ch:18001
     * BGR:   eida.bgr.de:18001
-    * IPGP:  eida.ipgp.fr:18001
+    * IPGP:  arclink.ipgp.fr:18001
     * USP:   seisrequest.iag.usp.br:18001
     """
     max_status_requests = MAX_REQUESTS

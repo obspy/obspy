@@ -37,7 +37,7 @@ class FDSNNoDataException(FDSNException):
 
 # A curated list collecting some implementations:
 # https://www.fdsn.org/webservices/datacenters/
-# http://www.orfeus-eu.org/eida/eida_odc.html
+# https://www.orfeus-eu.org/data/eida/nodes/
 URL_MAPPINGS = {
     "BGR": "http://eida.bgr.de",
     "ETH": "http://eida.ethz.ch",
@@ -46,7 +46,7 @@ URL_MAPPINGS = {
     "GFZ": "http://geofon.gfz-potsdam.de",
     "ICGC": "http://ws.icgc.cat",
     "INGV": "http://webservices.ingv.it",
-    "IPGP": "http://eida.ipgp.fr",
+    "IPGP": "http://fdsnws.ipgp.fr",
     "IRIS": "http://service.iris.edu",
     "ISC": "http://isc-mirror.iris.washington.edu",
     "KOERI": "http://eida.koeri.boun.edu.tr",
