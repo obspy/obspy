@@ -527,7 +527,7 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
     and the resulting string is returned. If the return values is ``True``,
     the particular time interval will be ignored.
 
-    If it is a string, and it contains ``"{network}"``,  ``"{station}"``,
+    If it is a string, and it contains the ``"{network}"``, ``"{station}"``,
     ``"{location}"``, ``"{channel}"``, ``"{starttime}"``, or ``"{endtime}"``
     formatting specifiers, ``str.format()`` is called.
 
