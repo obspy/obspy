@@ -528,7 +528,7 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
     the particular time interval will be ignored.
 
     If it is a string, and it contains ``"{network}"``,  ``"{station}"``,
-    ``"{location}"``, ``"{channel}"``, ``"{starttime}"``, and ``"{endtime}"``
+    ``"{location}"``, ``"{channel}"``, ``"{starttime}"``, or ``"{endtime}"``
     formatting specifiers, ``str.format()`` is called.
 
     Otherwise it is considered to be a folder name and the resulting
@@ -542,9 +542,8 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
     if callable(str_or_fct):
         path = str_or_fct(network, station, location, channel, starttime,
                           endtime)
-    elif ("{network}" in str_or_fct) and ("{station}" in str_or_fct) and \
-            ("{location}" in str_or_fct) and ("{channel}" in str_or_fct) and \
-            ("{starttime}" in str_or_fct) and ("{endtime}" in str_or_fct):
+    elif any("{%s}" % key in str_or_fct for key in ("network", "station", \
+                "location", "channel", "starttime", "endtime")):
         path = str_or_fct.format(
             network=network, station=station, location=location,
             channel=channel, starttime=starttime.strftime(strftime),
