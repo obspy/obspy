@@ -598,8 +598,9 @@ class UTCDateTime(object):
         """
         # datetime.utcfromtimestamp will cut off but not round
         # avoid through adding timedelta - also avoids the year 2038 problem
-        dt = datetime.timedelta(seconds=self._ns // 10**9,
-                                microseconds=self._ns % 10**9 // 1000)
+        rounded_ns = py3_round(self._ns, self.precision - 9)
+        dt = datetime.timedelta(seconds=rounded_ns // 10**9,
+                                microseconds=rounded_ns % 10**9 // 1000)
         try:
             return TIMESTAMP0 + dt
         except OverflowError:
@@ -830,7 +831,8 @@ class UTCDateTime(object):
         >>> dt.microsecond
         345234
         """
-        return int(py3_round(self._ns % 10**9, self.precision - 9) // 1000)
+        ms = int(py3_round(self._ns % 10**9, self.precision - 9) // 1000)
+        return ms % 1000000
 
     def _set_microsecond(self, value):
         """
