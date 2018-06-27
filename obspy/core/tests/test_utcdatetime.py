@@ -1212,6 +1212,21 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertFalse(a == e)
         self.assertFalse(e == a)
 
+    def test_issue_2165(self):
+        """
+        When a timestamp gets rounded it should increment seconds and not
+        result in 1_000_000 microsecond value. See #2072.
+        """
+        time = UTCDateTime(1.466387732999999762e+09)
+        # test microseconds are rounded
+        self.assertEqual(time.microsecond, 0)
+        # test __repr__
+        expected_repr = "UTCDateTime(2016, 6, 20, 1, 55, 33)"
+        self.assertEqual(time.__repr__(), expected_repr)
+        # test __str__
+        expected_str = "2016-06-20T01:55:33.000000Z"
+        self.assertEqual(str(time), expected_str)
+
     def test_ns_public_attribute(self):
         """
         Basic test for public ns interface to UTCDateTime
