@@ -26,6 +26,8 @@
  - obspy.imaging:
    * Normalize moment tensors prior to plotting in the mopad wrapper to
      stabilize the algorithm (see #2114, #2125).
+ - obspy.io.ascii:
+   * Fixes an issue with the time representation (see #2165, #2179).
  - obspy.io.mseed:
    * Ability to read files that have embedded chunks of non SEED data.
      (see #1981, #2057).
