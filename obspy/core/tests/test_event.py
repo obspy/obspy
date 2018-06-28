@@ -6,6 +6,7 @@ from future.utils import PY2, native_str
 
 import builtins
 import copy
+import io
 import os
 import sys
 import unittest
@@ -564,6 +565,21 @@ class CatalogTestCase(unittest.TestCase):
             self.assertIs(rid.get_referred_object(), cat2[0])
         del cat2
         self.assertIs(rid.get_referred_object(), None)
+
+    def test_issue_2173(self):
+        """
+        Ensure events with empty origins are equal after round-trip to disk.
+        See #2173.
+        """
+        # create event and save to disk
+        origin = Origin(time=UTCDateTime('2016-01-01'))
+        event1 = Event(origins=[origin])
+        bio = io.BytesIO()
+        event1.write(bio, 'quakeml')
+        # read from disk
+        event2 = read_events(bio)[0]
+        # saved and loaded event should be equal
+        self.assertEqual(event1, event2)
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
