@@ -1165,6 +1165,19 @@ class BaseTestCase(unittest.TestCase):
             err.confidence_levle = 80
             self.assertEqual(len(w), 1)
 
+    def test_quantity_error_equality(self):
+        """
+        Comparisons between empty quantity errors and None should return True.
+        Non-empty quantity errors should return False.
+        """
+        err1 = QuantityError()
+        self.assertEqual(err1, None)
+        err2 = QuantityError(uncertainty=10)
+        self.assertNotEqual(err2, None)
+        self.assertNotEqual(err2, err1)
+        err3 = QuantityError(uncertainty=10)
+        self.assertEqual(err3, err2)
+
     def test_event_type_objects_warn_on_non_default_key(self):
         """
         """
