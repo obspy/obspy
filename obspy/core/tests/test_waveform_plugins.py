@@ -193,6 +193,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
                          '2015282_225051_0ae4c_1_3.msd'),
             os.path.join('core', 'tests', 'data', 'ffbx_unrotated_gaps.mseed'),
             os.path.join('core', 'tests', 'data', 'ffbx_rotated.slist'),
+            os.path.join('io', 'ascii', 'tests', 'data',
+                         'miniseed_record.mseed'),
         ]
         formats_ep = _get_default_eps('obspy.plugin.waveform', 'isFormat')
         formats = list(formats_ep.values())
