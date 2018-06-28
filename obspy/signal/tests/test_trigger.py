@@ -98,6 +98,14 @@ class TriggerTestCase(unittest.TestCase):
         # self.assertAlmostEqual(stime, 31.2800006866)
         self.assertEqual(int(stime + 0.5), 31)
 
+        # All three arrays must have the same length, otherwise an error is
+        # raised.
+        with self.assertRaises(ValueError) as err:
+            ar_pick(data[0], data[1], np.zeros(1), samp_rate, f1, f2, lta_p,
+                    sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
+        self.assertEqual(err.exception.args[0],
+                         "All three data arrays must have the same length.")
+
     def test_trigger_onset(self):
         """
         Test trigger onset function

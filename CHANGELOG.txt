@@ -55,6 +55,8 @@
    * PPSD: for safety reasons, raise an ObsPyException if trying to read a PPSD
      npz file that was written with a newer version of the npz representation
      than is used by current ObsPy version (see #2051)
+   * The ar_pick() trigger function now raises an error if the three data arrays
+     don't have the same length (see #1801, #2148).
  - obspy.taup:
    * Fallback to linear slowness interpolation for very small and
      shallow layers (see #2126, #2129).
