@@ -473,7 +473,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
             header['mseed'] = dict((k, v.decode())
                                    if isinstance(v, bytes) else (k, v)
                                    for k, v in header['mseed'].items())
-            header = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
+            header = dict((k, util._decode_header_field(k, v))
+                          if isinstance(v, bytes) else (k, v)
                           for k, v in header.items())
             trace = Trace(header=header, data=data)
             # Append global information.

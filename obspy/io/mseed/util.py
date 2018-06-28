@@ -548,6 +548,28 @@ def get_record_information(file_or_file_object, offset=0, endian=None):
     return info
 
 
+def _decode_header_field(name, content):
+    """
+    Helper function to decode header fields. Fairly fault tolerant and it
+    will also raise nice warnings in case in encounters anything wild.
+    """
+    try:
+        return content.decode("ascii", errors="strict")
+    except UnicodeError:
+        r = content.decode("ascii", errors="ignore")
+        msg = (u"Failed to decode {name} code as ASCII. "
+               u"Code in file: '{result}' (\ufffd indicates characters "
+               u"that could not be decoded). "
+               u"Will be interpreted as: '{f_result}'. "
+               u"This is an invalid MiniSEED file - please "
+               u"contact your data provider.")
+        warnings.warn(msg.format(
+            name=name,
+            result=content.decode("ascii", errors="replace"),
+            f_result=r))
+        return r
+
+
 def _get_record_information(file_object, offset=0, endian=None):
     """
     Searches the first MiniSEED record stored in file_object at the current
@@ -628,10 +650,11 @@ def _get_record_information(file_object, offset=0, endian=None):
     # Jump to the network, station, location and channel codes.
     file_object.seek(record_start + 8, 0)
     data = file_object.read(12)
-    info["station"] = data[:5].strip().decode()
-    info["location"] = data[5:7].strip().decode()
-    info["channel"] = data[7:10].strip().decode()
-    info["network"] = data[10:12].strip().decode()
+
+    info["station"] = _decode_header_field("station", data[:5].strip())
+    info["location"] = _decode_header_field("location", data[5:7].strip())
+    info["channel"] = _decode_header_field("channel", data[7:10].strip())
+    info["network"] = _decode_header_field("network", data[10:12].strip())
 
     # Use the date to figure out the byte order.
     file_object.seek(record_start + 20, 0)
