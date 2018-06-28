@@ -542,8 +542,9 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
     if callable(str_or_fct):
         path = str_or_fct(network, station, location, channel, starttime,
                           endtime)
-    elif any("{%s}" % key in str_or_fct for key in ("network", "station", \
-                "location", "channel", "starttime", "endtime")):
+    elif any("{%s}" % key in str_or_fct for key in ("network", "station",
+                                                    "location", "channel",
+                                                    "starttime", "endtime")):
         path = str_or_fct.format(
             network=network, station=station, location=location,
             channel=channel, starttime=starttime.strftime(strftime),
