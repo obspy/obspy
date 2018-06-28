@@ -92,6 +92,11 @@ class QuantityError(AttribDict):
         """
         return any([getattr(self, key) is not None for key in self.defaults])
 
+    def __eq__(self, other):
+        if other is None and not bool(self):
+            return True
+        return super(QuantityError, self).__eq__(other)
+
     # Python 2 compatibility
     __nonzero__ = __bool__
 

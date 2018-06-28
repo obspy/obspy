@@ -6,6 +6,7 @@ from future.utils import PY2, native_str
 
 import builtins
 import copy
+import io
 import os
 import sys
 import unittest
@@ -564,6 +565,21 @@ class CatalogTestCase(unittest.TestCase):
             self.assertIs(rid.get_referred_object(), cat2[0])
         del cat2
         self.assertIs(rid.get_referred_object(), None)
+
+    def test_issue_2173(self):
+        """
+        Ensure events with empty origins are equal after round-trip to disk.
+        See #2173.
+        """
+        # create event and save to disk
+        origin = Origin(time=UTCDateTime('2016-01-01'))
+        event1 = Event(origins=[origin])
+        bio = io.BytesIO()
+        event1.write(bio, 'quakeml')
+        # read from disk
+        event2 = read_events(bio)[0]
+        # saved and loaded event should be equal
+        self.assertEqual(event1, event2)
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
@@ -1148,6 +1164,19 @@ class BaseTestCase(unittest.TestCase):
             # setting a typoed or custom field should warn!
             err.confidence_levle = 80
             self.assertEqual(len(w), 1)
+
+    def test_quantity_error_equality(self):
+        """
+        Comparisons between empty quantity errors and None should return True.
+        Non-empty quantity errors should return False.
+        """
+        err1 = QuantityError()
+        self.assertEqual(err1, None)
+        err2 = QuantityError(uncertainty=10)
+        self.assertNotEqual(err2, None)
+        self.assertNotEqual(err2, err1)
+        err3 = QuantityError(uncertainty=10)
+        self.assertEqual(err3, err2)
 
     def test_event_type_objects_warn_on_non_default_key(self):
         """
