@@ -939,7 +939,8 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
     import matplotlib.pyplot as plt
 
     # compute the requested arrivals:
-    model = TauPyModel(model)
+    if not isinstance(model, TauPyModel):
+        model = TauPyModel(model)
 
     # a list of epicentral distances without a travel time, and a flag:
     notimes = []
