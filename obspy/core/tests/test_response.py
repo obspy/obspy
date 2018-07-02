@@ -454,6 +454,23 @@ class ResponseTestCase(unittest.TestCase):
              6.51826202e+08 + 1.28404787e+07j,
              2.00067263e+04 - 2.63711751e+03j])
 
+    def test_regression_evalresp(self):
+        """
+        Regression test for an evalresp issue with a micropressure instrument.
+
+        See #2171.
+        """
+        inv = read_inventory(os.path.join(self.data_dir, "IM_I53H1_BDF.xml"))
+        self.assertEqual(
+            inv[0][0][0].response.get_evalresp_response_for_frequencies([0.0]),
+            0.0 + 0.0j)
+        np.testing.assert_allclose(
+            inv[0][0][0].response.get_evalresp_response_for_frequencies(
+                [0.1, 1.0, 10.0]),
+            [2.411908e+05 + 2.283852e+04j,
+             2.445572e+05 - 2.480459e+03j,
+             -2.455459e-01 + 4.888214e-02j], rtol=1e-6)
+
 
 def suite():
     return unittest.makeSuite(ResponseTestCase, 'test')
