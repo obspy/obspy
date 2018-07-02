@@ -1227,6 +1227,25 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             del st[0].stats.mseed
             self.assertEqual(reference, st)
 
+    def test_reading_files_with_non_ascii_headers(self):
+        """
+        Some dataloggers appear to do this.
+
+        See #2177.
+        """
+        filename = os.path.join(self.path, "data",
+                                "gecko_non_ascii_header.ms")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            st = read(filename)
+        # Two identical messages will be raised (but in most common cases only
+        # the first will be shown).
+        self.assertEqual(len(w), 2)
+        self.assertTrue(w[0].message.args[0].startswith(
+            "Failed to decode location code as ASCII."))
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].id, '.GECKO.A.CNZ')
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
