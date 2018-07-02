@@ -50,6 +50,9 @@
  - obspy.io.stationxml
    * Allow writing of dates before 1900 also on Python 2 (see #2013, #2015).
    * Write the UTC time zone specifier to all times (see #2015).
+ - obspy.io.xseed:
+   * Third condition to split blockettes when reading RESP files. Now more
+     forgiving for slightly different files (see #2170, #2189)
  - obspy.signal:
    * Allow singular COUNT units in evalresp (see #2003, #2011).
    * PPSD: for safety reasons, raise an ObsPyException if trying to read a PPSD
