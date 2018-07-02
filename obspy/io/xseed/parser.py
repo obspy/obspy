@@ -706,13 +706,15 @@ class Parser(object):
                 # A new blockette is starting.
                 # Either
                 # * when the blockette number increases or
-                # * when the blockette number suddenly decreases to 3 again.
+                # * (for blockette 58) when the field number suddenly decreases
+                # to 3 again.
                 # This catches a rare issue where blockette 58 is repeated
                 # twice (gain for a channel + total sensitivity) and the
                 # comments don't contain any `+` which would alternatively
                 # trigger a new blockette to be created.
                 if (blockette_number != last_blockette_id) or \
-                        ((field_number == 3) and
+                        ((blockette_number == "058") and
+                         (field_number == 3) and
                          (field_number < last_field_number)):
                     if len(blockettefieldlist) > 0:
                         blockettelist.append(blockettefieldlist)
