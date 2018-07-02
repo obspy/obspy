@@ -5,6 +5,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import copy
 import datetime
+import sys
 import unittest
 
 import numpy as np
@@ -1134,11 +1135,13 @@ class UTCDateTimeTestCase(unittest.TestCase):
         t = UTCDateTime(998, 11, 9, 1, 39, 37)
         self.assertEqual(t.strftime('%Y-%m-%d'), '0998-11-09')
         # some things we can't easily fix by string formatting alone..
-        with self.assertRaises(ValueError) as context:
-            self.assertEqual(t.strftime('%Y-%m-%d %A'), '0998-11-09')
-            self.assertTrue(
-                "the datetime strftime() methods require year >= 1900" in
-                str(context.exception))
+        # (but it only fails on Python <3.2, i.e. for us that means Python 2.7)
+        if sys.version_info.major == 2:
+            with self.assertRaises(ValueError) as context:
+                t.strftime('%Y-%m-%d %A')
+                self.assertTrue(
+                    "the datetime strftime() methods require year >= 1900" in
+                    str(context.exception))
 
 
 def suite():
