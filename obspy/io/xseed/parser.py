@@ -733,7 +733,7 @@ class Parser(object):
                         value = g[3].strip().split()[-1]
                     blockettefieldlist.append((blockette_number, g[1], value))
                     last_field_number = field_number
-                # Multiple field liens.
+                # Multiple field lines.
                 else:
                     first_field = int(g[1])
                     last_field = int(g[2])

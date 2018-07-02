@@ -12,6 +12,7 @@ import warnings
 import numpy as np
 from lxml import etree
 
+import obspy
 from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.xseed.blockette.blockette010 import Blockette010
@@ -21,6 +22,7 @@ from obspy.io.xseed.blockette.blockette054 import Blockette054
 import obspy.io.xseed.parser
 from obspy.io.xseed.parser import Parser
 from obspy.io.xseed.utils import SEEDParserException, compare_seed
+from obspy.signal.invsim import evalresp_for_frequencies
 
 
 class ParserTestCase(unittest.TestCase):
@@ -833,6 +835,13 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(b.number_of_history_values, 0)
         np.testing.assert_allclose(b.sensitivity_gain, 8.043400E+10)
         np.testing.assert_allclose(b.frequency, 1.0)
+
+        # Also compare directly against what evalresp would do.
+        obs_r = obspy.read_inventory(filename)[0][0][0].response\
+            .get_evalresp_response_for_frequencies([0.0, 1.0, 10.0])
+        evresp = evalresp_for_frequencies(0.01, [0.0, 1.0, 10.0], filename,
+                                          obspy.UTCDateTime(2015, 1, 2))
+        np.testing.assert_allclose(obs_r, evresp)
 
 
 def suite():
