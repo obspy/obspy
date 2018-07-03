@@ -92,6 +92,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
     Tests suite for util module of obspy.io.mseed.
     """
     def setUp(self):
+        self.maxDiff = None
         # Directory where the test files are located
         self.path = os.path.dirname(__file__)
         # mseed steim compression is big endian
@@ -200,6 +201,34 @@ class MSEEDUtilTestCase(unittest.TestCase):
         self.assertEqual(info['record_length'], 4096)
         self.assertEqual(info['number_of_records'], 2)
         self.assertEqual(info['excess_bytes'], 0)
+
+    def test_get_record_information_negative_sr_rate_and_mult(self):
+        """
+        Tests the method for negative sampling rate factors and multipliers.
+        """
+        filename = os.path.join(
+            self.path, 'data', 'single_record_negative_sr_fact_and_mult.mseed')
+        info = util.get_record_information(filename)
+        self.assertEqual(info, {
+            'activity_flags': 0,
+            'byteorder': '>',
+            'channel': 'VHZ',
+            'data_quality_flags': 0,
+            'encoding': 10,
+            'endtime': UTCDateTime(1991, 2, 21, 23, 59, 50, 430000),
+            'excess_bytes': 0,
+            'filesize': 4096,
+            'io_and_clock_flags': 0,
+            'location': '',
+            'network': 'MN',
+            'npts': 60,
+            'number_of_records': 1,
+            'record_length': 4096,
+            'samp_rate': 0.1,
+            'starttime': UTCDateTime(1991, 2, 21, 23, 50, 0, 430000),
+            'station': 'TNV',
+            'time_correction': 0
+        })
 
     def test_issue2069(self):
         """
