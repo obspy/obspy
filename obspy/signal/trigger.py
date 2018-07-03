@@ -469,6 +469,10 @@ def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     a = np.ascontiguousarray(a, np.float32)
     b = np.ascontiguousarray(b, np.float32)
     c = np.ascontiguousarray(c, np.float32)
+
+    if not (len(a) == len(b) == len(c)):
+        raise ValueError("All three data arrays must have the same length.")
+
     s_pick = C.c_int(s_pick)  # pick S phase also
     ptime = C.c_float()
     stime = C.c_float()

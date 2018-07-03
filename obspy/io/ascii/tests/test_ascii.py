@@ -683,6 +683,26 @@ class ASCIITestCase(unittest.TestCase):
 
         self.assertRaises(ValueError, _determine_dtype, '')
 
+    def test_regression_against_mseed2ascii(self):
+        """
+        Regression test against issue #2165.
+        """
+        mseed_file = os.path.join(self.path, "data", "miniseed_record.mseed")
+        mseed2ascii_file = os.path.join(
+            self.path, "data", "mseed2ascii_miniseed_record.txt")
+
+        with NamedTemporaryFile() as tf:
+            # Write as TSPAIR
+            read(mseed_file).write(tf.name, format="TSPAIR")
+            # Check all lines aside from the first as they differ.
+            with open(tf.name, "rt") as fh:
+                actual_lines = fh.readlines()[1:]
+            with open(mseed2ascii_file, "rt") as fh:
+                expected_lines = fh.readlines()[1:]
+
+        for actual, expected in zip(actual_lines, expected_lines):
+            self.assertEqual(actual.strip(), expected.strip())
+
 
 def suite():
     return unittest.makeSuite(ASCIITestCase, 'test')

@@ -57,7 +57,7 @@ master:
      'method' parameter to be consistent with recent SciPy versions
      (see #2042).
 
-1.1.1rc1:
+1.1.1rc1.post0:
  - General:
    * Tests pass with numpy 1.14 (see #2044).
  - obspy.core:
@@ -85,6 +85,10 @@ master:
  - obspy.imaging:
    * Normalize moment tensors prior to plotting in the mopad wrapper to
      stabilize the algorithm (see #2114, #2125).
+ - obspy.io.ascii:
+   * Fixes an issue with the time representation (see #2165, #2179).
+ - obspy.io.css:
+   * Fix automatic filetype detection (see #2160 and #2162)
  - obspy.io.mseed:
    * Ability to read files that have embedded chunks of non SEED data.
      (see #1981, #2057).
@@ -107,11 +111,16 @@ master:
  - obspy.io.stationxml
    * Allow writing of dates before 1900 also on Python 2 (see #2013, #2015).
    * Write the UTC time zone specifier to all times (see #2015).
+ - obspy.io.xseed:
+   * Third condition to split blockettes when reading RESP files. Now more
+     forgiving for slightly different files (see #2170, #2189)
  - obspy.signal:
    * Allow singular COUNT units in evalresp (see #2003, #2011).
    * PPSD: for safety reasons, raise an ObsPyException if trying to read a PPSD
      npz file that was written with a newer version of the npz representation
      than is used by current ObsPy version (see #2051)
+   * The ar_pick() trigger function now raises an error if the three data arrays
+     don't have the same length (see #1801, #2148).
  - obspy.taup:
    * Fallback to linear slowness interpolation for very small and
      shallow layers (see #2126, #2129).

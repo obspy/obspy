@@ -175,17 +175,22 @@ class RecordAnalyser(object):
             raise
         # Write values to dictionary.
         self.fixed_header['Sequence number'] = \
-            int(''.join(x.decode('ascii') for x in header_item[:6]))
+            int(''.join(x.decode('ascii', errors="replace")
+                for x in header_item[:6]))
         self.fixed_header['Data header/quality indicator'] = \
-            header_item[6].decode('ascii')
+            header_item[6].decode('ascii', errors="replace")
         self.fixed_header['Station identifier code'] = \
-            ''.join(x.decode('ascii') for x in header_item[8:13]).strip()
+            ''.join(x.decode('ascii', errors="replace")
+                    for x in header_item[8:13]).strip()
         self.fixed_header['Location identifier'] = \
-            ''.join(x.decode('ascii') for x in header_item[13:15]).strip()
+            ''.join(x.decode('ascii', errors="replace")
+                    for x in header_item[13:15]).strip()
         self.fixed_header['Channel identifier'] = \
-            ''.join(x.decode('ascii') for x in header_item[15:18]).strip()
+            ''.join(x.decode('ascii', errors="replace")
+                    for x in header_item[15:18]).strip()
         self.fixed_header['Network code'] = \
-            ''.join(x.decode('ascii') for x in header_item[18:20]).strip()
+            ''.join(x.decode('ascii', errors="replace")
+                    for x in header_item[18:20]).strip()
         # Construct the starttime. This is only the starttime in the fixed
         # header without any offset. See page 31 of the SEED manual for the
         # time definition.
