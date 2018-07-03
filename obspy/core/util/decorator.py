@@ -320,22 +320,6 @@ def _decorate_polyfill(func, caller):
         return fun
 
 
-def rlock(func):
-    """
-    Place a threading recursive lock (Rlock) on the wrapped function.
-    """
-    # This lock will be instantiated at function creation time, i.e. at the
-    # time the Python interpreter sees the decorated function the very
-    # first time - this lock thus exists once for each decorated function.
-    _rlock = threading.RLock()
-
-    def _locked_f(f, *args, **kwargs):
-        with _rlock:
-            return func(*args, **kwargs)
-
-    return _decorate_polyfill(func, _locked_f)
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
