@@ -26,7 +26,7 @@ from obspy.core.util.testing import (create_diverse_catalog,
 
 class ResourceIdentifierTestCase(unittest.TestCase):
     """
-    Test suite for obspy.core.event.ResourceIdentifier.
+    Test suite for obspy.core.event.resourceid.ResourceIdentifier.
     """
 
     # setup and utility function for tests

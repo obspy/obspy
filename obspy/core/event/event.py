@@ -58,7 +58,7 @@ class Event(__Event):
     event is usually associated with one or more magnitudes, and with one or
     more focal mechanism determinations.
 
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of Event.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of

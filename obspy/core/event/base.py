@@ -431,14 +431,12 @@ class CreationInfo(__CreationInfo):
 
     :type agency_id: str, optional
     :param agency_id: Designation of agency that published a resource.
-    :type agency_uri: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type agency_uri: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param agency_uri: Resource Identifier of the agency that published a
         resource.
     :type author: str, optional
     :param author: Name describing the author of a resource.
-    :type author_uri: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type author_uri: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param author_uri: Resource Identifier of the author of a resource.
     :type creation_time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
     :param creation_time: Time of creation of a resource.
@@ -562,8 +560,7 @@ class Comment(__Comment):
 
     :type text: str
     :param text: Text of comment.
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of comment.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -623,8 +620,8 @@ class WaveformStreamID(__WaveformStreamID):
     :param location_code: Location code.
     :type channel_code: str, optional
     :param channel_code: Channel code.
-    :type resource_uri: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type resource_uri:
+    :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_uri: Resource identifier for the waveform stream.
     :type seed_string: str, optional
     :param seed_string: Provides an alternative initialization way by passing a

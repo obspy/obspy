@@ -53,7 +53,7 @@ class Catalog(object):
 
     :type events: list of :class:`~obspy.core.event.event.Event`, optional
     :param events: List of events
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of the catalog.
     :type description: str, optional
     :param description: Description string that can be assigned to the

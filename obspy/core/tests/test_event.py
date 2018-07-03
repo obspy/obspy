@@ -5,7 +5,6 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import PY2, native_str
 
 import builtins
-import io
 import os
 import pickle
 import unittest
