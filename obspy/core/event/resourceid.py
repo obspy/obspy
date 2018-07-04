@@ -406,7 +406,7 @@ class ResourceIdentifier(object):
         else:  # old object is not equal to new object
             if warn and old_obj != referred_object:
                 msg = ('Warning, binding object to resource ID %s which '
-                       'is not equal to the last object bound to this'
+                       'is not equal to the last object bound to this '
                        'resource_id') % self.id
                 warnings.warn(msg, UserWarning)
         # only add this to the id_order if it is the resource_ids first object
