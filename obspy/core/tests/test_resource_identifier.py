@@ -535,6 +535,17 @@ class ResourceIdentifierTestCase(unittest.TestCase):
 
         self.assertIs(rid.get_referred_object(), t2)
 
+    def test_get_pick_from_arrival_on_copied_catalog_doesnt_warn(self):
+        """
+        Ensure a copied catalog doesn't raise a warning when
+        get_referred_object is called on a resource_id.
+        """
+        cat = create_diverse_catalog().copy()
+        arrival = cat[0].origins[0].arrivals[0]
+        with WarningsCapture() as w:
+            arrival.pick_id.get_referred_object()
+        self.assertEqual(len(w), 0)
+
 
 def get_instances(obj, cls=None, is_attr=None, has_attr=None):
     """
