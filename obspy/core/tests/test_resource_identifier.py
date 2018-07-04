@@ -65,12 +65,12 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         res_a = ResourceIdentifier(id=id, referred_object=object_a)
         # Now create a new resource with the same id but a different object.
         # This should not raise a warning as the object a and b are equal.
-        with warnings.catch_warnings(record=True) as w:
+        with WarningsCapture() as w:
             res_b = ResourceIdentifier(id=id, referred_object=object_b)
             self.assertEqual(len(w), 0)
         # if the set object is not equal to the last object set to the same
         # resource_id, however, a warning should be issued.
-        with warnings.catch_warnings(record=True) as w:
+        with WarningsCapture() as w:
             res_c = ResourceIdentifier(id=id, referred_object=object_c)
             self.assertEqual(len(w), 1)
             expected_text = 'which is not equal to the last object bound'
@@ -435,6 +435,40 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         self.assertIsNot(rob1, rob3)
         # although the referred objects should be equal
         self.assertEqual(rob1, rob3)
+
+    def test_set_referred_object_warning(self):
+        """
+        Setting a referred object equal to an object that is equal to the last
+        referred object should not emit a warning.
+        """
+        def assert_differnt_referred_object_warning_issued(w):
+            """ assert the different referred object warning is emitted """
+            self.assertEqual(len(w), 1)
+            self.assertIn('is not equal', str(w[0].message))
+
+        obj1 = UTCDateTime(10)
+        obj2 = UTCDateTime(11)
+        obj3 = UTCDateTime(10)
+
+        rid1 = ResourceIdentifier('abc123', referred_object=obj1)
+        # this should raise a warning as the new object != old object
+        with WarningsCapture() as w:
+            rid2 = ResourceIdentifier('abc123', referred_object=obj2)
+        assert_differnt_referred_object_warning_issued(w)
+
+        with WarningsCapture() as w:
+            rid2.set_referred_object(obj1)
+        assert_differnt_referred_object_warning_issued(w)
+
+        # set the referred object back to previous state, this should warn
+        with WarningsCapture() as w:
+            ResourceIdentifier('abc123', referred_object=obj2)
+        assert_differnt_referred_object_warning_issued(w)
+
+        # this should not emit a warning since obj1 == obj3
+        with WarningsCapture() as w:
+            rid1.set_referred_object(obj3)
+        self.assertEqual(len(w), 0)
 
     def test_catalog_resource_ids(self):
         """
