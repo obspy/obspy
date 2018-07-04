@@ -719,7 +719,7 @@ def _yield_resource_id_parent_attr(obj):
 
     ids = set()  # id cache to avoid circular references
 
-    def func(obj, attr=None, parent=None):
+    def func(obj, parent=None, attr=None):
 
         if obj is None or not (hasattr(obj, '__dict__') or
                                isinstance(obj, (list, tuple))):
@@ -733,12 +733,12 @@ def _yield_resource_id_parent_attr(obj):
             # Iterate through basic built-in types.
             elif isinstance(obj, (list, tuple)):
                 for val in obj:
-                    for out in func(val, attr, obj):
+                    for out in func(val, obj, attr):
                         yield out
             # Iterate through non built-in object attributes.
             elif hasattr(obj, '__dict__'):
                 for item, val in obj.__dict__.items():
-                    for out in func(val, item, obj):
+                    for out in func(val, obj, item):
                             yield out
 
     return func(obj)
