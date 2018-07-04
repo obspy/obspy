@@ -11,7 +11,9 @@ master:
    * Added remove method to Inventory class (see #2088).
    * Added id property to WaveformStreamID (see #2131).
    * Added __str__ and _repr_pretty_ method for Comment class (see #2115)
-   # Added __eq__ to QuantityError so empty instances equal None (see #2185).
+   * Added __eq__ to QuantityError so empty instances equal None (see #2185).
+   * Reworked the event scoped resource identifiers for the event classes
+     hopefully fixing all edge-cases (see #2091).
  - obspy.clients.fdsn:
    * Adding more location codes to the default priority list in the mass
      downloader (see #2155, #2159).
