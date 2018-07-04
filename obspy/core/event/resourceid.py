@@ -328,9 +328,9 @@ class ResourceIdentifier(object):
         """
         # Warn if resource_id was bound but its object got gc'ed.
         if self._object_id is not None:
-            msg = ("The object with identity of: %d no longer exists, "
-                   "returning the most recently created object with a"
-                   " resource id of: %s") % (self._object_id, self.id)
+            msg = ("The object with identity of: %d  and id of %s no longer"
+                   "exists, trying to find an object with the same id"
+                   ) % (self._object_id, self.id)
             warnings.warn(msg, UserWarning)
         # try to get the object_id from the parent_id_tree
         id_tree = ResourceIdentifier._parent_id_tree
