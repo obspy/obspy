@@ -157,7 +157,8 @@ class StreamTestCase(unittest.TestCase):
                 platform.architecture()[0] == "32bit":  # pragma: no cover
             for tr1, tr2 in zip(st1, st2):
                 self.assertEqual(tr1.stats, tr2.stats)
-                np.testing.assert_allclose(tr1.data, tr2.data)
+                np.testing.assert_allclose(tr1.data, tr2.data, rtol=1E-6,
+                                           atol=1E-6 * tr1.data.ptp())
         else:
             self.assertEqual(st1, st2)
 
