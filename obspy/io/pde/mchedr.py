@@ -1058,6 +1058,7 @@ class Unpickler(object):
         for event in catalog:
             for comment in event.comments:
                 comment.text = comment.text.strip()
+            event.scope_resource_ids()
         return catalog
 
 

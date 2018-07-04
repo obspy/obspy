@@ -102,6 +102,8 @@ class ISFReader(object):
         while True:
             next_line_type = self._next_line_type()
             if next_line_type == 'event':
+                if self.cat:
+                    self.cat[-1].scope_resource_ids()
                 self._read_event_header()
             elif next_line_type:
                 self._process_block()

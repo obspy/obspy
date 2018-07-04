@@ -453,6 +453,8 @@ class Unpickler(object):
         public_id = "event/%s" % event_id
         event.resource_id = self._get_res_id(public_id)
 
+        event.scope_resource_ids()
+
         return event
 
     def _parse_origin(self, event):
