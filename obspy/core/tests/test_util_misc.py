@@ -14,7 +14,7 @@ from obspy import UTCDateTime, read
 from obspy.core.compatibility import mock
 from obspy.core.event import ResourceIdentifier as ResId
 from obspy.core.util.misc import CatchOutput, get_window_times, \
-    _ENTRY_POINT_CACHE, yield_obj_parent_attr
+    _ENTRY_POINT_CACHE, _yield_obj_parent_attr
 
 
 class UtilMiscTestCase(unittest.TestCase):
@@ -286,7 +286,7 @@ class UtilMiscTestCase(unittest.TestCase):
 
         base = dict(right=ResId('6'), slotted=slotted, nested=nested)
 
-        out = list(yield_obj_parent_attr(base, ResId))
+        out = list(_yield_obj_parent_attr(base, ResId))
 
         self.assertEqual(len(out), 6)
 

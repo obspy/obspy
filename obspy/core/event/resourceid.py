@@ -2,6 +2,12 @@
 obspy.core.event.resourceid - ResourceIdentifier
 ================================================
 This module defines the ResourceIdentifier class and associated code.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -253,7 +259,6 @@ class ResourceIdentifier(object):
     Because ResourceIdentifier instances are hashed based on their id
     attribute, you should never change it once it has been set. Create a new
     ResourceIdentifier object instead.
-
     """
     # Class (not instance) attributes that keeps track of all resource
     # identifier instances throughout one Python run. Will only store weak

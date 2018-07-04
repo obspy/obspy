@@ -638,7 +638,7 @@ def buffered_load_entry_point(dist, group, name):
     return _ENTRY_POINT_CACHE[hash_str]
 
 
-def yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
+def _yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
     """
     Recurse an object, yield a tuple of object, parent, attr.
 
@@ -665,9 +665,8 @@ def yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
     >>> import obspy
     >>> from obspy.core.event import ResourceIdentifier
     >>> cat = obspy.read_events()
-    >>> resource_tuple = list(yield_obj_parent_attr(cat, ResourceIdentifier))
+    >>> resource_tuple = list(_yield_obj_parent_attr(cat, ResourceIdentifier))
     """
-
     ids = set()  # id cache to avoid circular references
 
     def func(obj, attr=None, parent=None):
@@ -710,7 +709,7 @@ def yield_obj_parent_attr(obj, cls=None, is_attr=None, has_attr=None):
 
 def _yield_resource_id_parent_attr(obj):
     """
-    Specialized form of yield_obj_parent_attr for getting ResourceIdentifiers.
+    Specialized form of _yield_obj_parent_attr for getting ResourceIdentifiers.
 
     This function makes some assumptions because only resource_identifiers are
     being sought in order to improve efficiency.
@@ -720,7 +719,6 @@ def _yield_resource_id_parent_attr(obj):
     ids = set()  # id cache to avoid circular references
 
     def func(obj, parent=None, attr=None):
-
         if obj is None or not (hasattr(obj, '__dict__') or
                                isinstance(obj, (list, tuple))):
             return  # stop iteration

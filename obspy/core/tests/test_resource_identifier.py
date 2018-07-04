@@ -1,5 +1,11 @@
 """
 Tests for the resource identifier
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -18,7 +24,7 @@ import warnings
 from obspy import UTCDateTime, read_events
 from obspy.core import event as event
 from obspy.core.event.resourceid import ResourceIdentifier, _ResourceKey
-from obspy.core.util.misc import yield_obj_parent_attr
+from obspy.core.util.misc import _yield_obj_parent_attr
 from obspy.core.util.testing import (create_diverse_catalog,
                                      setup_context_testcase,
                                      WarningsCapture)
@@ -28,9 +34,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.event.resourceid.ResourceIdentifier.
     """
-
-    # setup and utility function for tests
-
     def setUp(self):
         """
         Setup code to run before each test. Temporary replaces the state on
@@ -43,8 +46,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         self.parent_id_tree = state['parent_id_tree']
         self.id_order = state['id_order']
         self.id_object_map = state['id_object_map']
-
-    # tests
 
     def test_same_resource_id_different_referred_object(self):
         """
@@ -238,7 +239,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         del r1
         self.assertEqual(r2.get_referred_object(), t1)
         self.assertIn(r2._resource_key, r_dict)
-        # Deleting the second one should (r_dict should not be empty)
+        # Deleting the second one should (r_dict should now be empty)
         del r2
         self.assertEqual(len(r_dict), 0)
         r3 = ResourceIdentifier(rid)
@@ -278,7 +279,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         Ensure the debug_class_state method juggles the state within context
         manager.
         """
-
         def get_id_object_list():
             """ return the current _id_object_list """
             return ResourceIdentifier._id_order
@@ -357,7 +357,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         for num, cat in enumerate(catalogs or make_diverse_catalog_list()):
             for ev in cat:
                 ev_ids = get_object_id_dict(ev)
-                gen = yield_obj_parent_attr(ev, ResourceIdentifier)
+                gen = _yield_obj_parent_attr(ev, ResourceIdentifier)
                 for rid, parent, attr in gen:
                     referred_object = rid.get_referred_object()
                     if referred_object is None:
@@ -496,7 +496,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         should warn if it is being changed. This tests the case were an id is
         not specified and the default uuid is used.
         """
-        # test
         rid = ResourceIdentifier()
         with WarningsCapture() as w:
             warnings.simplefilter('default')
@@ -511,7 +510,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         should warn if it is being changed. This tests the case were an id is
         manually specified.
         """
-        # test
         rid = ResourceIdentifier('a very unique string indeed')
         with WarningsCapture() as w:
             warnings.simplefilter('default')
@@ -561,7 +559,7 @@ def get_instances(obj, cls=None, is_attr=None, has_attr=None):
     :param has_attr:
         Only return objects that have attribute has_attr, if None return all.
     """
-    gen = yield_obj_parent_attr(obj, cls, is_attr=is_attr, has_attr=has_attr)
+    gen = _yield_obj_parent_attr(obj, cls, is_attr=is_attr, has_attr=has_attr)
     return [x[0] for x in gen]
 
 
@@ -569,7 +567,7 @@ def get_object_id_dict(obj, cls=None):
     """
     Recurse an object and return a dict in the form of {id: object}.
     """
-    return {id(x[0]): x[0] for x in yield_obj_parent_attr(obj, cls)}
+    return {id(x[0]): x[0] for x in _yield_obj_parent_attr(obj, cls)}
 
 
 def get_non_built_in_id_dict(obj, cls=None):
