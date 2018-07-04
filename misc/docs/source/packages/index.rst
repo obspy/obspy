@@ -134,8 +134,8 @@ categories.*
 
     obspy.io.cmtsolution
     obspy.io.cnv
-    obspy.io.iaspei
     obspy.io.gse2
+    obspy.io.iaspei
     obspy.io.json
     obspy.io.kml
     obspy.io.ndk
@@ -143,10 +143,10 @@ categories.*
     obspy.io.nlloc
     obspy.io.nordic
     obspy.io.pde
-    obspy.io.seiscomp
-    obspy.io.scardec
-    obspy.io.shapefile
     obspy.io.quakeml
+    obspy.io.scardec
+    obspy.io.seiscomp
+    obspy.io.shapefile
     obspy.io.zmap
 
 .. rubric:: Inventory Data Import/Export Plug-ins
