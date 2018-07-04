@@ -2179,7 +2179,7 @@ class StreamTestCase(unittest.TestCase):
             # There is some strange issue on Win32bit (see #2188). Thus we just
             # use assert_allclose() here instead of testing for full equality.
             if platform.system() == "Windows" and \
-                    platform.architecture()[0] == "32bit":
+                    platform.architecture()[0] == "32bit":  # pragma: no cover
                 self.assertEqual(tr1.stats, tr2.stats)
                 np.testing.assert_allclose(tr1.data, tr2.data)
             else:
