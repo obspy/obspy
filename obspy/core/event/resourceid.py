@@ -369,7 +369,11 @@ class ResourceIdentifier(object):
         """
         Bind an object to the ResourceIdentifier instance.
 
-        Also allows the object to be bound to a parent scope.
+        Also allows the object to be bound to a parent scope. Will emit a
+        warning if referred_object is not equal to the last object referred
+        to by the same resource_id, or, if the resource_id does not refer to
+        an object that currently exists, the last object assigned to the same
+        resource id code.
 
         :param referred_object: The object to which the resource id refers.
         :type referred_object: object
@@ -383,33 +387,35 @@ class ResourceIdentifier(object):
             event object are event-scoped.
         :type parent: object, int
         """
+
+        # Get the last object bound to this instance of ResourceIdentifier or
+        # if there is None, get the last referred_object assigned the same
+        # resource_id code.
+        id_order = ResourceIdentifier._id_order
+        old = ResourceIdentifier._id_object_map.get(self._object_id, None)
+        if old is None:  # look for last object with same id code.
+            try:
+                old_obj_id = id_order[self._resource_key][-1]
+                old = ResourceIdentifier._id_object_map[old_obj_id]
+            except (KeyError, IndexError):
+                pass
+        if warn and old is not None and old != referred_object:
+            msg = ('Warning, binding object to resource ID %s which '
+                   'is not equal to the last object bound to this '
+                   'resource_id') % self.id
+            warnings.warn(msg, UserWarning)
+        # Set the object id to the new object, and update parent scoping tree.
         self._object_id = id(referred_object)
-        # Use parent-scoping feature if parent is not None.
         if parent is not None:
             self._parent_key = parent
             id_tree = ResourceIdentifier._parent_id_tree
             if self._parent_key not in id_tree:
                 id_tree[self._parent_key] = WeakKeyDictionary()
             id_tree[self._parent_key][self._resource_key] = self._object_id
-        # Set weakref to object_id.
+        # Set the new id in id map and append referred_object to id_order.
         ResourceIdentifier._id_object_map[self._object_id] = referred_object
-        # Set id in _id_order, warn if new object is not equal to last object
-        # with the same resource_id.
-        id_order = ResourceIdentifier._id_order
         if self._resource_key not in id_order:
             id_order[self._resource_key] = []
-        try:
-            old_obj_id = id_order[self._resource_key][-1]
-            old_obj = ResourceIdentifier._id_object_map[old_obj_id]
-        except (KeyError, IndexError):
-            pass
-        else:  # old object is not equal to new object
-            if warn and old_obj != referred_object:
-                msg = ('Warning, binding object to resource ID %s which '
-                       'is not equal to the last object bound to this '
-                       'resource_id') % self.id
-                warnings.warn(msg, UserWarning)
-        # only add this to the id_order if it is the resource_ids first object
         id_order[self._resource_key].append(self._object_id)
 
     def convert_id_to_quakeml_uri(self, authority_id="local"):
