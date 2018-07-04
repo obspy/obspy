@@ -148,7 +148,7 @@ class ResourceIdentifier(object):
     >>> # Deleting it, or letting the garbage collector handle the object will
     >>> # invalidate the reference.
     >>> del event
-    >>> print(res_id.get_referred_object())  # doctest: +SKIP
+    >>> print(res_id.get_referred_object())
     None
 
     The most powerful ability (and reason why one would want to use a resource
@@ -195,9 +195,9 @@ class ResourceIdentifier(object):
     >>> assert ref_a.get_referred_object() is obj_a
     >>> assert ref_b.get_referred_object() is obj_b
     >>> del obj_b  # obj_b gets garbage collected
-    >>> assert ref_b.get_referred_object() is obj_a  # doctest: +SKIP
+    >>> assert ref_b.get_referred_object() is obj_a
     >>> del obj_a  # now no object with res_id exists
-    >>> assert ref_b.get_referred_object() is None  # doctest: +SKIP
+    >>> assert ref_b.get_referred_object() is None
 
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convert_id_to_quakeml_uri() method. The resulting id will be of the
