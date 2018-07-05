@@ -795,7 +795,7 @@ def _get_record_information(file_object, offset=0, endian=None):
         elif (samp_rate_factor < 0) and (samp_rate_mult) > 0:
             samp_rate = -1.0 * float(samp_rate_mult) / float(samp_rate_factor)
         elif (samp_rate_factor < 0) and (samp_rate_mult) < 0:
-            samp_rate = -1.0 / float(samp_rate_factor * samp_rate_mult)
+            samp_rate = 1.0 / float(samp_rate_factor * samp_rate_mult)
         else:
             samp_rate = 0
 

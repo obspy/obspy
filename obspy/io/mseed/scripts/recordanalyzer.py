@@ -165,7 +165,7 @@ class RecordAnalyser(object):
         # Read and unpack.
         self.file.seek(self.record_offset, 0)
         fixed_header = self.file.read(48)
-        encoding = native_str('%s20c2H3Bx4H4Bl2H' % self.endian)
+        encoding = native_str('%s20c2H3Bx2H2h4Bl2h' % self.endian)
         try:
             header_item = unpack(encoding, fixed_header)
         except Exception:
@@ -343,7 +343,11 @@ class RecordAnalyser(object):
                    endian)
         ret_val += 'FIXED SECTION OF DATA HEADER\n'
         for key in self.fixed_header.keys():
-            ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
+            # Don't print empty values to ease testing.
+            if self.fixed_header[key] != "":
+                ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
+            else:
+                ret_val += '\t%s:\n' % (key)
         ret_val += '\nBLOCKETTES\n'
         for key in self.blockettes.keys():
             ret_val += '\t%i:' % key

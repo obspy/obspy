@@ -98,6 +98,8 @@ master:
      sample rate = 1 (see #2069)
    * Avoid showing invalid warnings when guessing endian during parsing
      timestamps (see #1988)
+   * util.get_record_information() now works correctly for negative
+     sampling rate factors and multipliers (see #2030, #2191).
  - obspy.io.nordic
    * Bug-fix for amplitudes without magnitude_hint (see #2021)
    * Bug-fix for wavefiles with full path stripping (see #2021)

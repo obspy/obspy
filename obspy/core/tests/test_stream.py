@@ -6,6 +6,7 @@ from future.builtins import *  # NOQA
 import inspect
 import os
 import pickle
+import platform
 import unittest
 import warnings
 from copy import deepcopy
@@ -2175,7 +2176,14 @@ class StreamTestCase(unittest.TestCase):
                 tr1.simulate(**kwargs)
                 tr1.stats.processing.pop()
             tr2 = st.select(component=component)[0]
-            self.assertEqual(tr1, tr2)
+            # There is some strange issue on Win32bit (see #2188). Thus we just
+            # use assert_allclose() here instead of testing for full equality.
+            if platform.system() == "Windows" and \
+                    platform.architecture()[0] == "32bit":  # pragma: no cover
+                self.assertEqual(tr1.stats, tr2.stats)
+                np.testing.assert_allclose(tr1.data, tr2.data)
+            else:
+                self.assertEqual(tr1, tr2)
 
     def test_select_empty_strings(self):
         """
