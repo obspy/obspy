@@ -50,6 +50,8 @@ master:
      (see #2106, #2098, #2095)
  - obspy.io.sac:
    * Fix bug writing inventory with SOH channels to SACPZ (see #2200).
+ - obspy.io.segy:
+   * Raise nicer error messages when header packing fails (see #2194, #2196).
  - obspy.io.seiscomp:
    * Adding support for SC3ML 0.10 (see #2024).
    * Update xsl to allow conversion of amplitude picks not associated with
