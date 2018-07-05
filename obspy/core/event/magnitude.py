@@ -23,8 +23,9 @@ from future.builtins import *  # NOQA
 
 from obspy import UTCDateTime
 from obspy.core.event.base import (
-    _event_type_class_factory, ResourceIdentifier, CreationInfo,
+    _event_type_class_factory, CreationInfo,
     WaveformStreamID, TimeWindow)
+from obspy.core.event import ResourceIdentifier
 from obspy.core.event.header import (
     AmplitudeCategory, AmplitudeUnit, EvaluationMode, EvaluationStatus,
     ATTRIBUTE_HAS_ERRORS)
@@ -54,7 +55,7 @@ class Magnitude(__Magnitude):
     originID. It is either a combination of different magnitude estimations, or
     it represents the reported magnitude for the given event.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of Magnitude.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -80,11 +81,11 @@ class Magnitude(__Magnitude):
         * coda magnitude (``'Mc'``)
         * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
 
-    :type origin_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+    :type origin_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`,
         optional
     :param origin_id: Reference to an origin’s resource_id if the magnitude has
         an associated Origin.
-    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+    :type method_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`,
         optional
     :param method_id: Identifies the method of magnitude estimation. Users
         should avoid to give contradictory information in method_id and
@@ -138,14 +139,13 @@ class StationMagnitude(__StationMagnitude):
     """
     This class describes the magnitude derived from a single waveform stream.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type resource_id:
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of StationMagnitude.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type origin_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type origin_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param origin_id: Reference to an origin’s ``resource_id`` if the
         StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
     :type mag: float
@@ -155,13 +155,12 @@ class StationMagnitude(__StationMagnitude):
     :type station_magnitude_type: str, optional
     :param station_magnitude_type: See
         :class:`~obspy.core.event.magnitude.Magnitude`
-    :type amplitude_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type amplitude_id:
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param amplitude_id: Identifies the data source of the StationMagnitude.
         For magnitudes derived from amplitudes in waveforms (e.g., local
         magnitude ML), amplitudeID points to publicID in class Amplitude.
-    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type method_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param method_id: See :class:`~obspy.core.event.magnitude.Magnitude`
     :type waveform_id: :class:`~obspy.core.event.base.WaveformStreamID`,
         optional
@@ -196,7 +195,7 @@ class StationMagnitudeContribution(__StationMagnitudeContribution):
     StationMagnitude objects for computing a network magnitude estimation.
 
     :type station_magnitude_id:
-        :class:`~obspy.core.event.base.ResourceIdentifier`, optional
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param station_magnitude_id: Refers to the resource_id of a
         StationMagnitude object.
     :type residual: float, optional
@@ -244,7 +243,7 @@ class Amplitude(__Amplitude):
     single amplitude measurement or a measurement of the visible signal
     duration for duration magnitudes.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of Amplitude.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -292,8 +291,7 @@ class Amplitude(__Amplitude):
         combinations of SI base units.
         See :class:`~obspy.core.event.header.AmplitudeUnit` for allowed
         values.
-    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type method_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param method_id: Describes the method of amplitude determination.
     :type period: float, optional
     :param period: Dominant period in the timeWindow in case of amplitude
@@ -304,15 +302,13 @@ class Amplitude(__Amplitude):
     :type time_window: :class:`~obspy.core.event.base.TimeWindow`, optional
     :param time_window: Description of the time window used for amplitude
         measurement. Recommended for duration magnitudes.
-    :type pick_id: :class:`~obspy.core.event.base.ResourceIdentifier`, optional
+    :type pick_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param pick_id: Refers to the ``resource_id`` of an associated
         :class:`~obspy.core.event.origin.Pick` object.
-    :type waveform_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type waveform_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param waveform_id: Identifies the waveform stream on which the amplitude
         was measured.
-    :type filter_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type filter_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param filter_id: Identifies the filter or filter setup used for filtering
         the waveform stream referenced by ``waveform_id``.
     :type scaling_time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional

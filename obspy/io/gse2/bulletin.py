@@ -273,22 +273,24 @@ class Unpickler(object):
 
     def _get_res_id(self, ident, parent=None, parent_res_id=None):
         """
-        Create a :class:`~obspy.core.event.base.ResourceIdentifier` object.
+        Create a :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        object.
 
         :type ident: str
         :param ident: Id of
-            the :class:`~obspy.core.event.base.ResourceIdentifier`.
+            the :class:`~obspy.core.event.resourceid.ResourceIdentifier`.
         :type parent: :class:`~obspy.core.event.origin.Origin`,
             :class:`~obspy.core.event.event.Event` or any other object
             with a resource_id attribute.
         :param parent: The resource_id attribute of the parent will be
             used as a prefix for the new
-            :class:`~obspy.core.event.base.ResourceIdentifier`.
-        :type parent_res_id: :class:`~obspy.core.event.base.ResourceIdentifier`
-            of the parent.
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`.
+        :type parent_res_id:
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier` of the
+            parent.
         :param parent_res_id:
-            :class:`~obspy.core.event.base.ResourceIdentifier`
-        :rtype: :class:`~obspy.core.event.base.ResourceIdentifier`
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :rtype: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
         :return: ResourceIdentifier object.
         """
         prefix = self.res_id_prefix
@@ -451,6 +453,8 @@ class Unpickler(object):
         public_id = "event/%s" % event_id
         event.resource_id = self._get_res_id(public_id)
 
+        event.scope_resource_ids()
+
         return event
 
     def _parse_origin(self, event):
@@ -460,7 +464,7 @@ class Unpickler(object):
         :type event: :class:`~obspy.core.event.event.Event`
         :param event: Event of the origin.
         :rtype: :class:`~obspy.core.event.origin.Origin`,
-            :class:`~obspy.core.event.base.ResourceIdentifier`
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`
         :returns: Parsed origin or None, resource identifier of the
             origin.
         """
@@ -519,7 +523,7 @@ class Unpickler(object):
         :param magnitudes: Store magnitudes in a list to keep
             their positions.
         :rtype: :class:`~obspy.core.event.origin.Origin`,
-            :class:`~obspy.core.event.base.ResourceIdentifier`
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`
         :returns: Parsed origin or None, resource identifier of the
             origin.
         """
@@ -1008,7 +1012,7 @@ def _read_gse2(filename, inventory=None, default_network_code='XX',
         are not found in the inventory.
     :type res_id_prefix: str
     :param res_id_prefix: Prefix used
-        in :class:`~obspy.core.event.base.ResourceIdentifier` attributes.
+        in :class:`~obspy.core.event.resourceid.ResourceIdentifier` attributes.
     :type fields: dict
     :param fields: dictionary of positions of input fields, used if input file
         is non-standard

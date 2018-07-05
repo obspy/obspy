@@ -544,6 +544,8 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1'):
             return_wavnames=return_wavnames)
     if return_wavnames:
         return catalog, wav_names
+    for event in catalog:
+        event.scope_resource_ids()
     return catalog
 
 

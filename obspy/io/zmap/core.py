@@ -259,6 +259,7 @@ class Unpickler(object):
                 magnitude.mag_errors.uncertainty = m_err
                 event.magnitudes.append(magnitude)
                 event.preferred_magnitude_id = magnitude.resource_id.id
+            event.scope_resource_ids()
             catalog.append(event)
         return catalog
 

@@ -20,16 +20,17 @@ This class hierarchy is closely modelled after the de-facto standard format
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+
 import copy
 
 from obspy.core.event.header import (
     EventType, EventTypeCertainty, EventDescriptionType)
-from obspy.core.util.decorator import rlock
+from obspy.core.event.resourceid import ResourceIdentifier
+from obspy.core.util.misc import _yield_resource_id_parent_attr
 from obspy.imaging.source import plot_radiation_pattern, _setup_figure_and_axes
 
 
-from .base import (_event_type_class_factory,
-                   CreationInfo, ResourceIdentifier)
+from .base import _event_type_class_factory, CreationInfo
 
 
 __Event = _event_type_class_factory(
@@ -57,7 +58,7 @@ class Event(__Event):
     event is usually associated with one or more magnitudes, and with one or
     more focal mechanism determinations.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of Event.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -101,6 +102,10 @@ class Event(__Event):
         :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
     do_not_warn_on = ["_format", "extra"]
+
+    def __init__(self, *args, **kwargs):
+        super(Event, self).__init__(*args, **kwargs)
+        self.scope_resource_ids()
 
     def short_str(self):
         """
@@ -275,7 +280,6 @@ class Event(__Event):
 
         return fig
 
-    @rlock
     def __deepcopy__(self, memodict=None):
         """
         reset resource_id's object_id after deep copy to allow the
@@ -287,8 +291,12 @@ class Event(__Event):
         memodict[id(self)] = result
         for k, v in self.__dict__.items():
             setattr(result, k, copy.deepcopy(v, memodict))
-        result.resource_id.bind_resource_ids()  # bind all resource_ids
+        result.scope_resource_ids()
         return result
+
+    def __setstate__(self, state_dict):
+        super(Event, self).__setstate__(state_dict)
+        self.scope_resource_ids()
 
     def write(self, filename, format, **kwargs):
         """
@@ -310,6 +318,23 @@ class Event(__Event):
         """
         from .catalog import Catalog
         Catalog(events=[self]).write(filename, format, **kwargs)
+
+    def scope_resource_ids(self):
+        """
+        Ensure all resource_ids in event instance are event-scoped.
+
+        This will ensure the resource_ids refer to objects in the event
+        structure when possible.
+        """
+        gen = _yield_resource_id_parent_attr(self)
+
+        for resource_id, parent, attr in gen:
+            if attr == 'resource_id':
+                resource_id.set_referred_object(parent, parent=self,
+                                                warn=False)
+            else:
+                resource_id._parent_key = self
+                resource_id._object_id = None
 
 
 __EventDescription = _event_type_class_factory(

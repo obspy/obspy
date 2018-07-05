@@ -354,6 +354,8 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         event.picks.append(pick)
         arrival.pick_id = pick.resource_id
 
+    event.scope_resource_ids()
+
     return event
 
 

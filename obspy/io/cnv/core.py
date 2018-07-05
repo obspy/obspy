@@ -36,7 +36,8 @@ def _write_cnv(catalog, filename, phase_mapping=None, ifx_list=None,
         uses a single letter phase code (either "P" or "S"). If not specified
         the following default mapping is used: 'p', 'P', 'Pg', 'Pn', 'Pm' will
         be mapped to "P" and 's', 'S', 'Sg', 'Sn', 'Sm' will be mapped to "S".
-    :type ifx_list: list of :class:`~obspy.core.event.ResourceIdentifier`
+    :type ifx_list: list of
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param ifx_list: List of events for which the 'IFX' flag should be set
         (used in VELEST to fix the y coordinate of the hypocenter).
     :type weight_mapping: list of float

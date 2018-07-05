@@ -298,6 +298,8 @@ def _internal_read_single_cmtsolution(buf):
     ev.preferred_magnitude_id = cmt_mag.resource_id.id
     ev.preferred_focal_mechanism_id = foc_mec.resource_id.id
 
+    ev.scope_resource_ids()
+
     return ev
 
 

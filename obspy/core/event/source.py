@@ -26,7 +26,8 @@ from future.builtins import *  # NOQA
 import numpy as np
 
 from obspy.core.event.base import (
-    _event_type_class_factory, ResourceIdentifier, CreationInfo)
+    _event_type_class_factory, CreationInfo)
+from obspy.core.event import ResourceIdentifier
 from obspy.core.event.header import (
     EvaluationMode, EvaluationStatus, MomentTensorCategory, MTInversionType,
     SourceTimeFunctionType, ATTRIBUTE_HAS_ERRORS)
@@ -269,16 +270,17 @@ class MomentTensor(__MomentTensor):
     This class represents a moment tensor solution for an event. It is an
     optional part of a FocalMechanism description.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of MomentTensor.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type derived_origin_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type derived_origin_id:
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param derived_origin_id: Refers to the resource_id of the Origin derived
         in the moment tensor inversion.
     :type moment_magnitude_id:
-        :class:`~obspy.core.event.base.ResourceIdentifier`, optional
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param moment_magnitude_id: Refers to the publicID of the Magnitude object
         which represents the derived moment magnitude.
     :type scalar_moment: float, optional
@@ -303,11 +305,10 @@ class MomentTensor(__MomentTensor):
     :param iso: Isotropic part obtained from moment tensor inversion (decimal
         fraction between 0 and 1).
     :type greens_function_id:
-        :class:`~obspy.core.event.base.ResourceIdentifier`, optional
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param greens_function_id: Resource identifier of the Green’s function used
         in moment tensor inversion.
-    :type filter_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type filter_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param filter_id: Resource identifier of the filter setup used in moment
         tensor inversion.
     :type source_time_function:
@@ -316,8 +317,7 @@ class MomentTensor(__MomentTensor):
         inversion.
     :type data_used: list of :class:`~obspy.core.event.base.DataUsed`, optional
     :param data_used: Describes waveform data used for moment-tensor inversion.
-    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type method_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param method_id: Resource identifier of the method used for moment-tensor
         inversion.
     :type category: str, optional
@@ -368,13 +368,13 @@ class FocalMechanism(__FocalMechanism):
     moment tensor description is provided by objects of the class MomentTensor
     which can be specified as child elements of FocalMechanism.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of FocalMechanism.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
     :type triggering_origin_id:
-        :class:`~obspy.core.event.base.ResourceIdentifier`, optional
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param triggering_origin_id: Refers to the resource_id of the triggering
         origin.
     :type nodal_planes: :class:`~obspy.core.event.source.NodalPlanes`, optional
@@ -395,8 +395,7 @@ class FocalMechanism(__FocalMechanism):
         parameter. Indicates how the stations are distributed about the focal
         sphere (Reasenberg and Oppenheimer 1985). Decimal fraction between 0
         and 1.
-    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type method_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param method_id: Resource identifier of the method used for determination
         of the focal mechanism.
     :type waveform_id: list of

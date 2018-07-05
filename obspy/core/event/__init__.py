@@ -25,7 +25,8 @@ from future.builtins import *  # NOQA
 
 from .base import (
     Comment, CompositeTime, ConfidenceEllipsoid, CreationInfo, DataUsed,
-    QuantityError, ResourceIdentifier, TimeWindow, WaveformStreamID)
+    QuantityError, TimeWindow, WaveformStreamID)
+from obspy.core.event.resourceid import ResourceIdentifier
 from .catalog import Catalog, read_events
 from .event import Event, EventDescription
 from .magnitude import (

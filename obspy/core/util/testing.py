@@ -14,7 +14,6 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import difflib
-from distutils.version import LooseVersion
 import doctest
 import glob
 import inspect
@@ -24,13 +23,13 @@ import re
 import shutil
 import unittest
 import warnings
+from distutils.version import LooseVersion
 
-from lxml import etree
 import numpy as np
+from lxml import etree
 
 from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
 from obspy.core.util.misc import MatplotlibBackend
-
 
 # this dictionary contains the locations of checker routines that determine
 # whether the module's tests can be executed or not (e.g. because test server
@@ -750,6 +749,305 @@ class WarningsCapture(object):
 
     def __getitem__(self, key):
         return self.captured_warnings[key]
+
+
+def create_diverse_catalog():
+    """
+    Create a catalog with a single event that has many features.
+
+    Uses most the event related classes.
+    """
+
+    # imports are here in order to avoid circular import issues
+    import obspy.core.event as ev
+    from obspy import UTCDateTime, Catalog
+    # local dict for storing state
+    state = dict(time=UTCDateTime('2016-05-04T12:00:01'))
+
+    def _create_event():
+        event = ev.Event(
+            event_type='mining explosion',
+            event_descriptions=[_get_event_description()],
+            picks=[_create_pick()],
+            origins=[_create_origins()],
+            station_magnitudes=[_get_station_mag()],
+            magnitudes=[_create_magnitudes()],
+            amplitudes=[_get_amplitudes()],
+            focal_mechanisms=[_get_focal_mechanisms()],
+        )
+        # set preferred origin, focal mechanism, magnitude
+        preferred_objects = dict(
+            origin=event.origins[-1].resource_id,
+            focal_mechanism=event.focal_mechanisms[-1].resource_id,
+            magnitude=event.magnitudes[-1].resource_id,
+        )
+        for item, value in preferred_objects.items():
+            setattr(event, 'preferred_' + item + '_id', value)
+
+        event.scope_resource_ids()
+        return event
+
+    def _create_pick():
+        # setup some of the classes
+        creation = ev.CreationInfo(
+            agency='SwanCo',
+            author='Indago',
+            creation_time=UTCDateTime(),
+            version='10.10',
+            author_url=ev.ResourceIdentifier('smi:local/me.com'),
+        )
+
+        pick = ev.Pick(
+            time=state['time'],
+            comments=[ev.Comment(x) for x in 'BOB'],
+            evaluation_mode='manual',
+            evaluation_status='final',
+            creation_info=creation,
+            phase_hint='P',
+            polarity='positive',
+            onset='emergent',
+            back_azimith_errors={"uncertainty": 10},
+            slowness_method_id=ev.ResourceIdentifier('smi:local/slow'),
+            backazimuth=122.1,
+            horizontal_slowness=12,
+            method_id=ev.ResourceIdentifier(),
+            horizontal_slowness_errors={'uncertainty': 12},
+            filter_id=ev.ResourceIdentifier(),
+            waveform_id=ev.WaveformStreamID('UU', 'FOO', '--', 'HHZ'),
+        )
+        state['pick_id'] = pick.resource_id
+        return pick
+
+    def _create_origins():
+        ori = ev.Origin(
+            resource_id=ev.ResourceIdentifier('smi:local/First'),
+            time=UTCDateTime('2016-05-04T12:00:00'),
+            time_errors={'uncertainty': .01},
+            longitude=-111.12525,
+            longitude_errors={'uncertainty': .020},
+            latitude=47.48589325,
+            latitude_errors={'uncertainty': .021},
+            depth=2.123,
+            depth_errors={'uncertainty': 1.22},
+            depth_type='from location',
+            time_fixed=False,
+            epicenter_fixed=False,
+            reference_system_id=ev.ResourceIdentifier(),
+            method_id=ev.ResourceIdentifier(),
+            earth_model_id=ev.ResourceIdentifier(),
+            arrivals=[_get_arrival()],
+            composite_times=[_get_composite_times()],
+            quality=_get_origin_quality(),
+            origin_type='hypocenter',
+            origin_uncertainty=_get_origin_uncertainty(),
+            region='US',
+            evaluation_mode='manual',
+            evaluation_status='final',
+        )
+        state['origin_id'] = ori.resource_id
+        return ori
+
+    def _get_arrival():
+        return ev.Arrival(
+            resource_id=ev.ResourceIdentifier('smi:local/Ar1'),
+            pick_id=state['pick_id'],
+            phase='P',
+            time_correction=.2,
+            azimuth=12,
+            distance=10,
+            takeoff_angle=15,
+            takeoff_angle_errors={'uncertainty': 10.2},
+            time_residual=.02,
+            horizontal_slowness_residual=12.2,
+            backazimuth_residual=12.2,
+            time_weight=.23,
+            horizontal_slowness_weight=12,
+            backazimuth_weight=12,
+            earth_model_id=ev.ResourceIdentifier(),
+            commens=[ev.Comment(x) for x in 'Nothing'],
+        )
+
+    def _get_composite_times():
+        return ev.CompositeTime(
+            year=2016,
+            year_errors={'uncertainty': 0},
+            month=5,
+            month_errors={'uncertainty': 0},
+            day=4,
+            day_errors={'uncertainty': 0},
+            hour=0,
+            hour_errors={'uncertainty': 0},
+            minute=0,
+            minute_errors={'uncertainty': 0},
+            second=0,
+            second_errors={'uncertainty': .01}
+        )
+
+    def _get_origin_quality():
+        return ev.OriginQuality(
+            associate_phase_count=1,
+            used_phase_count=1,
+            associated_station_count=1,
+            used_station_count=1,
+            depth_phase_count=1,
+            standard_error=.02,
+            azimuthal_gap=.12,
+            ground_truth_level='GT0',
+        )
+
+    def _get_origin_uncertainty():
+        return ev.OriginUncertainty(
+            horizontal_uncertainty=1.2,
+            min_horizontal_uncertainty=.12,
+            max_horizontal_uncertainty=2.2,
+            confidence_ellipsoid=_get_confidence_ellipsoid(),
+            preferred_description="uncertainty ellipse",
+        )
+
+    def _get_confidence_ellipsoid():
+        return ev.ConfidenceEllipsoid(
+            semi_major_axis_length=12,
+            semi_minor_axis_length=12,
+            major_axis_plunge=12,
+            major_axis_rotation=12,
+        )
+
+    def _create_magnitudes():
+        return ev.Magnitude(
+            resource_id=ev.ResourceIdentifier(),
+            mag=5.5,
+            mag_errors={'uncertainty': .01},
+            magnitude_type='Mw',
+            origin_id=state['origin_id'],
+            station_count=1,
+            station_magnitude_contributions=[_get_station_mag_contrib()],
+        )
+
+    def _get_station_mag():
+        station_mag = ev.StationMagnitude(
+            mag=2.24,
+        )
+        state['station_mag_id'] = station_mag.resource_id
+        return station_mag
+
+    def _get_station_mag_contrib():
+        return ev.StationMagnitudeContribution(
+            station_magnitude_id=state['station_mag_id'],
+        )
+
+    def _get_event_description():
+        return ev.EventDescription(
+            text='some text about the EQ',
+            type='earthquake name',
+        )
+
+    def _get_amplitudes():
+        return ev.Amplitude(
+            generic_amplitude=.0012,
+            type='A',
+            unit='m',
+            period=1,
+            time_window=_get_timewindow(),
+            pick_id=state['pick_id'],
+            scalling_time=state['time'],
+            mangitude_hint='ML',
+            scaling_time_errors=ev.QuantityError(uncertainty=42.0),
+        )
+
+    def _get_timewindow():
+        return ev.TimeWindow(
+            begin=1.2,
+            end=2.2,
+            reference=UTCDateTime('2016-05-04T12:00:00'),
+        )
+
+    def _get_focal_mechanisms():
+        return ev.FocalMechanism(
+            nodal_planes=_get_nodal_planes(),
+            principal_axis=_get_principal_axis(),
+            azimuthal_gap=12,
+            station_polarity_count=12,
+            misfit=.12,
+            station_distribution_ratio=.12,
+            moment_tensor=_get_moment_tensor(),
+        )
+
+    def _get_nodal_planes():
+        return ev.NodalPlanes(
+            nodal_plane_1=ev.NodalPlane(strike=12, dip=2, rake=12),
+            nodal_plane_2=ev.NodalPlane(strike=12, dip=2, rake=12),
+            preferred_plane=2,
+        )
+
+    def _get_principal_axis():
+        return ev.PrincipalAxes(
+            t_axis=15,
+            p_axis=15,
+            n_axis=15,
+        )
+
+    def _get_moment_tensor():
+        return ev.MomentTensor(
+            scalar_moment=12213,
+            tensor=_get_tensor(),
+            variance=12.23,
+            variance_reduction=98,
+            double_couple=.22,
+            clvd=.55,
+            iso=.33,
+            source_time_function=_get_source_time_function(),
+            data_used=[_get_data_used()],
+            method_id=ev.ResourceIdentifier(),
+            inversion_type='general',
+        )
+
+    def _get_tensor():
+        return ev.Tensor(
+            m_rr=12,
+            m_rr_errors={'uncertainty': .01},
+            m_tt=12,
+            m_pp=12,
+            m_rt=12,
+            m_rp=12,
+            m_tp=12,
+        )
+
+    def _get_source_time_function():
+        return ev.SourceTimeFunction(
+            type='triangle',
+            duration=.12,
+            rise_time=.33,
+            decay_time=.23,
+        )
+
+    def _get_data_used():
+        return ev.DataUsed(
+            wave_type='body waves',
+            station_count=12,
+            component_count=12,
+            shortest_period=1,
+            longest_period=20,
+        )
+
+    events = [_create_event()]
+    return Catalog(events=events)
+
+
+def setup_context_testcase(test_case, cm):
+    """
+    Use a contextmanager to set up a unittest test case.
+
+    Inspired by Ned Batchelder's recipe found here: goo.gl/8TBJ7s.
+
+    :param test_case:
+        An instance of unittest.TestCase
+    :param cm:
+        Any instances which implements the context manager protocol,
+        ie its class definition implements __enter__ and __exit__ methods.
+    """
+    val = cm.__enter__()
+    test_case.addCleanup(cm.__exit__, None, None, None)
+    return val
 
 
 if __name__ == '__main__':

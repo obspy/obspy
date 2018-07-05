@@ -990,7 +990,10 @@ class Unpickler(object):
             # finally append newly created event to catalog
             event.resource_id = event_el.get('publicID')
             self._extra(event_el, event)
+            # bind event scoped resource IDs to this event
+            event.scope_resource_ids()
             catalog.append(event)
+
         catalog.resource_id = catalog_el.get('publicID')
         self._extra(catalog_el, catalog)
         return catalog

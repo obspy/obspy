@@ -34,12 +34,12 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _read_from_plugin
 from obspy.core.util.base import (ENTRY_POINTS, download_to_file,
                                   sanitize_filename)
-from obspy.core.util.decorator import (map_example_filename, rlock,
-                                       uncompress_file)
+from obspy.core.util.decorator import map_example_filename, uncompress_file
 from obspy.core.util.misc import buffered_load_entry_point
 from obspy.imaging.cm import obspy_sequential
 
-from .base import CreationInfo, ResourceIdentifier
+from .base import CreationInfo
+from obspy.core.event import ResourceIdentifier
 
 from .event import Event
 
@@ -53,7 +53,7 @@ class Catalog(object):
 
     :type events: list of :class:`~obspy.core.event.event.Event`, optional
     :param events: List of events
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of the catalog.
     :type description: str, optional
     :param description: Description string that can be assigned to the
@@ -84,11 +84,21 @@ class Catalog(object):
         return self.__dict__['resource_id']
 
     def _set_resource_id(self, value):
-        if type(value) == dict:
+        if isinstance(value, dict):
             value = ResourceIdentifier(**value)
         elif type(value) != ResourceIdentifier:
             value = ResourceIdentifier(value)
+        value.set_referred_object(self, warn=False)
         self.__dict__['resource_id'] = value
+
+    def __setstate__(self, state):
+        """
+        Reset the resource id after being unpickled to ensure they are
+        bound to the correct object.
+        """
+        state['resource_id'].set_referred_object(self, warn=False,
+                                                 parent=self)
+        self.__dict__.update(state)
 
     resource_id = property(_get_resource_id, _set_resource_id)
 
@@ -765,7 +775,6 @@ class Catalog(object):
         return fig
 
 
-@rlock
 @map_example_filename("pathname_or_url")
 def read_events(pathname_or_url=None, format=None, **kwargs):
     """
@@ -845,7 +854,6 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
         if len(pathnames) > 1:
             for filename in pathnames[1:]:
                 catalog.extend(_read(filename, format, **kwargs).events)
-        ResourceIdentifier.bind_resource_ids()
         return catalog
 
 

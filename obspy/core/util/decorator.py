@@ -18,7 +18,6 @@ import os
 import re
 import socket
 import tarfile
-import threading
 import unittest
 import warnings
 import zipfile
@@ -300,40 +299,6 @@ def map_example_filename(arg_kwarg_name):
                             pass
         return func(*args, **kwargs)
     return _map_example_filename
-
-
-def _decorate_polyfill(func, caller):
-    """
-    decorate(func, caller) decorates a function using a caller.
-    """
-    try:
-        from decorator import decorate
-        return decorate(func, caller)
-    except ImportError:
-        from decorator import FunctionMaker
-        evaldict = dict(_call_=caller, _func_=func)
-        fun = FunctionMaker.create(
-            func, "return _call_(_func_, %(shortsignature)s)",
-            evaldict, __wrapped__=func)
-        if hasattr(func, '__qualname__'):
-            fun.__qualname__ = func.__qualname__
-        return fun
-
-
-def rlock(func):
-    """
-    Place a threading recursive lock (Rlock) on the wrapped function.
-    """
-    # This lock will be instantiated at function creation time, i.e. at the
-    # time the Python interpreter sees the decorated function the very
-    # first time - this lock thus exists once for each decorated function.
-    _rlock = threading.RLock()
-
-    def _locked_f(f, *args, **kwargs):
-        with _rlock:
-            return func(*args, **kwargs)
-
-    return _decorate_polyfill(func, _locked_f)
 
 
 if __name__ == '__main__':

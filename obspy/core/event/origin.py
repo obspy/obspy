@@ -23,8 +23,9 @@ from future.builtins import *  # NOQA
 
 from obspy import UTCDateTime
 from obspy.core.event.base import (
-    _event_type_class_factory, ResourceIdentifier, CreationInfo,
+    _event_type_class_factory, CreationInfo,
     WaveformStreamID, ConfidenceEllipsoid)
+from obspy.core.event import ResourceIdentifier
 from obspy.core.event.header import (
     EvaluationMode, EvaluationStatus, OriginDepthType, OriginType,
     OriginUncertaintyDescription, PickOnset, PickPolarity,
@@ -183,7 +184,7 @@ class Origin(__Origin):
     earthquake hypocenter, as well as additional meta-information. Origin can
     have objects of type OriginUncertainty and Arrival as child elements.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of Origin.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -223,16 +224,15 @@ class Origin(__Origin):
     :param epicenter_fixed: True if epicenter was kept fixed for computation of
         Origin.
     :type reference_system_id:
-        :class:`~obspy.core.event.base.ResourceIdentifier`, optional
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param reference_system_id: Identifies the reference system used for
         hypocenter determination. This is only necessary if a modified version
         of the standard (with local extensions) is used that provides a
         non-standard coordinate system.
-    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type method_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param method_id: Identifies the method used for locating the event.
-    :type earth_model_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type earth_model_id:
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param earth_model_id: Identifies the earth model used in method_id.
     :type arrivals: list of :class:`~obspy.core.event.origin.Arrival`, optional
     :param arrivals: List of arrivals associated with the origin.
@@ -326,7 +326,7 @@ class Pick(__Pick):
     A pick is the observation of an amplitude anomaly in a seismogram at a
     specific point in time. It is not necessarily related to a seismic event.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of Pick.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -337,12 +337,10 @@ class Pick(__Pick):
     :param time_errors: AttribDict containing error quantities.
     :type waveform_id: :class:`~obspy.core.event.base.WaveformStreamID`
     :param waveform_id: Identifies the waveform stream.
-    :type filter_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type filter_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param filter_id: Identifies the filter or filter setup used for filtering
         the waveform stream referenced by waveform_id.
-    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type method_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param method_id: Identifies the picker that produced the pick. This can be
         either a detection software program or a person.
     :type horizontal_slowness: float, optional
@@ -357,7 +355,7 @@ class Pick(__Pick):
     :type backazimuth_errors: :class:`~obspy.core.event.base.QuantityError`
     :param backazimuth_errors: AttribDict containing error quantities.
     :type slowness_method_id:
-        :class:`~obspy.core.event.base.ResourceIdentifier`, optional
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param slowness_method_id: Identifies the method that was used to determine
         the slowness.
     :type onset: str, optional
@@ -423,12 +421,12 @@ class Arrival(__Arrival):
     slowness and backazimuth of the observed wave—especially if derived from
     array data—may further constrain the nature of the arrival.
 
-    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param resource_id: Resource identifier of Arrival.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type pick_id: :class:`~obspy.core.event.base.ResourceIdentifier`
+    :type pick_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param pick_id: Refers to the resource_id of a Pick.
     :type phase: str
     :param phase: Phase identification. For possible values, please refer to
@@ -471,8 +469,8 @@ class Arrival(__Arrival):
     :param backazimuth_weight: Weight of the backazimuth for computation of the
         associated Origin. Note that the sum of all weights is not required to
         be unity.
-    :type earth_model_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
-        optional
+    :type earth_model_id:
+        :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param earth_model_id: Earth model which is used for the association of
         Arrival to Pick and computation of the residuals.
     :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
