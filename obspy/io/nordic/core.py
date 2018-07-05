@@ -1049,10 +1049,11 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         wavefiles = [str(wavefiles)]
     # Determine name from origin time
     try:
-        evtime = event.origins[0].time
+        origin = event.preferred_origin() or event.origins[0]
     except IndexError:
         msg = 'Need at least one origin with at least an origin time'
         raise NordicParsingError(msg)
+    evtime = origin.time
     if not evtime:
         msg = ('event has an origin, but time is not populated.  ' +
                'This is required!')
@@ -1081,16 +1082,16 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
         sfile_path = os.path.join(outdir, filename)
         sfilename = filename
     # Write the header info.
-    if event.origins[0].latitude is not None:
-        lat = '{0:.3f}'.format(event.origins[0].latitude)
+    if origin.latitude is not None:
+        lat = '{0:.3f}'.format(origin.latitude)
     else:
         lat = ''
-    if event.origins[0].longitude is not None:
-        lon = '{0:.3f}'.format(event.origins[0].longitude)
+    if origin.longitude is not None:
+        lon = '{0:.3f}'.format(origin.longitude)
     else:
         lon = ''
-    if event.origins[0].depth is not None:
-        depth = '{0:.1f}'.format(event.origins[0].depth / 1000.0)
+    if origin.depth is not None:
+        depth = '{0:.1f}'.format(origin.depth / 1000.0)
     else:
         depth = ''
     if event.creation_info:
@@ -1106,8 +1107,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     if len(agency) > 3:
         agency = agency[0:3]
     # Cope with differences in event uncertainty naming
-    if event.origins[0].quality and event.origins[0].quality['standard_error']:
-        timerms = '{0:.1f}'.format(event.origins[0].quality['standard_error'])
+    if origin.quality and origin.quality['standard_error']:
+        timerms = '{0:.1f}'.format(origin.quality['standard_error'])
     else:
         timerms = '0.0'
     conv_mags = []
@@ -1150,12 +1151,12 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     else:
         sfile = string_io
     sfile.write(
-        " {0} {1}{2} {3}{4} {5}.{6} {7}{8} {9}{10}  {11}{12}{13}{14}{15}{16}"
+        " {0} {1}{2} {3}{4} {5}.{6} {7}{8}{9}{10}  {11}{12}{13}{14}{15}{16}"
         "{17}{18}{19}{20}{21}{22}1\n".format(
             evtime.year, str(evtime.month).rjust(2), str(evtime.day).rjust(2),
             str(evtime.hour).rjust(2), str(evtime.minute).rjust(2),
             str(evtime.second).rjust(2), str(evtime.microsecond).ljust(1)[0:1],
-            evtype.ljust(2), lat.rjust(7), lon.rjust(7), depth.rjust(5),
+            evtype.ljust(2), lat.rjust(7), lon.rjust(8), depth.rjust(5),
             agency.rjust(3)[0:3], ksta.rjust(3), timerms.rjust(4),
             conv_mags[0]['mag'].rjust(4), conv_mags[0]['type'].rjust(1),
             conv_mags[0]['agency'][0:3].rjust(3),
@@ -1180,7 +1181,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
                 conv_mags[5]['agency'][0:3].rjust(3)))
     # Write hyp error line
     try:
-        sfile.write(_write_hyp_error_line(event.origins[0]) + '\n')
+        sfile.write(_write_hyp_error_line(origin) + '\n')
     except (NordicParsingError, TypeError):
         pass
     # Write fault plane solution
@@ -1358,7 +1359,6 @@ def nordpick(event):
         from the values stored in seisan.  Multiple weights are also
         not supported.
     """
-
     pick_strings = []
     for pick in event.picks:
         if not pick.waveform_id:
@@ -1394,8 +1394,12 @@ def nordpick(event):
             azimuth = ' '
         # Extract the correct arrival info for this pick - assuming only one
         # arrival per pick...
-        arrival = [arrival for arrival in event.origins[0].arrivals
-                   if arrival.pick_id == pick.resource_id]
+        try:
+            origin = event.preferred_origin() or event.origins[0]
+            arrival = [arrival for arrival in origin.arrivals
+                       if arrival.pick_id == pick.resource_id]
+        except IndexError:
+            arrival = []
         if len(arrival) > 0:
             arrival = arrival[0]
             # Extract weight - should be stored as 0-4, or 9 for seisan.

@@ -610,6 +610,33 @@ class TestNordicMethods(unittest.TestCase):
             int([p for p in pick_strings if p.split()[0] == 'WZ11' and
                  p.split()[1] == 'HZ'][0].split()[-1]), 30)
 
+    def test_large_negative_longitude(self):
+        event = full_test_event()
+        event.origins[0].longitude = -120
+        with NamedTemporaryFile(suffix=".out") as tf:
+            event.write(tf.name, format="NORDIC")
+            event_back = read_events(tf.name)
+            _assert_similarity(event, event_back[0])
+
+    def test_write_preferred_origin(self):
+        event = full_test_event()
+        preferred_origin = Origin(
+            time=UTCDateTime("2012-03-26") + 2.2, latitude=47.0,
+            longitude=35.0, depth=18000)
+        event.origins.append(preferred_origin)
+        event.preferred_origin_id = preferred_origin.resource_id
+        with NamedTemporaryFile(suffix=".out") as tf:
+            event.write(tf.name, format="NORDIC")
+            event_back = read_events(tf.name)
+            self.assertEqual(preferred_origin.latitude,
+                             event_back[0].origins[0].latitude)
+            self.assertEqual(preferred_origin.longitude,
+                             event_back[0].origins[0].longitude)
+            self.assertEqual(preferred_origin.depth,
+                             event_back[0].origins[0].depth)
+            self.assertEqual(preferred_origin.time,
+                             event_back[0].origins[0].time)
+
 
 def _assert_similarity(event_1, event_2, verbose=False):
     """
