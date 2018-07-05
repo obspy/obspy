@@ -272,12 +272,13 @@ which is rather general but also quite long.
 
 **Option 2: String Template**
 
-For more control use the second possibility and provide a string containing
-``{network}``, ``{station}``, ``{location}``, ``{channel}``, ``{starttime}``,
-and ``{endtime}`` format specifiers. These values will be interpolated to
-acquire the final filename. The start and end times will be formatted with
-``strftime()`` with the specifier ``"%Y%m%dT%H%M%SZ"`` in an effort to
-avoid colons which are troublesome in file names on many systems.
+For more control use the second possibility and provide a string
+containing one or more of the following format specifiers: ``{network}``,
+``{station}``, ``{location}``, ``{channel}``, ``{starttime}``,
+``{endtime}``. These values will be interpolated to acquire the final
+filename. The start and end times will be formatted with ``strftime()``
+with the specifier ``"%Y%m%dT%H%M%SZ"`` in an effort to avoid colons
+which are troublesome in file names on many systems.
 
 >>> mseed_storage = ("some_folder/{network}/{station}/"
 ...                  "{channel}.{location}.{starttime}.{endtime}.mseed")

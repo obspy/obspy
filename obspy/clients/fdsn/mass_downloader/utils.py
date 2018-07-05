@@ -473,7 +473,7 @@ def get_stationxml_filename(str_or_fct, network, station, channels,
     The rules are simple, if it is a function, then the network, station,
     channels, start time, and end time parameters are passed to it.
 
-    If it is a string, and it contains ``"{network}"``, and ``"{station}"``
+    If it is a string, and it contains the ``"{network}"`` or ``"{station}"``
     formatting specifiers, ``str.format()`` is called.
 
     Otherwise it is considered to be a folder name and the resulting
@@ -486,7 +486,7 @@ def get_stationxml_filename(str_or_fct, network, station, channels,
     if callable(str_or_fct):
         path = str_or_fct(network, station, channels, starttime, endtime)
     # Check if it's a format template.
-    elif ("{network}" in str_or_fct) and ("{station}" in str_or_fct):
+    elif any("{%s}" % key in str_or_fct for key in ("network", "station")):
         path = str_or_fct.format(network=network, station=station)
     # Otherwise assume it's a path.
     else:
@@ -527,8 +527,8 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
     and the resulting string is returned. If the return values is ``True``,
     the particular time interval will be ignored.
 
-    If it is a string, and it contains ``"{network}"``,  ``"{station}"``,
-    ``"{location}"``, ``"{channel}"``, ``"{starttime}"``, and ``"{endtime}"``
+    If it is a string, and it contains the ``"{network}"``, ``"{station}"``,
+    ``"{location}"``, ``"{channel}"``, ``"{starttime}"``, or ``"{endtime}"``
     formatting specifiers, ``str.format()`` is called.
 
     Otherwise it is considered to be a folder name and the resulting
@@ -542,9 +542,9 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
     if callable(str_or_fct):
         path = str_or_fct(network, station, location, channel, starttime,
                           endtime)
-    elif ("{network}" in str_or_fct) and ("{station}" in str_or_fct) and \
-            ("{location}" in str_or_fct) and ("{channel}" in str_or_fct) and \
-            ("{starttime}" in str_or_fct) and ("{endtime}" in str_or_fct):
+    elif any("{%s}" % key in str_or_fct for key in ("network", "station",
+                                                    "location", "channel",
+                                                    "starttime", "endtime")):
         path = str_or_fct.format(
             network=network, station=station, location=location,
             channel=channel, starttime=starttime.strftime(strftime),
