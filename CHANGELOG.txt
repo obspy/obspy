@@ -42,6 +42,7 @@
  - obspy.io.nordic
    * Bug-fix for amplitudes without magnitude_hint (see #2021)
    * Bug-fix for wavefiles with full path stripping (see #2021)
+   * Bug-fix for longitudes between -100 and -180 (see #2197)
  - obspy.io.reftek:
    * Fix problems reading some Reftek 130 files, presumably due to floating
      point accuracy issues in comparing timestamps. Internal representation of
