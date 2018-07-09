@@ -274,7 +274,7 @@ def _readheader(f):
     # new_event.ev_id=topline[22]
     try:
         new_event.origins[0].latitude = float(topline[23:30])
-        new_event.origins[0].longitude = float(topline[31:38])
+        new_event.origins[0].longitude = float(topline[30:38])
         new_event.origins[0].depth = float(topline[39:43]) * 1000
     except ValueError:
         # The origin 'requires' a lat & long
@@ -931,7 +931,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
                 str(evtime.minute).rjust(2) + ' ' +
                 str(evtime.second).rjust(2) + '.' +
                 str(evtime.microsecond).ljust(1)[0:1] + ' ' +
-                evtype.ljust(2) + lat.rjust(7) + ' ' + lon.rjust(7) +
+                evtype.ljust(2) + lat.rjust(7) + lon.rjust(8) +
                 depth.rjust(5) + agency.rjust(5) + ksta.rjust(3) +
                 timerms.rjust(4) +
                 conv_mags[0]['mag'].rjust(4) + conv_mags[0]['type'].rjust(1) +

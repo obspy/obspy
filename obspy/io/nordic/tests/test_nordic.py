@@ -569,6 +569,14 @@ class TestNordicMethods(unittest.TestCase):
             int([p for p in pick_strings if p.split()[0] == 'WZ11' and
                  p.split()[1] == 'HZ'][0].split()[-1]), 30)
 
+    def test_large_negative_longitude(self):
+        event = full_test_event()
+        event.origins[0].longitude = -120
+        with NamedTemporaryFile(suffix=".out") as tf:
+            event.write(tf.name, format="NORDIC")
+            event_back = read_events(tf.name)
+            _assert_similarity(event, event_back[0])
+
 
 def _assert_similarity(event_1, event_2, verbose=False):
     """
