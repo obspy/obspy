@@ -28,8 +28,6 @@ master:
    * Fix mapping of magnitude-types between MS to S and Ms to s.
    * Output preferred origin when writing to Nordic format instead of using
      the first origin (see #2195)
-   * Fix writing events with origins at high negative longitude (longitude
-     -100 to -180 degrees, see #2195)
  - obspy.io.reftek:
    * Implement reading reftek encodings '16' and '32' (uncompressed data,
      16/32bit integers, see #2058 and #2059)
@@ -107,6 +105,7 @@ master:
  - obspy.io.nordic
    * Bug-fix for amplitudes without magnitude_hint (see #2021)
    * Bug-fix for wavefiles with full path stripping (see #2021)
+   * Bug-fix for longitudes between -100 and -180 (see #2197)
  - obspy.io.reftek:
    * Fix problems reading some Reftek 130 files, presumably due to floating
      point accuracy issues in comparing timestamps. Internal representation of
