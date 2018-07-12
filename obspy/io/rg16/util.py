@@ -95,7 +95,7 @@ def _read(fi, position, length, dtype):
         return READ_FUNCS[dtype](fi, length)
     else:
         # multiply 1 to get new array with type np.float32 see #2198
-        data = np.fromstring(fi.read(int(length)), dtype) * 1
+        data = np.fromstring(fi.read(int(length)), dtype).astype(np.float32)
         return data[0] if len(data) == 1 else data
 
 
