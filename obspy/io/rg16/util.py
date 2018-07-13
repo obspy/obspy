@@ -60,7 +60,7 @@ def _read_block(fi, spec, start_bit=0):
     return out
 
 
-def _read(fi, position, length, dtype):
+def _read(fi, position, length, dtype, new_dtype=None):
     """
     Read one or more bytes using provided datatype.
 
@@ -76,6 +76,7 @@ def _read(fi, position, length, dtype):
             >i3 - big endian 3 byte int
             >i. - 4 bit int, left four bits
     :type dtype: str
+    :param new_dtype: Any valid numpy data type.
     :return:
     """
     # if a list is passed as parameters then recurse through each
@@ -94,8 +95,9 @@ def _read(fi, position, length, dtype):
     if dtype in READ_FUNCS:
         return READ_FUNCS[dtype](fi, length)
     else:
-        # multiply 1 to get new array with type np.float32 see #2198
-        data = np.fromstring(fi.read(int(length)), dtype).astype(np.float32)
+        data = np.fromstring(fi.read(int(length)), dtype)
+        if new_dtype is not None:  # cast data to new_dtype (due to #2198)
+            data = data.astype(new_dtype)
         return data[0] if len(data) == 1 else data
 
 
