@@ -104,20 +104,11 @@ def _make_dict_from_tree(element_tree):
         if tree is None:
             return accum
         tag = tree.tag.lstrip("{").split("}")[-1]
+        accum[tag] = {}
         if tree.getchildren():
-            accum[tag] = {}
             for each in tree.getchildren():
                 each_tag = each.tag.lstrip("{").split("}")[-1]
                 result = internal_iter(each, {})
-                namespace = tree.tag.lstrip("{").split("}")[0]
-                if namespace is not None:
-                    accum[tag].update({'namespace': namespace})
-                public_id = tree.get('publicID')
-                if public_id is not None:
-                    accum[tag].update({'publicID': public_id})
-                id_value = tree.get('id')
-                if id_value is not None:
-                    accum[tag].update({'id': id_value})
                 if each_tag == "waveformID":
                     # WaveformID is a special case...
                     result = {'waveformID': {
@@ -138,9 +129,19 @@ def _make_dict_from_tree(element_tree):
                     accum[tag][each_tag].append(result[each_tag])
                 else:
                     accum[tag].update(result)
-        else:
+        public_id = tree.get('publicID')
+        if public_id is not None:
+            accum[tag].update({'publicID': public_id})
+        id_value = tree.get('id')
+        if id_value is not None:
+            accum[tag].update({'id': id_value})
+        namespace = tree.tag.lstrip("{").split("}")[0]
+        if namespace is not None:
+            if id_value is not None or public_id is not None:
+                accum[tag].update({'namespace': namespace})
+        if not accum[tag]:
+            # If there is nothing in here, just set to the text
             accum[tag] = tree.text
-
         return accum
 
     qml_dict = internal_iter(tree=element_tree, accum={})
@@ -315,7 +316,8 @@ class Unpickler(object):
                 event.amplitudes.append(amp)
             # focal mechanisms
             event.focal_mechanisms = []
-            for fm_el in self._value_to_list('focalMechanism', event_dictionary):
+            for fm_el in self._value_to_list(
+                    'focalMechanism', event_dictionary):
                 fm = self._focal_mechanism(fm_el)
                 event.focal_mechanisms.append(fm)
             # finally append newly created event to catalog
@@ -1066,7 +1068,6 @@ class Unpickler(object):
         """
         Add information stored in custom tags/attributes in obj.extra.
         """
-        # TODO: do this.
         pass
         # # search all namespaces in current scope
         # for ns in self._value_to_list('namespace', element):
