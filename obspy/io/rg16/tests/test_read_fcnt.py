@@ -25,7 +25,7 @@ assert len(FCNT_FILES), 'No test files found'
 class TestReadRG16(unittest.TestCase):
 
     supported_samps = {250, 500, 1000, 2000}
-    supported_component_number = {1, 3}
+    supported_number_of_components = {1, 3}
 
     def test_rg16_files_identified(self):
         """
@@ -55,7 +55,7 @@ class TestReadRG16(unittest.TestCase):
         """
         for fcnt_stream in FCNT_STREAMS:
             seed_ids = len({tr.id for tr in fcnt_stream})
-            self.assertIn(seed_ids, self.supported_component_number)
+            self.assertIn(seed_ids, self.supported_number_of_components)
 
     def test_channel_code(self):
         """
@@ -70,11 +70,11 @@ class TestReadRG16(unittest.TestCase):
                 self.assertEqual(len(channel), 3)
                 self.assertIn(component, expected_components)
             seed_ids = len({tr.id for tr in fcnt_stream})
-            self.assertIn(seed_ids, self.supported_component_number)
+            self.assertIn(seed_ids, self.supported_number_of_components)
 
-    def test_standard_orientation(self):
+    def test_contacts_north(self):
         """
-        Ensure the standard orientation maps channels and flips Z trace data.
+        Ensure the contacts north option maps channels and flips Z trace data.
         """
         components = {'Z', 'N', 'E'}
         for filename, st_default in zip(FCNT_FILES, FCNT_STREAMS):
@@ -89,6 +89,15 @@ class TestReadRG16(unittest.TestCase):
             # we need to make sure a z component is found in each
             if len(tr_2) and len(tr_z):
                 self.assertTrue(np.all(tr_2[0].data == -tr_z[0].data))
+
+    def test_contacts_north_and_merge(self):
+        """
+        Ensure the "contacts_north" and "merge" parameters can be used
+        together. See #2198.
+        """
+        for filename in FCNT_FILES:
+            st = _read_rg16(filename, contacts_north=True, merge=True)
+            assert isinstance(st, obspy.Stream)
 
     def test_can_write(self):
         """

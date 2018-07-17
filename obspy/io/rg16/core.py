@@ -163,7 +163,8 @@ def _make_traces(fi, data_block_start, gheader, head_only=False,
             data = np.array([])
         else:  # else read data
             data_start = trace_position + 20 + theader['num_ext_blocks'] * 32
-            data = _read(fi, data_start, theader['samples'] * 4, '>f4')
+            data = _read(fi, data_start, theader['samples'] * 4, '>f4',
+                         np.float32)
             if standard_orientation and stats.channel[-1] == 'Z':
                 data = -data
         traces.append(Trace(data=data, header=stats))
