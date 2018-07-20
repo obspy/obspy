@@ -14,6 +14,8 @@ master:
    * Added __eq__ to QuantityError so empty instances equal None (see #2185).
    * Reworked the event scoped resource identifiers for the event classes
      hopefully fixing all edge-cases (see #2091).
+   * Calling Stream.write(...) on an empty stream will now raise an
+     ObsPyException consistently across all I/O plugins (see #2201)
  - obspy.clients.fdsn:
    * Adding more location codes to the default priority list in the mass
      downloader (see #2155, #2159).

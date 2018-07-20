@@ -34,6 +34,7 @@ from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
 from obspy.core.util.decorator import (map_example_filename,
                                        raise_if_masked, uncompress_file)
 from obspy.core.util.misc import get_window_times, buffered_load_entry_point
+from obspy.core.util.obspy_types import ObsPyException
 
 
 _headonly_warning_msg = (
@@ -1417,6 +1418,10 @@ class Stream(object):
 
         %s
         """
+        if not self.traces:
+            msg = 'Can not write empty stream to file.'
+            raise ObsPyException(msg)
+
         # Check all traces for masked arrays and raise exception.
         for trace in self.traces:
             if isinstance(trace.data, np.ma.masked_array):

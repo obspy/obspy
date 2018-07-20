@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import inspect
+import io
 import os
 import pickle
 import platform
@@ -17,7 +18,8 @@ from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.stream import _is_pickle, _read_pickle, _write_pickle
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, _get_entry_points
+from obspy.core.util.obspy_types import ObsPyException
 from obspy.io.xseed import Parser
 
 
@@ -2565,6 +2567,19 @@ class StreamTestCase(unittest.TestCase):
         # check that rotation to ZNE worked..
         self.assertEqual(set(tr.stats.channel[-1] for tr in result),
                          set('ZNE'))
+
+    def test_write_empty_stream(self):
+        """
+        Tests error message when trying to write an empty stream
+        """
+        st = Stream()
+        bio = io.BytesIO()
+        for format_ in _get_entry_points('obspy.plugin.waveform',
+                                         'writeFormat').keys():
+            with self.assertRaises(ObsPyException) as e:
+                st.write(bio, format=format_)
+            self.assertEqual(e.exception.args[0],
+                             'Can not write empty stream to file.')
 
 
 def suite():
