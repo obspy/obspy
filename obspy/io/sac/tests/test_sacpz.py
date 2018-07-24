@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 import io
+import warnings
 
 import numpy as np
 
@@ -62,6 +63,18 @@ class SACPZTestCase(unittest.TestCase):
         got = [l for l in got.split("\n") if "CREATED" not in l]
         expected = [l for l in expected.split("\n") if "CREATED" not in l]
         self.assertEqual(got, expected)
+
+    def test_write_sacpz_soh(self):
+        path = os.path.join(self.path, '..', '..', 'stationxml', 'tests',
+                            'data', 'only_soh.xml')
+        inv = read_inventory(path)
+        f = io.StringIO()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            inv.write(f, format='SACPZ')
+            self.assertEqual(len(w), 2)
+        # Only 2 newlines are written.
+        self.assertEqual(2, f.tell())
 
     def test_attach_paz(self):
         fvelhz = io.StringIO("""ZEROS 3
