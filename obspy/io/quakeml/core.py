@@ -914,81 +914,86 @@ class Unpickler(object):
         catalog.comments = self._comments(catalog_el)
         catalog.creation_info = self._creation_info(catalog_el)
         # loop over all events
-        for event_el in catalog_el.iterchildren('event'):
-            # create new Event object
-            event = Event(force_resource_id=False)
-            # optional event attributes
-            event.preferred_origin_id = \
-                self._xpath2obj('preferredOriginID', event_el)
-            event.preferred_magnitude_id = \
-                self._xpath2obj('preferredMagnitudeID', event_el)
-            event.preferred_focal_mechanism_id = \
-                self._xpath2obj('preferredFocalMechanismID', event_el)
-            event_type = self._xpath2obj('type', event_el)
-            # Change for QuakeML 1.2RC4. 'null' is no longer acceptable as an
-            # event type. Will be replaced with 'not reported'.
-            if event_type == "null":
-                event_type = "not reported"
-            # USGS event types contain '_' which is not compliant with
-            # the QuakeML standard
-            if isinstance(event_type, str):
-                event_type = event_type.replace("_", " ")
-            try:
-                event.event_type = event_type
-            except ValueError:
-                msg = "Event type '%s' does not comply " % event_type
-                msg += "with QuakeML standard -- event will be ignored."
-                warnings.warn(msg, UserWarning)
-                continue
-            self._set_enum('typeCertainty', event_el,
-                           event, 'event_type_certainty')
-            event.creation_info = self._creation_info(event_el)
-            event.event_descriptions = self._event_description(event_el)
-            event.comments = self._comments(event_el)
-            # origins
-            event.origins = []
-            event.magnitudes = []
-            event.station_magnitudes = []
-            event.picks = []
-            event.amplitudes = []
-            event.focal_mechanisms = []
-            for child in event_el.iterchildren():
-                if child.tag == 'origin':
-                    # Have to be created before the origin is created to avoid a
-                    # rare issue where a warning is read when the same event is
-                    # read twice - the warning does not occur if two referred
-                    # to objects compare equal - for this the arrivals have to
-                    # be bound to the event before the resource id is assigned.
-                    arrivals = []
-                    for arrival_el in child.iterchildren('arrival'):
-                        arrival = self._arrival(arrival_el)
-                        arrivals.append(arrival)
+        for cat_child in catalog_el.iterchildren():
+            # .iterchildren prefixes children with tags, so we use QName, which
+            # splits the local tag name from the namespace
+            if etree.QName(cat_child.tag).localname == 'event':
+                # create new Event object
+                event = Event(force_resource_id=False)
+                # optional event attributes
+                event.preferred_origin_id = \
+                    self._xpath2obj('preferredOriginID', cat_child)
+                event.preferred_magnitude_id = \
+                    self._xpath2obj('preferredMagnitudeID', cat_child)
+                event.preferred_focal_mechanism_id = \
+                    self._xpath2obj('preferredFocalMechanismID', cat_child)
+                event_type = self._xpath2obj('type', cat_child)
+                # Change for QuakeML 1.2RC4. 'null' is no longer acceptable as an
+                # event type. Will be replaced with 'not reported'.
+                if event_type == "null":
+                    event_type = "not reported"
+                # USGS event types contain '_' which is not compliant with
+                # the QuakeML standard
+                if isinstance(event_type, str):
+                    event_type = event_type.replace("_", " ")
+                try:
+                    event.event_type = event_type
+                except ValueError:
+                    msg = "Event type '%s' does not comply " % event_type
+                    msg += "with QuakeML standard -- event will be ignored."
+                    warnings.warn(msg, UserWarning)
+                    continue
+                self._set_enum('typeCertainty', cat_child,
+                            event, 'event_type_certainty')
+                event.creation_info = self._creation_info(cat_child)
+                event.event_descriptions = self._event_description(cat_child)
+                event.comments = self._comments(cat_child)
+                # origins
+                event.origins = []
+                event.magnitudes = []
+                event.station_magnitudes = []
+                event.picks = []
+                event.amplitudes = []
+                event.focal_mechanisms = []
+                for child in cat_child.iterchildren():
+                    child_tag = etree.QName(child.tag).localname
+                    if child_tag == 'origin':
+                        # Have to be created before the origin is created to avoid a
+                        # rare issue where a warning is read when the same event is
+                        # read twice - the warning does not occur if two referred
+                        # to objects compare equal - for this the arrivals have to
+                        # be bound to the event before the resource id is assigned.
+                        arrivals = []
+                        for arrival_el in child.iterchildren():
+                            if etree.QName(arrival_el.tag).localname == 'arrival':
+                                arrival = self._arrival(arrival_el)
+                                arrivals.append(arrival)
 
-                    origin = self._origin(child, arrivals=arrivals)
+                        origin = self._origin(child, arrivals=arrivals)
 
-                    # append origin with arrivals
-                    event.origins.append(origin)
-                elif child.tag == 'magnitude':
-                    magnitude = self._magnitude(child)
-                    event.magnitudes.append(magnitude)
-                elif child.tag == 'stationMagnitude':
-                    magnitude = self._station_magnitude(child)
-                    event.station_magnitudes.append(magnitude)
-                elif child.tag == 'pick':
-                    pick = self._pick(child)
-                    event.picks.append(pick)
-                elif child.tag == 'amplitude':
-                    amp = self._amplitude(child)
-                    event.amplitudes.append(amp)
-                elif child.tag == 'focalMechanism':
-                    fm = self._focal_mechanism(child)
-                    event.focal_mechanisms.append(fm)
-            # finally append newly created event to catalog
-            event.resource_id = event_el.get('publicID')
-            self._extra(event_el, event)
-            # bind event scoped resource IDs to this event
-            event.scope_resource_ids()
-            catalog.append(event)
+                        # append origin with arrivals
+                        event.origins.append(origin)
+                    elif child_tag == 'magnitude':
+                        magnitude = self._magnitude(child)
+                        event.magnitudes.append(magnitude)
+                    elif child_tag == 'stationMagnitude':
+                        magnitude = self._station_magnitude(child)
+                        event.station_magnitudes.append(magnitude)
+                    elif child_tag == 'pick':
+                        pick = self._pick(child)
+                        event.picks.append(pick)
+                    elif child_tag == 'amplitude':
+                        amp = self._amplitude(child)
+                        event.amplitudes.append(amp)
+                    elif child_tag == 'focalMechanism':
+                        fm = self._focal_mechanism(child)
+                        event.focal_mechanisms.append(fm)
+                # finally append newly created event to catalog
+                event.resource_id = cat_child.get('publicID')
+                self._extra(cat_child, event)
+                # bind event scoped resource IDs to this event
+                event.scope_resource_ids()
+                catalog.append(event)
 
         catalog.resource_id = catalog_el.get('publicID')
         self._extra(catalog_el, catalog)
