@@ -914,7 +914,7 @@ class Unpickler(object):
         catalog.comments = self._comments(catalog_el)
         catalog.creation_info = self._creation_info(catalog_el)
         # loop over all events
-        for event_el in self._xpath('event', catalog_el):
+        for event_el in catalog_el.iterchildren('event'):
             # create new Event object
             event = Event(force_resource_id=False)
             # optional event attributes
@@ -947,46 +947,48 @@ class Unpickler(object):
             event.comments = self._comments(event_el)
             # origins
             event.origins = []
-            for origin_el in self._xpath('origin', event_el):
-                # Have to be created before the origin is created to avoid a
-                # rare issue where a warning is read when the same event is
-                # read twice - the warnings does not occur if two referred
-                # to objects compare equal - for this the arrivals have to
-                # be bound to the event before the resource id is assigned.
-                arrivals = []
-                for arrival_el in self._xpath('arrival', origin_el):
-                    arrival = self._arrival(arrival_el)
-                    arrivals.append(arrival)
-
-                origin = self._origin(origin_el, arrivals=arrivals)
-
-                # append origin with arrivals
-                event.origins.append(origin)
-            # magnitudes
             event.magnitudes = []
-            for magnitude_el in self._xpath('magnitude', event_el):
-                magnitude = self._magnitude(magnitude_el)
-                event.magnitudes.append(magnitude)
-            # station magnitudes
             event.station_magnitudes = []
-            for magnitude_el in self._xpath('stationMagnitude', event_el):
-                magnitude = self._station_magnitude(magnitude_el)
-                event.station_magnitudes.append(magnitude)
-            # picks
             event.picks = []
-            for pick_el in self._xpath('pick', event_el):
-                pick = self._pick(pick_el)
-                event.picks.append(pick)
-            # amplitudes
             event.amplitudes = []
-            for el in self._xpath('amplitude', event_el):
-                amp = self._amplitude(el)
-                event.amplitudes.append(amp)
-            # focal mechanisms
             event.focal_mechanisms = []
-            for fm_el in self._xpath('focalMechanism', event_el):
-                fm = self._focal_mechanism(fm_el)
-                event.focal_mechanisms.append(fm)
+            for child in event_el.iterchildren():
+                if child.tag == 'origin':
+                    # Have to be created before the origin is created to avoid a
+                    # rare issue where a warning is read when the same event is
+                    # read twice - the warning does not occur if two referred
+                    # to objects compare equal - for this the arrivals have to
+                    # be bound to the event before the resource id is assigned.
+                    arrivals = []
+                    for arrival_el in child.iterchildren('arrival'):
+                        arrival = self._arrival(arrival_el)
+                        arrivals.append(arrival)
+
+                    origin = self._origin(child, arrivals=arrivals)
+
+                    # append origin with arrivals
+                    event.origins.append(origin)
+                    continue
+                if child.tag == 'magnitude':
+                    magnitude = self._magnitude(child)
+                    event.magnitudes.append(magnitude)
+                    continue
+                if child.tag == 'stationMagnitude':
+                    magnitude = self._station_magnitude(child)
+                    event.station_magnitudes.append(magnitude)
+                    continue
+                if child.tag == 'pick':
+                    pick = self._pick(child)
+                    event.picks.append(pick)
+                    continue
+                if child.tag == 'amplitude':
+                    amp = self._amplitude(child)
+                    event.amplitudes.append(amp)
+                    continue
+                if child.tag == 'focalMechanism':
+                    fm = self._focal_mechanism(child)
+                    event.focal_mechanisms.append(fm)
+                    continue
             # finally append newly created event to catalog
             event.resource_id = event_el.get('publicID')
             self._extra(event_el, event)
