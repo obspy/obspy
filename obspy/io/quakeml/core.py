@@ -968,27 +968,21 @@ class Unpickler(object):
 
                     # append origin with arrivals
                     event.origins.append(origin)
-                    continue
-                if child.tag == 'magnitude':
+                elif child.tag == 'magnitude':
                     magnitude = self._magnitude(child)
                     event.magnitudes.append(magnitude)
-                    continue
-                if child.tag == 'stationMagnitude':
+                elif child.tag == 'stationMagnitude':
                     magnitude = self._station_magnitude(child)
                     event.station_magnitudes.append(magnitude)
-                    continue
-                if child.tag == 'pick':
+                elif child.tag == 'pick':
                     pick = self._pick(child)
                     event.picks.append(pick)
-                    continue
-                if child.tag == 'amplitude':
+                elif child.tag == 'amplitude':
                     amp = self._amplitude(child)
                     event.amplitudes.append(amp)
-                    continue
-                if child.tag == 'focalMechanism':
+                elif child.tag == 'focalMechanism':
                     fm = self._focal_mechanism(child)
                     event.focal_mechanisms.append(fm)
-                    continue
             # finally append newly created event to catalog
             event.resource_id = event_el.get('publicID')
             self._extra(event_el, event)
