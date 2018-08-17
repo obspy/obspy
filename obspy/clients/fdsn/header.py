@@ -39,6 +39,7 @@ class FDSNNoDataException(FDSNException):
 # https://www.fdsn.org/webservices/datacenters/
 # https://www.orfeus-eu.org/data/eida/nodes/
 URL_MAPPINGS = {
+    "AUSPASS": "http://auspass.edu.au:8080",
     "BGR": "http://eida.bgr.de",
     "ETH": "http://eida.ethz.ch",
     "EMSC": "http://www.seismicportal.eu",
