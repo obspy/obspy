@@ -115,7 +115,15 @@ class Client(object):
             details. If set to ``None`` (or ``False``) no merge operation at
             all will be performed.
         """
-        return self._get_waveforms(query_rows, merge)
+        cleaned_query_rows = []
+        # perform any necessary cleanup on query rows
+        for query_row in query_rows:
+            cleaned_query_row = TSIndexRequestHandler.create_query_row(
+                                                            network, station,
+                                                            location, channel,
+                                                            starttime, endtime)
+            cleaned_query_rows.append(cleaned_query_row)
+        return self._get_waveforms(cleaned_query_rows, merge)
     
     def _get_waveforms(self, query_rows, merge=-1):
         """
@@ -337,6 +345,58 @@ class Client(object):
             spans that overlap are merged.
         """
         
+        def _join(timespans, sncl_joined_avail_tuples=[]):
+            """
+            Recurse over a list of timespans, joining adjacent timespans,
+            and merging if merge_overlaps is True.
+            """
+            if len(timespans) > 1:
+                prev_ts = timespans.pop(0)
+                cur_ts = timespans.pop(0)
+                if merge_overlap == True and \
+                    self._do_timespans_overlap(prev_ts, cur_ts) == True:
+                    # merge if overlapping timespans and merge_overlap
+                    # option is set to true
+                    earliest_tuple = min([prev_ts, cur_ts],
+                                       key = lambda t: t.earliest)
+                    latest_tuple = max([prev_ts, cur_ts],
+                                       key = lambda t: t.latest)
+                    avail_tuple = self._create_avail_tuple(
+                                                  net, sta, loc, cha,
+                                                  earliest_tuple.earliest,
+                                                  latest_tuple.latest)
+                    ts = self._create_timespan(avail_tuple[4], avail_tuple[5])
+                    timespans.insert(0, ts)
+                    return _join(timespans, sncl_joined_avail_tuples)
+                elif self._are_timespans_adjacent(prev_ts, cur_ts, sr, 0.5):
+                    # merge if timespans are next to each other within
+                    # a 0.5 sample tolerance
+                    avail_tuple = self._create_avail_tuple(
+                                                        net, sta, loc, cha,
+                                                        prev_ts.earliest,
+                                                        cur_ts.latest)
+                    ts = self._create_timespan(avail_tuple[4], avail_tuple[5])
+                    timespans.insert(0, ts)
+                    return _join(timespans, sncl_joined_avail_tuples)
+                else:
+                    # timespan shouldn't be merged so add to list
+                    avail_tuple = self._create_avail_tuple(
+                                                  net, sta, loc, cha,
+                                                  prev_ts.earliest,
+                                                  prev_ts.latest)
+                    sncl_joined_avail_tuples.append(avail_tuple)
+                    timespans.insert(0, cur_ts)
+                    return _join(timespans, sncl_joined_avail_tuples)
+            else:
+                # no other timespans to merge with
+                cur_ts = timespans[0]
+                avail_tuple = self._create_avail_tuple(
+                                              net, sta, loc, cha,
+                                              cur_ts.earliest,
+                                              cur_ts.latest)
+                sncl_joined_avail_tuples.append(avail_tuple)
+            return sncl_joined_avail_tuples
+        
         tsindex_rows = self.get_tsindex_rows(network, station,
                                              location, channel,
                                              starttime, endtime)
@@ -361,52 +421,7 @@ class Client(object):
         joined_avail_tuples = []
         for sncl, timespans in grouped_timespans.items():
             net, sta, loc, cha, sr = sncl.split("_")
-            sncl_joined_avail_tuples = []
-            if len(timespans) > 1:
-                for idx, cur_ts in enumerate(timespans[1:]):
-                    prev_ts = timespans[idx]
-                    if not sncl_joined_avail_tuples:
-                        avail_tuple = self._create_avail_tuple(
-                                                        net, sta, loc, cha,
-                                                        prev_ts.earliest,
-                                                        prev_ts.latest)
-                        sncl_joined_avail_tuples.append(avail_tuple)
-                    if merge_overlap == True and \
-                        self._do_timespans_overlap(prev_ts, cur_ts) == True:
-                        # merge if overlapping timespans and merge_overlap
-                        # option is set to true
-                        earliest_tuple = min([prev_ts, cur_ts],
-                                           key = lambda t: t.earliest)
-                        latest_tuple = min([prev_ts, cur_ts],
-                                           key = lambda t: t.earliest)
-                        avail_tuple = self._create_avail_tuple(
-                                                      net, sta, loc, cha,
-                                                      earliest_tuple.earliest,
-                                                      latest_tuple.latest)
-                        sncl_joined_avail_tuples.append(avail_tuple)
-                    elif self._are_timespans_adjacent(prev_ts, cur_ts, sr):
-                        # merge if timespans are next to each other within
-                        # a 0.5 sample tolerance
-                        avail_tuple = self._create_avail_tuple(
-                                                            net, sta, loc, cha,
-                                                            prev_ts.earliest,
-                                                            cur_ts.latest)
-                        sncl_joined_avail_tuples[-1] = avail_tuple
-                    else:
-                        # timespan shouldn't be merged so add to list
-                        avail_tuple = self._create_avail_tuple(
-                                                      net, sta, loc, cha,
-                                                      cur_ts.earliest,
-                                                      cur_ts.latest)
-                        sncl_joined_avail_tuples.append(avail_tuple)
-            else:
-                # no other timespans to merge with
-                cur_ts = timespans[0]
-                avail_tuple = self._create_avail_tuple(
-                                              net, sta, loc, cha,
-                                              cur_ts.earliest,
-                                              cur_ts.latest)
-                sncl_joined_avail_tuples.append(avail_tuple)
+            sncl_joined_avail_tuples = _join(timespans)
             # extend complete list
             joined_avail_tuples.extend(sncl_joined_avail_tuples)    
         return joined_avail_tuples
@@ -414,10 +429,25 @@ class Client(object):
     def get_availability_percentage(self, network, station, location,
                                     channel, starttime, endtime):
         """
-        Get percentage of available data for a specified network, station,
-        location, channel, starttime, endtime combination.
+        Get percentage of available data.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start of requested time window.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End of requested time window.
+        :rtype: 2-tuple (float, int)
+        :returns: 2-tuple of percentage of available data (``0.0`` to ``1.0``)
+            and number of gaps/overlaps.
         """
-        avail_extents = self.get_availability_extent(network, station,
+        """avail_extents = self.get_availability_extent(network, station,
                                                      location, channel,
                                                      starttime, endtime)
         availability = self.get_availability(network, station,
@@ -434,7 +464,37 @@ class Client(object):
             total_avail += latest - earliest
         percent_avail = total_avail / total_avail_extents
         num_gaps = len(availability)
-        return (percent_avail, num_gaps)
+        return (percent_avail, num_gaps)"""
+        if starttime >= endtime:
+            msg = ("'endtime' must be after 'starttime'.")
+            raise ValueError(msg)
+        avail = self.get_availability(network, station,
+                                  location, channel,
+                                  starttime, endtime,
+                                  merge_overlap=True)
+
+        if not avail:
+            return (0, 1)
+
+        total_duration = endtime - starttime
+        # sum up gaps in the middle
+        gap_sum = 0
+        gap_count = 0
+        for idx, cur_ts in enumerate(avail[1:]):
+            prev_ts = avail[idx]
+            gap_count = gap_count + 1
+            gap_sum += cur_ts[4] - prev_ts[5]
+ 
+        # check if we have a gap at start or end
+        earliest = min([ts[4] for ts in avail])
+        latest = max([ts[5] for ts in avail])
+        if earliest > starttime:
+            gap_sum += earliest - starttime
+            gap_count += 1
+        if latest < endtime:
+            gap_sum += endtime - latest
+            gap_count += 1
+        return (1 - (gap_sum / total_duration), gap_count)
     
     def has_data(self, network, station, location,
                  channel, starttime, endtime):
@@ -532,6 +592,13 @@ class TSIndexRequestHandler(object):
     @classmethod
     def create_query_row(cls, network, station, location,
                          channel, starttime, endtime):
+        # Replace "--" location ID request alias with true empty value
+        if location == "--":
+            location = ""
+        if isinstance(starttime, UTCDateTime):
+            starttime = starttime.isoformat()
+        if isinstance(endtime, UTCDateTime):
+            endtime = endtime.isoformat()
         return (network, station, location, channel, starttime, endtime)
     
     def fetch_index_rows(self, query_rows, bulk_params={}):
@@ -568,12 +635,6 @@ class TSIndexRequestHandler(object):
                                .format(request_table))
 
             for req in query_rows:
-                # Replace "--" location ID request alias with true empty value
-                if req[2] == "--":
-                    req[2] = ""
-
-                start = dateutil.parser.parse(req[4].isoformat())
-                end = dateutil.parser.parse(req[5].isoformat())
                 connection.execute("INSERT INTO {0} (network,station,location,"
                                "channel,starttime,endtime) "
                                "VALUES (?,?,?,?,?,?) ".format(request_table),
@@ -581,8 +642,8 @@ class TSIndexRequestHandler(object):
                                                              req[1],
                                                              req[2],
                                                              req[3],
-                                                             start,
-                                                             end))
+                                                             req[4],
+                                                             req[5]))
         except Exception as err:
             import traceback
             traceback.print_exc()
@@ -593,11 +654,10 @@ class TSIndexRequestHandler(object):
                                     .format(self.tsindex_summary_table))
 
         summary_present = result.fetchone()[0]
-
         wildcards = False
         for req in query_rows:
             for field in req:
-                if '*' in field or '?' in field:
+                if '*' in str(field) or '?' in str(field):
                     wildcards = True
                     break
 
@@ -643,9 +703,7 @@ class TSIndexRequestHandler(object):
                 bulk_params['quality'] in ('D', 'R', 'Q'):
                 sql = sql + " AND quality = '{0}' ".format(
                                                         bulk_params['quality'])
-
             result = connection.execute(sql)
-
         except Exception as err:
             import traceback
             traceback.print_exc()
@@ -708,9 +766,6 @@ class TSIndexRequestHandler(object):
                         " location TEXT, channel TEXT)".
                         format(request_table))
             for req in query_rows:
-                # Replace "--" location ID request alias with true empty value
-                if req[2] == "--":
-                    req[2] = ""
                 connection.execute("INSERT INTO {0} (network,station,"
                             "  location,channel) "
                             "VALUES (?,?,?,?) ".format(request_table), req[:4])
@@ -832,8 +887,8 @@ if __name__ == "__main__":
     station = "BAGL"
     location = "*"
     channel = "LCC"
-    starttime = "2010-08-10T22:08:33.270000"
-    endtime = "2019-08-10T22:24:48.950000"
+    starttime = "2018-08-10T22:00:54"
+    endtime = "2018-08-10T22:20:53"
     
     
     request = (network, station, location, channel, starttime, endtime)

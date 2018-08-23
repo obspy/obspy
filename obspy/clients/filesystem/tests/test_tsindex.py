@@ -144,6 +144,8 @@ class TSIndexTestCase(unittest.TestCase):
         # second row.
         mocked_tsindex_rows = \
                 [
+                   # 2018-08-10T22:00:54 to 2018-08-10T22:15:53 
+                   # 2018-08-10T22:05:54 to 2018-08-10T22:20:53 (MERGE)
                    NamedRow(network=u'AK', station=u'BAGL',
                             location=u'', channel=u'LCC',
                             starttime=u'2018-08-10T22:00:54.000000',
@@ -151,6 +153,8 @@ class TSIndexTestCase(unittest.TestCase):
                             samplerate=1.0,
                             timespans=u'[1533938454.000000:1533939353.000000],'
                                        '[1533938754.000000:1533939653.000000]'),
+                   # 2018-08-10T22:20:53.999000 to 2018-08-12T22:20:53 (JOIN)
+                   # 2018-08-12T23:20:53 to 2018-09-01T23:20:53
                    NamedRow(network=u'AK', station=u'BAGL',
                             location=u'', channel=u'LCC',
                             starttime=u'2018-08-10T22:20:53.999000',
@@ -158,6 +162,7 @@ class TSIndexTestCase(unittest.TestCase):
                             samplerate=1.0,
                             timespans=u'[1533939653.999000:1534112453.000000],'
                                        '[1534116053.000000:1535844053.000000]'),
+                   # 2018-08-27T00:00:00 to 2018-09-11T00:00:00 (MERGE)
                    NamedRow(network=u'AK', station=u'BAGL',
                             location=u'', channel=u'LCC',
                             starttime=u'2018-08-27T00:00:00.000000',
@@ -165,8 +170,6 @@ class TSIndexTestCase(unittest.TestCase):
                             samplerate=1.0,
                             timespans=u'[1535328000.0:1536624000.0]')
                 ]
-                   
-
         client.get_tsindex_rows = mock.MagicMock(
                                             return_value=mocked_tsindex_rows)
         
@@ -175,38 +178,90 @@ class TSIndexTestCase(unittest.TestCase):
                                    ("AK", "BAGL", "", "LCC", UTCDateTime(2018, 8, 12, 23, 20, 53), UTCDateTime(2018, 9, 1, 23, 20, 53)),
                                    ("AK", "BAGL", "", "LCC", UTCDateTime(2018, 8, 27, 0, 0), UTCDateTime(2018, 9, 11, 0, 0, 0))
                                   ]
-
-        avail = client.get_availability("AK",
-                                       "BAGL",
-                                       "",
-                                       "LCC",
-                                       UTCDateTime(2018, 8, 10, 22, 0, 54),
-                                       UTCDateTime(2018, 9, 1, 23, 20, 53))
-
+        
         self.assertEqual(client.get_availability("AK",
                                                 "BAGL", "",
                                                 "LCC",
                                                 UTCDateTime(2018, 8, 10, 22, 0, 54),
                                                 UTCDateTime(2018, 8, 10, 22, 9, 28, 890415)),
                                                 expected_unmerged_avail)
+
         self.assertEqual(client.get_availability("AK",
-                                                "BAGL", "",
-                                                
+                                                "BAGL",
+                                                "--",
                                                 "LCC",
                                                 UTCDateTime(2018, 8, 10, 22, 0, 54),
                                                 UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
                                                 merge_overlap=False),
                                                 expected_unmerged_avail)
-        
-        expected_merged_avail = [("AK", "BAGL", "", "LCC", UTCDateTime(2018, 8, 10, 22, 0, 54), UTCDateTime(2018, 8, 10, 22, 15, 53)),
-                                 ("AK", "BAGL", "", "LCC", UTCDateTime(2018, 8, 10, 22, 5, 54), UTCDateTime(2018, 8, 12, 22, 20, 53)),
+                                                
+
+        expected_merged_avail = [("AK", "BAGL", "", "LCC", UTCDateTime(2018, 8, 10, 22, 0, 54), UTCDateTime(2018, 8, 12, 22, 20, 53)),
                                  ("AK", "BAGL", "", "LCC", UTCDateTime(2018, 8, 12, 23, 20, 53), UTCDateTime(2018, 9, 11, 0, 0, 0))
                                 ]
 
-        self.assertNotEqual(client.get_availability("AK",
-                                                    "BAGL", "",
-                                                    "LCC",
-                                                    UTCDateTime(2018, 8, 10, 22, 0, 54),
-                                                    UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
-                                                    merge_overlap=True),
-                                                    expected_merged_avail)
+        self.assertEqual(client.get_availability("AK",
+                                                 "BAGL",
+                                                 "--",
+                                                 "LCC",
+                                                 UTCDateTime(2018, 8, 10, 22, 0, 54),
+                                                 UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
+                                                 merge_overlap=True),
+                                                 expected_merged_avail)
+
+    def test_get_availability_percentage(self):
+        client = Client("")
+        
+        mock_availability_output = [("AK", "BAGL", "", "LCC", UTCDateTime(2018, 8, 10, 22, 0, 54), UTCDateTime(2018, 8, 12, 22, 20, 53)),
+                                    ("AK", "BAGL", "", "LCC", UTCDateTime(2018, 8, 12, 23, 20, 53), UTCDateTime(2018, 9, 11, 0, 0, 0))
+                                   ]
+        client.get_availability = mock.MagicMock(
+                                            return_value=mock_availability_output)
+
+        avail_percentage = client.get_availability_percentage("AK",
+                                                           "BAGL",
+                                                           "--",
+                                                           "LCC",
+                                                           UTCDateTime(2018, 8, 10, 22, 0, 54),
+                                                           UTCDateTime(2018, 9, 11, 0, 0, 0))
+        expected_avail_percentage = (0.998659490472, 1)
+        self.assertAlmostEqual(avail_percentage[0],
+                               expected_avail_percentage[0])
+        self.assertEqual(avail_percentage[1],
+                         expected_avail_percentage[1])
+        self.assertIsInstance(avail_percentage, tuple)
+        
+        mock_availability_output = [("AF", "SOE", "", "BHE", UTCDateTime(2018, 1, 1), UTCDateTime(2018, 1, 2)),
+                                    ("AF", "SOE", "", "BHE", UTCDateTime(2018, 1, 3), UTCDateTime(2018, 1, 4)),
+                                    ("AF", "SOE", "", "BHE", UTCDateTime(2018, 1, 5), UTCDateTime(2018, 1, 6)),
+                                   ]
+
+        client.get_availability = mock.MagicMock(
+                                            return_value=mock_availability_output)
+
+        avail_percentage = client.get_availability_percentage("AK",
+                                                           "BAGL",
+                                                           "--",
+                                                           "LCC",
+                                                           UTCDateTime(2018, 1, 1),
+                                                           UTCDateTime(2018, 1, 6))
+        expected_avail_percentage = (0.6, 2)
+        self.assertAlmostEqual(avail_percentage[0],
+                               expected_avail_percentage[0])
+        self.assertEqual(avail_percentage[1],
+                         expected_avail_percentage[1])
+        self.assertIsInstance(avail_percentage, tuple)
+        
+        # Test for over extending time span
+        avail_percentage = client.get_availability_percentage("AK",
+                                                           "BAGL",
+                                                           "--",
+                                                           "LCC",
+                                                           UTCDateTime(2017, 12, 31),
+                                                           UTCDateTime(2018, 1, 7))
+        expected_avail_percentage = (0.4285714, 4)
+        self.assertAlmostEqual(avail_percentage[0],
+                               expected_avail_percentage[0])
+        self.assertEqual(avail_percentage[1],
+                         expected_avail_percentage[1])
+        self.assertIsInstance(avail_percentage, tuple)
