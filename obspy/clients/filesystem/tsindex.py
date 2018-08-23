@@ -23,9 +23,9 @@ import dateutil.parser
 from sqlalchemy import create_engine
 from obspy import UTCDateTime
 from obspy.core.stream import Stream
-from obspy.clients.filesystem.db import Base, TSIndex, TSIndexSummary
 from obspy.clients.filesystem.miniseed import MiniseedDataExtractor, \
     NoDataError
+from __builtin__ import True
 
 logger = getLogger(__name__)
 
@@ -190,7 +190,7 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End of requested time window.
         """
-        summary_rows = self._get_summary_rows(network, station, location,
+        summary_rows = self.get_summary_rows(network, station, location,
                                               channel, starttime, endtime)
 
         nslc_list = []
@@ -224,7 +224,7 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End of requested time window.
         """
-        summary_rows = self._get_summary_rows(network, station,
+        summary_rows = self.get_summary_rows(network, station,
                                               location, channel,
                                               UTCDateTime(starttime), 
                                               UTCDateTime(endtime))
@@ -235,8 +235,224 @@ class Client(object):
                       UTCDateTime(row.earliest), UTCDateTime(row.latest))
             availability_extents.append(extent)
         return availability_extents
+        
+    def _are_timespans_adjacent(self, ts1, ts2, sample_rate, tolerance=0.5):
+        """
+        Checks whether or not two time span named tuples
+        (e.g. NameTuple(earliest, latest)) are adjacent within
+        a given tolerance
+        """
+        sample_period = 1. / float(sample_rate) # @40Hz sample period = 0.025
+        expected_next = ts1.latest + sample_period
+        tolerance_amount = (tolerance*sample_period) # @40Hz tolerance = 0.0125
+        actual_next = ts2.earliest
+        if expected_next + tolerance_amount > actual_next and \
+           expected_next - tolerance_amount < actual_next:
+            return True
+        else:
+            return False
+        
+    def _do_timespans_overlap(self, ts1, ts2):
+        """
+        Checks whether or not two time span named tuples
+        (e.g. NameTuple(earliest, latest)) intersect with
+        one another
+        """
+        if ts1.earliest <= ts2.latest and \
+           ts1.latest >= ts2.earliest:
+            return True
+        else:
+            return False
+
+    def _create_avail_tuple(self, net, sta, loc, cha,
+                            earliest, latest, sr=None):
+        """
+        Returns a tuple representing available waveform data
+        """
+        if sr is not None:
+            avail_record = (net, sta, loc, cha,
+                            UTCDateTime(float(earliest)),
+                            UTCDateTime(float(latest)), sr)
+        else:
+            avail_record = (net, sta, loc, cha,
+                            UTCDateTime(float(earliest)),
+                            UTCDateTime(float(latest)))
+        return avail_record
     
-    def _get_summary_rows(self, network, station, location, channel,
+    def _create_timespan(self, earliest, latest):
+        TimeSpan = namedtuple('TimeSpan',
+                              ['earliest', 'latest'])
+        return TimeSpan(earliest, latest)
+    
+    def _create_timespans_list(self, raw_timespans):
+        """
+        Given a timespans string from the database, return 
+        a python list of named tuples
+        """
+        timespans = []
+        unparsed_timespans = raw_timespans.replace("[","") \
+                                .replace("]","").split(",")
+        for t in unparsed_timespans:
+            earliest, latest = t.split(":")
+            ts = self._create_timespan(float(earliest), float(latest))
+            timespans.append(ts)
+        return timespans
+
+    def get_availability(self, network, station, location,
+                         channel, starttime, endtime,
+                         include_sample_rate=False,
+                         merge_overlap=False):
+        """
+        Return a list of tuples [(net, sta, loc, cha, start, end),...]
+        containing data availability info for time series included in
+        the tsindex database.
+        
+        If include_sample_rate=True, then a tuple containing the sample
+        rate [(net, sta, loc, cha, start, end, sample_rate),...] is returned. 
+        
+        If merge_overlap=True, then all time spans that overlap are merged.
+        
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+            Wildcards '*' and '?' are supported.
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+            Wildcards '*' and '?' are supported.
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+            Wildcards '*' and '?' are supported.
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+            Wildcards '*' and '?' are supported.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start of requested time window.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End of requested time window.
+        :type include_sample_rate: bool
+        :param include_sample_rate: If include_sample_rate=True, then
+            a tuple containing the sample rate [(net, sta, loc, cha,
+            start, end, sample_rate),...] is returned.
+        :type mege_overlap: bool
+        :param merge_overlap: If merge_overlap=True, then all time
+            spans that overlap are merged.
+        """
+        
+        tsindex_rows = self.get_tsindex_rows(network, station,
+                                             location, channel,
+                                             starttime, endtime)
+        grouped_timespans = {} # list of timespans grouped by NSLC and SR
+        for row in tsindex_rows:
+            hash = "{}_{}_{}_{}_{}".format(row.network,
+                                           row.station,
+                                           row.location,
+                                           row.channel,
+                                           row.samplerate)
+            timespans = self._create_timespans_list(row.timespans)
+            if grouped_timespans.get(hash) is not None:
+                grouped_timespans[hash].extend(timespans)
+            else:
+                grouped_timespans[hash] = timespans
+
+        # sort timespans
+        for _, timespans in grouped_timespans.items():
+            timespans.sort()
+
+        # join timespans
+        joined_avail_tuples = []
+        for sncl, timespans in grouped_timespans.items():
+            net, sta, loc, cha, sr = sncl.split("_")
+            sncl_joined_avail_tuples = []
+            if len(timespans) > 1:
+                for idx, cur_ts in enumerate(timespans[1:]):
+                    prev_ts = timespans[idx]
+                    if not sncl_joined_avail_tuples:
+                        avail_tuple = self._create_avail_tuple(
+                                                        net, sta, loc, cha,
+                                                        prev_ts.earliest,
+                                                        prev_ts.latest)
+                        sncl_joined_avail_tuples.append(avail_tuple)
+                    if merge_overlap == True and \
+                        self._do_timespans_overlap(prev_ts, cur_ts) == True:
+                        # merge if overlapping timespans and merge_overlap
+                        # option is set to true
+                        earliest_tuple = min([prev_ts, cur_ts],
+                                           key = lambda t: t.earliest)
+                        latest_tuple = min([prev_ts, cur_ts],
+                                           key = lambda t: t.earliest)
+                        avail_tuple = self._create_avail_tuple(
+                                                      net, sta, loc, cha,
+                                                      earliest_tuple.earliest,
+                                                      latest_tuple.latest)
+                        sncl_joined_avail_tuples.append(avail_tuple)
+                    elif self._are_timespans_adjacent(prev_ts, cur_ts, sr):
+                        # merge if timespans are next to each other within
+                        # a 0.5 sample tolerance
+                        avail_tuple = self._create_avail_tuple(
+                                                            net, sta, loc, cha,
+                                                            prev_ts.earliest,
+                                                            cur_ts.latest)
+                        sncl_joined_avail_tuples[-1] = avail_tuple
+                    else:
+                        # timespan shouldn't be merged so add to list
+                        avail_tuple = self._create_avail_tuple(
+                                                      net, sta, loc, cha,
+                                                      cur_ts.earliest,
+                                                      cur_ts.latest)
+                        sncl_joined_avail_tuples.append(avail_tuple)
+            else:
+                # no other timespans to merge with
+                cur_ts = timespans[0]
+                avail_tuple = self._create_avail_tuple(
+                                              net, sta, loc, cha,
+                                              cur_ts.earliest,
+                                              cur_ts.latest)
+                sncl_joined_avail_tuples.append(avail_tuple)
+            # extend complete list
+            joined_avail_tuples.extend(sncl_joined_avail_tuples)    
+        return joined_avail_tuples
+
+    def get_availability_percentage(self, network, station, location,
+                                    channel, starttime, endtime):
+        """
+        Get percentage of available data for a specified network, station,
+        location, channel, starttime, endtime combination.
+        """
+        avail_extents = self.get_availability_extent(network, station,
+                                                     location, channel,
+                                                     starttime, endtime)
+        availability = self.get_availability(network, station,
+                                             location, channel,
+                                             starttime, endtime,
+                                             merge_overlap=True)
+        total_avail_extents = 0
+        for avail in avail_extents:
+            earliest, latest = avail[4], avail[5]
+            total_avail_extents += latest - earliest
+        total_avail = 0
+        for avail in availability:
+            earliest, latest = avail[4], avail[5]
+            total_avail += latest - earliest
+        percent_avail = total_avail / total_avail_extents
+        num_gaps = len(availability)
+        return (percent_avail, num_gaps)
+    
+    def has_data(self, network, station, location,
+                 channel, starttime, endtime):
+        """
+        Check if specified stream has any data using the tsindex database.
+        """
+        avail_percentage = self.get_availability_percentage(network,
+                                                            station,
+                                                            location,
+                                                            channel,
+                                                            starttime,
+                                                            endtime)[0]
+        if avail_percentage > 0:
+            return True
+        else:
+            return False
+    
+    def get_summary_rows(self, network, station, location, channel,
                           starttime, endtime):
         """
         Return a list of tuples [(net, sta, loc, cha, earliest, latest),...]
@@ -297,243 +513,6 @@ class Client(object):
                                                            starttime, endtime)
         query_rows = [query_row]
         return self.request_handler.fetch_index_rows(query_rows)
-    
-    def get_availability(self, network, station, location,
-                         channel, starttime, endtime,
-                         include_sample_rate=False,
-                         merge_overlap=False):
-        """
-        Return a list of tuples [(net, sta, loc, cha, start, end),...]
-        containing data availability info for time series included in
-        the tsindex database.
-        
-        If include_sample_rate=True, then a tuple containing the sample
-        rate [(net, sta, loc, cha, start, end, sample_rate),...] is returned. 
-        
-        If merge_overlap=True, then all time spans that overlap are merged.
-        
-        :type network: str
-        :param network: Network code of requested data (e.g. "IU").
-            Wildcards '*' and '?' are supported.
-        :type station: str
-        :param station: Station code of requested data (e.g. "ANMO").
-            Wildcards '*' and '?' are supported.
-        :type location: str
-        :param location: Location code of requested data (e.g. "").
-            Wildcards '*' and '?' are supported.
-        :type channel: str
-        :param channel: Channel code of requested data (e.g. "HHZ").
-            Wildcards '*' and '?' are supported.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Start of requested time window.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End of requested time window.
-        :type include_sample_rate: bool
-        :param include_sample_rate: If include_sample_rate=True, then
-            a tuple containing the sample rate [(net, sta, loc, cha,
-            start, end, sample_rate),...] is returned.
-        :type mege_overlap: bool
-        :param merge_overlap: If merge_overlap=True, then all time
-            spans that overlap are merged.
-        """
-        
-        def group_by_one_to_one_match(obj_dicts, compare_function):
-            """
-            Group every pair of items for which compare_function return True.
-        
-            Example: we have a list of 2-character strings representing segments
-            of the alphabet (eg. 'af' represents 'a' through 'f'), and we want to 
-            group all the ones that overlap alphabetically (so 'af' and 'eg'
-            overlap, but 'ab' and 'cd' do not).
-        
-            >>> cmp_fn = lambda a, b: a[0] < b[1] and b[0] < a[1]
-            >>> items = ['ab', 'ab', 'bc', 'bc', 'be', 'ef', 'fg']
-            >>> group_by_one_to_one_match(items, cmp_fn)
-             {'ab,ab': ['ab', 'ab'],
-             'bc,bc,be': ['bc', 'bc', 'be'],
-             'ef': ['ef'],
-             'fg': ['fg']}
-            """
-            groups = [[] for x in obj_dicts]
-            for index, obj_dict in enumerate(obj_dicts, start=0):
-                index2 = index + 1
-                groups[index].append(index)
-                for obj_dict2 in obj_dicts[index2:]:
-                    if compare_function(obj_dict, obj_dict2):
-                        groups[index].append(index2)
-                        groups[index2].append(index)
-                    index2 = index2 + 1
-        
-            unique_groups = {}
-            for index, group in enumerate(groups, start=0):
-                key = ",".join([str(x) for x in group])
-                if not unique_groups.get(key):
-                    unique_groups[key] = [obj_dicts[index]]
-                else:
-                    unique_groups[key].append(obj_dicts[index])
-        
-            return unique_groups
-        
-        def should_join(row1, row2):
-            """
-            Check if two rows representing available timespans should
-            be joined together to form one continuous timespan.
-            """
-            if row1.network == row2.network and \
-              row1.station == row2.station and \
-              row1.location == row2.location and \
-              row1.channel == row2.channel and \
-              row1.samplerate == row2.samplerate:
-                # Find the next sample and compoare it against the 
-                # calculate expected next sample
-                last = UTCDateTime(row1.timespans[-1].split(":")[1])
-                sample_period = 1 / sample_rate
-                expected_next = last + sample_period + tolerance
-                actual_next = row2.timespans[0].split(":")[0]
-                if actual_next < expected_next or \
-                    actual_next > expected_next:
-                    return True
-                else:
-                    return False
-            else:
-                return False
-            
-        def should_merge(avail1, avail2):
-            """
-            Check if two rows representing available timespans should
-            be joined together to form one continuous timespan.
-            """
-            if avail1[:3] == avail2[:3]: # check if NSLC match
-                # Find the next sample and compoare it against the 
-                # calculate expected next sample
-                avail1_start = avail1[4]
-                avail1_end = avail1[5]
-                avail2_start = avail2[4]
-                avail2_end = avail2[5]
-                if avail1_start <= avail2_end or \
-                    avail1_end >= avail2_start:
-                    return True
-                else:
-                    return False
-            else:
-                return False
-            
-        def create_avail_record(net, sta, loc, cha,
-                                earliest, latest, sr=None):
-            if sr is not None:
-                avail_record = (net, sta, loc, cha,
-                                UTCDateTime(float(earliest)),
-                                UTCDateTime(float(latest)), sr)
-            else:
-                avail_record = (net, sta, loc, cha,
-                                UTCDateTime(float(earliest)),
-                                UTCDateTime(float(latest)))
-            return avail_record
-        
-        tsindex_rows = self.get_tsindex_rows(network, station,
-                                             location, channel,
-                                             starttime, endtime)
-        # Create a dictionary of all groupings of interesecting timespans 
-        # based on :meth:`Client.get_availability.should_join(...)
-        # <obspy.clients.filesystem.tsindex.Client.get_availability.should_join>`. # NOQA
-        grouped_rows = group_by_one_to_one_match(tsindex_rows, should_join)
-        
-        # create a list of tuples representing merged timespans 
-        avail_timespans = []
-        for _, row_list in grouped_rows.items():
-            for r in row_list:
-                net = r.network
-                sta = r.station
-                loc = r.location
-                cha = r.channel
-                sr = r.samplerate if include_sample_rate else None
-                # create a python list from the 'timepsans' column returned by 
-                # :meth:`Cllient.get_tsindex_rows(...)
-                # <obspy.clients.filesystem.tsindex.Client.get_tsindex_rows>`.
-                timespan_list = r.timespans.replace("[","") \
-                                    .replace("]","").split(",")
-                earliest_times = []
-                latest_times = []
-                for t in timespan_list:
-                    earliest, latest = t.split(":")
-                    avail_record = create_avail_record(net,
-                                                       sta,
-                                                       loc,
-                                                       cha,
-                                                       earliest,
-                                                       latest,
-                                                       sr)
-                    avail_timespans.append(avail_record)
-        avail_timespans.sort(key=lambda x: (x[4], x[5]))
-        
-        if merge_overlap:
-            merged_avail_timespans = []
-            grouped_rows = group_by_one_to_one_match(avail_timespans,
-                                                     should_merge)
-            for _, row_list in grouped_rows.items():
-                row = row_list[0]
-                net = row[0]
-                sta = row[1]
-                loc = row[2]
-                cha = row[3]
-                sr = row[4] if include_sample_rate else None
-                earliest = min(row_list, key = lambda t: t[4])[4]
-                latest = max(row_list, key = lambda t: t[5])[5]
-                print(earliest)
-                print(latest)
-                avail_record = create_avail_record(net,
-                                                   sta,
-                                                   loc,
-                                                   cha,
-                                                   earliest,
-                                                   latest,
-                                                   sr)
-                merged_avail_timespans.append(row)
-            avail_timespans = merged_avail_timespans
-        return avail_timespans
-
-    def get_availability_percentage(self, network, station, location,
-                                    channel, starttime, endtime):
-        """
-        Get percentage of available data for a specified network, station,
-        location, channel, starttime, endtime combination.
-        """
-        avail_extents = self.get_availability_extent(network, station,
-                                                     location, channel,
-                                                     starttime, endtime)
-        availability = self.get_availability(network, station,
-                                             location, channel,
-                                             starttime, endtime,
-                                             merge_overlap=True)
-        total_avail_extents = 0
-        for avail in avail_extents:
-            earliest, latest = avail[4], avail[5]
-            total_avail_extents += latest - earliest
-        total_avail = 0
-        for avail in availability:
-            earliest, latest = avail[4], avail[5]
-            total_avail += latest - earliest
-        print(total_avail)
-        print(total_avail_extents)
-        percent_avail = total_avail / total_avail_extents
-        num_gaps = len(availability)
-        return (percent_avail, num_gaps)
-    
-    def has_data(self, network, station, location,
-                 channel, starttime, endtime):
-        """
-        Check if specified stream has any data using the tsindex database.
-        """
-        avail_percentage = self.get_availability_percentage(network,
-                                                            station,
-                                                            location,
-                                                            channel,
-                                                            starttime,
-                                                            endtime)[0]
-        if avail_percentage > 0:
-            return True
-        else:
-            return False
 
 
 class TSIndexRequestHandler(object):
@@ -549,8 +528,6 @@ class TSIndexRequestHandler(object):
         db_path = "sqlite:///{}".format(sqlitedb)
         self.engine = create_engine(db_path, encoding=native_str('utf-8'),
                                     convert_unicode=True)
-        Base.metadata.create_all(self.engine,  # @UndefinedVariable
-                                 checkfirst=True)
 
     @classmethod
     def create_query_row(cls, network, station, location,
