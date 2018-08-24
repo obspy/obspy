@@ -15,19 +15,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import sqlite3
+from sqlite3 import OperationalError
 import uuid
-from logging import getLogger
 from collections import namedtuple
-import dateutil.parser
 from sqlalchemy import create_engine
 from obspy import UTCDateTime
 from obspy.core.stream import Stream
 from obspy.clients.filesystem.miniseed import MiniseedDataExtractor, \
     NoDataError
 from __builtin__ import True
-
-logger = getLogger(__name__)
 
 
 class Client(object):
@@ -36,29 +32,35 @@ class Client(object):
     IRIS mseedindex program.
     """
 
-    def __init__(self, sqlitedb, datapath_replace=None):
+    def __init__(self, sqlitedb, datapath_replace=None, debug=False):
         """
         Initializes the client.
-        
-        If `datapath_replace` is specified it must be a 2-value tuple,
-        where any occurrence of the first value will be replaced with
-        the second value in filename paths from the index.
-        
+
         :type sqlitedb: str or
-            ~obspy.clients.filesystem.tsindex.TSIndexRequestHandler
+            ~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler
         :param sqlitedb: Path to sqlite tsindex database or a
-            TSIndexRequestHandler object
+            TSIndexDatabaseHandler object
+        :type datapath_replace: tuple
+        :param datapath_replace: A 2-value tuple, where any occurrence
+            of the first value will be replaced with the second value in
+            filename paths from the index.
+        :type debug: bool
+        :param debug: Debug flag.
         """
         if isinstance(sqlitedb, (str, native_str)):
-            self.request_handler = TSIndexRequestHandler(sqlitedb)
-        elif isinstance(sqlitedb, TSIndexRequestHandler):
+            self.request_handler = TSIndexDatabaseHandler(sqlitedb,
+                                                          debug=debug)
+        elif isinstance(sqlitedb, TSIndexDatabaseHandler):
             self.request_handler = sqlitedb
         else:
             raise ValueError("sqlitedb must be a string or "
-                             "TSIndexRequestHandler object.")
+                             "TSIndexDatabaseHandler object.")
             
         # Create and configure the data extraction
-        self.data_extractor = MiniseedDataExtractor(datapath_replace)
+        self.data_extractor = MiniseedDataExtractor(dp_replace=
+                                                        datapath_replace,
+                                                    debug=debug)
+        self.debug = debug
 
     def get_waveforms(self, network, station, location,
                       channel, starttime, endtime, merge=-1):
@@ -91,7 +93,7 @@ class Client(object):
             details. If set to ``None`` (or ``False``) no merge operation at
             all will be performed.
         """
-        query_row = TSIndexRequestHandler.create_query_row(network, station,
+        query_row = TSIndexDatabaseHandler.create_query_row(network, station,
                                                            location, channel,
                                                            starttime, endtime)
         query_rows = [query_row]
@@ -118,7 +120,7 @@ class Client(object):
         cleaned_query_rows = []
         # perform any necessary cleanup on query rows
         for query_row in query_rows:
-            cleaned_query_row = TSIndexRequestHandler.create_query_row(
+            cleaned_query_row = TSIndexDatabaseHandler.create_query_row(
                                                             network, station,
                                                             location, channel,
                                                             starttime, endtime)
@@ -151,7 +153,8 @@ class Client(object):
         total_bytes = 0
         src_bytes = {}
 
-        logger.debug("Starting data return")
+        if self.debug is True:
+            print("Starting data return")
         st = Stream(traces=[])
         try:
             # Extract the data, writing each returned segment to the response
@@ -165,14 +168,16 @@ class Client(object):
                     src_bytes.setdefault(src_name, 0)
                     src_bytes[src_name] += bytes_written
         except NoDataError:
-            logger.warning("No data matched selection")
-        
-        logger.debug("Wrote {} bytes".format(total_bytes))
+            if self.debug is True:
+                print("No data matched selection")
+
+        if self.debug is True:
+            print("Wrote {} bytes".format(total_bytes))
+
         if merge is None or merge is False:
             pass
         else:
             st.merge(merge)
-        st.merge(merge)
         return st
     
     def get_nslc(self, network, station, location,
@@ -447,24 +452,7 @@ class Client(object):
         :returns: 2-tuple of percentage of available data (``0.0`` to ``1.0``)
             and number of gaps/overlaps.
         """
-        """avail_extents = self.get_availability_extent(network, station,
-                                                     location, channel,
-                                                     starttime, endtime)
-        availability = self.get_availability(network, station,
-                                             location, channel,
-                                             starttime, endtime,
-                                             merge_overlap=True)
-        total_avail_extents = 0
-        for avail in avail_extents:
-            earliest, latest = avail[4], avail[5]
-            total_avail_extents += latest - earliest
-        total_avail = 0
-        for avail in availability:
-            earliest, latest = avail[4], avail[5]
-            total_avail += latest - earliest
-        percent_avail = total_avail / total_avail_extents
-        num_gaps = len(availability)
-        return (percent_avail, num_gaps)"""
+
         if starttime >= endtime:
             msg = ("'endtime' must be after 'starttime'.")
             raise ValueError(msg)
@@ -499,7 +487,24 @@ class Client(object):
     def has_data(self, network, station, location,
                  channel, starttime, endtime):
         """
-        Check if specified stream has any data using the tsindex database.
+        Return whether there is data for a specified network, station,
+        location, channel, starttime, and endtime combination.
+        
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+            Wildcards '*' and '?' are supported.
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+            Wildcards '*' and '?' are supported.
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+            Wildcards '*' and '?' are supported.
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+            Wildcards '*' and '?' are supported.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start of requested time window.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
         avail_percentage = self.get_availability_percentage(network,
                                                             station,
@@ -537,7 +542,7 @@ class Client(object):
         :param starttime: Start of requested time window.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
-        query_row = TSIndexRequestHandler.create_query_row(network, station,
+        query_row = TSIndexDatabaseHandler.create_query_row(network, station,
                                                            location, channel,
                                                            starttime, endtime)
         query_rows = [query_row]
@@ -568,26 +573,40 @@ class Client(object):
         :param starttime: Start of requested time window.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
-        query_row = TSIndexRequestHandler.create_query_row(network, station,
+        query_row = TSIndexDatabaseHandler.create_query_row(network, station,
                                                            location, channel,
                                                            starttime, endtime)
         query_rows = [query_row]
         return self.request_handler.fetch_index_rows(query_rows)
 
 
-class TSIndexRequestHandler(object):
+class TSIndexDatabaseHandler(object):
     
     def __init__(self, sqlitedb, tsindex_table="tsindex",
                  tsindex_summary_table="tsindex_summary",
-                 maxsectiondays=10):
+                 debug=False):
+        """
+        Main query interface to timeseries index database.
+    
+        :type sqlitedb: str or
+            ~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler
+        :param sqlitedb: Path to sqlite tsindex database or a
+            TSIndexDatabaseHandler object
+        :type tsindex_table: str
+        :param tsindex_table: Name of timeseries index table
+        :type tsindex_summary_table: str
+        :param tsindex_summary_table: Name of timeseries index summary table
+        :type debug: bool
+        :param debug: Debug flag.
+        """
         self.sqlitedb = sqlitedb
         self.tsindex_table = tsindex_table
         self.tsindex_summary_table = tsindex_summary_table
-        self.maxsectiondays = maxsectiondays
         
-        db_path = "sqlite:///{}".format(sqlitedb)
-        self.engine = create_engine(db_path, encoding=native_str('utf-8'),
+        self.db_path = "sqlite:///{}".format(sqlitedb)
+        self.engine = create_engine(self.db_path, encoding=native_str('utf-8'),
                                     convert_unicode=True)
+        self.debug = debug
 
     @classmethod
     def create_query_row(cls, network, station, location,
@@ -615,11 +634,14 @@ class TSIndexRequestHandler(object):
         '''
         my_uuid = uuid.uuid4().hex
         request_table = "request_%s" % my_uuid
-        
-        connection = self.engine.connect()
+        try:
+            connection = self.engine.connect()
+        except Exception as err:
+            raise ValueError(str(err))
 
-        logger.debug("Opening SQLite database for "
-                     "index rows: %s" % self.sqlitedb)
+        if self.debug is True:
+            print("Opening SQLite database for "
+                  "index rows: %s" % self.sqlitedb)
 
         # Store temporary table(s) in memory
         try:
@@ -645,8 +667,6 @@ class TSIndexRequestHandler(object):
                                                              req[4],
                                                              req[5]))
         except Exception as err:
-            import traceback
-            traceback.print_exc()
             raise ValueError(str(err))
 
         result = connection.execute("SELECT count(*) FROM sqlite_master "
@@ -692,11 +712,10 @@ class TSIndexRequestHandler(object):
                    "  AND ts.location {2} r.location "
                    "  AND ts.channel {2} r.channel "
                    "  AND ts.starttime <= r.endtime "
-                   "  AND ts.starttime >= datetime(r.starttime,'-{3} days') "
+                   "  AND ts.starttime >= datetime(r.starttime,'-10 days') "
                    "  AND ts.endtime >= r.starttime "
                    .format(self.tsindex_table,
-                           request_table, "GLOB" if wildcards else "=",
-                           self.maxsectiondays))
+                           request_table, "GLOB" if wildcards else "="))
 
             # Add quality identifer criteria
             if 'quality' in bulk_params and \
@@ -705,8 +724,6 @@ class TSIndexRequestHandler(object):
                                                         bulk_params['quality'])
             result = connection.execute(sql)
         except Exception as err:
-            import traceback
-            traceback.print_exc()
             raise ValueError(str(err))
 
         # Map raw tuples to named tuples for clear referencing
@@ -729,7 +746,8 @@ class TSIndexRequestHandler(object):
         # triggers bad index usage)
         index_rows.sort()
 
-        logger.debug("Fetched %d index rows" % len(index_rows))
+        if self.debug is True:
+            print("Fetched %d index rows" % len(index_rows))
 
         connection.execute("DROP TABLE {0}".format(request_table))
 
@@ -748,10 +766,14 @@ class TSIndexRequestHandler(object):
         my_uuid = uuid.uuid4().hex
         request_table = "request_%s" % my_uuid
         
-        connection = self.engine.connect()
+        try:
+            connection = self.engine.connect()
+        except Exception as err:
+            raise Exception(err)
 
-        logger.debug("Opening SQLite database for "
-                     "summary rows: %s" % self.sqlitedb)
+        if self.debug is True:
+            print("Opening SQLite database for "
+                  "summary rows: %s" % self.sqlitedb)
 
         # Store temporary table(s) in memory
         try:
@@ -772,8 +794,6 @@ class TSIndexRequestHandler(object):
 
 
         except Exception as err:
-            import traceback
-            traceback.print_exc()
             raise ValueError(str(err))
 
         result = connection.execute("SELECT count(*) "
@@ -815,7 +835,8 @@ class TSIndexRequestHandler(object):
             # bad index usage)
             summary_rows.sort()
 
-            logger.debug("Fetched %d summary rows" % len(summary_rows))
+            if self.debug is True:
+                print("Fetched %d summary rows" % len(summary_rows))
 
             connection.execute("DROP TABLE {0}".format(request_table))
 
@@ -874,59 +895,10 @@ class TSIndexRequestHandler(object):
         resolvedrows = connection.execute("SELECT COUNT(*) FROM {0}"
                                           .format(request_table)).fetchone()[0]
 
-        logger.debug("Resolved request with "
-                     "summary into %d rows" % resolvedrows)
+        if self.debug is True:
+            print("Resolved request with "
+                  "summary into %d rows" % resolvedrows)
 
         connection.execute("DROP TABLE {0}".format(request_table_orig))
 
         return resolvedrows
-
-
-if __name__ == "__main__":
-    network = "AK"
-    station = "BAGL"
-    location = "*"
-    channel = "LCC"
-    starttime = "2018-08-10T22:00:54"
-    endtime = "2018-08-10T22:20:53"
-    
-    
-    request = (network, station, location, channel, starttime, endtime)
-    
-    client = Client("/Users/nick/Development/workspace/tsindex-dataset/timeseries.sqlite")
-    #st = client.get_waveforms(network, station,
-    #                          location, channel,
-    #                          UTCDateTime(starttime),
-    #                          UTCDateTime(endtime))
-
-    #print(st)
-    #import obspy
-    #st2 = obspy.read("/Users/nick/Downloads/fdsnws-dataselect_2018-08-20t22_12_01z.mseed")
-    #print(st2)
-    
-    #nslc = client.get_nslc(network, station,
-    #                       location, channel,
-    #                       UTCDateTime(starttime),
-    #                       UTCDateTime(endtime))
-
-    #print(nslc)
-    avail_extents = client.get_availability_extent(network, station,
-                                                   location, channel,
-                                                   UTCDateTime(starttime),
-                                                   UTCDateTime(endtime))
-    for a in avail_extents:
-        print('  '.join(str(i) for i in a))
-
-    print("\n--------------------------\n")
-    avail = client.get_availability(network, station,
-                                    location, channel,
-                                    UTCDateTime(starttime),
-                                    UTCDateTime(endtime))
-    for a in avail:
-        print('  '.join(str(i) for i in a))
-        
-    avail_percentage = client.get_availability_percentage(network, station,
-                                                         location, channel,
-                                                         UTCDateTime(starttime),
-                                                         UTCDateTime(endtime))
-    print("avail = %s %s" % avail_percentage)

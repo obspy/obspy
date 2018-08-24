@@ -6,13 +6,66 @@ from future.builtins import *  # NOQA
 import unittest
 from obspy.core.compatibility import mock
 
+import obspy
 from obspy import UTCDateTime
 from obspy.clients.filesystem.tsindex import Client
-from collections import namedtuple
 
+from numpy.testing import assert_array_equal
+from collections import namedtuple
+import os
 
 class TSIndexTestCase(unittest.TestCase):
-    
+
+    def test_get_waveforms(self):
+        package_dir = os.path.abspath(os.path.dirname(__file__))
+        filepath = os.path.join(package_dir, 'data/tsindex_data/')
+        db_path = os.path.join(filepath, 'timeseries.sqlite')
+
+        # part of one file
+        client = Client(db_path, 
+                        datapath_replace=(None,
+                                          filepath)
+                       )
+        returned_stream = client.get_waveforms(
+                                  "IU", "ANMO", "10", "BHZ",
+                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
+        expected_stream = obspy.read(filepath + \
+                                 'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
+        for t1, t2 in zip(returned_stream, expected_stream):
+            self.assertListEqual(list(t1.data), list(t2.data))
+
+        # wildcard request spanning mutliple files
+        returned_stream = client.get_waveforms(
+                                  "*", "*", "00,10", "BHZ",
+                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+        expected_stream1 = obspy.read(filepath + \
+                                 'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+        expected_stream2 = obspy.read(filepath + \
+                                 'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
+                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+        expected_stream3 = obspy.read(filepath + \
+                         'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
+                          starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                          endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+        expected_stream = expected_stream1 + expected_stream2 + \
+                            expected_stream3
+        for t1, t2 in zip(returned_stream, expected_stream):
+            self.assertListEqual(list(t1.data), list(t2.data))
+
+        # no data
+        returned_stream = client.get_waveforms(
+                                  "XX", "XXX", "XX", "XXX",
+                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+        self.assertListEqual(returned_stream.traces, [])
+
     def test_get_nslc(self):
         client = Client("")
         
