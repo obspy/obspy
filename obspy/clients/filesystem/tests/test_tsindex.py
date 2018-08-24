@@ -66,6 +66,44 @@ class TSIndexTestCase(unittest.TestCase):
                                   endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         self.assertListEqual(returned_stream.traces, [])
 
+    def test_get_waveforms_bulk(self):
+        package_dir = os.path.abspath(os.path.dirname(__file__))
+        filepath = os.path.join(package_dir, 'data/tsindex_data/')
+        db_path = os.path.join(filepath, 'timeseries.sqlite')
+
+        # part of one file
+        client = Client(db_path, 
+                        datapath_replace=(None,
+                                          filepath)
+                       )
+        bulk_request = [
+                        ("IU", "ANMO", "10", "BHZ",
+                         UTCDateTime(2018, 1, 1, 0, 0, 0),
+                         UTCDateTime(2018, 1, 1, 0, 0, 5)),
+                        ("CU", "TGUH", "00", "BHZ",
+                         UTCDateTime(2018, 1, 1, 0, 0, 1),
+                         UTCDateTime(2018, 1, 1, 0, 0, 7)),
+                        ]
+        returned_stream = client.get_waveforms_bulk(bulk_request)
+        expected_stream1 = obspy.read(filepath + \
+                                 'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
+        expected_stream2 = obspy.read(filepath + \
+                                 'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
+                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 1),
+                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 7))
+        expected_stream = expected_stream1 + expected_stream2
+        for t1, t2 in zip(returned_stream, expected_stream):
+            self.assertListEqual(list(t1.data), list(t2.data))
+
+        # no data
+        returned_stream = client.get_waveforms(
+                                  "XX", "XXX", "XX", "XXX",
+                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+        self.assertListEqual(returned_stream.traces, [])
+
     def test_get_nslc(self):
         client = Client("")
         

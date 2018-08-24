@@ -121,9 +121,7 @@ class Client(object):
         # perform any necessary cleanup on query rows
         for query_row in query_rows:
             cleaned_query_row = TSIndexDatabaseHandler.create_query_row(
-                                                            network, station,
-                                                            location, channel,
-                                                            starttime, endtime)
+                                                            *query_row)
             cleaned_query_rows.append(cleaned_query_row)
         return self._get_waveforms(cleaned_query_rows, merge)
     
