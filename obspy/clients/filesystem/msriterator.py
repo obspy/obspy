@@ -9,7 +9,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import ctypes as C
-import os
 
 from obspy import UTCDateTime
 from obspy.io.mseed.headers import (HPTMODULUS, MS_NOERROR, MS_ENDOFFILE,
@@ -46,7 +45,8 @@ class MSR_iterator(object):
     The raw record as a byte array is available at:
     `MSR_iterator.msr.contents.record`
     and can be used with Python I/O routines using:
-    `ctypes.string_at(MSR_iterator.msr.contents.record, MSR_iterator.msr.contents.reclen))
+    `ctypes.string_at(MSR_iterator.msr.contents.record,
+    MSR_iterator.msr.contents.reclen))
 
     .. rubric:: Example
 
@@ -98,8 +98,12 @@ class MSR_iterator(object):
         errcode = clibmseed.ms_readmsr_r(C.pointer(self.msf),
                                          C.pointer(self.msr),
                                          self.file.encode('ascii', 'strict'),
-                                         self.reclen, C.byref(self.fpos), None,
-                                         self.skipnotdata, self.dataflag, self.verbose)
+                                         self.reclen,
+                                         C.byref(self.fpos),
+                                         None,
+                                         self.skipnotdata,
+                                         self.dataflag,
+                                         self.verbose)
 
         if errcode == MS_ENDOFFILE:
             raise StopIteration()

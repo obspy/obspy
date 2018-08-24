@@ -15,7 +15,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from sqlite3 import OperationalError
 import uuid
 from collections import namedtuple
 from sqlalchemy import create_engine
@@ -55,11 +54,11 @@ class Client(object):
         else:
             raise ValueError("sqlitedb must be a string or "
                              "TSIndexDatabaseHandler object.")
-            
+
         # Create and configure the data extraction
-        self.data_extractor = MiniseedDataExtractor(dp_replace=
-                                                        datapath_replace,
-                                                    debug=debug)
+        self.data_extractor = MiniseedDataExtractor(
+                                                dp_replace=datapath_replace,
+                                                debug=debug)
         self.debug = debug
 
     def get_waveforms(self, network, station, location,
@@ -67,7 +66,7 @@ class Client(object):
         """
         Query tsindex database and read miniSEED data from local
         indexed directory tree.
-        
+
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
             Wildcards '*' and '?' are supported.
@@ -94,16 +93,16 @@ class Client(object):
             all will be performed.
         """
         query_row = TSIndexDatabaseHandler.create_query_row(network, station,
-                                                           location, channel,
-                                                           starttime, endtime)
+                                                            location, channel,
+                                                            starttime, endtime)
         query_rows = [query_row]
         return self._get_waveforms(query_rows, merge)
-    
+
     def get_waveforms_bulk(self, query_rows, merge=-1):
         """
         Query tsindex database and read miniSEED data from local
         indexed directory tree using a bulk request
-        
+
         :type query_rows: str
         :param network: A list of tuples [(net, sta, loc, cha, starttime,
             endtime),...] containing information on what timeseries should be
@@ -124,14 +123,14 @@ class Client(object):
                                                             *query_row)
             cleaned_query_rows.append(cleaned_query_row)
         return self._get_waveforms(cleaned_query_rows, merge)
-    
+
     def _get_waveforms(self, query_rows, merge=-1):
         """
         Query tsindex database and read miniSEED data from local
         indexed directory tree using a bulk request and return a
         ~obspy.core.stream.Stream object containing the requested
         timeseries data.
-        
+
         :type query_rows: str
         :param network: A list of tuples [(net, sta, loc, cha, starttime,
             endtime),...] containing information on what timeseries should be
@@ -177,7 +176,7 @@ class Client(object):
         else:
             st.merge(merge)
         return st
-    
+
     def get_nslc(self, network, station, location,
                  channel, starttime, endtime):
         """
@@ -202,15 +201,14 @@ class Client(object):
         :param endtime: End of requested time window.
         """
         summary_rows = self.get_summary_rows(network, station, location,
-                                              channel, starttime, endtime)
+                                             channel, starttime, endtime)
 
         nslc_list = []
         for row in summary_rows:
             nslc = (row.network, row.station, row.location, row.channel)
             nslc_list.append(nslc)
         return nslc_list
-            
-    
+
     def get_availability_extent(self, network, station, location,
                                 channel, starttime, endtime):
         """
@@ -236,38 +234,45 @@ class Client(object):
         :param endtime: End of requested time window.
         """
         summary_rows = self.get_summary_rows(network, station,
-                                              location, channel,
-                                              UTCDateTime(starttime), 
-                                              UTCDateTime(endtime))
-        
+                                             location, channel,
+                                             UTCDateTime(starttime),
+                                             UTCDateTime(endtime))
+
         availability_extents = []
         for row in summary_rows:
             extent = (row.network, row.station, row.location, row.channel,
                       UTCDateTime(row.earliest), UTCDateTime(row.latest))
             availability_extents.append(extent)
         return availability_extents
-        
+
     def _are_timespans_adjacent(self, ts1, ts2, sample_rate, tolerance=0.5):
         """
         Checks whether or not two time span named tuples
         (e.g. NameTuple(earliest, latest)) are adjacent within
         a given tolerance
         """
-        sample_period = 1. / float(sample_rate) # @40Hz sample period = 0.025
+        # @40Hz sample period = 0.025
+        sample_period = 1. / float(sample_rate)
         expected_next = ts1.latest + sample_period
-        tolerance_amount = (tolerance*sample_period) # @40Hz tolerance = 0.0125
+        # @40Hz tolerance = 0.0125
+        tolerance_amount = (tolerance*sample_period)
         actual_next = ts2.earliest
         if expected_next + tolerance_amount > actual_next and \
            expected_next - tolerance_amount < actual_next:
             return True
         else:
             return False
-        
+
     def _do_timespans_overlap(self, ts1, ts2):
         """
         Checks whether or not two time span named tuples
         (e.g. NameTuple(earliest, latest)) intersect with
-        one another
+        one another.
+
+        :type ts1: namedtuple
+        :param ts1: Earliest timespan.
+        :type ts2: namedtuple
+        :param ts2: Latest timespan.
         """
         if ts1.earliest <= ts2.latest and \
            ts1.latest >= ts2.earliest:
@@ -275,34 +280,60 @@ class Client(object):
         else:
             return False
 
-    def _create_avail_tuple(self, net, sta, loc, cha,
+    def _create_avail_tuple(self, network, station, location, channel,
                             earliest, latest, sr=None):
         """
-        Returns a tuple representing available waveform data
+        Returns a tuple representing available waveform data.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+            Wildcards '*' and '?' are supported.
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+            Wildcards '*' and '?' are supported.
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+            Wildcards '*' and '?' are supported.
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+            Wildcards '*' and '?' are supported.
+        :type earliest: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param earliest: Earliest date of timespan.
+        :type latest: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param latest: Latest date of timespan.
         """
         if sr is not None:
-            avail_record = (net, sta, loc, cha,
+            avail_record = (network, station, location, channel,
                             UTCDateTime(float(earliest)),
                             UTCDateTime(float(latest)), sr)
         else:
-            avail_record = (net, sta, loc, cha,
+            avail_record = (network, station, location, channel,
                             UTCDateTime(float(earliest)),
                             UTCDateTime(float(latest)))
         return avail_record
-    
+
     def _create_timespan(self, earliest, latest):
+        """
+        Create a TimeSpan named tuple object given a earliest and latest date.
+
+        :param earliest: Earliest date of timespan.
+        :param latest: Latest date of timespan.
+        """
         TimeSpan = namedtuple('TimeSpan',
                               ['earliest', 'latest'])
         return TimeSpan(earliest, latest)
-    
+
     def _create_timespans_list(self, raw_timespans):
         """
-        Given a timespans string from the database, return 
-        a python list of named tuples
+        Given a timespans string from the database, return
+        a python list of named tuples.
+
+        :type raw_timespans: str
+        :param raw_timespans: timespans field from tsindex database table.
         """
         timespans = []
-        unparsed_timespans = raw_timespans.replace("[","") \
-                                .replace("]","").split(",")
+        unparsed_timespans = \
+            raw_timespans.replace("[", "").replace("]", "").split(",")
         for t in unparsed_timespans:
             earliest, latest = t.split(":")
             ts = self._create_timespan(float(earliest), float(latest))
@@ -317,12 +348,12 @@ class Client(object):
         Return a list of tuples [(net, sta, loc, cha, start, end),...]
         containing data availability info for time series included in
         the tsindex database.
-        
+
         If include_sample_rate=True, then a tuple containing the sample
-        rate [(net, sta, loc, cha, start, end, sample_rate),...] is returned. 
-        
+        rate [(net, sta, loc, cha, start, end, sample_rate),...] is returned.
+
         If merge_overlap=True, then all time spans that overlap are merged.
-        
+
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
             Wildcards '*' and '?' are supported.
@@ -347,30 +378,39 @@ class Client(object):
         :param merge_overlap: If merge_overlap=True, then all time
             spans that overlap are merged.
         """
-        
-        def _join(timespans, sncl_joined_avail_tuples=[]):
+
+        def _get_availability_from_timespans(timespans,
+                                             _sncl_joined_avail_tuples=[]):
             """
             Recurse over a list of timespans, joining adjacent timespans,
             and merging if merge_overlaps is True.
+
+            Returns a list of tuples (network, station, location, channel,
+            earliest, latest) representing available data.
+
+            :type timespans: list
+            :param timespans: List of timespan tuples
             """
             if len(timespans) > 1:
                 prev_ts = timespans.pop(0)
                 cur_ts = timespans.pop(0)
-                if merge_overlap == True and \
-                    self._do_timespans_overlap(prev_ts, cur_ts) == True:
+                if merge_overlap is True and \
+                        self._do_timespans_overlap(prev_ts, cur_ts) is True:
                     # merge if overlapping timespans and merge_overlap
                     # option is set to true
                     earliest_tuple = min([prev_ts, cur_ts],
-                                       key = lambda t: t.earliest)
+                                         key=lambda t: t.earliest)
                     latest_tuple = max([prev_ts, cur_ts],
-                                       key = lambda t: t.latest)
+                                       key=lambda t: t.latest)
                     avail_tuple = self._create_avail_tuple(
                                                   net, sta, loc, cha,
                                                   earliest_tuple.earliest,
                                                   latest_tuple.latest)
                     ts = self._create_timespan(avail_tuple[4], avail_tuple[5])
                     timespans.insert(0, ts)
-                    return _join(timespans, sncl_joined_avail_tuples)
+                    return _get_availability_from_timespans(
+                                                    timespans,
+                                                    _sncl_joined_avail_tuples)
                 elif self._are_timespans_adjacent(prev_ts, cur_ts, sr, 0.5):
                     # merge if timespans are next to each other within
                     # a 0.5 sample tolerance
@@ -380,16 +420,20 @@ class Client(object):
                                                         cur_ts.latest)
                     ts = self._create_timespan(avail_tuple[4], avail_tuple[5])
                     timespans.insert(0, ts)
-                    return _join(timespans, sncl_joined_avail_tuples)
+                    return _get_availability_from_timespans(
+                                                    timespans,
+                                                    _sncl_joined_avail_tuples)
                 else:
                     # timespan shouldn't be merged so add to list
                     avail_tuple = self._create_avail_tuple(
                                                   net, sta, loc, cha,
                                                   prev_ts.earliest,
                                                   prev_ts.latest)
-                    sncl_joined_avail_tuples.append(avail_tuple)
+                    _sncl_joined_avail_tuples.append(avail_tuple)
                     timespans.insert(0, cur_ts)
-                    return _join(timespans, sncl_joined_avail_tuples)
+                    return _get_availability_from_timespans(
+                                                    timespans,
+                                                    _sncl_joined_avail_tuples)
             else:
                 # no other timespans to merge with
                 cur_ts = timespans[0]
@@ -397,13 +441,13 @@ class Client(object):
                                               net, sta, loc, cha,
                                               cur_ts.earliest,
                                               cur_ts.latest)
-                sncl_joined_avail_tuples.append(avail_tuple)
-            return sncl_joined_avail_tuples
-        
+                _sncl_joined_avail_tuples.append(avail_tuple)
+            return _sncl_joined_avail_tuples
+
         tsindex_rows = self.get_tsindex_rows(network, station,
                                              location, channel,
                                              starttime, endtime)
-        grouped_timespans = {} # list of timespans grouped by NSLC and SR
+        grouped_timespans = {}  # list of timespans grouped by NSLC and SR
         for row in tsindex_rows:
             hash = "{}_{}_{}_{}_{}".format(row.network,
                                            row.station,
@@ -424,9 +468,9 @@ class Client(object):
         joined_avail_tuples = []
         for sncl, timespans in grouped_timespans.items():
             net, sta, loc, cha, sr = sncl.split("_")
-            sncl_joined_avail_tuples = _join(timespans)
+            avail_data = _get_availability_from_timespans(timespans)
             # extend complete list
-            joined_avail_tuples.extend(sncl_joined_avail_tuples)    
+            joined_avail_tuples.extend(avail_data)
         return joined_avail_tuples
 
     def get_availability_percentage(self, network, station, location,
@@ -455,9 +499,9 @@ class Client(object):
             msg = ("'endtime' must be after 'starttime'.")
             raise ValueError(msg)
         avail = self.get_availability(network, station,
-                                  location, channel,
-                                  starttime, endtime,
-                                  merge_overlap=True)
+                                      location, channel,
+                                      starttime, endtime,
+                                      merge_overlap=True)
 
         if not avail:
             return (0, 1)
@@ -470,7 +514,7 @@ class Client(object):
             prev_ts = avail[idx]
             gap_count = gap_count + 1
             gap_sum += cur_ts[4] - prev_ts[5]
- 
+
         # check if we have a gap at start or end
         earliest = min([ts[4] for ts in avail])
         latest = max([ts[5] for ts in avail])
@@ -481,13 +525,13 @@ class Client(object):
             gap_sum += endtime - latest
             gap_count += 1
         return (1 - (gap_sum / total_duration), gap_count)
-    
+
     def has_data(self, network, station, location,
                  channel, starttime, endtime):
         """
         Return whether there is data for a specified network, station,
         location, channel, starttime, and endtime combination.
-        
+
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
             Wildcards '*' and '?' are supported.
@@ -514,16 +558,16 @@ class Client(object):
             return True
         else:
             return False
-    
+
     def get_summary_rows(self, network, station, location, channel,
-                          starttime, endtime):
+                         starttime, endtime):
         """
         Return a list of tuples [(net, sta, loc, cha, earliest, latest),...]
         containing information found in the tsindex_summary table.
         
         Information about the tsindex_summary schema may be found at:
         https://github.com/iris-edu/mseedindex/wiki/Database-Schema#suggested-time-series-summary-table # NOQA
-        
+
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
             Wildcards '*' and '?' are supported.
@@ -541,20 +585,20 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
         query_row = TSIndexDatabaseHandler.create_query_row(network, station,
-                                                           location, channel,
-                                                           starttime, endtime)
+                                                            location, channel,
+                                                            starttime, endtime)
         query_rows = [query_row]
         return self.request_handler.fetch_summary_rows(query_rows)
-    
+
     def get_tsindex_rows(self, network, station, location, channel,
-                          starttime, endtime):
+                         starttime, endtime):
         """
         Return a list of tuples [(net, sta, loc, cha, quality... etc.),...]
         containing information found in the tsindex table.
-        
+
         Information about the tsindex schema may be found at:
         https://github.com/iris-edu/mseedindex/wiki/Database-Schema#sqlite-schema-version-11 # NOQA
-        
+
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
             Wildcards '*' and '?' are supported.
@@ -572,20 +616,20 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
         query_row = TSIndexDatabaseHandler.create_query_row(network, station,
-                                                           location, channel,
-                                                           starttime, endtime)
+                                                            location, channel,
+                                                            starttime, endtime)
         query_rows = [query_row]
         return self.request_handler.fetch_index_rows(query_rows)
 
 
 class TSIndexDatabaseHandler(object):
-    
+
     def __init__(self, sqlitedb, tsindex_table="tsindex",
                  tsindex_summary_table="tsindex_summary",
                  debug=False):
         """
         Main query interface to timeseries index database.
-    
+
         :type sqlitedb: str or
             ~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler
         :param sqlitedb: Path to sqlite tsindex database or a
@@ -600,7 +644,7 @@ class TSIndexDatabaseHandler(object):
         self.sqlitedb = sqlitedb
         self.tsindex_table = tsindex_table
         self.tsindex_summary_table = tsindex_summary_table
-        
+
         self.db_path = "sqlite:///{}".format(sqlitedb)
         self.engine = create_engine(self.db_path, encoding=native_str('utf-8'),
                                     convert_unicode=True)
@@ -609,6 +653,28 @@ class TSIndexDatabaseHandler(object):
     @classmethod
     def create_query_row(cls, network, station, location,
                          channel, starttime, endtime):
+        """
+        Returns a tuple (network, station, location, channel, starttime,
+        endtime) with elements that have been formatted to match database
+        entries. This allows for accurate comparisons when querying the
+        database.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+            Wildcards '*' and '?' are supported.
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+            Wildcards '*' and '?' are supported.
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+            Wildcards '*' and '?' are supported.
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+            Wildcards '*' and '?' are supported.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start of requested time window.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        """
         # Replace "--" location ID request alias with true empty value
         if location == "--":
             location = ""
@@ -617,18 +683,21 @@ class TSIndexDatabaseHandler(object):
         if isinstance(endtime, UTCDateTime):
             endtime = endtime.isoformat()
         return (network, station, location, channel, starttime, endtime)
-    
+
     def fetch_index_rows(self, query_rows, bulk_params={}):
         '''
         Fetch index rows matching specified request
-        `query_rows`: List of tuples containing (net,sta,loc,chan,start,end)
-        `bulk_params`: Dict of bulk parameters (e.g. quality, minsegmentlength)
-        Request elements may contain '?' and '*' wildcards.  The start and
-        end elements can be a single '*' if not a date-time string.
-        Return rows as list of named tuples containing:
-        (network,station,location,channel,quality,starttime,endtime,samplerate,
-         filename,byteoffset,bytes,hash,timeindex,timespans,timerates,
-         format,filemodtime,updated,scanned,requeststart,requestend)
+        :type query_rows: list
+        :param: List of tuples containing (net,sta,loc,chan,start,end)
+        :type bulk_params: dict
+        :param: Dict of bulk parameters (e.g. quality)
+            Request elements may contain '?' and '*' wildcards.  The start and
+            end elements can be a single '*' if not a date-time string.
+            Return rows as list of named tuples containing:
+            (network, station, location, channel, quality, starttime, endtime,
+            samplerate, filename, byteoffset, bytes, hash, timeindex,
+            timespans, timerates, format, filemodtime, updated, scanned,
+            requeststart, requestend)
         '''
         my_uuid = uuid.uuid4().hex
         request_table = "request_%s" % my_uuid
@@ -656,14 +725,11 @@ class TSIndexDatabaseHandler(object):
 
             for req in query_rows:
                 connection.execute("INSERT INTO {0} (network,station,location,"
-                               "channel,starttime,endtime) "
-                               "VALUES (?,?,?,?,?,?) ".format(request_table),
-                                                            (req[0],
-                                                             req[1],
-                                                             req[2],
-                                                             req[3],
-                                                             req[4],
-                                                             req[5]))
+                                   "channel,starttime,endtime) "
+                                   "VALUES (?,?,?,?,?,?) "
+                                   .format(request_table), (req[0], req[1],
+                                                            req[2], req[3],
+                                                            req[4], req[5]))
         except Exception as err:
             raise ValueError(str(err))
 
@@ -717,7 +783,7 @@ class TSIndexDatabaseHandler(object):
 
             # Add quality identifer criteria
             if 'quality' in bulk_params and \
-                bulk_params['quality'] in ('D', 'R', 'Q'):
+                    bulk_params['quality'] in ('D', 'R', 'Q'):
                 sql = sql + " AND quality = '{0}' ".format(
                                                         bulk_params['quality'])
             result = connection.execute(sql)
@@ -740,7 +806,7 @@ class TSIndexDatabaseHandler(object):
                 break
             index_rows.append(NamedRow(*row))
 
-        # Sort results in application (ORDER BY in SQL 
+        # Sort results in application (ORDER BY in SQL
         # triggers bad index usage)
         index_rows.sort()
 
@@ -753,17 +819,20 @@ class TSIndexDatabaseHandler(object):
 
     def fetch_summary_rows(self, query_rows):
         '''
-        Fetch summary rows matching specified request
-        `query_rows`: List of tuples containing (net,sta,loc,chan,start,end)
-        Request elements may contain '?' and '*' wildcards.  The start and
-        end elements can be a single '*' if not a date-time string.
-        Return rows as list of named tuples containing:
+        Fetch summary rows matching specified request.
+
+        Returns rows as list of named tuples containing:
         (network,station,location,channel,earliest,latest,updated)
+
+        :type query_rows: list
+        :param: List of tuples containing (net,sta,loc,chan,start,end)
+            Request elements may contain '?' and '*' wildcards. The start and
+            end elements can be a single '*' if not a date-time string.
         '''
         summary_rows = []
         my_uuid = uuid.uuid4().hex
         request_table = "request_%s" % my_uuid
-        
+
         try:
             connection = self.engine.connect()
         except Exception as err:
@@ -782,15 +851,15 @@ class TSIndexDatabaseHandler(object):
         # Create temporary table and load request
         try:
             connection.execute("CREATE TEMPORARY TABLE {0}"
-                        " (network TEXT, station TEXT,"
-                        " location TEXT, channel TEXT)".
-                        format(request_table))
+                               " (network TEXT, station TEXT,"
+                               " location TEXT, channel TEXT)"
+                               .format(request_table))
             for req in query_rows:
                 connection.execute("INSERT INTO {0} (network,station,"
-                            "  location,channel) "
-                            "VALUES (?,?,?,?) ".format(request_table), req[:4])
-
-
+                                   "  location,channel) "
+                                   "VALUES (?,?,?,?) "
+                                   .format(request_table),
+                                   req[:4])
         except Exception as err:
             raise ValueError(str(err))
 
@@ -839,15 +908,18 @@ class TSIndexDatabaseHandler(object):
             connection.execute("DROP TABLE {0}".format(request_table))
 
         return summary_rows
-    
 
     def resolve_request(self, connection, request_table):
-        '''Resolve request table using summary
-        `connection`: Database connection
-        `request_table`: request table to resolve
-        Resolve any '?' and '*' wildcards in the specified request table.
-        The original table is renamed, rebuilt with a join to summary
-        and then original table is then removed.
+        '''
+        Resolve request table by expanding wildcards using summary.
+
+        :type connection: sqlalchemy.engine.base.Connection
+        :param: database connection to resolve request with
+        :type request_table: str
+        :param request_table: table to resolve
+            Resolve any '?' and '*' wildcards in the specified request table.
+            The original table is renamed, rebuilt with a join to summary
+            and then original table is then removed.
         '''
 
         request_table_orig = request_table + "_orig"

@@ -35,8 +35,9 @@ class RequestLimitExceededError(Exception):
 
 class ExtractedDataSegment(object):
     """
-    There are a few different forms that a chunk of extracted data can take, so we return
-    a wrapped object that exposes a simple, consistent API for the handler to use.
+    There are a few different forms that a chunk of extracted data can take,
+    so we return a wrapped object that exposes a simple, consistent API
+    for the handler to use.
     """
     def write(self, wfile):
         """
@@ -96,9 +97,13 @@ class MSRIDataSegment(ExtractedDataSegment):
             if self.sample_rate > 0 and (msrstart < self.start_time or
                                          msrend > self.end_time):
                 if self.debug is True:
-                    print("Trimming record %s @ %s" % 
+                    print("Trimming record %s @ %s" %
                           (self.src_name, self.msri.get_starttime()))
-                tr = read(BytesIO(ctypes.string_at(self.msri.msr.contents.record, reclen)), format="MSEED")[0]
+                tr = \
+                    read(BytesIO(ctypes.string_at(
+                                    self.msri.msr.contents.record,
+                                    reclen)),
+                         format="MSEED")[0]
                 tr.trim(self.start_time, self.end_time)
                 st.traces.append(tr)
                 return st
@@ -217,50 +222,56 @@ class MiniseedDataExtractor(object):
         """
         Perform the data extraction.
 
-        :param index_rows: requested data, as produced by `HTTPServer_RequestHandler.fetch_index_rows`
+        :param index_rows: requested data, as produced by
+        `HTTPServer_RequestHandler.fetch_index_rows`
         :yields: sequence of `ExtractedDataSegment`s
         """
 
         # Pre-scan the index rows:
         # 1) Build processed list for extraction
         # 2) Check if the request is small enough to satisfy
-        # Note: accumulated estimate of output bytes will be equal to or higher than actual output
+        # Note: accumulated estimate of output bytes will be equal to or
+        # higher than actual output
         total_bytes = 0
         request_rows = []
-        Request = namedtuple('Request', ['srcname', 'filename', 'starttime', 'endtime',
-                                         'triminfo', 'bytes', 'samplerate'])
-        #try:
-        for NRow in index_rows:
-            srcname = "_".join(NRow[:4])
-            filename = NRow.filename
-            if self.debug:
-                print("EXTRACT: src=%s, file=%s, bytes=%s, rate:%s" %
-                             (srcname, filename, NRow.bytes, NRow.samplerate))
+        Request = namedtuple('Request', ['srcname', 'filename', 'starttime',
+                                         'endtime', 'triminfo', 'bytes',
+                                         'samplerate'])
+        try:
+            for NRow in index_rows:
+                srcname = "_".join(NRow[:4])
+                filename = NRow.filename
+                if self.debug:
+                    print("EXTRACT: src=%s, file=%s, bytes=%s, rate:%s" %
+                          (srcname, filename, NRow.bytes, NRow.samplerate))
 
-            starttime = UTCDateTime(NRow.requeststart)
-            endtime = UTCDateTime(NRow.requestend)
-            triminfo = self.handle_trimming(starttime, endtime, NRow)
-            total_bytes += triminfo[1][1] - triminfo[0][1]
-            if self.request_limit > 0 and total_bytes > self.request_limit:
-                raise RequestLimitExceededError("Result exceeds limit of %d bytes" % self.request_limit)
-            if self.dp_replace_re and self.dp_replace_sub:
-                filename = self.dp_replace_re.sub(self.dp_replace_sub, filename)
-            elif self.dp_replace_sub:
-                filename = self.dp_replace_sub + filename
-            if not os.path.exists(filename):
-                raise Exception("Data file does not exist: %s" % filename)
-            request_rows.append(Request(srcname=srcname,
-                                        filename=filename,
-                                        starttime=starttime,
-                                        endtime=endtime,
-                                        triminfo=triminfo,
-                                        bytes=NRow.bytes,
-                                        samplerate=NRow.samplerate))
-            if self.debug:
-                print("EXTRACT: src=%s, file=%s, bytes=%s, rate:%s" %
-                      (srcname, filename, NRow.bytes, NRow.samplerate))
-        #except Exception as err:
-        #    raise Exception("Error accessing data index: %s" % str(err))
+                starttime = UTCDateTime(NRow.requeststart)
+                endtime = UTCDateTime(NRow.requestend)
+                triminfo = self.handle_trimming(starttime, endtime, NRow)
+                total_bytes += triminfo[1][1] - triminfo[0][1]
+                if self.request_limit > 0 and total_bytes > self.request_limit:
+                    raise RequestLimitExceededError(
+                            "Result exceeds limit of %d bytes" %
+                            self.request_limit)
+                if self.dp_replace_re and self.dp_replace_sub:
+                    filename = self.dp_replace_re.sub(self.dp_replace_sub,
+                                                      filename)
+                elif self.dp_replace_sub:
+                    filename = self.dp_replace_sub + filename
+                if not os.path.exists(filename):
+                    raise Exception("Data file does not exist: %s" % filename)
+                request_rows.append(Request(srcname=srcname,
+                                            filename=filename,
+                                            starttime=starttime,
+                                            endtime=endtime,
+                                            triminfo=triminfo,
+                                            bytes=NRow.bytes,
+                                            samplerate=NRow.samplerate))
+                if self.debug:
+                    print("EXTRACT: src=%s, file=%s, bytes=%s, rate:%s" %
+                          (srcname, filename, NRow.bytes, NRow.samplerate))
+        except Exception as err:
+            raise Exception("Error accessing data index: %s" % str(err))
 
         # Error if request matches no data
         if total_bytes == 0:
@@ -274,7 +285,8 @@ class MiniseedDataExtractor(object):
                                                            NRow.endtime,
                                                            NRow.filename))
 
-            # Iterate through records in section if only part of the section is needed
+            # Iterate through records in section
+            # if only part of the section is needed
             if NRow.triminfo[0][2] or NRow.triminfo[1][2]:
 
                 for msri in MSR_iterator(filename=NRow.filename,
@@ -294,7 +306,8 @@ class MiniseedDataExtractor(object):
                                           self.debug)
 
                     # Check for passing end offset
-                    if (offset + msri.msr.contents.reclen) >= NRow.triminfo[1][1]:
+                    if (offset + msri.msr.contents.reclen) >= \
+                            NRow.triminfo[1][1]:
                         break
 
             # Otherwise, return the entire section
