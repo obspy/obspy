@@ -8,11 +8,15 @@ from obspy.core.compatibility import mock
 
 import obspy
 from obspy import UTCDateTime
-from obspy.clients.filesystem.tsindex import Client
+from datetime import datetime
+from obspy.clients.filesystem.tsindex import Client, Indexer, \
+    TSIndexDatabaseHandler
 
 from collections import namedtuple
+import uuid
 import os
-
+import re
+import itertools
 
 class TSIndexTestCase(unittest.TestCase):
 
@@ -23,16 +27,18 @@ class TSIndexTestCase(unittest.TestCase):
 
         # part of one file
         client = Client(db_path,
-                        datapath_replace=(None,
+                        datapath_replace=("^",
                                           filepath))
         returned_stream = client.get_waveforms(
                                   "IU", "ANMO", "10", "BHZ",
                                   starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                                   endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
         expected_stream = \
-            obspy.read(filepath + 'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
-                       starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                       endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
+            obspy.read(
+                    filepath +
+                    'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
         for t1, t2 in zip(returned_stream, expected_stream):
             self.assertListEqual(list(t1.data), list(t2.data))
 
@@ -42,17 +48,23 @@ class TSIndexTestCase(unittest.TestCase):
                                   starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                                   endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream1 = \
-            obspy.read(filepath + 'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
-                       starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                       endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+            obspy.read(
+                    filepath +
+                    'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream2 = \
-            obspy.read(filepath + 'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
-                       starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                       endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+            obspy.read(
+                    filepath +
+                    'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed',
+                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream3 = \
-            obspy.read(filepath + 'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
-                       starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                       endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+            obspy.read(
+                    filepath +
+                    'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
+                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream = \
             expected_stream1 + expected_stream2 + expected_stream3
         for t1, t2 in zip(returned_stream, expected_stream):
@@ -72,7 +84,7 @@ class TSIndexTestCase(unittest.TestCase):
 
         # part of one file
         client = Client(db_path,
-                        datapath_replace=(None,
+                        datapath_replace=("^",
                                           filepath))
         bulk_request = [
                         ("IU", "ANMO", "10", "BHZ",
@@ -84,13 +96,17 @@ class TSIndexTestCase(unittest.TestCase):
                         ]
         returned_stream = client.get_waveforms_bulk(bulk_request)
         expected_stream1 = \
-            obspy.read(filepath + 'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
-                       starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                       endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
+            obspy.read(
+                    filepath +
+                    'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
         expected_stream2 = \
-            obspy.read(filepath + 'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
-                       starttime=UTCDateTime(2018, 1, 1, 0, 0, 1),
-                       endtime=UTCDateTime(2018, 1, 1, 0, 0, 7))
+            obspy.read(
+                    filepath +
+                    'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
+                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 1),
+                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 7))
         expected_stream = expected_stream1 + expected_stream2
         for t1, t2 in zip(returned_stream, expected_stream):
             self.assertListEqual(list(t1.data), list(t2.data))
@@ -423,3 +439,76 @@ class TSIndexTestCase(unittest.TestCase):
         self.assertEqual(avail_percentage[1],
                          expected_avail_percentage[1])
         self.assertIsInstance(avail_percentage, tuple)
+
+
+def purge(dir, pattern):
+    for f in os.listdir(dir):
+        if re.search(pattern, f):
+            os.remove(os.path.join(dir, f))
+
+class IndexerTestCase(unittest.TestCase):
+
+    def test_build_file_list(self):
+        package_dir = os.path.abspath(os.path.dirname(__file__))
+        filepath = os.path.join(package_dir, 'data/tsindex_data/')
+        indexer = Indexer(filepath, filename_pattern="*.mseed")
+        file_list = indexer.build_file_list()
+        file_list.sort()
+        self.assertEqual(len(file_list), 3)
+        self.assertIn('/CU/2018/001/'
+                      'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
+                      file_list[0])
+        self.assertIn('/IU/2018/001/'
+                      'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                      file_list[1])
+        self.assertIn('/IU/2018/001/'
+                      'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
+                      file_list[2])
+
+        indexer = Indexer("some/bad/path/", filename_pattern="*.mseed")
+        self.assertRaises(OSError, indexer.build_file_list)
+
+    def test_run(self):
+        try:
+            my_uuid = uuid.uuid4().hex
+            fname = 'test_timeseries_{}'.format(my_uuid)
+            package_dir = os.path.abspath(os.path.dirname(__file__))
+            filepath = os.path.join(package_dir, 'data/tsindex_data/')
+            sqlitedb = '{}{}.sqlite'.format(filepath, fname)
+            indexer = Indexer(filepath,
+                              sqlitedb=sqlitedb,
+                              filename_pattern="*.mseed",
+                              parallel=2,
+                              debug=True)
+            indexer.run(relative_paths=True)
+            keys = ['network', 'station', 'location', 'channel',
+                    'quality', 'starttime', 'endtime', 'samplerate',
+                    'filename', 'byteoffset', 'bytes', 'hash',
+                    'timeindex', 'timespans', 'timerates', 'format',
+                    'filemodtime']
+            NamedRow = namedtuple('NamedRow',
+                                  keys)
+            
+            expected_tsindex_data = \
+                [
+                 NamedRow("CU", "TGUH", "00", "BHZ", "M",
+                          "2018-01-01T00:00:00.000000", "2018-01-01T00:01:00.000000", 40.0,
+                  "CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed",
+                  0, 4096, "aaaac5315f84cdd174fd8360002a1e3a",
+                  "1514764800.000000=>0,latest=>1",
+                  "[1514764800.000000:1514764860.000000]", None, None,
+                  "2018-08-24T16:38:01")]
+            db_handler = TSIndexDatabaseHandler(sqlitedb)
+            tsindex_data = db_handler.fetch_index_rows([("CU",'*','*','*', '*', '*')])
+    
+            for i in range(0, len(expected_tsindex_data)):
+                for j in range(0, len(keys)):
+                    self.assertEqual(unicode(getattr(expected_tsindex_data[i],
+                                                     keys[j])),
+                                     unicode(getattr(tsindex_data[i],
+                                                     keys[j]))
+                                    )
+        except Exception as err:
+            raise(err)
+        finally:
+            purge(filepath, '^{}.*$'.format(fname))

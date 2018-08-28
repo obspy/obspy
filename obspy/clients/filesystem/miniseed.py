@@ -172,8 +172,7 @@ class MiniseedDataExtractor(object):
         :param debug: Debug flag.
         """
         if dp_replace:
-            self.dp_replace_re = re.compile(dp_replace[0]) if dp_replace[0] \
-                                                            else None
+            self.dp_replace_re = re.compile(dp_replace[0])
             self.dp_replace_sub = dp_replace[1]
         else:
             self.dp_replace_re = None
@@ -256,8 +255,6 @@ class MiniseedDataExtractor(object):
                 if self.dp_replace_re and self.dp_replace_sub:
                     filename = self.dp_replace_re.sub(self.dp_replace_sub,
                                                       filename)
-                elif self.dp_replace_sub:
-                    filename = self.dp_replace_sub + filename
                 if not os.path.exists(filename):
                     raise Exception("Data file does not exist: %s" % filename)
                 request_rows.append(Request(srcname=srcname,

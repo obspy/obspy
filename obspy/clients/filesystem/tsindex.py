@@ -15,14 +15,29 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import os
+from os.path import relpath
+from glob import glob
 import uuid
+import subprocess
+import copy_reg
+from multiprocessing import Pool
+import types
 from collections import namedtuple
 from sqlalchemy import create_engine
+
 from obspy import UTCDateTime
 from obspy.core.stream import Stream
 from obspy.clients.filesystem.miniseed import MiniseedDataExtractor, \
     NoDataError
-from __builtin__ import True
+
+
+def _pickle_method(m):
+    if m.im_self is None:
+        return getattr, (m.im_class, m.im_func.func_name)
+    else:
+        return getattr, (m.im_self, m.im_func.func_name)
+copy_reg.pickle(types.MethodType, _pickle_method)
 
 
 class Client(object):
@@ -622,6 +637,168 @@ class Client(object):
         return self.request_handler.fetch_index_rows(query_rows)
 
 
+class Indexer(object):
+    """
+    Build an index for miniSEED data using IRIS's mseedindex program.
+    Recursively search for files matching `filename_pattern` starting
+    from `root_path` and run `index_cmd` for each target file found that
+    is not already in the index. After all new files are indexed a summary
+    table is generated with the extents of each time series.
+    """
+
+    def __init__(self, root_path, sqlitedb="timeseries.sqlite",
+                 index_cmd='mseedindex', bulk_params={}, filename_pattern='*',
+                 parallel=5, debug=False):
+        """
+        Initializes the Indexer.
+
+        :type root_path: str
+        :param root_path: Root path to the directory structure to index.
+        :type sqlitedb: str or
+            ~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler
+        :param sqlitedb: Path to sqlite tsindex database or a
+            TSIndexDatabaseHandler object. A database will be created
+            if one does not already exists at the specified path.
+        :type index_cmd: str
+        :param index_cmd: Command to be run for each target file found that
+            is not already in the index
+        :type bulk_params: dict
+        :param bulk_params: Dictionary of options to pass to index_cmd.
+        :type filename_pattern: str        
+        :param filename_pattern: 
+        :type parallel: int
+        :param parallel: Max number of index_cmd instances to run in parallel.
+            By default a max of 5 parallel process are run.
+        :type debug: bool
+        :param debug: Debug flag.
+        """
+        self.root_path = root_path
+        self.index_cmd = index_cmd
+        self.bulk_params = bulk_params
+        self.filename_pattern = filename_pattern
+        self.parallel = parallel
+        self.sqlitedb = sqlitedb
+        self.debug = debug
+
+        if isinstance(self.sqlitedb, (str, native_str)):
+            self.request_handler = TSIndexDatabaseHandler(self.sqlitedb,
+                                                          debug=debug)
+        elif isinstance(self.sqlitedb, TSIndexDatabaseHandler):
+            self.request_handler = self.sqlitedb
+        else:
+            raise ValueError("sqlitedb must be a string or "
+                             "TSIndexDatabaseHandler object.")
+
+    def run(self, build_summary=True, relative_paths=False, reindex=False):
+        """
+        Execute the file discovery and indexing.
+
+        :type build_summary: bool
+        :param build_summary: By default, a summary table is (re)generated
+            containing the extents for each time series in the index. This can
+            be turned off by setting `build_summary` to False.
+        :type relative_paths: bool
+        :param relative_paths: By default, the absolute path to each file is
+            stored in the index. If `relative_paths` is True, the file paths
+            will be relative to the `root_path`.
+        type reindex: bool
+        :param reindex: By default, files are not indexed that are already in
+            the index and have not been modified.  The `reindex` option can be
+            set to True to force a re-indexing of all files regardless.
+        """
+        self.is_mseedindex_installed()
+        self.request_handler._init_database_for_indexing()
+        file_paths = self.build_file_list(relative_paths)
+
+        # always keep the original file paths as specified. absolute and
+        # relative paths are determined in the build_file_list method
+        self.bulk_params["-kp"] = None
+        if self.bulk_params.get("-table") is None:
+            # set db table to write to
+            self.bulk_params["-table"] = self.request_handler.tsindex_table
+        if self.bulk_params.get("-sqlite") is None:
+            # set path to sqlite database
+            self.bulk_params['-sqlite'] = self.sqlitedb
+
+        # run mseedindex on each file in parallel
+        pool = Pool(processes=self.parallel)     
+        for file_name in file_paths:
+            if self.debug:
+                print("Indexing file '{}'.".format(file_name))
+            pool.apply_async(Indexer._run_index_command,
+                             args=(self.index_cmd,
+                                   file_name,
+                                   self.bulk_params))
+        pool.close()
+        pool.join()
+
+        if build_summary is True:
+            self.request_handler.build_tsindex_summary()
+
+    def build_file_list(self, relative_paths=False, reindex=False):
+        """
+        Create a list of absolute paths to all files under root_path that match
+        the filename_pattern.
+        
+        :type relative_paths: bool
+        :param relative_paths: By default, the absolute path to each file is
+            stored in the index. If `relative_paths` is True, the file paths
+            will be relative to the `root_path`.
+        """
+        file_list = [y for x in os.walk(self.root_path)
+                    for y in glob(os.path.join(x[0], self.filename_pattern))]
+        result = []
+        if relative_paths is True:
+            for abs_path in file_list:
+                result.append(relpath(abs_path, self.root_path))
+        else:
+            result = file_list
+        if not result:
+            raise OSError("No files matching filename pattern '{}' "
+                          "were found under root path '{}'."
+                          .format(self.filename_pattern, self.root_path))
+        return result
+
+    def is_mseedindex_installed(self):
+        """
+        Checks if mseedindex is installed.
+        """
+        try:
+            subprocess.call(["mseedindex", "-V"])
+        except OSError:
+            raise OSError(
+                    "Required program mseedindex is not installed. Install "
+                    "mseedindex at https://github.com/iris-edu/mseedindex/.")
+
+    @classmethod
+    def _run_index_command(cls, index_cmd, file_name, bulk_params):
+        """
+        Execute a command to perform indexing.
+        
+        :type index_cmd: str
+        :param index_cmd: Name of indexing command to execute. Defaults to
+            `mseedindex`. 
+        :type file_name: str
+        :param file_name: Name of file to index.
+        :type bulk_params: dict
+        :param bulk_params: Dictionary of options to pass to index_cmd.
+        """
+        try:
+            cmd = [index_cmd]
+            for option, value in bulk_params.iteritems():
+                params = [option, value]
+                cmd.extend(params)
+            cmd.append(file_name)
+            # boolean options have a value of None
+            cmd = [c for c in cmd if c is not None]
+            proc = subprocess.Popen(cmd)
+            proc.wait()
+        except OSError as err:
+            msg = ("Error running command `{}` - {}"
+                   .format(index_cmd, err))
+            raise OSError(msg)
+
+
 class TSIndexDatabaseHandler(object):
 
     def __init__(self, sqlitedb, tsindex_table="tsindex",
@@ -684,11 +861,52 @@ class TSIndexDatabaseHandler(object):
             endtime = endtime.isoformat()
         return (network, station, location, channel, starttime, endtime)
 
-    def fetch_index_rows(self, query_rows, bulk_params={}):
+    def _init_database_for_indexing(self):
+        """
+        Setup a sqlite3 database for indexing.
+        """
+        try:
+            if self.debug:
+                print('Setting up sqlite3 database at %s' % self.sqlitedb)
+            # setup the sqlite database
+            connection = self.engine.connect()
+            # https://www.sqlite.org/foreignkeys.html
+            connection.execute('PRAGMA foreign_keys = ON')
+            # as used by mseedindex
+            connection.execute('PRAGMA case_sensitive_like = ON')
+            # enable Write-Ahead Log for better concurrency support
+            connection.execute('PRAGMA journal_mode=WAL')
+            connection.close()
+        except Exception as e:
+            raise OSError("Failed to setup sqlite3 database for indexing.")
+
+    def build_tsindex_summary(self):
+        connection = self.engine.connect()
+
+        # test if tsindex table exists
+        if not self.engine.dialect.has_table(self.engine, 'tsindex'):
+            raise ValueError("No tsindex table '{}' exists in database '{}'."
+                             .format(self.tsindex_table, self.sqlitedb))
+
+        connection.execute("DROP TABLE IF EXISTS {};"
+                           .format(self.tsindex_summary_table))
+        connection.execute(
+            "CREATE TABLE {} AS "
+            "SELECT network, station, location, channel, "
+            "  min(starttime) AS earliest, max(endtime) AS latest, "
+            "  datetime('now') as updt "
+            "FROM {} "
+            "GROUP BY 1,2,3,4;"
+            .format(self.tsindex_summary_table, self.tsindex_table)
+        )
+        connection.close()
+
+    def fetch_index_rows(self, query_rows=[], bulk_params={}):
         '''
         Fetch index rows matching specified request
         :type query_rows: list
-        :param: List of tuples containing (net,sta,loc,chan,start,end)
+        :param: List of tuples containing (net,sta,loc,chan,start,end). By
+            default everything is selected.
         :type bulk_params: dict
         :param: Dict of bulk parameters (e.g. quality)
             Request elements may contain '?' and '*' wildcards.  The start and
@@ -699,6 +917,11 @@ class TSIndexDatabaseHandler(object):
             timespans, timerates, format, filemodtime, updated, scanned,
             requeststart, requestend)
         '''
+        
+        # by default select everything.
+        if query_rows == []:
+            query_rows = [('*','*','*','*', '*', '*')]
+        
         my_uuid = uuid.uuid4().hex
         request_table = "request_%s" % my_uuid
         try:
@@ -767,7 +990,7 @@ class TSIndexDatabaseHandler(object):
                    "ts.channel,ts.quality,ts.starttime,ts.endtime,"
                    "ts.samplerate,ts.filename,ts.byteoffset,ts.bytes,ts.hash, "
                    "ts.timeindex,ts.timespans,ts.timerates,ts.format,"
-                   "ts.filemodtime,ts.updated,ts.scanned,""r.starttime,"
+                   "ts.filemodtime,ts.updated,ts.scanned,r.starttime,"
                    "r.endtime "
                    "FROM {0} ts, {1} r "
                    "WHERE "
