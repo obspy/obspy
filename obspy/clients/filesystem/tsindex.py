@@ -107,10 +107,8 @@ class Client(object):
             details. If set to ``None`` (or ``False``) no merge operation at
             all will be performed.
         """
-        query_row = TSIndexDatabaseHandler.create_query_row(network, station,
-                                                            location, channel,
-                                                            starttime, endtime)
-        query_rows = [query_row]
+        query_rows = [(network, station, location,
+                       channel, starttime, endtime)]
         return self._get_waveforms(query_rows, merge)
 
     def get_waveforms_bulk(self, query_rows, merge=-1):
@@ -131,13 +129,7 @@ class Client(object):
             details. If set to ``None`` (or ``False``) no merge operation at
             all will be performed.
         """
-        cleaned_query_rows = []
-        # perform any necessary cleanup on query rows
-        for query_row in query_rows:
-            cleaned_query_row = TSIndexDatabaseHandler.create_query_row(
-                                                            *query_row)
-            cleaned_query_rows.append(cleaned_query_row)
-        return self._get_waveforms(cleaned_query_rows, merge)
+        return self._get_waveforms(query_rows, merge)
 
     def _get_waveforms(self, query_rows, merge=-1):
         """
@@ -599,10 +591,8 @@ class Client(object):
         :param starttime: Start of requested time window.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
-        query_row = TSIndexDatabaseHandler.create_query_row(network, station,
-                                                            location, channel,
-                                                            starttime, endtime)
-        query_rows = [query_row]
+        query_rows = [(network, station, location,
+                       channel, starttime, endtime)]
         return self.request_handler.fetch_summary_rows(query_rows)
 
     def get_tsindex_rows(self, network, station, location, channel,
@@ -630,10 +620,8 @@ class Client(object):
         :param starttime: Start of requested time window.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
-        query_row = TSIndexDatabaseHandler.create_query_row(network, station,
-                                                            location, channel,
-                                                            starttime, endtime)
-        query_rows = [query_row]
+        query_rows = [(network, station, location,
+                       channel, starttime, endtime)]
         return self.request_handler.fetch_index_rows(query_rows)
 
 
@@ -727,6 +715,7 @@ class Indexer(object):
                 print("Indexing file '{}'.".format(file_name))
             pool.apply_async(Indexer._run_index_command,
                              args=(self.index_cmd,
+                                   self.root_path,
                                    file_name,
                                    self.bulk_params))
         pool.close()
@@ -771,7 +760,7 @@ class Indexer(object):
                     "mseedindex at https://github.com/iris-edu/mseedindex/.")
 
     @classmethod
-    def _run_index_command(cls, index_cmd, file_name, bulk_params):
+    def _run_index_command(cls, index_cmd, root_path, file_name, bulk_params):
         """
         Execute a command to perform indexing.
         
@@ -791,7 +780,7 @@ class Indexer(object):
             cmd.append(file_name)
             # boolean options have a value of None
             cmd = [c for c in cmd if c is not None]
-            proc = subprocess.Popen(cmd)
+            proc = subprocess.Popen(cmd, cwd=root_path)
             proc.wait()
         except OSError as err:
             msg = ("Error running command `{}` - {}"
@@ -827,8 +816,7 @@ class TSIndexDatabaseHandler(object):
                                     convert_unicode=True)
         self.debug = debug
 
-    @classmethod
-    def create_query_row(cls, network, station, location,
+    def _create_query_row(self, network, station, location,
                          channel, starttime, endtime):
         """
         Returns a tuple (network, station, location, channel, starttime,
@@ -860,6 +848,43 @@ class TSIndexDatabaseHandler(object):
         if isinstance(endtime, UTCDateTime):
             endtime = endtime.isoformat()
         return (network, station, location, channel, starttime, endtime)
+
+    def clean_query_rows(self, query_rows):
+        """
+        Reformats query rows to match what the database expects
+        
+        :type query_rows: list
+        :param query_rows: List of tuples containing (net,sta,loc,chan,start,
+            end).
+        """
+        if query_rows == []:
+            # if an empty list is supplied then select everything
+            select_all_query = self._create_query_row('*', '*', '*',
+                                                      '*', '*', '*')
+            query_rows = [select_all_query]
+        else:
+            # perform some formatting on the query rows to ensure that they
+            # query the database properly.
+            for i, qr in enumerate(query_rows):
+                query_rows[i] = self._create_query_row(*qr)
+        
+        flat_query_rows = []
+        # flatten query rows
+        for req in query_rows:
+            networks = req[0].replace(" ", "").split(",")
+            stations = req[1].replace(" ", "").split(",")
+            locations = req[2].replace(" ", "").split(",")
+            channels = req[3].replace(" ", "").split(",")
+            starttime = req[4]
+            endtime = req[5]
+            for net in networks:
+                for sta in stations:
+                    for loc in locations:
+                        for cha in channels:
+                            qr = self._create_query_row(net, sta, loc, cha,
+                                                        starttime, endtime)
+                            flat_query_rows.append(qr)
+        return flat_query_rows
 
     def _init_database_for_indexing(self):
         """
@@ -899,16 +924,16 @@ class TSIndexDatabaseHandler(object):
             "GROUP BY 1,2,3,4;"
             .format(self.tsindex_summary_table, self.tsindex_table)
         )
-        connection.close()
+        connection.close()     
 
     def fetch_index_rows(self, query_rows=[], bulk_params={}):
         '''
         Fetch index rows matching specified request
         :type query_rows: list
-        :param: List of tuples containing (net,sta,loc,chan,start,end). By
-            default everything is selected.
+        :param query_rows: List of tuples containing (net,sta,loc,chan,start,
+            end). By default everything is selected.
         :type bulk_params: dict
-        :param: Dict of bulk parameters (e.g. quality)
+        :param bulk_params: Dict of bulk parameters (e.g. quality)
             Request elements may contain '?' and '*' wildcards.  The start and
             end elements can be a single '*' if not a date-time string.
             Return rows as list of named tuples containing:
@@ -917,11 +942,8 @@ class TSIndexDatabaseHandler(object):
             timespans, timerates, format, filemodtime, updated, scanned,
             requeststart, requestend)
         '''
-        
-        # by default select everything.
-        if query_rows == []:
-            query_rows = [('*','*','*','*', '*', '*')]
-        
+        query_rows = self.clean_query_rows(query_rows)
+
         my_uuid = uuid.uuid4().hex
         request_table = "request_%s" % my_uuid
         try:
@@ -1002,7 +1024,8 @@ class TSIndexDatabaseHandler(object):
                    "  AND ts.starttime >= datetime(r.starttime,'-10 days') "
                    "  AND ts.endtime >= r.starttime "
                    .format(self.tsindex_table,
-                           request_table, "GLOB" if wildcards else "="))
+                           request_table,
+                           "GLOB" if wildcards else "="))
 
             # Add quality identifer criteria
             if 'quality' in bulk_params and \
@@ -1052,6 +1075,8 @@ class TSIndexDatabaseHandler(object):
             Request elements may contain '?' and '*' wildcards. The start and
             end elements can be a single '*' if not a date-time string.
         '''
+        query_rows = self.clean_query_rows(query_rows)
+
         summary_rows = []
         my_uuid = uuid.uuid4().hex
         request_table = "request_%s" % my_uuid

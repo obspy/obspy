@@ -50,23 +50,25 @@ class TSIndexTestCase(unittest.TestCase):
         expected_stream1 = \
             obspy.read(
                     filepath +
-                    'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                    'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
                     starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                     endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream2 = \
             obspy.read(
                     filepath +
-                    'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed',
+                    'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
                     starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                     endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream3 = \
             obspy.read(
                     filepath +
-                    'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
+                    'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed',
                     starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                     endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream = \
             expected_stream1 + expected_stream2 + expected_stream3
+        returned_stream.sort()
+        expected_stream.sort()
         for t1, t2 in zip(returned_stream, expected_stream):
             self.assertListEqual(list(t1.data), list(t2.data))
 
@@ -478,8 +480,7 @@ class IndexerTestCase(unittest.TestCase):
             indexer = Indexer(filepath,
                               sqlitedb=sqlitedb,
                               filename_pattern="*.mseed",
-                              parallel=2,
-                              debug=True)
+                              parallel=2)
             indexer.run(relative_paths=True)
             keys = ['network', 'station', 'location', 'channel',
                     'quality', 'starttime', 'endtime', 'samplerate',
@@ -491,16 +492,29 @@ class IndexerTestCase(unittest.TestCase):
             
             expected_tsindex_data = \
                 [
-                 NamedRow("CU", "TGUH", "00", "BHZ", "M",
-                          "2018-01-01T00:00:00.000000", "2018-01-01T00:01:00.000000", 40.0,
-                  "CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed",
-                  0, 4096, "aaaac5315f84cdd174fd8360002a1e3a",
-                  "1514764800.000000=>0,latest=>1",
-                  "[1514764800.000000:1514764860.000000]", None, None,
-                  "2018-08-24T16:38:01")]
+                 NamedRow(
+                    "CU", "TGUH", "00", "BHZ", "M",
+                    "2018-01-01T00:00:00.000000",
+                    "2018-01-01T00:01:00.000000", 40.0,
+                    "CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed",
+                    0, 4096, "aaaac5315f84cdd174fd8360002a1e3a",
+                    "1514764800.000000=>0,latest=>1",
+                    "[1514764800.000000:1514764860.000000]", None, None,
+                    "2018-08-24T16:38:01"),
+                 NamedRow(
+                    "IU", "ANMO", "10", "BHZ", "M" ,
+                    "2018-01-01T00:00:00.019500",
+                    "2018-01-01T00:00:59.994536", 40.0,
+                    "IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed",
+                    0, 2560, "36a771ca1dc648c505873c164d8b26f2",
+                    "1514764800.019500=>0,latest=>1",
+                    "[1514764800.019500:1514764859.994536]", None, None,
+                    "2018-08-24T16:31:39")]
             db_handler = TSIndexDatabaseHandler(sqlitedb)
-            tsindex_data = db_handler.fetch_index_rows([("CU",'*','*','*', '*', '*')])
-    
+            tsindex_data = db_handler.fetch_index_rows([("I*,C*",'T*,A*',
+                                                         '0?,1?', '*', '*',
+                                                         '*')])
+
             for i in range(0, len(expected_tsindex_data)):
                 for j in range(0, len(keys)):
                     self.assertEqual(unicode(getattr(expected_tsindex_data[i],
@@ -508,6 +522,7 @@ class IndexerTestCase(unittest.TestCase):
                                      unicode(getattr(tsindex_data[i],
                                                      keys[j]))
                                     )
+            self.assertEqual(len(tsindex_data), len(expected_tsindex_data))
         except Exception as err:
             raise(err)
         finally:
