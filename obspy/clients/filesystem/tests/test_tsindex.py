@@ -18,7 +18,7 @@ import os
 import re
 import itertools
 
-class TSIndexTestCase(unittest.TestCase):
+class ClientTestCase(unittest.TestCase):
 
     def test_get_waveforms(self):
         package_dir = os.path.abspath(os.path.dirname(__file__))
@@ -29,24 +29,23 @@ class TSIndexTestCase(unittest.TestCase):
         client = Client(db_path,
                         datapath_replace=("^",
                                           filepath))
-        returned_stream = client.get_waveforms(
-                                  "IU", "ANMO", "10", "BHZ",
-                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
         expected_stream = \
             obspy.read(
                     filepath +
                     'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
                     starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
                     endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
+        returned_stream = client.get_waveforms(
+                                  "IU", "ANMO", "10", "BHZ",
+                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
+        returned_stream.sort()
+        expected_stream.sort()
+
         for t1, t2 in zip(returned_stream, expected_stream):
             self.assertListEqual(list(t1.data), list(t2.data))
 
-        # wildcard request spanning mutliple files
-        returned_stream = client.get_waveforms(
-                                  "*", "*", "00,10", "BHZ",
-                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
+        # wildcard request spanning multiple files
         expected_stream1 = \
             obspy.read(
                     filepath +
@@ -67,12 +66,18 @@ class TSIndexTestCase(unittest.TestCase):
                     endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         expected_stream = \
             expected_stream1 + expected_stream2 + expected_stream3
+        returned_stream = client.get_waveforms(
+                                  "*", "*", "10,00", "BHZ",
+                                  starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                                  endtime=UTCDateTime(2018, 1, 1, 0, 0, 3, 1))
         returned_stream.sort()
         expected_stream.sort()
+
+        self.assertEqual(len(returned_stream), len(expected_stream))
         for t1, t2 in zip(returned_stream, expected_stream):
             self.assertListEqual(list(t1.data), list(t2.data))
 
-        # no data
+        # request resulting in no data
         returned_stream = client.get_waveforms(
                                   "XX", "XXX", "XX", "XXX",
                                   starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
@@ -88,32 +93,53 @@ class TSIndexTestCase(unittest.TestCase):
         client = Client(db_path,
                         datapath_replace=("^",
                                           filepath))
-        bulk_request = [
-                        ("IU", "ANMO", "10", "BHZ",
-                         UTCDateTime(2018, 1, 1, 0, 0, 0),
-                         UTCDateTime(2018, 1, 1, 0, 0, 5)),
-                        ("CU", "TGUH", "00", "BHZ",
-                         UTCDateTime(2018, 1, 1, 0, 0, 1),
-                         UTCDateTime(2018, 1, 1, 0, 0, 7)),
-                        ]
-        returned_stream = client.get_waveforms_bulk(bulk_request)
+        
         expected_stream1 = \
-            obspy.read(
-                    filepath +
-                    'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
-                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
-                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
-        expected_stream2 = \
             obspy.read(
                     filepath +
                     'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
                     starttime=UTCDateTime(2018, 1, 1, 0, 0, 1),
                     endtime=UTCDateTime(2018, 1, 1, 0, 0, 7))
+        expected_stream2 = \
+            obspy.read(
+                    filepath +
+                    'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                    starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
+                    endtime=UTCDateTime(2018, 1, 1, 0, 0, 5))
         expected_stream = expected_stream1 + expected_stream2
+        expected_stream.sort()
+
+        # assert equal
+        bulk_request = [
+                        ("CU", "TGUH", "00", "BHZ",
+                         UTCDateTime(2018, 1, 1, 0, 0, 1),
+                         UTCDateTime(2018, 1, 1, 0, 0, 7)),
+                        ("IU", "ANMO", "10", "BHZ",
+                         UTCDateTime(2018, 1, 1, 0, 0, 0),
+                         UTCDateTime(2018, 1, 1, 0, 0, 5)),
+                        ]
+        returned_stream = client.get_waveforms_bulk(bulk_request)
+        returned_stream.sort()
+
+        self.assertEqual(len(returned_stream), len(expected_stream))
         for t1, t2 in zip(returned_stream, expected_stream):
             self.assertListEqual(list(t1.data), list(t2.data))
 
-        # no data
+        # assert not equal with a non-equivalent request
+        bulk_request = [
+                        ("IU", "ANMO", "10", "BHZ",
+                         UTCDateTime(2018, 1, 1, 0, 0, 0),
+                         UTCDateTime(2018, 1, 1, 0, 0, 5)),
+                        ]
+        returned_stream = client.get_waveforms_bulk(bulk_request)
+        returned_stream.sort()
+        self.assertNotEqual(len(returned_stream), len(expected_stream))
+        for t1, t2 in zip(returned_stream, expected_stream):
+            self.assertRaises(AssertionError,
+                              self.assertListEqual,
+                              list(t1.data), list(t2.data))
+
+        # request resulting in no data
         returned_stream = client.get_waveforms(
                                   "XX", "XXX", "XX", "XXX",
                                   starttime=UTCDateTime(2018, 1, 1, 0, 0, 0),
