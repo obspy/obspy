@@ -25,6 +25,7 @@ from multiprocessing import Pool
 import types
 from collections import namedtuple
 from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 
 from obspy import UTCDateTime
 from obspy.core.stream import Stream
@@ -152,7 +153,7 @@ class Client(object):
             all will be performed.
         """
         # Get the corresponding index DB entries
-        index_rows = self.request_handler.fetch_index_rows(query_rows)
+        index_rows = self.request_handler._fetch_index_rows(query_rows)
 
         total_bytes = 0
         src_bytes = {}
@@ -593,7 +594,7 @@ class Client(object):
         """
         query_rows = [(network, station, location,
                        channel, starttime, endtime)]
-        return self.request_handler.fetch_summary_rows(query_rows)
+        return self.request_handler._fetch_summary_rows(query_rows)
 
     def get_tsindex_rows(self, network, station, location, channel,
                          starttime, endtime):
@@ -622,7 +623,7 @@ class Client(object):
         """
         query_rows = [(network, station, location,
                        channel, starttime, endtime)]
-        return self.request_handler.fetch_index_rows(query_rows)
+        return self.request_handler._fetch_index_rows(query_rows)
 
 
 class Indexer(object):
@@ -736,6 +737,7 @@ class Indexer(object):
         """
         file_list = [y for x in os.walk(self.root_path)
                     for y in glob(os.path.join(x[0], self.filename_pattern))]
+
         result = []
         if relative_paths is True:
             for abs_path in file_list:
@@ -812,121 +814,34 @@ class TSIndexDatabaseHandler(object):
         self.tsindex_summary_table = tsindex_summary_table
 
         self.db_path = "sqlite:///{}".format(sqlitedb)
-        self.engine = create_engine(self.db_path, encoding=native_str('utf-8'),
-                                    convert_unicode=True)
+        self.engine = create_engine(self.db_path)
         self.debug = debug
-
-    def _create_query_row(self, network, station, location,
-                         channel, starttime, endtime):
-        """
-        Returns a tuple (network, station, location, channel, starttime,
-        endtime) with elements that have been formatted to match database
-        entries. This allows for accurate comparisons when querying the
-        database.
-
-        :type network: str
-        :param network: Network code of requested data (e.g. "IU").
-            Wildcards '*' and '?' are supported.
-        :type station: str
-        :param station: Station code of requested data (e.g. "ANMO").
-            Wildcards '*' and '?' are supported.
-        :type location: str
-        :param location: Location code of requested data (e.g. "").
-            Wildcards '*' and '?' are supported.
-        :type channel: str
-        :param channel: Channel code of requested data (e.g. "HHZ").
-            Wildcards '*' and '?' are supported.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Start of requested time window.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        """
-        # Replace "--" location ID request alias with true empty value
-        if location == "--":
-            location = ""
-        if isinstance(starttime, UTCDateTime):
-            starttime = starttime.isoformat()
-        if isinstance(endtime, UTCDateTime):
-            endtime = endtime.isoformat()
-        return (network, station, location, channel, starttime, endtime)
-
-    def clean_query_rows(self, query_rows):
-        """
-        Reformats query rows to match what the database expects
         
-        :type query_rows: list
-        :param query_rows: List of tuples containing (net,sta,loc,chan,start,
-            end).
-        """
-        if query_rows == []:
-            # if an empty list is supplied then select everything
-            select_all_query = self._create_query_row('*', '*', '*',
-                                                      '*', '*', '*')
-            query_rows = [select_all_query]
-        else:
-            # perform some formatting on the query rows to ensure that they
-            # query the database properly.
-            for i, qr in enumerate(query_rows):
-                query_rows[i] = self._create_query_row(*qr)
-        
-        flat_query_rows = []
-        # flatten query rows
-        for req in query_rows:
-            networks = req[0].replace(" ", "").split(",")
-            stations = req[1].replace(" ", "").split(",")
-            locations = req[2].replace(" ", "").split(",")
-            channels = req[3].replace(" ", "").split(",")
-            starttime = req[4]
-            endtime = req[5]
-            for net in networks:
-                for sta in stations:
-                    for loc in locations:
-                        for cha in channels:
-                            qr = self._create_query_row(net, sta, loc, cha,
-                                                        starttime, endtime)
-                            flat_query_rows.append(qr)
-        return flat_query_rows
-
-    def _init_database_for_indexing(self):
-        """
-        Setup a sqlite3 database for indexing.
-        """
-        try:
-            if self.debug:
-                print('Setting up sqlite3 database at %s' % self.sqlitedb)
-            # setup the sqlite database
+    def build_tsindex_summary(self, connection=None, temporary=False):
+        if connection is None:
             connection = self.engine.connect()
-            # https://www.sqlite.org/foreignkeys.html
-            connection.execute('PRAGMA foreign_keys = ON')
-            # as used by mseedindex
-            connection.execute('PRAGMA case_sensitive_like = ON')
-            # enable Write-Ahead Log for better concurrency support
-            connection.execute('PRAGMA journal_mode=WAL')
-            connection.close()
-        except Exception as e:
-            raise OSError("Failed to setup sqlite3 database for indexing.")
-
-    def build_tsindex_summary(self):
-        connection = self.engine.connect()
-
         # test if tsindex table exists
         if not self.engine.dialect.has_table(self.engine, 'tsindex'):
             raise ValueError("No tsindex table '{}' exists in database '{}'."
                              .format(self.tsindex_table, self.sqlitedb))
-
-        connection.execute("DROP TABLE IF EXISTS {};"
-                           .format(self.tsindex_summary_table))
+        if temporary is False:
+            connection.execute("DROP TABLE IF EXISTS {};"
+                               .format(self.tsindex_summary_table))
         connection.execute(
-            "CREATE TABLE {} AS "
+            "CREATE {0} TABLE {1} AS "
             "SELECT network, station, location, channel, "
             "  min(starttime) AS earliest, max(endtime) AS latest, "
             "  datetime('now') as updt "
-            "FROM {} "
+            "FROM {2} "
             "GROUP BY 1,2,3,4;"
-            .format(self.tsindex_summary_table, self.tsindex_table)
+            .format("TEMPORARY" if temporary is True else "",
+                    self.tsindex_summary_table,
+                    self.tsindex_table)
         )
-        connection.close()     
+        if connection is None:
+            connection.close()
 
-    def fetch_index_rows(self, query_rows=[], bulk_params={}):
+    def _fetch_index_rows(self, query_rows=[], bulk_params={}):
         '''
         Fetch index rows matching specified request
         :type query_rows: list
@@ -942,7 +857,7 @@ class TSIndexDatabaseHandler(object):
             timespans, timerates, format, filemodtime, updated, scanned,
             requeststart, requestend)
         '''
-        query_rows = self.clean_query_rows(query_rows)
+        query_rows = self._clean_query_rows(query_rows)
 
         my_uuid = uuid.uuid4().hex
         request_table = "request_%s" % my_uuid
@@ -995,7 +910,7 @@ class TSIndexDatabaseHandler(object):
             # a) resolve wildcards, allows use of '=' operator and table index
             # b) reduce index table search to channels that are known included
             if summary_present:
-                self.resolve_request(connection, request_table)
+                self._resolve_request(connection, request_table)
                 wildcards = False
             # Replace wildcarded starttime and endtime with extreme date-times
             else:
@@ -1060,12 +975,14 @@ class TSIndexDatabaseHandler(object):
             print("Fetched %d index rows" % len(index_rows))
 
         connection.execute("DROP TABLE {0}".format(request_table))
+        connection.close()
 
         return index_rows
 
-    def fetch_summary_rows(self, query_rows):
+    def _fetch_summary_rows(self, query_rows):
         '''
-        Fetch summary rows matching specified request.
+        Fetch summary rows matching specified request. A temporary tsindex
+        summary table is created if one does not exists
 
         Returns rows as list of named tuples containing:
         (network,station,location,channel,earliest,latest,updated)
@@ -1075,17 +992,13 @@ class TSIndexDatabaseHandler(object):
             Request elements may contain '?' and '*' wildcards. The start and
             end elements can be a single '*' if not a date-time string.
         '''
-        query_rows = self.clean_query_rows(query_rows)
-
-        summary_rows = []
-        my_uuid = uuid.uuid4().hex
-        request_table = "request_%s" % my_uuid
+        query_rows = self._clean_query_rows(query_rows)
 
         try:
             connection = self.engine.connect()
         except Exception as err:
             raise Exception(err)
-
+        
         if self.debug is True:
             print("Opening SQLite database for "
                   "summary rows: %s" % self.sqlitedb)
@@ -1095,6 +1008,21 @@ class TSIndexDatabaseHandler(object):
             connection.execute("PRAGMA temp_store=MEMORY")
         except Exception as err:
             raise ValueError(str(err))
+        
+        result = connection.execute("SELECT count(*) FROM sqlite_master "
+                                    "WHERE type='table' and name='{0}'"
+                                    .format(self.tsindex_summary_table))
+
+        summary_present = result.fetchone()[0]
+        if not summary_present:
+            if self.debug is True:
+                print("Building temporary tsindex summary table.")
+            self.build_tsindex_summary(connection=connection,
+                                       temporary=True)
+
+        summary_rows = []
+        my_uuid = uuid.uuid4().hex
+        request_table = "request_%s" % my_uuid
 
         # Create temporary table and load request
         try:
@@ -1111,11 +1039,19 @@ class TSIndexDatabaseHandler(object):
         except Exception as err:
             raise ValueError(str(err))
 
-        result = connection.execute("SELECT count(*) "
-                                    "FROM sqlite_master WHERE type='table' "
-                                    "and name='{0}'"
-                                    .format(self.tsindex_summary_table))
-        summary_present = result.fetchone()[0]
+        result_perm = connection.execute("SELECT count(*) "
+                                         "FROM sqlite_master "
+                                         "WHERE type='table' "
+                                         "and name='{0}'"
+                                         .format(self.tsindex_summary_table))
+        result_temp = connection.execute("SELECT count(*) "
+                                         "FROM sqlite_temp_master "
+                                         "WHERE type='table' "
+                                         "and name='{0}'"
+                                         .format(self.tsindex_summary_table))
+        
+        summary_present = result_perm.fetchone()[0] or \
+                                result_temp.fetchone()[0]
 
         if summary_present:
             # Select summary rows by joining with summary table
@@ -1127,7 +1063,9 @@ class TSIndexDatabaseHandler(object):
                        "  (r.network='*' OR s.network GLOB r.network) "
                        "  AND (r.station='*' OR s.station GLOB r.station) "
                        "  AND (r.location='*' OR s.location GLOB r.location) "
-                       "  AND (r.channel='*' OR s.channel GLOB r.channel) ".
+                       "  AND (r.channel='*' OR s.channel GLOB r.channel) "
+                       "ORDER BY s.network, s.station, s.location, "
+                       "s.channel, s.earliest, s.latest".
                        format(self.tsindex_summary_table, request_table))
                 result = connection.execute(sql)
 
@@ -1140,10 +1078,7 @@ class TSIndexDatabaseHandler(object):
                                    'earliest', 'latest', 'updated'])
 
             summary_rows = []
-            while True:
-                row = result.fetchone()
-                if row is None:
-                    break
+            for row in result:
                 summary_rows.append(NamedRow(*row))
 
             # Sort results in application (ORDER BY in SQL triggers
@@ -1154,10 +1089,12 @@ class TSIndexDatabaseHandler(object):
                 print("Fetched %d summary rows" % len(summary_rows))
 
             connection.execute("DROP TABLE {0}".format(request_table))
+        
+        connection.close()
 
         return summary_rows
 
-    def resolve_request(self, connection, request_table):
+    def _resolve_request(self, connection, request_table):
         '''
         Resolve request table by expanding wildcards using summary.
 
@@ -1220,3 +1157,92 @@ class TSIndexDatabaseHandler(object):
         connection.execute("DROP TABLE {0}".format(request_table_orig))
 
         return resolvedrows
+
+    def _create_query_row(self, network, station, location,
+                         channel, starttime, endtime):
+        """
+        Returns a tuple (network, station, location, channel, starttime,
+        endtime) with elements that have been formatted to match database
+        entries. This allows for accurate comparisons when querying the
+        database.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+            Wildcards '*' and '?' are supported.
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+            Wildcards '*' and '?' are supported.
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+            Wildcards '*' and '?' are supported.
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+            Wildcards '*' and '?' are supported.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start of requested time window.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        """
+        # Replace "--" location ID request alias with true empty value
+        if location == "--":
+            location = ""
+        if isinstance(starttime, UTCDateTime):
+            starttime = starttime.isoformat()
+        if isinstance(endtime, UTCDateTime):
+            endtime = endtime.isoformat()
+        return (network, station, location, channel, starttime, endtime)
+
+    def _clean_query_rows(self, query_rows):
+        """
+        Reformats query rows to match what the database expects
+        
+        :type query_rows: list
+        :param query_rows: List of tuples containing (net,sta,loc,chan,start,
+            end).
+        """
+        if query_rows == []:
+            # if an empty list is supplied then select everything
+            select_all_query = self._create_query_row('*', '*', '*',
+                                                      '*', '*', '*')
+            query_rows = [select_all_query]
+        else:
+            # perform some formatting on the query rows to ensure that they
+            # query the database properly.
+            for i, qr in enumerate(query_rows):
+                query_rows[i] = self._create_query_row(*qr)
+        
+        flat_query_rows = []
+        # flatten query rows
+        for req in query_rows:
+            networks = req[0].replace(" ", "").split(",")
+            stations = req[1].replace(" ", "").split(",")
+            locations = req[2].replace(" ", "").split(",")
+            channels = req[3].replace(" ", "").split(",")
+            starttime = req[4]
+            endtime = req[5]
+            for net in networks:
+                for sta in stations:
+                    for loc in locations:
+                        for cha in channels:
+                            qr = self._create_query_row(net, sta, loc, cha,
+                                                        starttime, endtime)
+                            flat_query_rows.append(qr)
+        return flat_query_rows
+
+    def _init_database_for_indexing(self):
+        """
+        Setup a sqlite3 database for indexing.
+        """
+        try:
+            if self.debug:
+                print('Setting up sqlite3 database at %s' % self.sqlitedb)
+            # setup the sqlite database
+            connection = self.engine.connect()
+            # https://www.sqlite.org/foreignkeys.html
+            connection.execute('PRAGMA foreign_keys = ON')
+            # as used by mseedindex
+            connection.execute('PRAGMA case_sensitive_like = ON')
+            # enable Write-Ahead Log for better concurrency support
+            connection.execute('PRAGMA journal_mode=WAL')
+            connection.close()
+        except Exception as e:
+            raise OSError("Failed to setup sqlite3 database for indexing.")

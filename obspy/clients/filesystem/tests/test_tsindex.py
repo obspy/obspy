@@ -18,6 +18,7 @@ import os
 import re
 import itertools
 
+
 class ClientTestCase(unittest.TestCase):
 
     def test_get_waveforms(self):
@@ -93,7 +94,7 @@ class ClientTestCase(unittest.TestCase):
         client = Client(db_path,
                         datapath_replace=("^",
                                           filepath))
-        
+
         expected_stream1 = \
             obspy.read(
                     filepath +
@@ -147,6 +148,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertListEqual(returned_stream.traces, [])
 
     def test_get_nslc(self):
+        # part of one file
         client = Client("")
 
         NamedRow = namedtuple('NamedRow',
@@ -161,7 +163,7 @@ class ClientTestCase(unittest.TestCase):
                                NamedRow("AK", "ANM", "", "VM4",
                                         "2018-08-10T21:52:50.000000",
                                         "2018-08-10T22:12:39.999991"),
-                               NamedRow("AK", "ANM", "", "VM5",
+                               NamedRow("XX", "ANM", "", "VM5",
                                         "2018-08-10T21:52:50.000000",
                                         "2018-08-10T22:12:39.999991"),
                                NamedRow("N4", "H43A", "", "VM2",
@@ -173,20 +175,38 @@ class ClientTestCase(unittest.TestCase):
         client.get_summary_rows = mock.MagicMock(
                                             return_value=mocked_summary_rows)
 
-        expected_avail_extents = [("AK", "ANM", "", "VM2"),
-                                  ("AK", "ANM", "", "VM3"),
-                                  ("AK", "ANM", "", "VM4"),
-                                  ("AK", "ANM", "", "VM5"),
-                                  ("N4", "H43A", "", "VM2"),
-                                  ("N4", "H43A", "", "VM3")]
+        expected_nslc = [("AK", "ANM", "", "VM2"),
+                         ("AK", "ANM", "", "VM3"),
+                         ("AK", "ANM", "", "VM4"),
+                         ("XX", "ANM", "", "VM5"),
+                         ("N4", "H43A", "", "VM2"),
+                         ("N4", "H43A", "", "VM3")]
 
-        self.assertEqual(client.get_nslc("AK,N4",
+        self.assertEqual(client.get_nslc("AK,N4,XX",
                                          "ANM,H43A",
                                          "",
                                          "VM2,VM3,VM4,VM5",
                                          "2018-08-10T21:09:39.000000",
                                          "2018-08-10T22:09:28.890415"),
-                         expected_avail_extents)
+                         expected_nslc)
+
+        # test with actual sqlite3 database that is missing a summary table
+        # a temporary summary table gets created at runtime
+        package_dir = os.path.abspath(os.path.dirname(__file__))
+        filepath = os.path.join(package_dir, 'data/tsindex_data/')
+        db_path = os.path.join(filepath, 'timeseries.sqlite')
+        client = Client(db_path)
+
+        expected_nslc = [(u'CU', u'TGUH', u'00', u'BHZ')]
+
+        actual_nslc = client.get_nslc("I*,CU",
+                                      "ANMO,COL?,T*",
+                                      "00,10",
+                                      "BHZ",
+                                      "2018-01-01T00:00:00.000000",
+                                      "2018-01-01T00:00:00.019499")
+        self.assertListEqual(actual_nslc, expected_nslc)
+
 
     def test_get_availability_extent(self):
         client = Client("")
@@ -205,7 +225,7 @@ class ClientTestCase(unittest.TestCase):
                                         "2018-08-10T22:12:39.999991"),
                                NamedRow("AK", "ANM", "", "VM5",
                                         "2018-08-10T21:52:50.000000",
-                                        "2018-08-10T22:12:39.999991"),
+                                        "2018-08-10T22:15:39.999991"),
                                NamedRow("N4", "H43A", "", "VM2",
                                         "2018-08-10T21:09:39.000000",
                                         "2018-08-10T22:09:28.890415"),
@@ -226,7 +246,7 @@ class ClientTestCase(unittest.TestCase):
                                    UTCDateTime("2018-08-10T22:12:39.999991")),
                                   ("AK", "ANM", "", "VM5",
                                    UTCDateTime("2018-08-10T21:52:50.000000"),
-                                   UTCDateTime("2018-08-10T22:12:39.999991")),
+                                   UTCDateTime("2018-08-10T22:15:39.999991")),
                                   ("N4", "H43A", "", "VM2",
                                    UTCDateTime("2018-08-10T21:09:39.000000"),
                                    UTCDateTime("2018-08-10T22:09:28.890415")),
@@ -234,13 +254,37 @@ class ClientTestCase(unittest.TestCase):
                                    UTCDateTime("2018-08-10T21:09:39.000000"),
                                    UTCDateTime("2018-08-10T22:09:28.890415"))]
 
-        self.assertEqual(client.get_availability_extent(
+        self.assertListEqual(client.get_availability_extent(
                                                 "AK,N4",
                                                 "ANM,H43A", "",
                                                 "VM2,VM3,VM4,VM5",
                                                 "2018-08-10T21:09:39.000000",
                                                 "2018-08-10T22:09:28.890415"),
-                         expected_avail_extents)
+                             expected_avail_extents)
+        
+        # test with actual sqlite3 database that is missing a summary table
+        # a temporary summary table gets created at runtime
+        package_dir = os.path.abspath(os.path.dirname(__file__))
+        filepath = os.path.join(package_dir, 'data/tsindex_data/')
+        db_path = os.path.join(filepath, 'timeseries.sqlite')
+        client = Client(db_path)
+
+        expected_nslc = [(u'IU', u'ANMO', u'10', u'BHZ',
+                           UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
+                           UTCDateTime(2018, 1, 1, 0, 0, 59, 994536)),
+                         (u'IU', u'COLA', u'10', u'BHZ',
+                           UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
+                           UTCDateTime(2018, 1, 1, 0, 0, 59, 994538))]
+
+        actual_nslc = client.get_availability_extent(
+                                                "I*",
+                                                "ANMO,COL?,T*",
+                                                "00,10",
+                                                "BHZ",
+                                                "2018-01-01T00:00:00.000000",
+                                                "*")
+        self.assertListEqual(actual_nslc, expected_nslc)
+
 
     def test__are_timespans_adjacent(self):
         client = Client("")
@@ -470,9 +514,13 @@ class ClientTestCase(unittest.TestCase):
 
 
 def purge(dir, pattern):
+    """
+    Delete a file matching a pattern from the OS.
+    """
     for f in os.listdir(dir):
         if re.search(pattern, f):
             os.remove(os.path.join(dir, f))
+
 
 class IndexerTestCase(unittest.TestCase):
 
@@ -515,7 +563,7 @@ class IndexerTestCase(unittest.TestCase):
                     'filemodtime']
             NamedRow = namedtuple('NamedRow',
                                   keys)
-            
+
             expected_tsindex_data = \
                 [
                  NamedRow(
@@ -537,7 +585,7 @@ class IndexerTestCase(unittest.TestCase):
                     "[1514764800.019500:1514764859.994536]", None, None,
                     "2018-08-24T16:31:39")]
             db_handler = TSIndexDatabaseHandler(sqlitedb)
-            tsindex_data = db_handler.fetch_index_rows([("I*,C*",'T*,A*',
+            tsindex_data = db_handler._fetch_index_rows([("I*,C*",'T*,A*',
                                                          '0?,1?', '*', '*',
                                                          '*')])
 
@@ -553,3 +601,44 @@ class IndexerTestCase(unittest.TestCase):
             raise(err)
         finally:
             purge(filepath, '^{}.*$'.format(fname))
+
+
+class TSIndexDatabaseHanderTestCase(unittest.TestCase):
+
+    def test__fetch_summary_rows(self):
+        # test with actual sqlite3 database that is missing a summary table
+        # a temporary summary table gets created at runtime
+        package_dir = os.path.abspath(os.path.dirname(__file__))
+        filepath = os.path.join(package_dir, 'data/tsindex_data/')
+        db_path = os.path.join(filepath, 'timeseries.sqlite')
+        request_handler = TSIndexDatabaseHandler(db_path)
+
+        keys = ['network', 'station', 'location', 'channel',
+                'earliest', 'latest']
+        NamedRow = namedtuple('NamedRow',
+                              keys)
+
+        expected_ts_summary_data = \
+            [NamedRow(
+                "CU", "TGUH", "00", "BHZ",
+                "2018-01-01T00:00:00.000000",
+                "2018-01-01T00:01:00.000000"),
+             NamedRow(
+                "IU", "ANMO", "10", "BHZ",
+                "2018-01-01T00:00:00.019500",
+                "2018-01-01T00:00:59.994536")]
+
+        ts_summary_data = request_handler._fetch_summary_rows([("I*,CU",
+                                                                "ANMO,T*",
+                                                                "00,10",
+                                                                "BHZ",
+                                                                "*",
+                                                                "*")])
+
+        for i in range(0, len(expected_ts_summary_data)):
+            for j in range(0, len(keys)):
+                self.assertEqual(unicode(getattr(expected_ts_summary_data[i],
+                                                 keys[j])),
+                                 unicode(getattr(ts_summary_data[i],
+                                                 keys[j]))
+                                )
