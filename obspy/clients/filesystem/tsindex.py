@@ -23,14 +23,31 @@ import subprocess
 import copy_reg
 from multiprocessing import Pool
 import types
+import logging
 from collections import namedtuple
 from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import QueuePool
 
 from obspy import UTCDateTime
 from obspy.core.stream import Stream
 from obspy.clients.filesystem.miniseed import MiniseedDataExtractor, \
     NoDataError
+    
+
+# Setup the logger.
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+# Prevent propagating to higher loggers.
+logger.propagate = 0
+# Console log handler. By default any logs of level info and above are
+# written to the console
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+# Add formatter
+FORMAT = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
+formatter = logging.Formatter(FORMAT)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 
 def _pickle_method(m):
@@ -61,10 +78,17 @@ class Client(object):
             filename paths from the index.
         :type debug: bool
         :param debug: Debug flag.
+        :type logger: logging.Logger
+        :param logger: The logger instance to use for logging.
         """
+        self.debug = debug
+        if self.debug == True:
+            # write debug level logs to the console
+            ch.setLevel(logging.DEBUG)
+
         if isinstance(sqlitedb, (str, native_str)):
             self.request_handler = TSIndexDatabaseHandler(sqlitedb,
-                                                          debug=debug)
+                                                          debug=self.debug)
         elif isinstance(sqlitedb, TSIndexDatabaseHandler):
             self.request_handler = sqlitedb
         else:
@@ -74,8 +98,7 @@ class Client(object):
         # Create and configure the data extraction
         self.data_extractor = MiniseedDataExtractor(
                                                 dp_replace=datapath_replace,
-                                                debug=debug)
-        self.debug = debug
+                                                debug=self.debug)
 
     def get_waveforms(self, network, station, location,
                       channel, starttime, endtime, merge=-1):
@@ -158,8 +181,7 @@ class Client(object):
         total_bytes = 0
         src_bytes = {}
 
-        if self.debug is True:
-            print("Starting data return")
+        logger.debug("Starting data return")
         st = Stream(traces=[])
         try:
             # Extract the data, writing each returned segment to the response
@@ -173,11 +195,9 @@ class Client(object):
                     src_bytes.setdefault(src_name, 0)
                     src_bytes[src_name] += bytes_written
         except NoDataError:
-            if self.debug is True:
-                print("No data matched selection")
+            logger.debug("No data matched selection")
 
-        if self.debug is True:
-            print("Wrote {} bytes".format(total_bytes))
+        logger.debug("Wrote {} bytes".format(total_bytes))
 
         if merge is None or merge is False:
             pass
@@ -243,8 +263,7 @@ class Client(object):
         """
         summary_rows = self.get_summary_rows(network, station,
                                              location, channel,
-                                             UTCDateTime(starttime),
-                                             UTCDateTime(endtime))
+                                             starttime, endtime)
 
         availability_extents = []
         for row in summary_rows:
@@ -661,17 +680,21 @@ class Indexer(object):
         :type debug: bool
         :param debug: Debug flag.
         """
+        self.debug = debug
+        if self.debug == True:
+            # write debug level logs to the console
+            ch.setLevel(logging.DEBUG)
+
         self.root_path = root_path
         self.index_cmd = index_cmd
         self.bulk_params = bulk_params
         self.filename_pattern = filename_pattern
         self.parallel = parallel
         self.sqlitedb = sqlitedb
-        self.debug = debug
 
         if isinstance(self.sqlitedb, (str, native_str)):
             self.request_handler = TSIndexDatabaseHandler(self.sqlitedb,
-                                                          debug=debug)
+                                                          debug=self.debug)
         elif isinstance(self.sqlitedb, TSIndexDatabaseHandler):
             self.request_handler = self.sqlitedb
         else:
@@ -712,8 +735,7 @@ class Indexer(object):
         # run mseedindex on each file in parallel
         pool = Pool(processes=self.parallel)     
         for file_name in file_paths:
-            if self.debug:
-                print("Indexing file '{}'.".format(file_name))
+            logger.debug("Indexing file '{}'.".format(file_name))
             pool.apply_async(Indexer._run_index_command,
                              args=(self.index_cmd,
                                    self.root_path,
@@ -809,13 +831,17 @@ class TSIndexDatabaseHandler(object):
         :type debug: bool
         :param debug: Debug flag.
         """
+        self.debug = debug
+        if self.debug == True:
+            # write debug level logs to the console
+            ch.setLevel(logging.DEBUG)
+
         self.sqlitedb = sqlitedb
         self.tsindex_table = tsindex_table
         self.tsindex_summary_table = tsindex_summary_table
 
         self.db_path = "sqlite:///{}".format(sqlitedb)
-        self.engine = create_engine(self.db_path)
-        self.debug = debug
+        self.engine = create_engine(self.db_path, poolclass=QueuePool)
         
     def build_tsindex_summary(self, connection=None, temporary=False):
         if connection is None:
@@ -866,9 +892,8 @@ class TSIndexDatabaseHandler(object):
         except Exception as err:
             raise ValueError(str(err))
 
-        if self.debug is True:
-            print("Opening SQLite database for "
-                  "index rows: %s" % self.sqlitedb)
+        logger.debug("Opening SQLite database for "
+                     "index rows: %s" % self.sqlitedb)
 
         # Store temporary table(s) in memory
         try:
@@ -971,8 +996,7 @@ class TSIndexDatabaseHandler(object):
         # triggers bad index usage)
         index_rows.sort()
 
-        if self.debug is True:
-            print("Fetched %d index rows" % len(index_rows))
+        logger.debug("Fetched %d index rows" % len(index_rows))
 
         connection.execute("DROP TABLE {0}".format(request_table))
         connection.close()
@@ -999,9 +1023,8 @@ class TSIndexDatabaseHandler(object):
         except Exception as err:
             raise Exception(err)
         
-        if self.debug is True:
-            print("Opening SQLite database for "
-                  "summary rows: %s" % self.sqlitedb)
+        logger.debug("Opening sqlite3 database for "
+                     "summary rows: %s" % self.sqlitedb)
 
         # Store temporary table(s) in memory
         try:
@@ -1015,10 +1038,16 @@ class TSIndexDatabaseHandler(object):
 
         summary_present = result.fetchone()[0]
         if not summary_present:
-            if self.debug is True:
-                print("Building temporary tsindex summary table.")
+            logger.warning("No tsindex_summary table found! A temporary "
+                           "tsindex_summary table will be created.")
             self.build_tsindex_summary(connection=connection,
                                        temporary=True)
+            logger.warning(
+                       "For improved performance create a permanent "
+                       "tsindex_summary table by running the "
+                       "`~obspy.clients.filesystem.tsindex."
+                       "TSIndexDatabaseHandler.build_tsindex_summary()` "
+                       "instance method.")
 
         summary_rows = []
         my_uuid = uuid.uuid4().hex
@@ -1028,14 +1057,15 @@ class TSIndexDatabaseHandler(object):
         try:
             connection.execute("CREATE TEMPORARY TABLE {0}"
                                " (network TEXT, station TEXT,"
-                               " location TEXT, channel TEXT)"
+                               " location TEXT, channel TEXT,"
+                               " starttime TEXT, endtime TEXT)"
                                .format(request_table))
             for req in query_rows:
                 connection.execute("INSERT INTO {0} (network,station,"
-                                   "  location,channel) "
-                                   "VALUES (?,?,?,?) "
+                                   "  location,channel, starttime, endtime) "
+                                   "VALUES (?,?,?,?,?,?) "
                                    .format(request_table),
-                                   req[:4])
+                                   req)
         except Exception as err:
             raise ValueError(str(err))
 
@@ -1060,7 +1090,9 @@ class TSIndexDatabaseHandler(object):
                        "s.channel,s.earliest,s.latest,s.updt "
                        "FROM {0} s, {1} r "
                        "WHERE "
-                       "  (r.network='*' OR s.network GLOB r.network) "
+                       "  (r.starttime='*' OR r.starttime <= s.latest) "
+                       "  AND (r.endtime='*' OR r.endtime >= s.earliest) "
+                       "  AND (r.network='*' OR s.network GLOB r.network) "
                        "  AND (r.station='*' OR s.station GLOB r.station) "
                        "  AND (r.location='*' OR s.location GLOB r.location) "
                        "  AND (r.channel='*' OR s.channel GLOB r.channel) "
@@ -1068,7 +1100,6 @@ class TSIndexDatabaseHandler(object):
                        "s.channel, s.earliest, s.latest".
                        format(self.tsindex_summary_table, request_table))
                 result = connection.execute(sql)
-
             except Exception as err:
                 raise ValueError(str(err))
 
@@ -1085,8 +1116,7 @@ class TSIndexDatabaseHandler(object):
             # bad index usage)
             summary_rows.sort()
 
-            if self.debug is True:
-                print("Fetched %d summary rows" % len(summary_rows))
+            logger.debug("Fetched %d summary rows" % len(summary_rows))
 
             connection.execute("DROP TABLE {0}".format(request_table))
         
@@ -1150,9 +1180,8 @@ class TSIndexDatabaseHandler(object):
         resolvedrows = connection.execute("SELECT COUNT(*) FROM {0}"
                                           .format(request_table)).fetchone()[0]
 
-        if self.debug is True:
-            print("Resolved request with "
-                  "summary into %d rows" % resolvedrows)
+        logger.debug("Resolved request with "
+                     "summary into %d rows" % resolvedrows)
 
         connection.execute("DROP TABLE {0}".format(request_table_orig))
 
@@ -1233,8 +1262,7 @@ class TSIndexDatabaseHandler(object):
         Setup a sqlite3 database for indexing.
         """
         try:
-            if self.debug:
-                print('Setting up sqlite3 database at %s' % self.sqlitedb)
+            logger.debug('Setting up sqlite3 database at %s' % self.sqlitedb)
             # setup the sqlite database
             connection = self.engine.connect()
             # https://www.sqlite.org/foreignkeys.html

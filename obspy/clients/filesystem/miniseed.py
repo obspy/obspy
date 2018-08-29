@@ -10,6 +10,7 @@ import re
 import os
 import ctypes
 import bisect
+import logging
 
 from collections import namedtuple
 from io import BytesIO
@@ -18,6 +19,21 @@ from obspy.core import UTCDateTime
 from obspy.core.stream import Stream
 from obspy.clients.filesystem.msriterator import MSR_iterator
 
+
+# Setup the logger.
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+# Prevent propagating to higher loggers.
+logger.propagate = 0
+# Console log handler. By default any logs of level info and above are
+# written to the console
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+# Add formatter
+FORMAT = "[%(asctime)s] - %(name)s - %(levelname)s: %(message)s"
+formatter = logging.Formatter(FORMAT)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 class NoDataError(Exception):
     """
@@ -74,12 +90,16 @@ class MSRIDataSegment(ExtractedDataSegment):
         :type debug: bool
         :param debug: Debug flag.
         """
+        self.debug = debug
+        if self.debug == True:
+            # write debug level logs to the console
+            ch.setLevel(logging.DEBUG)
+
         self.msri = msri
         self.sample_rate = sample_rate
         self.start_time = start_time
         self.end_time = end_time
         self.src_name = src_name
-        self.debug = debug
 
     def read_stream(self):
         msrstart = self.msri.get_startepoch()
@@ -96,9 +116,8 @@ class MSRIDataSegment(ExtractedDataSegment):
             # Trim record if coverage and partial overlap with request
             if self.sample_rate > 0 and (msrstart < self.start_time or
                                          msrend > self.end_time):
-                if self.debug is True:
-                    print("Trimming record %s @ %s" %
-                          (self.src_name, self.msri.get_starttime()))
+                logger.debug("Trimming record %s @ %s" %
+                             (self.src_name, self.msri.get_starttime()))
                 tr = \
                     read(BytesIO(ctypes.string_at(
                                     self.msri.msr.contents.record,
@@ -110,9 +129,8 @@ class MSRIDataSegment(ExtractedDataSegment):
             # Otherwise, write un-trimmed record
             else:
                 # Construct to avoid copying the data, supposedly
-                if self.debug is True:
-                    print("Writing full record %s @ %s" %
-                          (self.src_name, self.msri.get_starttime()))
+                logger.debug("Writing full record %s @ %s" %
+                             (self.src_name, self.msri.get_starttime()))
                 out = (ctypes.c_char * reclen).from_address(
                     ctypes.addressof(self.msri.msr.contents.record.contents))
                 data = BytesIO(out.raw)
@@ -171,6 +189,11 @@ class MiniseedDataExtractor(object):
         :type debug: bool
         :param debug: Debug flag.
         """
+        self.debug = debug
+        if self.debug == True:
+            # write debug level logs to the console
+            ch.setLevel(logging.DEBUG)
+
         if dp_replace:
             self.dp_replace_re = re.compile(dp_replace[0])
             self.dp_replace_sub = dp_replace[1]
@@ -178,7 +201,6 @@ class MiniseedDataExtractor(object):
             self.dp_replace_re = None
             self.dp_replace_sub = None
         self.request_limit = request_limit
-        self.debug = debug
 
     def handle_trimming(self, stime, etime, NRow):
         """
@@ -240,9 +262,8 @@ class MiniseedDataExtractor(object):
             for NRow in index_rows:
                 srcname = "_".join(NRow[:4])
                 filename = NRow.filename
-                if self.debug:
-                    print("EXTRACT: src=%s, file=%s, bytes=%s, rate:%s" %
-                          (srcname, filename, NRow.bytes, NRow.samplerate))
+                logger.debug("EXTRACT: src=%s, file=%s, bytes=%s, rate:%s" %
+                             (srcname, filename, NRow.bytes, NRow.samplerate))
 
                 starttime = UTCDateTime(NRow.requeststart)
                 endtime = UTCDateTime(NRow.requestend)
@@ -264,9 +285,8 @@ class MiniseedDataExtractor(object):
                                             triminfo=triminfo,
                                             bytes=NRow.bytes,
                                             samplerate=NRow.samplerate))
-                if self.debug:
-                    print("EXTRACT: src=%s, file=%s, bytes=%s, rate:%s" %
-                          (srcname, filename, NRow.bytes, NRow.samplerate))
+                logger.debug("EXTRACT: src=%s, file=%s, bytes=%s, rate:%s" %
+                             (srcname, filename, NRow.bytes, NRow.samplerate))
         except Exception as err:
             raise Exception("Error accessing data index: %s" % str(err))
 
@@ -276,11 +296,10 @@ class MiniseedDataExtractor(object):
 
         # Get & return the actual data
         for NRow in request_rows:
-            if self.debug:
-                print("Extracting %s (%s - %s) from %s" % (NRow.srcname,
-                                                           NRow.starttime,
-                                                           NRow.endtime,
-                                                           NRow.filename))
+            logger.debug("Extracting %s (%s - %s) from %s" % (NRow.srcname,
+                                                              NRow.starttime,
+                                                              NRow.endtime,
+                                                              NRow.filename))
 
             # Iterate through records in section
             # if only part of the section is needed
