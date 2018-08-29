@@ -86,6 +86,10 @@ class Client(object):
             # write debug level logs to the console
             ch.setLevel(logging.DEBUG)
 
+        if not os.path.isfile(sqlitedb):
+            raise OSError("No sqlite3 database file exists at `{}`."
+                          .format(sqlitedb))
+
         if isinstance(sqlitedb, (str, native_str)):
             self.request_handler = TSIndexDatabaseHandler(sqlitedb,
                                                           debug=self.debug)
@@ -366,6 +370,90 @@ class Client(object):
             ts = self._create_timespan(float(earliest), float(latest))
             timespans.append(ts)
         return timespans
+    
+    def _get_availability_from_timespans(self, net, sta, loc, cha,
+                                         samplerates,
+                                         include_sample_rate,
+                                         merge_overlap,
+                                         timespans,
+                                         _sncl_joined_avail_tuples=None):
+        """
+        Recurse over a list of timespans, joining adjacent timespans,
+        and merging if merge_overlaps is True.
+
+        Returns a list of tuples (network, station, location, channel,
+        earliest, latest) representing available data.
+
+        :type timespans: list
+        :param timespans: List of timespan tuples
+        """
+        if _sncl_joined_avail_tuples is None:
+            _sncl_joined_avail_tuples = []
+
+        sr = min(samplerates)
+        if len(timespans) > 1:
+            prev_ts = timespans.pop(0)
+            cur_ts = timespans.pop(0)
+            if merge_overlap is True and \
+                    self._do_timespans_overlap(prev_ts, cur_ts) is True:
+                # merge if overlapping timespans and merge_overlap
+                # option is set to true
+                earliest_tuple = min([prev_ts, cur_ts],
+                                     key=lambda t: t.earliest)
+                latest_tuple = max([prev_ts, cur_ts],
+                                   key=lambda t: t.latest)
+                merged_ts = self._create_timespan(prev_ts.earliest,
+                                                  cur_ts.latest)
+                timespans.insert(0, merged_ts)
+                return self._get_availability_from_timespans(
+                                                net, sta, loc, cha,
+                                                samplerates,
+                                                include_sample_rate,
+                                                merge_overlap,
+                                                timespans,
+                                                _sncl_joined_avail_tuples)
+            elif self._are_timespans_adjacent(prev_ts, cur_ts, sr, 0.5):
+                # merge if timespans are next to each other within
+                # a 0.5 sample tolerance
+                merged_ts = self._create_timespan(prev_ts.earliest,
+                                                  cur_ts.latest)
+                timespans.insert(0, merged_ts)
+                return self._get_availability_from_timespans(
+                                                net, sta, loc, cha,
+                                                samplerates,
+                                                include_sample_rate,
+                                                merge_overlap,
+                                                timespans,
+                                                _sncl_joined_avail_tuples)
+            else:
+                # timespan shouldn't be merged so add to list
+                avail_tuple = self._create_avail_tuple(
+                                          net, sta, loc, cha,
+                                          prev_ts.earliest,
+                                          prev_ts.latest,
+                                          sr=sr if include_sample_rate \
+                                                else None)
+                _sncl_joined_avail_tuples.append(avail_tuple)
+                timespans.insert(0, cur_ts)
+                return self._get_availability_from_timespans(
+                                                net, sta, loc, cha,
+                                                samplerates,
+                                                include_sample_rate,
+                                                merge_overlap,
+                                                timespans,
+                                                _sncl_joined_avail_tuples)
+        else:
+            # no other timespans to merge with
+            cur_ts = timespans.pop(0)
+            avail_tuple = self._create_avail_tuple(
+                                          net, sta,
+                                          loc, cha,
+                                          cur_ts.earliest,
+                                          cur_ts.latest,
+                                          sr=sr if include_sample_rate \
+                                                else None)
+            _sncl_joined_avail_tuples.append(avail_tuple)
+        return _sncl_joined_avail_tuples
 
     def get_availability(self, network, station, location,
                          channel, starttime, endtime,
@@ -406,96 +494,59 @@ class Client(object):
             spans that overlap are merged.
         """
 
-        def _get_availability_from_timespans(timespans,
-                                             _sncl_joined_avail_tuples=[]):
-            """
-            Recurse over a list of timespans, joining adjacent timespans,
-            and merging if merge_overlaps is True.
-
-            Returns a list of tuples (network, station, location, channel,
-            earliest, latest) representing available data.
-
-            :type timespans: list
-            :param timespans: List of timespan tuples
-            """
-            if len(timespans) > 1:
-                prev_ts = timespans.pop(0)
-                cur_ts = timespans.pop(0)
-                if merge_overlap is True and \
-                        self._do_timespans_overlap(prev_ts, cur_ts) is True:
-                    # merge if overlapping timespans and merge_overlap
-                    # option is set to true
-                    earliest_tuple = min([prev_ts, cur_ts],
-                                         key=lambda t: t.earliest)
-                    latest_tuple = max([prev_ts, cur_ts],
-                                       key=lambda t: t.latest)
-                    avail_tuple = self._create_avail_tuple(
-                                                  net, sta, loc, cha,
-                                                  earliest_tuple.earliest,
-                                                  latest_tuple.latest)
-                    ts = self._create_timespan(avail_tuple[4], avail_tuple[5])
-                    timespans.insert(0, ts)
-                    return _get_availability_from_timespans(
-                                                    timespans,
-                                                    _sncl_joined_avail_tuples)
-                elif self._are_timespans_adjacent(prev_ts, cur_ts, sr, 0.5):
-                    # merge if timespans are next to each other within
-                    # a 0.5 sample tolerance
-                    avail_tuple = self._create_avail_tuple(
-                                                        net, sta, loc, cha,
-                                                        prev_ts.earliest,
-                                                        cur_ts.latest)
-                    ts = self._create_timespan(avail_tuple[4], avail_tuple[5])
-                    timespans.insert(0, ts)
-                    return _get_availability_from_timespans(
-                                                    timespans,
-                                                    _sncl_joined_avail_tuples)
-                else:
-                    # timespan shouldn't be merged so add to list
-                    avail_tuple = self._create_avail_tuple(
-                                                  net, sta, loc, cha,
-                                                  prev_ts.earliest,
-                                                  prev_ts.latest)
-                    _sncl_joined_avail_tuples.append(avail_tuple)
-                    timespans.insert(0, cur_ts)
-                    return _get_availability_from_timespans(
-                                                    timespans,
-                                                    _sncl_joined_avail_tuples)
-            else:
-                # no other timespans to merge with
-                cur_ts = timespans[0]
-                avail_tuple = self._create_avail_tuple(
-                                              net, sta, loc, cha,
-                                              cur_ts.earliest,
-                                              cur_ts.latest)
-                _sncl_joined_avail_tuples.append(avail_tuple)
-            return _sncl_joined_avail_tuples
-
-        tsindex_rows = self.get_tsindex_rows(network, station,
+        tsindex_rows = self._get_tsindex_rows(network, station,
                                              location, channel,
                                              starttime, endtime)
-        grouped_timespans = {}  # list of timespans grouped by NSLC and SR
+
+        grouped_channels = {}
         for row in tsindex_rows:
-            hash = "{}_{}_{}_{}_{}".format(row.network,
-                                           row.station,
-                                           row.location,
-                                           row.channel,
-                                           row.samplerate)
-            timespans = self._create_timespans_list(row.timespans)
-            if grouped_timespans.get(hash) is not None:
-                grouped_timespans[hash].extend(timespans)
+            if include_sample_rate == True:
+                # split on different sample rates when merging
+                hash = "{}_{}_{}_{}_{}".format(row.network,
+                                               row.station,
+                                               row.location,
+                                               row.channel,
+                                               row.samplerate)
             else:
-                grouped_timespans[hash] = timespans
+                # ignore sample rate when merging
+                hash = "{}_{}_{}_{}".format(row.network,
+                                               row.station,
+                                               row.location,
+                                               row.channel)
+            timespans = self._create_timespans_list(row.timespans)
+            
+            if grouped_channels.get(hash) is not None:
+                group = grouped_channels[hash]
+                if row.samplerate not in \
+                        grouped_channels[hash]["samplerates"]:
+                    grouped_channels[hash]["samplerates"].append(
+                                                            row.samplerate)
+                grouped_channels[hash]["timespans"].extend(timespans)
+            else:
+                grouped_channels[hash] = {}
+                grouped_channels[hash]["samplerates"] = [row.samplerate]
+                grouped_channels[hash]["timespans"] = timespans
 
         # sort timespans
-        for _, timespans in grouped_timespans.items():
-            timespans.sort()
+        for _, channel_group in grouped_channels.items():
+            channel_group["timespans"].sort()
 
         # join timespans
         joined_avail_tuples = []
-        for sncl, timespans in grouped_timespans.items():
-            net, sta, loc, cha, sr = sncl.split("_")
-            avail_data = _get_availability_from_timespans(timespans)
+        for sncl, channel_group in grouped_channels.items():
+            net, sta, loc, cha = sncl.split("_")[:4]
+            samplerates = channel_group["samplerates"]
+            timespans = channel_group["timespans"]
+            avail_data = self._get_availability_from_timespans(
+                                                      net,
+                                                      sta,
+                                                      loc,
+                                                      cha,
+                                                      samplerates,
+                                                      include_sample_rate,
+                                                      merge_overlap,
+                                                      timespans
+                                                      )
             # extend complete list
             joined_avail_tuples.extend(avail_data)
         return joined_avail_tuples
@@ -615,7 +666,7 @@ class Client(object):
                        channel, starttime, endtime)]
         return self.request_handler._fetch_summary_rows(query_rows)
 
-    def get_tsindex_rows(self, network, station, location, channel,
+    def _get_tsindex_rows(self, network, station, location, channel,
                          starttime, endtime):
         """
         Return a list of tuples [(net, sta, loc, cha, quality... etc.),...]
@@ -655,7 +706,8 @@ class Indexer(object):
     """
 
     def __init__(self, root_path, sqlitedb="timeseries.sqlite",
-                 index_cmd='mseedindex', bulk_params={}, filename_pattern='*',
+                 leap_seconds_file=None, index_cmd='mseedindex',
+                 bulk_params=None, filename_pattern='*',
                  parallel=5, debug=False):
         """
         Initializes the Indexer.
@@ -667,6 +719,11 @@ class Indexer(object):
         :param sqlitedb: Path to sqlite tsindex database or a
             TSIndexDatabaseHandler object. A database will be created
             if one does not already exists at the specified path.
+        :type leap_seconds_file: str
+        :param leap_seconds_file: Path to leap seconds file. See the
+            `mseedindex wiki <https://github.com/iris-edu/mseedindex/blob/"
+            "master/doc/mseedindex.md#leap-second-list-file>` "
+            "for more information.
         :type index_cmd: str
         :param index_cmd: Command to be run for each target file found that
             is not already in the index
@@ -678,7 +735,7 @@ class Indexer(object):
         :param parallel: Max number of index_cmd instances to run in parallel.
             By default a max of 5 parallel process are run.
         :type debug: bool
-        :param debug: Debug flag.
+        :param debug: Debug flag. Sets logging level to debug.
         """
         self.debug = debug
         if self.debug == True:
@@ -687,10 +744,13 @@ class Indexer(object):
 
         self.root_path = root_path
         self.index_cmd = index_cmd
+        if bulk_params is None:
+            bulk_params = {}
         self.bulk_params = bulk_params
         self.filename_pattern = filename_pattern
         self.parallel = parallel
         self.sqlitedb = sqlitedb
+        self.leap_seconds_file = leap_seconds_file
 
         if isinstance(self.sqlitedb, (str, native_str)):
             self.request_handler = TSIndexDatabaseHandler(self.sqlitedb,
@@ -721,6 +781,11 @@ class Indexer(object):
         self.is_mseedindex_installed()
         self.request_handler._init_database_for_indexing()
         file_paths = self.build_file_list(relative_paths)
+        
+        if self.leap_seconds_file is not None and \
+                not os.path.isfile(self.leap_seconds_file):
+            raise OSError("No leap seconds file exists at `{}`."
+                          .format(self.leap_seconds_file))
 
         # always keep the original file paths as specified. absolute and
         # relative paths are determined in the build_file_list method
@@ -736,11 +801,14 @@ class Indexer(object):
         pool = Pool(processes=self.parallel)     
         for file_name in file_paths:
             logger.debug("Indexing file '{}'.".format(file_name))
-            pool.apply_async(Indexer._run_index_command,
-                             args=(self.index_cmd,
-                                   self.root_path,
-                                   file_name,
-                                   self.bulk_params))
+            proc = pool.apply_async(Indexer._run_index_command,
+                                    args=(self.index_cmd,
+                                          self.root_path,
+                                          file_name,
+                                          self.bulk_params))
+            # If the remote call raised an exception
+            # then that exception will be reraised by get()
+            proc.get()
         pool.close()
         pool.join()
 
@@ -806,7 +874,7 @@ class Indexer(object):
             cmd = [c for c in cmd if c is not None]
             proc = subprocess.Popen(cmd, cwd=root_path)
             proc.wait()
-        except OSError as err:
+        except Exception as err:
             msg = ("Error running command `{}` - {}"
                    .format(index_cmd, err))
             raise OSError(msg)
@@ -961,8 +1029,9 @@ class TSIndexDatabaseHandler(object):
                    "  AND ts.location {2} r.location "
                    "  AND ts.channel {2} r.channel "
                    "  AND ts.starttime <= r.endtime "
-                   "  AND ts.starttime >= datetime(r.starttime,'-10 days') "
                    "  AND ts.endtime >= r.starttime "
+                   "ORDER BY ts.network, ts.station, ts.location, "
+                    "  ts.channel, ts.starttime, ts.endtime"
                    .format(self.tsindex_table,
                            request_table,
                            "GLOB" if wildcards else "="))
@@ -986,15 +1055,8 @@ class TSIndexDatabaseHandler(object):
                                'requeststart', 'requestend'])
 
         index_rows = []
-        while True:
-            row = result.fetchone()
-            if row is None:
-                break
+        for row in result:
             index_rows.append(NamedRow(*row))
-
-        # Sort results in application (ORDER BY in SQL
-        # triggers bad index usage)
-        index_rows.sort()
 
         logger.debug("Fetched %d index rows" % len(index_rows))
 
@@ -1042,7 +1104,7 @@ class TSIndexDatabaseHandler(object):
                            "tsindex_summary table will be created.")
             self.build_tsindex_summary(connection=connection,
                                        temporary=True)
-            logger.warning(
+            logger.info(
                        "For improved performance create a permanent "
                        "tsindex_summary table by running the "
                        "`~obspy.clients.filesystem.tsindex."
@@ -1111,10 +1173,6 @@ class TSIndexDatabaseHandler(object):
             summary_rows = []
             for row in result:
                 summary_rows.append(NamedRow(*row))
-
-            # Sort results in application (ORDER BY in SQL triggers
-            # bad index usage)
-            summary_rows.sort()
 
             logger.debug("Fetched %d summary rows" % len(summary_rows))
 

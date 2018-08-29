@@ -19,17 +19,39 @@ import re
 import itertools
 
 
+def get_test_data_filepath():
+    package_dir = os.path.abspath(os.path.dirname(__file__))
+    filepath = os.path.join(package_dir, 'data/tsindex_data/')
+    return filepath
+
+
+def get_test_client():
+    filepath = get_test_data_filepath()
+    db_path = os.path.join(filepath, 'timeseries.sqlite')
+
+    client = Client(db_path,
+                    datapath_replace=("^",
+                                      filepath),
+                    debug=True)
+    return client
+
+
 class ClientTestCase(unittest.TestCase):
 
-    def test_get_waveforms(self):
-        package_dir = os.path.abspath(os.path.dirname(__file__))
-        filepath = os.path.join(package_dir, 'data/tsindex_data/')
-        db_path = os.path.join(filepath, 'timeseries.sqlite')
+    def test_bad_sqlitdb_filepath(self):
+        """
+        Checks that an error is raised when an invalid path is provided to
+        a SQLite database
+        """
+        self.assertRaisesRegexp(OSError,
+                                "^No sqlite3 database file exists at.*$",
+                                Client,
+                                "/some/bad/path/timeseries.sqlite")
 
-        # part of one file
-        client = Client(db_path,
-                        datapath_replace=("^",
-                                          filepath))
+    def test_get_waveforms(self):
+        filepath = get_test_data_filepath()
+        client = get_test_client()
+
         expected_stream = \
             obspy.read(
                     filepath +
@@ -86,14 +108,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertListEqual(returned_stream.traces, [])
 
     def test_get_waveforms_bulk(self):
-        package_dir = os.path.abspath(os.path.dirname(__file__))
-        filepath = os.path.join(package_dir, 'data/tsindex_data/')
-        db_path = os.path.join(filepath, 'timeseries.sqlite')
-
-        # part of one file
-        client = Client(db_path,
-                        datapath_replace=("^",
-                                          filepath))
+        filepath = get_test_data_filepath()
+        client = get_test_client()
 
         expected_stream1 = \
             obspy.read(
@@ -148,9 +164,9 @@ class ClientTestCase(unittest.TestCase):
         self.assertListEqual(returned_stream.traces, [])
 
     def test_get_nslc(self):
-        # part of one file
-        client = Client("")
+        client = get_test_client()
 
+        # test using mocked client.get_summary_rows method for more diversity
         NamedRow = namedtuple('NamedRow',
                               ['network', 'station', 'location', 'channel',
                                'earliest', 'latest'])
@@ -189,13 +205,9 @@ class ClientTestCase(unittest.TestCase):
                                          "2018-08-10T21:09:39.000000",
                                          "2018-08-10T22:09:28.890415"),
                          expected_nslc)
-
-        # test with actual sqlite3 database that is missing a summary table
-        # a temporary summary table gets created at runtime
-        package_dir = os.path.abspath(os.path.dirname(__file__))
-        filepath = os.path.join(package_dir, 'data/tsindex_data/')
-        db_path = os.path.join(filepath, 'timeseries.sqlite')
-        client = Client(db_path)
+        
+        # test using actual sqlite test database
+        client = get_test_client()
 
         expected_nslc = [(u'CU', u'TGUH', u'00', u'BHZ')]
 
@@ -209,8 +221,9 @@ class ClientTestCase(unittest.TestCase):
 
 
     def test_get_availability_extent(self):
-        client = Client("")
-
+        client = get_test_client()
+        
+        # test using mocked client.get_summary_rows method for more diversity
         NamedRow = namedtuple('NamedRow',
                               ['network', 'station', 'location', 'channel',
                                'earliest', 'latest'])
@@ -220,7 +233,7 @@ class ClientTestCase(unittest.TestCase):
                                NamedRow("AK", "ANM", "", "VM3",
                                         "2018-08-10T21:52:50.000000",
                                         "2018-08-10T22:12:39.999991"),
-                               NamedRow("AK", "ANM", "", "VM4",
+                               NamedRow("XX", "ANM", "", "VM4",
                                         "2018-08-10T21:52:50.000000",
                                         "2018-08-10T22:12:39.999991"),
                                NamedRow("AK", "ANM", "", "VM5",
@@ -241,7 +254,7 @@ class ClientTestCase(unittest.TestCase):
                                   ("AK", "ANM", "", "VM3",
                                    UTCDateTime("2018-08-10T21:52:50.000000"),
                                    UTCDateTime("2018-08-10T22:12:39.999991")),
-                                  ("AK", "ANM", "", "VM4",
+                                  ("XX", "ANM", "", "VM4",
                                    UTCDateTime("2018-08-10T21:52:50.000000"),
                                    UTCDateTime("2018-08-10T22:12:39.999991")),
                                   ("AK", "ANM", "", "VM5",
@@ -261,13 +274,9 @@ class ClientTestCase(unittest.TestCase):
                                                 "2018-08-10T21:09:39.000000",
                                                 "2018-08-10T22:09:28.890415"),
                              expected_avail_extents)
-        
-        # test with actual sqlite3 database that is missing a summary table
-        # a temporary summary table gets created at runtime
-        package_dir = os.path.abspath(os.path.dirname(__file__))
-        filepath = os.path.join(package_dir, 'data/tsindex_data/')
-        db_path = os.path.join(filepath, 'timeseries.sqlite')
-        client = Client(db_path)
+
+        # test using actual sqlite test database
+        client = get_test_client()
 
         expected_nslc = [(u'IU', u'ANMO', u'10', u'BHZ',
                            UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
@@ -276,18 +285,19 @@ class ClientTestCase(unittest.TestCase):
                            UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
                            UTCDateTime(2018, 1, 1, 0, 0, 59, 994538))]
 
-        actual_nslc = client.get_availability_extent(
+        actual_avail_extents= client.get_availability_extent(
                                                 "I*",
                                                 "ANMO,COL?,T*",
                                                 "00,10",
                                                 "BHZ",
                                                 "2018-01-01T00:00:00.000000",
                                                 "*")
-        self.assertListEqual(actual_nslc, expected_nslc)
+        self.assertListEqual(actual_avail_extents, expected_nslc)
 
 
     def test__are_timespans_adjacent(self):
-        client = Client("")
+        client = get_test_client()
+
         sample_rate = 40
         # sample_period = 1/40 = 0.025 sec = 25000 ms
         # and tolerance = 0.5 so an adjacent sample is +/-0.0125 sec = 12500 ms
@@ -356,8 +366,9 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(client._are_timespans_adjacent(ts1, ts2, sample_rate))
 
     def test_get_availability(self):
-        client = Client("")
+        client = get_test_client()
 
+        # test using mocked client.get_summary_rows method for more diversity
         NamedRow = namedtuple('NamedRow',
                               ['network', 'station', 'location', 'channel',
                                'samplerate', 'starttime', 'endtime',
@@ -385,15 +396,16 @@ class ClientTestCase(unittest.TestCase):
                         samplerate=1.0,
                         timespans=u'[1533939653.999000:1534112453.000000],'
                                   u'[1534116053.000000:1535844053.000000]'),
-               # 2018-08-27T00:00:00 to 2018-09-11T00:00:00 (MERGE)
+               # (MERGE IF INCL SAMPLE RATE IS TRUE)
+               # 2018-08-27T00:00:00 to 2018-09-11T00:00:00
                NamedRow(network=u'AK', station=u'BAGL',
                         location=u'', channel=u'LCC',
                         starttime=u'2018-08-27T00:00:00.000000',
                         endtime=u'2018-09-11T00:00:00.000000',
-                        samplerate=1.0,
+                        samplerate=10.0,
                         timespans=u'[1535328000.0:1536624000.0]')
             ]
-        client.get_tsindex_rows = mock.MagicMock(
+        client._get_tsindex_rows = mock.MagicMock(
                                             return_value=mocked_tsindex_rows)
 
         expected_unmerged_avail = [("AK", "BAGL", "", "LCC",
@@ -409,15 +421,18 @@ class ClientTestCase(unittest.TestCase):
                                     UTCDateTime(2018, 8, 27, 0, 0),
                                     UTCDateTime(2018, 9, 11, 0, 0, 0))]
 
-        self.assertEqual(client.get_availability(
+         # test default options
+        self.assertListEqual(client.get_availability(
                                 "AK",
-                                "BAGL", "",
+                                "BAGL",
+                                "",
                                 "LCC",
                                 UTCDateTime(2018, 8, 10, 22, 0, 54),
                                 UTCDateTime(2018, 8, 10, 22, 9, 28, 890415)),
                          expected_unmerged_avail)
-
-        self.assertEqual(client.get_availability(
+        
+         # test merge overlap false
+        self.assertListEqual(client.get_availability(
                                 "AK",
                                 "BAGL",
                                 "--",
@@ -427,6 +442,7 @@ class ClientTestCase(unittest.TestCase):
                                 merge_overlap=False),
                          expected_unmerged_avail)
 
+        # test merge overlap true
         expected_merged_avail = [("AK", "BAGL", "", "LCC",
                                   UTCDateTime(2018, 8, 10, 22, 0, 54),
                                   UTCDateTime(2018, 8, 12, 22, 20, 53)),
@@ -434,7 +450,7 @@ class ClientTestCase(unittest.TestCase):
                                   UTCDateTime(2018, 8, 12, 23, 20, 53),
                                   UTCDateTime(2018, 9, 11, 0, 0, 0))]
 
-        self.assertEqual(client.get_availability(
+        self.assertListEqual(client.get_availability(
                                 "AK",
                                 "BAGL",
                                 "--",
@@ -444,8 +460,49 @@ class ClientTestCase(unittest.TestCase):
                                 merge_overlap=True),
                          expected_merged_avail)
 
+        # test include_sample_rate true
+        expected_incl_sr_avail = [("AK", "BAGL", "", "LCC",
+                                   UTCDateTime(2018, 8, 10, 22, 0, 54),
+                                   UTCDateTime(2018, 8, 12, 22, 20, 53), 1.0),
+                                  ("AK", "BAGL", "", "LCC",
+                                   UTCDateTime(2018, 8, 12, 23, 20, 53),
+                                   UTCDateTime(2018, 9, 1, 23, 20, 53), 1.0),
+                                  ("AK", "BAGL", "", "LCC",
+                                   UTCDateTime(2018, 8, 27, 0, 0),
+                                   UTCDateTime(2018, 9, 11, 0, 0, 0), 10.0)]
+
+        self.assertListEqual(client.get_availability(
+                                "AK",
+                                "BAGL",
+                                "--",
+                                "LCC",
+                                UTCDateTime(2018, 8, 10, 22, 0, 54),
+                                UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
+                                merge_overlap=True,
+                                include_sample_rate=True),
+                         expected_incl_sr_avail)
+
+        # test using actual sqlite test database
+        client = get_test_client()
+
+        expected_avail = [(u'IU', u'ANMO', u'10', u'BHZ',
+                           UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
+                           UTCDateTime(2018, 1, 1, 0, 0, 59, 994536)),
+                          (u'IU', u'COLA', u'10', u'BHZ',
+                           UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
+                           UTCDateTime(2018, 1, 1, 0, 0, 59, 994538))]
+
+        actual_avail = client.get_availability(
+                                                "IU",
+                                                "ANMO,COLA",
+                                                "10",
+                                                "BHZ",
+                                                "*",
+                                                "*")
+        self.assertListEqual(actual_avail, expected_avail)
+
     def test_get_availability_percentage(self):
-        client = Client("")
+        client = get_test_client()
 
         mock_availability_output = [("AK", "BAGL", "", "LCC",
                                      UTCDateTime(2018, 8, 10, 22, 0, 54),
@@ -524,10 +581,25 @@ def purge(dir, pattern):
 
 class IndexerTestCase(unittest.TestCase):
 
+    def test_run_bad_index_cmd(self):
+        """
+        Checks that an OSError is raised when there is an error running a
+        index_cmd. (such as no command found.)
+        """
+        filepath = get_test_data_filepath()
+        indexer = Indexer(filepath,
+                          filename_pattern="*.mseed",
+                          index_cmd="some_bad_command")
+        
+        self.assertRaisesRegexp(OSError,
+                                "^Error running command.*$",
+                                indexer.run)
+
     def test_build_file_list(self):
-        package_dir = os.path.abspath(os.path.dirname(__file__))
-        filepath = os.path.join(package_dir, 'data/tsindex_data/')
-        indexer = Indexer(filepath, filename_pattern="*.mseed")
+        filepath = get_test_data_filepath()
+        indexer = Indexer(filepath,
+                          filename_pattern="*.mseed")
+
         file_list = indexer.build_file_list()
         file_list.sort()
         self.assertEqual(len(file_list), 3)
@@ -541,6 +613,7 @@ class IndexerTestCase(unittest.TestCase):
                       'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
                       file_list[2])
 
+        # assert that an OSError is raised for a invalid root_path
         indexer = Indexer("some/bad/path/", filename_pattern="*.mseed")
         self.assertRaises(OSError, indexer.build_file_list)
 
@@ -548,8 +621,8 @@ class IndexerTestCase(unittest.TestCase):
         try:
             my_uuid = uuid.uuid4().hex
             fname = 'test_timeseries_{}'.format(my_uuid)
-            package_dir = os.path.abspath(os.path.dirname(__file__))
-            filepath = os.path.join(package_dir, 'data/tsindex_data/')
+            filepath = get_test_data_filepath()
+    
             sqlitedb = '{}{}.sqlite'.format(filepath, fname)
             indexer = Indexer(filepath,
                               sqlitedb=sqlitedb,
@@ -597,6 +670,17 @@ class IndexerTestCase(unittest.TestCase):
                                                      keys[j]))
                                     )
             self.assertEqual(len(tsindex_data), len(expected_tsindex_data))
+            
+            # test that a bad leap second file path raises an error
+            indexer = Indexer(filepath,
+                              sqlitedb=sqlitedb,
+                              filename_pattern="*.mseed",
+                              leap_seconds_file="/some/bad/path/",
+                              parallel=2)
+            self.assertRaisesRegexp(OSError,
+                                    "^No leap seconds file exists at.*$",
+                                    indexer.run)
+            
         except Exception as err:
             raise(err)
         finally:
@@ -608,8 +692,7 @@ class TSIndexDatabaseHanderTestCase(unittest.TestCase):
     def test__fetch_summary_rows(self):
         # test with actual sqlite3 database that is missing a summary table
         # a temporary summary table gets created at runtime
-        package_dir = os.path.abspath(os.path.dirname(__file__))
-        filepath = os.path.join(package_dir, 'data/tsindex_data/')
+        filepath = get_test_data_filepath()
         db_path = os.path.join(filepath, 'timeseries.sqlite')
         request_handler = TSIndexDatabaseHandler(db_path)
 
