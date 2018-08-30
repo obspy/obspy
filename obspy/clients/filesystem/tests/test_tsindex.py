@@ -592,7 +592,7 @@ class IndexerTestCase(unittest.TestCase):
                           index_cmd="some_bad_command")
         
         self.assertRaisesRegexp(OSError,
-                                "^Error running command.*$",
+                                "^Required program.* is not installed.*$",
                                 indexer.run)
 
     def test_build_file_list(self):

@@ -10,6 +10,9 @@
        :nosignatures:
 
        sds.Client
+       tsindex.Client
+       tsindex.Indexer
+       tsindex.TSIndexDatabaseHandler
 
     .. comment to end block
 
@@ -20,5 +23,6 @@
        :nosignatures:
 
        sds
+       tsindex
 
     .. comment to end block

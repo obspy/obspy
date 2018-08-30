@@ -1,13 +1,127 @@
 # -*- coding: utf-8 -*-
 """
-Time series extraction client for a database created by the
-IRIS mseedindex program.
+obspy.clients.filesystem.tsindex - IRIS TSIndex Client and Indexer
+==========================================================================
+
+The obspy.clients.filesystem.tsindex module includes a timeseries extraction
+:class:`~obspy.clients.filesystem.tsindex.Client` class for a database created
+by the IRIS 
+`mseedindex <https://github.com/iris-edu/mseedindex>`_ program, as well as, a
+:class:`~obspy.clients.filesystem.tsindex.Indexer` class for creating a SQLite3
+database that follows the IRIS `tsindex database 
+schema <https://github.com/iris-edu/mseedindex/wiki/Database-Schema/>`_\.
 
 :copyright:
+    Nick Falco, Chad Trabant, IRISDMC, 2018
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
+
+
+.. contents:: Contents
+    :local:
+    :depth: 2
+
+------------
+Client Usage
+------------
+
+The first step is always to initialize a client object. 
+
+.. highlight:: python
+>>> from obspy.clients.filesystem.tsindex import Client
+>>> from obspy.clients.filesystem.tests.test_tsindex \
+import get_test_data_filepath
+>>> # for this example get the file path to test data
+>>> filepath = get_test_data_filepath()
+>>> db_path = os.path.join(filepath, 'timeseries.sqlite')
+>>> # create a new Client instance
+>>> client = Client(db_path, datapath_replace=("^", filepath))
+
+The example below uses the test SQLite3 tsindex database included with ObsPy to
+illustrate how to do the following:
+
+* Determine what data is available in the tsindex database using
+  :meth:`~obspy.clients.filesystem.tsindex.Client.get_availability_extent()`
+  and :meth:`~obspy.clients.filesystem.tsindex.Client.get_availability()`, as
+  well as, the percentage of data available using
+  :meth:`~obspy.clients.filesystem.tsindex.Client.get_availability_percentage()`.
+* Request available timeseries data using
+  :meth:`~obspy.clients.filesystem.tsindex.Client.get_waveforms()` and
+  :meth:`~obspy.clients.filesystem.tsindex.Client.get_waveforms_bulk()`.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Determining Data Availability
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* :meth:`~obspy.clients.filesystem.tsindex.Client.get_availability_extent()`:
+  Returns a list of (network, station, location, channel, earliest, latest)
+  tuples that represent the full extent of available data. This example
+  retrieves from the very small obspy test tsindex database a list of all
+  available (``"BHZ"``) channel extents from the Global Seismograph Network
+  (``"IU"``) for all times.
+
+>>> extents = client.get_availability_extent("IU", "*", "*", \
+                                             "BHZ", "*", "*")
+>>> for extent in extents:
+...     print("{0:<3} {1:<6} {2:<3} {3:<4} {4} {5}".format(*extent))
+IU  ANMO   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994536Z
+IU  COLA   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994538Z
+
+* :meth:`~obspy.clients.filesystem.tsindex.Client.get_availability()`:
+  Works in the same way as
+  :meth:`~obspy.clients.filesystem.tsindex.Client.get_availability_extent()`
+  but returns a list of (network, station, location, channel, starttime,
+  endtime) tuples representing contiguous time spans for selected channels
+  and time ranges.
+
+* :meth:`~obspy.clients.filesystem.tsindex.Client.get_percentage_availability()`:
+  Returns the 2-tuple of percentage of available data (`0.0` to `1.0`) and
+  number of gaps/overlaps. Percentage availability is calculated relative to
+  the provided starttime and endtime.
+
+>>> from obspy import UTCDateTime
+>>> avail_percentage = client.get_availability_percentage( \
+"IU", \
+"ANMO", \
+"10", \
+"BHZ", \
+UTCDateTime(2018, 1, 1, 0, 0, 0, 19500), \
+UTCDateTime(2018, 1, 1, 0, 1, 57, 994536))
+>>> print(avail_percentage)
+(0.5083705674817509, 0)
+  
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Requesting Timeseries Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* :meth:`~obspy.clients.filesystem.tsindex.Client.get_waveforms()`:
+  This example illustrates how to request 1 second of available (``"IU"``)
+  timeseries data in the test tsindex database. Results are returned as a
+  :class:`~obspy.core.stream.Stream` object. See the
+  :meth:`~obspy.clients.filesystem.tsindex.Client.get_waveforms_bulk()`
+  method for information on how to make multiple request at once.
+
+>>> t = UTCDateTime("2018-01-01T00:00:00.019500")
+>>> st = client.get_waveforms("IU", "*", "*", "BHZ", t, t + 1)
+>>> st.plot()  # doctest: +SKIP
+
+.. plot::
+
+    from obspy import UTCDateTime
+    from obspy.clients.filesystem.tsindex import Client
+    from obspy.clients.filesystem.tests.test_tsindex \
+    import get_test_data_filepath
+    # for this example get the file path to test data
+    filepath = get_test_data_filepath()
+    db_path = os.path.join(filepath, 'timeseries.sqlite')
+    # create a new Client instance
+    client = Client(db_path, datapath_replace=("^", filepath))
+    t = UTCDateTime("2018-01-01T00:00:00.019500")
+    st = client.get_waveforms("IU", "*", "*", "BHZ", t, t + 1)
+    st.plot()
+
 """
 
 from __future__ import (absolute_import, division, print_function,
@@ -63,8 +177,7 @@ copy_reg.pickle(types.MethodType, _pickle_method)
 
 class Client(object):
     """
-    Time series extraction client for a database created by the
-    IRIS mseedindex program.
+    Time series extraction client for IRIS tsindex database schema.
     """
 
     def __init__(self, sqlitedb, datapath_replace=None, debug=False):
@@ -72,7 +185,7 @@ class Client(object):
         Initializes the client.
 
         :type sqlitedb: str or
-            ~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler
+            :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
         :param sqlitedb: Path to sqlite tsindex database or a
             TSIndexDatabaseHandler object
         :type datapath_replace: tuple
@@ -137,6 +250,9 @@ class Client(object):
             :meth:`Stream.merge(...) <obspy.core.stream.Stream.merge>` for
             details. If set to ``None`` (or ``False``) no merge operation at
             all will be performed.
+        :rtype: `~obspy.core.stream.Stream`
+        :returns: A ObsPy `~obspy.core.stream.Stream` object containing
+            requested timeseries data.
         """
         query_rows = [(network, station, location,
                        channel, starttime, endtime)]
@@ -159,14 +275,17 @@ class Client(object):
             :meth:`Stream.merge(...) <obspy.core.stream.Stream.merge>` for
             details. If set to ``None`` (or ``False``) no merge operation at
             all will be performed.
+        :rtype: `~obspy.core.stream.Stream`
+        :returns: A ObsPy `~obspy.core.stream.Stream` object containing
+            requested timeseries data.
         """
         return self._get_waveforms(query_rows, merge)
 
     def get_nslc(self, network, station, location,
                  channel, starttime, endtime):
         """
-        Return a list of tuples [(net, sta, loc, cha),...] containing
-        information on what streams are included in the tsindex database.
+        Get a list of tuples [(net, sta, loc, cha),...] containing information
+        on what streams are included in the tsindex database.
 
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
@@ -184,6 +303,10 @@ class Client(object):
         :param starttime: Start of requested time window.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End of requested time window.
+        :rtype: list
+        :returns: A list of tuples [(network, station, location, channel)...]
+            containing information on what streams are included in the tsindex
+            database.
         """
         summary_rows = self._get_summary_rows(network, station, location,
                                              channel, starttime, endtime)
@@ -197,7 +320,7 @@ class Client(object):
     def get_availability_extent(self, network, station, location,
                                 channel, starttime, endtime):
         """
-        Return a list of tuples [(network, station, location, channel,
+        Get a list of tuples [(network, station, location, channel,
         earliest, latest)] containing data extent info for time series
         included in the tsindex database.
 
@@ -217,6 +340,10 @@ class Client(object):
         :param starttime: Start of requested time window.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End of requested time window.
+        :rtype: list
+        :returns: A list of tuples [(network, station, location, channel,
+            earliest, latest)...] containing data extent info for time series
+            included in the tsindex database.
         """
         summary_rows = self._get_summary_rows(network, station,
                                              location, channel,
@@ -234,7 +361,7 @@ class Client(object):
                          include_sample_rate=False,
                          merge_overlap=False):
         """
-        Return a list of tuples [(network, station, location, channel,
+        Get a list of tuples [(network, station, location, channel,
         starttime, endtime),...] containing data availability info for
         time series included in the tsindex database.
 
@@ -266,6 +393,10 @@ class Client(object):
         :type mege_overlap: bool
         :param merge_overlap: If merge_overlap=True, then all time
             spans that overlap are merged.
+        :rtype: list
+        :returns: A list of tuples [(network, station, location, channel,
+            earliest, latest)...] representing contiguous time spans for
+            selected channels and time ranges.
         """
 
         tsindex_rows = self._get_tsindex_rows(network, station,
@@ -395,6 +526,9 @@ class Client(object):
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start of requested time window.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :rtype: bool
+        :returns: Returns True if there is data in the index for a given
+            network, station, location, channel, starttime, endtime.
         """
         avail_percentage = self.get_availability_percentage(network,
                                                             station,
@@ -745,14 +879,14 @@ class Indexer(object):
         :type root_path: str
         :param root_path: Root path to the directory structure to index.
         :type sqlitedb: str or
-            ~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler
+            :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
         :param sqlitedb: Path to sqlite tsindex database or a
             TSIndexDatabaseHandler object. A database will be created
             if one does not already exists at the specified path.
         :type leap_seconds_file: str
         :param leap_seconds_file: Path to leap seconds file. See the
             `mseedindex wiki <https://github.com/iris-edu/mseedindex/blob/"
-            "master/doc/mseedindex.md#leap-second-list-file>` "
+            "master/doc/mseedindex.md#leap-second-list-file>`_ "
             "for more information.
         :type index_cmd: str
         :param index_cmd: Command to be run for each target file found that
@@ -808,7 +942,7 @@ class Indexer(object):
             the index and have not been modified.  The `reindex` option can be
             set to True to force a re-indexing of all files regardless.
         """
-        self.is_mseedindex_installed()
+        self.is_index_cmd_installed()
         self.request_handler._init_database_for_indexing()
         file_paths = self.build_file_list(relative_paths)
         
@@ -854,6 +988,9 @@ class Indexer(object):
         :param relative_paths: By default, the absolute path to each file is
             stored in the index. If `relative_paths` is True, the file paths
             will be relative to the `root_path`.
+        :rtype: list
+        :returns: A list of files under the root_path matching
+            filename_pattern.
         """
         file_list = [y for x in os.walk(self.root_path)
                     for y in glob(os.path.join(x[0], self.filename_pattern))]
@@ -870,16 +1007,18 @@ class Indexer(object):
                           .format(self.filename_pattern, self.root_path))
         return result
 
-    def is_mseedindex_installed(self):
+    def is_index_cmd_installed(self):
         """
-        Checks if mseedindex is installed.
+        Checks if the index command (e.g. mseedindex) is installed. Raises an
+        OSError if it is not installed.
         """
         try:
-            subprocess.call(["mseedindex", "-V"])
+            subprocess.call([self.index_cmd])
         except OSError:
             raise OSError(
-                    "Required program mseedindex is not installed. Install "
-                    "mseedindex at https://github.com/iris-edu/mseedindex/.")
+                    "Required program `{}` is not installed. Hint: Install "
+                    "mseedindex at https://github.com/iris-edu/mseedindex/."
+                    .format(self.index_cmd))
 
     @classmethod
     def _run_index_command(cls, index_cmd, root_path, file_name, bulk_params):
@@ -911,6 +1050,9 @@ class Indexer(object):
 
 
 class TSIndexDatabaseHandler(object):
+    """
+    Supports direct tsindex database data access and manipulation.
+    """
 
     def __init__(self, sqlitedb, tsindex_table="tsindex",
                  tsindex_summary_table="tsindex_summary",
@@ -919,7 +1061,7 @@ class TSIndexDatabaseHandler(object):
         Main query interface to timeseries index database.
 
         :type sqlitedb: str or
-            ~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler
+            :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
         :param sqlitedb: Path to sqlite tsindex database or a
             TSIndexDatabaseHandler object
         :type tsindex_table: str
@@ -942,6 +1084,15 @@ class TSIndexDatabaseHandler(object):
         self.engine = create_engine(self.db_path, poolclass=QueuePool)
         
     def build_tsindex_summary(self, connection=None, temporary=False):
+        """
+        Builds a tsindex_summary table using the table name supplied to the
+        Indexer instance (defaults to 'tsindex_summary'). 
+        
+        :type connection: :class:`~sqlalchemy.engine.Connection`
+        :param: connection: SQLAlchemy database connection object.
+        :type temporary: bool
+        :param temporary: If True then a temporary tsindex table is created.
+        """
         if connection is None:
             connection = self.engine.connect()
         # test if tsindex table exists
@@ -967,7 +1118,9 @@ class TSIndexDatabaseHandler(object):
 
     def _fetch_index_rows(self, query_rows=[], bulk_params={}):
         '''
-        Fetch index rows matching specified request
+        Fetch index rows matching specified request. This method is marked as
+        private because the index schema is subject to change.
+
         :type query_rows: list
         :param query_rows: List of tuples containing (net,sta,loc,chan,start,
             end). By default everything is selected.
@@ -1098,7 +1251,8 @@ class TSIndexDatabaseHandler(object):
     def _fetch_summary_rows(self, query_rows):
         '''
         Fetch summary rows matching specified request. A temporary tsindex
-        summary table is created if one does not exists
+        summary table is created if one does not exists. This method is marked
+        as private because the index schema is subject to change.
 
         Returns rows as list of named tuples containing:
         (network,station,location,channel,earliest,latest,updated)
