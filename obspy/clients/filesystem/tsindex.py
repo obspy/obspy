@@ -51,6 +51,9 @@ logger.addHandler(ch)
 
 
 def _pickle_method(m):
+    """
+    Allows serializing of class and instance methods.
+    """
     if m.im_self is None:
         return getattr, (m.im_class, m.im_func.func_name)
     else:
@@ -142,7 +145,7 @@ class Client(object):
     def get_waveforms_bulk(self, query_rows, merge=-1):
         """
         Query tsindex database and read miniSEED data from local
-        indexed directory tree using a bulk request
+        indexed directory tree using a bulk request.
 
         :type query_rows: str
         :param network: A list of tuples [(net, sta, loc, cha, starttime,
@@ -158,56 +161,6 @@ class Client(object):
             all will be performed.
         """
         return self._get_waveforms(query_rows, merge)
-
-    def _get_waveforms(self, query_rows, merge=-1):
-        """
-        Query tsindex database and read miniSEED data from local
-        indexed directory tree using a bulk request and return a
-        ~obspy.core.stream.Stream object containing the requested
-        timeseries data.
-
-        :type query_rows: str
-        :param network: A list of tuples [(net, sta, loc, cha, starttime,
-            endtime),...] containing information on what timeseries should be
-            returned from the indexed archive.
-            Wildcards '*' and '?' are supported.
-        :param merge: Specifies, which merge operation should be performed
-            on the stream before returning the data. Default (``-1``) means
-            only a conservative cleanup merge is performed to merge seamless
-            traces (e.g. when reading across day boundaries). See
-            :meth:`Stream.merge(...) <obspy.core.stream.Stream.merge>` for
-            details. If set to ``None`` (or ``False``) no merge operation at
-            all will be performed.
-        """
-        # Get the corresponding index DB entries
-        index_rows = self.request_handler._fetch_index_rows(query_rows)
-
-        total_bytes = 0
-        src_bytes = {}
-
-        logger.debug("Starting data return")
-        st = Stream(traces=[])
-        try:
-            # Extract the data, writing each returned segment to the response
-            for data_segment in self.data_extractor.extract_data(index_rows):
-                bytes_written = data_segment.get_num_bytes()
-                src_name = data_segment.get_src_name()
-                if bytes_written > 0:
-                    st_segment = data_segment.read_stream()
-                    st += st_segment
-                    total_bytes += bytes_written
-                    src_bytes.setdefault(src_name, 0)
-                    src_bytes[src_name] += bytes_written
-        except NoDataError:
-            logger.debug("No data matched selection")
-
-        logger.debug("Wrote {} bytes".format(total_bytes))
-
-        if merge is None or merge is False:
-            pass
-        else:
-            st.merge(merge)
-        return st
 
     def get_nslc(self, network, station, location,
                  channel, starttime, endtime):
@@ -232,7 +185,7 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End of requested time window.
         """
-        summary_rows = self.get_summary_rows(network, station, location,
+        summary_rows = self._get_summary_rows(network, station, location,
                                              channel, starttime, endtime)
 
         nslc_list = []
@@ -244,9 +197,9 @@ class Client(object):
     def get_availability_extent(self, network, station, location,
                                 channel, starttime, endtime):
         """
-        Return a list of tuples [(net, sta, loc, cha, earliest, latest)]
-        containing data extent info for time series included in the
-        tsindex database.
+        Return a list of tuples [(network, station, location, channel,
+        earliest, latest)] containing data extent info for time series
+        included in the tsindex database.
 
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
@@ -265,7 +218,7 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End of requested time window.
         """
-        summary_rows = self.get_summary_rows(network, station,
+        summary_rows = self._get_summary_rows(network, station,
                                              location, channel,
                                              starttime, endtime)
 
@@ -276,193 +229,14 @@ class Client(object):
             availability_extents.append(extent)
         return availability_extents
 
-    def _are_timespans_adjacent(self, ts1, ts2, sample_rate, tolerance=0.5):
-        """
-        Checks whether or not two time span named tuples
-        (e.g. NameTuple(earliest, latest)) are adjacent within
-        a given tolerance
-        """
-        # @40Hz sample period = 0.025
-        sample_period = 1. / float(sample_rate)
-        expected_next = ts1.latest + sample_period
-        # @40Hz tolerance = 0.0125
-        tolerance_amount = (tolerance*sample_period)
-        actual_next = ts2.earliest
-        if expected_next + tolerance_amount > actual_next and \
-           expected_next - tolerance_amount < actual_next:
-            return True
-        else:
-            return False
-
-    def _do_timespans_overlap(self, ts1, ts2):
-        """
-        Checks whether or not two time span named tuples
-        (e.g. NameTuple(earliest, latest)) intersect with
-        one another.
-
-        :type ts1: namedtuple
-        :param ts1: Earliest timespan.
-        :type ts2: namedtuple
-        :param ts2: Latest timespan.
-        """
-        if ts1.earliest <= ts2.latest and \
-           ts1.latest >= ts2.earliest:
-            return True
-        else:
-            return False
-
-    def _create_avail_tuple(self, network, station, location, channel,
-                            earliest, latest, sr=None):
-        """
-        Returns a tuple representing available waveform data.
-
-        :type network: str
-        :param network: Network code of requested data (e.g. "IU").
-            Wildcards '*' and '?' are supported.
-        :type station: str
-        :param station: Station code of requested data (e.g. "ANMO").
-            Wildcards '*' and '?' are supported.
-        :type location: str
-        :param location: Location code of requested data (e.g. "").
-            Wildcards '*' and '?' are supported.
-        :type channel: str
-        :param channel: Channel code of requested data (e.g. "HHZ").
-            Wildcards '*' and '?' are supported.
-        :type earliest: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param earliest: Earliest date of timespan.
-        :type latest: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param latest: Latest date of timespan.
-        """
-        if sr is not None:
-            avail_record = (network, station, location, channel,
-                            UTCDateTime(float(earliest)),
-                            UTCDateTime(float(latest)), sr)
-        else:
-            avail_record = (network, station, location, channel,
-                            UTCDateTime(float(earliest)),
-                            UTCDateTime(float(latest)))
-        return avail_record
-
-    def _create_timespan(self, earliest, latest):
-        """
-        Create a TimeSpan named tuple object given a earliest and latest date.
-
-        :param earliest: Earliest date of timespan.
-        :param latest: Latest date of timespan.
-        """
-        TimeSpan = namedtuple('TimeSpan',
-                              ['earliest', 'latest'])
-        return TimeSpan(earliest, latest)
-
-    def _create_timespans_list(self, raw_timespans):
-        """
-        Given a timespans string from the database, return
-        a python list of named tuples.
-
-        :type raw_timespans: str
-        :param raw_timespans: timespans field from tsindex database table.
-        """
-        timespans = []
-        unparsed_timespans = \
-            raw_timespans.replace("[", "").replace("]", "").split(",")
-        for t in unparsed_timespans:
-            earliest, latest = t.split(":")
-            ts = self._create_timespan(float(earliest), float(latest))
-            timespans.append(ts)
-        return timespans
-    
-    def _get_availability_from_timespans(self, net, sta, loc, cha,
-                                         samplerates,
-                                         include_sample_rate,
-                                         merge_overlap,
-                                         timespans,
-                                         _sncl_joined_avail_tuples=None):
-        """
-        Recurse over a list of timespans, joining adjacent timespans,
-        and merging if merge_overlaps is True.
-
-        Returns a list of tuples (network, station, location, channel,
-        earliest, latest) representing available data.
-
-        :type timespans: list
-        :param timespans: List of timespan tuples
-        """
-        if _sncl_joined_avail_tuples is None:
-            _sncl_joined_avail_tuples = []
-
-        sr = min(samplerates)
-        if len(timespans) > 1:
-            prev_ts = timespans.pop(0)
-            cur_ts = timespans.pop(0)
-            if merge_overlap is True and \
-                    self._do_timespans_overlap(prev_ts, cur_ts) is True:
-                # merge if overlapping timespans and merge_overlap
-                # option is set to true
-                earliest_tuple = min([prev_ts, cur_ts],
-                                     key=lambda t: t.earliest)
-                latest_tuple = max([prev_ts, cur_ts],
-                                   key=lambda t: t.latest)
-                merged_ts = self._create_timespan(prev_ts.earliest,
-                                                  cur_ts.latest)
-                timespans.insert(0, merged_ts)
-                return self._get_availability_from_timespans(
-                                                net, sta, loc, cha,
-                                                samplerates,
-                                                include_sample_rate,
-                                                merge_overlap,
-                                                timespans,
-                                                _sncl_joined_avail_tuples)
-            elif self._are_timespans_adjacent(prev_ts, cur_ts, sr, 0.5):
-                # merge if timespans are next to each other within
-                # a 0.5 sample tolerance
-                merged_ts = self._create_timespan(prev_ts.earliest,
-                                                  cur_ts.latest)
-                timespans.insert(0, merged_ts)
-                return self._get_availability_from_timespans(
-                                                net, sta, loc, cha,
-                                                samplerates,
-                                                include_sample_rate,
-                                                merge_overlap,
-                                                timespans,
-                                                _sncl_joined_avail_tuples)
-            else:
-                # timespan shouldn't be merged so add to list
-                avail_tuple = self._create_avail_tuple(
-                                          net, sta, loc, cha,
-                                          prev_ts.earliest,
-                                          prev_ts.latest,
-                                          sr=sr if include_sample_rate \
-                                                else None)
-                _sncl_joined_avail_tuples.append(avail_tuple)
-                timespans.insert(0, cur_ts)
-                return self._get_availability_from_timespans(
-                                                net, sta, loc, cha,
-                                                samplerates,
-                                                include_sample_rate,
-                                                merge_overlap,
-                                                timespans,
-                                                _sncl_joined_avail_tuples)
-        else:
-            # no other timespans to merge with
-            cur_ts = timespans.pop(0)
-            avail_tuple = self._create_avail_tuple(
-                                          net, sta,
-                                          loc, cha,
-                                          cur_ts.earliest,
-                                          cur_ts.latest,
-                                          sr=sr if include_sample_rate \
-                                                else None)
-            _sncl_joined_avail_tuples.append(avail_tuple)
-        return _sncl_joined_avail_tuples
-
     def get_availability(self, network, station, location,
                          channel, starttime, endtime,
                          include_sample_rate=False,
                          merge_overlap=False):
         """
-        Return a list of tuples [(net, sta, loc, cha, start, end),...]
-        containing data availability info for time series included in
-        the tsindex database.
+        Return a list of tuples [(network, station, location, channel,
+        starttime, endtime),...] containing data availability info for
+        time series included in the tsindex database.
 
         If include_sample_rate=True, then a tuple containing the sample
         rate [(net, sta, loc, cha, start, end, sample_rate),...] is returned.
@@ -547,7 +321,7 @@ class Client(object):
                                                       merge_overlap,
                                                       timespans
                                                       )
-            # extend complete list
+            # extend complete list of available data
             joined_avail_tuples.extend(avail_data)
         return joined_avail_tuples
 
@@ -572,10 +346,6 @@ class Client(object):
         :returns: 2-tuple of percentage of available data (``0.0`` to ``1.0``)
             and number of gaps/overlaps.
         """
-
-        if starttime >= endtime:
-            msg = ("'endtime' must be after 'starttime'.")
-            raise ValueError(msg)
         avail = self.get_availability(network, station,
                                       location, channel,
                                       starttime, endtime,
@@ -637,7 +407,7 @@ class Client(object):
         else:
             return False
 
-    def get_summary_rows(self, network, station, location, channel,
+    def _get_summary_rows(self, network, station, location, channel,
                          starttime, endtime):
         """
         Return a list of tuples [(net, sta, loc, cha, earliest, latest),...]
@@ -665,6 +435,56 @@ class Client(object):
         query_rows = [(network, station, location,
                        channel, starttime, endtime)]
         return self.request_handler._fetch_summary_rows(query_rows)
+
+    def _get_waveforms(self, query_rows, merge=-1):
+        """
+        Query tsindex database and read miniSEED data from local
+        indexed directory tree using a bulk request and return a
+        ~obspy.core.stream.Stream object containing the requested
+        timeseries data.
+
+        :type query_rows: str
+        :param network: A list of tuples [(net, sta, loc, cha, starttime,
+            endtime),...] containing information on what timeseries should be
+            returned from the indexed archive.
+            Wildcards '*' and '?' are supported.
+        :param merge: Specifies, which merge operation should be performed
+            on the stream before returning the data. Default (``-1``) means
+            only a conservative cleanup merge is performed to merge seamless
+            traces (e.g. when reading across day boundaries). See
+            :meth:`Stream.merge(...) <obspy.core.stream.Stream.merge>` for
+            details. If set to ``None`` (or ``False``) no merge operation at
+            all will be performed.
+        """
+        # Get the corresponding index DB entries
+        index_rows = self.request_handler._fetch_index_rows(query_rows)
+
+        total_bytes = 0
+        src_bytes = {}
+
+        logger.debug("Starting data return")
+        st = Stream(traces=[])
+        try:
+            # Extract the data, writing each returned segment to the response
+            for data_segment in self.data_extractor.extract_data(index_rows):
+                bytes_written = data_segment.get_num_bytes()
+                src_name = data_segment.get_src_name()
+                if bytes_written > 0:
+                    st_segment = data_segment.read_stream()
+                    st += st_segment
+                    total_bytes += bytes_written
+                    src_bytes.setdefault(src_name, 0)
+                    src_bytes[src_name] += bytes_written
+        except NoDataError:
+            logger.debug("No data matched selection")
+
+        logger.debug("Wrote {} bytes".format(total_bytes))
+
+        if merge is None or merge is False:
+            pass
+        else:
+            st.merge(merge)
+        return st
 
     def _get_tsindex_rows(self, network, station, location, channel,
                          starttime, endtime):
@@ -694,6 +514,216 @@ class Client(object):
         query_rows = [(network, station, location,
                        channel, starttime, endtime)]
         return self.request_handler._fetch_index_rows(query_rows)
+    
+    def _get_availability_from_timespans(self, network, station,
+                                         location, channel,
+                                         samplerates,
+                                         include_sample_rate,
+                                         merge_overlap,
+                                         timespans,
+                                         _sncl_joined_avail_tuples=None):
+        """
+        Recurse over a list of timespans, joining adjacent timespans,
+        and merging if merge_overlaps is True.
+
+        Returns a list of tuples (network, station, location, channel,
+        earliest, latest) representing available data.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+            Wildcards '*' and '?' are supported.
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+            Wildcards '*' and '?' are supported.
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+            Wildcards '*' and '?' are supported.
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+            Wildcards '*' and '?' are supported.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start of requested time window.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End of requested time window.
+        :type timespans: list
+        :param timespans: List of timespan tuples
+        """
+        if _sncl_joined_avail_tuples is None:
+            _sncl_joined_avail_tuples = []
+
+        sr = min(samplerates)
+        if len(timespans) > 1:
+            prev_ts = timespans.pop(0)
+            cur_ts = timespans.pop(0)
+            if merge_overlap is True and \
+                    self._do_timespans_overlap(prev_ts, cur_ts) is True:
+                # merge if overlapping timespans and merge_overlap
+                # option is set to true
+                earliest_tuple = min([prev_ts, cur_ts],
+                                     key=lambda t: t.earliest)
+                latest_tuple = max([prev_ts, cur_ts],
+                                   key=lambda t: t.latest)
+                merged_ts = self._create_timespan(prev_ts.earliest,
+                                                  cur_ts.latest)
+                timespans.insert(0, merged_ts)
+                return self._get_availability_from_timespans(
+                                                network, station,
+                                                location, channel,
+                                                samplerates,
+                                                include_sample_rate,
+                                                merge_overlap,
+                                                timespans,
+                                                _sncl_joined_avail_tuples)
+            elif self._are_timespans_adjacent(prev_ts, cur_ts, sr, 0.5):
+                # merge if timespans are next to each other within
+                # a 0.5 sample tolerance
+                merged_ts = self._create_timespan(prev_ts.earliest,
+                                                  cur_ts.latest)
+                timespans.insert(0, merged_ts)
+                return self._get_availability_from_timespans(
+                                                network, station,
+                                                location, channel,
+                                                samplerates,
+                                                include_sample_rate,
+                                                merge_overlap,
+                                                timespans,
+                                                _sncl_joined_avail_tuples)
+            else:
+                # timespan shouldn't be merged so add to list
+                avail_tuple = self._create_avail_tuple(
+                                          network, station,
+                                          location, channel,
+                                          prev_ts.earliest,
+                                          prev_ts.latest,
+                                          sr=sr if include_sample_rate \
+                                                else None)
+                _sncl_joined_avail_tuples.append(avail_tuple)
+                timespans.insert(0, cur_ts)
+                return self._get_availability_from_timespans(
+                                                network, station,
+                                                location, channel,
+                                                samplerates,
+                                                include_sample_rate,
+                                                merge_overlap,
+                                                timespans,
+                                                _sncl_joined_avail_tuples)
+        else:
+            # no other timespans to merge with
+            cur_ts = timespans.pop(0)
+            avail_tuple = self._create_avail_tuple(
+                                          network, station,
+                                          location, channel,
+                                          cur_ts.earliest,
+                                          cur_ts.latest,
+                                          sr=sr if include_sample_rate \
+                                                else None)
+            _sncl_joined_avail_tuples.append(avail_tuple)
+        return _sncl_joined_avail_tuples
+
+    def _are_timespans_adjacent(self, ts1, ts2, sample_rate, tolerance=0.5):
+        """
+        Checks whether or not two time span named tuples
+        (e.g. NameTuple(earliest, latest)) are adjacent within
+        a given tolerance
+
+        :type ts1: namedtuple
+        :param ts1: Earliest timespan.
+        :type ts2: namedtuple
+        :param ts2: Latest timespan.
+        :type sample_rate: int
+        :param sample_rate: Sensor sample rate
+        :type tolerance: float
+        :param tolerance: Tolerance to determine whether a adjacent
+            timespan should be merged.
+        """
+        # @40Hz sample period = 0.025
+        sample_period = 1. / float(sample_rate)
+        expected_next = ts1.latest + sample_period
+        # @40Hz tolerance = 0.0125
+        tolerance_amount = (tolerance*sample_period)
+        actual_next = ts2.earliest
+        if expected_next + tolerance_amount > actual_next and \
+           expected_next - tolerance_amount < actual_next:
+            return True
+        else:
+            return False
+
+    def _do_timespans_overlap(self, ts1, ts2):
+        """
+        Checks whether or not two time span named tuples
+        (e.g. NameTuple(earliest, latest)) intersect with
+        one another.
+
+        :type ts1: namedtuple
+        :param ts1: Earliest timespan.
+        :type ts2: namedtuple
+        :param ts2: Latest timespan.
+        """
+        if ts1.earliest <= ts2.latest and \
+           ts1.latest >= ts2.earliest:
+            return True
+        else:
+            return False
+
+    def _create_avail_tuple(self, network, station, location, channel,
+                            earliest, latest, sr=None):
+        """
+        Returns a tuple representing available waveform data.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+            Wildcards '*' and '?' are supported.
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+            Wildcards '*' and '?' are supported.
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+            Wildcards '*' and '?' are supported.
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+            Wildcards '*' and '?' are supported.
+        :type earliest: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param earliest: Earliest date of timespan.
+        :type latest: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param latest: Latest date of timespan.
+        """
+        if sr is not None:
+            avail_record = (network, station, location, channel,
+                            UTCDateTime(float(earliest)),
+                            UTCDateTime(float(latest)), sr)
+        else:
+            avail_record = (network, station, location, channel,
+                            UTCDateTime(float(earliest)),
+                            UTCDateTime(float(latest)))
+        return avail_record
+
+    def _create_timespan(self, earliest, latest):
+        """
+        Create a TimeSpan named tuple object given a earliest and latest date.
+
+        :param earliest: Earliest date of timespan.
+        :param latest: Latest date of timespan.
+        """
+        TimeSpan = namedtuple('TimeSpan',
+                              ['earliest', 'latest'])
+        return TimeSpan(earliest, latest)
+
+    def _create_timespans_list(self, raw_timespans):
+        """
+        Given a timespans string from the database, return
+        a list of named tuples.
+
+        :type raw_timespans: str
+        :param raw_timespans: timespans field from tsindex database table.
+        """
+        timespans = []
+        unparsed_timespans = \
+            raw_timespans.replace("[", "").replace("]", "").split(",")
+        for t in unparsed_timespans:
+            earliest, latest = t.split(":")
+            ts = self._create_timespan(float(earliest), float(latest))
+            timespans.append(ts)
+        return timespans
 
 
 class Indexer(object):
@@ -1280,11 +1310,11 @@ class TSIndexDatabaseHandler(object):
 
     def _clean_query_rows(self, query_rows):
         """
-        Reformats query rows to match what the database expects
+        Reformats query rows to match what is stored in the database.
         
         :type query_rows: list
-        :param query_rows: List of tuples containing (net,sta,loc,chan,start,
-            end).
+        :param query_rows: List of tuples containing (network, station,
+            location, channel, starttime, endtime).
         """
         if query_rows == []:
             # if an empty list is supplied then select everything

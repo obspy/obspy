@@ -166,7 +166,7 @@ class ClientTestCase(unittest.TestCase):
     def test_get_nslc(self):
         client = get_test_client()
 
-        # test using mocked client.get_summary_rows method for more diversity
+        # test using mocked client._get_summary_rows method for more diversity
         NamedRow = namedtuple('NamedRow',
                               ['network', 'station', 'location', 'channel',
                                'earliest', 'latest'])
@@ -188,7 +188,7 @@ class ClientTestCase(unittest.TestCase):
                                NamedRow("N4", "H43A", "", "VM3",
                                         "2018-08-10T21:09:39.000000",
                                         "2018-08-10T22:09:28.890415")]
-        client.get_summary_rows = mock.MagicMock(
+        client._get_summary_rows = mock.MagicMock(
                                             return_value=mocked_summary_rows)
 
         expected_nslc = [("AK", "ANM", "", "VM2"),
@@ -223,7 +223,7 @@ class ClientTestCase(unittest.TestCase):
     def test_get_availability_extent(self):
         client = get_test_client()
         
-        # test using mocked client.get_summary_rows method for more diversity
+        # test using mocked client._get_summary_rows method for more diversity
         NamedRow = namedtuple('NamedRow',
                               ['network', 'station', 'location', 'channel',
                                'earliest', 'latest'])
@@ -245,7 +245,7 @@ class ClientTestCase(unittest.TestCase):
                                NamedRow("N4", "H43A", "", "VM3",
                                         "2018-08-10T21:09:39.000000",
                                         "2018-08-10T22:09:28.890415")]
-        client.get_summary_rows = mock.MagicMock(
+        client._get_summary_rows = mock.MagicMock(
                                             return_value=mocked_summary_rows)
 
         expected_avail_extents = [("AK", "ANM", "", "VM2",
@@ -368,7 +368,7 @@ class ClientTestCase(unittest.TestCase):
     def test_get_availability(self):
         client = get_test_client()
 
-        # test using mocked client.get_summary_rows method for more diversity
+        # test using mocked client._get_summary_rows method for more diversity
         NamedRow = namedtuple('NamedRow',
                               ['network', 'station', 'location', 'channel',
                                'samplerate', 'starttime', 'endtime',
