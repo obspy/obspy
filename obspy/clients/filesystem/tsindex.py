@@ -1148,7 +1148,7 @@ class TSIndexDatabaseHandler(object):
         Builds a tsindex_summary table using the table name supplied to the
         Indexer instance (defaults to 'tsindex_summary'). 
         
-        :type connection: :class:`~sqlalchemy.engine.Connection`
+        :type connection: sqlalchemy.engine.Connection
         :param: connection: SQLAlchemy database connection object.
         :type temporary: bool
         :param temporary: If True then a temporary tsindex table is created.
@@ -1159,9 +1159,9 @@ class TSIndexDatabaseHandler(object):
         if not self.engine.dialect.has_table(self.engine, 'tsindex'):
             raise ValueError("No tsindex table '{}' exists in database '{}'."
                              .format(self.tsindex_table, self.sqlitedb))
-        if temporary is False:
-            connection.execute("DROP TABLE IF EXISTS {};"
-                               .format(self.tsindex_summary_table))
+        connection.execute("DROP TABLE IF EXISTS {};"
+                            .format(self.tsindex_summary_table))
+        
         connection.execute(
             "CREATE {0} TABLE {1} AS "
             "SELECT network, station, location, channel, "
