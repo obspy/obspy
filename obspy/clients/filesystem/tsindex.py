@@ -944,7 +944,7 @@ class Indexer(object):
         """
         self.is_index_cmd_installed()
         self.request_handler._init_database_for_indexing()
-        file_paths = self.build_file_list(relative_paths)
+        file_paths = self.build_file_list(relative_paths, reindex)
         
         if self.leap_seconds_file is not None and \
                 not os.path.isfile(self.leap_seconds_file):
@@ -995,25 +995,49 @@ class Indexer(object):
         file_list = [y for x in os.walk(self.root_path)
                     for y in glob(os.path.join(x[0], self.filename_pattern))]
 
+        # find relative file paths in case they are stored in the database as
+        # relative paths.
+        file_list_relative = []
+        for abs_path in file_list:
+            file_list_relative.append(relpath(abs_path, self.root_path))
+
         result = []
-        if relative_paths is True:
-            for abs_path in file_list:
-                result.append(relpath(abs_path, self.root_path))
+        if reindex is False and self.request_handler.has_tsindex():
+            # remove any files already in the tsindex table
+            unindexed_abs = []
+            unindexed_rel = []
+            tsindex = self.request_handler._fetch_index_rows()
+            tsindex_filenames = [row.filename for row in tsindex]
+            for abs_fn, rel_fn in zip(file_list, file_list_relative):
+                if abs_fn not in tsindex_filenames:
+                    unindexed_abs.append(abs_fn)
+                if rel_fn not in tsindex_filenames:
+                    unindexed_rel.append(rel_fn)
+            if relative_paths is True:
+                result = unindexed_rel
+            else:
+                result = unindexed_abs
+        elif relative_paths is True:
+            result = file_list_relative
         else:
             result = file_list
+
         if not result:
-            raise OSError("No files matching filename pattern '{}' "
+            raise OSError("No {}files matching filename pattern '{}' "
                           "were found under root path '{}'."
-                          .format(self.filename_pattern, self.root_path))
+                          .format("unindexed " if reindex is False else "",
+                                  self.filename_pattern,
+                                  self.root_path))
         return result
 
     def is_index_cmd_installed(self):
         """
-        Checks if the index command (e.g. mseedindex) is installed. Raises an
-        OSError if it is not installed.
+        Checks if the index command (e.g. mseedindex) is installed.
+
+        :raises OSError: If the index command is not installed.
         """
         try:
-            subprocess.call([self.index_cmd])
+            subprocess.call([self.index_cmd, "-V"])
         except OSError:
             raise OSError(
                     "Required program `{}` is not installed. Hint: Install "
@@ -1116,6 +1140,36 @@ class TSIndexDatabaseHandler(object):
         if connection is None:
             connection.close()
 
+    def has_tsindex_summary(self, connection=None):
+        """
+        Returns True if there is a tsindex_summary table in the database.
+        """
+        if connection is None:
+            connection = self.engine.connect()
+        result = connection.execute("SELECT count(*) FROM sqlite_master "
+                                    "WHERE type='table' and name='{0}'"
+                                    .format(self.tsindex_summary_table))
+
+        summary_present = result.fetchone()[0]
+        if connection is None:
+            connection.close()
+        return summary_present
+
+    def has_tsindex(self, connection=None):
+        """
+        Returns True if there is a tsindex table in the database.
+        """
+        if connection is None:
+            connection = self.engine.connect()
+        result = connection.execute("SELECT count(*) FROM sqlite_master "
+                                    "WHERE type='table' and name='{0}'"
+                                    .format(self.tsindex_table))
+
+        summary_present = result.fetchone()[0]
+        if connection is None:
+            connection.close()
+        return summary_present
+
     def _fetch_index_rows(self, query_rows=[], bulk_params={}):
         '''
         Fetch index rows matching specified request. This method is marked as
@@ -1169,11 +1223,7 @@ class TSIndexDatabaseHandler(object):
         except Exception as err:
             raise ValueError(str(err))
 
-        result = connection.execute("SELECT count(*) FROM sqlite_master "
-                                    "WHERE type='table' and name='{0}'"
-                                    .format(self.tsindex_summary_table))
-
-        summary_present = result.fetchone()[0]
+        summary_present = self.has_tsindex_summary(connection)
         wildcards = False
         for req in query_rows:
             for field in req:
@@ -1277,12 +1327,9 @@ class TSIndexDatabaseHandler(object):
             connection.execute("PRAGMA temp_store=MEMORY")
         except Exception as err:
             raise ValueError(str(err))
-        
-        result = connection.execute("SELECT count(*) FROM sqlite_master "
-                                    "WHERE type='table' and name='{0}'"
-                                    .format(self.tsindex_summary_table))
 
-        summary_present = result.fetchone()[0]
+        summary_present = self.has_tsindex_summary(connection)
+        print(summary_present)
         if not summary_present:
             logger.warning("No tsindex_summary table found! A temporary "
                            "tsindex_summary table will be created.")

@@ -581,6 +581,70 @@ def purge(dir, pattern):
 
 class IndexerTestCase(unittest.TestCase):
 
+    def test_build_file_list(self):
+        filepath = get_test_data_filepath()
+        sqlitedb = os.path.join(filepath, 'timeseries.sqlite')
+        indexer = Indexer(filepath,
+                          sqlitedb=sqlitedb,
+                          filename_pattern="*.mseed")
+
+        # test for relative paths
+        file_list = indexer.build_file_list(relative_paths=True,
+                                            reindex=True)
+        file_list.sort()
+        self.assertEqual(len(file_list), 3)
+        self.assertEqual('CU/2018/001/'
+                         'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
+                         file_list[0])
+        self.assertEqual('IU/2018/001/'
+                         'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                         file_list[1])
+        self.assertEqual('IU/2018/001/'
+                         'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
+                         file_list[2])
+
+        # test for absolute paths
+        file_list = indexer.build_file_list(reindex=True)
+        file_list.sort()
+        self.assertEqual(len(file_list), 3)
+        self.assertNotEqual('CU/2018/001/'
+                            'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
+                            file_list[0])
+        self.assertIn('CU/2018/001/'
+                      'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
+                      file_list[0])
+        self.assertNotEqual('IU/2018/001/'
+                            'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                            file_list[1])
+        self.assertIn('IU/2018/001/'
+                      'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                      file_list[1])
+        self.assertNotEqual('IU/2018/001/'
+                            'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
+                            file_list[2])
+        self.assertIn('IU/2018/001/'
+                      'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
+                      file_list[2])
+
+        
+        self.assertRaisesRegexp(OSError,
+                                "^No unindexed files matching filename.*$",
+                                indexer.build_file_list,
+                                relative_paths=True,
+                                reindex=False)
+        self.assertRaisesRegexp(OSError,
+                                "^No unindexed files matching filename.*$",
+                                indexer.build_file_list,
+                                relative_paths=True)
+
+        # assert that an OSError is raised for a invalid root_path
+        indexer = Indexer("some/bad/path/",
+                          sqlitedb=sqlitedb,
+                          filename_pattern="*.mseed")
+        self.assertRaisesRegexp(OSError,
+                                "^No unindexed files matching filename.*$",
+                                indexer.build_file_list)
+
     def test_run_bad_index_cmd(self):
         """
         Checks that an OSError is raised when there is an error running a
@@ -595,39 +659,18 @@ class IndexerTestCase(unittest.TestCase):
                                 "^Required program.* is not installed.*$",
                                 indexer.run)
 
-    def test_build_file_list(self):
-        filepath = get_test_data_filepath()
-        indexer = Indexer(filepath,
-                          filename_pattern="*.mseed")
-
-        file_list = indexer.build_file_list()
-        file_list.sort()
-        self.assertEqual(len(file_list), 3)
-        self.assertIn('/CU/2018/001/'
-                      'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
-                      file_list[0])
-        self.assertIn('/IU/2018/001/'
-                      'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
-                      file_list[1])
-        self.assertIn('/IU/2018/001/'
-                      'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
-                      file_list[2])
-
-        # assert that an OSError is raised for a invalid root_path
-        indexer = Indexer("some/bad/path/", filename_pattern="*.mseed")
-        self.assertRaises(OSError, indexer.build_file_list)
-
     def test_run(self):
         try:
             my_uuid = uuid.uuid4().hex
             fname = 'test_timeseries_{}'.format(my_uuid)
             filepath = get_test_data_filepath()
-    
             sqlitedb = '{}{}.sqlite'.format(filepath, fname)
+
             indexer = Indexer(filepath,
                               sqlitedb=sqlitedb,
                               filename_pattern="*.mseed",
-                              parallel=2)
+                              parallel=2,
+                              debug=True)
             indexer.run(relative_paths=True)
             keys = ['network', 'station', 'location', 'channel',
                     'quality', 'starttime', 'endtime', 'samplerate',
@@ -679,7 +722,8 @@ class IndexerTestCase(unittest.TestCase):
                               parallel=2)
             self.assertRaisesRegexp(OSError,
                                     "^No leap seconds file exists at.*$",
-                                    indexer.run)
+                                    indexer.run,
+                                    reindex=True)
             
         except Exception as err:
             raise(err)
