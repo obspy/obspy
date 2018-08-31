@@ -982,7 +982,7 @@ class Indexer(object):
             the index and have not been modified.  The `reindex` option can be
             set to True to force a re-indexing of all files regardless.
         """
-        self.is_index_cmd_installed()
+        self._is_index_cmd_installed()
         self.request_handler._init_database_for_indexing()
         file_paths = self.build_file_list(relative_paths, reindex)
 
@@ -1066,7 +1066,7 @@ class Indexer(object):
                                   self.root_path))
         return result
 
-    def is_index_cmd_installed(self):
+    def _is_index_cmd_installed(self):
         """
         Checks if the index command (e.g. mseedindex) is installed.
 
@@ -1179,6 +1179,12 @@ class TSIndexDatabaseHandler(object):
     def has_tsindex_summary(self, connection=None):
         """
         Returns True if there is a tsindex_summary table in the database.
+
+        :type connection: sqlalchemy.engine.Connection
+        :param: connection: SQLAlchemy database connection object.
+        :rtype: bool
+        :returns: Returns True if there a tsindex_summary table is present
+            in the database.
         """
         if connection is None:
             connection = self.engine.connect()
@@ -1189,11 +1195,20 @@ class TSIndexDatabaseHandler(object):
         summary_present = result.fetchone()[0]
         if connection is None:
             connection.close()
-        return summary_present
+        if summary_present:
+            return True
+        else:
+            return False
 
     def has_tsindex(self, connection=None):
         """
         Returns True if there is a tsindex table in the database.
+
+        :type connection: sqlalchemy.engine.Connection
+        :param: connection: SQLAlchemy database connection object.
+        :rtype: bool
+        :returns: Returns True if there a tsindex_summary table is present
+            in the database.
         """
         if connection is None:
             connection = self.engine.connect()
@@ -1204,7 +1219,10 @@ class TSIndexDatabaseHandler(object):
         summary_present = result.fetchone()[0]
         if connection is None:
             connection.close()
-        return summary_present
+        if summary_present:
+            return True
+        else:
+            return False
 
     def _fetch_index_rows(self, query_rows=[], bulk_params={}):
         '''
