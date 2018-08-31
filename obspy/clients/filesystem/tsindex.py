@@ -62,8 +62,7 @@ Determining Data Availability
   available (``"BHZ"``) channel extents from the Global Seismograph Network
   (``"IU"``) for all times.
 
->>> extents = client.get_availability_extent("IU", "*", "*", \
-                                             "BHZ", "*", "*")
+>>> extents = client.get_availability_extent(network="IU", channel="BHZ")
 >>> for extent in extents:
 ...     print("{0:<3} {1:<6} {2:<3} {3:<4} {4} {5}".format(*extent))
 IU  ANMO   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994536Z
@@ -105,7 +104,7 @@ Requesting Timeseries Data
 
 >>> t = UTCDateTime("2018-01-01T00:00:00.019500")
 >>> st = client.get_waveforms("IU", "*", "*", "BHZ", t, t + 1)
->>> st.plot()  # doctest: +SKIP
+>>> st.plot()
 
 .. plot::
 
@@ -121,6 +120,34 @@ Requesting Timeseries Data
     t = UTCDateTime("2018-01-01T00:00:00.019500")
     st = client.get_waveforms("IU", "*", "*", "BHZ", t, t + 1)
     st.plot()
+
+-------------
+Indexer Usage
+-------------
+
+The :class:`~obspy.clients.filesystem.tsindex.Indexer` provides a high level
+API for indexing a directory tree of miniSEED files using the IRIS
+`mseedindex <https://github.com/iris-edu/mseedindex/>`_ software.
+
+Initialize a indexer object by supplying the root path to data to be indexed.
+
+>>> from obspy.clients.filesystem.tsindex import Indexer
+>>> from obspy.clients.filesystem.tests.test_tsindex \
+import get_test_data_filepath
+>>> # for this example get the file path to test data
+>>> filepath = get_test_data_filepath()
+>>> # create a new Indexer instance
+>>> indexer = Indexer(filepath, filename_pattern='*.mseed')
+
+Index a directory tree of miniSEED files by calling
+:meth:`~obspy.clients.filesystem.tsindex.Indexer.run`. By default this will
+create a database called 'timeseries.sqlite' in the current working directory.
+The name of the index database can be changed by supplying the 'sqlitedb'
+parameter when instantiating the Indexer object.
+
+.. code-block:: python
+  
+  indexer.run()
 
 """
 
@@ -281,8 +308,8 @@ class Client(object):
         """
         return self._get_waveforms(query_rows, merge)
 
-    def get_nslc(self, network, station, location,
-                 channel, starttime, endtime):
+    def get_nslc(self, network=None, station=None, location=None,
+                 channel=None, starttime=None, endtime=None):
         """
         Get a list of tuples [(net, sta, loc, cha),...] containing information
         on what streams are included in the tsindex database.
@@ -317,8 +344,8 @@ class Client(object):
             nslc_list.append(nslc)
         return nslc_list
 
-    def get_availability_extent(self, network, station, location,
-                                channel, starttime, endtime):
+    def get_availability_extent(self, network=None, station=None, location=None,
+                                channel=None, starttime=None, endtime=None):
         """
         Get a list of tuples [(network, station, location, channel,
         earliest, latest)] containing data extent info for time series
@@ -356,8 +383,8 @@ class Client(object):
             availability_extents.append(extent)
         return availability_extents
 
-    def get_availability(self, network, station, location,
-                         channel, starttime, endtime,
+    def get_availability(self, network=None, station=None, location=None,
+                         channel=None, starttime=None, endtime=None,
                          include_sample_rate=False,
                          merge_overlap=False):
         """
@@ -456,8 +483,9 @@ class Client(object):
             joined_avail_tuples.extend(avail_data)
         return joined_avail_tuples
 
-    def get_availability_percentage(self, network, station, location,
-                                    channel, starttime, endtime):
+    def get_availability_percentage(self, network, station,
+                                    location, channel,
+                                    starttime, endtime):
         """
         Get percentage of available data.
 
@@ -505,8 +533,8 @@ class Client(object):
             gap_count += 1
         return (1 - (gap_sum / total_duration), gap_count)
 
-    def has_data(self, network, station, location,
-                 channel, starttime, endtime):
+    def has_data(self, network=None, station=None, location=None,
+                 channel=None, starttime=None, endtime=None):
         """
         Return whether there is data for a specified network, station,
         location, channel, starttime, and endtime combination.
@@ -925,6 +953,18 @@ class Indexer(object):
             raise ValueError("sqlitedb must be a string or "
                              "TSIndexDatabaseHandler object.")
 
+        if self.leap_seconds_file is not None and \
+                not os.path.isfile(self.leap_seconds_file):
+            raise OSError("No leap seconds file exists at `{}`."
+                          .format(self.leap_seconds_file))
+        elif self.leap_seconds_file is not None:
+            os.environ["LIBMSEED_LEAPSECOND_FILE"] = os.path.abspath(
+                                                        self.leap_seconds_file)
+        else:
+            logger.warning("No leap second file specified. This is highly "
+                            "recommended")
+            os.environ["LIBMSEED_LEAPSECOND_FILE"] = "NONE"
+
     def run(self, build_summary=True, relative_paths=False, reindex=False):
         """
         Execute the file discovery and indexing.
@@ -945,11 +985,6 @@ class Indexer(object):
         self.is_index_cmd_installed()
         self.request_handler._init_database_for_indexing()
         file_paths = self.build_file_list(relative_paths, reindex)
-        
-        if self.leap_seconds_file is not None and \
-                not os.path.isfile(self.leap_seconds_file):
-            raise OSError("No leap seconds file exists at `{}`."
-                          .format(self.leap_seconds_file))
 
         # always keep the original file paths as specified. absolute and
         # relative paths are determined in the build_file_list method
@@ -993,7 +1028,8 @@ class Indexer(object):
             filename_pattern.
         """
         file_list = [y for x in os.walk(self.root_path)
-                    for y in glob(os.path.join(x[0], self.filename_pattern))]
+                    for y in glob(os.path.join(x[0], self.filename_pattern))
+                    if os.path.isfile(y)]
 
         # find relative file paths in case they are stored in the database as
         # relative paths.
@@ -1329,7 +1365,6 @@ class TSIndexDatabaseHandler(object):
             raise ValueError(str(err))
 
         summary_present = self.has_tsindex_summary(connection)
-        print(summary_present)
         if not summary_present:
             logger.warning("No tsindex_summary table found! A temporary "
                            "tsindex_summary table will be created.")
@@ -1509,6 +1544,17 @@ class TSIndexDatabaseHandler(object):
             endtime = endtime.isoformat()
         return (network, station, location, channel, starttime, endtime)
 
+    def _format_date(self, dt):
+        try:
+            if dt is None:
+                dt = "*"
+            else:
+                dt = UTCDateTime(dt)
+        except TypeError:
+            raise TypeError("'{}' could not be converted to "
+                            "type 'UTCDateTime'.".format(dt))
+        return dt
+
     def _clean_query_rows(self, query_rows):
         """
         Reformats query rows to match what is stored in the database.
@@ -1517,33 +1563,38 @@ class TSIndexDatabaseHandler(object):
         :param query_rows: List of tuples containing (network, station,
             location, channel, starttime, endtime).
         """
+        flat_query_rows = []
         if query_rows == []:
             # if an empty list is supplied then select everything
             select_all_query = self._create_query_row('*', '*', '*',
                                                       '*', '*', '*')
-            query_rows = [select_all_query]
+            flat_query_rows = [select_all_query]
         else:
             # perform some formatting on the query rows to ensure that they
             # query the database properly.
             for i, qr in enumerate(query_rows):
                 query_rows[i] = self._create_query_row(*qr)
-        
-        flat_query_rows = []
-        # flatten query rows
-        for req in query_rows:
-            networks = req[0].replace(" ", "").split(",")
-            stations = req[1].replace(" ", "").split(",")
-            locations = req[2].replace(" ", "").split(",")
-            channels = req[3].replace(" ", "").split(",")
-            starttime = req[4]
-            endtime = req[5]
-            for net in networks:
-                for sta in stations:
-                    for loc in locations:
-                        for cha in channels:
-                            qr = self._create_query_row(net, sta, loc, cha,
-                                                        starttime, endtime)
-                            flat_query_rows.append(qr)
+
+            # flatten query rows
+            for req in query_rows:
+                networks = req[0].replace(" ", "").split(",") \
+                            if req[0] else "*"
+                stations = req[1].replace(" ", "").split(",") \
+                            if req[1] else "*"
+                locations = req[2].replace(" ", "").split(",") \
+                            if req[2] else "*"
+                channels = req[3].replace(" ", "").split(",") \
+                            if req[3] else "*"
+                starttime = self._format_date(req[4])
+                endtime = self._format_date(req[5])
+    
+                for net in networks:
+                    for sta in stations:
+                        for loc in locations:
+                            for cha in channels:
+                                qr = self._create_query_row(net, sta, loc, cha,
+                                                            starttime, endtime)
+                                flat_query_rows.append(qr)
         return flat_query_rows
 
     def _init_database_for_indexing(self):

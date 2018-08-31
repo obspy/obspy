@@ -218,6 +218,9 @@ class ClientTestCase(unittest.TestCase):
                                       "2018-01-01T00:00:00.000000",
                                       "2018-01-01T00:00:00.019499")
         self.assertListEqual(actual_nslc, expected_nslc)
+        actual_nslc = client.get_nslc("CU",
+                                      "ANMO,COL?,T*")
+        self.assertListEqual(actual_nslc, expected_nslc)
 
 
     def test_get_availability_extent(self):
@@ -291,7 +294,10 @@ class ClientTestCase(unittest.TestCase):
                                                 "00,10",
                                                 "BHZ",
                                                 "2018-01-01T00:00:00.000000",
-                                                "*")
+                                                "2018-12-31T00:00:00.000000")
+        self.assertListEqual(actual_avail_extents, expected_nslc)
+
+        actual_avail_extents= client.get_availability_extent("I*")
         self.assertListEqual(actual_avail_extents, expected_nslc)
 
 
@@ -497,8 +503,12 @@ class ClientTestCase(unittest.TestCase):
                                                 "ANMO,COLA",
                                                 "10",
                                                 "BHZ",
-                                                "*",
-                                                "*")
+                                                "2018-01-01",
+                                                "2018-12-31")
+        self.assertListEqual(actual_avail, expected_avail)
+
+        actual_avail = client.get_availability("IU",
+                                               "ANMO,COLA")
         self.assertListEqual(actual_avail, expected_avail)
 
     def test_get_availability_percentage(self):
@@ -580,6 +590,19 @@ def purge(dir, pattern):
 
 
 class IndexerTestCase(unittest.TestCase):
+    
+    def test_bad_leapsecond_filepath(self):
+        filepath = get_test_data_filepath()
+        sqlitedb = os.path.join(filepath, 'timeseries.sqlite')
+        # test that a bad leap second file path raises an error
+        self.assertRaisesRegexp(OSError,
+                                "^No leap seconds file exists at.*$",
+                                Indexer,
+                                filepath,
+                                sqlitedb=sqlitedb,
+                                filename_pattern="*.mseed",
+                                leap_seconds_file="/some/bad/path/",
+                                parallel=2)
 
     def test_build_file_list(self):
         filepath = get_test_data_filepath()
@@ -699,11 +722,21 @@ class IndexerTestCase(unittest.TestCase):
                     0, 2560, "36a771ca1dc648c505873c164d8b26f2",
                     "1514764800.019500=>0,latest=>1",
                     "[1514764800.019500:1514764859.994536]", None, None,
-                    "2018-08-24T16:31:39")]
+                    "2018-08-24T16:31:39"),
+                 NamedRow(
+                    "IU", "COLA", "10", "BHZ", "M" ,
+                    "2018-01-01T00:00:00.019500",
+                    "2018-01-01T00:00:59.994538", 40.0,
+                    "IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed",
+                    0, 5120, "4ccbb97573ca00ef8c2c4f9c01d27ddf",
+                    "1514764800.019500=>0,latest=>1",
+                    "[1514764800.019500:1514764859.994538]", None, None,
+                    "2018-08-24T16:33:03")]
             db_handler = TSIndexDatabaseHandler(sqlitedb)
-            tsindex_data = db_handler._fetch_index_rows([("I*,C*",'T*,A*',
-                                                         '0?,1?', '*', '*',
-                                                         '*')])
+            tsindex_data = db_handler._fetch_index_rows([("I*,C*",'*',
+                                                         '0?,1?', '*',
+                                                         '2018-01-01',
+                                                         '2018-02-01')])
 
             for i in range(0, len(expected_tsindex_data)):
                 for j in range(0, len(keys)):
@@ -713,17 +746,6 @@ class IndexerTestCase(unittest.TestCase):
                                                      keys[j]))
                                     )
             self.assertEqual(len(tsindex_data), len(expected_tsindex_data))
-            
-            # test that a bad leap second file path raises an error
-            indexer = Indexer(filepath,
-                              sqlitedb=sqlitedb,
-                              filename_pattern="*.mseed",
-                              leap_seconds_file="/some/bad/path/",
-                              parallel=2)
-            self.assertRaisesRegexp(OSError,
-                                    "^No leap seconds file exists at.*$",
-                                    indexer.run,
-                                    reindex=True)
             
         except Exception as err:
             raise(err)
@@ -755,12 +777,13 @@ class TSIndexDatabaseHanderTestCase(unittest.TestCase):
                 "2018-01-01T00:00:00.019500",
                 "2018-01-01T00:00:59.994536")]
 
-        ts_summary_data = request_handler._fetch_summary_rows([("I*,CU",
-                                                                "ANMO,T*",
-                                                                "00,10",
-                                                                "BHZ",
-                                                                "*",
-                                                                "*")])
+        ts_summary_data = request_handler._fetch_summary_rows(
+                                              [("I*,CU",
+                                                "ANMO,T*",
+                                                "00,10",
+                                                "BHZ",
+                                                "2018-01-01T00:00:00.000000",
+                                                "2018-12-31T00:00:00.000000")])
 
         for i in range(0, len(expected_ts_summary_data)):
             for j in range(0, len(keys)):
