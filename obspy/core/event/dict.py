@@ -1,5 +1,11 @@
 """
 Module for converting Catalog objects to and from dictionaries.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -78,9 +84,7 @@ def _getattr_factory(attributes):
 
 def _camel2snake(name):
     """
-    a function to convert CamelCase to snake_case. Uses regex so now we have
-    two problems
-
+    Function to convert CamelCase to snake_case.
     """
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     s2 = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
@@ -91,7 +95,6 @@ def make_class_map():
     """
     Return a dict that maps names in QML to their obspy class.
     """
-
     # Loop classes in mod, convert to snake_case and add to dict
     out = {}
     for name, obj in ev.__dict__.items():
@@ -166,7 +169,9 @@ def _parse_dict_class(cdict):
 
 
 def _init_update(indict, cls):
-    """ init an object from cls and update its dict with indict """
+    """
+    init an object from cls and update its dict with indict.
+    """
     if not indict:
         return indict
     obj = cls(**_parse_dict_class(indict))

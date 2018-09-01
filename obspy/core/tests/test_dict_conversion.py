@@ -21,9 +21,7 @@ TEST_CATALOGS = [obspy.read_events(), create_diverse_catalog()]
 
 
 class TestCatalogToDict(unittest.TestCase):
-    """ class to test json """
 
-    # tests
     def test_roundtrip_conversion(self):
         """
         Any catalog converted to a dict, then converted back to a catalog,
