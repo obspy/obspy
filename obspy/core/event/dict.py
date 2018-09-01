@@ -170,7 +170,7 @@ def _parse_dict_class(input_dict):
 
 def _init_update(input_dict, cls):
     """
-    init an object from cls and update its dict with indict.
+    init an object from cls and update its __dict__.
     """
     if not input_dict:
         return input_dict
