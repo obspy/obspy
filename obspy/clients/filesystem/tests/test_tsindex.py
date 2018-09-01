@@ -8,7 +8,6 @@ from obspy.core.compatibility import mock
 
 import obspy
 from obspy import UTCDateTime
-from datetime import datetime
 from obspy.clients.filesystem.tsindex import Client, Indexer, \
     TSIndexDatabaseHandler
 
@@ -16,7 +15,6 @@ from collections import namedtuple
 import uuid
 import os
 import re
-import itertools
 
 
 def get_test_data_filepath():
@@ -205,8 +203,8 @@ class ClientTestCase(unittest.TestCase):
                                          "2018-08-10T21:09:39.000000",
                                          "2018-08-10T22:09:28.890415"),
                          expected_nslc)
-        
-        # test using actual sqlite test database
+
+        # test using actual sqlite3 test database
         client = get_test_client()
 
         expected_nslc = [(u'CU', u'TGUH', u'00', u'BHZ')]
@@ -222,10 +220,9 @@ class ClientTestCase(unittest.TestCase):
                                       "ANMO,COL?,T*")
         self.assertListEqual(actual_nslc, expected_nslc)
 
-
     def test_get_availability_extent(self):
         client = get_test_client()
-        
+
         # test using mocked client._get_summary_rows method for more diversity
         NamedRow = namedtuple('NamedRow',
                               ['network', 'station', 'location', 'channel',
@@ -282,13 +279,13 @@ class ClientTestCase(unittest.TestCase):
         client = get_test_client()
 
         expected_nslc = [(u'IU', u'ANMO', u'10', u'BHZ',
-                           UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
-                           UTCDateTime(2018, 1, 1, 0, 0, 59, 994536)),
+                          UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
+                          UTCDateTime(2018, 1, 1, 0, 0, 59, 994536)),
                          (u'IU', u'COLA', u'10', u'BHZ',
-                           UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
-                           UTCDateTime(2018, 1, 1, 0, 0, 59, 994538))]
+                          UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
+                          UTCDateTime(2018, 1, 1, 0, 0, 59, 994538))]
 
-        actual_avail_extents= client.get_availability_extent(
+        actual_avail_extents = client.get_availability_extent(
                                                 "I*",
                                                 "ANMO,COL?,T*",
                                                 "00,10",
@@ -297,9 +294,8 @@ class ClientTestCase(unittest.TestCase):
                                                 "2018-12-31T00:00:00.000000")
         self.assertListEqual(actual_avail_extents, expected_nslc)
 
-        actual_avail_extents= client.get_availability_extent("I*")
+        actual_avail_extents = client.get_availability_extent("I*")
         self.assertListEqual(actual_avail_extents, expected_nslc)
-
 
     def test__are_timespans_adjacent(self):
         client = get_test_client()
@@ -427,7 +423,7 @@ class ClientTestCase(unittest.TestCase):
                                     UTCDateTime(2018, 8, 27, 0, 0),
                                     UTCDateTime(2018, 9, 11, 0, 0, 0))]
 
-         # test default options
+        # test default options
         self.assertListEqual(client.get_availability(
                                 "AK",
                                 "BAGL",
@@ -435,9 +431,9 @@ class ClientTestCase(unittest.TestCase):
                                 "LCC",
                                 UTCDateTime(2018, 8, 10, 22, 0, 54),
                                 UTCDateTime(2018, 8, 10, 22, 9, 28, 890415)),
-                         expected_unmerged_avail)
-        
-         # test merge overlap false
+                             expected_unmerged_avail)
+
+        # test merge overlap false
         self.assertListEqual(client.get_availability(
                                 "AK",
                                 "BAGL",
@@ -446,7 +442,7 @@ class ClientTestCase(unittest.TestCase):
                                 UTCDateTime(2018, 8, 10, 22, 0, 54),
                                 UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
                                 merge_overlap=False),
-                         expected_unmerged_avail)
+                             expected_unmerged_avail)
 
         # test merge overlap true
         expected_merged_avail = [("AK", "BAGL", "", "LCC",
@@ -464,7 +460,7 @@ class ClientTestCase(unittest.TestCase):
                                 UTCDateTime(2018, 8, 10, 22, 0, 54),
                                 UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
                                 merge_overlap=True),
-                         expected_merged_avail)
+                             expected_merged_avail)
 
         # test include_sample_rate true
         expected_incl_sr_avail = [("AK", "BAGL", "", "LCC",
@@ -486,7 +482,7 @@ class ClientTestCase(unittest.TestCase):
                                 UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
                                 merge_overlap=True,
                                 include_sample_rate=True),
-                         expected_incl_sr_avail)
+                             expected_incl_sr_avail)
 
         # test using actual sqlite test database
         client = get_test_client()
@@ -590,7 +586,7 @@ def purge(dir, pattern):
 
 
 class IndexerTestCase(unittest.TestCase):
-    
+
     def test_bad_leapsecond_filepath(self):
         filepath = get_test_data_filepath()
         sqlitedb = os.path.join(filepath, 'timeseries.sqlite')
@@ -649,7 +645,6 @@ class IndexerTestCase(unittest.TestCase):
                       'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
                       file_list[2])
 
-        
         self.assertRaisesRegexp(OSError,
                                 "^No unindexed files matching filename.*$",
                                 indexer.build_file_list,
@@ -677,7 +672,7 @@ class IndexerTestCase(unittest.TestCase):
         indexer = Indexer(filepath,
                           filename_pattern="*.mseed",
                           index_cmd="some_bad_command")
-        
+
         self.assertRaisesRegexp(OSError,
                                 "^Required program.* is not installed.*$",
                                 indexer.run)
@@ -715,7 +710,7 @@ class IndexerTestCase(unittest.TestCase):
                     "[1514764800.000000:1514764860.000000]", None, None,
                     "2018-08-24T16:38:01"),
                  NamedRow(
-                    "IU", "ANMO", "10", "BHZ", "M" ,
+                    "IU", "ANMO", "10", "BHZ", "M",
                     "2018-01-01T00:00:00.019500",
                     "2018-01-01T00:00:59.994536", 40.0,
                     "IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed",
@@ -724,7 +719,7 @@ class IndexerTestCase(unittest.TestCase):
                     "[1514764800.019500:1514764859.994536]", None, None,
                     "2018-08-24T16:31:39"),
                  NamedRow(
-                    "IU", "COLA", "10", "BHZ", "M" ,
+                    "IU", "COLA", "10", "BHZ", "M",
                     "2018-01-01T00:00:00.019500",
                     "2018-01-01T00:00:59.994538", 40.0,
                     "IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed",
@@ -733,20 +728,19 @@ class IndexerTestCase(unittest.TestCase):
                     "[1514764800.019500:1514764859.994538]", None, None,
                     "2018-08-24T16:33:03")]
             db_handler = TSIndexDatabaseHandler(sqlitedb)
-            tsindex_data = db_handler._fetch_index_rows([("I*,C*",'*',
-                                                         '0?,1?', '*',
-                                                         '2018-01-01',
-                                                         '2018-02-01')])
+            tsindex_data = db_handler._fetch_index_rows([("I*,C*", "*",
+                                                          "0?,1?", "*",
+                                                          "2018-01-01",
+                                                          "2018-02-01")])
 
             for i in range(0, len(expected_tsindex_data)):
                 for j in range(0, len(keys)):
                     self.assertEqual(unicode(getattr(expected_tsindex_data[i],
                                                      keys[j])),
                                      unicode(getattr(tsindex_data[i],
-                                                     keys[j]))
-                                    )
+                                                     keys[j])))
             self.assertEqual(len(tsindex_data), len(expected_tsindex_data))
-            
+
         except Exception as err:
             raise(err)
         finally:
@@ -790,5 +784,4 @@ class TSIndexDatabaseHanderTestCase(unittest.TestCase):
                 self.assertEqual(unicode(getattr(expected_ts_summary_data[i],
                                                  keys[j])),
                                  unicode(getattr(ts_summary_data[i],
-                                                 keys[j]))
-                                )
+                                                 keys[j])))

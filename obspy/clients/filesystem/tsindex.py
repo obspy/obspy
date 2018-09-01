@@ -5,10 +5,10 @@ obspy.clients.filesystem.tsindex - IRIS TSIndex Client and Indexer
 
 The obspy.clients.filesystem.tsindex module includes a timeseries extraction
 :class:`~obspy.clients.filesystem.tsindex.Client` class for a database created
-by the IRIS 
+by the IRIS
 `mseedindex <https://github.com/iris-edu/mseedindex>`_ program, as well as, a
 :class:`~obspy.clients.filesystem.tsindex.Indexer` class for creating a SQLite3
-database that follows the IRIS `tsindex database 
+database that follows the IRIS `tsindex database
 schema <https://github.com/iris-edu/mseedindex/wiki/Database-Schema/>`_\.
 
 :copyright:
@@ -27,7 +27,7 @@ schema <https://github.com/iris-edu/mseedindex/wiki/Database-Schema/>`_\.
 Client Usage
 ------------
 
-The first step is always to initialize a client object. 
+The first step is always to initialize a client object.
 
 .. highlight:: python
 >>> from obspy.clients.filesystem.tsindex import Client
@@ -75,7 +75,7 @@ IU  COLA   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994538Z
   endtime) tuples representing contiguous time spans for selected channels
   and time ranges.
 
-* :meth:`~obspy.clients.filesystem.tsindex.Client.get_percentage_availability()`:
+* :meth:`~obspy.clients.filesystem.tsindex.Client.get_percentage_availability()`:  # NOQA
   Returns the 2-tuple of percentage of available data (`0.0` to `1.0`) and
   number of gaps/overlaps. Percentage availability is calculated relative to
   the provided starttime and endtime.
@@ -90,7 +90,7 @@ UTCDateTime(2018, 1, 1, 0, 0, 0, 19500), \
 UTCDateTime(2018, 1, 1, 0, 1, 57, 994536))
 >>> print(avail_percentage)
 (0.5083705674817509, 0)
-  
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Requesting Timeseries Data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -173,7 +173,7 @@ from obspy import UTCDateTime
 from obspy.core.stream import Stream
 from obspy.clients.filesystem.miniseed import MiniseedDataExtractor, \
     NoDataError
-    
+
 
 # Setup the logger.
 logger = logging.getLogger(__name__)
@@ -199,6 +199,8 @@ def _pickle_method(m):
         return getattr, (m.im_class, m.im_func.func_name)
     else:
         return getattr, (m.im_self, m.im_func.func_name)
+
+
 copy_reg.pickle(types.MethodType, _pickle_method)
 
 
@@ -225,7 +227,7 @@ class Client(object):
         :param logger: The logger instance to use for logging.
         """
         self.debug = debug
-        if self.debug == True:
+        if self.debug is True:
             # write debug level logs to the console
             ch.setLevel(logging.DEBUG)
 
@@ -336,7 +338,7 @@ class Client(object):
             database.
         """
         summary_rows = self._get_summary_rows(network, station, location,
-                                             channel, starttime, endtime)
+                                              channel, starttime, endtime)
 
         nslc_list = []
         for row in summary_rows:
@@ -344,8 +346,9 @@ class Client(object):
             nslc_list.append(nslc)
         return nslc_list
 
-    def get_availability_extent(self, network=None, station=None, location=None,
-                                channel=None, starttime=None, endtime=None):
+    def get_availability_extent(self, network=None, station=None,
+                                location=None, channel=None, starttime=None,
+                                endtime=None):
         """
         Get a list of tuples [(network, station, location, channel,
         earliest, latest)] containing data extent info for time series
@@ -373,8 +376,8 @@ class Client(object):
             included in the tsindex database.
         """
         summary_rows = self._get_summary_rows(network, station,
-                                             location, channel,
-                                             starttime, endtime)
+                                              location, channel,
+                                              starttime, endtime)
 
         availability_extents = []
         for row in summary_rows:
@@ -427,12 +430,12 @@ class Client(object):
         """
 
         tsindex_rows = self._get_tsindex_rows(network, station,
-                                             location, channel,
-                                             starttime, endtime)
+                                              location, channel,
+                                              starttime, endtime)
 
         grouped_channels = {}
         for row in tsindex_rows:
-            if include_sample_rate == True:
+            if include_sample_rate is True:
                 # split on different sample rates when merging
                 hash = "{}_{}_{}_{}_{}".format(row.network,
                                                row.station,
@@ -442,13 +445,12 @@ class Client(object):
             else:
                 # ignore sample rate when merging
                 hash = "{}_{}_{}_{}".format(row.network,
-                                               row.station,
-                                               row.location,
-                                               row.channel)
+                                            row.station,
+                                            row.location,
+                                            row.channel)
             timespans = self._create_timespans_list(row.timespans)
-            
+
             if grouped_channels.get(hash) is not None:
-                group = grouped_channels[hash]
                 if row.samplerate not in \
                         grouped_channels[hash]["samplerates"]:
                     grouped_channels[hash]["samplerates"].append(
@@ -570,7 +572,7 @@ class Client(object):
             return False
 
     def _get_summary_rows(self, network, station, location, channel,
-                         starttime, endtime):
+                          starttime, endtime):
         """
         Return a list of tuples [(net, sta, loc, cha, earliest, latest),...]
         containing information found in the tsindex_summary table.
@@ -648,8 +650,8 @@ class Client(object):
             st.merge(merge)
         return st
 
-    def _get_tsindex_rows(self, network, station, location, channel,
-                         starttime, endtime):
+    def _get_tsindex_rows(self, network, station, location, channel, starttime,
+                          endtime):
         """
         Return a list of tuples [(net, sta, loc, cha, quality... etc.),...]
         containing information found in the tsindex table.
@@ -676,7 +678,7 @@ class Client(object):
         query_rows = [(network, station, location,
                        channel, starttime, endtime)]
         return self.request_handler._fetch_index_rows(query_rows)
-    
+
     def _get_availability_from_timespans(self, network, station,
                                          location, channel,
                                          samplerates,
@@ -721,10 +723,6 @@ class Client(object):
                     self._do_timespans_overlap(prev_ts, cur_ts) is True:
                 # merge if overlapping timespans and merge_overlap
                 # option is set to true
-                earliest_tuple = min([prev_ts, cur_ts],
-                                     key=lambda t: t.earliest)
-                latest_tuple = max([prev_ts, cur_ts],
-                                   key=lambda t: t.latest)
                 merged_ts = self._create_timespan(prev_ts.earliest,
                                                   cur_ts.latest)
                 timespans.insert(0, merged_ts)
@@ -757,8 +755,8 @@ class Client(object):
                                           location, channel,
                                           prev_ts.earliest,
                                           prev_ts.latest,
-                                          sr=sr if include_sample_rate \
-                                                else None)
+                                          sr=sr if include_sample_rate
+                                          else None)
                 _sncl_joined_avail_tuples.append(avail_tuple)
                 timespans.insert(0, cur_ts)
                 return self._get_availability_from_timespans(
@@ -777,8 +775,8 @@ class Client(object):
                                           location, channel,
                                           cur_ts.earliest,
                                           cur_ts.latest,
-                                          sr=sr if include_sample_rate \
-                                                else None)
+                                          sr=sr if include_sample_rate
+                                          else None)
             _sncl_joined_avail_tuples.append(avail_tuple)
         return _sncl_joined_avail_tuples
 
@@ -921,8 +919,8 @@ class Indexer(object):
             is not already in the index
         :type bulk_params: dict
         :param bulk_params: Dictionary of options to pass to index_cmd.
-        :type filename_pattern: str        
-        :param filename_pattern: 
+        :type filename_pattern: str
+        :param filename_pattern:
         :type parallel: int
         :param parallel: Max number of index_cmd instances to run in parallel.
             By default a max of 5 parallel process are run.
@@ -930,7 +928,7 @@ class Indexer(object):
         :param debug: Debug flag. Sets logging level to debug.
         """
         self.debug = debug
-        if self.debug == True:
+        if self.debug is True:
             # write debug level logs to the console
             ch.setLevel(logging.DEBUG)
 
@@ -962,7 +960,7 @@ class Indexer(object):
                                                         self.leap_seconds_file)
         else:
             logger.warning("No leap second file specified. This is highly "
-                            "recommended")
+                           "recommended")
             os.environ["LIBMSEED_LEAPSECOND_FILE"] = "NONE"
 
     def run(self, build_summary=True, relative_paths=False, reindex=False):
@@ -997,7 +995,7 @@ class Indexer(object):
             self.bulk_params['-sqlite'] = self.sqlitedb
 
         # run mseedindex on each file in parallel
-        pool = Pool(processes=self.parallel)     
+        pool = Pool(processes=self.parallel)
         for file_name in file_paths:
             logger.debug("Indexing file '{}'.".format(file_name))
             proc = pool.apply_async(Indexer._run_index_command,
@@ -1018,7 +1016,7 @@ class Indexer(object):
         """
         Create a list of absolute paths to all files under root_path that match
         the filename_pattern.
-        
+
         :type relative_paths: bool
         :param relative_paths: By default, the absolute path to each file is
             stored in the index. If `relative_paths` is True, the file paths
@@ -1028,8 +1026,8 @@ class Indexer(object):
             filename_pattern.
         """
         file_list = [y for x in os.walk(self.root_path)
-                    for y in glob(os.path.join(x[0], self.filename_pattern))
-                    if os.path.isfile(y)]
+                     for y in glob(os.path.join(x[0], self.filename_pattern))
+                     if os.path.isfile(y)]
 
         # find relative file paths in case they are stored in the database as
         # relative paths.
@@ -1084,10 +1082,10 @@ class Indexer(object):
     def _run_index_command(cls, index_cmd, root_path, file_name, bulk_params):
         """
         Execute a command to perform indexing.
-        
+
         :type index_cmd: str
         :param index_cmd: Name of indexing command to execute. Defaults to
-            `mseedindex`. 
+            `mseedindex`.
         :type file_name: str
         :param file_name: Name of file to index.
         :type bulk_params: dict
@@ -1132,7 +1130,7 @@ class TSIndexDatabaseHandler(object):
         :param debug: Debug flag.
         """
         self.debug = debug
-        if self.debug == True:
+        if self.debug is True:
             # write debug level logs to the console
             ch.setLevel(logging.DEBUG)
 
@@ -1142,12 +1140,12 @@ class TSIndexDatabaseHandler(object):
 
         self.db_path = "sqlite:///{}".format(sqlitedb)
         self.engine = create_engine(self.db_path, poolclass=QueuePool)
-        
+
     def build_tsindex_summary(self, connection=None, temporary=False):
         """
         Builds a tsindex_summary table using the table name supplied to the
-        Indexer instance (defaults to 'tsindex_summary'). 
-        
+        Indexer instance (defaults to 'tsindex_summary').
+
         :type connection: sqlalchemy.engine.Connection
         :param: connection: SQLAlchemy database connection object.
         :type temporary: bool
@@ -1160,8 +1158,8 @@ class TSIndexDatabaseHandler(object):
             raise ValueError("No tsindex table '{}' exists in database '{}'."
                              .format(self.tsindex_table, self.sqlitedb))
         connection.execute("DROP TABLE IF EXISTS {};"
-                            .format(self.tsindex_summary_table))
-        
+                           .format(self.tsindex_summary_table))
+
         connection.execute(
             "CREATE {0} TABLE {1} AS "
             "SELECT network, station, location, channel, "
@@ -1318,7 +1316,7 @@ class TSIndexDatabaseHandler(object):
                    "  AND ts.starttime <= r.endtime "
                    "  AND ts.endtime >= r.starttime "
                    "ORDER BY ts.network, ts.station, ts.location, "
-                    "  ts.channel, ts.starttime, ts.endtime"
+                   "  ts.channel, ts.starttime, ts.endtime"
                    .format(self.tsindex_table,
                            request_table,
                            "GLOB" if wildcards else "="))
@@ -1372,7 +1370,7 @@ class TSIndexDatabaseHandler(object):
             connection = self.engine.connect()
         except Exception as err:
             raise Exception(err)
-        
+
         logger.debug("Opening sqlite3 database for "
                      "summary rows: %s" % self.sqlitedb)
 
@@ -1425,9 +1423,9 @@ class TSIndexDatabaseHandler(object):
                                          "WHERE type='table' "
                                          "and name='{0}'"
                                          .format(self.tsindex_summary_table))
-        
-        summary_present = result_perm.fetchone()[0] or \
-                                result_temp.fetchone()[0]
+
+        summary_present = (result_perm.fetchone()[0] or
+                           result_temp.fetchone()[0])
 
         if summary_present:
             # Select summary rows by joining with summary table
@@ -1461,7 +1459,7 @@ class TSIndexDatabaseHandler(object):
             logger.debug("Fetched %d summary rows" % len(summary_rows))
 
             connection.execute("DROP TABLE {0}".format(request_table))
-        
+
         connection.close()
 
         return summary_rows
@@ -1530,7 +1528,7 @@ class TSIndexDatabaseHandler(object):
         return resolvedrows
 
     def _create_query_row(self, network, station, location,
-                         channel, starttime, endtime):
+                          channel, starttime, endtime):
         """
         Returns a tuple (network, station, location, channel, starttime,
         endtime) with elements that have been formatted to match database
@@ -1576,7 +1574,7 @@ class TSIndexDatabaseHandler(object):
     def _clean_query_rows(self, query_rows):
         """
         Reformats query rows to match what is stored in the database.
-        
+
         :type query_rows: list
         :param query_rows: List of tuples containing (network, station,
             location, channel, starttime, endtime).
@@ -1595,17 +1593,17 @@ class TSIndexDatabaseHandler(object):
 
             # flatten query rows
             for req in query_rows:
-                networks = req[0].replace(" ", "").split(",") \
-                            if req[0] else "*"
-                stations = req[1].replace(" ", "").split(",") \
-                            if req[1] else "*"
-                locations = req[2].replace(" ", "").split(",") \
-                            if req[2] else "*"
-                channels = req[3].replace(" ", "").split(",") \
-                            if req[3] else "*"
+                networks = (req[0].replace(" ", "").split(",")
+                            if req[0] else "*")
+                stations = (req[1].replace(" ", "").split(",")
+                            if req[1] else "*")
+                locations = (req[2].replace(" ", "").split(",")
+                             if req[2] else "*")
+                channels = (req[3].replace(" ", "").split(",")
+                            if req[3] else "*")
                 starttime = self._format_date(req[4])
                 endtime = self._format_date(req[5])
-    
+
                 for net in networks:
                     for sta in stations:
                         for loc in locations:
@@ -1630,5 +1628,5 @@ class TSIndexDatabaseHandler(object):
             # enable Write-Ahead Log for better concurrency support
             connection.execute('PRAGMA journal_mode=WAL')
             connection.close()
-        except Exception as e:
+        except Exception:
             raise OSError("Failed to setup sqlite3 database for indexing.")

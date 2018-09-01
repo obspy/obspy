@@ -35,6 +35,7 @@ formatter = logging.Formatter(FORMAT)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
+
 class NoDataError(Exception):
     """
     Error raised when no data is found
@@ -91,7 +92,7 @@ class MSRIDataSegment(ExtractedDataSegment):
         :param debug: Debug flag.
         """
         self.debug = debug
-        if self.debug == True:
+        if self.debug is True:
             # write debug level logs to the console
             ch.setLevel(logging.DEBUG)
 
@@ -190,7 +191,7 @@ class MiniseedDataExtractor(object):
         :param debug: Debug flag.
         """
         self.debug = debug
-        if self.debug == True:
+        if self.debug is True:
             # write debug level logs to the console
             ch.setLevel(logging.DEBUG)
 
