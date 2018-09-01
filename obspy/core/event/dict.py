@@ -12,8 +12,6 @@ import obspy.core.event as ev
 
 UTC_KEYS = ("creation_time", "time", "reference")
 
-JSON_SERIALIZER_VERSION = "0.0.0"  # increment when serialization changes
-
 EVENT_ATTRS = ev.Event._containers + [x[0] for x in ev.Event._properties]
 
 
@@ -26,8 +24,6 @@ def catalog_to_dict(obj):
 
     :return: A dict.
     """
-    if isinstance(obj, obspy.Catalog):
-        obj.json_serializer_version = JSON_SERIALIZER_VERSION
     # if this is a non-recursible type (ie a leaf) return it
     if isinstance(obj, (int, float, str)) or obj is None:
         return obj
