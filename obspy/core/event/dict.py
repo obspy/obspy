@@ -142,42 +142,42 @@ def _obj_to_dict(obj):
         return _OBSPY_TO_DICT_FUNCS[type(obj)](obj)
 
 
-def _parse_dict_class(cdict):
+def _parse_dict_class(input_dict):
     """
     Parse a dictionary, init expected obspy classes.
     """
     # get intersection between cdict
     class_set = set(_OBSPY_CLASS_MAP)
-    cdict_set = set(cdict)
+    cdict_set = set(input_dict)
     # get set of keys that are obspy classes in the current dict
     class_keys = class_set & cdict_set
     # iterate over keys that are also classes and recurse when needed
     for key in class_keys:
         cls = _OBSPY_CLASS_MAP[key]
-        val = cdict[key]
+        val = input_dict[key]
         if isinstance(val, list):
             out = []  # a blank list for storing outputs
             for item in val:
                 out.append(_init_update(item, cls))
-            cdict[key] = out
+            input_dict[key] = out
         elif isinstance(val, dict):
-            cdict[key] = _init_update(val, cls)
+            input_dict[key] = _init_update(val, cls)
         elif isinstance(val, str):
-            cdict[key] = cls(val)
+            input_dict[key] = cls(val)
 
-    return cdict
+    return input_dict
 
 
-def _init_update(indict, cls):
+def _init_update(input_dict, cls):
     """
     init an object from cls and update its dict with indict.
     """
-    if not indict:
-        return indict
-    obj = cls(**_parse_dict_class(indict))
+    if not input_dict:
+        return input_dict
+    obj = cls(**_parse_dict_class(input_dict))
     # some objects instantiate even with None param, set back to None.
     # Maybe not an issue after  #2185?
-    for attr in set(obj.__dict__) & set(indict):
-        if indict[attr] is None:
+    for attr in set(obj.__dict__) & set(input_dict):
+        if input_dict[attr] is None:
             setattr(obj, attr, None)
     return obj
