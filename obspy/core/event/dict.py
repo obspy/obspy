@@ -119,6 +119,7 @@ def make_class_map():
 
 # a cache for functions that convert obspy objects to dictionaries
 _OBSPY_TO_DICT_FUNCS = {obspy.UTCDateTime: lambda x: str(x),
+                        ev.ResourceIdentifier: lambda x: str(x),
                         ev.Event: _getattr_factory(EVENT_ATTRS)}
 
 # a cache for mapping attribute names to expected obspy classes
@@ -147,7 +148,6 @@ def _parse_dict_class(input_dict):
     """
     Parse a dictionary, init expected obspy classes.
     """
-    # get intersection between cdict
     class_set = set(_OBSPY_CLASS_MAP)
     cdict_set = set(input_dict)
     # get set of keys that are obspy classes in the current dict
@@ -156,14 +156,14 @@ def _parse_dict_class(input_dict):
     for key in class_keys:
         cls = _OBSPY_CLASS_MAP[key]
         val = input_dict[key]
+        if val is None:
+            continue
         if isinstance(val, list):
-            out = []  # a blank list for storing outputs
-            for item in val:
-                out.append(_init_update(item, cls))
-            input_dict[key] = out
-        elif isinstance(val, dict):
+            input_dict[key] = [_init_update(x, cls) for x in val]
+        elif isinstance(val, dict):  # use dict to init class
             input_dict[key] = _init_update(val, cls)
-        elif isinstance(val, str):
+        # input should be only argument to class constructor
+        else:
             input_dict[key] = cls(val)
 
     return input_dict
