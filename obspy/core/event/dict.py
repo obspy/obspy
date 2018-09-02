@@ -62,7 +62,7 @@ def _get_params_from_docs(obj):
     """
     Attempt to figure out params for obj from the doc strings.
     """
-    doc_list = obj.__doc__.splitlines(keepends=False)
+    doc_list = obj.__doc__.splitlines()
     params_lines = [x for x in doc_list if ":param" in x]
     params = [x.split(":")[1].replace("param ", "") for x in params_lines]
     return params
@@ -135,6 +135,7 @@ def _obj_to_dict(obj):
     try:
         return _OBSPY_TO_DICT_FUNCS[type(obj)](obj)
     except KeyError:
+        # params = _get_params_from_docs(obj)
         params = _get_params_from_docs(obj)
         # create function for processing
         _OBSPY_TO_DICT_FUNCS[type(obj)] = _getattr_factory(params)
