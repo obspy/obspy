@@ -11,6 +11,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
 import re
 
 import obspy
@@ -45,16 +46,22 @@ def catalog_to_dict(obj):
         return catalog_to_dict(_obj_to_dict(obj))
 
 
-def dict_to_catalog(catalog_dict):
+def dict_to_catalog(catalog_dict, inplace=False):
     """
     Create a catalog from a dictionary.
 
     :param catalog_dict: Catalog information in dictionary format.
     :type catalog_dict: dict.
+    :param inplace:
+        If True, modify catalog_dict in-place as objects are created, else
+        deepcopy input dictionary before performing the conversion.
+    :type inplace: bool
 
     :return: An ObsPy :class:`~obspy.core.event.Catalog` object.
     """
     assert isinstance(catalog_dict, dict)
+    if not inplace:
+        catalog_dict = copy.deepcopy(catalog_dict)
     return obspy.Catalog(**_parse_dict_class(catalog_dict))
 
 
