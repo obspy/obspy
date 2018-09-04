@@ -735,9 +735,10 @@ class WarningsCapture(object):
                     message=category(message), category=category or Warning,
                     filename="", lineno=0))
         else:
+            category_wraper = Warning if category is None else category
             self.captured_warnings.append(
                 warnings.WarningMessage(
-                    message=category(message), category=category,
+                    message=category_wraper(message), category=category,
                     filename="", lineno=0))
 
     def __exit__(self, exc_type, exc_val, exc_tb):
