@@ -19,7 +19,7 @@ import obspy
 from obspy import read_events
 from obspy.core.event.dict import catalog_to_dict, dict_to_catalog
 from obspy.core.util.misc import _yield_obj_parent_attr
-from obspy.core.util.testing import create_diverse_catalog
+from obspy.core.util.testing import create_diverse_catalog, WarningsCapture
 
 
 def load_test_quakeml():
@@ -30,7 +30,8 @@ def load_test_quakeml():
     """
     base = dirname(obspy.__file__)
     test_data = join(base, 'io', 'quakeml', 'tests', 'data')
-    return [read_events(x, 'quakeml') for x in glob(join(test_data, '*'))]
+    with WarningsCapture():
+        return [read_events(x, 'quakeml') for x in glob(join(test_data, '*'))]
 
 
 class TestCatalogToDict(unittest.TestCase):
