@@ -143,7 +143,6 @@ def _obj_to_dict(obj):
     try:
         return _OBSPY_TO_DICT_FUNCS[type(obj)](obj)
     except KeyError:
-        # params = _get_params_from_docs(obj)
         params = _get_params_from_docs(obj)
         # create function for processing
         _OBSPY_TO_DICT_FUNCS[type(obj)] = _getattr_factory(params)
