@@ -75,7 +75,7 @@ IU  COLA   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994538Z
   endtime) tuples representing contiguous time spans for selected channels
   and time ranges.
 
-* :meth:`~obspy.clients.filesystem.tsindex.Client.get_percentage_availability()`:  # NOQA
+* :meth:`~obspy.clients.filesystem.tsindex.Client.get_percentage_availability()`_\:  # NOQA
   Returns the 2-tuple of percentage of available data (`0.0` to `1.0`) and
   number of gaps/overlaps. Percentage availability is calculated relative to
   the provided starttime and endtime.
@@ -100,7 +100,7 @@ Requesting Timeseries Data
   timeseries data in the test tsindex database. Results are returned as a
   :class:`~obspy.core.stream.Stream` object. See the
   :meth:`~obspy.clients.filesystem.tsindex.Client.get_waveforms_bulk()`
-  method for information on how to make multiple request at once.
+  method for information on how to make multiple requests at once.
 
 >>> t = UTCDateTime("2018-01-01T00:00:00.019500")
 >>> st = client.get_waveforms("IU", "*", "*", "BHZ", t, t + 1)
@@ -161,7 +161,7 @@ from os.path import relpath
 from glob import glob
 import uuid
 import subprocess
-import copy_reg
+import copyreg
 from multiprocessing import Pool
 import types
 import logging
@@ -201,7 +201,7 @@ def _pickle_method(m):
         return getattr, (m.im_self, m.im_func.func_name)
 
 
-copy_reg.pickle(types.MethodType, _pickle_method)
+copyreg.pickle(types.MethodType, _pickle_method)
 
 
 class Client(object):
@@ -996,21 +996,29 @@ class Indexer(object):
 
         # run mseedindex on each file in parallel
         pool = Pool(processes=self.parallel)
-        for file_name in file_paths:
-            logger.debug("Indexing file '{}'.".format(file_name))
-            proc = pool.apply_async(Indexer._run_index_command,
-                                    args=(self.index_cmd,
-                                          self.root_path,
-                                          file_name,
-                                          self.bulk_params))
-            # If the remote call raised an exception
-            # then that exception will be reraised by get()
-            proc.get()
-        pool.close()
-        pool.join()
-
-        if build_summary is True:
-            self.request_handler.build_tsindex_summary()
+        try:
+            for file_name in file_paths:
+                logger.debug("Indexing file '{}'.".format(file_name))
+                proc = pool.apply_async(Indexer._run_index_command,
+                                        args=(self.index_cmd,
+                                              self.root_path,
+                                              file_name,
+                                              self.bulk_params))
+                # If the remote call raised an exception
+                # then that exception will be reraised by get()
+                proc.get()
+            pool.close()
+            pool.join()
+        except KeyboardInterrupt:
+                logger.warning('Parent received keyboard interrupt.')
+                if build_summary is True:
+                    logger.warning("Skipped building timeseries summary "
+                                   "table since indexing was ended "
+                                   "prematurely.")
+                pool.terminate()
+        else:
+            if build_summary is True:
+                self.request_handler.build_tsindex_summary()
 
     def build_file_list(self, relative_paths=False, reindex=False):
         """
@@ -1222,6 +1230,22 @@ class TSIndexDatabaseHandler(object):
         else:
             return False
 
+    def _open_database_connection(self):
+        try:
+            connection = self.engine.connect()
+        except Exception as err:
+            raise ValueError(str(err))
+
+        logger.debug("Opening SQLite database for "
+                     "index rows: %s" % self.sqlitedb)
+
+        # Store temporary table(s) in memory
+        try:
+            connection.execute("PRAGMA temp_store=MEMORY")
+        except Exception as err:
+            raise ValueError(str(err))
+        return connection
+
     def _fetch_index_rows(self, query_rows=[], bulk_params={}):
         '''
         Fetch index rows matching specified request. This method is marked as
@@ -1244,19 +1268,7 @@ class TSIndexDatabaseHandler(object):
 
         my_uuid = uuid.uuid4().hex
         request_table = "request_%s" % my_uuid
-        try:
-            connection = self.engine.connect()
-        except Exception as err:
-            raise ValueError(str(err))
-
-        logger.debug("Opening SQLite database for "
-                     "index rows: %s" % self.sqlitedb)
-
-        # Store temporary table(s) in memory
-        try:
-            connection.execute("PRAGMA temp_store=MEMORY")
-        except Exception as err:
-            raise ValueError(str(err))
+        connection = self._open_database_connection()
 
         # Create temporary table and load request
         try:
@@ -1366,19 +1378,7 @@ class TSIndexDatabaseHandler(object):
         '''
         query_rows = self._clean_query_rows(query_rows)
 
-        try:
-            connection = self.engine.connect()
-        except Exception as err:
-            raise Exception(err)
-
-        logger.debug("Opening sqlite3 database for "
-                     "summary rows: %s" % self.sqlitedb)
-
-        # Store temporary table(s) in memory
-        try:
-            connection.execute("PRAGMA temp_store=MEMORY")
-        except Exception as err:
-            raise ValueError(str(err))
+        connection = self._open_database_connection()
 
         summary_present = self.has_tsindex_summary(connection)
         if not summary_present:
