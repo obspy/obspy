@@ -17,7 +17,7 @@ from os.path import join, dirname
 
 import obspy
 from obspy import read_events
-from obspy.core.event.dict import catalog_to_dict, dict_to_catalog
+from obspy.core.event.dictionary import catalog_to_dict, dict_to_catalog
 from obspy.core.util.misc import _yield_obj_parent_attr
 from obspy.core.util.testing import create_diverse_catalog, WarningsCapture
 
@@ -37,14 +37,14 @@ def load_test_quakeml():
 class TestCatalogToDict(unittest.TestCase):
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         """
         Create input catalogs, dict list, and output catalogs.
         """
-        self.in_catalogs = [read_events(), create_diverse_catalog()]
-        self.in_catalogs += load_test_quakeml()  # load quakeml catalogs
-        self.catalog_dicts = [catalog_to_dict(x) for x in self.in_catalogs]
-        self.out_catalogs = [dict_to_catalog(x) for x in self.catalog_dicts]
+        cls.in_catalogs = [read_events(), create_diverse_catalog()]
+        cls.in_catalogs += load_test_quakeml()  # load quakeml catalogs
+        cls.catalog_dicts = [catalog_to_dict(x) for x in cls.in_catalogs]
+        cls.out_catalogs = [dict_to_catalog(x) for x in cls.catalog_dicts]
 
     def test_roundtrip_conversion(self):
         """
