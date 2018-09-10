@@ -165,6 +165,7 @@ import copyreg
 from multiprocessing import Pool
 import types
 import logging
+import requests
 from collections import namedtuple
 from sqlalchemy import create_engine
 from sqlalchemy.pool import QueuePool
@@ -893,9 +894,9 @@ class Indexer(object):
     """
 
     def __init__(self, root_path, sqlitedb="timeseries.sqlite",
-                 leap_seconds_file=None, index_cmd='mseedindex',
-                 bulk_params=None, filename_pattern='*',
-                 parallel=5, debug=False):
+                 leap_seconds_file="SEARCH", index_cmd='mseedindex',
+                 bulk_params=None, filename_pattern='*', parallel=5,
+                 debug=False):
         """
         Initializes the Indexer.
 
@@ -907,10 +908,18 @@ class Indexer(object):
             TSIndexDatabaseHandler object. A database will be created
             if one does not already exists at the specified path.
         :type leap_seconds_file: str
-        :param leap_seconds_file: Path to leap seconds file. See the
+        :param leap_seconds_file: Path to leap seconds file. If set to
+            "SEARCH" (default), then the program looks for a leap seconds file
+            in the same directory as the sqlite3 database. If set to `None`
+            then no leap seconds file will be used.
+
+            In :meth:`~obspy.clients.filesystem.tsindex.Indexer.run` the leap
+            seconds listed in this file will be used to adjust the time
+            coverage for records that contain a leap second. Also, leap second
+            indicators in the miniSEED headers will be ignored. See the
             `mseedindex wiki <https://github.com/iris-edu/mseedindex/blob/"
-            "master/doc/mseedindex.md#leap-second-list-file>`_ "
-            "for more information.
+            "master/doc/mseedindex.md#leap-second-list-file>`_ for more"
+            "for more information regarding this file.
         :type index_cmd: str
         :param index_cmd: Command to be run for each target file found that
             is not already in the index
@@ -946,24 +955,12 @@ class Indexer(object):
             raise ValueError("sqlitedb must be a string or "
                              "TSIndexDatabaseHandler object.")
 
+        self.leap_seconds_file = self._get_leap_seconds_file(leap_seconds_file)
+
         self.root_path = os.path.abspath(root_path)
         if not os.path.isdir(self.root_path):
             raise OSError("Root path `{}` does not exists."
                           .format(self.root_path))
-
-        self.leap_seconds_file = leap_seconds_file
-        if leap_seconds_file is not None and \
-                not os.path.isfile(leap_seconds_file):
-            self.leap_seconds_file = os.path.abspath(leap_seconds_file)
-            raise OSError("No leap seconds file exists at `{}`."
-                          .format(self.leap_seconds_file))
-        elif self.leap_seconds_file is not None:
-            os.environ["LIBMSEED_LEAPSECOND_FILE"] = os.path.abspath(
-                                                        self.leap_seconds_file)
-        else:
-            logger.warning("No leap second file specified. This is highly "
-                           "recommended")
-            os.environ["LIBMSEED_LEAPSECOND_FILE"] = "NONE"
 
     def run(self, build_summary=True, relative_paths=False, reindex=False):
         """
@@ -1080,6 +1077,82 @@ class Indexer(object):
                                   self.filename_pattern,
                                   self.root_path))
         return result
+
+    def download_leap_seconds_file(self, file_path=None):
+        """
+        Attempt to download leap-seconds.list from IETF and save to a file.
+
+        :type file_path: str
+        :param file_path: Optional path to file path where leap seconds
+            file should be downloaded. By default the file is downloaded to
+            the same directory as the Indexer instances sqlite3 timeseries
+            index database path (i.e. `sqlitedb`).
+
+        :rtype: str
+        :returns: Returns path to downloaded leap seconds file.
+        """
+        try:
+            logger.info("Downloading leap seconds file from the IETF.")
+            r = self._download(
+                        "http://www.ietf.org/timezones/data/leap-seconds.list")
+            if file_path is None:
+                file_path = os.path.join(
+                            os.path.dirname(self.request_handler.sqlitedb),
+                            "leap-seconds.list")
+                logger.debug("No leap seconds file path specified. Attempting "
+                             "to create a leap seconds file at {}."
+                             .format(file_path))
+        except Exception:
+            raise OSError("Failed to download leap seconds file. "
+                          "No leap seconds file will be used.")
+        try:
+            logger.debug("Writing IETF leap seconds info to a file at {}."
+                         .format(file_path))
+            f = open(file_path, "w")
+            f.write(r.text)
+            f.close()
+        except Exception:
+            raise OSError("Failed to create leap seconds file at {}."
+                          .format(file_path))
+        return file_path
+
+    def _download(self, url):
+        return requests.get(url)
+
+    def _get_leap_seconds_file(self, leap_seconds_file):
+        """
+        Return path to leap second file and set appropriate environment
+        variable for mseedindex.
+
+        :type leap_seconds_file: str or None
+        :param leap_seconds_file: Leap second file options defined in the
+            :class:`~obspy.clients.filesystem.tsindex.Indexer` constructor.
+        """
+        if leap_seconds_file is not None:
+            if leap_seconds_file == "SEARCH":
+                dbpath = os.path.dirname(self.request_handler.sqlitedb)
+                file_path = os.path.join(dbpath, "leap-seconds.list")
+                # leap seconds file will be downloaded when calling mseedindex
+                if os.path.isfile(file_path):
+                    leap_seconds_file = os.path.abspath(file_path)
+                else:
+                    logger.warning("Leap seconds file `{}` not found. "
+                                   "No leap seconds file will be used for "
+                                   "indexing.".format(file_path))
+            elif os.path.isfile(leap_seconds_file):
+                # use leap seconds file provided by user
+                leap_seconds_file = os.path.abspath(leap_seconds_file)
+            else:
+                raise OSError("No leap seconds file exists at `{}`. "
+                              .format(leap_seconds_file))
+            os.environ["LIBMSEED_LEAPSECOND_FILE"] = os.path.abspath(
+                                                        leap_seconds_file)
+        else:
+            # warn user and don't use a leap seconds file
+            logger.warning("No leap second file specified. This is highly "
+                           "recommended.")
+            os.environ["LIBMSEED_LEAPSECOND_FILE"] = "NONE"
+        return leap_seconds_file
 
     def _is_index_cmd_installed(self):
         """

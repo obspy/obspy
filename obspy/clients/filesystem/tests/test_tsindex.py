@@ -15,6 +15,7 @@ from collections import namedtuple
 import uuid
 import os
 import re
+import requests
 
 
 def get_test_data_filepath():
@@ -595,6 +596,7 @@ class IndexerTestCase(unittest.TestCase):
         filepath = get_test_data_filepath()
         sqlitedb = os.path.join(filepath,
                                 'timeseries.sqlite')
+
         # test that a bad leap second file path raises an error
         self.assertRaisesRegexp(OSError,
                                 "^Root path.*does not exists.$",
@@ -615,21 +617,52 @@ class IndexerTestCase(unittest.TestCase):
                                 Indexer,
                                 filepath,
                                 sqlitedb='/some/bad/path/',
-                                filename_pattern="*.mseed",
-                                parallel=2)
+                                filename_pattern="*.mseed")
 
-    def test_bad_leapsecond_filepath(self):
+    def test_download_leap_seconds_file(self):
         filepath = get_test_data_filepath()
         sqlitedb = os.path.join(filepath, 'timeseries.sqlite')
+        indexer = Indexer(filepath,
+                          sqlitedb=sqlitedb)
+        # mock actually downloading the file since this requires a internet
+        # connection
+        indexer._download = \
+            mock.MagicMock(return_value=requests.Response())
+        # create a empty leap-seconds.list file
+        test_file = os.path.join(
+                            os.path.dirname(sqlitedb), "leap-seconds.list")
+        file_path = indexer.download_leap_seconds_file(test_file)
+        # assert that the file was put in the same location as the sqlite db
+        self.assertTrue(os.path.isfile(file_path))
+        self.assertEquals(file_path, test_file)
+        os.remove(test_file)
+
+    def test__get_leap_seconds_file(self):
+        filepath = get_test_data_filepath()
+        sqlitedb = os.path.join(filepath, 'timeseries.sqlite')
+        indexer = Indexer(filepath,
+                          sqlitedb=sqlitedb)
+
         # test that a bad leap second file path raises an error
         self.assertRaisesRegexp(OSError,
                                 "^No leap seconds file exists at.*$",
                                 Indexer,
                                 filepath,
                                 sqlitedb=sqlitedb,
-                                filename_pattern="*.mseed",
-                                leap_seconds_file="/some/bad/path/",
-                                parallel=2)
+                                leap_seconds_file="/some/bad/path/")
+        self.assertRaisesRegexp(OSError,
+                                "^No leap seconds file exists at.*$",
+                                indexer._get_leap_seconds_file,
+                                "/some/bad/path/")
+
+        # test search
+        # create a empty leap-seconds.list file
+        test_file = os.path.join(
+                            os.path.dirname(sqlitedb), "leap-seconds.list")
+        open(test_file, 'a').close()
+        file_path = indexer._get_leap_seconds_file("SEARCH")
+        self.assertEquals(file_path, test_file)
+        os.remove(test_file)
 
     def test_build_file_list(self):
         filepath = get_test_data_filepath()
