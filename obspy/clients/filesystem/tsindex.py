@@ -231,10 +231,7 @@ class Client(object):
             # write debug level logs to the console
             ch.setLevel(logging.DEBUG)
 
-        if not os.path.isfile(sqlitedb):
-            raise OSError("No sqlite3 database file exists at `{}`."
-                          .format(sqlitedb))
-
+        # setup handler for database
         if isinstance(sqlitedb, (str, native_str)):
             self.request_handler = TSIndexDatabaseHandler(sqlitedb,
                                                           debug=self.debug)
@@ -932,27 +929,32 @@ class Indexer(object):
             # write debug level logs to the console
             ch.setLevel(logging.DEBUG)
 
-        self.root_path = root_path
         self.index_cmd = index_cmd
         if bulk_params is None:
             bulk_params = {}
         self.bulk_params = bulk_params
         self.filename_pattern = filename_pattern
         self.parallel = parallel
-        self.sqlitedb = sqlitedb
-        self.leap_seconds_file = leap_seconds_file
 
-        if isinstance(self.sqlitedb, (str, native_str)):
-            self.request_handler = TSIndexDatabaseHandler(self.sqlitedb,
+        # setup handler for database
+        if isinstance(sqlitedb, (str, native_str)):
+            self.request_handler = TSIndexDatabaseHandler(sqlitedb,
                                                           debug=self.debug)
-        elif isinstance(self.sqlitedb, TSIndexDatabaseHandler):
-            self.request_handler = self.sqlitedb
+        elif isinstance(sqlitedb, TSIndexDatabaseHandler):
+            self.request_handler = sqlitedb
         else:
             raise ValueError("sqlitedb must be a string or "
                              "TSIndexDatabaseHandler object.")
 
-        if self.leap_seconds_file is not None and \
-                not os.path.isfile(self.leap_seconds_file):
+        self.root_path = os.path.abspath(root_path)
+        if not os.path.isdir(self.root_path):
+            raise OSError("Root path `{}` does not exists."
+                          .format(self.root_path))
+
+        self.leap_seconds_file = leap_seconds_file
+        if leap_seconds_file is not None and \
+                not os.path.isfile(leap_seconds_file):
+            self.leap_seconds_file = os.path.abspath(leap_seconds_file)
             raise OSError("No leap seconds file exists at `{}`."
                           .format(self.leap_seconds_file))
         elif self.leap_seconds_file is not None:
@@ -992,7 +994,7 @@ class Indexer(object):
             self.bulk_params["-table"] = self.request_handler.tsindex_table
         if self.bulk_params.get("-sqlite") is None:
             # set path to sqlite database
-            self.bulk_params['-sqlite'] = self.sqlitedb
+            self.bulk_params['-sqlite'] = self.request_handler.sqlitedb
 
         pool = Pool(processes=self.parallel)
         # run mseedindex on each file in parallel
@@ -1154,11 +1156,21 @@ class TSIndexDatabaseHandler(object):
             # write debug level logs to the console
             ch.setLevel(logging.DEBUG)
 
-        self.sqlitedb = sqlitedb
         self.tsindex_table = tsindex_table
         self.tsindex_summary_table = tsindex_summary_table
 
-        self.db_path = "sqlite:///{}".format(sqlitedb)
+        if isinstance(sqlitedb, (str, native_str)):
+            self.sqlitedb = os.path.abspath(sqlitedb)
+            db_dirpath = os.path.dirname(self.sqlitedb)
+            if not os.path.exists(db_dirpath):
+                raise OSError("Database path `{}` does not exist."
+                              .format(db_dirpath))
+            elif not os.path.isfile(self.sqlitedb):
+                logger.warning("No sqlite3 database file exists at `{}`."
+                               .format(self.sqlitedb))
+        else:
+            raise ValueError("sqlitedb must be a string.")
+        self.db_path = "sqlite:///{}".format(self.sqlitedb)
         self.engine = create_engine(self.db_path, poolclass=QueuePool)
 
     def build_tsindex_summary(self, connection=None, temporary=False):

@@ -42,7 +42,7 @@ class ClientTestCase(unittest.TestCase):
         a SQLite database
         """
         self.assertRaisesRegexp(OSError,
-                                "^No sqlite3 database file exists at.*$",
+                                "^Database path.*does not exist.$",
                                 Client,
                                 "/some/bad/path/timeseries.sqlite")
 
@@ -587,6 +587,37 @@ def purge(dir, pattern):
 
 class IndexerTestCase(unittest.TestCase):
 
+    def test_bad_rootpath(self):
+        """
+        Checks that an error is raised when an invalid path is provided to
+        a data
+        """
+        filepath = get_test_data_filepath()
+        sqlitedb = os.path.join(filepath,
+                                'timeseries.sqlite')
+        # test that a bad leap second file path raises an error
+        self.assertRaisesRegexp(OSError,
+                                "^Root path.*does not exists.$",
+                                Indexer,
+                                "/some/bad/path",
+                                sqlitedb=sqlitedb,
+                                filename_pattern="*.mseed",
+                                parallel=2)
+
+    def test_bad_sqlitdb_filepath(self):
+        """
+        Checks that an error is raised when an invalid path is provided to
+        a SQLite database
+        """
+        filepath = get_test_data_filepath()
+        self.assertRaisesRegexp(OSError,
+                                "^Database path.*does not exist.$",
+                                Indexer,
+                                filepath,
+                                sqlitedb='/some/bad/path/',
+                                filename_pattern="*.mseed",
+                                parallel=2)
+
     def test_bad_leapsecond_filepath(self):
         filepath = get_test_data_filepath()
         sqlitedb = os.path.join(filepath, 'timeseries.sqlite')
@@ -650,18 +681,11 @@ class IndexerTestCase(unittest.TestCase):
                                 indexer.build_file_list,
                                 relative_paths=True,
                                 reindex=False)
+
         self.assertRaisesRegexp(OSError,
                                 "^No unindexed files matching filename.*$",
                                 indexer.build_file_list,
                                 relative_paths=True)
-
-        # assert that an OSError is raised for a invalid root_path
-        indexer = Indexer("some/bad/path/",
-                          sqlitedb=sqlitedb,
-                          filename_pattern="*.mseed")
-        self.assertRaisesRegexp(OSError,
-                                "^No unindexed files matching filename.*$",
-                                indexer.build_file_list)
 
     def test_run_bad_index_cmd(self):
         """
@@ -747,7 +771,21 @@ class IndexerTestCase(unittest.TestCase):
             purge(filepath, '^{}.*$'.format(fname))
 
 
-class TSIndexDatabaseHanderTestCase(unittest.TestCase):
+class TSIndexDatabaseHandlerTestCase(unittest.TestCase):
+
+    def test_bad_sqlitdb_filepath(self):
+        """
+        Checks that an error is raised when an invalid path is provided to
+        a SQLite database
+        """
+        filepath = get_test_data_filepath()
+        self.assertRaisesRegexp(OSError,
+                                "^Database path.*does not exist.$",
+                                Indexer,
+                                filepath,
+                                sqlitedb='/some/bad/path/',
+                                filename_pattern="*.mseed",
+                                parallel=2)
 
     def test__fetch_summary_rows(self):
         # test with actual sqlite3 database that is missing a summary table
