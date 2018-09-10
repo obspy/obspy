@@ -994,9 +994,10 @@ class Indexer(object):
             # set path to sqlite database
             self.bulk_params['-sqlite'] = self.sqlitedb
 
-        # run mseedindex on each file in parallel
         pool = Pool(processes=self.parallel)
+        # run mseedindex on each file in parallel
         try:
+            proccesses = []
             for file_name in file_paths:
                 logger.debug("Indexing file '{}'.".format(file_name))
                 proc = pool.apply_async(Indexer._run_index_command,
@@ -1004,10 +1005,15 @@ class Indexer(object):
                                               self.root_path,
                                               file_name,
                                               self.bulk_params))
-                # If the remote call raised an exception
-                # then that exception will be reraised by get()
-                proc.get()
+                proccesses.append(proc)
             pool.close()
+            # Without timeout, cannot respond to KeyboardInterrupt.
+            # Also need get to raise the exceptions workers may throw.
+            for proc in proccesses:
+                cmd, rc, out, err = proc.get(timeout=999999)
+                if rc:
+                    logger.warning("FAIL [{0}] '{1}' out: '{2}' err: '{3}'"
+                                   .format(rc, cmd, out, err))
             pool.join()
         except KeyboardInterrupt:
                 logger.warning('Parent received keyboard interrupt.')
@@ -1033,6 +1039,7 @@ class Indexer(object):
         :returns: A list of files under the root_path matching
             filename_pattern.
         """
+        logger.debug("Building a list of files to index.")
         file_list = [y for x in os.walk(self.root_path)
                      for y in glob(os.path.join(x[0], self.filename_pattern))
                      if os.path.isfile(y)]
@@ -1107,8 +1114,13 @@ class Indexer(object):
             cmd.append(file_name)
             # boolean options have a value of None
             cmd = [c for c in cmd if c is not None]
-            proc = subprocess.Popen(cmd, cwd=root_path)
-            proc.wait()
+            proc = subprocess.Popen(cmd,
+                                    cwd=root_path,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            out, err = proc.communicate()
+            return (index_cmd, proc.returncode,
+                    out.strip(), err.strip())
         except Exception as err:
             msg = ("Error running command `{}` - {}"
                    .format(index_cmd, err))
@@ -1426,6 +1438,8 @@ class TSIndexDatabaseHandler(object):
 
         summary_present = (result_perm.fetchone()[0] or
                            result_temp.fetchone()[0])
+        result_perm.close()
+        result_temp.close()
 
         if summary_present:
             # Select summary rows by joining with summary table
@@ -1455,11 +1469,11 @@ class TSIndexDatabaseHandler(object):
             summary_rows = []
             for row in result:
                 summary_rows.append(NamedRow(*row))
+            result.close()
 
             logger.debug("Fetched %d summary rows" % len(summary_rows))
 
-            connection.execute("DROP TABLE {0}".format(request_table))
-
+        connection.execute("DROP TABLE IF EXISTS {0}".format(request_table))
         connection.close()
 
         return summary_rows
