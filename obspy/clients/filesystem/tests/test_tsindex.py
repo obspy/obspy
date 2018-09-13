@@ -792,10 +792,9 @@ class IndexerTestCase(unittest.TestCase):
 
             for i in range(0, len(expected_tsindex_data)):
                 for j in range(0, len(keys)):
-                    self.assertEqual(unicode(getattr(expected_tsindex_data[i],
-                                                     keys[j])),
-                                     unicode(getattr(tsindex_data[i],
-                                                     keys[j])))
+                    self.assertEqual(getattr(expected_tsindex_data[i],
+                                             keys[j]),
+                                     getattr(tsindex_data[i], keys[j]))
             self.assertEqual(len(tsindex_data), len(expected_tsindex_data))
 
         except Exception as err:
@@ -852,7 +851,5 @@ class TSIndexDatabaseHandlerTestCase(unittest.TestCase):
 
         for i in range(0, len(expected_ts_summary_data)):
             for j in range(0, len(keys)):
-                self.assertEqual(unicode(getattr(expected_ts_summary_data[i],
-                                                 keys[j])),
-                                 unicode(getattr(ts_summary_data[i],
-                                                 keys[j])))
+                self.assertEqual(getattr(expected_ts_summary_data[i], keys[j]),
+                                 getattr(ts_summary_data[i], keys[j]))

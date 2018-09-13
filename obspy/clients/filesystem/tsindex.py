@@ -1089,7 +1089,7 @@ class Indexer(object):
             index database path (i.e. `sqlitedb`).
 
         :rtype: str
-        :returns: Returns path to downloaded leap seconds file.
+        :returns: Path to downloaded leap seconds file.
         """
         try:
             logger.info("Downloading leap seconds file from the IETF.")
@@ -1183,7 +1183,7 @@ class Indexer(object):
         """
         try:
             cmd = [index_cmd]
-            for option, value in bulk_params.iteritems():
+            for option, value in bulk_params.items():
                 params = [option, value]
                 cmd.extend(params)
             cmd.append(file_name)
