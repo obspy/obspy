@@ -159,6 +159,7 @@ from future.utils import native_str
 import os
 from os.path import relpath
 from glob import glob
+import datetime
 import uuid
 import subprocess
 import copyreg
@@ -552,12 +553,23 @@ class Client(object):
         :param channel: Channel code of requested data (e.g. "HHZ").
             Wildcards '*' and '?' are supported.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Start of requested time window.
+        :param starttime: Start of requested time window. Defaults to
+            minimum possible start date.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End of requested time window. Defaults to
+            maximum possible end date.
         :rtype: bool
         :returns: Returns True if there is data in the index for a given
             network, station, location, channel, starttime, endtime.
         """
+        if starttime is None:
+            starttime = UTCDateTime(year=datetime.MINYEAR,
+                                    month=1,
+                                    day=1)
+        if endtime is None:
+            endtime = UTCDateTime(year=datetime.MAXYEAR,
+                                  month=12,
+                                  day=31)
         avail_percentage = self.get_availability_percentage(network,
                                                             station,
                                                             location,

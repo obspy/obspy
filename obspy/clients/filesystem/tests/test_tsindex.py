@@ -576,6 +576,14 @@ class ClientTestCase(unittest.TestCase):
                          expected_avail_percentage[1])
         self.assertIsInstance(avail_percentage, tuple)
 
+    def test_has_data(self):
+        client = get_test_client()
+        self.assertTrue(client.has_data())
+        self.assertTrue(client.has_data(starttime=UTCDateTime(2017, 12, 31),
+                                        endtime=UTCDateTime(2018, 1, 7)))
+        self.assertFalse(client.has_data(starttime=UTCDateTime(1970, 12, 31),
+                                         endtime=UTCDateTime(2013, 1, 7)))
+
 
 def purge(dir, pattern):
     """
