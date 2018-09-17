@@ -788,13 +788,13 @@ def _get_record_information(file_object, offset=0, endian=None):
     # If samprate not set via blockette 100 calculate the sample rate according
     # to the SEED manual.
     if not samp_rate:
-        if (samp_rate_factor > 0) and (samp_rate_mult) > 0:
+        if samp_rate_factor > 0 and samp_rate_mult > 0:
             samp_rate = float(samp_rate_factor * samp_rate_mult)
-        elif (samp_rate_factor > 0) and (samp_rate_mult) < 0:
+        elif samp_rate_factor > 0 and samp_rate_mult < 0:
             samp_rate = -1.0 * float(samp_rate_factor) / float(samp_rate_mult)
-        elif (samp_rate_factor < 0) and (samp_rate_mult) > 0:
+        elif samp_rate_factor < 0 and samp_rate_mult > 0:
             samp_rate = -1.0 * float(samp_rate_mult) / float(samp_rate_factor)
-        elif (samp_rate_factor < 0) and (samp_rate_mult) < 0:
+        elif samp_rate_factor < 0 and samp_rate_mult < 0:
             samp_rate = 1.0 / float(samp_rate_factor * samp_rate_mult)
         else:
             samp_rate = 0
