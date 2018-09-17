@@ -743,68 +743,70 @@ class IndexerTestCase(unittest.TestCase):
                                 indexer.run)
 
     def test_run(self):
+        my_uuid = uuid.uuid4().hex
+        fname = 'test_timeseries_{}'.format(my_uuid)
+        filepath = get_test_data_filepath()
+        database = '{}{}.sqlite'.format(filepath, fname)
         try:
-            my_uuid = uuid.uuid4().hex
-            fname = 'test_timeseries_{}'.format(my_uuid)
-            filepath = get_test_data_filepath()
-            database = '{}{}.sqlite'.format(filepath, fname)
-
             indexer = Indexer(filepath,
                               database=database,
                               filename_pattern="*.mseed",
                               parallel=2,
                               debug=True)
-            indexer.run(relative_paths=True)
-            keys = ['network', 'station', 'location', 'channel',
-                    'quality', 'starttime', 'endtime', 'samplerate',
-                    'filename', 'byteoffset', 'bytes', 'hash',
-                    'timeindex', 'timespans', 'timerates', 'format',
-                    'filemodtime']
-            NamedRow = namedtuple('NamedRow',
-                                  keys)
+            if indexer._is_index_cmd_installed():
+                indexer.run(relative_paths=True)
+                keys = ['network', 'station', 'location', 'channel',
+                        'quality', 'starttime', 'endtime', 'samplerate',
+                        'filename', 'byteoffset', 'bytes', 'hash',
+                        'timeindex', 'timespans', 'timerates', 'format',
+                        'filemodtime']
+                NamedRow = namedtuple('NamedRow',
+                                      keys)
 
-            expected_tsindex_data = \
-                [
-                 NamedRow(
-                    "CU", "TGUH", "00", "BHZ", "M",
-                    "2018-01-01T00:00:00.000000",
-                    "2018-01-01T00:01:00.000000", 40.0,
-                    "CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed",
-                    0, 4096, "aaaac5315f84cdd174fd8360002a1e3a",
-                    "1514764800.000000=>0,latest=>1",
-                    "[1514764800.000000:1514764860.000000]", None, None,
-                    "2018-08-24T16:38:01"),
-                 NamedRow(
-                    "IU", "ANMO", "10", "BHZ", "M",
-                    "2018-01-01T00:00:00.019500",
-                    "2018-01-01T00:00:59.994536", 40.0,
-                    "IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed",
-                    0, 2560, "36a771ca1dc648c505873c164d8b26f2",
-                    "1514764800.019500=>0,latest=>1",
-                    "[1514764800.019500:1514764859.994536]", None, None,
-                    "2018-08-24T16:31:39"),
-                 NamedRow(
-                    "IU", "COLA", "10", "BHZ", "M",
-                    "2018-01-01T00:00:00.019500",
-                    "2018-01-01T00:00:59.994538", 40.0,
-                    "IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed",
-                    0, 5120, "4ccbb97573ca00ef8c2c4f9c01d27ddf",
-                    "1514764800.019500=>0,latest=>1",
-                    "[1514764800.019500:1514764859.994538]", None, None,
-                    "2018-08-24T16:33:03")]
-            db_handler = TSIndexDatabaseHandler(database)
-            tsindex_data = db_handler._fetch_index_rows([("I*,C*", "*",
-                                                          "0?,1?", "*",
-                                                          "2018-01-01",
-                                                          "2018-02-01")])
+                expected_tsindex_data = \
+                    [
+                     NamedRow(
+                        "CU", "TGUH", "00", "BHZ", "M",
+                        "2018-01-01T00:00:00.000000",
+                        "2018-01-01T00:01:00.000000", 40.0,
+                        "CU/2018/001/"
+                        "CU.TGUH.00.BHZ.2018.001_first_minute.mseed",
+                        0, 4096, "aaaac5315f84cdd174fd8360002a1e3a",
+                        "1514764800.000000=>0,latest=>1",
+                        "[1514764800.000000:1514764860.000000]", None, None,
+                        "2018-08-24T16:38:01"),
+                     NamedRow(
+                        "IU", "ANMO", "10", "BHZ", "M",
+                        "2018-01-01T00:00:00.019500",
+                        "2018-01-01T00:00:59.994536", 40.0,
+                        "IU/2018/001/"
+                        "IU.ANMO.10.BHZ.2018.001_first_minute.mseed",
+                        0, 2560, "36a771ca1dc648c505873c164d8b26f2",
+                        "1514764800.019500=>0,latest=>1",
+                        "[1514764800.019500:1514764859.994536]", None, None,
+                        "2018-08-24T16:31:39"),
+                     NamedRow(
+                        "IU", "COLA", "10", "BHZ", "M",
+                        "2018-01-01T00:00:00.019500",
+                        "2018-01-01T00:00:59.994538", 40.0,
+                        "IU/2018/001/"
+                        "IU.COLA.10.BHZ.2018.001_first_minute.mseed",
+                        0, 5120, "4ccbb97573ca00ef8c2c4f9c01d27ddf",
+                        "1514764800.019500=>0,latest=>1",
+                        "[1514764800.019500:1514764859.994538]", None, None,
+                        "2018-08-24T16:33:03")]
+                db_handler = TSIndexDatabaseHandler(database)
+                tsindex_data = db_handler._fetch_index_rows([("I*,C*", "*",
+                                                              "0?,1?", "*",
+                                                              "2018-01-01",
+                                                              "2018-02-01")])
 
-            for i in range(0, len(expected_tsindex_data)):
-                for j in range(0, len(keys)):
-                    self.assertEqual(getattr(expected_tsindex_data[i],
-                                             keys[j]),
-                                     getattr(tsindex_data[i], keys[j]))
-            self.assertEqual(len(tsindex_data), len(expected_tsindex_data))
-
+                for i in range(0, len(expected_tsindex_data)):
+                    for j in range(0, len(keys)):
+                        self.assertEqual(getattr(expected_tsindex_data[i],
+                                                 keys[j]),
+                                         getattr(tsindex_data[i], keys[j]))
+                self.assertEqual(len(tsindex_data), len(expected_tsindex_data))
         except Exception as err:
             raise(err)
         finally:

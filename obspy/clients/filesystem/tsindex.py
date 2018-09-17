@@ -104,7 +104,7 @@ Requesting Timeseries Data
 
 >>> t = UTCDateTime("2018-01-01T00:00:00.019500")
 >>> st = client.get_waveforms("IU", "*", "*", "BHZ", t, t + 1)
->>> st.plot()
+>>> st.plot()  # doctest: +SKIP
 
 .. plot::
 
@@ -991,7 +991,11 @@ class Indexer(object):
             the index and have not been modified.  The `reindex` option can be
             set to True to force a re-indexing of all files regardless.
         """
-        self._is_index_cmd_installed()
+        if self._is_index_cmd_installed() is False:
+            raise OSError(
+                    "Required program `{}` is not installed. Hint: Install "
+                    "mseedindex at https://github.com/iris-edu/mseedindex/."
+                    .format(self.index_cmd))
         self.request_handler._init_database_for_indexing()
         file_paths = self.build_file_list(relative_paths, reindex)
 
@@ -1175,10 +1179,9 @@ class Indexer(object):
         try:
             subprocess.call([self.index_cmd, "-V"])
         except OSError:
-            raise OSError(
-                    "Required program `{}` is not installed. Hint: Install "
-                    "mseedindex at https://github.com/iris-edu/mseedindex/."
-                    .format(self.index_cmd))
+            return False
+        else:
+            return True
 
     @classmethod
     def _run_index_command(cls, index_cmd, root_path, file_name, bulk_params):

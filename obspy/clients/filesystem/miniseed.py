@@ -17,7 +17,7 @@ from io import BytesIO
 from obspy import read
 from obspy.core import UTCDateTime
 from obspy.core.stream import Stream
-from obspy.clients.filesystem.msriterator import MSR_iterator
+from obspy.clients.filesystem.msriterator import MSRIterator
 
 
 # Setup the logger.
@@ -77,12 +77,12 @@ class ExtractedDataSegment(object):
 
 class MSRIDataSegment(ExtractedDataSegment):
     """
-    Segment of data from a MSR_iterator
+    Segment of data from a MSRIterator
     """
     def __init__(self, msri, sample_rate, start_time, end_time, src_name,
                  debug=False):
         """
-        :param msri: A `MSR_iterator`
+        :param msri: A `MSRIterator`
         :param sample_rate: Sample rate of the data
         :param start_time: A `UTCDateTime` giving the start of the
                            requested data
@@ -203,7 +203,7 @@ class MiniseedDataExtractor(object):
             self.dp_replace_sub = None
         self.request_limit = request_limit
 
-    def handle_trimming(self, stime, etime, NRow):
+    def handle_trimming(self, stime, etime, nrow):
         """
         Get the time & byte-offsets for the data in time range (stime, etime).
 
@@ -214,15 +214,15 @@ class MiniseedDataExtractor(object):
         :returns: [(start time, start offset, trim_boolean),
                    (end time, end offset, trim_boolean)]
         """
-        etime = UTCDateTime(NRow.requestend)
-        row_stime = UTCDateTime(NRow.starttime)
-        row_etime = UTCDateTime(NRow.endtime)
+        etime = UTCDateTime(nrow.requestend)
+        row_stime = UTCDateTime(nrow.starttime)
+        row_etime = UTCDateTime(nrow.endtime)
 
         # If we need a subset of the this block, trim it accordingly
-        block_start = int(NRow.byteoffset)
-        block_end = block_start + int(NRow.bytes)
+        block_start = int(nrow.byteoffset)
+        block_end = block_start + int(nrow.bytes)
         if stime > row_stime or etime < row_etime:
-            tix = [x.split("=>") for x in NRow.timeindex.split(",")]
+            tix = [x.split("=>") for x in nrow.timeindex.split(",")]
             if tix[-1][0] == 'latest':
                 tix[-1] = [str(row_etime.timestamp), block_end]
             to_x = [float(x[0]) for x in tix]
@@ -260,15 +260,15 @@ class MiniseedDataExtractor(object):
                                          'endtime', 'triminfo', 'bytes',
                                          'samplerate'])
         try:
-            for NRow in index_rows:
-                srcname = "_".join(NRow[:4])
-                filename = NRow.filename
+            for nrow in index_rows:
+                srcname = "_".join(nrow[:4])
+                filename = nrow.filename
                 logger.debug("EXTRACT: src=%s, file=%s, bytes=%s, rate:%s" %
-                             (srcname, filename, NRow.bytes, NRow.samplerate))
+                             (srcname, filename, nrow.bytes, nrow.samplerate))
 
-                starttime = UTCDateTime(NRow.requeststart)
-                endtime = UTCDateTime(NRow.requestend)
-                triminfo = self.handle_trimming(starttime, endtime, NRow)
+                starttime = UTCDateTime(nrow.requeststart)
+                endtime = UTCDateTime(nrow.requestend)
+                triminfo = self.handle_trimming(starttime, endtime, nrow)
                 total_bytes += triminfo[1][1] - triminfo[0][1]
                 if self.request_limit > 0 and total_bytes > self.request_limit:
                     raise RequestLimitExceededError(
@@ -284,10 +284,10 @@ class MiniseedDataExtractor(object):
                                             starttime=starttime,
                                             endtime=endtime,
                                             triminfo=triminfo,
-                                            bytes=NRow.bytes,
-                                            samplerate=NRow.samplerate))
+                                            bytes=nrow.bytes,
+                                            samplerate=nrow.samplerate))
                 logger.debug("EXTRACT: src=%s, file=%s, bytes=%s, rate:%s" %
-                             (srcname, filename, NRow.bytes, NRow.samplerate))
+                             (srcname, filename, nrow.bytes, nrow.samplerate))
         except Exception as err:
             raise Exception("Error accessing data index: %s" % str(err))
 
@@ -296,38 +296,38 @@ class MiniseedDataExtractor(object):
             raise NoDataError()
 
         # Get & return the actual data
-        for NRow in request_rows:
-            logger.debug("Extracting %s (%s - %s) from %s" % (NRow.srcname,
-                                                              NRow.starttime,
-                                                              NRow.endtime,
-                                                              NRow.filename))
+        for nrow in request_rows:
+            logger.debug("Extracting %s (%s - %s) from %s" % (nrow.srcname,
+                                                              nrow.starttime,
+                                                              nrow.endtime,
+                                                              nrow.filename))
 
             # Iterate through records in section
             # if only part of the section is needed
-            if NRow.triminfo[0][2] or NRow.triminfo[1][2]:
+            if nrow.triminfo[0][2] or nrow.triminfo[1][2]:
 
-                for msri in MSR_iterator(filename=NRow.filename,
-                                         startoffset=NRow.triminfo[0][1],
-                                         dataflag=False):
+                for msri in MSRIterator(filename=nrow.filename,
+                                        startoffset=nrow.triminfo[0][1],
+                                        dataflag=False):
                     offset = msri.get_offset()
 
                     # Done if we are beyond end offset
-                    if offset >= NRow.triminfo[1][1]:
+                    if offset >= nrow.triminfo[1][1]:
                         break
 
                     yield MSRIDataSegment(msri,
-                                          NRow.samplerate,
-                                          NRow.starttime,
-                                          NRow.endtime,
-                                          NRow.srcname,
+                                          nrow.samplerate,
+                                          nrow.starttime,
+                                          nrow.endtime,
+                                          nrow.srcname,
                                           self.debug)
 
                     # Check for passing end offset
                     if (offset + msri.msr.contents.reclen) >= \
-                            NRow.triminfo[1][1]:
+                            nrow.triminfo[1][1]:
                         break
 
             # Otherwise, return the entire section
             else:
-                yield FileDataSegment(NRow.filename, NRow.triminfo[0][1],
-                                      NRow.bytes, NRow.srcname)
+                yield FileDataSegment(nrow.filename, nrow.triminfo[0][1],
+                                      nrow.bytes, nrow.srcname)

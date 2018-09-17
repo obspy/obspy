@@ -15,7 +15,7 @@ from obspy.io.mseed.headers import (HPTMODULUS, MS_NOERROR, MS_ENDOFFILE,
                                     MSFileParam, MSRecord, clibmseed)
 
 
-class MSR_iterator(object):
+class MSRIterator(object):
     """
     Class for iterating through miniSEED records in a file.
 
@@ -40,23 +40,23 @@ class MSR_iterator(object):
     .. rubric:: Notes
 
     The elements of the MSRecord struct are available through `contents`
-    on the pointer to the MSrecord, e.g. `MSR_iterator.msr.contents.reclen`.
+    on the pointer to the MSrecord, e.g. `MSRIterator.msr.contents.reclen`.
 
     The raw record as a byte array is available at:
-    `MSR_iterator.msr.contents.record`
+    `MSRIterator.msr.contents.record`
     and can be used with Python I/O routines using:
-    `ctypes.string_at(MSR_iterator.msr.contents.record,
-    MSR_iterator.msr.contents.reclen))
+    `ctypes.string_at(MSRIterator.msr.contents.record,
+    MSRIterator.msr.contents.reclen))
 
     .. rubric:: Example
 
     from future.builtins import *
 
-    from msriterator import MSR_iterator
+    from msriterator import MSRIterator
 
     mseedfile = "test.mseed"
 
-    for msri in MSR_iterator(filename=mseedfile, dataflag=False):
+    for msri in MSRIterator(filename=mseedfile, dataflag=False):
 
         print ("{:d}: {}, reclen: {}, samples: {}, starttime: {}, endtime: {}".
                format(msri.get_offset(),
