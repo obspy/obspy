@@ -142,7 +142,7 @@ import get_test_data_filepath
 Index a directory tree of miniSEED files by calling
 :meth:`~obspy.clients.filesystem.tsindex.Indexer.run`. By default this will
 create a database called 'timeseries.sqlite' in the current working directory.
-The name of the index database can be changed by supplying the 'sqlitedb'
+The name of the index database can be changed by supplying the 'database'
 parameter when instantiating the Indexer object.
 
 .. code-block:: python
@@ -211,13 +211,13 @@ class Client(object):
     Time series extraction client for IRIS tsindex database schema.
     """
 
-    def __init__(self, sqlitedb, datapath_replace=None, debug=False):
+    def __init__(self, database, datapath_replace=None, debug=False):
         """
         Initializes the client.
 
-        :type sqlitedb: str or
+        :type database: str or
             :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
-        :param sqlitedb: Path to sqlite tsindex database or a
+        :param database: Path to sqlite tsindex database or a
             TSIndexDatabaseHandler object
         :type datapath_replace: tuple
         :param datapath_replace: A 2-value tuple, where any occurrence
@@ -234,13 +234,13 @@ class Client(object):
             ch.setLevel(logging.DEBUG)
 
         # setup handler for database
-        if isinstance(sqlitedb, (str, native_str)):
-            self.request_handler = TSIndexDatabaseHandler(sqlitedb,
+        if isinstance(database, (str, native_str)):
+            self.request_handler = TSIndexDatabaseHandler(database,
                                                           debug=self.debug)
-        elif isinstance(sqlitedb, TSIndexDatabaseHandler):
-            self.request_handler = sqlitedb
+        elif isinstance(database, TSIndexDatabaseHandler):
+            self.request_handler = database
         else:
-            raise ValueError("sqlitedb must be a string or "
+            raise ValueError("database must be a string or "
                              "TSIndexDatabaseHandler object.")
 
         # Create and configure the data extraction
@@ -905,7 +905,7 @@ class Indexer(object):
     table is generated with the extents of each time series.
     """
 
-    def __init__(self, root_path, sqlitedb="timeseries.sqlite",
+    def __init__(self, root_path, database="timeseries.sqlite",
                  leap_seconds_file="SEARCH", index_cmd='mseedindex',
                  bulk_params=None, filename_pattern='*', parallel=5,
                  debug=False):
@@ -914,9 +914,9 @@ class Indexer(object):
 
         :type root_path: str
         :param root_path: Root path to the directory structure to index.
-        :type sqlitedb: str or
+        :type database: str or
             :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
-        :param sqlitedb: Path to sqlite tsindex database or a
+        :param database: Path to sqlite tsindex database or a
             TSIndexDatabaseHandler object. A database will be created
             if one does not already exists at the specified path.
         :type leap_seconds_file: str
@@ -958,13 +958,13 @@ class Indexer(object):
         self.parallel = parallel
 
         # setup handler for database
-        if isinstance(sqlitedb, (str, native_str)):
-            self.request_handler = TSIndexDatabaseHandler(sqlitedb,
+        if isinstance(database, (str, native_str)):
+            self.request_handler = TSIndexDatabaseHandler(database,
                                                           debug=self.debug)
-        elif isinstance(sqlitedb, TSIndexDatabaseHandler):
-            self.request_handler = sqlitedb
+        elif isinstance(database, TSIndexDatabaseHandler):
+            self.request_handler = database
         else:
-            raise ValueError("sqlitedb must be a string or "
+            raise ValueError("database must be a string or "
                              "TSIndexDatabaseHandler object.")
 
         self.leap_seconds_file = self._get_leap_seconds_file(leap_seconds_file)
@@ -1003,7 +1003,7 @@ class Indexer(object):
             self.bulk_params["-table"] = self.request_handler.tsindex_table
         if self.bulk_params.get("-sqlite") is None:
             # set path to sqlite database
-            self.bulk_params['-sqlite'] = self.request_handler.sqlitedb
+            self.bulk_params['-sqlite'] = self.request_handler.database
 
         pool = Pool(processes=self.parallel)
         # run mseedindex on each file in parallel
@@ -1098,7 +1098,7 @@ class Indexer(object):
         :param file_path: Optional path to file path where leap seconds
             file should be downloaded. By default the file is downloaded to
             the same directory as the Indexer instances sqlite3 timeseries
-            index database path (i.e. `sqlitedb`).
+            index database path.
 
         :rtype: str
         :returns: Path to downloaded leap seconds file.
@@ -1109,7 +1109,7 @@ class Indexer(object):
                         "http://www.ietf.org/timezones/data/leap-seconds.list")
             if file_path is None:
                 file_path = os.path.join(
-                            os.path.dirname(self.request_handler.sqlitedb),
+                            os.path.dirname(self.request_handler.database),
                             "leap-seconds.list")
                 logger.debug("No leap seconds file path specified. Attempting "
                              "to create a leap seconds file at {}."
@@ -1142,7 +1142,7 @@ class Indexer(object):
         """
         if leap_seconds_file is not None:
             if leap_seconds_file == "SEARCH":
-                dbpath = os.path.dirname(self.request_handler.sqlitedb)
+                dbpath = os.path.dirname(self.request_handler.database)
                 file_path = os.path.join(dbpath, "leap-seconds.list")
                 # leap seconds file will be downloaded when calling mseedindex
                 if os.path.isfile(file_path):
@@ -1219,15 +1219,15 @@ class TSIndexDatabaseHandler(object):
     Supports direct tsindex database data access and manipulation.
     """
 
-    def __init__(self, sqlitedb, tsindex_table="tsindex",
+    def __init__(self, database, tsindex_table="tsindex",
                  tsindex_summary_table="tsindex_summary",
                  debug=False):
         """
         Main query interface to timeseries index database.
 
-        :type sqlitedb: str or
+        :type database: str or
             :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
-        :param sqlitedb: Path to sqlite tsindex database or a
+        :param database: Path to sqlite tsindex database or a
             TSIndexDatabaseHandler object
         :type tsindex_table: str
         :param tsindex_table: Name of timeseries index table
@@ -1244,18 +1244,18 @@ class TSIndexDatabaseHandler(object):
         self.tsindex_table = tsindex_table
         self.tsindex_summary_table = tsindex_summary_table
 
-        if isinstance(sqlitedb, (str, native_str)):
-            self.sqlitedb = os.path.abspath(sqlitedb)
-            db_dirpath = os.path.dirname(self.sqlitedb)
+        if isinstance(database, (str, native_str)):
+            self.database = os.path.abspath(database)
+            db_dirpath = os.path.dirname(self.database)
             if not os.path.exists(db_dirpath):
                 raise OSError("Database path `{}` does not exist."
                               .format(db_dirpath))
-            elif not os.path.isfile(self.sqlitedb):
+            elif not os.path.isfile(self.database):
                 logger.warning("No sqlite3 database file exists at `{}`."
-                               .format(self.sqlitedb))
+                               .format(self.database))
         else:
-            raise ValueError("sqlitedb must be a string.")
-        self.db_path = "sqlite:///{}".format(self.sqlitedb)
+            raise ValueError("database must be a string.")
+        self.db_path = "sqlite:///{}".format(self.database)
         self.engine = create_engine(self.db_path, poolclass=QueuePool)
 
     def build_tsindex_summary(self, connection=None, temporary=False):
@@ -1273,7 +1273,7 @@ class TSIndexDatabaseHandler(object):
         # test if tsindex table exists
         if not self.engine.dialect.has_table(self.engine, 'tsindex'):
             raise ValueError("No tsindex table '{}' exists in database '{}'."
-                             .format(self.tsindex_table, self.sqlitedb))
+                             .format(self.tsindex_table, self.database))
         connection.execute("DROP TABLE IF EXISTS {};"
                            .format(self.tsindex_summary_table))
 
@@ -1346,7 +1346,7 @@ class TSIndexDatabaseHandler(object):
             raise ValueError(str(err))
 
         logger.debug("Opening SQLite database for "
-                     "index rows: %s" % self.sqlitedb)
+                     "index rows: %s" % self.database)
 
         # Store temporary table(s) in memory
         try:
@@ -1355,7 +1355,7 @@ class TSIndexDatabaseHandler(object):
             raise ValueError(str(err))
         return connection
 
-    def _fetch_index_rows(self, query_rows=[], bulk_params={}):
+    def _fetch_index_rows(self, query_rows=None, bulk_params=None):
         '''
         Fetch index rows matching specified request. This method is marked as
         private because the index schema is subject to change.
@@ -1373,6 +1373,11 @@ class TSIndexDatabaseHandler(object):
             timespans, timerates, format, filemodtime, updated, scanned,
             requeststart, requestend)
         '''
+        if query_rows is None:
+            query_rows = []
+        if bulk_params is None:
+            bulk_params = {}
+
         query_rows = self._clean_query_rows(query_rows)
 
         my_uuid = uuid.uuid4().hex
@@ -1729,7 +1734,7 @@ class TSIndexDatabaseHandler(object):
         Setup a sqlite3 database for indexing.
         """
         try:
-            logger.debug('Setting up sqlite3 database at %s' % self.sqlitedb)
+            logger.debug('Setting up sqlite3 database at %s' % self.database)
             # setup the sqlite database
             connection = self.engine.connect()
             # https://www.sqlite.org/foreignkeys.html

@@ -602,7 +602,7 @@ class IndexerTestCase(unittest.TestCase):
         a data
         """
         filepath = get_test_data_filepath()
-        sqlitedb = os.path.join(filepath,
+        database = os.path.join(filepath,
                                 'timeseries.sqlite')
 
         # test that a bad leap second file path raises an error
@@ -610,7 +610,7 @@ class IndexerTestCase(unittest.TestCase):
                                 "^Root path.*does not exists.$",
                                 Indexer,
                                 "/some/bad/path",
-                                sqlitedb=sqlitedb,
+                                database=database,
                                 filename_pattern="*.mseed",
                                 parallel=2)
 
@@ -624,21 +624,21 @@ class IndexerTestCase(unittest.TestCase):
                                 "^Database path.*does not exist.$",
                                 Indexer,
                                 filepath,
-                                sqlitedb='/some/bad/path/',
+                                database='/some/bad/path/',
                                 filename_pattern="*.mseed")
 
     def test_download_leap_seconds_file(self):
         filepath = get_test_data_filepath()
-        sqlitedb = os.path.join(filepath, 'timeseries.sqlite')
+        database = os.path.join(filepath, 'timeseries.sqlite')
         indexer = Indexer(filepath,
-                          sqlitedb=sqlitedb)
+                          database=database)
         # mock actually downloading the file since this requires a internet
         # connection
         indexer._download = \
             mock.MagicMock(return_value=requests.Response())
         # create a empty leap-seconds.list file
         test_file = os.path.join(
-                            os.path.dirname(sqlitedb), "leap-seconds.list")
+                            os.path.dirname(database), "leap-seconds.list")
         file_path = indexer.download_leap_seconds_file(test_file)
         # assert that the file was put in the same location as the sqlite db
         self.assertTrue(os.path.isfile(file_path))
@@ -647,16 +647,16 @@ class IndexerTestCase(unittest.TestCase):
 
     def test__get_leap_seconds_file(self):
         filepath = get_test_data_filepath()
-        sqlitedb = os.path.join(filepath, 'timeseries.sqlite')
+        database = os.path.join(filepath, 'timeseries.sqlite')
         indexer = Indexer(filepath,
-                          sqlitedb=sqlitedb)
+                          database=database)
 
         # test that a bad leap second file path raises an error
         self.assertRaisesRegexp(OSError,
                                 "^No leap seconds file exists at.*$",
                                 Indexer,
                                 filepath,
-                                sqlitedb=sqlitedb,
+                                database=database,
                                 leap_seconds_file="/some/bad/path/")
         self.assertRaisesRegexp(OSError,
                                 "^No leap seconds file exists at.*$",
@@ -666,7 +666,7 @@ class IndexerTestCase(unittest.TestCase):
         # test search
         # create a empty leap-seconds.list file
         test_file = os.path.join(
-                            os.path.dirname(sqlitedb), "leap-seconds.list")
+                            os.path.dirname(database), "leap-seconds.list")
         open(test_file, 'a').close()
         file_path = indexer._get_leap_seconds_file("SEARCH")
         self.assertEquals(file_path, test_file)
@@ -674,9 +674,9 @@ class IndexerTestCase(unittest.TestCase):
 
     def test_build_file_list(self):
         filepath = get_test_data_filepath()
-        sqlitedb = os.path.join(filepath, 'timeseries.sqlite')
+        database = os.path.join(filepath, 'timeseries.sqlite')
         indexer = Indexer(filepath,
-                          sqlitedb=sqlitedb,
+                          database=database,
                           filename_pattern="*.mseed")
 
         # test for relative paths
@@ -747,10 +747,10 @@ class IndexerTestCase(unittest.TestCase):
             my_uuid = uuid.uuid4().hex
             fname = 'test_timeseries_{}'.format(my_uuid)
             filepath = get_test_data_filepath()
-            sqlitedb = '{}{}.sqlite'.format(filepath, fname)
+            database = '{}{}.sqlite'.format(filepath, fname)
 
             indexer = Indexer(filepath,
-                              sqlitedb=sqlitedb,
+                              database=database,
                               filename_pattern="*.mseed",
                               parallel=2,
                               debug=True)
@@ -792,7 +792,7 @@ class IndexerTestCase(unittest.TestCase):
                     "1514764800.019500=>0,latest=>1",
                     "[1514764800.019500:1514764859.994538]", None, None,
                     "2018-08-24T16:33:03")]
-            db_handler = TSIndexDatabaseHandler(sqlitedb)
+            db_handler = TSIndexDatabaseHandler(database)
             tsindex_data = db_handler._fetch_index_rows([("I*,C*", "*",
                                                           "0?,1?", "*",
                                                           "2018-01-01",
@@ -823,7 +823,7 @@ class TSIndexDatabaseHandlerTestCase(unittest.TestCase):
                                 "^Database path.*does not exist.$",
                                 Indexer,
                                 filepath,
-                                sqlitedb='/some/bad/path/',
+                                database='/some/bad/path/',
                                 filename_pattern="*.mseed",
                                 parallel=2)
 
@@ -861,3 +861,16 @@ class TSIndexDatabaseHandlerTestCase(unittest.TestCase):
             for j in range(0, len(keys)):
                 self.assertEqual(getattr(expected_ts_summary_data[i], keys[j]),
                                  getattr(ts_summary_data[i], keys[j]))
+
+
+def suite():
+    testsuite = unittest.TestSuite()
+    testsuite.addTest(unittest.makeSuite(ClientTestCase, 'test'))
+    testsuite.addTest(unittest.makeSuite(IndexerTestCase, 'test'))
+    testsuite.addTest(unittest.makeSuite(TSIndexDatabaseHandlerTestCase,
+                                         'test'))
+    return testsuite
+
+
+if __name__ == '__main__':
+    unittest.main(defaultTest='suite')
