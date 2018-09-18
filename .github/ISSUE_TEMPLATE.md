@@ -12,5 +12,5 @@ Before submitting an Issue, please review the [Issue Guidelines](https://github.
      demonstrates the issue.
   -  If this is a regression (used to work in an earlier version of ObsPy),
      please note when it used to work.
-
-
+* Please take the time to [format your ticket appropriately](https://guides.github.com/features/mastering-markdown/)
+  (e.g. put error tracebacks into code blocks)
