@@ -33,6 +33,7 @@ The first step is always to initialize a client object.
 >>> from obspy.clients.filesystem.tsindex import Client
 >>> from obspy.clients.filesystem.tests.test_tsindex \
 import get_test_data_filepath
+>>> import os
 >>> # for this example get the file path to test data
 >>> filepath = get_test_data_filepath()
 >>> db_path = os.path.join(filepath, 'timeseries.sqlite')
@@ -89,7 +90,7 @@ IU  COLA   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994538Z
 UTCDateTime(2018, 1, 1, 0, 0, 0, 19500), \
 UTCDateTime(2018, 1, 1, 0, 1, 57, 994536))
 >>> print(avail_percentage)
-(0.5083705674817509, 0)
+(0.5083705674817509, 1)
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Requesting Timeseries Data
@@ -1174,7 +1175,8 @@ class Indexer(object):
         """
         Checks if the index command (e.g. mseedindex) is installed.
 
-        :raises OSError: If the index command is not installed.
+        :rtype: bool
+        :returns: Returns True the index_cmd is installed.
         """
         try:
             subprocess.call([self.index_cmd, "-V"])
