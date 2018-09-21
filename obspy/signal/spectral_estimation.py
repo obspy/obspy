@@ -1364,11 +1364,14 @@ class PPSD(object):
             finally:
                 data.close()
 
-    def _split_lists(self, times, psds):
+    def _split_lists(self, times, psds, fraction=0.3):
         """
+        :param fration: Fraction of one PSD time step that is considered a gap
+            in data on which the following plot will be separated.
         """
         t_diff_gapless = self.step * 1e9
-        gap_indices = np.argwhere(np.diff(times) - t_diff_gapless)
+        gap_indices = np.argwhere(np.diff(times) - float(t_diff_gapless) >
+                                  fraction * float(t_diff_gapless))
         gap_indices = (gap_indices.flatten() + 1).tolist()
 
         if not len(gap_indices):
