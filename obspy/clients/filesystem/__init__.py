@@ -2,12 +2,12 @@
 """
 obspy.clients.filesystem - Local filesystem (SDS or TSINDEX) client for ObsPy
 =============================================================================
-This package provides read support for some ordered local directory structures
-(e.g. SeisComP Data Structure 'SDS') that store data in filetypes readable by
-one of ObsPy's I/O plugins.
+This package provides read support for some local directory structures.
 
 The SDS :class:`~obspy.clients.filesystem.sds.Client` class provides read
-support to any filetypes readable by one of ObsPy's I/O plugins.
+support for the SeisComP Data Structure 'SDS' ordered local directory
+structure. The SDS client supports any filetypes readable by one of ObsPy's
+I/O plugins.
 
 The TSIndex :class:`~obspy.clients.filesystem.tsindex.Client` class provides
 read support for miniSEED files indexed using the IRIS

@@ -60,8 +60,8 @@ Determining Data Availability
   Returns a list of (network, station, location, channel, earliest, latest)
   tuples that represent the full extent of available data. This example
   retrieves from the very small obspy test tsindex database a list of all
-  available (``"BHZ"``) channel extents from the Global Seismograph Network
-  (``"IU"``) for all times.
+  available ("BHZ") channel extents from the Global Seismograph Network
+  ("IU") for all times.
 
 >>> extents = client.get_availability_extent(network="IU", channel="BHZ")
 >>> for extent in extents:
@@ -76,10 +76,11 @@ IU  COLA   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994538Z
   endtime) tuples representing contiguous time spans for selected channels
   and time ranges.
 
-* :meth:`~obspy.clients.filesystem.tsindex.Client.get_percentage_availability()`_\:  # NOQA
-  Returns the 2-tuple of percentage of available data (`0.0` to `1.0`) and
-  number of gaps/overlaps. Percentage availability is calculated relative to
-  the provided starttime and endtime.
+* :meth: \
+  `~obspy.clients.filesystem.tsindex.Client.get_availability_percentage()`:
+  Returns the tuple(float, int) of percentage of available data
+  (``0.0`` to ``1.0``) and number of gaps/overlaps. Availability percentage is
+  calculated relative to the provided ``starttime`` and ``endtime``.
 
 >>> from obspy import UTCDateTime
 >>> avail_percentage = client.get_availability_percentage( \
@@ -97,7 +98,7 @@ Requesting Timeseries Data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * :meth:`~obspy.clients.filesystem.tsindex.Client.get_waveforms()`:
-  This example illustrates how to request 1 second of available (``"IU"``)
+  This example illustrates how to request 1 second of available ("IU")
   timeseries data in the test tsindex database. Results are returned as a
   :class:`~obspy.core.stream.Stream` object. See the
   :meth:`~obspy.clients.filesystem.tsindex.Client.get_waveforms_bulk()`
@@ -142,12 +143,13 @@ import get_test_data_filepath
 
 Index a directory tree of miniSEED files by calling
 :meth:`~obspy.clients.filesystem.tsindex.Indexer.run`. By default this will
-create a database called 'timeseries.sqlite' in the current working directory.
-The name of the index database can be changed by supplying the 'database'
-parameter when instantiating the Indexer object.
+create a database called ``timeseries.sqlite`` in the current working
+directory. The name of the index database can be changed by supplying the
+``database`` parameter when instantiating the
+:class:`~obspy.clients.filesystem.tsindex.Indexer` object.
 
 .. code-block:: python
-  
+
   indexer.run()
 
 """
@@ -220,14 +222,12 @@ class Client(object):
             :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
         :param database: Path to sqlite tsindex database or a
             TSIndexDatabaseHandler object
-        :type datapath_replace: tuple
-        :param datapath_replace: A 2-value tuple, where any occurrence
-            of the first value will be replaced with the second value in
-            filename paths from the index.
+        :type datapath_replace: 2-value tuple(str, str)
+        :param datapath_replace: A 2-value ``tuple(str, str)``, where any
+            occurrence of the first value will be replaced with the second
+            value in åfilename paths from the index.
         :type debug: bool
         :param debug: Debug flag.
-        :type logger: logging.Logger
-        :param logger: The logger instance to use for logging.
         """
         self.debug = debug
         if self.debug is True:
@@ -252,8 +252,8 @@ class Client(object):
     def get_waveforms(self, network, station, location,
                       channel, starttime, endtime, merge=-1):
         """
-        Query tsindex database and read miniSEED data from local
-        indexed directory tree.
+        Query tsindex database and read miniSEED data from local indexed
+        directory tree.
 
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
@@ -276,11 +276,11 @@ class Client(object):
             on the stream before returning the data. Default (``-1``) means
             only a conservative cleanup merge is performed to merge seamless
             traces (e.g. when reading across day boundaries). See
-            :meth:`Stream.merge(...) <obspy.core.stream.Stream.merge>` for
+            :meth:`Stream.merge() <obspy.core.stream.Stream.merge>` for
             details. If set to ``None`` (or ``False``) no merge operation at
             all will be performed.
-        :rtype: `~obspy.core.stream.Stream`
-        :returns: A ObsPy `~obspy.core.stream.Stream` object containing
+        :rtype: :class:`~obspy.core.stream.Stream`
+        :returns: A ObsPy :class:`~obspy.core.stream.Stream` object containing
             requested timeseries data.
         """
         query_rows = [(network, station, location,
@@ -289,23 +289,26 @@ class Client(object):
 
     def get_waveforms_bulk(self, query_rows, merge=-1):
         """
-        Query tsindex database and read miniSEED data from local
-        indexed directory tree using a bulk request.
+        Query tsindex database and read miniSEED data from local indexed
+        directory tree using a bulk request.
 
-        :type query_rows: str
-        :param network: A list of tuples [(net, sta, loc, cha, starttime,
+        :type query_rows: list(tuple(str, str, str, str,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`)
+        :param query_rows: A list of tuples [(net, sta, loc, cha, starttime,
             endtime),...] containing information on what timeseries should be
             returned from the indexed archive.
             Wildcards '*' and '?' are supported.
+        :type merge: int or None
         :param merge: Specifies, which merge operation should be performed
             on the stream before returning the data. Default (``-1``) means
             only a conservative cleanup merge is performed to merge seamless
             traces (e.g. when reading across day boundaries). See
-            :meth:`Stream.merge(...) <obspy.core.stream.Stream.merge>` for
+            :meth:`Stream.merge() <obspy.core.stream.Stream.merge>` for
             details. If set to ``None`` (or ``False``) no merge operation at
             all will be performed.
-        :rtype: `~obspy.core.stream.Stream`
-        :returns: A ObsPy `~obspy.core.stream.Stream` object containing
+        :rtype: :class:`~obspy.core.stream.Stream`
+        :returns: A ObsPy :class:`~obspy.core.stream.Stream` object containing
             requested timeseries data.
         """
         return self._get_waveforms(query_rows, merge)
@@ -332,7 +335,7 @@ class Client(object):
         :param starttime: Start of requested time window.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End of requested time window.
-        :rtype: list
+        :rtype: list(tuple(str, str, str, str))
         :returns: A list of tuples [(network, station, location, channel)...]
             containing information on what streams are included in the tsindex
             database.
@@ -370,7 +373,9 @@ class Client(object):
         :param starttime: Start of requested time window.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End of requested time window.
-        :rtype: list
+        :rtype: list(tuple(str, str, str, str,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`))
         :returns: A list of tuples [(network, station, location, channel,
             earliest, latest)...] containing data extent info for time series
             included in the tsindex database.
@@ -395,10 +400,10 @@ class Client(object):
         starttime, endtime),...] containing data availability info for
         time series included in the tsindex database.
 
-        If include_sample_rate=True, then a tuple containing the sample
+        If ``include_sample_rate=True``, then a tuple containing the sample
         rate [(net, sta, loc, cha, start, end, sample_rate),...] is returned.
 
-        If merge_overlap=True, then all time spans that overlap are merged.
+        If ``merge_overlap=True``, then all time spans that overlap are merged.
 
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
@@ -417,13 +422,15 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End of requested time window.
         :type include_sample_rate: bool
-        :param include_sample_rate: If include_sample_rate=True, then
+        :param include_sample_rate: If ``include_sample_rate=True``, then
             a tuple containing the sample rate [(net, sta, loc, cha,
             start, end, sample_rate),...] is returned.
-        :type mege_overlap: bool
-        :param merge_overlap: If merge_overlap=True, then all time
+        :type merge_overlap: bool
+        :param merge_overlap: If ``merge_overlap=True``, then all time
             spans that overlap are merged.
-        :rtype: list
+        :rtype: list(tuple(str, str, str, str,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`))
         :returns: A list of tuples [(network, station, location, channel,
             earliest, latest)...] representing contiguous time spans for
             selected channels and time ranges.
@@ -503,8 +510,8 @@ class Client(object):
         :param starttime: Start of requested time window.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End of requested time window.
-        :rtype: 2-tuple (float, int)
-        :returns: 2-tuple of percentage of available data (``0.0`` to ``1.0``)
+        :rtype: tuple(float, int)
+        :returns: Tuple of percentage of available data (``0.0`` to ``1.0``)
             and number of gaps/overlaps.
         """
         avail = self.get_availability(network, station,
@@ -557,10 +564,10 @@ class Client(object):
         :param starttime: Start of requested time window. Defaults to
             minimum possible start date.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End of requested time window. Defaults to
-            maximum possible end date.
+        :param endtime: End of requested time window. Defaults to maximum
+            possible end date.
         :rtype: bool
-        :returns: Returns True if there is data in the index for a given
+        :returns: Returns ``True`` if there is data in the index for a given
             network, station, location, channel, starttime, endtime.
         """
         if starttime is None:
@@ -587,9 +594,10 @@ class Client(object):
         """
         Return a list of tuples [(net, sta, loc, cha, earliest, latest),...]
         containing information found in the tsindex_summary table.
-        
-        Information about the tsindex_summary schema may be found at:
-        https://github.com/iris-edu/mseedindex/wiki/Database-Schema#suggested-time-series-summary-table # NOQA
+
+        Information about the tsindex_summary schema may be found in the
+        `mseedindex wiki <https://github.com/iris-edu/mseedindex/wiki/\
+        Database-Schema#suggested-time-series-summary-table>`_.
 
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
@@ -615,19 +623,22 @@ class Client(object):
         """
         Query tsindex database and read miniSEED data from local
         indexed directory tree using a bulk request and return a
-        ~obspy.core.stream.Stream object containing the requested
+        :class:`~obspy.core.stream.Stream` object containing the requested
         timeseries data.
 
-        :type query_rows: str
-        :param network: A list of tuples [(net, sta, loc, cha, starttime,
+        :type query_rows: list(tuple(str, str, str, str,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`))
+        :param query_rows: A list of tuples [(net, sta, loc, cha, starttime,
             endtime),...] containing information on what timeseries should be
             returned from the indexed archive.
             Wildcards '*' and '?' are supported.
+        :type merge: int or None
         :param merge: Specifies, which merge operation should be performed
             on the stream before returning the data. Default (``-1``) means
             only a conservative cleanup merge is performed to merge seamless
             traces (e.g. when reading across day boundaries). See
-            :meth:`Stream.merge(...) <obspy.core.stream.Stream.merge>` for
+            :meth:`Stream.merge() <obspy.core.stream.Stream.merge>` for
             details. If set to ``None`` (or ``False``) no merge operation at
             all will be performed.
         """
@@ -667,8 +678,9 @@ class Client(object):
         Return a list of tuples [(net, sta, loc, cha, quality... etc.),...]
         containing information found in the tsindex table.
 
-        Information about the tsindex schema may be found at:
-        https://github.com/iris-edu/mseedindex/wiki/Database-Schema#sqlite-schema-version-11 # NOQA
+        Information about the tsindex schema may be found in the
+        `mseedindex wiki <https://github.com/iris-edu/mseedindex/wiki/\
+        Database-Schema#sqlite-schema-version-11>`_.
 
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
@@ -685,6 +697,7 @@ class Client(object):
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start of requested time window.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End of requested time window.
         """
         query_rows = [(network, station, location,
                        channel, starttime, endtime)]
@@ -699,7 +712,7 @@ class Client(object):
                                          _sncl_joined_avail_tuples=None):
         """
         Recurse over a list of timespans, joining adjacent timespans,
-        and merging if merge_overlaps is True.
+        and merging if merge_overlaps is ``True``.
 
         Returns a list of tuples (network, station, location, channel,
         earliest, latest) representing available data.
@@ -721,7 +734,7 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End of requested time window.
         :type timespans: list
-        :param timespans: List of timespan tuples
+        :param timespans: List of timespan tuples.
         """
         if _sncl_joined_avail_tuples is None:
             _sncl_joined_avail_tuples = []
@@ -795,14 +808,14 @@ class Client(object):
         """
         Checks whether or not two time span named tuples
         (e.g. NameTuple(earliest, latest)) are adjacent within
-        a given tolerance
+        a given tolerance.
 
-        :type ts1: namedtuple
+        :type ts1: NamedTuple
         :param ts1: Earliest timespan.
-        :type ts2: namedtuple
+        :type ts2: NamedTuple
         :param ts2: Latest timespan.
         :type sample_rate: int
-        :param sample_rate: Sensor sample rate
+        :param sample_rate: Sensor sample rate.
         :type tolerance: float
         :param tolerance: Tolerance to determine whether a adjacent
             timespan should be merged.
@@ -857,6 +870,8 @@ class Client(object):
         :param earliest: Earliest date of timespan.
         :type latest: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param latest: Latest date of timespan.
+        :type sr: float
+        :param sr: Sensor sample rate (optional).
         """
         if sr is not None:
             avail_record = (network, station, location, channel,
@@ -870,7 +885,8 @@ class Client(object):
 
     def _create_timespan(self, earliest, latest):
         """
-        Create a TimeSpan named tuple object given a earliest and latest date.
+        Create a ``TimeSpan`` named tuple object given a earliest and latest
+        date.
 
         :param earliest: Earliest date of timespan.
         :param latest: Latest date of timespan.
@@ -900,10 +916,10 @@ class Client(object):
 class Indexer(object):
     """
     Build an index for miniSEED data using IRIS's mseedindex program.
-    Recursively search for files matching `filename_pattern` starting
-    from `root_path` and run `index_cmd` for each target file found that
+    Recursively search for files matching ``filename_pattern`` starting
+    from ``root_path`` and run ``index_cmd`` for each target file found that
     is not already in the index. After all new files are indexed a summary
-    table is generated with the extents of each time series.
+    table is generated with the extents of each timeseries.
     """
 
     def __init__(self, root_path, database="timeseries.sqlite",
@@ -937,12 +953,12 @@ class Indexer(object):
         :param index_cmd: Command to be run for each target file found that
             is not already in the index
         :type bulk_params: dict
-        :param bulk_params: Dictionary of options to pass to index_cmd.
+        :param bulk_params: Dictionary of options to pass to ``index_cmd``.
         :type filename_pattern: str
-        :param filename_pattern:
+        :param filename_pattern: Glob pattern to determine what files to index.
         :type parallel: int
-        :param parallel: Max number of index_cmd instances to run in parallel.
-            By default a max of 5 parallel process are run.
+        :param parallel: Max number of ``index_cmd`` instances to run in
+            parallel. By default a max of 5 parallel process are run.
         :type debug: bool
         :param debug: Debug flag. Sets logging level to debug.
         """
@@ -987,14 +1003,14 @@ class Indexer(object):
         :param relative_paths: By default, the absolute path to each file is
             stored in the index. If `relative_paths` is True, the file paths
             will be relative to the `root_path`.
-        type reindex: bool
+        :type reindex: bool
         :param reindex: By default, files are not indexed that are already in
-            the index and have not been modified.  The `reindex` option can be
-            set to True to force a re-indexing of all files regardless.
+            the index and have not been modified.  The ``reindex`` option can
+            be set to ``True`` to force a re-indexing of all files regardless.
         """
         if self._is_index_cmd_installed() is False:
             raise OSError(
-                    "Required program `{}` is not installed. Hint: Install "
+                    "Required program '{}' is not installed. Hint: Install "
                     "mseedindex at https://github.com/iris-edu/mseedindex/."
                     .format(self.index_cmd))
         self.request_handler._init_database_for_indexing()
@@ -1044,16 +1060,19 @@ class Indexer(object):
 
     def build_file_list(self, relative_paths=False, reindex=False):
         """
-        Create a list of absolute paths to all files under root_path that match
-        the filename_pattern.
+        Create a list of absolute paths to all files under ``root_path`` that
+        match the ``filename_pattern``.
 
         :type relative_paths: bool
         :param relative_paths: By default, the absolute path to each file is
-            stored in the index. If `relative_paths` is True, the file paths
-            will be relative to the `root_path`.
-        :rtype: list
-        :returns: A list of files under the root_path matching
-            filename_pattern.
+            stored in the index. If ``relative_paths`` is ``True``, then the
+            file paths will be relative to the ``root_path``.
+        :type reindex: bool
+        :param reindex: If ``reindex`` is ``True``, then already indexed
+            files will be reindexed.
+        :rtype: list(str)
+        :returns: A list of files under the ``root_path`` matching
+            ``filename_pattern``.
         """
         logger.debug("Building a list of files to index.")
         file_list = [y for x in os.walk(self.root_path)
@@ -1102,8 +1121,9 @@ class Indexer(object):
         :type file_path: str
         :param file_path: Optional path to file path where leap seconds
             file should be downloaded. By default the file is downloaded to
-            the same directory as the Indexer instances sqlite3 timeseries
-            index database path.
+            the same directory as the
+            :class:`~obspy.clients.filesystem.tsindex.Indexer` instances
+            sqlite3 timeseries index database path.
 
         :rtype: str
         :returns: Path to downloaded leap seconds file.
@@ -1176,7 +1196,7 @@ class Indexer(object):
         Checks if the index command (e.g. mseedindex) is installed.
 
         :rtype: bool
-        :returns: Returns True the index_cmd is installed.
+        :returns: Returns ``True`` if the ``index_cmd`` is installed.
         """
         try:
             subprocess.call([self.index_cmd, "-V"])
@@ -1196,7 +1216,7 @@ class Indexer(object):
         :type file_name: str
         :param file_name: Name of file to index.
         :type bulk_params: dict
-        :param bulk_params: Dictionary of options to pass to index_cmd.
+        :param bulk_params: Dictionary of options to pass to ``index_cmd``.
         """
         try:
             cmd = [index_cmd]
@@ -1233,7 +1253,8 @@ class TSIndexDatabaseHandler(object):
         :type database: str or
             :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
         :param database: Path to sqlite tsindex database or a
-            TSIndexDatabaseHandler object
+            :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
+            object
         :type tsindex_table: str
         :param tsindex_table: Name of timeseries index table
         :type tsindex_summary_table: str
@@ -1268,10 +1289,11 @@ class TSIndexDatabaseHandler(object):
         Builds a tsindex_summary table using the table name supplied to the
         Indexer instance (defaults to 'tsindex_summary').
 
-        :type connection: sqlalchemy.engine.Connection
-        :param: connection: SQLAlchemy database connection object.
+        :type connection: :class:`~sqlalchemy.engine.Connection`
+        :param connection: SQLAlchemy database connection object.
         :type temporary: bool
-        :param temporary: If True then a temporary tsindex table is created.
+        :param temporary: If ``True`` then a temporary tsindex table is
+            created.
         """
         if connection is None:
             connection = self.engine.connect()
@@ -1298,12 +1320,12 @@ class TSIndexDatabaseHandler(object):
 
     def has_tsindex_summary(self, connection=None):
         """
-        Returns True if there is a tsindex_summary table in the database.
+        Returns ``True`` if there is a tsindex_summary table in the database.
 
         :type connection: sqlalchemy.engine.Connection
         :param: connection: SQLAlchemy database connection object.
         :rtype: bool
-        :returns: Returns True if there a tsindex_summary table is present
+        :returns: Returns ``True`` if there a tsindex_summary table is present
             in the database.
         """
         if connection is None:
@@ -1322,12 +1344,12 @@ class TSIndexDatabaseHandler(object):
 
     def has_tsindex(self, connection=None):
         """
-        Returns True if there is a tsindex table in the database.
+        Returns ``True`` if there is a tsindex table in the database.
 
         :type connection: sqlalchemy.engine.Connection
         :param: connection: SQLAlchemy database connection object.
         :rtype: bool
-        :returns: Returns True if there a tsindex_summary table is present
+        :returns: Returns ``True`` if there a tsindex_summary table is present
             in the database.
         """
         if connection is None:
@@ -1365,18 +1387,21 @@ class TSIndexDatabaseHandler(object):
         Fetch index rows matching specified request. This method is marked as
         private because the index schema is subject to change.
 
-        :type query_rows: list
+        :type query_rows: list(tuple(str, str, str, str,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`))
         :param query_rows: List of tuples containing (net,sta,loc,chan,start,
             end). By default everything is selected.
         :type bulk_params: dict
         :param bulk_params: Dict of bulk parameters (e.g. quality)
             Request elements may contain '?' and '*' wildcards.  The start and
             end elements can be a single '*' if not a date-time string.
-            Return rows as list of named tuples containing:
+        :rtype: list(tuple)
+        :returns: Return rows as list of named tuples containing:
             (network, station, location, channel, quality, starttime, endtime,
             samplerate, filename, byteoffset, bytes, hash, timeindex,
             timespans, timerates, format, filemodtime, updated, scanned,
-            requeststart, requestend)
+            requeststart, requestend).
         '''
         if query_rows is None:
             query_rows = []
@@ -1490,10 +1515,16 @@ class TSIndexDatabaseHandler(object):
         Returns rows as list of named tuples containing:
         (network,station,location,channel,earliest,latest,updated)
 
-        :type query_rows: list
-        :param: List of tuples containing (net,sta,loc,chan,start,end)
-            Request elements may contain '?' and '*' wildcards. The start and
-            end elements can be a single '*' if not a date-time string.
+        :type query_rows: list(tuple(str, str, str, str,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`))
+        :param query_rows: List of tuples containing
+            (net,sta,loc,chan,start,end) Request elements may contain '?'
+            and '*' wildcards. The start and end elements can be a single
+            '*' if not a date-time string.
+        :rtype: list(tuple)
+        :returns: Return rows as list of named tuples containing:
+            (network, station, location, channel, earliest, latest, updated).
         '''
         query_rows = self._clean_query_rows(query_rows)
 
@@ -1696,7 +1727,9 @@ class TSIndexDatabaseHandler(object):
         """
         Reformats query rows to match what is stored in the database.
 
-        :type query_rows: list
+        :type query_rows: list(tuple(str, str, str, str,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            :class:`~obspy.core.utcdatetime.UTCDateTime`))
         :param query_rows: List of tuples containing (network, station,
             location, channel, starttime, endtime).
         """
