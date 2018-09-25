@@ -25,11 +25,6 @@ Models can be initialized by specifying the name of a model provided by ObsPy.
 >>> from obspy.taup import TauPyModel
 >>> model = TauPyModel(model="iasp91")
 
-Model initialization is a fairly expensive operation so make sure to do it only
-if necessary. Custom built models can be initialized by specifying an absolute
-path to a model in ObsPy's ``.npz`` model format instead of just a model name.
-See below for information on how to build a ``.npz`` model file.
-
 ObsPy currently ships with the following 1D velocity models:
 
 * ``1066a``, see [GilbertDziewonski1975]_
@@ -47,12 +42,17 @@ ObsPy currently ships with the following 1D velocity models:
 * ``pwdk``, see [WeberDavis1990]_
 * ``sp6``, see [MorelliDziewonski1993]_
 
+Custom built models can be initialized by specifying an absolute
+path to a model in ObsPy's ``.npz`` model format instead of just a model name.
+Model initialization is a fairly expensive operation so make sure to do it only
+if necessary. See below for information on how to build a ``.npz`` model file.
+
 Travel Times
 ^^^^^^^^^^^^
 The models' main method is the
 :meth:`~obspy.taup.tau.TauPyModel.get_travel_times` method; as the name
 suggests it returns travel times for the chosen phases, distance, source depth,
-and model. Per default it returns arrivals for a number of phases.
+and model. By default it returns arrivals for a number of phases.
 
 >>> arrivals = model.get_travel_times(source_depth_in_km=55,
 ...                                   distance_in_degree=67)
@@ -203,7 +203,7 @@ Travel times for these ray paths can be plotted using the
 Alternatively, convenience wrapper functions plot the arrival times
 and the ray paths for a range of epicentral distances.
 
-The travel times wrapper function is :func:`obspy.taup.plot_travel_times()`,
+The travel times wrapper function is :func:`obspy.taup.plot_travel_times() <obspy.taup.plot_travel_times>`,
 creating the figure and axes first is optional to have control over e.g. figure
 size or subplot setup:
 
@@ -225,12 +225,12 @@ There was 1 epicentral distance without an arrival
     ax = plot_travel_times(source_depth=10, ax=ax, phase_list=["P", "S", "PP"],
                            fig=fig)
 
-The ray path plot wrapper function is :func:`obspy.taup.plot_ray_paths()`.
+The ray path plot wrapper function is :func:`obspy.taup.plot_ray_paths() <obspy.taup.plot_ray_paths>`.
 Again, creating the figure and axes first is optional to have control over e.g.
 figure size or subplot setup (note that a polar axes has to be set up when
 aiming to do a plot with ``plot_type='spherical'`` and a normal matplotlib axes
 when aiming to do a plot with ``plot_type='cartesian'``. An error will be
-raised when mixing thw two options):
+raised when mixing the two options):
 
 >>> from obspy.taup import plot_ray_paths
 >>> import matplotlib.pyplot as plt
