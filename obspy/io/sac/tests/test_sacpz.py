@@ -72,7 +72,8 @@ class SACPZTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
             inv.write(f, format='SACPZ')
-            self.assertEqual(len(w), 2)
+        self.assertEqual(len(w), 2)
+
         # Only 2 newlines are written.
         self.assertEqual(2, f.tell())
 
