@@ -804,7 +804,7 @@ class Stream(object):
             else:
                 same_sampling_rate = False
             stats = self.traces[_i].stats
-            stime = stats['endtime']
+            stime = min(stats['endtime'], self.traces[_i + 1].stats['endtime'])
             etime = self.traces[_i + 1].stats['starttime']
             # last sample of earlier trace represents data up to time of last
             # sample (stats.endtime) plus one delta
