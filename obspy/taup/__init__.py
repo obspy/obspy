@@ -203,7 +203,7 @@ Travel times for these ray paths can be plotted using the
 Alternatively, convenience wrapper functions plot the arrival times
 and the ray paths for a range of epicentral distances.
 
-The travel times wrapper function is :func:`obspy.taup.tau.plot_travel_times`, 
+The travel times wrapper function is :func:`~obspy.taup.tau.plot_travel_times`, 
 creating the figure and axes first is optional to have control over e.g. figure
 size or subplot setup:
 
