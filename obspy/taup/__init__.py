@@ -203,7 +203,7 @@ Travel times for these ray paths can be plotted using the
 Alternatively, convenience wrapper functions plot the arrival times
 and the ray paths for a range of epicentral distances.
 
-The travel times wrapper function is :meth:`~obspy.taup.plot_travel_times`,
+The travel times wrapper function is :func:`obspy.taup.tau.plot_travel_times`, 
 creating the figure and axes first is optional to have control over e.g. figure
 size or subplot setup:
 
@@ -225,7 +225,7 @@ There was 1 epicentral distance without an arrival
     ax = plot_travel_times(source_depth=10, ax=ax, phase_list=["P", "S", "PP"],
                            fig=fig)
 
-The ray path plot wrapper function is :meth:`~obspy.taup.plot_ray_paths`.
+The ray path plot wrapper function is :func:`~obspy.taup.plot_ray_paths`.
 Again, creating the figure and axes first is optional to have control over e.g.
 figure size or subplot setup (note that a polar axes has to be set up when
 aiming to do a plot with ``plot_type='spherical'`` and a normal matplotlib axes
