@@ -915,15 +915,17 @@ def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
     :param verbose: Whether to print information about epicentral distances
         that did not have an arrival.
     :type verbose: bool
-    :param fig: Figure to plot in. If not given, a new figure instance
+    :param fig: Figure to plot into. If not given, a new figure instance
         will be created.
-    :type fig: :class:`matplotlib.axes.Axes
+    :type fig: :class:`matplotlib.figure.Figure`
     :param ax: Axes to plot in. If not given, a new figure with an axes
         will be created.
-    param show: Show the plot.
-    type show: bool
-    :type ax: :class:`matplotlib.Figure.figure`
-    :returns: ax
+    :param show: Show the plot.
+    :type show: bool
+    :param ax: Axes to plot in. If not given, a new figure with an axes
+        will be created.
+    :type ax: :class:`matplotlib.axes.Axes`
+    :returns: Matplotlib axes with the plot
     :rtype: :class:`matplotlib.axes.Axes`
 
     .. rubric:: Example
@@ -996,7 +998,8 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
     :type max_degrees: float
     :param npoints: Number of receivers to plot.
     :type npoints: int
-    :param plot_type: type of plot to create.
+    :param plot_type: type of plot to create. Options are 'spherical' (default) 
+        and 'cartesian'.
     :type plot_type: str
     :param phase_list: List of phase names.
     :type phase_list: list of str
@@ -1031,22 +1034,21 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
 
     .. rubric:: Example
 
-    >>> from obspy.taup.tau import plot_ray_paths
+    >>> from obspy.taup import plot_ray_paths
     >>> import matplotlib.pyplot as plt
     >>> fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
-    >>> ax = plot_ray_paths(source_depth=10, plot_type="spherical",
-    ...                     ax=ax, fig=fig, legend=True,
+    >>> ax = plot_ray_paths(source_depth=10, ax=ax, fig=fig, legend=True,
     ...                     phase_list=['P', 'S', 'PP'], verbose=True)
     There were rays for all but the following epicentral distances:
      [0.0, 360.0]
 
     .. plot::
 
-    from obspy.taup.tau import plot_ray_paths
-    import matplotlib.pyplot as plt
+        from obspy.taup import plot_ray_paths
+        import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
-    ax = plot_ray_paths(source_depth=10, plot_type="spherical",
+        fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
+        ax = plot_ray_paths(source_depth=10, plot_type="spherical",
                         ax=ax, fig=fig, legend=True,
                         phase_list=['P','S','PP'])
     """
