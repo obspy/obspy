@@ -100,16 +100,14 @@ class ScanTestCase(unittest.TestCase):
             ('*.UH[12]*',
              ['BW.UH2..SHZ\n100.0%',
               'BW.UH1..SHZ\n100.0%',
-              'BW.UH1..EHZ\n10.7%',
-             ]),
+              'BW.UH1..EHZ\n10.7%']),
             ('*Z',
              ['IU.ANMO.00.LHZ\n100.0%',
               'BW.UH4..EHZ\n100.0%',
               'BW.UH3..SHZ\n100.0%',
               'BW.UH2..SHZ\n100.0%',
               'BW.UH1..SHZ\n100.0%',
-              'BW.UH1..EHZ\n10.7%',
-             ])]
+              'BW.UH1..EHZ\n10.7%'])]
 
         for seed_id, expected_labels in expected:
             fig, ax = plt.subplots()
