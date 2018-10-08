@@ -1118,6 +1118,19 @@ class QuakeMLTestCase(unittest.TestCase):
         # It should of course not be set.
         self.assertIsNone(cat[0].origins[0].depth_type)
 
+    def test_read_write_magnitude_no_origin_id(self):
+        """
+        Create a catalog object with a magnitude and station magnitude both
+        which dont have origin IDs. Ensure it can be written, read, and is
+        equal to the original.
+        """
+        mag = Magnitude(mag=2.4)
+        stamag = StationMagnitude(mag=2.33)
+        event = Event(magnitudes=[mag], station_magnitudes=[stamag])
+        cat1 = Catalog(events=[event])
+        cat2 = _read_write(cat1)
+        self.assertEqual(cat1, cat2)
+
     def test_read_write_diverse_catalog(self):
         """
         Tests for reading/writing a "diverse" catalog, created with the
