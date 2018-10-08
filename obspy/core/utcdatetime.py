@@ -163,13 +163,18 @@ class UTCDateTime(object):
 
     (5) Using the following keyword arguments: `year, month, day, julday, hour,
         minute, second, microsecond`. Either the combination of year, month and
-        day, or year and Julian day are required.
+        day, or year and Julian day are required. This is the only input mode
+        that supports using hour, minute, or second values above the natural
+        limits of 24, 60, 60, respectively.
 
         >>> UTCDateTime(year=1970, month=1, day=1, minute=15, microsecond=20)
         UTCDateTime(1970, 1, 1, 0, 15, 0, 20)
 
         >>> UTCDateTime(year=2009, julday=234, hour=14, minute=13)
         UTCDateTime(2009, 8, 22, 14, 13)
+
+        >>> UTCDateTime(year=1970, month=1, day=1, hour=48, minute=60)
+        UTCDateTime(1970, 1, 3, 1, 0)
 
     (6) Using a Python :class:`datetime.datetime` object.
 
@@ -390,6 +395,9 @@ class UTCDateTime(object):
             if args:
                 raise
             else:
+                # ensure hour minute second are in kwargs
+                for time_unit in ('hour', 'minute', 'second'):
+                    kwargs[time_unit] = kwargs.get(time_unit, 0)
                 extra_seconds = 0
                 # keep track of second equiv. of overflow
                 extra_seconds += (kwargs['hour'] // 24) * 3600 * 24
