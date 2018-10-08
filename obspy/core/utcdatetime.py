@@ -396,11 +396,11 @@ class UTCDateTime(object):
                 extra_seconds += (kwargs['minute'] // 60) * 60 * 60
                 extra_seconds += (kwargs['second'] // 60) * 60
                 # reduce value in kwargs to be within normal bounds
-                kwargs['hour'] = kwargs['hour'] % 24
-                kwargs['minute'] = kwargs['minute'] % 60
-                kwargs['second'] = kwargs['second'] % 60
-            self._from_datetime(datetime.datetime(**kwargs))
-            self._ns = (self + extra_seconds)._ns
+                kwargs['hour'] %= 24
+                kwargs['minute'] %= 60
+                kwargs['second'] %= 60
+            # get the correct timestamp, add extra seconds
+            self._ns = (UTCDateTime(**kwargs) + extra_seconds).ns
         else:
             self._from_datetime(dt)
 
@@ -468,13 +468,7 @@ class UTCDateTime(object):
         :type dt: :class:`datetime.datetime`
         :param dt: Python datetime object.
         """
-        # see datetime.timedelta.total_seconds
-        try:
-            td = (dt - TIMESTAMP0)
-        except TypeError:
-            td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
-        self._ns = \
-            (td.days * 86400 + td.seconds) * 10**9 + td.microseconds * 1000
+        self._ns = _datetime_to_ns(dt)
 
     def _from_timestamp(self, value):
         """
@@ -1597,6 +1591,22 @@ class UTCDateTime(object):
         """
         from matplotlib.dates import date2num
         return date2num(self.datetime)
+
+
+def _datetime_to_ns(dt):
+    """
+    Use Python datetime object to return equivalent nanoseconds.
+
+    :type dt: :class:`datetime.datetime`
+    :param dt: Python datetime object.
+    :returns: nanoseconds as an int.
+    """
+    try:
+        td = (dt - TIMESTAMP0)
+    except TypeError:
+        td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
+    # see datetime.timedelta.total_seconds
+    return (td.days * 86400 + td.seconds) * 10**9 + td.microseconds * 1000
 
 
 if __name__ == '__main__':
