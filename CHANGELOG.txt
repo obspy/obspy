@@ -53,6 +53,8 @@ master:
      integer nanosecond POSIX timestamps to avoid any potential floating point
      inaccuracies and since this is also what UTCDateTime is based on nowadays
      (see #2045)
+   * Fixed the check for new PSD slices whether they should be added or whether
+     they would add unwanted duplicated data (see #2229)
  - obspy.signal.cross_correlation:
    * Add new `correlate_template()` function with 'full' normalization option,
      required for correlations in template-matching

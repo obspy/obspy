@@ -18,6 +18,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core import Stats
+from obspy.core.inventory import Response
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.core.util.testing import (
@@ -584,6 +585,61 @@ class PsdTestCase(unittest.TestCase):
             np.testing.assert_array_equal(_binned_psds, ppsd._binned_psds)
             np.testing.assert_array_equal(_times_processed,
                                           ppsd._times_processed)
+
+    def test_ppsd_time_checks(self):
+        """
+        Some tests that make sure checking if a new PSD slice to be addded to
+        existing PPSD has an invalid overlap or not works as expected.
+        """
+        ppsd = PPSD(Stats(), Response())
+        one_second = 1000000000
+        t0 = 946684800000000000  # 2000-01-01T00:00:00
+        time_diffs = [
+            0, one_second, one_second * 2, one_second * 3,
+            one_second * 8, one_second * 9, one_second * 10]
+        ppsd._times_processed = [t0 + td for td in time_diffs]
+        ppsd.ppsd_length = 2
+        ppsd.overlap = 0.5
+        # valid time stamps to insert data for (i.e. data that overlaps with
+        # existing data at most "overlap" times "ppsd_length")
+        ns_ok = [
+            t0 - 3 * one_second,
+            t0 - 1.01 * one_second,
+            t0 - one_second,
+            t0 + 4 * one_second,
+            t0 + 4.01 * one_second,
+            t0 + 6 * one_second,
+            t0 + 7 * one_second,
+            t0 + 6.99 * one_second,
+            t0 + 11 * one_second,
+            t0 + 11.01 * one_second,
+            t0 + 15 * one_second,
+            ]
+        for ns in ns_ok:
+            t = UTCDateTime(ns=int(ns))
+            # getting False means time is not present yet and a PSD slice would
+            # be added to the PPSD data
+            self.assertFalse(ppsd._PPSD__check_time_present(t))
+        # invalid time stamps to insert data for (i.e. data that overlaps with
+        # existing data more than "overlap" times "ppsd_length")
+        ns_bad = [
+            t0 - 0.99 * one_second,
+            t0 - 0.5 * one_second,
+            t0,
+            t0 + 1.1 * one_second,
+            t0 + 3.99 * one_second,
+            t0 + 7.01 * one_second,
+            t0 + 7.5 * one_second,
+            t0 + 8 * one_second,
+            t0 + 8.8 * one_second,
+            t0 + 10 * one_second,
+            t0 + 10.99 * one_second,
+            ]
+        for ns in ns_bad:
+            t = UTCDateTime(ns=int(ns))
+            # getting False means time is not present yet and a PSD slice would
+            # be added to the PPSD data
+            self.assertTrue(ppsd._PPSD__check_time_present(t))
 
     def test_issue1216(self):
         tr, paz = _get_sample_data()
