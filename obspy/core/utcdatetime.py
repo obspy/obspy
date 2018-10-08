@@ -383,8 +383,26 @@ class UTCDateTime(object):
             kwargs['second'] = int(_sec)
             kwargs['microsecond'] = int(round(_frac * 1e6))
             args = args[0:5]
-        dt = datetime.datetime(*args, **kwargs)
-        self._from_datetime(dt)
+
+        try:  # If a value Error is raised try to allow overflow (see #2222)
+            dt = datetime.datetime(*args, **kwargs)
+        except ValueError:
+            if args:
+                raise
+            else:
+                extra_seconds = 0
+                # keep track of second equiv. of overflow
+                extra_seconds += (kwargs['hour'] // 24) * 3600 * 24
+                extra_seconds += (kwargs['minute'] // 60) * 60 * 60
+                extra_seconds += (kwargs['second'] // 60) * 60
+                # reduce value in kwargs to be within normal bounds
+                kwargs['hour'] = kwargs['hour'] % 24
+                kwargs['minute'] = kwargs['minute'] % 60
+                kwargs['second'] = kwargs['second'] % 60
+            self._from_datetime(datetime.datetime(**kwargs))
+            self._ns = (self + extra_seconds)._ns
+        else:
+            self._from_datetime(dt)
 
     def _set(self, **kwargs):
         """
