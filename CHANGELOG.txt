@@ -7,6 +7,8 @@ master:
    * UTCDateTime objects now issue depreciation warnings when setting any
      attributes outside of init, or comparing UTCDateTime objects with
      different precisions (see #2077).
+   * UTCDateTime objects can now except hour, minute, and second values
+     greater than their normal limits when initialized with kwargs (see #2232)
    * Added replace method to UTCDateTime class (see #2077).
    * Added remove method to Inventory class (see #2088).
    * Added id property to WaveformStreamID (see #2131).
