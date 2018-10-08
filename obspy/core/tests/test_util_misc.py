@@ -15,6 +15,7 @@ from obspy.core.compatibility import mock
 from obspy.core.event import ResourceIdentifier as ResId
 from obspy.core.util.misc import CatchOutput, get_window_times, \
     _ENTRY_POINT_CACHE, _yield_obj_parent_attr
+from obspy.core.util.testing import WarningsCapture
 
 
 class UtilMiscTestCase(unittest.TestCase):
@@ -293,6 +294,18 @@ class UtilMiscTestCase(unittest.TestCase):
         for obj, parent, attr in out:
             self.assertEqual(attr, 'right')
             self.assertIsInstance(obj, ResId)
+
+    def test_warning_capture(self):
+        """
+        Tests for the WarningsCapture class in obspy.core.util.testing
+        """
+        # ensure a warning issued with warn is captured. Before, this could
+        # raise a TypeError.
+        with WarningsCapture() as w:
+            warnings.warn('something bad is happening in the world')
+
+        self.assertEqual(len(w), 1)
+        self.assertIn('something bad', str(w.captured_warnings[0].message))
 
 
 def suite():
