@@ -1457,6 +1457,15 @@ class UTCDateTimeTestCase(unittest.TestCase):
         utc = base_utc(second=120)
         self.assertEqual(utc, base_utc(minute=2))
 
+    def test_hour_minute_second_overflow_with_replace(self):
+        """
+        The replace method should also support the changes described in #2222.
+        """
+        utc = UTCDateTime('2017-09-18T00:00:00')
+        self.assertEqual(utc.replace(hour=25), utc + 25 * 3600)
+        self.assertEqual(utc.replace(minute=1000), utc + 1000 * 60)
+        self.assertEqual(utc.replace(second=60), utc + 60)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
