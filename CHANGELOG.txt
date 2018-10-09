@@ -30,6 +30,9 @@
      stabilize the algorithm (see #2114, #2125).
  - obspy.io.ascii:
    * Fixes an issue with the time representation (see #2165, #2179).
+ - obspy.io.cnv:
+   * Bugfix when phase_mapping is passed as argument when writing a Catalog
+     object to CNV (see #2001)
  - obspy.io.css:
    * Fix automatic filetype detection (see #2160 and #2162)
  - obspy.io.mseed:
@@ -78,7 +81,7 @@
    * Read support for Reftek 130 (rt130) waveform data,
      obspy.io.reftek (see #1433)
    * Add Nordic format (s-file) read/write (see #1517)
-   * Read and write support for events in the SCARDEC catlogue format
+   * Read and write support for events in the SCARDEC catalogue format
      (see #1391).
    * Read support for IASPEI ISF ISM 1.0 Bulletin event data,
      (see #1946)
