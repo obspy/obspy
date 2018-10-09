@@ -646,7 +646,7 @@ class Unpickler(object):
         """
         obj = StationMagnitude(force_resource_id=False)
         # required parameter
-        obj.origin_id = self._xpath2obj('originID', element) or ''
+        obj.origin_id = self._xpath2obj('originID', element)
         obj.mag, obj.mag_errors = self._float_value(element, 'mag')
         # optional parameter
         obj.station_magnitude_type = self._xpath2obj('type', element)
@@ -1342,7 +1342,7 @@ class Pickler(object):
         element = etree.Element(
             'stationMagnitude',
             attrib={'publicID': self._id(magnitude.resource_id)})
-        self._str(magnitude.origin_id, element, 'originID', True)
+        self._str(magnitude.origin_id, element, 'originID')
         self._value(magnitude.mag, magnitude.mag_errors, element, 'mag', True)
         # optional parameter
         self._str(magnitude.station_magnitude_type, element, 'type')
