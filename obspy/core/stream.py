@@ -2404,9 +2404,25 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Remove a trend from all traces.
 
-        For details see the corresponding
+        For details on supported methods and parameters see the corresponding
         :meth:`~obspy.core.trace.Trace.detrend` method of
         :class:`~obspy.core.trace.Trace`.
+
+         .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data will no longer be accessible afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
+
+        .. rubric:: Example
+
+        Apply an order 3 spline detrend on all traces contained in the stream.
+        >>> from obspy import read
+        >>> st = read()
+        >>> st.detrend("spline", order=3, dspline=500)
+        ... # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         """
         for tr in self:
             tr.detrend(type=type, **options)
