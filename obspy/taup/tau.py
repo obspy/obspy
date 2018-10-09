@@ -998,7 +998,7 @@ def plot_ray_paths(source_depth, min_degrees=0, max_degrees=360, npoints=10,
     :type max_degrees: float
     :param npoints: Number of receivers to plot.
     :type npoints: int
-    :param plot_type: type of plot to create. Options are 'spherical' (default) 
+    :param plot_type: type of plot to create. Options are 'spherical' (default)
         and 'cartesian'.
     :type plot_type: str
     :param phase_list: List of phase names.
