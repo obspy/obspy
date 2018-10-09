@@ -461,6 +461,8 @@ class Inventory(ComparingObject):
                time=None, starttime=None, endtime=None, sampling_rate=None,
                keep_empty=False):
         """
+        Return a copy of the inventory filtered on various parameters.
+
         Returns the :class:`Inventory` object with only the
         :class:`~obspy.core.inventory.network.Network`\ s /
         :class:`~obspy.core.inventory.station.Station`\ s /
@@ -559,6 +561,8 @@ class Inventory(ComparingObject):
     def remove(self, network='*', station='*', location='*', channel='*',
                keep_empty=False):
         """
+        Return a copy of the inventory with selected elements removed.
+
         Returns the :class:`Inventory` object but excluding the
         :class:`~obspy.core.inventory.network.Network`\ s /
         :class:`~obspy.core.inventory.station.Station`\ s /

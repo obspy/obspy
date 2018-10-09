@@ -152,6 +152,8 @@ def cosine_taper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
 
 def cosine_sac_taper(freqs, flimit):
     """
+    Create a cosine taper similar to SAC.
+
     Generate a cosine flank frequency domain taper similar to the one SAC
     applies before instrument response deconvolution. This acts as a bandpass
     filter when applied to the data in frequency space.
@@ -217,8 +219,9 @@ def evalresp_for_frequencies(t_samp, frequencies, filename, date, station='*',
                              channel='*', network='*', locid='*', units="VEL",
                              debug=False):
     """
-    Use the evalresp library to extract instrument response information from a
-    SEED RESP-file for the specified frequencies.
+    Get the instrument response from a SEED RESP-file for select frequencies.
+
+    Uses the evalresp library.
 
     :type t_samp: float
     :param t_samp: Sampling interval in seconds
@@ -298,8 +301,9 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
              network='*', locid='*', units="VEL", freq=False,
              debug=False):
     """
-    Use the evalresp library to extract instrument response
-    information from a SEED RESP-file.
+    Get the instrument response from a SEED RESP-file.
+
+    Uses the evalresp library.
 
     :type t_samp: float
     :param t_samp: Sampling interval in seconds
@@ -338,8 +342,9 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
 
 def corn_freq_2_paz(fc, damp=0.707):
     """
-    Convert corner frequency and damping to poles and zeros. 2 zeros at
-    position (0j, 0j) are given as output  (m/s).
+    Convert corner frequency and damping to poles and zeros.
+
+    2 zeros at position (0j, 0j) are given as output  (m/s).
 
     :param fc: Corner frequency
     :param damping: Corner frequency
@@ -352,8 +357,9 @@ def corn_freq_2_paz(fc, damp=0.707):
 
 def paz_to_freq_resp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     """
-    Convert Poles and Zeros (PAZ) to frequency response. The output
-    contains the frequency zero which is the offset of the trace.
+    Convert Poles and Zeros (PAZ) to frequency response.
+
+    The output contains the frequency zero which is the offset of the trace.
 
     :type poles: list of complex
     :param poles: The poles of the transfer function
@@ -385,8 +391,7 @@ def paz_to_freq_resp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
 
 def waterlevel(spec, wlev):
     """
-    Return the absolute spectral value corresponding
-    to dB wlev in spectrum spec.
+    Get the absolute spectral value corresponding to dB wlev in spectrum spec.
 
     :param spec: The spectrum
     :param wlev: The water level
@@ -396,8 +401,9 @@ def waterlevel(spec, wlev):
 
 def invert_spectrum(spec, wlev):
     """
-    Invert Spectrum and shrink values under water-level of max spec
-    amplitude. The water-level is given in db scale.
+    Invert Spectrum and shrink values under water-level of max spec amplitude.
+
+    The water-level is given in db scale.
 
     :note: In place operations on spec, translated from PITSA spr_sinv.c
     :param spec: Spectrum as returned by :func:`numpy.fft.rfft`
@@ -605,7 +611,7 @@ def simulate_seismometer(
 
 def paz_2_amplitude_value_of_freq_resp(paz, freq):
     """
-    Returns Amplitude at one frequency for the given poles and zeros
+    Returns Amplitude at one frequency for the given poles and zeros.
 
     :param paz: Given poles and zeros
     :param freq: Given frequency
@@ -633,6 +639,8 @@ def paz_2_amplitude_value_of_freq_resp(paz, freq):
 
 def estimate_magnitude(paz, amplitude, timespan, h_dist):
     """
+    Estimate local magnitude.
+
     Estimates local magnitude from poles and zeros or full response of given
     instrument, the peak to peak amplitude and the time span from peak to peak.
     Readings on two components can be used in magnitude estimation by providing
@@ -705,6 +713,8 @@ def estimate_magnitude(paz, amplitude, timespan, h_dist):
 
 def estimate_wood_anderson_amplitude(paz, amplitude, timespan):
     """
+    Calculate the Wood-Anderson amplitude equivalent.
+
     Convert amplitude in counts measured of instrument with given Poles and
     Zeros information for use in :func:`estimate_magnitude`.
     Amplitude should be measured as full peak to peak amplitude, timespan as
@@ -730,6 +740,8 @@ def estimate_wood_anderson_amplitude(paz, amplitude, timespan):
 def estimate_wood_anderson_amplitude_using_response(response, amplitude,
                                                     timespan):
     """
+    Estimate the Wood-Anderson amplitude with a given instrument response.
+
     Convert amplitude in counts measured of instrument with given response
     information for use in :func:`estimate_magnitude`.
     Amplitude should be measured as full peak to peak amplitude, timespan as
