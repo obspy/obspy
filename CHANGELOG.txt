@@ -28,6 +28,8 @@
  - obspy.imaging:
    * Normalize moment tensors prior to plotting in the mopad wrapper to
      stabilize the algorithm (see #2114, #2125).
+   * fix some map plotting issues with cartopy and local projection (see #2193,
+     #2204)
  - obspy.io.ascii:
    * Fixes an issue with the time representation (see #2165, #2179).
  - obspy.io.cnv:
