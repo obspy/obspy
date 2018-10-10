@@ -72,8 +72,12 @@ class SACPZTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
             inv.write(f, format='SACPZ')
+        # Testxml has 2 channels: 1 no paz, 2 unrecognized units.
         self.assertEqual(len(w), 2)
-
+        # Assert warning messages contain correct warnings
+        self.assertTrue(any('has no paz' in str(x.message) for x in w))
+        self.assertTrue(any('has unrecognized input units'
+                            in str(x.message) for x in w))
         # Only 2 newlines are written.
         self.assertEqual(2, f.tell())
 
