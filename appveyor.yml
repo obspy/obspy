@@ -106,6 +106,14 @@ install:
   # Install default dependencies
   # pip 10.0.1 seems buggy and breaks all our appveyor builds
   - "conda install -q --yes \"pip<10\" numpy scipy matplotlib lxml sqlalchemy mock nose gdal decorator requests basemap jsonschema pyshp cryptography"
+  # somehow basemap/pyproj/proj4 can fail when PROJ_LIB is not set correctly
+  # for whatever reason, see:
+  #  - conda-forge/basemap-feedstock#36
+  #  - conda-forge/basemap-feedstock#30
+  #  - https://ci.appveyor.com/project/obspy/obspy/builds/19346925/job/prqqev70hy0qt786#L692
+  #  This is really ugly and should ideally reverted at some later point, in
+  #  case used paths / env var names change etc
+  - "SET PROJ_LIB=%CONDA_PREFIX%\\Library\\share"
   # additional dependencies
   - "pip install pyimgur"
   - "pip install -U future"
