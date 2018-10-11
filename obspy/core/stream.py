@@ -2408,6 +2408,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :meth:`~obspy.core.trace.Trace.detrend` method of
         :class:`~obspy.core.trace.Trace`.
 
+        :param options: collects keyword arguments which are passed to the
+            trace method call. Does not need to be used directly.
+            See the example that follows.
+
          .. note::
 
             This operation is performed in place on the actual data arrays. The
