@@ -50,6 +50,10 @@ class UTCDateTime(object):
     :type iso8601: bool, optional
     :param iso8601: Enforce `ISO8601:2004`_ detection. Works only with a string
         as first input argument.
+    :type strict: bool, optional
+    :param strict: If True, Conform to `ISO8601:2004`_ limits on positional
+        and keyword arguments. If False, allow hour, minute and second values
+        to exceed 23, 59, and 59 respectively.
     :type precision: int, optional
     :param precision: Sets the precision used by the rich comparison operators.
         Defaults to ``6`` digits after the decimal point. See also `Precision`_
@@ -173,14 +177,17 @@ class UTCDateTime(object):
         >>> UTCDateTime(year=2009, julday=234, hour=14, minute=13)
         UTCDateTime(2009, 8, 22, 14, 13)
 
-        >>> UTCDateTime(year=1970, month=1, day=1, hour=48, minute=60)
-        UTCDateTime(1970, 1, 3, 1, 0)
-
     (6) Using a Python :class:`datetime.datetime` object.
 
         >>> dt = datetime.datetime(2009, 5, 24, 8, 28, 12, 5001)
         >>> UTCDateTime(dt)
         UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
+
+    (7) Using strict=False the limits of hour, minute, and second become more
+        flexible:
+
+        >>> UTCDateTime(year=1970, month=1, day=1, hour=48, strict=False)
+        UTCDateTime(1970, 1, 3, 0, 0)
 
     .. rubric:: _`Precision`
 
@@ -229,7 +236,7 @@ class UTCDateTime(object):
     _initialized = False
     _has_warned = False  # this is a temporary, it will be removed soon
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, strict=True, **kwargs):
         """
         Creates a new UTCDateTime object.
         """
@@ -392,25 +399,32 @@ class UTCDateTime(object):
         try:  # If a value Error is raised try to allow overflow (see #2222)
             dt = datetime.datetime(*args, **kwargs)
         except ValueError:
-            if args:
-                raise
+            if not strict:
+                self._handle_overflow(*args, **kwargs)
             else:
-                # ensure hour minute second are in kwargs
-                for time_unit in ('hour', 'minute', 'second'):
-                    kwargs[time_unit] = kwargs.get(time_unit, 0)
-                extra_seconds = 0
-                # keep track of second equiv. of overflow
-                extra_seconds += (kwargs['hour'] // 24) * 3600 * 24
-                extra_seconds += (kwargs['minute'] // 60) * 60 * 60
-                extra_seconds += (kwargs['second'] // 60) * 60
-                # reduce value in kwargs to be within normal bounds
-                kwargs['hour'] %= 24
-                kwargs['minute'] %= 60
-                kwargs['second'] %= 60
-            # get the correct timestamp, add extra seconds
-            self._ns = (UTCDateTime(**kwargs) + extra_seconds).ns
+                raise
         else:
             self._from_datetime(dt)
+
+    def _handle_overflow(self, year, month, day, hour=0, minute=0, second=0,
+                         microsecond=0):
+        """
+        Handles setting date if an overflow of usual value limits is detected.
+        """
+        kwargs = locals()
+        kwargs.pop('self')
+        # ensure hour minute second are in kwargs
+        extra_seconds = 0
+        # keep track of second equiv. of overflow
+        extra_seconds += (kwargs['hour'] // 24) * 3600 * 24
+        extra_seconds += (kwargs['minute'] // 60) * 60 * 60
+        extra_seconds += (kwargs['second'] // 60) * 60
+        # reduce value in kwargs to be within normal bounds
+        kwargs['hour'] %= 24
+        kwargs['minute'] %= 60
+        kwargs['second'] %= 60
+        # get the correct timestamp, add extra seconds
+        self._ns = (UTCDateTime(**kwargs) + extra_seconds).ns
 
     def _set(self, **kwargs):
         """
@@ -1499,7 +1513,9 @@ class UTCDateTime(object):
         precision, simply create a new UTCDateTime instance.
 
         The following parameters are supported: year, month, day, julday,
-        hour, minute second, microsecond.
+        hour, minute second, microsecond. Additionally, the keyword 'strict'
+        can be set to False to allow hour, minute, and second to exceed normal
+        limits.
 
         .. rubric:: Example
 
@@ -1519,7 +1535,7 @@ class UTCDateTime(object):
             0
         """
         # check parameters, raise Value error if any are unsupported
-        supported_args = set(YMDHMS) | set(YJHMS) | {'microsecond'}
+        supported_args = set(YMDHMS) | set(YJHMS) | {'microsecond', 'strict'}
         if not set(kwargs).issubset(supported_args):
             unsupported_args = set(kwargs) - supported_args
             msg = ('%s are not supported arguments for replace, supported '
