@@ -16,7 +16,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from obspy import Stream, Trace, UTCDateTime, read, read_inventory
+from obspy import Stream, Trace, UTCDateTime, read, read_inventory, Inventory
 from obspy.core import Stats
 from obspy.core.inventory import Response
 from obspy.core.util.base import NamedTemporaryFile
@@ -816,6 +816,15 @@ class PsdTestCase(unittest.TestCase):
                 with self.assertRaises(ObsPyException) as e:
                     method(filename)
                 self.assertEqual(str(e.exception), msg)
+
+    def test_nice_ringlaser_metadata_error_msg(self):
+        with self.assertRaises(TypeError) as e:
+            PPSD(stats=Stats(), metadata=Inventory(networks=[], source=""),
+                 special_handling='ringlaser')
+        expected = ("When using `special_handling='ringlaser'`, `metadata` "
+                    "must be a plain dictionary with key 'sensitivity' "
+                    "stating the overall sensitivity`.")
+        self.assertEqual(str(e.exception), expected)
 
 
 def suite():

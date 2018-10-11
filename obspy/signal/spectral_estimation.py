@@ -320,7 +320,15 @@ class PPSD(object):
         self.ppsd_length = ppsd_length
         self.overlap = overlap
         self.special_handling = special_handling and special_handling.lower()
-        if self.special_handling not in (None, "ringlaser", "hydrophone"):
+        if self.special_handling == 'ringlaser':
+            if not isinstance(self.metadata, dict):
+                msg = ("When using `special_handling='ringlaser'`, `metadata` "
+                       "must be a plain dictionary with key 'sensitivity' "
+                       "stating the overall sensitivity`.")
+                raise TypeError(msg)
+        elif self.special_handling == 'hydrophone':
+            pass
+        elif self.special_handling is not None:
             msg = "Unsupported value for 'special_handling' parameter: %s"
             msg = msg % self.special_handling
             raise ValueError(msg)
