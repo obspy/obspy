@@ -236,7 +236,7 @@ class UTCDateTime(object):
     _initialized = False
     _has_warned = False  # this is a temporary, it will be removed soon
 
-    def __init__(self, *args, strict=True, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Creates a new UTCDateTime object.
         """
@@ -244,6 +244,7 @@ class UTCDateTime(object):
         self.precision = kwargs.pop('precision', self.DEFAULT_PRECISION)
         # set directly to nanoseconds if given
         ns = kwargs.pop('ns', None)
+        strict = kwargs.pop('strict', True)
         if ns is not None:
             self._ns = ns
             return
