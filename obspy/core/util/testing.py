@@ -728,8 +728,7 @@ class WarningsCapture(object):
                                     category=category,
                                     filename="", lineno=0))
 
-    def _warn(self, message, category=None, *args, **kwargs):
-        category = Warning if category is None else category
+    def _warn(self, message, category=Warning, *args, **kwargs):
         if isinstance(message, Warning):
             self.captured_warnings.append(
                 warnings.WarningMessage(
