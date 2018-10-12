@@ -2422,6 +2422,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. rubric:: Example
 
         Apply an order 3 spline detrend on all traces contained in the stream.
+
         >>> from obspy import read
         >>> st = read()
         >>> st.detrend("spline", order=3, dspline=500)
