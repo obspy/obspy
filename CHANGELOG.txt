@@ -16,6 +16,7 @@
      creating a string representation (see #2119 and #2127).
    * Fix Stream.get_gaps() when a trace is completely overlapping another trace
      (see #2218).
+   * Fig Exception when comparing ComparingObjects (see #2220).
  - obspy.clients.arclink:
    * Raise a warning at import time that the ArcLink protocol will be
      deprecated soon (see #1987).

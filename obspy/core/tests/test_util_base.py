@@ -4,13 +4,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import os
+import copy
 import shutil
 import unittest
 
 from obspy.core.compatibility import mock
 from obspy.core.util.base import (NamedTemporaryFile, get_dependency_version,
                                   download_to_file, sanitize_filename,
-                                  create_empty_data_chunk)
+                                  create_empty_data_chunk, ComparingObject)
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 
 import numpy as np
@@ -139,6 +140,19 @@ class UtilBaseTestCase(unittest.TestCase):
         self.assertIsInstance(out, np.ma.MaskedArray)
         self.assertEqual(out.dtype, np.float32)
         np.testing.assert_allclose(out.mask, [True, True, True])
+
+    def test_comparing_object_eq(self):
+        co = ComparingObject()
+        # Compare to other types
+        self.assertNotEqual(co, 5)
+        self.assertNotEqual(co, None)
+        self.assertNotEqual(co, object())
+        # Compare same type, different instance, with attributes
+        co.at = 3
+        deep_copy = copy.deepcopy(co)
+        self.assertEqual(co, deep_copy)
+        deep_copy.at = 0
+        self.assertNotEqual(co, deep_copy)
 
 
 def suite():
