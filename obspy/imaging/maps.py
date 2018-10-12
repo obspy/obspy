@@ -627,6 +627,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
 
         proj_kwargs['central_latitude'] = lat_0
         proj_kwargs['central_longitude'] = lon_0
+        proj_kwargs['standard_parallels'] = [lat_0, lat_0]
         proj = ccrs.AlbersEqualArea(**proj_kwargs)
 
     # User-supplied projection.

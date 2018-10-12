@@ -1439,6 +1439,25 @@ class StreamTestCase(unittest.TestCase):
         gaps = st.get_gaps()
         self.assertEqual(len(gaps), 1)
 
+    def test_get_gaps_whole_overlap(self):
+        """
+        Test get_gaps method with a trace completely overlapping another trace.
+        """
+        tr1 = Trace(data=np.empty(3600))
+        tr1.stats.starttime = UTCDateTime("2018-09-25T00:00:00.000000Z")
+        tr1.stats.sampling_rate = 1.
+        tr2 = Trace(data=np.empty(60))
+        tr2.stats.starttime = UTCDateTime("2018-09-25T00:01:00.000000Z")
+        tr2.stats.sampling_rate = 1.
+        st = Stream([tr1, tr2])
+        gaps = st.get_gaps()
+        self.assertEqual(len(gaps), 1)
+        gap = gaps[0]
+        starttime = gap[4]
+        self.assertEqual(starttime, UTCDateTime("2018-09-25T00:01:59.000000Z"))
+        endtime = gap[5]
+        self.assertEqual(endtime, tr2.stats.starttime)
+
     def test_comparisons(self):
         """
         Tests all rich comparison operators (==, !=, <, <=, >, >=)

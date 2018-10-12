@@ -81,6 +81,9 @@ master:
    * Event instances with Origin instances that have do not have defined
      latitude/longitude attributes will no longer raise a TypeError when
      creating a string representation (see #2119 and #2127).
+   * Fix Stream.get_gaps() when a trace is completely overlapping another trace
+     (see #2218).
+   * Fig Exception when comparing ComparingObjects (see #2220).
  - obspy.clients.arclink:
    * Raise a warning at import time that the ArcLink protocol will be
      deprecated soon (see #1987).
@@ -93,8 +96,13 @@ master:
  - obspy.imaging:
    * Normalize moment tensors prior to plotting in the mopad wrapper to
      stabilize the algorithm (see #2114, #2125).
+   * fix some map plotting issues with cartopy and local projection (see #2193,
+     #2204)
  - obspy.io.ascii:
    * Fixes an issue with the time representation (see #2165, #2179).
+ - obspy.io.cnv:
+   * Bugfix when phase_mapping is passed as argument when writing a Catalog
+     object to CNV (see #2001)
  - obspy.io.css:
    * Fix automatic filetype detection (see #2160 and #2162)
  - obspy.io.mseed:
@@ -143,7 +151,7 @@ master:
    * Read support for Reftek 130 (rt130) waveform data,
      obspy.io.reftek (see #1433)
    * Add Nordic format (s-file) read/write (see #1517)
-   * Read and write support for events in the SCARDEC catlogue format
+   * Read and write support for events in the SCARDEC catalogue format
      (see #1391).
    * Read support for IASPEI ISF ISM 1.0 Bulletin event data,
      (see #1946)

@@ -305,7 +305,7 @@ class Amplitude(__Amplitude):
     :type pick_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
     :param pick_id: Refers to the ``resource_id`` of an associated
         :class:`~obspy.core.event.origin.Pick` object.
-    :type waveform_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+    :type waveform_id: :class:`~obspy.core.event.base.WaveformStreamID`,
     :param waveform_id: Identifies the waveform stream on which the amplitude
         was measured.
     :type filter_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
