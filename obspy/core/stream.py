@@ -2408,27 +2408,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :meth:`~obspy.core.trace.Trace.detrend` method of
         :class:`~obspy.core.trace.Trace`.
 
-        :param options:
-            Collects keyword arguments which are passed to the trace method
-            call. Does not need to be specified directly.
-
         .. note::
 
             This operation is performed in place on the actual data arrays. The
             raw data will no longer be accessible afterwards. To keep your
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
-
-        .. rubric:: Example
-
-        Apply a third order spline detrend with 500 samples between nodes on
-        all traces contained in the stream.
-
-        >>> from obspy import read
-        >>> st = read()
-        >>> st.detrend("spline", order=3, dspline=500)
-        ... # doctest: +ELLIPSIS
-        <...Stream object at 0x...>
         """
         for tr in self:
             tr.detrend(type=type, **options)
