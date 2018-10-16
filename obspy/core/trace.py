@@ -1932,8 +1932,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: Method to use for detrending. Defaults to ``'simple'``.
             See the `Supported Methods`_ section below for further details.
         :param options:
-            Collects keyword arguments which are passed to the trace method
-            call. Does not need to be specified directly.
+            Collects keyword arguments which are passed to the selected
+            detrend function. Does not need to be specified directly.
 
         .. note::
 
