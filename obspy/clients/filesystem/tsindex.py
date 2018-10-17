@@ -347,6 +347,7 @@ class Client(object):
         for row in summary_rows:
             nslc = (row.network, row.station, row.location, row.channel)
             nslc_list.append(nslc)
+        nslc_list.sort()
         return nslc_list
 
     def get_availability_extent(self, network=None, station=None,
@@ -389,6 +390,7 @@ class Client(object):
             extent = (row.network, row.station, row.location, row.channel,
                       UTCDateTime(row.earliest), UTCDateTime(row.latest))
             availability_extents.append(extent)
+        availability_extents.sort()
         return availability_extents
 
     def get_availability(self, network=None, station=None, location=None,
@@ -490,6 +492,7 @@ class Client(object):
                                                       )
             # extend complete list of available data
             joined_avail_tuples.extend(avail_data)
+        joined_avail_tuples.sort()
         return joined_avail_tuples
 
     def get_availability_percentage(self, network, station,

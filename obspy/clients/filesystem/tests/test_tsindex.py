@@ -193,9 +193,9 @@ class ClientTestCase(unittest.TestCase):
         expected_nslc = [("AK", "ANM", "", "VM2"),
                          ("AK", "ANM", "", "VM3"),
                          ("AK", "ANM", "", "VM4"),
-                         ("XX", "ANM", "", "VM5"),
                          ("N4", "H43A", "", "VM2"),
-                         ("N4", "H43A", "", "VM3")]
+                         ("N4", "H43A", "", "VM3"),
+                         ("XX", "ANM", "", "VM5")]
 
         self.assertEqual(client.get_nslc("AK,N4,XX",
                                          "ANM,H43A",
@@ -234,9 +234,6 @@ class ClientTestCase(unittest.TestCase):
                                NamedRow("AK", "ANM", "", "VM3",
                                         "2018-08-10T21:52:50.000000",
                                         "2018-08-10T22:12:39.999991"),
-                               NamedRow("XX", "ANM", "", "VM4",
-                                        "2018-08-10T21:52:50.000000",
-                                        "2018-08-10T22:12:39.999991"),
                                NamedRow("AK", "ANM", "", "VM5",
                                         "2018-08-10T21:52:50.000000",
                                         "2018-08-10T22:15:39.999991"),
@@ -245,7 +242,10 @@ class ClientTestCase(unittest.TestCase):
                                         "2018-08-10T22:09:28.890415"),
                                NamedRow("N4", "H43A", "", "VM3",
                                         "2018-08-10T21:09:39.000000",
-                                        "2018-08-10T22:09:28.890415")]
+                                        "2018-08-10T22:09:28.890415"),
+                               NamedRow("XX", "ANM", "", "VM4",
+                                        "2018-08-10T21:52:50.000000",
+                                        "2018-08-10T22:12:39.999991")]
         client._get_summary_rows = mock.MagicMock(
                                             return_value=mocked_summary_rows)
 
@@ -253,9 +253,6 @@ class ClientTestCase(unittest.TestCase):
                                    UTCDateTime("2018-08-10T21:52:50.000000"),
                                    UTCDateTime("2018-08-10T22:12:39.999991")),
                                   ("AK", "ANM", "", "VM3",
-                                   UTCDateTime("2018-08-10T21:52:50.000000"),
-                                   UTCDateTime("2018-08-10T22:12:39.999991")),
-                                  ("XX", "ANM", "", "VM4",
                                    UTCDateTime("2018-08-10T21:52:50.000000"),
                                    UTCDateTime("2018-08-10T22:12:39.999991")),
                                   ("AK", "ANM", "", "VM5",
@@ -266,7 +263,10 @@ class ClientTestCase(unittest.TestCase):
                                    UTCDateTime("2018-08-10T22:09:28.890415")),
                                   ("N4", "H43A", "", "VM3",
                                    UTCDateTime("2018-08-10T21:09:39.000000"),
-                                   UTCDateTime("2018-08-10T22:09:28.890415"))]
+                                   UTCDateTime("2018-08-10T22:09:28.890415")),
+                                  ("XX", "ANM", "", "VM4",
+                                   UTCDateTime("2018-08-10T21:52:50.000000"),
+                                   UTCDateTime("2018-08-10T22:12:39.999991"))]
 
         self.assertListEqual(client.get_availability_extent(
                                                 "AK,N4",
