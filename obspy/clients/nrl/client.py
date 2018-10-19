@@ -219,6 +219,7 @@ class NRL(object):
         sensor_stage0 = sensor_resp.response_stages[0]
         dl_resp.response_stages.insert(0, sensor_stage0)
         dl_resp.instrument_sensitivity.input_units = sensor_stage0.input_units
+        dl_resp.instrument_sensitivity.input_units_description = sensor_stage0.input_units_description
         try:
             dl_resp.recalculate_overall_sensitivity()
         except ValueError:
