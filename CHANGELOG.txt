@@ -26,6 +26,9 @@
    * A few fixes and stability improvements for the mass downloader
      (see #2081).
    * Fixed routing startup error when running under certain locales (see #2147)
+ - obspy.clients.nrl:
+   * Set input units of overall sensitivity to input units of first stage
+     in NRL.get_response()
  - obspy.imaging:
    * Normalize moment tensors prior to plotting in the mopad wrapper to
      stabilize the algorithm (see #2114, #2125).
