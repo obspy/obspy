@@ -216,7 +216,9 @@ class NRL(object):
         # Combine both by replace stage one in the data logger with stage
         # one of the sensor.
         dl_resp.response_stages.pop(0)
-        dl_resp.response_stages.insert(0, sensor_resp.response_stages[0])
+        sensor_stage0 = sensor_resp.response_stages[0]
+        dl_resp.response_stages.insert(0, sensor_stage0)
+        dl_resp.instrument_sensitivity.input_units = sensor_stage0.input_units
         try:
             dl_resp.recalculate_overall_sensitivity()
         except ValueError:
