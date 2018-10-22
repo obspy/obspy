@@ -2404,9 +2404,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Remove a trend from all traces.
 
-        For details see the corresponding
+        For details on supported methods and parameters see the corresponding
         :meth:`~obspy.core.trace.Trace.detrend` method of
         :class:`~obspy.core.trace.Trace`.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data will no longer be accessible afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
         """
         for tr in self:
             tr.detrend(type=type, **options)

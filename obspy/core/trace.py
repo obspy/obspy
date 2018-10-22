@@ -1931,6 +1931,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type type: str, optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
             See the `Supported Methods`_ section below for further details.
+        :param options:
+            Collects keyword arguments which are passed to the selected
+            detrend function. Does not need to be specified directly.
 
         .. note::
 
@@ -1962,6 +1965,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             Subtracts a spline of a given order with a given number of
             samples between spline nodes.
             (uses :func:`obspy.signal.detrend.spline`).
+
+        .. rubric:: Example
+
+        Apply a third order spline detrend with 500 samples between nodes.
+
+        >>> from obspy import read
+        >>> tr = read()[0]
+        >>> tr.detrend("spline", order=3, dspline=500)
+        ... # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         """
         type = type.lower()
         # retrieve function call from entry points
