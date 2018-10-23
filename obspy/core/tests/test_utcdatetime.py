@@ -1456,6 +1456,9 @@ class UTCDateTimeTestCase(unittest.TestCase):
         # ensure second can exceed 60
         utc = base_utc(second=120, strict=False)
         self.assertEqual(utc, base_utc(minute=2))
+        # ensure microsecond can exceed 1_000_000
+        utc = base_utc(microsecond=10000000, strict=False)
+        self.assertEqual(utc, base_utc(second=10))
         # ensure not all kwargs are required for overflow behavior
         utc = UTCDateTime(year=2017, month=9, day=18, second=60, strict=False)
         self.assertEqual(utc, base_utc(minute=1))

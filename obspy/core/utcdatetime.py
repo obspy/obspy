@@ -412,20 +412,15 @@ class UTCDateTime(object):
         """
         Handles setting date if an overflow of usual value limits is detected.
         """
-        kwargs = locals()
-        kwargs.pop('self')
-        # ensure hour minute second are in kwargs
-        extra_seconds = 0
-        # keep track of second equiv. of overflow
-        extra_seconds += (kwargs['hour'] // 24) * 3600 * 24
-        extra_seconds += (kwargs['minute'] // 60) * 60 * 60
-        extra_seconds += (kwargs['second'] // 60) * 60
-        # reduce value in kwargs to be within normal bounds
-        kwargs['hour'] %= 24
-        kwargs['minute'] %= 60
-        kwargs['second'] %= 60
-        # get the correct timestamp, add extra seconds
-        self._ns = (UTCDateTime(**kwargs) + extra_seconds).ns
+        # Keep track of seconds due to hour, minute, second
+        seconds = 0
+        seconds += hour * 3600
+        seconds += minute * 60
+        seconds += second
+        # Init UTCDateTime based on year, month, day, add seconds
+        utc_base = UTCDateTime(year=year, month=month, day=day)
+        # Add seconds and set nanoseconds on self
+        self._ns = (utc_base + seconds + microsecond / 1000000).ns
 
     def _set(self, **kwargs):
         """
