@@ -118,7 +118,13 @@ install:
         BASEMAP="basemap"
         PYPROJ="pyproj"
       fi
-  - conda create -q -n test-environment
+    - |
+      if [[ "${PYTHON_VERSION}" == '3.7' ]]; then
+        FREETYPE="freetype"
+      else
+        FREETYPE="freetype<2.8"
+      fi
+  - conda create -q -n test-environment numpy scipy matplotlib basemap pyproj
         python=$PYTHON_VERSION
         $NUMPY
         $SCIPY
@@ -135,7 +141,7 @@ install:
         nose
         requests
         sqlalchemy
-        "freetype<2.8"
+        $FREETYPE
         cryptography
   - source activate test-environment
   # additional, optional packages that run some more tests but are not
