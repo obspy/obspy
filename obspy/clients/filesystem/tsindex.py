@@ -1253,11 +1253,8 @@ class TSIndexDatabaseHandler(object):
         """
         Main query interface to timeseries index database.
 
-        :type database: str or
-            :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
-        :param database: Path to sqlite tsindex database or a
-            :class:`~obspy.clients.filesystem.tsindex.TSIndexDatabaseHandler`
-            object
+        :type database: str
+        :param database: Path to sqlite tsindex database
         :type tsindex_table: str
         :param tsindex_table: Name of timeseries index table
         :type tsindex_summary_table: str
@@ -1277,7 +1274,7 @@ class TSIndexDatabaseHandler(object):
             self.database = os.path.abspath(database)
             db_dirpath = os.path.dirname(self.database)
             if not os.path.exists(db_dirpath):
-                raise OSError("Database path `{}` does not exist."
+                raise OSError("Database path '{}' does not exist."
                               .format(db_dirpath))
             elif not os.path.isfile(self.database):
                 logger.warning("No sqlite3 database file exists at `{}`."
@@ -1296,12 +1293,16 @@ class TSIndexDatabaseHandler(object):
         :param connection: SQLAlchemy database connection object.
         :type temporary: bool
         :param temporary: If ``True`` then a temporary tsindex table is
-            created.
+            created and a open SQLAlchemy database connection object
+            is returned.
+        :returns: Return a open SQLAlchemy database connection object if the
+            ``temporary`` parameter is ``True``, otherwise return a closed
+            SQLAlchemy database connection object.
         """
         if connection is None:
-            connection = self.engine.connect()
+            connection = self._open_database_connection()
         # test if tsindex table exists
-        if not self.engine.dialect.has_table(self.engine, 'tsindex'):
+        if not self.engine.dialect.has_table(self.engine, self.tsindex_table):
             raise ValueError("No tsindex table '{}' exists in database '{}'."
                              .format(self.tsindex_table, self.database))
         connection.execute("DROP TABLE IF EXISTS {};"
@@ -1318,8 +1319,9 @@ class TSIndexDatabaseHandler(object):
                     self.tsindex_summary_table,
                     self.tsindex_table)
         )
-        if connection is None:
+        if temporary is False:
             connection.close()
+        return connection
 
     def has_tsindex_summary(self, connection=None):
         """
@@ -1332,7 +1334,7 @@ class TSIndexDatabaseHandler(object):
             in the database.
         """
         if connection is None:
-            connection = self.engine.connect()
+            connection = self._open_database_connection()
         result = connection.execute("SELECT count(*) FROM sqlite_master "
                                     "WHERE type='table' and name='{0}'"
                                     .format(self.tsindex_summary_table))
@@ -1356,7 +1358,7 @@ class TSIndexDatabaseHandler(object):
             in the database.
         """
         if connection is None:
-            connection = self.engine.connect()
+            connection = self._open_database_connection()
         result = connection.execute("SELECT count(*) FROM sqlite_master "
                                     "WHERE type='table' and name='{0}'"
                                     .format(self.tsindex_table))
@@ -1374,15 +1376,8 @@ class TSIndexDatabaseHandler(object):
             connection = self.engine.connect()
         except Exception as err:
             raise ValueError(str(err))
-
         logger.debug("Opening SQLite database for "
                      "index rows: %s" % self.database)
-
-        # Store temporary table(s) in memory
-        try:
-            connection.execute("PRAGMA temp_store=MEMORY")
-        except Exception as err:
-            raise ValueError(str(err))
         return connection
 
     def _fetch_index_rows(self, query_rows=None, bulk_params=None):
@@ -1777,13 +1772,15 @@ class TSIndexDatabaseHandler(object):
         try:
             logger.debug('Setting up sqlite3 database at %s' % self.database)
             # setup the sqlite database
-            connection = self.engine.connect()
+            connection = self._open_database_connection()
             # https://www.sqlite.org/foreignkeys.html
             connection.execute('PRAGMA foreign_keys = ON')
             # as used by mseedindex
             connection.execute('PRAGMA case_sensitive_like = ON')
             # enable Write-Ahead Log for better concurrency support
             connection.execute('PRAGMA journal_mode=WAL')
+            # Store temporary table(s) in memory
+            connection.execute("PRAGMA temp_store=MEMORY")
             connection.close()
         except Exception:
             raise OSError("Failed to setup sqlite3 database for indexing.")
