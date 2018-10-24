@@ -28,7 +28,7 @@ from obspy.core.util.base import _get_entry_points
 from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
-from obspy.core.inventory.util import _unified_content_strings
+from obspy.core.inventory.util import _unified_content_strings, resolve_seed_id
 
 
 class InventoryTestCase(unittest.TestCase):
@@ -706,6 +706,75 @@ class InventoryTestCase(unittest.TestCase):
         path1 = Path(self.station_xml1)
         inv1 = read_inventory(path1)
         self.assertEqual(inv1, read_inventory(self.station_xml1))
+
+    def test_resolve_seed_id(self):
+        """
+        Test the resolve_seed_id() utility function
+        """
+        t_valid = UTCDateTime(2018, 3, 4)
+        t_invalid = UTCDateTime(1985, 3, 4)
+        inv = read_inventory()
+        self.assertEqual(
+            ('GR', 'FUR', '', 'HHZ'),
+            resolve_seed_id('FUR', 'HHZ', inv))
+        self.assertEqual(
+            ('GR', 'FUR', '', 'HHZ'),
+            resolve_seed_id('FUR', 'HHZ', inv, time=t_valid))
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self.assertEqual(
+                (None, 'FUR', None, 'HHZ'),
+                resolve_seed_id('FUR', 'HHZ', inv, time=t_invalid))
+        self.assertTrue(any(
+            str(w_.message) == 'No matching metadata found for network code.'
+            for w_ in w))
+        # make a copy, but stripping channels. network lookup should still
+        # work, location code lookup obviously not
+        inv2 = copy.deepcopy(inv)
+        for net in inv2:
+            for sta in net:
+                sta.channels = []
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self.assertEqual(
+                ('GR', 'FUR', None, 'HHZ'),
+                resolve_seed_id('FUR', 'HHZ', inv2))
+        self.assertTrue(any(
+            str(w_.message) == 'No matching metadata found for location code.'
+            for w_ in w))
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self.assertEqual(
+                ('GR', 'FUR', None, 'HHZ'),
+                resolve_seed_id('FUR', 'HHZ', inv2, time=t_valid))
+        self.assertTrue(any(
+            str(w_.message) == 'No matching metadata found for location code.'
+            for w_ in w))
+        # now add some ambiguity in network code
+        inv = inv.select(network='GR', station='FUR', channel='HHZ',
+                         time=t_valid)
+        inv.networks.append(copy.deepcopy(inv[0]))
+        inv[-1].code = 'XX'
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self.assertEqual(
+                (None, 'FUR', None, 'HHZ'),
+                resolve_seed_id('FUR', 'HHZ', inv, time=t_valid))
+        self.assertTrue(any(
+            str(w_.message) == 'Metadata lookup for network code is ambiguous.'
+            for w_ in w))
+        # now add some ambiguity in location code only
+        inv.networks = [inv[0]]
+        inv[0][0].channels.append(copy.deepcopy(inv[0][0][0]))
+        inv[0][0][-1].location_code = '01'
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self.assertEqual(
+                ('GR', 'FUR', None, 'HHZ'),
+                resolve_seed_id('FUR', 'HHZ', inv, time=t_valid))
+        self.assertTrue(any(
+            str(w_.message) == 'Metadata lookup for location code is '
+            'ambiguous.' for w_ in w))
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')

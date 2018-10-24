@@ -1073,6 +1073,86 @@ def _warn_on_invalid_uri(uri):
         warnings.warn(msg)
 
 
+def resolve_seed_id(station, channel, inventory, time=None, network=None,
+                    location=None, warn=True):
+    """
+    Return a (Network, Station, Location, Channel) tuple.
+
+    Given a station and channel code and station metadata (and optionally a
+    certain point in time), try to resolve the full SEED ID, i.e. fill in
+    a missing/unknown network and/or location code.
+    If no matching data is found in metadata or if ambiguities in the station
+    metadata are encountered, returns ``None`` for network and/or location
+    code.
+
+    Simply returns the given (Network, Station, Location, Channel) input if
+    *both* ``location`` and ``network`` are already specified.
+
+    :type station: str
+    :param station: Station code to look up.
+    :type channel: str
+    :param channel: Channel code to look up.
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+    :param inventory: Station metadata to use for look up of missing parts of
+        the full SEED ID.
+    :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param time: Optionally restrict lookup from metadata to given timestamp.
+    :type network: str
+    :param network: Also specify network code for lookup (not intended to be
+        used together with ``location``, see above)
+    :type location: str
+    :param location: Also specify location code for lookup (not intended to be
+        used together with ``network``, see above)
+    :type warn: bool
+    :param warn: Whether or not to warn on failed look ups (no matching data
+        found or ambiguous results) that return some ``None``s.
+    :rtype: tuple of str
+    :returns: (Network, Station, Location, Channel) tuple. Network and/or
+        location code can be ``None`` (see above).
+    """
+    inv = inventory.select(station=station, channel=channel, time=time,
+                           network=network, location=location,
+                           keep_empty=False)
+    found_network = set()
+    found_location = set()
+    for net in inv:
+        for sta in net:
+            if sta.code != station:
+                # this should not happen
+                raise NotImplementedError()
+            found_network.add(net.code)
+            for cha in sta:
+                if cha.code != channel:
+                    # this should not happen
+                    raise NotImplementedError()
+                found_location.add(cha.location_code)
+    if not found_network:
+        if warn:
+            msg = 'No matching metadata found for network code.'
+            warnings.warn(msg)
+        return (None, station, None, channel)
+    elif len(found_network) > 1:
+        if warn:
+            msg = 'Metadata lookup for network code is ambiguous.'
+            warnings.warn(msg)
+        return (None, station, None, channel)
+    # exactly one item in set, get it
+    network = found_network.pop()
+    if not found_location:
+        if warn:
+            msg = 'No matching metadata found for location code.'
+            warnings.warn(msg)
+        return (network, station, None, channel)
+    elif len(found_location) > 1:
+        if warn:
+            msg = 'Metadata lookup for location code is ambiguous.'
+            warnings.warn(msg)
+        return (network, station, None, channel)
+    # exactly one item in set, get it
+    location = found_location.pop()
+    return (network, station, location, channel)
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
