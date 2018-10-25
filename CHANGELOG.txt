@@ -73,6 +73,8 @@
      than is used by current ObsPy version (see #2051)
    * The ar_pick() trigger function now raises an error if the three data arrays
      don't have the same length (see #1801, #2148).
+   * fix a precision issue in AR picker in case of low amplitude input (see
+     #2252 and #2253)
  - obspy.taup:
    * Fallback to linear slowness interpolation for very small and
      shallow layers (see #2126, #2129).
