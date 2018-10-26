@@ -34,6 +34,7 @@ import ctypes as C
 import warnings
 
 import numpy as np
+import scipy
 
 from obspy import UTCDateTime
 from obspy.signal.cross_correlation import templates_max_similarity
@@ -465,13 +466,30 @@ def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     :rtype: tuple
     :returns: A tuple with the P and the S arrival.
     """
-    # be nice and adapt type if necessary
-    a = np.ascontiguousarray(a, np.float32)
-    b = np.ascontiguousarray(b, np.float32)
-    c = np.ascontiguousarray(c, np.float32)
-
     if not (len(a) == len(b) == len(c)):
         raise ValueError("All three data arrays must have the same length.")
+
+    a = scipy.signal.detrend(a, type='linear')
+    b = scipy.signal.detrend(b, type='linear')
+    c = scipy.signal.detrend(c, type='linear')
+
+    # be nice and adapt type if necessary
+    a = np.require(a, dtype=np.float32, requirements=['C_CONTIGUOUS'])
+    b = np.require(b, dtype=np.float32, requirements=['C_CONTIGUOUS'])
+    c = np.require(c, dtype=np.float32, requirements=['C_CONTIGUOUS'])
+
+    # scale amplitudes to avoid precision issues in case of low amplitudes
+    # C code picks the horizontal component with larger amplitudes, so scale
+    # horizontal components with a common scaling factor
+    data_max = np.abs(a).max()
+    if data_max < 100:
+        a *= 1e6
+        a /= data_max
+    data_max = max(np.abs(b).max(), np.abs(c).max())
+    if data_max < 100:
+        for data in (b, c):
+            data *= 1e6
+            data /= data_max
 
     s_pick = C.c_int(s_pick)  # pick S phase also
     ptime = C.c_float()
