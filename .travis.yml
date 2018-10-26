@@ -124,7 +124,7 @@ install:
     else
       FREETYPE="freetype<2.8"
     fi
-  - conda create -q -n test-environment numpy scipy matplotlib basemap pyproj
+  - conda create -q -n test-environment
         python=$PYTHON_VERSION
         $NUMPY
         $SCIPY
