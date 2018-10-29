@@ -14,10 +14,13 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            pip install -U flake8 pep8-naming
+            conda create -n test-env
+            source activate test-env
+            conda install -y flake8 pep8-naming
 
       - run:
-        name: run tests
+        name: run linting and metrics
         command: |
+          source activate test-env
           flake8 --version
           flake8 --verbose --ignore=E402,$(python -c 'import pycodestyle; print(pycodestyle.DEFAULT_IGNORE)') --exclude=__init__.py obspy
