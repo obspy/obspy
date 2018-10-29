@@ -19,8 +19,8 @@ jobs:
             conda install -y flake8 pep8-naming
 
       - run:
-        name: run linting and metrics
-        command: |
-          source activate test-env
-          flake8 --version
-          flake8 --verbose --ignore=E402,$(python -c 'import pycodestyle; print(pycodestyle.DEFAULT_IGNORE)') --exclude=__init__.py obspy
+          name: run linting
+          command: |
+            source activate test-env
+            flake8 --version
+            flake8 --verbose --ignore=E402,$(python -c 'import pycodestyle; print(pycodestyle.DEFAULT_IGNORE)') --exclude=__init__.py obspy
