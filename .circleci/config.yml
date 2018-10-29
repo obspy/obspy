@@ -16,7 +16,8 @@ jobs:
           command: |
             pip install -U flake8 pep8-naming
 
-      - run: run tests
+      - run:
+        name: run tests
         command: |
           flake8 --version
           flake8 --verbose --ignore=E402,$(python -c 'import pycodestyle; print(pycodestyle.DEFAULT_IGNORE)') --exclude=__init__.py obspy
