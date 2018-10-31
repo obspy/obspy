@@ -1476,9 +1476,9 @@ class UTCDateTimeTestCase(unittest.TestCase):
         The replace method should also support the changes described in #2222.
         """
         utc = UTCDateTime('2017-09-18T00:00:00')
-        self.assertEqual(utc.replace(hour=25, strict=0), utc + 25 * 3600)
-        self.assertEqual(utc.replace(minute=1000, strict=0), utc + 1000 * 60)
-        self.assertEqual(utc.replace(second=60, strict=0), utc + 60)
+        self.assertEqual(utc.replace(hour=25, strict=False), utc + 25 * 3600)
+        self.assertEqual(utc.replace(minute=1000, strict=False), utc + 60000)
+        self.assertEqual(utc.replace(second=60, strict=False), utc + 60)
 
 
 def suite():
