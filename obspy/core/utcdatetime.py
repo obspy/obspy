@@ -52,8 +52,8 @@ class UTCDateTime(object):
         as first input argument.
     :type strict: bool, optional
     :param strict: If True, Conform to `ISO8601:2004`_ limits on positional
-        and keyword arguments. If False, allow hour, minute and second values
-        to exceed 23, 59, and 59 respectively.
+        and keyword arguments. If False, allow hour, minute, second, and
+        microsecond values to exceed 23, 59, 59, and 1_000_000 respectively.
     :type precision: int, optional
     :param precision: Sets the precision used by the rich comparison operators.
         Defaults to ``6`` digits after the decimal point. See also `Precision`_
