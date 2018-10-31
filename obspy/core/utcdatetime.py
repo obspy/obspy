@@ -50,6 +50,10 @@ class UTCDateTime(object):
     :type iso8601: bool, optional
     :param iso8601: Enforce `ISO8601:2004`_ detection. Works only with a string
         as first input argument.
+    :type strict: bool, optional
+    :param strict: If True, Conform to `ISO8601:2004`_ limits on positional
+        and keyword arguments. If False, allow hour, minute, second, and
+        microsecond values to exceed 23, 59, 59, and 1_000_000 respectively.
     :type precision: int, optional
     :param precision: Sets the precision used by the rich comparison operators.
         Defaults to ``6`` digits after the decimal point. See also `Precision`_
@@ -163,7 +167,9 @@ class UTCDateTime(object):
 
     (5) Using the following keyword arguments: `year, month, day, julday, hour,
         minute, second, microsecond`. Either the combination of year, month and
-        day, or year and Julian day are required.
+        day, or year and Julian day are required. This is the only input mode
+        that supports using hour, minute, or second values above the natural
+        limits of 24, 60, 60, respectively.
 
         >>> UTCDateTime(year=1970, month=1, day=1, minute=15, microsecond=20)
         UTCDateTime(1970, 1, 1, 0, 15, 0, 20)
@@ -176,6 +182,12 @@ class UTCDateTime(object):
         >>> dt = datetime.datetime(2009, 5, 24, 8, 28, 12, 5001)
         >>> UTCDateTime(dt)
         UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
+
+    (7) Using strict=False the limits of hour, minute, and second become more
+        flexible:
+
+        >>> UTCDateTime(year=1970, month=1, day=1, hour=48, strict=False)
+        UTCDateTime(1970, 1, 3, 0, 0)
 
     .. rubric:: _`Precision`
 
@@ -232,6 +244,7 @@ class UTCDateTime(object):
         self.precision = kwargs.pop('precision', self.DEFAULT_PRECISION)
         # set directly to nanoseconds if given
         ns = kwargs.pop('ns', None)
+        strict = kwargs.pop('strict', True)
         if ns is not None:
             self._ns = ns
             return
@@ -383,8 +396,31 @@ class UTCDateTime(object):
             kwargs['second'] = int(_sec)
             kwargs['microsecond'] = int(round(_frac * 1e6))
             args = args[0:5]
-        dt = datetime.datetime(*args, **kwargs)
-        self._from_datetime(dt)
+
+        try:  # If a value Error is raised try to allow overflow (see #2222)
+            dt = datetime.datetime(*args, **kwargs)
+        except ValueError:
+            if not strict:
+                self._handle_overflow(*args, **kwargs)
+            else:
+                raise
+        else:
+            self._from_datetime(dt)
+
+    def _handle_overflow(self, year, month, day, hour=0, minute=0, second=0,
+                         microsecond=0):
+        """
+        Handles setting date if an overflow of usual value limits is detected.
+        """
+        # Keep track of seconds due to hour, minute, second
+        seconds = 0
+        seconds += hour * 3600
+        seconds += minute * 60
+        seconds += second
+        # Init UTCDateTime based on year, month, day, add seconds
+        utc_base = UTCDateTime(year=year, month=month, day=day)
+        # Add seconds and set nanoseconds on self
+        self._ns = (utc_base + seconds + microsecond / 1000000).ns
 
     def _set(self, **kwargs):
         """
@@ -450,13 +486,7 @@ class UTCDateTime(object):
         :type dt: :class:`datetime.datetime`
         :param dt: Python datetime object.
         """
-        # see datetime.timedelta.total_seconds
-        try:
-            td = (dt - TIMESTAMP0)
-        except TypeError:
-            td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
-        self._ns = \
-            (td.days * 86400 + td.seconds) * 10**9 + td.microseconds * 1000
+        self._ns = _datetime_to_ns(dt)
 
     def _from_timestamp(self, value):
         """
@@ -1479,7 +1509,9 @@ class UTCDateTime(object):
         precision, simply create a new UTCDateTime instance.
 
         The following parameters are supported: year, month, day, julday,
-        hour, minute second, microsecond.
+        hour, minute second, microsecond. Additionally, the keyword 'strict'
+        can be set to False to allow hour, minute, and second to exceed normal
+        limits.
 
         .. rubric:: Example
 
@@ -1499,7 +1531,7 @@ class UTCDateTime(object):
             0
         """
         # check parameters, raise Value error if any are unsupported
-        supported_args = set(YMDHMS) | set(YJHMS) | {'microsecond'}
+        supported_args = set(YMDHMS) | set(YJHMS) | {'microsecond', 'strict'}
         if not set(kwargs).issubset(supported_args):
             unsupported_args = set(kwargs) - supported_args
             msg = ('%s are not supported arguments for replace, supported '
@@ -1579,6 +1611,22 @@ class UTCDateTime(object):
         """
         from matplotlib.dates import date2num
         return date2num(self.datetime)
+
+
+def _datetime_to_ns(dt):
+    """
+    Use Python datetime object to return equivalent nanoseconds.
+
+    :type dt: :class:`datetime.datetime`
+    :param dt: Python datetime object.
+    :returns: nanoseconds as an int.
+    """
+    try:
+        td = (dt - TIMESTAMP0)
+    except TypeError:
+        td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
+    # see datetime.timedelta.total_seconds
+    return (td.days * 86400 + td.seconds) * 10**9 + td.microseconds * 1000
 
 
 if __name__ == '__main__':

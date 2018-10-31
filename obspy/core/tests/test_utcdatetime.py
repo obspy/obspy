@@ -9,6 +9,7 @@ import datetime
 import itertools
 import unittest
 import warnings
+from functools import partial
 from operator import ge, eq, lt, le, gt, ne
 
 import numpy as np
@@ -1436,6 +1437,48 @@ class UTCDateTimeTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             utc.replace(zweite=22)
         self.assertIn('zweite', str(e.exception))
+
+    def test_hour_minute_second_overflow(self):
+        """
+        Tests for allowing hour, minute, and second to exceed usual limits.
+        This only applies when using dates as kwargs to the UTCDateTime
+        constructor. See #2222.
+        """
+        # Create a UTCDateTime constructor with default values using partial
+        kwargs = dict(year=2017, month=9, day=18, hour=0, minute=0, second=0)
+        base_utc = partial(UTCDateTime, **kwargs)
+        # ensure hour can exceed 23 and is equal to the day ticking forward
+        utc = base_utc(hour=25, strict=False)
+        self.assertEqual(utc, base_utc(day=19, hour=1))
+        # ensure minute can exceed 60
+        utc = base_utc(minute=61, strict=False)
+        self.assertEqual(utc, base_utc(hour=1, minute=1))
+        # ensure second can exceed 60
+        utc = base_utc(second=120, strict=False)
+        self.assertEqual(utc, base_utc(minute=2))
+        # ensure microsecond can exceed 1_000_000
+        utc = base_utc(microsecond=10000000, strict=False)
+        self.assertEqual(utc, base_utc(second=10))
+        # ensure not all kwargs are required for overflow behavior
+        utc = UTCDateTime(year=2017, month=9, day=18, second=60, strict=False)
+        self.assertEqual(utc, base_utc(minute=1))
+        # test for combination of args and kwargs
+        utc1 = UTCDateTime(2017, 5, 4, second=120, strict=False)
+        utc2 = UTCDateTime(2017, 5, 4, minute=2)
+        self.assertEqual(utc1, utc2)
+        # if strict == True a ValueError should be raised
+        with self.assertRaises(ValueError) as e:
+            base_utc(hour=60)
+        self.assertIn('hour must be in', str(e.exception))
+
+    def test_hour_minute_second_overflow_with_replace(self):
+        """
+        The replace method should also support the changes described in #2222.
+        """
+        utc = UTCDateTime('2017-09-18T00:00:00')
+        self.assertEqual(utc.replace(hour=25, strict=False), utc + 25 * 3600)
+        self.assertEqual(utc.replace(minute=1000, strict=False), utc + 60000)
+        self.assertEqual(utc.replace(second=60, strict=False), utc + 60)
 
 
 def suite():
