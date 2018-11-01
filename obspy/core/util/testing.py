@@ -28,7 +28,8 @@ from distutils.version import LooseVersion
 import numpy as np
 from lxml import etree
 
-from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
+from obspy.core.util.base import (
+    NamedTemporaryFile, MATPLOTLIB_VERSION, _get_entry_points)
 from obspy.core.util.misc import MatplotlibBackend
 
 # this dictionary contains the locations of checker routines that determine
@@ -750,6 +751,47 @@ class WarningsCapture(object):
 
     def __getitem__(self, key):
         return self.captured_warnings[key]
+
+
+def read_test_datasets(group, warn=False):
+    """
+    Read all io test catalogs
+
+    Will try and read everything in the test datasets, regardless of whether
+    this can or should be read in.  Errors are ignored, unless warn=True. If
+    warn=True then errors are reported as UserWarning.
+
+    :type group: str
+    :param group: Plugin group to search (e.g. "waveform" or "event").
+    :return: list of catalogs
+    """
+    # This could use the functions for each plugin directly quite simply using
+    # obspy.core.util.misc.buffered_load_entry_point
+    if group == "event":
+        from obspy import read_events as read_func
+    elif group == "waveform":
+        from obspy import read as read_func
+
+    # This is revolting.
+    base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.abspath(inspect.getfile(inspect.currentframe()))))))
+    eps = _get_entry_points('obspy.plugin.{0}'.format(group), 'readFormat')
+    total_files = 0
+    read_files = 0
+    for name, ep in eps.items():
+        test_base = os.path.join(
+            base, *ep.module_name.split(".")[:3], "tests", "data")
+        valid_files = glob.glob(os.path.join(test_base, "*"))
+        total_files += len(valid_files)
+        for x in valid_files:
+            with WarningsCapture():
+                try:
+                    yield read_func(x, name)
+                    read_files += 1
+                except Exception as e:
+                    if warn:
+                        UserWarning(e)
+                    pass
 
 
 def create_diverse_catalog():

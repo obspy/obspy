@@ -12,26 +12,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import unittest
-from glob import glob
-from os.path import join, dirname
 
-import obspy
 from obspy import read_events
 from obspy.core.event.dictionary import catalog_to_dict, dict_to_catalog
 from obspy.core.util.misc import _yield_obj_parent_attr
-from obspy.core.util.testing import create_diverse_catalog, WarningsCapture
-
-
-def load_test_quakeml():
-    """
-    Load the valid quakeml files from the test module.
-
-    :return: list of catalogs.
-    """
-    base = dirname(obspy.__file__)
-    test_data = join(base, 'io', 'quakeml', 'tests', 'data')
-    with WarningsCapture():
-        return [read_events(x, 'quakeml') for x in glob(join(test_data, '*'))]
+from obspy.core.util.testing import (
+    create_diverse_catalog, read_test_datasets)
 
 
 class TestCatalogToDict(unittest.TestCase):
@@ -42,7 +28,7 @@ class TestCatalogToDict(unittest.TestCase):
         Create input catalogs, dict list, and output catalogs.
         """
         cls.in_catalogs = [read_events(), create_diverse_catalog()]
-        cls.in_catalogs += load_test_quakeml()  # load quakeml catalogs
+        cls.in_catalogs += read_test_datasets(group="event")
         cls.catalog_dicts = [catalog_to_dict(x) for x in cls.in_catalogs]
         cls.out_catalogs = [dict_to_catalog(x) for x in cls.catalog_dicts]
 
