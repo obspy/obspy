@@ -13,7 +13,7 @@ binary:
 
 override_dh_auto_build:
 	dh_auto_build
-	set -ex; for python in $(shell py3versions -r); do \
+	set -ex; for python in $(shell py3versions -d); do \
 	    $$python setup.py build; \
 	done;
 
@@ -21,7 +21,7 @@ override_dh_auto_install:
 	dh_auto_install #-- release
 	dh_numpy
 	dh_numpy3
-	set -ex; for python in $(shell py3versions -r); do \
+	set -ex; for python in $(shell py3versions -d); do \
 		echo $$python; \
 	    $$python setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb; \
 	done;
