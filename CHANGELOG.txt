@@ -134,7 +134,7 @@ master:
  - obspy.io.seiscomp:
    * Fix inventory read when maxClockDrift is unset in SC3ML (see #1993)
    * Fix the reading of FIR coefficients when multiple whitespaces in SC3ML (see #2259)
-   * Fix the reading of the poles and zeros when multiple whitespaces in SC3ML.
+   * Fix the reading of the poles and zeros when multiple whitespaces in SC3ML (see #2260).
  - obspy.io.stationxml
    * Allow writing of dates before 1900 also on Python 2 (see #2013, #2015).
    * Write the UTC time zone specifier to all times (see #2015).
