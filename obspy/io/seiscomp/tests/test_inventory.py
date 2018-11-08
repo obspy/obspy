@@ -239,12 +239,8 @@ class SC3MLTestCase(unittest.TestCase):
                             continue
 
                         if isinstance(sc3ml, FIRResponseStage):
-                            for sc3ml_FIR, stationxml_FIR in zip(sc3ml.__dict__
-                                                                 .items(),
-                                                                 stationxml.
-                                                                 __dict__
-                                                                 .items()):
-                                self.assertEqual(sc3ml_FIR, stationxml_FIR)
+                            self.assertEqual(sc3ml.__dict__,
+                                             stationxml.__dict__)
 
                     """ Check poles / zeros """
                     sc3ml_paz = sc3ml_cha.response.get_paz()

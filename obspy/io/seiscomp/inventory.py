@@ -770,7 +770,7 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
         coeffs_str = _tag2obj(stage, _ns("coefficients"), str)
         coeffs_float = []
         if coeffs_str is not None and coeffs_str != 'None':
-            coeffs = coeffs_str.split(" ")
+            coeffs = coeffs_str.split()
             i = 0
             # pass additional mapping of coefficient counter
             # so that a proper stationXML can be formatted
