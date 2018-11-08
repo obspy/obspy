@@ -701,11 +701,11 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
         zeros_array = stage.find(_ns("zeros")).text
         poles_array = stage.find(_ns("poles")).text
         if zeros_array is not None:
-            zeros_array = zeros_array.split(" ")
+            zeros_array = zeros_array.split()
         else:
             zeros_array = []
         if poles_array is not None:
-            poles_array = poles_array.split(" ")
+            poles_array = poles_array.split()
         else:
             poles_array = []
 
