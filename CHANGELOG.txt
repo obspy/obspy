@@ -78,7 +78,7 @@ master:
  - obspy.io.segy:
    * Raise nicer error messages when header packing fails (see #2194, #2196).
  - obspy.io.seiscomp:
-   * Adding support for SC3ML 0.10 (see #2024 and #2004).
+   * Adding support for SC3ML 0.10 (see #2004, #2024 and #2124).
    * Update xsl to allow conversion of amplitude picks not associated with
      origins (see #2273).
  - obspy.io.sh:

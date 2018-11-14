@@ -21,6 +21,7 @@ import math
 import re
 import warnings
 
+import numpy as np
 from lxml import etree
 from scipy.signal import tf2zpk
 
@@ -30,10 +31,10 @@ from obspy.core.util.obspy_types import (ComplexWithUncertainties,
 from obspy.core.inventory import (Azimuth, ClockDrift, Dip,
                                   Distance, Frequency, Latitude,
                                   Longitude, SampleRate)
-from obspy.core.inventory import (CoefficientsTypeResponseStage,
-                                  FilterCoefficient, FIRResponseStage,
-                                  PolesZerosResponseStage,
-                                  PolynomialResponseStage)
+from obspy.core.inventory.response import (
+    CoefficientsTypeResponseStage, FilterCoefficient, FIRResponseStage,
+    PolesZerosResponseStage, PolynomialResponseStage, ResponseListElement,
+    ResponseListResponseStage)
 from obspy.io.stationxml.core import _read_floattype
 
 
@@ -855,6 +856,18 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
 
         return FIRResponseStage(
             coefficients=coeffs_float, symmetry=symmetry, **kwargs)
+
+    elif(elem_type == 'responseFAP'):
+
+        data = _tag2obj(stage, _ns("tuples"), str)
+        data = np.array(data.split(), dtype=np.float64)
+        freq, amp, phase = data.reshape((-1, 3)).T
+        elements = []
+        for freq_, amp_, phase_ in zip(freq, amp, phase):
+            elements.append(ResponseListElement(freq_, amp_, phase_))
+
+        return ResponseListResponseStage(
+            response_list_elements=elements, **kwargs)
 
 
 def _tag2pole_or_zero(paz_element, count):
