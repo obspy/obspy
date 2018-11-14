@@ -365,8 +365,11 @@ def _read_channel(inventory_root, cha_element, _ns):
     # obtain the sensorID and link to particular publicID <sensor> element
     # in the inventory base node
     sensor_id = cha_element.get("sensor")
-    sensor_element = inventory_root.find(_ns("*[@publicID='" + sensor_id +
-                                             "']"))
+    if sensor_id is None:
+        sensor_element = None
+    else:
+        sensor_element = inventory_root.find(_ns("*[@publicID='" + sensor_id +
+                                                 "']"))
     # obtain the poles and zeros responseID and link to particular
     # <responsePAZ> publicID element in the inventory base node
     response_element = None
@@ -385,8 +388,11 @@ def _read_channel(inventory_root, cha_element, _ns):
     # obtain the dataloggerID and link to particular <responsePAZ> publicID
     # element in the inventory base node
     datalogger_id = cha_element.get("datalogger")
-    search = "*[@publicID='" + datalogger_id + "']"
-    data_log_element = inventory_root.find(_ns(search))
+    if datalogger_id is None:
+        data_log_element = None
+    else:
+        search = "*[@publicID='" + datalogger_id + "']"
+        data_log_element = inventory_root.find(_ns(search))
 
     channel.restricted_status = _get_restricted_status(cha_element, _ns)
 
