@@ -1003,25 +1003,41 @@ class TauPyModelTestCase(unittest.TestCase):
         with self.assertRaises(TypeError):
             arrivals *= [2, ]
 
-    def test_small_regional_model(self):
+    def test_regional_models(self):
         """
-        Tests a small regional model as this used to not work.
+        Tests small regional models as this used to not work.
+
+        Note: It looks like too much work to get a 1-layer model working.
+        The problem is first in finding the moho, and second in coarsely-
+        sampling slowness. Also, why bother.
         """
-        with TemporaryWorkingDirectory():
-            folder = os.path.abspath(os.curdir)
-            model_name = "regional_model"
-            build_taup_model(
-                filename=os.path.join(DATA, os.path.pardir,
-                                      model_name + ".tvel"),
-                output_folder=folder, verbose=False)
-            m = TauPyModel(os.path.join(folder, model_name + ".npz"))
-        arr = m.get_ray_paths(source_depth_in_km=18.0, distance_in_degree=1.0)
-        self.assertEqual(len(arr), 9)
-        for a, d in zip(arr, [("p", 18.143), ("Pn", 19.202), ("PcP", 19.884),
-                              ("sP", 22.054), ("ScP", 23.029), ("PcS", 26.410),
-                              ("s", 31.509), ("Sn", 33.395), ("ScS", 34.533)]):
-            self.assertEqual(a.name, d[0])
-            self.assertAlmostEqual(a.time, d[1], 3)
+        model_names = ["2_layer_model", "5_layer_model"]
+        expected_results = [
+            [("p", 18.143), ("Pn", 19.202), ("PcP", 19.884), ("sP", 22.054),
+             ("ScP", 23.029), ("PcS", 26.410), ("s", 31.509), ("Sn", 33.395),
+             ("ScS", 34.533)],
+            [("Pn", 17.358), ("P", 17.666), ("p", 17.804), ("P", 17.869),
+             ("PcP", 18.039), ("ScP", 19.988), ("sP", 22.640), ("sP", 22.716),
+             ("sP", 22.992), ("PcS", 23.051), ("sP", 24.039), ("sP", 24.042),
+             ("Sn", 30.029), ("S", 30.563), ("s", 30.801), ("S", 30.913),
+             ("ScS", 31.208)]]
+
+        for model_name, expects in zip(model_names, expected_results):
+            with TemporaryWorkingDirectory():
+                folder = os.path.abspath(os.curdir)
+                build_taup_model(
+                    filename=os.path.join(DATA, os.path.pardir,
+                                          model_name + ".tvel"),
+                    output_folder=folder, verbose=False)
+                model = TauPyModel(os.path.join(folder, model_name + ".npz"))
+
+            arrvials = model.get_ray_paths(source_depth_in_km=18.0,
+                                           distance_in_degree=1.0)
+
+            self.assertEqual(len(arrvials), len(expects))
+            for arrival, expect in zip(arrvials, expects):
+                self.assertEqual(arrival.name, expect[0])
+                self.assertAlmostEqual(arrival.time, expect[1], 3)
 
 
 def suite():
