@@ -1,38 +1,41 @@
-"""
-tests for reading fcnt files
-"""
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-
-import glob
 import io
+import os
 import unittest
-from os.path import dirname, join, basename
+
 
 import numpy as np
 import obspy
-from obspy.io.rg16.core import _read_rg16, _is_rg16
-
-TEST_FCNT_DIRECTORY = join(dirname(__file__), 'data')
-FCNT_FILES = glob.glob(join(TEST_FCNT_DIRECTORY, '*'))
-FCNT_DICT = {basename(x): _read_rg16(x) for x in FCNT_FILES}
-FCNT_STREAMS = list(FCNT_DICT.values())
-
-assert len(FCNT_FILES), 'No test files found'
+from obspy import UTCDateTime
+from obspy.io.rg16.core import (read_rg16, _is_rg16, _cmp_nbr_headers,
+                                _cmp_nbr_records, _cmp_jump, _make_stats,
+                                _read_trace_header, _read_trace_header_1,
+                                _read_trace_header_2, _read_trace_header_3,
+                                _read_trace_header_4, _read_trace_header_5,
+                                _read_trace_header_6, _read_trace_header_7,
+                                _read_trace_header_8, _read_trace_header_9,
+                                _read_trace_header_10, _make_trace,
+                                _read_general_header_1, _read_general_header_2,
+                                _read_channel_sets, _read_channel_set,
+                                _read_extended_header_1,
+                                _read_extended_header_2,
+                                _read_extended_header_3)
+TEST_FCNT_DIRECTORY = os.path.join(os.path.dirname(__file__), 'data')
+ONE_CHAN_FCNT = os.path.join(TEST_FCNT_DIRECTORY,
+                             'one_channel_many_traces.fcnt')
+THREE_CHAN_FCNT = os.path.join(TEST_FCNT_DIRECTORY,
+                               'three_chans_six_traces.fcnt')
+FCNT_FILES = [ONE_CHAN_FCNT, THREE_CHAN_FCNT]
 
 
 class TestReadRG16(unittest.TestCase):
-
-    supported_samps = {250, 500, 1000, 2000}
-    supported_number_of_components = {1, 3}
 
     def test_rg16_files_identified(self):
         """
         Ensure the rg16 files are correctly labeled as such.
         """
         for fcnt_file in FCNT_FILES:
-            self.assertTrue(_is_rg16(fcnt_file))
+            with open(fcnt_file, 'rb') as fi:
+                self.assertTrue(_is_rg16(fi))
 
     def test_empty_buffer(self):
         """
@@ -41,155 +44,473 @@ class TestReadRG16(unittest.TestCase):
         buff = io.BytesIO()
         self.assertFalse(_is_rg16(buff))
 
-    def test_supported_samps(self):
+    def test_headonly_option(self):
         """
-        Ensure all the sampling rates are supported.
+        Ensure no data is returned when the option headonly is used.
         """
-        for fcnt_stream in FCNT_STREAMS:
-            for tr in fcnt_stream:
-                self.assertIn(tr.stats.sampling_rate, self.supported_samps)
+        st = read_rg16(THREE_CHAN_FCNT, headonly=True)
+        for tr in st:
+            self.assertEqual(len(tr.data), 0)
+            self.assertNotEqual(tr.stats.npts, 0)
 
-    def test_component_number(self):
+    def test_starttime_endtime_option(self):
         """
-        Ensure there are either 1 type of channel or 3.
+        Test the the options starttime and endtime
         """
-        for fcnt_stream in FCNT_STREAMS:
-            seed_ids = len({tr.id for tr in fcnt_stream})
-            self.assertIn(seed_ids, self.supported_number_of_components)
+        st = read_rg16(THREE_CHAN_FCNT,
+                       starttime=UTCDateTime(2017, 8, 9, 16, 0, 30))
+        self.assertEqual(len(st), 3)
+        for tr in st:
+            self.assertEqual(tr.stats.starttime,
+                             UTCDateTime('2017-08-09T16:00:30.380000Z'))
+            self.assertEqual(tr.stats.endtime,
+                             UTCDateTime('2017-08-09T16:01:00.378000Z'))
+        st = read_rg16(THREE_CHAN_FCNT,
+                       endtime=UTCDateTime(2017, 8, 9, 16, 0, 30))
+        self.assertEqual(len(st), 3)
+        for tr in st:
+            start_date = '2017-08-09T16:00:00.380000Z'
+            self.assertEqual(tr.stats.starttime,
+                             UTCDateTime(start_date))
+            end_date = '2017-08-09T16:00:30.378000Z'
+            self.assertEqual(tr.stats.endtime,
+                             UTCDateTime(end_date))
+        st = read_rg16(THREE_CHAN_FCNT)
+        self.assertEqual(len(st), 6)
+        start_date = '2017-08-09T16:00:00.380000Z'
+        end_date = '2017-08-09T16:00:30.378000Z'
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime(start_date))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime(start_date))
+        self.assertEqual(st[4].stats.starttime,
+                         UTCDateTime(start_date))
+        self.assertEqual(st[0].stats.endtime,
+                         UTCDateTime(end_date))
+        self.assertEqual(st[2].stats.endtime,
+                         UTCDateTime(end_date))
+        self.assertEqual(st[4].stats.endtime,
+                         UTCDateTime(end_date))
+        start_date = '2017-08-09T16:00:30.380000Z'
+        end_date = '2017-08-09T16:01:00.378000Z'
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime(start_date))
+        self.assertEqual(st[3].stats.starttime,
+                         UTCDateTime(start_date))
+        self.assertEqual(st[5].stats.starttime,
+                         UTCDateTime(start_date))
+        self.assertEqual(st[1].stats.endtime,
+                         UTCDateTime(end_date))
+        self.assertEqual(st[3].stats.endtime,
+                         UTCDateTime(end_date))
+        self.assertEqual(st[5].stats.endtime,
+                         UTCDateTime(end_date))
 
-    def test_channel_code(self):
+    def test_cmp_nbr_headers(self):
         """
-        Ensure the channel code is seed compliant.
+        Test to check that the number of headers is correct
         """
-        expected_components = {'2', '3', '4'}
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            (nbr_channel_set_headers, nbr_extended_headers,
+             nbr_external_headers) = _cmp_nbr_headers(fi)
+        self.assertEqual(nbr_channel_set_headers, 3)
+        self.assertEqual(nbr_extended_headers, 3)
+        self.assertEqual(nbr_external_headers, 1)
 
-        for fcnt_stream in FCNT_STREAMS:
-            for tr in fcnt_stream:
-                channel = tr.stats.channel
-                component = channel[-1]
-                self.assertEqual(len(channel), 3)
-                self.assertIn(component, expected_components)
-            seed_ids = len({tr.id for tr in fcnt_stream})
-            self.assertIn(seed_ids, self.supported_number_of_components)
+    def test_cmp_nbr_records(self):
+        """
+        Check the number of records in the file
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            nbr_records = _cmp_nbr_records(fi, 3, True)
+        self.assertEqual(nbr_records, 6)
+        with open(ONE_CHAN_FCNT, 'rb') as fi:
+            nbr_records = _cmp_nbr_records(fi, 1, False)
+        self.assertEqual(nbr_records, 10)
 
-    def test_contacts_north(self):
+    def test_cmp_jump(self):
         """
-        Ensure the contacts north option maps channels and flips Z trace data.
+        Check the number of bytes to jump to reach the next trace block.
         """
-        components = {'Z', 'N', 'E'}
-        for filename, st_default in zip(FCNT_FILES, FCNT_STREAMS):
-            st_mapped = _read_rg16(filename, contacts_north=True)
-            # make sure components have been mapped to principal directions
-            for tr in st_mapped:
-                self.assertIn(tr.stats.channel[-1], components)
-            # make sure z component is reverse of 2
-            tr_2 = st_default.select(component='2')
-            tr_z = st_mapped.select(component='Z')
-            # apparently the one component test file only has channel 3 so
-            # we need to make sure a z component is found in each
-            if len(tr_2) and len(tr_z):
-                self.assertTrue(np.all(tr_2[0].data == -tr_z[0].data))
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            jump = _cmp_jump(fi, 288)
+        self.assertEqual(jump, 60340)
 
-    def test_contacts_north_and_merge(self):
+    def test_make_stats(self):
         """
-        Ensure the "contacts_north" and "merge" parameters can be used
-        together. See #2198.
+        Check function make_stats
         """
-        for filename in FCNT_FILES:
-            st = _read_rg16(filename, contacts_north=True, merge=True)
-            assert isinstance(st, obspy.Stream)
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            stats = _make_stats(fi, 288, False)
+        self.assertIsInstance(stats, obspy.core.trace.Stats)
+        self.assertAlmostEqual(stats.sampling_rate, 500, delta=1e-5)
+        self.assertEqual(stats.network, '1')
+        self.assertEqual(stats.station, '1')
+        self.assertEqual(stats.location, '1')
+        self.assertEqual(stats.channel, 'DPN')
+        self.assertEqual(stats.npts, 15000)
+        self.assertEqual(stats.starttime,
+                         UTCDateTime('2017-08-09T16:00:00.380000Z'))
+        self.assertEqual(stats.endtime,
+                         UTCDateTime('2017-08-09T16:00:30.378000Z'))
+
+    def test_read_trace_header(self):
+        """
+        Test the reading of the trace header.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            trace_header = _read_trace_header(fi, 288)
+        self.assertEqual(trace_header['trace_number'], 1)
+        self.assertEqual(trace_header['trace_edit_code'], 0)
+
+    def test_read_trace_header_1(self):
+        """
+        Test the reading of the trace header 1.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            trace_header_1 = _read_trace_header_1(fi, 288)
+        self.assertEqual(trace_header_1['extended_receiver_line_nbr'], 65536)
+        self.assertEqual(trace_header_1['extended_receiver_point_nbr'], 65536)
+        self.assertEqual(trace_header_1['sensor_type'], 3)
+        self.assertEqual(trace_header_1['trace_count_file'], 1)
+
+    def test_read_trace_header_2(self):
+        """
+        Test the reading of the trace header 2.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            trace_header_2 = _read_trace_header_2(fi, 288)
+        self.assertEqual(trace_header_2['shot_line_nbr'], 2240)
+        self.assertEqual(trace_header_2['shot_point'], 1)
+        self.assertEqual(trace_header_2['shot_point_index'], 0)
+        self.assertAlmostEqual(trace_header_2['shot_point_pre_plan_x'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_2['shot_point_pre_plan_y'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_2['shot_point_final_x'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_2['shot_point_final_y'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_2['shot_point_final_depth'], 0,
+                               delta=1e-5)
+        self.assertEqual(trace_header_2['source_of_final_shot_info'],
+                         'undefined')
+        self.assertEqual(trace_header_2['energy_source_type'], 'undefined')
+
+    def test_read_trace_header_3(self):
+        """
+        Test the reading of the trace header 3.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            trace_header_3 = _read_trace_header_3(fi, 288)
+        self.assertEqual(trace_header_3['epoch_time'],
+                         UTCDateTime('2017-08-09T16:00:00.380000Z'))
+        self.assertAlmostEqual(trace_header_3['shot_skew_time'], 0, delta=1e-5)
+        self.assertAlmostEqual(trace_header_3['time_shift_clock_correction'],
+                               0, delta=1e-5)
+        self.assertAlmostEqual(trace_header_3['remaining_clock_correction'],
+                               0, delta=1e-5)
+
+    def test_read_trace_header_4(self):
+        """
+        Test the reading of the trace header 4.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            trace_header_4 = _read_trace_header_4(fi, 288)
+        self.assertAlmostEqual(trace_header_4['pre_shot_guard_band'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_4['post_shot_guard_band'], 0,
+                               delta=1e-5)
+        self.assertEqual(trace_header_4['preamp_gain'], 24)
+        self.assertEqual(trace_header_4['trace_clipped_flag'], 'not clipped')
+        self.assertEqual(trace_header_4['record_type_code'],
+                         'normal seismic data record')
+        self.assertEqual(trace_header_4['shot_status_flag'], 'normal')
+        self.assertEqual(trace_header_4['external_shot_id'], 0)
+        key = 'post_processed_first_break_pick_time'
+        self.assertAlmostEqual(trace_header_4[key], 0, delta=1e-5)
+        self.assertAlmostEqual(trace_header_4['post_processed_rms_noise'], 0,
+                               delta=1e-5)
+
+    def test_read_trace_header_5(self):
+        """
+        Test the reading of the trace header 5.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            trace_header_5 = _read_trace_header_5(fi, 288)
+        self.assertAlmostEqual(trace_header_5['receiver_point_pre_plan_x'],
+                               469567.2, delta=1e-5)
+        self.assertAlmostEqual(trace_header_5['receiver_point_pre_plan_y'],
+                               5280707.8, delta=1e-5)
+        self.assertAlmostEqual(trace_header_5['receiver_point_final_x'],
+                               469565.2, delta=1e-5)
+        self.assertAlmostEqual(trace_header_5['receiver_point_final_y'],
+                               5280709.7, delta=1e-5)
+        self.assertAlmostEqual(trace_header_5['receiver_point_final_depth'], 0,
+                               delta=1e-5)
+        self.assertEqual(trace_header_5['source_of_final_receiver_info'],
+                         'as laid (no navigation sensor)')
+
+    def test_read_trace_header_6(self):
+        """
+        Test the reading of the trace header 6.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            trace_header_6 = _read_trace_header_6(fi, 288)
+        self.assertAlmostEqual(trace_header_6['tilt_matrix_h1x'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_6['tilt_matrix_h2x'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_6['tilt_matrix_vx'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_6['tilt_matrix_h1y'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_6['tilt_matrix_h2y'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_6['tilt_matrix_vy'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_6['tilt_matrix_h1z'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_6['tilt_matrix_h2z'], 0,
+                               delta=1e-5)
+
+    def test_read_trace_header_7(self):
+        """
+        Test the reading of the trace header 7.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            trace_header_7 = _read_trace_header_7(fi, 288)
+        self.assertAlmostEqual(trace_header_7['tilt_matrix_vz'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_7['azimuth_degree'], 0, delta=1e-5)
+        self.assertAlmostEqual(trace_header_7['pitch_degree'], 0, delta=1e-5)
+        self.assertAlmostEqual(trace_header_7['roll_degree'], 0, delta=1e-5)
+        self.assertAlmostEqual(trace_header_7['remote_unit_temp'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(trace_header_7['remote_unit_humidity'], 0,
+                               delta=1e-5)
+        self.assertEqual(trace_header_7['orientation_matrix_version_nbr'], 0)
+        self.assertEqual(trace_header_7['gimbal_corrections'], 0)
+
+    def test_read_trace_header_8(self):
+        """
+        Test the reading of the trace header 8.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            trace_header_8 = _read_trace_header_8(fi, 288)
+        self.assertEqual(trace_header_8['fairfield_test_analysis_code'], 0)
+        self.assertEqual(trace_header_8['first_test_oscillator_attenuation'],
+                         0)
+        self.assertEqual(trace_header_8['second_test_oscillator_attenuation'],
+                         0)
+        self.assertAlmostEqual(trace_header_8['start_delay'], 0, delta=1e-5)
+        self.assertEqual(trace_header_8['dc_filter_flag'], 0)
+        self.assertAlmostEqual(trace_header_8['dc_filter_frequency'], 0,
+                               delta=1e-5)
+        self.assertEqual(trace_header_8['preamp_path'],
+                         'external input selected')
+        self.assertEqual(trace_header_8['test_oscillator_signal_type'],
+                         'test oscillator path open')
+
+    def test_read_trace_header_9(self):
+        """
+        Test the reading of the trace header 9.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            trace_header_9 = _read_trace_header_9(fi, 288)
+        self.assertEqual(trace_header_9['test_signal_generator_signal_type'],
+                         'pattern is address ramp')
+        key = 'test_signal_generator_frequency_1'
+        self.assertAlmostEqual(trace_header_9[key], 0, delta=1e-5)
+        key = 'test_signal_generator_frequency_2'
+        self.assertAlmostEqual(trace_header_9[key], 0, delta=1e-5)
+        self.assertEqual(trace_header_9['test_signal_generator_amplitude_1'],
+                         0)
+        self.assertEqual(trace_header_9['test_signal_generator_amplitude_2'],
+                         0)
+        key = 'test_signal_generator_duty_cycle_percentage'
+        self.assertAlmostEqual(trace_header_9[key], 0, delta=1e-5)
+        key = 'test_signal_generator_active_duration'
+        self.assertAlmostEqual(trace_header_9[key], 0, delta=1e-5)
+        key = 'test_signal_generator_activation_time'
+        self.assertAlmostEqual(trace_header_9[key], 0, delta=1e-5)
+
+    def test_read_trace_header_10(self):
+        """
+        Test the reading of the trace header 10.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            trace_header_10 = _read_trace_header_10(fi, 288)
+        self.assertEqual(trace_header_10['test_signal_generator_idle_level'],
+                         0)
+        self.assertEqual(trace_header_10['test_signal_generator_active_level'],
+                         0)
+        self.assertEqual(trace_header_10['test_signal_generator_pattern_1'], 0)
+        self.assertEqual(trace_header_10['test_signal_generator_pattern_2'], 0)
+
+    def test_make_trace(self):
+        """
+        Test if the ten first samples of the waveform are read correctly
+        and if the output is a Trace object.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            trace = _make_trace(fi, 288, False, False)
+        expected = np.array([-0.18864873, -0.30852857, -0.35189095,
+                             -0.22547323, -0.12023376, -0.14336781,
+                             -0.11712314,  0.04060567,  0.18024819,
+                             0.17769636])
+        all_close = np.allclose(trace.data[:len(expected)], expected)
+        self.assertTrue(all_close)
+        self.assertIsInstance(trace, obspy.core.trace.Trace)
 
     def test_can_write(self):
         """
-        Ensure the resulting stream can be written as mseed.
+        Ensure the result of read_rg16 is a stream object and that
+        it can be written as mseed.
         """
-        for fcnt_stream in FCNT_STREAMS:
-            bytstr = io.BytesIO()
-            # test passes if this doesn't raise
-            try:
-                fcnt_stream.write(bytstr, 'mseed')
-            except Exception:
-                self.fail('Failed to write to mseed!')
+        st = read_rg16(THREE_CHAN_FCNT)
+        self.assertIsInstance(st, obspy.core.stream.Stream)
+        bytstr = io.BytesIO()
+        # test passes if this doesn't raise
+        try:
+            st.write(bytstr, 'mseed')
+        except Exception:
+            self.fail('Failed to write to mseed!')
 
-    def test_can_read_from_buffer(self):
+    def test_read_general_header_1(self):
         """
-        Ensure each stream can be read from a buffer.
+        Test the reading of the general header 1.
         """
-        for fcnt_file in FCNT_FILES:
-            with open(fcnt_file, 'rb') as fi:
-                buff = io.BytesIO(fi.read())
-            buff.seek(0)
-            try:
-                _read_rg16(buff, 'mseed')
-            except Exception:
-                self.fail('failed to read from bytesIO')
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            header_1 = _read_general_header_1(fi)
+        self.assertEqual(header_1['base_scan_interval'], 32)
+        self.assertEqual(header_1['file_number'], 1)
+        self.assertEqual(header_1['general_constant'], 0)
+        self.assertEqual(header_1['julian_day'], 221)
+        self.assertEqual(header_1['manufacturer_code'], 20)
+        self.assertEqual(header_1['manufacturer_serial_number'], 0)
+        self.assertEqual(header_1['nbr_add_general_header'], 1)
+        self.assertEqual(header_1['nbr_channel_set'], 3)
+        self.assertEqual(header_1['nbr_skew_block'], 0)
+        self.assertEqual(header_1['polarity_code'], 0)
+        self.assertEqual(header_1['record_type'], 0)
+        self.assertEqual(header_1['sample_format_code'], 8058)
+        self.assertEqual(header_1['scan_type_per_record'], 1)
+        self.assertEqual(header_1['time_slice'], 160000)
+        self.assertEqual(header_1['time_slice_year'], 17)
 
-    def test_no_empty_streams(self):
+    def test_read_general_header_2(self):
         """
-        There should be no empty streams.
+        Test the reading of the general header 2.
         """
-        for st in FCNT_STREAMS:
-            for tr in st:
-                self.assertGreater(len(tr.data), 0)
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            header_2 = _read_general_header_2(fi)
+        self.assertEqual(header_2['extended_channel_sets_per_scan_type'], 3)
+        self.assertEqual(header_2['extended_file_number'], 1)
+        self.assertEqual(header_2['extended_header_blocks'], 3)
+        self.assertEqual(header_2['extended_record_length'], 30000)
+        self.assertEqual(header_2['external_header_blocks'], 1)
+        self.assertEqual(header_2['general_header_block_number'], 2)
+        self.assertEqual(header_2['version_number'], 262)
 
-    def test_no_data(self):
+    def test_read_channel_sets(self):
         """
-        Ensure no data is returned when the option is used.
+        Test that all the channel sets are read.
         """
-        for fcnt_file in FCNT_FILES:
-            st = _read_rg16(fcnt_file, headonly=True)
-            for tr in st:
-                self.assertEqual(len(tr.data), 0)
-                self.assertNotEqual(tr.stats.npts, 0)
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            channel_sets = _read_channel_sets(fi)
+        self.assertEqual(len(channel_sets), 3)
 
-    def test_starttime_endtime(self):
+    def test_read_channel_set(self):
         """
-        Ensure starttimes and endtimes filter traces returned.
+        Test the reading of the first channel set
         """
-        for fcnt_file in FCNT_FILES:
-            # get good times to filter on
-            st = _read_rg16(fcnt_file, headonly=True)
-            stats = st[0].stats
-            t1, t2 = stats.starttime.timestamp, stats.endtime.timestamp
-            tpoint = obspy.UTCDateTime((t1 + t2) / 2.)
-            # this should only return one trace for each channel
-            st = _read_rg16(fcnt_file, starttime=tpoint, endtime=tpoint)
-            ids = {tr.id for tr in st}
-            self.assertEqual(len(st), len(ids))
-            # make sure tpoint is in the time range
-            start = st[0].stats.starttime
-            end = st[0].stats.endtime
-            self.assertLess(start, tpoint)
-            self.assertLess(tpoint, end)
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            channel_set_1 = _read_channel_set(fi, 64)
+        self.assertEqual(channel_set_1['RU_channel_number'], 1)
+        self.assertEqual(channel_set_1['alias_filter_frequency'], 207)
+        self.assertEqual(channel_set_1['alias_filter_slope'], 320)
+        self.assertEqual(channel_set_1['array_forming'], 0)
+        self.assertAlmostEqual(channel_set_1['channel_set_end_time'],
+                               30, delta=1e-5)
+        self.assertEqual(channel_set_1['channel_set_number'], 1)
+        self.assertAlmostEqual(channel_set_1['channel_set_start_time'],
+                               0, delta=1e-5)
+        self.assertEqual(channel_set_1['channel_type_code'], 1)
+        self.assertEqual(channel_set_1['extended_channel_set_number'], 1)
+        self.assertEqual(channel_set_1['extended_header_flag'], 0)
+        self.assertEqual(channel_set_1['gain_control_type'], 3)
+        self.assertEqual(channel_set_1['low_cut_filter_freq'], 0)
+        self.assertEqual(channel_set_1['low_cut_filter_slope'], 6)
+        self.assertEqual(channel_set_1['mp_factor_descaler_multiplier'], 0)
+        self.assertEqual(channel_set_1['nbr_32_byte_trace_header_extension'],
+                         10)
+        self.assertEqual(channel_set_1['nbr_channels_in_channel_set'], 2)
+        self.assertAlmostEqual(channel_set_1['notch_2_filter_freq'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(channel_set_1['notch_3_filter_freq'], 0,
+                               delta=1e-5)
+        self.assertAlmostEqual(channel_set_1['notch_filter_freq'], 0,
+                               delta=1e-5)
+        self.assertEqual(channel_set_1['optionnal_MP_factor'], 0)
+        self.assertEqual(channel_set_1['scan_type_number'], 1)
+        self.assertEqual(channel_set_1['vertical_stack_size'], 1)
 
-    def test_merge(self):
+    def test_read_extended_header_1(self):
         """
-        Ensure the merge option of read_rg16 merges all contiguous traces
-        together.
+        Test the reading of the extended header 1
         """
-        for fcnt_file in FCNT_FILES:
-            st_merged = _read_rg16(fcnt_file, merge=True)
-            st = _read_rg16(fcnt_file).merge()
-            self.assertEqual(len(st), len(st_merged))
-            self.assertEqual(st, st_merged)
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            extended_header_1 = _read_extended_header_1(fi, 160)
+        self.assertEqual(extended_header_1['deployment_time'],
+                         UTCDateTime('2017-08-09T15:46:32.230000Z'))
+        self.assertEqual(extended_header_1['id_ru'], 1219770716358969536)
+        self.assertEqual(extended_header_1['pick_up_time'],
+                         UTCDateTime('2017-08-09T20:06:58.120000Z'))
+        self.assertEqual(extended_header_1['start_time_ru'],
+                         UTCDateTime('2017-08-09T15:52:31.366000Z'))
 
-    def test_values(self):
+    def test_read_extended_header_2(self):
         """
-        Test the first few values of one of the files.
+        Test the reading of the extended header 2.
         """
-        st = FCNT_DICT['one_channel_many_traces.fcnt']
-        expected = np.array([
-            -0.00163913, -0.00409782, -0.00834465, -0.00439584, -0.00394881,
-            -0.00238419, -0.0013411, 0.00052154, 0.00789762, 0.00841916,
-            0.00670552, 0.00655651, 0.00759959, 0.00685454, 0.00715256
-        ])
-        all_close = np.allclose(st[0].data[:len(expected)], expected)
-        self.assertTrue(all_close)
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            extended_header_2 = _read_extended_header_2(fi, 192)
+        self.assertAlmostEqual(extended_header_2['acquisition_drift_window'],
+                               0, delta=1e-5)
+        self.assertAlmostEqual(extended_header_2['clock_drift'], 0, delta=1e-5)
+        self.assertEqual(extended_header_2['clock_stop_method'], 'normal')
+        self.assertEqual(extended_header_2['data_collection_method'],
+                         'continuous')
+        self.assertEqual(extended_header_2['data_decimation'], 'not decimated')
+        self.assertEqual(extended_header_2['file_number'], 1)
+        self.assertEqual(extended_header_2['frequency_drift'],
+                         'within specification')
+        self.assertEqual(extended_header_2['nbr_files'], 1)
+        self.assertEqual(extended_header_2['nbr_time_slices'], 2)
+        key = 'number_decimation_filter_coefficient'
+        self.assertEqual(extended_header_2[key], 0)
+        self.assertEqual(extended_header_2['original_base_scan_interval'], 0)
+        self.assertEqual(extended_header_2['oscillator_type'], 'disciplined')
 
+    def test_read_extended_header_3(self):
+        """
+        Test the reading of the extended header 3.
+        """
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            extended_header_3 = _read_extended_header_3(fi, 224)
+        self.assertEqual(extended_header_3['first_shot_line'], 0)
+        self.assertEqual(extended_header_3['first_shot_point'], 0)
+        self.assertEqual(extended_header_3['first_shot_point_index'], 0)
+        self.assertEqual(extended_header_3['last_shot_line'], 0)
+        self.assertEqual(extended_header_3['last_shot_point'], 0)
+        self.assertEqual(extended_header_3['last_shot_point_index'], 0)
+        self.assertEqual(extended_header_3['receiver_line_number'], 1)
+        self.assertEqual(extended_header_3['receiver_point'], 1)
+        self.assertEqual(extended_header_3['receiver_point_index'], 1)
 
-def suite():
-    return unittest.makeSuite(TestReadRG16, 'test')
-
+    def suite():
+        return unittest.makeSuite(TestReadRG16, 'test')
 
 if __name__ == '__main__':
     unittest.main()
