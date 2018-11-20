@@ -3,16 +3,16 @@ from future.utils import native_str as nstr
 import time
 
 import numpy as np
-from obspy.core.compatibility import is_bytes_buffer
 from obspy.core import Stream, Trace, Stats, UTCDateTime
-from obspy.io.rg16.util import _read
+from obspy.io.rg16.util import _read, _open_file
 
 
+@_open_file
 def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
                merge=False, contacts_north=False, details=False):
     """
     Read Fairfield Nodal's Receiver Gather File Format version 1.6-1.
-    :param filename: a path to the file to read or a file object.
+    :param filename: path to the rg16 file or a file object.
     :type filename: str, buffer
     :param headonly: If True don't read data, only main informations
      contained in the headers of the trace block are read.
@@ -42,56 +42,19 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
         local_time = time.localtime()
         endtime = UTCDateTime(local_time[0], local_time[1], local_time[2],
                               local_time[3], local_time[4], local_time[5])
-    if is_bytes_buffer(filename):
-        return _internal_read_rg16(filename, headonly, starttime, endtime,
-                                   merge, contacts_north, details)
-    else:
-        with open(filename, 'rb') as fi:
-            return _internal_read_rg16(fi, headonly, starttime, endtime,
-                                       merge, contacts_north, details)
-
-
-def _internal_read_rg16(fi, headonly, starttime, endtime, merge,
-                        contacts_north, details):
-    """
-    Read Fairfield Nodal's Receiver Gather File Format version 1.6-1.
-    :param fi: a file object.
-    :type fi: buffer
-    :param headonly: If True don't read data, only main informations
-     contained in the headers of the trace block are read.
-    :type headonly: optional, bool
-    :param starttime: If not None dont read traces that start before starttime.
-    :type starttime: optional, obspy.UTCDateTime
-    :param endtime: If not None dont read traces that start after endtime.
-    :type endtime: optional, obspy.UTCDateTime
-    :param merge: If True merge contiguous data blocks as they are found. For
-     continuous data files having 100,000+ traces this will create
-     more manageable streams.
-    :type merge: bool
-    :param contacts_north: If this parameter is set to True, it will map the
-    components to Z (1C, 3C), N (3C), and E (3C) as well as correct
-    the polarity for the vertical component.
-    :type contacts_north: bool
-    :param details: If True, all the informations contained in the headers
-     are read).
-    :type details: optional, bool
-    :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
-    Frequencies are expressed in hertz and time is expressed in seconds
-    (except for date).
-    """
     (nbr_channel_set_headers, nbr_extended_headers,
-     nbr_external_headers) = _cmp_nbr_headers(fi)
-    nbr_records = _cmp_nbr_records(fi)
+     nbr_external_headers) = _cmp_nbr_headers(filename)
+    nbr_records = _cmp_nbr_records(filename)
     trace_block_start = 32 * (2 + nbr_channel_set_headers +
                               nbr_extended_headers + nbr_external_headers)
     traces = []  # list to store traces
     for i in range(0, nbr_records):
-        nbr_bytes_trace_block = _cmp_jump(fi, trace_block_start)
-        starttime_block = _read(fi, trace_block_start + 20 + 2*32, 8,
+        nbr_bytes_trace_block = _cmp_jump(filename, trace_block_start)
+        starttime_block = _read(filename, trace_block_start + 20 + 2*32, 8,
                                 'binary') / 1e6
         if starttime.timestamp <= starttime_block and\
            starttime_block < endtime.timestamp:
-            trace = _make_trace(fi, trace_block_start, headonly,
+            trace = _make_trace(filename, trace_block_start, headonly,
                                 contacts_north, details)
             traces.append(trace)
         trace_block_start += nbr_bytes_trace_block
@@ -602,73 +565,42 @@ def _read_trace_header_10(fi, trace_block_start):
     return dict_header_10
 
 
+@_open_file
 def _is_rg16(filename):
     """
-    Determine if a file is a rg16 file or not.
-    :param filename: a path to the file to check or a rg16 file object.
-    :type filename: str, buffer.
-    :rtype: bool
-    :return: True if the file is a rg16 file.
-    """
-    if is_bytes_buffer(filename):
-        return _internal_is_rg16(filename)
-    else:
-        with open(filename, "rb") as fi:
-            return _internal_is_rg16(fi)
-
-
-def _internal_is_rg16(fi):
-    """
-    Determine if a file object fi is a rg16 file.
-    :param fi: a file object.
-    :type fi: buffer
+    Determine if a file is a rg16 file.
+    :param filename: a path to a file or a file object
+    :type filename: str, buffer
     :rtype: bool
     :return: True if the file object is a rg16 file.
     """
     try:
-        sample_format = _read(fi, 2, 2, 'bcd')
-        manufacturer_code = _read(fi, 16, 1, 'bcd')
-        version = _read(fi, 42, 2, 'binary')
+        sample_format = _read(filename, 2, 2, 'bcd')
+        manufacturer_code = _read(filename, 16, 1, 'bcd')
+        version = _read(filename, 42, 2, 'binary')
     except ValueError:  # if file too small
         return False
     con1 = version == 262 and sample_format == 8058
     return con1 and manufacturer_code == 20
 
 
+@_open_file
 def _read_initial_headers(filename):
     """
     Extract all the informations contained in the headers located before data,
-    at the beginning of the rg16 file.
-    :param filename : a path to the rg16 file or a rg16 file object.
+    at the beginning of the rg16 file object.
+    :param filename : a path to a rg16 file or a rg16 file object.
     :type filename: str, buffer
     :return: a dictionnary containing all the informations
              in the initial headers
     Frequencies are expressed in hertz and time is expressed in seconds
     (except for the date).
     """
-    if is_bytes_buffer(filename):
-        return _internal_read_initial_headers(filename)
-    else:
-        with open(filename, 'rb') as fi:
-            return _internal_read_initial_headers(fi)
-
-
-def _internal_read_initial_headers(fi):
-    """
-    Extract all the informations contained in the headers located before data,
-    at the beginning of the rg16 file object.
-    :param fi : a rg16 file object.
-    :type fi: buffer
-    :return: a dictionnary containing all the informations
-             in the initial headers
-    Frequencies are expressed in hertz and time is expressed in seconds
-    (except for the date).
-    """
     headers_content = {}
-    headers_content['general_header_1'] = _read_general_header_1(fi)
-    headers_content['general_header_2'] = _read_general_header_2(fi)
-    headers_content['channel_sets_descriptor'] = _read_channel_sets(fi)
-    headers_content['extended_headers'] = _read_extended_headers(fi)
+    headers_content['general_header_1'] = _read_general_header_1(filename)
+    headers_content['general_header_2'] = _read_general_header_2(filename)
+    headers_content['channel_sets_descriptor'] = _read_channel_sets(filename)
+    headers_content['extended_headers'] = _read_extended_headers(filename)
     return headers_content
 
 
