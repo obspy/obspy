@@ -1,16 +1,19 @@
+import copy
+from future.utils import native_str as nstr
 import time
 
 import numpy as np
+from obspy.core.compatibility import is_bytes_buffer
 from obspy.core import Stream, Trace, Stats, UTCDateTime
 from obspy.io.rg16.util import _read
 
 
-def read_rg16(filename, headonly=False, starttime=None, endtime=None,
-              details=False, three_components=True):
+def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
+               merge=False, contacts_north=False, details=False):
     """
     Read Fairfield Nodal's Receiver Gather File Format version 1.6-1.
-    :param filename: A path to the fcnt file.
-    :type filename: str
+    :param filename: a path to the file to read or a file object.
+    :type filename: str, buffer
     :param headonly: If True don't read data, only main informations
      contained in the headers of the trace block are read.
     :type headonly: optional, bool
@@ -18,12 +21,17 @@ def read_rg16(filename, headonly=False, starttime=None, endtime=None,
     :type starttime: optional, obspy.UTCDateTime
     :param endtime: If not None dont read traces that start after endtime.
     :type endtime: optional, obspy.UTCDateTime
+    :param merge: If True merge contiguous data blocks as they are found. For
+     continuous data files having 100,000+ traces this will create
+     more manageable streams.
+    :type merge: bool
+    :param contacts_north: If this parameter is set to True, it will map the
+    components to Z (1C, 3C), N (3C), and E (3C) as well as correct
+    the polarity for the vertical component.
+    :type contacts_north: bool
     :param details: If True, all the informations contained in the header
      of the trace block are read).
     :type details: optional, bool
-    :param three_components: Setting this parameter to False indicates the file
-     contains 1C traces.
-    :type three_components: optional, bool
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
     Frequencies are expressed in hertz and time is expressed in seconds
     (except for date).
@@ -34,25 +42,61 @@ def read_rg16(filename, headonly=False, starttime=None, endtime=None,
         local_time = time.localtime()
         endtime = UTCDateTime(local_time[0], local_time[1], local_time[2],
                               local_time[3], local_time[4], local_time[5])
-    with open(filename, 'rb') as fi:
-        (nbr_channel_set_headers, nbr_extended_headers,
-         nbr_external_headers) = _cmp_nbr_headers(fi)
-        nbr_records = _cmp_nbr_records(fi, nbr_channel_set_headers,
-                                       three_components)
-        trace_block_start = 32 * (2 + nbr_channel_set_headers +
-                                  nbr_extended_headers +
-                                  nbr_external_headers)
-        traces = []  # list to store traces
-        for i in range(0, nbr_records):
-            nbr_bytes_trace_block = _cmp_jump(fi, trace_block_start)
-            starttime_block = _read(fi, trace_block_start + 20 + 2*32, 8,
-                                    'binary') / 1e6
-            if starttime.timestamp <= starttime_block and\
-               starttime_block < endtime.timestamp:
-                trace = _make_trace(fi, trace_block_start, headonly,
-                                    details)
-                traces.append(trace)
-            trace_block_start += nbr_bytes_trace_block
+    if is_bytes_buffer(filename):
+        return _internal_read_rg16(filename, headonly, starttime, endtime,
+                                   merge, contacts_north, details)
+    else:
+        with open(filename, 'rb') as fi:
+            return _internal_read_rg16(fi, headonly, starttime, endtime,
+                                       merge, contacts_north, details)
+
+
+def _internal_read_rg16(fi, headonly, starttime, endtime, merge,
+                        contacts_north, details):
+    """
+    Read Fairfield Nodal's Receiver Gather File Format version 1.6-1.
+    :param fi: a file object.
+    :type fi: buffer
+    :param headonly: If True don't read data, only main informations
+     contained in the headers of the trace block are read.
+    :type headonly: optional, bool
+    :param starttime: If not None dont read traces that start before starttime.
+    :type starttime: optional, obspy.UTCDateTime
+    :param endtime: If not None dont read traces that start after endtime.
+    :type endtime: optional, obspy.UTCDateTime
+    :param merge: If True merge contiguous data blocks as they are found. For
+     continuous data files having 100,000+ traces this will create
+     more manageable streams.
+    :type merge: bool
+    :param contacts_north: If this parameter is set to True, it will map the
+    components to Z (1C, 3C), N (3C), and E (3C) as well as correct
+    the polarity for the vertical component.
+    :type contacts_north: bool
+    :param details: If True, all the informations contained in the header
+     of the trace block are read).
+    :type details: optional, bool
+    :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
+    Frequencies are expressed in hertz and time is expressed in seconds
+    (except for date).
+    """
+    (nbr_channel_set_headers, nbr_extended_headers,
+     nbr_external_headers) = _cmp_nbr_headers(fi)
+    nbr_records = _cmp_nbr_records(fi)
+    trace_block_start = 32 * (2 + nbr_channel_set_headers +
+                              nbr_extended_headers + nbr_external_headers)
+    traces = []  # list to store traces
+    for i in range(0, nbr_records):
+        nbr_bytes_trace_block = _cmp_jump(fi, trace_block_start)
+        starttime_block = _read(fi, trace_block_start + 20 + 2*32, 8,
+                                'binary') / 1e6
+        if starttime.timestamp <= starttime_block and\
+           starttime_block < endtime.timestamp:
+            trace = _make_trace(fi, trace_block_start, headonly,
+                                contacts_north, details)
+            traces.append(trace)
+        trace_block_start += nbr_bytes_trace_block
+    if merge:
+        traces = _quick_merge(traces)
     return Stream(traces=traces)
 
 
@@ -69,17 +113,20 @@ def _cmp_nbr_headers(fi):
             nbr_external_headers)
 
 
-def _cmp_nbr_records(fi, nbr_channel_set_headers, three_components):
+def _cmp_nbr_records(fi):
     """
     Return the number of records in the file (ie number of time slices
     multiplied by the number of components).
     """
-    start_byte = 32 * (2 + nbr_channel_set_headers) + 32
-    nbr_time_slices = _read(fi, start_byte + 16, 4, 'binary')
-    if three_components:
-        nbr_records = 3*nbr_time_slices
-    else:
-        nbr_records = nbr_time_slices
+    initial_header = read_initial_headers(fi)
+    channel_sets_descriptor = initial_header['channel_sets_descriptor']
+    channels_number = set()
+    for _, val in channel_sets_descriptor.items():
+        channels_number.add(val['RU_channel_number'])
+    nbr_component = len(channels_number)
+    extended_header_2 = initial_header['extended_headers']['2']
+    nbr_time_slices = extended_header_2['nbr_time_slices']
+    nbr_records = nbr_time_slices * nbr_component
     return nbr_records
 
 
@@ -95,11 +142,12 @@ def _cmp_jump(fi, trace_block_start):
     return nbr_bytes_trace_block
 
 
-def _make_trace(fi, trace_block_start, headonly, details):
+def _make_trace(fi, trace_block_start, headonly, standard_orientation,
+                details):
     """
     Make obspy trace from a trace block (header + trace)
     """
-    stats = _make_stats(fi, trace_block_start, details)
+    stats = _make_stats(fi, trace_block_start, standard_orientation, details)
     if headonly:
         data = np.array([])
     else:  # read trace
@@ -111,10 +159,11 @@ def _make_trace(fi, trace_block_start, headonly, details):
         data = _read(fi, trace_start, nbr_bytes_trace, 'IEEE')
         if stats.channel[-1] == 'Z':
             data = -data
+            data = data.astype('>f4')
     return Trace(data=data, header=stats)
 
 
-def _make_stats(fi, trace_block_start, details):
+def _make_stats(fi, trace_block_start, standard_orientation, details):
     """
     Make Stats object from information contained in the header of the trace.
     """
@@ -127,7 +176,8 @@ def _make_stats(fi, trace_block_start, details):
     # mapping for "standard_orientation"
     standard_component_map = {'2': 'Z', '3': 'N', '4': 'E'}
     component = str(_read(fi, trace_block_start + 40, 1, 'binary'))
-    component = standard_component_map[component]
+    if standard_orientation:
+        component = standard_component_map[component]
     chan = band_map[sampling_rate] + instrument_code + component
     npts = _read(fi, trace_block_start + 27, 3, 'binary')
     start_time = _read(fi, trace_block_start + 20 + 2*32, 8, 'binary') / 1e6
@@ -154,6 +204,75 @@ def _make_stats(fi, trace_block_start, details):
                                                          nbr_tr_header_block)
             statsdict.update(stats_trace_header_ext)
     return Stats(statsdict)
+
+
+def _quick_merge(traces, small_number=.000001):
+    """
+    Specialized function for merging traces produced by _read_rg16.
+    Requires that traces are of the same datatype, have the same
+    sampling_rate, and dont have data overlaps.
+    :param traces: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
+    :param small_number:
+        A small number for determining if traces should be merged. Should be
+        much less than one sample spacing.
+    :return: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
+    """
+    # make sure sampling rates are all the same
+    assert len({tr.stats.sampling_rate for tr in traces}) == 1
+    assert len({tr.data.dtype for tr in traces}) == 1
+    sampling_rate = traces[0].stats.sampling_rate
+    diff = 1. / sampling_rate + small_number
+    # get the array
+    ar, trace_ar = _trace_list_to_rec_array(traces)
+    # get groups of traces that can be merged together
+    group = _get_trace_groups(ar, diff)
+    group_numbers = np.unique(group)
+    out = [None] * len(group_numbers)  # init output list
+    for index, gnum in enumerate(group_numbers):
+        trace_ar_to_merge = trace_ar[group == gnum]
+        new_data = np.concatenate(list(trace_ar_to_merge['data']))
+        # get updated stats object
+        new_stats = copy.deepcopy(trace_ar_to_merge['stats'][0])
+        new_stats.npts = len(new_data)
+        out[index] = Trace(data=new_data, header=new_stats)
+    return out
+
+
+def _trace_list_to_rec_array(traces):
+    """
+    return a recarray from the trace list. These are seperated into
+    two arrays due to a weird issue with numpy.sort returning and error
+    set.
+    """
+    # get the id, starttime, endtime into a recarray
+    # rec array column names must be native strings due to numpy issue 2407
+    dtype1 = [(nstr('id'), np.object), (nstr('starttime'), float),
+              (nstr('endtime'), float)]
+    dtype2 = [(nstr('data'), np.object), (nstr('stats'), np.object)]
+    data1 = [(tr.id, tr.stats.starttime.timestamp, tr.stats.endtime.timestamp)
+             for tr in traces]
+    data2 = [(tr.data, tr.stats) for tr in traces]
+    ar1 = np.array(data1, dtype=dtype1)  # array of id, starttime, endtime
+    ar2 = np.array(data2, dtype=dtype2)  # array of data, stats objects
+    #
+    sort_index = np.argsort(ar1, order=['id', 'starttime'])
+    return ar1[sort_index], ar2[sort_index]
+
+
+def _get_trace_groups(ar, diff):
+    """
+    Return an array of ints where each element corresponds to a pre-merged
+    trace row. All trace rows with the same group number can be merged.
+    """
+    # get a bool of if ids are the same as the next row down
+    ids_different = np.ones(len(ar), dtype=bool)
+    ids_different[1:] = ar['id'][1:] != ar['id'][:-1]
+    # get bool of endtimes within one sample of starttime of next row
+    disjoint = np.zeros(len(ar), dtype=bool)
+    start_end_diffs = ar['starttime'][1:] - ar['endtime'][:-1]
+    disjoint[:-1] = np.abs(start_end_diffs) <= diff
+    # get groups (not disjoint, not different ids)
+    return np.cumsum(ids_different & disjoint)
 
 
 def _read_trace_headers(fi, trace_block_start, nbr_trace_header):
@@ -479,12 +598,28 @@ def _read_trace_header_10(fi, trace_block_start):
     return dict_header_10
 
 
-def _is_rg16(fi, **kwargs):
+def _is_rg16(filename):
     """
-    Determine if a buffer fi contains an rg16 file.
-    :param fi: A buffer of an opened file.
+    Determine if a file is a rg16 file or not.
+    :param filename: a path to the file to check or a rg16 file object.
+    :type filename: str, buffer.
+    :rtype: bool
+    :return: True if the file is a rg16 file.
+    """
+    if is_bytes_buffer(filename):
+        return _internal_is_rg16(filename)
+    else:
+        with open(filename, "rb") as fi:
+            return _internal_is_rg16(fi)
+
+
+def _internal_is_rg16(fi):
+    """
+    Determine if a file object fi is a rg16 file.
+    :param fi: a file object.
     :type fi: buffer
-    :return: bool
+    :rtype: bool
+    :return: True if the file object is a rg16 file.
     """
     try:
         sample_format = _read(fi, 2, 2, 'bcd')
@@ -499,20 +634,37 @@ def _is_rg16(fi, **kwargs):
 def read_initial_headers(filename):
     """
     Extract all the informations contained in the headers located before data,
-    at the beginning of the fcnt file.
-    :param filename : A path to the fcnt file.
-    :type filename: str
+    at the beginning of the rg16 file.
+    :param filename : a path to the rg16 file or a rg16 file object.
+    :type filename: str, buffer
+    :return: a dictionnary containing all the informations
+             in the initial headers
+    Frequencies are expressed in hertz and time is expressed in seconds
+    (except for the date).
+    """
+    if is_bytes_buffer(filename):
+        return _internal_read_initial_headers(filename)
+    else:
+        with open(filename, 'rb') as fi:
+            return _internal_read_initial_headers(fi)
+
+
+def _internal_read_initial_headers(fi):
+    """
+    Extract all the informations contained in the headers located before data,
+    at the beginning of the rg16 file object.
+    :param fi : a rg16 file object.
+    :type fi: buffer
     :return: a dictionnary containing all the informations
              in the initial headers
     Frequencies are expressed in hertz and time is expressed in seconds
     (except for the date).
     """
     headers_content = {}
-    with open(filename, 'rb') as fi:
-        headers_content['general_header_1'] = _read_general_header_1(fi)
-        headers_content['general_header_2'] = _read_general_header_2(fi)
-        headers_content['channel_sets_descriptor'] = _read_channel_sets(fi)
-        headers_content['extended_headers'] = _read_extended_headers(fi)
+    headers_content['general_header_1'] = _read_general_header_1(fi)
+    headers_content['general_header_2'] = _read_general_header_2(fi)
+    headers_content['channel_sets_descriptor'] = _read_channel_sets(fi)
+    headers_content['extended_headers'] = _read_extended_headers(fi)
     return headers_content
 
 

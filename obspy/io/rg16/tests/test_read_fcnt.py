@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 import obspy
 from obspy import UTCDateTime
-from obspy.io.rg16.core import (read_rg16, _is_rg16, _cmp_nbr_headers,
+from obspy.io.rg16.core import (_read_rg16, _is_rg16, _cmp_nbr_headers,
                                 _cmp_nbr_records, _cmp_jump, _make_stats,
                                 _read_trace_header, _read_trace_header_1,
                                 _read_trace_header_2, _read_trace_header_3,
@@ -34,6 +34,7 @@ class TestReadRG16(unittest.TestCase):
         Ensure the rg16 files are correctly labeled as such.
         """
         for fcnt_file in FCNT_FILES:
+            self.assertTrue(_is_rg16(fcnt_file))
             with open(fcnt_file, 'rb') as fi:
                 self.assertTrue(_is_rg16(fi))
 
@@ -48,7 +49,7 @@ class TestReadRG16(unittest.TestCase):
         """
         Ensure no data is returned when the option headonly is used.
         """
-        st = read_rg16(THREE_CHAN_FCNT, headonly=True)
+        st = _read_rg16(THREE_CHAN_FCNT, headonly=True)
         for tr in st:
             self.assertEqual(len(tr.data), 0)
             self.assertNotEqual(tr.stats.npts, 0)
@@ -57,16 +58,16 @@ class TestReadRG16(unittest.TestCase):
         """
         Test the the options starttime and endtime
         """
-        st = read_rg16(THREE_CHAN_FCNT,
-                       starttime=UTCDateTime(2017, 8, 9, 16, 0, 30))
+        st = _read_rg16(THREE_CHAN_FCNT,
+                        starttime=UTCDateTime(2017, 8, 9, 16, 0, 30))
         self.assertEqual(len(st), 3)
         for tr in st:
             self.assertEqual(tr.stats.starttime,
                              UTCDateTime('2017-08-09T16:00:30.380000Z'))
             self.assertEqual(tr.stats.endtime,
                              UTCDateTime('2017-08-09T16:01:00.378000Z'))
-        st = read_rg16(THREE_CHAN_FCNT,
-                       endtime=UTCDateTime(2017, 8, 9, 16, 0, 30))
+        st = _read_rg16(THREE_CHAN_FCNT,
+                        endtime=UTCDateTime(2017, 8, 9, 16, 0, 30))
         self.assertEqual(len(st), 3)
         for tr in st:
             start_date = '2017-08-09T16:00:00.380000Z'
@@ -75,7 +76,7 @@ class TestReadRG16(unittest.TestCase):
             end_date = '2017-08-09T16:00:30.378000Z'
             self.assertEqual(tr.stats.endtime,
                              UTCDateTime(end_date))
-        st = read_rg16(THREE_CHAN_FCNT)
+        st = _read_rg16(THREE_CHAN_FCNT)
         self.assertEqual(len(st), 6)
         start_date = '2017-08-09T16:00:00.380000Z'
         end_date = '2017-08-09T16:00:30.378000Z'
@@ -106,6 +107,26 @@ class TestReadRG16(unittest.TestCase):
         self.assertEqual(st[5].stats.endtime,
                          UTCDateTime(end_date))
 
+    def test_merge(self):
+        """
+        Ensure the merge option of read_rg16 merges all contiguous traces
+        together.
+        """
+        for fcnt_file in FCNT_FILES:
+            st_merged = _read_rg16(fcnt_file, merge=True)
+            st = _read_rg16(fcnt_file).merge()
+            self.assertEqual(len(st), len(st_merged))
+            self.assertEqual(st, st_merged)
+
+    def test_contacts_north_and_merge(self):
+        """
+        Ensure the "contacts_north" and "merge" parameters can be used
+        together. See #2198.
+        """
+        for filename in FCNT_FILES:
+            st = _read_rg16(filename, contacts_north=True, merge=True)
+            assert isinstance(st, obspy.Stream)
+
     def test_cmp_nbr_headers(self):
         """
         Test to check that the number of headers is correct
@@ -122,10 +143,10 @@ class TestReadRG16(unittest.TestCase):
         Check the number of records in the file
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
-            nbr_records = _cmp_nbr_records(fi, 3, True)
+            nbr_records = _cmp_nbr_records(fi)
         self.assertEqual(nbr_records, 6)
         with open(ONE_CHAN_FCNT, 'rb') as fi:
-            nbr_records = _cmp_nbr_records(fi, 1, False)
+            nbr_records = _cmp_nbr_records(fi)
         self.assertEqual(nbr_records, 10)
 
     def test_cmp_jump(self):
@@ -141,18 +162,21 @@ class TestReadRG16(unittest.TestCase):
         Check function make_stats
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
-            stats = _make_stats(fi, 288, False)
+            stats = _make_stats(fi, 288, False, False)
         self.assertIsInstance(stats, obspy.core.trace.Stats)
         self.assertAlmostEqual(stats.sampling_rate, 500, delta=1e-5)
         self.assertEqual(stats.network, '1')
         self.assertEqual(stats.station, '1')
         self.assertEqual(stats.location, '1')
-        self.assertEqual(stats.channel, 'DPN')
+        self.assertEqual(stats.channel, 'DP3')
         self.assertEqual(stats.npts, 15000)
         self.assertEqual(stats.starttime,
                          UTCDateTime('2017-08-09T16:00:00.380000Z'))
         self.assertEqual(stats.endtime,
                          UTCDateTime('2017-08-09T16:00:30.378000Z'))
+        with open(THREE_CHAN_FCNT, 'rb') as fi:
+            stats = _make_stats(fi, 288, True, False)
+        self.assertEqual(stats.channel, 'DPN')
 
     def test_read_trace_header(self):
         """
@@ -354,21 +378,27 @@ class TestReadRG16(unittest.TestCase):
         and if the output is a Trace object.
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
-            trace = _make_trace(fi, 288, False, False)
+            trace_3 = _make_trace(fi, 288, False, False, False)
+            trace_Z = _make_trace(fi, 241648, False, True, False)
         expected = np.array([-0.18864873, -0.30852857, -0.35189095,
                              -0.22547323, -0.12023376, -0.14336781,
                              -0.11712314,  0.04060567,  0.18024819,
                              0.17769636])
-        all_close = np.allclose(trace.data[:len(expected)], expected)
+        all_close = np.allclose(trace_3.data[:len(expected)], expected)
         self.assertTrue(all_close)
-        self.assertIsInstance(trace, obspy.core.trace.Trace)
+        self.assertIsInstance(trace_3, obspy.core.trace.Trace)
+        expected = np.array([-0.673309, -0.71590775, -0.54966664, -0.33980238,
+                             -0.29999766, -0.3031269, -0.12762846, 0.08782373,
+                             0.11377038, 0.09888785])
+        all_close = np.allclose(trace_Z.data[:len(expected)], expected)
+        self.assertTrue(all_close)
 
     def test_can_write(self):
         """
-        Ensure the result of read_rg16 is a stream object and that
+        Ensure the result of _read_rg16 is a stream object and that
         it can be written as mseed.
         """
-        st = read_rg16(THREE_CHAN_FCNT)
+        st = _read_rg16(THREE_CHAN_FCNT)
         self.assertIsInstance(st, obspy.core.stream.Stream)
         bytstr = io.BytesIO()
         # test passes if this doesn't raise

@@ -8,18 +8,21 @@ This format is used to store continuous data recorded by
 `Farfield Nodal <fairfieldnodal.com>`_'s
 `Zland <http://fairfieldnodal.com/equipment/zland>`_ product line.
 
+:author:
+    Derrick Chambers
+    Romain Pestourie
 :copyright:
-    Romain Pestourie and the ObsPy Development Team (devs@obspy.org)
+    the ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 
 .. note::
-    1. In order to homogenize the units, fields concerning frequencies parameters
-    are expressed in Hertz (ie alias_filter_frequency,
-    test_signal_generator_frequency_1...) and fields concerning
-    time are expressed in second (channel_set_end_time,
-    test_signal_generator_activation_time...), except for the dates.
+    1. In order to homogenize the units, fields concerning frequencies
+       parameters are expressed in Hertz (ie alias_filter_frequency,
+       test_signal_generator_frequency_1...) and fields concerning
+       time are expressed in second (channel_set_end_time,
+       test_signal_generator_activation_time...), except for the dates.
 
     2. Documentation about fcnt format
        can be found in the directory obspy.io.rg16.doc
@@ -33,9 +36,9 @@ The waveforms of the rg16 format can be read using two methods:
    the format parameter can be specified as "rg16" for a speed-up.
 
 2. Using the :mod:`obspy.io.rg16` specific function
-   :func:`obspy.io.rg16.core.read_rg16`.
+   :func:`obspy.io.rg16.core._read_rg16`.
 
-Noteworthy parameters of  :func:`obspy.io.rg16.core.read_rg16`,
+Noteworthy parameters of  :func:`obspy.io.rg16.core._read_rg16`,
 which can also be passed as kwargs to :func:`~obspy.core.stream.read`:
 
 * `starttime` and `endtime`: Can be passed
@@ -44,13 +47,13 @@ which can also be passed as kwargs to :func:`~obspy.core.stream.read`:
   file contents in memory.
 
 >>> import obspy
->>> from obspy.io.rg16.core import read_rg16
+>>> from obspy.io.rg16.core import _read_rg16
 >>> from obspy.core.util import get_example_file
 >>> filename = get_example_file('three_chans_six_traces.fcnt')
 >>> # these are all equivalent:
 >>> st = obspy.read(filename)
 >>> st = obspy.read(filename, format='rg16')
->>> st = read_rg16(filename)
+>>> st = _read_rg16(filename)
 
 Reading initial headers
 -------

@@ -283,7 +283,7 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.waveform.RG16': [
         'isFormat = obspy.io.rg16.core:_is_rg16',
-        'readFormat = obspy.io.rg16.core:read_rg16',
+        'readFormat = obspy.io.rg16.core:_read_rg16',
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
