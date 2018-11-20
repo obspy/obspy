@@ -29,8 +29,8 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
     components to Z (1C, 3C), N (3C), and E (3C) as well as correct
     the polarity for the vertical component.
     :type contacts_north: bool
-    :param details: If True, all the informations contained in the header
-     of the trace block are read).
+    :param details: If True, all the informations contained in the headers
+     are read).
     :type details: optional, bool
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
     Frequencies are expressed in hertz and time is expressed in seconds
@@ -72,8 +72,8 @@ def _internal_read_rg16(fi, headonly, starttime, endtime, merge,
     components to Z (1C, 3C), N (3C), and E (3C) as well as correct
     the polarity for the vertical component.
     :type contacts_north: bool
-    :param details: If True, all the informations contained in the header
-     of the trace block are read).
+    :param details: If True, all the informations contained in the headers
+     are read).
     :type details: optional, bool
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
     Frequencies are expressed in hertz and time is expressed in seconds
@@ -118,7 +118,7 @@ def _cmp_nbr_records(fi):
     Return the number of records in the file (ie number of time slices
     multiplied by the number of components).
     """
-    initial_header = read_initial_headers(fi)
+    initial_header = _read_initial_headers(fi)
     channel_sets_descriptor = initial_header['channel_sets_descriptor']
     channels_number = set()
     for _, val in channel_sets_descriptor.items():
@@ -194,15 +194,19 @@ def _make_stats(fi, trace_block_start, standard_orientation, details):
                      location=str(location),
                      channel=chan)
     if details:
-        stats_trace_header = _read_trace_header(fi, trace_block_start)
-        statsdict.update(stats_trace_header)
+        statsdict['rg16'] = {}
+        statsdict['rg16']['initial_headers'] = {}
+        stats_initial_headers = statsdict['rg16']['initial_headers']
+        stats_initial_headers.update(_read_initial_headers(fi))
+        statsdict['rg16']['trace_headers'] = {}
+        stats_tr_headers = statsdict['rg16']['trace_headers']
+        stats_tr_headers.update(_read_trace_header(fi, trace_block_start))
         nbr_tr_header_block = _read(fi, trace_block_start + 9,
                                     1, 'binary')
         if nbr_tr_header_block > 0:
-            stats_trace_header_ext = _read_trace_headers(fi,
-                                                         trace_block_start,
-                                                         nbr_tr_header_block)
-            statsdict.update(stats_trace_header_ext)
+            stats_tr_headers.update(_read_trace_headers(fi,
+                                                        trace_block_start,
+                                                        nbr_tr_header_block))
     return Stats(statsdict)
 
 
@@ -631,7 +635,7 @@ def _internal_is_rg16(fi):
     return con1 and manufacturer_code == 20
 
 
-def read_initial_headers(filename):
+def _read_initial_headers(filename):
     """
     Extract all the informations contained in the headers located before data,
     at the beginning of the rg16 file.
@@ -796,7 +800,7 @@ def _read_extended_headers(fi):
             extended_header_name = str(i+1)
             if i == nbr_extended_headers - 1:
                 header = _read_extended_header(fi, start_byte, i+1,
-                                              nbr_coeff_remain)
+                                               nbr_coeff_remain)
                 extended_headers[extended_header_name] = header
             else:
                 header = _read_extended_header(fi, start_byte, i+1, 8)
