@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 import io
 import os
 import unittest
@@ -379,7 +383,7 @@ class TestReadRG16(unittest.TestCase):
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             trace_3 = _make_trace(fi, 288, False, False, False)
-            trace_Z = _make_trace(fi, 241648, False, True, False)
+            trace_z = _make_trace(fi, 241648, False, True, False)
         expected = np.array([-0.18864873, -0.30852857, -0.35189095,
                              -0.22547323, -0.12023376, -0.14336781,
                              -0.11712314,  0.04060567,  0.18024819,
@@ -390,7 +394,7 @@ class TestReadRG16(unittest.TestCase):
         expected = np.array([-0.673309, -0.71590775, -0.54966664, -0.33980238,
                              -0.29999766, -0.3031269, -0.12762846, 0.08782373,
                              0.11377038, 0.09888785])
-        all_close = np.allclose(trace_Z.data[:len(expected)], expected)
+        all_close = np.allclose(trace_z.data[:len(expected)], expected)
         self.assertTrue(all_close)
 
     def test_can_write(self):
@@ -541,6 +545,7 @@ class TestReadRG16(unittest.TestCase):
 
     def suite():
         return unittest.makeSuite(TestReadRG16, 'test')
+
 
 if __name__ == '__main__':
     unittest.main()

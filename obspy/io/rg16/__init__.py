@@ -11,7 +11,7 @@ This format is used to store continuous data recorded by
     Derrick Chambers
     Romain Pestourie (Ecole et Observatoire des Sciences de la Terre)
 :copyright:
-    the ObsPy Development Team (devs@obspy.org)
+    The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
@@ -58,18 +58,18 @@ which can also be passed as kwargs to :func:`~obspy.core.stream.read`:
   continuity and type can be made.
 
 * `contacts_north`: If this parameter is set to True, it will map the
-    components to Z (1C, 3C), N (3C), and E (3C) as well as correct
-    the polarity for the vertical component.
+  components to Z (1C, 3C), N (3C), and E (3C) as well as correct
+  the polarity for the vertical component.
 
-* `details`: If this parameter is set to True, all the informations contained
-    in the headers are extracted. These informations are stored in an attribute
-    dict in the Stats object named "rg16".The "rg16" attribute dict owns two
-    attribute dict named "initial_headers" and "trace_headers". The
-    "initial_headers" contains informations relative to the headers located at
-    the beginning of the file. "initial_headers" owns four attribute dict named
-    "general_header_1", " general_header_2", "channel_sets_descriptor",
-    "extended_headers. The "trace_headers" contains informations
-    relative to the data block.
+* `details`: If this parameter is set to True, all the information contained
+  in the headers is extracted. These information is stored in an attribute
+  dict in the Stats object named "rg16".The "rg16" attribute dict owns two
+  attribute dict named "initial_headers" and "trace_headers". The
+  "initial_headers" contains information relative to the headers located at
+  the beginning of the file. "initial_headers" owns four attribute dict named
+  "general_header_1", " general_header_2", "channel_sets_descriptor",
+  "extended_headers. The "trace_headers" contains information
+  relative to the data block.
 
 >>> import obspy
 >>> from obspy.io.rg16.core import _read_rg16
@@ -98,6 +98,7 @@ separetely using the :mod:`obspy.io.rg16` specific function
 :func:`obspy.io.rg16.core._read_initial_headers`
 
 >>> initial_headers = _read_initial_headers(filename)
-
-
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA

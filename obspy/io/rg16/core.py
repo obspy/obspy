@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 import copy
 from future.utils import native_str as nstr
 import time
@@ -9,13 +13,13 @@ from obspy.io.rg16.util import _read, _open_file
 
 @_open_file
 def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
-               merge=False, contacts_north=False, details=False):
+               merge=False, contacts_north=False, details=False, **kwargs):
     """
     Read Fairfield Nodal's Receiver Gather File Format version 1.6-1.
     :param filename: path to the rg16 file or a file object.
     :type filename: str, buffer
-    :param headonly: If True don't read data, only main informations
-     contained in the headers of the trace block are read.
+    :param headonly: If True don't read data, only main information
+     contained in the headers of the trace block is read.
     :type headonly: optional, bool
     :param starttime: If not None dont read traces that start before starttime.
     :type starttime: optional, obspy.UTCDateTime
@@ -26,11 +30,11 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
      more manageable streams.
     :type merge: bool
     :param contacts_north: If this parameter is set to True, it will map the
-    components to Z (1C, 3C), N (3C), and E (3C) as well as correct
-    the polarity for the vertical component.
+     components to Z (1C, 3C), N (3C), and E (3C) as well as correct
+     the polarity for the vertical component.
     :type contacts_north: bool
-    :param details: If True, all the informations contained in the headers
-     are read).
+    :param details: If True, all the information contained in the headers
+     is read).
     :type details: optional, bool
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
     Frequencies are expressed in hertz and time is expressed in seconds
@@ -39,9 +43,7 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
     if starttime is None:
         starttime = UTCDateTime(1970, 1, 1)
     if endtime is None:
-        local_time = time.localtime()
-        endtime = UTCDateTime(local_time[0], local_time[1], local_time[2],
-                              local_time[3], local_time[4], local_time[5])
+        endtime = UTCDateTime(*time.localtime()[:6])
     (nbr_channel_set_headers, nbr_extended_headers,
      nbr_external_headers) = _cmp_nbr_headers(filename)
     nbr_records = _cmp_nbr_records(filename)
@@ -179,9 +181,8 @@ def _quick_merge(traces, small_number=.000001):
     Requires that traces are of the same datatype, have the same
     sampling_rate, and dont have data overlaps.
     :param traces: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
-    :param small_number:
-        A small number for determining if traces should be merged. Should be
-        much less than one sample spacing.
+    :param small_number: a small number for determining if traces
+     should be merged. Should be much less than one sample spacing.
     :return: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
     """
     # make sure sampling rates are all the same
@@ -207,7 +208,7 @@ def _quick_merge(traces, small_number=.000001):
 
 def _trace_list_to_rec_array(traces):
     """
-    return a recarray from the trace list. These are seperated into
+    Return a recarray from the trace list. These are seperated into
     two arrays due to a weird issue with numpy.sort returning and error
     set.
     """
@@ -259,8 +260,7 @@ def _read_trace_headers(fi, trace_block_start, nbr_trace_header):
 
 def _read_trace_header(fi, trace_block_start):
     """
-    Read the 20 bytes trace header
-    (first header in the trace block).
+    Read the 20 bytes trace header (first header in the trace block).
     """
     trace_number = _read(fi, trace_block_start + 4, 2, 'bcd')
     trace_edit_code = _read(fi, trace_block_start + 11, 1, 'binary')
@@ -566,7 +566,7 @@ def _read_trace_header_10(fi, trace_block_start):
 
 
 @_open_file
-def _is_rg16(filename):
+def _is_rg16(filename, **kwargs):
     """
     Determine if a file is a rg16 file.
     :param filename: a path to a file or a file object
@@ -587,12 +587,12 @@ def _is_rg16(filename):
 @_open_file
 def _read_initial_headers(filename):
     """
-    Extract all the informations contained in the headers located before data,
+    Extract all the information contained in the headers located before data,
     at the beginning of the rg16 file object.
     :param filename : a path to a rg16 file or a rg16 file object.
     :type filename: str, buffer
-    :return: a dictionnary containing all the informations
-             in the initial headers
+    :return: a dictionnary containing all the information
+     in the initial headers
     Frequencies are expressed in hertz and time is expressed in seconds
     (except for the date).
     """
@@ -606,7 +606,7 @@ def _read_initial_headers(filename):
 
 def _read_general_header_1(fi):
     """
-    Extract informations contained in the general header block 1
+    Extract information contained in the general header block 1
     """
     gen_head_1 = {}
     gen_head_1['file_number'] = _read(fi, 0, 2, 'bcd')
@@ -629,7 +629,7 @@ def _read_general_header_1(fi):
 
 def _read_general_header_2(fi):
     """
-    Extract informations contained in the general header block 2
+    Extract information contained in the general header block 2
     """
     gen_head_2 = {}
     gen_head_2['extended_file_number'] = _read(fi, 32, 3, 'binary')
@@ -645,7 +645,7 @@ def _read_general_header_2(fi):
 
 def _read_channel_sets(fi):
     """
-    Extract informations of all channel set descriptor blocks.
+    Extract information of all channel set descriptor blocks.
     """
     channel_sets = {}
     nbr_channel_set = _read(fi, 28, 1, 'bcd')
@@ -659,7 +659,7 @@ def _read_channel_sets(fi):
 
 def _read_channel_set(fi, start_byte):
     """
-    Extract informations contained in the ith channel set descriptor.
+    Extract information contained in the ith channel set descriptor.
     """
     channel_set = {}
     channel_set['scan_type_number'] = _read(fi, start_byte, 1, 'bcd')
@@ -713,7 +713,7 @@ def _read_channel_set(fi, start_byte):
 
 def _read_extended_headers(fi):
     """
-    Extract informations from the extended headers.
+    Extract information from the extended headers.
     """
     extended_headers = {}
     nbr_channel_set = _read(fi, 28, 1, 'bcd')
@@ -742,7 +742,7 @@ def _read_extended_headers(fi):
 
 def _read_extended_header_1(fi, start_byte):
     """
-    Extract informations contained in the extended header block number 1.
+    Extract information contained in the extended header block number 1.
     """
     extended_header_1 = {}
     extended_header_1['id_ru'] = _read(fi, start_byte, 8, 'binary')
@@ -766,7 +766,7 @@ def _read_extended_header_1(fi, start_byte):
 
 def _read_extended_header_2(fi, start_byte):
     """
-    Extract informations contained in the extended header block number 2.
+    Extract information contained in the extended header block number 2.
     """
     extended_header_2 = {}
     # acquisition drift window in second
@@ -809,7 +809,7 @@ def _read_extended_header_2(fi, start_byte):
 
 def _read_extended_header_3(fi, start_byte):
     """
-    Extract informations contained in the extended header block number 3.
+    Extract information contained in the extended header block number 3.
     """
     extended_header_3 = {}
     extended_header_3['receiver_line_number'] = _read(fi, start_byte, 4,
@@ -835,7 +835,7 @@ def _read_extended_header_3(fi, start_byte):
 
 def _read_extended_header(fi, start_byte, block_number, nbr_coeff):
     """
-    Extract informations contained in the ith extended header block (i>3).
+    Extract information contained in the ith extended header block (i>3).
     """
     extended_header = {}
     for i in range(0, nbr_coeff):
@@ -843,3 +843,8 @@ def _read_extended_header(fi, start_byte, block_number, nbr_coeff):
         extended_header[key] = _read(fi, start_byte, 4, 'IEEE')
         start_byte += 4
     return extended_header
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

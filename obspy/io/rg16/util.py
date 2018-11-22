@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from codecs import encode
 
 import decorator
@@ -9,9 +13,8 @@ def _open_file(func, *args, **kwargs):
     """
     Decorator to ensure a file buffer is passed as first argument to the
     decorated function.
-    :param func:
-        callable that takes at least one argument; the first argument must
-        be treated as a buffer.
+    :param func: callable that takes at least one argument;
+     the first argument must be treated as a buffer.
     :return: callable
     """
     first_arg = args[0]
@@ -35,15 +38,11 @@ def _read(fi, position, length, dtype, left_part=True):
     :type position: int
     :param length: Length, in bytes, of data to read.
     :type length: int or float
-    :param dtype:
-        - bcd
-        - binary
-        - IEEE
+    :param dtype: bcd, binary or IEEE
     :type dtype: str
     :param left_part: If True, start the reading from the first half part
-                      of the byte position.
-                      If False, start the reading from the second half part
-                      of the byte position.
+     of the byte position. If False, start the reading from the second
+     half part of the byte position.
     :type left_part: boolean
     """
     fi.seek(position)
@@ -63,9 +62,9 @@ def _read_bcd(fi, length, left_part):
     :param fi: A buffer containing the bytes to read.
     :param length: number of bytes to read.
     :type length: int or float
-    :param left_part:  If True, start the reading from the first half part
-                       of the first byte. If False, start the reading from
-                       the second half part of the first byte.
+    :param left_part: If True, start the reading from the first half part
+     of the first byte. If False, start the reading from
+     the second half part of the first byte.
     :type left_part: boolean
     """
     tens = np.power(10, range(12))[::-1]
@@ -90,8 +89,8 @@ def _read_binary(fi, length, left_part):
     :param fi: A buffer containing the bytes to read.
     :param length: number of bytes to read.
     :type length: int or float
-    :param left_part:  If True, start the reading from the first half part
-                       of the byte.
+    :param left_part: If True, start the reading from the first half part
+     of the byte.
     :type left_part: boolean
     """
     if isinstance(length, float):
@@ -106,3 +105,8 @@ def _read_binary(fi, length, left_part):
                              It has to be an integer or 0.5')
     else:
         return int(encode(fi.read(length), 'hex'), 16)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

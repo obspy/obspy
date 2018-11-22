@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 import unittest
 from io import BytesIO
 
@@ -6,7 +10,7 @@ from obspy.io.rg16.util import _read, _read_bcd, _read_binary
 
 class TestRG16Util(unittest.TestCase):
 
-    def byte_io(byte_str):
+    def byte_io(self, byte_str):
         """
         write byte_str to BytesIO object, return.
         """
@@ -50,6 +54,7 @@ class TestRG16Util(unittest.TestCase):
 
     def suite():
         return unittest.makeSuite(TestRG16Util, 'test')
+
 
 if __name__ == '__main__':
     unittest.main()
