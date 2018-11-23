@@ -5,13 +5,17 @@ Receiver Gather (version 1.6-1) bindings to ObsPy core module.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-import copy
 from future.utils import native_str as nstr
-import time
+
+import copy
+from collections import namedtuple
 
 import numpy as np
 from obspy.core import Stream, Trace, Stats, UTCDateTime
 from obspy.io.rg16.util import _read, _open_file
+
+
+HeaderCount = namedtuple('HeaderCount', 'channel_set extended external')
 
 
 @_open_file
@@ -48,22 +52,19 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
         Frequencies are expressed in hertz and time is expressed in seconds
         (except for date).
     """
-    if starttime is None:
-        starttime = UTCDateTime(1970, 1, 1)
-    if endtime is None:
-        endtime = UTCDateTime(*time.localtime()[:6])
-    (nbr_channel_set_headers, nbr_extended_headers,
-     nbr_external_headers) = _cmp_nbr_headers(filename)
-    nbr_records = _cmp_nbr_records(filename)
-    trace_block_start = 32 * (2 + nbr_channel_set_headers +
-                              nbr_extended_headers + nbr_external_headers)
-    traces = []  # list to store traces
-    for i in range(0, nbr_records):
+    starttime = starttime or UTCDateTime(1970, 1, 1)
+    endtime = endtime or UTCDateTime("3000-01-01")
+    # get the number of headers/records and position of trace data
+    header_count = _cmp_nbr_headers(filename)
+    record_count = _cmp_nbr_records(filename)
+    trace_block_start = 32 * (2 + sum(header_count))
+    # create trace data
+    traces = []
+    for i in range(0, record_count):
         nbr_bytes_trace_block = _cmp_jump(filename, trace_block_start)
-        starttime_block = _read(filename, trace_block_start + 20 + 2*32, 8,
+        trace_starttime = _read(filename, trace_block_start + 20 + 2*32, 8,
                                 'binary') / 1e6
-        if starttime.timestamp <= starttime_block and\
-           starttime_block < endtime.timestamp:
+        if starttime.timestamp <= trace_starttime < endtime.timestamp:
             trace = _make_trace(filename, trace_block_start, headonly,
                                 contacts_north, details)
             traces.append(trace)
@@ -79,11 +80,12 @@ def _cmp_nbr_headers(fi):
     the number of extended headers and the number of external headers
     in the file.
     """
-    nbr_channel_set_headers = _read(fi, 28, 1, 'bcd')
-    nbr_extended_headers = _read(fi, 37, 2, 'binary')
-    nbr_external_headers = _read(fi, 39, 3, 'binary')
-    return (nbr_channel_set_headers, nbr_extended_headers,
-            nbr_external_headers)
+    header_count = HeaderCount(
+        channel_set=_read(fi, 28, 1, 'bcd'),
+        extended=_read(fi, 37, 2, 'binary'),
+        external=_read(fi, 39, 3, 'binary'),
+    )
+    return header_count
 
 
 def _cmp_nbr_records(fi):
@@ -94,6 +96,7 @@ def _cmp_nbr_records(fi):
     initial_header = _read_initial_headers(fi)
     channel_sets_descriptor = initial_header['channel_sets_descriptor']
     channels_number = set()
+
     for _, val in channel_sets_descriptor.items():
         channels_number.add(val['RU_channel_number'])
     nbr_component = len(channels_number)
@@ -136,7 +139,7 @@ def _make_trace(fi, trace_block_start, headonly, standard_orientation,
     return Trace(data=data, header=stats)
 
 
-def _make_stats(fi, trace_block_start, standard_orientation, details):
+def _make_stats(fi, tr_block_start, standard_orientation, details):
     """
     Make Stats object from information contained in the header of the trace.
     """
@@ -148,16 +151,16 @@ def _make_stats(fi, trace_block_start, standard_orientation, details):
     instrument_code = 'P'
     # mapping for "standard_orientation"
     standard_component_map = {'2': 'Z', '3': 'N', '4': 'E'}
-    component = str(_read(fi, trace_block_start + 40, 1, 'binary'))
+    component = str(_read(fi, tr_block_start + 40, 1, 'binary'))
     if standard_orientation:
         component = standard_component_map[component]
     chan = band_map[sampling_rate] + instrument_code + component
-    npts = _read(fi, trace_block_start + 27, 3, 'binary')
-    start_time = _read(fi, trace_block_start + 20 + 2*32, 8, 'binary') / 1e6
+    npts = _read(fi, tr_block_start + 27, 3, 'binary')
+    start_time = _read(fi, tr_block_start + 20 + 2 * 32, 8, 'binary') / 1e6
     end_time = start_time + (npts - 1) * (1/sampling_rate)
-    network = _read(fi, trace_block_start + 20, 3, 'binary')
-    station = _read(fi, trace_block_start + 23, 3, 'binary')
-    location = _read(fi, trace_block_start + 26, 1, 'binary')
+    network = _read(fi, tr_block_start + 20, 3, 'binary')
+    station = _read(fi, tr_block_start + 23, 3, 'binary')
+    location = _read(fi, tr_block_start + 26, 1, 'binary')
     statsdict = dict(starttime=UTCDateTime(start_time),
                      endtime=UTCDateTime(end_time),
                      sampling_rate=sampling_rate,
@@ -173,13 +176,12 @@ def _make_stats(fi, trace_block_start, standard_orientation, details):
         stats_initial_headers.update(_read_initial_headers(fi))
         statsdict['rg16']['trace_headers'] = {}
         stats_tr_headers = statsdict['rg16']['trace_headers']
-        stats_tr_headers.update(_read_trace_header(fi, trace_block_start))
-        nbr_tr_header_block = _read(fi, trace_block_start + 9,
+        stats_tr_headers.update(_read_trace_header(fi, tr_block_start))
+        nbr_tr_header_block = _read(fi, tr_block_start + 9,
                                     1, 'binary')
         if nbr_tr_header_block > 0:
-            stats_tr_headers.update(_read_trace_headers(fi,
-                                                        trace_block_start,
-                                                        nbr_tr_header_block))
+            stats_tr_headers.update(
+                _read_trace_headers(fi, tr_block_start, nbr_tr_header_block))
     return Stats(statsdict)
 
 
@@ -283,14 +285,13 @@ def _read_trace_header_1(fi, trace_block_start):
     Read trace header 1
     """
     pos = trace_block_start + 20
-    extended_receiver_line_nbr = _read(fi, pos + 10, 5, 'binary')
-    ext_receiver_point_nbr = _read(fi, pos + 15, 5, 'binary')
-    sensor_type = _read(fi, pos + 20, 1, 'binary')
-    trace_count_file = _read(fi, pos + 21, 4, 'binary')
-    dict_header_1 = {'extended_receiver_line_nbr': extended_receiver_line_nbr,
-                     'extended_receiver_point_nbr': ext_receiver_point_nbr,
-                     'sensor_type': sensor_type,
-                     'trace_count_file': trace_count_file}
+
+    dict_header_1 = dict(
+        extended_receiver_line_nbr=_read(fi, pos + 10, 5, 'binary'),
+        extended_receiver_point_nbr=_read(fi, pos + 15, 5, 'binary'),
+        sensor_type=_read(fi, pos + 20, 1, 'binary'),
+        trace_count_file=_read(fi, pos + 21, 4, 'binary'),
+    )
     return dict_header_1
 
 
@@ -299,31 +300,27 @@ def _read_trace_header_2(fi, trace_block_start):
     Read trace header 2
     """
     pos = trace_block_start + 20 + 32
-    shot_line_nbr = _read(fi, pos, 4, 'binary')
-    shot_point = _read(fi, pos + 4, 4, 'binary')
-    shot_point_index = _read(fi, pos + 8, 1, 'binary')
-    shot_point_pre_plan_x = _read(fi, pos + 9, 4, 'binary') / 10
-    shot_point_pre_plan_y = _read(fi, pos + 13, 4, 'binary') / 10
-    shot_point_final_x = _read(fi, pos + 17, 4, 'binary') / 10
-    shot_point_final_y = _read(fi, pos + 21, 4, 'binary') / 10
-    shot_point_final_depth = _read(fi, pos + 25, 4, 'binary') / 10
+
     leg_source_info = {'0': 'undefined', '1': 'preplan', '2': 'as shot',
                        '3': 'post processed'}
-    key = str(_read(fi, pos + 29, 1, 'binary'))
-    source_of_final_shot_info = leg_source_info[key]
+    source_key = str(_read(fi, pos + 29, 1, 'binary'))
+
     leg_energy_source = {'0': 'undefined', '1': 'vibroseis', '2': 'dynamite',
                          '3': 'air gun'}
-    key = str(_read(fi, pos + 30, 1, 'binary'))
-    energy_source_type = leg_energy_source[key]
-    dict_header_2 = {'shot_line_nbr': shot_line_nbr, 'shot_point': shot_point,
-                     'shot_point_index': shot_point_index,
-                     'shot_point_pre_plan_x': shot_point_pre_plan_x,
-                     'shot_point_pre_plan_y': shot_point_pre_plan_y,
-                     'shot_point_final_x': shot_point_final_x,
-                     'shot_point_final_y': shot_point_final_y,
-                     'shot_point_final_depth': shot_point_final_depth,
-                     'source_of_final_shot_info': source_of_final_shot_info,
-                     'energy_source_type': energy_source_type}
+    energy_source_key = str(_read(fi, pos + 30, 1, 'binary'))
+
+    dict_header_2 = dict(
+        shot_line_nbr=_read(fi, pos, 4, 'binary'),
+        shot_point=_read(fi, pos + 4, 4, 'binary'),
+        shot_point_index=_read(fi, pos + 8, 1, 'binary'),
+        shot_point_pre_plan_x=_read(fi, pos + 9, 4, 'binary') / 10,
+        shot_point_pre_plan_y=_read(fi, pos + 13, 4, 'binary') / 10,
+        shot_point_final_x=_read(fi, pos + 17, 4, 'binary') / 10,
+        shot_point_final_y=_read(fi, pos + 21, 4, 'binary') / 10,
+        shot_point_final_depth=_read(fi, pos + 25, 4, 'binary') / 10,
+        source_of_final_shot_info=leg_source_info[source_key],
+        energy_source_type=leg_energy_source[energy_source_key],
+    )
     return dict_header_2
 
 
@@ -332,17 +329,16 @@ def _read_trace_header_3(fi, trace_block_start):
     Read trace header 3
     """
     pos = trace_block_start + 20 + 32 * 2
-    epoch_time = UTCDateTime(_read(fi, pos, 8, 'binary') / 1e6)
-    # shot skew time in second
-    shot_skew_time = _read(fi, pos + 8, 8, 'binary') / 1e6
-    # time shift clock correction in second
-    time_shift_clock_correc = _read(fi, pos + 16, 8, 'binary') / 1e9
-    # remaining clock correction in second
-    remaining_clock_correction = _read(fi, pos + 24, 8, 'binary') / 1e9
-    dict_header_3 = {'epoch_time': epoch_time,
-                     'shot_skew_time': shot_skew_time,
-                     'time_shift_clock_correction': time_shift_clock_correc,
-                     'remaining_clock_correction': remaining_clock_correction}
+
+    dict_header_3 = dict(
+        epoch_time=UTCDateTime(_read(fi, pos, 8, 'binary') / 1e6),
+        # shot skew time in seconds
+        shot_skew_time=_read(fi, pos + 8, 8, 'binary') / 1e6,
+        # time shift clock correction in seconds
+        time_shift_clock_correction=_read(fi, pos + 16, 8, 'binary') / 1e9,
+        # remaining clock correction in seconds
+        remaining_clock_correction=_read(fi, pos + 24, 8, 'binary') / 1e9,
+    )
     return dict_header_3
 
 
@@ -351,36 +347,30 @@ def _read_trace_header_4(fi, trace_block_start):
     Read trace header 4
     """
     pos = trace_block_start + 20 + 32 * 3
-    # pre shot guard band in second
-    pre_shot_guard_band = _read(fi, pos, 4, 'binary') / 1e3
-    # post shot guard band in second
-    post_shot_guard_band = _read(fi, pos + 4, 4, 'binary') / 1e3
-    # Preamp gain in dB
-    preamp_gain = _read(fi, pos + 8, 1, 'binary')
+
     leg_trace_clipped = {'0': 'not clipped', '1': 'digital clip detected',
                          '2': 'analog clip detected'}
-    key = str(_read(fi, pos + 9, 1, 'binary'))
-    trace_clipped_flag = leg_trace_clipped[key]
+    clipped_code = str(_read(fi, pos + 9, 1, 'binary'))
+
     leg_record_type = {'2': 'test data record',
                        '8': 'normal seismic data record'}
-    key = str(_read(fi, pos + 10, 1, 'binary'))
-    record_type_code = leg_record_type[key]
+    record_type_code = str(_read(fi, pos + 10, 1, 'binary'))
+
     leg_shot_flag = {'0': 'normal', '1': 'bad-operator specified',
                      '2': 'bad-failed to QC test'}
-    key = str(_read(fi, pos + 11, 1, 'binary'))
-    shot_status_flag = leg_shot_flag[key]
-    external_shot_id = _read(fi, pos + 12, 4, 'binary')
-    first_break_pick = _read(fi, pos + 24, 4, 'IEEE')
-    post_processed_rms_noise = _read(fi, pos + 28, 4, 'IEEE')
-    dict_header_4 = {'pre_shot_guard_band': pre_shot_guard_band,
-                     'post_shot_guard_band': post_shot_guard_band,
-                     'preamp_gain': preamp_gain,
-                     'trace_clipped_flag': trace_clipped_flag,
-                     'record_type_code': record_type_code,
-                     'shot_status_flag': shot_status_flag,
-                     'external_shot_id': external_shot_id,
-                     'post_processed_first_break_pick_time': first_break_pick,
-                     'post_processed_rms_noise': post_processed_rms_noise}
+    shot_code = str(_read(fi, pos + 11, 1, 'binary'))
+
+    dict_header_4 = dict(
+        pre_shot_guard_band=_read(fi, pos, 4, 'binary') / 1e3,
+        post_shot_guard_band=_read(fi, pos + 4, 4, 'binary') / 1e3,
+        preamp_gain=_read(fi, pos + 8, 1, 'binary'),
+        trace_clipped_flag=leg_trace_clipped[clipped_code],
+        record_type_code=leg_record_type[record_type_code],
+        shot_status_flag=leg_shot_flag[shot_code],
+        external_shot_id=_read(fi, pos + 12, 4, 'binary'),
+        post_processed_first_break_pick_time=_read(fi, pos + 24, 4, 'IEEE'),
+        post_processed_rms_noise=_read(fi, pos + 28, 4, 'IEEE'),
+    )
     return dict_header_4
 
 
@@ -389,30 +379,30 @@ def _read_trace_header_5(fi, trace_block_start):
     Read trace header 5
     """
     pos = trace_block_start + 20 + 32 * 4
-    receiver_point_pre_plan_x = _read(fi, pos + 9, 4, 'binary') / 10
-    receiver_point_pre_plan_y = _read(fi, pos + 13, 4, 'binary') / 10
-    receiver_point_final_x = _read(fi, pos + 17, 4, 'binary') / 10
-    receiver_point_final_y = _read(fi, pos + 21, 4, 'binary') / 10
-    receiver_point_final_depth = _read(fi, pos + 25, 4, 'binary') / 10
-    leg_source_receiver_info = {'1': 'preplan',
-                                '2': 'as laid (no navigation sensor)',
-                                '3': 'as laid (HiPAP only)',
-                                '4': 'as laid (HiPAP and INS)',
-                                '5': 'as laid (HiPAP and DVL)',
-                                '6': 'as laid (HiPAP, DVL and INS)',
-                                '7': 'post processed (HiPAP only)',
-                                '8': 'post processed (HiPAP and INS)',
-                                '9': 'post processed (HiPAP and DVL)',
-                                '10': 'post processed (HiPAP, DVL ans INS)',
-                                '11': 'first break analysis'}
-    key = str(_read(fi, pos + 29, 1, 'binary'))
-    source_receiver_info = leg_source_receiver_info[key]
-    dict_header_5 = {'receiver_point_pre_plan_x': receiver_point_pre_plan_x,
-                     'receiver_point_pre_plan_y': receiver_point_pre_plan_y,
-                     'receiver_point_final_x': receiver_point_final_x,
-                     'receiver_point_final_y': receiver_point_final_y,
-                     'receiver_point_final_depth': receiver_point_final_depth,
-                     'source_of_final_receiver_info': source_receiver_info}
+
+    leg_source_receiver_info = {
+        '1': 'preplan',
+        '2': 'as laid (no navigation sensor)',
+        '3': 'as laid (HiPAP only)',
+        '4': 'as laid (HiPAP and INS)',
+        '5': 'as laid (HiPAP and DVL)',
+        '6': 'as laid (HiPAP, DVL and INS)',
+        '7': 'post processed (HiPAP only)',
+        '8': 'post processed (HiPAP and INS)',
+        '9': 'post processed (HiPAP and DVL)',
+        '10': 'post processed (HiPAP, DVL ans INS)',
+        '11': 'first break analysis',
+    }
+    source_key = str(_read(fi, pos + 29, 1, 'binary'))
+
+    dict_header_5 = dict(
+        receiver_point_pre_plan_x=_read(fi, pos + 9, 4, 'binary') / 10,
+        receiver_point_pre_plan_y=_read(fi, pos + 13, 4, 'binary') / 10,
+        receiver_point_final_x=_read(fi, pos + 17, 4, 'binary') / 10,
+        receiver_point_final_y=_read(fi, pos + 21, 4, 'binary') / 10,
+        receiver_point_final_depth=_read(fi, pos + 25, 4, 'binary') / 10,
+        source_of_final_receiver_info=leg_source_receiver_info[source_key],
+    )
     return dict_header_5
 
 
@@ -421,22 +411,17 @@ def _read_trace_header_6(fi, trace_block_start):
     Read trace header 6
     """
     pos = trace_block_start + 20 + 32 * 5
-    tilt_matrix_h1x = _read(fi, pos, 4, 'IEEE')
-    tilt_matrix_h2x = _read(fi, pos + 4, 4, 'IEEE')
-    tilt_matrix_vx = _read(fi, pos + 8, 4, 'IEEE')
-    tilt_matrix_h1y = _read(fi, pos + 12, 4, 'IEEE')
-    tilt_matrix_h2y = _read(fi, pos + 16, 4, 'IEEE')
-    tilt_matrix_vy = _read(fi, pos + 20, 4, 'IEEE')
-    tilt_matrix_h1z = _read(fi, pos + 24, 4, 'IEEE')
-    tilt_matrix_h2z = _read(fi, pos + 28, 4, 'IEEE')
-    dict_header_6 = {'tilt_matrix_h1x': tilt_matrix_h1x,
-                     'tilt_matrix_h2x': tilt_matrix_h2x,
-                     'tilt_matrix_vx': tilt_matrix_vx,
-                     'tilt_matrix_h1y': tilt_matrix_h1y,
-                     'tilt_matrix_h2y': tilt_matrix_h2y,
-                     'tilt_matrix_vy': tilt_matrix_vy,
-                     'tilt_matrix_h1z': tilt_matrix_h1z,
-                     'tilt_matrix_h2z': tilt_matrix_h2z}
+
+    dict_header_6 = dict(
+        tilt_matrix_h1x=_read(fi, pos, 4, 'IEEE'),
+        tilt_matrix_h2x=_read(fi, pos + 4, 4, 'IEEE'),
+        tilt_matrix_vx=_read(fi, pos + 8, 4, 'IEEE'),
+        tilt_matrix_h1y=_read(fi, pos + 12, 4, 'IEEE'),
+        tilt_matrix_h2y=_read(fi, pos + 16, 4, 'IEEE'),
+        tilt_matrix_vy=_read(fi, pos + 20, 4, 'IEEE'),
+        tilt_matrix_h1z=_read(fi, pos + 24, 4, 'IEEE'),
+        tilt_matrix_h2z=_read(fi, pos + 28, 4, 'IEEE'),
+    )
     return dict_header_6
 
 
@@ -445,22 +430,16 @@ def _read_trace_header_7(fi, trace_block_start):
     Read trace header 7
     """
     pos = trace_block_start + 20 + 32 * 6
-    tilt_matrix_vz = _read(fi, pos, 4, 'IEEE')
-    azimuth_degree = _read(fi, pos + 4, 4, 'IEEE')
-    pitch_degree = _read(fi, pos + 8, 4, 'IEEE')
-    roll_degree = _read(fi, pos + 12, 4, 'IEEE')
-    remote_unit_temp = _read(fi, pos + 16, 4, 'IEEE')
-    remote_unit_humidity = _read(fi, pos + 20, 4, 'IEEE')
-    orientation_matrix = _read(fi, pos + 24, 4, 'binary')
-    gimbal_corrections = _read(fi, pos + 28, 1, 'binary')
-    dict_header_7 = {'tilt_matrix_vz': tilt_matrix_vz,
-                     'azimuth_degree': azimuth_degree,
-                     'pitch_degree': pitch_degree,
-                     'roll_degree': roll_degree,
-                     'remote_unit_temp': remote_unit_temp,
-                     'remote_unit_humidity': remote_unit_humidity,
-                     'orientation_matrix_version_nbr': orientation_matrix,
-                     'gimbal_corrections': gimbal_corrections}
+
+    dict_header_7 = dict(
+        tilt_matrix_vz=_read(fi, pos, 4, 'IEEE'),
+        azimuth_degree=_read(fi, pos + 4, 4, 'IEEE'),
+        pitch_degree=_read(fi, pos + 8, 4, 'IEEE'),
+        roll_degree=_read(fi, pos + 12, 4, 'IEEE'),
+        remote_unit_temp=_read(fi, pos + 16, 4, 'IEEE'),
+        remote_unit_humidity=_read(fi, pos + 20, 4, 'IEEE'),
+        orientation_matrix_version_nbr=_read(fi, pos + 24, 4, 'binary'),
+        gimbal_corrections=_read(fi, pos + 28, 1, 'binary'))
     return dict_header_7
 
 
@@ -469,49 +448,42 @@ def _read_trace_header_8(fi, trace_block_start):
     Read trace header 8
     """
     pos = trace_block_start + 20 + 32 * 7
-    fairfield_test = _read(fi, pos, 4, 'binary')
-    first_test = _read(fi, pos + 4, 4, 'binary')
-    second_test = _read(fi, pos + 8, 4, 'binary')
-    # start delay in second
-    start_delay = _read(fi, pos + 12, 4, 'binary') / 1e6
-    dc_filter_flag = _read(fi, pos + 16, 4, 'binary')
-    dc_filter_frequency = _read(fi, pos + 20, 4, 'IEEE')
-    leg_preamp_path = {'0': 'external input selected',
-                       '1': 'simulated data selected',
-                       '2': 'pre-amp input shorted to ground',
-                       '3': 'test oscillator with sensors',
-                       '4': 'test oscillator without sensors',
-                       '5': 'common mode test oscillator with sensors',
-                       '6': 'common mode test oscillator without sensors',
-                       '7': 'test oscillator on positive sensors with neg\
-                             sensor grounded',
-                       '8': 'test oscillator on negative sensors with pos\
-                             sensor grounded',
-                       '9': 'test oscillator on positive PA input with neg\
-                             PA input ground',
-                       '10': 'test oscillator on negative PA input, with pos\
-                              PA input ground',
-                       '11': 'test oscillator on positive PA input, with neg\
+
+    leg_preamp_path = {
+        '0': 'external input selected',
+        '1': 'simulated data selected',
+        '2': 'pre-amp input shorted to ground',
+        '3': 'test oscillator with sensors',
+        '4': 'test oscillator without sensors',
+        '5': 'common mode test oscillator with sensors',
+        '6': 'common mode test oscillator without sensors',
+        '7': 'test oscillator on positive sensors with neg sensor grounded',
+        '8': 'test oscillator on negative sensors with pos sensor grounded',
+        '9': 'test oscillator on positive PA input with neg PA input ground',
+        '10': 'test oscillator on negative PA input with pos PA input ground',
+        '11': 'test oscillator on positive PA input with neg\
                               PA input ground, no sensors',
-                       '12': 'test oscillator on negative PA input, with pos\
+        '12': 'test oscillator on negative PA input with pos\
                               PA input ground, no sensors'}
-    key = str(_read(fi, pos + 24, 4, 'binary'))
-    preamp_path = leg_preamp_path[key]
+    preamp_path_code = str(_read(fi, pos + 24, 4, 'binary'))
+
     leg_test_oscillator = {'0': 'test oscillator path open',
                            '1': 'test signal selected',
                            '2': 'DC reference selected',
                            '3': 'test oscillator path grounded',
                            '4': 'DC reference toggle selected'}
-    key = str(_read(fi, pos + 28, 4, 'binary'))
-    test_oscillator = leg_test_oscillator[key]
-    dict_header_8 = {'fairfield_test_analysis_code': fairfield_test,
-                     'first_test_oscillator_attenuation': first_test,
-                     'second_test_oscillator_attenuation': second_test,
-                     'start_delay': start_delay,
-                     'dc_filter_flag': dc_filter_flag,
-                     'dc_filter_frequency': dc_filter_frequency,
-                     'preamp_path': preamp_path,
-                     'test_oscillator_signal_type': test_oscillator}
+    oscillator_code = str(_read(fi, pos + 28, 4, 'binary'))
+
+    dict_header_8 = dict(
+        fairfield_test_analysis_code=_read(fi, pos, 4, 'binary'),
+        first_test_oscillator_attenuation=_read(fi, pos + 4, 4, 'binary'),
+        second_test_oscillator_attenuation=_read(fi, pos + 8, 4, 'binary'),
+        start_delay=_read(fi, pos + 12, 4, 'binary') / 1e6,
+        dc_filter_flag=_read(fi, pos + 16, 4, 'binary'),
+        dc_filter_frequency=_read(fi, pos + 20, 4, 'IEEE'),
+        preamp_path=leg_preamp_path[preamp_path_code],
+        test_oscillator_signal_type=leg_test_oscillator[oscillator_code],
+    )
     return dict_header_8
 
 
@@ -520,6 +492,7 @@ def _read_trace_header_9(fi, trace_block_start):
     Read trace header 9
     """
     pos = trace_block_start + 20 + 32 * 8
+
     leg_signal_type = {'0': 'pattern is address ramp',
                        '1': 'pattern is RU address ramp',
                        '2': 'pattern is built from provided values',
@@ -533,8 +506,8 @@ def _read_trace_header_9(fi, trace_block_start):
                        '9': 'test signal is a dual tone sine',
                        '10': 'test signal is an impulse',
                        '11': 'test signal is a step function'}
-    key = str(_read(fi, pos, 4, 'binary'))
-    test_signal_type = leg_signal_type[key]
+    type_code = str(_read(fi, pos, 4, 'binary'))
+
     # test signal generator frequency 1 in hertz
     test_signal_freq_1 = _read(fi, pos + 4, 4, 'binary') / 1e3
     # test signal generator frequency 2 in hertz
@@ -549,14 +522,17 @@ def _read_trace_header_9(fi, trace_block_start):
     active_duration = _read(fi, pos + 24, 4, 'binary') / 1e6
     # test signal generator activation time in second
     activation_time = _read(fi, pos + 28, 4, 'binary') / 1e6
-    dict_header_9 = {'test_signal_generator_signal_type': test_signal_type,
-                     'test_signal_generator_frequency_1': test_signal_freq_1,
-                     'test_signal_generator_frequency_2': test_signal_freq_2,
-                     'test_signal_generator_amplitude_1': test_signal_amp_1,
-                     'test_signal_generator_amplitude_2': test_signal_amp_2,
-                     'test_signal_generator_duty_cycle_percentage': duty_cycle,
-                     'test_signal_generator_active_duration': active_duration,
-                     'test_signal_generator_activation_time': activation_time}
+
+    dict_header_9 = dict(
+        test_signal_generator_signal_type=leg_signal_type[type_code],
+        test_signal_generator_frequency_1=test_signal_freq_1,
+        test_signal_generator_frequency_2=test_signal_freq_2,
+        test_signal_generator_amplitude_1=test_signal_amp_1,
+        test_signal_generator_amplitude_2=test_signal_amp_2,
+        test_signal_generator_duty_cycle_percentage=duty_cycle,
+        test_signal_generator_active_duration=active_duration,
+        test_signal_generator_activation_time=activation_time,
+    )
     return dict_header_9
 
 
@@ -565,14 +541,13 @@ def _read_trace_header_10(fi, trace_block_start):
     Read trace header 10
     """
     pos = trace_block_start + 20 + 32 * 9
-    idle_level = _read(fi, pos, 4, 'binary')
-    active_level = _read(fi, pos + 4, 4, 'binary')
-    pattern_1 = _read(fi, pos + 8, 4, 'binary')
-    pattern_2 = _read(fi, pos + 12, 4, 'binary')
-    dict_header_10 = {'test_signal_generator_idle_level': idle_level,
-                      'test_signal_generator_active_level': active_level,
-                      'test_signal_generator_pattern_1': pattern_1,
-                      'test_signal_generator_pattern_2': pattern_2}
+
+    dict_header_10 = dict(
+        test_signal_generator_idle_level=_read(fi, pos, 4, 'binary'),
+        test_signal_generator_active_level=_read(fi, pos + 4, 4, 'binary'),
+        test_signal_generator_pattern_1=_read(fi, pos + 8, 4, 'binary'),
+        test_signal_generator_pattern_2=_read(fi, pos + 12, 4, 'binary'),
+    )
     return dict_header_10
 
 
@@ -610,11 +585,12 @@ def _read_initial_headers(filename):
     Frequencies are expressed in hertz and time is expressed in seconds
     (except for the date).
     """
-    headers_content = {}
-    headers_content['general_header_1'] = _read_general_header_1(filename)
-    headers_content['general_header_2'] = _read_general_header_2(filename)
-    headers_content['channel_sets_descriptor'] = _read_channel_sets(filename)
-    headers_content['extended_headers'] = _read_extended_headers(filename)
+    headers_content = dict(
+        general_header_1=_read_general_header_1(filename),
+        general_header_2=_read_general_header_2(filename),
+        channel_sets_descriptor=_read_channel_sets(filename),
+        extended_headers=_read_extended_headers(filename),
+    )
     return headers_content
 
 
@@ -622,22 +598,23 @@ def _read_general_header_1(fi):
     """
     Extract information contained in the general header block 1
     """
-    gen_head_1 = {}
-    gen_head_1['file_number'] = _read(fi, 0, 2, 'bcd')
-    gen_head_1['sample_format_code'] = _read(fi, 2, 2, 'bcd')
-    gen_head_1['general_constant'] = _read(fi, 4, 6, 'bcd')
-    gen_head_1['time_slice_year'] = _read(fi, 10, 1, 'bcd')
-    gen_head_1['nbr_add_general_header'] = _read(fi, 11, 0.5, 'bcd')
-    gen_head_1['julian_day'] = _read(fi, 11, 1.5, 'bcd', False)
-    gen_head_1['time_slice'] = _read(fi, 13, 3, 'bcd')
-    gen_head_1['manufacturer_code'] = _read(fi, 16, 1, 'bcd')
-    gen_head_1['manufacturer_serial_number'] = _read(fi, 17, 2, 'bcd')
-    gen_head_1['base_scan_interval'] = _read(fi, 22, 1, 'binary')
-    gen_head_1['polarity_code'] = _read(fi, 23, 0.5, 'binary')
-    gen_head_1['record_type'] = _read(fi, 25, 0.5, 'binary')
-    gen_head_1['scan_type_per_record'] = _read(fi, 27, 1, 'bcd')
-    gen_head_1['nbr_channel_set'] = _read(fi, 28, 1, 'bcd')
-    gen_head_1['nbr_skew_block'] = _read(fi, 29, 1, 'bcd')
+    gen_head_1 = dict(
+        file_number=_read(fi, 0, 2, 'bcd'),
+        sample_format_code=_read(fi, 2, 2, 'bcd'),
+        general_constant=_read(fi, 4, 6, 'bcd'),
+        time_slice_year=_read(fi, 10, 1, 'bcd'),
+        nbr_add_general_header=_read(fi, 11, 0.5, 'bcd'),
+        julian_day=_read(fi, 11, 1.5, 'bcd', False),
+        time_slice=_read(fi, 13, 3, 'bcd'),
+        manufacturer_code=_read(fi, 16, 1, 'bcd'),
+        manufacturer_serial_number=_read(fi, 17, 2, 'bcd'),
+        base_scan_interval=_read(fi, 22, 1, 'binary'),
+        polarity_code=_read(fi, 23, 0.5, 'binary'),
+        record_type=_read(fi, 25, 0.5, 'binary'),
+        scan_type_per_record=_read(fi, 27, 1, 'bcd'),
+        nbr_channel_set=_read(fi, 28, 1, 'bcd'),
+        nbr_skew_block=_read(fi, 29, 1, 'bcd'),
+    )
     return gen_head_1
 
 
@@ -645,15 +622,15 @@ def _read_general_header_2(fi):
     """
     Extract information contained in the general header block 2
     """
-    gen_head_2 = {}
-    gen_head_2['extended_file_number'] = _read(fi, 32, 3, 'binary')
-    gen_head_2['extended_channel_sets_per_scan_type'] = _read(fi, 35, 2,
-                                                              'binary')
-    gen_head_2['extended_header_blocks'] = _read(fi, 37, 2, 'binary')
-    gen_head_2['external_header_blocks'] = _read(fi, 39, 3, 'binary')
-    gen_head_2['version_number'] = _read(fi, 42, 2, 'binary')
-    gen_head_2['extended_record_length'] = _read(fi, 46, 3, 'binary')
-    gen_head_2['general_header_block_number'] = _read(fi, 50, 1, 'binary')
+    gen_head_2 = dict(
+        extended_file_number=_read(fi, 32, 3, 'binary'),
+        extended_channel_sets_per_scan_type=_read(fi, 35, 2, 'binary'),
+        extended_header_blocks=_read(fi, 37, 2, 'binary'),
+        external_header_blocks=_read(fi, 39, 3, 'binary'),
+        version_number=_read(fi, 42, 2, 'binary'),
+        extended_record_length=_read(fi, 46, 3, 'binary'),
+        general_header_block_number=_read(fi, 50, 1, 'binary'),
+    )
     return gen_head_2
 
 
@@ -675,53 +652,35 @@ def _read_channel_set(fi, start_byte):
     """
     Extract information contained in the ith channel set descriptor.
     """
-    channel_set = {}
-    channel_set['scan_type_number'] = _read(fi, start_byte, 1, 'bcd')
-    channel_set['channel_set_number'] = _read(fi, start_byte + 1, 1, 'bcd')
-    channel_set['channel_set_start_time'] = _read(fi, start_byte + 2,
-                                                  2, 'binary') * 2e-3
-    channel_set['channel_set_end_time'] = _read(fi, start_byte + 4, 2,
-                                                'binary') * 2e-3
-    channel_set['optionnal_MP_factor'] = _read(fi, start_byte + 6, 1, 'binary')
-    channel_set['mp_factor_descaler_multiplier'] = _read(fi, start_byte + 7,
-                                                         1, 'binary')
-    channel_set['nbr_channels_in_channel_set'] = _read(fi, start_byte + 8,
-                                                       2, 'bcd')
-    channel_set['channel_type_code'] = _read(fi, start_byte + 10, 0.5,
-                                             'binary')
-    channel_set['nbr_sub_scans'] = _read(fi, start_byte + 11, 0.5, 'bcd')
-    channel_set['gain_control_type'] = _read(fi, start_byte + 11,
-                                             0.5, 'bcd', False)
-    # alias filter frequency in Hertz
-    channel_set['alias_filter_frequency'] = _read(fi, start_byte + 12,
-                                                  2, 'bcd')
-    # alias filter slope in dB per octave
-    channel_set['alias_filter_slope'] = _read(fi, start_byte + 14, 2, 'bcd')
-    # low cut filter frequency in hertz
-    channel_set['low_cut_filter_freq'] = _read(fi, start_byte + 16, 2, 'bcd')
-    # low cut filter slope in dB per octave
-    channel_set['low_cut_filter_slope'] = _read(fi, start_byte + 18, 2, 'bcd')
-    # notch filter frequency in Hertz
-    notch_filter_freq = _read(fi, start_byte + 20, 2, 'bcd') / 10
-    channel_set['notch_filter_freq'] = notch_filter_freq
-    # second notch filter frequency in Hertz
-    notch_2_filter_freq = _read(fi, start_byte + 22, 2, 'bcd') / 10
-    channel_set['notch_2_filter_freq'] = notch_2_filter_freq
-    # third notch filter frequency in Hertz
-    notch_3_filter_freq = _read(fi, start_byte + 24, 2, 'bcd') / 10
-    channel_set['notch_3_filter_freq'] = notch_3_filter_freq
-    channel_set['extended_channel_set_number'] = _read(fi, start_byte + 26, 2,
-                                                       'binary')
-    channel_set['extended_header_flag'] = _read(fi, start_byte + 28, 0.5,
-                                                'binary')
-    channel_set['nbr_32_byte_trace_header_extension'] = _read(fi,
-                                                              start_byte + 28,
-                                                              0.5, 'binary',
-                                                              False)
-    channel_set['vertical_stack_size'] = _read(fi, start_byte + 29, 1,
-                                               'binary')
-    channel_set['RU_channel_number'] = _read(fi, start_byte + 30, 1, 'binary')
-    channel_set['array_forming'] = _read(fi, start_byte + 31, 1, 'binary')
+    nbr_32_ext = _read(fi, start_byte + 28, 0.5, 'binary', False)
+
+    channel_set = dict(
+        scan_type_number=_read(fi, start_byte, 1, 'bcd'),
+        channel_set_number=_read(fi, start_byte + 1, 1, 'bcd'),
+        channel_set_start_time=_read(fi, start_byte + 2, 2, 'binary') * 2e-3,
+        channel_set_end_time=_read(fi, start_byte + 4, 2, 'binary') * 2e-3,
+        optionnal_MP_factor=_read(fi, start_byte + 6, 1, 'binary'),
+        mp_factor_descaler_multiplier=_read(fi, start_byte + 7, 1, 'binary'),
+        nbr_channels_in_channel_set=_read(fi, start_byte + 8, 2, 'bcd'),
+        channel_type_code=_read(fi, start_byte + 10, 0.5, 'binary'),
+        nbr_sub_scans=_read(fi, start_byte + 11, 0.5, 'bcd'),
+        gain_control_type=_read(fi, start_byte + 11, 0.5, 'bcd', False),
+        alias_filter_frequency=_read(fi, start_byte + 12, 2, 'bcd'),
+        alias_filter_slope=_read(fi, start_byte + 14, 2, 'bcd'),
+        low_cut_filter_freq=_read(fi, start_byte + 16, 2, 'bcd'),
+        low_cut_filter_slope=_read(fi, start_byte + 18, 2, 'bcd'),
+        notch_filter_freq=_read(fi, start_byte + 20, 2, 'bcd') / 10,
+        notch_2_filter_freq=_read(fi, start_byte + 22, 2, 'bcd') / 10,
+        notch_3_filter_freq=_read(fi, start_byte + 24, 2, 'bcd') / 10,
+        extended_channel_set_number=_read(fi, start_byte + 26, 2, 'binary'),
+        extended_header_flag=_read(fi, start_byte + 28, 0.5, 'binary'),
+        nbr_32_byte_trace_header_extension=nbr_32_ext,
+        vertical_stack_size=_read(fi, start_byte + 29, 1, 'binary'),
+        RU_channel_number=_read(fi, start_byte + 30, 1, 'binary'),
+        array_forming=_read(fi, start_byte + 31, 1, 'binary'),
+
+    )
+
     return channel_set
 
 
@@ -758,23 +717,16 @@ def _read_extended_header_1(fi, start_byte):
     """
     Extract information contained in the extended header block number 1.
     """
-    extended_header_1 = {}
-    extended_header_1['id_ru'] = _read(fi, start_byte, 8, 'binary')
-    deployment_time = UTCDateTime(_read(fi,
-                                        start_byte + 8,
-                                        8,
-                                        'binary') / 1000000)
-    extended_header_1['deployment_time'] = deployment_time
-    pick_up_time = UTCDateTime(_read(fi,
-                                     start_byte + 16,
-                                     8,
-                                     'binary') / 1000000)
-    extended_header_1['pick_up_time'] = pick_up_time
-    start_time_ru = UTCDateTime(_read(fi,
-                                      start_byte + 24,
-                                      8,
-                                      'binary') / 1000000)
-    extended_header_1['start_time_ru'] = start_time_ru
+    deployment_time = _read(fi, start_byte + 8, 8, 'binary') / 1000000
+    pick_up_time = _read(fi, start_byte + 16, 8, 'binary') / 1000000
+    start_time_ru = _read(fi, start_byte + 24, 8, 'binary') / 1000000
+
+    extended_header_1 = dict(
+        id_ru=_read(fi, start_byte, 8, 'binary'),
+        deployment_time=UTCDateTime(deployment_time),
+        pick_up_time=UTCDateTime(pick_up_time),
+        start_time_ru=UTCDateTime(start_time_ru),
+    )
     return extended_header_1
 
 
@@ -782,42 +734,41 @@ def _read_extended_header_2(fi, start_byte):
     """
     Extract information contained in the extended header block number 2.
     """
-    extended_header_2 = {}
-    # acquisition drift window in second
-    extended_header_2['acquisition_drift_window'] = _read(fi, start_byte, 4,
-                                                          'IEEE') * 1e-6
-    # clock drift in second
-    clock_drift = _read(fi, start_byte + 4, 8, 'binary') * 1e-9
-    extended_header_2['clock_drift'] = clock_drift
+    # code mappings to meaning
     leg_clock_stop = {'0': 'normal', '1': 'storage full', '2': 'power loss',
                       '3': 'reboot'}
-    key = str(_read(fi, start_byte + 12, 1, 'binary'))
-    extended_header_2['clock_stop_method'] = leg_clock_stop[key]
+    stop_code = str(_read(fi, start_byte + 12, 1, 'binary'))
+
     leg_freq_drift = {'0': 'not within specification',
                       '1': 'within specification'}
-    key = str(_read(fi, start_byte + 13, 1, 'binary'))
-    extended_header_2['frequency_drift'] = leg_freq_drift[key]
+    drift_code = str(_read(fi, start_byte + 13, 1, 'binary'))
+
     leg_oscillator_type = {'0': 'control board', '1': 'atomic',
                            '2': 'ovenized', '3': 'double ovenized',
                            '4': 'disciplined'}
-    key = str(_read(fi, start_byte + 14, 1, 'binary'))
-    extended_header_2['oscillator_type'] = leg_oscillator_type[key]
+    oscillator_code = str(_read(fi, start_byte + 14, 1, 'binary'))
+
     leg_data_collection = {'0': 'normal', '1': 'continuous',
                            '2': 'shot sliced with guard band'}
-    key = str(_read(fi, start_byte + 15, 1, 'binary'))
-    extended_header_2['data_collection_method'] = leg_data_collection[key]
-    nbr_time_slices = _read(fi, start_byte + 16, 4, 'binary')
-    extended_header_2['nbr_time_slices'] = nbr_time_slices
-    extended_header_2['nbr_files'] = _read(fi, start_byte + 20, 4, 'binary')
-    extended_header_2['file_number'] = _read(fi, start_byte + 24, 4, 'binary')
+    data_collection_code = str(_read(fi, start_byte + 15, 1, 'binary'))
+
     leg_data_decimation = {'0': 'not decimated', '1': 'decimated data'}
-    key = str(_read(fi, start_byte + 28, 1, 'binary'))
-    extended_header_2['data_decimation'] = leg_data_decimation[key]
-    extended_header_2['original_base_scan_interval'] = _read(fi,
-                                                             start_byte + 29,
-                                                             1, 'binary')
-    nbr_dec_coeff = _read(fi, start_byte + 30, 2, 'binary')
-    extended_header_2['number_decimation_filter_coefficient'] = nbr_dec_coeff
+    decimation_code = str(_read(fi, start_byte + 28, 1, 'binary'))
+
+    extended_header_2 = dict(
+        acquisition_drift_window=_read(fi, start_byte, 4, 'IEEE') * 1e-6,
+        clock_drift=_read(fi, start_byte + 4, 8, 'binary') * 1e-9,
+        clock_stop_method=leg_clock_stop[stop_code],
+        frequency_drift=leg_freq_drift[drift_code],
+        oscillator_type=leg_oscillator_type[oscillator_code],
+        data_collection_method=leg_data_collection[data_collection_code],
+        nbr_time_slices=_read(fi, start_byte + 16, 4, 'binary'),
+        nbr_files=_read(fi, start_byte + 20, 4, 'binary'),
+        file_number=_read(fi, start_byte + 24, 4, 'binary'),
+        data_decimation=leg_data_decimation[decimation_code],
+        original_base_scan_interval=_read(fi, start_byte + 29, 1, 'binary'),
+        nbr_decimation_filter_coef=_read(fi, start_byte + 30, 2, 'binary'),
+    )
     return extended_header_2
 
 
@@ -825,25 +776,17 @@ def _read_extended_header_3(fi, start_byte):
     """
     Extract information contained in the extended header block number 3.
     """
-    extended_header_3 = {}
-    extended_header_3['receiver_line_number'] = _read(fi, start_byte, 4,
-                                                      'binary')
-    extended_header_3['receiver_point'] = _read(fi, start_byte + 4, 4,
-                                                'binary')
-    extended_header_3['receiver_point_index'] = _read(fi, start_byte + 8,
-                                                      1, 'binary')
-    extended_header_3['first_shot_line'] = _read(fi, start_byte + 9,
-                                                 4, 'binary')
-    extended_header_3['first_shot_point'] = _read(fi, start_byte + 13, 4,
-                                                  'binary')
-    extended_header_3['first_shot_point_index'] = _read(fi, start_byte + 17,
-                                                        1, 'binary')
-    extended_header_3['last_shot_line'] = _read(fi, start_byte + 18,
-                                                4, 'binary')
-    extended_header_3['last_shot_point'] = _read(fi, start_byte + 22, 4,
-                                                 'binary')
-    extended_header_3['last_shot_point_index'] = _read(fi, start_byte + 26,
-                                                       1, 'binary')
+    extended_header_3 = dict(
+        receiver_line_number=_read(fi, start_byte, 4, 'binary'),
+        receiver_point=_read(fi, start_byte + 4, 4, 'binary'),
+        receiver_point_index=_read(fi, start_byte + 8, 1, 'binary'),
+        first_shot_line=_read(fi, start_byte + 9, 4, 'binary'),
+        first_shot_point=_read(fi, start_byte + 13, 4, 'binary'),
+        first_shot_point_index=_read(fi, start_byte + 17, 1, 'binary'),
+        last_shot_line=_read(fi, start_byte + 18, 4, 'binary'),
+        last_shot_point=_read(fi, start_byte + 22, 4, 'binary'),
+        last_shot_point_index=_read(fi, start_byte + 26, 1, 'binary'),
+    )
     return extended_header_3
 
 
