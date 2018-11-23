@@ -133,7 +133,7 @@ class TestReadRG16(unittest.TestCase):
 
     def test_cmp_nbr_headers(self):
         """
-        Test to check that the number of headers is correct
+        Test to check that the number of headers is correct.
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             (nbr_channel_set_headers, nbr_extended_headers,
@@ -144,7 +144,7 @@ class TestReadRG16(unittest.TestCase):
 
     def test_cmp_nbr_records(self):
         """
-        Check the number of records in the file
+        Check the number of records in the file.
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             nbr_records = _cmp_nbr_records(fi)
@@ -163,7 +163,7 @@ class TestReadRG16(unittest.TestCase):
 
     def test_make_stats(self):
         """
-        Check function make_stats
+        Check function make_stats.
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             stats = _make_stats(fi, 288, False, False)
@@ -457,7 +457,7 @@ class TestReadRG16(unittest.TestCase):
 
     def test_read_channel_set(self):
         """
-        Test the reading of the first channel set
+        Test the reading of the first channel set.
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             channel_set_1 = _read_channel_set(fi, 64)
@@ -492,7 +492,7 @@ class TestReadRG16(unittest.TestCase):
 
     def test_read_extended_header_1(self):
         """
-        Test the reading of the extended header 1
+        Test the reading of the extended header 1.
         """
         with open(THREE_CHAN_FCNT, 'rb') as fi:
             extended_header_1 = _read_extended_header_1(fi, 160)

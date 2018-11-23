@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Receiver Gather (version 1.6-1) bindings to ObsPy core module.
+"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
@@ -16,29 +19,34 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
                merge=False, contacts_north=False, details=False, **kwargs):
     """
     Read Fairfield Nodal's Receiver Gather File Format version 1.6-1.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+
     :param filename: path to the rg16 file or a file object.
     :type filename: str, buffer
     :param headonly: If True don't read data, only main information
-     contained in the headers of the trace block is read.
+        contained in the headers of the trace block is read.
     :type headonly: optional, bool
     :param starttime: If not None dont read traces that start before starttime.
-    :type starttime: optional, obspy.UTCDateTime
+    :type starttime: optional, :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param endtime: If not None dont read traces that start after endtime.
-    :type endtime: optional, obspy.UTCDateTime
+    :type endtime: optional, :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param merge: If True merge contiguous data blocks as they are found. For
-     continuous data files having 100,000+ traces this will create
-     more manageable streams.
+        continuous data files having 100,000+ traces this will create
+        more manageable streams.
     :type merge: bool
     :param contacts_north: If this parameter is set to True, it will map the
-     components to Z (1C, 3C), N (3C), and E (3C) as well as correct
-     the polarity for the vertical component.
+        components to Z (1C, 3C), N (3C), and E (3C) as well as correct
+        the polarity for the vertical component.
     :type contacts_north: bool
     :param details: If True, all the information contained in the headers
-     is read).
-    :type details: optional, bool
+        is read).
+    :type details: bool
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
-    Frequencies are expressed in hertz and time is expressed in seconds
-    (except for date).
+        Frequencies are expressed in hertz and time is expressed in seconds
+        (except for date).
     """
     if starttime is None:
         starttime = UTCDateTime(1970, 1, 1)
@@ -110,7 +118,7 @@ def _cmp_jump(fi, trace_block_start):
 def _make_trace(fi, trace_block_start, headonly, standard_orientation,
                 details):
     """
-    Make obspy trace from a trace block (header + trace)
+    Make obspy trace from a trace block (header + trace).
     """
     stats = _make_stats(fi, trace_block_start, standard_orientation, details)
     if headonly:
@@ -178,11 +186,13 @@ def _make_stats(fi, trace_block_start, standard_orientation, details):
 def _quick_merge(traces, small_number=.000001):
     """
     Specialized function for merging traces produced by _read_rg16.
+
     Requires that traces are of the same datatype, have the same
     sampling_rate, and dont have data overlaps.
+
     :param traces: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
     :param small_number: a small number for determining if traces
-     should be merged. Should be much less than one sample spacing.
+        should be merged. Should be much less than one sample spacing.
     :return: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
     """
     # make sure sampling rates are all the same
@@ -208,9 +218,10 @@ def _quick_merge(traces, small_number=.000001):
 
 def _trace_list_to_rec_array(traces):
     """
-    Return a recarray from the trace list. These are seperated into
-    two arrays due to a weird issue with numpy.sort returning and error
-    set.
+    Return a recarray from the trace list.
+
+    These are separated into two arrays due to a weird issue with
+    numpy.sort returning and error set.
     """
     # get the id, starttime, endtime into a recarray
     # rec array column names must be native strings due to numpy issue 2407
@@ -569,6 +580,7 @@ def _read_trace_header_10(fi, trace_block_start):
 def _is_rg16(filename, **kwargs):
     """
     Determine if a file is a rg16 file.
+
     :param filename: a path to a file or a file object
     :type filename: str, buffer
     :rtype: bool
@@ -589,10 +601,12 @@ def _read_initial_headers(filename):
     """
     Extract all the information contained in the headers located before data,
     at the beginning of the rg16 file object.
+
     :param filename : a path to a rg16 file or a rg16 file object.
     :type filename: str, buffer
-    :return: a dictionnary containing all the information
-     in the initial headers
+    :return: a dictionnary containing all the information in the initial
+        headers
+
     Frequencies are expressed in hertz and time is expressed in seconds
     (except for the date).
     """
