@@ -31,8 +31,6 @@ FLAKE8_IGNORE_CODES = [
     # This is really annoying when using the standard library import hooks
     # from the future package.
     "E402",
-    # backslash
-    # https://lintlyci.github.io/Flake8Rules/rules/W605.html
 ]
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",
