@@ -30,7 +30,9 @@ FLAKE8_IGNORE_CODES = [
     # E402 module level import not at top of file
     # This is really annoying when using the standard library import hooks
     # from the future package.
-    "E402"
+    "E402",
+    # backslash
+    # https://lintlyci.github.io/Flake8Rules/rules/W605.html
 ]
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",

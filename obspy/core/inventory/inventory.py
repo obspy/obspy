@@ -460,7 +460,7 @@ class Inventory(ComparingObject):
     def select(self, network=None, station=None, location=None, channel=None,
                time=None, starttime=None, endtime=None, sampling_rate=None,
                keep_empty=False):
-        """
+        r"""
         Returns the :class:`Inventory` object with only the
         :class:`~obspy.core.inventory.network.Network`\ s /
         :class:`~obspy.core.inventory.station.Station`\ s /

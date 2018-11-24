@@ -331,7 +331,7 @@ class Network(BaseNode):
     def select(self, station=None, location=None, channel=None, time=None,
                starttime=None, endtime=None, sampling_rate=None,
                keep_empty=False):
-        """
+        r"""
         Returns the :class:`Network` object with only the
         :class:`~obspy.core.inventory.station.Station`\ s /
         :class:`~obspy.core.inventory.channel.Channel`\ s that match the given
