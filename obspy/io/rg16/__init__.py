@@ -94,7 +94,7 @@ in a stream with seed compliant channel codes with orientations Z, N, E.
 Reading the initial headers
 -------
 The initial headers at the beginning of the rg16 file can be read
-separetely using the :mod:`obspy.io.rg16` specific function
+separately using the :mod:`obspy.io.rg16` specific function
 :func:`obspy.io.rg16.core._read_initial_headers`
 
 >>> initial_headers = _read_initial_headers(filename)
@@ -102,3 +102,8 @@ separetely using the :mod:`obspy.io.rg16` specific function
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
