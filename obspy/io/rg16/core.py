@@ -5,12 +5,12 @@ Receiver Gather (version 1.6-1) bindings to ObsPy core module.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str as nstr
 
-import copy
 from collections import namedtuple
 
 import numpy as np
+
+from io.rg16.util import _quick_merge
 from obspy.core import Stream, Trace, Stats, UTCDateTime
 from obspy.io.rg16.util import _read, _open_file
 
@@ -183,77 +183,6 @@ def _make_stats(fi, tr_block_start, standard_orientation, details):
             stats_tr_headers.update(
                 _read_trace_headers(fi, tr_block_start, nbr_tr_header_block))
     return Stats(statsdict)
-
-
-def _quick_merge(traces, small_number=.000001):
-    """
-    Specialized function for merging traces produced by _read_rg16.
-
-    Requires that traces are of the same datatype, have the same
-    sampling_rate, and dont have data overlaps.
-
-    :param traces: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
-    :param small_number: a small number for determining if traces
-        should be merged. Should be much less than one sample spacing.
-    :return: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
-    """
-    # make sure sampling rates are all the same
-    assert len({tr.stats.sampling_rate for tr in traces}) == 1
-    assert len({tr.data.dtype for tr in traces}) == 1
-    sampling_rate = traces[0].stats.sampling_rate
-    diff = 1. / sampling_rate + small_number
-    # get the array
-    ar, trace_ar = _trace_list_to_rec_array(traces)
-    # get groups of traces that can be merged together
-    group = _get_trace_groups(ar, diff)
-    group_numbers = np.unique(group)
-    out = [None] * len(group_numbers)  # init output list
-    for index, gnum in enumerate(group_numbers):
-        trace_ar_to_merge = trace_ar[group == gnum]
-        new_data = np.concatenate(list(trace_ar_to_merge['data']))
-        # get updated stats object
-        new_stats = copy.deepcopy(trace_ar_to_merge['stats'][0])
-        new_stats.npts = len(new_data)
-        out[index] = Trace(data=new_data, header=new_stats)
-    return out
-
-
-def _trace_list_to_rec_array(traces):
-    """
-    Return a recarray from the trace list.
-
-    These are separated into two arrays due to a weird issue with
-    numpy.sort returning and error set.
-    """
-    # get the id, starttime, endtime into a recarray
-    # rec array column names must be native strings due to numpy issue 2407
-    dtype1 = [(nstr('id'), np.object), (nstr('starttime'), float),
-              (nstr('endtime'), float)]
-    dtype2 = [(nstr('data'), np.object), (nstr('stats'), np.object)]
-    data1 = [(tr.id, tr.stats.starttime.timestamp, tr.stats.endtime.timestamp)
-             for tr in traces]
-    data2 = [(tr.data, tr.stats) for tr in traces]
-    ar1 = np.array(data1, dtype=dtype1)  # array of id, starttime, endtime
-    ar2 = np.array(data2, dtype=dtype2)  # array of data, stats objects
-    #
-    sort_index = np.argsort(ar1, order=['id', 'starttime'])
-    return ar1[sort_index], ar2[sort_index]
-
-
-def _get_trace_groups(ar, diff):
-    """
-    Return an array of ints where each element corresponds to a pre-merged
-    trace row. All trace rows with the same group number can be merged.
-    """
-    # get a bool of if ids are the same as the next row down
-    ids_different = np.ones(len(ar), dtype=bool)
-    ids_different[1:] = ar['id'][1:] != ar['id'][:-1]
-    # get bool of endtimes within one sample of starttime of next row
-    disjoint = np.zeros(len(ar), dtype=bool)
-    start_end_diffs = ar['starttime'][1:] - ar['endtime'][:-1]
-    disjoint[:-1] = np.abs(start_end_diffs) <= diff
-    # get groups (not disjoint, not different ids)
-    return np.cumsum(ids_different & disjoint)
 
 
 def _read_trace_headers(fi, trace_block_start, nbr_trace_header):
