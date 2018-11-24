@@ -77,7 +77,8 @@ def normalize_version_number(string):
     Due to Py3k arbitrary dictionary ordering it also sorts word wise the
     input string, independent of commas and newlines.
     """
-    repl = re.sub('v[0-9]+\.[0-9]+\.[0-9]+', "vX.X.X", string).replace(",", "")
+    match = r'v[0-9]+\.[0-9]+\.[0-9]+'
+    repl = re.sub(match, "vX.X.X", string).replace(",", "")
     return [l.strip() for l in repl.splitlines()]
 
 

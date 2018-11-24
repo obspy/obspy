@@ -320,7 +320,7 @@ class Station(BaseNode):
 
     def select(self, location=None, channel=None, time=None, starttime=None,
                endtime=None, sampling_rate=None):
-        """
+        r"""
         Returns the :class:`Station` object with only the
         :class:`~obspy.core.inventory.channel.Channel`\ s that match the given
         criteria (e.g. all channels with ``channel="EHZ"``).

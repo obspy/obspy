@@ -74,7 +74,7 @@ class _ResourceKeyDescriptor(object):
 
 
 class ResourceIdentifier(object):
-    """
+    r"""
     Unique identifier referring to a resource.
 
     In QuakeML many elements and types can have a unique id that other elements

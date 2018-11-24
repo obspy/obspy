@@ -326,9 +326,9 @@ class Unpickler(object):
         :type first_line: str
         :param first_line: First line of header.
         """
-        line_1_pattern = 'BEGIN\sGSE2.0'
-        line_2_pattern = 'MSG_TYPE\s(REQUEST|DATA|SUBSCRIPTION|PROBLEM)'
-        line_3_pattern = 'MSG_ID\s\w{1,20}\s?\w{1,8}'
+        line_1_pattern = r'BEGIN\sGSE2.0'
+        line_2_pattern = r'MSG_TYPE\s(REQUEST|DATA|SUBSCRIPTION|PROBLEM)'
+        line_3_pattern = r'MSG_ID\s\w{1,20}\s?\w{1,8}'
 
         if not re.match(line_1_pattern, first_line):
             raise GSE2BulletinSyntaxError('Wrong GSE2.0 header')
@@ -488,7 +488,7 @@ class Unpickler(object):
         line = self._skip_empty_lines()
 
         # File from ldg can have author on several lines
-        while re.match('\s{105,}\w+\s*', line):
+        while re.match(r'\s{105,}\w+\s*', line):
             fields = self.fields['line_1']
             origin.creation_info.author += line[fields['author']].strip()
             line = self._skip_empty_lines()
