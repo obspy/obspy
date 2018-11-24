@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Tests for rg16 utilities.
+"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
@@ -28,7 +31,7 @@ class TestRG16Util(unittest.TestCase):
             self.assertEqual(out, answer)
         with self.assertRaises(ValueError) as e:
             _read_bcd(BytesIO(b'\xFF'), 1, True)
-        assert 'invalid bcd values' in str(e.exception)
+        self.assertIn('invalid bcd values', str(e.exception))
 
     def test_read_binary(self):
         """
@@ -52,8 +55,9 @@ class TestRG16Util(unittest.TestCase):
         out = _read(BytesIO(ieee), 0, 4, 'IEEE')
         self.assertAlmostEqual(out, 3.14, delta=1e-6)
 
-    def suite():
-        return unittest.makeSuite(TestRG16Util, 'test')
+
+def suite():
+    return unittest.makeSuite(TestRG16Util, 'test')
 
 
 if __name__ == '__main__':
