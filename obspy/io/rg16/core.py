@@ -10,9 +10,8 @@ from collections import namedtuple
 
 import numpy as np
 
-from io.rg16.util import _quick_merge
 from obspy.core import Stream, Trace, Stats, UTCDateTime
-from obspy.io.rg16.util import _read, _open_file
+from obspy.io.rg16.util import _read, _open_file, _quick_merge
 
 
 HeaderCount = namedtuple('HeaderCount', 'channel_set extended external')
