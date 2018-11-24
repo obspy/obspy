@@ -1452,7 +1452,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                            err_msg=filename)
                 self.assertEqual(tr.stats.npts, npts, msg=filename)
             else:  # pragma: no cover
-                raise NotImplemented
+                raise NotImplementedError
 
         folder = os.path.join(self.path, os.path.pardir, "src", "libmseed",
                               "test")
