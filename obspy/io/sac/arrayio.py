@@ -592,7 +592,7 @@ def validate_sac_content(hf, hi, hs, data, *tests):
             if not all([is_min, is_max, is_mean]):
                 msg = "Data headers don't match data array."
                 raise SacInvalidContentError(msg)
-        except (AttributeError, ValueError) as e:
+        except (AttributeError, ValueError):
             msg = "Data array is None, empty array, or non-array. " + \
                   "Cannot check data headers."
             raise SacInvalidContentError(msg)

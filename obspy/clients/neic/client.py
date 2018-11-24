@@ -216,7 +216,7 @@ class Client(object):
                                 tf.seek(0)
                                 try:
                                     st = read(tf, 'MSEED')
-                                except Exception as e:
+                                except Exception:
                                     st = Stream()
                                 st.trim(starttime, starttime + duration)
                                 s.close()
@@ -226,7 +226,7 @@ class Client(object):
                                 totlen += len(data)
                                 tf.write(data)
                                 slept = 0
-                        except socket.error as e:
+                        except socket.error:
                             if slept > maxslept:
                                 print(ascdate(), asctime(),
                                       "Timeout on connection",
@@ -235,7 +235,7 @@ class Client(object):
                                 s.close()
                             sleep(0.05)
                             slept += 1
-            except socket.error as e:
+            except socket.error:
                 print(traceback.format_exc())
                 print("CWB QueryServer at " + self.host + "/" + str(self.port))
                 raise

@@ -135,7 +135,7 @@ def skip_on_network_error(func, *args, **kwargs):
         if str(e) == "[Errno 110] Connection timed out":
             raise unittest.SkipTest(str(e))
     # general except to be able to generally reraise
-    except Exception as e:
+    except Exception:
         raise
 
 
