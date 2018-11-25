@@ -618,6 +618,7 @@ class InventoryBasemapTestCase(unittest.TestCase):
                      size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                      outfile=ic.name)
 
+    @unittest.skip('skip due to basemap issue #443')
     def test_combined_station_event_plot(self):
         """
         Tests the coombined plotting of inventory/event data in one plot,

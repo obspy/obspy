@@ -518,6 +518,7 @@ class CatalogBasemapTestCase(unittest.TestCase):
         # directory where the test files are located
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
+    @unittest.skip('skip due to basemap issue #443')
     def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters, using Basemap.
