@@ -580,6 +580,7 @@ class CatalogBasemapTestCase(unittest.TestCase):
         # Also clear the tracker.
         ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
+    @unittest.skip('skip due to basemap issue #443')
     def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters, using Basemap.
