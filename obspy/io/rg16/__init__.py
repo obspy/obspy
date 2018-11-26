@@ -97,6 +97,7 @@ The initial headers at the beginning of the rg16 file can be read
 separately using the :mod:`obspy.io.rg16` specific function
 :func:`obspy.io.rg16.core._read_initial_headers`
 
+>>> from obspy.io.rg16.core import _read_initial_headers
 >>> initial_headers = _read_initial_headers(filename)
 """
 from __future__ import (absolute_import, division, print_function,
