@@ -44,6 +44,7 @@ INGV    http://webservices.ingv.it
 IPGP    http://ws.ipgp.fr
 IRIS    http://service.iris.edu
 ISC     http://isc-mirror.iris.washington.edu
+KNMI    http://rdsa.knmi.nl
 KOERI   http://eida.koeri.boun.edu.tr
 LMU     http://erde.geophysik.uni-muenchen.de
 NCEDC   http://service.ncedc.org
