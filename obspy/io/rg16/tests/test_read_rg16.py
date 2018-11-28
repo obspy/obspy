@@ -13,6 +13,7 @@ import unittest
 import numpy as np
 import obspy
 import obspy.io.rg16.core as rc
+from obspy import read
 from obspy import UTCDateTime
 
 TEST_FCNT_DIRECTORY = os.path.join(os.path.dirname(__file__), 'data')
@@ -24,6 +25,26 @@ FCNT_FILES = [ONE_CHAN_FCNT, THREE_CHAN_FCNT]
 
 
 class TestReadRG16(unittest.TestCase):
+
+    def test_reading_rg16_files(self):
+        """
+        Ensure that the rg16 files are read by the
+        :func:`~obspy.core.stream.read` function
+        with or without specifying the format.
+        """
+        for fcnt_file in FCNT_FILES:
+            st_1 = read(fcnt_file)
+            st_2 = read(fcnt_file, format="RG16")
+            st_3 = rc._read_rg16(fcnt_file)
+            # when the function read is called a key "_format" is introduced
+            # in the object stats. This key is not created when the function
+            # _read_rg16 is called. In order to check the stream equality, the
+            # key "_format" was removed.
+            for tr_1, tr_2 in zip(st_1, st_2):
+                del tr_1.stats._format
+                del tr_2.stats._format
+            self.assertTrue(st_1 == st_3)
+            self.assertTrue(st_2 == st_3)
 
     def test_rg16_files_identified(self):
         """
