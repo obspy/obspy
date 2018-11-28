@@ -739,11 +739,21 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         zeros_array = stage.find(_ns("zeros")).text
         poles_array = stage.find(_ns("poles")).text
         if zeros_array is not None:
+<<<<<<< HEAD
             zeros_array = _parse_list_of_complex_string(zeros_array)
         else:
             zeros_array = []
         if poles_array is not None:
             poles_array = _parse_list_of_complex_string(poles_array)
+=======
+            zeros_array = re.findall(r'\(\s*([^,\s]+)\s*,\s*([^)\s]+)\s*\)',
+                                     zeros_array)
+        else:
+            zeros_array = []
+        if poles_array is not None:
+            poles_array = re.findall(r'\(\s*([^,\s]+)\s*,\s*([^)\s]+)\s*\)',
+                                     poles_array)
+>>>>>>> Fix poles and zeros reading
         else:
             poles_array = []
 
