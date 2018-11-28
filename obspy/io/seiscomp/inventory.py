@@ -18,10 +18,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import math
+import re
 import warnings
-import obspy
 
 from lxml import etree
+
+import obspy
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (Azimuth, ClockDrift, Dip,
@@ -701,11 +703,13 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
         zeros_array = stage.find(_ns("zeros")).text
         poles_array = stage.find(_ns("poles")).text
         if zeros_array is not None:
-            zeros_array = zeros_array.split()
+            zeros_array = re.findall(r'\(\s*([^,\s]+)\s*,\s*([^)\s]+)\s*\)',
+                                     zeros_array)
         else:
             zeros_array = []
         if poles_array is not None:
-            poles_array = poles_array.split()
+            poles_array = re.findall(r'\(\s*([^,\s]+)\s*,\s*([^)\s]+)\s*\)',
+                                     poles_array)
         else:
             poles_array = []
 
