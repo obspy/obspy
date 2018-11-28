@@ -805,20 +805,16 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
 def _tag2pole_or_zero(paz_element, count):
 
     """
-    Parses sc3ml paz format
+    Parses sc3ml poles and zeros
     Uncertainties on poles removed, not present in sc3ml.xsd?
     Always put to None so no internal conflict
     The sanitization removes the first/last parenthesis
     and split by comma, real part is 1st, imaginary 2nd
 
-    :param paz_element: string of poles or zeros e.g. (12320, 23020)
+    :param paz_element: tuple of poles or zeros e.g. ('12320', '23020')
     """
 
-    paz_element = paz_element[1:-1]
-    paz_element = paz_element.split(",")
-
-    real = float(paz_element[0])
-    imag = float(paz_element[1])
+    real, imag = map(float, paz_element)
 
     if real is not None or imag is not None:
         real = real or 0
