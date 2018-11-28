@@ -52,7 +52,7 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
         (except for date).
     """
     starttime = starttime or UTCDateTime(1970, 1, 1)
-    endtime = endtime or UTCDateTime("3000-01-01")
+    endtime = endtime or UTCDateTime()
     # get the number of headers/records and position of trace data
     header_count = _cmp_nbr_headers(filename)
     record_count = _cmp_nbr_records(filename)
