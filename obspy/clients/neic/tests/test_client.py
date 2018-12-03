@@ -16,13 +16,17 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.neic.client.Client.
     """
+    @classmethod
+    def setUpClass(cls):
+        cls.client = Client(host="137.227.224.97", port=2061)
+        cls.starttime = UTCDateTime() - 5 * 60 * 60
+
     def test_get_waveform(self):
         """
         Tests get_waveforms method. Tests against get_waveforms_nscl method.
         """
-        client = Client(host="137.227.224.97", port=2061)
-        # now - 5 hours
-        t = UTCDateTime() - 5 * 60 * 60
+        client = self.client
+        t = self.starttime
         duration = 1.0
         st = client.get_waveforms_nscl("IUANMO BH.00", t, duration)
         # try a series of requests, compare against get_waveforms_nscl
@@ -40,9 +44,8 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests get_waveforms_nscl method.
         """
-        client = Client(host="137.227.224.97", port=2061)
-        # now - 5 hours
-        t = UTCDateTime() - 5 * 60 * 60
+        client = self.client
+        t = self.starttime
         duration_long = 3600.0
         duration = 1.0
         components = ["1", "2", "Z"]
@@ -68,8 +71,8 @@ class ClientTestCase(unittest.TestCase):
                 tr.stats.delta)
             # if the following fails this is likely due to a change at the
             # requested station and simply has to be adapted
-            self.assertEqual(stats.sampling_rate, 20.0)
-            self.assertEqual(len(tr), 72001)
+            self.assertEqual(stats.sampling_rate, 40.0)
+            self.assertEqual(len(tr), 144001)
         # now use shorter piece, this is faster and less error prone (gaps etc)
         st = client.get_waveforms_nscl("IUANMO BH.00", t, duration)
         st.sort()
@@ -91,8 +94,8 @@ class ClientTestCase(unittest.TestCase):
                 tr.stats.delta)
             # if the following fails this is likely due to a change at the
             # requested station and simply has to be adapted
-            self.assertEqual(stats.sampling_rate, 20.0)
-            self.assertEqual(len(tr), 21)
+            self.assertEqual(stats.sampling_rate, 40.0)
+            self.assertEqual(len(tr), 41)
 
         # try a series of regex patterns that should return the same data
         st = client.get_waveforms_nscl("IUANMO BH", t, duration)
