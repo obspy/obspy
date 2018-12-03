@@ -448,7 +448,7 @@ def TemporaryWorkingDirectory():  # noqa --> this name is IMHO ok for a CM
         # directories (e.g. https://ci.appveyor.com/project/obspy/obspy/builds
         # /20718605/job/0vuja1b95rv5a0s2).
         except Exception as e:
-            warnings.warn(e)
+            warnings.warn(e.__repr__())
 
 
 def factorize_int(x):
