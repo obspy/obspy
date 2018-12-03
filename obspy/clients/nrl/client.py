@@ -192,7 +192,8 @@ class NRL(object):
 
         >>> nrl = NRL()
         >>> response = nrl.get_response(
-        ...     sensor_keys=['Nanometrics', 'Trillium Compact 120 (Vault, Posthole, OBS)', '754 V/m/s'],
+        ...     sensor_keys=['Nanometrics', 'Trillium Compact 120 (Vault, '
+        ...                  'Posthole, OBS)', '754 V/m/s'],
         ...     datalogger_keys=['REF TEK', 'RT 130 & 130-SMA', '1', '200'])
         >>> print(response)   # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         Channel Response
