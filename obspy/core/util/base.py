@@ -355,10 +355,42 @@ def get_dependency_version(package_name, raw_string=False):
     return version_list
 
 
+def get_proj_version(raw_string=False):
+    """
+    Get the version number for proj4 as a list.
+
+    proj4 >= 5 does not play nicely for pseudocyl projections
+    (see basemap issue 433).  Checking this will allow us to raise a warning
+    when plotting using basemap.
+
+    :returns: Package version as a list of three integers.
+        With option ``raw_string=True`` returns raw version string instead.
+        The last version number can indicate different things like it being a
+        version from the old svn trunk, the latest git repo, some release
+        candidate version, ...
+        If the last number cannot be converted to an integer it will be set to
+        0.
+    """
+    from pyproj import Proj
+
+    # proj4 is a c library, prproj wraps this.  proj_version is an attribute
+    # of the Proj class that is only set when the projection is made. Make
+    # a dummy projection and get the version
+    version_string = str(Proj(proj='utm', zone=10, ellps='WGS84').proj_version)
+    if raw_string:
+        return version_string
+    version_list = [to_int_or_zero(no) for no in version_string.split(".")]
+    # For version 5.2.0 the version number is given as 5.2
+    while len(version_list) < 3:
+        version_list.append(0)
+    return version_list
+
+
 NUMPY_VERSION = get_dependency_version('numpy')
 SCIPY_VERSION = get_dependency_version('scipy')
 MATPLOTLIB_VERSION = get_dependency_version('matplotlib')
 BASEMAP_VERSION = get_dependency_version('basemap')
+PROJ4_VERSION = get_proj_version()
 CARTOPY_VERSION = get_dependency_version('cartopy')
 
 
