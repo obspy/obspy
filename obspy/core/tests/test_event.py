@@ -20,7 +20,7 @@ from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               read_events, Magnitude, FocalMechanism, Arrival)
 from obspy.core.event.source import farfield
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import BASEMAP_VERSION, CARTOPY_VERSION
+from obspy.core.util import BASEMAP_VERSION, CARTOPY_VERSION, PROJ4_VERSION
 from obspy.core.util.base import _get_entry_points
 from obspy.core.util.testing import ImageComparison
 from obspy.core.event.base import QuantityError
@@ -161,6 +161,7 @@ class EventTestCase(unittest.TestCase):
         self.assertEqual(rob1, rob3)
 
     @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    @unittest.skipIf(PROJ4_VERSION == [5, 2, 0], 'unsupported proj4 library')
     def test_plot_farfield_without_quiver_with_maps(self):
         """
         Tests to plot P/S wave farfield radiation pattern, also with beachball
@@ -654,6 +655,7 @@ class CatalogCartopyTestCase(unittest.TestCase):
         # Also clear the tracker.
         ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
+    @unittest.skipIf(PROJ4_VERSION == [5, 2, 0], 'unsupported proj4 library')
     def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters, using Cartopy.

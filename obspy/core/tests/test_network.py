@@ -25,7 +25,7 @@ import obspy
 from obspy import UTCDateTime, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.util import (
-    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION)
+    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION, PROJ4_VERSION)
 from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory import Channel, Network, Response, Station
 
@@ -272,6 +272,7 @@ class NetworkBasemapTestCase(unittest.TestCase):
     def tearDown(self):
         np.seterr(**self.nperr)
 
+    @unittest.skipIf(PROJ4_VERSION == [5, 2, 0], 'unsupported proj4 library')
     def test_location_plot_global(self):
         """
         Tests the network location preview plot, default parameters, using

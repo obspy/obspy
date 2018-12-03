@@ -25,7 +25,7 @@ from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
 
 from obspy import UTCDateTime
 from obspy.core.util import (BASEMAP_VERSION, CARTOPY_VERSION,
-                             MATPLOTLIB_VERSION)
+                             MATPLOTLIB_VERSION, PROJ4_VERSION)
 from obspy.geodetics.base import mean_longitude
 
 
@@ -50,6 +50,13 @@ else:
 
 if not HAS_BASEMAP and not HAS_CARTOPY:
     msg = ("Neither basemap nor cartopy installed, map plots will not work.")
+    warnings.warn(msg)
+
+
+if PROJ4_VERSION == [5, 2, 0]:
+    msg = (
+        "pyproj with proj4 5.2.0 has a bug that results in inverted map axes. "
+        "Your maps may be wrong. Please use another version of proj4.")
     warnings.warn(msg)
 
 
