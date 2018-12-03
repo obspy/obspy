@@ -89,6 +89,7 @@ install:
         # no basemap version works with this old numpy, so leave out
         BASEMAP=""
         PYPROJ="pyproj"
+        PROJ4="proj4"
         # ancient matplotlib needs to be turned to AGG before anything else,
         # otherwise it tries to import incompatible version of Qt as a backend
         # and hick-ups..
@@ -102,6 +103,7 @@ install:
         MATPLOTLIB="matplotlib"
         BASEMAP="basemap"
         PYPROJ="pyproj"
+        PROJ4="proj4"
       # elif [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
       #   # Special packages for 32bit. Also let conda resolve to the latest
       #   # versions.
@@ -111,12 +113,22 @@ install:
       #   BASEMAP="basemap"
       #   PYPROJ="pyproj"
       # For anything else also let conda resolve, but force matplotlib 2.
+      elif [[ "${PYTHON_VERSION}" == '3.6' ]]; then
+        # Pin proj4 to 4.9.3 for map testing - see basemap #433
+        # Let conda resolve to the latest versions otherwise.
+        NUMPY="numpy"
+        SCIPY="scipy"
+        MATPLOTLIB="matplotlib"
+        BASEMAP="basemap"
+        PYPROJ="pyproj"
+        PROJ4="proj4=4.9.3"
       else
         NUMPY="numpy"
         SCIPY="scipy"
         MATPLOTLIB="matplotlib>=2.0.0"
         BASEMAP="basemap"
         PYPROJ="pyproj"
+        PROJ4="proj4"
       fi
   - |
     if [[ "${PYTHON_VERSION}" == '3.7' ]]; then
@@ -132,7 +144,7 @@ install:
         $MATPLOTLIB
         $BASEMAP
         $PYPROJ
-        proj4=4.9.3
+        $PROJ4
         coverage
         decorator
         docopt
