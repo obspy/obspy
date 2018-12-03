@@ -687,6 +687,8 @@ class ClientTestCase(unittest.TestCase):
                 ("IU", "ANMO", "*", "HHZ",
                  UTCDateTime("2010-03-25T00:00:00"),
                  UTCDateTime("2010-03-25T00:00:08")))
+        # As of 03 December 2018, it looks like IRIS returns data shorter than
+        # minimumlength if the start and end time specified force shorter data.
         params = dict(quality="B", longestonly=False, minimumlength=5)
         for client in clients:
             # test output to stream
@@ -1359,11 +1361,11 @@ class ClientTestCase(unittest.TestCase):
                     endtime=UTCDateTime("2010-02-27T06:40:00.000"))
 
         # test invalid token/token file
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 ValueError,
                 'EIDA token does not seem to be a valid PGP message'):
             client = Client('GFZ', eida_token="spam")
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 ValueError,
                 "Read EIDA token from file '[^']*event_helpstring.txt' but it "
                 "does not seem to contain a valid PGP message."):
