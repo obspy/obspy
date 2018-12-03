@@ -268,6 +268,11 @@ class ShapefileTestCase(unittest.TestCase):
                     expected_records=expected_catalog_records_with_region)
                 self.assertEqual(shp.shapeType, shapefile.POINT)
                 _close_shapefile_reader(shp)
+            # For some reason, on windows the files are still in use when
+            # TemporaryWorkingDirectory tries to remove the directory.
+            self.assertTrue(fh_shp.closed)
+            self.assertTrue(fh_dbf.closed)
+            self.assertTrue(fh_shx.closed)
 
     def test_write_catalog_shapefile_via_plugin(self):
         # read two events with uncertainties, one deserializes with "confidence
