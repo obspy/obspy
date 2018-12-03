@@ -569,6 +569,7 @@ class InventoryBasemapTestCase(unittest.TestCase):
     def tearDown(self):
         np.seterr(**self.nperr)
 
+    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
     def test_location_plot_global(self):
         """
         Tests the inventory location preview plot, default parameters, using
@@ -618,7 +619,7 @@ class InventoryBasemapTestCase(unittest.TestCase):
                      size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                      outfile=ic.name)
 
-    @unittest.skipIf(PROJ4_VERSION == [5, 2, 0], 'unsupported proj4 library')
+    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
     def test_combined_station_event_plot(self):
         """
         Tests the combined plotting of inventory/event data in one plot,

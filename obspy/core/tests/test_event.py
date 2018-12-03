@@ -124,7 +124,7 @@ class EventTestCase(unittest.TestCase):
         self.assertFalse(hasattr(p, "test_2"))
 
     @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
-    @unittest.skipIf(PROJ4_VERSION == [5, 2, 0], 'unsupported proj4 library')
+    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
     def test_plot_farfield_without_quiver_with_maps(self):
         """
         Tests to plot P/S wave farfield radiation pattern, also with beachball
@@ -519,7 +519,7 @@ class CatalogBasemapTestCase(unittest.TestCase):
         # directory where the test files are located
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
-    @unittest.skip('skip due to basemap issue #443')
+    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
     def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters, using Basemap.
@@ -588,7 +588,6 @@ class CatalogCartopyTestCase(unittest.TestCase):
         # directory where the test files are located
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
-    @unittest.skipIf(PROJ4_VERSION == [5, 2, 0], 'unsupported proj4 library')
     def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters, using Cartopy.
