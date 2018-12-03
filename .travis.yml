@@ -124,6 +124,7 @@ install:
     else
       FREETYPE="freetype<2.8"
     fi
+  # proj4 version 5.2.0 has issues with psuedocyl projections (see basemap #433).
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
         $NUMPY
@@ -131,6 +132,7 @@ install:
         $MATPLOTLIB
         $BASEMAP
         $PYPROJ
+        proj4=4.9.3
         coverage
         decorator
         docopt
