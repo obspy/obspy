@@ -53,10 +53,10 @@ if not HAS_BASEMAP and not HAS_CARTOPY:
     warnings.warn(msg)
 
 
-if PROJ4_VERSION == [5, 2, 0]:
+if PROJ4_VERSION[0] == 5:
     msg = (
-        "pyproj with proj4 5.2.0 has a bug that results in inverted map axes. "
-        "Your maps may be wrong. Please use another version of proj4.")
+        "pyproj with proj4 version 5 has a bug that results in inverted map "
+        "axes. Your maps may be wrong. Please use another version of proj4.")
     warnings.warn(msg)
 
 

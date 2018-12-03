@@ -272,7 +272,7 @@ class NetworkBasemapTestCase(unittest.TestCase):
     def tearDown(self):
         np.seterr(**self.nperr)
 
-    @unittest.skipIf(PROJ4_VERSION == [5, 2, 0], 'unsupported proj4 library')
+    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
     def test_location_plot_global(self):
         """
         Tests the network location preview plot, default parameters, using
