@@ -37,6 +37,18 @@ if BASEMAP_VERSION:
                       "when rendering countries and continents. ObsPy will "
                       "still work but the maps might be wrong. Please update "
                       "your basemap installation.")
+    if PROJ4_VERSION[0] == 5:
+        msg = (
+            "basemap/pyproj with proj4 version >= 5 has a bug that results in "
+            "inverted map axes. Your maps may be wrong. Please use another "
+            "version of proj4, or use cartopy.")
+        warnings.warn(msg)
+    if MATPLOTLIB_VERSION == [3, 0, 1] and BASEMAP_VERSION >= [1, 1, 0]:
+        msg = (
+            "basemap and matplotlib version 3.0.1 have compataibilty issues, "
+            "please change your matplotlib version. "
+            "See https://github.com/matplotlib/basemap/issues/435")
+        warnings.warn(msg)
 else:
     HAS_BASEMAP = False
 
@@ -50,13 +62,6 @@ else:
 
 if not HAS_BASEMAP and not HAS_CARTOPY:
     msg = ("Neither basemap nor cartopy installed, map plots will not work.")
-    warnings.warn(msg)
-
-
-if PROJ4_VERSION[0] == 5:
-    msg = (
-        "pyproj with proj4 version 5 has a bug that results in inverted map "
-        "axes. Your maps may be wrong. Please use another version of proj4.")
     warnings.warn(msg)
 
 
