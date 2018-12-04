@@ -153,15 +153,17 @@ class TauBranch(object):
     def shift_branch(self, index):
         new_size = len(self.dist) + 1
 
-        self.time.resize(new_size)
+        # Note that using the resize method sometimes fails due to references
+        # to other array
+        self.time = np.resize(self.time, new_size)
         self.time[index + 1:] = self.time[index:-1]
         self.time[index] = 0
 
-        self.dist.resize(new_size)
+        self.dist = np.resize(self.dist, new_size)
         self.dist[index + 1:] = self.dist[index:-1]
         self.dist[index] = 0
 
-        self.tau.resize(new_size)
+        self.tau = np.resize(self.tau, new_size)
         self.tau[index + 1:] = self.tau[index:-1]
         self.tau[index] = 0
 
