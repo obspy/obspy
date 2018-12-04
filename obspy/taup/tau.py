@@ -871,20 +871,6 @@ class TauPyModel(object):
         return arrivals
 
 
-def create_taup_model(model_name, output_dir, input_dir):
-    """
-    Create a .taup model from a .tvel file.
-
-    :param model_name:
-    :param output_dir:
-    """
-    if "." in model_name:
-        model_file_name = model_name
-    else:
-        model_file_name = model_name + ".tvel"
-    TauPCreate.main(model_file_name, output_dir, input_dir)
-
-
 def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
                       max_degrees=180, npoints=50, model='iasp91',
                       plot_all=True, legend=True, verbose=False, fig=None,
