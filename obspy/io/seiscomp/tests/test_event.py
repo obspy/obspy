@@ -13,6 +13,7 @@ seiscomp.event test suite.
 """
 import filecmp
 import os
+import re
 import unittest
 
 from lxml import etree
@@ -38,23 +39,45 @@ class EventTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         self.write_xslt_filename = os.path.join(
             self.io_directory, 'seiscomp', 'data',
-            'quakeml_1.2__sc3ml_0.10.xsl')
+            'quakeml_1.2__sc3ml_0.11.xsl')
+        self.schema_pattern = re.compile(
+            'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[\d\.]+'
+        )
+        self.version_pattern = re.compile('version="[\d\.]+"')
 
-    def change_version(self, filename, version):
+    def change_reading_version(self, filename, version):
         """
-        Change the version number of a SC3ML file and return an etree
-        document.
+        Change the version number of a SC3ML file-like object and
+        return an etree document.
         """
         with open(filename, 'r') as f:
             data = f.read()
+
             # Remove encoding declaration otherwise lxml will not be
             # able to read the file.
             data = data.replace('<?xml version="1.0" encoding="UTF-8"?>\n', '')
-            data = data.replace(
-                'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10',
-                'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/%s'
-                % version)
+            data = self.schema_pattern.sub(
+                'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/%s' % version,
+                data,
+            )
+            data = self.version_pattern.sub('version="%s"' % version, data)
             return etree.fromstring(data)
+
+    def change_writing_version(self, data, version):
+        """
+        Change the version number of a string and return the new
+        string.
+        """
+        # Remove the XML header else the version will be changed
+        data = data.replace('<?xml version="1.0" encoding="UTF-8"?>\n', '')
+        data = self.schema_pattern.sub(
+            'http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/%s' % version,
+            data,
+        )
+        data = self.version_pattern.sub('version="%s"' % version, data)
+
+        # Put back the XML header
+        return '<?xml version="1.0" encoding="UTF-8"?>\n%s' % data
 
     def cmp_read_xslt_file(self, sc3ml_file, quakeml_file, validate=True):
         """
@@ -70,8 +93,9 @@ class EventTestCase(unittest.TestCase):
             )
 
             transform = etree.XSLT(etree.parse(read_xslt_filename))
+
             filename = os.path.join(self.path, sc3ml_file)
-            sc3ml_doc = self.change_version(filename, version)
+            sc3ml_doc = self.change_reading_version(filename, version)
 
             # Only test valid SC3ML file
             if not validate_sc3ml(sc3ml_doc):
@@ -86,23 +110,37 @@ class EventTestCase(unittest.TestCase):
                 filepath_cmp = os.path.join(self.path, quakeml_file)
                 self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
 
-    def cmp_write_xslt_file(self, quakeml_file, sc3ml_file, validate=True,
-                            path=None):
+    def cmp_write_xslt_file(self, quakeml_file, sc3ml_file, target_version,
+                            validate=True, path=None):
         """
         Check if the SC3ML file generated with the XSLT file is the
         same than the one in the data folder.
+
+        The `target_version` parameter allows to change the version of
+        the generated file to match the version of the reference file.
         """
         if path is None:
             path = self.path
 
         transform = etree.XSLT(etree.parse(self.write_xslt_filename))
         filename = os.path.join(path, quakeml_file)
-        sc3ml_doc = transform(etree.parse(filename))
+        quakeml_doc = etree.parse(filename)
+        sc3ml_doc = transform(quakeml_doc)
+
+        sc3ml_doc_string = self.change_writing_version(
+            bytes(sc3ml_doc).decode(encoding=quakeml_doc.docinfo.encoding),
+            target_version,
+        )
+        # The NamedTemporaryFile works with bytes not string…
+        sc3ml_doc_bytes = sc3ml_doc_string.encode(
+            encoding=quakeml_doc.docinfo.encoding
+        )
 
         with NamedTemporaryFile() as tf:
-            tf.write(sc3ml_doc)
+            tf.write(sc3ml_doc_bytes)
+
             if validate:
-                self.assertTrue(validate_sc3ml(tf.name))
+                self.assertTrue(validate_sc3ml(tf.name, target_version))
             filepath_cmp = os.path.join(self.path, sc3ml_file)
             self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
 
@@ -110,7 +148,7 @@ class EventTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        for version in ['0.5', '0.6', '0.7', '0.8', '0.10']:
+        for version in ['0.5', '0.6', '0.7', '0.8', '0.10', '0.11']:
             filename = os.path.join(self.path, 'version%s' % version)
             read_events(filename)
 
@@ -119,15 +157,17 @@ class EventTestCase(unittest.TestCase):
             read_events(filename)
 
         expected_message = ("Can't read SC3ML version 0.3, ObsPy can deal "
-                            "with versions [0.5, 0.6, 0.7, 0.8, 0.9, 0.10].")
+                            "with versions [0.5, 0.6, 0.7, 0.8, 0.9, 0.10, "
+                            "0.11].")
         self.assertEqual(e.exception.args[0], expected_message)
 
-        filename = os.path.join(self.path, 'version0.11')
+        filename = os.path.join(self.path, 'version0.12')
         with self.assertRaises(ValueError) as e:
             read_events(filename)
 
-        expected_message = ("Can't read SC3ML version 0.11, ObsPy can deal "
-                            "with versions [0.5, 0.6, 0.7, 0.8, 0.9, 0.10].")
+        expected_message = ("Can't read SC3ML version 0.12, ObsPy can deal "
+                            "with versions [0.5, 0.6, 0.7, 0.8, 0.9, 0.10, "
+                            "0.11].")
         self.assertEqual(e.exception.args[0], expected_message)
 
     def test_read_xslt_event(self):
@@ -222,8 +262,7 @@ class EventTestCase(unittest.TestCase):
         """
         Test reading a SC3ML string/unicode object via read_events.
         """
-        filename = \
-            os.path.join(self.path, 'qml-example-1.2-RC3.sc3ml')
+        filename = os.path.join(self.path, 'qml-example-1.2-RC3.sc3ml')
         with open(filename, 'rb') as fp:
             data = fp.read()
 
@@ -246,54 +285,66 @@ class EventTestCase(unittest.TestCase):
         Test new fields in SC3ML 0.10 which are not in the QuakeML 1.2.
         """
         self.cmp_read_xslt_file('field_sc3ml0.10.sc3ml',
-                                'field_sc3ml0.10_res.xml')
+                                'field_sc3ml0.10_res.xml',
+                                '0.10')
 
     def test_write_xslt_event(self):
         self.cmp_write_xslt_file('quakeml_1.2_event.xml',
                                  'quakeml_1.2_event.sc3ml',
+                                 '0.10',
                                  path=self.quakeml_path)
 
     def test_write_xslt_origin(self):
         self.cmp_write_xslt_file('quakeml_1.2_origin.xml',
                                  'quakeml_1.2_origin.sc3ml',
+                                 '0.10',
                                  path=self.quakeml_path)
 
     def test_write_xslt_magnitude(self):
         # Missing origin in original QuakeML test case.
         self.cmp_write_xslt_file('quakeml_1.2_magnitude.xml',
-                                 'quakeml_1.2_magnitude.sc3ml')
+                                 'quakeml_1.2_magnitude.sc3ml',
+                                 '0.10')
 
     def test_write_xslt_station_magnitude_contribution(self):
         # Missing origin in original QuakeML test case.
         self.cmp_write_xslt_file(
             'quakeml_1.2_stationmagnitudecontributions.xml',
-            'quakeml_1.2_stationmagnitudecontributions.sc3ml')
+            'quakeml_1.2_stationmagnitudecontributions.sc3ml',
+            '0.10',
+        )
 
     def test_write_xslt_station_magnitude(self):
         # Missing origin in original QuakeML test case.
         self.cmp_write_xslt_file('quakeml_1.2_stationmagnitude.xml',
-                                 'quakeml_1.2_stationmagnitude.sc3ml')
+                                 'quakeml_1.2_stationmagnitude.sc3ml',
+                                 '0.10')
 
     def test_write_xslt_data_used_in_moment_tensor(self):
         self.cmp_write_xslt_file('quakeml_1.2_data_used.xml',
-                                 'quakeml_1.2_data_used.sc3ml')
+                                 'quakeml_1.2_data_used.sc3ml',
+                                 '0.10')
 
     def test_write_xslt_arrival(self):
         self.cmp_write_xslt_file('quakeml_1.2_arrival.xml',
-                                 'quakeml_1.2_arrival_res.sc3ml')
+                                 'quakeml_1.2_arrival_res.sc3ml',
+                                 '0.10')
 
     def test_write_xslt_pick(self):
         self.cmp_write_xslt_file('quakeml_1.2_pick.xml',
-                                 'quakeml_1.2_pick.sc3ml')
+                                 'quakeml_1.2_pick.sc3ml',
+                                 '0.10')
 
     def test_write_xslt_focalmechanism(self):
         self.cmp_write_xslt_file('quakeml_1.2_focalmechanism.xml',
                                  'quakeml_1.2_focalmechanism.sc3ml',
+                                 '0.10',
                                  path=self.quakeml_path)
 
     def test_write_xslt_iris_events(self):
         self.cmp_write_xslt_file('iris_events.xml',
                                  'iris_events.sc3ml',
+                                 '0.10',
                                  path=self.quakeml_path)
 
     def test_write_xslt_neries_events(self):
@@ -314,12 +365,14 @@ class EventTestCase(unittest.TestCase):
         # unvalid)
         self.cmp_write_xslt_file('usgs_event.xml',
                                  'usgs_event.sc3ml',
+                                 '0.10',
                                  path=self.quakeml_path,
                                  validate=False)
 
     def test_write_xslt_example(self):
         self.cmp_write_xslt_file('qml-example-1.2-RC3.xml',
-                                 'qml-example-1.2-RC3.sc3ml')
+                                 'qml-example-1.2-RC3.sc3ml',
+                                 '0.10')
 
     def test_write_example(self):
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
