@@ -669,7 +669,6 @@ class ClientTestCase(unittest.TestCase):
         expected = normalize_version_number(expected)
         self.assertEqual(got, expected, failmsg(got, expected))
 
-    @unittest.expectedFailure
     def test_dataselect_bulk(self):
         """
         Test bulk dataselect requests, POSTing data to server. Also tests
