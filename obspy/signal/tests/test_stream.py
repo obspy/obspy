@@ -163,7 +163,7 @@ class StreamTestCase(unittest.TestCase):
             # Added (up to ###) to debug appveyor fails
             for tr1, tr2 in zip(st1.sort(), st2.sort()):
                 self.assertEqual(tr1.stats, tr2.stats)
-                self.assertEqual(tr1.data, tr2.data)
+                np.testing.assert_allclose(tr1.data, tr2.data)
             ###
             self.assertEqual(st1, st2)
 
