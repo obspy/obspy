@@ -18,7 +18,6 @@ import numpy as np
 
 from .helper_classes import Arrival
 from .tau_model import TauModel
-from .taup_create import TauPCreate
 from .taup_path import TauPPath
 from .taup_pierce import TauPPierce
 from .taup_time import TauPTime
@@ -869,20 +868,6 @@ class TauPyModel(object):
             warnings.warn(msg)
 
         return arrivals
-
-
-def create_taup_model(model_name, output_dir, input_dir):
-    """
-    Create a .taup model from a .tvel file.
-
-    :param model_name:
-    :param output_dir:
-    """
-    if "." in model_name:
-        model_file_name = model_name
-    else:
-        model_file_name = model_name + ".tvel"
-    TauPCreate.main(model_file_name, output_dir, input_dir)
 
 
 def plot_travel_times(source_depth, phase_list=("ttbasic",), min_degrees=0,
