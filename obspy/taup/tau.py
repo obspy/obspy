@@ -18,7 +18,6 @@ import numpy as np
 
 from .helper_classes import Arrival
 from .tau_model import TauModel
-from .taup_create import TauPCreate
 from .taup_path import TauPPath
 from .taup_pierce import TauPPierce
 from .taup_time import TauPTime
