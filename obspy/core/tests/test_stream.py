@@ -2204,7 +2204,7 @@ class StreamTestCase(unittest.TestCase):
             else:
                 # Added (up to ###) to debug appveyor fails
                 self.assertEqual(tr1.stats, tr2.stats)
-                self.assertEqual(tr1.data, tr2.data)
+                np.testing.assert_allclose(tr1.data, tr2.data)
                 ###
                 self.assertEqual(tr1, tr2)
 
