@@ -48,7 +48,7 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
         is read).
     :type details: bool
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
-        Frequencies are expressed in hertz and time is expressed in seconds
+        Frequencies are expressed in hertz and time is expressed in second
         (except for date).
     """
     starttime = starttime or UTCDateTime(1970, 1, 1)
@@ -260,11 +260,11 @@ def _read_trace_header_3(fi, trace_block_start):
 
     dict_header_3 = dict(
         epoch_time=UTCDateTime(_read(fi, pos, 8, 'binary') / 1e6),
-        # shot skew time in seconds
+        # shot skew time in second
         shot_skew_time=_read(fi, pos + 8, 8, 'binary') / 1e6,
-        # time shift clock correction in seconds
+        # time shift clock correction in second
         time_shift_clock_correction=_read(fi, pos + 16, 8, 'binary') / 1e9,
-        # remaining clock correction in seconds
+        # remaining clock correction in second
         remaining_clock_correction=_read(fi, pos + 24, 8, 'binary') / 1e9,
     )
     return dict_header_3
@@ -289,8 +289,11 @@ def _read_trace_header_4(fi, trace_block_start):
     shot_code = str(_read(fi, pos + 11, 1, 'binary'))
 
     dict_header_4 = dict(
+        # pre shot guard band in second
         pre_shot_guard_band=_read(fi, pos, 4, 'binary') / 1e3,
+        # post shot guard band in second
         post_shot_guard_band=_read(fi, pos + 4, 4, 'binary') / 1e3,
+        # preamp gain in dB
         preamp_gain=_read(fi, pos + 8, 1, 'binary'),
         trace_clipped_flag=leg_trace_clipped[clipped_code],
         record_type_code=leg_record_type[record_type_code],
@@ -406,6 +409,7 @@ def _read_trace_header_8(fi, trace_block_start):
         fairfield_test_analysis_code=_read(fi, pos, 4, 'binary'),
         first_test_oscillator_attenuation=_read(fi, pos + 4, 4, 'binary'),
         second_test_oscillator_attenuation=_read(fi, pos + 8, 4, 'binary'),
+        # start delay in second
         start_delay=_read(fi, pos + 12, 4, 'binary') / 1e6,
         dc_filter_flag=_read(fi, pos + 16, 4, 'binary'),
         dc_filter_frequency=_read(fi, pos + 20, 4, 'IEEE'),
@@ -510,7 +514,7 @@ def _read_initial_headers(filename):
     :return: a dictionnary containing all the information in the initial
         headers
 
-    Frequencies are expressed in hertz and time is expressed in seconds
+    Frequencies are expressed in hertz and time is expressed in second
     (except for the date).
     """
     headers_content = dict(
@@ -556,7 +560,8 @@ def _read_general_header_2(fi):
         extended_header_blocks=_read(fi, 37, 2, 'binary'),
         external_header_blocks=_read(fi, 39, 3, 'binary'),
         version_number=_read(fi, 42, 2, 'binary'),
-        extended_record_length=_read(fi, 46, 3, 'binary'),
+        # extended record length in second
+        extended_record_length=_read(fi, 46, 3, 'binary') / 1e3,
         general_header_block_number=_read(fi, 50, 1, 'binary'),
     )
     return gen_head_2
@@ -645,9 +650,9 @@ def _read_extended_header_1(fi, start_byte):
     """
     Extract information contained in the extended header block number 1.
     """
-    deployment_time = _read(fi, start_byte + 8, 8, 'binary') / 1000000
-    pick_up_time = _read(fi, start_byte + 16, 8, 'binary') / 1000000
-    start_time_ru = _read(fi, start_byte + 24, 8, 'binary') / 1000000
+    deployment_time = _read(fi, start_byte + 8, 8, 'binary') / 1e6
+    pick_up_time = _read(fi, start_byte + 16, 8, 'binary') / 1e6
+    start_time_ru = _read(fi, start_byte + 24, 8, 'binary') / 1e6
 
     extended_header_1 = dict(
         id_ru=_read(fi, start_byte, 8, 'binary'),

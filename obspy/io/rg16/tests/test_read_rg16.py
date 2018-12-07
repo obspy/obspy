@@ -433,7 +433,7 @@ class TestReadRG16Headers(unittest.TestCase):
         self.assertEqual(header_2['extended_channel_sets_per_scan_type'], 3)
         self.assertEqual(header_2['extended_file_number'], 1)
         self.assertEqual(header_2['extended_header_blocks'], 3)
-        self.assertEqual(header_2['extended_record_length'], 30000)
+        self.assertEqual(header_2['extended_record_length'], 30)
         self.assertEqual(header_2['external_header_blocks'], 1)
         self.assertEqual(header_2['general_header_block_number'], 2)
         self.assertEqual(header_2['version_number'], 262)
