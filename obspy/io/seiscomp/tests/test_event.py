@@ -107,6 +107,7 @@ class EventTestCase(unittest.TestCase):
                 tf.write(quakeml_doc)
                 if validate:
                     self.assertTrue(_validate_quakeml(tf.name))
+
                 filepath_cmp = os.path.join(self.path, quakeml_file)
                 self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
 
@@ -280,13 +281,32 @@ class EventTestCase(unittest.TestCase):
         expected_message = "Not a SC3ML compatible file or string."
         self.assertEqual(e.exception.args[0], expected_message)
 
-    def test_read_field_sc3ml0_10(self):
+    def test_read_sc3ml_fields(self):
         """
-        Test new fields in SC3ML 0.10 which are not in the QuakeML 1.2.
+        Test SC3ML fields which are not in the QuakeML 1.2.
         """
-        self.cmp_read_xslt_file('field_sc3ml0.10.sc3ml',
-                                'field_sc3ml0.10_res.xml',
-                                '0.10')
+        filename = os.path.join(self.path, 'sc3ml_fields.sc3ml')
+        catalog = read_events(filename, format='SC3ML')
+
+        self.assertTrue('reading' in catalog.extra)
+
+        origin = catalog[0].origins[0]
+        self.assertTrue('pdf' in origin.time_errors.extra)
+        self.assertTrue('modificationTime' in origin.creation_info.extra)
+
+        comment = origin.comments[0]
+        self.assertTrue('start' in comment.extra)
+        self.assertTrue('end' in comment.extra)
+
+        station_magnitude = catalog[0].station_magnitudes[0]
+        self.assertTrue('passedQC' in station_magnitude.extra)
+
+        tensor = catalog[0].focal_mechanisms[0].moment_tensor
+        self.assertTrue('status' in tensor.extra)
+        self.assertTrue('cmtName' in tensor.extra)
+        self.assertTrue('cmtVersion' in tensor.extra)
+        self.assertTrue('phaseSetting' in tensor.extra)
+        self.assertTrue('stationMomentTensorContribution' in tensor.extra)
 
     def test_write_xslt_event(self):
         self.cmp_write_xslt_file('quakeml_1.2_event.xml',
@@ -397,6 +417,17 @@ class EventTestCase(unittest.TestCase):
 
     def test_read_and_write(self):
         filename = os.path.join(self.path, 'qml-example-1.2-RC3_write.sc3ml')
+        catalog = read_events(filename)
+
+        with NamedTemporaryFile() as tf:
+            catalog.write(tf, format='SC3ML', validate=True)
+            self.assertTrue(filecmp.cmp(filename, tf.name))
+
+    def test_read_and_write_sc3ml_fields(self):
+        """
+        Test that the non-QuakeML nodes are correctly rewritten.
+        """
+        filename = os.path.join(self.path, 'sc3ml_fields.sc3ml')
         catalog = read_events(filename)
 
         with NamedTemporaryFile() as tf:
