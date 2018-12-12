@@ -18,10 +18,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import math
+import re
 import warnings
-import obspy
 
 from lxml import etree
+
+import obspy
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (Azimuth, ClockDrift, Dip,
@@ -37,6 +39,39 @@ from obspy.io.stationxml.core import _read_floattype
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
 SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9']
+
+
+def _count_complex(complex_string):
+    """
+    Returns number of complex numbers in string (formatted according to
+    SeisComp3 XML schema type "ComplexArray"). Raises an Exception if string
+    seems invalid.
+    """
+    counts = set()
+    for char in '(,)':
+        counts.add(complex_string.count(char))
+    if len(counts) != 1:
+        msg = ("Invalid string for list of complex numbers:"
+               "\n'%s'") % complex_string
+        raise ValueError(msg)
+    return counts.pop()
+
+
+def _parse_list_of_complex_string(complex_string):
+    """
+    Returns a list of complex numbers, parsed from a string (formatted
+    according to SeisComp3 XML schema type "ComplexArray").
+    """
+    count = _count_complex(complex_string)
+    numbers = re.findall(r'\(\s*([^,\s]+)\s*,\s*([^)\s]+)\s*\)',
+                         complex_string)
+    if len(numbers) != count:
+        msg = ("Unexpected count of complex numbers parsed from string:"
+               "\n  Raw string: '%s'\n  Expected count of complex numbers: %s"
+               "\n  Parsed complex numbers: %s") % (complex_string, count,
+                                                    numbers)
+        raise ValueError(msg)
+    return numbers
 
 
 def _read_sc3ml(path_or_file_object):
@@ -701,11 +736,11 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
         zeros_array = stage.find(_ns("zeros")).text
         poles_array = stage.find(_ns("poles")).text
         if zeros_array is not None:
-            zeros_array = zeros_array.split(" ")
+            zeros_array = _parse_list_of_complex_string(zeros_array)
         else:
             zeros_array = []
         if poles_array is not None:
-            poles_array = poles_array.split(" ")
+            poles_array = _parse_list_of_complex_string(poles_array)
         else:
             poles_array = []
 
@@ -801,20 +836,16 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
 def _tag2pole_or_zero(paz_element, count):
 
     """
-    Parses sc3ml paz format
+    Parses sc3ml poles and zeros
     Uncertainties on poles removed, not present in sc3ml.xsd?
     Always put to None so no internal conflict
     The sanitization removes the first/last parenthesis
     and split by comma, real part is 1st, imaginary 2nd
 
-    :param paz_element: string of poles or zeros e.g. (12320, 23020)
+    :param paz_element: tuple of poles or zeros e.g. ('12320', '23020')
     """
 
-    paz_element = paz_element[1:-1]
-    paz_element = paz_element.split(",")
-
-    real = float(paz_element[0])
-    imag = float(paz_element[1])
+    real, imag = map(float, paz_element)
 
     if real is not None or imag is not None:
         real = real or 0
