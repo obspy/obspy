@@ -41,6 +41,39 @@ SOFTWARE_URI = "http://www.obspy.org"
 SCHEMA_VERSION = ['0.5', '0.6', '0.7', '0.8', '0.9']
 
 
+def _count_complex(complex_string):
+    """
+    Returns number of complex numbers in string (formatted according to
+    SeisComp3 XML schema type "ComplexArray"). Raises an Exception if string
+    seems invalid.
+    """
+    counts = set()
+    for char in '(,)':
+        counts.add(complex_string.count(char))
+    if len(counts) != 1:
+        msg = ("Invalid string for list of complex numbers:"
+               "\n'%s'") % complex_string
+        raise ValueError(msg)
+    return counts.pop()
+
+
+def _parse_list_of_complex_string(complex_string):
+    """
+    Returns a list of complex numbers, parsed from a string (formatted
+    according to SeisComp3 XML schema type "ComplexArray").
+    """
+    count = _count_complex(complex_string)
+    numbers = re.findall(r'\(\s*([^,\s]+)\s*,\s*([^)\s]+)\s*\)',
+                         complex_string)
+    if len(numbers) != count:
+        msg = ("Unexpected count of complex numbers parsed from string:"
+               "\n  Raw string: '%s'\n  Expected count of complex numbers: %s"
+               "\n  Parsed complex numbers: %s") % (complex_string, count,
+                                                    numbers)
+        raise ValueError(msg)
+    return numbers
+
+
 def _read_sc3ml(path_or_file_object):
     """
     Function for reading a stationXML file.
@@ -703,13 +736,11 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
         zeros_array = stage.find(_ns("zeros")).text
         poles_array = stage.find(_ns("poles")).text
         if zeros_array is not None:
-            zeros_array = re.findall(r'\(\s*([^,\s]+)\s*,\s*([^)\s]+)\s*\)',
-                                     zeros_array)
+            zeros_array = _parse_list_of_complex_string(zeros_array)
         else:
             zeros_array = []
         if poles_array is not None:
-            poles_array = re.findall(r'\(\s*([^,\s]+)\s*,\s*([^)\s]+)\s*\)',
-                                     poles_array)
+            poles_array = _parse_list_of_complex_string(poles_array)
         else:
             poles_array = []
 
