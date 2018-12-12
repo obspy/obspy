@@ -1,17 +1,14 @@
-# -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-
-import copy
-
 from future.builtins import *  # NOQA
-from codecs import encode
-
-import decorator
-import numpy as np
 from future.builtins import list
 from future.utils import native_str as nstr
 
+from codecs import encode
+import copy
+import decorator
+
+import numpy as np
 from obspy import Trace
 
 
@@ -52,14 +49,14 @@ def _read(fi, position, length, dtype, left_part=True):
     :param left_part: If True, start the reading from the first half part
         of the byte position. If False, start the reading from the second
         half part of the byte position.
-    :type left_part: boolean
+    :type left_part: bool
     """
     fi.seek(position)
     if dtype == 'bcd':
         return _read_bcd(fi, length, left_part)
-    if dtype == 'binary':
+    elif dtype == 'binary':
         return _read_binary(fi, length, left_part)
-    if dtype == 'IEEE':
+    elif dtype == 'IEEE':
         data = np.frombuffer(fi.read(int(length)), '>f4')
         return data[0] if len(data) == 1 else data
 
@@ -76,7 +73,7 @@ def _read_bcd(fi, length, left_part):
     :param left_part: If True, start the reading from the first half part
         of the first byte. If False, start the reading from
         the second half part of the first byte.
-    :type left_part: boolean
+    :type left_part: bool
     """
     tens = np.power(10, range(12))[::-1]
     nbr_half_bytes = round(2*length)
@@ -103,7 +100,7 @@ def _read_binary(fi, length, left_part):
     :type length: int or float
     :param left_part: If True, start the reading from the first half part
         of the byte.
-    :type left_part: boolean
+    :type left_part: bool
     """
     if isinstance(length, float):
         if np.isclose(length, 0.5):
@@ -131,10 +128,10 @@ def _quick_merge(traces, small_number=.000001):
     Requires that traces are of the same datatype, have the same
     sampling_rate, and dont have data overlaps.
 
-    :param traces: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
+    :param traces: list of ObsPy :class:``~obspy.core.trace.Trace`` objects.
     :param small_number: a small number for determining if traces
         should be merged. Should be much less than one sample spacing.
-    :return: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
+    :return: list of ObsPy :class:``~obspy.core.trace.Trace`` objects.
     """
     # make sure sampling rates are all the same
     assert len({tr.stats.sampling_rate for tr in traces}) == 1

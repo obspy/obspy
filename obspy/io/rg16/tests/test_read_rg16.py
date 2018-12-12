@@ -29,7 +29,7 @@ class TestReadRG16(unittest.TestCase):
     def test_reading_rg16_files(self):
         """
         Ensure that the rg16 files are read by the
-        :func:`~obspy.core.stream.read` function
+        :func:``~obspy.core.stream.read`` function
         with or without specifying the format.
         """
         for fcnt_file in FCNT_FILES:

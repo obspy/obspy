@@ -4,8 +4,8 @@ obspy.io.rg16 - Receiver Gather v1.6 read support for ObsPy
 
 Functions to read waveform data from Receiver Gather 1.6-1 format.
 This format is used to store continuous data recorded by
-`Farfield Nodal <fairfieldnodal.com>`_'s
-`Zland <http://fairfieldnodal.com/equipment/zland>`_ product line.
+``Farfield Nodal <fairfieldnodal.com>``_'s
+``Zland <http://fairfieldnodal.com/equipment/zland>``_ product line.
 
 :author:
     Derrick Chambers
@@ -18,13 +18,13 @@ This format is used to store continuous data recorded by
 
 .. note::
     1. In order to homogenize the units, fields concerning frequencies
-       parameters are expressed in Hertz (ie alias_filter_frequency,
-       test_signal_generator_frequency_1...) and fields concerning
-       time are expressed in second (channel_set_end_time,
-       test_signal_generator_activation_time...), except for the dates.
+       parameters are expressed in Hertz (ie ``alias_filter_frequency``,
+       ``test_signal_generator_frequency_1``...) and fields concerning
+       time are expressed in second (``channel_set_end_time``,
+       ``test_signal_generator_activation_time``...), except for the dates.
 
-    2. Documentation about fcnt format
-       can be found in the directory obspy.io.rg16.doc
+    2. Documentation about fcnt format can be found in the directory
+       ``obspy/io/rg16/doc``.
 
 Instrument Orientation
 ----------------------
@@ -36,32 +36,32 @@ relate to the instrument position as illustrated in the following diagram:
 .. figure:: /_images/rg16_node_orientation.png
 
 Reading the waveforms
--------
+---------------------
 The rg16 format can be read using two methods:
 
-1. Using the standard :func:`~obspy.core.stream.read` function. Optionally,
+1. Using the standard :func:``~obspy.core.stream.read`` function. Optionally,
    the format parameter can be specified as "rg16" for a speed-up.
 
-2. Using the :mod:`obspy.io.rg16` specific function
-   :func:`obspy.io.rg16.core._read_rg16`.
+2. Using the :mod:``obspy.io.rg16`` specific function
+   :func:``obspy.io.rg16.core._read_rg16``.
 
-Noteworthy parameters of  :func:`obspy.io.rg16.core._read_rg16`,
-which can also be passed as kwargs to :func:`~obspy.core.stream.read`:
+Noteworthy parameters of  :func:``obspy.io.rg16.core._read_rg16``,
+which can also be passed as kwargs to :func:``~obspy.core.stream.read``:
 
-* `starttime` and `endtime`: :class:`~obspy.core.utcdatetime.UTCDateTime`
-  instances can be passedin order to only load slices of the file at a time,
+* ``starttime`` and ``endtime``: :class:``~obspy.core.utcdatetime.UTCDateTime``
+  instances can be passed in order to only load slices of the file at a time,
   avoiding the need to store the entire file contents in memory.
 
-* `merge`: If `True` will merge traces belonging to the same channel
+* ``merge``: If ``True`` will merge traces belonging to the same channel
   into a single trace. This is much more efficient than other merge methods
   when there are many (thousands) of traces because assumptions about data
   continuity and type can be made.
 
-* `contacts_north`: If this parameter is set to True, it will map the
+* ``contacts_north``: If this parameter is set to True, it will map the
   components to Z (1C, 3C), N (3C), and E (3C) as well as correct
   the polarity for the vertical component.
 
-* `details`: If this parameter is set to True, all the information contained
+* ``details``: If this parameter is set to True, all the information contained
   in the headers is extracted. These information is stored in an attribute
   dict in the Stats object named "rg16".The "rg16" attribute dict owns two
   attribute dict named "initial_headers" and "trace_headers". The
@@ -80,22 +80,22 @@ which can also be passed as kwargs to :func:`~obspy.core.stream.read`:
 >>> st = obspy.read(filename, format='rg16')
 >>> st = _read_rg16(filename)
 
-If the file is very large, using the `merge` parameter may speed up downstream
+If the file is very large, using the ``merge`` parameter may speed up downstream
 processing significantly.
 
 >>> st = obspy.read(filename, merge=True)
 
 If the instruments are single component, or if the gold contact terminals
-were deployed facing north, setting `contacts_north` to `True` will result
+were deployed facing north, setting ``contacts_north`` to ``True`` will result
 in a stream with seed compliant channel codes with orientations Z, N, E.
 
 >>> st = obspy.read(filename, contacts_north=True)
 
 Reading the initial headers
--------
+---------------------------
 The initial headers at the beginning of the rg16 file can be read
-separately using the :mod:`obspy.io.rg16` specific function
-:func:`obspy.io.rg16.core._read_initial_headers`
+separately using the :mod:``obspy.io.rg16`` specific function
+:func:``obspy.io.rg16.core._read_initial_headers``
 
 >>> from obspy.io.rg16.core import _read_initial_headers
 >>> initial_headers = _read_initial_headers(filename)
