@@ -746,7 +746,7 @@ class TauPyModel(object):
                               phase_list=("ttall",),
                               resample=False):
         """
-        Return ray paths of every given phase with geographical info.
+        Return pierce points of every given phase with geographical info.
 
         .. note::
 

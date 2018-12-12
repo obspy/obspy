@@ -41,9 +41,10 @@ GEONET  http://service.geonet.org.nz
 GFZ     http://geofon.gfz-potsdam.de
 ICGC    http://ws.icgc.cat
 INGV    http://webservices.ingv.it
-IPGP    http://fdsnws.ipgp.fr
+IPGP    http://ws.ipgp.fr
 IRIS    http://service.iris.edu
 ISC     http://isc-mirror.iris.washington.edu
+KNMI    http://rdsa.knmi.nl
 KOERI   http://eida.koeri.boun.edu.tr
 LMU     http://erde.geophysik.uni-muenchen.de
 NCEDC   http://service.ncedc.org

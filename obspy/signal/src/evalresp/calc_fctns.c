@@ -373,8 +373,16 @@ void analog_trans(struct blkt *blkt_ptr, double freq, struct complex *out) {
   temp.imag = -denom.imag;
   zmul(&temp, &num);
   mod_squared = denom.real*denom.real + denom.imag*denom.imag;
-  temp.real /= mod_squared;
-  temp.imag /= mod_squared;
+
+  if (mod_squared != 0.) {
+      temp.real /= mod_squared;
+      temp.imag /= mod_squared;
+  }
+  else if (temp.real != 0.0 || temp.imag != 0.0) {
+      fprintf(stderr,"%s WARNING (analog_trans): Numerical problem detected. Result might be wrong.", myLabel);
+      fprintf(stderr,"%s\t Execution continuing.\n", myLabel);
+  }
+
   out->real = h0 * temp.real;
   out->imag = h0 * temp.imag;
 }
