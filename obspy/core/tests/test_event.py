@@ -19,7 +19,8 @@ from obspy.core.event import (Catalog, Comment, CreationInfo, Event,
                               FocalMechanism, Magnitude, Origin, Pick,
                               ResourceIdentifier, WaveformStreamID)
 from obspy.core.event.source import farfield
-from obspy.core.util import BASEMAP_VERSION, CARTOPY_VERSION
+from obspy.core.util import (
+    BASEMAP_VERSION, CARTOPY_VERSION, PROJ4_VERSION, MATPLOTLIB_VERSION)
 from obspy.core.util.base import _get_entry_points
 from obspy.core.util.testing import ImageComparison
 from obspy.core.event.base import QuantityError
@@ -124,6 +125,10 @@ class EventTestCase(unittest.TestCase):
         self.assertFalse(hasattr(p, "test_2"))
 
     @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    @unittest.skipIf(
+        BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+        'matplotlib 3.0.1 is not campatible with basemap')
+    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
     def test_plot_farfield_without_quiver_with_maps(self):
         """
         Tests to plot P/S wave farfield radiation pattern, also with beachball
@@ -510,6 +515,9 @@ class CatalogTestCase(unittest.TestCase):
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+@unittest.skipIf(
+    BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+    'matplotlib 3.0.1 is not campatible with basemap')
 class CatalogBasemapTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.event.Catalog.plot with Basemap
@@ -518,6 +526,7 @@ class CatalogBasemapTestCase(unittest.TestCase):
         # directory where the test files are located
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
+    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
     def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters, using Basemap.

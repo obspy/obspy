@@ -70,7 +70,10 @@ def _write_shapefile(obj, filename, extra_fields=None, **kwargs):
     if not filename.endswith(".shp"):
         filename += ".shp"
 
-    writer = shapefile.Writer(shapefile.POINT)
+    if PYSHP_VERSION >= [2., 0, 0]:
+        writer = shapefile.Writer(target=filename, shapeType=shapefile.POINT)
+    else:
+        writer = shapefile.Writer(shapeType=shapefile.POINT)
     writer.autoBalance = 1
 
     # create the layer
@@ -83,7 +86,11 @@ def _write_shapefile(obj, filename, extra_fields=None, **kwargs):
                "a Catalog or Inventory.")
         raise TypeError(msg)
 
-    writer.save(filename)
+    if PYSHP_VERSION >= [2.0, 0, 0]:
+        writer.close()
+    else:
+        writer.save(filename)
+
     _save_projection_file(filename.rsplit('.', 1)[0] + '.prj')
 
 
@@ -335,13 +342,13 @@ def _add_record(writer, feature):
         # various hacks for old pyshp < 1.2.11
         if not PYSHP_VERSION_AT_LEAST_1_2_11:
             if type_ == 'C':
-                # mimick pyshp 1.2.12 behavior of putting 'None' in string
+                # mimic pyshp 1.2.12 behavior of putting 'None' in string
                 # fields for value of `None`
                 if value is None:
                     value = 'None'
                 else:
                     value = native_str(value)
-            # older pyshp is not correctly writing dates as thenowadays used
+            # older pyshp is not correctly writing dates as used nowadays
             # '%Y%m%d' (8 chars), work around this
             elif type_ == 'D':
                 if isinstance(value, (UTCDateTime, datetime.date)):

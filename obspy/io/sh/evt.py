@@ -108,7 +108,7 @@ def _kw(obj, obj_name):
     for source_key, (dest_key, convert) in MAP[obj_name].items():
         try:
             val = convert(obj[source_key])
-        except KeyError as ex:
+        except KeyError:
             pass
         except ValueError as ex:
             warn(str(ex))

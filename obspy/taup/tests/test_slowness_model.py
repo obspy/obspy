@@ -8,7 +8,7 @@ import unittest
 
 import numpy as np
 
-from .. import _DEFAULT_VALUES
+from obspy.taup import _DEFAULT_VALUES
 from obspy.taup.slowness_layer import (SlownessLayer, SlownessModelError,
                                        bullen_depth_for, create_from_vlayer)
 from obspy.taup.velocity_layer import VelocityLayer

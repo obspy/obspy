@@ -460,7 +460,7 @@ class Inventory(ComparingObject):
     def select(self, network=None, station=None, location=None, channel=None,
                time=None, starttime=None, endtime=None, sampling_rate=None,
                keep_empty=False):
-        """
+        r"""
         Return a copy of the inventory filtered on various parameters.
 
         Returns the :class:`Inventory` object with only the
@@ -560,7 +560,7 @@ class Inventory(ComparingObject):
 
     def remove(self, network='*', station='*', location='*', channel='*',
                keep_empty=False):
-        """
+        r"""
         Return a copy of the inventory with selected elements removed.
 
         Returns the :class:`Inventory` object but excluding the

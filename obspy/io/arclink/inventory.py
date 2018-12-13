@@ -68,11 +68,11 @@ def _is_inventory_xml(path_or_file_object):
                 return False
         root = xmldoc.getroot()
         if re.match(r'{http://geofon.gfz-potsdam.de/ns/Inventory/'
-                    '[0-9]*\.?[0-9]+/}', root.tag) is None:
+                    r'[0-9]*\.?[0-9]+/}', root.tag) is None:
             return False
         # Match and convert schema number to a float to have positive
         # comparisons between, e.g "1" and "1.0".
-        version = float(re.findall("\d+\.\d+", root.tag)[0])
+        version = float(re.findall(r"\d+\.\d+", root.tag)[0])
         if float(version != float(SCHEMA_VERSION)):
             warnings.warn("The inventory file has version %s, ObsPy can "
                           "deal with version %s. Proceed with caution." % (

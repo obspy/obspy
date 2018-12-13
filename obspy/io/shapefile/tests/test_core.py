@@ -96,6 +96,8 @@ expected_catalog_records_with_region[1].append('GERMANY')
 
 def _assert_records_and_fields(got_fields, got_records, expected_fields,
                                expected_records):
+    null_values = {'None', '', None}
+
     if got_fields != expected_fields:
         msg = 'Expected Fields:\n{!s}\nActual Fields\n{!s}'
         msg = msg.format(expected_fields, got_fields)
@@ -135,10 +137,14 @@ def _assert_records_and_fields(got_fields, got_records, expected_fields,
                         got = None
                     else:
                         # old pyshp is seriously buggy and doesn't respect the
-                        # sepcified precision when writing numerical fields
+                        # specified precision when writing numerical fields
                         if round(got, 1) == round(expected, 1):
                             continue
-            if not got == expected:
+            if got != expected:
+                # pyshp 2.0.0 now seems to write empty str rather than 'None'
+                # try to just check for null-ish values and exit if found
+                if got in null_values and expected in null_values:
+                    return
                 msg = "Record {} mismatching:\nExpected: '{!s}'\nGot: '{!s}'"
                 msg = msg.format(i, expected, got)
                 raise AssertionError(msg)
@@ -189,7 +195,7 @@ class ShapefileTestCase(unittest.TestCase):
                     continue
                 break
             else:
-                raise
+                raise Exception
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("catalog" + suffix))
             with open("catalog.shp", "rb") as fh_shp, \
@@ -248,7 +254,7 @@ class ShapefileTestCase(unittest.TestCase):
                     continue
                 break
             else:
-                raise
+                raise Exception
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("catalog" + suffix))
             with open("catalog.shp", "rb") as fh_shp, \
@@ -262,6 +268,11 @@ class ShapefileTestCase(unittest.TestCase):
                     expected_records=expected_catalog_records_with_region)
                 self.assertEqual(shp.shapeType, shapefile.POINT)
                 _close_shapefile_reader(shp)
+            # For some reason, on windows the files are still in use when
+            # TemporaryWorkingDirectory tries to remove the directory.
+            self.assertTrue(fh_shp.closed)
+            self.assertTrue(fh_dbf.closed)
+            self.assertTrue(fh_shx.closed)
 
     def test_write_catalog_shapefile_via_plugin(self):
         # read two events with uncertainties, one deserializes with "confidence
@@ -286,7 +297,7 @@ class ShapefileTestCase(unittest.TestCase):
                     continue
                 break
             else:
-                raise
+                raise Exception
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("catalog" + suffix))
             with open("catalog.shp", "rb") as fh_shp, \

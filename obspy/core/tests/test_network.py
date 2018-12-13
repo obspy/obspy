@@ -25,7 +25,7 @@ import obspy
 from obspy import UTCDateTime, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.util import (
-    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION)
+    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION, PROJ4_VERSION)
 from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory import Channel, Network, Response, Station
 
@@ -260,6 +260,9 @@ class NetworkTestCase(unittest.TestCase):
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+@unittest.skipIf(
+    BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+    'matplotlib 3.0.1 is not campatible with basemap')
 class NetworkBasemapTestCase(unittest.TestCase):
     """
     Tests for the :meth:`~obspy.station.network.Network.plot` with Basemap.
@@ -272,6 +275,7 @@ class NetworkBasemapTestCase(unittest.TestCase):
     def tearDown(self):
         np.seterr(**self.nperr)
 
+    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
     def test_location_plot_global(self):
         """
         Tests the network location preview plot, default parameters, using
