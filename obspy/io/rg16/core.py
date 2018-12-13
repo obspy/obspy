@@ -24,7 +24,7 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        ObsPy :func:``~obspy.core.stream.read`` function, call this instead.
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :param filename: path to the rg16 file or a file object.
     :type filename: str, buffer
@@ -32,9 +32,9 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
         contained in the headers of the trace block is read.
     :type headonly: optional, bool
     :param starttime: If not None dont read traces that start before starttime.
-    :type starttime: optional, :class:``~obspy.core.utcdatetime.UTCDateTime``
+    :type starttime: optional, :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param endtime: If not None dont read traces that start after endtime.
-    :type endtime: optional, :class:``~obspy.core.utcdatetime.UTCDateTime``
+    :type endtime: optional, :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param merge: If True merge contiguous data blocks as they are found. For
         continuous data files having 100,000+ traces this will create
         more manageable streams.
@@ -46,7 +46,7 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
     :param details: If True, all the information contained in the headers
         is read).
     :type details: bool
-    :return: An ObsPy :class:``~obspy.core.stream.Stream`` object.
+    :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
         Frequencies are expressed in hertz and time is expressed in second
         (except for date).
     """

@@ -128,10 +128,10 @@ def _quick_merge(traces, small_number=.000001):
     Requires that traces are of the same datatype, have the same
     sampling_rate, and dont have data overlaps.
 
-    :param traces: list of ObsPy :class:``~obspy.core.trace.Trace`` objects.
+    :param traces: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
     :param small_number: a small number for determining if traces
         should be merged. Should be much less than one sample spacing.
-    :return: list of ObsPy :class:``~obspy.core.trace.Trace`` objects.
+    :return: list of ObsPy :class:`~obspy.core.trace.Trace` objects.
     """
     # make sure sampling rates are all the same
     assert len({tr.stats.sampling_rate for tr in traces}) == 1
