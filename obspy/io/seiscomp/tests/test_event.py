@@ -17,6 +17,7 @@ from future.builtins import *  # NOQA
 
 import filecmp
 import os
+import shutil
 import unittest
 
 from lxml import etree
@@ -60,7 +61,8 @@ class EventTestCase(unittest.TestCase):
                 % version)
             return etree.fromstring(data)
 
-    def cmp_read_xslt_file(self, sc3ml_file, quakeml_file, validate=True):
+    def cmp_read_xslt_file(self, sc3ml_file, quakeml_file, validate=True,
+                           debug=False):
         """
         Check if the QuakeML file generated with the XSLT file is the
         same than the one in the data folder. Every available SC3ML
@@ -88,6 +90,8 @@ class EventTestCase(unittest.TestCase):
                 if validate:
                     self.assertTrue(_validate_quakeml(tf.name))
                 filepath_cmp = os.path.join(self.path, quakeml_file)
+                if debug and not filecmp.cmp(filepath_cmp, tf.name):
+                    shutil.copyfile(tf.name, filepath_cmp + "_failed")
                 self.assertTrue(filecmp.cmp(filepath_cmp, tf.name))
 
     def cmp_write_xslt_file(self, quakeml_file, sc3ml_file, validate=True,
@@ -170,6 +174,11 @@ class EventTestCase(unittest.TestCase):
     def test_read_xslt_focalmechanism(self):
         self.cmp_read_xslt_file('quakeml_1.2_focalmechanism.sc3ml',
                                 'quakeml_1.2_focalmechanism_res.xml')
+
+    def test_read_xslt_amplitude(self):
+        """ See issue #2273 """
+        self.cmp_read_xslt_file('quakeml_1.2_amplitude.sc3ml',
+                                'quakeml_1.2_amplitude_res.xml', debug=True)
 
     def test_read_xslt_iris_events(self):
         # Magnitude lost during conversion
