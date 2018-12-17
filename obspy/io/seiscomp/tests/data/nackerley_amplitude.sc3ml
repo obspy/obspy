@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9" version="0.9">
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
   <EventParameters publicID="smi:ca.seismo/catalog/pickfile.npf">
     <pick publicID="smi:ca.seismo/pick/solid/arrid/19521225.0428001/19521225.0429001">
       <time>
@@ -256,6 +256,7 @@
         <distance>4.226812</distance>
         <takeOffAngle>49.0</takeOffAngle>
         <timeResidual>0.14</timeResidual>
+        <timeUsed>true</timeUsed>
         <weight>0.0</weight>
         <creationInfo>
           <agencyID>GSC</agencyID>
@@ -270,6 +271,7 @@
         <distance>4.226812</distance>
         <takeOffAngle>49.0</takeOffAngle>
         <timeResidual>-4.91</timeResidual>
+        <timeUsed>true</timeUsed>
         <weight>0.0</weight>
         <creationInfo>
           <agencyID>GSC</agencyID>
@@ -284,6 +286,7 @@
         <distance>4.226812</distance>
         <takeOffAngle>49.0</takeOffAngle>
         <timeResidual>-0.2</timeResidual>
+        <timeUsed>true</timeUsed>
         <weight>0.1</weight>
         <creationInfo>
           <agencyID>GSC</agencyID>
@@ -298,6 +301,7 @@
         <distance>4.226812</distance>
         <takeOffAngle>49.0</takeOffAngle>
         <timeResidual>-0.96</timeResidual>
+        <timeUsed>true</timeUsed>
         <weight>2.1</weight>
         <creationInfo>
           <agencyID>GSC</agencyID>
@@ -312,6 +316,7 @@
         <distance>4.487615</distance>
         <takeOffAngle>49.0</takeOffAngle>
         <timeResidual>-0.08</timeResidual>
+        <timeUsed>true</timeUsed>
         <weight>0.0</weight>
         <creationInfo>
           <agencyID>GSC</agencyID>
@@ -326,6 +331,7 @@
         <distance>6.565048</distance>
         <takeOffAngle>49.0</takeOffAngle>
         <timeResidual>1.09</timeResidual>
+        <timeUsed>true</timeUsed>
         <weight>2.7</weight>
         <creationInfo>
           <agencyID>GSC</agencyID>
