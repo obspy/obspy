@@ -510,7 +510,7 @@ def _read_initial_headers(filename):
 
     :param filename : a path to a rg16 file or a rg16 file object.
     :type filename: str, buffer
-    :return: a dictionnary containing all the information in the initial
+    :return: a dictionnary containing all the information of the initial
         headers
 
     Frequencies are expressed in hertz and time is expressed in second
