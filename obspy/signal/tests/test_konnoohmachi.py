@@ -138,10 +138,12 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         # Test the non-matrix mode for single spectra.
         smoothed_4 = konno_ohmachi_smoothing(
             np.require(spectra[0], dtype=np.float64),
-            np.require(frequencies, dtype=np.float64))
+            np.require(frequencies, dtype=np.float64),
+            enforce_no_matrix=True)
         smoothed_5 = konno_ohmachi_smoothing(
             np.require(spectra[0], dtype=np.float64),
             np.require(frequencies, dtype=np.float64),
+            enforce_no_matrix=True,
             normalize=True)
         # The normalized and not normalized should not be the same. That the
         # normalizing works has been tested before.
