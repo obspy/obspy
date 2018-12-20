@@ -52,17 +52,21 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
     """
     starttime = starttime or UTCDateTime(1970, 1, 1)
     endtime = endtime or UTCDateTime()
-    # get the number of headers/records and position of trace data
+    # get the number of headers/records, position of trace data
+    # and record length.
     header_count = _cmp_nbr_headers(filename)
     record_count = _cmp_nbr_records(filename)
     trace_block_start = 32 * (2 + sum(header_count))
+    record_length = _cmp_record_length(filename)
     # create trace data
     traces = []
     for i in range(0, record_count):
         nbr_bytes_trace_block = _cmp_jump(filename, trace_block_start)
         trace_starttime = _read(filename, trace_block_start + 20 + 2*32, 8,
                                 'binary') / 1e6
-        if starttime.timestamp <= trace_starttime < endtime.timestamp:
+        trace_endtime = trace_starttime + record_length
+        if starttime.timestamp <= trace_starttime < endtime.timestamp or\
+           starttime.timestamp <= trace_endtime < endtime.timestamp:
             trace = _make_trace(filename, trace_block_start, headonly,
                                 contacts_north, details)
             traces.append(trace)
@@ -102,6 +106,17 @@ def _cmp_nbr_records(fi):
     nbr_time_slices = extended_header_2['nbr_time_slices']
     nbr_records = nbr_time_slices * nbr_component
     return nbr_records
+
+
+def _cmp_record_length(fi):
+    """
+    Return the record length.
+    """
+    base_scan_interval = _read(fi, 22, 1, 'binary')
+    sampling_rate = int(1000 / (base_scan_interval / 16))
+    gen_head_2 = _read_initial_headers(fi)['general_header_2']
+    record_length = gen_head_2['extended_record_length'] - 1/sampling_rate
+    return record_length
 
 
 def _cmp_jump(fi, trace_block_start):
