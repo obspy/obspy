@@ -1,93 +1,58 @@
 """
-tests for the Utilities of rg16
+Tests for rg16 utilities.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-
 import unittest
 from io import BytesIO
 
-from obspy.io.rg16.util import _read
-
-
-def byte_io(byte_str):
-    """
-    write byte_str to BytesIO object, return.
-    """
-    return BytesIO(byte_str)
+from obspy.io.rg16.util import _read, _read_bcd, _read_binary
 
 
 class TestRG16Util(unittest.TestCase):
-    """
-    Tests for the read function, which should read all the weird binary
-    formats used in rg16.
-    """
 
-    bcd = [
-        (b'\x99', 1, 99),
-        (b'\x99\x01', 2, 9901),
-    ]
+    def byte_io(self, byte_str):
+        """
+        write byte_str to BytesIO object, return.
+        """
+        return BytesIO(byte_str)
 
     def test_read_bcd(self):
         """
         Ensure bcd encoding returns expected values.
         """
-        for byte, length, answer in self.bcd:
-            out = _read(byte_io(byte), 0, length, 'bcd')
+        bcd = [(b'\x99', 1, True, 99), (b'\x99\x01', 2, True, 9901),
+               (b'\x91', 0.5, True, 9), (b'\x91', 0.5, False, 1),
+               (b'\x99\01', 1.5, True, 990), (b'\x99\01', 1.5, False, 901)]
+        for byte, length, left_part, answer in bcd:
+            out = _read_bcd(BytesIO(byte), length, left_part)
+            self.assertEqual(out, answer)
+        with self.assertRaises(ValueError) as e:
+            _read_bcd(BytesIO(b'\xFF'), 1, True)
+        self.assertIn('invalid bcd values', str(e.exception))
+
+    def test_read_binary(self):
+        """
+        Ensure binary encoding return expected values.
+        """
+        binary = [(b'\x99', 1, True, 153), (b'\x99\x01', 2, True, 39169),
+                  (b'\x91', 0.5, True, 9), (b'\x91', 0.5, False, 1),
+                  (b'\x76\x23\x14', 3, True, 7742228),
+                  (b'\x00\x10\x00\x10', 4, True, 1048592),
+                  (b'\x10\xed\x7f\x01\x00\x00\x08\xc0', 8,
+                  True, 1219770716358969536)]
+        for byte, length, left_part, answer in binary:
+            out = _read_binary(BytesIO(byte), length, left_part)
             self.assertEqual(out, answer)
 
-    def test_ff_raises(self):
+    def test_read(self):
         """
-        Ensure FF raises. BCD values for any half byte past 9 should raise.
+        Ensure IEEE float are well returned in the function _read.
         """
-        with self.assertRaises(ValueError) as e:
-            _read(byte_io(b'\xFF'), 0, 1, 'bcd')
-        assert 'invalid bcd values' in str(e.exception)
-
-    halfsies = [
-        (b'\x45', '>i.', 4),
-        (b'\x45', '<i.', 5),
-        (b'\xfa', '>i.', 15),
-        (b'\xfa', '<i.', 10),
-    ]
-
-    def test_read_half_bit(self):
-        """
-        Ensure reading half bytes (4 bit) works.
-        """
-        for byte, format, answer in self.halfsies:
-            self.assertEqual(_read(byte_io(byte), 0, 1, format), answer)
-
-    why_use_3_bytes = [  # seriously, how expensive is one extra byte!?
-        (b'\x00\x00\x00', '<i3', 0),
-        (b'\x00\x00\x00', '>i3', 0),
-        (b'\x00\x00\x01', '>i3', 1),
-        (b'\x00\x00\x01', '<i3', 65536),
-    ]
-
-    def test_read_3_bytes(self):
-        """
-        Ensure 3 byte chunks are correctly read.
-        """
-        for byte, format, answer in self.why_use_3_bytes:
-            self.assertEqual(_read(byte_io(byte), 0, 3, format), answer)
-
-    def test_backup(self):
-        """
-        If lists are passed it the second values should be used as backup
-        if the first read attempt raises.
-        """
-        fi = byte_io(b'\xff\x98')
-        self.assertEqual(_read(fi, [0, 1], [1, 1], ['bcd', 'bcd']), 98)
-
-    def test_read_raises_when_all_fail(self):
-        """
-        Ensure the backup function raises if it runs off the edge.
-        """
-        fi = byte_io(b'\xff\xff')
-        with self.assertRaises(ValueError):
-            _read(fi, [0, 1], [1, 1], ['bcd', 'bcd'])
+        ieee = b'\x40\x48\xf5\xc3'
+        out = _read(BytesIO(ieee), 0, 4, 'IEEE')
+        self.assertAlmostEqual(out, 3.14, delta=1e-6)
 
 
 def suite():
