@@ -171,6 +171,11 @@ class EventTestCase(unittest.TestCase):
         self.cmp_read_xslt_file('quakeml_1.2_focalmechanism.sc3ml',
                                 'quakeml_1.2_focalmechanism_res.xml')
 
+    def test_read_xslt_amplitude(self):
+        """ See issue #2273 """
+        self.cmp_read_xslt_file('quakeml_1.2_amplitude.sc3ml',
+                                'quakeml_1.2_amplitude_res.xml')
+
     def test_read_xslt_iris_events(self):
         # Magnitude lost during conversion
         self.cmp_read_xslt_file('iris_events.sc3ml', 'iris_events_res.xml')

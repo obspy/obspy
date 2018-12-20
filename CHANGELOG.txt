@@ -45,6 +45,8 @@ master:
    * Fix bug writing inventory with SOH channels to SACPZ (see #2200).
  - obspy.io.seiscomp:
    * Adding support for SC3ML 0.10 (see #2024).
+   * Update xsl to allow conversion of amplitude picks not associated with
+     origins (see #2273).
  - obspy.io.sh:
    * Add read support for SeismicHandler EVT event files (see #2109)
  - obspy.io.shapefile:

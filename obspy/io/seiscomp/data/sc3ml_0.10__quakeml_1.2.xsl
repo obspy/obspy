@@ -168,6 +168,8 @@
  *    - Remove unmapped nodes
  *    - Fix arrival weight mapping
  *
+ *  * 07.12.2018: Copy picks referenced by amplitudes
+ *
  ********************************************************************** -->
 <xsl:stylesheet version="1.0"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -213,11 +215,17 @@
             <!-- search origins referenced by this event -->
             <xsl:for-each select="scs:originReference">
                 <xsl:for-each select="../../scs:origin[@publicID=current()]">
+                    <xsl:variable name="origin" select="current()" />
+
                     <!-- stationMagnitudes and referenced amplitudes -->
                     <xsl:for-each select="scs:stationMagnitude">
                         <xsl:for-each select="../../scs:amplitude[@publicID=current()/scs:amplitudeID]">
                             <!-- amplitude/genericAmplitude is mandatory in QuakeML -->
                             <xsl:if test="scs:amplitude">
+                                <!-- copy picks referenced in amplitudes -->
+                                <xsl:for-each select="../scs:pick[@publicID=current()/scs:pickID]">
+                                    <xsl:call-template name="genericNode" />
+                                </xsl:for-each>
                                 <xsl:call-template name="genericNode"/>
                             </xsl:if>
                         </xsl:for-each>
@@ -236,7 +244,12 @@
                     <!-- picks, referenced by arrivals -->
                     <xsl:for-each select="scs:arrival">
                         <!--xsl:value-of select="scs:pickID"/-->
-                        <xsl:for-each select="../../scs:pick[@publicID=current()/scs:pickID]">
+                        <!-- Don't copy picks already referenced in amplitudes -->
+                        <xsl:for-each select="
+                                ../../scs:pick[
+                                    @publicID=current()/scs:pickID
+                                    and not(@publicID=../scs:amplitude[
+                                        @publicID=$origin/scs:stationMagnitude/scs:amplitudeID]/scs:pickID)]">
                             <xsl:call-template name="genericNode"/>
                         </xsl:for-each>
                     </xsl:for-each>
