@@ -74,29 +74,19 @@ class TestReadRG16(unittest.TestCase):
         """
         Test the the options starttime and endtime
         """
-        t1 = UTCDateTime(2017, 8, 9, 16, 0, 30)
+        t1 = UTCDateTime(2017, 8, 9, 16, 0, 15)
+        t2 = UTCDateTime(2017, 8, 9, 16, 0, 45)
 
         # read streams for testing. The three channel rg16 file has 6 traces
         # but the streams may have less depending on the starttime/endtime
         st = rc._read_rg16(THREE_CHAN_FCNT)  # no time filtering
-        st1 = rc._read_rg16(THREE_CHAN_FCNT, starttime=t1)
-        st2 = rc._read_rg16(THREE_CHAN_FCNT, endtime=t1)
+        st1 = rc._read_rg16(THREE_CHAN_FCNT, starttime=t1, endtime=t2)
 
-        # get a list of starttime/endtimes for streams
-        start_times = [tr.stats.starttime for tr in st]
-        end_times = [tr.stats.endtime for tr in st]
-
-        # test using only starttime
-        self.assertEqual(len(st1), 3)
-        for tr in st1:
-            self.assertEqual(tr.stats.starttime, max(start_times))
-            self.assertEqual(tr.stats.endtime, max(end_times))
-
-        # test using only endtime
-        self.assertEqual(len(st2), 3)
-        for tr in st2:
-            self.assertEqual(tr.stats.starttime, min(start_times))
-            self.assertEqual(tr.stats.endtime, min(end_times))
+        # test using starttime and endtime
+        self.assertEqual(len(st1), len(st))
+        for tr, tr1 in zip(st, st1):
+            self.assertEqual(tr.stats.starttime, tr1.stats.starttime)
+            self.assertEqual(tr.stats.endtime, tr1.stats.endtime)
 
     def test_merge(self):
         """
