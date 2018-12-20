@@ -102,7 +102,7 @@ def _read_binary(fi, length, left_part):
     :type left_part: bool
     """
     if isinstance(length, float):
-        if np.isclose(length, 0.5):
+        if abs(length - 0.5) <= 1e-7:
             ints = np.frombuffer(fi.read(1), dtype='<u1')[0]
             if left_part is True:
                 return np.bitwise_and(ints >> 4, 0x0f)
