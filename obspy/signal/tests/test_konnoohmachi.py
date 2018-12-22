@@ -177,8 +177,10 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         spectra, frequencies = self.get_default_spectra(3)
 
         # # test normalization with disabled matrix and enabled ones
-        smoothed_1 = konno_ohmachi_smoothing(spectra, frequencies, normalize=True)
-        smoothed_2 = konno_ohmachi_smoothing(spectra, frequencies, normalize=True,
+        smoothed_1 = konno_ohmachi_smoothing(spectra, frequencies,
+                                             normalize=True)
+        smoothed_2 = konno_ohmachi_smoothing(spectra, frequencies,
+                                             normalize=True,
                                              enforce_no_matrix=True)
         np.testing.assert_almost_equal(smoothed_1, smoothed_2, 5)
         # # test normalization with disabled matrix and enabled ones
