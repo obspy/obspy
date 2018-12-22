@@ -7,11 +7,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import itertools
 import unittest
 import warnings
 
 import numpy as np
 
+import obspy
 from obspy.signal.konnoohmachismoothing import (calculate_smoothing_matrix,
                                                 apply_smoothing_matrix,
                                                 konno_ohmachi_smoothing_window,
@@ -27,6 +29,24 @@ class KonnoOhmachiTestCase(unittest.TestCase):
 
     def tearDown(self):
         pass
+
+    def get_default_spectra(self, n=1):
+        """
+        Return the n spectra of the default stream and corresponding
+        frequencies. If n > 3 repeat streams.
+        """
+        st = obspy.read()
+        st.detrend('linear')
+        data_len = len(st[0].data)
+        sampling_period = 1. / st[0].stats.sampling_rate
+        # create spectrum
+        cycle = itertools.cycle([tr.data for tr in st])
+        data = np.array([x for _, x in zip(range(n), cycle)])
+        spectrum = np.abs(np.fft.rfft(data, axis=-1))
+        # determine corresponding frequencies and return
+        freq = np.fft.rfftfreq(data_len, sampling_period)
+        assert spectrum.shape[-1] == freq.shape[-1]
+        return spectrum, freq
 
     def test_smoothing_window(self):
         """
@@ -150,6 +170,63 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         self.assertFalse(np.all(smoothed_4 == smoothed_5))
         # Input dtype should be output dtype.
         self.assertEqual(smoothed_4.dtype, np.float64)
+
+    def test_downsample_with_center_frequencies(self):
+        """
+        Test the smoothing with specified center frequencies for downsampling.
+        """
+        spectra, frequencies = self.get_default_spectra(4)
+        # Use a linear extrapolation to get center frequencies.
+        center_frequencies = np.linspace(min(frequencies), max(frequencies))
+        out = konno_ohmachi_smoothing(spectra, frequencies,
+                                      center_frequencies=center_frequencies)
+        self.assertEqual(out.shape[-1], center_frequencies.shape[-1])
+        self.assertEqual(out.shape[0], 4)
+        # Test with one 1D array.
+        spectrum = spectra[0, :]
+        out = konno_ohmachi_smoothing(spectrum, frequencies,
+                                      center_frequencies=center_frequencies)
+        self.assertEqual(out.shape[-1], center_frequencies.shape[-1])
+        # Test count != 0 still works.
+        out = konno_ohmachi_smoothing(spectrum, frequencies, count=5,
+                                      center_frequencies=center_frequencies)
+        self.assertEqual(out.shape[-1], center_frequencies.shape[-1])
+        # It should also work if smoothing matrix is disabled.
+        spectrum = spectra[0, :]
+        out = konno_ohmachi_smoothing(spectrum, frequencies,
+                                      center_frequencies=center_frequencies,
+                                      enforce_no_matrix=True, count=2)
+        self.assertEqual(out.shape[-1], center_frequencies.shape[-1])
+
+    def test_upsampling_with_center_frequencies(self):
+        """
+        Smoothing should also work when the number of center frequencies
+        is greater than the original frequencies.
+        """
+        spectra, frequencies = self.get_default_spectra(4)
+        num = int(spectra.shape[-1] * 1.2)
+        center_frequencies = np.linspace(min(frequencies), max(frequencies),
+                                         num=num)
+        out = konno_ohmachi_smoothing(spectra, frequencies,
+                                      center_frequencies=center_frequencies)
+        self.assertEqual(out.shape[-1], center_frequencies.shape[-1])
+
+    def test_center_frequencies_outside_frequencies_raises(self):
+        """
+        Center frequencies must be contained in the range of frequencies
+        or a ValueError should be raised.
+        """
+        spectra, frequencies = self.get_default_spectra(2)
+        # First test a value which is too low.
+        center_frequencies = np.copy(frequencies)
+        center_frequencies[0] = -1
+        self.assertRaises(ValueError, konno_ohmachi_smoothing, spectra,
+                          frequencies, center_frequencies=center_frequencies)
+        # Then test a value which is too high
+        center_frequencies = np.copy(frequencies)
+        center_frequencies[-1] = center_frequencies[-1] * 10
+        self.assertRaises(ValueError, konno_ohmachi_smoothing, spectra,
+                          frequencies, center_frequencies=center_frequencies)
 
 
 def suite():
