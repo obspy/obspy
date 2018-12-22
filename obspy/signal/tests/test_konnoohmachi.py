@@ -165,11 +165,27 @@ class KonnoOhmachiTestCase(unittest.TestCase):
             np.require(frequencies, dtype=np.float64),
             enforce_no_matrix=True,
             normalize=True)
-        # The normalized and not normalized should not be the same. That the
-        # normalizing works has been tested before.
         self.assertFalse(np.all(smoothed_4 == smoothed_5))
         # Input dtype should be output dtype.
         self.assertEqual(smoothed_4.dtype, np.float64)
+
+    def test_smoothing_with_and_without_smoothing_matrix(self):
+        """
+        The results of smoothing wih enforce_no_matrix should be the same
+        as without.
+        """
+        spectra, frequencies = self.get_default_spectra(3)
+
+        # # test normalization with disabled matrix and enabled ones
+        smoothed_1 = konno_ohmachi_smoothing(spectra, frequencies, normalize=True)
+        smoothed_2 = konno_ohmachi_smoothing(spectra, frequencies, normalize=True,
+                                             enforce_no_matrix=True)
+        np.testing.assert_almost_equal(smoothed_1, smoothed_2, 5)
+        # # test normalization with disabled matrix and enabled ones
+        smoothed_1 = konno_ohmachi_smoothing(spectra, frequencies)
+        smoothed_2 = konno_ohmachi_smoothing(spectra, frequencies,
+                                             enforce_no_matrix=True)
+        np.testing.assert_almost_equal(smoothed_1, smoothed_2, 5)
 
     def test_downsample_with_center_frequencies(self):
         """
