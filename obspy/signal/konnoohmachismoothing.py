@@ -167,7 +167,7 @@ def _smooth_no_matrix(spectra, frequencies, bandwidth, normalize, count,
     # Calculate length of output array and init it.
     output_shape = [len(center_frequencies)]
     if len(spectra.shape) > 1:
-        output_shape.append(spectra.shape[0])
+        output_shape.insert(0, spectra.shape[0])
     new_spec = np.empty(tuple(output_shape), spectra.dtype)
     # Separate case for just one spectrum.
     if len(spectra.shape) == 1:
