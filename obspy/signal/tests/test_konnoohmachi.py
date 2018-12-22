@@ -39,11 +39,11 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         st.detrend('linear')
         data_len = len(st[0].data)
         sampling_period = 1. / st[0].stats.sampling_rate
-        # create spectrum
+        # Create spectra.
         cycle = itertools.cycle([tr.data for tr in st])
         data = np.array([x for _, x in zip(range(n), cycle)])
         spectrum = np.abs(np.fft.rfft(data, axis=-1))
-        # determine corresponding frequencies and return
+        # Determine corresponding frequencies and return.
         freq = np.fft.rfftfreq(data_len, sampling_period)
         assert spectrum.shape[-1] == freq.shape[-1]
         return spectrum, freq
