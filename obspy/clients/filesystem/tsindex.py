@@ -163,7 +163,6 @@ import os
 from os.path import relpath
 from glob import glob
 import datetime
-import uuid
 import subprocess
 import copyreg
 from multiprocessing import Pool
@@ -171,13 +170,15 @@ import types
 import logging
 import requests
 from collections import namedtuple
-from sqlalchemy import create_engine
+import sqlalchemy as sa
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 
 from obspy import UTCDateTime
 from obspy.core.stream import Stream
 from obspy.clients.filesystem.miniseed import MiniseedDataExtractor, \
     NoDataError
+from obspy.clients.filesystem.db import TSIndexTable, TSIndexSummaryTable
 
 
 # Setup the logger.
@@ -669,9 +670,7 @@ class Client(object):
 
         logger.debug("Wrote {} bytes".format(total_bytes))
 
-        if merge is None or merge is False:
-            pass
-        else:
+        if merge:
             st.merge(merge)
         return st
 
@@ -984,7 +983,7 @@ class Indexer(object):
         elif isinstance(database, TSIndexDatabaseHandler):
             self.request_handler = database
         else:
-            raise ValueError("database must be a string or "
+            raise ValueError("Database must be a string or "
                              "TSIndexDatabaseHandler object.")
 
         self.leap_seconds_file = self._get_leap_seconds_file(leap_seconds_file)
@@ -1016,7 +1015,7 @@ class Indexer(object):
                     "Required program '{}' is not installed. Hint: Install "
                     "mseedindex at https://github.com/iris-edu/mseedindex/."
                     .format(self.index_cmd))
-        self.request_handler._init_database_for_indexing()
+        self.request_handler._set_sqlite_pragma()
         file_paths = self.build_file_list(relative_paths, reindex)
 
         # always keep the original file paths as specified. absolute and
@@ -1078,16 +1077,10 @@ class Indexer(object):
             ``filename_pattern``.
         """
         logger.debug("Building a list of files to index.")
-        file_list = [y for x in os.walk(self.root_path)
-                     for y in glob(os.path.join(x[0], self.filename_pattern))
-                     if os.path.isfile(y)]
-
+        file_list = self._get_rootpath_files(relative_paths=False)
         # find relative file paths in case they are stored in the database as
         # relative paths.
-        file_list_relative = []
-        for abs_path in file_list:
-            file_list_relative.append(relpath(abs_path, self.root_path))
-
+        file_list_relative = self._get_rootpath_files(relative_paths=True)
         result = []
         if reindex is False and self.request_handler.has_tsindex():
             # remove any files already in the tsindex table
@@ -1096,9 +1089,9 @@ class Indexer(object):
             tsindex = self.request_handler._fetch_index_rows()
             tsindex_filenames = [row.filename for row in tsindex]
             for abs_fn, rel_fn in zip(file_list, file_list_relative):
-                if abs_fn not in tsindex_filenames:
+                if abs_fn not in tsindex_filenames and \
+                   rel_fn not in tsindex_filenames:
                     unindexed_abs.append(abs_fn)
-                if rel_fn not in tsindex_filenames:
                     unindexed_rel.append(rel_fn)
             if relative_paths is True:
                 result = unindexed_rel
@@ -1108,7 +1101,6 @@ class Indexer(object):
             result = file_list_relative
         else:
             result = file_list
-
         if not result:
             raise OSError("No {}files matching filename pattern '{}' "
                           "were found under root path '{}'."
@@ -1156,6 +1148,22 @@ class Indexer(object):
                           .format(file_path))
         return file_path
 
+    def _get_rootpath_files(self, relative_paths=False):
+        """
+        Return a list of absolute paths to files under the rootpath that
+        match the Indexers filename pattern
+        """
+        file_list = [y for x in os.walk(self.root_path)
+                     for y in glob(os.path.join(x[0], self.filename_pattern))
+                     if os.path.isfile(y)]
+        if relative_paths:
+            file_list_relative = []
+            for abs_path in file_list:
+                file_list_relative.append(relpath(abs_path, self.root_path))
+            return file_list_relative
+        else:
+            return file_list
+
     def _download(self, url):
         return requests.get(url)
 
@@ -1176,6 +1184,7 @@ class Indexer(object):
                 if os.path.isfile(file_path):
                     leap_seconds_file = os.path.abspath(file_path)
                 else:
+                    leap_seconds_file = "NONE"
                     logger.warning("Leap seconds file `{}` not found. "
                                    "No leap seconds file will be used for "
                                    "indexing.".format(file_path))
@@ -1247,9 +1256,9 @@ class TSIndexDatabaseHandler(object):
     Supports direct tsindex database data access and manipulation.
     """
 
-    def __init__(self, database, tsindex_table="tsindex",
+    def __init__(self, database=None, tsindex_table="tsindex",
                  tsindex_summary_table="tsindex_summary",
-                 debug=False):
+                 session=None, debug=False):
         """
         Main query interface to timeseries index database.
 
@@ -1259,6 +1268,8 @@ class TSIndexDatabaseHandler(object):
         :param tsindex_table: Name of timeseries index table
         :type tsindex_summary_table: str
         :param tsindex_summary_table: Name of timeseries index summary table
+        :type session: :class:`sqlalchemy.orm.session.Session`
+        :param session: An existing database session object.
         :type debug: bool
         :param debug: Debug flag.
         """
@@ -1270,115 +1281,155 @@ class TSIndexDatabaseHandler(object):
         self.tsindex_table = tsindex_table
         self.tsindex_summary_table = tsindex_summary_table
 
-        if isinstance(database, (str, native_str)):
-            self.database = os.path.abspath(database)
-            db_dirpath = os.path.dirname(self.database)
-            if not os.path.exists(db_dirpath):
-                raise OSError("Database path '{}' does not exist."
-                              .format(db_dirpath))
-            elif not os.path.isfile(self.database):
-                logger.warning("No sqlite3 database file exists at `{}`."
-                               .format(self.database))
-        else:
-            raise ValueError("database must be a string.")
-        self.db_path = "sqlite:///{}".format(self.database)
-        self.engine = create_engine(self.db_path, poolclass=QueuePool)
+        if database and session:
+            raise ValueError("Both a database path and an existing database "
+                             "session object were supplied. Supply one or "
+                             "the other but not both.")
 
-    def build_tsindex_summary(self, connection=None, temporary=False):
+        if session:
+            self.session = session
+            self.engine = session().get_bind()
+        elif database:
+            if isinstance(database, (str, native_str)):
+                self.database = os.path.abspath(database)
+                db_dirpath = os.path.dirname(self.database)
+                if not os.path.exists(db_dirpath):
+                    raise OSError("Database path '{}' does not exist."
+                                  .format(db_dirpath))
+                elif not os.path.isfile(self.database):
+                    logger.warning("No sqlite3 database file exists at `{}`."
+                                   .format(self.database))
+            else:
+                raise ValueError("database must be a string.")
+            db_path = "sqlite:///{}".format(self.database)
+            self.engine = sa.create_engine(db_path, poolclass=QueuePool)
+            self.session = sessionmaker(bind=self.engine)
+        else:
+            raise ValueError("Either a database path or an existing "
+                             "database session object must be supplied.")
+
+    def get_tsindex_summary_cte(self):
+        """
+        :rtype: `sqlalchemy.sql.expression.CTE`
+        :returns: Returns a common table expression (CTE) containing the
+            tsindex summary information. If a tsindex summary table has been
+            created in the database it will be used as the source for the CTE,
+            otherwise it will be created by querying the tsindex table.
+        """
+        session = self.session()
+        tsindex_summary_cte_name = "tsindex_summary"
+        if self.has_tsindex_summary():
+            # get tsindex summary cte by querying tsindex_summary table
+            tsindex_summary_cte = \
+                (session
+                 .query(TSIndexSummaryTable)
+                 .group_by(TSIndexSummaryTable.network,
+                           TSIndexSummaryTable.station,
+                           TSIndexSummaryTable.location,
+                           TSIndexSummaryTable.channel)
+                 .cte(name=tsindex_summary_cte_name)
+                 )
+        else:
+            logger.warning("No {0} table found! A {0} "
+                           "CTE will be created by querying the {1} "
+                           "table, which could be slow!"
+                           .format(self.tsindex_summary_table,
+                                   self.tsindex_table))
+            logger.info("For improved performance create a permanent "
+                        "{0} table by running the "
+                        "`~obspy.clients.filesystem.tsindex."
+                        "TSIndexDatabaseHandler.build_tsindex_summary()` "
+                        "instance method."
+                        .format(self.tsindex_summary_table))
+            # create the tsindex summary cte by querying the tsindex table.
+            tsindex_summary_cte = \
+                (session
+                 .query(TSIndexTable.network,
+                        TSIndexTable.station,
+                        TSIndexTable.location,
+                        TSIndexTable.channel,
+                        sa.func.min(TSIndexTable.starttime).label("earliest"),
+                        sa.func.max(TSIndexTable.endtime).label("latest"),
+                        sa.literal(
+                            UTCDateTime.now().isoformat()).label("updt")
+                        )
+                 .group_by(TSIndexTable.network,
+                           TSIndexTable.station,
+                           TSIndexTable.location,
+                           TSIndexTable.channel)
+                 .cte(name=tsindex_summary_cte_name)
+                 )
+        return tsindex_summary_cte
+
+    def build_tsindex_summary(self):
         """
         Builds a tsindex_summary table using the table name supplied to the
         Indexer instance (defaults to 'tsindex_summary').
-
-        :type connection: :class:`~sqlalchemy.engine.Connection`
-        :param connection: SQLAlchemy database connection object.
-        :type temporary: bool
-        :param temporary: If ``True`` then a temporary tsindex table is
-            created and a open SQLAlchemy database connection object
-            is returned.
-        :returns: Return a open SQLAlchemy database connection object if the
-            ``temporary`` parameter is ``True``, otherwise return a closed
-            SQLAlchemy database connection object.
         """
-        if connection is None:
-            connection = self._open_database_connection()
         # test if tsindex table exists
-        if not self.engine.dialect.has_table(self.engine, self.tsindex_table):
+        if not self.has_tsindex():
             raise ValueError("No tsindex table '{}' exists in database '{}'."
                              .format(self.tsindex_table, self.database))
-        connection.execute("DROP TABLE IF EXISTS {};"
-                           .format(self.tsindex_summary_table))
+        if self.has_tsindex_summary():
+            TSIndexSummaryTable.__table__.drop(self.engine)
 
-        connection.execute(
-            "CREATE {0} TABLE {1} AS "
-            "SELECT network, station, location, channel, "
-            "  min(starttime) AS earliest, max(endtime) AS latest, "
-            "  datetime('now') as updt "
-            "FROM {2} "
-            "GROUP BY 1,2,3,4;"
-            .format("TEMPORARY" if temporary is True else "",
-                    self.tsindex_summary_table,
-                    self.tsindex_table)
-        )
-        if temporary is False:
-            connection.close()
-        return connection
+        session = self.session()
+        TSIndexSummaryTable.__table__.create(self.engine)
+        rows = (session
+                .query(TSIndexTable.network,
+                       TSIndexTable.station,
+                       TSIndexTable.location,
+                       TSIndexTable.channel,
+                       sa.func.min(TSIndexTable.starttime).label("earliest"),
+                       sa.func.max(TSIndexTable.endtime).label("latest"),
+                       sa.literal(UTCDateTime().now().isoformat()))
+                .group_by(TSIndexTable.network,
+                          TSIndexTable.station,
+                          TSIndexTable.location,
+                          TSIndexTable.channel))
+        session.execute(TSIndexSummaryTable.__table__.insert(),
+                        [{'network': r[0],
+                          'station': r[1],
+                          'location': r[2],
+                          'channel': r[3],
+                          'earliest': r[4],
+                          'latest': r[5],
+                          'updt': r[6]
+                          }
+                        for r in rows])
+        session.commit()
 
-    def has_tsindex_summary(self, connection=None):
+    def has_tsindex_summary(self):
         """
         Returns ``True`` if there is a tsindex_summary table in the database.
 
-        :type connection: sqlalchemy.engine.Connection
-        :param: connection: SQLAlchemy database connection object.
         :rtype: bool
         :returns: Returns ``True`` if there a tsindex_summary table is present
             in the database.
         """
-        if connection is None:
-            connection = self._open_database_connection()
-        result = connection.execute("SELECT count(*) FROM sqlite_master "
-                                    "WHERE type='table' and name='{0}'"
-                                    .format(self.tsindex_summary_table))
-
-        summary_present = result.fetchone()[0]
-        if connection is None:
-            connection.close()
-        if summary_present:
+        table_names = sa.inspect(self.engine).get_table_names()
+        temp_table_names = sa.inspect(self.engine).get_temp_table_names()
+        if self.tsindex_summary_table in table_names or \
+                self.tsindex_summary_table in temp_table_names:
             return True
         else:
             return False
 
-    def has_tsindex(self, connection=None):
+    def has_tsindex(self):
         """
         Returns ``True`` if there is a tsindex table in the database.
 
-        :type connection: sqlalchemy.engine.Connection
-        :param: connection: SQLAlchemy database connection object.
         :rtype: bool
-        :returns: Returns ``True`` if there a tsindex_summary table is present
+        :returns: Returns ``True`` if there a tsindex table is present
             in the database.
         """
-        if connection is None:
-            connection = self._open_database_connection()
-        result = connection.execute("SELECT count(*) FROM sqlite_master "
-                                    "WHERE type='table' and name='{0}'"
-                                    .format(self.tsindex_table))
-
-        summary_present = result.fetchone()[0]
-        if connection is None:
-            connection.close()
-        if summary_present:
+        table_names = sa.inspect(self.engine).get_table_names()
+        temp_table_names = sa.inspect(self.engine).get_temp_table_names()
+        if self.tsindex_table in table_names or \
+                self.tsindex_table in temp_table_names:
             return True
         else:
             return False
-
-    def _open_database_connection(self):
-        try:
-            connection = self.engine.connect()
-        except Exception as err:
-            raise ValueError(str(err))
-        logger.debug("Opening SQLite database for "
-                     "index rows: %s" % self.database)
-        return connection
 
     def _fetch_index_rows(self, query_rows=None, bulk_params=None):
         '''
@@ -1401,106 +1452,171 @@ class TSIndexDatabaseHandler(object):
             timespans, timerates, format, filemodtime, updated, scanned,
             requeststart, requestend).
         '''
+
+        session = self.session()
+
         if query_rows is None:
             query_rows = []
         if bulk_params is None:
             bulk_params = {}
 
         query_rows = self._clean_query_rows(query_rows)
+        request_cte_name = "raw_request_cte"
 
-        my_uuid = uuid.uuid4().hex
-        request_table = "request_%s" % my_uuid
-        connection = self._open_database_connection()
-
+        result = []
         # Create temporary table and load request
         try:
-            connection.execute("CREATE TEMPORARY TABLE {0} "
-                               "(network TEXT, station TEXT, location TEXT, "
-                               "channel TEXT, starttime TEXT, endtime TEXT) "
-                               .format(request_table))
-
+            stmts = [
+                sa.select([
+                    sa.literal(a).label("network"),
+                    sa.literal(b).label("station"),
+                    sa.literal(c).label("location"),
+                    sa.literal(d).label("channel"),
+                    sa.literal(e).label("starttime")
+                    if e != '*' else
+                    sa.literal('0000-00-00T00:00:00').label("starttime"),
+                    sa.literal(f).label("endtime")
+                    if f != '*' else
+                    sa.literal('5000-00-00T00:00:00').label("endtime")
+                ])
+                for idx, (a, b, c, d, e, f) in enumerate(query_rows)
+            ]
+            requests = sa.union_all(*stmts)
+            requests_cte = requests.cte(name=request_cte_name)
+            wildcards = False
             for req in query_rows:
-                connection.execute("INSERT INTO {0} (network,station,location,"
-                                   "channel,starttime,endtime) "
-                                   "VALUES (?,?,?,?,?,?) "
-                                   .format(request_table), (req[0], req[1],
-                                                            req[2], req[3],
-                                                            req[4], req[5]))
-        except Exception as err:
-            raise ValueError(str(err))
-
-        summary_present = self.has_tsindex_summary(connection)
-        wildcards = False
-        for req in query_rows:
-            for field in req:
-                if '*' in str(field) or '?' in str(field):
-                    wildcards = True
-                    break
-
-        if wildcards:
-            # Resolve wildcards using summary if present to:
-            # a) resolve wildcards, allows use of '=' operator and table index
-            # b) reduce index table search to channels that are known included
-            if summary_present:
-                self._resolve_request(connection, request_table)
+                for field in req:
+                    if '*' in str(field) or '?' in str(field):
+                        wildcards = True
+                        break
+            summary_present = self.has_tsindex_summary()
+            if wildcards and summary_present:
+                # Resolve wildcards using summary if present to:
+                # a) resolve wildcards, allows use of '=' operator
+                #    and table index
+                # b) reduce index table search to channels that are
+                #    known included
+                flattened_request_cte_name = 'flattened_request_cte'
+                # expand
+                flattened_request_cte = (
+                    session
+                    .query(TSIndexSummaryTable.network,
+                           TSIndexSummaryTable.station,
+                           TSIndexSummaryTable.location,
+                           TSIndexSummaryTable.channel,
+                           TSIndexSummaryTable.network,
+                           sa.case([
+                                    (requests_cte.c.starttime == '*',
+                                     TSIndexSummaryTable.earliest),
+                                    (requests_cte.c.starttime != '*',
+                                     requests_cte.c.starttime)
+                                   ])
+                           .label('starttime'),
+                           sa.case([
+                                    (requests_cte.c.endtime == '*',
+                                     TSIndexSummaryTable.latest),
+                                    (requests_cte.c.endtime != '*',
+                                     requests_cte.c.endtime)
+                                   ])
+                           .label('endtime'))
+                    .filter(TSIndexSummaryTable.network.op('GLOB')
+                            (requests_cte.c.network))
+                    .filter(TSIndexSummaryTable.station.op('GLOB')
+                            (requests_cte.c.station))
+                    .filter(TSIndexSummaryTable.location.op('GLOB')
+                            (requests_cte.c.location))
+                    .filter(TSIndexSummaryTable.channel.op('GLOB')
+                            (requests_cte.c.channel))
+                    .filter(TSIndexSummaryTable.earliest <=
+                            requests_cte.c.endtime)
+                    .filter(TSIndexSummaryTable.latest >=
+                            requests_cte.c.starttime)
+                    .order_by(TSIndexSummaryTable.network,
+                              TSIndexSummaryTable.station,
+                              TSIndexSummaryTable.location,
+                              TSIndexSummaryTable.channel,
+                              TSIndexSummaryTable.earliest,
+                              TSIndexSummaryTable.latest)
+                    .cte(name=flattened_request_cte_name))
+                result = (
+                    session
+                    .query(TSIndexTable,
+                           requests_cte.c.starttime,
+                           requests_cte.c.endtime)
+                    .filter(TSIndexTable.network ==
+                            flattened_request_cte.c.network)
+                    .filter(TSIndexTable.station ==
+                            flattened_request_cte.c.station)
+                    .filter(TSIndexTable.location ==
+                            flattened_request_cte.c.location)
+                    .filter(TSIndexTable.channel ==
+                            flattened_request_cte.c.channel)
+                    .filter(TSIndexTable.starttime <=
+                            flattened_request_cte.c.endtime)
+                    .filter(TSIndexTable.endtime >=
+                            flattened_request_cte.c.starttime)
+                    .order_by(TSIndexTable.network,
+                              TSIndexTable.station,
+                              TSIndexTable.location,
+                              TSIndexTable.channel,
+                              TSIndexTable.starttime,
+                              TSIndexTable.endtime))
                 wildcards = False
-            # Replace wildcarded starttime and endtime with extreme date-times
             else:
-                connection.execute("UPDATE {0} "
-                                   "SET starttime='0000-00-00T00:00:00' "
-                                   "WHERE starttime='*'".format(request_table))
-                connection.execute("UPDATE {0} "
-                                   "SET endtime='5000-00-00T00:00:00' "
-                                   "WHERE endtime='*'".format(request_table))
-
-        # Fetch final results by joining resolved and index table
-        try:
-            sql = ("SELECT DISTINCT ts.network,ts.station,ts.location,"
-                   "ts.channel,ts.quality,ts.starttime,ts.endtime,"
-                   "ts.samplerate,ts.filename,ts.byteoffset,ts.bytes,ts.hash, "
-                   "ts.timeindex,ts.timespans,ts.timerates,ts.format,"
-                   "ts.filemodtime,ts.updated,ts.scanned,r.starttime,"
-                   "r.endtime "
-                   "FROM {0} ts, {1} r "
-                   "WHERE "
-                   "  ts.network {2} r.network "
-                   "  AND ts.station {2} r.station "
-                   "  AND ts.location {2} r.location "
-                   "  AND ts.channel {2} r.channel "
-                   "  AND ts.starttime <= r.endtime "
-                   "  AND ts.endtime >= r.starttime "
-                   "ORDER BY ts.network, ts.station, ts.location, "
-                   "  ts.channel, ts.starttime, ts.endtime"
-                   .format(self.tsindex_table,
-                           request_table,
-                           "GLOB" if wildcards else "="))
-
-            # Add quality identifer criteria
-            if 'quality' in bulk_params and \
-                    bulk_params['quality'] in ('D', 'R', 'Q'):
-                sql = sql + " AND quality = '{0}' ".format(
-                                                        bulk_params['quality'])
-            result = connection.execute(sql)
+                result = (
+                    session
+                    .query(TSIndexTable,
+                           requests_cte.c.starttime,
+                           requests_cte.c.endtime
+                           )
+                    .filter(TSIndexTable.network.op('GLOB')
+                            (requests_cte.c.network))
+                    .filter(TSIndexTable.station.op('GLOB')
+                            (requests_cte.c.station))
+                    .filter(TSIndexTable.location.op('GLOB')
+                            (requests_cte.c.location))
+                    .filter(TSIndexTable.channel.op('GLOB')
+                            (requests_cte.c.channel))
+                    .filter(TSIndexTable.starttime <=
+                            requests_cte.c.endtime)
+                    .filter(TSIndexTable.endtime >=
+                            requests_cte.c.starttime)
+                    .order_by(TSIndexTable.network,
+                              TSIndexTable.station,
+                              TSIndexTable.location,
+                              TSIndexTable.channel,
+                              TSIndexTable.starttime,
+                              TSIndexTable.endtime))
         except Exception as err:
             raise ValueError(str(err))
-
-        # Map raw tuples to named tuples for clear referencing
-        NamedRow = namedtuple('NamedRow',
-                              ['network', 'station', 'location', 'channel',
-                               'quality', 'starttime', 'endtime', 'samplerate',
-                               'filename', 'byteoffset', 'bytes', 'hash',
-                               'timeindex', 'timespans', 'timerates', 'format',
-                               'filemodtime', 'updated', 'scanned',
-                               'requeststart', 'requestend'])
 
         index_rows = []
-        for row in result:
-            index_rows.append(NamedRow(*row))
+        for rt in result:
+            # convert to a named tuple
+            NamedRow = namedtuple('NamedRow',
+                                  ['network', 'station', 'location',
+                                   'channel', 'quality', 'version',
+                                   'starttime', 'endtime', 'samplerate',
+                                   'filename', 'byteoffset', 'bytes',
+                                   'hash', 'timeindex', 'timespans',
+                                   'timerates', 'format', 'filemodtime',
+                                   'updated', 'scanned', 'requeststart',
+                                   'requestend'])
+            row, requeststart, requestend = rt
+            nrow = NamedRow(
+                    row.network, row.station, row.location,
+                    row.channel, row.quality, row.version,
+                    row.starttime, row.endtime, row.samplerate,
+                    row.filename, row.byteoffset, row.bytes,
+                    row.hash, row.timeindex, row.timespans,
+                    row.timerates, row.format, row.filemodtime,
+                    row.updated, row.scanned,
+                    requeststart, requestend
+                   )
+
+            index_rows.append(nrow)
 
         logger.debug("Fetched %d index rows" % len(index_rows))
-
-        connection.execute("DROP TABLE {0}".format(request_table))
-        connection.close()
 
         return index_rows
 
@@ -1524,158 +1640,74 @@ class TSIndexDatabaseHandler(object):
         :returns: Return rows as list of named tuples containing:
             (network, station, location, channel, earliest, latest, updated).
         '''
+        session = self.session()
         query_rows = self._clean_query_rows(query_rows)
-
-        connection = self._open_database_connection()
-
-        summary_present = self.has_tsindex_summary(connection)
-        if not summary_present:
-            logger.warning("No tsindex_summary table found! A temporary "
-                           "tsindex_summary table will be created.")
-            self.build_tsindex_summary(connection=connection,
-                                       temporary=True)
-            logger.info(
-                       "For improved performance create a permanent "
-                       "tsindex_summary table by running the "
-                       "`~obspy.clients.filesystem.tsindex."
-                       "TSIndexDatabaseHandler.build_tsindex_summary()` "
-                       "instance method.")
-
-        summary_rows = []
-        my_uuid = uuid.uuid4().hex
-        request_table = "request_%s" % my_uuid
-
+        tsindex_summary_cte = self.get_tsindex_summary_cte()
         # Create temporary table and load request
         try:
-            connection.execute("CREATE TEMPORARY TABLE {0}"
-                               " (network TEXT, station TEXT,"
-                               " location TEXT, channel TEXT,"
-                               " starttime TEXT, endtime TEXT)"
-                               .format(request_table))
-            for req in query_rows:
-                connection.execute("INSERT INTO {0} (network,station,"
-                                   "  location,channel, starttime, endtime) "
-                                   "VALUES (?,?,?,?,?,?) "
-                                   .format(request_table),
-                                   req)
+            request_cte_name = "request_cte"
+            stmts = [
+                sa.select([
+                    sa.literal(a).label("network"),
+                    sa.literal(b).label("station"),
+                    sa.literal(c).label("location"),
+                    sa.literal(d).label("channel"),
+                    sa.literal(e).label("starttime")
+                    if e != '*' else
+                    sa.literal('0000-00-00T00:00:00').label("starttime"),
+                    sa.literal(f).label("endtime")
+                    if f != '*' else
+                    sa.literal('5000-00-00T00:00:00').label("endtime")
+                ])
+                for idx, (a, b, c, d, e, f) in enumerate(query_rows)
+            ]
+            requests = sa.union_all(*stmts)
+            requests_cte = requests.cte(name=request_cte_name)
         except Exception as err:
             raise ValueError(str(err))
 
-        result_perm = connection.execute("SELECT count(*) "
-                                         "FROM sqlite_master "
-                                         "WHERE type='table' "
-                                         "and name='{0}'"
-                                         .format(self.tsindex_summary_table))
-        result_temp = connection.execute("SELECT count(*) "
-                                         "FROM sqlite_temp_master "
-                                         "WHERE type='table' "
-                                         "and name='{0}'"
-                                         .format(self.tsindex_summary_table))
+        # Select summary rows by joining with summary table
+        try:
+            # expand
+            result = (
+                session
+                .query(tsindex_summary_cte.c.network,
+                       tsindex_summary_cte.c.station,
+                       tsindex_summary_cte.c.location,
+                       tsindex_summary_cte.c.channel,
+                       tsindex_summary_cte.c.earliest,
+                       tsindex_summary_cte.c.latest,
+                       tsindex_summary_cte.c.updt)
+                .filter(tsindex_summary_cte.c.network.op('GLOB')
+                        (requests_cte.c.network))
+                .filter(tsindex_summary_cte.c.station.op('GLOB')
+                        (requests_cte.c.station))
+                .filter(tsindex_summary_cte.c.location.op('GLOB')
+                        (requests_cte.c.location))
+                .filter(tsindex_summary_cte.c.channel.op('GLOB')
+                        (requests_cte.c.channel))
+                .filter(tsindex_summary_cte.c.earliest <=
+                        requests_cte.c.endtime)
+                .filter(tsindex_summary_cte.c.latest >=
+                        requests_cte.c.starttime)
+                .order_by(tsindex_summary_cte.c.network,
+                          tsindex_summary_cte.c.station,
+                          tsindex_summary_cte.c.location,
+                          tsindex_summary_cte.c.channel,
+                          tsindex_summary_cte.c.earliest,
+                          tsindex_summary_cte.c.latest))
+        except Exception as err:
+            raise ValueError(str(err))
 
-        summary_present = (result_perm.fetchone()[0] or
-                           result_temp.fetchone()[0])
-        result_perm.close()
-        result_temp.close()
-
-        if summary_present:
-            # Select summary rows by joining with summary table
-            try:
-                sql = ("SELECT DISTINCT s.network,s.station,s.location,"
-                       "s.channel,s.earliest,s.latest,s.updt "
-                       "FROM {0} s, {1} r "
-                       "WHERE "
-                       "  (r.starttime='*' OR r.starttime <= s.latest) "
-                       "  AND (r.endtime='*' OR r.endtime >= s.earliest) "
-                       "  AND (r.network='*' OR s.network GLOB r.network) "
-                       "  AND (r.station='*' OR s.station GLOB r.station) "
-                       "  AND (r.location='*' OR s.location GLOB r.location) "
-                       "  AND (r.channel='*' OR s.channel GLOB r.channel) "
-                       "ORDER BY s.network, s.station, s.location, "
-                       "s.channel, s.earliest, s.latest".
-                       format(self.tsindex_summary_table, request_table))
-                result = connection.execute(sql)
-            except Exception as err:
-                raise ValueError(str(err))
-
-            # Map raw tuples to named tuples for clear referencing
-            NamedRow = namedtuple('NamedRow',
-                                  ['network', 'station', 'location', 'channel',
-                                   'earliest', 'latest', 'updated'])
-
-            summary_rows = []
-            for row in result:
-                summary_rows.append(NamedRow(*row))
-            result.close()
-
-            logger.debug("Fetched %d summary rows" % len(summary_rows))
-
-        connection.execute("DROP TABLE IF EXISTS {0}".format(request_table))
-        connection.close()
-
+        # Map raw tuples to named tuples for clear referencing
+        NamedRow = namedtuple('NamedRow',
+                              ['network', 'station', 'location', 'channel',
+                               'earliest', 'latest', 'updated'])
+        summary_rows = []
+        for row in result:
+            summary_rows.append(NamedRow(*row))
+        logger.debug("Fetched %d summary rows" % len(summary_rows))
         return summary_rows
-
-    def _resolve_request(self, connection, request_table):
-        '''
-        Resolve request table by expanding wildcards using summary.
-
-        :type connection: sqlalchemy.engine.base.Connection
-        :param: database connection to resolve request with
-        :type request_table: str
-        :param request_table: table to resolve
-            Resolve any '?' and '*' wildcards in the specified request table.
-            The original table is renamed, rebuilt with a join to summary
-            and then original table is then removed.
-        '''
-
-        request_table_orig = request_table + "_orig"
-
-        # Rename request table
-        try:
-            connection.execute("ALTER TABLE {0} "
-                               "RENAME TO {1}".format(request_table,
-                                                      request_table_orig))
-        except Exception as err:
-            raise ValueError(str(err))
-
-        # Create resolved request table by joining with summary
-        try:
-            sql = ("CREATE TEMPORARY TABLE {0} "
-                   "(network TEXT, station TEXT, location TEXT, channel TEXT, "
-                   "starttime TEXT, endtime TEXT) ".format(request_table))
-            connection.execute(sql)
-
-            sql = ("INSERT INTO {0} (network, station, location, "
-                   "channel, starttime, endtime) "
-                   "SELECT s.network, s.station, s.location, s.channel,"
-                   "CASE WHEN r.starttime='*' "
-                   "THEN s.earliest ELSE r.starttime END,"
-                   "CASE WHEN r.endtime='*' "
-                   "THEN s.latest ELSE r.endtime END "
-                   "FROM {1} s, {2} r "
-                   "WHERE "
-                   "  (r.starttime='*' OR r.starttime <= s.latest) "
-                   "  AND (r.endtime='*' OR r.endtime >= s.earliest) "
-                   "  AND (r.network='*' OR s.network GLOB r.network) "
-                   "  AND (r.station='*' OR s.station GLOB r.station) "
-                   "  AND (r.location='*' OR s.location GLOB r.location) "
-                   "  AND (r.channel='*' OR s.channel GLOB r.channel) ".
-                   format(request_table,
-                          self.tsindex_summary_table,
-                          request_table_orig))
-            connection.execute(sql)
-
-        except Exception as err:
-            raise ValueError(str(err))
-
-        resolvedrows = connection.execute("SELECT COUNT(*) FROM {0}"
-                                          .format(request_table)).fetchone()[0]
-
-        logger.debug("Resolved request with "
-                     "summary into %d rows" % resolvedrows)
-
-        connection.execute("DROP TABLE {0}".format(request_table_orig))
-
-        return resolvedrows
 
     def _create_query_row(self, network, station, location,
                           channel, starttime, endtime):
@@ -1765,22 +1797,21 @@ class TSIndexDatabaseHandler(object):
                                 flat_query_rows.append(qr)
         return flat_query_rows
 
-    def _init_database_for_indexing(self):
+    def _set_sqlite_pragma(self):
         """
         Setup a sqlite3 database for indexing.
         """
         try:
             logger.debug('Setting up sqlite3 database at %s' % self.database)
             # setup the sqlite database
-            connection = self._open_database_connection()
+            session = self.session()
             # https://www.sqlite.org/foreignkeys.html
-            connection.execute('PRAGMA foreign_keys = ON')
+            session.execute('PRAGMA foreign_keys = ON')
             # as used by mseedindex
-            connection.execute('PRAGMA case_sensitive_like = ON')
+            session.execute('PRAGMA case_sensitive_like = ON')
             # enable Write-Ahead Log for better concurrency support
-            connection.execute('PRAGMA journal_mode=WAL')
+            session.execute('PRAGMA journal_mode=WAL')
             # Store temporary table(s) in memory
-            connection.execute("PRAGMA temp_store=MEMORY")
-            connection.close()
+            session.execute("PRAGMA temp_store=MEMORY")
         except Exception:
             raise OSError("Failed to setup sqlite3 database for indexing.")
