@@ -350,16 +350,20 @@ class ResourceIdentifier(object):
                    ) % (self._object_id, self.id)
             warnings.warn(msg, UserWarning)
         # try to get the object_id from the parent_id_tree
-        id_tree = ResourceIdentifier._parent_id_tree
-        try:
-            obj_key = id_tree[self._parent_key][self._resource_key]
-        except (KeyError, TypeError):
-            pass
-        else:
-            out = ResourceIdentifier._id_object_map[obj_key]
-            self.set_referred_object(out, warn=False)
-            return out
-        # else try to find the last object assigned the same resource_id
+        obj = self._get_object_from_parent_scope()
+        if obj is None:
+            # else try to find the last object assigned the same resource_id
+            obj = self._get_newest_object_with_same_resource_id()
+        # if an object was found bind it to resource_id and return it
+        if obj is not None:
+            self.set_referred_object(obj, warn=False)
+        return obj
+
+    def _get_newest_object_with_same_resource_id(self):
+        """
+        Return the newest object which has been bound to the same resource_id.
+        If No such object exists return None.
+        """
         try:
             rid_list = ResourceIdentifier._id_order[self._resource_key]
         except KeyError:  # no existing object is assigned to this resource_id
@@ -372,10 +376,34 @@ class ResourceIdentifier(object):
             else:
                 try:
                     obj = ResourceIdentifier._id_object_map[obj_key]
-                    self.set_referred_object(obj, warn=False)
+                except KeyError:  # Object got gc'ed or was not defined.
+                    rid_list.pop()  # Remove last element in list.
+                    continue
+                # Ensure the current resource_id matches the old one, there
+                # can, in rare cases, be a mismatch due to issue #2278.
+                if obj_key[-1] != self.id:
+                    rid_list.pop()
+                    continue
+                return obj
+
+    def _get_object_from_parent_scope(self):
+        """
+        Find an object in the same parent scope with the same resource_id. If
+        No such object is found return None.
+        """
+        id_tree = ResourceIdentifier._parent_id_tree
+        try:
+            obj_key = id_tree[self._parent_key][self._resource_key]
+        except (KeyError, TypeError):
+            pass
+        else:
+            try:
+                obj = ResourceIdentifier._id_object_map[obj_key]
+            except KeyError:
+                pass
+            else:
+                if obj_key[-1] == self.id:
                     return obj
-                except KeyError:  # object got gc'ed or was not defined
-                    rid_list.pop()  # remove last element in list
 
     def set_referred_object(self, referred_object, warn=True, parent=None):
         """
