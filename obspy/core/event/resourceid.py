@@ -314,7 +314,7 @@ class ResourceIdentifier(object):
         return None.
         """
         try:
-            return ResourceIdentifier._id_object_map[self._object_id]
+            return ResourceIdentifier._id_object_map[self._object_key]
         except KeyError:
             return self._get_similar_referred_object()
 
@@ -333,18 +333,18 @@ class ResourceIdentifier(object):
         """
         # Warn if resource_id was bound but its object got gc'ed.
         if self._object_id is not None:
-            msg = ("The object with identity of: %d  and id of %s no longer"
+            msg = ("The object with identity of: %d  and id of %s no longer "
                    "exists, trying to find an object with the same id"
                    ) % (self._object_id, self.id)
             warnings.warn(msg, UserWarning)
         # try to get the object_id from the parent_id_tree
         id_tree = ResourceIdentifier._parent_id_tree
         try:
-            obj_id = id_tree[self._parent_key][self._resource_key]
+            obj_key = id_tree[self._parent_key][self._resource_key]
         except (KeyError, TypeError):
             pass
         else:
-            out = ResourceIdentifier._id_object_map[obj_id]
+            out = ResourceIdentifier._id_object_map[obj_key]
             self.set_referred_object(out, warn=False)
             return out
         # else try to find the last object assigned the same resource_id
@@ -354,12 +354,12 @@ class ResourceIdentifier(object):
             return None
         while len(rid_list):
             try:
-                obj_id = ResourceIdentifier._id_order[self._resource_key][-1]
+                obj_key = ResourceIdentifier._id_order[self._resource_key][-1]
             except KeyError:
                 return None
             else:
                 try:
-                    obj = ResourceIdentifier._id_object_map[obj_id]
+                    obj = ResourceIdentifier._id_object_map[obj_key]
                     self.set_referred_object(obj, warn=False)
                     return obj
                 except KeyError:  # object got gc'ed or was not defined
@@ -392,11 +392,11 @@ class ResourceIdentifier(object):
         # if there is None, get the last referred_object assigned the same
         # resource_id code.
         id_order = ResourceIdentifier._id_order
-        old = ResourceIdentifier._id_object_map.get(self._object_id, None)
-        if old is None:  # look for last object with same id code.
+        old = ResourceIdentifier._id_object_map.get(self._object_key, None)
+        if old is None:  # Look for last object with same resource id.
             try:
-                old_obj_id = id_order[self._resource_key][-1]
-                old = ResourceIdentifier._id_object_map[old_obj_id]
+                old_obj_id_key = id_order[self._resource_key][-1]
+                old = ResourceIdentifier._id_object_map[old_obj_id_key]
             except (KeyError, IndexError):
                 pass
         if warn and old is not None and old != referred_object:
@@ -411,12 +411,12 @@ class ResourceIdentifier(object):
             id_tree = ResourceIdentifier._parent_id_tree
             if self._parent_key not in id_tree:
                 id_tree[self._parent_key] = WeakKeyDictionary()
-            id_tree[self._parent_key][self._resource_key] = self._object_id
+            id_tree[self._parent_key][self._resource_key] = self._object_key
         # Set the new id in id map and append referred_object to id_order.
-        ResourceIdentifier._id_object_map[self._object_id] = referred_object
+        ResourceIdentifier._id_object_map[self._object_key] = referred_object
         if self._resource_key not in id_order:
             id_order[self._resource_key] = []
-        id_order[self._resource_key].append(self._object_id)
+        id_order[self._resource_key].append(self._object_key)
 
     def convert_id_to_quakeml_uri(self, authority_id="local"):
         """
@@ -496,6 +496,15 @@ class ResourceIdentifier(object):
         self.__dict__ = state
         self._parent_key = None
         self._resource_key = _ResourceKey.get_resource_key(self.id)
+
+    @property
+    def _object_key(self):
+        """
+        The value used to identify objects bound to resource_ids.
+
+        Uses a hash of both the object id and resource id, see #2278.
+        """
+        return self._object_id, self.id
 
     @property
     def id(self):
