@@ -280,7 +280,11 @@ class ResourceIdentifier(object):
     # {object_id: object}
     _id_object_map = WeakValueDictionary()
 
-    # set default _ResourceKey attributes and object_id
+    # A get objects hook to allow plugging in custom logic for finding objects
+    # with by resource_id if they are not found via normal means.
+    _get_object_hook = []
+
+    # Set default _ResourceKey attributes and object_id.
     _parent_key = _ResourceKeyDescriptor('_parent_key')
     _resource_key = _ResourceKeyDescriptor('_resource_key')
     _object_id = None
@@ -314,9 +318,17 @@ class ResourceIdentifier(object):
         return None.
         """
         try:
-            return ResourceIdentifier._id_object_map[self._object_key]
+            out = ResourceIdentifier._id_object_map[self._object_key]
         except KeyError:
-            return self._get_similar_referred_object()
+            out = self._get_similar_referred_object()
+        if out is not None:
+            return out
+        else:  # If no object was found iterate get_object hooks.
+            for hook in self._get_object_hook:
+                out = hook(self.id)
+                if out is not None:
+                    self.set_referred_object(out)
+                    return out
 
     def _get_similar_referred_object(self):
         """
@@ -406,8 +418,9 @@ class ResourceIdentifier(object):
             warnings.warn(msg, UserWarning)
         # Set the object id to the new object, and update parent scoping tree.
         self._object_id = id(referred_object)
-        if parent is not None:
-            self._parent_key = parent
+        if parent is not None or self._parent_key is not None:
+            if parent is not None:
+                self._parent_key = parent
             id_tree = ResourceIdentifier._parent_id_tree
             if self._parent_key not in id_tree:
                 id_tree[self._parent_key] = WeakKeyDictionary()
@@ -631,6 +644,39 @@ class ResourceIdentifier(object):
         self._uuid = str(uuid4())
 
     @classmethod
+    def register_get_object_hook(cls, get_object_callable):
+        """
+        Register a callable to return referred object if normal means fail.
+
+        This is useful, for example, to allow the resource_identifier to
+        create objects from entries in a database that do not yet have an
+        in-memory representation.
+
+        :param get_object_callable:
+            Any callable that takes a resource id string and returns an
+            object.
+        :type get_object_callable: callable
+        """
+        cls._get_object_hook.append(get_object_callable)
+
+    @classmethod
+    def remove_get_object_hook(cls, get_object_callable):
+        """
+        Remove a callable from the registered get_object hooks.
+
+        :param get_object_callable:
+            The callable to remove from the get_object hook registry.
+        :type get_object_callable: callable, optional
+        """
+        if get_object_callable is not None:
+            try:
+                cls._get_object_hook.remove(get_object_callable)
+            except ValueError:  # Pass if get_object_callable is not in list.
+                pass
+        else:
+            cls._get_object_hook.clear()
+
+    @classmethod
     def _bind_class_state(cls, state_dict):
         """
         Bind the state contained in state_dict to ResourceIdentifier class.
@@ -638,6 +684,7 @@ class ResourceIdentifier(object):
         cls._parent_id_tree = state_dict['parent_id_tree']
         cls._id_order = state_dict['id_order']
         cls._id_object_map = state_dict['id_object_map']
+        cls._get_referred_object_hook = state_dict['get_object_hook']
 
     @classmethod
     @contextmanager
@@ -654,12 +701,14 @@ class ResourceIdentifier(object):
             parent_id_tree=cls._parent_id_tree,
             id_order=cls._id_order,
             id_object_map=cls._id_object_map,
+            get_object_hook=cls._get_object_hook,
         )
         # init new class state
         new_state = dict(
             parent_id_tree=WeakKeyDictionary(),
             id_order=WeakKeyDictionary(),
             id_object_map=WeakValueDictionary(),
+            get_object_hook=[],
         )
         # bind new state and return dict
         cls._bind_class_state(new_state)
