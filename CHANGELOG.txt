@@ -17,6 +17,11 @@ master:
    * Added __eq__ to QuantityError so empty instances equal None (see #2185).
    * Reworked the event scoped resource identifiers for the event classes
      hopefully fixing all edge-cases (see #2091).
+   * Fixed issue where resource_ids could refer to incorrect object if the
+     original object went out of scope and a new object shared the python
+     id of the old object (see #2278).
+   * Added a hook to allow users to customize finding objects for
+     resource_ids which are not found via the normal means (see #2279).
    * Calling Stream.write(...) on an empty stream will now raise an
      ObsPyException consistently across all I/O plugins (see #2201)
  - obspy.clients.fdsn:
@@ -37,7 +42,7 @@ master:
    * Implement reading reftek encodings '16' and '32' (uncompressed data,
      16/32bit integers, see #2058 and #2059)
  - obspy.io.rg16:
-   * implement module to read waveforms and headers from fcnt format (see #2265). 
+   * implement module to read waveforms and headers from fcnt format (see #2265).
  - obspy.io.quakeml:
    * Allow writing invalid ids but raise a warning
      (see #2104, #2090, #2093, #1872).
