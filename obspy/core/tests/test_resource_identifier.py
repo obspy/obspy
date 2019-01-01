@@ -590,6 +590,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             def __init__(self, value):
                 self.value = value
 
+        parent = Simple('parent1')
+
         # keep track of objects, resource_ids, and used python ids
         obj_list1, rid_list1, used_ids1 = [], [], set()
         # create a slew of objects and resource_ids
@@ -597,7 +599,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             obj_list1.append(Simple(1))
             used_ids1.add(id(obj_list1[-1]))
         for obj in obj_list1:
-            rid_list1.append(ResourceIdentifier(referred_object=obj))
+            kwargs = dict(referred_object=obj, parent=parent)
+            rid_list1.append(ResourceIdentifier(**kwargs))
         # delete objects and create second set
         del obj_list1
 
@@ -608,7 +611,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             obj_list2.append(Simple(2))
             used_ids2.add(id(obj_list2[-1]))
         for obj in obj_list2:
-            rid_list2.append(ResourceIdentifier(referred_object=obj))
+            kwargs = dict(referred_object=obj, parent=parent)
+            rid_list2.append(ResourceIdentifier(**kwargs))
 
         # since we cannot control which IDs python uses, skip the test if
         # no overlapping ids were created.
