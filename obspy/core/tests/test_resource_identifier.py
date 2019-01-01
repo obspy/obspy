@@ -20,6 +20,7 @@ import pickle
 import sys
 import unittest
 import warnings
+from collections import namedtuple
 
 from obspy import UTCDateTime, read_events
 from obspy.core import event as event
@@ -620,6 +621,41 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             # should raise a warning
             with WarningsCapture():
                 self.assertIs(rid.get_referred_object(), None)
+
+    def test_get_object_hook(self):
+        """
+        Test that custom logic for getting referred objects can be plugged
+        into resource ids.
+        """
+
+        class MyClass():
+            pass
+
+        new_obj1 = MyClass()
+        new_obj2 = MyClass()
+
+
+        def _get_object_hook(arg):
+            if str(arg) == '123':
+                return new_obj1
+            elif str(arg) == '789':
+                return new_obj2
+            else:
+                return None
+
+        with ResourceIdentifier._debug_class_state():
+            ResourceIdentifier.register_get_object_hook(_get_object_hook)
+            rid1 = ResourceIdentifier('123')
+            rid2 = ResourceIdentifier('456')
+            rid3 = ResourceIdentifier('789')
+            self.assertIs(rid1.get_referred_object(), new_obj1)
+            self.assertIs(rid2.get_referred_object(), None)
+            # Now clear the hook, _get_object_hook should no longer be called
+            ResourceIdentifier.remove_get_object_hook(_get_object_hook)
+            self.assertIs(rid3.get_referred_object(), None)
+            # But rid1 should have been bound to new_obj1 (so it no longer
+            # needs to call get_object_hook to find it
+            self.assertIs(rid1.get_referred_object(), new_obj1)
 
 
 def get_instances(obj, cls=None, is_attr=None, has_attr=None):
