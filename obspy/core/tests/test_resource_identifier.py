@@ -20,7 +20,6 @@ import pickle
 import sys
 import unittest
 import warnings
-from collections import namedtuple
 
 from obspy import UTCDateTime, read_events
 from obspy.core import event as event
@@ -633,7 +632,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
 
         new_obj1 = MyClass()
         new_obj2 = MyClass()
-
 
         def _get_object_hook(arg):
             if str(arg) == '123':
