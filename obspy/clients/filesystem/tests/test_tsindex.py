@@ -184,46 +184,44 @@ class ClientTestCase(unittest.TestCase):
         self.assertListEqual(actual_nslc, expected_nslc)
 
         # test using mocked client._get_summary_rows method for more diversity
-        with mock.patch(
-                'obspy.clients.filesystem.tsindex.Client._get_summary_rows'
-                ) as MockMethod:
-            NamedRow = namedtuple('NamedRow',
-                                  ['network', 'station', 'location', 'channel',
-                                   'earliest', 'latest'])
-            mocked_summary_rows = [NamedRow("AK", "ANM", "", "VM2",
-                                            "2018-08-10T21:52:50.000000",
-                                            "2018-08-10T22:12:39.999991"),
-                                   NamedRow("AK", "ANM", "", "VM3",
-                                            "2018-08-10T21:52:50.000000",
-                                            "2018-08-10T22:12:39.999991"),
-                                   NamedRow("AK", "ANM", "", "VM4",
-                                            "2018-08-10T21:52:50.000000",
-                                            "2018-08-10T22:12:39.999991"),
-                                   NamedRow("XX", "ANM", "", "VM5",
-                                            "2018-08-10T21:52:50.000000",
-                                            "2018-08-10T22:12:39.999991"),
-                                   NamedRow("N4", "H43A", "", "VM2",
-                                            "2018-08-10T21:09:39.000000",
-                                            "2018-08-10T22:09:28.890415"),
-                                   NamedRow("N4", "H43A", "", "VM3",
-                                            "2018-08-10T21:09:39.000000",
-                                            "2018-08-10T22:09:28.890415")]
-            MockMethod.return_value = mocked_summary_rows
+        NamedRow = namedtuple('NamedRow',
+                              ['network', 'station', 'location', 'channel',
+                               'earliest', 'latest'])
+        mocked_summary_rows = [NamedRow("AK", "ANM", "", "VM2",
+                                        "2018-08-10T21:52:50.000000",
+                                        "2018-08-10T22:12:39.999991"),
+                               NamedRow("AK", "ANM", "", "VM3",
+                                        "2018-08-10T21:52:50.000000",
+                                        "2018-08-10T22:12:39.999991"),
+                               NamedRow("AK", "ANM", "", "VM4",
+                                        "2018-08-10T21:52:50.000000",
+                                        "2018-08-10T22:12:39.999991"),
+                               NamedRow("XX", "ANM", "", "VM5",
+                                        "2018-08-10T21:52:50.000000",
+                                        "2018-08-10T22:12:39.999991"),
+                               NamedRow("N4", "H43A", "", "VM2",
+                                        "2018-08-10T21:09:39.000000",
+                                        "2018-08-10T22:09:28.890415"),
+                               NamedRow("N4", "H43A", "", "VM3",
+                                        "2018-08-10T21:09:39.000000",
+                                        "2018-08-10T22:09:28.890415")]
+        client._get_summary_rows = \
+            mock.MagicMock(return_value=mocked_summary_rows)
 
-            expected_nslc = [("AK", "ANM", "", "VM2"),
-                             ("AK", "ANM", "", "VM3"),
-                             ("AK", "ANM", "", "VM4"),
-                             ("N4", "H43A", "", "VM2"),
-                             ("N4", "H43A", "", "VM3"),
-                             ("XX", "ANM", "", "VM5")]
+        expected_nslc = [("AK", "ANM", "", "VM2"),
+                         ("AK", "ANM", "", "VM3"),
+                         ("AK", "ANM", "", "VM4"),
+                         ("N4", "H43A", "", "VM2"),
+                         ("N4", "H43A", "", "VM3"),
+                         ("XX", "ANM", "", "VM5")]
 
-            self.assertEqual(client.get_nslc("AK,N4,XX",
-                                             "ANM,H43A",
-                                             "",
-                                             "VM2,VM3,VM4,VM5",
-                                             "2018-08-10T21:09:39.000000",
-                                             "2018-08-10T22:09:28.890415"),
-                             expected_nslc)
+        self.assertEqual(client.get_nslc("AK,N4,XX",
+                                         "ANM,H43A",
+                                         "",
+                                         "VM2,VM3,VM4,VM5",
+                                         "2018-08-10T21:09:39.000000",
+                                         "2018-08-10T22:09:28.890415"),
+                         expected_nslc)
 
     def test_get_availability_extent(self):
         client = get_test_client()
@@ -248,59 +246,57 @@ class ClientTestCase(unittest.TestCase):
         self.assertListEqual(actual_avail_extents, expected_nslc)
 
         # test using mocked client._get_summary_rows method for more diversity
-        with mock.patch(
-                'obspy.clients.filesystem.tsindex.Client._get_summary_rows'
-                ) as MockMethod:
-            NamedRow = namedtuple('NamedRow',
-                                  ['network', 'station', 'location', 'channel',
-                                   'earliest', 'latest'])
-            mocked_summary_rows = [NamedRow("AK", "ANM", "", "VM2",
-                                            "2018-08-10T21:52:50.000000",
-                                            "2018-08-10T22:12:39.999991"),
-                                   NamedRow("AK", "ANM", "", "VM3",
-                                            "2018-08-10T21:52:50.000000",
-                                            "2018-08-10T22:12:39.999991"),
-                                   NamedRow("AK", "ANM", "", "VM5",
-                                            "2018-08-10T21:52:50.000000",
-                                            "2018-08-10T22:15:39.999991"),
-                                   NamedRow("N4", "H43A", "", "VM2",
+        NamedRow = namedtuple('NamedRow',
+                              ['network', 'station', 'location', 'channel',
+                               'earliest', 'latest'])
+        mocked_summary_rows = [NamedRow("AK", "ANM", "", "VM2",
+                                        "2018-08-10T21:52:50.000000",
+                                        "2018-08-10T22:12:39.999991"),
+                               NamedRow("AK", "ANM", "", "VM3",
+                                        "2018-08-10T21:52:50.000000",
+                                        "2018-08-10T22:12:39.999991"),
+                               NamedRow("AK", "ANM", "", "VM5",
+                                        "2018-08-10T21:52:50.000000",
+                                        "2018-08-10T22:15:39.999991"),
+                               NamedRow("N4", "H43A", "", "VM2",
+                                        "2018-08-10T21:09:39.000000",
+                                        "2018-08-10T22:09:28.890415"),
+                               NamedRow("N4", "H43A", "", "VM3",
+                                        "2018-08-10T21:09:39.000000",
+                                        "2018-08-10T22:09:28.890415"),
+                               NamedRow("XX", "ANM", "", "VM4",
+                                        "2018-08-10T21:52:50.000000",
+                                        "2018-08-10T22:12:39.999991")]
+        client._get_summary_rows = \
+            mock.MagicMock(return_value=mocked_summary_rows)
+
+        expected_avail_extents = \
+            [("AK", "ANM", "", "VM2",
+              UTCDateTime("2018-08-10T21:52:50.000000"),
+              UTCDateTime("2018-08-10T22:12:39.999991")),
+             ("AK", "ANM", "", "VM3",
+              UTCDateTime("2018-08-10T21:52:50.000000"),
+              UTCDateTime("2018-08-10T22:12:39.999991")),
+             ("AK", "ANM", "", "VM5",
+              UTCDateTime("2018-08-10T21:52:50.000000"),
+              UTCDateTime("2018-08-10T22:15:39.999991")),
+             ("N4", "H43A", "", "VM2",
+              UTCDateTime("2018-08-10T21:09:39.000000"),
+              UTCDateTime("2018-08-10T22:09:28.890415")),
+             ("N4", "H43A", "", "VM3",
+              UTCDateTime("2018-08-10T21:09:39.000000"),
+              UTCDateTime("2018-08-10T22:09:28.890415")),
+             ("XX", "ANM", "", "VM4",
+              UTCDateTime("2018-08-10T21:52:50.000000"),
+              UTCDateTime("2018-08-10T22:12:39.999991"))]
+
+        self.assertListEqual(client.get_availability_extent(
+                                            "AK,N4",
+                                            "ANM,H43A", "",
+                                            "VM2,VM3,VM4,VM5",
                                             "2018-08-10T21:09:39.000000",
                                             "2018-08-10T22:09:28.890415"),
-                                   NamedRow("N4", "H43A", "", "VM3",
-                                            "2018-08-10T21:09:39.000000",
-                                            "2018-08-10T22:09:28.890415"),
-                                   NamedRow("XX", "ANM", "", "VM4",
-                                            "2018-08-10T21:52:50.000000",
-                                            "2018-08-10T22:12:39.999991")]
-            MockMethod.return_value = mocked_summary_rows
-
-            expected_avail_extents = \
-                [("AK", "ANM", "", "VM2",
-                  UTCDateTime("2018-08-10T21:52:50.000000"),
-                  UTCDateTime("2018-08-10T22:12:39.999991")),
-                 ("AK", "ANM", "", "VM3",
-                  UTCDateTime("2018-08-10T21:52:50.000000"),
-                  UTCDateTime("2018-08-10T22:12:39.999991")),
-                 ("AK", "ANM", "", "VM5",
-                  UTCDateTime("2018-08-10T21:52:50.000000"),
-                  UTCDateTime("2018-08-10T22:15:39.999991")),
-                 ("N4", "H43A", "", "VM2",
-                  UTCDateTime("2018-08-10T21:09:39.000000"),
-                  UTCDateTime("2018-08-10T22:09:28.890415")),
-                 ("N4", "H43A", "", "VM3",
-                  UTCDateTime("2018-08-10T21:09:39.000000"),
-                  UTCDateTime("2018-08-10T22:09:28.890415")),
-                 ("XX", "ANM", "", "VM4",
-                  UTCDateTime("2018-08-10T21:52:50.000000"),
-                  UTCDateTime("2018-08-10T22:12:39.999991"))]
-
-            self.assertListEqual(client.get_availability_extent(
-                                                "AK,N4",
-                                                "ANM,H43A", "",
-                                                "VM2,VM3,VM4,VM5",
-                                                "2018-08-10T21:09:39.000000",
-                                                "2018-08-10T22:09:28.890415"),
-                                 expected_avail_extents)
+                             expected_avail_extents)
 
     def test__are_timespans_adjacent(self):
         client = get_test_client()
@@ -396,192 +392,189 @@ class ClientTestCase(unittest.TestCase):
         self.assertListEqual(actual_avail, expected_avail)
 
         # test using mocked client._get_summary_rows method for more diversity
-        with mock.patch(
-                'obspy.clients.filesystem.tsindex.Client._get_tsindex_rows'
-                ) as MockMethod:
-            NamedRow = namedtuple('NamedRow',
-                                  ['network', 'station', 'location', 'channel',
-                                   'samplerate', 'starttime', 'endtime',
-                                   'timespans'])
-            # Each row contains one gap. The first rows latest time is adjacent
-            # to the second rows earliest time. The third row overlaps with the
-            # second row.
-            mocked_tsindex_rows = \
-                [
-                   # 2018-08-10T22:00:54 to 2018-08-10T22:15:53
-                   # 2018-08-10T22:05:54 to 2018-08-10T22:20:53 (MERGE)
-                   NamedRow(
-                       network=u'AK', station=u'BAGL',
-                       location=u'', channel=u'LCC',
-                       starttime=u'2018-08-10T22:00:54.000000',
-                       endtime=u'2018-08-10T22:20:53.000000',
-                       samplerate=1.0,
-                       timespans=u'[1533938454.000000:1533939353.000000],'
-                                 u'[1533938754.000000:1533939653.000000]'),
-                   # 2018-08-10T22:20:53.999000 to 2018-08-12T22:20:53 (JOIN)
-                   # 2018-08-12T23:20:53 to 2018-09-01T23:20:53
-                   NamedRow(
-                       network=u'AK', station=u'BAGL',
-                       location=u'', channel=u'LCC',
-                       starttime=u'2018-08-10T22:20:53.999000',
-                       endtime=u'2018-09-01T23:20:53.000000',
-                       samplerate=1.0,
-                       timespans=u'[1533939653.999000:1534112453.000000],'
-                                 u'[1534116053.000000:1535844053.000000]'),
-                   # (MERGE IF INCL SAMPLE RATE IS TRUE)
-                   # 2018-08-27T00:00:00 to 2018-09-11T00:00:00
-                   NamedRow(network=u'AK', station=u'BAGL',
-                            location=u'', channel=u'LCC',
-                            starttime=u'2018-08-27T00:00:00.000000',
-                            endtime=u'2018-09-11T00:00:00.000000',
-                            samplerate=10.0,
-                            timespans=u'[1535328000.0:1536624000.0]')
-                ]
-            MockMethod.return_value = mocked_tsindex_rows
+        NamedRow = namedtuple('NamedRow',
+                              ['network', 'station', 'location', 'channel',
+                               'samplerate', 'starttime', 'endtime',
+                               'timespans'])
+        # Each row contains one gap. The first rows latest time is adjacent
+        # to the second rows earliest time. The third row overlaps with the
+        # second row.
+        mocked_tsindex_rows = \
+            [
+               # 2018-08-10T22:00:54 to 2018-08-10T22:15:53
+               # 2018-08-10T22:05:54 to 2018-08-10T22:20:53 (MERGE)
+               NamedRow(
+                   network=u'AK', station=u'BAGL',
+                   location=u'', channel=u'LCC',
+                   starttime=u'2018-08-10T22:00:54.000000',
+                   endtime=u'2018-08-10T22:20:53.000000',
+                   samplerate=1.0,
+                   timespans=u'[1533938454.000000:1533939353.000000],'
+                             u'[1533938754.000000:1533939653.000000]'),
+               # 2018-08-10T22:20:53.999000 to 2018-08-12T22:20:53 (JOIN)
+               # 2018-08-12T23:20:53 to 2018-09-01T23:20:53
+               NamedRow(
+                   network=u'AK', station=u'BAGL',
+                   location=u'', channel=u'LCC',
+                   starttime=u'2018-08-10T22:20:53.999000',
+                   endtime=u'2018-09-01T23:20:53.000000',
+                   samplerate=1.0,
+                   timespans=u'[1533939653.999000:1534112453.000000],'
+                             u'[1534116053.000000:1535844053.000000]'),
+               # (MERGE IF INCL SAMPLE RATE IS TRUE)
+               # 2018-08-27T00:00:00 to 2018-09-11T00:00:00
+               NamedRow(network=u'AK', station=u'BAGL',
+                        location=u'', channel=u'LCC',
+                        starttime=u'2018-08-27T00:00:00.000000',
+                        endtime=u'2018-09-11T00:00:00.000000',
+                        samplerate=10.0,
+                        timespans=u'[1535328000.0:1536624000.0]')
+            ]
+        client._get_tsindex_rows = \
+            mock.MagicMock(return_value=mocked_tsindex_rows)
 
-            expected_unmerged_avail = [("AK", "BAGL", "", "LCC",
-                                        UTCDateTime(2018, 8, 10, 22, 0, 54),
-                                        UTCDateTime(2018, 8, 10, 22, 15, 53)),
-                                       ("AK", "BAGL", "", "LCC",
-                                        UTCDateTime(2018, 8, 10, 22, 5, 54),
-                                        UTCDateTime(2018, 8, 12, 22, 20, 53)),
-                                       ("AK", "BAGL", "", "LCC",
-                                        UTCDateTime(2018, 8, 12, 23, 20, 53),
-                                        UTCDateTime(2018, 9, 1, 23, 20, 53)),
-                                       ("AK", "BAGL", "", "LCC",
-                                        UTCDateTime(2018, 8, 27, 0, 0),
-                                        UTCDateTime(2018, 9, 11, 0, 0, 0))]
+        expected_unmerged_avail = [("AK", "BAGL", "", "LCC",
+                                    UTCDateTime(2018, 8, 10, 22, 0, 54),
+                                    UTCDateTime(2018, 8, 10, 22, 15, 53)),
+                                   ("AK", "BAGL", "", "LCC",
+                                    UTCDateTime(2018, 8, 10, 22, 5, 54),
+                                    UTCDateTime(2018, 8, 12, 22, 20, 53)),
+                                   ("AK", "BAGL", "", "LCC",
+                                    UTCDateTime(2018, 8, 12, 23, 20, 53),
+                                    UTCDateTime(2018, 9, 1, 23, 20, 53)),
+                                   ("AK", "BAGL", "", "LCC",
+                                    UTCDateTime(2018, 8, 27, 0, 0),
+                                    UTCDateTime(2018, 9, 11, 0, 0, 0))]
 
-            # test default options
-            self.assertListEqual(client.get_availability(
-                                "AK",
-                                "BAGL",
-                                "",
-                                "LCC",
-                                UTCDateTime(2018, 8, 10, 22, 0, 54),
-                                UTCDateTime(2018, 8, 10, 22, 9, 28, 890415)),
-                             expected_unmerged_avail)
+        # test default options
+        self.assertListEqual(client.get_availability(
+                            "AK",
+                            "BAGL",
+                            "",
+                            "LCC",
+                            UTCDateTime(2018, 8, 10, 22, 0, 54),
+                            UTCDateTime(2018, 8, 10, 22, 9, 28, 890415)),
+                         expected_unmerged_avail)
 
-            # test merge overlap false
-            self.assertListEqual(client.get_availability(
-                                "AK",
-                                "BAGL",
-                                "--",
-                                "LCC",
-                                UTCDateTime(2018, 8, 10, 22, 0, 54),
-                                UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
-                                merge_overlap=False),
-                             expected_unmerged_avail)
+        # test merge overlap false
+        self.assertListEqual(client.get_availability(
+                            "AK",
+                            "BAGL",
+                            "--",
+                            "LCC",
+                            UTCDateTime(2018, 8, 10, 22, 0, 54),
+                            UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
+                            merge_overlap=False),
+                         expected_unmerged_avail)
 
-            # test merge overlap true
-            expected_merged_avail = [("AK", "BAGL", "", "LCC",
-                                      UTCDateTime(2018, 8, 10, 22, 0, 54),
-                                      UTCDateTime(2018, 8, 12, 22, 20, 53)),
-                                     ("AK", "BAGL", "", "LCC",
-                                      UTCDateTime(2018, 8, 12, 23, 20, 53),
-                                      UTCDateTime(2018, 9, 11, 0, 0, 0))]
+        # test merge overlap true
+        expected_merged_avail = [("AK", "BAGL", "", "LCC",
+                                  UTCDateTime(2018, 8, 10, 22, 0, 54),
+                                  UTCDateTime(2018, 8, 12, 22, 20, 53)),
+                                 ("AK", "BAGL", "", "LCC",
+                                  UTCDateTime(2018, 8, 12, 23, 20, 53),
+                                  UTCDateTime(2018, 9, 11, 0, 0, 0))]
 
-            self.assertListEqual(
-                    client.get_availability(
-                        "AK",
-                        "BAGL",
-                        "--",
-                        "LCC",
-                        UTCDateTime(2018, 8, 10, 22, 0, 54),
-                        UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
-                        merge_overlap=True),
-                    expected_merged_avail)
+        self.assertListEqual(
+                client.get_availability(
+                    "AK",
+                    "BAGL",
+                    "--",
+                    "LCC",
+                    UTCDateTime(2018, 8, 10, 22, 0, 54),
+                    UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
+                    merge_overlap=True),
+                expected_merged_avail)
 
-            # test include_sample_rate true
-            expected_incl_sr_avail = \
-                [("AK", "BAGL", "", "LCC",
-                  UTCDateTime(2018, 8, 10, 22, 0, 54),
-                  UTCDateTime(2018, 8, 12, 22, 20, 53), 1.0),
-                 ("AK", "BAGL", "", "LCC",
-                  UTCDateTime(2018, 8, 12, 23, 20, 53),
-                  UTCDateTime(2018, 9, 1, 23, 20, 53), 1.0),
-                 ("AK", "BAGL", "", "LCC",
-                  UTCDateTime(2018, 8, 27, 0, 0),
-                  UTCDateTime(2018, 9, 11, 0, 0, 0), 10.0)]
+        # test include_sample_rate true
+        expected_incl_sr_avail = \
+            [("AK", "BAGL", "", "LCC",
+              UTCDateTime(2018, 8, 10, 22, 0, 54),
+              UTCDateTime(2018, 8, 12, 22, 20, 53), 1.0),
+             ("AK", "BAGL", "", "LCC",
+              UTCDateTime(2018, 8, 12, 23, 20, 53),
+              UTCDateTime(2018, 9, 1, 23, 20, 53), 1.0),
+             ("AK", "BAGL", "", "LCC",
+              UTCDateTime(2018, 8, 27, 0, 0),
+              UTCDateTime(2018, 9, 11, 0, 0, 0), 10.0)]
 
-            self.assertListEqual(
-                    client.get_availability(
-                        "AK",
-                        "BAGL",
-                        "--",
-                        "LCC",
-                        UTCDateTime(2018, 8, 10, 22, 0, 54),
-                        UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
-                        merge_overlap=True,
-                        include_sample_rate=True),
-                    expected_incl_sr_avail)
+        self.assertListEqual(
+                client.get_availability(
+                    "AK",
+                    "BAGL",
+                    "--",
+                    "LCC",
+                    UTCDateTime(2018, 8, 10, 22, 0, 54),
+                    UTCDateTime(2018, 8, 10, 22, 9, 28, 890415),
+                    merge_overlap=True,
+                    include_sample_rate=True),
+                expected_incl_sr_avail)
 
     def test_get_availability_percentage(self):
         client = get_test_client()
-        with mock.patch(
-                'obspy.clients.filesystem.tsindex.Client.get_availability'
-                ) as MockMethod:
-            mock_availability_output = [("AK", "BAGL", "", "LCC",
-                                         UTCDateTime(2018, 8, 10, 22, 0, 54),
-                                         UTCDateTime(2018, 8, 12, 22, 20, 53)),
-                                        ("AK", "BAGL", "", "LCC",
-                                         UTCDateTime(2018, 8, 12, 23, 20, 53),
-                                         UTCDateTime(2018, 9, 11, 0, 0, 0))]
-            MockMethod.return_value = mock_availability_output
+        mock_availability_output = [("AK", "BAGL", "", "LCC",
+                                     UTCDateTime(2018, 8, 10, 22, 0, 54),
+                                     UTCDateTime(2018, 8, 12, 22, 20, 53)),
+                                    ("AK", "BAGL", "", "LCC",
+                                     UTCDateTime(2018, 8, 12, 23, 20, 53),
+                                     UTCDateTime(2018, 9, 11, 0, 0, 0))]
+        client.get_availability = mock.MagicMock(
+                                        return_value=mock_availability_output)
 
-            avail_percentage = client.get_availability_percentage(
-                                        "AK",
-                                        "BAGL",
-                                        "--",
-                                        "LCC",
-                                        UTCDateTime(2018, 8, 10, 22, 0, 54),
-                                        UTCDateTime(2018, 9, 11, 0, 0, 0))
-            expected_avail_percentage = (0.998659490472, 1)
-            self.assertAlmostEqual(avail_percentage[0],
-                                   expected_avail_percentage[0])
-            self.assertEqual(avail_percentage[1],
-                             expected_avail_percentage[1])
-            self.assertIsInstance(avail_percentage, tuple)
+        avail_percentage = client.get_availability_percentage(
+                                    "AK",
+                                    "BAGL",
+                                    "--",
+                                    "LCC",
+                                    UTCDateTime(2018, 8, 10, 22, 0, 54),
+                                    UTCDateTime(2018, 9, 11, 0, 0, 0))
+        expected_avail_percentage = (0.998659490472, 1)
+        self.assertAlmostEqual(avail_percentage[0],
+                               expected_avail_percentage[0])
+        self.assertEqual(avail_percentage[1],
+                         expected_avail_percentage[1])
+        self.assertIsInstance(avail_percentage, tuple)
 
-            mock_availability_output = [("AK", "BAGL", "", "LCC",
-                                         UTCDateTime(2018, 1, 1),
-                                         UTCDateTime(2018, 1, 2)),
-                                        ("AK", "BAGL", "", "LCC",
-                                         UTCDateTime(2018, 1, 3),
-                                         UTCDateTime(2018, 1, 4)),
-                                        ("AK", "BAGL", "", "LCC",
-                                         UTCDateTime(2018, 1, 5),
-                                         UTCDateTime(2018, 1, 6))]
-            MockMethod.return_value = mock_availability_output
+        mock_availability_output = [("AK", "BAGL", "", "LCC",
+                                     UTCDateTime(2018, 1, 1),
+                                     UTCDateTime(2018, 1, 2)),
+                                    ("AK", "BAGL", "", "LCC",
+                                     UTCDateTime(2018, 1, 3),
+                                     UTCDateTime(2018, 1, 4)),
+                                    ("AK", "BAGL", "", "LCC",
+                                     UTCDateTime(2018, 1, 5),
+                                     UTCDateTime(2018, 1, 6))]
+        client.get_availability = mock.MagicMock(
+                                        return_value=mock_availability_output)
 
-            avail_percentage = client.get_availability_percentage(
-                                                    "AK",
-                                                    "BAGL",
-                                                    "--",
-                                                    "LCC",
-                                                    UTCDateTime(2018, 1, 1),
-                                                    UTCDateTime(2018, 1, 6))
-            expected_avail_percentage = (0.6, 2)
-            self.assertAlmostEqual(avail_percentage[0],
-                                   expected_avail_percentage[0])
-            self.assertEqual(avail_percentage[1],
-                             expected_avail_percentage[1])
-            self.assertIsInstance(avail_percentage, tuple)
+        avail_percentage = client.get_availability_percentage(
+                                                "AK",
+                                                "BAGL",
+                                                "--",
+                                                "LCC",
+                                                UTCDateTime(2018, 1, 1),
+                                                UTCDateTime(2018, 1, 6))
+        expected_avail_percentage = (0.6, 2)
+        self.assertAlmostEqual(avail_percentage[0],
+                               expected_avail_percentage[0])
+        self.assertEqual(avail_percentage[1],
+                         expected_avail_percentage[1])
+        self.assertIsInstance(avail_percentage, tuple)
 
-            # Test for over extending time span
-            avail_percentage = client.get_availability_percentage(
-                                                    "AK",
-                                                    "BAGL",
-                                                    "--",
-                                                    "LCC",
-                                                    UTCDateTime(2017, 12, 31),
-                                                    UTCDateTime(2018, 1, 7))
-            expected_avail_percentage = (0.4285714, 4)
-            self.assertAlmostEqual(avail_percentage[0],
-                                   expected_avail_percentage[0])
-            self.assertEqual(avail_percentage[1],
-                             expected_avail_percentage[1])
-            self.assertIsInstance(avail_percentage, tuple)
+        # Test for over extending time span
+        avail_percentage = client.get_availability_percentage(
+                                                "AK",
+                                                "BAGL",
+                                                "--",
+                                                "LCC",
+                                                UTCDateTime(2017, 12, 31),
+                                                UTCDateTime(2018, 1, 7))
+        expected_avail_percentage = (0.4285714, 4)
+        self.assertAlmostEqual(avail_percentage[0],
+                               expected_avail_percentage[0])
+        self.assertEqual(avail_percentage[1],
+                         expected_avail_percentage[1])
+        self.assertIsInstance(avail_percentage, tuple)
 
     def test_has_data(self):
         client = get_test_client()
@@ -654,21 +647,18 @@ class IndexerTestCase(unittest.TestCase):
         database = os.path.join(filepath, 'timeseries.sqlite')
         indexer = Indexer(filepath,
                           database=database)
-        with mock.patch(
-                'obspy.clients.filesystem.tsindex.Indexer._download'
-                ) as MockMethod:
-            # mock actually downloading the file since this requires a internet
-            # connection
-            MockMethod.return_value = requests.Response()
-            # create a empty leap-seconds.list file
-            test_file = os.path.join(
-                                os.path.dirname(database), "leap-seconds.list")
-            file_path = indexer.download_leap_seconds_file(test_file)
-            # assert that the file was put in the same location as the
-            # sqlite db
-            self.assertTrue(os.path.isfile(file_path))
-            self.assertEquals(file_path, test_file)
-            os.remove(test_file)
+        # mock actually downloading the file since this requires a internet
+        # connection
+        indexer._download = mock.MagicMock(return_value=requests.Response())
+        # create a empty leap-seconds.list file
+        test_file = os.path.join(
+                            os.path.dirname(database), "leap-seconds.list")
+        file_path = indexer.download_leap_seconds_file(test_file)
+        # assert that the file was put in the same location as the
+        # sqlite db
+        self.assertTrue(os.path.isfile(file_path))
+        self.assertEquals(file_path, test_file)
+        os.remove(test_file)
 
     def test__get_leap_seconds_file(self):
         filepath = get_test_data_filepath()
@@ -769,23 +759,20 @@ class IndexerTestCase(unittest.TestCase):
                                 relative_paths=True)
         # for this test mock an unindexed file ('data.mseed') to ensure that
         # it gets added when reindex is True
-        with mock.patch(
-                'obspy.clients.filesystem.tsindex.Indexer._get_rootpath_files'
-                ) as MockMethod:
-            mocked_files = [
-                    'CU/2018/001/'
-                    'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
-                    'IU/2018/001/'
-                    'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
-                    'IU/2018/001/'
-                    'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
-                    'data.mseed'
-                ]
-            MockMethod.return_value = mocked_files
-            self.assertEquals(indexer.build_file_list(
-                                reindex=False,
-                                relative_paths=False),
-                              ['data.mseed'])
+        mocked_files = [
+                'CU/2018/001/'
+                'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
+                'IU/2018/001/'
+                'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                'IU/2018/001/'
+                'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
+                'data.mseed'
+            ]
+        indexer._get_rootpath_files = mock.MagicMock(return_value=mocked_files)
+        self.assertEquals(indexer.build_file_list(
+                            reindex=False,
+                            relative_paths=False),
+                          ['data.mseed'])
 
     def test_run_bad_index_cmd(self):
         """
