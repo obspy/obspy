@@ -919,6 +919,16 @@ class TSIndexDatabaseHandlerTestCase(unittest.TestCase):
                 self.assertEqual(getattr(expected_ts_summary_data[i], keys[j]),
                                  getattr(ts_summary_data[i], keys[j]))
 
+        # test for case where query returns no results
+        ts_summary_data = request_handler._fetch_summary_rows(
+                                              [("XX",
+                                                "ANMO,T*",
+                                                "00,10",
+                                                "BHZ",
+                                                "2018-01-01T00:00:00.000000",
+                                                "2018-12-31T00:00:00.000000")])
+        self.assertEqual(ts_summary_data, [])
+
     def test_get_tsindex_summary_cte(self):
         # test with actual sqlite3 database that is missing a summary table
         # a tsindex summary CTE gets created using the tsindex at runtime

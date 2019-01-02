@@ -171,6 +171,7 @@ import logging
 import requests
 from collections import namedtuple
 import sqlalchemy as sa
+from sqlalchemy.exc import ResourceClosedError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 
@@ -1591,33 +1592,33 @@ class TSIndexDatabaseHandler(object):
             raise ValueError(str(err))
 
         index_rows = []
-        for rt in result:
-            # convert to a named tuple
-            NamedRow = namedtuple('NamedRow',
-                                  ['network', 'station', 'location',
-                                   'channel', 'quality', 'version',
-                                   'starttime', 'endtime', 'samplerate',
-                                   'filename', 'byteoffset', 'bytes',
-                                   'hash', 'timeindex', 'timespans',
-                                   'timerates', 'format', 'filemodtime',
-                                   'updated', 'scanned', 'requeststart',
-                                   'requestend'])
-            row, requeststart, requestend = rt
-            nrow = NamedRow(
-                    row.network, row.station, row.location,
-                    row.channel, row.quality, row.version,
-                    row.starttime, row.endtime, row.samplerate,
-                    row.filename, row.byteoffset, row.bytes,
-                    row.hash, row.timeindex, row.timespans,
-                    row.timerates, row.format, row.filemodtime,
-                    row.updated, row.scanned,
-                    requeststart, requestend
-                   )
-
-            index_rows.append(nrow)
-
+        try:
+            for rt in result:
+                # convert to a named tuple
+                NamedRow = namedtuple('NamedRow',
+                                      ['network', 'station', 'location',
+                                       'channel', 'quality', 'version',
+                                       'starttime', 'endtime', 'samplerate',
+                                       'filename', 'byteoffset', 'bytes',
+                                       'hash', 'timeindex', 'timespans',
+                                       'timerates', 'format', 'filemodtime',
+                                       'updated', 'scanned', 'requeststart',
+                                       'requestend'])
+                row, requeststart, requestend = rt
+                nrow = NamedRow(
+                        row.network, row.station, row.location,
+                        row.channel, row.quality, row.version,
+                        row.starttime, row.endtime, row.samplerate,
+                        row.filename, row.byteoffset, row.bytes,
+                        row.hash, row.timeindex, row.timespans,
+                        row.timerates, row.format, row.filemodtime,
+                        row.updated, row.scanned,
+                        requeststart, requestend
+                       )
+                index_rows.append(nrow)
+        except ResourceClosedError:
+            pass  # query returned no results
         logger.debug("Fetched %d index rows" % len(index_rows))
-
         return index_rows
 
     def _fetch_summary_rows(self, query_rows):
@@ -1704,8 +1705,11 @@ class TSIndexDatabaseHandler(object):
                               ['network', 'station', 'location', 'channel',
                                'earliest', 'latest', 'updated'])
         summary_rows = []
-        for row in result:
-            summary_rows.append(NamedRow(*row))
+        try:
+            for row in result:
+                summary_rows.append(NamedRow(*row))
+        except ResourceClosedError:
+            pass  # query returned no results
         logger.debug("Fetched %d summary rows" % len(summary_rows))
         return summary_rows
 
