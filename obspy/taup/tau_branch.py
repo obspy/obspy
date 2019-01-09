@@ -155,11 +155,11 @@ class TauBranch(object):
     def shift_branch(self, index):
         new_size = len(self.dist) + 1
 
-<<<<<<< HEAD
-        self.time.resize(new_size)
-=======
-        self.time = self._robust_resize(self.time, new_size)
->>>>>>> 64d329058... add resize helper
+        try:
+            self.time.resize(new_size)
+        except ValueError:  # Value Error gets raised on py37, assume its ok
+            self.time.resize(new_size, refcheck=False)
+
         self.time[index + 1:] = self.time[index:-1]
         self.time[index] = 0
 
