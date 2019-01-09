@@ -158,7 +158,7 @@ class TauBranch(object):
         try:
             self.time.resize(new_size)
         except ValueError:  # Value Error gets raised on py37, assume its ok
-            self.time.resize(new_size, refcheck=False)
+            self.time.resize(refcheck=False)
 
         self.time[index + 1:] = self.time[index:-1]
         self.time[index] = 0
