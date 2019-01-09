@@ -481,8 +481,8 @@ class TauBranch(object):
     @staticmethod
     def _robust_resize(arr, new_size):
         """
-        Try to resize an array inplace. If an error is raised used numpy
-        resize function then return the array.
+        Try to resize an array inplace. If an error is raised use numpy
+        resize function to create a new array. Return the array.
         """
         try:
             arr.resize(new_size)
