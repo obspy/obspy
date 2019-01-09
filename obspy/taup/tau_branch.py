@@ -153,7 +153,11 @@ class TauBranch(object):
     def shift_branch(self, index):
         new_size = len(self.dist) + 1
 
-        self.time.resize(new_size)
+        try:
+            self.time.resize(new_size)
+        except ValueError:  # Value Error gets raised on py37, assume its ok
+            self.time.resize(refcheck=False)
+
         self.time[index + 1:] = self.time[index:-1]
         self.time[index] = 0
 
