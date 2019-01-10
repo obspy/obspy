@@ -8,6 +8,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import warnings
+
 import numpy as np
 
 from .c_wrappers import clibtau
@@ -477,3 +479,19 @@ class TauBranch(object):
                 arr_ = arr_[()]
             setattr(branch, key, arr_)
         return branch
+
+    @staticmethod
+    def _robust_resize(arr, new_size):
+        """
+        Try to resize an array inplace. If an error is raised use numpy
+        resize function to create a new array. Return the array.
+        """
+        try:
+            arr.resize(new_size)
+        except ValueError:
+            msg = ('Resizing a TauP array inplace failed due to the existence'
+                   ' of other references to the array, creating a new array. '
+                   'See Obspy #2280.')
+            warnings.warn(msg)
+            arr = np.resize(arr, new_size)
+        return arr
