@@ -30,6 +30,8 @@
  - obspy.clients.nrl:
    * Set input units of overall sensitivity to input units of first stage
      in NRL.get_response() (see #2248)
+ - obspy.geodetics:
+   * Fix the vincenty inverse calculation for equatorial lines (see #2282).
  - obspy.imaging:
    * Normalize moment tensors prior to plotting in the mopad wrapper to
      stabilize the algorithm (see #2114, #2125).
