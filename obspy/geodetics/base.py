@@ -162,8 +162,7 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
                 cos2sigma_m = cos_sigma - \
                     (2 * math.sin(u_1) * math.sin(u_2) / sqr_cos_alpha)
 
-            c = (f / 16) * sqr_cos_alpha * \
-                (4 + f * (4 - 3 * sqr_cos_alpha))
+            c = (f / 16) * sqr_cos_alpha * (4 + f * (4 - 3 * sqr_cos_alpha))
             last_dlon = dlon
             dlon = omega + (1 - c) * f * sin_alpha * \
                 (sigma + c * sin_sigma *
