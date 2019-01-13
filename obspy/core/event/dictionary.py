@@ -15,7 +15,7 @@ import copy
 
 import obspy
 import obspy.core.event as ev
-from obspy.core.misc import _camel2snake
+from obspy.core.util.misc import _camel_to_snake_case
 from obspy.core.util.obspy_types import Enum
 from obspy.core.event.base import QuantityError
 
@@ -103,7 +103,7 @@ def make_class_map():
 
     def _add_lower_and_plural(name, cls):
         """ add the lower case and plural case to dict"""
-        name_lower = _camel2snake(name)
+        name_lower = _camel_to_snake_case(name)
         name_plural = name_lower + "s"
         out[name_lower] = cls
         out[name_plural] = cls  # add both singular and plural

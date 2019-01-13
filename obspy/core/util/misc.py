@@ -20,6 +20,7 @@ import itertools
 import locale
 import math
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -746,6 +747,15 @@ def _yield_resource_id_parent_attr(obj):
                             yield out
 
     return func(obj)
+
+
+def _camel_to_snake_case(name):
+    """
+    Function to convert CamelCase to snake_case.
+    """
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    s2 = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+    return s2
 
 
 if __name__ == '__main__':
