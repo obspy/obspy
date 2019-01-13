@@ -16,6 +16,9 @@ import re
 
 import obspy
 import obspy.core.event as ev
+from obspy.core.util.obspy_types import Enum
+from obspy.core.event.base import QuantityError
+
 
 UTC_KEYS = ("creation_time", "time", "reference")
 
@@ -100,27 +103,31 @@ def _camel2snake(name):
 
 def make_class_map():
     """
-    Return a dict that maps names in QML to their obspy class.
+    Return a dict that maps names in QML to the appropriate obspy class.
     """
-    # Loop classes in mod, convert to snake_case and add to dict
-    out = {}
-    for name, obj in ev.__dict__.items():
-        if isinstance(obj, type):
-            name_lower = _camel2snake(name)
-            name_plural = name_lower + "s"
-            out[name_lower] = obj
-            out[name_plural] = obj
-    # add UTCDateTimes
-    for utckey in UTC_KEYS:
-        out[utckey] = obspy.UTCDateTime
-    # add quality stuff
-    out["quality"] = ev.OriginQuality
-    # add waveform ids
-    out["waveform_id"] = obspy.core.event.WaveformStreamID
-    # add nodal_planes (this one is a bit weird)
-    out["nodal_plane_1"] = ev.NodalPlane
-    out["nodal_plane_2"] = ev.NodalPlane
-    out["nodal_planes"] = ev.NodalPlanes
+
+    # add "special" cases to mapping
+    out = dict(mag_errors=QuantityError)
+    out.update({x: obspy.UTCDateTime for x in UTC_KEYS})
+
+    def _add_lower_and_plural(name, cls):
+        """ add the lower case and plural case to dict"""
+        name_lower = _camel2snake(name)
+        name_plural = name_lower + "s"
+        out[name_lower] = cls
+        out[name_plural] = cls  # add both singular and plural
+
+    # iterate all classes contained in core.event and add to dict
+    for name, cls in ev.__dict__.items():
+        if not isinstance(cls, type):
+            continue
+        if hasattr(cls, "_property_dict"):
+            for name_, obj_type in cls._property_dict.items():
+                # skip enums, object creation handles validation of these
+                if isinstance(obj_type, Enum):
+                    continue
+                _add_lower_and_plural(name_, obj_type)
+        _add_lower_and_plural(name, cls)
     return out
 
 
