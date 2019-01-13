@@ -12,14 +12,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import copy
-import re
 
 import obspy
 import obspy.core.event as ev
+from obspy.core.misc import _camel2snake
 from obspy.core.util.obspy_types import Enum
 from obspy.core.event.base import QuantityError
 
-
+# attribute keys which are UTCDateTime instances
 UTC_KEYS = ("creation_time", "time", "reference")
 
 EVENT_ATTRS = ev.Event._containers + [x[0] for x in ev.Event._properties]
@@ -90,15 +90,6 @@ def _getattr_factory(attributes):
         return out or None  # return None rather than empty dict
 
     return func
-
-
-def _camel2snake(name):
-    """
-    Function to convert CamelCase to snake_case.
-    """
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    s2 = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
-    return s2
 
 
 def make_class_map():
