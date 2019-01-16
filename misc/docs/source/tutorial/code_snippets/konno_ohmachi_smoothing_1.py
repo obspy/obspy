@@ -7,14 +7,14 @@ from scipy.signal import savgol_filter
 
 # Load sample data.
 st = read()
-tr = st[0].data
+tr = st[0]
 
 # Get the amplitude spectra and corresponding frequencies.
 amp_spec = np.abs(np.fft.rfft(tr.data))
-freqs = np.fft.rfftfreq(len(tr.data), 1. / tr.stats.sampling_rate)
+freqs = np.fft.rfftfreq(tr.stats.npts, 1. / tr.stats.sampling_rate)
 
 # Apply Konno-Ohmachi smoothing
-konno_smooth = konno_ohmachi_smoothing(amp_spec[0], freqs, normalize=True)
+konno_smooth = konno_ohmachi_smoothing(amp_spec, freqs, normalize=True)
 
 # Apply a Savitzky-Golay filter (a linear space smoother).
 savitzky_smooth = savgol_filter(amp_spec, 51, 3)
