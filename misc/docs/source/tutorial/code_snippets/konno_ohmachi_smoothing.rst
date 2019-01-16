@@ -2,25 +2,33 @@
 Konno-Ohmachi Smoothing
 =======================
 
-This example shows how to apply smoothing to amplitude spectra following the
-approach by developed by [Konno1998]_. This method applies a smoothing window
-whose width is constant in log space rather than linear space. This can be
-useful, for example, to reduce noise before fitting a spectral model.
+Obspy includes a smoothing function which follows the approach described by
+[Konno1998]_. Unlike most smoothing algorithms, this method applies a
+smoothing window with constant width in logarithmic space. Such an approach
+can be useful, for example, to reduce noise before fitting a spectral model.
 
 The following example will apply Konno-Ohmachi smoothing and a Savitzky-Golay
 filter (included in scipy) and compare the results on a log-log plot. Note how
 the Savitzky-Golay filter appears over-smoothed at lower frequencies and
-under-smoothed at higher frequencies but the Konno-Ohmachi filtered data
+under-smoothed at higher frequencies but the Konno-Ohmachi smoothed data
 appears reasonable throughout.
 
 .. plot:: tutorial/code_snippets/konno_ohmachi_smoothing_1.py
    :include-source:
 
+-------------------
+Efficient Smoothing
+-------------------
+
 For large spectra it can be very time-consuming and memory intensive to
 calculate the smoothing coefficients for all frequencies. In these cases
-it is usually best specify a subset of frequencies of interest using the
-``center_frequencies`` parameter. Multiple spectra can also be smoothed
-simultaneously which is more efficient than smoothing each individually.
+it is usually best specify a subset of frequencies using the
+``center_frequencies`` parameter. The output will then only contain values
+corresponding to the frequencies of interest.
+
+Multiple spectra can also be smoothed simultaneously by passing a numpy array
+to the smoothing function, which is more efficient than smoothing each
+spectrum individually.
 
 .. plot:: tutorial/code_snippets//konno_ohmachi_smoothing_2.py
    :include-source:

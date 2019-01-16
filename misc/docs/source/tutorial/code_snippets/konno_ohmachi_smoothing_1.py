@@ -1,9 +1,9 @@
-import numpy as np
-
 import matplotlib.pyplot as plt
+import numpy as np
+from scipy.signal import savgol_filter
+
 from obspy import read
 from obspy.signal.konnoohmachismoothing import konno_ohmachi_smoothing
-from scipy.signal import savgol_filter
 
 # Load sample data.
 st = read()
