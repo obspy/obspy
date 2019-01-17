@@ -22,7 +22,7 @@ Efficient Smoothing
 
 For large spectra it can be very time-consuming and memory intensive to
 calculate the smoothing coefficients for all frequencies. In these cases
-it is usually best specify a subset of frequencies using the
+it may be best to specify a subset of frequencies using the
 ``center_frequencies`` parameter. The output will then only contain values
 corresponding to the frequencies of interest.
 
@@ -30,5 +30,12 @@ Multiple spectra can also be smoothed simultaneously by passing a numpy array
 to the smoothing function, which is more efficient than smoothing each
 spectrum individually.
 
+The following example will generate a few large(ish) random time-series,
+calculate the amplitude spectra, then apply Konno-Ohmachi smoothing to all
+spectra simultaneously for selected frequencies of interest.
+
 .. plot:: tutorial/code_snippets//konno_ohmachi_smoothing_2.py
    :include-source:
+
+For more information see
+:func:`~obspy.signal.konnoohmachismoothing.konno_ohmachi_smoothing`.
