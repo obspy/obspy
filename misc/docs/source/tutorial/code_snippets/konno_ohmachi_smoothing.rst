@@ -2,10 +2,12 @@
 Konno-Ohmachi Smoothing
 =======================
 
-Obspy includes a smoothing function which follows the approach described by
-[Konno1998]_. Unlike most smoothing algorithms, this method applies a
-smoothing window with constant width in logarithmic space. Such an approach
-can be useful, for example, to reduce noise before fitting a spectral model.
+Obspy includes the
+:func:`~obspy.signal.konnoohmachismoothing.konno_ohmachi_smoothing`
+function which follows the approach described by [Konno1998]_. Unlike most
+smoothing algorithms, this method applies a smoothing window with constant
+width in logarithmic space. Such an approach can be useful, for example, to
+reduce noise before fitting a spectral model.
 
 The following example will apply Konno-Ohmachi smoothing and a Savitzky-Golay
 filter (included in scipy) and compare the results on a log-log plot. Note how
@@ -32,10 +34,7 @@ spectrum individually.
 
 The following example will generate a few large(ish) random time-series,
 calculate the amplitude spectra, then apply Konno-Ohmachi smoothing to all
-spectra simultaneously for selected frequencies of interest.
+spectra simultaneously for selected frequencies.
 
 .. plot:: tutorial/code_snippets//konno_ohmachi_smoothing_2.py
    :include-source:
-
-For more information see
-:func:`~obspy.signal.konnoohmachismoothing.konno_ohmachi_smoothing`.
