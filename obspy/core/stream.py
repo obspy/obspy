@@ -653,6 +653,37 @@ class Stream(object):
         # see also https://docs.python.org/3/reference/datamodel.html
         return self.__class__(traces=self.traces[max(0, i):max(0, j):k])
 
+    def almost_equal(self, other, processing=False, rtol=1e-05, atol=1e-08,
+                     equal_nan=False):
+        """
+        Return True if the stream is approximately equal to another stream.
+
+        :param other: Another :class:`~obspy.core.stream.Stream` object.
+        :param processing:
+            If True also compare the ``processing`` attribute of each trace's
+            :class:`~obspy.core.trace.Stats` object.
+        :param rtol: The relative tolerance parameter passed to
+            :func:`~numpy.allclose` for comparing time series.
+        :param atol: The absolute tolerance parameter passed to
+            :func:`~numpy.allclose` for comparing time series.
+        :param equal_nan:
+            If ``True`` NaNs are evaluated equal when comparing the time
+            series.
+        :return: bool
+        """
+        # Kwargs to pass trace's almost_equal method.
+        tr_kwargs = dict(processing=processing, rtol=rtol, atol=atol,
+                         equal_nan=equal_nan)
+        # Ensure the streams are sorted (as done with the __equal__ method)
+        self_sorted = self.select()
+        self_sorted.sort()
+        other_sorted = other.select()
+        other_sorted.sort()
+        for tr1, tr2 in zip(self_sorted, other_sorted):
+            if not tr1.almost_equal(tr2, **tr_kwargs):
+                return False
+        return True
+
     def append(self, trace):
         """
         Append a single Trace object to the current Stream object.

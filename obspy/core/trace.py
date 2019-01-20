@@ -818,6 +818,32 @@ class Trace(object):
         out.data = data
         return out
 
+    def almost_equal(self, tr, processing=False, rtol=1e-05, atol=1e-08,
+                     equal_nan=False):
+        """
+        Return True if the trace is approximately equal to another trace.
+
+        :param tr: Another :class:`~obspy.core.trace.Trace` object.
+        :param processing:
+            If True also compare the ``processing`` attribute of each trace's
+            :class:`~obspy.core.trace.Stats` object.
+        :param rtol: The relative tolerance parameter passed to
+            :func:`~numpy.allclose` for comparing time series.
+        :param atol: The absolute tolerance parameter passed to
+            :func:`~numpy.allclose` for comparing time series.
+        :param equal_nan:
+            If ``True`` NaNs are evaluated equal when comparing the time
+            series.
+        :return: bool
+        """
+        # First compare the array values
+        all_close = np.allclose(self.data, tr.data, rtol=rtol, atol=atol,
+                                equal_nan=equal_nan)
+        # Then compare the stats objects
+        stats1 = _make_stats_dict(self, processing)
+        stats2 = _make_stats_dict(tr, processing)
+        return all_close and stats1 == stats2
+
     def get_id(self):
         """
         Return a SEED compatible identifier of the trace.
@@ -2948,6 +2974,16 @@ def _data_sanity_checks(value):
         msg = ("NumPy array for Trace.data has bad shape ('%s'). Only 1-d "
                "arrays are allowed for initialization.") % str(value.shape)
         raise ValueError(msg)
+
+
+def _make_stats_dict(tr, processing):
+    """
+    Return a dict of stats from trace optionally including processing.
+    """
+    out = {i: v for i,v in tr.stats.items() if i != 'processing'}
+    if processing:
+        out['processing'] = getattr(tr.stats, 'processing', None)
+    return out
 
 
 if __name__ == '__main__':
