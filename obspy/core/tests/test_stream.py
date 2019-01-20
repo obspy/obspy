@@ -2656,9 +2656,18 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(e.exception.args[0],
                              'Can not write empty stream to file.')
 
+    def test_almost_equal(self):
+        """
+        Identical Streams should be almost_equal.
+        """
+        st1, st2 = read(), read()
+        self.assertTrue(st1.almost_equal(st2))
+
 
 def suite():
-    return unittest.makeSuite(StreamTestCase, 'test')
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(StreamTestCase, 'test'))
+    return suite
 
 
 if __name__ == '__main__':

@@ -2740,8 +2740,59 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr_orig, tr_pickled)
 
 
+class AlmostEqualTestCase(unittest.TestCase):
+    """
+    Tests for fuzzy equality comparisons for traces.
+    """
+
+    def test_identical_traces(self):
+        """
+        Should return True on identical streams but false if a value is
+        greatly changed.
+        """
+        tr1, tr2 = read()[0], read()[0]
+        self.assertTrue(tr1.almost_equal(tr2))
+        # when one number is changed significantly it should return False
+        tr1.data[0] = (tr1.data[0] + 1) * 1000
+        self.assertFalse(tr1.almost_equal(tr2))
+
+    def test_empty_traces(self):
+        """
+        Empty traces should be considered almost equal.
+        """
+        tr1, tr2 = Trace(), Trace()
+        self.assertTrue(tr1.almost_equal(tr2))
+
+    def test_different_stats_no_processing(self):
+        """
+        If only the stats are different traces should not be considered almost
+        equal.
+        """
+        tr1 = Trace(header=dict(network='UU', station='TMU', channel='HHZ'))
+        tr2 = Trace(header=dict(network='UU', station='TMU', channel='HHN'))
+        self.assertFalse(tr1.almost_equal(tr2))
+        self.assertFalse(tr2.almost_equal(tr1))
+
+    def test_processing(self):
+        """
+        Differences in processing attr of stats should only count if
+        processing is True.
+        """
+        tr1, tr2 = read()[0], read()[0]
+        # Detrend each traces once, then second trace twice for two entries
+        # in processing.
+        tr1.detrend()
+        tr2.detrend()
+        tr1.detrend()
+        self.assertTrue(tr1.almost_equal(tr2, processing=False))
+        self.assertFalse(tr1.almost_equal(tr2, processing=True))
+
+
 def suite():
-    return unittest.makeSuite(TraceTestCase, 'test')
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(TraceTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(AlmostEqualTestCase, 'test'))
+    return suite
 
 
 if __name__ == '__main__':
