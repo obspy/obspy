@@ -721,6 +721,9 @@ class Stream(object):
             >>> st1[0].data *= 10
             >>> assert not st1.almost_equal(st2)
         """
+        # Return False if other is not a stream or not the same length.
+        if not isinstance(other, Stream) or not len(self) == len(other):
+            return False
         # Kwargs to pass trace's almost_equal method.
         tr_kwargs = dict(default_stats=default_stats, rtol=rtol, atol=atol,
                          equal_nan=equal_nan)

@@ -818,12 +818,12 @@ class Trace(object):
         out.data = data
         return out
 
-    def almost_equal(self, tr, default_stats=True, rtol=1e-05, atol=1e-08,
+    def almost_equal(self, other, default_stats=True, rtol=1e-05, atol=1e-08,
                      equal_nan=True):
         """
         Return True if the trace is approximately equal to another trace.
 
-        :param tr: Another :class:`~obspy.core.trace.Trace` object.
+        :param other: Another :class:`~obspy.core.trace.Trace` object.
         :param default_stats:
             If True only compare the default stats on the traces, such as seed
             identification codes, start/end times, sampling_rates, etc. If
@@ -838,15 +838,25 @@ class Trace(object):
             series.
         :return: bool
         """
+        # If other isnt  a trace, or data is not the same len return False.
+        if not isinstance(other, Trace) or len(self.data) != len(other.data):
+            return False
         # First compare the array values
         try:  # Use equal_nan if available
-            all_close = np.allclose(self.data, tr.data, rtol=rtol, atol=atol,
+            all_close = np.allclose(self.data, other.data, rtol=rtol, atol=atol,
                                     equal_nan=equal_nan)
-        except TypeError:  # If on older version of numpy
-            all_close = np.allclose(self.data, tr.data, rtol=rtol, atol=atol)
+        except TypeError:
+            # This happens on very old versions of numpy. Essentially
+            # we just need to handle NaN detection on our own, if equal_nan.
+            is_close = np.isclose(self.data, other.data, rtol=rtol, atol=atol)
+            if equal_nan:
+                isnan = np.isnan(self.data) & np.isnan(other.data)
+            else:
+                isnan = np.zeros(self.data.shape).astype(bool)
+            all_close = np.all(isnan | is_close)
         # Then compare the stats objects
         stats1 = _make_stats_dict(self, default_stats)
-        stats2 = _make_stats_dict(tr, default_stats)
+        stats2 = _make_stats_dict(other, default_stats)
         return all_close and stats1 == stats2
 
     def get_id(self):
