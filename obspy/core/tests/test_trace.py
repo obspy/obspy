@@ -2796,6 +2796,32 @@ class AlmostEqualTestCase(unittest.TestCase):
         self.assertTrue(tr1.almost_equal(tr2, default_stats=True))
         self.assertFalse(tr1.almost_equal(tr2, default_stats=False))
 
+    def test_nan(self):
+        """
+        Ensure NaNs eval equal if equal_nan is used, else they do not.
+        """
+        tr1, tr2 = read()[0], read()[0]
+        tr1.data[0], tr2.data[0] = np.NaN, np.NaN
+        self.assertTrue(tr1.almost_equal(tr2, equal_nan=True))
+        self.assertFalse(tr1.almost_equal(tr2, equal_nan=False))
+
+    def test_unequal_trace_lengths(self):
+        """
+        Ensure traces with different lengths are not almost equal.
+        """
+        tr1, tr2 = read()[0], read()[0]
+        tr2.data = tr2.data[:-1]
+        self.assertFalse(tr1.almost_equal(tr2))
+
+    def test_not_a_trace(self):
+        """
+        Ensure comparing to someething that is not a trace returns False.
+        """
+        tr1 = read()[0]
+        self.assertFalse(tr1.almost_equal(1))
+        self.assertFalse(tr1.almost_equal(None))
+        self.assertFalse(tr1.almost_equal('not a trace'))
+
 
 def suite():
     suite = unittest.TestSuite()
