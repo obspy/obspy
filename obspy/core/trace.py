@@ -819,7 +819,7 @@ class Trace(object):
         return out
 
     def almost_equal(self, tr, default_stats=True, rtol=1e-05, atol=1e-08,
-                     equal_nan=False):
+                     equal_nan=True):
         """
         Return True if the trace is approximately equal to another trace.
 
@@ -839,8 +839,11 @@ class Trace(object):
         :return: bool
         """
         # First compare the array values
-        all_close = np.allclose(self.data, tr.data, rtol=rtol, atol=atol,
-                                equal_nan=equal_nan)
+        try:  # Use equal_nan if available
+            all_close = np.allclose(self.data, tr.data, rtol=rtol, atol=atol,
+                                    equal_nan=equal_nan)
+        except TypeError:  # If on older version of numpy
+            all_close = np.allclose(self.data, tr.data, rtol=rtol, atol=atol)
         # Then compare the stats objects
         stats1 = _make_stats_dict(self, default_stats)
         stats2 = _make_stats_dict(tr, default_stats)

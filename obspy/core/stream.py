@@ -662,7 +662,7 @@ class Stream(object):
         return self.__class__(traces=self.traces[max(0, i):max(0, j):k])
 
     def almost_equal(self, other, default_stats=True, rtol=1e-05, atol=1e-08,
-                     equal_nan=False):
+                     equal_nan=True):
         """
         Return True if the stream is approximately equal to another stream.
 
