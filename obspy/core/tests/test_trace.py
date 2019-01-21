@@ -2756,6 +2756,15 @@ class AlmostEqualTestCase(unittest.TestCase):
         tr1.data[0] = (tr1.data[0] + 1) * 1000
         self.assertFalse(tr1.almost_equal(tr2))
 
+    def test_slightly_modified_data(self):
+        """
+        Traces that are "close" should be considered almost equal.
+        """
+        tr1, tr2 = read()[0], read()[0]
+        # alter one trace's data slightly
+        tr1.data *= (1. + 1e-6)
+        self.assertTrue(tr1.almost_equal(tr2))
+
     def test_empty_traces(self):
         """
         Empty traces should be considered almost equal.
@@ -2784,8 +2793,8 @@ class AlmostEqualTestCase(unittest.TestCase):
         tr1.detrend()
         tr2.detrend()
         tr1.detrend()
-        self.assertTrue(tr1.almost_equal(tr2, processing=False))
-        self.assertFalse(tr1.almost_equal(tr2, processing=True))
+        self.assertTrue(tr1.almost_equal(tr2, default_stats=True))
+        self.assertFalse(tr1.almost_equal(tr2, default_stats=False))
 
 
 def suite():
