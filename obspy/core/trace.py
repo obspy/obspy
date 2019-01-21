@@ -843,8 +843,8 @@ class Trace(object):
             return False
         # First compare the array values
         try:  # Use equal_nan if available
-            all_close = np.allclose(self.data, other.data, rtol=rtol, atol=atol,
-                                    equal_nan=equal_nan)
+            all_close = np.allclose(self.data, other.data, rtol=rtol,
+                                    atol=atol, equal_nan=equal_nan)
         except TypeError:
             # This happens on very old versions of numpy. Essentially
             # we just need to handle NaN detection on our own, if equal_nan.
