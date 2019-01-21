@@ -672,18 +672,59 @@ class Stream(object):
             If ``True`` NaNs are evaluated equal when comparing the time
             series.
         :return: bool
+
+        .. rubric:: Example
+
+        1) Changes to the non-default parameters of the
+            :class:`~obspy.core.trace.Stats` objects of the stream's contained
+            :class:`~obspy.core.trace.Trace` objects will cause the streams to
+            be considered unequal, but they will be considered almost equal.
+
+            >>> from obspy import read
+            >>> st1 = read()
+            >>> st2 = read()
+            >>> # The traces should, of course, be equal.
+            >>> assert st1 == st2
+            >>> # Perform detrending on st1 twice so that processing stats differ.
+            >>> st1 = st1.detrend('linear')
+            >>> st1 = st1.detrend('linear')
+            >>> st2 = st2.detrend('linear')
+            >>> # The traces are no longer equal, but are almost equal.
+            >>> assert st1 != st2
+            >>> assert st1.almost_equal(st2)
+
+
+        2) Slight differences in each trace's data will cause the streams
+            to be considered unequal, but they will be almost equal if the
+            differences don't exceed the limits set by the ``rtol`` and
+            ``atol`` parameters.
+
+            >>> from obspy import read
+            >>> st1 = read()
+            >>> st2 = read()
+            >>> # Perturb the trace data in st2 slightly.
+            >>> for tr in st2:
+            ...     tr.data *= (1 + 1e-6)
+            >>> # The streams are no longer equal.
+            >>> assert st1 != st2
+            >>> # But they are almost equal.
+            >>> assert st1.almost_equal(st2)
+            >>> # Unless, of course, there is a large change.
+            >>> st1[0].data *= 10
+            >>> assert not st1.almost_equal(st2)
         """
         # Kwargs to pass trace's almost_equal method.
-        tr_kwargs = dict(processing=default_stats, rtol=rtol, atol=atol,
+        tr_kwargs = dict(default_stats=default_stats, rtol=rtol, atol=atol,
                          equal_nan=equal_nan)
         # Ensure the streams are sorted (as done with the __equal__ method)
         self_sorted = self.select()
         self_sorted.sort()
         other_sorted = other.select()
         other_sorted.sort()
+        # Iterate over sorted trace pairs and determine they are almost equal.
         for tr1, tr2 in zip(self_sorted, other_sorted):
             if not tr1.almost_equal(tr2, **tr_kwargs):
-                return False
+                return False  # If any are not almost equal return None.
         return True
 
     def append(self, trace):
