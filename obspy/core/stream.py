@@ -693,7 +693,7 @@ class Stream(object):
             >>> st2 = read()
             >>> # The traces should, of course, be equal.
             >>> assert st1 == st2
-            >>> # Perform detrending on st1 twice so that processing stats differ.
+            >>> # Perform detrending on st1 twice so processing stats differ.
             >>> st1 = st1.detrend('linear')
             >>> st1 = st1.detrend('linear')
             >>> st2 = st2.detrend('linear')
