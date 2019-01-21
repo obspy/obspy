@@ -429,7 +429,7 @@ class InvSimTestCase(unittest.TestCase):
         tr2.data = simulate_seismometer(tr2.data, tr2.stats.sampling_rate,
                                         seedresp=seedresp)
 
-        self.assertEqual(tr1, tr2)
+        self.assertTrue(tr1.almost_equal(tr2))
 
     def test_segfaulting_resp_file(self):
         """
