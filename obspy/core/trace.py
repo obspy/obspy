@@ -818,15 +818,17 @@ class Trace(object):
         out.data = data
         return out
 
-    def almost_equal(self, tr, processing=False, rtol=1e-05, atol=1e-08,
+    def almost_equal(self, tr, default_stats=True, rtol=1e-05, atol=1e-08,
                      equal_nan=False):
         """
         Return True if the trace is approximately equal to another trace.
 
         :param tr: Another :class:`~obspy.core.trace.Trace` object.
-        :param processing:
-            If True also compare the ``processing`` attribute of each trace's
-            :class:`~obspy.core.trace.Stats` object.
+        :param default_stats:
+            If True only compare the default stats on the traces, such as seed
+            identification codes, start/end times, sampling_rates, etc. If
+            False also compare extra stats attributes such as processing and
+            format specific information.
         :param rtol: The relative tolerance parameter passed to
             :func:`~numpy.allclose` for comparing time series.
         :param atol: The absolute tolerance parameter passed to
@@ -840,8 +842,8 @@ class Trace(object):
         all_close = np.allclose(self.data, tr.data, rtol=rtol, atol=atol,
                                 equal_nan=equal_nan)
         # Then compare the stats objects
-        stats1 = _make_stats_dict(self, processing)
-        stats2 = _make_stats_dict(tr, processing)
+        stats1 = _make_stats_dict(self, default_stats)
+        stats2 = _make_stats_dict(tr, default_stats)
         return all_close and stats1 == stats2
 
     def get_id(self):
@@ -2976,14 +2978,13 @@ def _data_sanity_checks(value):
         raise ValueError(msg)
 
 
-def _make_stats_dict(tr, processing):
+def _make_stats_dict(tr, default_stats):
     """
     Return a dict of stats from trace optionally including processing.
     """
-    out = {i: v for i,v in tr.stats.items() if i != 'processing'}
-    if processing:
-        out['processing'] = getattr(tr.stats, 'processing', None)
-    return out
+    if not default_stats:
+        return dict(tr.stats)
+    return {i: tr.stats[i] for i in Stats.defaults}
 
 
 if __name__ == '__main__':
