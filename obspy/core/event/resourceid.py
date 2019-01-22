@@ -280,7 +280,11 @@ class ResourceIdentifier(object):
     # {object_id: object}
     _id_object_map = WeakValueDictionary()
 
-    # set default _ResourceKey attributes and object_id
+    # A get objects hook to allow plugging in custom logic for finding objects
+    # with by resource_id if they are not found via normal means.
+    _get_object_hook = []
+
+    # Set default _ResourceKey attributes and object_id.
     _parent_key = _ResourceKeyDescriptor('_parent_key')
     _resource_key = _ResourceKeyDescriptor('_resource_key')
     _object_id = None
@@ -314,9 +318,17 @@ class ResourceIdentifier(object):
         return None.
         """
         try:
-            return ResourceIdentifier._id_object_map[self._object_id]
+            out = ResourceIdentifier._id_object_map[self._object_key]
         except KeyError:
-            return self._get_similar_referred_object()
+            out = self._get_similar_referred_object()
+        if out is not None:
+            return out
+        else:  # If no object was found iterate get_object hooks.
+            for hook in self._get_object_hook:
+                out = hook(self.id)
+                if out is not None:
+                    self.set_referred_object(out)
+                    return out
 
     def _get_similar_referred_object(self):
         """
@@ -333,37 +345,65 @@ class ResourceIdentifier(object):
         """
         # Warn if resource_id was bound but its object got gc'ed.
         if self._object_id is not None:
-            msg = ("The object with identity of: %d  and id of %s no longer"
+            msg = ("The object with identity of: %d  and id of %s no longer "
                    "exists, trying to find an object with the same id"
                    ) % (self._object_id, self.id)
             warnings.warn(msg, UserWarning)
         # try to get the object_id from the parent_id_tree
-        id_tree = ResourceIdentifier._parent_id_tree
-        try:
-            obj_id = id_tree[self._parent_key][self._resource_key]
-        except (KeyError, TypeError):
-            pass
-        else:
-            out = ResourceIdentifier._id_object_map[obj_id]
-            self.set_referred_object(out, warn=False)
-            return out
-        # else try to find the last object assigned the same resource_id
+        obj = self._get_object_from_parent_scope()
+        if obj is None:
+            # else try to find the last object assigned the same resource_id
+            obj = self._get_newest_object_with_same_resource_id()
+        # if an object was found bind it to resource_id and return it
+        if obj is not None:
+            self.set_referred_object(obj, warn=False)
+        return obj
+
+    def _get_newest_object_with_same_resource_id(self):
+        """
+        Return the newest object which has been bound to the same resource_id.
+        If No such object exists return None.
+        """
         try:
             rid_list = ResourceIdentifier._id_order[self._resource_key]
         except KeyError:  # no existing object is assigned to this resource_id
             return None
         while len(rid_list):
             try:
-                obj_id = ResourceIdentifier._id_order[self._resource_key][-1]
+                obj_key = ResourceIdentifier._id_order[self._resource_key][-1]
             except KeyError:
                 return None
             else:
                 try:
-                    obj = ResourceIdentifier._id_object_map[obj_id]
-                    self.set_referred_object(obj, warn=False)
+                    obj = ResourceIdentifier._id_object_map[obj_key]
+                except KeyError:  # Object got gc'ed or was not defined.
+                    rid_list.pop()  # Remove last element in list.
+                    continue
+                # Ensure the current resource_id matches the old one, there
+                # can, in rare cases, be a mismatch due to issue #2278.
+                if obj_key[-1] != self.id:
+                    rid_list.pop()
+                    continue
+                return obj
+
+    def _get_object_from_parent_scope(self):
+        """
+        Find an object in the same parent scope with the same resource_id. If
+        No such object is found return None.
+        """
+        id_tree = ResourceIdentifier._parent_id_tree
+        try:
+            obj_key = id_tree[self._parent_key][self._resource_key]
+        except (KeyError, TypeError):
+            pass
+        else:
+            try:
+                obj = ResourceIdentifier._id_object_map[obj_key]
+            except KeyError:
+                pass
+            else:
+                if obj_key[-1] == self.id:
                     return obj
-                except KeyError:  # object got gc'ed or was not defined
-                    rid_list.pop()  # remove last element in list
 
     def set_referred_object(self, referred_object, warn=True, parent=None):
         """
@@ -392,11 +432,11 @@ class ResourceIdentifier(object):
         # if there is None, get the last referred_object assigned the same
         # resource_id code.
         id_order = ResourceIdentifier._id_order
-        old = ResourceIdentifier._id_object_map.get(self._object_id, None)
-        if old is None:  # look for last object with same id code.
+        old = ResourceIdentifier._id_object_map.get(self._object_key, None)
+        if old is None:  # Look for last object with same resource id.
             try:
-                old_obj_id = id_order[self._resource_key][-1]
-                old = ResourceIdentifier._id_object_map[old_obj_id]
+                old_obj_id_key = id_order[self._resource_key][-1]
+                old = ResourceIdentifier._id_object_map[old_obj_id_key]
             except (KeyError, IndexError):
                 pass
         if warn and old is not None and old != referred_object:
@@ -406,17 +446,18 @@ class ResourceIdentifier(object):
             warnings.warn(msg, UserWarning)
         # Set the object id to the new object, and update parent scoping tree.
         self._object_id = id(referred_object)
-        if parent is not None:
-            self._parent_key = parent
+        if parent is not None or self._parent_key is not None:
+            if parent is not None:
+                self._parent_key = parent
             id_tree = ResourceIdentifier._parent_id_tree
             if self._parent_key not in id_tree:
                 id_tree[self._parent_key] = WeakKeyDictionary()
-            id_tree[self._parent_key][self._resource_key] = self._object_id
+            id_tree[self._parent_key][self._resource_key] = self._object_key
         # Set the new id in id map and append referred_object to id_order.
-        ResourceIdentifier._id_object_map[self._object_id] = referred_object
+        ResourceIdentifier._id_object_map[self._object_key] = referred_object
         if self._resource_key not in id_order:
             id_order[self._resource_key] = []
-        id_order[self._resource_key].append(self._object_id)
+        id_order[self._resource_key].append(self._object_key)
 
     def convert_id_to_quakeml_uri(self, authority_id="local"):
         """
@@ -496,6 +537,15 @@ class ResourceIdentifier(object):
         self.__dict__ = state
         self._parent_key = None
         self._resource_key = _ResourceKey.get_resource_key(self.id)
+
+    @property
+    def _object_key(self):
+        """
+        The value used to identify objects bound to resource_ids.
+
+        Uses a hash of both the object id and resource id, see #2278.
+        """
+        return self._object_id, self.id
 
     @property
     def id(self):
@@ -622,6 +672,39 @@ class ResourceIdentifier(object):
         self._uuid = str(uuid4())
 
     @classmethod
+    def register_get_object_hook(cls, get_object_callable):
+        """
+        Register a callable to return referred object if normal means fail.
+
+        This is useful, for example, to allow the resource_identifier to
+        create objects from entries in a database that do not yet have an
+        in-memory representation.
+
+        :param get_object_callable:
+            Any callable that takes a resource id string and returns an
+            object.
+        :type get_object_callable: callable
+        """
+        cls._get_object_hook.append(get_object_callable)
+
+    @classmethod
+    def remove_get_object_hook(cls, get_object_callable):
+        """
+        Remove a callable from the registered get_object hooks.
+
+        :param get_object_callable:
+            The callable to remove from the get_object hook registry.
+        :type get_object_callable: callable, optional
+        """
+        if get_object_callable is not None:
+            try:
+                cls._get_object_hook.remove(get_object_callable)
+            except ValueError:  # Pass if get_object_callable is not in list.
+                pass
+        else:
+            cls._get_object_hook.clear()
+
+    @classmethod
     def _bind_class_state(cls, state_dict):
         """
         Bind the state contained in state_dict to ResourceIdentifier class.
@@ -629,6 +712,7 @@ class ResourceIdentifier(object):
         cls._parent_id_tree = state_dict['parent_id_tree']
         cls._id_order = state_dict['id_order']
         cls._id_object_map = state_dict['id_object_map']
+        cls._get_referred_object_hook = state_dict['get_object_hook']
 
     @classmethod
     @contextmanager
@@ -645,12 +729,14 @@ class ResourceIdentifier(object):
             parent_id_tree=cls._parent_id_tree,
             id_order=cls._id_order,
             id_object_map=cls._id_object_map,
+            get_object_hook=cls._get_object_hook,
         )
         # init new class state
         new_state = dict(
             parent_id_tree=WeakKeyDictionary(),
             id_order=WeakKeyDictionary(),
             id_object_map=WeakValueDictionary(),
+            get_object_hook=[],
         )
         # bind new state and return dict
         cls._bind_class_state(new_state)

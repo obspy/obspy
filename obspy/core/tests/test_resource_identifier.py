@@ -578,6 +578,87 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             arrival.pick_id.get_referred_object()
         self.assertEqual(len(w), 0)
 
+    def test_issue_2278(self):
+        """
+        Tests for issue # 2278 which has to do with resource ids returning
+        the wrong objects when the bound object has gone out of scope and
+        a new object adopts the old object's python id.
+        """
+        # Create a simple class for resource_ids to refere to.
+        class Simple(object):
+
+            def __init__(self, value):
+                self.value = value
+
+        parent = Simple('parent1')
+
+        # keep track of objects, resource_ids, and used python ids
+        obj_list1, rid_list1, used_ids1 = [], [], set()
+        # create a slew of objects and resource_ids
+        for _ in range(100):
+            obj_list1.append(Simple(1))
+            used_ids1.add(id(obj_list1[-1]))
+        for obj in obj_list1:
+            kwargs = dict(referred_object=obj, parent=parent)
+            rid_list1.append(ResourceIdentifier(**kwargs))
+        # delete objects and create second set
+        del obj_list1
+
+        # create another slew of objects and resource_ids. Some will reuse
+        # deleted object ids
+        obj_list2, rid_list2, used_ids2 = [], [], set()
+        for _ in range(100):
+            obj_list2.append(Simple(2))
+            used_ids2.add(id(obj_list2[-1]))
+        for obj in obj_list2:
+            kwargs = dict(referred_object=obj, parent=parent)
+            rid_list2.append(ResourceIdentifier(**kwargs))
+
+        # since we cannot control which IDs python uses, skip the test if
+        # no overlapping ids were created.
+        if not used_ids1 & used_ids2:
+            self.skipTest('setup requires reuse of python ids')
+
+        # Iterate over first list of ids. Referred objects should be None
+        for rid in rid_list1:
+            # should raise a warning
+            with WarningsCapture():
+                self.assertIs(rid.get_referred_object(), None)
+
+    def test_get_object_hook(self):
+        """
+        Test that custom logic for getting referred objects can be plugged
+        into resource ids.
+        """
+
+        class MyClass():
+            pass
+
+        new_obj1 = MyClass()
+        new_obj2 = MyClass()
+
+        def _get_object_hook(arg):
+            if str(arg) == '123':
+                return new_obj1
+            elif str(arg) == '789':
+                return new_obj2
+            else:
+                return None
+
+        with ResourceIdentifier._debug_class_state():
+            ResourceIdentifier.register_get_object_hook(_get_object_hook)
+            rid1 = ResourceIdentifier('123')
+            rid2 = ResourceIdentifier('456')
+            rid3 = ResourceIdentifier('789')
+            self.assertIs(rid1.get_referred_object(), new_obj1)
+            self.assertIs(rid2.get_referred_object(), None)
+            # Now clear the hook, _get_object_hook should no longer be called
+            ResourceIdentifier.remove_get_object_hook(_get_object_hook)
+            self.assertIs(rid3.get_referred_object(), None)
+            # But rid1 should have been bound to new_obj1 (so it no longer
+            # needs to call get_object_hook to find it
+            self.assertIs(rid1.get_referred_object(), new_obj1)
+
 
 def get_instances(obj, cls=None, is_attr=None, has_attr=None):
     """
