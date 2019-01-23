@@ -1089,7 +1089,7 @@ def streams_almost_equal(st1, st2, default_stats=True, rtol=1e-05, atol=1e-08,
         >>> st2 = st2.detrend('linear')
         >>> # The traces are no longer equal, but are almost equal.
         >>> assert st1 != st2
-        >>> assert st1.almost_equal(st2)
+        >>> assert streams_almost_equal(st1, st2)
 
 
     2) Slight differences in each trace's data will cause the streams
@@ -1106,10 +1106,10 @@ def streams_almost_equal(st1, st2, default_stats=True, rtol=1e-05, atol=1e-08,
         >>> # The streams are no longer equal.
         >>> assert st1 != st2
         >>> # But they are almost equal.
-        >>> assert st1.almost_equal(st2)
+        >>> assert streams_almost_equal(st1, st2)
         >>> # Unless, of course, there is a large change.
         >>> st1[0].data *= 10
-        >>> assert not st1.almost_equal(st2)
+        >>> assert not streams_almost_equal(st1, st2)
     """
     from obspy.core.stream import Stream
     # Return False if both objects are not streams or not the same length.
