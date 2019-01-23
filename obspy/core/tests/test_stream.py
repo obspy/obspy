@@ -2656,21 +2656,6 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(e.exception.args[0],
                              'Can not write empty stream to file.')
 
-    def test_almost_equal(self):
-        """
-        Basic tests for almost equal. More rigorous testing is done on the
-        Trace's almost_equal method, which gets called by this one.
-        """
-        # identical streams should be almost equal
-        st1, st2 = read(), read()
-        self.assertTrue(st1.almost_equal(st2))
-        # passing something other than a stream should not be almost equal
-        self.assertFalse(st1.almost_equal(None))
-        self.assertFalse(st1.almost_equal(1.1))
-        # passing streams of different lengths should not be almost equal
-        st2 = st2[1:]
-        self.assertFalse(st1.almost_equal(st2))
-
 
 def suite():
     suite = unittest.TestSuite()
