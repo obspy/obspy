@@ -83,7 +83,7 @@ install:
   - conda info -a
   - |
       if [[ "$MINIMUM_DEPENDENCIES" == 'True' ]]; then
-        NUMPY="numpy=1.7.0"
+        NUMPY="numpy=1.7.2"
         SCIPY="scipy=0.11.0"
         MATPLOTLIB="matplotlib=1.1.1"
         # no basemap version works with this old numpy, so leave out
