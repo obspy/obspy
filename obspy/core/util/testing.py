@@ -1156,28 +1156,55 @@ def traces_almost_equal(tr1, tr2, default_stats=True, rtol=1e-05, atol=1e-08,
     # If other isnt  a trace, or data is not the same len return False.
     if not isinstance(tr2, Trace) or len(tr1.data) != len(tr2.data):
         return False
-    # First compare the array values
+    # First compare trace stats objects.
+    stats1 = _make_stats_dict(tr1, default_stats)
+    stats2 = _make_stats_dict(tr2, default_stats)
+    if stats1 != stats2:
+        return False
+    # Then  compare the array values
     try:  # Use equal_nan if available
         all_close = np.allclose(tr1.data, tr2.data, rtol=rtol,
                                 atol=atol, equal_nan=equal_nan)
     except TypeError:
-        # This happens on very old versions of numpy. Essentially
-        # we just need to handle NaN detection on our own, if equal_nan.
-        is_close = np.isclose(tr1.data, tr2.data, rtol=rtol, atol=atol)
-        if equal_nan:
-            isnan = np.isnan(tr1.data) & np.isnan(tr2.data)
-        else:
-            isnan = np.zeros(tr1.data.shape).astype(bool)
-        all_close = np.all(isnan | is_close)
-    # Then compare the stats objects
-    stats1 = _make_stats_dict(tr1, default_stats)
-    stats2 = _make_stats_dict(tr2, default_stats)
-    return all_close and stats1 == stats2
+        # This happens on very old versions of numpy (< 1.7) which do not
+        # have isclose.
+        all_close = _all_close(tr1.data, tr2.data, rtol=rtol,
+                               atol=atol, equal_nan=equal_nan)
+    return all_close
+
+
+def _all_close(ar1, ar2, rtol, atol, equal_nan):
+    """
+    A simple implementation of numpy.allclose.
+
+    Should be removed when obspy's minimum required numpy version >= 1.10.
+    """
+    def within_tol(x, y, atol, rtol):
+        with np.errstate(invalid='ignore'):
+            return np.less_equal(abs(x-y), atol + rtol * abs(y))
+    # If the arrays are not the same shape they cannot be close
+    if not ar1.shape == ar2.shape:
+        return False
+    # Determine if arrays are within tolerance.
+    are_close = within_tol(ar1, ar2, atol, rtol)
+    # Handle NaNs.
+    if equal_nan:
+        isnan = np.isnan(ar1) & np.isnan(ar2)
+    else:
+        isnan = np.zeros(ar2.shape).astype(bool)
+    return np.all(are_close | isnan)
 
 
 def _make_stats_dict(tr, default_stats):
     """
-    Return a dict of stats from trace optionally including processing.
+    Return a dict of stats from the trace.
+
+    :param tr: An :class:`~obspy.core.trace.Trace` object
+    :param default_stats:
+        If True only include the defaults defined by the
+        ``default`` class attribute of :class:`~obspy.core.trace.Stats`
+        thereby excluding processing and format specific information.
+    :return: dict of stats attributes.
     """
     from obspy.core.trace import Stats
     if not default_stats:
