@@ -1050,5 +1050,140 @@ def setup_context_testcase(test_case, cm):
     return val
 
 
+def streams_almost_equal(st1, st2, default_stats=True, rtol=1e-05, atol=1e-08,
+                         equal_nan=True):
+    """
+    Return True if two streams are almost equal.
+
+    :param st1: The first :class:`~obspy.core.stream.Stream` object.
+    :param st2: The second :class:`~obspy.core.stream.Stream` object.
+    :param default_stats:
+        If True only compare the default stats on the traces, such as seed
+        identification codes, start/end times, sampling_rates, etc. If
+        False also compare extra stats attributes such as processing and
+        format specific information.
+    :param rtol: The relative tolerance parameter passed to
+        :func:`~numpy.allclose` for comparing time series.
+    :param atol: The absolute tolerance parameter passed to
+        :func:`~numpy.allclose` for comparing time series.
+    :param equal_nan:
+        If ``True`` NaNs are evaluated equal when comparing the time
+        series.
+    :return: bool
+
+    .. rubric:: Example
+
+    1) Changes to the non-default parameters of the
+        :class:`~obspy.core.trace.Stats` objects of the stream's contained
+        :class:`~obspy.core.trace.Trace` objects will cause the streams to
+        be considered unequal, but they will be considered almost equal.
+
+        >>> from obspy import read
+        >>> st1 = read()
+        >>> st2 = read()
+        >>> # The traces should, of course, be equal.
+        >>> assert st1 == st2
+        >>> # Perform detrending on st1 twice so processing stats differ.
+        >>> st1 = st1.detrend('linear')
+        >>> st1 = st1.detrend('linear')
+        >>> st2 = st2.detrend('linear')
+        >>> # The traces are no longer equal, but are almost equal.
+        >>> assert st1 != st2
+        >>> assert st1.almost_equal(st2)
+
+
+    2) Slight differences in each trace's data will cause the streams
+        to be considered unequal, but they will be almost equal if the
+        differences don't exceed the limits set by the ``rtol`` and
+        ``atol`` parameters.
+
+        >>> from obspy import read
+        >>> st1 = read()
+        >>> st2 = read()
+        >>> # Perturb the trace data in st2 slightly.
+        >>> for tr in st2:
+        ...     tr.data *= (1 + 1e-6)
+        >>> # The streams are no longer equal.
+        >>> assert st1 != st2
+        >>> # But they are almost equal.
+        >>> assert st1.almost_equal(st2)
+        >>> # Unless, of course, there is a large change.
+        >>> st1[0].data *= 10
+        >>> assert not st1.almost_equal(st2)
+    """
+    from obspy.core.stream import Stream
+    # Return False if both objects are not streams or not the same length.
+    are_streams = isinstance(st1, Stream) and isinstance(st2, Stream)
+    if not are_streams or not len(st1) == len(st2):
+        return False
+    # Kwargs to pass trace_almost_equal.
+    tr_kwargs = dict(default_stats=default_stats, rtol=rtol, atol=atol,
+                     equal_nan=equal_nan)
+    # Ensure the streams are sorted (as done with the __equal__ method)
+    st1_sorted = st1.select()
+    st1_sorted.sort()
+    st2_sorted = st2.select()
+    st2_sorted.sort()
+    # Iterate over sorted trace pairs and determine if they are almost equal.
+    for tr1, tr2 in zip(st1_sorted, st2_sorted):
+        if not traces_almost_equal(tr1, tr2, **tr_kwargs):
+            return False  # If any are not almost equal return None.
+    return True
+
+
+def traces_almost_equal(tr1, tr2, default_stats=True, rtol=1e-05, atol=1e-08,
+                        equal_nan=True):
+    """
+    Return True if the two traces are almost equal.
+
+    :param tr1: The first :class:`~obspy.core.trace.Trace` object.
+    :param tr2: The second :class:`~obspy.core.trace.Trace` object.
+    :param default_stats:
+        If True only compare the default stats on the traces, such as seed
+        identification codes, start/end times, sampling_rates, etc. If
+        False also compare extra stats attributes such as processing and
+        format specific information.
+    :param rtol: The relative tolerance parameter passed to
+        :func:`~numpy.allclose` for comparing time series.
+    :param atol: The absolute tolerance parameter passed to
+        :func:`~numpy.allclose` for comparing time series.
+    :param equal_nan:
+        If ``True`` NaNs are evaluated equal when comparing the time
+        series.
+    :return: bool
+    """
+    from obspy.core.trace import Trace
+    # If other isnt  a trace, or data is not the same len return False.
+    if not isinstance(tr2, Trace) or len(tr1.data) != len(tr2.data):
+        return False
+    # First compare the array values
+    try:  # Use equal_nan if available
+        all_close = np.allclose(tr1.data, tr2.data, rtol=rtol,
+                                atol=atol, equal_nan=equal_nan)
+    except TypeError:
+        # This happens on very old versions of numpy. Essentially
+        # we just need to handle NaN detection on our own, if equal_nan.
+        is_close = np.isclose(tr1.data, tr2.data, rtol=rtol, atol=atol)
+        if equal_nan:
+            isnan = np.isnan(tr1.data) & np.isnan(tr2.data)
+        else:
+            isnan = np.zeros(tr1.data.shape).astype(bool)
+        all_close = np.all(isnan | is_close)
+    # Then compare the stats objects
+    stats1 = _make_stats_dict(tr1, default_stats)
+    stats2 = _make_stats_dict(tr2, default_stats)
+    return all_close and stats1 == stats2
+
+
+def _make_stats_dict(tr, default_stats):
+    """
+    Return a dict of stats from trace optionally including processing.
+    """
+    from obspy.core.trace import Stats
+    if not default_stats:
+        return dict(tr.stats)
+    return {i: tr.stats[i] for i in Stats.defaults}
+
+
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)
