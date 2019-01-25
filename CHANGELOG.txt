@@ -343,6 +343,7 @@
    * Reinforce ASCII encoding in reading non-ASCII SAC files regardless of
       default encoding setting. (see #1768)
    * Implementing encoding flag for reading/writing SAC files.
+   * Fix passing through "byteorder" kwarg from obspy.read() (see #2292)
 - obspy.io.sh:
    * Fix writing of long headers for Python 3 (see #1526)
    * Whitespace in header fields is not ignored anymore (see #1552)
