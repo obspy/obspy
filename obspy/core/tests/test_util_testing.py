@@ -11,7 +11,10 @@ import unittest
 import numpy as np
 
 from obspy import read, Trace
-from obspy.core.util.testing import assert_streams_almost_equal, assert_traces_almost_equal
+from obspy.core.util.testing import (
+    assert_streams_almost_equal,
+    assert_traces_almost_equal
+)
 
 
 class AlmostEqualTestCase(unittest.TestCase):
