@@ -57,8 +57,10 @@ class AlmostEqualTestCase(unittest.TestCase):
         """
         tr1 = Trace(header=dict(network='UU', station='TMU', channel='HHZ'))
         tr2 = Trace(header=dict(network='UU', station='TMU', channel='HHN'))
-        assert_traces_almost_equal(tr1, tr2)
-        assert_traces_almost_equal(tr2, tr1)
+        with self.assertRaises(AssertionError):
+            assert_traces_almost_equal(tr1, tr2)
+        with self.assertRaises(AssertionError):
+            assert_traces_almost_equal(tr2, tr1)
 
     def test_processing(self):
         """
