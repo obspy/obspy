@@ -550,7 +550,7 @@ class Stream(object):
         This function strictly compares the data and stats objects of each
         trace contained by the streams. If less strict behavior is desired,
         which may be the case for testing, consider using the
-        :func:`~obspy.core.util.testing.streams_almost_equal` function.
+        :func:`~obspy.core.util.testing.assert_streams_almost_equal` function.
 
         :type other: :class:`~obspy.core.stream.Stream`
         :param other: Stream object for comparison.

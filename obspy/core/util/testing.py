@@ -28,6 +28,7 @@ from distutils.version import LooseVersion
 import numpy as np
 from lxml import etree
 
+from obspy.core.compatibility import allclose
 from obspy.core.util.base import NamedTemporaryFile, MATPLOTLIB_VERSION
 from obspy.core.util.misc import MatplotlibBackend
 
@@ -1050,10 +1051,10 @@ def setup_context_testcase(test_case, cm):
     return val
 
 
-def streams_almost_equal(st1, st2, default_stats=True, rtol=1e-05, atol=1e-08,
-                         equal_nan=True):
+def assert_streams_almost_equal(st1, st2, default_stats=True, rtol=1e-05,
+                                atol=1e-08, equal_nan=True):
     """
-    Return True if two streams are almost equal.
+    Raise an AssertionError if two streams are not almost equal.
 
     :param st1: The first :class:`~obspy.core.stream.Stream` object.
     :param st2: The second :class:`~obspy.core.stream.Stream` object.
@@ -1089,7 +1090,7 @@ def streams_almost_equal(st1, st2, default_stats=True, rtol=1e-05, atol=1e-08,
         >>> st2 = st2.detrend('linear')
         >>> # The traces are no longer equal, but are almost equal.
         >>> assert st1 != st2
-        >>> assert streams_almost_equal(st1, st2)
+        >>> assert_streams_almost_equal(st1, st2)
 
 
     2) Slight differences in each trace's data will cause the streams
@@ -1106,16 +1107,22 @@ def streams_almost_equal(st1, st2, default_stats=True, rtol=1e-05, atol=1e-08,
         >>> # The streams are no longer equal.
         >>> assert st1 != st2
         >>> # But they are almost equal.
-        >>> assert streams_almost_equal(st1, st2)
+        >>> assert_streams_almost_equal(st1, st2)
         >>> # Unless, of course, there is a large change.
         >>> st1[0].data *= 10
-        >>> assert not streams_almost_equal(st1, st2)
+        >>> try:
+        ...    assert_streams_almost_equal(st1, st2)
+        ... except AssertionError:
+        ...    pass
+        ... else:
+        ...    raise AssertionError('did not raise')
     """
     from obspy.core.stream import Stream
+    # TODO replace this with more descriptive messages (see #2286)
+    msg = 'streams %s and %s are not almost equal' % (st1, st2)
     # Return False if both objects are not streams or not the same length.
-    are_streams = isinstance(st1, Stream) and isinstance(st2, Stream)
-    if not are_streams or not len(st1) == len(st2):
-        return False
+    assert isinstance(st1, Stream) and isinstance(st2, Stream), msg
+    assert len(st1) == len(st2), msg
     # Kwargs to pass trace_almost_equal.
     tr_kwargs = dict(default_stats=default_stats, rtol=rtol, atol=atol,
                      equal_nan=equal_nan)
@@ -1126,15 +1133,16 @@ def streams_almost_equal(st1, st2, default_stats=True, rtol=1e-05, atol=1e-08,
     st2_sorted.sort()
     # Iterate over sorted trace pairs and determine if they are almost equal.
     for tr1, tr2 in zip(st1_sorted, st2_sorted):
-        if not traces_almost_equal(tr1, tr2, **tr_kwargs):
-            return False  # If any are not almost equal return None.
-    return True
+        try:
+            assert_traces_almost_equal(tr1, tr2, **tr_kwargs)
+        except AssertionError as e:
+            raise e
 
 
-def traces_almost_equal(tr1, tr2, default_stats=True, rtol=1e-05, atol=1e-08,
-                        equal_nan=True):
+def assert_traces_almost_equal(tr1, tr2, default_stats=True, rtol=1e-05,
+                               atol=1e-08, equal_nan=True):
     """
-    Return True if the two traces are almost equal.
+    Raises an AssertionError if the two traces are not almost equal.
 
     :param tr1: The first :class:`~obspy.core.trace.Trace` object.
     :param tr2: The second :class:`~obspy.core.trace.Trace` object.
@@ -1150,49 +1158,19 @@ def traces_almost_equal(tr1, tr2, default_stats=True, rtol=1e-05, atol=1e-08,
     :param equal_nan:
         If ``True`` NaNs are evaluated equal when comparing the time
         series.
-    :return: bool
     """
     from obspy.core.trace import Trace
+    # TODO replace with a more descriptive message (see #2286)
+    msg = 'traces %s and %s are not almost equal' % (tr1, tr2)
     # If other isnt  a trace, or data is not the same len return False.
-    if not isinstance(tr2, Trace) or len(tr1.data) != len(tr2.data):
-        return False
+    assert isinstance(tr1, Trace) and isinstance(tr2, Trace), msg
     # First compare trace stats objects.
     stats1 = _make_stats_dict(tr1, default_stats)
     stats2 = _make_stats_dict(tr2, default_stats)
-    if stats1 != stats2:
-        return False
+    assert stats1 == stats2, msg
     # Then  compare the array values
-    try:  # Use equal_nan if available
-        all_close = np.allclose(tr1.data, tr2.data, rtol=rtol,
-                                atol=atol, equal_nan=equal_nan)
-    except TypeError:
-        # This happens on very old versions of numpy (< 1.7) which do not
-        # have isclose.
-        all_close = _all_close(tr1.data, tr2.data, rtol=rtol,
-                               atol=atol, equal_nan=equal_nan)
-    return all_close
-
-
-def _all_close(ar1, ar2, rtol, atol, equal_nan):
-    """
-    A simple implementation of numpy.allclose.
-
-    Should be removed when obspy's minimum required numpy version >= 1.10.
-    """
-    def within_tol(x, y, atol, rtol):
-        with np.errstate(invalid='ignore'):
-            return np.less_equal(abs(x-y), atol + rtol * abs(y))
-    # If the arrays are not the same shape they cannot be close
-    if not ar1.shape == ar2.shape:
-        return False
-    # Determine if arrays are within tolerance.
-    are_close = within_tol(ar1, ar2, atol, rtol)
-    # Handle NaNs.
-    if equal_nan:
-        isnan = np.isnan(ar1) & np.isnan(ar2)
-    else:
-        isnan = np.zeros(ar2.shape).astype(bool)
-    return np.all(are_close | isnan)
+    assert allclose(tr1.data, tr2.data, rtol=rtol, atol=atol,
+                    equal_nan=equal_nan), msg
 
 
 def _make_stats_dict(tr, default_stats):

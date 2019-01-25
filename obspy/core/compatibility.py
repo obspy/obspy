@@ -249,3 +249,31 @@ def get_reason_from_response(r):
         c = c.encode()
 
     return c
+
+
+def allclose(ar1, ar2, rtol, atol, equal_nan):
+    """
+    Use numpy's allcose function, if it fails revert to custom implementation.
+
+    Should be removed when obspy's minimum required numpy version >= 1.10.
+    """
+    try:  # Use equal_nan if available
+        return np.allclose(ar1, ar2, rtol=rtol, atol=atol,
+                           equal_nan=equal_nan)
+    except TypeError:
+        # This happens on very old versions of numpy (< 1.7) which do not
+        # have isclose.
+        def within_tol(x, y, atol, rtol):
+            with np.errstate(invalid='ignore'):
+                return np.less_equal(abs(x-y), atol + rtol * abs(y))
+        # If the arrays are not the same shape they cannot be close
+        if not ar1.shape == ar2.shape:
+            return False
+        # Determine if arrays are within tolerance.
+        are_close = within_tol(ar1, ar2, atol, rtol)
+        # Handle NaNs.
+        if equal_nan:
+            isnan = np.isnan(ar1) & np.isnan(ar2)
+        else:
+            isnan = np.zeros(ar2.shape).astype(bool)
+        return np.all(are_close | isnan)
