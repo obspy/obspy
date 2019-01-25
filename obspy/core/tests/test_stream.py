@@ -2291,7 +2291,7 @@ class StreamTestCase(unittest.TestCase):
         for tr in st1:
             tr.remove_response(pre_filt=(0.1, 0.5, 30, 50))
         st2.remove_response(pre_filt=(0.1, 0.5, 30, 50))
-        
+
         assert_streams_almost_equal(st1, st2)
 
     def test_remove_sensitivity(self):
