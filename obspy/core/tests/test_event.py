@@ -32,6 +32,12 @@ if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
 else:
     HAS_CARTOPY = False
 
+# If BASEMAP_VERSION is None it will raise a TypeError when compared with
+# specific versions. Just use an empty list that will always be less than
+# a non-empty list.
+if not BASEMAP_VERSION:
+    BASEMAP_VERSION = []
+
 
 class EventTestCase(unittest.TestCase):
     """
