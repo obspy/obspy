@@ -22,6 +22,7 @@ import re
 import warnings
 
 from lxml import etree
+from collections import defaultdict
 
 import obspy
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
@@ -111,11 +112,58 @@ def _read_sc3ml(path_or_file_object):
     module = None
     module_uri = None
 
+    # Find the inventory root element. (Only finds the first. We expect only one, so any more than
+    # that will be ignored.)
+    inv_element = root.find(_ns("Inventory"))
+
+    # Pre-generate a dictionary of the sensors, dataloggers and responses to avoid costly linear
+    # search when parsing network nodes later.
+    # Register sensors
+    sensors = {}
+    for sensor_element in inv_element.findall(_ns("sensor")):
+        public_id = sensor_element.get("publicID")
+        if public_id:
+            if public_id in sensors:
+                msg = ("Found multiple matching sensor tags with the same publicID '{}'.".format(public_id))
+                raise obspy.ObsPyException(msg)
+            else:
+                sensors[public_id] = sensor_element
+    # Register dataloggers
+    dataloggers = {}
+    for datalogger_element in inv_element.findall(_ns("datalogger")):
+        public_id = datalogger_element.get("publicID")
+        if public_id:
+            if public_id in dataloggers:
+                msg = ("Found multiple matching datalogger tags with the same publicID '{}'.".format(public_id))
+                raise obspy.ObsPyException(msg)
+            else:
+                dataloggers[public_id] = datalogger_element
+    # Register reponses
+    responses = {
+        "responsePAZ": {},
+        "responsePolynomial": {},
+        "responseFIR": {}
+    }
+    for response_type in responses.keys():
+        for response_element in inv_element.findall(_ns(response_type)):
+            public_id = response_element.get("publicID")
+            if public_id:
+                if public_id in responses[response_type]:
+                    msg = ("Found multiple matching {} tags with the same publicID '{}'.".format(response_type, public_id))
+                    raise obspy.ObsPyException(msg)
+                else:
+                    responses[response_type][public_id] = response_element
+    # Organize all the collection instrument information into a unified intrumentation register.
+    instrumentation_register = {
+        "sensors": sensors,
+        "dataloggers": dataloggers,
+        "responses": responses
+    }
+
     # Collect all networks from the sc3ml inventory
     networks = []
-    inv_element = root.find(_ns("Inventory"))
     for net_element in inv_element.findall(_ns("network")):
-        networks.append(_read_network(inv_element, net_element, _ns))
+        networks.append(_read_network(instrumentation_register, net_element, _ns))
 
     return obspy.core.inventory.Inventory(networks=networks, source=source,
                                           sender=sender, created=created,
@@ -141,12 +189,12 @@ def _tag2obj(element, tag, convert):
         None
 
 
-def _read_network(inventory_root, net_element, _ns):
+def _read_network(instrumentation_register, net_element, _ns):
 
     """
     Reads the network structure
 
-    :param inventory_root: base inventory element of sc3ml
+    :param instrumentation_register: register of instrumentation metadata
     :param net_element: network element to be read
     :param _ns: namespace
     """
@@ -168,7 +216,7 @@ def _read_network(inventory_root, net_element, _ns):
     # Collect the stations
     stations = []
     for sta_element in net_element.findall(_ns("station")):
-        stations.append(_read_station(inventory_root, sta_element, _ns))
+        stations.append(_read_station(instrumentation_register, sta_element, _ns))
     network.stations = stations
 
     return network
@@ -189,12 +237,12 @@ def _get_restricted_status(element, _ns):
         return 'closed'
 
 
-def _read_station(inventory_root, sta_element, _ns):
+def _read_station(instrumentation_register, sta_element, _ns):
 
     """
     Reads the station structure
 
-    :param inventory_root: base inventory element of sc3ml
+    :param instrumentation_register: register of instrumentation metadata
     :param sta_element: station element to be read
     :param _ns: name space
     """
@@ -231,7 +279,7 @@ def _read_station(inventory_root, sta_element, _ns):
     channels = []
     for sen_loc_element in sta_element.findall(_ns("sensorLocation")):
         for channel in sen_loc_element.findall(_ns("stream")):
-            channels.append(_read_channel(inventory_root, channel, _ns))
+            channels.append(_read_channel(instrumentation_register, channel, _ns))
 
     station.channels = channels
 
@@ -314,12 +362,13 @@ def _read_sensor(equip_element, _ns):
         removal_date=None, calibration_dates=None)
 
 
-def _read_channel(inventory_root, cha_element, _ns):
+def _read_channel(instrumentation_register, cha_element, _ns):
 
     """
     reads channel element from sc3ml format
 
-    :param sta_element: channel element
+    :param instrumentation_register: register of instrumentation metadata
+    :param cha_element: channel element
     :param _ns: namespace
     """
 
@@ -364,19 +413,21 @@ def _read_channel(inventory_root, cha_element, _ns):
     # obtain the sensorID and link to particular publicID <sensor> element
     # in the inventory base node
     sensor_id = cha_element.get("sensor")
-    sensor_element = inventory_root.find(_ns("sensor[@publicID='" + sensor_id +
-                                             "']"))
+    sensor_element = instrumentation_register["sensors"].get(sensor_id)
+
     # obtain the poles and zeros responseID and link to particular
     # <responsePAZ> publicID element in the inventory base node
     if (sensor_element is not None and
-       sensor_element.get("response") is not None):
+        sensor_element.get("response") is not None):
 
         response_id = sensor_element.get("response")
         response_elements = []
 
-        for resp_type in ['responsePAZ', 'responsePolynomial']:
-            search = "{}[@publicID='{}']".format(resp_type, response_id)
-            response_elements += inventory_root.findall(_ns(search))
+        for resp_type in instrumentation_register["responses"].keys():
+            found_response = instrumentation_register["responses"][resp_type].get(response_id)
+            if found_response:
+                response_elements += found_response
+
         if len(response_elements) == 0:
             msg = ("Could not find response tag with public ID "
                    "'{}'.".format(response_id))
@@ -392,8 +443,7 @@ def _read_channel(inventory_root, cha_element, _ns):
     # obtain the dataloggerID and link to particular <responsePAZ> publicID
     # element in the inventory base node
     datalogger_id = cha_element.get("datalogger")
-    search = "datalogger[@publicID='" + datalogger_id + "']"
-    data_log_element = inventory_root.find(_ns(search))
+    data_log_element = instrumentation_register["dataloggers"].get(datalogger_id)
 
     channel.restricted_status = _get_restricted_status(cha_element, _ns)
 
@@ -459,7 +509,7 @@ def _read_channel(inventory_root, cha_element, _ns):
         if digital_filter_chain is not None:
             response_fir_id = digital_filter_chain.split(" ")
 
-    channel.response = _read_response(inventory_root, sensor_element,
+    channel.response = _read_response(instrumentation_register, sensor_element,
                                       response_element, cha_element,
                                       data_log_element, _ns,
                                       channel.sample_rate,
@@ -494,12 +544,12 @@ def _read_instrument_sensitivity(sen_element, cha_element, _ns):
     return sensitivity
 
 
-def _read_response(root, sen_element, resp_element, cha_element,
+def _read_response(instrumentation_register, sen_element, resp_element, cha_element,
                    data_log_element, _ns, samp_rate, fir, analogue):
     """
     reads response from sc3ml format
 
-    :param
+    :param instrumentation_register: register of instrumentation metadata
     :param _ns: namespace
     """
     response = obspy.core.inventory.response.Response()
@@ -533,8 +583,7 @@ def _read_response(root, sen_element, resp_element, cha_element,
         for fir_id in fir:
             # get the particular fir stage decimation factor
             # multiply the decimated sample rate by this factor
-            search = "responseFIR[@publicID='" + fir_id + "']"
-            fir_element = root.find(_ns(search))
+            fir_element = instrumentation_register["responses"]["responseFIR"].get(fir_id)
             if fir_element is None:
                 continue
             dec_fac = _tag2obj(fir_element, _ns("decimationFactor"), int)
@@ -573,8 +622,7 @@ def _read_response(root, sen_element, resp_element, cha_element,
     # Output unit: V
     if len(analogue):
         for analogue_id in analogue:
-            search = "responsePAZ[@publicID='" + analogue_id + "']"
-            analogue_element = root.find(_ns(search))
+            analogue_element = instrumentation_register["responses"]["responsePAZ"].get(analogue_id)
             if analogue_element is None:
                 msg = ('Analogue responsePAZ not in inventory:'
                        '%s, stopping before stage %i') % (analogue_id, stage)
@@ -602,8 +650,7 @@ def _read_response(root, sen_element, resp_element, cha_element,
     # Input unit: COUNTS
     # Output unit: COUNTS
     for fir_id, rate in zip(fir, fir_stage_rates):
-        search = "responseFIR[@publicID='" + fir_id + "']"
-        stage_element = root.find(_ns(search))
+        stage_element = instrumentation_register["responses"]["responseFIR"].get(fir_id)
         if stage_element is None:
             msg = ("fir response not in inventory: %s, stopping correction"
                    "before stage %i") % (fir_id, stage)
