@@ -425,8 +425,8 @@ def _read_channel(instrumentation_register, cha_element, _ns):
 
         for resp_type in instrumentation_register["responses"].keys():
             found_response = instrumentation_register["responses"][resp_type].get(response_id)
-            if found_response:
-                response_elements += found_response
+            if found_response is not None:
+                response_elements.append(found_response)
 
         if len(response_elements) == 0:
             msg = ("Could not find response tag with public ID "
