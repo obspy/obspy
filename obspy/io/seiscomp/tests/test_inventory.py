@@ -117,8 +117,10 @@ class SC3MLTestCase(unittest.TestCase):
         Assert depth, latitude, longitude, elevation set to 0.0 if left empty
         """
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("default")
             read_inventory(os.path.join(self.data_dir,
                                         "sc3ml_empty_depth_and_id.sc3ml"))
+            self.assertEqual(len(w), 4)
             self.assertEqual(str(w[0].message), "Sensor is missing "
                                                 "longitude information, "
                                                 "using 0.0")
