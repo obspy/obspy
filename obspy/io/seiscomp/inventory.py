@@ -465,7 +465,6 @@ def _read_channel(instrumentation_register, cha_element, _ns):
     numerator = _tag2obj(cha_element, _ns("sampleRateNumerator"), int)
     denominator = _tag2obj(cha_element, _ns("sampleRateDenominator"), int)
 
-    # If numerator is zero, set rate to zero irrespective of the denominator.
     # If numerator is non-zero and denominator zero, will raise
     # ZeroDivisionError.
     rate = numerator / denominator if numerator != 0 else 0
