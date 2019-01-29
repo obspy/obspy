@@ -303,6 +303,12 @@ class ClientTestCase(unittest.TestCase):
         # queryauth)
         self.assertEqual(client.user, user)
 
+    def test_trim_stream_after_get_waveform(self):
+        """
+        Fixes #1887
+        """
+        self.assertEqual(1, 0)
+
     def test_service_discovery_iris(self):
         """
         Tests the automatic discovery of services with the IRIS endpoint. The
