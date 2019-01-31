@@ -758,7 +758,7 @@ class Stream(object):
 
         Please be aware that no sorting and checking of stations, channels, ...
         is done. This method only compares the start and end times of the
-        Traces.
+        Traces and gaps within Traces.
 
         .. rubric:: Example
 
