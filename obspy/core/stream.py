@@ -796,7 +796,8 @@ class Stream(object):
         self.sort()
         gap_list = []
         for _i in range(len(self.traces)):
-            # if the trace is masked, break it up and run get_gaps on the stream
+            # if the trace is masked, break it up and run get_gaps on the 
+            # stream
             if isinstance(self.traces[_i].data, np.ma.masked_array):
                 gap_list.extend(self.traces[_i].split().get_gaps())
             if _i + 1 == len(self.traces):
