@@ -795,7 +795,13 @@ class Stream(object):
         copied_traces = copy.copy(self.traces)
         self.sort()
         gap_list = []
-        for _i in range(len(self.traces) - 1):
+        for _i in range(len(self.traces)):
+            # if the trace is masked, break it up and run get_gaps on the stream
+            if isinstance(self.traces[_i].data, np.ma.masked_array):
+                gap_list.extend(self.traces[_i].split().get_gaps())
+            if _i + 1 == len(self.traces):
+                # reached the last trace
+                break
             # skip traces with different network, station, location or channel
             if self.traces[_i].id != self.traces[_i + 1].id:
                 continue
