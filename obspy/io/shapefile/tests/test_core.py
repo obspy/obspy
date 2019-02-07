@@ -99,8 +99,8 @@ expected_inventory_fields_with_comment.append(['Comment', 'C', 50, 0])
 expected_inventory_records_with_comment = copy.deepcopy(
     expected_inventory_records)
 expected_inventory_records_with_comment[0].append('Abc')
-expected_inventory_records_with_comment[1].append('123')
-expected_inventory_records_with_comment[2].append(None)
+expected_inventory_records_with_comment[1].append(None)
+expected_inventory_records_with_comment[2].append('123')
 expected_inventory_records_with_comment[3].append('Some comment')
 expected_inventory_records_with_comment[4].append('')
 
@@ -291,7 +291,7 @@ class ShapefileTestCase(unittest.TestCase):
         """
         inv = read_inventory()
         extra_fields = [('Comment', 'C', 50, None,
-                        ['Abc', '123', None, 'Some comment', ''])]
+                        ['Abc', None, '123', 'Some comment', ''])]
         bad_extra_fields_wrong_length = [('Comment', 'C', 50, None, ['ABC'])]
         bad_extra_fields_name_clash = [('Station', 'C', 50, None, ['ABC'])]
 
@@ -303,8 +303,8 @@ class ShapefileTestCase(unittest.TestCase):
                     extra_fields=bad_extra_fields_wrong_length)
             self.assertEqual(
                 str(cm.exception), "list of values for each item in "
-                "'extra_fields' must have same length as all Stations "
-                "combined across all Networks.")
+                "'extra_fields' must have same length as the count of all "
+                "Stations combined across all Networks.")
             with self.assertRaises(ValueError) as cm:
                 _write_shapefile(
                     inv, "inventory.shp",
