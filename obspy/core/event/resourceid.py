@@ -517,7 +517,9 @@ class ResourceIdentifier(object):
 
     def get_quakeml_uri_str(self, authority_id="local"):
         """
-        Returns the ID as a valid QuakeML URI if possible else raise ValueError.
+        Returns an id with a valid QuakeML URI.
+
+        If no valid QuakeML is possible a ValueError is raised.
 
         :type authority_id: str, optional
         :param authority_id: The base url of the resulting string. Defaults to
