@@ -20,6 +20,7 @@ import os
 import textwrap
 import warnings
 
+from glob import glob
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
                                   _read_from_plugin, NamedTemporaryFile,
@@ -46,6 +47,15 @@ def _create_example_inventory():
     return read_inventory(path, format="STATIONXML")
 
 
+def _read_inventory(filename, format=None, *args, **kwargs):
+    """
+    read a single file into inventory.
+    """
+    inv, format = _read_from_plugin("inventory", filename,
+                             format=format, *args, **kwargs)
+    return inv
+
+
 @map_example_filename("path_or_file_object")
 def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     """
@@ -53,7 +63,7 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
 
     :param path_or_file_object: File name or file like object. If this
         attribute is omitted, an example :class:`Inventory`
-        object will be returned.
+        object will be returned. Wildcards are allowed for a file name.
     :type format: str
     :param format: Format of the file to read (e.g. ``"STATIONXML"``). See the
         `Supported Formats`_ section below for a list of supported formats.
@@ -85,8 +95,9 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
         return _create_example_inventory()
-    elif isinstance(path_or_file_object, (str, native_str)) and \
-            "://" in path_or_file_object:
+
+# added the not as a test to make two options
+    elif isinstance(path_or_file_object, (str, native_str)) and "://" in path_or_file_object:
         # some URL
         # extract extension if any
         suffix = \
@@ -94,6 +105,15 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
         with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
             download_to_file(url=path_or_file_object, filename_or_buffer=fh)
             return read_inventory(fh.name, format=format)
+
+    else:
+        #some file name, possibly wildcards
+        paths = sorted(glob(path_or_file_object))
+        inv = _read_inventory(paths[0])
+        for file in paths[1:]:
+            inv += _read_inventory(file)
+        return inv
+
     return _read_from_plugin("inventory", path_or_file_object,
                              format=format, *args, **kwargs)[0]
 
