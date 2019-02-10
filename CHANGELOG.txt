@@ -21,7 +21,8 @@ master:
      resource_ids which are not found via the normal means (see #2279).
    * Calling Stream.write(...) on an empty stream will now raise an
      ObsPyException consistently across all I/O plugins (see #2201)
-   * Stream.get_gaps() will now check for gaps within previously merged Traces.
+   * Stream.get_gaps() will now check for gaps within Traces that have masked
+     arrays (i.e., Traces that have been merged without a fill value).
  - obspy.clients.fdsn:
    * Adding more location codes to the default priority list in the mass
      downloader (see #2155, #2159).
