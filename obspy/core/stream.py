@@ -758,7 +758,8 @@ class Stream(object):
 
         Please be aware that no sorting and checking of stations, channels, ...
         is done. This method only compares the start and end times of the
-        Traces.
+        Traces and the start and end times of segments within Traces that contain
+        masked arrays (i.e., Traces that were merged without a fill value).
 
         .. rubric:: Example
 
@@ -795,7 +796,14 @@ class Stream(object):
         copied_traces = copy.copy(self.traces)
         self.sort()
         gap_list = []
-        for _i in range(len(self.traces) - 1):
+        for _i in range(len(self.traces)):
+            # if the trace is masked, break it up and run get_gaps on the
+            # resulting stream
+            if isinstance(self.traces[_i].data, np.ma.masked_array):
+                gap_list.extend(self.traces[_i].split().get_gaps())
+            if _i + 1 == len(self.traces):
+                # reached the last trace
+                break
             # skip traces with different network, station, location or channel
             if self.traces[_i].id != self.traces[_i + 1].id:
                 continue

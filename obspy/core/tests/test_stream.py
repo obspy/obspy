@@ -363,6 +363,33 @@ class StreamTestCase(unittest.TestCase):
             st.append(Trace(data=data, header={'network': network}))
         self.assertEqual(len(st.get_gaps()), 0)
 
+    def test_get_gaps_masked(self):
+        """
+        Test get_gaps method of the Stream objects (Issue #2299)
+        """
+        # Create a Stream with a masked array (analogous to a merged Stream)
+        st = Stream()
+        data = np.ma.array(np.arange(0, 100, step=1))
+        data.mask = np.zeros(data.shape)
+        data.mask[50:60] = 1
+        st.append(Trace(data=data))
+        # Expected gap
+        gap = ["", "", "", "",
+               UTCDateTime(1970, 1, 1, 0, 0, 49),
+               UTCDateTime(1970, 1, 1, 0, 1, 0),
+               10., 10]
+        # Get the gaps
+        gaps = st.get_gaps()
+        # Assert the number of gaps
+        self.assertEqual(len(gaps), 1)
+        # Verify the resulting gap list matches what is expected
+        for _i in range(6):
+            self.assertEqual(gaps[0][_i], gap[_i])
+        self.assertAlmostEqual(float(gaps[0][6]), float(gap[6]), places=3)
+        self.assertAlmostEqual(float(gaps[0][7]), float(gap[7]))
+        # Double-check that the initial Stream is unmodified
+        self.assertEqual(len(st), 1)
+
     def test_pop(self):
         """
         Test the pop method of the Stream object.
