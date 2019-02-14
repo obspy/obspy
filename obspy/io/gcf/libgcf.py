@@ -104,7 +104,7 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
     # number of 32bit records (num_records)
     reserved, sps, compress, num_records = np.frombuffer(f.read(4), count=4,
                                                          dtype='>u1')
-    compression = compress & 0b00001111  # get compression code
+    compression = compress & 0b00000111  # get compression code
     t_offset = compress >> 4  # get time offset
     if t_offset > 0:
         starttime = starttime + t_offset / TIME_OFFSETS_D[sps]
