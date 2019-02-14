@@ -768,6 +768,78 @@ class Response(ComparingObject):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
+    def _attempt_to_fix_units(self):
+        """
+        Internal helper function that will add units to gain only stages based
+        on the units of surrounding stages.
+
+        Should be called when parsing from file formats that don't have units
+        for identity stages.
+        """
+        previous_output_units = None
+        previous_output_units_description = None
+
+        # Potentially set the input units of the first stage to the units of
+        # the overall sensitivity and the output units of the second stage.
+        if self.response_stages and self.response_stages[0] and \
+                hasattr(self, "instrument_sensitivity"):
+            s = self.instrument_sensitivity
+
+            if s:
+                if self.response_stages[0].input_units is None:
+                    self.response_stages[0].input_units = s.input_units
+                if self.response_stages[0].input_units_description is None:
+                    self.response_stages[0].input_units_description = \
+                        s.input_units_description
+
+            if len(self.response_stages) >= 2 and self.response_stages[1]:
+                if self.response_stages[0].output_units is None:
+                    self.response_stages[0].output_units = \
+                        self.response_stages[1].input_units
+                if self.response_stages[0].output_units_description is None:
+                    self.response_stages[0].output_units_description = \
+                        self.response_stages[1].input_units_description
+
+        # Front to back.
+        for r in self.response_stages:
+            # Only for identity/stage only.
+            if type(r) is ResponseStage:
+                if not r.input_units and not r.output_units and \
+                        previous_output_units:
+                    r.input_units = previous_output_units
+                    r.output_units = previous_output_units
+                if not r.input_units_description and \
+                        not r.output_units_description \
+                        and previous_output_units_description:
+                    r.input_units_description = \
+                        previous_output_units_description
+                    r.output_units_description = \
+                        previous_output_units_description
+
+            previous_output_units = r.output_units
+            previous_output_units_description = r.output_units_description
+
+        # Back to front.
+        previous_input_units = None
+        previous_input_units_description = None
+        for r in reversed(self.response_stages):
+            # Only for identity/stage only.
+            if type(r) is ResponseStage:
+                if not r.input_units and not r.output_units and \
+                        previous_input_units:
+                    r.input_units = previous_input_units
+                    r.output_units = previous_input_units
+                if not r.input_units_description and \
+                        not r.output_units_description \
+                        and previous_input_units_description:
+                    r.input_units_description = \
+                        previous_input_units_description
+                    r.output_units_description = \
+                        previous_input_units_description
+
+            previous_input_units = r.input_units
+            previous_input_units_description = r.input_units_description
+
     def get_sampling_rates(self):
         """
         Computes the input and output sampling rates of each stage.
