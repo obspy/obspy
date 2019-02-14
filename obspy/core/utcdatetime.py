@@ -21,12 +21,10 @@ import time
 
 import numpy as np
 
+
+# Regular expression used in the init function of the UTCDateTime objects which
+# is called a lot. Thus pre-compile it.
 _YEAR0REGEX = re.compile(r"^(\d{1,3}[-/,])(.*)$")
-
-
-def _year0repl(m):
-    return ("%5s%s" % m.groups()).replace(" ", "0")
-
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 # XXX the strftime problem seems to be specific to Python < 3.2
@@ -303,8 +301,8 @@ class UTCDateTime(object):
                 # Raising in the case where the leading string is less than 4
                 # chars; linked to #2167
                 if re.match(_YEAR0REGEX, value):
-                    raise ValueError("'%s' does not start with a 4 digit year" %
-                                     value)
+                    raise ValueError(
+                        "'%s' does not start with a 4 digit year" % value)
 
                 # check for ISO8601 date string
                 if value.count("T") == 1 or iso8601:
