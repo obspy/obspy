@@ -19,6 +19,7 @@ from obspy.core.util.testing import ImageComparison
 from obspy.signal.cross_correlation import (correlate, correlate_template,
                                             xcorr_pick_correction,
                                             xcorr_3c, xcorr_max, xcorr,
+                                            xcorr_detector,
                                             _xcorr_padzeros, _xcorr_slice)
 
 
@@ -498,6 +499,45 @@ class CrossCorrelationTestCase(unittest.TestCase):
                 cc4 = correlate_template(c, d, demean=demean,
                                          normalize=normalize)
                 np.testing.assert_allclose(cc3, cc4)
+
+    def test_xcorr_detector(self):
+        template = read().filter('highpass', freq=5).normalize()
+        template[1].stats.starttime += 20
+        stream = template.copy()
+        N1 = len(template[0])
+        N2 = 100 * 3600  # 1 hour
+        np.random.seed(42)
+        for tr, trt in zip(stream, template):
+            tr.stats.starttime += 24 * 3600
+            tr.data = np.random.random(N2) - 0.5  # noise
+            if tr.stats.channel[-1] == 'Z':
+                tr.data[N1:2*N1] += 10 * trt.data
+            tr.data[5*N1:6*N1] += 5 * trt.data
+            tr.data[20*N1:21*N1] += 2 * trt.data
+        d, ccs = xcorr_detector(stream, template, 0.2)
+        self.assertEqual(len(d), 3)
+        self.assertEqual(len(ccs), len(stream))
+
+        def dummy(ccs):
+            N = len(list(ccs.values())[0])
+            cond = np.zeros(N, dtype=bool)
+            cond[0] = True
+            return cond
+
+        def component_thres(ccs):
+            ccmatrix = np.array(list(ccs.values()))
+            return np.count_nonzero(ccmatrix > 0.2, axis=0) / len(ccs) > 0.6
+
+        d, ccs = xcorr_detector(stream, template, condition=dummy)
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d[0], stream[0].stats.starttime)
+        d, ccs = xcorr_detector(stream, template, 0.2,
+                                condition=component_thres)
+        self.assertEqual(len(d), 2)
+        d, ccs = xcorr_detector(stream, template, 0.2, holdon=150, holdoff=500)
+        self.assertEqual(len(d), 1)
+        d, ccs = xcorr_detector(stream[:1], template[:1], 0.2)
+        self.assertEqual(len(d), 2)
 
 
 def suite():
