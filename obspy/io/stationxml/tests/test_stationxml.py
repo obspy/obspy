@@ -23,8 +23,7 @@ import warnings
 
 import obspy
 from obspy.core.util import AttribDict
-from obspy.core.inventory import (Inventory, Network, Station, Channel,
-                                  Response, ResponseStage)
+from obspy.core.inventory import (Inventory, Network, ResponseStage)
 from obspy.core.util.base import NamedTemporaryFile
 from lxml import etree
 import obspy.io.stationxml.core
@@ -1097,27 +1096,43 @@ class StationXMLTestCase(unittest.TestCase):
     def test_units_during_identity_stage(self):
         """
         """
-        t = obspy.UTCDateTime('2017-01-01')
-
-        response = Response(response_stages=[
-            ResponseStage(1, 1, 1, 'V', 'V'),
-            ResponseStage(1, 1, 1, 'V', 'V')
-        ])
+        t = obspy.UTCDateTime(2017, 1, 1)
+        inv = obspy.read_inventory().select(station="RJOB", channel="EHZ",
+                                            time=t)
+        response = inv.get_response("BW.RJOB..EHZ", t)
+        response.response_stages[0].input_units_description = "M/S"
+        response.response_stages[0].output_units_description = "Volts"
+        rstage_2 = ResponseStage(2, 1, 1, "V", "V",
+                                 input_units_description="Volts",
+                                 output_units_description="Volts")
+        rstage_3 = ResponseStage(3, 1, 1, "V", "V",
+                                 input_units_description="Volts",
+                                 output_units_description="Volts")
+        response.response_stages.insert(1, rstage_2)
+        response.response_stages.insert(2, rstage_3)
+        for i, rstage in enumerate(response.response_stages[3:]):
+            rstage.stage_sequence_number = i + 4
 
         with io.BytesIO() as buf:
-            Inventory(
-                networks=[Network(code="XX", stations=[Station(
-                    code="AA", latitude=0.0, longitude=0.0, elevation=0.0,
-                    channels=[
-                        Channel(code="XX", location_code="",
-                                latitude=0.0, longitude=0.0, elevation=0.0,
-                                depth=0.0, response=response)])])],
-                source="").write(buf, format="stationxml")
+            inv.write(buf, format="stationxml", validate=True)
             buf.seek(0, 0)
-            inv2 = obspy.read_inventory(buf)
+            inv_2 = obspy.read_inventory(buf)
 
-        response_2 = inv2.get_response('XX.AA..XX', t)
+        response_2 = inv_2.get_response("BW.RJOB..EHZ", t)
+
         self.assertEqual(response, response_2)
+        self.assertEqual(response_2.response_stages[1].input_units, "V")
+        self.assertEqual(response_2.response_stages[1].output_units, "V")
+        self.assertEqual(
+            response_2.response_stages[1].input_units_description, "Volts")
+        self.assertEqual(
+            response_2.response_stages[1].output_units_description, "Volts")
+        self.assertEqual(response_2.response_stages[2].input_units, "V")
+        self.assertEqual(response_2.response_stages[2].output_units, "V")
+        self.assertEqual(
+            response_2.response_stages[2].input_units_description, "Volts")
+        self.assertEqual(
+            response_2.response_stages[2].output_units_description, "Volts")
 
 
 def suite():
