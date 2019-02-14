@@ -563,7 +563,7 @@ class Site(ComparingObject):
         Description of a site location using name and optional geopolitical
         boundaries (country, city, etc.).
     """
-    def __init__(self, name, description=None, town=None, county=None,
+    def __init__(self, name="", description=None, town=None, county=None,
                  region=None, country=None):
         """
         :type name: str
