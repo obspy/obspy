@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
 import builtins
+import copy
 import io
 import os
 import unittest
@@ -344,6 +345,27 @@ class InventoryTestCase(unittest.TestCase):
             inv_ = inv.remove(**kwargs)
             self.assertEqual(inv_, inv)
 
+    def test_issue_2266(self):
+        """
+        Ensure the remove method works for more than just channel level
+        inventories. See #2266.
+        """
+        # get inventory and remove all channel level info
+        inv = obspy.read_inventory()
+        for net in inv:
+            for sta in net:
+                sta.channels = []
+        # filter by one of the networks
+        inv_net = copy.deepcopy(inv).remove(network='BW')
+        self.assertEqual(len(inv_net.networks), 1)
+        # filter by the stations, this should also remove network BW
+        inv_sta = copy.deepcopy(inv).remove(station='RJOB')
+        self.assertEqual(len(inv_sta.networks), 1)
+        self.assertEqual(len(inv_sta.networks[0].stations), 2)
+        # but is keep empty is selected network BW should remain
+        inv_sta = copy.deepcopy(inv).remove(station='RJOB', keep_empty=True)
+        self.assertEqual(len(inv_sta.networks), 2)
+
     def test_inventory_select(self):
         """
         Test for the Inventory.select() method.
@@ -577,7 +599,7 @@ class InventoryTestCase(unittest.TestCase):
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 @unittest.skipIf(
-    BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+    BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
     'matplotlib 3.0.1 is not campatible with basemap')
 class InventoryBasemapTestCase(unittest.TestCase):
     """
