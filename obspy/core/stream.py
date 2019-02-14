@@ -758,8 +758,9 @@ class Stream(object):
 
         Please be aware that no sorting and checking of stations, channels, ...
         is done. This method only compares the start and end times of the
-        Traces and the start and end times of segments within Traces that contain
-        masked arrays (i.e., Traces that were merged without a fill value).
+        Traces and the start and end times of segments within Traces that
+        contain masked arrays (i.e., Traces that were merged without a fill
+        value).
 
         .. rubric:: Example
 
