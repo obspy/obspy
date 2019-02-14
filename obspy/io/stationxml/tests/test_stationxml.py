@@ -23,7 +23,8 @@ import warnings
 
 import obspy
 from obspy.core.util import AttribDict
-from obspy.core.inventory import Inventory, Network
+from obspy.core.inventory import (Inventory, Network, Station, Channel,
+                                  Response, ResponseStage)
 from obspy.core.util.base import NamedTemporaryFile
 from lxml import etree
 import obspy.io.stationxml.core
@@ -1092,6 +1093,31 @@ class StationXMLTestCase(unittest.TestCase):
             inv.get_contents(),
             {'networks': ['IV'], 'stations': ['IV.LATE (Latera)'],
              'channels': []})
+
+    def test_units_during_identity_stage(self):
+        """
+        """
+        t = obspy.UTCDateTime('2017-01-01')
+
+        response = Response(response_stages=[
+            ResponseStage(1, 1, 1, 'V', 'V'),
+            ResponseStage(1, 1, 1, 'V', 'V')
+        ])
+
+        with io.BytesIO() as buf:
+            Inventory(
+                networks=[Network(code="XX", stations=[Station(
+                    code="AA", latitude=0.0, longitude=0.0, elevation=0.0,
+                    channels=[
+                        Channel(code="XX", location_code="",
+                                latitude=0.0, longitude=0.0, elevation=0.0,
+                                depth=0.0, response=response)])])],
+                source="").write(buf, format="stationxml")
+            buf.seek(0, 0)
+            inv2 = obspy.read_inventory(buf)
+
+        response_2 = inv2.get_response('XX.AA..XX', t)
+        self.assertEqual(response, response_2)
 
 
 def suite():
