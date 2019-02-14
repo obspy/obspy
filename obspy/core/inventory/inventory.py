@@ -106,7 +106,8 @@ class Inventory(ComparingObject):
     In essence just a container for one or more networks.
     """
     def __init__(self, networks=None, source=SOFTWARE_MODULE, sender=None,
-                created=None, module=SOFTWARE_MODULE, module_uri=SOFTWARE_URI):
+                 created=None, module=SOFTWARE_MODULE,
+                 module_uri=SOFTWARE_URI):
         """
         :type networks: list of
             :class:`~obspy.core.inventory.network.Network`
