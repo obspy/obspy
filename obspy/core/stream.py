@@ -1504,15 +1504,20 @@ class Stream(object):
         # select start/end time fitting to a sample point of the first trace
         if nearest_sample:
             tr = self.traces[0]
-            if starttime:
-                delta = compatibility.round_away(
-                    (starttime - tr.stats.starttime) * tr.stats.sampling_rate)
-                starttime = tr.stats.starttime + delta * tr.stats.delta
-            if endtime:
-                delta = compatibility.round_away(
-                    (endtime - tr.stats.endtime) * tr.stats.sampling_rate)
-                # delta is negative!
-                endtime = tr.stats.endtime + delta * tr.stats.delta
+            try:
+                if starttime is not None:
+                    delta = compatibility.round_away(
+                        (starttime - tr.stats.starttime) * tr.stats.sampling_rate)
+                    starttime = tr.stats.starttime + delta * tr.stats.delta
+                if endtime is not None:
+                    delta = compatibility.round_away(
+                        (endtime - tr.stats.endtime) * tr.stats.sampling_rate)
+                    # delta is negative!
+                    endtime = tr.stats.endtime + delta * tr.stats.delta
+            except TypeError:
+                msg = ('starttime and endtime have to be UTCDateTime objects '
+                       'or None for this call to Stream.trim()')
+                raise TypeError(msg)
         for trace in self.traces:
             trace.trim(starttime, endtime, pad=pad,
                        nearest_sample=nearest_sample, fill_value=fill_value)
