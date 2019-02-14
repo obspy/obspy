@@ -1143,6 +1143,17 @@ class UTCDateTimeTestCase(unittest.TestCase):
                     "the datetime strftime() methods require year >= 1900" in
                     str(context.exception))
 
+    def test_strftime_replacement(self):
+        """
+        Explicitly test this function.
+
+        Can be removed once we drop support for Python 2.
+        """
+        t = UTCDateTime(1888, 1, 2, 1, 39, 37)
+        self.assertEqual(t._strftime_replacement('%Y-%m-%d'), '1888-01-02')
+        t = UTCDateTime(998, 11, 9, 1, 39, 37)
+        self.assertEqual(t._strftime_replacement('%Y-%m-%d'), '0998-11-09')
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
