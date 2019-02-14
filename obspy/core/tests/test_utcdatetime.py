@@ -1154,6 +1154,17 @@ class UTCDateTimeTestCase(unittest.TestCase):
         t = UTCDateTime(998, 11, 9, 1, 39, 37)
         self.assertEqual(t._strftime_replacement('%Y-%m-%d'), '0998-11-09')
 
+    def test_string_parsing_at_instantiating_before_1000(self):
+        """
+        Try instantiating the UTCDateTime object with strings containing years
+        before 1000.
+        """
+        for value in ["998-01-01", "98-01-01", "9-01-01"]:
+            with self.assertRaises(ValueError) as e:
+                t = UTCDateTime(value)
+            msg = "'%s' does not start with a 4 digit year" % value
+            self.assertEqual(msg, e.exception.args[0])
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')

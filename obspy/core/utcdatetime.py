@@ -15,9 +15,17 @@ from future.utils import native_str
 
 import datetime
 import math
+import re
+import sys
 import time
 
 import numpy as np
+
+_YEAR0REGEX = re.compile(r"^(\d{1,3}[-/,])(.*)$")
+
+
+def _year0repl(m):
+    return ("%5s%s" % m.groups()).replace(" ", "0")
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
@@ -291,6 +299,13 @@ class UTCDateTime(object):
                     value = value.decode()
                 # got a string instance
                 value = value.strip()
+
+                # Raising in the case where the leading string is less than 4
+                # chars; linked to #2167
+                if re.match(_YEAR0REGEX, value):
+                    raise ValueError("'%s' does not start with a 4 digit year" %
+                                     value)
+
                 # check for ISO8601 date string
                 if value.count("T") == 1 or iso8601:
                     try:
@@ -1247,6 +1262,8 @@ class UTCDateTime(object):
         See methods :meth:`~datetime.datetime.strftime()` and
         :meth:`~datetime.datetime.strptime()` for more information.
         """
+        if sys.version_info.major < 3 and sys.platform.startswith("linux"):
+            format = format.replace("%Y", "%04Y")
         try:
             ret = self.datetime.strftime(format)
         # this is trying to work around strftime refusing to work with years
