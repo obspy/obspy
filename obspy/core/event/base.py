@@ -428,7 +428,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
 
 
 class ResourceIdentifier(object):
-    """
+    r"""
     Unique identifier of any resource so it can be referred to.
 
     In QuakeML many elements and types can have a unique id that other elements
