@@ -574,6 +574,19 @@ class InventoryTestCase(unittest.TestCase):
 
         self.assertEqual(inv, inv2)
 
+    def test_copy(self):
+        """
+        Test for copying inventory.
+        """
+        inv = read_inventory()
+        inv2 = inv.copy()
+        self.assertIsNot(inv, inv2)
+        self.assertEqual(inv, inv2)
+        # make sure changing inv2 doesnt affect inv
+        original_latitude = inv2[0][0][0].latitude
+        inv2[0][0][0].latitudue = original_latitude + 1
+        self.assertEqual(inv[0][0][0].latitude, original_latitude)
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 @unittest.skipIf(
