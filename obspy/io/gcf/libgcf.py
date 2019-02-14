@@ -119,8 +119,8 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
     npts = num_records * compression  # number of samples
     header = {}
     header['starttime'] = starttime
-    header['station'] = stid[:4]
-    header['channel'] = (channel_prefix[:2] + stid[4]).upper()
+    header['station'] = stid[:-2]
+    header['channel'] = (channel_prefix[:2] + stid[-2]).upper()
     header['sampling_rate'] = float(sps)
     header['npts'] = npts
     if headonly:
