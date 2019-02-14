@@ -30,7 +30,7 @@ FLAKE8_IGNORE_CODES = [
     # E402 module level import not at top of file
     # This is really annoying when using the standard library import hooks
     # from the future package.
-    "E402"
+    "E402",
 ]
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",

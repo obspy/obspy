@@ -605,7 +605,7 @@ def _parse_path_to_dict(path, pattern, group_map):
     # replace each format string placeholder with a regex group, matching
     # alphanumerics. append end-of-line otherwise the last non-greedy match
     # doesn't catch anything if it's at the end of the regex
-    regex = re.sub(FORMAT_STR_PLACEHOLDER_REGEX, r'(\w*?)', regex) + "$"
+    regex = re.sub(FORMAT_STR_PLACEHOLDER_REGEX, r'(\\w*?)', regex) + "$"
     match = re.match(regex, path)
     if match is None:
         return None

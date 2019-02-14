@@ -2202,6 +2202,10 @@ class StreamTestCase(unittest.TestCase):
                 self.assertEqual(tr1.stats, tr2.stats)
                 np.testing.assert_allclose(tr1.data, tr2.data)
             else:
+                # Added (up to ###) to debug appveyor fails
+                self.assertEqual(tr1.stats, tr2.stats)
+                np.testing.assert_allclose(tr1.data, tr2.data)
+                ###
                 self.assertEqual(tr1, tr2)
 
     def test_select_empty_strings(self):

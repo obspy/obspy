@@ -44,7 +44,7 @@ if sys.version_info.major == 2:
     ERRORS.append(OSError)
 else:
     # All other connection errors inherit from it.
-    ERRORS.append(ConnectionError)
+    ERRORS.append(ConnectionError)  # NOQA
 
 ERRORS = tuple(ERRORS)
 

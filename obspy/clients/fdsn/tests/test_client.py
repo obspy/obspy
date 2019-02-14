@@ -77,7 +77,8 @@ def normalize_version_number(string):
     Due to Py3k arbitrary dictionary ordering it also sorts word wise the
     input string, independent of commas and newlines.
     """
-    repl = re.sub('v[0-9]+\.[0-9]+\.[0-9]+', "vX.X.X", string).replace(",", "")
+    match = r'v[0-9]+\.[0-9]+\.[0-9]+'
+    repl = re.sub(match, "vX.X.X", string).replace(",", "")
     return [l.strip() for l in repl.splitlines()]
 
 
@@ -677,15 +678,18 @@ class ClientTestCase(unittest.TestCase):
         file = os.path.join(self.datapath, "bulk.mseed")
         expected = read(file)
         # test cases for providing lists of lists
+        # Deliberately requesting data that overlap the end-time of a channel.
+        # TA.A25A..BHZ ends at 2011-07-22T14:50:25.5
         bulk = (("TA", "A25A", "", "BHZ",
-                 UTCDateTime("2010-03-25T00:00:00"),
-                 UTCDateTime("2010-03-25T00:00:04")),
+                 UTCDateTime("2011-07-22T14:50:23"),
+                 UTCDateTime("2011-07-22T14:50:29")),
                 ("TA", "A25A", "", "BHE",
                  UTCDateTime("2010-03-25T00:00:00"),
                  UTCDateTime("2010-03-25T00:00:06")),
                 ("IU", "ANMO", "*", "HHZ",
                  UTCDateTime("2010-03-25T00:00:00"),
                  UTCDateTime("2010-03-25T00:00:08")))
+        # As of 03 December 2018, it looks like IRIS is ignoring minimumlength?
         params = dict(quality="B", longestonly=False, minimumlength=5)
         for client in clients:
             # test output to stream

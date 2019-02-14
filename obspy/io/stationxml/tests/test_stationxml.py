@@ -739,7 +739,7 @@ class StationXMLTestCase(unittest.TestCase):
 
         # Ugly test - remove all whitespace and make sure the four following
         # lines are part of the written output.
-        data = re.sub('\s+', ' ', data)
+        data = re.sub(r'\s+', ' ', data)
 
         self.assertIn(
             '<Zero number="0"> <Real>0.0</Real> '

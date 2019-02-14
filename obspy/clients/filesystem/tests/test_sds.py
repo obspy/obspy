@@ -224,7 +224,7 @@ class SDSTestCase(unittest.TestCase):
                     print(pattern.strip())
                     print(got.strip())
             if failed:
-                raise
+                raise Exception
 
     def test_get_all_stations_and_nslc(self):
         """

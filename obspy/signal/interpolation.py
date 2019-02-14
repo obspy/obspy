@@ -100,7 +100,7 @@ def interpolate_1d(data, old_start, old_dt, new_start, new_dt, new_npts,
 
 def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
                             new_npts, *args, **kwargs):
-    """
+    r"""
     Implements the weighted average slopes interpolation scheme proposed in
     [Wiggins1976]_ for evenly sampled data. The scheme guarantees that there
     will be no additional extrema after the interpolation in contrast to

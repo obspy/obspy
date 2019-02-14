@@ -35,7 +35,7 @@ from obspy.signal.util import next_pow_2, util_geo_km
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
                           sigmau):
-    """
+    r"""
     This routine calculates the best-fitting rigid body rotation and
     uniform strain as functions of time, and their formal errors, given
     three-component ground motion time series recorded on a seismic array.

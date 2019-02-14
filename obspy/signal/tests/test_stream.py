@@ -160,6 +160,11 @@ class StreamTestCase(unittest.TestCase):
                 np.testing.assert_allclose(tr1.data, tr2.data, rtol=1E-6,
                                            atol=1E-6 * tr1.data.ptp())
         else:
+            # Added (up to ###) to debug appveyor fails
+            for tr1, tr2 in zip(st1.sort(), st2.sort()):
+                self.assertEqual(tr1.stats, tr2.stats)
+                np.testing.assert_allclose(tr1.data, tr2.data)
+            ###
             self.assertEqual(st1, st2)
 
     def test_decimate(self):

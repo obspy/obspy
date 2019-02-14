@@ -26,7 +26,7 @@ import obspy
 from obspy import UTCDateTime, read_inventory, read_events
 from obspy.core.compatibility import mock
 from obspy.core.util import (
-    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION)
+    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION, PROJ4_VERSION)
 from obspy.core.util.base import _get_entry_points
 from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
@@ -468,6 +468,9 @@ class InventoryTestCase(unittest.TestCase):
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+@unittest.skipIf(
+    BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+    'matplotlib 3.0.1 is not campatible with basemap')
 class InventoryBasemapTestCase(unittest.TestCase):
     """
     Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Basemap.
@@ -480,6 +483,7 @@ class InventoryBasemapTestCase(unittest.TestCase):
     def tearDown(self):
         np.seterr(**self.nperr)
 
+    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
     def test_location_plot_global(self):
         """
         Tests the inventory location preview plot, default parameters, using
@@ -529,9 +533,10 @@ class InventoryBasemapTestCase(unittest.TestCase):
                      size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                      outfile=ic.name)
 
+    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
     def test_combined_station_event_plot(self):
         """
-        Tests the coombined plotting of inventory/event data in one plot,
+        Tests the combined plotting of inventory/event data in one plot,
         reusing the basemap instance.
         """
         inv = read_inventory()

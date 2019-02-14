@@ -835,9 +835,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             # Tests all ASCII letters.
             os.path.join(path, "fullASCII.mseed"):
             (native_str('|S1'), 'a', 0, from_buffer(
-                """ !"#$%&'()*+,-./""" +
-                """0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" +
-                """abcdefghijklmnopqrstuvwxyz{|}~""",
+                r""" !"#$%&'()*+,-./""" +
+                r"""0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" +
+                r"""abcdefghijklmnopqrstuvwxyz{|}~""",
                 dtype=native_str('|S1'))),
             # Note: int16 array will also be returned as int32.
             os.path.join(path, "int16_INT16.mseed"):
@@ -1421,7 +1421,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
                 with io.open(reference, "rt") as fh:
                     err_msg = fh.readlines()[-1]
-                err_msg = re.sub("^Error:\s", "", err_msg).strip()
+                err_msg = re.sub(r"^Error:\s", "", err_msg).strip()
                 self.assertEqual(err_msg, e.exception.args[0].splitlines()[1])
             elif test_type == "summary":
                 st = read(filename)
@@ -1452,7 +1452,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                            err_msg=filename)
                 self.assertEqual(tr.stats.npts, npts, msg=filename)
             else:  # pragma: no cover
-                raise NotImplemented
+                raise NotImplementedError
 
         folder = os.path.join(self.path, os.path.pardir, "src", "libmseed",
                               "test")

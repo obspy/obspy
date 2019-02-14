@@ -238,10 +238,14 @@ class ClientTestCase(unittest.TestCase):
         self.assertIn('RO.BISRR', result)
         self.assertIn('RO.VRI', result)
         # 3 - defined @ETH
-        result = client.get_inventory(network="_NFOVALAIS")
+        result = client.get_inventory(
+            network="_NFOVALAIS", starttime=UTCDateTime(2017, 10, 16),
+            endtime=UTCDateTime(2017, 10, 19))
         self.assertIn('CH', result)
         self.assertIn('S', result)
-        self.assertIn('7H', result)
+        # self.assertIn('7H', result) This network does not appear to be
+        # included in the _NFOVALAIS network anymore. Checked on 03/12/2018
+        # at http://eida.gfz-potsdam.de/webdc3/
         self.assertIn('CH.AIGLE', result)
         self.assertIn('CH.VANNI', result)
         self.assertIn('S.ESION', result)

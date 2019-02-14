@@ -1453,9 +1453,9 @@ class Client(object):
                             wadl_queue.put((url, None))
                         else:
                             raise
-                    except urllib_request.URLError as e:
+                    except urllib_request.URLError:
                         wadl_queue.put((url, "timeout"))
-                    except socket_timeout as e:
+                    except socket_timeout:
                         wadl_queue.put((url, "timeout"))
             return ThreadURL()
 
