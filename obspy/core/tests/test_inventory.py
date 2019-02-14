@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
 import builtins
+import io
 import os
 import unittest
 import warnings
@@ -465,6 +466,24 @@ class InventoryTestCase(unittest.TestCase):
                 read_inventory(doesnt_exist, format=format)
             self.assertEqual(
                 str(e.exception), exception_msg.format(doesnt_exist))
+
+    def test_inventory_can_be_initialized_with_no_arguments(self):
+        """
+        Source and networks need not be specified.
+        """
+        inv = Inventory()
+        self.assertEqual(inv.networks, [])
+        self.assertEqual(inv.source, "ObsPy %s" % obspy.__version__)
+
+        # Should also be serializable.
+        with io.BytesIO() as buf:
+            # This actually would not be a valid StationXML file but there
+            # might be uses for this.
+            inv.write(buf, format="stationxml")
+            buf.seek(0, 0)
+            inv2 = read_inventory(buf)
+
+        self.assertEqual(inv, inv2)
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
