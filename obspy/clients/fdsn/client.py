@@ -140,7 +140,7 @@ class Client(object):
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
                  timeout=120, service_mappings=None, force_redirect=False,
-                 eida_token=None):
+                 eida_token=None, discover_services=True):
         """
         Initializes an FDSN Web Service client.
 
@@ -202,11 +202,19 @@ class Client(object):
             used. This mechanism is only available on select EIDA nodes. The
             token can be provided in form of the PGP message as a string, or
             the filename of a local file with the PGP message in it.
+        :type discover_services: bool
+        :param discover_services: By default the client will query information
+            about the FDSN endpoint when it is instantiated.  This is cached per
+            Python process, but in cases where many clients are instantiated in
+            seperate processes, this initial querying can place a heavy load on
+            the FDSN service provider.  If set to ``False``, no initial service
+            discover is performed and default parameter support is assumed.
         """
         self.debug = debug
         self.user = user
         self.timeout = timeout
         self._force_redirect = force_redirect
+        self.discover_services = discover_services
 
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
@@ -253,7 +261,10 @@ class Client(object):
                     print("\t%s: '%s'" % (key, value))
             print("Request Headers: %s" % str(self.request_headers))
 
-        self._discover_services()
+        if self.discover_services:
+            self._discover_services()
+        else:
+            self.services = DEFAULT_PARAMETERS.copy()
 
         # Use EIDA token if provided - this requires setting new url openers.
         #
@@ -501,7 +512,7 @@ class Client(object):
         non-default parameters that the webservice does not support will raise
         an error.
         """
-        if "event" not in self.services:
+        if self.discover_services and "event" not in self.services:
             msg = "The current client does not have an event service."
             raise ValueError(msg)
 
@@ -699,7 +710,7 @@ class Client(object):
         non-default parameters that the webservice does not support will raise
         an error.
         """
-        if "station" not in self.services:
+        if self.discover_services and "station" not in self.services:
             msg = "The current client does not have a station service."
             raise ValueError(msg)
 
@@ -812,7 +823,7 @@ class Client(object):
         non-default parameters that the webservice does not support will raise
         an error.
         """
-        if "dataselect" not in self.services:
+        if self.discover_services and "dataselect" not in self.services:
             msg = "The current client does not have a dataselect service."
             raise ValueError(msg)
 
@@ -994,7 +1005,7 @@ class Client(object):
         non-default parameters that the webservice does not support will raise
         an error.
         """
-        if "dataselect" not in self.services:
+        if self.discover_services and "dataselect" not in self.services:
             msg = "The current client does not have a dataselect service."
             raise ValueError(msg)
 
@@ -1140,7 +1151,7 @@ class Client(object):
         non-default parameters that the webservice does not support will raise
         an error.
         """
-        if "station" not in self.services:
+        if self.discover_services and "station" not in self.services:
             msg = "The current client does not have a station service."
             raise ValueError(msg)
 
