@@ -526,7 +526,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
 
         def component_thres(ccs):
             ccmatrix = np.array(list(ccs.values()))
-            return np.count_nonzero(ccmatrix > 0.2, axis=0) / len(ccs) > 0.6
+            return np.sum(ccmatrix > 0.2, axis=0) / len(ccs) > 0.6
 
         d, ccs = xcorr_detector(stream, template, condition=dummy)
         self.assertEqual(len(d), 1)
