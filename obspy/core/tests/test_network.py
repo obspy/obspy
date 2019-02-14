@@ -27,7 +27,8 @@ from obspy.core.compatibility import mock
 from obspy.core.util import (
     BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION)
 from obspy.core.util.testing import ImageComparison
-from obspy.core.inventory import Channel, Network, Response, Station
+from obspy.core.inventory import (Channel, Inventory, Network, Response,
+                                  Station)
 
 
 class NetworkTestCase(unittest.TestCase):
@@ -257,6 +258,28 @@ class NetworkTestCase(unittest.TestCase):
         self.assertEqual(len(net.select(time=UTCDateTime(2006, 1, 1))), 0)
         self.assertEqual(len(net.select(time=UTCDateTime(2007, 1, 1))), 1)
         self.assertEqual(len(net.select(time=UTCDateTime(2008, 1, 1))), 2)
+
+    def test_empty_network_code(self):
+        """
+        Tests that an empty sring is acceptabble.
+        """
+        # An empty string is allowed.
+        n = Network(code="")
+        self.assertEqual(n.code, "")
+
+        # But None is not allowed.
+        with self.assertRaises(ValueError) as e:
+            Network(code=None)
+        self.assertEqual(e.exception.args[0], "A code is required")
+
+        # Should still serialize to something.
+        inv = Inventory(networks=[n])
+        with io.BytesIO() as buf:
+            inv.write(buf, format="stationxml", validate=True)
+            buf.seek(0, 0)
+            inv2 = read_inventory(buf)
+
+        self.assertEqual(inv, inv2)
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')

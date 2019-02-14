@@ -74,8 +74,8 @@ class BaseNode(ComparingObject):
 
     @code.setter
     def code(self, value):
-        if not value:
-            msg = "A Code is required"
+        if value is None:
+            msg = "A code is required"
             raise ValueError(msg)
         self._code = str(value).strip()
 
