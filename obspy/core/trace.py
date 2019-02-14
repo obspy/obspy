@@ -2357,13 +2357,21 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             fitting  number to retain the current end time of the trace if
             not given.
         :type time_shift: float
-        :param time_shift: Interpolation can also shift the data with
-            subsample accuracy. The time shift is always given in seconds. A
-            positive shift means the data is shifted towards the future,
-            e.g. a positive time delta. Please note that a time shift in
-            the Fourier domain is always more accurate than this. When using
-            Lanczos interpolation with large values of ``a`` and away from the
-            boundaries this is nonetheless pretty good.
+        :param time_shift: Shift the trace by adding time_shift to the
+            starttime. The time shift is always given in seconds.
+            A positive shift means the data is shifted towards the future,
+            e.g. a positive time delta.
+            Note that this parameter solely affects the metadata.
+            The actual interpolation of the underlaying data is governed
+            by the parameters sampling_rate, starttime and npts.
+
+            .. note::
+
+                Interpolation can also shift the data with
+                subsample accuracy.  Please note that a time shift in
+                the Fourier domain is always more accurate than this.
+                When using Lanczos interpolation with large values of ``a``
+                and away from the boundaries this is nonetheless pretty good.
 
         .. rubric:: _`New in version 0.11:`
 

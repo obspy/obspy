@@ -275,8 +275,20 @@ class ResponseTestCase(unittest.TestCase):
         inv = read_inventory(os.path.join(
             self.data_dir, "stationxml_no_units_in_stage_1.xml"))
         r = inv[0][0][0].response
-        self.assertIsNone(r.response_stages[0].input_units)
-        self.assertIsNone(r.response_stages[0].output_units)
+
+        # The units should already have been fixed from reading the StationXML
+        # files...
+        self.assertEqual(r.response_stages[0].input_units, "M/S")
+        self.assertEqual(r.response_stages[0].input_units_description,
+                         "Meters per second")
+        self.assertEqual(r.response_stages[0].output_units, "V")
+        self.assertEqual(r.response_stages[0].output_units_description,
+                         "VOLTS")
+
+        # We have to set the units to None here as there is some other logic in
+        # reading the StationXML files that sets them based on other units...
+        r.response_stages[0].input_units = None
+        r.response_stages[0].output_units = None
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")

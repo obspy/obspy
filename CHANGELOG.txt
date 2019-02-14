@@ -111,6 +111,8 @@ master:
  - obspy.clients.nrl:
    * Set input units of overall sensitivity to input units of first stage
      in NRL.get_response() (see #2248)
+ - obspy.geodetics:
+   * Fix the vincenty inverse calculation for equatorial lines (see #2282).
  - obspy.imaging:
    * Normalize moment tensors prior to plotting in the mopad wrapper to
      stabilize the algorithm (see #2114, #2125).
@@ -123,6 +125,9 @@ master:
      object to CNV (see #2001)
  - obspy.io.css:
    * Fix automatic filetype detection (see #2160 and #2162)
+ - obspy.io.gcf:
+   * Fix reading stream ID for station/channel code in header (see #2289, #2311)
+   * Fix bitmask in getting compression code (see #2290, #2310)
  - obspy.io.mseed:
    * Ability to read files that have embedded chunks of non SEED data.
      (see #1981, #2057).
@@ -147,6 +152,7 @@ master:
    * Fix inventory read when maxClockDrift is unset in SC3ML (see #1993)
    * Fix the reading of FIR coefficients when multiple whitespaces in SC3ML (see #2259)
    * Fix the reading of the poles and zeros when multiple whitespaces in SC3ML (see #2260).
+   * Fix reading files with zero sampling rates (see #2294 and #2293)
  - obspy.io.stationxml
    * Allow writing of dates before 1900 also on Python 2 (see #2013, #2015).
    * Write the UTC time zone specifier to all times (see #2015).
@@ -421,6 +427,7 @@ master:
    * Reinforce ASCII encoding in reading non-ASCII SAC files regardless of
       default encoding setting. (see #1768)
    * Implementing encoding flag for reading/writing SAC files.
+   * Fix passing through "byteorder" kwarg from obspy.read() (see #2292)
 - obspy.io.sh:
    * Fix writing of long headers for Python 3 (see #1526)
    * Whitespace in header fields is not ignored anymore (see #1552)

@@ -388,6 +388,7 @@ def _read_channel(cha_element, _ns):
     response = cha_element.find(_ns("Response"))
     if response is not None:
         channel.response = _read_response(response, _ns)
+        channel.response._attempt_to_fix_units()
     return channel
 
 
