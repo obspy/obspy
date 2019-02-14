@@ -44,6 +44,8 @@
      object to CNV (see #2001)
  - obspy.io.css:
    * Fix automatic filetype detection (see #2160 and #2162)
+ - obspy.io.gcf:
+   * Fix bitmask in getting compression code (see #2290, #2310)
  - obspy.io.mseed:
    * Ability to read files that have embedded chunks of non SEED data.
      (see #1981, #2057).
