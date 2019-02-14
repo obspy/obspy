@@ -768,7 +768,7 @@ class Response(ComparingObject):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
-    def _add_units_to_identity_stages(self):
+    def _attempt_to_fix_units(self):
         """
         Internal helper function that will add units to gain only stages based
         on the units of surrounding stages.
@@ -778,6 +778,27 @@ class Response(ComparingObject):
         """
         previous_output_units = None
         previous_output_units_description = None
+
+        # Potentially set the input units of the first stage to the units of
+        # the overall sensitivity and the output units of the second stage.
+        if self.response_stages and self.response_stages[0] and \
+                hasattr(self, "instrument_sensitivity"):
+            s = self.instrument_sensitivity
+
+            if s:
+                if self.response_stages[0].input_units is None:
+                    self.response_stages[0].input_units = s.input_units
+                if self.response_stages[0].input_units_description is None:
+                    self.response_stages[0].input_units_description = \
+                        s.input_units_description
+
+            if len(self.response_stages) >= 2 and self.response_stages[1]:
+                if self.response_stages[0].output_units is None:
+                    self.response_stages[0].output_units = \
+                        self.response_stages[1].input_units
+                if self.response_stages[0].output_units_description is None:
+                    self.response_stages[0].output_units_description = \
+                        self.response_stages[1].input_units_description
 
         # Front to back.
         for r in self.response_stages:

@@ -1159,6 +1159,10 @@ class StationXMLTestCase(unittest.TestCase):
             inv_2 = obspy.read_inventory(buf)
 
         response_2 = inv_2.get_response("BW.RJOB..EHZ", t)
+        # Set these to None manually as the autocorrection during parsing will
+        # set it.
+        response_2.response_stages[0].input_units = None
+        response_2.response_stages[0].input_units_description = None
 
         self.assertEqual(response, response_2)
         self.assertEqual(response_2.response_stages[1].input_units, "V")
