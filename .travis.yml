@@ -22,6 +22,8 @@ matrix:
       env: PYTHON_VERSION=3.5
     - os: linux
       env: PYTHON_VERSION=3.6
+    - os: linux
+      env: PYTHON_VERSION=3.7
     # - os: linux
     #   env: PYTHON_VERSION=3.5 ARCHITECTURE_32BIT="True"
     #   addons:
@@ -34,6 +36,8 @@ matrix:
       env: PYTHON_VERSION=2.7
     - os: osx
       env: PYTHON_VERSION=3.6
+    - os: osx
+      env: PYTHON_VERSION=3.7
 
 # mimick travis fast fail and rolling build setup from:
 # https://github.com/JuliaLang/julia/blob/master/.travis.yml
@@ -114,6 +118,12 @@ install:
         BASEMAP="basemap"
         PYPROJ="pyproj"
       fi
+  - |
+    if [[ "${PYTHON_VERSION}" == '3.7' ]]; then
+      FREETYPE="freetype"
+    else
+      FREETYPE="freetype<2.8"
+    fi
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
         $NUMPY
@@ -131,7 +141,7 @@ install:
         nose
         requests
         sqlalchemy
-        "freetype<2.8"
+        $FREETYPE
         cryptography
   - source activate test-environment
   # additional, optional packages that run some more tests but are not
@@ -149,7 +159,7 @@ install:
   # "conda install -c conda-forge --no-update-dependencies pyshp", because the
   # pyshp conda package lists 0 dependencies, anyway, so use "--no-deps" to
   # really avoid installing/updating any other packages
-  - conda install -c conda-forge --no-update-dependencies --no-deps pyshp
+  - conda install -c conda-forge --no-update-deps --no-deps pyshp || pip install pyshp
   # install packages not available via conda
   - pip install codecov
   - pip install geographiclib
