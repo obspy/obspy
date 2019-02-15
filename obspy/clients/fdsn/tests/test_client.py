@@ -38,7 +38,8 @@ from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNException, FDSNRedirectException,
-                                       FDSNNoDataException, DEFAULT_PARAMETERS)
+                                       FDSNNoDataException, DEFAULT_PARAMETERS,
+                                       DEFAULT_SERVICES)
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
 
@@ -393,16 +394,13 @@ class ClientTestCase(unittest.TestCase):
 
     def test_discover_services_defaults(self):
         """
-        A Client initialized with discover_services=False shouldn't perform any
+        A Client initialized with _discover_services=False shouldn't perform any
         services/WADL queries on the endpoint, and should show only the default
         service parameters.
         """
         client = Client(base_url="IRIS", user_agent=USER_AGENT,
-                        discover_services=False)
-        self.assertEqual(set(client.services.keys()),
-                         set(DEFAULT_PARAMETERS.keys()))
-        # XXX: this is a bad test.  DEFAULT_PARAMETERS.values() aren't the same
-        # as expected for a normal client.services.values()
+                        _discover_services=False)
+        self.assertEqual(client.services, DEFAULT_SERVICES)
 
     def test_simple_xml_parser(self):
         """
@@ -618,7 +616,7 @@ class ClientTestCase(unittest.TestCase):
         now tests if the queries return what was asked for.
         """
         client = Client(base_url="IRIS", user_agent=USER_AGENT,
-                        discover_services=False)
+                        _discover_services=False)
 
         # Event id query.
         cat = client.get_events(eventid=609301)
@@ -669,7 +667,7 @@ class ClientTestCase(unittest.TestCase):
         returned inventory in different ways.
         """
         client = Client(base_url="IRIS", user_agent=USER_AGENT,
-                        discover_services=False)
+                        _discover_services=False)
 
         # Radial query.
         inv = client.get_stations(latitude=-56.1, longitude=-26.7,
@@ -739,7 +737,7 @@ class ClientTestCase(unittest.TestCase):
         without discovering services first.
         """
         client = Client(base_url="IRIS", user_agent=USER_AGENT,
-                        discover_services=False)
+                        _discover_services=False)
 
         queries = [
             ("IU", "ANMO", "00", "BHZ",
