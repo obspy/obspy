@@ -861,11 +861,12 @@ def correlate_stream_template(stream, template, template_time=None, **kwargs):
 
     :param stream: Stream with data traces
     :param template: Stream with template traces (should be shorter than data)
-    :template_time: UTCDateTime associated with template event
+    :param template_time: UTCDateTime associated with template event
         (e.g. origin time, default is the startime of the template stream).
         The starttimes of the returnd Stream will be shifted by the given
         template time minus the template starttime.
-    :param kwargs: kwargs are passed to correlate_template function
+    :param kwargs: kwargs are passed to
+        :func:`~obspy.signal.cross_correlation.correlate_template` function
 
     :return: Stream with cross-correlations.
     """
@@ -928,7 +929,7 @@ def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
     Detector based on the similarity of waveforms
 
     This detector evaluates the cross-correlation stream returned by
-    `correlate_template_stream`.
+    :func:`~obspy.signal.cross_correlation.correlate_stream_template`.
 
     :param cross_correlations: Stream with cross correlations. The similarity
         is calculated as the mean of the cross correlation value over all
