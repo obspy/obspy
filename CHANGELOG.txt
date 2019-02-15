@@ -17,6 +17,7 @@
    * Fix Stream.get_gaps() when a trace is completely overlapping another trace
      (see #2218).
    * Fig Exception when comparing ComparingObjects (see #2220).
+   * Fix UTCDateTime.strftime() when year is <1900 on Python 2 (see #2167)
  - obspy.clients.arclink:
    * Raise a warning at import time that the ArcLink protocol will be
      deprecated soon (see #1987).

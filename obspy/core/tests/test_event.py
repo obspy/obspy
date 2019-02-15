@@ -6,6 +6,7 @@ from future.utils import PY2, native_str
 
 import builtins
 import copy
+import io
 import os
 import sys
 import unittest
@@ -23,6 +24,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import (
     BASEMAP_VERSION, CARTOPY_VERSION, PROJ4_VERSION, MATPLOTLIB_VERSION)
 from obspy.core.util.base import _get_entry_points
+from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import ImageComparison
 from obspy.core.event.base import QuantityError
 
@@ -646,6 +648,21 @@ class CatalogBasemapTestCase(unittest.TestCase):
             cat.plot(method='basemap', outfile=ic.name, projection='local',
                      resolution='l', continent_fill_color='0.3',
                      color='date', colormap='gist_heat')
+
+    def test_plot_catalog_before_1900(self):
+        """
+        Tests plotting events with origin times before 1900
+        """
+        cat = read_events()
+        cat[1].origins[0].time = UTCDateTime(813, 2, 4, 14, 13)
+
+        # just checking this runs without error is fine, no need to check
+        # content
+        with MatplotlibBackend("AGG", sloppy=True):
+            cat.plot(outfile=io.BytesIO(), method='basemap')
+            # also test with just a single event
+            cat.events = [cat[1]]
+            cat.plot(outfile=io.BytesIO(), method='basemap')
 
 
 @unittest.skipIf(not HAS_CARTOPY, 'Cartopy not installed or too old')
