@@ -50,9 +50,12 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     """
     Function to read inventory files.
 
-    :param path_or_file_object: File name or file like object. If this
-        attribute is omitted, an example :class:`Inventory`
-        object will be returned.
+    :type path_or_file_object: str or StringIO.StringIO
+    :param path_or_file_object: String containing a file name or a URL or a open
+        file-like object. Wildcards are allowed for a file name. If this
+        attribute is omitted, an example
+        :class:`~obspy.core.inventory.inventory.Inventory` object will be
+        returned.
     :type format: str
     :param format: Format of the file to read (e.g. ``"STATIONXML"``). See the
         `Supported Formats`_ section below for a list of supported formats.
