@@ -1507,7 +1507,8 @@ class Stream(object):
             try:
                 if starttime is not None:
                     delta = compatibility.round_away(
-                        (starttime - tr.stats.starttime) * tr.stats.sampling_rate)
+                        (starttime - tr.stats.starttime) *
+                        tr.stats.sampling_rate)
                     starttime = tr.stats.starttime + delta * tr.stats.delta
                 if endtime is not None:
                     delta = compatibility.round_away(
