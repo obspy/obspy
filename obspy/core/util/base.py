@@ -15,6 +15,7 @@ from future.utils import PY2
 
 import builtins
 import doctest
+import glob
 import inspect
 import io
 import os
@@ -635,6 +636,51 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
                     continue
                 fh.write(chunk)
 
+
+def _generic_reader(pathname_or_url=None, format=None, callback_func=None,
+                    **kwargs):
+    if not isinstance(pathname_or_url, (str, native_str)):
+        # not a string - we assume a file-like object
+        try:
+            # first try reading directly
+            generic = callback_func(pathname_or_url, format, **kwargs)
+        except TypeError:
+            # if this fails, create a temporary file which is read directly
+            # from the file system
+            pathname_or_url.seek(0)
+            with NamedTemporaryFile() as fh:
+                fh.write(pathname_or_url.read())
+                generic = callback_func(fh.name, format, **kwargs)
+        return generic
+    elif isinstance(pathname_or_url, bytes) and \
+            pathname_or_url.strip().startswith(b'<'):
+        # XML string
+        return callback_func(io.BytesIO(pathname_or_url), format, **kwargs)
+    elif "://" in pathname_or_url[:10]:
+        # URL
+        # extract extension if any
+        suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
+        with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
+            download_to_file(url=pathname_or_url, filename_or_buffer=fh)
+            generic = callback_func(fh.name, format, **kwargs)
+        return generic
+    else:
+        pathname = pathname_or_url
+        # File name(s)
+        pathnames = sorted(glob.glob(pathname))
+        if not pathnames:
+            # try to give more specific information why the stream is empty
+            if glob.has_magic(pathname) and not glob.glob(pathname):
+                raise Exception("No file matching file pattern: %s" % pathname)
+            elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
+                raise IOError(2, "No such file or directory", pathname)
+
+        generic = callback_func(pathnames[0], format, **kwargs)
+        if len(pathnames) > 1:
+            for filename in pathnames[1:]:
+                generic.extend(callback_func(filename, format, **kwargs))
+        return generic
+    
 
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)

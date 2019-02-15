@@ -23,8 +23,9 @@ import warnings
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
                                   _read_from_plugin, NamedTemporaryFile,
-                                  download_to_file, sanitize_filename)
-from obspy.core.util.decorator import map_example_filename
+                                  download_to_file, sanitize_filename,
+                                  _generic_reader)
+from obspy.core.util.decorator import map_example_filename, uncompress_file
 from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
@@ -41,9 +42,7 @@ def _create_example_inventory():
     """
     Create an example inventory.
     """
-    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "data")
-    path = os.path.join(data_dir, "BW_GR_misc.xml")
-    return read_inventory(path, format="STATIONXML")
+    return read_inventory('/path/to/BW_GR_misc.xml', format="STATIONXML")
 
 
 @map_example_filename("path_or_file_object")
@@ -85,18 +84,18 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
         return _create_example_inventory()
-    elif isinstance(path_or_file_object, (str, native_str)) and \
-            "://" in path_or_file_object:
-        # some URL
-        # extract extension if any
-        suffix = \
-            os.path.basename(path_or_file_object).partition('.')[2] or '.tmp'
-        with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
-            download_to_file(url=path_or_file_object, filename_or_buffer=fh)
-            return read_inventory(fh.name, format=format)
-    return _read_from_plugin("inventory", path_or_file_object,
-                             format=format, *args, **kwargs)[0]
+    else:
+        return _generic_reader(path_or_file_object, format, _read, **kwargs)
 
+
+@uncompress_file
+def _read(filename, format=None, **kwargs):
+    """
+    Reads a single event file into a ObsPy Catalog object.
+    """
+    inventory, format = _read_from_plugin('inventory', filename, format=format,
+                                  **kwargs)
+    return inventory
 
 @python_2_unicode_compatible
 class Inventory(ComparingObject):
@@ -143,6 +142,34 @@ class Inventory(ComparingObject):
             self.created = obspy.UTCDateTime()
         else:
             self.created = created
+
+    def __eq__(self, other):
+        """
+        __eq__ method of the Catalog object.
+
+        :type other: :class:`~obspy.core.inventory.Inventory`
+        :param other: Inventory object for comparison.
+        :rtype: bool
+        :return: ``True`` if both Inventories contain the same networks.
+
+        .. rubric:: Example
+
+        >>> from obspy.core.inventory import read_inventory
+        >>> inv = read_inventory()
+        >>> inv2 = inv.copy()
+        >>> inv is inv2
+        False
+        >>> inv == inv2
+        True
+        """
+        if not isinstance(other, Inventory):
+            return False
+        if self.networks != other.networks:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __add__(self, other):
         new = copy.deepcopy(self)
@@ -272,6 +299,23 @@ class Inventory(ComparingObject):
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
+
+    def extend(self, network_list):
+        """
+        Extends the current Catalog object with a list of Network objects.
+        """
+        if isinstance(network_list, list):
+            for _i in network_list:
+                # Make sure each item in the list is a event.
+                if not isinstance(_i, Network):
+                    msg = 'Extend only accepts a list of Network objects.'
+                    raise TypeError(msg)
+            self.networks.extend(network_list)
+        elif isinstance(network_list, Inventory):
+            self.networks.extend(network_list.networks)
+        else:
+            msg = 'Extend only supports a list of Network objects as argument.'
+            raise TypeError(msg)
 
     def write(self, path_or_file_object, format, **kwargs):
         """
