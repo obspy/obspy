@@ -174,8 +174,6 @@ method will call some functions within evalresp to generate the response.
 Some convenience methods to perform an instrument correction on
 :class:`~obspy.core.stream.Stream` (and :class:`~obspy.core.trace.Trace`)
 objects are available and most users will want to use those. The
-:meth:`~obspy.core.stream.Stream.attach_response()` method will attach matching
-responses to each trace if they are available within the inventory object. The
 :meth:`~obspy.core.stream.Stream.remove_response()` method deconvolves the
 instrument response in-place. As always see the corresponding docs pages for a
 full list of options and a more detailed explanation.
@@ -183,9 +181,8 @@ full list of options and a more detailed explanation.
 >>> from obspy import read
 >>> st = read()
 >>> inv = read_inventory("/path/to/BW_RJOB.xml")
->>> st.attach_response(inv)  # doctest: +NORMALIZE_WHITESPACE
- []
->>> st.remove_response(output="VEL", water_level=20)  # doctest: +ELLIPSIS
+>>> st.remove_response(
+...     inventory=inv, output="VEL", water_level=20)  # doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
 
 Writing
