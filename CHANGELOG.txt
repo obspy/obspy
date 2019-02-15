@@ -282,6 +282,8 @@ master:
     * Also parse author information and COMMENT line (see #1484)
     * Fix reading hypocenter files created by NonLinLoc versions of the 6.0.x
       beta branch (see #1760 and #1783)
+    * Fix reading NonLinLoc files that have 24:00 as hours or 60 seconds (see
+      #2222, #2324)
  - obspy.io.quakeml:
     * Read and write support for nested custom tags (see #1463)
     * Fix some minor bugs that could lead to empty stub elements, e.g. like
