@@ -667,12 +667,14 @@ class Inventory(ComparingObject):
             without child elements (stations/channels) will still be included
             in the result.
         """
+        # Select all objects that are to be removed.
         selected = self.select(network=network, station=station,
                                location=location, channel=channel)
         selected_networks = [net for net in selected]
         selected_stations = [sta for net in selected_networks for sta in net]
         selected_channels = [cha for net in selected_networks
                              for sta in net for cha in sta]
+        # Iterate inventory tree and rebuild it excluding selected components.
         networks = []
         for net in self:
             if net in selected_networks and station == '*' and \
@@ -688,12 +690,14 @@ class Inventory(ComparingObject):
                     if cha in selected_channels:
                         continue
                     channels.append(cha)
-                if not channels and not keep_empty:
+                channels_were_empty = not bool(sta.channels)
+                if not channels and not (keep_empty or channels_were_empty):
                     continue
                 sta = copy.copy(sta)
                 sta.channels = channels
                 stations.append(sta)
-            if not stations and not keep_empty:
+            stations_were_empty = not bool(net.stations)
+            if not stations and not (keep_empty or stations_were_empty):
                 continue
             net = copy.copy(net)
             net.stations = stations
