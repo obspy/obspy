@@ -320,6 +320,33 @@ class Inventory(ComparingObject):
             raise ValueError(msg)
         return write_format(self, path_or_file_object, **kwargs)
 
+    def copy(self):
+        """
+        Return a deepcopy of the Inventory object.
+
+        :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
+        :return: Copy of current inventory.
+
+        .. rubric:: Examples
+
+        1. Create an Inventory and copy it
+
+            >>> from obspy import read_inventory
+            >>> inv = read_inventory()
+            >>> inv2 = inv.copy()
+
+           The two objects are not the same:
+
+            >>> inv is inv2
+            False
+
+           But they are (currently) equal:
+
+            >>> inv == inv2
+            True
+        """
+        return copy.deepcopy(self)
+
     @property
     def networks(self):
         return self._networks
