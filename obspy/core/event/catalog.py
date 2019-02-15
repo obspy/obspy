@@ -152,9 +152,7 @@ class Catalog(object):
         """
         if not isinstance(other, Catalog):
             return False
-        if self.events != other.events:
-            return False
-        return True
+        return self.events == other.events
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -815,7 +813,7 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
         # if no pathname or URL specified, return example catalog
         return _create_example_catalog()
     else:
-        return _generic_reader(pathname_or_url, format, _read, **kwargs)
+        return _generic_reader(pathname_or_url, _read, format=format, **kwargs)
 
 
 @uncompress_file

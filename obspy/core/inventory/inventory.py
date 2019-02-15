@@ -50,7 +50,7 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     """
     Function to read inventory files.
 
-    :type path_or_file_object: str or StringIO.StringIO
+    :type path_or_file_object: str or file-like object.
     :param path_or_file_object: String containing a file name or a URL or a open
         file-like object. Wildcards are allowed for a file name. If this
         attribute is omitted, an example
@@ -88,7 +88,8 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
         # if no pathname or URL specified, return example catalog
         return _create_example_inventory()
     else:
-        return _generic_reader(path_or_file_object, format, _read, **kwargs)
+        return _generic_reader(path_or_file_object, _read, format=format,
+                               **kwargs)
 
 
 @uncompress_file
@@ -97,7 +98,7 @@ def _read(filename, format=None, **kwargs):
     Reads a single event file into a ObsPy Catalog object.
     """
     inventory, format = _read_from_plugin('inventory', filename, format=format,
-                                  **kwargs)
+                                          **kwargs)
     return inventory
 
 @python_2_unicode_compatible
@@ -148,12 +149,12 @@ class Inventory(ComparingObject):
 
     def __eq__(self, other):
         """
-        __eq__ method of the Catalog object.
+        __eq__ method of the Inventory object.
 
         :type other: :class:`~obspy.core.inventory.Inventory`
         :param other: Inventory object for comparison.
         :rtype: bool
-        :return: ``True`` if both Inventories contain the same networks.
+        :return: ``True`` if both Inventories are equal.
 
         .. rubric:: Example
 
@@ -167,9 +168,7 @@ class Inventory(ComparingObject):
         """
         if not isinstance(other, Inventory):
             return False
-        if self.networks != other.networks:
-            return False
-        return True
+        return self.networks == other.networks
 
     def __ne__(self, other):
         return not self.__eq__(other)
