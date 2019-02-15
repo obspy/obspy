@@ -38,8 +38,7 @@ from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNException, FDSNRedirectException,
-                                       FDSNNoDataException, DEFAULT_PARAMETERS,
-                                       DEFAULT_SERVICES)
+                                       FDSNNoDataException, DEFAULT_SERVICES)
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
 
@@ -394,9 +393,9 @@ class ClientTestCase(unittest.TestCase):
 
     def test_discover_services_defaults(self):
         """
-        A Client initialized with _discover_services=False shouldn't perform any
-        services/WADL queries on the endpoint, and should show only the default
-        service parameters.
+        A Client initialized with _discover_services=False shouldn't perform
+        any services/WADL queries on the endpoint, and should show only the
+        default service parameters.
         """
         client = Client(base_url="IRIS", user_agent=USER_AGENT,
                         _discover_services=False)
@@ -606,8 +605,7 @@ class ClientTestCase(unittest.TestCase):
             del tr.stats._fdsnws_dataselect_url
         self.assertEqual(got, expected, failmsg(got, expected))
 
-
-    def test_iris_example_queries_event_discover_services_False(self):
+    def test_iris_example_queries_event_discover_services_false(self):
         """
         Tests the (sometimes modified) example queries given on the IRIS
         web page, without service discovery.
@@ -657,7 +655,7 @@ class ClientTestCase(unittest.TestCase):
             # does not only check the preferred magnitude..
             self.assertTrue(any(m.mag >= 3.999 for m in event.magnitudes))
 
-    def test_iris_example_queries_station_discover_services_False(self):
+    def test_iris_example_queries_station_discover_services_false(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage,
         without service discovery.
@@ -731,7 +729,7 @@ class ClientTestCase(unittest.TestCase):
                 self.assertEqual(net.code, "IU")
                 self.assertTrue(sta.code.startswith("A"))
 
-    def test_iris_example_queries_dataselect_discover_services_False(self):
+    def test_iris_example_queries_dataselect_discover_services_false(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage,
         without discovering services first.
@@ -1571,7 +1569,6 @@ class ClientTestCase(unittest.TestCase):
             client = Client(
                 'GFZ', eida_token=os.path.join(self.datapath,
                                                'event_helpstring.txt'))
-        
 
 
 def suite():

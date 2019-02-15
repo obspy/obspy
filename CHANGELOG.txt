@@ -30,6 +30,10 @@ master:
    * Added wildcard and url support to read_inventory (see #2326).
    * Modified stream.get_gaps() to deal with overlaps correctly (see #1403)
  - obspy.clients.fdsn:
+   * Add new `_discover_services` boolean flag to the Client, which allows the
+     Client to skip the initial services query at instantiation.  This can
+     reduce the load on service providers, but skips checks against unsupported
+     query parameters.
    * Adding more location codes to the default priority list in the mass
      downloader (see #2155, #2159).
    * The mass downloader now raises a warning if all channels from a station

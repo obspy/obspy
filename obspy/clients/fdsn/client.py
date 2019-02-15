@@ -205,10 +205,10 @@ class Client(object):
         :type _discover_services: bool
         :param _discover_services: By default the client will query information
             about the FDSN endpoint when it is instantiated.  In certain cases,
-            this may place a heavy load on the FDSN service provider.  If set to
-            ``False``, no service discovery is performed and default parameter
-            support is assumed. This parameter is experimental and will likely
-            be removed in the future.
+            this may place a heavy load on the FDSN service provider.  If set
+            to ``False``, no service discovery is performed and default
+            parameter support is assumed. This parameter is experimental and
+            will likely be removed in the future.
         """
         self.debug = debug
         self.user = user
