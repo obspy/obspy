@@ -27,6 +27,7 @@ master:
    * Added copy method to Inventory class (see #2322).
    * The Response.recalculate_overall_sensitivity() method now accepts integers
      (see #2338, #2343).
+   * Added wildcard and url support to read_inventory (see #2326).
  - obspy.clients.fdsn:
    * Adding more location codes to the default priority list in the mass
      downloader (see #2155, #2159).
