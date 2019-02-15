@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML schemaVersion="1.0" xmlns="http://www.fdsn.org/xml/station/1">
+  <Source>sender name</Source>
+  <Module>ObsPy 0.10.1.dev0+167.g963edb1cee.dirty.krischer.arraytools</Module>
+  <ModuleURI>http://www.obspy.org</ModuleURI>
+  <Created>2015-07-10T13:07:56+00:00</Created>
+  <Network code="BW">
+    <Station code="BW01">
+      <Latitude unit="DEGREES">48.108589</Latitude>
+      <Longitude unit="DEGREES">11.582967</Longitude>
+      <Elevation unit="METERS">0.45</Elevation>
+      <Site>
+        <Name>agfa</Name>
+      </Site>
+      <CreationDate>2008-02-17T11:05:00+00:00</CreationDate>
+      <TerminationDate>2008-02-17T11:05:00+00:00</TerminationDate>
+      <Channel code="ZH" locationCode="">
+        <Latitude unit="DEGREES">48.108589</Latitude>
+        <Longitude unit="DEGREES">11.582967</Longitude>
+        <Elevation unit="METERS">0.45</Elevation>
+        <Depth unit="METERS">0.0</Depth>
+      </Channel>
+    </Station>
+    <Station code="BW02">
+      <Latitude unit="DEGREES">48.108192</Latitude>
+      <Longitude unit="DEGREES">11.58312</Longitude>
+      <Elevation unit="METERS">0.45</Elevation>
+      <Site>
+        <Name>agfa</Name>
+      </Site>
+      <CreationDate>2008-02-17T11:05:00+00:00</CreationDate>
+      <TerminationDate>2008-02-17T11:05:00+00:00</TerminationDate>
+      <Channel code="ZH" locationCode="">
+        <Latitude unit="DEGREES">48.108192</Latitude>
+        <Longitude unit="DEGREES">11.58312</Longitude>
+        <Elevation unit="METERS">0.45</Elevation>
+        <Depth unit="METERS">0.0</Depth>
+      </Channel>
+    </Station>
+    <Station code="BW03">
+      <Latitude unit="DEGREES">48.108692</Latitude>
+      <Longitude unit="DEGREES">11.583414</Longitude>
+      <Elevation unit="METERS">0.45</Elevation>
+      <Site>
+        <Name>agfa</Name>
+      </Site>
+      <CreationDate>2008-02-17T11:05:00+00:00</CreationDate>
+      <TerminationDate>2008-02-17T11:05:00+00:00</TerminationDate>
+      <Channel code="ZH" locationCode="">
+        <Latitude unit="DEGREES">48.108692</Latitude>
+        <Longitude unit="DEGREES">11.583414</Longitude>
+        <Elevation unit="METERS">0.45</Elevation>
+        <Depth unit="METERS">0.0</Depth>
+      </Channel>
+    </Station>
+    <Station code="BW07">
+      <Latitude unit="DEGREES">48.108456</Latitude>
+      <Longitude unit="DEGREES">11.583049</Longitude>
+      <Elevation unit="METERS">0.45</Elevation>
+      <Site>
+        <Name>agfa</Name>
+      </Site>
+      <CreationDate>2008-02-17T11:05:00+00:00</CreationDate>
+      <TerminationDate>2008-02-17T11:05:00+00:00</TerminationDate>
+      <Channel code="ZH" locationCode="">
+        <Latitude unit="DEGREES">48.108456</Latitude>
+        <Longitude unit="DEGREES">11.583049</Longitude>
+        <Elevation unit="METERS">0.45</Elevation>
+        <Depth unit="METERS">0.0</Depth>
+      </Channel>
+    </Station>
+    <Station code="BW08">
+      <Latitude unit="DEGREES">48.10873</Latitude>
+      <Longitude unit="DEGREES">11.583157</Longitude>
+      <Elevation unit="METERS">0.45</Elevation>
+      <Site>
+        <Name>agfa</Name>
+      </Site>
+      <CreationDate>2008-02-17T11:05:00+00:00</CreationDate>
+      <TerminationDate>2008-02-17T11:05:00+00:00</TerminationDate>
+      <Channel code="ZH" locationCode="">
+        <Latitude unit="DEGREES">48.10873</Latitude>
+        <Longitude unit="DEGREES">11.583157</Longitude>
+        <Elevation unit="METERS">0.45</Elevation>
+        <Depth unit="METERS">0.0</Depth>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>
