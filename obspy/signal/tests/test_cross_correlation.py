@@ -17,9 +17,10 @@ from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.libnames import _load_cdll
 from obspy.core.util.testing import ImageComparison
 from obspy.signal.cross_correlation import (correlate, correlate_template,
+                                            correlate_stream_template,
+                                            similarity_detector,
                                             xcorr_pick_correction,
                                             xcorr_3c, xcorr_max, xcorr,
-                                            xcorr_detector,
                                             _xcorr_padzeros, _xcorr_slice)
 
 
@@ -500,44 +501,68 @@ class CrossCorrelationTestCase(unittest.TestCase):
                                          normalize=normalize)
                 np.testing.assert_allclose(cc3, cc4)
 
-    def test_xcorr_detector(self):
+    def test_correlate_stream_template_and_similarity_detector(self):
         template = read().filter('highpass', freq=5).normalize()
+        pick = UTCDateTime('2009-08-24T00:20:07.73')
+        template.trim(pick, pick + 10)
+        n1 = len(template[0])
+        n2 = 100 * 3600  # 1 hour
+        # shift one template Trace
         template[1].stats.starttime += 20
         stream = template.copy()
-        N1 = len(template[0])
-        N2 = 100 * 3600  # 1 hour
         np.random.seed(42)
         for tr, trt in zip(stream, template):
             tr.stats.starttime += 24 * 3600
-            tr.data = np.random.random(N2) - 0.5  # noise
+            tr.data = np.random.random(n2) - 0.5  # noise
             if tr.stats.channel[-1] == 'Z':
-                tr.data[N1:2*N1] += 10 * trt.data
-            tr.data[5*N1:6*N1] += 5 * trt.data
-            tr.data[20*N1:21*N1] += 2 * trt.data
-        d, ccs = xcorr_detector(stream, template, 0.2)
+                tr.data[n1:2*n1] += 10 * trt.data
+                tr.data = tr.data[:-n1]
+            tr.data[5*n1:6*n1] += 5 * trt.data
+            tr.data[20*n1:21*n1] += 2 * trt.data
+        # make one template trace a bit shorter
+        template[2].data = template[2].data[:-n1 // 5]
+
+        ccs = correlate_stream_template(stream, template)
+        d = similarity_detector(ccs, 0.2, 30, 30)
+
         self.assertEqual(len(d), 3)
         self.assertEqual(len(ccs), len(stream))
+        self.assertEqual(stream[0].stats.starttime, ccs[0].stats.starttime)
 
-        def dummy(ccs):
-            N = len(list(ccs.values())[0])
-            cond = np.zeros(N, dtype=bool)
-            cond[0] = True
-            return cond
-
-        def component_thres(ccs):
-            ccmatrix = np.array(list(ccs.values()))
-            return np.sum(ccmatrix > 0.2, axis=0) / len(ccs) > 0.6
-
-        d, ccs = xcorr_detector(stream, template, condition=dummy)
+        simple_cond = np.zeros(len(ccs[0]), dtype=bool)
+        simple_cond[0] = True
+        d = similarity_detector(ccs, None, 30, 30, condition=simple_cond)
         self.assertEqual(len(d), 1)
-        self.assertEqual(d[0], stream[0].stats.starttime)
-        d, ccs = xcorr_detector(stream, template, 0.2,
-                                condition=component_thres)
+        self.assertEqual(d[0], ccs[0].stats.starttime)
+
+        ccmatrix = np.array([tr.data for tr in ccs])
+        comp_thres = np.sum(ccmatrix > 0.2, axis=0) / len(ccs) > 0.6
+        similarity = ccs[0].copy()
+        similarity.data = np.mean(ccmatrix, axis=0)
+        d = similarity_detector(None, 0.2, 30, 30, similarity=similarity,
+                                condition=comp_thres)
         self.assertEqual(len(d), 2)
-        d, ccs = xcorr_detector(stream, template, 0.2, holdon=150, holdoff=500)
+#        from obspy.signal.trigger import plot_trigger
+#        similarity.data = similarity.data[:len(stream[0])]
+#        plot_trigger(stream[0], similarity.data, 0.2, 0.1)
+
+        d = similarity_detector(ccs, 0.2, 150, 500)
         self.assertEqual(len(d), 1)
-        d, ccs = xcorr_detector(stream[:1], template[:1], 0.2)
-        self.assertEqual(len(d), 2)
+
+        ccs = correlate_stream_template(stream[:2], template[1:])
+        self.assertEqual(len(ccs), 1)
+
+        ccs1 = correlate_stream_template(stream, template)
+        template_time = template[0].stats.starttime + 100
+        ccs2 = correlate_stream_template(stream, template,
+                                         template_time=template_time)
+        self.assertEqual(len(ccs2), len(ccs1))
+        delta = ccs2[0].stats.starttime - ccs1[0].stats.starttime
+        self.assertAlmostEqual(delta, 100)
+
+
+
+
 
 
 def suite():
