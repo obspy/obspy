@@ -585,7 +585,8 @@ class InventoryTestCase(unittest.TestCase):
         # make sure changing inv2 doesnt affect inv
         original_latitude = inv2[0][0][0].latitude
         inv2[0][0][0].latitude = original_latitude + 1
-        self.assertEqual(inv[0][0][0].latitude, original_latitude + 1)
+        self.assertEqual(inv[0][0][0].latitude, original_latitude)
+        self.assertEqual(inv2[0][0][0].latitude, original_latitude + 1)
         self.assertNotEqual(inv[0][0][0].latitude, inv2[0][0][0].latitude)
 
 
