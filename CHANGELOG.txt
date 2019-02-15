@@ -93,6 +93,8 @@
  - obspy.taup:
    * Fallback to linear slowness interpolation for very small and
      shallow layers (see #2126, #2129).
+   * Fix bug preventing constant-velocity models with discontinuities at every
+     layer boundary from being built.
 
 1.1.0: (doi: 10.5281/zenodo.165135)
  - General:
