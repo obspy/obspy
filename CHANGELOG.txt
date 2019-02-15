@@ -57,8 +57,8 @@ master:
  - obspy.io.sh:
    * Add read support for SeismicHandler EVT event files (see #2109)
  - obspy.io.shapefile:
-   * Add possibility to add custom database columns when writing catalog
-     objects to shapefile (see #2012)
+   * Add possibility to add custom database columns when writing catalog or
+     inventory objects to shapefile (see #2012 and #2305)
  - obspy.io
     * added read support for receiver gather format v. 1.6 (see #2070)
  - obspy.signal.trigger:
