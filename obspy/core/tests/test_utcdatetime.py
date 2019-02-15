@@ -1161,7 +1161,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         for value in ["998-01-01", "98-01-01", "9-01-01"]:
             with self.assertRaises(ValueError) as e:
-                t = UTCDateTime(value)
+                UTCDateTime(value)
             msg = "'%s' does not start with a 4 digit year" % value
             self.assertEqual(msg, e.exception.args[0])
 
