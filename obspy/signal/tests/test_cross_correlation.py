@@ -22,6 +22,7 @@ from obspy.signal.cross_correlation import (correlate, correlate_template,
                                             xcorr_pick_correction,
                                             xcorr_3c, xcorr_max, xcorr,
                                             _xcorr_padzeros, _xcorr_slice)
+from obspy.signal.trigger import coincidence_trigger
 
 
 class CrossCorrelationTestCase(unittest.TestCase):
@@ -527,6 +528,9 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.assertEqual(len(d), 3)
         self.assertEqual(len(ccs), len(stream))
         self.assertEqual(stream[0].stats.starttime, ccs[0].stats.starttime)
+        # test if xcorr stream is suitable for coincidence_trigger
+        triggers = coincidence_trigger(None, 0.4, 0.4, ccs, 0.5)
+        self.assertEqual(len(triggers), 3)
         # test similarity parameter with additional constraints
         ccmatrix = np.array([tr.data for tr in ccs])
         comp_thres = np.sum(ccmatrix > 0.2, axis=0) / len(ccs) > 0.6
