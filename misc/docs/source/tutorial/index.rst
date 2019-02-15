@@ -59,6 +59,7 @@ Introduction to ObsPy
    code_snippets/visualize_data_availability_of_local_waveform_archive
    code_snippets/travel_time
    code_snippets/xcorr_pick_correction
+   code_snippets/xcorr_detector
    code_snippets/quakeml_custom_tags
    code_snippets/stationxml_custom_tags
    code_snippets/stationxml_file_from_scratch
