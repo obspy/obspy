@@ -22,18 +22,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import glob
-import io
 import copy
-import os
 import warnings
 
 import numpy as np
 
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, _read_from_plugin
-from obspy.core.util.base import (ENTRY_POINTS, download_to_file,
-                                  sanitize_filename, _generic_reader)
+from obspy.core.util import _read_from_plugin
+from obspy.core.util.base import ENTRY_POINTS, _generic_reader
 from obspy.core.util.decorator import map_example_filename, uncompress_file
 from obspy.core.util.misc import buffered_load_entry_point
 from obspy.imaging.cm import obspy_sequential

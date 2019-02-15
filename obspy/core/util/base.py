@@ -680,7 +680,7 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
             for filename in pathnames[1:]:
                 generic.extend(callback_func(filename, **kwargs))
         return generic
-    
+
 
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)

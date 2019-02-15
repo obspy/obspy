@@ -12,19 +12,16 @@ Provides the Inventory class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import python_2_unicode_compatible, native_str
+from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
-import os
 import textwrap
 import warnings
 
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
-                                  _read_from_plugin, NamedTemporaryFile,
-                                  download_to_file, sanitize_filename,
-                                  _generic_reader)
+                                  _read_from_plugin, _generic_reader)
 from obspy.core.util.decorator import map_example_filename, uncompress_file
 from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
@@ -100,6 +97,7 @@ def _read(filename, format=None, **kwargs):
     inventory, format = _read_from_plugin('inventory', filename, format=format,
                                           **kwargs)
     return inventory
+
 
 @python_2_unicode_compatible
 class Inventory(ComparingObject):
