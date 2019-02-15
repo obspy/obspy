@@ -201,6 +201,27 @@ class InventoryTestCase(unittest.TestCase):
                 inv.plot_response(0.01, output="ACC", channel="*N",
                                   station="[WR]*", time=t, outfile=ic.name)
 
+    def test_response_plot_epoch_times_in_label(self):
+        """
+        Tests response plot with epoch times in labels switched on.
+        """
+        import matplotlib.pyplot as plt
+        inv = read_inventory().select(station='RJOB', channel='EHZ')
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            fig = inv.plot_response(0.01, label_epoch_dates=True, show=False)
+        try:
+            legend = fig.axes[0].get_legend()
+            texts = legend.get_texts()
+            expecteds = ['BW.RJOB..EHZ\n2001-05-15 -- 2006-12-12',
+                         'BW.RJOB..EHZ\n2006-12-13 -- 2007-12-17',
+                         'BW.RJOB..EHZ\n2007-12-17 -- open']
+            self.assertEqual(len(texts), 3)
+            for text, expected in zip(texts, expecteds):
+                self.assertEqual(text.get_text(), expected)
+        finally:
+            plt.close(fig)
+
     def test_inventory_merging_metadata_update(self):
         """
         Tests the metadata update during merging of inventory objects.

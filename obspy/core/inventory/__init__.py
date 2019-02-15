@@ -156,6 +156,23 @@ For example:
     resp = inv[0][0][0].response
     resp.plot(0.001, output="VEL")
 
+When plotting stations with instrumentation changes, epoch times can be added
+to the legend labels:
+
+.. code-block:: python
+
+    >>> from obspy import read_inventory
+    >>> inv = read_inventory()
+    >>> inv = inv.select(station='RJOB', channel='EHZ')
+    >>> inv.plot_response(0.001, label_epoch_dates=True)  # doctest: +SKIP
+
+.. plot::
+
+    from obspy import read_inventory
+    inv = read_inventory()
+    inv = inv.select(station='RJOB', channel='EHZ')
+    inv.plot_response(0.001, label_epoch_dates=True)
+
 For more examples see the :ref:`Obspy Gallery <gallery>`.
 
 Dealing with the Response information
