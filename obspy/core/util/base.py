@@ -347,7 +347,7 @@ def get_dependency_version(package_name, raw_string=False):
     try:
         version_string = pkg_resources.get_distribution(package_name).version
     except pkg_resources.DistributionNotFound:
-        return None
+        return []
     if raw_string:
         return version_string
     version_list = version_string.split("rc")[0].strip("~")
