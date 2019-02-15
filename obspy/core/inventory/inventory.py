@@ -48,8 +48,8 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     Function to read inventory files.
 
     :type path_or_file_object: str or file-like object.
-    :param path_or_file_object: String containing a file name or a URL or a open
-        file-like object. Wildcards are allowed for a file name. If this
+    :param path_or_file_object: String containing a file name or a URL or a
+        open file-like object. Wildcards are allowed for a file name. If this
         attribute is omitted, an example
         :class:`~obspy.core.inventory.inventory.Inventory` object will be
         returned.
