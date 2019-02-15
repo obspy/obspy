@@ -333,7 +333,7 @@ class Inventory(ComparingObject):
 
             >>> from obspy import read_inventory
             >>> inv = read_inventory()
-            >>> inv2 = inv2.copy()
+            >>> inv2 = inv.copy()
 
            The two objects are not the same:
 
