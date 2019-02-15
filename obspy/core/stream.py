@@ -1515,7 +1515,7 @@ class Stream(object):
                     # delta is negative!
                     endtime = tr.stats.endtime + delta * tr.stats.delta
             except TypeError:
-                msg = ('starttime and endtime have to be UTCDateTime objects '
+                msg = ('starttime and endtime must be UTCDateTime objects '
                        'or None for this call to Stream.trim()')
                 raise TypeError(msg)
         for trace in self.traces:
