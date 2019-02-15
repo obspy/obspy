@@ -923,8 +923,7 @@ def _calc_mean(stream):
 
 
 def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
-                        similarity=None, condition=None,
-                        plot_similarity=False):
+                        similarity=None, plot_detections=None):
     """
     Detector based on the similarity of waveforms
 
@@ -942,12 +941,8 @@ def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
     :param similarity: The similarity Trace can be directly specified.
         The cross_correlations argument has to be None in this case.
         Otherwise the similarity is calculated as the mean cross correlation.
-    :param condition: Custom condition. This needs to be a bool array with the
-        same length as the cross correlations. A detection is only valid if
-        a sample in the similarity trace is larger than the threshold and
-        the condition array is True for this sample.
-        The mean_thresshold parameter might be None if condition is supplied.
-    :param plot_similarity: plot the similarity with detections and threshold
+    :param plot_detections: plot detections together with the data of the
+        supplied stream
 
     :return: list of UTCDateTime objects with detections
     """
@@ -957,12 +952,7 @@ def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
     dt = similarity.stats.delta
     holdon_samples = int(round(holdon / dt))
     holdoff_samples = int(round(holdoff / dt))
-    conditions = []
-    if mean_threshold is not None:
-        conditions.append(similarity.data >= mean_threshold)
-    if condition is not None:
-        conditions.append(condition)
-    cond = np.logical_and.reduce(conditions)
+    cond = similarity.data >= mean_threshold
     # loop through True values in cond array and guarantee hold time
     similarity_cond = similarity.data[cond]
     cindices = np.nonzero(cond)[0]
@@ -980,136 +970,28 @@ def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
         detections.append(starttime + cindex * dt)
         # wait holdoff time after detection
         i = bisect_left(cindices, cindex + holdoff_samples, lo=j)
-    if plot_similarity:
+    if plot_detections:
+        if plot_detections is True:
+            plot_detections = []
         import matplotlib.pyplot as plt
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        if mean_threshold:
-            ax.axhline(mean_threshold)
+        from obspy.imaging.util import _set_xaxis_obspy_dates
+        akw = dict(xy=(0.02, 0.95), xycoords='axes fraction', va='top')
+        num = len(plot_detections) + 1
+        fig, ax = plt.subplots(num, 1, sharex=True)
+        if num == 1:
+            ax = [ax]
         for detection in detections:
-            ax.axvline(detection - starttime, color='orange')
-        plt.plot(similarity.times(), similarity.data, 'k', lw=0.5)
-        ax.set_xlabel('time (s) realtive to %s' % starttime)
-        ax.set_ylabel('similarity')
+            for i in range(num):
+                ax[i].axvline(detection.matplotlib_date, color='orange')
+        for i, tr in enumerate(plot_detections):
+            ax[i].plot(tr.times('matplotlib'), tr.data, 'k')
+            ax[i].annotate(tr.id, **akw)
+        ax[-1].plot(similarity.times('matplotlib'), similarity.data, 'k')
+        ax[-1].axhline(mean_threshold)
+        ax[-1].annotate('similarity', **akw)
+        _set_xaxis_obspy_dates(ax[-1])
         plt.show()
     return detections
-
-
-#def xcorr_detector(stream, template, mean_threshold=None, condition=None,
-#                   template_time=None, holdon=None, holdoff=None,
-#                   plot_ccmean=False, **kwargs):
-#    """
-#    Detector based on the cross correlation of a template with data.
-#
-#    :param stream: Stream with data traces
-#    :param template: Stream with template traces (should be shorter than data)
-#    :param mean_thresshold: mean cross correlation value across all channels to
-#        trigger a detection
-#    :param condition: Custom condition function which takes a dictionary with
-#        correlations {seed_id: numpy.array} as argument and returns a boolean
-#        array of the same length as the correlations.
-#        Example condition function which sets a sample to True when at least
-#        60% of the components have a correlation value larger than 0.8:
-#
-#        .. sourcecode:: python
-#
-#            def component_thresshold(ccs):
-#                ccmatrix = np.array(list(ccs.values()))
-#                num = np.count_nonzero(ccmatrix > 0.8, axis=0)
-#                return num / len(ccs) > 0.6
-#
-#    :param template_time: UTCDateTime associated with template event
-#        (e.g. origin time, default is the startime of the template stream)
-#    :param holdon: Hold time in seconds, only the detection with largest
-#        correlation value in that time span is returned.
-#        (default: duration of template stream)
-#    :param holdoff: Hold time in seconds, detections are
-#        separated by this time span. (default: duration of template stream)
-#    :param plot_ccmean: plot mean cross correlation with detections and
-#        threshold
-#    :param kwargs: kwargs are passed to correlate_template function
-#
-#    :return: list of UTCDateTime objects with detections and
-#        dictionary with correlations {seed_id: numpy.array}
-#    """
-#    # preparations
-#    stream.merge(fill_value=0)
-#    if len({tr.stats.sampling_rate for tr in stream + template}) > 1:
-#        raise ValueError('Traces have different sampling rate')
-#    ids = {tr.id for tr in stream} | {tr.id for tr in template}
-#    if len(ids) == 0:
-#        raise ValueError('No traces with matching ids in template and stream')
-#    stream.traces = [tr for tr in stream if tr.id in ids]
-#    template.traces = [tr for tr in template if tr.id in ids]
-#    assert len(stream) == len(template)
-#    template.sort()
-#    stream.sort()
-#    starttime = min(tr.stats.starttime for tr in stream)
-#    endtime = max(tr.stats.endtime for tr in stream)
-#    starttime_template = min(tr.stats.starttime for tr in template)
-#    if template_time is None:
-#        template_offset = 0
-#    else:
-#        template_offset = template_time - starttime_template
-#    dt = template[0].stats.delta
-#    if holdon is None:
-#        holdon_samples = np.median([len(tr) for tr in template])
-#    else:
-#        holdon_samples = int(round(holdon / dt))
-#    if holdoff is None:
-#        holdoff_samples = np.median([len(tr) for tr in template])
-#    else:
-#        holdoff_samples = int(round(holdoff / dt))
-#    # trim traces and calculate correlations
-#    ccs = {}
-#    for tr, trt in zip(stream, template):
-#        shift = trt.stats.starttime - starttime_template
-#        tr.trim(starttime + shift, endtime + shift, pad=True, fill_value=0)
-#        ccs[tr.id] = correlate_template(tr, trt, mode='valid', **kwargs)
-#    # make sure xcorrs have the same length, can differ by one sample
-#    len_ = min(len(cc) for cc in ccs.values())
-#    ccs = {id_: cc[:len_] for id_, cc in ccs.items()}
-#    # calculate bool array with possible detections
-#    if mean_threshold is None and condition is None:
-#        return [], ccs
-#    ccmatrix = np.array(list(ccs.values()))
-#    ccmean = np.mean(ccmatrix, axis=0)
-#    conditions = []
-#    if mean_threshold is not None:
-#        conditions.append(ccmean >= mean_threshold)
-#    if condition is not None:
-#        conditions.append(condition(ccs))
-#    cond = np.logical_and.reduce(conditions)
-#    # loop through True values in cond array and guarantee hold time
-#    cc_mean_cond = ccmean[cond]
-#    cindices = np.nonzero(cond)[0]
-#    detections = []
-#    i = 0
-#    while True:
-#        try:
-#            cindex = cindices[i]
-#        except:
-#            break
-#        # look for maximum inside holdon time
-#        j = bisect_left(cindices, cindex + holdon_samples, lo=i)
-#        k = i + np.argmax(cc_mean_cond[i:j])
-#        cindex = cindices[k]
-#        detections.append(starttime + template_offset + cindex * dt)
-#        # wait holdoff time after detection
-#        i = bisect_left(cindices, cindex + holdoff_samples, lo=j)
-#    if plot_ccmean:
-#        import matplotlib.pyplot as plt
-#        fig = plt.figure()
-#        ax = fig.add_subplot(111)
-#        if mean_threshold:
-#            ax.axhline(mean_threshold)
-#        for detection in detections:
-#            ax.axvline(detection - starttime, color='orange')
-#        plt.plot(stream[0].times()[:len(ccmean)], ccmean, 'k', lw=0.5)
-#        ax.set_xlabel('time (s)')
-#        ax.set_ylabel('mean cc value')
-#        plt.show()
-#    return detections, ccs
 
 
 if __name__ == '__main__':

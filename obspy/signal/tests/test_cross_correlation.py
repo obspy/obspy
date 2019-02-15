@@ -521,37 +521,26 @@ class CrossCorrelationTestCase(unittest.TestCase):
             tr.data[20*n1:21*n1] += 2 * trt.data
         # make one template trace a bit shorter
         template[2].data = template[2].data[:-n1 // 5]
-
+        # test if all three events found
         ccs = correlate_stream_template(stream, template)
         d = similarity_detector(ccs, 0.2, 30, 30)
-
         self.assertEqual(len(d), 3)
         self.assertEqual(len(ccs), len(stream))
         self.assertEqual(stream[0].stats.starttime, ccs[0].stats.starttime)
-
-        simple_cond = np.zeros(len(ccs[0]), dtype=bool)
-        simple_cond[0] = True
-        d = similarity_detector(ccs, None, 30, 30, condition=simple_cond)
-        self.assertEqual(len(d), 1)
-        self.assertEqual(d[0], ccs[0].stats.starttime)
-
+        # test similarity parameter with additional constraints
         ccmatrix = np.array([tr.data for tr in ccs])
         comp_thres = np.sum(ccmatrix > 0.2, axis=0) / len(ccs) > 0.6
         similarity = ccs[0].copy()
-        similarity.data = np.mean(ccmatrix, axis=0)
-        d = similarity_detector(None, 0.2, 30, 30, similarity=similarity,
-                                condition=comp_thres)
+        similarity.data = np.mean(ccmatrix, axis=0) * comp_thres
+        d = similarity_detector(None, 0.2, 30, 30, similarity=similarity)
         self.assertEqual(len(d), 2)
-#        from obspy.signal.trigger import plot_trigger
-#        similarity.data = similarity.data[:len(stream[0])]
-#        plot_trigger(stream[0], similarity.data, 0.2, 0.1)
-
+        # test holdon and holdoff parameters
         d = similarity_detector(ccs, 0.2, 150, 500)
         self.assertEqual(len(d), 1)
-
+        # test if traces with not matching seed ids are discarded
         ccs = correlate_stream_template(stream[:2], template[1:])
         self.assertEqual(len(ccs), 1)
-
+        # test template_time parameter
         ccs1 = correlate_stream_template(stream, template)
         template_time = template[0].stats.starttime + 100
         ccs2 = correlate_stream_template(stream, template,
@@ -559,10 +548,6 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.assertEqual(len(ccs2), len(ccs1))
         delta = ccs2[0].stats.starttime - ccs1[0].stats.starttime
         self.assertAlmostEqual(delta, 100)
-
-
-
-
 
 
 def suite():
