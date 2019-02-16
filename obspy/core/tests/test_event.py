@@ -167,7 +167,8 @@ class EventTestCase(unittest.TestCase):
     @unittest.skipIf(
         BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
         'matplotlib 3.0.1 is not campatible with basemap')
-    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
     def test_plot_farfield_without_quiver_with_maps(self):
         """
         Tests to plot P/S wave farfield radiation pattern, also with beachball
@@ -590,7 +591,8 @@ class CatalogBasemapTestCase(unittest.TestCase):
         # Also clear the tracker.
         ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
-    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
     def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters, using Basemap.
