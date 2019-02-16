@@ -37,7 +37,7 @@ if BASEMAP_VERSION:
                       "when rendering countries and continents. ObsPy will "
                       "still work but the maps might be wrong. Please update "
                       "your basemap installation.")
-    if PROJ4_VERSION[0] == 5:
+    if PROJ4_VERSION and PROJ4_VERSION[0] == 5:
         msg = (
             "basemap/pyproj with proj4 version >= 5 has a bug that results in "
             "inverted map axes. Your maps may be wrong. Please use another "
