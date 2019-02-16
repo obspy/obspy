@@ -951,6 +951,7 @@ def create_diverse_catalog():
             pick_id=state['pick_id'],
             scalling_time=state['time'],
             mangitude_hint='ML',
+            scaling_time=UTCDateTime('2012-01-01T00:00:00'),
             scaling_time_errors=ev.QuantityError(uncertainty=42.0),
         )
 

@@ -13,11 +13,12 @@ from lxml import etree
 
 from obspy.core.event import (Catalog, Event, FocalMechanism, Magnitude,
                               MomentTensor, Origin, Pick, ResourceIdentifier,
-                              Tensor, WaveformStreamID, read_events)
+                              StationMagnitude, Tensor, WaveformStreamID,
+                              read_events)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.testing import compare_xml_strings
+from obspy.core.util.testing import compare_xml_strings, create_diverse_catalog
 from obspy.io.quakeml.core import Pickler, _read_quakeml, _write_quakeml
 
 
@@ -26,6 +27,16 @@ IS_RECENT_LXML = False
 version = float(etree.__version__.rsplit('.', 1)[0])
 if version >= 2.3:
     IS_RECENT_LXML = True
+
+
+def _read_write(catalog):
+    """
+    Write the catalg to a BytesIO object, then read it and return result.
+    """
+    bio = io.BytesIO()
+    catalog.write(bio, 'quakeml')
+    bio.seek(0)
+    return read_events(bio, format='quakeml')
 
 
 class QuakeMLTestCase(unittest.TestCase):
@@ -1106,6 +1117,30 @@ class QuakeMLTestCase(unittest.TestCase):
             'the resulting object.')
         # It should of course not be set.
         self.assertIsNone(cat[0].origins[0].depth_type)
+
+    def test_read_write_magnitude_no_origin_id(self):
+        """
+        Create a catalog object with a magnitude and station magnitude both
+        which dont have origin IDs. Ensure it can be written, read, and is
+        equal to the original.
+        """
+        mag = Magnitude(mag=2.4)
+        stamag = StationMagnitude(mag=2.33)
+        event = Event(magnitudes=[mag], station_magnitudes=[stamag])
+        cat1 = Catalog(events=[event])
+        cat2 = _read_write(cat1)
+        self.assertEqual(cat1, cat2)
+
+    def test_read_write_diverse_catalog(self):
+        """
+        Tests for reading/writing a "diverse" catalog, created with the
+        function obspy.core.util.testing.create_diverse_catalog. The diverse
+        catalog intends to use every type in the catalog object tree.
+        See #571.
+        """
+        cat1 = create_diverse_catalog()
+        cat2 = _read_write(cat1)
+        self.assertEqual(cat1, cat2)
 
 
 def suite():
