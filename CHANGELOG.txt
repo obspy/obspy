@@ -1,4 +1,4 @@
-1.1.1rc4:
+1.1.1: (doi: 10.5281/zenodo.1040770)
  - General:
    * Tests pass with numpy 1.14 (see #2044).
    * Map plots now also work with matplotlib >= 2.2 (see #2089).
