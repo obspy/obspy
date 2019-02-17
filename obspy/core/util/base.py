@@ -347,7 +347,7 @@ def get_dependency_version(package_name, raw_string=False):
     try:
         version_string = pkg_resources.get_distribution(package_name).version
     except pkg_resources.DistributionNotFound:
-        return None
+        return []
     if raw_string:
         return version_string
     version_list = version_string.split("rc")[0].strip("~")
@@ -363,7 +363,8 @@ def get_proj_version(raw_string=False):
     (see basemap issue 433).  Checking this will allow us to raise a warning
     when plotting using basemap.
 
-    :returns: Package version as a list of three integers.
+    :returns: Package version as a list of three integers. Empty list if pyproj
+        not installed.
         With option ``raw_string=True`` returns raw version string instead.
         The last version number can indicate different things like it being a
         version from the old svn trunk, the latest git repo, some release
@@ -371,7 +372,10 @@ def get_proj_version(raw_string=False):
         If the last number cannot be converted to an integer it will be set to
         0.
     """
-    from pyproj import Proj
+    try:
+        from pyproj import Proj
+    except ImportError:
+        return []
 
     # proj4 is a c library, prproj wraps this.  proj_version is an attribute
     # of the Proj class that is only set when the projection is made. Make

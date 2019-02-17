@@ -83,12 +83,13 @@ master:
      'method' parameter to be consistent with recent SciPy versions
      (see #2042).
 
-1.1.1rc1.post0:
+1.1.1: (doi: 10.5281/zenodo.1040770)
  - General:
    * Tests pass with numpy 1.14 (see #2044).
+   * Map plots now also work with matplotlib >= 2.2 (see #2089).
  - obspy.core:
-   * UTCDateTime now raises a meaningful exceptions when passing
-     invalid or out-of-bounds 'julday' during initialization (see #1988)
+   * UTCDateTime now raises a meaningful exceptions when passing invalid or
+     out-of-bounds 'julday' during initialization (see #1988)
    * Fix pickling of traces with a sampling rate of 0 (see #1990)
    * read_inventory() used with non-existing file path (e.g. typo in filename)
      now shows a proper "No such file or directory" error message (see #2062)
@@ -101,20 +102,25 @@ master:
      creating a string representation (see #2119 and #2127).
    * Fix Stream.get_gaps() when a trace is completely overlapping another trace
      (see #2218).
-   * Fig Exception when comparing ComparingObjects (see #2220).
+   * Fix Exception when comparing ComparingObjects (see #2220).
+   * Fix UTCDateTime.strftime() when year is <1900 on Python 2 (see #2167)
+   * Inventory objects are more convenient to create now. Network, station, and
+     channel codes can now be optional. Additionally the source parameter of
+     inventories must no longer be specified at init time (see #2307, #2314).
  - obspy.clients.arclink:
    * Raise a warning at import time that the ArcLink protocol will be
      deprecated soon (see #1987).
  - obspy.clients.fdsn:
    * Mass downloader: Priority lists are now correctly overwritten if `channel`
      and/or `location` are set (see #1810, #2031, #2047).
-   * A few fixes and stability improvements for the mass downloader
-     (see #2081).
+   * A few fixes and stability improvements for the mass downloader (see
+     #2081).
    * Fixed routing startup error when running under certain locales (see #2147)
+   * Update the IPGP mapping (see #2268).
    * Adding a mapping for the KNMI (see #2270) services.
  - obspy.clients.nrl:
-   * Set input units of overall sensitivity to input units of first stage
-     in NRL.get_response() (see #2248)
+   * Set input units of overall sensitivity to input units of first stage in
+     NRL.get_response() (see #2248)
  - obspy.geodetics:
    * Fix the vincenty inverse calculation for equatorial lines (see #2282).
  - obspy.imaging:
@@ -130,17 +136,18 @@ master:
  - obspy.io.css:
    * Fix automatic filetype detection (see #2160 and #2162)
  - obspy.io.gcf:
-   * Fix reading stream ID for station/channel code in header (see #2289, #2311)
+   * Fix reading stream ID for station/channel code in header (see #2289,
+     #2311)
    * Fix bitmask in getting compression code (see #2290, #2310)
  - obspy.io.mseed:
-   * Ability to read files that have embedded chunks of non SEED data.
-     (see #1981, #2057).
-   * Fix util.get_start_and_end_time returning sample rate = 0 when
-     sample rate = 1 (see #2069)
+   * Ability to read files that have embedded chunks of non SEED data. (see
+     #1981, #2057).
+   * Fix util.get_start_and_end_time returning sample rate = 0 when sample rate
+     = 1 (see #2069)
    * Avoid showing invalid warnings when guessing endian during parsing
      timestamps (see #1988)
-   * util.get_record_information() now works correctly for negative
-     sampling rate factors and multipliers (see #2030, #2191).
+   * util.get_record_information() now works correctly for negative sampling
+     rate factors and multipliers (see #2030, #2191).
  - obspy.io.nordic
    * Bug-fix for amplitudes without magnitude_hint (see #2021)
    * Bug-fix for wavefiles with full path stripping (see #2021)
@@ -152,14 +159,23 @@ master:
      #2038, #2105)
    * Fix a bug that prevents reading files that have no data in first channel
      (see #2101)
+ - obspy.io.sac:
+   * Allow passing on the byteorder flag from the top-level `obspy.read()`
+     function (see #2285, #2292).
  - obspy.io.seiscomp:
    * Fix inventory read when maxClockDrift is unset in SC3ML (see #1993)
-   * Fix the reading of FIR coefficients when multiple whitespaces in SC3ML (see #2259)
-   * Fix the reading of the poles and zeros when multiple whitespaces in SC3ML (see #2260).
+   * Fix the reading of FIR coefficients when multiple whitespaces in SC3ML
+     (see #2259)
+   * Fix the reading of the poles and zeros when multiple whitespaces in SC3ML
+     (see #2260).
    * Fix reading files with zero sampling rates (see #2294 and #2293)
+   * Fix divide by zero error when parsing sc3ml files of zero sampling rage
+     (see #2294).
  - obspy.io.stationxml
    * Allow writing of dates before 1900 also on Python 2 (see #2013, #2015).
    * Write the UTC time zone specifier to all times (see #2015).
+   * Units of first response stage as well as unit response stages are now
+     determined with some heuristics (see #2250, #2318).
  - obspy.io.xseed:
    * Third condition to split blockettes when reading RESP files. Now more
      forgiving for slightly different files (see #2170, #2189)
@@ -170,13 +186,17 @@ master:
    * PPSD: for safety reasons, raise an ObsPyException if trying to read a PPSD
      npz file that was written with a newer version of the npz representation
      than is used by current ObsPy version (see #2051)
-   * The ar_pick() trigger function now raises an error if the three data arrays
-     don't have the same length (see #1801, #2148).
+   * The ar_pick() trigger function now raises an error if the three data
+     arrays don't have the same length (see #1801, #2148).
    * fix a precision issue in AR picker in case of low amplitude input (see
      #2252 and #2253)
  - obspy.taup:
-   * Fallback to linear slowness interpolation for very small and
-     shallow layers (see #2126, #2129).
+   * Fallback to linear slowness interpolation for very small and shallow
+     layers (see #2126, #2129).
+   * Fix bug preventing constant-velocity models with discontinuities at every
+     layer boundary from being built (see #2264).
+   * More robust resize method so TauPy now works properly on Python 3.7 (see
+     #2280, #2319).
 
 1.1.0: (doi: 10.5281/zenodo.165135)
  - General:
