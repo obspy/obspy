@@ -207,6 +207,11 @@ class UTCDateTime(object):
         >>> UTCDateTime(year=1970, month=1, day=1, hour=48, strict=False)
         UTCDateTime(1970, 1, 3, 0, 0)
 
+    (8) Using the magic "today" argument to get the UTCDatetime for the
+        beginning of today:
+
+        >>> today = UTCDateTime("today")
+
     .. rubric:: _`Precision`
 
     The :class:`UTCDateTime` class works with a default precision of ``6``
@@ -322,6 +327,12 @@ class UTCDateTime(object):
                     value = value.decode()
                 # got a string instance
                 value = value.strip()
+
+                if value == "today":
+                    value = self.now()
+                    dt = datetime.datetime(value.year, value.month, value.day)
+                    self._from_datetime(dt)
+                    return
 
                 # Raising in the case where the leading string is less than 4
                 # chars; linked to #2167
