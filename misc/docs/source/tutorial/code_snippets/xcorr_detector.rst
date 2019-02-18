@@ -7,11 +7,13 @@ This code snippets shows how to use the functions
 :func:`~obspy.signal.cross_correlation.similarity_detector`.
 
 In the first example we will determine the origin time of the 2017
-Korean nuclear test, by using a template of another test in 2013. We will
-use only s single channel of the station IC.MDJ.
+North Korean nuclear test, by using a template of another test in 2013. We will
+use only a single channel of the station IC.MDJ.
+
 
 .. plot::
-   :include-source:
+    :context:
+    :include-source:
 
     from obspy import read, UTCDateTime as UTC
     from obspy.signal.cross_correlation import correlate_stream_template, similarity_detector
@@ -19,6 +21,11 @@ use only s single channel of the station IC.MDJ.
     template = read('https://examples.obspy.org/IC.MDJ.2013.043.mseed')
     template.filter('bandpass', freqmin=0.5, freqmax=2)
     template.plot()
+
+.. plot::
+    :context:
+    :include-source:
+
     pick = UTC('2013-02-12T02:58:44.95')
     template.trim(pick, pick + 150)
 
@@ -28,9 +35,11 @@ use only s single channel of the station IC.MDJ.
     detections = similarity_detector(ccs, 0.3, 10, 10, plot_detections=stream)
 
 
-The detection corresponds to the starttime of the template. If we know the
-origin time from the first explosion, we can directly get the origin time
-of the 2017 explosion:
+The above detection corresponds to the starttime of the template.
+If the template of the 2013 explosion is associated with its origin time,
+the origin time of the 2017 explosion can be directly determined.
+The thresshold is lowered to 0.2 to detect also the collapse which occured
+around 8 minutes after the 2013 test.
 
 .. testsetup::
 
