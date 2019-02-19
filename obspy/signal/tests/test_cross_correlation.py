@@ -18,6 +18,7 @@ from obspy.core.util.libnames import _load_cdll
 from obspy.core.util.testing import ImageComparison
 from obspy.signal.cross_correlation import (correlate, correlate_template,
                                             correlate_stream_template,
+                                            insert_amplitude_ratio,
                                             similarity_detector,
                                             xcorr_pick_correction,
                                             xcorr_3c, xcorr_max, xcorr,
@@ -518,7 +519,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
             if tr.stats.channel[-1] == 'Z':
                 tr.data[n1:2*n1] += 10 * trt.data
                 tr.data = tr.data[:-n1]
-            tr.data[5*n1:6*n1] += 5 * trt.data
+            tr.data[5*n1:6*n1] += 100 * trt.data
             tr.data[20*n1:21*n1] += 2 * trt.data
         # make one template trace a bit shorter
         template[2].data = template[2].data[:-n1 // 5]
@@ -528,6 +529,12 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.assertEqual(len(detections), 3)
         self.assertEqual(len(ccs), len(stream))
         self.assertEqual(stream[0].stats.starttime, ccs[0].stats.starttime)
+        insert_amplitude_ratio(detections, stream, template,
+                               template_magnitude=1)
+        self.assertAlmostEqual(detections[1]['amplitude_ratio'], 100, delta=1)
+        self.assertAlmostEqual(detections[1]['magnitude'], 1 + 8 / 3,
+                               delta=0.01)
+        self.assertAlmostEqual(detections[2]['amplitude_ratio'], 2, delta=2)
         # test similarity parameter with additional constraints
         # test details=True
         ccmatrix = np.array([tr.data for tr in ccs])
