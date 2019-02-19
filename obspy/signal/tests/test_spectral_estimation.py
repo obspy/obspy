@@ -470,11 +470,16 @@ class PsdTestCase(unittest.TestCase):
             np.testing.assert_array_equal(selection_got, expected_selection)
 
         # test one particular selection as an image test
+        # mpl < 2.2 has slightly offset ticks/ticklabels, so needs a higher
+        # tolerance (see e.g. http://tests.obspy.org/102260)
+        reltol = 1.5
+        if MATPLOTLIB_VERSION < [2, 2]:
+            reltol = 5
         plot_kwargs = dict(max_percentage=15, xaxis_frequency=True,
                            period_lim=(0.01, 50))
         ppsd.calculate_histogram(**stack_criteria_list[1])
         with ImageComparison(self.path_images,
-                             'ppsd_restricted_stack.png', reltol=1.5) as ic:
+                             'ppsd_restricted_stack.png', reltol=reltol) as ic:
             fig = ppsd.plot(show=False, **plot_kwargs)
             # some matplotlib/Python version combinations lack the left-most
             # tick/label "Jan 2015". Try to circumvent and get the (otherwise
@@ -491,7 +496,7 @@ class PsdTestCase(unittest.TestCase):
         #     matches (like above):
         ppsd.calculate_histogram(**stack_criteria_list[1])
         with ImageComparison(self.path_images,
-                             'ppsd_restricted_stack.png', reltol=1.5,
+                             'ppsd_restricted_stack.png', reltol=reltol,
                              plt_close_all_exit=False) as ic:
             fig = ppsd.plot(show=False, **plot_kwargs)
             # some matplotlib/Python version combinations lack the left-most
@@ -527,7 +532,7 @@ class PsdTestCase(unittest.TestCase):
         #     image test should pass agin:
         ppsd.calculate_histogram(**stack_criteria_list[1])
         with ImageComparison(self.path_images,
-                             'ppsd_restricted_stack.png', reltol=1.5,
+                             'ppsd_restricted_stack.png', reltol=reltol,
                              plt_close_all_enter=False) as ic:
             ppsd._plot_histogram(fig=fig, draw=True)
             with np.errstate(under='ignore'):
