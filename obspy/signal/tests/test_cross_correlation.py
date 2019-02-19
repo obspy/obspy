@@ -524,20 +524,29 @@ class CrossCorrelationTestCase(unittest.TestCase):
         template[2].data = template[2].data[:-n1 // 5]
         # test if all three events found
         ccs = correlate_stream_template(stream, template)
-        d = similarity_detector(ccs, 0.2, 30, 30)
-        self.assertEqual(len(d), 3)
+        detections = similarity_detector(ccs, 0.2, 30, 30)
+        self.assertEqual(len(detections), 3)
         self.assertEqual(len(ccs), len(stream))
         self.assertEqual(stream[0].stats.starttime, ccs[0].stats.starttime)
-        # test if xcorr stream is suitable for coincidence_trigger
-        triggers = coincidence_trigger(None, 0.4, 0.4, ccs, 0.5)
-        self.assertEqual(len(triggers), 3)
         # test similarity parameter with additional constraints
+        # test details=True
         ccmatrix = np.array([tr.data for tr in ccs])
-        comp_thres = np.sum(ccmatrix > 0.2, axis=0) / len(ccs) > 0.6
+        comp_thres = np.sum(ccmatrix > 0.2, axis=0) > 1
         similarity = ccs[0].copy()
         similarity.data = np.mean(ccmatrix, axis=0) * comp_thres
-        d = similarity_detector(None, 0.2, 30, 30, similarity=similarity)
-        self.assertEqual(len(d), 2)
+        detections = similarity_detector(ccs, 0.1, 30, 30,
+                                         similarity=similarity, details=True)
+        self.assertEqual(len(detections), 2)
+        for d in detections:
+            self.assertAlmostEqual(np.mean(list(d['cc_values'].values())),
+                                   d['similarity'])
+        # test if xcorr stream is suitable for coincidence_trigger
+        # result should be the same, return values related
+        triggers = coincidence_trigger(None, 0.2, -1, ccs, 2,
+                                       max_trigger_length=30, details=True)
+        self.assertEqual(len(triggers), 2)
+        for d, t in zip(detections, triggers):
+            self.assertAlmostEqual(np.mean(t['cft_peaks']), d['similarity'])
         # test holdon and holdoff parameters
         d = similarity_detector(ccs, 0.2, 150, 500)
         self.assertEqual(len(d), 1)

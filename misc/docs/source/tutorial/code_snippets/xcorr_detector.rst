@@ -12,7 +12,7 @@ use only a single channel of the station IC.MDJ.
 
 
 .. plot::
-    :context:
+    :context: reset
     :include-source:
 
     from obspy import read, UTCDateTime as UTC
@@ -60,11 +60,13 @@ around 8 minutes after the 2013 test.
     ccs = correlate_stream_template(stream, template, template_time=utc_nuclear_test_2013)
     detections = similarity_detector(ccs, 0.2, 10, 10)
     print('number of detections:', len(detections))
-    print('detections:', ', '.join(str(d) for d in detections))
+    for detection in detections:
+        print('detection at {time} with similarity {similarity:.2f}'.format(**detection))
 
 
 .. testoutput::
 
     number of detections: 2
-    detections: 2017-09-03T03:30:01.371731Z, 2017-09-03T03:38:31.821731Z
+    detection at 2017-09-03T03:30:01.371731Z with similarity 0.46
+    detection at 2017-09-03T03:38:31.821731Z with similarity 0.21
 

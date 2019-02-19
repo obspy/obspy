@@ -924,7 +924,7 @@ def _calc_mean(stream):
 
 
 def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
-                        similarity=None, plot_detections=None):
+                        similarity=None, plot_detections=None, details=False):
     """
     Detector based on the similarity of waveforms
 
@@ -940,14 +940,17 @@ def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
     :param holdoff: Hold time in seconds, detections are
         separated by this time span.
     :param similarity: The similarity Trace can be directly specified.
-        The cross_correlations argument has to be None in this case.
+        The cross_correlations argument is ignored in this case.
         Otherwise the similarity is calculated as the mean cross correlation.
-    :param plot_detections: plot detections together with the data of the
+    :param plot_detections: Plot detections together with the data of the
         supplied stream
+    :param details: By default the list returned by this function includes
+        detection time and similarity value. If set to True it also returns
+        the individual cross correlation values for all channels.
 
-    :return: list of UTCDateTime objects with detections
+    :return: List of event detections sorted chronologically.
     """
-    if cross_correlations is not None:
+    if similarity is None:
         similarity = _calc_mean(cross_correlations)
     starttime = similarity.stats.starttime
     dt = similarity.stats.delta
@@ -968,14 +971,19 @@ def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
         j = bisect_left(cindices, cindex + holdon_samples, lo=i)
         k = i + np.argmax(similarity_cond[i:j])
         cindex = cindices[k]
-        detections.append(starttime + cindex * dt)
+        detection = {'time': starttime + cindex * dt,
+                     'similarity': similarity_cond[k]}
+        if details and cross_correlations is not None:
+            detection['cc_values'] = {tr.id: tr.data[cindex]
+                                      for tr in cross_correlations}
+        detections.append(detection)
         # wait holdoff time after detection
         i = bisect_left(cindices, cindex + holdoff_samples, lo=j)
     if plot_detections:
-        if plot_detections is True:
-            plot_detections = []
         import matplotlib.pyplot as plt
         from obspy.imaging.util import _set_xaxis_obspy_dates
+        if plot_detections is True:
+            plot_detections = []
         akw = dict(xy=(0.02, 0.95), xycoords='axes fraction', va='top')
         num = len(plot_detections) + 1
         fig, ax = plt.subplots(num, 1, sharex=True)
@@ -983,7 +991,8 @@ def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
             ax = [ax]
         for detection in detections:
             for i in range(num):
-                ax[i].axvline(detection.matplotlib_date, color='orange')
+                ax[i].axvline(detection['time'].matplotlib_date,
+                              color='orange')
         for i, tr in enumerate(plot_detections):
             ax[i].plot(tr.times('matplotlib'), tr.data, 'k')
             ax[i].annotate(tr.id, **akw)
