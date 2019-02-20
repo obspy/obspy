@@ -850,7 +850,6 @@ def templates_max_similarity(st, time, streams_templates):
         return 0
 
 
-
 def _prep_streams_correlate(stream, template, template_time=None):
     if len({tr.stats.sampling_rate for tr in stream + template}) > 1:
         raise ValueError('Traces have different sampling rate')
@@ -1033,7 +1032,7 @@ def insert_amplitude_ratio(detections, stream, template, template_time=None,
     for detection in detections:
         t = detection['time']
         ratio = np.mean([np.mean(np.abs(tr.slice(t).data[:len(trt)]))
-                        for tr, trt in zip(stream, template)]) / ref_amp
+                         for tr, trt in zip(stream, template)]) / ref_amp
         detection['amplitude_ratio'] = ratio
         if template_magnitude is not None:
             magdiff = 4 / 3 * np.log10(ratio)
