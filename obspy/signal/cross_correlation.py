@@ -891,17 +891,17 @@ def correlate_stream_template(stream, template, template_time=None, **kwargs):
 
     Only matching seed ids are correlated, other traces are silently discarded.
     The template stream might have traces of different length and different
-    starttimes. The data stream must not have gaps and will be padded with
+    start times. The data stream must not have gaps and will be padded with
     zeros as necessary.
 
-    :param stream: Stream with data traces
-    :param template: Stream with template traces (should be shorter than data)
+    :param stream: Stream with data traces.
+    :param template: Stream with template traces (should be shorter than data).
     :param template_time: UTCDateTime associated with template event
-        (e.g. origin time, default is the startime of the template stream).
-        The starttimes of the returnd Stream will be shifted by the given
-        template time minus the template starttime.
+        (e.g. origin time, default is the start time of the template stream).
+        The start times of the returned Stream will be shifted by the given
+        template time minus the template start time.
     :param kwargs: kwargs are passed to
-        :func:`~obspy.signal.cross_correlation.correlate_template` function
+        :func:`~obspy.signal.cross_correlation.correlate_template` function.
 
     :return: Stream with cross-correlations.
     """
@@ -913,9 +913,9 @@ def correlate_stream_template(stream, template, template_time=None, **kwargs):
     lens = {len(tr) for tr in stream}
     if len(lens) > 1:
         warnings.warn('Samples of traces are slightly misaligned. '
-                      'Use Stream.interpolate if this is not intented.')
+                      'Use Stream.interpolate if this is not intended.')
         if max(lens) - min(lens) > 1:
-            msg = 'This should not happen. Please cotact the developers.'
+            msg = 'This should not happen. Please contact the developers.'
             raise RuntimeError(msg)
         for tr in stream:
             tr.data = tr.data[:min(lens)]
@@ -939,22 +939,22 @@ def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
     This detector evaluates the cross-correlation stream returned by
     :func:`~obspy.signal.cross_correlation.correlate_stream_template`.
 
-    :param cross_correlations: Stream with cross correlations. The similarity
-        is calculated as the mean of the cross correlation value over all
+    :param cross_correlations: Stream with cross-correlations. The similarity
+        is calculated as the mean of the cross-correlation value over all
         channels.
-    :param mean_thresshold: similarity value to trigger a detection
+    :param mean_thresshold: Similarity value to trigger a detection.
     :param holdon: Hold time in seconds, only the detection with largest
         similarity value in that time span is returned.
     :param holdoff: Hold time in seconds, detections are
         separated by this time span.
     :param similarity: The similarity Trace can be directly specified.
-        The cross_correlations argument is ignored in this case.
-        Otherwise the similarity is calculated as the mean cross correlation.
+        Otherwise the similarity is calculated as the mean of
+        cross-correlations.
     :param plot_detections: Plot detections together with the data of the
-        supplied stream
+        supplied stream.
     :param details: By default the list returned by this function includes
         detection time and similarity value. If set to True it also returns
-        the individual cross correlation values for all channels.
+        the individual cross-correlation values for all channels.
 
     :return: List of event detections sorted chronologically.
     """
@@ -1018,10 +1018,10 @@ def insert_amplitude_ratio(detections, stream, template, template_time=None,
     Insert amplitude ratio and magnitude into detections.
 
     :param detections: List of detections from
-       :func:`~obspy.signal.cross_correlation.similarity_detector`
+       :func:`~obspy.signal.cross_correlation.similarity_detector`.
     :param stream,template,template_time: Must be the same objects
        that were passed to
-       :func:`~obspy.signal.cross_correlation.correlate_stream_template`
+       :func:`~obspy.signal.cross_correlation.correlate_stream_template`.
     :param template_magnutde: If provided, magnitude of detections will be
         calculated.
 

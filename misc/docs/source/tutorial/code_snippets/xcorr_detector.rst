@@ -1,8 +1,8 @@
 ==========================
-Cross Correlation Detector
+Cross-Correlation Detector
 ==========================
 
-These code snippets shows how to use the functions
+These code snippets show how to use the functions
 :func:`~obspy.signal.cross_correlation.correlate_stream_template`,
 :func:`~obspy.signal.cross_correlation.similarity_detector` and
 :func:`~obspy.signal.cross_correlation.insert_amplitude_ratio`.
@@ -14,7 +14,6 @@ Detection based on one component
 In the first example we will determine the origin time of the 2017
 North Korean nuclear test, by using a template of another test in 2013. We will
 use only a single channel of the station IC.MDJ.
-
 
 .. plot::
     :context: reset
@@ -39,11 +38,10 @@ use only a single channel of the station IC.MDJ.
     ccs = correlate_stream_template(stream, template)
     detections = similarity_detector(ccs, 0.3, 10, 10, plot_detections=stream)
 
-
-The above detection corresponds to the starttime of the template.
+The above detection corresponds to the start time of the template.
 If the template of the 2013 explosion is associated with its origin time,
 the origin time of the 2017 explosion can be directly determined.
-The thresshold is lowered to 0.2 to detect also the collapse which occured
+The threshold is lowered to 0.2 to detect also the collapse which occurred
 around 8 minutes after the 2013 test.
 
 .. testsetup::
@@ -58,14 +56,12 @@ around 8 minutes after the 2013 test.
     stream = read('https://examples.obspy.org/IC.MDJ.2017.246.mseed')
     stream.filter('bandpass', freqmin=0.5, freqmax=2)
 
-
 .. testcode::
 
     utc_nuclear_test_2013 = UTC('2013-02-12T02:57:51')
     ccs = correlate_stream_template(stream, template, template_time=utc_nuclear_test_2013)
     detections = similarity_detector(ccs, 0.2, 10, 10)
     detections
-
 
 .. testoutput::
 
@@ -80,10 +76,11 @@ Multi-station detection of swarm earthquakes
 In this example we load 12 hours of data from the start of the 2018 Novy Kostel
 earthquake swarm in Northwestern Bohemia/Czech Republic near the border to Germany.
 The example stream consists only of Z component data.
+Data are filtered by a highpass.
 Origin time and magnitude of the largest earthquake in this period are
 extracted from the WEBNET earthquake catalog.
-Data are filtered by a highpass and the template waveforms of this earthquake are selected and plotted.
-After that, cross correlations are caluclated and other earthquakes in the swarm are detected.
+The template waveforms of this earthquake are selected and plotted.
+After that, cross-correlations are calculated and other, similar earthquakes in the swarm are detected.
 
 .. plot::
     :context: reset
@@ -108,13 +105,12 @@ After that, cross correlations are caluclated and other earthquakes in the swarm
     ccs = correlate_stream_template(stream, template, template_time=otime)
     detections = similarity_detector(ccs, 0.5, 10, 10, plot_detections=stream)
 
-Note, that the stream of cross correlations in the variable ccs is also suitable for use with
+Note, that the stream of cross-correlations in the variable ccs is also suitable for use with
 :func:`~obspy.signal.trigger.coincidence_trigger`, but that function will return the trigger time,
-when we are interessed in the time when the similarity is maximized.
+when we are interested in the time when the similarity is maximized.
 
 In the following, we create the similarity trace on our own and introduce the
-constraint that the cross correlation should be larger than 0.5 at all stations.
-
+constraint that the cross-correlation should be larger than 0.5 at all stations.
 
 .. plot::
     :context: close-figs
@@ -122,7 +118,7 @@ constraint that the cross correlation should be larger than 0.5 at all stations.
 
     def similarity_component_thres(ccs, thres, num_components):
         """Return Trace with mean of ccs
-        and set values to zero if number of components above thresshold is not reached"""
+        and set values to zero if number of components above threshold is not reached"""
         ccmatrix = np.array([tr.data for tr in ccs])
         header = dict(sampling_rate=ccs[0].stats.sampling_rate,
                       starttime=ccs[0].stats.starttime)
@@ -137,9 +133,9 @@ Now, we have only 7 detections, probably from a specific earthquake cluster.
 To get more detections, we need to relax the constraints again.
 Another possibility is to calculate the envelope of the data before applying the correlation.
 
-Finally, amplitude ratios between the detections and the template and magnitude
-estimates based on the amplitude ratio and the magnitude of the template event
-are inserted into the detection list.
+Finally, amplitude ratios between the detections and the template are calculated
+and inserted into the detection list. The magnitude of the detected earthquakes
+can also be estimated if the magnitude of the template event is provided.
 
 .. testsetup::
 
@@ -167,12 +163,9 @@ are inserted into the detection list.
     similarity = similarity_component_thres(ccs, 0.5, 3)
     detections = similarity_detector(None, 0.5, 10, 10, similarity=similarity)
 
-
-
 .. testcode::
 
     insert_amplitude_ratio(detections, stream, template, template_time=otime, template_magnitude=2.9)
-
 
 .. testoutput::
 

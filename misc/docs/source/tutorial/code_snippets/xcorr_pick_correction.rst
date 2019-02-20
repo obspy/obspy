@@ -1,5 +1,5 @@
 =================================
-Cross Correlation Pick Correction
+Cross-Correlation Pick Correction
 =================================
 
 This example shows how to align the waveforms of phase onsets of two
