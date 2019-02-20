@@ -47,13 +47,12 @@ class SC3MLTestCase(unittest.TestCase):
         """
         Test multiple schema versions
         """
-        for version in ['0.5', '0.6', '0.7', '0.8', '0.9', '0.10']:
+        for version in ['0.5', '0.6', '0.7', '0.8', '0.9', '0.10', '0.11']:
             filename = os.path.join(self.data_dir, 'version%s' % version)
             read_inventory(filename)
 
-        for version in ['0.3', '0.11']:
+        for version in ['0.3', '0.12']:
             filename = os.path.join(self.data_dir, 'version%s' % version)
-
             with self.assertRaises(ValueError) as e:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
