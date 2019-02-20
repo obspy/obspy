@@ -306,20 +306,21 @@ class ClientTestCase(unittest.TestCase):
 
     def test_trim_stream_after_get_waveform(self):
         """
-        Fixes #1887
+        Tests that stream is properly trimmed to user requested times after
+        fetching from datacenter, see #1887
         """
-        from obspy.clients import fdsn
-        c = fdsn.client.Client(
-            service_mappings={'dataselect': \
-                    'http://eida.ipgp.fr/fdsnws/dataselect/1'}, debug=True)
-        starttime=UTCDateTime('2016-11-01T00:00:00')
-        endtime=UTCDateTime('2016-11-01T00:00:10')
-        stream = c.get_waveforms('G', 'PEL', '*', 'LHZ', starttime,endtime)
+        c = Client(
+            service_mappings={'dataselect':
+                              'http://eida.ipgp.fr/fdsnws/dataselect/1'},
+            debug=True)
+        starttime = UTCDateTime('2016-11-01T00:00:00')
+        endtime = UTCDateTime('2016-11-01T00:00:10')
+        stream = c.get_waveforms('G', 'PEL', '*', 'LHZ', starttime, endtime)
         trace = stream[0]
-        t1= trace.stats.starttime
-        t2= trace.stats.endtime
+        t1 = trace.stats.starttime
+        t2 = trace.stats.endtime
         self.assertEqual(starttime, t1)
-        self.assertEqual(endtime,t2)
+        self.assertEqual(endtime, t2)
 
     def test_service_discovery_iris(self):
         """
