@@ -29,10 +29,10 @@ from obspy.core.util.obspy_types import (ComplexWithUncertainties,
 from obspy.core.inventory import (Azimuth, ClockDrift, Dip,
                                   Distance, Frequency, Latitude,
                                   Longitude, SampleRate)
-from obspy.core.inventory import (CoefficientsTypeResponseStage,
-                                  FilterCoefficient, FIRResponseStage,
-                                  PolesZerosResponseStage,
-                                  PolynomialResponseStage)
+from obspy.core.inventory.response import (
+	    CoefficientsTypeResponseStage, FilterCoefficient, FIRResponseStage,
+	    PolesZerosResponseStage, PolynomialResponseStage, ResponseListElement,
+	    ResponseListResponseStage)
 from obspy.io.stationxml.core import _read_floattype
 
 
@@ -143,7 +143,8 @@ def _read_sc3ml(path_or_file_object):
     responses = {}
 
     # Go over all responses
-    for response_type in ["responseFIR", "responsePAZ", "responseIIR", "responsePolynomial"]: 
+    for response_type in ["responseFAP", "responseFIR", "responsePAZ",
+                          "responseIIR", "responsePolynomial"]: 
         for response_element in inv_element.findall(_ns(response_type)):
             public_id = response_element.get("publicID")
             if public_id:
@@ -417,7 +418,11 @@ def _read_channel(instrumentation_register, cha_element, _ns):
     # obtain the sensorID and link to particular publicID <sensor> element
     # in the inventory base node
     sensor_id = cha_element.get("sensor")
-    sensor_element = instrumentation_register["sensors"].get(sensor_id)
+    if sensor_id is None:
+        sensor_element = None
+    else:
+        sensor_element = instrumentation_register["sensors"]\
+                         .get(sensor_id)
 
     # obtain the poles and zeros responseID and link to particular
     # <responsePAZ> publicID element in the inventory base node
@@ -441,8 +446,11 @@ def _read_channel(instrumentation_register, cha_element, _ns):
     # obtain the dataloggerID and link to particular <responsePAZ> publicID
     # element in the inventory base node
     datalogger_id = cha_element.get("datalogger")
-    data_log_element = \
-        instrumentation_register["dataloggers"].get(datalogger_id)
+    if datalogger_id is None:
+        data_log_element = None
+    else:
+        data_log_element = instrumentation_register["dataloggers"]\
+                           .get(datalogger_id)
 
     channel.restricted_status = _get_restricted_status(cha_element, _ns)
 
@@ -892,6 +900,18 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
 
         return FIRResponseStage(
             coefficients=coeffs_float, symmetry=symmetry, **kwargs)
+
+    elif(elem_type == 'responseFAP'):
+	
+	        data = _tag2obj(stage, _ns("tuples"), str)
+	        data = np.array(data.split(), dtype=np.float64)
+	        freq, amp, phase = data.reshape((-1, 3)).T
+	        elements = []
+	        for freq_, amp_, phase_ in zip(freq, amp, phase):
+	            elements.append(ResponseListElement(freq_, amp_, phase_))
+	
+	        return ResponseListResponseStage(
+	            response_list_elements=elements, **kwargs)
 
 
 def _tag2pole_or_zero(paz_element, count):
