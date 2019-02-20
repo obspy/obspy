@@ -311,16 +311,12 @@ class ClientTestCase(unittest.TestCase):
         """
         c = Client(
             service_mappings={'dataselect':
-                              'http://eida.ipgp.fr/fdsnws/dataselect/1'},
-            debug=True)
+                              'http://eida.ipgp.fr/fdsnws/dataselect/1'})
         starttime = UTCDateTime('2016-11-01T00:00:00')
         endtime = UTCDateTime('2016-11-01T00:00:10')
         stream = c.get_waveforms('G', 'PEL', '*', 'LHZ', starttime, endtime)
-        trace = stream[0]
-        t1 = trace.stats.starttime
-        t2 = trace.stats.endtime
-        self.assertEqual(starttime, t1)
-        self.assertEqual(endtime, t2)
+        self.assertEqual(starttime, stream[0].stats.starttime)
+        self.assertEqual(endtime, stream[0].stats.endtime)
 
     def test_service_discovery_iris(self):
         """
