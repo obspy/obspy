@@ -32,6 +32,9 @@ master:
      have been deselected due to the default location priorities setting. This
      is a pure usability improvement as it has been confusing users
      (see #2159).
+   * make sure that streams fetched via FDSN are properly trimmed to user
+     requested times if data center serves additional data around the start/end
+     (see #1887, #2298)
  - obspy.io.nordic:
    * Add ability to read and write focal mechanisms and moment tensor
      information. (see #1924)

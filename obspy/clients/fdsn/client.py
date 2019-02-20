@@ -839,6 +839,7 @@ class Client(object):
             if attach_response:
                 self._attach_responses(st)
             self._attach_dataselect_url_to_stream(st)
+            st.trim(starttime, endtime)
             return st
 
     def _attach_responses(self, st):

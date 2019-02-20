@@ -304,6 +304,20 @@ class ClientTestCase(unittest.TestCase):
         # queryauth)
         self.assertEqual(client.user, user)
 
+    def test_trim_stream_after_get_waveform(self):
+        """
+        Tests that stream is properly trimmed to user requested times after
+        fetching from datacenter, see #1887
+        """
+        c = Client(
+            service_mappings={'dataselect':
+                              'http://eida.ipgp.fr/fdsnws/dataselect/1'})
+        starttime = UTCDateTime('2016-11-01T00:00:00')
+        endtime = UTCDateTime('2016-11-01T00:00:10')
+        stream = c.get_waveforms('G', 'PEL', '*', 'LHZ', starttime, endtime)
+        self.assertEqual(starttime, stream[0].stats.starttime)
+        self.assertEqual(endtime, stream[0].stats.endtime)
+
     def test_service_discovery_iris(self):
         """
         Tests the automatic discovery of services with the IRIS endpoint. The
