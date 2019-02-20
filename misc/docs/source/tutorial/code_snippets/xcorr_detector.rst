@@ -85,6 +85,7 @@ After that, cross-correlations are calculated and other, similar earthquakes in 
 .. plot::
     :context: reset
     :include-source:
+    :height: 500px
 
     from obspy import read, Trace, UTCDateTime as UTC
     from obspy.signal.cross_correlation import correlate_stream_template, insert_amplitude_ratio, similarity_detector
