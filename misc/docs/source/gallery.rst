@@ -160,7 +160,23 @@ Gallery
 
 .. gallery-plot:: tutorial/code_snippets/xcorr_pick_correction.py
     :target: tutorial/code_snippets/xcorr_pick_correction.html
-    :alt: Cross Correlation Pick Correction
+    :alt: Cross-Correlation Pick Correction
+
+.. gallery-plot::
+    :target: tutorial/code_snippets/xcorr_detector.html
+    :alt: Cross-Correlation Detector
+
+    from obspy import read, Trace, UTCDateTime as UTC
+    from obspy.signal.cross_correlation import correlate_stream_template, similarity_detector
+
+    stream = read('https://examples.obspy.org/NKC_PLN_ROHR.HHZ.2018.130.mseed')
+    stream.filter('highpass', freq=1, zerophase=True)
+    otime = UTC('2018-05-10 14:24:50')
+    template = stream.select(station='NKC').slice(otime + 2, otime + 7)
+    template += stream.select(station='ROHR').slice(otime + 2, otime + 7)
+    template += stream.select(station='PLN').slice(otime + 6, otime + 12)
+    ccs = correlate_stream_template(stream, template, template_time=otime)
+    detections = similarity_detector(ccs, 0.5, 10, 10, plot_detections=stream)
 
 .. gallery-plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
