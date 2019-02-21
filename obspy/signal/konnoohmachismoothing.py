@@ -3,7 +3,7 @@
 # Filename: konnoohmachismoothing.py
 #  Purpose: Small module to smooth spectra with the so called Konno & Ohmachi
 #           method.
-#   Author: Lion Krischer
+#   Author: Lion Krischer, Derrick Chambers
 #    Email: krischer@geophysik.uni-muenchen.de
 #  License: GPLv2
 #
@@ -30,8 +30,7 @@ import numpy as np
 def konno_ohmachi_smoothing_window(frequencies, center_frequency,
                                    bandwidth=40.0, normalize=False):
     """
-    Returns the Konno & Ohmachi Smoothing window for every frequency in
-    frequencies.
+    Calculate the Konno & Ohmachi smoothing window(s).
 
     Returns the smoothing window around the center frequency with one value per
     input frequency defined as follows (see [Konno1998]_)::
@@ -40,6 +39,10 @@ def konno_ohmachi_smoothing_window(frequencies, center_frequency,
             b   = bandwidth
             f   = frequency
             f_c = center frequency
+
+    If an array is provided for center_frequency then a 2D array is returned
+    where each row is a smoothing window for the corresponding center
+    frequency.
 
     The bandwidth of the smoothing function is constant on a logarithmic scale.
     A small value will lead to a strong smoothing, while a large value of will
@@ -54,10 +57,10 @@ def konno_ohmachi_smoothing_window(frequencies, center_frequency,
     :type frequencies: :class:`numpy.ndarray` (float32 or float64)
     :param frequencies:
         All frequencies for which the smoothing window will be returned.
-    :type center_frequency: float
+    :type center_frequency: float or :class:`numpy.ndarray`
     :param center_frequency:
-        The frequency around which the smoothing is performed. Must be greater
-        or equal to 0.
+        The frequency or frequencies around which the smoothing is performed.
+        All values must be greater or equal to 0.
     :type bandwidth: float
     :param bandwidth:
         Determines the width of the smoothing peak. Lower values result in a
@@ -71,33 +74,46 @@ def konno_ohmachi_smoothing_window(frequencies, center_frequency,
     if frequencies.dtype != np.float32 and frequencies.dtype != np.float64:
         msg = 'frequencies needs to have a dtype of float32/64.'
         raise ValueError(msg)
-    # If the center_frequency is 0 return an array with zero everywhere except
-    # at zero.
-    if center_frequency == 0:
-        smoothing_window = np.zeros(len(frequencies), dtype=frequencies.dtype)
-        smoothing_window[frequencies == 0.0] = 1.0
-        return smoothing_window
-    # Disable div by zero errors and return zero instead
+    # Cast center freq. to dtype of frequencies if it is not an array
+    if not isinstance(center_frequency, np.ndarray):
+        # If no center frequencies are provided use all frequencies.
+        if center_frequency is None:
+            center_frequency = frequencies
+        center_frequency = np.array(center_frequency, dtype=frequencies.dtype)
+    # Ensure centerfrequencies is within the range of frequencies
+    too_low = np.min(center_frequency) < np.min(frequencies)
+    too_high = np.max(center_frequency) > np.max(frequencies)
+    if too_high or too_low:
+        msg = ('center frequencies must be contained in frequencies, '
+               'konno_ohmachi_smoothing_window cannot be used to extrapolate')
+        raise ValueError(msg)
+    # Disable div by zero errors and return zero instead.
     with np.errstate(divide='ignore', invalid='ignore'):
-        # Calculate the bandwidth*log10(f/f_c)
-        smoothing_window = bandwidth * np.log10(frequencies / center_frequency)
-        # Just the Konno-Ohmachi formulae.
-        smoothing_window[:] = (
-            np.sin(smoothing_window) / smoothing_window) ** 4
+        # Calculate outer product.
+        outer_division = np.divide.outer(frequencies, center_frequency).T
+        # Calculate the bandwidth*log10(f/f_c).
+        product = bandwidth * np.log10(outer_division)
+        # The Konno-Ohmachi formulae.
+        window = (np.sin(product) / product) ** 4
     # Check if the center frequency is exactly part of the provided
     # frequencies. This will result in a division by 0. The limit of f->f_c is
     # one.
-    smoothing_window[frequencies == center_frequency] = 1.0
-    # Also a frequency of zero will result in a logarithm of -inf. The limit of
-    # f->0 with f_c!=0 is zero.
-    smoothing_window[frequencies == 0.0] = 0.0
-    # Normalize to one if wished.
+    window[np.equal.outer(center_frequency, frequencies)] = 1.0
+    # For center_frequency == 0 ensure the row is 0 for every freq. except 0,
+    # which should be one.
+    window[center_frequency == 0.0] = 0.0
+    window[np.logical_and.outer(center_frequency == 0, frequencies == 0)] = 1
+    # A frequency of zero will result in a logarithm of -inf. The limit of
+    # f->0 with f_c!=0 is zero. All remaining NaNs will be due to this.
+    window[np.isnan(window)] = 0.
+    # Normalize to one if wished. Transposes are to make division work in 2D.
     if normalize:
-        smoothing_window /= smoothing_window.sum()
-    return smoothing_window
+        window = (window.T / window.sum(axis=-1)).T
+    return window
 
 
-def calculate_smoothing_matrix(frequencies, bandwidth=40.0, normalize=False):
+def calculate_smoothing_matrix(frequencies, bandwidth=40.0, normalize=False,
+                               center_frequencies=None):
     """
     Calculates a len(frequencies) x len(frequencies) matrix with the Konno &
     Ohmachi window for each frequency as the center frequency.
@@ -124,17 +140,55 @@ def calculate_smoothing_matrix(frequencies, bandwidth=40.0, normalize=False):
         The Konno-Ohmachi smoothing window is normalized on a logarithmic
         scale. Set this parameter to True to normalize it on a normal scale.
         Default to False.
+    :type center_frequencies: :class:`numpy.ndarray` (float32 or float64)
+    :param center_frequencies:
+        Specified center frequencies around which to perform smoothing. This
+        can be useful when spectra is very large and only a subset of the
+        frequencies are of interest. If None use all frequencies provided.
     """
-    # Create matrix to be filled with smoothing entries.
-    sm_matrix = np.empty((len(frequencies), len(frequencies)),
-                         frequencies.dtype)
-    for _i, freq in enumerate(frequencies):
-        sm_matrix[_i, :] = konno_ohmachi_smoothing_window(
-            frequencies, freq, bandwidth, normalize=normalize)
-    return sm_matrix
+    args = (frequencies, center_frequencies, bandwidth)
+    return konno_ohmachi_smoothing_window(*args, normalize=normalize)
 
 
-def apply_smoothing_matrix(spectra, smoothing_matrix, count=1):
+def _smooth_no_matrix(spectra, frequencies, bandwidth, normalize, count,
+                      center_frequencies=None):
+    """
+    Apply the smoothing algorithm without using matrices.
+    This is much slower but more memory efficient.
+    """
+    if count < 1:
+        return spectra
+    # If no center frequencies are specified use all frequencies.
+    if center_frequencies is None:
+        center_frequencies = frequencies
+    # Ensure we are working with an array for simplicity.
+    elif not isinstance(center_frequencies, np.ndarray):
+        center_frequencies = np.array(center_frequencies)
+    # Calculate length of output array and init it.
+    output_shape = [len(center_frequencies)]
+    if len(spectra.shape) > 1:
+        output_shape.insert(0, spectra.shape[0])
+    new_spec = np.empty(tuple(output_shape), spectra.dtype)
+    # Separate case for just one spectrum.
+    if len(spectra.shape) == 1:
+        for _i, freq in enumerate(center_frequencies):
+            window = konno_ohmachi_smoothing_window(
+                frequencies, freq, bandwidth, normalize=normalize)
+            new_spec[_i] = (window * spectra).sum()
+    else:  # Reuse smoothing window if more than one spectrum.
+        for _i, freq in enumerate(center_frequencies):
+            window = konno_ohmachi_smoothing_window(
+                frequencies, freq, bandwidth, normalize=normalize)
+
+            for _j, spec in enumerate(spectra):
+                new_spec[_j, _i] = (window * spec).sum()
+    # Call recursively to ensure spectra was smoothed count times.
+    return _smooth_no_matrix(new_spec, center_frequencies, bandwidth,
+                             normalize=normalize, count=count - 1)
+
+
+def apply_smoothing_matrix(spectra, smoothing_matrix, count=1,
+                           smoothing_matrix2=None):
     """
     Smooths a matrix containing one spectra per row with the Konno-Ohmachi
     smoothing window, using a smoothing matrix pre-computed through the
@@ -149,16 +203,20 @@ def apply_smoothing_matrix(spectra, smoothing_matrix, count=1):
     if spectra.dtype not in (np.float32, np.float64):
         msg = '`spectra` needs to have a dtype of float32/64.'
         raise ValueError(msg)
-    new_spec = np.dot(spectra, smoothing_matrix)
+    new_spec = np.dot(spectra, smoothing_matrix.T)
+    if smoothing_matrix2 is None:
+        smoothing_matrix2 = smoothing_matrix
     # Eventually apply more than once.
+    # The matrix may need to be recalculated if the center frequencies were
+    # not equal to the spectra frequencies.
     for _i in range(count - 1):
-        new_spec = np.dot(new_spec, smoothing_matrix)
+        new_spec = np.dot(new_spec, smoothing_matrix2.T)
     return new_spec
 
 
 def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
                             enforce_no_matrix=False, max_memory_usage=512,
-                            normalize=False):
+                            normalize=False, center_frequencies=None):
     """
     Smooths a matrix containing one spectra per row with the Konno-Ohmachi
     smoothing window.
@@ -168,6 +226,10 @@ def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
 
     This method first will estimate the memory usage and then either use a fast
     and memory intensive method or a slow one with a better memory usage.
+
+    For large spectra it may be desirable to specify the a
+    subset of the frequencies for which the smoothing is performed to in order
+    to improve performance.
 
     :type spectra: :class:`numpy.ndarray` (float32 or float64)
     :param spectra:
@@ -200,6 +262,11 @@ def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
         The Konno-Ohmachi smoothing window is normalized on a logarithmic
         scale. Set this parameter to True to normalize it on a normal scale.
         Default to False.
+    :type center_frequencies: :class:`numpy.ndarray` (float32 or float64)
+    :param center_frequencies:
+        Specified center frequencies around which to perform smoothing. This
+        can be useful when spectra is very large and only a subset of the
+        frequencies are of interest. If None use all frequencies provided.
     """
     if spectra.dtype not in (np.float32, np.float64):
         msg = '`spectra` needs to have a dtype of float32/64.'
@@ -219,39 +286,25 @@ def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
         size = 4.0
     elif frequencies.dtype == np.float64:
         size = 8.0
-    # Calculate the approximate usage needs for the smoothing matrix algorithm.
+    # Calculate the approximate memory required for the smoothing matrix.
     length = len(frequencies)
-    approx_mem_usage = (length * length + 2 * len(spectra) + length) * \
-        size / 1048576.0
+    element_count = (length * length + 2 * len(spectra) + length)
+    mem_required = (element_count * size) / 1048576.
     # If smaller than the allowed maximum memory consumption build a smoothing
-    # matrix and apply to each spectrum. Also only use when more then one
-    # spectrum is to be smoothed.
-    if enforce_no_matrix is False and (len(spectra.shape) > 1 or count > 1) \
-            and approx_mem_usage < max_memory_usage:
-        smoothing_matrix = calculate_smoothing_matrix(
-            frequencies, bandwidth, normalize=normalize)
-        return apply_smoothing_matrix(spectra, smoothing_matrix, count=count)
-    # Otherwise just calculate the smoothing window every time and apply it.
-    else:
-        new_spec = np.empty(spectra.shape, spectra.dtype)
-        # Separate case for just one spectrum.
-        if len(new_spec.shape) == 1:
-            for _i in range(len(frequencies)):
-                window = konno_ohmachi_smoothing_window(
-                    frequencies, frequencies[_i], bandwidth,
-                    normalize=normalize)
-                new_spec[_i] = (window * spectra).sum()
-        # Reuse smoothing window if more than one spectrum.
+    # matrix and apply to each spectrum.
+    if not enforce_no_matrix and mem_required < max_memory_usage:
+        kwargs = dict(bandwidth=bandwidth, normalize=normalize,
+                      center_frequencies=center_frequencies)
+        smoothing_matrix = calculate_smoothing_matrix(frequencies, **kwargs)
+        # Calculate smoothing matrix for subsequent iterations (if needed)
+        if center_frequencies is not None and count > 1:
+            smoohting_matrix2 = calculate_smoothing_matrix(center_frequencies,
+                                                           **kwargs)
         else:
-            for _i in range(len(frequencies)):
-                window = konno_ohmachi_smoothing_window(
-                    frequencies, frequencies[_i], bandwidth,
-                    normalize=normalize)
-                for _j, spec in enumerate(spectra):
-                    new_spec[_j, _i] = (window * spec).sum()
-        # Eventually apply more than once.
-        for _i in range(count - 1):
-            new_spec = konno_ohmachi_smoothing(
-                new_spec, frequencies, bandwidth, enforce_no_matrix=True,
-                normalize=normalize)
-        return new_spec
+            smoohting_matrix2 = smoothing_matrix
+        return apply_smoothing_matrix(spectra, smoothing_matrix, count=count,
+                                      smoothing_matrix2=smoohting_matrix2)
+    # If memory is limited calculate/apply the smoothing window for each freq.
+    else:
+        return _smooth_no_matrix(spectra, frequencies, bandwidth, normalize,
+                                 count, center_frequencies=center_frequencies)

@@ -40,6 +40,7 @@ Introduction to ObsPy
    code_snippets/beamforming_fk_analysis
    code_snippets/seismogram_envelopes
    code_snippets/plotting_spectrograms
+   code_snippets/konno_ohmachi_smoothing
    code_snippets/trigger_tutorial
    code_snippets/frequency_response
    code_snippets/seismometer_correction_simulation

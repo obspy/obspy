@@ -78,6 +78,12 @@ master:
      (see #2045)
    * Fixed the check for new PSD slices whether they should be added or whether
      they would add unwanted duplicated data (see #2229)
+ - obspy.signal.konnoohmachismoothing:
+   * Added `center_frequencies` argument to `konno_ohmachi_smoothing`
+     (see #2277).
+   * Refactored internals to take better advantage of numpy vectorization
+     (see #2277).
+   * Fix bug in smoothing multiple spectra at once (see #2276).
  - obspy.signal.cross_correlation:
    * Add new `correlate_template()` function with 'full' normalization option,
      required for correlations in template-matching
