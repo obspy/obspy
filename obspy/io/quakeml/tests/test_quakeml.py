@@ -1115,7 +1115,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         # create a catalog  with an empty event description
         empty_description = EventDescription()
-        cat1 = read_events()
+        cat1 = Catalog(events=[read_events()[0]])
         cat1[0].event_descriptions.append(empty_description)
         # serialize the catalog using quakeml and re-read
         bio = io.BytesIO()
