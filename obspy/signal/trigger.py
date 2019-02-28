@@ -379,7 +379,7 @@ def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
 
 
 def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
-            p_dur):
+            p_dur, return_cf=False):
     """
     Wrapper for P-picker routine by M. Baer, Schweizer Erdbebendienst.
 
@@ -394,9 +394,13 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
         SF(t) on preset()
     :param p_dur: p_dur defines the time interval for which the maximum
         amplitude is evaluated Originally set to 6 secs
-    :return: (pptime, pfm) pptime sample number of parrival; pfm direction
-        of first motion (U or D)
-
+    :type return_cf: bool
+    :param return_cf: If ``True``, also return the charachteristic function
+        calculated by the C-routine.
+    :return: (pptime, pfm [,cf]) pptime sample number of parrival;
+        pfm direction of first motion (U or D), optionally also the
+        numpy.ndarray float32 containing the values of the characteristic
+        function.
     .. note:: currently the first sample is not taken into account
 
     .. seealso:: [Baer1987]_
@@ -409,17 +413,21 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     # Initiliaze CF array (MB)
     c_float_p = C.POINTER(C.c_float)
     CF = np.ascontiguousarray(np.zeros(len(reltrc) - 1), np.float32)
-    data_p = CF.ctypes.data_as(c_float_p)
+    cf_p = CF.ctypes.data_as(c_float_p)
     # index in pk_mbaer.c starts with 1, 0 index is lost, length must be
     # one shorter
     args = (len(reltrc) - 1, C.byref(pptime), pfm, samp_int,
-            tdownmax, tupevent, thr1, thr2, preset_len, p_dur, data_p)
+            tdownmax, tupevent, thr1, thr2, preset_len, p_dur, cf_p)
     errcode = clibsignal.ppick(reltrc, *args)
     if errcode != 0:
         raise MemoryError("Error in function ppick of mk_mbaer.c")
+    # Switch CF param (MB)
     # add the sample to the time which is not taken into account
     # pfm has to be decoded from byte to string
-    return pptime.value + 1, pfm.value.decode('utf-8'), CF
+    if return_cf:
+        return pptime.value + 1, pfm.value.decode('utf-8'), CF
+    else:
+        return pptime.value + 1, pfm.value.decode('utf-8')
 
 
 def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
