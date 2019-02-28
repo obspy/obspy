@@ -412,8 +412,8 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     reltrc = np.ascontiguousarray(reltrc, np.float32)
     # Initiliaze CF array (MB)
     c_float_p = C.POINTER(C.c_float)
-    CF = np.ascontiguousarray(np.zeros(len(reltrc) - 1), np.float32)
-    cf_p = CF.ctypes.data_as(c_float_p)
+    cf_arr = np.ascontiguousarray(np.zeros(len(reltrc) - 1), np.float32)
+    cf_p = cf_arr.ctypes.data_as(c_float_p)
     # index in pk_mbaer.c starts with 1, 0 index is lost, length must be
     # one shorter
     args = (len(reltrc) - 1, C.byref(pptime), pfm, samp_int,
@@ -421,11 +421,11 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     errcode = clibsignal.ppick(reltrc, *args)
     if errcode != 0:
         raise MemoryError("Error in function ppick of mk_mbaer.c")
-    # Switch CF param (MB)
+    # Switch cf_arr param (MB)
     # add the sample to the time which is not taken into account
     # pfm has to be decoded from byte to string
     if return_cf:
-        return pptime.value + 1, pfm.value.decode('utf-8'), CF
+        return pptime.value + 1, pfm.value.decode('utf-8'), cf_arr
     else:
         return pptime.value + 1, pfm.value.decode('utf-8')
 
