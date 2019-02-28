@@ -79,7 +79,7 @@ class TriggerTestCase(unittest.TestCase):
         self.assertEqual(nptime, 17545)
         self.assertEqual(pfm, 'IPU0')
 
-    def test_pk_baer_CF(self):
+    def test_pk_baer_cf(self):
         """
         Test pk_baer against implementation for UNESCO short course
         """

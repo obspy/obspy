@@ -3,6 +3,9 @@
 #  Purpose: C-Version of Baer Picker based on Fortran code of Baer
 #   Author: Andreas Rietbrock, Joachim Wassermann
 # Copyright (C) A. Rietbrock, J. Wassermann
+#
+# Modified: M.Bagagli 02-2019
+            - The function now returns also the characteristic function
 #---------------------------------------------------------------------*/
 #include "platform.h"
 #include <stdio.h>
