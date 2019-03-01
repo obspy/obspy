@@ -1028,7 +1028,7 @@ class Response(ComparingObject):
             raise ValueError(msg)
 
         freq, gain = self._get_overall_sensitivity_and_gain(
-            output=unit, frequency=frequency)
+            output=unit, frequency=float(frequency))
 
         self.instrument_sensitivity.value = gain
         self.instrument_sensitivity.frequency = freq

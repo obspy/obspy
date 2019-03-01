@@ -483,6 +483,49 @@ class ResponseTestCase(unittest.TestCase):
              2.445572e+05 - 2.480459e+03j,
              -2.455459e-01 + 4.888214e-02j], rtol=1e-6)
 
+    def test_recalculate_overall_sensitivity(self):
+        """
+        Tests the recalculate_overall_sensitivity_method().
+
+        This is not yet an exhaustive test as responses are complicated...
+        """
+        resp = read_inventory()[0][0][0].response
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.value,
+            943680000.0)
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.frequency,
+            0.02)
+        # Recompute - it is not much different but a bit.
+        resp.recalculate_overall_sensitivity(0.02)
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.value,
+            943681500.0)
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.frequency,
+            0.02)
+
+        # There is some logic to automatically determine a suitable frequency.
+        # Make sure this does something here.
+        resp = read_inventory()[0][0][0].response
+        resp.recalculate_overall_sensitivity()
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.value,
+            957562105.3939067)
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.frequency,
+            1.0)
+
+        # Passing an integer also works. See #2338.
+        resp = read_inventory()[0][0][0].response
+        resp.recalculate_overall_sensitivity(1)
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.value,
+            957562105.3939067)
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.frequency,
+            1.0)
+
 
 def suite():
     return unittest.makeSuite(ResponseTestCase, 'test')
