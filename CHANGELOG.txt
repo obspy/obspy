@@ -25,6 +25,8 @@ master:
      have masked arrays (i.e. Traces that have been merged without a fill
      value, see #2299 and #2300).
    * Added copy method to Inventory class (see #2322).
+   * The Response.recalculate_overall_sensitivity() method now accepts integers
+     (see #2338, #2343).
  - obspy.clients.fdsn:
    * Adding more location codes to the default priority list in the mass
      downloader (see #2155, #2159).
