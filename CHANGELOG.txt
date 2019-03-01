@@ -52,6 +52,8 @@ master:
      (see #2104, #2090, #2093, #1872).
    * Skip invalid enumeration values during reading but raise a warning.
      (see #2106, #2098, #2095)
+   * Catalogs with empty event description objects can be round-tripped (see
+     #2339, #2340).
  - obspy.io.sac:
    * Fix bug writing inventory with SOH channels to SACPZ (see #2200).
  - obspy.io.segy:
