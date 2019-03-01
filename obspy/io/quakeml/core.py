@@ -1759,7 +1759,7 @@ class Pickler(object):
             # event descriptions
             for description in event.event_descriptions:
                 el = etree.Element('description')
-                self._str(description.text, el, 'text', True)
+                self._str(description.text, el, 'text')
                 self._str(description.type, el, 'type')
                 self._extra(description, el)
                 event_el.append(el)
