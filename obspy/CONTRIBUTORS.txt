@@ -3,6 +3,7 @@ Allgeyer, Sebastien
 Ammon, Charles J.
 Antunes, Emanuel
 Arnarsson, Ólafur St.
+Bagagli, Matteo
 Bank, Markus
 Barsch, Robert
 Behr, Yannik
@@ -92,4 +93,3 @@ Winkelman, Andrew
 Zaccarelli, Riccardo
 Zad, Seyed Kasra Hosseini
 Zhu, Lijun
-Bagagli, Matteo

@@ -395,12 +395,10 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     :param p_dur: p_dur defines the time interval for which the maximum
         amplitude is evaluated Originally set to 6 secs
     :type return_cf: bool
-    :param return_cf: If ``True``, also return the charachteristic function
-        calculated by the C-routine.
+    :param return_cf: If ``True``, also return the characteristic function.
     :return: (pptime, pfm [,cf]) pptime sample number of parrival;
         pfm direction of first motion (U or D), optionally also the
-        numpy.ndarray float32 containing the values of the characteristic
-        function.
+        characteristic function.
     .. note:: currently the first sample is not taken into account
 
     .. seealso:: [Baer1987]_
@@ -412,7 +410,7 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     reltrc = np.ascontiguousarray(reltrc, np.float32)
     # Initiliaze CF array (MB)
     c_float_p = C.POINTER(C.c_float)
-    cf_arr = np.ascontiguousarray(np.zeros(len(reltrc) - 1), np.float32)
+    cf_arr = np.zeros(len(reltrc) - 1, dtype=np.float32, order="C")
     cf_p = cf_arr.ctypes.data_as(c_float_p)
     # index in pk_mbaer.c starts with 1, 0 index is lost, length must be
     # one shorter

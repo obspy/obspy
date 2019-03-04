@@ -3,9 +3,6 @@
 #  Purpose: C-Version of Baer Picker based on Fortran code of Baer
 #   Author: Andreas Rietbrock, Joachim Wassermann
 # Copyright (C) A. Rietbrock, J. Wassermann
-#
-# Modified: M.Bagagli 02-2019
-            - The function now returns also the characteristic function
 #---------------------------------------------------------------------*/
 #include "platform.h"
 #include <stdio.h>
@@ -85,7 +82,7 @@ c preset_len  | no of points taken for the estimation of variance of
 
 *******************************************************************************
 int ppick (reltrc,npts,pptime,pfm,
-     samplespersec,tdownmax,tupevent,thrshl1,thrshl2,preset_len,p_dur)
+     samplespersec,tdownmax,tupevent,thrshl1,thrshl2,preset_len,p_dur,cf)
 float *reltrc;
 int npts;
 int *pptime;
@@ -95,11 +92,10 @@ int tdownmax,tupevent;
 float thrshl1,thrshl2;
 int preset_len;
 int p_dur;
-float *CF  //MB
-
+float *cf
 */
 
-int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec, int tdownmax, int tupevent, float thrshl1, float thrshl2, int preset_len, int p_dur,float *CF){
+int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec, int tdownmax, int tupevent, float thrshl1, float thrshl2, int preset_len, int p_dur,float *cf){
       int len2;
       int *trace = NULL;
       int ipkflg;
@@ -121,7 +117,7 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
       float min,max;
       float scale;
 
-      int CF_COUNTER=0;    //MB
+      int cf_counter=0;
 
 
       len2 = 2*preset_len;  /*
@@ -276,9 +272,9 @@ label160:
           edev= (edat-mean)/sdev;  /* corresponds to CF(t), mean corresponds
                                       to S(t)
                                    */
-          CF[CF_COUNTER]=edev ;    //MB
-          CF_COUNTER++ ;           //MB
-      }                            //MB add brackets {}.
+          cf[cf_counter]=edev;
+          cf_counter++;
+      }
 
       iamp = (int) (abs(trace[i]) + 0.5);
       if(iamp > amp)
