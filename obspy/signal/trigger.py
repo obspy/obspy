@@ -432,17 +432,17 @@ def aic(td):
     Computes P-phase arrival time digital single-component acceleration
     or broadband velocity record without requiring threshold settings using
     AKAIKE INFORMATION CRITERION.
-    Returns P-phase arrival time index and the charachteristic function.
-    The returned index correspond to the carachteristic function's minima.
+    Returns P-phase arrival time index and the characteristic function.
+    The returned index correspond to the characteristic function's minima.
 
     :type td: numpy.ndarray
     :param td: time series as numpy.ndarray float32 data
     :return: (idx, aic_cf) idx sample number of parrival; aic_cf numpy.ndarray
-        containing the values of the charachteristic function.
+        containing the values of the characteristic function.
 
     .. seealso:: [Maeda1985]_
     """
-    # --------------------  Creation of the carachteristic function
+    # --------------------  Creation of the characteristic function
     aic_cf = np.zeros(td.size-1)
     for ii in range(1, td.size):
         with np.errstate(divide='raise'):
@@ -459,7 +459,7 @@ def aic(td):
         val1 = ii*var1
         val2 = (td.size-ii-1)*var2
         aic_cf[ii-1] = (val1+val2)
-    # -------------------- idx search
+    # --------------------  Index search
     idx = sorted(range(len(aic_cf)), key=lambda k: aic_cf[k])[0]
     return idx, aic_cf
 

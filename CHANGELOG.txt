@@ -1,46 +1,5 @@
-1.2.1 (doi: 10.5281/zenodo.3706479)
-===================================
-
-Changes:
- - fix an installation issue with pip and setuptools version 46 (see #2578)
- - fix response plots when providing `axes=...` with a numpy array of Axes
-   instances (see #2579)
-
-1.2.0 (doi: 10.5281/zenodo.3674646)
-===================================
-
-Work on this release was in parts and among others supported by the following
-institutions/companies and grants (in alphabetical order):
- - Earthquake Commision of New Zealand (EQC), grant 18/753
- - École et Observatoire des Sciences de la Terre - Université de Strasbourg
- - ETH Zürich
- - Friedrich-Schiller-Universität Jena
- - Geoscience Australia
- - Incorporated Research Institutions for Seismology (IRIS), NSF (SAGE) award
-   :: EAR-1851048
- - Institut de Physique du Globe de Strasbourg
- - Institut de Physique du Globe de Paris
- - Institutions for Seismology (IRIS) through the PASSCAL Instrument Center at
-   New Mexico Tech. The facilities of the IRIS Consortium are supported by the
-   National Science Foundation under Cooperative Agreement EAR-1261681 and the
-   DOE National Nuclear Security Administration.
- - Istituto Nazionale di Geofisica e Vulcanologia, Osservatorio Etneo (Italy),
-   Allegato B2 DPC-INGV 2012-2021 Task 10
- - Ludwig-Maximilians-Universität München
- - National Institute for Occupational Safety and Health
- - Royal Netherlands Meteorological Institute (KNMI)
- - School of Geography, Environment and Earth Sciences, Victoria University of
-   Wellington
- - The European Union’s Horizon 2020 research and innovation programme under
-   the ChEESE project, grant agreement No. 823844
- - The Royal Observatory of Belgium
- - U.S. Geological Survey
-
-Changes:
+master:
  - obspy.core:
-   * Inventory objects have been adapted to StationXML 1.1 for details on
-     changes see #2510 and
-     https://github.com/FDSN/StationXML/blob/master/Changes.md
    * Fixed import of custom plugins (see #2423)
    * Fixed "==" comparison for Stream and Trace which was very slow in case of
      traces with >1e6 samples (see #2377)
@@ -55,12 +14,12 @@ Changes:
    * UTCDateTime objects can now accept hour, minute, second, and microsecond
      values greater than their normal limits by setting the strict keyword
      argument to False (see #2232).
-   * Fixed UTCDateTime(..., julday=366) for non-leap years. This was returning
+   * fixed UTCDateTime(..., julday=366) for non-leap years. This was returning
      January 1st of the next year in case of non-leap years being used. Now it
      properly raises an out-of-bounds ValueError (see #2369)
    * When reading StationXML/SC3ML, make sure to properly read empty string
      fields as empty strings instead of "None" (see #2519 and #2527)
-   * Better ISO8601 detection for UTCDateTime objects and UTCDateTime(...,
+   * better ISO8601 detection for UTCDateTime objects and UTCDateTime(...,
      iso8601=False) now completely disables ISO8601 handling (see #2447)
    * Added replace method to UTCDateTime class (see #2077).
    * Added remove method to Inventory class (see #2088).
@@ -99,8 +58,6 @@ Changes:
    * Fix a bug that was causing an exception being raised in `Response.plot()`
      because a float was being passed down to numpy.linspace as length of array
      (see #2533)
-   * Geographic select of inventory/network/station (see #2515)
-   * Select traces in Stream based on an Inventory (see #2531)
  - obspy.clients.fdsn:
    * Add new `_discover_services` boolean flag to the Client, which allows the
      Client to skip the initial services query at instantiation.  This can
@@ -112,57 +69,41 @@ Changes:
      have been deselected due to the default location priorities setting. This
      is a pure usability improvement as it has been confusing users
      (see #2159).
-   * Make sure that streams fetched via FDSN are properly trimmed to user
+   * make sure that streams fetched via FDSN are properly trimmed to user
      requested times if data center serves additional data around the start/end
      (see #1887, #2298)
-   * Fix a problem that could spam subprocesses that were not closed in routed
+   * fix a problem that could spam subprocesses that were not closed in routed
      clients (see #2342 and #2344)
-   * Make it possible to use signed EIDA tokens and also skip token validation
+   * make it possible to use signed EIDA tokens and also skip token validation
      completely (see #2297)
-   * Adding a mapping for RASPISHAKE
- - obspy.clients.filesystem.tsindex:
-   * Add new Client & Indexer modules based on IRIS time series index (see
-     #2206)
- - obspy.clients.iris:
-   * Results of distaz method are now returned as native floats (see #2499)
  - obspy.clients.neic:
-   * Properly use specified timeout value (see #2450)
+   * properly use specified timeout value (see #2450)
+ - obspy.clients.seishub:
+   * Properly handle fetching poles and zeros in presence of multiple metadata
+     files for a given station (see #2411)
  - obspy.clients.seedlink:
-   * Add method "get_info()" to fetch information on what
+   * add method "get_info()" to fetch information on what
      networks/stations/locations/channels are served by the seedlink server
      (see #2405)
    * "get_waveforms()" can now be used with '*' and '?' wildcards in any part
      of requested SEED ID, i.e. network, station, location and channel (see
      #2405)
- - obspy.clients.seishub:
-   * Properly handle fetching poles and zeros in presence of multiple metadata
-     files for a given station (see #2411)
- - obspy.geodetics:
-   * New utility function `inside_geobounds()` to check whether an object is
-     inside a geographic bound (see #2515)
+ - obspy.clients.iris:
+   * results of distaz method are now returned as native floats (see #2499)
  - obspy.imaging:
    * obspy-scan can now be used with wildcarded SEED IDs when specifying what
      to plot after scanning data (see #2227)
-   * Fix a problem in Scanner when loading npz on Python3 that was written on
+   * fix a problem in Scanner when loading npz on Python3 that was written on
      Python2 (see #2413)
-   * Fix an issue that could make small landmasses not get plotted in basemap
+   * fix an issue that could make small landmasses not get plotted in basemap
      plots (see #2471, #2477)
    * Fixed a bug in Stream.plot(type='section', reftime=..., ...) that caused
      wrong relative start times of traces relative to given reftime (see #2493)
- - obspy.io:
-   * Added read support for receiver gather format v. 1.6 (see #2070)
-   * Added read support for FOCMEC 'out' and 'lst' files (see #2156)
-   * Added read support for HypoDD 'pha' files (see #2378)
- - obspy.io.arclink:
-   * Accommodate change in SeisComP3 publicID delimiter from '#' to '/' in
-     ArclinkXML (see #2552)
  - obspy.io.dmx:
    * Add read support for INGV's DMX format (see #2452)
  - obspy.io.gcf:
    * Fixes Python 3.8 compatibility of GCF reader. (see #2505)
  - obspy.io.mseed:
-   * Fix a bug resulting in an infinite loop when trying to read a FullSEED
-     file without any data records (see #2534 and #2535)
    * Add ability to write int64 data to mseed if it can safely be downcast
      to int32 data, otherwise raises ObsPyMSEEDError. (see #2356)
    * The recordanalyzer can now detect calibration blockettes 300, 310,
@@ -189,40 +130,24 @@ Changes:
    * Implement reading reftek encodings '16' and '32' (uncompressed data,
      16/32bit integers, see #2058 and #2059)
  - obspy.io.rg16:
-   * Implement module to read waveforms and headers from fcnt format (see #2265).
+   * implement module to read waveforms and headers from fcnt format (see #2265).
    * Fix reading when start+endtime are inside one data packet (see #2485).
- - obspy.io.sac:
-   * Fix bug writing inventory with SOH channels to SACPZ (see #2200).
-   * Blank-pad character header variables, as opposed to NUL-padding them, to
-     comply with SAC behavior (see #2543).
- - obspy.io.segy:
-   * Raise nicer error messages when header packing fails (see #2194, #2196).
-   * Show nice error message when trying to write a trace with too many samples
-     in it (see #2358, #1393)
  - obspy.io.seg2:
    * Handle data format code 3 trace data (#2022, #2385).
    * Improve parsing of free-form entries (#2385).
    * Fix non-native endian data loading (#2385).
+ - obspy.io.segy:
+   * show nice error message when trying to write a trace with too many samples
+     in it (see #2358, #1393)
  - obspy.io.seiscomp:
-   * Adding support for SC3ML 0.10 (see #2024).
-   * Update xsl to allow conversion of amplitude picks not associated with
-     origins (see #2273).
    * Very large performance improvement reading large sc3ml inventory files by
      pre-indexing sensors, dataloggers and responses and reducing lxml calls
      (see #2296).
    * When reading StationXML/SC3ML, make sure to properly read empty string
      fields as empty strings instead of "None" (see #2519 and #2527)
- - obspy.io.sh:
-   * Add read support for SeismicHandler EVT event files (see #2109)
- - obspy.io.shapefile:
-   * Add possibility to add custom database columns when writing catalog or
-     inventory objects to shapefile (see #2012 and #2305)
  - obspy.io.stationxml:
    * When reading StationXML/SC3ML, make sure to properly read empty string
      fields as empty strings instead of "None" (see #2519 and #2527)
-   * Inventory objects have been adapted to StationXML 1.1 for details on
-     changes see #2510 and
-     https://github.com/FDSN/StationXML/blob/master/Changes.md
  - obspy.io.quakeml:
    * Allow writing invalid ids but raise a warning
      (see #2104, #2090, #2093, #1872).
@@ -233,18 +158,33 @@ Changes:
    * Correctly handle QuakeML native namespaces (if they are not matching the
      document root's namespace) as custom namespaces and parse them into
      `.extra` (see #2466)
+ - obspy.io.sac:
+   * Fix bug writing inventory with SOH channels to SACPZ (see #2200).
+ - obspy.io.segy:
+   * Raise nicer error messages when header packing fails (see #2194, #2196).
+ - obspy.io.seiscomp:
+   * Adding support for SC3ML 0.10 (see #2024).
+   * Update xsl to allow conversion of amplitude picks not associated with
+     origins (see #2273).
+ - obspy.io.sh:
+   * Add read support for SeismicHandler EVT event files (see #2109)
+ - obspy.io.shapefile:
+   * Add possibility to add custom database columns when writing catalog or
+     inventory objects to shapefile (see #2012 and #2305)
  - obspy.io.xseed:
    * Ability to parse SEED files with extra newlines between blockettes
      (see #2383)
- - obspy.signal.cross_correlation:
-   * Add new `correlate_template()` function with 'full' normalization option,
-     required for correlations in template-matching
-     (see #2035 and #2042).
-   * 'domain' parameter in correlate function is deprecated in favour of new
-     'method' parameter to be consistent with recent SciPy versions
-     (see #2042).
-   * Add `correlate_stream_template()` and `correlation_detector()`
-     functions to detect events based on template matching (see #2315)
+ - obspy.io
+    * added read support for receiver gather format v. 1.6 (see #2070)
+    * added read support for FOCMEC 'out' and 'lst' files (see #2156)
+    * added read support for HypoDD 'pha' files (see #2378)
+ - obspy.signal.trigger:
+    * fix a bug in AR picker (see #2157)
+    * option to return Baer-Kradolfer characteristic function from pk_mbaer
+      function added (see #2341)
+    * adding a simple AIC picker (see #2347)
+ - obspy.signal.polarization:
+   * Fix an issue in selecting Z/N/E traces from given stream (see #2365)
  - obspy.signal.PPSD:
    * Changed numpy-based serialization as to not require pickling (see #2424).
    * Fixed exact trace cutting for PSD segments (see #2040).
@@ -259,17 +199,17 @@ Changes:
      set its default to `False` (see #2457).
    * Added representation of earthquake models from Clinton & Heaton (2002) in
      'plot()' method using option 'show_earthquakes' (see #2455).
- - obspy.signal.polarization:
-   * Fix an issue with covariance matrix in vidale algorithm and make adaptive
-     windowing opt-out (see #2565)
-   * Fix an issue in selecting Z/N/E traces from given stream (see #2365)
- - obspy.signal.trigger:
-   * Fix a bug in AR picker (see #2157)
-   * Option to return Baer-Kradolfer characteristic function from pk_mbaer
-     function added (see #2341)
+ - obspy.signal.cross_correlation:
+   * Add new `correlate_template()` function with 'full' normalization option,
+     required for correlations in template-matching
+     (see #2035 and #2042).
+   * 'domain' parameter in correlate function is deprecated in favour of new
+     'method' parameter to be consistent with recent SciPy versions
+     (see #2042).
+   * Add `correlate_stream_template()` and `correlation_detector()`
+     functions to detect events based on template matching (see #2315)
  - obspy.taup:
-   * Fix cycling through colors in ray path plots (see #2470, #2478)
-   * Fix a floating point issue on IBM machines (see #2559, #2560)
+   * fix cycling through colors in ray path plots (see #2470, #2478)
 
 1.1.1: (doi: 10.5281/zenodo.1040770)
  - General:
