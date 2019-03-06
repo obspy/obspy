@@ -13,7 +13,7 @@ import numpy as np
 from obspy import Stream, UTCDateTime, read
 from obspy.signal.trigger import (
     ar_pick, classic_sta_lta, classic_sta_lta_py, coincidence_trigger, pk_baer,
-    recursive_sta_lta, recursive_sta_lta_py, trigger_onset)
+    recursive_sta_lta, recursive_sta_lta_py, trigger_onset, aic)
 from obspy.signal.util import clibsignal
 
 
@@ -90,6 +90,17 @@ class TriggerTestCase(unittest.TestCase):
         self.assertEqual(nptime, 17545)
         self.assertEqual(pfm, 'IPU0')
         self.assertEqual(len(cf), 119999)
+
+    def test_aic(self):
+        """
+        Test AIC function aganist implementation for UNESCO short course
+        """
+        filename = os.path.join(self.path, 'manz_waldk.a01.gz')
+        with gzip.open(filename) as f:
+            data = np.loadtxt(f, dtype=np.float32)
+        idx, aic_cf = aic(data)
+        self.assertEqual(idx, 60868)
+        self.assertEqual(len(aic_cf), 119999)
 
     def test_ar_pick(self):
         """

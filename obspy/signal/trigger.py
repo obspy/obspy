@@ -424,6 +424,46 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
         return pptime.value + 1, pfm.value.decode('utf-8')
 
 
+def aic(td):
+    """
+    Differently from AR-AIC picker, this function calculates AIC function
+    directly from the data, without using the AR coefficients (Maeda, 1985)
+
+    Computes P-phase arrival time digital single-component acceleration
+    or broadband velocity record without requiring threshold settings using
+    AKAIKE INFORMATION CRITERION.
+    Returns P-phase arrival time index and the charachteristic function.
+    The returned index correspond to the carachteristic function's minima.
+
+    :type td: numpy.ndarray
+    :param td: time series as numpy.ndarray float32 data
+    :return: (idx, aic_cf) idx sample number of parrival; aic_cf numpy.ndarray
+        containing the values of the charachteristic function.
+
+    .. seealso:: [Maeda1985]_
+    """
+    # --------------------  Creation of the carachteristic function
+    aic_cf = np.zeros(td.size-1)
+    for ii in range(1, td.size):
+        with np.errstate(divide='raise'):
+            try:
+                var1 = np.log(np.var(td[0:ii]))
+            except FloatingPointError:  # if var==0 --> log is -inf
+                var1 = 0.00
+            #
+            try:
+                var2 = np.log(np.var(td[ii:]))
+            except FloatingPointError:  # if var==0 --> log is -inf
+                var2 = 0.00
+        #
+        val1 = ii*var1
+        val2 = (td.size-ii-1)*var2
+        aic_cf[ii-1] = (val1+val2)
+    # -------------------- idx search
+    idx = sorted(range(len(aic_cf)), key=lambda k: aic_cf[k])[0]
+    return idx, aic_cf
+
+
 def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
             l_p, l_s, s_pick=True):
     """
