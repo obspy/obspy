@@ -574,8 +574,100 @@ class TestNordicMethods(unittest.TestCase):
         event.origins[0].longitude = -120
         with NamedTemporaryFile(suffix=".out") as tf:
             event.write(tf.name, format="NORDIC")
-            event_back = read_events(tf.name)
-            _assert_similarity(event, event_back[0])
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                event_back = read_events(tf.name)
+        _assert_similarity(event, event_back[0])
+
+    def test_read_high_precision_pick(self):
+        """
+        Nordic supports writing to milliseconds in high-precision mode,
+        obspy < 1.2.0 did not properly read this, see #2348.
+        """
+        # raises "UserWarning: AIN in header, currently unsupported"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_high_precision_picks"))
+        event = cat[0]
+        pick_times = {
+            "LSd1": UTCDateTime(2010, 11, 26, 1, 28, 46.859),
+            "LSd3": UTCDateTime(2010, 11, 26, 1, 28, 48.132),
+            "LSd2": UTCDateTime(2010, 11, 26, 1, 28, 48.183),
+            "LSd4": UTCDateTime(2010, 11, 26, 1, 28, 49.744)}
+        for key, value in pick_times.items():
+            pick = [p for p in event.picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
+
+    def test_high_precision_read_write(self):
+        """ Test that high-precision writing works. """
+        # raises "UserWarning: AIN in header, currently unsupported"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_high_precision_picks"))
+        event = cat[0]
+        pick_times = {
+            "LSd1": UTCDateTime(2010, 11, 26, 1, 28, 46.859),
+            "LSd3": UTCDateTime(2010, 11, 26, 1, 28, 48.132),
+            "LSd2": UTCDateTime(2010, 11, 26, 1, 28, 48.183),
+            "LSd4": UTCDateTime(2010, 11, 26, 1, 28, 49.744)}
+        for key, value in pick_times.items():
+            pick = [p for p in event.picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
+        with NamedTemporaryFile(suffix=".out") as tf:
+            write_select(cat, filename=tf.name)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        self.assertEqual(len(cat_back), 1)
+        for key, value in pick_times.items():
+            pick = [p for p in cat_back[0].picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
+
+    def test_long_phase_name(self):
+        """ Nordic format supports 8 char phase names, sometimes. """
+        # raises "UserWarning: AIN in header, currently unsupported"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_long_phase"))
+        # This file has one event with one pick
+        pick = cat[0].picks[0]
+        arrival = cat[0].origins[0].arrivals[0]
+        self.assertEqual(pick.phase_hint, "PKiKP")
+        self.assertEqual(arrival.time_weight, 1)
+        with NamedTemporaryFile(suffix=".out") as tf:
+            write_select(cat, filename=tf.name)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        pick = cat_back[0].picks[0]
+        arrival = cat_back[0].origins[0].arrivals[0]
+        self.assertEqual(pick.phase_hint, "PKiKP")
+        self.assertEqual(arrival.time_weight, 1)
+
+    def test_read_write_over_day(self):
+        """
+        Nordic picks are relative to origin time - check that this works
+        over day boundaries.
+        """
+        event = full_test_event()
+        event.origins[0].time -= 3600
+        self.assertGreater(
+            event.picks[0].time.date, event.origins[0].time.date)
+        with NamedTemporaryFile(suffix=".out") as tf:
+            write_select(Catalog([event]), filename=tf.name)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                event_back = read_events(tf.name)[0]
+        _assert_similarity(event, event_back)
 
 
 def _assert_similarity(event_1, event_2, verbose=False):

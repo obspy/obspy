@@ -158,20 +158,14 @@ def _str_conv(number, rounded=False):
             exponant = int('{0:.2E}'.format(number).split('E+')[-1]) - 1
             divisor = 10 ** exponant
             string = '{0:.1f}'.format(number / divisor) + 'e' + str(exponant)
-    elif rounded == 2 and isinstance(number, (float, int)):
+    elif rounded and isinstance(number, (float, int)):
+        format_str = "{0:." + str(rounded) + "f}"
         if number < 100000:
-            string = '{0:.2f}'.format(number)
+            string = format_str.format(number)
         else:
             exponant = int('{0:.2E}'.format(number).split('E+')[-1]) - 1
             divisor = 10 ** exponant
-            string = '{0:.2f}'.format(number / divisor) + 'e' + str(exponant)
-    elif rounded == 1 and isinstance(number, (float, int)):
-        if number < 100000:
-            string = '{0:.1f}'.format(number)
-        else:
-            exponant = int('{0:.2E}'.format(number).split('E+')[-1]) - 1
-            divisor = 10 ** exponant
-            string = '{0:.1f}'.format(number / divisor) + 'e' + str(exponant)
+            string = format_str.format(number / divisor) + 'e' + str(exponant)
     else:
         return str(number)
     return string
@@ -250,22 +244,12 @@ def _readheader(f):
         raise NordicParsingError('No header found, or incorrect '
                                  'formatting: corrupt s-file')
     try:
-        sfile_seconds = int(topline[16:18])
-        if sfile_seconds == 60:
-            sfile_seconds = 0
-            add_seconds = 60
-        else:
-            add_seconds = 0
+        sfile_seconds = float(topline[16:20])
         new_event.origins.append(Origin())
-        new_event.origins[0].time = UTCDateTime(int(topline[1:5]),
-                                                int(topline[6:8]),
-                                                int(topline[8:10]),
-                                                int(topline[11:13]),
-                                                int(topline[13:15]),
-                                                sfile_seconds,
-                                                int(topline[19:20]) *
-                                                100000)\
-            + add_seconds
+        new_event.origins[0].time = UTCDateTime(
+            year=int(topline[1:5]), month=int(topline[6:8]),
+            day=int(topline[8:10]), hour=int(topline[11:13]),
+            minute=int(topline[13:15])) + sfile_seconds
     except Exception:
         NordicParsingError("Couldn't read a date from sfile")
     # new_event.loc_mod_ind=topline[20]
@@ -500,7 +484,11 @@ def _read_picks(f, new_event):
         if line[18:28].strip() == '':  # If line is empty miss it
             continue
         weight = line[14]
-        if weight == '_':
+        if weight not in ' 012349_':
+            weight = line[8]
+            phase = line[10:17].strip()
+            polarity = ''
+        elif weight == '_':
             phase = line[10:17]
             weight = 0
             polarity = ''
@@ -516,27 +504,20 @@ def _read_picks(f, new_event):
             polarity = "undecidable"
         # It is valid nordic for the origin to be hour 23 and picks to be hour
         # 00 or 24: this signifies a pick over a day boundary.
-        if int(line[18:20]) == 0 and evtime.hour == 23:
+        pick_hour = int(line[18:20])
+        pick_minute = int(line[20:22])
+        pick_seconds = float(line[22:28])
+        if pick_hour == 0 and evtime.hour == 23:
             day_add = 86400
             pick_hour = 0
-        elif int(line[18:20]) == 24:
+        elif pick_hour == 24:
             day_add = 86400
             pick_hour = 0
         else:
             day_add = 0
-            pick_hour = int(line[18:20])
-        try:
-            time = UTCDateTime(evtime.year, evtime.month, evtime.day,
-                               pick_hour, int(line[20:22]),
-                               float(line[23:28])) + day_add
-        except ValueError:
-            time = UTCDateTime(evtime.year, evtime.month, evtime.day,
-                               int(line[18:20]), pick_hour,
-                               float("0." + line[23:38].split('.')[1])) +\
-                60 + day_add
-            # Add 60 seconds on to the time, this copes with s-file
-            # preference to write seconds in 1-60 rather than 0-59 which
-            # datetime objects accept
+        time = UTCDateTime(
+            year=evtime.year, month=evtime.month, day=evtime.day,
+            hour=pick_hour, minute=pick_minute) + (pick_seconds + day_add)
         if header[57:60] == 'AIN':
             ain = _float_conv(line[57:60])
             warnings.warn('AIN: %s in header, currently unsupported' % ain)
@@ -546,9 +527,9 @@ def _read_picks(f, new_event):
             warnings.warn('%s is not currently supported' % header[57:60])
         # finalweight = _int_conv(line[68:70])
         # Create a new obspy.event.Pick class for this pick
-        _waveform_id = WaveformStreamID(station_code=line[1:6].strip(),
-                                        channel_code=line[6:8].strip(),
-                                        network_code='NA')
+        _waveform_id = WaveformStreamID(
+            station_code=line[1:6].strip(), channel_code=line[6:8].strip(),
+            network_code='NA')
         pick = Pick(waveform_id=_waveform_id, phase_hint=phase,
                     polarity=polarity, time=time)
         try:
@@ -991,7 +972,13 @@ def nordpick(event):
         from the values stored in seisan.  Multiple weights are also
         not supported.
     """
-
+    # Nordic picks do not have a date associated with them - we need time
+    # relatvie to some origin time.
+    try:
+        origin = event.preferred_origin() or event.origins[0]
+        origin_date = origin.time.date
+    except IndexError:
+        origin_date = min([p.time for p in event.picks]).date
     pick_strings = []
     for pick in event.picks:
         if not pick.waveform_id:
@@ -1133,20 +1120,36 @@ def nordpick(event):
         elif pick.evaluation_mode == "manual":
             eval_mode = " "
         else:
-            warnings.warn("Evaluation mode %s is not supported"
-                          % pick.evaluation_mode)
+            warnings.warn("Evaluation mode {0} is not supported".format(
+                pick.evaluation_mode))
         # Generate a print string and attach it to the list
         channel_code = pick.waveform_id.channel_code or '   '
+        pick_hour = pick.time.hour
+        if pick.time.date > origin_date:
+            # pick hours up to 48 are supported
+            days_diff = (pick.time.date - origin_date).days
+            if days_diff > 1:
+                raise NordicParsingError(
+                    "Pick is {0} days from the origin, must be < 48 "
+                    "hours".format(days_diff))
+            pick_hour += 24
+        pick_seconds = pick.time.second + (pick.time.microsecond / 1e6)
+        if len(phase_hint) > 4:
+            # Weight goes in 9 and phase_hint runs through 11-18
+            if polarity != ' ':
+                UserWarning("Polarity not written due to phase hint length")
+            phase_info = (
+                _str_conv(weight).rjust(1) + impulsivity + phase_hint.ljust(8))
+        else:
+            phase_info = (
+                ' ' + impulsivity + phase_hint.ljust(4) +
+                _str_conv(weight).rjust(1) + eval_mode +
+                polarity.rjust(1) + ' ')
         pick_strings.append(' ' + pick.waveform_id.station_code.ljust(5) +
                             channel_code[0] + channel_code[-1] +
-                            ' ' + impulsivity + phase_hint.ljust(4) +
-                            _str_conv(weight).rjust(1) + eval_mode +
-                            polarity.rjust(1) + ' ' +
-                            str(pick.time.hour).rjust(2) +
+                            phase_info + str(pick_hour).rjust(2) +
                             str(pick.time.minute).rjust(2) +
-                            str(pick.time.second).rjust(3) + '.' +
-                            str(float(pick.time.microsecond) /
-                            (10 ** 4)).split('.')[0].zfill(2) +
+                            _str_conv(pick_seconds, rounded=3).rjust(6) +
                             _str_conv(coda).rjust(5)[0:5] +
                             _str_conv(amp, rounded=1).rjust(7)[0:7] +
                             _str_conv(peri, rounded=peri_round).rjust(5) +
