@@ -21,6 +21,7 @@ master:
      resource_ids which are not found via the normal means (see #2279).
    * Calling Stream.write(...) on an empty stream will now raise an
      ObsPyException consistently across all I/O plugins (see #2201)
+   * Modified stream.get_gaps() to deal with overlaps correctly (see #1403)
  - obspy.clients.fdsn:
    * Adding more location codes to the default priority list in the mass
      downloader (see #2155, #2159).
