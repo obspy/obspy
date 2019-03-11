@@ -1512,9 +1512,9 @@ def nordpick(event):
             period=_str_conv(peri, rounded=peri_round).rjust(5)[0:5],
             azimuth=_str_conv(azimuth).rjust(6)[0:6],
             velocity=_str_conv(velocity).rjust(5)[0:5],
-            azimuthres= _str_conv(azimuthres).rjust(3)[0:3],
-            timeres= _str_conv(timeres, rounded=2).rjust(5)[0:5],
-            distance= distance.rjust(5)[0:5],
+            azimuthres=_str_conv(azimuthres).rjust(3)[0:3],
+            timeres=_str_conv(timeres, rounded=2).rjust(5)[0:5],
+            distance=distance.rjust(5)[0:5],
             caz=_str_conv(caz).rjust(4)[0:4]))
         # Note that currently finalweight is unsupported, nor is velocity, or
         # angle of incidence.  This is because obspy.event stores slowness in
