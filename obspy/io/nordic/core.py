@@ -344,21 +344,31 @@ def _read_origin(line):
         except ValueError:
             new_event.origins[0].__dict__[key] = None
     if new_event.origins[0].depth:
-        new_event.origins[0].depth *= 1000
+        new_event.origins[0].depth *= 1000.
     if line[43].strip():
         warnings.warn("Depth indicator {0} has not been mapped "
                       "to the event".format(line[43]))
     if line[44].strip():
         warnings.warn("Origin location indicator {0} has not been mapped "
                       "to the event".format(line[44]))
+    if line[10] == "F":
+        new_event.origins[0].time_fixed = True
     new_event.creation_info = CreationInfo(agency_id=line[45:48].strip())
     new_event.origins[0].creation_info = CreationInfo(
         agency_id=line[45:48].strip())
-    ksta = Comment(text='Number of stations=' + line[49:51].strip())
-    new_event.origins[0].comments.append(ksta)
-    if _float_conv(line[51:55]) is not None:
+    used_station_count = line[49:51].strip()
+    if used_station_count != '':
+        new_event.origins[0].comments.append(
+            Comment(text='Number of stations={0}'.format(used_station_count)))
         new_event.origins[0].quality = OriginQuality(
-            standard_error=_float_conv(line[51:55]))
+            used_station_count=int(used_station_count))
+    timeres = _float_conv(line[51:55])
+    if timeres is not None:
+        if new_event.origins[0].quality is not None:
+            new_event.origins[0].quality.standard_error = timeres
+        else:
+            new_event.origins[0].quality = OriginQuality(
+                standard_error=timeres)
     # Read in magnitudes if they are there.
     magnitudes = []
     magnitudes.extend(_read_mags(line, new_event))
@@ -1493,23 +1503,26 @@ def nordpick(event):
                 ' ' + impulsivity + phase_hint.ljust(4) +
                 _str_conv(weight).rjust(1) + eval_mode +
                 polarity.rjust(1) + ' ')
-        # TODO: Make this a nice format string that specifically matches seisan
-        pick_strings.append(' ' + pick.waveform_id.station_code.ljust(5) +
-                            channel_code[0] + channel_code[-1] +
-                            phase_info + str(pick_hour).rjust(2) +
-                            str(pick.time.minute).rjust(2) +
-                            _str_conv(pick_seconds, rounded=3).rjust(6) +
-                            _str_conv(coda).rjust(5)[0:5] +
-                            _str_conv(amp, rounded=1).rjust(7)[0:7] +
-                            _str_conv(peri, rounded=peri_round).rjust(5) +
-                            _str_conv(azimuth).rjust(6) +
-                            _str_conv(velocity).rjust(5) +
-                            _str_conv(' ').rjust(4) +
-                            _str_conv(azimuthres).rjust(3) +
-                            _str_conv(timeres, rounded=2).rjust(5)[0:5] +
-                            _str_conv(' ').rjust(2) +
-                            distance.rjust(5) +
-                            _str_conv(caz).rjust(4) + ' ')
+        pick_string_formatter = (
+            " {station:5s}{instrument:1s}{component:1s}{phase_info:10s}"
+            "{hour:2d}{minute:2d}{seconds:6s}{coda:5s}{amp:7s}{period:5s}"
+            "{azimuth:6s}{velocity:5s}    {azimuthres:3s}{timeres:5s}  "
+            "{distance:5s}{caz:4s} ")
+        pick_strings.append(pick_string_formatter.format(
+            station=pick.waveform_id.station_code,
+            instrument=channel_code[0], component=channel_code[-1],
+            phase_info=phase_info, hour=pick_hour,
+            minute=pick.time.minute,
+            seconds=_str_conv(pick_seconds, rounded=3),
+            coda=_str_conv(coda).rjust(5)[0:5],
+            amp=_str_conv(amp, rounded=1).rjust(7)[0:7],
+            period=_str_conv(peri, rounded=peri_round).rjust(5)[0:5],
+            azimuth=_str_conv(azimuth).rjust(6)[0:6],
+            velocity=_str_conv(velocity).rjust(5)[0:5],
+            azimuthres= _str_conv(azimuthres).rjust(3)[0:3],
+            timeres= _str_conv(timeres, rounded=2).rjust(5)[0:5],
+            distance= distance.rjust(5)[0:5],
+            caz=_str_conv(caz).rjust(4)[0:4]))
         # Note that currently finalweight is unsupported, nor is velocity, or
         # angle of incidence.  This is because obspy.event stores slowness in
         # s/deg and takeoff angle, which would require computation from the
