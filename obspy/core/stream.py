@@ -831,20 +831,20 @@ class Stream(object):
                 continue
             # check if gap is already covered in trace before:
             covered = False
-            # you only need to check previous traces because the traces are sorted
-            for prev_i in range(_i):
-                prev_stats = self.traces[prev_i].stats
+            # only need to check previous traces because the traces are sorted
+            for prev_trace in self.traces[:_i]:
+                prev_stats = prev_trace.stats
                 # look if trace is contained in other trace
-                if not (prev_stats['starttime'] < stime < etime < prev_stats['endtime']):
+                prev_start = prev_stats['starttime']
+                prev_end = prev_stats['endtime']
+                if not (prev_start < stime < etime < prev_end):
                     continue
                 # don't look in traces of other measurements
-                elif (stats["network"] == prev_stats["network"] and
-                      stats["location"] == prev_stats["location"] and
-                      stats["station"] == prev_stats["station"] and
-                      not (stats["channel"] == prev_stats["channel"])):
+                elif self.traces[_i].id != prev_trace.id:
                     continue
                 else:
                     covered = True
+                    break
             if covered:
                 continue
             gap_list.append([stats['network'], stats['station'],
