@@ -28,6 +28,7 @@ master:
    * The Response.recalculate_overall_sensitivity() method now accepts integers
      (see #2338, #2343).
    * Added wildcard and url support to read_inventory (see #2326).
+   * Modified stream.get_gaps() to deal with overlaps correctly (see #1403)
  - obspy.clients.fdsn:
    * Adding more location codes to the default priority list in the mass
      downloader (see #2155, #2159).
