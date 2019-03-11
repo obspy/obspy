@@ -1507,9 +1507,8 @@ class StreamTestCase(unittest.TestCase):
             tr_.data = tr_.data[:numsamp]
             st.append(tr_)
 
-        # min_gap=1 is used to only show the gaps (overlays are not of interest here)
+        # min_gap=1 is used to only show the gaps
         self.assertEqual(len(st.get_gaps(min_gap=1)), 0)
-
 
     def test_comparisons(self):
         """
