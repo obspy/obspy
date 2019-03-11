@@ -44,6 +44,9 @@ master:
    * Fix mapping of magnitude-types between MS to S and Ms to s.
    * Output preferred origin when writing to Nordic format instead of using
      the first origin (see #2195)
+   * Include high-accuracy phase-pick reading and writing - high-accuracy is
+     now the default phase-writing format.
+   * Allow long-phase names (both reading and writing) - longer than 4 char.
  - obspy.io.reftek:
    * Implement reading reftek encodings '16' and '32' (uncompressed data,
      16/32bit integers, see #2058 and #2059)

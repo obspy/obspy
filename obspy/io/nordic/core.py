@@ -732,11 +732,7 @@ def _read_picks(tagged_lines, new_event):
             polarity = line[16]
             if weight == ' ':
                 weight = 0
-        polarity_maps = {"": "undecidable", "C": "positive", "D": "negative"}
-        try:
-            polarity = polarity_maps[polarity]
-        except KeyError:
-            polarity = "undecidable"
+        polarity = POLARITY_MAPPING.get(polarity, "undecidable")
         # It is valid nordic for the origin to be hour 23 and picks to be hour
         # 00 or 24: this signifies a pick over a day boundary.
         pick_hour = int(line[18:20])
@@ -770,10 +766,7 @@ def _read_picks(tagged_lines, new_event):
             pick.onset = ONSET_MAPPING[line[9]]
         except KeyError:
             pass
-        if line[15] == 'A':
-            pick.evaluation_mode = 'automatic'
-        else:
-            pick.evaluation_mode = 'manual'
+        pick.evaluation_mode = EVALUATION_MAPPING.get(line[15], "manual")
         # Note these two are not always filled - velocity conversion not yet
         # implemented, needs to be converted from km/s to s/deg
         # if not velocity == 999.0:
