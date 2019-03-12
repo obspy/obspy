@@ -737,7 +737,8 @@ def _read_picks(tagged_lines, new_event):
         # 00 or 24: this signifies a pick over a day boundary.
         pick_hour = int(line[18:20])
         pick_minute = int(line[20:22])
-        pick_seconds = float(line[22:28])
+        pick_seconds = float(line[22:29])  # 29 should be blank, but sometimes
+        # SEISAN appears to overflow here, see #2348
         if pick_hour == 0 and evtime.hour == 23:
             day_add = 86400
         elif pick_hour >= 24:  # Nordic supports up to 48 hours advanced.
@@ -770,7 +771,7 @@ def _read_picks(tagged_lines, new_event):
         # Note these two are not always filled - velocity conversion not yet
         # implemented, needs to be converted from km/s to s/deg
         # if not velocity == 999.0:
-            # new_event.picks[pick_index].horizontal_slowness = 1.0 / velocity
+        #     new_event.picks[pick_index].horizontal_slowness = 1.0 / velocity
         if _float_conv(line[46:51]) is not None:
             pick.backazimuth = _float_conv(line[46:51])
         # Create new obspy.event.Amplitude class which references above Pick
@@ -796,9 +797,9 @@ def _read_picks(tagged_lines, new_event):
             if snr:
                 _amplitude.snr = snr
             new_event.amplitudes.append(_amplitude)
-        elif _int_conv(line[28:33]) is not None:
-            # Create an amplitude instance for code duration also
-            _amplitude = Amplitude(generic_amplitude=_int_conv(line[28:33]),
+        elif _int_conv(line[29:33]) is not None:
+            # Create an amplitude instance for coda duration also
+            _amplitude = Amplitude(generic_amplitude=_int_conv(line[29:33]),
                                    pick_id=pick.resource_id,
                                    waveform_id=pick.waveform_id)
             # Amplitude for coda magnitude
@@ -947,7 +948,7 @@ def blanksfile(wavefile, evtype, userid, overwrite=False, evtime=None):
 
 
 def write_select(catalog, filename, userid='OBSP', evtype='L',
-                 wavefiles=None):
+                 wavefiles=None, high_accuracy=True):
     """
     Function to write a catalog to a select file in nordic format.
 
@@ -964,6 +965,10 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
     :param wavefiles:
         Waveforms to associate the events with, must be ordered in the same
          way as the events in the catalog.
+    :type high_accuracy: bool
+    :param high_accuracy:
+        Whether to output pick seconds at 6.3f (high_accuracy) or
+        5.2f (standard)
     """
     if not wavefiles:
         wavefiles = ['DUMMY' for _i in range(len(catalog))]
@@ -972,7 +977,7 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
             select = io.StringIO()
             _write_nordic(event=event, filename=None, userid=userid,
                           evtype=evtype, wavefiles=wavfile,
-                          string_io=select)
+                          string_io=select, high_accuracy=high_accuracy)
             select.seek(0)
             for line in select:
                 fout.write(line)
@@ -981,7 +986,7 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
 
 def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
                   wavefiles='DUMMY', explosion=False,
-                  overwrite=True, string_io=None):
+                  overwrite=True, string_io=None, high_accuracy=True):
     """
     Write an :class:`~obspy.core.event.Event` to a nordic formatted s-file.
 
@@ -1009,6 +1014,10 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     :param string_io:
         If given, will write to the StringIO object in memory rather than to
         the filename.
+    :type high_accuracy: bool
+    :param high_accuracy:
+        Whether to output pick seconds at 6.3f (high_accuracy) or
+        5.2f (standard)
 
     :returns: str: name of nordic file written
 
@@ -1209,7 +1218,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
                 ' VELO AIN AR TRES W  DIS CAZ7\n')
     # Now call the populate sfile function
     if len(event.picks) > 0:
-        newpicks = '\n'.join(nordpick(event))
+        newpicks = '\n'.join(nordpick(event, high_accuracy=high_accuracy))
         sfile.write(newpicks + '\n')
         sfile.write('\n'.rjust(81))
     if not string_io:
@@ -1337,12 +1346,16 @@ def _write_hyp_error_line(origin):
     return ''.join(error_line)
 
 
-def nordpick(event):
+def nordpick(event, high_accuracy=True):
     """
     Format picks in an :class:`~obspy.core.event.event.Event` to nordic.
 
     :type event: :class:`~obspy.core.event.event.Event`
     :param event: A single obspy event.
+    :type high_accuracy: bool
+    :param high_accuracy:
+        Whether to output pick seconds at 6.3f (high_accuracy) or
+        5.2f (standard).
 
     :returns: List of String
 
@@ -1364,6 +1377,10 @@ def nordpick(event):
         origin = Origin()
         origin_date = min([p.time for p in event.picks]).date
     pick_strings = []
+    if high_accuracy:
+        pick_rounding = 3
+    else:
+        pick_rounding = 2
     for pick in event.picks:
         if not pick.waveform_id:
             msg = ('No waveform id for pick at time %s, skipping' % pick.time)
@@ -1501,12 +1518,17 @@ def nordpick(event):
             "{hour:2d}{minute:2d}{seconds:6s}{coda:5s}{amp:7s}{period:5s}"
             "{azimuth:6s}{velocity:5s}    {azimuthres:3s}{timeres:5s}  "
             "{distance:5s}{caz:4s} ")
+        # Note that pick seconds rounding only works because SEISAN does not
+        # enforce that seconds stay 0 <= seconds < 60, so rounding something
+        # like seconds = 59.997 to 2dp gets to 60.00, which SEISAN is happy
+        # with.  It appears that SEISAN is happy with large numbers of seconds
+        # see #2348.
         pick_strings.append(pick_string_formatter.format(
             station=pick.waveform_id.station_code,
             instrument=channel_code[0], component=channel_code[-1],
             phase_info=phase_info, hour=pick_hour,
             minute=pick.time.minute,
-            seconds=_str_conv(pick_seconds, rounded=3),
+            seconds=_str_conv(pick_seconds, rounded=pick_rounding),
             coda=_str_conv(coda).rjust(5)[0:5],
             amp=_str_conv(amp, rounded=1).rjust(7)[0:7],
             period=_str_conv(peri, rounded=peri_round).rjust(5)[0:5],

@@ -709,6 +709,22 @@ class TestNordicMethods(unittest.TestCase):
                     if p.waveform_id.station_code == key]
             self.assertEqual(len(pick), 1)
             self.assertEqual(pick[0].time, value)
+        # Check that writing to standard accuracy just gives a rounded version
+        with NamedTemporaryFile(suffix=".out") as tf:
+            cat.write(format="NORDIC", filename=tf.name, high_accuracy=False)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        self.assertEqual(len(cat_back), 1)
+        for key, value in pick_times.items():
+            pick = [p for p in cat_back[0].picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            rounded_pick_time = UTCDateTime(
+                value.year, value.month, value.day, value.hour, value.minute)
+            rounded_pick_time += round(
+                value.second + (value.microsecond / 1e6), 2)
+            self.assertEqual(pick[0].time, rounded_pick_time)
 
     def test_long_phase_name(self):
         """ Nordic format supports 8 char phase names, sometimes. """
@@ -747,6 +763,34 @@ class TestNordicMethods(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 event_back = read_events(tf.name)[0]
         _assert_similarity(event, event_back)
+
+    def test_seconds_overflow(self):
+        """
+        #2348 indicates that SEISAN sometimes overflows seconds into column 29.
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_seconds_overflow"))
+        event = cat[0]
+        pick_times = {
+            "LSb2": UTCDateTime(2009, 7, 2, 6, 49) + 100.24}
+        for key, value in pick_times.items():
+            pick = [p for p in event.picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
+        with NamedTemporaryFile(suffix=".out") as tf:
+            write_select(cat, filename=tf.name)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        self.assertEqual(len(cat_back), 1)
+        for key, value in pick_times.items():
+            pick = [p for p in cat_back[0].picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
 
 
 def _assert_similarity(event_1, event_2, verbose=False):
