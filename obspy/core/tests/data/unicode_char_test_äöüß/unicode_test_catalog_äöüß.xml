@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="US-ASCII" standalone="yes"?>
+<q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:ingv="http://webservices.rm.ingv.it/fdsnws/event/1">
+  <eventParameters publicID="smi:webservices.rm.ingv.it/fdsnws/event/1/query">
+    <event publicID="smi:webservices.rm.ingv.it/fdsnws/event/1/query?eventId=2322919">
+      <type>earthquake</type>
+      <description>
+        <type>region name</type>
+        <text>Near east coast of eastern Honshu, Japan</text>
+      </description>
+      <preferredMagnitudeID>smi:webservices.rm.ingv.it/fdsnws/event/1/query?magnitudeId=2122949</preferredMagnitudeID>
+      <preferredOriginID>smi:webservices.rm.ingv.it/fdsnws/event/1/query?originId=1180759</preferredOriginID>
+      <creationInfo>
+        <agencyID>INGV</agencyID>
+        <author>CSEM</author>
+        <creationTime>2013-01-05T23:02:38</creationTime>
+      </creationInfo>
+      <origin publicID="smi:webservices.rm.ingv.it/fdsnws/event/1/query?originId=1180759">
+        <evaluationMode>manual</evaluationMode>
+        <type>hypocenter</type>
+        <time>
+          <value>2011-03-11T05:46:23.000000</value>
+        </time>
+        <latitude>
+          <value>38.3</value>
+        </latitude>
+        <longitude>
+          <value>142.5</value>
+        </longitude>
+        <depth>
+          <value>21000</value>
+        </depth>
+        <depthType>from location</depthType>
+        <quality>
+          <associatedPhaseCount>88</associatedPhaseCount>
+          <usedPhaseCount>65</usedPhaseCount>
+          <minimumDistance>0.00000</minimumDistance>
+          <maximumDistance>0.00000</maximumDistance>
+          <associatedStationCount>82</associatedStationCount>
+          <usedStationCount>65</usedStationCount>
+        </quality>
+        <evaluationStatus>reviewed</evaluationStatus>
+        <methodID>smi:webservices.rm.ingv.it/fdsnws/event/1/query?methodId=2</methodID>
+        <earthModelID>smi:webservices.rm.ingv.it/fdsnws/event/1/query?earthModelId=1</earthModelID>
+        <creationInfo>
+          <agencyID>INGV</agencyID>
+          <author>CSEM</author>
+          <version>1000</version>
+          <creationTime>2013-01-05T23:02:39</creationTime>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:webservices.rm.ingv.it/fdsnws/event/1/query?magnitudeId=2122949">
+        <originID>smi:webservices.rm.ingv.it/fdsnws/event/1/query?originId=1180759</originID>
+        <type>Mw</type>
+        <mag>
+          <value>9.0</value>
+        </mag>
+        <methodID>smi:webservices.rm.ingv.it/fdsnws/event/1/query?methodId=2</methodID>
+        <creationInfo>
+          <agencyID>INGV</agencyID>
+          <author>CSEM</author>
+          <creationTime>2013-01-05T23:02:39</creationTime>
+        </creationInfo>
+      </magnitude>
+    </event>
+  </eventParameters>
+</q:quakeml>

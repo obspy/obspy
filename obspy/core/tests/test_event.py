@@ -223,6 +223,7 @@ class CatalogTestCase(unittest.TestCase):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.iris_xml = os.path.join(path, 'iris_events.xml')
         self.neries_xml = os.path.join(path, 'neries_events.xml')
+        self.unicode_characters_xml = os.path.join(path, "unicode_char_test_äöüß/unicode_test_catalog_äöüß.xml")
 
     def test_read_invalid_filename(self):
         """
@@ -514,6 +515,16 @@ class CatalogTestCase(unittest.TestCase):
         event2 = read_events(bio)[0]
         # saved and loaded event should be equal
         self.assertEqual(event1, event2)
+
+    def test_read_unicode_characters(self):
+        """
+        Ensures that unicode characters in file path don't cause errors.
+        See #1932.
+        """
+        try:
+            read_events(self.unicode_characters_xml)
+        except UnicodeDecodeError:
+            self.fail("read_events() raised UnicodeDecodeError !")
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
