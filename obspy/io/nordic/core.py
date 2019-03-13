@@ -14,13 +14,18 @@ Nordic file format support for ObsPy
     the arrival.pick_id linking the arrival (which contain calculated
     information) with the pick.resource_id (where the pick contains only
     physical measured information).
+
+.. versionchanged:: 1.2.0
+
+    The number of stations used to calculate the origin was previously
+    incorrectly stored in a comment. From version 1.2.0 this is now stored
+    in `origin.quality.used_station_count`
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import warnings
-from collections import defaultdict
 import datetime
 import os
 import io
@@ -28,15 +33,16 @@ import io
 from obspy import UTCDateTime, read
 from obspy.geodetics import kilometers2degrees, degrees2kilometers
 from obspy.core.event import (
-    Event, Origin, Magnitude, Comment, Catalog, EventDescription, CreationInfo,
+    Event, Origin, Magnitude, Catalog, EventDescription, CreationInfo,
     OriginQuality, Pick, WaveformStreamID, Arrival, Amplitude,
     FocalMechanism, MomentTensor, NodalPlane, NodalPlanes, QuantityError,
     Tensor, ResourceIdentifier)
+from obspy.io.nordic import NordicParsingError
+from obspy.io.nordic.utils import (
+    _int_conv, _str_conv, _float_conv, _evmagtonor, _nortoevmag,
+    _get_line_tags)
 
 
-MAG_MAPPING = {"ML": "L", "MLv": "L", "mB": "B", "Ms": "s", "MS": "S",
-               "MW": "W", "MbLg": "G", "Mc": "C"}
-INV_MAG_MAPPING = {item: key for key, item in MAG_MAPPING.items()}
 POLARITY_MAPPING = {"": "undecidable", "C": "positive", "D": "negative"}
 INV_POLARITY_MAPPING = {item: key for key, item in POLARITY_MAPPING.items()}
 ONSET_MAPPING = {'I': 'impulsive', 'E': 'emergent'}
@@ -44,17 +50,6 @@ INV_ONSET_MAPPING = {item: key for key, item in ONSET_MAPPING.items()}
 EVALUATION_MAPPING = {'A': 'automatic', ' ': 'manual'}
 INV_EVALUTATION_MAPPING = {
     item: key for key, item in EVALUATION_MAPPING.items()}
-# List of currently implemented line-endings, which in Nordic mark what format
-# info in that line will be.
-accepted_tags = ['1', '6', '7', 'E', ' ', 'F', 'M', '3']
-
-
-class NordicParsingError(Exception):
-    """
-    Internal general error for IO operations in obspy.core.io.nordic.
-    """
-    def __init__(self, value):
-        self.value = value
 
 
 def _is_sfile(sfile, encoding='latin-1'):
@@ -102,144 +97,6 @@ def _is_sfile(sfile, encoding='latin-1'):
             return False
     else:
         return False
-
-
-def _get_line_tags(f, report=True):
-    """
-    Associate lines with a known line-type
-    :param f: File open in read
-    :param report: Whether to report warnings about lines not implemented
-    """
-    f.seek(0)
-    line = f.readline()
-    if len(line.rstrip()) != 80:
-        # Cannot be Nordic
-        raise NordicParsingError(
-            "Lines are not 80 characters long: not a nordic file")
-    f.seek(0)
-    tags = defaultdict(list)
-    for i, line in enumerate(f):
-        try:
-            line_id = line.rstrip()[79]
-        except IndexError:
-            line_id = ' '
-        if line_id in accepted_tags:
-            tags[line_id].append((line, i))
-        elif report:
-            warnings.warn("Lines of type %s have not been implemented yet, "
-                          "please submit a development request" % line_id)
-    return tags
-
-
-def _int_conv(string):
-    """
-    Convenience tool to convert from string to integer.
-
-    If empty string return None rather than an error.
-
-    >>> _int_conv('12')
-    12
-    >>> _int_conv('')
-
-    """
-    try:
-        intstring = int(string)
-    except Exception:
-        intstring = None
-    return intstring
-
-
-def _float_conv(string):
-    """
-    Convenience tool to convert from string to float.
-
-    If empty string return None rather than an error.
-
-    >>> _float_conv('12')
-    12.0
-    >>> _float_conv('')
-    >>> _float_conv('12.324')
-    12.324
-    """
-    try:
-        floatstring = float(string)
-    except Exception:
-        floatstring = None
-    return floatstring
-
-
-def _str_conv(number, rounded=False):
-    """
-    Convenience tool to convert a number, either float or int into a string.
-
-    If the int or float is None, returns empty string.
-
-    >>> print(_str_conv(12.3))
-    12.3
-    >>> print(_str_conv(12.34546, rounded=1))
-    12.3
-    >>> print(_str_conv(None))
-    <BLANKLINE>
-    >>> print(_str_conv(1123040))
-    11.2e5
-    """
-    if not number:
-        return str(' ')
-    if not rounded and isinstance(number, (float, int)):
-        if number < 100000:
-            string = str(number)
-        else:
-            exponent = int('{0:.2E}'.format(number).split('E+')[-1]) - 1
-            divisor = 10 ** exponent
-            string = '{0:.1f}'.format(number / divisor) + 'e' + str(exponent)
-    elif rounded and isinstance(number, (float, int)):
-        if number < 100000:
-            string = "{:.{precision}f}".format(number, precision=rounded)
-        else:
-            exponent = int('{0:.2E}'.format(number).split('E+')[-1]) - 1
-            divisor = 10 ** exponent
-            string = "{:.{precision}f}".format(
-                number / divisor, precision=rounded) + 'e' + str(exponent)
-    else:
-        return str(number)
-    return string
-
-
-def _evmagtonor(mag_type):
-    """
-    Switch from obspy event magnitude types to seisan syntax.
-
-    >>> print(_evmagtonor('mB'))  # doctest: +SKIP
-    B
-    >>> print(_evmagtonor('M'))  # doctest: +SKIP
-    W
-    >>> print(_evmagtonor('bob'))  # doctest: +SKIP
-    <BLANKLINE>
-    """
-    if mag_type == 'M':
-        warnings.warn('Converting generic magnitude to moment magnitude')
-        return "W"
-    mag = MAG_MAPPING.get(mag_type, '')
-    if mag == '':
-        warnings.warn(mag_type + ' is not convertible')
-    return mag
-
-
-def _nortoevmag(mag_type):
-    """
-    Switch from nordic type magnitude notation to obspy event magnitudes.
-
-    >>> print(_nortoevmag('B'))  # doctest: +SKIP
-    mB
-    >>> print(_nortoevmag('bob'))  # doctest: +SKIP
-    <BLANKLINE>
-    """
-    if mag_type.upper() == "L":
-        return "ML"
-    mag = INV_MAG_MAPPING.get(mag_type, '')
-    if mag == '':
-        warnings.warn(mag_type + ' is not convertible')
-    return mag
 
 
 def readheader(sfile, encoding='latin-1'):
@@ -358,8 +215,6 @@ def _read_origin(line):
         agency_id=line[45:48].strip())
     used_station_count = line[49:51].strip()
     if used_station_count != '':
-        new_event.origins[0].comments.append(
-            Comment(text='Number of stations={0}'.format(used_station_count)))
         new_event.origins[0].quality = OriginQuality(
             used_station_count=int(used_station_count))
     timeres = _float_conv(line[51:55])

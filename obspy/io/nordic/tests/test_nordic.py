@@ -21,10 +21,13 @@ from obspy.core.event import (
     NodalPlane, NodalPlanes, ResourceIdentifier, Tensor)
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import TemporaryWorkingDirectory
+
+from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.core import (
     _is_sfile, read_spectral_info, read_nordic, readwavename, blanksfile,
-    _write_nordic, nordpick, readheader, _int_conv, _readheader, _evmagtonor,
-    write_select, NordicParsingError, _float_conv, _nortoevmag, _str_conv,
+    _write_nordic, nordpick, readheader, _readheader,  write_select)
+from obspy.io.nordic.utils import (
+    _int_conv, _float_conv, _str_conv, _nortoevmag, _evmagtonor,
     _get_line_tags)
 
 
