@@ -176,7 +176,7 @@ Gallery
     template += stream.select(station='ROHR').slice(otime + 2, otime + 7)
     template += stream.select(station='PLN').slice(otime + 6, otime + 12)
     ccs = correlate_stream_template(stream, template, template_time=otime)
-    detections = similarity_detector(ccs, 0.5, 10, 10, plot_detections=stream)
+    detections = similarity_detector(ccs, 0.5, 10, plot_detections=stream)
 
 .. gallery-plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html

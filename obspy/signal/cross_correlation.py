@@ -874,7 +874,7 @@ def _prep_streams_correlate(stream, template, template_time=None):
         template_offset = 0
     else:
         template_offset = template_time - starttime_template
-    # trim traces and calculate correlations
+    # trim traces
     for tr, trt in zip(stream, template):
         trim1 = trt.stats.starttime - starttime_template
         len_this_template = trt.stats.endtime - trt.stats.starttime
@@ -930,44 +930,12 @@ def _calc_mean(stream):
     return Trace(data=np.mean(matrix, axis=0), header=header)
 
 
-def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
-                        similarity=None, plot_detections=None, details=False):
-    """
-    Detector based on the similarity of waveforms
-
-    This detector evaluates the cross-correlation stream returned by
-    :func:`~obspy.signal.cross_correlation.correlate_stream_template`.
-
-    :param cross_correlations: Stream with cross-correlations. The similarity
-        is calculated as the mean of the cross-correlation value over all
-        channels.
-    :param mean_thresshold: Similarity value to trigger a detection.
-    :param holdon: Hold time in seconds, only the detection with largest
-        similarity value in that time span is returned.
-    :param holdoff: Hold time in seconds, detections are
-        separated by this time span.
-    :param similarity: The similarity Trace can be directly specified.
-        Otherwise the similarity is calculated as the mean of
-        cross-correlations.
-    :param plot_detections: Plot detections together with the data of the
-        supplied stream.
-    :param details: By default the list returned by this function includes
-        detection time and similarity value. If set to True it also returns
-        the individual cross-correlation values for all channels.
-
-    :return: List of event detections sorted chronologically.
-    """
-    if similarity is None:
-        similarity = _calc_mean(cross_correlations)
-    starttime = similarity.stats.starttime
-    dt = similarity.stats.delta
-    holdon_samples = int(round(holdon / dt))
-    holdoff_samples = int(round(holdoff / dt))
-    cond = similarity.data >= mean_threshold
+def _find_peaks(data, height, holdon_samples, holdoff_samples):
+    cond = data >= height
     # loop through True values in cond array and guarantee hold time
-    similarity_cond = similarity.data[cond]
+    similarity_cond = data[cond]
     cindices = np.nonzero(cond)[0]
-    detections = []
+    detections_index = []
     i = 0
     while True:
         try:
@@ -978,14 +946,73 @@ def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
         j = bisect_left(cindices, cindex + holdon_samples, lo=i)
         k = i + np.argmax(similarity_cond[i:j])
         cindex = cindices[k]
-        detection = {'time': starttime + cindex * dt,
-                     'similarity': similarity_cond[k]}
-        if details and cross_correlations is not None:
-            detection['cc_values'] = {tr.id: tr.data[cindex]
-                                      for tr in cross_correlations}
-        detections.append(detection)
+        detections_index.append(cindex)
         # wait holdoff time after detection
         i = bisect_left(cindices, cindex + holdoff_samples, lo=j)
+    return detections_index
+
+
+def similarity_detector(cross_correlations, height, distance,
+                        similarity=None, plot_detections=None, details=False,
+                        **kwargs):
+    """
+    Detector based on the similarity of waveforms
+
+    This detector evaluates the cross-correlation stream returned by
+    :func:`~obspy.signal.cross_correlation.correlate_stream_template`.
+    It utilizes the SciPy function :func:`~scipy.signal.find_peaks`.
+    For a SciPy version smaller than 1.1 it uses a custom function
+    for peak finding. The parameters `heigth`, `distance`
+    (converted to samples) and other kwargs are passed to
+    :func:`~scipy.signal.find_peaks`.
+
+    :param cross_correlations: Stream with cross-correlations. The similarity
+        is calculated as the mean of the cross-correlation value over all
+        channels.
+    :param height: Similarity value to trigger a detection.
+    :param distance: The distance in seconds between two detections.
+    :param similarity: The similarity Trace can be directly specified.
+        Otherwise the similarity is calculated as the mean of
+        cross-correlations.
+    :param plot_detections: Plot detections together with the data of the
+        supplied stream. The default `plot_detections=None` does not plot
+        anything. `plot_detections=True` plots the similarity trace together
+        with the detections. If a stream is passed as argument, the traces
+        in the stream will be plotted together with the similarity trace and
+        detections.
+    :param details: By default the list returned by this function includes
+        detection time and similarity value. If set to True it also returns
+        the individual cross-correlation values for all channels and properties
+        from :func:`~scipy.signal.find_peaks`.
+
+    :return: List of event detections sorted chronologically.
+    """
+    if similarity is None:
+        similarity = _calc_mean(cross_correlations)
+    starttime = similarity.stats.starttime
+    dt = similarity.stats.delta
+    if distance is not None:
+        distance = int(round(distance / dt))
+    try:
+        from scipy.signal import find_peaks
+    except ImportError:
+        indices = _find_peaks(similarity.data, height, distance, distance)
+        properties = {}
+    else:
+        indices, properties = find_peaks(similarity.data, height,
+                                         distance=distance, **kwargs)
+    detections = []
+    for i, index in enumerate(indices):
+        detection = {'time': starttime + index * dt,
+                     'similarity': similarity.data[index]}
+        if details and cross_correlations is not None:
+            detection['cc_values'] = {tr.id: tr.data[index]
+                                      for tr in cross_correlations}
+        if details:
+            for k, v in properties.items():
+                if k != 'peak_heights':
+                    detection[k[:-1] if k.endswith('s') else k] = v[i]
+        detections.append(detection)
     if plot_detections:
         import matplotlib.pyplot as plt
         from obspy.imaging.util import _set_xaxis_obspy_dates
@@ -1004,8 +1031,9 @@ def similarity_detector(cross_correlations, mean_threshold, holdon, holdoff,
             ax[i].plot(tr.times('matplotlib'), tr.data, 'k')
             ax[i].annotate(tr.id, **akw)
         ax[-1].plot(similarity.times('matplotlib'), similarity.data, 'k')
-        ax[-1].axhline(mean_threshold)
         ax[-1].annotate('similarity', **akw)
+        if isinstance(height, (float, int)):
+            ax[-1].axhline(height)
         _set_xaxis_obspy_dates(ax[-1])
         plt.show()
     return detections

@@ -16,13 +16,11 @@ from obspy import UTCDateTime, read
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.libnames import _load_cdll
 from obspy.core.util.testing import ImageComparison
-from obspy.signal.cross_correlation import (correlate, correlate_template,
-                                            correlate_stream_template,
-                                            insert_amplitude_ratio,
-                                            similarity_detector,
-                                            xcorr_pick_correction,
-                                            xcorr_3c, xcorr_max, xcorr,
-                                            _xcorr_padzeros, _xcorr_slice)
+from obspy.signal.cross_correlation import (
+        correlate, correlate_template, correlate_stream_template,
+        insert_amplitude_ratio, similarity_detector,
+        xcorr_pick_correction, xcorr_3c, xcorr_max,
+        xcorr, _xcorr_padzeros, _xcorr_slice, _find_peaks)
 from obspy.signal.trigger import coincidence_trigger
 
 
@@ -525,7 +523,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
         template[2].data = template[2].data[:-n1 // 5]
         # test if all three events found
         ccs = correlate_stream_template(stream, template)
-        detections = similarity_detector(ccs, 0.2, 30, 30)
+        detections = similarity_detector(ccs, 0.2, 30)
         self.assertEqual(len(detections), 3)
         self.assertEqual(len(ccs), len(stream))
         self.assertEqual(stream[0].stats.starttime, ccs[0].stats.starttime)
@@ -541,12 +539,27 @@ class CrossCorrelationTestCase(unittest.TestCase):
         comp_thres = np.sum(ccmatrix > 0.2, axis=0) > 1
         similarity = ccs[0].copy()
         similarity.data = np.mean(ccmatrix, axis=0) * comp_thres
-        detections = similarity_detector(ccs, 0.1, 30, 30,
+        detections = similarity_detector(ccs, 0.1, 30,
                                          similarity=similarity, details=True)
         self.assertEqual(len(detections), 2)
         for d in detections:
             self.assertAlmostEqual(np.mean(list(d['cc_values'].values())),
                                    d['similarity'])
+        # test if properties from find_peaks function are returned
+        detections = similarity_detector(ccs, 0.2, 30, threshold=0.16,
+                                         details=True)
+        try:
+            from scipy.signal import find_peaks
+        except ImportError:
+            self.assertEqual(len(detections), 2)
+            self.assertNotIn('left_threshold', detections[0])
+        else:
+            self.assertEqual(len(detections), 1)
+            self.assertIn('left_threshold', detections[0])
+        # also check the _find_peaks function
+        distance = int(round(30 / similarity.stats.delta))
+        indices = _find_peaks(similarity.data, 0.1, distance, distance)
+        self.assertEqual(len(indices), 2)
         # test if xcorr stream is suitable for coincidence_trigger
         # result should be the same, return values related
         triggers = coincidence_trigger(None, 0.2, -1, ccs, 2,
@@ -554,8 +567,8 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.assertEqual(len(triggers), 2)
         for d, t in zip(detections, triggers):
             self.assertAlmostEqual(np.mean(t['cft_peaks']), d['similarity'])
-        # test holdon and holdoff parameters
-        d = similarity_detector(ccs, 0.2, 150, 500)
+        # test distance parameter
+        d = similarity_detector(ccs, 0.2, 500)
         self.assertEqual(len(d), 1)
         # test if traces with not matching seed ids are discarded
         ccs = correlate_stream_template(stream[:2], template[1:])

@@ -36,7 +36,9 @@ use only a single channel of the station IC.MDJ.
     stream = read('https://examples.obspy.org/IC.MDJ.2017.246.mseed')
     stream.filter('bandpass', freqmin=0.5, freqmax=2)
     ccs = correlate_stream_template(stream, template)
-    detections = similarity_detector(ccs, 0.3, 10, 10, plot_detections=stream)
+    height = 0.3  # similarity threshold
+    distance = 10  # distance between detections in seconds
+    detections = similarity_detector(ccs, height, distance, plot_detections=stream)
 
 The above detection corresponds to the start time of the template.
 If the template of the 2013 explosion is associated with its origin time,
@@ -55,12 +57,14 @@ around 8 minutes after the 2013 test.
     template.trim(pick, pick + 150)
     stream = read('https://examples.obspy.org/IC.MDJ.2017.246.mseed')
     stream.filter('bandpass', freqmin=0.5, freqmax=2)
+    distance = 10
 
 .. testcode::
 
     utc_nuclear_test_2013 = UTC('2013-02-12T02:57:51')
     ccs = correlate_stream_template(stream, template, template_time=utc_nuclear_test_2013)
-    detections = similarity_detector(ccs, 0.2, 10, 10)
+    height = 0.2  # lower threshold
+    detections = similarity_detector(ccs, height, distance)
     detections
 
 .. testoutput::
@@ -104,7 +108,9 @@ After that, cross-correlations are calculated and other, similar earthquakes in 
     :include-source:
 
     ccs = correlate_stream_template(stream, template, template_time=otime)
-    detections = similarity_detector(ccs, 0.5, 10, 10, plot_detections=stream)
+    height = 0.5  # similarity threshold
+    distance = 10  # distance between detections in seconds
+    detections = similarity_detector(ccs, height, distance, plot_detections=stream)
 
 Note, that the stream of cross-correlations in the variable ccs is also suitable for use with
 :func:`~obspy.signal.trigger.coincidence_trigger`, but that function will return the trigger time,
@@ -128,11 +134,12 @@ constraint that the cross-correlation should be larger than 0.5 at all stations.
         return Trace(data=data, header=header)
 
     similarity = similarity_component_thres(ccs, 0.5, 3)
-    detections = similarity_detector(None, 0.5, 10, 10, similarity=similarity, plot_detections=stream)
+    detections = similarity_detector(None, height, distance, similarity=similarity, plot_detections=stream)
 
 Now, we have only 7 detections, probably from a specific earthquake cluster.
 To get more detections, we need to relax the constraints again.
-Another possibility is to calculate the envelope of the data before applying the correlation.
+Another possibility is to calculate the envelope of the data before applying the correlation
+or to mute the coda waves in the template by setting corresponding data values to zero.
 
 Finally, amplitude ratios between the detections and the template are calculated
 and inserted into the detection list. The magnitude of the detected earthquakes
@@ -162,7 +169,7 @@ can also be estimated if the magnitude of the template event is provided.
         return Trace(data=data, header=header)
 
     similarity = similarity_component_thres(ccs, 0.5, 3)
-    detections = similarity_detector(None, 0.5, 10, 10, similarity=similarity)
+    detections = similarity_detector(None, 0.5, 10, similarity=similarity)
 
 .. testcode::
 
