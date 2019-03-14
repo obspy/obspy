@@ -546,10 +546,10 @@ class CrossCorrelationTestCase(unittest.TestCase):
             self.assertAlmostEqual(np.mean(list(d['cc_values'].values())),
                                    d['similarity'])
         # test if properties from find_peaks function are returned
-        detections = similarity_detector(ccs, 0.2, 30, threshold=0.16,
-                                         details=True)
+        detections = similarity_detector(ccs, 0.1, 30, threshold=0.16,
+                                         similarity=similarity, details=True)
         try:
-            from scipy.signal import find_peaks
+            from scipy.signal import find_peaks  # noqa
         except ImportError:
             self.assertEqual(len(detections), 2)
             self.assertNotIn('left_threshold', detections[0])
