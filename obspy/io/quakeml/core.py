@@ -29,9 +29,9 @@ import io
 import os
 import warnings
 
-from collections import Mapping
 from lxml import etree
 
+from obspy.core import compatibility
 from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               CompositeTime, ConfidenceEllipsoid, CreationInfo,
                               DataUsed, Event, EventDescription,
@@ -1218,7 +1218,7 @@ class Pickler(object):
                 element.attrib[tag] = str(value)
             elif type_.lower() == "element":
                 # check if value is dictionary-like
-                if isinstance(value, Mapping):
+                if isinstance(value, compatibility.collections_abc.Mapping):
                     subelement = etree.SubElement(element, tag, attrib=attrib)
                     self._custom(value, subelement)
                 elif isinstance(value, bool):

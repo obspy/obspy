@@ -12,12 +12,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import collections
 import copy
 import warnings
 
+from .. import compatibility
 
-class AttribDict(collections.MutableMapping):
+
+class AttribDict(compatibility.collections_abc.MutableMapping):
     """
     A class which behaves like a dictionary.
 
@@ -98,7 +99,8 @@ class AttribDict(collections.MutableMapping):
         if key in self._types and not isinstance(value, self._types[key]):
             value = self._cast_type(key, value)
 
-        mapping_instance = isinstance(value, collections.Mapping)
+        mapping_instance = isinstance(value,
+                                      compatibility.collections_abc.Mapping)
         attr_dict_instance = isinstance(value, AttribDict)
         if mapping_instance and not attr_dict_instance:
             self.__dict__[key] = AttribDict(value)
@@ -182,7 +184,8 @@ class AttribDict(collections.MutableMapping):
         :return: value cast to correct type.
         """
         typ = self._types[key]
-        new_type = typ[0] if isinstance(typ, collections.Sequence) else typ
+        new_type = typ[0] if isinstance(
+            typ, compatibility.collections_abc.Sequence) else typ
         msg = ('Attribute "%s" must be of type %s, not %s. Attempting to '
                'cast %s to %s') % (key, typ, type(value), value, new_type)
         warnings.warn(msg)

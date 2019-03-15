@@ -7,6 +7,7 @@ it work with various versions of our dependencies.
 """
 from future.utils import PY2
 
+import collections
 import io
 import json
 import sys
@@ -35,6 +36,13 @@ if PY2:
     string_types = (basestring,)  # NOQA
 else:
     string_types = (str,)  # NOQA
+
+
+# Importing the ABCs from collections will no longer work with Python 3.8.
+if PY2:
+    collections_abc = collections
+else:
+    collections_abc = collections.abc
 
 
 # NumPy does not offer the from_buffer method under Python 3 and instead
