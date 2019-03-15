@@ -154,7 +154,7 @@ class SEGYFile(object):
             [i for i in self._read_traces(
                 unpack_headers=unpack_headers,
                 headonly=headonly,
-                map_header=map_header])]
+                map_header=map_header)]
 
     def __str__(self):
         """
