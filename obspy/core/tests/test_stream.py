@@ -1920,7 +1920,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 2)
         # headonly
         tr = read('https://examples.obspy.org/test.sac', headonly=True)[0]
-        self.assertFalse(tr.data)
+        self.assertEqual(tr.data.size, 0)
 
     def test_copy(self):
         """
