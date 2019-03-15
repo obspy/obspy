@@ -20,25 +20,29 @@ from future.builtins import *  # NOQA
 import math
 import re
 import warnings
-import obspy
 
 from lxml import etree
+import numpy as np
 from scipy.signal import tf2zpk
+
+import obspy
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (Azimuth, ClockDrift, Dip,
                                   Distance, Frequency, Latitude,
                                   Longitude, SampleRate)
 from obspy.core.inventory.response import (
-	    CoefficientsTypeResponseStage, FilterCoefficient, FIRResponseStage,
-	    PolesZerosResponseStage, PolynomialResponseStage, ResponseListElement,
-	    ResponseListResponseStage)
+            CoefficientsTypeResponseStage, FilterCoefficient,
+            FIRResponseStage, PolesZerosResponseStage,
+            PolynomialResponseStage, ResponseListElement,
+            ResponseListResponseStage)
 from obspy.io.stationxml.core import _read_floattype
 
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
 SCHEMA_VERSION = ["0.5", "0.6", "0.7", "0.8", "0.9", "0.10", "0.11"]
+
 
 def _count_complex(complex_string):
     """
@@ -71,6 +75,7 @@ def _parse_list_of_complex_string(complex_string):
                                                     numbers)
         raise ValueError(msg)
     return numbers
+
 
 def _read_sc3ml(path_or_file_object):
     """
@@ -113,7 +118,7 @@ def _read_sc3ml(path_or_file_object):
     # one, so any more than that will be ignored.)
     # that will be ignored.)
     inv_element = root.find(_ns("Inventory"))
-    
+
     # Pre-generate a dictionary of the sensors, dataloggers and responses to
     # avoid costly linear search when parsing network nodes later
     # search when parsing network nodes later.
@@ -124,7 +129,7 @@ def _read_sc3ml(path_or_file_object):
         if public_id:
             if public_id in sensors:
                 msg = ("Found multiple matching sensor tags with the same "
-	               "publicID '{}'.".format(public_id))
+                       "publicID '{}'.".format(public_id))
                 raise obspy.ObsPyException(msg)
             else:
                 sensors[public_id] = sensor_element
@@ -135,7 +140,7 @@ def _read_sc3ml(path_or_file_object):
         if public_id:
             if public_id in dataloggers:
                 msg = ("Found multiple matching datalogger tags with the same "
-	               "publicID '{}'.".format(public_id))
+                       "publicID '{}'.".format(public_id))
                 raise obspy.ObsPyException(msg)
             else:
                 dataloggers[public_id] = datalogger_element
@@ -144,7 +149,7 @@ def _read_sc3ml(path_or_file_object):
 
     # Go over all responses
     for response_type in ["responseFAP", "responseFIR", "responsePAZ",
-                          "responseIIR", "responsePolynomial"]: 
+                          "responseIIR", "responsePolynomial"]:
         for response_element in inv_element.findall(_ns(response_type)):
             public_id = response_element.get("publicID")
             if public_id:
@@ -161,7 +166,7 @@ def _read_sc3ml(path_or_file_object):
         "dataloggers": dataloggers,
         "responses": responses
     }
-	
+
     # Collect all networks from the sc3ml inventory
     networks = []
     for net_element in inv_element.findall(_ns("network")):
@@ -246,7 +251,7 @@ def _read_station(instrumentation_register, sta_element, _ns):
     """
     Reads the station structure
 
-    :param instrumentation_register: register of instrumentation metadata 
+    :param instrumentation_register: register of instrumentation metadata
     :param sta_element: station element to be read
     :param _ns: name space
     """
@@ -432,10 +437,6 @@ def _read_channel(instrumentation_register, cha_element, _ns):
         response_id = sensor_element.get("response")
         if response_id is not None:
             # Change in v0.10 the way identifiers are delimited (# -> /)
-            if len(response_id.split("#")) == 1:
-                resp_type = response_id.split("/")[0]
-            else:
-                resp_type = response_id.split("#")[0]
             response_element = instrumentation_register["responses"]\
                                .get(response_id)
         else:
@@ -465,7 +466,8 @@ def _read_channel(instrumentation_register, cha_element, _ns):
     denominator = _tag2obj(cha_element, _ns("sampleRateDenominator"), int)
 
     # If numerator is zero, set rate to zero irrespective of the denominator.
-    # If numerator is non-zero and denominator zero, will raise ZeroDivisionError.
+    # If numerator is non-zero and denominator zero, will raise
+    # ZeroDivisionError.
     rate = numerator / denominator if numerator != 0 else 0
 
     channel.sample_rate_ratio_number_samples = numerator
@@ -551,8 +553,9 @@ def _read_instrument_sensitivity(sen_element, cha_element, _ns):
     return sensitivity
 
 
-def _read_response(instrumentation_register, sen_element, resp_element, cha_element,
-                   data_log_element, _ns, samp_rate, fir, analogue):
+def _read_response(instrumentation_register, sen_element, resp_element,
+                   cha_element, data_log_element, _ns, samp_rate, fir,
+                   analogue):
     """
     reads response from sc3ml format
 
@@ -630,7 +633,8 @@ def _read_response(instrumentation_register, sen_element, resp_element, cha_elem
     # Output unit: V
     if len(analogue):
         for analogue_id in analogue:
-            analogue_element = instrumentation_register["responses"].get(analogue_id)
+            analogue_element = instrumentation_register["responses"].get(
+                analogue_id)
             if analogue_element is None:
                 msg = ('Analogue responsePAZ not in inventory:'
                        '%s, stopping before stage %i') % (analogue_id, stage)
@@ -723,19 +727,27 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
     # Since 0.10 ResponsePAZ can have a decimation attributes
     if output_units != "V":
 
-      # Get element or default value
-      decimation["factor"] = _tag2obj(stage, _ns("decimationFactor"), int) or 1
-      decimation["delay"] = _tag2obj(stage, _ns("delay"), float)  or 0
-      decimation["correction"] = _tag2obj(stage, _ns("correction"), float) or 0
-      decimation["offset"] = _tag2obj(stage, _ns("offset"), float) or 0
-      decimation["rate"] = _read_float_var(rate, Frequency)
+        # Get element or default value
+        decimation["factor"] = _tag2obj(
+            stage, _ns("decimationFactor"), int) or 1
+        decimation["delay"] = _tag2obj(
+            stage, _ns("delay"), float) or 0
+        decimation["correction"] = _tag2obj(
+            stage, _ns("correction"), float) or 0
+        decimation["offset"] = _tag2obj(
+            stage, _ns("offset"), float) or 0
+        decimation["rate"] = _read_float_var(rate, Frequency)
 
     # Decimation delay/correction need to be normalized
     if rate != 0.0:
-      if decimation["delay"] is not None:
-        decimation["delay"] = _read_float_var(decimation["delay"] / rate, FloatWithUncertaintiesAndUnit, unit=True)
-      if decimation["correction"] is not None:
-        decimation["correction"] = _read_float_var(decimation["correction"] / rate, FloatWithUncertaintiesAndUnit, unit=True)
+        if decimation["delay"] is not None:
+            decimation["delay"] = \
+                _read_float_var(decimation["delay"] / rate,
+                                FloatWithUncertaintiesAndUnit, unit=True)
+        if decimation["correction"] is not None:
+            decimation["correction"] = \
+                _read_float_var(decimation["correction"] / rate,
+                                FloatWithUncertaintiesAndUnit, unit=True)
 
     # Set up list of for this stage arguments
     kwargs = {
@@ -775,7 +787,8 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         # B: Laplace (Hz)
         # D: digital (z-transform)
         pz_transfer_function_type = _tag2obj(stage, _ns("type"), str)
-        pz_transfer_function_type = _map_transfer_type(pz_transfer_function_type)
+        pz_transfer_function_type = \
+            _map_transfer_type(pz_transfer_function_type)
 
         # Parse string of poles and zeros
         # paz are stored as a string in sc3ml
@@ -812,7 +825,8 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
     # For IIR filters reuse the PolesZerosResponseStage
     elif(elem_type == 'responseIIR'):
         pz_transfer_function_type = _tag2obj(stage, _ns("type"), str)
-        pz_transfer_function_type = _map_transfer_type(pz_transfer_function_type)
+        pz_transfer_function_type = _map_transfer_type(
+            pz_transfer_function_type)
 
         numerators = stage.find(_ns("numerators")).text.split(" ")
         denominators = stage.find(_ns("denominators")).text.split(" ")
@@ -824,7 +838,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
         # See #2004 @andres-h
         zeros, poles, gain = tf2zpk(numerators, denominators)
         msg = "ResponseIIR is not fully tested in ObsPy. Please be cautious"
-	warnings.warn(msg)
+        warnings.warn(msg)
 
         return PolesZerosResponseStage(
             pz_transfer_function_type=pz_transfer_function_type,
@@ -902,16 +916,16 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
             coefficients=coeffs_float, symmetry=symmetry, **kwargs)
 
     elif(elem_type == 'responseFAP'):
-	
-	        data = _tag2obj(stage, _ns("tuples"), str)
-	        data = np.array(data.split(), dtype=np.float64)
-	        freq, amp, phase = data.reshape((-1, 3)).T
-	        elements = []
-	        for freq_, amp_, phase_ in zip(freq, amp, phase):
-	            elements.append(ResponseListElement(freq_, amp_, phase_))
-	
-	        return ResponseListResponseStage(
-	            response_list_elements=elements, **kwargs)
+
+        data = _tag2obj(stage, _ns("tuples"), str)
+        data = np.array(data.split(), dtype=np.float64)
+        freq, amp, phase = data.reshape((-1, 3)).T
+        elements = []
+        for freq_, amp_, phase_ in zip(freq, amp, phase):
+            elements.append(ResponseListElement(freq_, amp_, phase_))
+
+        return ResponseListResponseStage(
+            response_list_elements=elements, **kwargs)
 
 
 def _tag2pole_or_zero(paz_element, count):
