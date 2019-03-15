@@ -119,10 +119,10 @@ class SEGYFile(object):
         :type map_header: list
         :param map_header: List of lists with headerwords that have been
             reassigned. Formatting should be as follows
-                [[length, name_1, special_type, start_byte],
-                ...
-                [length, name_2, special_type, start_byte]]
-            Example:
+            [[length, name_1, special_type, start_byte],
+            [...],
+            [length, name_2, special_type, start_byte]]
+            Example
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -264,12 +264,12 @@ class SEGYFile(object):
         If data_encoding or endian is set, these values will be enforced.
 
         :type map_header: list
-        :param non map_header: List of lists with headerwords that have been
+        :param map_header: List of lists with headerwords that have been
             reassigned. Formatting should be as follows
-                [[length, name_1, special_type, start_byte],
-                ...
-                [length, name_2, special_type, start_byte]]
-            Example:
+            [[length, name_1, special_type, start_byte],
+            [...],
+            [length, name_2, special_type, start_byte]]
+            Example
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -431,12 +431,12 @@ class SEGYFile(object):
             ``True``.
 
         :type map_header: list
-        :param non map_header: List of lists with headerwords that have been
+        :param map_header: List of lists with headerwords that have been
             reassigned. Formatting should be as follows
-                [[length, name_1, special_type, start_byte],
-                ...
-                [length, name_2, special_type, start_byte]]
-            Example:
+            [[length, name_1, special_type, start_byte],
+            [...],
+            [length, name_2, special_type, start_byte]]
+            Example
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -612,12 +612,12 @@ class SEGYTrace(object):
             will not be unpackable on-the-fly after reading the file.
             Defaults to False.
         :type map_header: list
-        :param non map_header: List of lists with headerwords that have been
+        :param map_header: List of lists with headerwords that have been
             reassigned. Formatting should be as follows
-                [[length, name_1, special_type, start_byte],
-                ...
-                [length, name_2, special_type, start_byte]]
-            Example:
+            [[length, name_1, special_type, start_byte],
+            [...],
+            [length, name_2, special_type, start_byte]]
+            ::Example::
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -659,12 +659,12 @@ class SEGYTrace(object):
             will not be unpackable on-the-fly after reading the file.
             Defaults to False.
         :type map_header: list
-        :param non map_header: List of lists with headerwords that have been
+        :param map_header: List of lists with headerwords that have been
             reassigned. Formatting should be as follows
-                [[length, name_1, special_type, start_byte],
-                ...
-                [length, name_2, special_type, start_byte]]
-            Example:
+            [[length, name_1, special_type, start_byte],
+            [...],
+            [length, name_2, special_type, start_byte]]
+            :Example:
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -864,14 +864,14 @@ class SEGYTraceHeader(object):
             usage and the performance. They can be unpacked on-the-fly after
             being read. Defaults to False.
         :type map_header: list
-        :param non map_header: List of lists with headerwords that have been
+        :param map_header: List of lists with headerwords that have been
             reassigned. Formatting should be as follows
-                [[length, name_1, special_type, start_byte],
-                ...
-                [length, name_2, special_type, start_byte]]
-            Example:
-                [[4, 'delay', False, 180],
-                [[4, 'vessel_speed', False, 184]]]
+            [[length, name_1, special_type, start_byte],
+            [...],
+            [length, name_2, special_type, start_byte]]
+            Example
+            [[4, 'delay', False, 180],
+            [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
         """
         self.endian = endian
@@ -895,12 +895,12 @@ class SEGYTraceHeader(object):
         Reads the 240 byte long header and unpacks all values into
         corresponding class attributes.
         :type map_header: list
-        :param non map_header: List of lists with headerwords that have been
+        :param map_header: List of lists with headerwords that have been
             reassigned. Formatting should be as follows
-                [[length, name_1, special_type, start_byte],
-                ...
-                [length, name_2, special_type, start_byte]]
-            Example:
+            [[length, name_1, special_type, start_byte],
+            [...],
+            [length, name_2, special_type, start_byte]]
+            Example
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -932,12 +932,12 @@ class SEGYTraceHeader(object):
         """
         Writes the header to an open file like object.
         :type map_header: list
-        :param non map_header: List of lists with headerwords that have been
+        :param map_header: List of lists with headerwords that have been
             reassigned. Formatting should be as follows
-                [[length, name_1, special_type, start_byte],
-                ...
-                [length, name_2, special_type, start_byte]]
-            Example:
+            [[length, name_1, special_type, start_byte],
+            [...],
+            [length, name_2, special_type, start_byte]]
+            Example
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -1057,12 +1057,12 @@ def _read_segy(file, endian=None, textual_header_encoding=None,
         read and unpacked. Has a huge impact on memory usage. Data will not be
         unpackable on-the-fly after reading the file. Defaults to False.
     :type map_header: list
-    :param non map_header: List of lists with headerwords that have been
+    :param map_header: List of lists with headerwords that have been
         reassigned. Formatting should be as follows
-            [[length, name_1, special_type, start_byte],
-            ...
-            [length, name_2, special_type, start_byte]]
-        Example:
+        [[length, name_1, special_type, start_byte],
+        [...],
+        [length, name_2, special_type, start_byte]]
+        Example
             [[4, 'delay', False, 180],
             [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -1109,15 +1109,15 @@ def _internal_read_segy(file, endian=None, textual_header_encoding=None,
         read and unpacked. Has a huge impact on memory usage. Data will not be
         unpackable on-the-fly after reading the file. Defaults to False.
     :type map_header: list
-    :param non map_header: List of lists with headerwords that have been
+    :param map_header: List of lists with headerwords that have been
         reassigned. Formatting should be as follows
-            [[length, name_1, special_type, start_byte],
-            ...
-            [length, name_2, special_type, start_byte]]
-        Example:
+        [[length, name_1, special_type, start_byte],
+        [...],
+        [length, name_2, special_type, start_byte]]
+        Example
             [[4, 'delay', False, 180],
             [[4, 'vessel_speed', False, 184]]]
-            Defaults to False.
+        Defaults to False.
     """
     return SEGYFile(file, endian=endian,
                     textual_header_encoding=textual_header_encoding,
@@ -1135,8 +1135,8 @@ def iread_segy(file, endian=None, textual_header_encoding=None,
     finished - this function is thus suitable for reading arbitrarily large
     SEG-Y files without running into memory problems.
 
-    >>> from obspy.core.util import get_example_file
-    >>> filename = get_example_file("00001034.sgy_first_trace")
+    >>> from obspy.core.util import get_Example_file
+    >>> filename = get_Example_file("00001034.sgy_first_trace")
     >>> from obspy.io.segy.segy import iread_segy
     >>> for tr in iread_segy(filename):
     ...     # Each Trace's stats attribute will have references to the file
@@ -1170,12 +1170,12 @@ def iread_segy(file, endian=None, textual_header_encoding=None,
         read and unpacked. Has a huge impact on memory usage. Data will not be
         unpackable on-the-fly after reading the file. Defaults to False.
     :type map_header: list
-    :param non map_header: List of lists with headerwords that have been
+    :param map_header: List of lists with headerwords that have been
         reassigned. Formatting should be as follows
             [[length, name_1, special_type, start_byte],
-            ...
+            [...],
             [length, name_2, special_type, start_byte]]
-        Example:
+        Example
             [[4, 'delay', False, 180],
             [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -1234,8 +1234,8 @@ def iread_su(file, endian=None, unpack_headers=False, headonly=False):
     finished - this function is thus suitable for reading arbitrarily large
     SU files without running into memory problems.
 
-    >>> from obspy.core.util import get_example_file
-    >>> filename = get_example_file("1.su_first_trace")
+    >>> from obspy.core.util import get_Example_file
+    >>> filename = get_Example_file("1.su_first_trace")
     >>> from obspy.io.segy.segy import iread_su
     >>> for tr in iread_su(filename):
     ...     # Each Trace's stats attribute will have some file-wide
