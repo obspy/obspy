@@ -33,8 +33,8 @@ from obspy import UTCDateTime, read_inventory
 from obspy.core.compatibility import urlparse
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
-                     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
-                     FDSNRedirectException, FDSNNoDataException)
+                     WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_SERVICES,
+                     FDSNException, FDSNRedirectException, FDSNNoDataException)
 from .wadl_parser import WADLParser
 
 if PY2:
@@ -140,7 +140,7 @@ class Client(object):
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
                  timeout=120, service_mappings=None, force_redirect=False,
-                 eida_token=None):
+                 eida_token=None, _discover_services=True):
         """
         Initializes an FDSN Web Service client.
 
@@ -202,6 +202,13 @@ class Client(object):
             used. This mechanism is only available on select EIDA nodes. The
             token can be provided in form of the PGP message as a string, or
             the filename of a local file with the PGP message in it.
+        :type _discover_services: bool
+        :param _discover_services: By default the client will query information
+            about the FDSN endpoint when it is instantiated.  In certain cases,
+            this may place a heavy load on the FDSN service provider.  If set
+            to ``False``, no service discovery is performed and default
+            parameter support is assumed. This parameter is experimental and
+            will likely be removed in the future.
         """
         self.debug = debug
         self.user = user
@@ -253,7 +260,10 @@ class Client(object):
                     print("\t%s: '%s'" % (key, value))
             print("Request Headers: %s" % str(self.request_headers))
 
-        self._discover_services()
+        if _discover_services:
+            self._discover_services()
+        else:
+            self.services = DEFAULT_SERVICES
 
         # Use EIDA token if provided - this requires setting new url openers.
         #
