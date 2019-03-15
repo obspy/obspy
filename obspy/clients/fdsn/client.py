@@ -291,7 +291,7 @@ class Client(object):
         self.user = user
         self._set_opener(user, password)
 
-    def set_eida_token(self, token):
+    def set_eida_token(self, token, validate=True):
         """
         Fetch user and password from the server using the provided token,
         resulting in subsequent web service requests for waveforms being
@@ -308,8 +308,11 @@ class Client(object):
             This mechanism is only available on select EIDA nodes. The token
             can be provided in form of the PGP message as a string, or the
             filename of a local file with the PGP message in it.
+        :type validate: bool
+        :param validate: Whether to sanity check the token before sending it to
+            the EIDA server or not.
         """
-        user, password = self._resolve_eida_token(token)
+        user, password = self._resolve_eida_token(token, validate=validate)
         self.set_credentials(user, password)
 
     def _set_opener(self, user, password):
@@ -333,7 +336,7 @@ class Client(object):
         if self.debug:
             print('Installed new opener with handlers: {!s}'.format(handlers))
 
-    def _resolve_eida_token(self, token):
+    def _resolve_eida_token(self, token, validate=True):
         """
         Use the token to get credentials.
         """
@@ -350,16 +353,17 @@ class Client(object):
             with open(token_file, 'rb') as fh:
                 token = fh.read().decode()
         # sanity check on the token
-        if not _validate_eida_token(token):
-            if token_file:
-                msg = ("Read EIDA token from file '{}' but it does not "
-                       "seem to contain a valid PGP message.").format(
-                            token_file)
-            else:
-                msg = ("EIDA token does not seem to be a valid PGP message. "
-                       "If you passed a filename, make sure the file "
-                       "actually exists.")
-            raise ValueError(msg)
+        if validate:
+            if not _validate_eida_token(token):
+                if token_file:
+                    msg = ("Read EIDA token from file '{}' but it does not "
+                           "seem to contain a valid PGP message.").format(
+                                token_file)
+                else:
+                    msg = ("EIDA token does not seem to be a valid PGP "
+                           "message. If you passed a filename, make sure the "
+                           "file actually exists.")
+                raise ValueError(msg)
 
         # force https so that we don't send around tokens unsecurely
         url = 'https://{}/fdsnws/dataselect/1/auth'.format(
