@@ -175,7 +175,7 @@ DEFAULT_TYPES = {
     "catalog": str,
     "contributor": str,
     "updatedafter": UTCDateTime,
-    'format': str}
+    "format": str}
 
 DEFAULT_VALUES = {
     "starttime": None,
@@ -184,7 +184,7 @@ DEFAULT_VALUES = {
     "station": None,
     "location": None,
     "channel": None,
-    "quality": 'B',
+    "quality": "B",
     "minimumlength": 0.0,
     "longestonly": False,
     "startbefore": None,
@@ -204,7 +204,7 @@ DEFAULT_VALUES = {
     "magnitudetype": None,
     "maxradius": 180.0,
     "minradius": 0.0,
-    "level": 'station',
+    "level": "station",
     "includerestricted": True,
     "includeavailability": False,
     "includeallorigins": False,
@@ -214,7 +214,7 @@ DEFAULT_VALUES = {
     "eventid": None,
     "limit": None,
     "offset": 1,
-    "orderby": 'time',
+    "orderby": "time",
     "catalog": None,
     "contributor": None,
     "updatedafter": None,
@@ -231,24 +231,24 @@ for service in ["dataselect", "event", "station"]:
 
     for default_param in DEFAULT_PARAMETERS[service]:
         DEFAULT_SERVICES[service][default_param] = {
-            'default_value': DEFAULT_VALUES[default_param],
-            'type': DEFAULT_TYPES[default_param],
-            'required': False,
+            "default_value": DEFAULT_VALUES[default_param],
+            "type": DEFAULT_TYPES[default_param],
+            "required": False,
         }
 
     for optional_param in OPTIONAL_PARAMETERS[service]:
-        if optional_param == 'format':
-            if service == 'dataselect':
-                default_val = 'miniseed'
+        if optional_param == "format":
+            if service == "dataselect":
+                default_val = "miniseed"
             else:
-                default_val = 'xml'
+                default_val = "xml"
         else:
             default_val = DEFAULT_VALUES[optional_param]
 
         DEFAULT_SERVICES[service][optional_param] = {
-            'default_value': default_val,
-            'type': DEFAULT_TYPES[optional_param],
-            'required': False,
+            "default_value": default_val,
+            "type": DEFAULT_TYPES[optional_param],
+            "required": False,
         }
 
 # This list collects WADL parameters that will not be parsed because they are
