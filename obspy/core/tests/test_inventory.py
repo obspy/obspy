@@ -44,6 +44,10 @@ class InventoryTestCase(unittest.TestCase):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.nperr = np.geterr()
         np.seterr(all='ignore')
+        path = os.path.join(os.path.dirname(__file__), 'data')
+        self.path = path
+        self.station_xml1 = os.path.join(path, 'IU_ANMO_00_BHZ.xml')
+        self.station_xml2 = os.path.join(path, 'IU_ULN_00_LH1.xml')
 
     def tearDown(self):
         np.seterr(**self.nperr)
@@ -610,6 +614,17 @@ class InventoryTestCase(unittest.TestCase):
         self.assertEqual(inv[0][0][0].latitude, original_latitude)
         self.assertEqual(inv2[0][0][0].latitude, original_latitude + 1)
         self.assertNotEqual(inv[0][0][0].latitude, inv2[0][0][0].latitude)
+
+    def test_read_inventory_with_wildcard(self):
+        """
+        Tests the read_inventory() function with a filename wild card.
+        """
+        # without wildcard..
+        expected = read_inventory(self.station_xml1)
+        expected += read_inventory(self.station_xml2)
+        # with wildcard
+        got = read_inventory(os.path.join(self.path, "IU_*_00*.xml"))
+        self.assertEqual(expected, got)
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')

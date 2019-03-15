@@ -27,10 +27,8 @@ import numpy as np
 from obspy.core import compatibility
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
-                                  _read_from_plugin, download_to_file,
-                                  sanitize_filename)
+                                  _read_from_plugin, _generic_reader)
 from obspy.core.util.decorator import (map_example_filename,
                                        raise_if_masked, uncompress_file)
 from obspy.core.util.misc import get_window_times, buffered_load_entry_point
@@ -202,51 +200,30 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     kwargs['endtime'] = endtime
     kwargs['nearest_sample'] = nearest_sample
     kwargs['check_compression'] = check_compression
-    # create stream
-    st = Stream()
+    kwargs['headonly'] = headonly
+    kwargs['format'] = format
+
     if pathname_or_url is None:
         # if no pathname or URL specified, return example stream
         st = _create_example_stream(headonly=headonly)
-    elif not isinstance(pathname_or_url, (str, native_str)):
-        # not a string - we assume a file-like object
-        pathname_or_url.seek(0)
-        try:
-            # first try reading directly
-            stream = _read(pathname_or_url, format, headonly, **kwargs)
-            st.extend(stream.traces)
-        except TypeError:
-            # if this fails, create a temporary file which is read directly
-            # from the file system
-            pathname_or_url.seek(0)
-            with NamedTemporaryFile() as fh:
-                fh.write(pathname_or_url.read())
-                st.extend(_read(fh.name, format, headonly, **kwargs).traces)
-        pathname_or_url.seek(0)
-    elif "://" in pathname_or_url:
-        # some URL
-        # extract extension if any
-        suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
-        with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
-            download_to_file(url=pathname_or_url, filename_or_buffer=fh)
-            st.extend(_read(fh.name, format, headonly, **kwargs).traces)
     else:
-        # some file name
-        pathname = pathname_or_url
-        for file in sorted(glob(pathname)):
-            st.extend(_read(file, format, headonly, **kwargs).traces)
-        if len(st) == 0:
-            # try to give more specific information why the stream is empty
-            if has_magic(pathname) and not glob(pathname):
-                raise Exception("No file matching file pattern: %s" % pathname)
-            elif not has_magic(pathname) and not os.path.isfile(pathname):
-                raise IOError(2, "No such file or directory", pathname)
-            # Only raise error if no start/end time has been set. This
-            # will return an empty stream if the user chose a time window with
-            # no data in it.
-            # XXX: Might cause problems if the data is faulty and the user
-            # set start/end time. Not sure what to do in this case.
-            elif not starttime and not endtime:
-                raise Exception("Cannot open file/files: %s" % pathname)
+        st = _generic_reader(pathname_or_url, _read, **kwargs)
+
+    if len(st) == 0:
+        # try to give more specific information why the stream is empty
+        if has_magic(pathname_or_url) and not glob(pathname_or_url):
+            raise Exception("No file matching file pattern: %s" %
+                            pathname_or_url)
+        elif not has_magic(pathname_or_url) and \
+                not os.path.isfile(pathname_or_url):
+            raise IOError(2, "No such file or directory", pathname_or_url)
+        # Only raise error if no start/end time has been set. This
+        # will return an empty stream if the user chose a time window with
+        # no data in it.
+        # XXX: Might cause problems if the data is faulty and the user
+        # set start/end time. Not sure what to do in this case.
+        elif not starttime and not endtime:
+            raise Exception("Cannot open file/files: %s" % pathname_or_url)
     # Trim if times are given.
     if headonly and (starttime or endtime or dtype):
         warnings.warn(_headonly_warning_msg, UserWarning)

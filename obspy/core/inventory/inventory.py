@@ -12,19 +12,17 @@ Provides the Inventory class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import python_2_unicode_compatible, native_str
+from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
-import os
 import textwrap
 import warnings
 
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
-                                  _read_from_plugin, NamedTemporaryFile,
-                                  download_to_file, sanitize_filename)
-from obspy.core.util.decorator import map_example_filename
+                                  _read_from_plugin, _generic_reader)
+from obspy.core.util.decorator import map_example_filename, uncompress_file
 from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
@@ -41,9 +39,7 @@ def _create_example_inventory():
     """
     Create an example inventory.
     """
-    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "data")
-    path = os.path.join(data_dir, "BW_GR_misc.xml")
-    return read_inventory(path, format="STATIONXML")
+    return read_inventory('/path/to/BW_GR_misc.xml', format="STATIONXML")
 
 
 @map_example_filename("path_or_file_object")
@@ -51,9 +47,12 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     """
     Function to read inventory files.
 
-    :param path_or_file_object: File name or file like object. If this
-        attribute is omitted, an example :class:`Inventory`
-        object will be returned.
+    :type path_or_file_object: str or file-like object.
+    :param path_or_file_object: String containing a file name or a URL or a
+        open file-like object. Wildcards are allowed for a file name. If this
+        attribute is omitted, an example
+        :class:`~obspy.core.inventory.inventory.Inventory` object will be
+        returned.
     :type format: str
     :param format: Format of the file to read (e.g. ``"STATIONXML"``). See the
         `Supported Formats`_ section below for a list of supported formats.
@@ -85,17 +84,19 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
         return _create_example_inventory()
-    elif isinstance(path_or_file_object, (str, native_str)) and \
-            "://" in path_or_file_object:
-        # some URL
-        # extract extension if any
-        suffix = \
-            os.path.basename(path_or_file_object).partition('.')[2] or '.tmp'
-        with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
-            download_to_file(url=path_or_file_object, filename_or_buffer=fh)
-            return read_inventory(fh.name, format=format)
-    return _read_from_plugin("inventory", path_or_file_object,
-                             format=format, *args, **kwargs)[0]
+    else:
+        return _generic_reader(path_or_file_object, _read, format=format,
+                               **kwargs)
+
+
+@uncompress_file
+def _read(filename, format=None, **kwargs):
+    """
+    Reads a single event file into a ObsPy Catalog object.
+    """
+    inventory, format = _read_from_plugin('inventory', filename, format=format,
+                                          **kwargs)
+    return inventory
 
 
 @python_2_unicode_compatible
@@ -143,6 +144,32 @@ class Inventory(ComparingObject):
             self.created = obspy.UTCDateTime()
         else:
             self.created = created
+
+    def __eq__(self, other):
+        """
+        __eq__ method of the Inventory object.
+
+        :type other: :class:`~obspy.core.inventory.Inventory`
+        :param other: Inventory object for comparison.
+        :rtype: bool
+        :return: ``True`` if both Inventories are equal.
+
+        .. rubric:: Example
+
+        >>> from obspy.core.inventory import read_inventory
+        >>> inv = read_inventory()
+        >>> inv2 = inv.copy()
+        >>> inv is inv2
+        False
+        >>> inv == inv2
+        True
+        """
+        if not isinstance(other, Inventory):
+            return False
+        return self.networks == other.networks
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __add__(self, other):
         new = copy.deepcopy(self)
@@ -272,6 +299,23 @@ class Inventory(ComparingObject):
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
+
+    def extend(self, network_list):
+        """
+        Extends the current Catalog object with a list of Network objects.
+        """
+        if isinstance(network_list, list):
+            for _i in network_list:
+                # Make sure each item in the list is a event.
+                if not isinstance(_i, Network):
+                    msg = 'Extend only accepts a list of Network objects.'
+                    raise TypeError(msg)
+            self.networks.extend(network_list)
+        elif isinstance(network_list, Inventory):
+            self.networks.extend(network_list.networks)
+        else:
+            msg = 'Extend only supports a list of Network objects as argument.'
+            raise TypeError(msg)
 
     def write(self, path_or_file_object, format, **kwargs):
         """
