@@ -24,7 +24,7 @@ import requests
 
 import obspy
 from obspy.core.compatibility import (
-    configparser, get_text_from_response, urlparse)
+    ConfigParser, get_text_from_response, urlparse)
 from obspy.core.inventory.util import _textwrap
 
 
@@ -277,7 +277,7 @@ class LocalNRL(NRL):
         """
         Returns a configparser from a path to an index.txt
         """
-        cp = configparser.ConfigParser()
+        cp = ConfigParser()
         with codecs.open(path, mode='r', encoding='UTF-8') as f:
             if sys.version_info.major == 2:  # pragma: no cover
                 cp.readfp(f)
@@ -318,7 +318,7 @@ class RemoteNRL(NRL):
         '''
         Returns a configparser from a path to an index.txt
         '''
-        cp = configparser.SafeConfigParser()
+        cp = ConfigParser()
         with io.StringIO(self._download(path)) as buf:
             if sys.version_info.major == 2:  # pragma: no cover
                 cp.readfp(buf)

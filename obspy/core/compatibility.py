@@ -41,9 +41,9 @@ else:
 
 # Importing the ABCs from collections will no longer work with Python 3.8.
 if PY2:
-    collections_abc = collections
+    collections_abc = collections  # NOQA
 else:
-    collections_abc = collections.abc
+    collections_abc = collections.abc  # NOQA
 
 
 if PY2:
@@ -70,7 +70,6 @@ if PY2:
             return np.frombuffer(data, dtype=dtype).copy()
         else:
             return np.array([], dtype=dtype)
-    import ConfigParser as configparser  # NOQA
 else:
     def from_buffer(data, dtype):
         try:
@@ -78,7 +77,12 @@ else:
         except Exception:
             pass
         return np.array(memoryview(data)).view(dtype).copy()  # NOQA
-    import configparser  # NOQA
+
+
+if PY2:
+    from ConfigParser import SaveConfigParser as ConfigParser  # NOQA
+else:
+    from configparser import ConfigParser  # NOQA
 
 
 def is_text_buffer(obj):
