@@ -46,6 +46,17 @@ from obspy.geodetics import locations2degrees
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
 
 
+def _normalize_stats(obj):
+    if isinstance(obj, Stream):
+        for tr in obj:
+            _normalize_stats(tr)
+    else:
+        if "processing" in obj.stats:
+            del obj.stats["processing"]
+        if "_fdsnws_dataselect_url" in obj.stats:
+            del obj.stats._fdsnws_dataselect_url
+
+
 def failmsg(got, expected, ignore_lines=[]):
     """
     Create message on difference between objects.
@@ -575,6 +586,8 @@ class ClientTestCase(unittest.TestCase):
                 del tr.stats._fdsnws_dataselect_url
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
+            # The client trims by default.
+            _normalize_stats(got)
             self.assertEqual(got, expected, "Dataselect failed for query %s" %
                              repr(query))
             # test output to file
@@ -600,9 +613,7 @@ class ClientTestCase(unittest.TestCase):
         got = client.get_waveforms(*query)
         file_ = os.path.join(self.datapath, filename)
         expected = read(file_)
-        # Remove fdsnws URL as it is not in the data from the disc.
-        for tr in got:
-            del tr.stats._fdsnws_dataselect_url
+        _normalize_stats(got)
         self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_iris_example_queries_event_discover_services_false(self):
@@ -765,6 +776,7 @@ class ClientTestCase(unittest.TestCase):
                 del tr.stats._fdsnws_dataselect_url
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
+            _normalize_stats(got)
             self.assertEqual(got, expected, "Dataselect failed for query %s" %
                              repr(query))
             # test output to file
