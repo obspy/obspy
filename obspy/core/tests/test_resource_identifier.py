@@ -660,10 +660,10 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             # needs to call get_object_hook to find it
             self.assertIs(rid1.get_referred_object(), new_obj1)
 
-    def test_mutative_methods_depreciated(self):
+    def test_mutative_methods_deprecation(self):
         """
         Because Resource ids are hashable they should be immutable. Make
-        sure any methods that mutate resource_ids are depreciated. Currently
+        sure any methods that mutate resource_ids are deprecated. Currently
         there are two:
 
         1. `convert_id_to_quakeml_uri`
