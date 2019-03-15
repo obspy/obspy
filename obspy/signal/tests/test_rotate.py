@@ -6,7 +6,6 @@ The Rotate test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2
 
 import gzip
 import itertools
@@ -15,12 +14,13 @@ import unittest
 
 import numpy as np
 
+from obspy.core.compatibility import RegExTextCase
 from obspy.signal.rotate import (rotate_lqt_zne, rotate_ne_rt, rotate_rt_ne,
                                  rotate_zne_lqt, _dip_azimuth2zne_base_vector,
                                  rotate2zne)
 
 
-class RotateTestCase(unittest.TestCase):
+class RotateTestCase(RegExTextCase):
     """
     Test cases for Rotate.
     """
@@ -163,11 +163,7 @@ class RotateTestCase(unittest.TestCase):
         dip_1, dip_2, dip_3 = 0.0, 30.0, 60.0
         azi_1, azi_2, azi_3 = 0.0, 170.0, 35.0
 
-        if PY2:
-            testmethod = self.assertRaisesRegexp
-        else:
-            testmethod = self.assertRaisesRegex
-        testmethod(
+        self.assertRaisesRegex(
             ValueError, 'All three data arrays must be of same length.',
             rotate2zne, z, azi_1, dip_1, n, azi_2, dip_2, e, azi_3, dip_3)
 

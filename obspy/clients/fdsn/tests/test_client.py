@@ -32,7 +32,7 @@ import numpy as np
 import requests
 
 from obspy import UTCDateTime, read, read_inventory, Stream, Trace
-from obspy.core.compatibility import mock
+from obspy.core.compatibility import mock, RegExTextCase
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
@@ -93,7 +93,7 @@ def normalize_version_number(string):
     return [l.strip() for l in repl.splitlines()]
 
 
-class ClientTestCase(unittest.TestCase):
+class ClientTestCase(RegExTextCase):
     """
     Test cases for obspy.clients.fdsn.client.Client.
     """
@@ -1570,11 +1570,11 @@ class ClientTestCase(unittest.TestCase):
                     endtime=UTCDateTime("2010-02-27T06:40:00.000"))
 
         # test invalid token/token file
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 ValueError,
                 'EIDA token does not seem to be a valid PGP message'):
             client = Client('GFZ', eida_token="spam")
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 ValueError,
                 "Read EIDA token from file '[^']*event_helpstring.txt' but it "
                 "does not seem to contain a valid PGP message."):

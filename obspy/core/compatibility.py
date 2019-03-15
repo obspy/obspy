@@ -11,6 +11,7 @@ import collections
 import io
 import json
 import sys
+import unittest
 
 import numpy as np
 
@@ -43,6 +44,15 @@ if PY2:
     collections_abc = collections
 else:
     collections_abc = collections.abc
+
+
+if PY2:
+    class RegExTextCase(unittest.TestCase):
+        def assertRaisesRegex(self, exception, regex):
+            return self.assertRaisesRegexp(exception, regex)
+else:
+    class RegExTextCase(unittest.TestCase):
+        pass
 
 
 # NumPy does not offer the from_buffer method under Python 3 and instead
