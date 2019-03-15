@@ -83,6 +83,8 @@ master:
     * added read support for FOCMEC 'out' and 'lst' files (see #2156)
  - obspy.signal.trigger:
     * fix a bug in AR picker (see #2157)
+    * option to return Baer-Kradolfer characteristic function from pk_mbaer
+      function added (see #2341)
  - obspy.signal.PPSD:
    * Fixed exact trace cutting for PSD segments (see #2040).
    * Timestamp representations internally and in npz I/O were changed to use
