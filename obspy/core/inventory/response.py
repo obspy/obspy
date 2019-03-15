@@ -1897,22 +1897,21 @@ class Response(ComparingObject):
                  pz_transfer_function_type='LAPLACE (RADIANS/SECOND)',
                  normalization_factor=1.0):
         """
-        Convert poles and response lists into a one-stage response.
+        Convert poles and zeros lists into a single-stage response.
 
         Takes in lists of complex poles and zeros and returns a Response with
-        those values defining its only stage.
+        those values defining its only stage. Most of the optional parameters
+        defined here are from
+        :class:`~obspy.core.inventory.response.PolesZerosResponseStage`.
+
         :type zeros: list of complex
         :param zeros: All zeros of the response to be defined.
         :type poles: list of complex
         :param poles: All poles of the response to be defined.
         :type stage_gain: float
         :param stage_gain: The gain value of the response [sensitivity]
-
-        Most of the optional parameters defined here are from
-        :class:`~obspy.core.inventory.response.PolesZerosResponseStage`.
         :returns: new Response instance with given P-Z values
         """
-
         pzstage = PolesZerosResponseStage(
                     stage_sequence_number=1, stage_gain=stage_gain,
                     stage_gain_frequency=stage_gain_frequency,
