@@ -20,6 +20,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
+from obspy.core.util.obspy_types import ObsPyException
 from .header import (BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_CODE_DTYPE,
                      ENDIAN, TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
 from .segy import _read_segy as _read_segyrev1
@@ -36,6 +37,9 @@ VALID_FORMATS = [1, 2, 3, 4, 5, 8]
 # This is the maximum possible interval between two samples due to the nature
 # of the SEG Y format.
 MAX_INTERVAL_IN_SECONDS = 0.065535
+
+# largest number possible with int16
+MAX_NUMBER_OF_SAMPLES = 32767
 
 
 class SEGYCoreWritingError(SEGYError):
@@ -270,6 +274,12 @@ def _write_segy(stream, filename, data_encoding=None, byteorder=None,
     the SEG Y format. Therefore the smallest possible sampling rate is ~ 15.26
     Hz. Please keep that in mind.
     """
+    for i, tr in enumerate(stream):
+        if len(tr) > MAX_NUMBER_OF_SAMPLES:
+            msg = ('Can not write traces with more than {:d} samples (trace '
+                   'at index {:d}):\n{!s}')
+            raise ObsPyException(msg.format(MAX_NUMBER_OF_SAMPLES, i, tr))
+
     # Some sanity checks to catch invalid arguments/keyword arguments.
     if data_encoding is not None and data_encoding not in VALID_FORMATS:
         msg = "Invalid data encoding."
