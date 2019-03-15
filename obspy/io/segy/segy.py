@@ -118,7 +118,7 @@ class SEGYFile(object):
             ``True``. The data will be completely ignored if this is set to
             ``False``.
         :type map_header: list
-        :param non map_header: List of lists with headerwords that have been
+        :param map_header: List of lists with headerwords that have been
             reassigned. Formatting should be as follows
                 [[length, name_1, special_type, start_byte],
                 ...
