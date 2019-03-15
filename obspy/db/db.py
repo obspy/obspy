@@ -124,7 +124,7 @@ class WaveformChannel(Base):
 
     def get_preview(self, apply_calibration=False):
         try:
-            data = np.loads(self.preview)
+            data = pickle.loads(self.preview)
         except Exception:
             data = np.array([])
         if apply_calibration:
