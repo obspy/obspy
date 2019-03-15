@@ -30,7 +30,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from collections import deque
-import ctypes as C
+import ctypes as C  # NOQA
 import warnings
 
 import numpy as np

@@ -691,11 +691,11 @@ def _test_similarity(event_1, event_2, verbose=False):
                                 return False
                     if arr_1["distance"] and round(
                             arr_1["distance"]) != round(arr_2["distance"]):
-                            if verbose:
-                                print('%s does not match %s for key %s' %
-                                      (arr_1[arr_key], arr_2[arr_key],
-                                       arr_key))
-                            return False
+                        if verbose:
+                            print('%s does not match %s for key %s' %
+                                  (arr_1[arr_key], arr_2[arr_key],
+                                   arr_key))
+                        return False
     # Check picks
     if len(event_1.picks) != len(event_2.picks):
         if verbose:

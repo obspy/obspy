@@ -40,7 +40,7 @@ from .wadl_parser import WADLParser
 if PY2:
     from urllib import urlencode
     import urllib2 as urllib_request
-    import Queue as queue
+    import Queue as queue  # NOQA
 else:
     from urllib.parse import urlencode
     import urllib.request as urllib_request
