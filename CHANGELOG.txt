@@ -46,8 +46,9 @@ master:
      the first origin (see #2195)
    * Include high-accuracy phase-pick reading and writing - high-accuracy is
      now the default phase-writing format, a boolean flag `high_accuracy`
-     has been added to turn this off.
+     has been added to turn this off. (see #2351 and #2348)
    * Allow long-phase names (both reading and writing) - longer than 4 char.
+     (see #2351)
  - obspy.io.reftek:
    * Implement reading reftek encodings '16' and '32' (uncompressed data,
      16/32bit integers, see #2058 and #2059)
