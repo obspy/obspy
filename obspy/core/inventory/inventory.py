@@ -27,7 +27,7 @@ from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .network import Network
-from .util import _unified_content_strings, _textwrap
+from .util import _unified_content_strings, _textwrap, _response_plot_label
 
 # Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
@@ -997,7 +997,8 @@ class Inventory(ComparingObject):
     def plot_response(self, min_freq, output="VEL", network="*", station="*",
                       location="*", channel="*", time=None, starttime=None,
                       endtime=None, axes=None, unwrap_phase=False,
-                      plot_degrees=False, show=True, outfile=None):
+                      plot_degrees=False, show=True, outfile=None,
+                      label_epoch_dates=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
         inventory's channels.
@@ -1056,6 +1057,9 @@ class Inventory(ComparingObject):
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
+        :type label_epoch_dates: bool
+        :param label_epoch_dates: Whether to add channel epoch dates in the
+            plot's legend labels.
 
         .. rubric:: Basic Usage
 
@@ -1086,11 +1090,11 @@ class Inventory(ComparingObject):
         for net in matching.networks:
             for sta in net.stations:
                 for cha in sta.channels:
+                    label = _response_plot_label(
+                        net, sta, cha, label_epoch_dates=label_epoch_dates)
                     try:
                         cha.plot(min_freq=min_freq, output=output,
-                                 axes=(ax1, ax2),
-                                 label=".".join((net.code, sta.code,
-                                                 cha.location_code, cha.code)),
+                                 axes=(ax1, ax2), label=label,
                                  unwrap_phase=unwrap_phase,
                                  plot_degrees=plot_degrees, show=False,
                                  outfile=None)

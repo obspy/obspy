@@ -874,6 +874,24 @@ def _seed_id_keyfunction(x):
     return x
 
 
+def _response_plot_label(network, station, channel, label_epoch_dates):
+    label = ".".join((network.code, station.code,
+                      channel.location_code, channel.code))
+    if label_epoch_dates:
+        start = channel.start_date
+        if start is None:
+            start = 'open'
+        else:
+            start = str(start.date)
+        end = channel.end_date
+        if end is None:
+            end = 'open'
+        else:
+            end = str(end.date)
+        label += '\n{} -- {}'.format(start, end)
+    return label
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
