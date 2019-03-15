@@ -1910,6 +1910,9 @@ def _validate_eida_token(token):
     if re.search(pattern='BEGIN PGP MESSAGE', string=token,
                  flags=re.IGNORECASE):
         return True
+    elif re.search(pattern='BEGIN PGP SIGNED MESSAGE', string=token,
+                   flags=re.IGNORECASE):
+        return True
     return False
 
 
