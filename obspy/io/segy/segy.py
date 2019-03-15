@@ -118,11 +118,11 @@ class SEGYFile(object):
             ``False``.
         :type map_header: list
         :param map_header: List of lists with headerwords that have been
-            reassigned. Formatting should be as follows
-            [[length, name_1, special_type, start_byte],
-            [...],
-            [length, name_2, special_type, start_byte]]
-            Example
+            reassigned. Formatting should be as follows::
+                [[length, name_1, special_type, start_byte],
+                [...],
+                [length, name_2, special_type, start_byte]]
+            Example::
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -265,11 +265,11 @@ class SEGYFile(object):
 
         :type map_header: list
         :param map_header: List of lists with headerwords that have been
-            reassigned. Formatting should be as follows
-            [[length, name_1, special_type, start_byte],
-            [...],
-            [length, name_2, special_type, start_byte]]
-            Example
+            reassigned. Formatting should be as follows::
+                [[length, name_1, special_type, start_byte],
+                [...],
+                [length, name_2, special_type, start_byte]]
+            Example::
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -432,11 +432,11 @@ class SEGYFile(object):
 
         :type map_header: list
         :param map_header: List of lists with headerwords that have been
-            reassigned. Formatting should be as follows
-            [[length, name_1, special_type, start_byte],
-            [...],
-            [length, name_2, special_type, start_byte]]
-            Example
+            reassigned. Formatting should be as follows::
+                [[length, name_1, special_type, start_byte],
+                [...],
+                [length, name_2, special_type, start_byte]]
+            Example::
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -613,11 +613,11 @@ class SEGYTrace(object):
             Defaults to False.
         :type map_header: list
         :param map_header: List of lists with headerwords that have been
-            reassigned. Formatting should be as follows
-            [[length, name_1, special_type, start_byte],
-            [...],
-            [length, name_2, special_type, start_byte]]
-            ::Example::
+            reassigned. Formatting should be as follows::
+                [[length, name_1, special_type, start_byte],
+                [...],
+                [length, name_2, special_type, start_byte]]
+            Example::
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -660,11 +660,11 @@ class SEGYTrace(object):
             Defaults to False.
         :type map_header: list
         :param map_header: List of lists with headerwords that have been
-            reassigned. Formatting should be as follows
-            [[length, name_1, special_type, start_byte],
-            [...],
-            [length, name_2, special_type, start_byte]]
-            :Example:
+            reassigned. Formatting should be as follows::
+                [[length, name_1, special_type, start_byte],
+                [...],
+                [length, name_2, special_type, start_byte]]
+            Example::
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -865,13 +865,13 @@ class SEGYTraceHeader(object):
             being read. Defaults to False.
         :type map_header: list
         :param map_header: List of lists with headerwords that have been
-            reassigned. Formatting should be as follows
-            [[length, name_1, special_type, start_byte],
-            [...],
-            [length, name_2, special_type, start_byte]]
-            Example
-            [[4, 'delay', False, 180],
-            [[4, 'vessel_speed', False, 184]]]
+            reassigned. Formatting should be as follows::
+                [[length, name_1, special_type, start_byte],
+                [...],
+                [length, name_2, special_type, start_byte]]
+            Example::
+                [[4, 'delay', False, 180],
+                [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
         """
         self.endian = endian
@@ -896,11 +896,11 @@ class SEGYTraceHeader(object):
         corresponding class attributes.
         :type map_header: list
         :param map_header: List of lists with headerwords that have been
-            reassigned. Formatting should be as follows
-            [[length, name_1, special_type, start_byte],
-            [...],
-            [length, name_2, special_type, start_byte]]
-            Example
+            reassigned. Formatting should be as follows::
+                [[length, name_1, special_type, start_byte],
+                [...],
+                [length, name_2, special_type, start_byte]]
+            Example::
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -933,11 +933,11 @@ class SEGYTraceHeader(object):
         Writes the header to an open file like object.
         :type map_header: list
         :param map_header: List of lists with headerwords that have been
-            reassigned. Formatting should be as follows
-            [[length, name_1, special_type, start_byte],
-            [...],
-            [length, name_2, special_type, start_byte]]
-            Example
+            reassigned. Formatting should be as follows::
+                [[length, name_1, special_type, start_byte],
+                [...],
+                [length, name_2, special_type, start_byte]]
+            Example::
                 [[4, 'delay', False, 180],
                 [[4, 'vessel_speed', False, 184]]]
             Defaults to False.
@@ -1058,14 +1058,14 @@ def _read_segy(file, endian=None, textual_header_encoding=None,
         unpackable on-the-fly after reading the file. Defaults to False.
     :type map_header: list
     :param map_header: List of lists with headerwords that have been
-        reassigned. Formatting should be as follows
-        [[length, name_1, special_type, start_byte],
-        [...],
-        [length, name_2, special_type, start_byte]]
-        Example
+        reassigned. Formatting should be as follows::
+            [[length, name_1, special_type, start_byte],
+            [...],
+            [length, name_2, special_type, start_byte]]
+        Example::
             [[4, 'delay', False, 180],
             [[4, 'vessel_speed', False, 184]]]
-            Defaults to False.
+        Defaults to False.
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
@@ -1110,11 +1110,11 @@ def _internal_read_segy(file, endian=None, textual_header_encoding=None,
         unpackable on-the-fly after reading the file. Defaults to False.
     :type map_header: list
     :param map_header: List of lists with headerwords that have been
-        reassigned. Formatting should be as follows
-        [[length, name_1, special_type, start_byte],
-        [...],
-        [length, name_2, special_type, start_byte]]
-        Example
+        reassigned. Formatting should be as follows::
+            [[length, name_1, special_type, start_byte],
+            [...],
+            [length, name_2, special_type, start_byte]]
+        Example::
             [[4, 'delay', False, 180],
             [[4, 'vessel_speed', False, 184]]]
         Defaults to False.
@@ -1171,14 +1171,14 @@ def iread_segy(file, endian=None, textual_header_encoding=None,
         unpackable on-the-fly after reading the file. Defaults to False.
     :type map_header: list
     :param map_header: List of lists with headerwords that have been
-        reassigned. Formatting should be as follows
+        reassigned. Formatting should be as follows::
             [[length, name_1, special_type, start_byte],
             [...],
             [length, name_2, special_type, start_byte]]
-        Example
+        Example::
             [[4, 'delay', False, 180],
             [[4, 'vessel_speed', False, 184]]]
-            Defaults to False.
+        Defaults to False.
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
