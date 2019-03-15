@@ -1485,6 +1485,31 @@ class StreamTestCase(unittest.TestCase):
         endtime = gap[5]
         self.assertEqual(endtime, tr2.stats.starttime)
 
+    def test_get_gaps_overlap(self):
+        """
+         Tests the get_gaps method of the Stream objects.
+
+         Test for Issue #1403. Tests if wrong overlaps are returned.
+        """
+        data = [
+            ("2016-01-07T00:00:50.388393Z", 6158),
+            ("2016-01-07T00:00:57.248393Z", 1370),
+            ("2016-01-07T00:01:31.458393Z", 4107)]
+
+        x = np.arange(20000)
+        tr = Trace(x)
+        tr.stats.starttime = UTCDateTime("2016-01-07T00:00:50.388393Z")
+        tr.stats.sampling_rate = 100
+
+        st = Stream()
+        for i, (start, numsamp) in enumerate(data):
+            tr_ = tr.slice(starttime=UTCDateTime(start))
+            tr_.data = tr_.data[:numsamp]
+            st.append(tr_)
+
+        # min_gap=1 is used to only show the gaps
+        self.assertEqual(len(st.get_gaps(min_gap=1)), 0)
+
     def test_comparisons(self):
         """
         Tests all rich comparison operators (==, !=, <, <=, >, >=)

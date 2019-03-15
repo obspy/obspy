@@ -815,6 +815,24 @@ class Stream(object):
             # skip if is equal to delta (1 / sampling rate)
             if same_sampling_rate and nsamples == 0:
                 continue
+            # check if gap is already covered in trace before:
+            covered = False
+            # only need to check previous traces because the traces are sorted
+            for prev_trace in self.traces[:_i]:
+                prev_stats = prev_trace.stats
+                # look if trace is contained in other trace
+                prev_start = prev_stats['starttime']
+                prev_end = prev_stats['endtime']
+                if not (prev_start < stime < etime < prev_end):
+                    continue
+                # don't look in traces of other measurements
+                elif self.traces[_i].id != prev_trace.id:
+                    continue
+                else:
+                    covered = True
+                    break
+            if covered:
+                continue
             gap_list.append([stats['network'], stats['station'],
                              stats['location'], stats['channel'],
                              stime, etime, delta, nsamples])
