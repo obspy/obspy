@@ -4,8 +4,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import inspect
+import io
 import os
 import pickle
+import platform
 import unittest
 import warnings
 from copy import deepcopy
@@ -16,7 +18,8 @@ from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.stream import _is_pickle, _read_pickle, _write_pickle
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, _get_entry_points
+from obspy.core.util.obspy_types import ObsPyException
 from obspy.io.xseed import Parser
 
 
@@ -359,6 +362,33 @@ class StreamTestCase(unittest.TestCase):
         for network in ['BW', 'GE', 'GR']:
             st.append(Trace(data=data, header={'network': network}))
         self.assertEqual(len(st.get_gaps()), 0)
+
+    def test_get_gaps_masked(self):
+        """
+        Test get_gaps method of the Stream objects (Issue #2299)
+        """
+        # Create a Stream with a masked array (analogous to a merged Stream)
+        st = Stream()
+        data = np.ma.array(np.arange(0, 100, step=1))
+        data.mask = np.zeros(data.shape)
+        data.mask[50:60] = 1
+        st.append(Trace(data=data))
+        # Expected gap
+        gap = ["", "", "", "",
+               UTCDateTime(1970, 1, 1, 0, 0, 49),
+               UTCDateTime(1970, 1, 1, 0, 1, 0),
+               10., 10]
+        # Get the gaps
+        gaps = st.get_gaps()
+        # Assert the number of gaps
+        self.assertEqual(len(gaps), 1)
+        # Verify the resulting gap list matches what is expected
+        for _i in range(6):
+            self.assertEqual(gaps[0][_i], gap[_i])
+        self.assertAlmostEqual(float(gaps[0][6]), float(gap[6]), places=3)
+        self.assertAlmostEqual(float(gaps[0][7]), float(gap[7]))
+        # Double-check that the initial Stream is unmodified
+        self.assertEqual(len(st), 1)
 
     def test_pop(self):
         """
@@ -1436,6 +1466,50 @@ class StreamTestCase(unittest.TestCase):
         gaps = st.get_gaps()
         self.assertEqual(len(gaps), 1)
 
+    def test_get_gaps_whole_overlap(self):
+        """
+        Test get_gaps method with a trace completely overlapping another trace.
+        """
+        tr1 = Trace(data=np.empty(3600))
+        tr1.stats.starttime = UTCDateTime("2018-09-25T00:00:00.000000Z")
+        tr1.stats.sampling_rate = 1.
+        tr2 = Trace(data=np.empty(60))
+        tr2.stats.starttime = UTCDateTime("2018-09-25T00:01:00.000000Z")
+        tr2.stats.sampling_rate = 1.
+        st = Stream([tr1, tr2])
+        gaps = st.get_gaps()
+        self.assertEqual(len(gaps), 1)
+        gap = gaps[0]
+        starttime = gap[4]
+        self.assertEqual(starttime, UTCDateTime("2018-09-25T00:01:59.000000Z"))
+        endtime = gap[5]
+        self.assertEqual(endtime, tr2.stats.starttime)
+
+    def test_get_gaps_overlap(self):
+        """
+         Tests the get_gaps method of the Stream objects.
+
+         Test for Issue #1403. Tests if wrong overlaps are returned.
+        """
+        data = [
+            ("2016-01-07T00:00:50.388393Z", 6158),
+            ("2016-01-07T00:00:57.248393Z", 1370),
+            ("2016-01-07T00:01:31.458393Z", 4107)]
+
+        x = np.arange(20000)
+        tr = Trace(x)
+        tr.stats.starttime = UTCDateTime("2016-01-07T00:00:50.388393Z")
+        tr.stats.sampling_rate = 100
+
+        st = Stream()
+        for i, (start, numsamp) in enumerate(data):
+            tr_ = tr.slice(starttime=UTCDateTime(start))
+            tr_.data = tr_.data[:numsamp]
+            st.append(tr_)
+
+        # min_gap=1 is used to only show the gaps
+        self.assertEqual(len(st.get_gaps(min_gap=1)), 0)
+
     def test_comparisons(self):
         """
         Tests all rich comparison operators (==, !=, <, <=, >, >=)
@@ -2175,7 +2249,18 @@ class StreamTestCase(unittest.TestCase):
                 tr1.simulate(**kwargs)
                 tr1.stats.processing.pop()
             tr2 = st.select(component=component)[0]
-            self.assertEqual(tr1, tr2)
+            # There is some strange issue on Win32bit (see #2188) and Win64bit
+            # (see #2330). Thus we just use assert_allclose() here instead of
+            # testing for full equality.
+            if platform.system() == "Windows":  # pragma: no cover
+                self.assertEqual(tr1.stats, tr2.stats)
+                np.testing.assert_allclose(tr1.data, tr2.data)
+            else:
+                # Added (up to ###) to debug appveyor fails
+                self.assertEqual(tr1.stats, tr2.stats)
+                np.testing.assert_allclose(tr1.data, tr2.data)
+                ###
+                self.assertEqual(tr1, tr2)
 
     def test_select_empty_strings(self):
         """
@@ -2524,6 +2609,8 @@ class StreamTestCase(unittest.TestCase):
         inv = read_inventory("/path/to/ffbx.stationxml", format="STATIONXML")
         parser = Parser("/path/to/ffbx.dataless")
         st_expected = read('/path/to/ffbx_rotated.slist', format='SLIST')
+        st_unrotated = read("/path/to/ffbx_unrotated_gaps.mseed",
+                            format="MSEED")
         for tr in st_expected:
             # ignore format specific keys and processing which also holds
             # version number
@@ -2531,7 +2618,7 @@ class StreamTestCase(unittest.TestCase):
             tr.stats.pop('_format')
         # check rotation using both Inventory and Parser as metadata input
         for metadata in (inv, parser):
-            st = read("/path/to/ffbx_unrotated_gaps.mseed", format="MSEED")
+            st = st_unrotated.copy()
             st.rotate("->ZNE", inventory=metadata)
             # do some checks on results
             self.assertEqual(len(st), 30)
@@ -2547,6 +2634,27 @@ class StreamTestCase(unittest.TestCase):
                 tr_got.stats.pop('_format')
                 tr_got.stats.pop('processing')
                 self.assertEqual(tr_got.stats, tr_expected.stats)
+
+        # check that using something like `components="Z12"` also works,
+        st = st_unrotated.copy()
+        result = st.rotate("->ZNE", inventory=inv,
+                           components='Z12')
+        # check that rotation to ZNE worked..
+        self.assertEqual(set(tr.stats.channel[-1] for tr in result),
+                         set('ZNE'))
+
+    def test_write_empty_stream(self):
+        """
+        Tests error message when trying to write an empty stream
+        """
+        st = Stream()
+        bio = io.BytesIO()
+        for format_ in _get_entry_points('obspy.plugin.waveform',
+                                         'writeFormat').keys():
+            with self.assertRaises(ObsPyException) as e:
+                st.write(bio, format=format_)
+            self.assertEqual(e.exception.args[0],
+                             'Can not write empty stream to file.')
 
 
 def suite():

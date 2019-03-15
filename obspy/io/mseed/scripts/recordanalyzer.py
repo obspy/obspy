@@ -165,7 +165,7 @@ class RecordAnalyser(object):
         # Read and unpack.
         self.file.seek(self.record_offset, 0)
         fixed_header = self.file.read(48)
-        encoding = native_str('%s20c2H3Bx4H4Bl2H' % self.endian)
+        encoding = native_str('%s20c2H3Bx2H2h4Bl2h' % self.endian)
         try:
             header_item = unpack(encoding, fixed_header)
         except Exception:
@@ -175,17 +175,22 @@ class RecordAnalyser(object):
             raise
         # Write values to dictionary.
         self.fixed_header['Sequence number'] = \
-            int(''.join(x.decode('ascii') for x in header_item[:6]))
+            int(''.join(x.decode('ascii', errors="replace")
+                for x in header_item[:6]))
         self.fixed_header['Data header/quality indicator'] = \
-            header_item[6].decode('ascii')
+            header_item[6].decode('ascii', errors="replace")
         self.fixed_header['Station identifier code'] = \
-            ''.join(x.decode('ascii') for x in header_item[8:13]).strip()
+            ''.join(x.decode('ascii', errors="replace")
+                    for x in header_item[8:13]).strip()
         self.fixed_header['Location identifier'] = \
-            ''.join(x.decode('ascii') for x in header_item[13:15]).strip()
+            ''.join(x.decode('ascii', errors="replace")
+                    for x in header_item[13:15]).strip()
         self.fixed_header['Channel identifier'] = \
-            ''.join(x.decode('ascii') for x in header_item[15:18]).strip()
+            ''.join(x.decode('ascii', errors="replace")
+                    for x in header_item[15:18]).strip()
         self.fixed_header['Network code'] = \
-            ''.join(x.decode('ascii') for x in header_item[18:20]).strip()
+            ''.join(x.decode('ascii', errors="replace")
+                    for x in header_item[18:20]).strip()
         # Construct the starttime. This is only the starttime in the fixed
         # header without any offset. See page 31 of the SEED manual for the
         # time definition.
@@ -338,7 +343,11 @@ class RecordAnalyser(object):
                    endian)
         ret_val += 'FIXED SECTION OF DATA HEADER\n'
         for key in self.fixed_header.keys():
-            ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
+            # Don't print empty values to ease testing.
+            if self.fixed_header[key] != "":
+                ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
+            else:
+                ret_val += '\t%s:\n' % (key)
         ret_val += '\nBLOCKETTES\n'
         for key in self.blockettes.keys():
             ret_val += '\t%i:' % key

@@ -1,3 +1,5 @@
+<!--
+
 Thank your for contributing to ObsPy!
 
 !! Please check that you select the **correct base branch** (details see below link) !!
@@ -8,12 +10,18 @@ https://github.com/obspy/obspy/blob/master/CONTRIBUTING.md#submitting-a-pull-req
 Also, please make sure you are following the ObsPy branching model:
 https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model
 
+-->
+
 ### What does this PR do?
+
+*Please fill in*
 
 ### Why was it initiated?  Any relevant Issues?
 
+*Please fill in*
+
 ### PR Checklist
-- [ ] Correct base branch selected? `master` for new fetures, `maintenance_...` for bug fixes
+- [ ] Correct base branch selected? `master` for new features, `maintenance_...` for bug fixes
 - [ ] This PR is not directly related to an existing issue (which has no PR yet).
 - [ ] If the PR is making changes to documentation, docs pages can be built automatically.
       Just remove the space in the following string after the + sign: "+ DOCS"

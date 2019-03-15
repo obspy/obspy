@@ -275,8 +275,20 @@ class ResponseTestCase(unittest.TestCase):
         inv = read_inventory(os.path.join(
             self.data_dir, "stationxml_no_units_in_stage_1.xml"))
         r = inv[0][0][0].response
-        self.assertIsNone(r.response_stages[0].input_units)
-        self.assertIsNone(r.response_stages[0].output_units)
+
+        # The units should already have been fixed from reading the StationXML
+        # files...
+        self.assertEqual(r.response_stages[0].input_units, "M/S")
+        self.assertEqual(r.response_stages[0].input_units_description,
+                         "Meters per second")
+        self.assertEqual(r.response_stages[0].output_units, "V")
+        self.assertEqual(r.response_stages[0].output_units_description,
+                         "VOLTS")
+
+        # We have to set the units to None here as there is some other logic in
+        # reading the StationXML files that sets them based on other units...
+        r.response_stages[0].input_units = None
+        r.response_stages[0].output_units = None
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -367,6 +379,152 @@ class ResponseTestCase(unittest.TestCase):
             "\tMaximum error: None\n"
             "\tNumber of coefficients: 0"
         )
+
+    def test_get_sampling_rates(self):
+        """
+        Tests for the get_sampling_rates() method.
+        """
+        # Test for the default inventory.
+        resp = read_inventory()[0][0][0].response
+        self.assertEqual(
+            resp.get_sampling_rates(),
+            {1: {'decimation_factor': 1,
+                 'input_sampling_rate': 200.0,
+                 'output_sampling_rate': 200.0},
+             2: {'decimation_factor': 1,
+                 'input_sampling_rate': 200.0,
+                 'output_sampling_rate': 200.0}})
+
+        # Another, well behaved file.
+        inv = read_inventory(os.path.join(self.data_dir, "AU.MEEK.xml"))
+        self.assertEqual(
+            inv[0][0][0].response.get_sampling_rates(),
+            {1: {'decimation_factor': 1,
+                 'input_sampling_rate': 600.0,
+                 'output_sampling_rate': 600.0},
+             2: {'decimation_factor': 1,
+                 'input_sampling_rate': 600.0,
+                 'output_sampling_rate': 600.0},
+             3: {'decimation_factor': 1,
+                 'input_sampling_rate': 600.0,
+                 'output_sampling_rate': 600.0},
+             4: {'decimation_factor': 3,
+                 'input_sampling_rate': 600.0,
+                 'output_sampling_rate': 200.0},
+             5: {'decimation_factor': 10,
+                 'input_sampling_rate': 200.0,
+                 'output_sampling_rate': 20.0}})
+
+        # This file lacks decimation attributes for the first two stages as
+        # well as one of the later ones. These thus have to be inferred.
+        inv = read_inventory(os.path.join(self.data_dir, "DK.BSD..BHZ.xml"))
+        self.assertEqual(
+            inv[0][0][0].response.get_sampling_rates(),
+            {1: {'decimation_factor': 1,
+                 'input_sampling_rate': 30000.0,
+                 'output_sampling_rate': 30000.0},
+             2: {'decimation_factor': 1,
+                 'input_sampling_rate': 30000.0,
+                 'output_sampling_rate': 30000.0},
+             3: {'decimation_factor': 1,
+                 'input_sampling_rate': 30000.0,
+                 'output_sampling_rate': 30000.0},
+             4: {'decimation_factor': 5,
+                 'input_sampling_rate': 30000.0,
+                 'output_sampling_rate': 6000.0},
+             5: {'decimation_factor': 3,
+                 'input_sampling_rate': 6000.0,
+                 'output_sampling_rate': 2000.0},
+             6: {'decimation_factor': 2,
+                 'input_sampling_rate': 2000.0,
+                 'output_sampling_rate': 1000.0},
+             7: {'decimation_factor': 5,
+                 'input_sampling_rate': 1000.0,
+                 'output_sampling_rate': 200.0},
+             8: {'decimation_factor': 2,
+                 'input_sampling_rate': 200.0,
+                 'output_sampling_rate': 100.0},
+             9: {'decimation_factor': 1,
+                 'input_sampling_rate': 100.0,
+                 'output_sampling_rate': 100.0},
+             10: {'decimation_factor': 5,
+                  'input_sampling_rate': 100.0,
+                  'output_sampling_rate': 20.0}})
+
+    def test_response_calculation_paz_without_decimation(self):
+        """
+        This test files has two PAZ stages with no decimation attributes.
+
+        Evalresp does not like this so we have to add dummy decimation
+        attributes before calling it.
+        """
+        inv = read_inventory(os.path.join(self.data_dir, "DK.BSD..BHZ.xml"))
+        np.testing.assert_allclose(
+            inv[0][0][0].response.get_evalresp_response_for_frequencies(
+                [0.1, 1.0, 10.0]),
+            [6.27191825e+08 + 1.38925202e+08j,
+             6.51826202e+08 + 1.28404787e+07j,
+             2.00067263e+04 - 2.63711751e+03j])
+
+    def test_regression_evalresp(self):
+        """
+        Regression test for an evalresp issue with a micropressure instrument.
+
+        See #2171.
+        """
+        inv = read_inventory(os.path.join(self.data_dir, "IM_I53H1_BDF.xml"))
+        self.assertEqual(
+            inv[0][0][0].response.get_evalresp_response_for_frequencies([0.0]),
+            0.0 + 0.0j)
+        np.testing.assert_allclose(
+            inv[0][0][0].response.get_evalresp_response_for_frequencies(
+                [0.1, 1.0, 10.0]),
+            [2.411908e+05 + 2.283852e+04j,
+             2.445572e+05 - 2.480459e+03j,
+             -2.455459e-01 + 4.888214e-02j], rtol=1e-6)
+
+    def test_recalculate_overall_sensitivity(self):
+        """
+        Tests the recalculate_overall_sensitivity_method().
+
+        This is not yet an exhaustive test as responses are complicated...
+        """
+        resp = read_inventory()[0][0][0].response
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.value,
+            943680000.0)
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.frequency,
+            0.02)
+        # Recompute - it is not much different but a bit.
+        resp.recalculate_overall_sensitivity(0.02)
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.value,
+            943681500.0)
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.frequency,
+            0.02)
+
+        # There is some logic to automatically determine a suitable frequency.
+        # Make sure this does something here.
+        resp = read_inventory()[0][0][0].response
+        resp.recalculate_overall_sensitivity()
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.value,
+            957562105.3939067)
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.frequency,
+            1.0)
+
+        # Passing an integer also works. See #2338.
+        resp = read_inventory()[0][0][0].response
+        resp.recalculate_overall_sensitivity(1)
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.value,
+            957562105.3939067)
+        np.testing.assert_allclose(
+            resp.instrument_sensitivity.frequency,
+            1.0)
 
 
 def suite():

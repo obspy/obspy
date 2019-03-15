@@ -74,8 +74,8 @@ class BaseNode(ComparingObject):
 
     @code.setter
     def code(self, value):
-        if not value:
-            msg = "A Code is required"
+        if value is None:
+            msg = "A code is required"
             raise ValueError(msg)
         self._code = str(value).strip()
 
@@ -352,7 +352,7 @@ class Person(ComparingObject):
         to multiple agencies and have multiple email addresses and phone
         numbers.
     """
-    email_pattern = re.compile("[\w\.\-_]+@[\w\.\-_]+")
+    email_pattern = re.compile(r"[\w\.\-_]+@[\w\.\-_]+")
 
     def __init__(self, names=None, agencies=None, emails=None, phones=None):
         """
@@ -404,7 +404,7 @@ class Person(ComparingObject):
         for value in values:
             if re.match(self.email_pattern, value) is None:
                 msg = ("emails needs to match the pattern "
-                       "'[\w\.\-_]+@[\w\.\-_]+'")
+                       r"'[\w\.\-_]+@[\w\.\-_]+'")
                 raise ValueError(msg)
         self._emails = values
 
@@ -556,6 +556,21 @@ class Comment(ComparingObject):
             raise ValueError(msg)
         self._authors = values
 
+    def __str__(self):
+        ret = ("Comment:\t{value}\n"
+               "\tBegin Effective Time:\t{begin_effective_time}\n"
+               "\tEnd Effective Time:\t{end_effective_time}\n"
+               "\tAuthors:\t\t{authors}\n"
+               "\tId:\t\t\t{id}")
+        ret = ret.format(
+            value=self.value, begin_effective_time=self.begin_effective_time,
+            end_effective_time=self.end_effective_time, authors=self.authors,
+            id=self.id)
+        return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 class Site(ComparingObject):
     """
@@ -563,7 +578,7 @@ class Site(ComparingObject):
         Description of a site location using name and optional geopolitical
         boundaries (country, city, etc.).
     """
-    def __init__(self, name, description=None, town=None, county=None,
+    def __init__(self, name="", description=None, town=None, county=None,
                  region=None, country=None):
         """
         :type name: str

@@ -462,11 +462,9 @@ def _write_tspair(stream, filename, custom_fmt=None,
             header = _format_header(stats, 'TSPAIR', dataquality, dtype, unit)
             fh.write(header.encode('ascii', 'strict'))
             # write data
-            times = np.linspace(stats.starttime.timestamp,
-                                stats.endtime.timestamp, stats.npts)
-            for t, d in zip(times, trace.data):
+            for t, d in zip(trace.times(type='utcdatetime'), trace.data):
                 # .26s cuts the Z from the time string
-                line = ('%.26s  ' + fmt + '\n') % (UTCDateTime(t), d)
+                line = ('%.26s  ' + fmt + '\n') % (t, d)
                 fh.write(line.encode('ascii', 'strict'))
 
 

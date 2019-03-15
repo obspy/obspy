@@ -12,7 +12,11 @@ Test suite for the inventory class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY2, native_str
 
+import builtins
+import copy
+import io
 import os
 import unittest
 import warnings
@@ -24,7 +28,8 @@ import obspy
 from obspy import UTCDateTime, read_inventory, read_events
 from obspy.core.compatibility import mock
 from obspy.core.util import (
-    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION)
+    BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION, PROJ4_VERSION)
+from obspy.core.util.base import _get_entry_points
 from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
@@ -39,6 +44,10 @@ class InventoryTestCase(unittest.TestCase):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.nperr = np.geterr()
         np.seterr(all='ignore')
+        path = os.path.join(os.path.dirname(__file__), 'data')
+        self.path = path
+        self.station_xml1 = os.path.join(path, 'IU_ANMO_00_BHZ.xml')
+        self.station_xml2 = os.path.join(path, 'IU_ULN_00_LH1.xml')
 
     def tearDown(self):
         np.seterr(**self.nperr)
@@ -251,6 +260,116 @@ class InventoryTestCase(unittest.TestCase):
         self.assertEqual(len(inv), len(inv.networks))
         self.assertEqual(len(inv), 2)
 
+    def test_inventory_remove(self):
+        """
+        Test for the Inventory.remove() method.
+        """
+        inv = read_inventory()
+
+        # Currently contains 30 channels.
+        self.assertEqual(sum(len(sta) for net in inv for sta in net), 30)
+
+        # No arguments, everything should be removed, as `None` values left in
+        # network/station/location/channel are interpreted as wildcards.
+        inv_ = inv.remove()
+        self.assertEqual(len(inv_), 0)
+
+        # remove one entire network code
+        for network in ['GR', 'G?', 'G*', '?R']:
+            inv_ = inv.remove(network=network)
+            self.assertEqual(len(inv_), 1)
+            self.assertEqual(inv_[0].code, 'BW')
+            self.assertEqual(len(inv_[0]), 3)
+            for sta in inv_[0]:
+                self.assertEqual(len(sta), 3)
+
+        # remove one specific network/station
+        for network in ['GR', 'G?', 'G*', '?R']:
+            for station in ['FUR', 'F*', 'F??', '*R']:
+                inv_ = inv.remove(network=network, station=station)
+                self.assertEqual(len(inv_), 2)
+                self.assertEqual(inv_[0].code, 'GR')
+                self.assertEqual(len(inv_[0]), 1)
+                for sta in inv_[0]:
+                    self.assertEqual(len(sta), 9)
+                    self.assertEqual(sta.code, 'WET')
+                self.assertEqual(inv_[1].code, 'BW')
+                self.assertEqual(len(inv_[1]), 3)
+                for sta in inv_[1]:
+                    self.assertEqual(len(sta), 3)
+                    self.assertEqual(sta.code, 'RJOB')
+
+        # remove one specific channel
+        inv_ = inv.remove(channel='*Z')
+        self.assertEqual(len(inv_), 2)
+        self.assertEqual(inv_[0].code, 'GR')
+        self.assertEqual(len(inv_[0]), 2)
+        self.assertEqual(len(inv_[0][0]), 8)
+        self.assertEqual(len(inv_[0][1]), 6)
+        self.assertEqual(inv_[0][0].code, 'FUR')
+        self.assertEqual(inv_[0][1].code, 'WET')
+        self.assertEqual(inv_[1].code, 'BW')
+        self.assertEqual(len(inv_[1]), 3)
+        for sta in inv_[1]:
+            self.assertEqual(len(sta), 2)
+            self.assertEqual(sta.code, 'RJOB')
+        for net in inv_:
+            for sta in net:
+                for cha in sta:
+                    self.assertTrue(cha.code[2] != 'Z')
+
+        # check keep_empty kwarg
+        inv_ = inv.remove(station='R*')
+        self.assertEqual(len(inv_), 1)
+        self.assertEqual(inv_[0].code, 'GR')
+        inv_ = inv.remove(station='R*', keep_empty=True)
+        self.assertEqual(len(inv_), 2)
+        self.assertEqual(inv_[0].code, 'GR')
+        self.assertEqual(inv_[1].code, 'BW')
+        self.assertEqual(len(inv_[1]), 0)
+
+        inv_ = inv.remove(channel='EH*')
+        self.assertEqual(len(inv_), 1)
+        self.assertEqual(inv_[0].code, 'GR')
+        inv_ = inv.remove(channel='EH*', keep_empty=True)
+        self.assertEqual(len(inv_), 2)
+        self.assertEqual(inv_[0].code, 'GR')
+        self.assertEqual(inv_[1].code, 'BW')
+        self.assertEqual(len(inv_[1]), 3)
+        for sta in inv_[1]:
+            self.assertEqual(sta.code, 'RJOB')
+            self.assertEqual(len(sta), 0)
+
+        # some remove calls that don't match anything and should not do
+        # anything
+        for kwargs in [dict(network='AA'),
+                       dict(network='AA', station='FUR'),
+                       dict(network='GR', station='ABCD'),
+                       dict(network='GR', channel='EHZ')]:
+            inv_ = inv.remove(**kwargs)
+            self.assertEqual(inv_, inv)
+
+    def test_issue_2266(self):
+        """
+        Ensure the remove method works for more than just channel level
+        inventories. See #2266.
+        """
+        # get inventory and remove all channel level info
+        inv = obspy.read_inventory()
+        for net in inv:
+            for sta in net:
+                sta.channels = []
+        # filter by one of the networks
+        inv_net = copy.deepcopy(inv).remove(network='BW')
+        self.assertEqual(len(inv_net.networks), 1)
+        # filter by the stations, this should also remove network BW
+        inv_sta = copy.deepcopy(inv).remove(station='RJOB')
+        self.assertEqual(len(inv_sta.networks), 1)
+        self.assertEqual(len(inv_sta.networks[0].stations), 2)
+        # but is keep empty is selected network BW should remain
+        inv_sta = copy.deepcopy(inv).remove(station='RJOB', keep_empty=True)
+        self.assertEqual(len(inv_sta.networks), 2)
+
     def test_inventory_select(self):
         """
         Test for the Inventory.select() method.
@@ -431,8 +550,87 @@ class InventoryTestCase(unittest.TestCase):
         for contents_, expected_ in zip(contents, expected):
             self.assertEqual(expected_, _unified_content_strings(contents_))
 
+    def test_read_invalid_filename(self):
+        """
+        Tests that we get a sane error message when calling read_inventory()
+        with a filename that doesn't exist
+        """
+        doesnt_exist = 'dsfhjkfs'
+        for i in range(10):
+            if os.path.exists(doesnt_exist):
+                doesnt_exist += doesnt_exist
+                continue
+            break
+        else:
+            self.fail('unable to get invalid file path')
+        doesnt_exist = native_str(doesnt_exist)
+
+        if PY2:
+            exception_type = getattr(builtins, 'IOError')
+        else:
+            exception_type = getattr(builtins, 'FileNotFoundError')
+        exception_msg = "[Errno 2] No such file or directory: '{}'"
+
+        formats = _get_entry_points(
+            'obspy.plugin.inventory', 'readFormat').keys()
+        # try read_inventory() with invalid filename for all registered read
+        # plugins and also for filetype autodiscovery
+        formats = [None] + list(formats)
+        for format in formats[:1]:
+            with self.assertRaises(exception_type) as e:
+                read_inventory(doesnt_exist, format=format)
+            self.assertEqual(
+                str(e.exception), exception_msg.format(doesnt_exist))
+
+    def test_inventory_can_be_initialized_with_no_arguments(self):
+        """
+        Source and networks need not be specified.
+        """
+        inv = Inventory()
+        self.assertEqual(inv.networks, [])
+        self.assertEqual(inv.source, "ObsPy %s" % obspy.__version__)
+
+        # Should also be serializable.
+        with io.BytesIO() as buf:
+            # This actually would not be a valid StationXML file but there
+            # might be uses for this.
+            inv.write(buf, format="stationxml")
+            buf.seek(0, 0)
+            inv2 = read_inventory(buf)
+
+        self.assertEqual(inv, inv2)
+
+    def test_copy(self):
+        """
+        Test for copying inventory.
+        """
+        inv = read_inventory()
+        inv2 = inv.copy()
+        self.assertIsNot(inv, inv2)
+        self.assertEqual(inv, inv2)
+        # make sure changing inv2 doesnt affect inv
+        original_latitude = inv2[0][0][0].latitude
+        inv2[0][0][0].latitude = original_latitude + 1
+        self.assertEqual(inv[0][0][0].latitude, original_latitude)
+        self.assertEqual(inv2[0][0][0].latitude, original_latitude + 1)
+        self.assertNotEqual(inv[0][0][0].latitude, inv2[0][0][0].latitude)
+
+    def test_read_inventory_with_wildcard(self):
+        """
+        Tests the read_inventory() function with a filename wild card.
+        """
+        # without wildcard..
+        expected = read_inventory(self.station_xml1)
+        expected += read_inventory(self.station_xml2)
+        # with wildcard
+        got = read_inventory(os.path.join(self.path, "IU_*_00*.xml"))
+        self.assertEqual(expected, got)
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+@unittest.skipIf(
+    BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+    'matplotlib 3.0.1 is not compatible with basemap')
 class InventoryBasemapTestCase(unittest.TestCase):
     """
     Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Basemap.
@@ -445,6 +643,8 @@ class InventoryBasemapTestCase(unittest.TestCase):
     def tearDown(self):
         np.seterr(**self.nperr)
 
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
     def test_location_plot_global(self):
         """
         Tests the inventory location preview plot, default parameters, using
@@ -494,9 +694,11 @@ class InventoryBasemapTestCase(unittest.TestCase):
                      size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                      outfile=ic.name)
 
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
     def test_combined_station_event_plot(self):
         """
-        Tests the coombined plotting of inventory/event data in one plot,
+        Tests the combined plotting of inventory/event data in one plot,
         reusing the basemap instance.
         """
         inv = read_inventory()

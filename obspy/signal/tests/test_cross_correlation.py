@@ -77,13 +77,18 @@ class CrossCorrelationTestCase(unittest.TestCase):
             self.assertAlmostEqual(corr, 1, 2)
 
     def test_correlate_deprecated_domain_keyword(self):
+
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always", category=ObsPyDeprecationWarning)
             a = [1, 2, 3]
             b = [1, 2]
             correlate(a, b, 5, domain='freq')
             correlate(a, b, 5, domain='time')
-            self.assertEqual(len(w), 2)
+        # on py37, scipy 1.1.0 this also catch FutureWarning from scipy
+        # internals, so we need to filter the warning messages
+        domain_warn = [x for x in w if 'keyword of correlate function'
+                       in str(x.message)]
+        self.assertEqual(len(domain_warn), 2)
 
     def test_correlate_normalize_true_false(self):
         a = read()[0].data[500:]

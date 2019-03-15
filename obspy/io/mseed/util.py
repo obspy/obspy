@@ -20,6 +20,7 @@ import numpy as np
 from obspy import UTCDateTime
 from obspy.core.compatibility import from_buffer
 from obspy.core.util.decorator import ObsPyDeprecationWarning
+from . import InternalMSEEDParseTimeError
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
                       FIXED_HEADER_DATA_QUAL_FLAGS,
                       FIXED_HEADER_IO_CLOCK_FLAGS, HPTMODULUS,
@@ -547,6 +548,28 @@ def get_record_information(file_or_file_object, offset=0, endian=None):
     return info
 
 
+def _decode_header_field(name, content):
+    """
+    Helper function to decode header fields. Fairly fault tolerant and it
+    will also raise nice warnings in case in encounters anything wild.
+    """
+    try:
+        return content.decode("ascii", errors="strict")
+    except UnicodeError:
+        r = content.decode("ascii", errors="ignore")
+        msg = (u"Failed to decode {name} code as ASCII. "
+               u"Code in file: '{result}' (\ufffd indicates characters "
+               u"that could not be decoded). "
+               u"Will be interpreted as: '{f_result}'. "
+               u"This is an invalid MiniSEED file - please "
+               u"contact your data provider.")
+        warnings.warn(msg.format(
+            name=name,
+            result=content.decode("ascii", errors="replace"),
+            f_result=r))
+        return r
+
+
 def _get_record_information(file_object, offset=0, endian=None):
     """
     Searches the first MiniSEED record stored in file_object at the current
@@ -627,10 +650,11 @@ def _get_record_information(file_object, offset=0, endian=None):
     # Jump to the network, station, location and channel codes.
     file_object.seek(record_start + 8, 0)
     data = file_object.read(12)
-    info["station"] = data[:5].strip().decode()
-    info["location"] = data[5:7].strip().decode()
-    info["channel"] = data[7:10].strip().decode()
-    info["network"] = data[10:12].strip().decode()
+
+    info["station"] = _decode_header_field("station", data[:5].strip())
+    info["location"] = _decode_header_field("location", data[5:7].strip())
+    info["channel"] = _decode_header_field("channel", data[7:10].strip())
+    info["network"] = _decode_header_field("network", data[10:12].strip())
 
     # Use the date to figure out the byte order.
     file_object.seek(record_start + 20, 0)
@@ -641,6 +665,10 @@ def _get_record_information(file_object, offset=0, endian=None):
         return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
 
     def _parse_time(values):
+        if not (1 <= values[1] <= 366):
+            msg = 'julday out of bounds (wrong endian?): {!s}'.format(
+                values[1])
+            raise InternalMSEEDParseTimeError(msg)
         # The spec says values[5] (.0001 seconds) must be between 0-9999 but
         # we've  encountered files which have a value of 10000. We interpret
         # this as an additional second. The approach here is general enough
@@ -653,17 +681,22 @@ def _get_record_information(file_object, offset=0, endian=None):
                 "the maximum strictly allowed value is 9999. It will be "
                 "interpreted as one or more additional seconds." % values[5],
                 category=UserWarning)
-        return UTCDateTime(
-            year=values[0], julday=values[1],
-            hour=values[2], minute=values[3], second=values[4],
-            microsecond=msec % 1000000) + offset
+        try:
+            t = UTCDateTime(
+                year=values[0], julday=values[1],
+                hour=values[2], minute=values[3], second=values[4],
+                microsecond=msec % 1000000) + offset
+        except TypeError:
+            msg = 'Problem decoding time (wrong endian?)'
+            raise InternalMSEEDParseTimeError(msg)
+        return t
 
     if endian is None:
         try:
             endian = ">"
             values = unpack(fmt(endian), data)
             starttime = _parse_time(values)
-        except Exception:
+        except InternalMSEEDParseTimeError:
             endian = "<"
             values = unpack(fmt(endian), data)
             starttime = _parse_time(values)
@@ -671,7 +704,7 @@ def _get_record_information(file_object, offset=0, endian=None):
         values = unpack(fmt(endian), data)
         try:
             starttime = _parse_time(values)
-        except Exception:
+        except InternalMSEEDParseTimeError:
             msg = ("Invalid starttime found. The passed byte order is likely "
                    "wrong.")
             raise ValueError(msg)
@@ -755,23 +788,26 @@ def _get_record_information(file_object, offset=0, endian=None):
     # If samprate not set via blockette 100 calculate the sample rate according
     # to the SEED manual.
     if not samp_rate:
-        if (samp_rate_factor > 0) and (samp_rate_mult) > 0:
+        if samp_rate_factor > 0 and samp_rate_mult > 0:
             samp_rate = float(samp_rate_factor * samp_rate_mult)
-        elif (samp_rate_factor > 0) and (samp_rate_mult) < 0:
+        elif samp_rate_factor > 0 and samp_rate_mult < 0:
             samp_rate = -1.0 * float(samp_rate_factor) / float(samp_rate_mult)
-        elif (samp_rate_factor < 0) and (samp_rate_mult) > 0:
+        elif samp_rate_factor < 0 and samp_rate_mult > 0:
             samp_rate = -1.0 * float(samp_rate_mult) / float(samp_rate_factor)
-        elif (samp_rate_factor < 0) and (samp_rate_mult) < 0:
-            samp_rate = -1.0 / float(samp_rate_factor * samp_rate_mult)
+        elif samp_rate_factor < 0 and samp_rate_mult < 0:
+            samp_rate = 1.0 / float(samp_rate_factor * samp_rate_mult)
         else:
-            # if everything is unset or 0 set sample rate to 1
-            samp_rate = 1
+            samp_rate = 0
 
     info['samp_rate'] = samp_rate
 
     info['starttime'] = starttime
+    # If sample rate is zero set endtime to startime
+    if samp_rate == 0:
+        info['endtime'] = starttime
     # Endtime is the time of the last sample.
-    info['endtime'] = starttime + (npts - 1) / samp_rate
+    else:
+        info['endtime'] = starttime + (npts - 1) / samp_rate
     info['byteorder'] = endian
 
     info['number_of_records'] = int(info['filesize'] //

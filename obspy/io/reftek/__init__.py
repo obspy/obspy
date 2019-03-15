@@ -21,9 +21,9 @@ should be filled in manually after reading). See the low-level routine
 be supplied to :func:`~obspy.core.stream.read`.
 Currently, only event header/trailer (EH/ET) and data packets (DT) are
 implemented and any other packets will be ignored (a warning is shown if any
-other packets are encountered during reading). So far, only data encoding "C0"
-(STEIM 1 compressed data) is implemented due to the lack of test data in other
-encodings.
+other packets are encountered during reading). So far, only data encodings
+"C0", "C2", "16" and "32" are implemented (due to the lack of test data in
+other encodings).
 
 Reading
 -------

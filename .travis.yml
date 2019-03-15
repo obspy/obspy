@@ -22,6 +22,8 @@ matrix:
       env: PYTHON_VERSION=3.5
     - os: linux
       env: PYTHON_VERSION=3.6
+    - os: linux
+      env: PYTHON_VERSION=3.7
     # - os: linux
     #   env: PYTHON_VERSION=3.5 ARCHITECTURE_32BIT="True"
     #   addons:
@@ -34,6 +36,8 @@ matrix:
       env: PYTHON_VERSION=2.7
     - os: osx
       env: PYTHON_VERSION=3.6
+    - os: osx
+      env: PYTHON_VERSION=3.7
 
 # mimick travis fast fail and rolling build setup from:
 # https://github.com/JuliaLang/julia/blob/master/.travis.yml
@@ -85,6 +89,7 @@ install:
         # no basemap version works with this old numpy, so leave out
         BASEMAP=""
         PYPROJ="pyproj"
+        PROJ4="proj4"
         # ancient matplotlib needs to be turned to AGG before anything else,
         # otherwise it tries to import incompatible version of Qt as a backend
         # and hick-ups..
@@ -98,6 +103,7 @@ install:
         MATPLOTLIB="matplotlib"
         BASEMAP="basemap"
         PYPROJ="pyproj"
+        PROJ4="proj4"
       # elif [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
       #   # Special packages for 32bit. Also let conda resolve to the latest
       #   # versions.
@@ -107,13 +113,30 @@ install:
       #   BASEMAP="basemap"
       #   PYPROJ="pyproj"
       # For anything else also let conda resolve, but force matplotlib 2.
+      elif [[ "${PYTHON_VERSION}" == '3.6' ]]; then
+        # Pin proj4 to 4.9.3 for map testing - see basemap #433
+        # Let conda resolve to the latest versions otherwise.
+        NUMPY="numpy"
+        SCIPY="scipy"
+        MATPLOTLIB="matplotlib"
+        BASEMAP="basemap"
+        PYPROJ="pyproj"
+        PROJ4="proj4=4.9.3"
       else
         NUMPY="numpy"
         SCIPY="scipy"
         MATPLOTLIB="matplotlib>=2.0.0"
         BASEMAP="basemap"
         PYPROJ="pyproj"
+        PROJ4="proj4"
       fi
+  - |
+    if [[ "${PYTHON_VERSION}" == '3.7' ]]; then
+      FREETYPE="freetype"
+    else
+      FREETYPE="freetype<2.8"
+    fi
+  # proj4 version 5.2.0 has issues with psuedocyl projections (see basemap #433).
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
         $NUMPY
@@ -121,6 +144,7 @@ install:
         $MATPLOTLIB
         $BASEMAP
         $PYPROJ
+        $PROJ4
         coverage
         decorator
         docopt
@@ -131,7 +155,7 @@ install:
         nose
         requests
         sqlalchemy
-        "freetype<2.8"
+        $FREETYPE
         cryptography
   - source activate test-environment
   # additional, optional packages that run some more tests but are not
@@ -149,7 +173,7 @@ install:
   # "conda install -c conda-forge --no-update-dependencies pyshp", because the
   # pyshp conda package lists 0 dependencies, anyway, so use "--no-deps" to
   # really avoid installing/updating any other packages
-  - conda install -c conda-forge --no-update-dependencies --no-deps pyshp
+  - conda install -c conda-forge --no-update-deps --no-deps pyshp || pip install pyshp
   # install packages not available via conda
   - pip install codecov
   - pip install geographiclib

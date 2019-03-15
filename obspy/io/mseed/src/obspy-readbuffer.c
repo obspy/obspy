@@ -230,6 +230,9 @@ void log_error(int errcode, int offset) {
                       "file will not be read.\n", offset);
             break;
         case MS_NOTSEED:
+            // This is likely not called at all as non-SEED records will
+            // verbosely be skipped and ObsPy keeps trying until it finds a
+            // record.
             ms_log(1, "readMSEEDBuffer(): Record starting at offset "
                       "%d is not valid SEED. The rest of the file "
                       "will not be read.\n", offset);
@@ -373,8 +376,17 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         //       return value is a hint of how many more bytes are needed.
         //  <0 : libmseed error code (listed in libmseed.h) is returned.
         retcode = msr_parse ((mseed+offset), buflen - offset, &msr, reclen, dataflag, verbose);
-        // Handle error.
-        if (retcode < 0) {
+        // If its not a record, skip MINRECLEN bytes and try again.
+        if (retcode == MS_NOTSEED) {
+            ms_log(1,
+                   "readMSEEDBuffer(): Not a SEED record. Will skip bytes "
+                   "%i to %i.\n", offset, offset + MINRECLEN - 1);
+            msr_free(&msr);
+            offset += MINRECLEN;
+            continue;
+        }
+        // Handle all other error.
+        else if (retcode < 0) {
             log_error(retcode, offset);
             msr_free(&msr);
             break;

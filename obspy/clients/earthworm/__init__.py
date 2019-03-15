@@ -18,16 +18,16 @@ Basic Usage
 
     >>> from obspy.clients.earthworm import Client
     >>> client = Client("pubavo1.wr.usgs.gov", 16022)
-    >>> response = client.get_availability('AV', 'ACH', channel='EHE')
+    >>> response = client.get_availability('AV', 'ACH', channel='BHE')
     >>> print(response)  # doctest: +SKIP
     [('AV',
       'ACH',
       '--',
-      'EHE',
+      'BHE',
       UTCDateTime(2015, 1, 22, 7, 26, 32, 679000),
       UTCDateTime(2015, 3, 23, 7, 26, 29, 919966)]
     >>> t = response[0][4]
-    >>> st = client.get_waveforms('AV', 'ACH', '', 'EH*', t + 100, t + 130)
+    >>> st = client.get_waveforms('AV', 'ACH', '', 'BH*', t + 100, t + 130)
     >>> st.plot()  # doctest: +SKIP
 
     .. plot::
@@ -37,14 +37,14 @@ Basic Usage
         client = Client("pubavo1.wr.usgs.gov", 16022, timeout=5)
         response = client.get_availability('AV', 'ACH', channel='EHE')
         t = response[0][4]
-        st = client.get_waveforms('AV', 'ACH', '', 'EH*', t + 100, t + 130)
+        st = client.get_waveforms('AV', 'ACH', '', 'BH*', t + 100, t + 130)
         st.plot()
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from .client import Client  # NOQA
+from obspy.clients.earthworm.client import Client  # NOQA
 
 
 if __name__ == '__main__':

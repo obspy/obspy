@@ -13,6 +13,7 @@ from future.builtins import *  # NOQA
 
 import collections
 import unittest
+import warnings
 
 import obspy
 from obspy.core.compatibility import mock
@@ -202,6 +203,32 @@ class BaseRoutingClientTestCase(unittest.TestCase):
                          set(["test1=a\n1234"]))
         for _i in wf_bulk.call_args_list:
             self.assertEqual(_i[1], {})
+
+    def test_unexpected_exception_handling(self):
+        split = {
+            "https://example.com": "1234"
+        }
+
+        with mock.patch("obspy.clients.fdsn.client.Client") as p:
+            mock_instance = p.return_value
+            mock_instance.get_stations_bulk.side_effect = ValueError("random")
+            c = self._cls_object(debug=False, timeout=240)
+            # Should not fail, but a warning should be raised.
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                inv = c._download_stations(split=split)
+
+        # Returns an empty inventory.
+        self.assertIsInstance(inv, obspy.core.inventory.Inventory)
+        self.assertEqual(len(inv), 0)
+
+        # Raises a nice warning.
+        self.assertEqual(len(w), 1)
+        msg = w[0].message.args[0]
+        self.assertTrue(msg.startswith(
+            "Failed to download data of type 'station' from "
+            "'https://example.com' due to:"))
+        self.assertIn("ValueError: random", msg)
 
 
 def suite():  # pragma: no cover

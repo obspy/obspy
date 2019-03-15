@@ -95,6 +95,38 @@ class TriggerTestCase(unittest.TestCase):
                                lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
         self.assertAlmostEqual(ptime, 30.6350002289)
         # seems to be strongly machine dependent, go for int for 64 bit
+        # self.assertEqual(int(stime + 0.5), 31)
+        self.assertAlmostEqual(stime, 31.165, delta=0.05)
+
+        # All three arrays must have the same length, otherwise an error is
+        # raised.
+        with self.assertRaises(ValueError) as err:
+            ar_pick(data[0], data[1], np.zeros(1), samp_rate, f1, f2, lta_p,
+                    sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
+        self.assertEqual(err.exception.args[0],
+                         "All three data arrays must have the same length.")
+
+    def test_ar_pick_low_amplitude(self):
+        """
+        Test ar_pick with low amplitude data
+        """
+        data = []
+        for channel in ['z', 'n', 'e']:
+            file = os.path.join(self.path,
+                                'loc_RJOB20050801145719850.' + channel)
+            data.append(np.loadtxt(file, dtype=np.float32))
+
+        # articially reduce signal amplitude
+        for d in data:
+            d /= 10.0 * d.max()
+
+        # some default arguments
+        samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s = \
+            200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2
+        ptime, stime = ar_pick(data[0], data[1], data[2], samp_rate, f1, f2,
+                               lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
+        self.assertAlmostEqual(ptime, 30.6350002289)
+        # seems to be strongly machine dependent, go for int for 64 bit
         # self.assertAlmostEqual(stime, 31.2800006866)
         self.assertEqual(int(stime + 0.5), 31)
 

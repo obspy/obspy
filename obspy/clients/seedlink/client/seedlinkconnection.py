@@ -397,7 +397,7 @@ class SeedLinkConnection(object):
         finally:
             try:
                 streamfile_file.close()
-            except Exception as e:
+            except Exception:
                 pass
         return stacount
 
@@ -652,7 +652,7 @@ class SeedLinkConnection(object):
         finally:
             try:
                 statefile_file.close()
-            except Exception as e:
+            except Exception:
                 pass
         return stacount
 
@@ -696,7 +696,7 @@ class SeedLinkConnection(object):
         finally:
             try:
                 statefile_file.close()
-            except Exception as e:
+            except Exception:
                 pass
         return stacount
 
@@ -788,7 +788,7 @@ class SeedLinkConnection(object):
                     self.state.query_mode = SLState.KEEP_ALIVE_QUERY
                     self.state.expect_info = True
                     self.state.keepalive_trig = -1
-                except IOError as ioe:
+                except IOError:
                     msg = "I/O error, reconnecting in %ss"
                     logger.warn(msg % (self.netdly))
                     self.disconnect()
@@ -802,7 +802,7 @@ class SeedLinkConnection(object):
                     self.send_info_request(self.info_request_string, 1)
                     self.state.query_mode = SLState.INFO_QUERY
                     self.state.expect_info = True
-                except IOError as ioe:
+                except IOError:
                     self.state.query_mode = SLState.NO_QUERY
                     msg = "I/O error, reconnecting in %ss"
                     logger.warn(msg % (self.netdly))
@@ -833,7 +833,7 @@ class SeedLinkConnection(object):
                         self.send_info_request(self.info_request_string, 1)
                         self.state.query_mode = SLState.INFO_QUERY
                         self.state.expect_info = True
-                    except IOError as ioe:
+                    except IOError:
                         msg = "SeedLink version does not support INFO requests"
                         logger.info(msg)
                         self.state.query_mode = SLState.NO_QUERY
@@ -948,14 +948,14 @@ class SeedLinkConnection(object):
                             "SeedLink reported an error with the last command")
                         self.disconnect()
                         return SLPacket.SLERROR
-                except SeedLinkException as sle:
+                except SeedLinkException:
                     pass  # not enough bytes to determine packet type
                 try:
                     if self.state.is_end():
                         logger.info("end of buffer or selected time window")
                         self.disconnect()
                         return SLPacket.SLTERMINATE
-                except SeedLinkException as sle:
+                except SeedLinkException:
                     pass
 
                 # Check for more available data from the socket

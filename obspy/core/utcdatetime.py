@@ -16,14 +16,36 @@ from future.utils import native_str
 import datetime
 import math
 import operator
+import re
+import sys
 import time
 import warnings
 
 import numpy as np
 from obspy.core.compatibility import py3_round
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+
+# Regular expression used in the init function of the UTCDateTime objects which
+# is called a lot. Thus pre-compile it.
+_YEAR0REGEX = re.compile(r"^(\d{1,3}[-/,])(.*)$")
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
+# XXX the strftime problem seems to be specific to Python < 3.2
+# XXX so this can be removed after dropping Python 2 support
+STRFTIME_MAPPING = (
+    ('%Y', '04d', 'year', None),
+    ('%m', '02d', 'month', None),
+    ('%d', '02d', 'day', None),
+    ('%H', '02d', 'hour', None),
+    ('%M', '02d', 'minute', None),
+    ('%S', '02d', 'second', None),
+    ('%f', '06d', 'microsecond', None),
+    ('%y', '02d', 'year', lambda x: x % 100),
+    )
+
+# common attributes
 YMDHMS = ('year', 'month', 'day', 'hour', 'minute', 'second')
+YJHMS = ('year', 'julday', 'hour', 'minute', 'second')
 YMDHMS_FORMAT = "%04d-%02d-%02dT%02d:%02d:%02d"
 
 
@@ -46,6 +68,10 @@ class UTCDateTime(object):
     :type iso8601: bool, optional
     :param iso8601: Enforce `ISO8601:2004`_ detection. Works only with a string
         as first input argument.
+    :type strict: bool, optional
+    :param strict: If True, Conform to `ISO8601:2004`_ limits on positional
+        and keyword arguments. If False, allow hour, minute, second, and
+        microsecond values to exceed 23, 59, 59, and 1_000_000 respectively.
     :type precision: int, optional
     :param precision: Sets the precision used by the rich comparison operators.
         Defaults to ``6`` digits after the decimal point. See also `Precision`_
@@ -159,7 +185,9 @@ class UTCDateTime(object):
 
     (5) Using the following keyword arguments: `year, month, day, julday, hour,
         minute, second, microsecond`. Either the combination of year, month and
-        day, or year and Julian day are required.
+        day, or year and Julian day are required. This is the only input mode
+        that supports using hour, minute, or second values above the natural
+        limits of 24, 60, 60, respectively.
 
         >>> UTCDateTime(year=1970, month=1, day=1, minute=15, microsecond=20)
         UTCDateTime(1970, 1, 1, 0, 15, 0, 20)
@@ -172,6 +200,12 @@ class UTCDateTime(object):
         >>> dt = datetime.datetime(2009, 5, 24, 8, 28, 12, 5001)
         >>> UTCDateTime(dt)
         UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
+
+    (7) Using strict=False the limits of hour, minute, and second become more
+        flexible:
+
+        >>> UTCDateTime(year=1970, month=1, day=1, hour=48, strict=False)
+        UTCDateTime(1970, 1, 3, 0, 0)
 
     .. rubric:: _`Precision`
 
@@ -217,6 +251,8 @@ class UTCDateTime(object):
     .. _ISO8601:2004: https://en.wikipedia.org/wiki/ISO_8601
     """
     DEFAULT_PRECISION = 6
+    _initialized = False
+    _has_warned = False  # this is a temporary, it will be removed soon
 
     def __init__(self, *args, **kwargs):
         """
@@ -226,6 +262,7 @@ class UTCDateTime(object):
         self.precision = kwargs.pop('precision', self.DEFAULT_PRECISION)
         # set directly to nanoseconds if given
         ns = kwargs.pop('ns', None)
+        strict = kwargs.pop('strict', True)
         if ns is not None:
             self._ns = ns
             return
@@ -285,6 +322,13 @@ class UTCDateTime(object):
                     value = value.decode()
                 # got a string instance
                 value = value.strip()
+
+                # Raising in the case where the leading string is less than 4
+                # chars; linked to #2167
+                if re.match(_YEAR0REGEX, value):
+                    raise ValueError(
+                        "'%s' does not start with a 4 digit year" % value)
+
                 # check for ISO8601 date string
                 if value.count("T") == 1 or iso8601:
                     try:
@@ -345,6 +389,15 @@ class UTCDateTime(object):
                 return
         # check for ordinal/julian date kwargs
         if 'julday' in kwargs:
+            try:
+                int(kwargs['julday'])
+            except (ValueError, TypeError):
+                msg = "Failed to convert 'julday' to int: {!s}".format(
+                    kwargs['julday'])
+                raise TypeError(msg)
+            if not (1 <= int(kwargs['julday']) <= 366):
+                msg = "'julday' out of bounds: {!s}".format(kwargs['julday'])
+                raise ValueError(msg)
             if 'year' in kwargs:
                 # year given as kwargs
                 year = kwargs['year']
@@ -368,8 +421,31 @@ class UTCDateTime(object):
             kwargs['second'] = int(_sec)
             kwargs['microsecond'] = int(round(_frac * 1e6))
             args = args[0:5]
-        dt = datetime.datetime(*args, **kwargs)
-        self._from_datetime(dt)
+
+        try:  # If a value Error is raised try to allow overflow (see #2222)
+            dt = datetime.datetime(*args, **kwargs)
+        except ValueError:
+            if not strict:
+                self._handle_overflow(*args, **kwargs)
+            else:
+                raise
+        else:
+            self._from_datetime(dt)
+
+    def _handle_overflow(self, year, month, day, hour=0, minute=0, second=0,
+                         microsecond=0):
+        """
+        Handles setting date if an overflow of usual value limits is detected.
+        """
+        # Keep track of seconds due to hour, minute, second
+        seconds = 0
+        seconds += hour * 3600
+        seconds += minute * 60
+        seconds += second
+        # Init UTCDateTime based on year, month, day, add seconds
+        utc_base = UTCDateTime(year=year, month=month, day=day)
+        # Add seconds and set nanoseconds on self
+        self._ns = (utc_base + seconds + microsecond / 1000000).ns
 
     def _set(self, **kwargs):
         """
@@ -422,6 +498,8 @@ class UTCDateTime(object):
         if not isinstance(value, int):
             raise TypeError('nanoseconds must be set as int/long type')
         self.__ns = value
+        # flag that this instance has been initialized; any changes will warn
+        self._initialized = True
 
     _ns = property(_get_ns, _set_ns)
     ns = property(_get_ns, _set_ns)
@@ -433,13 +511,7 @@ class UTCDateTime(object):
         :type dt: :class:`datetime.datetime`
         :param dt: Python datetime object.
         """
-        # see datetime.timedelta.total_seconds
-        try:
-            td = (dt - TIMESTAMP0)
-        except TypeError:
-            td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
-        self._ns = \
-            (td.days * 86400 + td.seconds) * 10**9 + td.microseconds * 1000
+        self._ns = _datetime_to_ns(dt)
 
     def _from_timestamp(self, value):
         """
@@ -581,8 +653,9 @@ class UTCDateTime(object):
         """
         # datetime.utcfromtimestamp will cut off but not round
         # avoid through adding timedelta - also avoids the year 2038 problem
-        dt = datetime.timedelta(seconds=self._ns // 10**9,
-                                microseconds=self._ns % 10**9 // 1000)
+        rounded_ns = py3_round(self._ns, self.precision - 9)
+        dt = datetime.timedelta(seconds=rounded_ns // 10**9,
+                                microseconds=rounded_ns % 10**9 // 1000)
         try:
             return TIMESTAMP0 + dt
         except OverflowError:
@@ -629,13 +702,6 @@ class UTCDateTime(object):
 
         :param value: Year
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12)
-        >>> dt.year = 2010
-        >>> dt
-        UTCDateTime(2010, 2, 11, 10, 11, 12)
         """
         self._set(year=value)
 
@@ -663,13 +729,6 @@ class UTCDateTime(object):
 
         :param value: Month
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12)
-        >>> dt.month = 10
-        >>> dt
-        UTCDateTime(2012, 10, 11, 10, 11, 12)
         """
         self._set(month=value)
 
@@ -696,13 +755,6 @@ class UTCDateTime(object):
 
         :param value: Day
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12)
-        >>> dt.day = 20
-        >>> dt
-        UTCDateTime(2012, 2, 20, 10, 11, 12)
         """
         self._set(day=value)
 
@@ -764,13 +816,6 @@ class UTCDateTime(object):
 
         :param value: Hours
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12)
-        >>> dt.hour = 20
-        >>> dt
-        UTCDateTime(2012, 2, 11, 20, 11, 12)
         """
         self._set(hour=value)
 
@@ -797,13 +842,6 @@ class UTCDateTime(object):
 
         :param value: Minutes
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12)
-        >>> dt.minute = 20
-        >>> dt
-        UTCDateTime(2012, 2, 11, 10, 20, 12)
         """
         self._set(minute=value)
 
@@ -830,13 +868,6 @@ class UTCDateTime(object):
 
         :param value: Seconds
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12)
-        >>> dt.second = 20
-        >>> dt
-        UTCDateTime(2012, 2, 11, 10, 11, 20)
         """
         self._set(second=value)
 
@@ -855,7 +886,8 @@ class UTCDateTime(object):
         >>> dt.microsecond
         345234
         """
-        return int(py3_round(self._ns % 10**9, self.precision - 9) // 1000)
+        ms = int(py3_round(self._ns % 10**9, self.precision - 9) // 1000)
+        return ms % 1000000
 
     def _set_microsecond(self, value):
         """
@@ -863,13 +895,6 @@ class UTCDateTime(object):
 
         :param value: Microseconds
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2012, 2, 11, 10, 11, 12, 345234)
-        >>> dt.microsecond = 999123
-        >>> dt
-        UTCDateTime(2012, 2, 11, 10, 11, 12, 999123)
         """
         self._set(microsecond=value)
 
@@ -896,13 +921,6 @@ class UTCDateTime(object):
 
         :param value: Julian day
         :type value: int
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2008, 12, 5, 12, 30, 35, 45020)
-        >>> dt.julday = 275
-        >>> dt
-        UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         """
         self._set(julday=value)
 
@@ -1025,8 +1043,9 @@ class UTCDateTime(object):
             ndigits = min(self.precision, other.precision) - 9
             if self.precision != other.precision:
                 msg = ('Comparing UTCDateTime objects of different precision'
-                       ' is not defined and may lead to surpising behavior')
-                warnings.warn(msg)
+                       ' is not defined will raise an Exception in a future'
+                       ' version of obspy')
+                warnings.warn(msg, ObsPyDeprecationWarning)
             a = py3_round(self._ns, ndigits)
             b = py3_round(other._ns, ndigits)
             return op_func(a, b)
@@ -1204,6 +1223,16 @@ class UTCDateTime(object):
         # explicitly flag it as unhashable
         return None
 
+    def __setattr__(self, key, value):
+        # raise a warning if overwriting previous ns (see #2072)
+        if self._initialized and not self._has_warned:
+            msg = ('Setting attributes on UTCDateTime instances will raise an'
+                   ' Exception in a future version of Obspy.')
+            warnings.warn(msg, ObsPyDeprecationWarning)
+            # only issue the warning once per object
+            self.__dict__['_has_warned'] = True
+        super(UTCDateTime, self).__setattr__(key, value)
+
     def strftime(self, format):
         """
         Return a string representing the date and time, controlled by an
@@ -1217,7 +1246,50 @@ class UTCDateTime(object):
         See methods :meth:`~datetime.datetime.strftime()` and
         :meth:`~datetime.datetime.strptime()` for more information.
         """
-        return self.datetime.strftime(format)
+        # See https://bugs.python.org/issue32195
+        # This is an attempt to get consistent behavior across platforms.
+        if sys.version_info.major > 2 and sys.platform.startswith("linux"):
+            format = format.replace("%Y", "%04Y")
+
+        try:
+            ret = self.datetime.strftime(format)
+        # this is trying to work around strftime refusing to work with years
+        # <1900
+        # XXX this problem seems to be specific to Python < 3.2
+        # XXX so this can be removed after dropping Python 2 support
+        except ValueError as e:
+            # some other error? just raise it..
+            if 'the datetime strftime() methods require year' not in str(e):
+                raise
+            # otherwise, try to do replace all strftime '%' commands with
+            # simple string formatting
+            format_ = self._strftime_replacement(format)
+            # if there's still some strftime commands in there, we have a
+            # problem still ('%%' is a %-sign literal)
+            if '%' in format_.replace('%%', ''):
+                raise
+            ret = format_
+        return ret
+
+    def _strftime_replacement(self, strftime_string):
+        """
+        Replace all simple, year-independent strftime commands
+
+        >>> t = UTCDateTime(1813, 10, 30, 12, 34, 56, 789012)
+        >>> print(t._strftime_replacement('"%Y-%m-%dT%H:%M:%S.%f %y"'))
+        "1813-10-30T12:34:56.789012 13"
+        """
+        for strftime_key, format_spec, property_name, func in STRFTIME_MAPPING:
+            if strftime_key not in strftime_string:
+                continue
+            strftime_string = strftime_string.replace(
+                    strftime_key, '{%s:%s}' % (property_name, format_spec))
+            replacement = getattr(self, property_name)
+            if func is not None:
+                replacement = func(replacement)
+            strftime_string = strftime_string.format(
+                **{property_name: replacement})
+        return strftime_string
 
     @staticmethod
     def strptime(date_string, format):
@@ -1486,13 +1558,6 @@ class UTCDateTime(object):
             >>> dt = UTCDateTime(precision=5)
             >>> dt.precision
             5
-
-        (3) Set precision for an existing UTCDateTime object.
-
-            >>> dt = UTCDateTime()
-            >>> dt.precision = 9
-            >>> dt.precision
-            9
         """
         if value > 9:
             msg = 'UTCDateTime precision above 9 is not supported, using 9'
@@ -1501,6 +1566,59 @@ class UTCDateTime(object):
         self.__precision = int(value)
 
     precision = property(_get_precision, _set_precision)
+
+    def replace(self, **kwargs):
+        """
+        Return a new UTCDateTime object with one or more parameters replaced.
+
+        Replace is useful for substituting parameters that depend on other
+        parameters (eg hour depends on the current day for meaning). In order
+        to replace independent parameters, such as timestamp, ns, or
+        precision, simply create a new UTCDateTime instance.
+
+        The following parameters are supported: year, month, day, julday,
+        hour, minute second, microsecond. Additionally, the keyword 'strict'
+        can be set to False to allow hour, minute, and second to exceed normal
+        limits.
+
+        .. rubric:: Example
+
+        (1) Get time of the 15th day of the same month to which a timestamp
+            belongs.
+
+            >>> dt = UTCDateTime(999999999)
+            >>> dt2 = dt.replace(day=15)
+            >>> print(dt2)
+            2001-09-15T01:46:39.000000Z
+
+
+        (2) Determine the day of the week 2 months before Guy Fawkes day.
+
+            >>> dt = UTCDateTime('1605-11-05')
+            >>> dt.replace(month=9).weekday
+            0
+        """
+        # check parameters, raise Value error if any are unsupported
+        supported_args = set(YMDHMS) | set(YJHMS) | {'microsecond', 'strict'}
+        if not set(kwargs).issubset(supported_args):
+            unsupported_args = set(kwargs) - supported_args
+            msg = ('%s are not supported arguments for replace, supported '
+                   'arguments are %s') % (unsupported_args, supported_args)
+            raise ValueError(msg)
+        # ensure julday is used correctly if used
+        if kwargs.get('julday') is not None:
+            if 'month' in kwargs or 'day' in kwargs:
+                msg = 'If julday is used month and day cannot be used.'
+                raise ValueError(msg)
+            time_paramters = YJHMS  # use julday
+
+        else:
+            time_paramters = YMDHMS  # use month and day
+        # get a dict of time parameters to pass to UTCDateTime constructor
+        new_dict = {x: getattr(self, x) for x in time_paramters}
+        new_dict['microsecond'] = self.microsecond
+        new_dict.update(kwargs)
+        return UTCDateTime(**new_dict)
 
     def toordinal(self):
         """
@@ -1561,6 +1679,22 @@ class UTCDateTime(object):
         """
         from matplotlib.dates import date2num
         return date2num(self.datetime)
+
+
+def _datetime_to_ns(dt):
+    """
+    Use Python datetime object to return equivalent nanoseconds.
+
+    :type dt: :class:`datetime.datetime`
+    :param dt: Python datetime object.
+    :returns: nanoseconds as an int.
+    """
+    try:
+        td = (dt - TIMESTAMP0)
+    except TypeError:
+        td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
+    # see datetime.timedelta.total_seconds
+    return (td.days * 86400 + td.seconds) * 10**9 + td.microseconds * 1000
 
 
 if __name__ == '__main__':

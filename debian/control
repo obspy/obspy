@@ -1,0 +1,99 @@
+Source: python-obspy
+Maintainer: ObsPy Development Team <devs@obspy.org>
+Section: python
+Priority: extra
+X-Python-Version: >= 2.7
+X-Python3-Version: >= 3.2
+Build-Depends: debhelper (>= 5),
+ python (>= 2.7), python-dev (>= 2.7), python3-all-dev,
+ dh-python, python-numpy, python3-numpy,
+ python-setuptools (>=0.6.21), python3-setuptools, gcc, help2man,
+ quilt, python-future (>= 0.12.4), python3-future (>= 0.12.4)
+Standards-Version: 3.9.3
+Vcs-Git: git://github.com/obspy/obspy.git
+Vcs-Browser: https://github.com/obspy/obspy
+Homepage: https://www.obspy.org
+
+Package: python-obspy
+Architecture: any
+Section: python
+Priority: extra
+Depends: python (>= 2.7),
+ ${python:Depends}, python-numpy (>= 1:1.6.1), python-setuptools (>= 0.6),
+ python-lxml (>= 2.1), python-matplotlib (>= 1.1.0), python-scipy (>= 0.9.0),
+ python-sqlalchemy, ${shlibs:Depends},
+ python-tornado, python-future (>= 0.12.4), python-decorator,
+ python-requests
+Conflicts: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
+ python-obspy-db, python-obspy-earthworm, python-obspy-fissures,
+ python-obspy-gse2, python-obspy-imaging, python-obspy-iris,
+ python-obspy-mseed, python-obspy-neries, python-obspy-realtime,
+ python-obspy-sac, python-obspy-seg2, python-obspy-segy, python-obspy-seisan,
+ python-obspy-seishub, python-obspy-sh, python-obspy-signal, python-obspy-taup,
+ python-obspy-wav, python-obspy-xseed
+Replaces: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
+ python-obspy-db, python-obspy-earthworm, python-obspy-gse2,
+ python-obspy-imaging, python-obspy-iris, python-obspy-mseed,
+ python-obspy-neries, python-obspy-realtime, python-obspy-sac,
+ python-obspy-seg2, python-obspy-segy, python-obspy-seisan,
+ python-obspy-seishub, python-obspy-sh, python-obspy-signal, python-obspy-taup,
+ python-obspy-wav, python-obspy-xseed
+Recommends: python-obspy-dbg (= ${binary:Version}),
+ python-mpltoolkits.basemap, python-geographiclib, python-pil | python-imaging,
+ python-nose, python-flake8, python-mock, python-pyshp,
+ python-cryptography, python-m2crypto
+Suggests: python-mlpy, python-pyproj, ipython
+Description: ObsPy: A Python Toolbox for seismology
+ ObsPy is an open-source project dedicated to provide a Python framework for
+ processing seismological data. It provides parsers for common file formats,
+ clients to access data centers and seismological signal processing routines
+ which allow the manipulation of seismological time series.
+ .
+ For more information visit https://www.obspy.org.
+ .
+ This is the Python 2 version of the package.
+Homepage: https://www.obspy.org
+
+Package: python3-obspy
+Architecture: any
+Section: python
+Priority: extra
+Depends: python3 (>= 3.2),
+ ${python3:Depends}, python3-numpy (>= 1:1.6.1), python3-setuptools (>= 0.6),
+ python3-lxml (>= 2.1), python3-matplotlib (>= 1.1.0), python3-scipy (>= 0.9.0),
+ python3-sqlalchemy, ${shlibs:Depends}, python3-tornado,
+ python3-future (>= 0.12.4), python3-decorator, python3-requests
+Recommends: python-obspy-dbg (= ${binary:Version}),
+ python3-mpltoolkits.basemap, python3-geographiclib,
+ python3-pil | python3-imaging,
+ python3-nose, python3-flake8, python3-mock, python3-pyshp,
+ python3-cryptography
+Suggests: python3-pyproj, ipython3, ipython3-notebook
+Description: ObsPy: A Python Toolbox for seismology
+ ObsPy is an open-source project dedicated to provide a Python framework for
+ processing seismological data. It provides parsers for common file formats,
+ clients to access data centers and seismological signal processing routines
+ which allow the manipulation of seismological time series.
+ .
+ For more information visit https://www.obspy.org.
+ .
+ This is the Python 3 version of the package.
+Homepage: https://www.obspy.org
+
+Package: python-obspy-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: python-obspy (= ${binary:Version}) |
+ python3-obspy (= ${binary:Version})
+Description: ObsPy: A Python Toolbox for seismology
+ ObsPy is an open-source project dedicated to provide a Python framework for
+ processing seismological data. It provides parsers for common file formats,
+ clients to access data centers and seismological signal processing routines
+ which allow the manipulation of seismological time series.
+ .
+ For more information visit https://www.obspy.org.
+ .
+ This package provides data and image files, primarily those needed to run the
+ test suite.
+Homepage: https://www.obspy.org

@@ -6,7 +6,7 @@ Scan a directory to determine the data availability.
 Scan all specified files/directories, determine which time spans are covered
 for which stations and plot everything in summarized in one overview plot.
 Start times of traces with available data are marked by crosses, gaps are
-indicated by vertical red lines.
+indicated by vertical red lines, and overlaps are indicated by blue lines.
 The sampling rate must stay the same for each station, but may vary between the
 stations.
 

@@ -64,10 +64,10 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         with CatchOutput() as out:
             obspy_mopad(['convert', '--fancy', '-t', 't',
                          ','.join(str(x) for x in self.mt)])
-        expected = '''
+        expected = r'''
    Full moment tensor in NED-coordinates:
 
-  /  0.91  1.78 -1.55 \\
+  /  0.91  1.78 -1.55 \
   |  1.78 -0.89  0.47  |
   \ -1.55  0.47 -0.02 /
 
@@ -78,10 +78,10 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         with CatchOutput() as out:
             obspy_mopad(['convert', '--fancy', '-t', 't',
                          ','.join(str(x * 100) for x in self.mt)])
-        expected = '''
+        expected = r'''
    Full moment tensor in NED-coordinates:
 
-  /  0.51  1.00 -0.87 \\
+  /  0.51  1.00 -0.87 \
   |  1.00 -0.50  0.26  |   x  178.000000
   \ -0.87  0.26 -0.01 /
 

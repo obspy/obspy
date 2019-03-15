@@ -320,7 +320,15 @@ class PPSD(object):
         self.ppsd_length = ppsd_length
         self.overlap = overlap
         self.special_handling = special_handling and special_handling.lower()
-        if self.special_handling not in (None, "ringlaser", "hydrophone"):
+        if self.special_handling == 'ringlaser':
+            if not isinstance(self.metadata, dict):
+                msg = ("When using `special_handling='ringlaser'`, `metadata` "
+                       "must be a plain dictionary with key 'sensitivity' "
+                       "stating the overall sensitivity`.")
+                raise TypeError(msg)
+        elif self.special_handling == 'hydrophone':
+            pass
+        elif self.special_handling is not None:
             msg = "Unsupported value for 'special_handling' parameter: %s"
             msg = msg % self.special_handling
             raise ValueError(msg)
@@ -643,14 +651,70 @@ class PPSD(object):
         would result in an overlap of the ppsd data base, False if it is OK to
         insert this piece of data.
         """
-        index1 = bisect.bisect_left(self._times_processed,
-                                    utcdatetime._ns)
-        index2 = bisect.bisect_right(self._times_processed,
-                                     utcdatetime._ns + self.ppsd_length * 1e9)
-        if index1 != index2:
-            return True
-        else:
+        if not self._times_processed:
             return False
+        # new data comes before existing data.
+        if utcdatetime._ns < self._times_processed[0]:
+            overlap_seconds = (
+                (utcdatetime._ns + self.ppsd_length * 1e9) -
+                self._times_processed[0]) / 1e9
+            # the new data is welcome if any overlap that would be introduced
+            # is less or equal than the overlap used by default on continuous
+            # data.
+            if overlap_seconds / self.ppsd_length > self.overlap:
+                return True
+            else:
+                return False
+        # new data exactly at start of first data segment
+        elif utcdatetime._ns == self._times_processed[0]:
+            return True
+        # new data comes after existing data.
+        elif utcdatetime._ns > self._times_processed[-1]:
+            overlap_seconds = (
+                (self._times_processed[-1] + self.ppsd_length * 1e9) -
+                utcdatetime._ns) / 1e9
+            # the new data is welcome if any overlap that would be introduced
+            # is less or equal than the overlap used by default on continuous
+            # data.
+            if overlap_seconds / self.ppsd_length > self.overlap:
+                return True
+            else:
+                return False
+        # new data exactly at start of last data segment
+        elif utcdatetime._ns == self._times_processed[-1]:
+            return True
+        # otherwise we are somewhere within the currently already present time
+        # range..
+        else:
+            index1 = bisect.bisect_left(self._times_processed,
+                                        utcdatetime._ns)
+            index2 = bisect.bisect_right(self._times_processed,
+                                         utcdatetime._ns)
+            # if bisect left/right gives same result, we are not exactly at one
+            # sampling point but in between to timestamps
+            if index1 == index2:
+                t1 = self._times_processed[index1 - 1]
+                t2 = self._times_processed[index1]
+                # check if we are overlapping on left side more than the normal
+                # overlap specified during init
+                overlap_seconds_left = (
+                    (t1 + self.ppsd_length * 1e9) - utcdatetime._ns) / 1e9
+                # check if we are overlapping on right side more than the
+                # normal overlap specified during init
+                overlap_seconds_right = (
+                    (utcdatetime._ns + self.ppsd_length * 1e9) - t2) / 1e9
+                max_overlap = max(overlap_seconds_left,
+                                  overlap_seconds_right) / self.ppsd_length
+                if max_overlap > self.overlap:
+                    return True
+                else:
+                    return False
+            # if bisect left/right gives different results, we are at exactly
+            # one timestamp that is already present
+            else:
+                return True
+        raise NotImplementedError('This should not happen, please report on '
+                                  'github.')
 
     def __check_histogram(self):
         # check if any data has been added yet
@@ -1777,13 +1841,11 @@ class PPSD(object):
 
         ax.semilogx()
         if xaxis_frequency:
-            xlim = map(lambda x: 1.0 / x, period_lim)
             ax.set_xlabel('Frequency [Hz]')
             ax.invert_xaxis()
         else:
-            xlim = period_lim
             ax.set_xlabel('Period [s]')
-        ax.set_xlim(sorted(xlim))
+        ax.set_xlim(period_lim)
         ax.set_ylim(self.db_bin_edges[0], self.db_bin_edges[-1])
         if self.special_handling is None:
             ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
@@ -1841,8 +1903,9 @@ class PPSD(object):
 
         if "meshgrid" not in fig.ppsd:
             fig.ppsd.meshgrid = np.meshgrid(xedges, self.db_bin_edges)
-        X, Y = fig.ppsd.meshgrid
-        ppsd = ax.pcolormesh(X, Y, data.T, cmap=fig.ppsd.cmap, zorder=-1)
+        ppsd = ax.pcolormesh(
+            fig.ppsd.meshgrid[0], fig.ppsd.meshgrid[1], data.T,
+            cmap=fig.ppsd.cmap, zorder=-1)
         fig.ppsd.quadmesh = ppsd
 
         if "colorbar" not in fig.ppsd:

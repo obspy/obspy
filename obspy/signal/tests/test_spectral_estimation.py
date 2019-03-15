@@ -16,8 +16,9 @@ from copy import deepcopy
 
 import numpy as np
 
-from obspy import Stream, Trace, UTCDateTime, read, read_inventory
+from obspy import Stream, Trace, UTCDateTime, read, read_inventory, Inventory
 from obspy.core import Stats
+from obspy.core.inventory import Response
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.core.util.testing import (
@@ -469,11 +470,16 @@ class PsdTestCase(unittest.TestCase):
             np.testing.assert_array_equal(selection_got, expected_selection)
 
         # test one particular selection as an image test
+        # mpl < 2.2 has slightly offset ticks/ticklabels, so needs a higher
+        # tolerance (see e.g. http://tests.obspy.org/102260)
+        reltol = 1.5
+        if MATPLOTLIB_VERSION < [2, 2]:
+            reltol = 5
         plot_kwargs = dict(max_percentage=15, xaxis_frequency=True,
                            period_lim=(0.01, 50))
         ppsd.calculate_histogram(**stack_criteria_list[1])
         with ImageComparison(self.path_images,
-                             'ppsd_restricted_stack.png', reltol=1.5) as ic:
+                             'ppsd_restricted_stack.png', reltol=reltol) as ic:
             fig = ppsd.plot(show=False, **plot_kwargs)
             # some matplotlib/Python version combinations lack the left-most
             # tick/label "Jan 2015". Try to circumvent and get the (otherwise
@@ -490,7 +496,7 @@ class PsdTestCase(unittest.TestCase):
         #     matches (like above):
         ppsd.calculate_histogram(**stack_criteria_list[1])
         with ImageComparison(self.path_images,
-                             'ppsd_restricted_stack.png', reltol=1.5,
+                             'ppsd_restricted_stack.png', reltol=reltol,
                              plt_close_all_exit=False) as ic:
             fig = ppsd.plot(show=False, **plot_kwargs)
             # some matplotlib/Python version combinations lack the left-most
@@ -526,7 +532,7 @@ class PsdTestCase(unittest.TestCase):
         #     image test should pass agin:
         ppsd.calculate_histogram(**stack_criteria_list[1])
         with ImageComparison(self.path_images,
-                             'ppsd_restricted_stack.png', reltol=1.5,
+                             'ppsd_restricted_stack.png', reltol=reltol,
                              plt_close_all_enter=False) as ic:
             ppsd._plot_histogram(fig=fig, draw=True)
             with np.errstate(under='ignore'):
@@ -584,6 +590,61 @@ class PsdTestCase(unittest.TestCase):
             np.testing.assert_array_equal(_binned_psds, ppsd._binned_psds)
             np.testing.assert_array_equal(_times_processed,
                                           ppsd._times_processed)
+
+    def test_ppsd_time_checks(self):
+        """
+        Some tests that make sure checking if a new PSD slice to be addded to
+        existing PPSD has an invalid overlap or not works as expected.
+        """
+        ppsd = PPSD(Stats(), Response())
+        one_second = 1000000000
+        t0 = 946684800000000000  # 2000-01-01T00:00:00
+        time_diffs = [
+            0, one_second, one_second * 2, one_second * 3,
+            one_second * 8, one_second * 9, one_second * 10]
+        ppsd._times_processed = [t0 + td for td in time_diffs]
+        ppsd.ppsd_length = 2
+        ppsd.overlap = 0.5
+        # valid time stamps to insert data for (i.e. data that overlaps with
+        # existing data at most "overlap" times "ppsd_length")
+        ns_ok = [
+            t0 - 3 * one_second,
+            t0 - 1.01 * one_second,
+            t0 - one_second,
+            t0 + 4 * one_second,
+            t0 + 4.01 * one_second,
+            t0 + 6 * one_second,
+            t0 + 7 * one_second,
+            t0 + 6.99 * one_second,
+            t0 + 11 * one_second,
+            t0 + 11.01 * one_second,
+            t0 + 15 * one_second,
+            ]
+        for ns in ns_ok:
+            t = UTCDateTime(ns=int(ns))
+            # getting False means time is not present yet and a PSD slice would
+            # be added to the PPSD data
+            self.assertFalse(ppsd._PPSD__check_time_present(t))
+        # invalid time stamps to insert data for (i.e. data that overlaps with
+        # existing data more than "overlap" times "ppsd_length")
+        ns_bad = [
+            t0 - 0.99 * one_second,
+            t0 - 0.5 * one_second,
+            t0,
+            t0 + 1.1 * one_second,
+            t0 + 3.99 * one_second,
+            t0 + 7.01 * one_second,
+            t0 + 7.5 * one_second,
+            t0 + 8 * one_second,
+            t0 + 8.8 * one_second,
+            t0 + 10 * one_second,
+            t0 + 10.99 * one_second,
+            ]
+        for ns in ns_bad:
+            t = UTCDateTime(ns=int(ns))
+            # getting False means time is not present yet and a PSD slice would
+            # be added to the PPSD data
+            self.assertTrue(ppsd._PPSD__check_time_present(t))
 
     def test_issue1216(self):
         tr, paz = _get_sample_data()
@@ -702,9 +763,14 @@ class PsdTestCase(unittest.TestCase):
             current = start.ns + (i * 30 * 60) * 1e9
             self.assertTrue(time == current)
 
+    @unittest.skipIf(MATPLOTLIB_VERSION[0] >= 3,
+                     'matplotlib >= 3 shifts labels')
     def test_ppsd_spectrogram_plot(self):
         """
         Test spectrogram type plot of PPSD
+
+        Matplotlib version 3 shifts the x-axis labels but everything else looks
+        the same. Skipping test for matplotlib >= 3 on 05/12/2018.
         """
         ppsd = PPSD.load_npz(self.example_ppsd_npz)
 
@@ -760,6 +826,15 @@ class PsdTestCase(unittest.TestCase):
                 with self.assertRaises(ObsPyException) as e:
                     method(filename)
                 self.assertEqual(str(e.exception), msg)
+
+    def test_nice_ringlaser_metadata_error_msg(self):
+        with self.assertRaises(TypeError) as e:
+            PPSD(stats=Stats(), metadata=Inventory(networks=[], source=""),
+                 special_handling='ringlaser')
+        expected = ("When using `special_handling='ringlaser'`, `metadata` "
+                    "must be a plain dictionary with key 'sensitivity' "
+                    "stating the overall sensitivity`.")
+        self.assertEqual(str(e.exception), expected)
 
 
 def suite():

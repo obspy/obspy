@@ -27,13 +27,12 @@ import numpy as np
 from obspy.core import compatibility
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
-                                  _read_from_plugin, download_to_file,
-                                  sanitize_filename)
+                                  _read_from_plugin, _generic_reader)
 from obspy.core.util.decorator import (map_example_filename,
                                        raise_if_masked, uncompress_file)
 from obspy.core.util.misc import get_window_times, buffered_load_entry_point
+from obspy.core.util.obspy_types import ObsPyException
 
 
 _headonly_warning_msg = (
@@ -201,51 +200,30 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     kwargs['endtime'] = endtime
     kwargs['nearest_sample'] = nearest_sample
     kwargs['check_compression'] = check_compression
-    # create stream
-    st = Stream()
+    kwargs['headonly'] = headonly
+    kwargs['format'] = format
+
     if pathname_or_url is None:
         # if no pathname or URL specified, return example stream
         st = _create_example_stream(headonly=headonly)
-    elif not isinstance(pathname_or_url, (str, native_str)):
-        # not a string - we assume a file-like object
-        pathname_or_url.seek(0)
-        try:
-            # first try reading directly
-            stream = _read(pathname_or_url, format, headonly, **kwargs)
-            st.extend(stream.traces)
-        except TypeError:
-            # if this fails, create a temporary file which is read directly
-            # from the file system
-            pathname_or_url.seek(0)
-            with NamedTemporaryFile() as fh:
-                fh.write(pathname_or_url.read())
-                st.extend(_read(fh.name, format, headonly, **kwargs).traces)
-        pathname_or_url.seek(0)
-    elif "://" in pathname_or_url:
-        # some URL
-        # extract extension if any
-        suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
-        with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
-            download_to_file(url=pathname_or_url, filename_or_buffer=fh)
-            st.extend(_read(fh.name, format, headonly, **kwargs).traces)
     else:
-        # some file name
-        pathname = pathname_or_url
-        for file in sorted(glob(pathname)):
-            st.extend(_read(file, format, headonly, **kwargs).traces)
-        if len(st) == 0:
-            # try to give more specific information why the stream is empty
-            if has_magic(pathname) and not glob(pathname):
-                raise Exception("No file matching file pattern: %s" % pathname)
-            elif not has_magic(pathname) and not os.path.isfile(pathname):
-                raise IOError(2, "No such file or directory", pathname)
-            # Only raise error if no start/end time has been set. This
-            # will return an empty stream if the user chose a time window with
-            # no data in it.
-            # XXX: Might cause problems if the data is faulty and the user
-            # set start/end time. Not sure what to do in this case.
-            elif not starttime and not endtime:
-                raise Exception("Cannot open file/files: %s" % pathname)
+        st = _generic_reader(pathname_or_url, _read, **kwargs)
+
+    if len(st) == 0:
+        # try to give more specific information why the stream is empty
+        if has_magic(pathname_or_url) and not glob(pathname_or_url):
+            raise Exception("No file matching file pattern: %s" %
+                            pathname_or_url)
+        elif not has_magic(pathname_or_url) and \
+                not os.path.isfile(pathname_or_url):
+            raise IOError(2, "No such file or directory", pathname_or_url)
+        # Only raise error if no start/end time has been set. This
+        # will return an empty stream if the user chose a time window with
+        # no data in it.
+        # XXX: Might cause problems if the data is faulty and the user
+        # set start/end time. Not sure what to do in this case.
+        elif not starttime and not endtime:
+            raise Exception("Cannot open file/files: %s" % pathname_or_url)
     # Trim if times are given.
     if headonly and (starttime or endtime or dtype):
         warnings.warn(_headonly_warning_msg, UserWarning)
@@ -757,7 +735,9 @@ class Stream(object):
 
         Please be aware that no sorting and checking of stations, channels, ...
         is done. This method only compares the start and end times of the
-        Traces.
+        Traces and the start and end times of segments within Traces that
+        contain masked arrays (i.e., Traces that were merged without a fill
+        value).
 
         .. rubric:: Example
 
@@ -794,7 +774,14 @@ class Stream(object):
         copied_traces = copy.copy(self.traces)
         self.sort()
         gap_list = []
-        for _i in range(len(self.traces) - 1):
+        for _i in range(len(self.traces)):
+            # if the trace is masked, break it up and run get_gaps on the
+            # resulting stream
+            if isinstance(self.traces[_i].data, np.ma.masked_array):
+                gap_list.extend(self.traces[_i].split().get_gaps())
+            if _i + 1 == len(self.traces):
+                # reached the last trace
+                break
             # skip traces with different network, station, location or channel
             if self.traces[_i].id != self.traces[_i + 1].id:
                 continue
@@ -804,7 +791,7 @@ class Stream(object):
             else:
                 same_sampling_rate = False
             stats = self.traces[_i].stats
-            stime = stats['endtime']
+            stime = min(stats['endtime'], self.traces[_i + 1].stats['endtime'])
             etime = self.traces[_i + 1].stats['starttime']
             # last sample of earlier trace represents data up to time of last
             # sample (stats.endtime) plus one delta
@@ -827,6 +814,24 @@ class Stream(object):
                 nsamples = -nsamples
             # skip if is equal to delta (1 / sampling rate)
             if same_sampling_rate and nsamples == 0:
+                continue
+            # check if gap is already covered in trace before:
+            covered = False
+            # only need to check previous traces because the traces are sorted
+            for prev_trace in self.traces[:_i]:
+                prev_stats = prev_trace.stats
+                # look if trace is contained in other trace
+                prev_start = prev_stats['starttime']
+                prev_end = prev_stats['endtime']
+                if not (prev_start < stime < etime < prev_end):
+                    continue
+                # don't look in traces of other measurements
+                elif self.traces[_i].id != prev_trace.id:
+                    continue
+                else:
+                    covered = True
+                    break
+            if covered:
                 continue
             gap_list.append([stats['network'], stats['station'],
                              stats['location'], stats['channel'],
@@ -1417,6 +1422,10 @@ class Stream(object):
 
         %s
         """
+        if not self.traces:
+            msg = 'Can not write empty stream to file.'
+            raise ObsPyException(msg)
+
         # Check all traces for masked arrays and raise exception.
         for trace in self.traces:
             if isinstance(trace.data, np.ma.masked_array):
@@ -1504,15 +1513,21 @@ class Stream(object):
         # select start/end time fitting to a sample point of the first trace
         if nearest_sample:
             tr = self.traces[0]
-            if starttime:
-                delta = compatibility.round_away(
-                    (starttime - tr.stats.starttime) * tr.stats.sampling_rate)
-                starttime = tr.stats.starttime + delta * tr.stats.delta
-            if endtime:
-                delta = compatibility.round_away(
-                    (endtime - tr.stats.endtime) * tr.stats.sampling_rate)
-                # delta is negative!
-                endtime = tr.stats.endtime + delta * tr.stats.delta
+            try:
+                if starttime is not None:
+                    delta = compatibility.round_away(
+                        (starttime - tr.stats.starttime) *
+                        tr.stats.sampling_rate)
+                    starttime = tr.stats.starttime + delta * tr.stats.delta
+                if endtime is not None:
+                    delta = compatibility.round_away(
+                        (endtime - tr.stats.endtime) * tr.stats.sampling_rate)
+                    # delta is negative!
+                    endtime = tr.stats.endtime + delta * tr.stats.delta
+            except TypeError:
+                msg = ('starttime and endtime must be UTCDateTime objects '
+                       'or None for this call to Stream.trim()')
+                raise TypeError(msg)
         for trace in self.traces:
             trace.trim(starttime, endtime, pad=pad,
                        nearest_sample=nearest_sample, fill_value=fill_value)
@@ -2399,9 +2414,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Remove a trend from all traces.
 
-        For details see the corresponding
+        For details on supported methods and parameters see the corresponding
         :meth:`~obspy.core.trace.Trace.detrend` method of
         :class:`~obspy.core.trace.Trace`.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data will no longer be accessible afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
         """
         for tr in self:
             tr.detrend(type=type, **options)
@@ -3214,15 +3236,23 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type inventory: :class:`~obspy.core.inventory.inventory.Inventory` or
             :class:`~obspy.io.xseed.parser.Parser`
         :param inventory: Inventory or Parser with metadata of channels.
-        :type components: list or tuple
+        :type components: list or tuple or str
         :param components: List of combinations of three (case sensitive)
             component characters. Rotations are executed in this order, so
             order might matter in very strange cases (e.g. if traces with more
             than three component codes are present for the same SEED ID down to
             the component code). For example, specifying components ``"Z12"``
             would rotate sets of "BHZ", "BH1", "BH2" (and "HHZ", "HH1", "HH2",
-            etc.) channels at the same station.
+            etc.) channels at the same station. If only a single set of
+            component codes is used, this option can also be specified as a
+            string (e.g. ``components='Z12'``).
         """
+        # be nice to users that specify e.g. ``components='ZNE'``..
+        # compare http://lists.swapbytes.de/archives/obspy-users/
+        # 2018-March/002692.html
+        if isinstance(components, (str, native_str)):
+            components = [components]
+
         for component_pair in components:
             st = self.select(component="[{}]".format(component_pair))
             netstaloc = sorted(set(

@@ -1004,22 +1004,20 @@ class SACTrace(object):
         try:
             old_reftime = self.reftime
 
-            # find the milliseconds and leftover microseconds for new reftime
-            _, rem_microsecs = _ut.split_microseconds(new_reftime.microsecond)
-
             # snap the new reftime to the most recent milliseconds
             # (subtract the leftover microseconds)
-            new_reftime.microsecond -= rem_microsecs
+            ns = new_reftime.ns
+            utc = UTCDateTime(ns=(ns - ns % 1000000))
 
-            self.nzyear = new_reftime.year
-            self.nzjday = new_reftime.julday
-            self.nzhour = new_reftime.hour
-            self.nzmin = new_reftime.minute
-            self.nzsec = new_reftime.second
-            self.nzmsec = new_reftime.microsecond / 1000
+            self.nzyear = utc.year
+            self.nzjday = utc.julday
+            self.nzhour = utc.hour
+            self.nzmin = utc.minute
+            self.nzsec = utc.second
+            self.nzmsec = utc.microsecond / 1000
 
             # get the float seconds between the old and new reftimes
-            shift = old_reftime - new_reftime
+            shift = old_reftime - utc
 
             # shift the relative time headers
             self._allt(np.float32(shift))

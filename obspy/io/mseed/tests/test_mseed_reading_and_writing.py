@@ -236,7 +236,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_records',
                            'gaps.mseed', 'qualityflags.mseed', 'test.mseed',
                            'timingquality.mseed', 'blockette008.mseed',
-                           'fullseed.mseed', 'various_noise_records.mseed']
+                           'fullseed.mseed', 'various_noise_records.mseed',
+                           'rt130_sr0_cropped.mseed']
 
         # Non Mini-SEED file names.
         non_mseed_filenames = ['test_mseed_reading_and_writing.py',
@@ -834,9 +835,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             # Tests all ASCII letters.
             os.path.join(path, "fullASCII.mseed"):
             (native_str('|S1'), 'a', 0, from_buffer(
-                """ !"#$%&'()*+,-./""" +
-                """0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" +
-                """abcdefghijklmnopqrstuvwxyz{|}~""",
+                r""" !"#$%&'()*+,-./""" +
+                r"""0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" +
+                r"""abcdefghijklmnopqrstuvwxyz{|}~""",
                 dtype=native_str('|S1'))),
             # Note: int16 array will also be returned as int32.
             os.path.join(path, "int16_INT16.mseed"):
@@ -1420,7 +1421,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
                 with io.open(reference, "rt") as fh:
                     err_msg = fh.readlines()[-1]
-                err_msg = re.sub("^Error:\s", "", err_msg).strip()
+                err_msg = re.sub(r"^Error:\s", "", err_msg).strip()
                 self.assertEqual(err_msg, e.exception.args[0].splitlines()[1])
             elif test_type == "summary":
                 st = read(filename)
@@ -1451,7 +1452,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                            err_msg=filename)
                 self.assertEqual(tr.stats.npts, npts, msg=filename)
             else:  # pragma: no cover
-                raise NotImplemented
+                raise NotImplementedError
 
         folder = os.path.join(self.path, os.path.pardir, "src", "libmseed",
                               "test")
@@ -1546,6 +1547,24 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             'filesize': 14336,
             'number_of_records': 10,
             'record_length': 512})
+
+    def test_read_mseed_sr0(self):
+        """
+        Test reading a small mseed ASCII LOG file.
+        """
+        filename = os.path.join(self.path, 'data', 'rt130_sr0_cropped.mseed')
+        st = read(filename)
+        tr = st[0]
+        self.assertEqual(0.0, tr.stats.sampling_rate)
+        self.assertEqual(tr.stats.mseed,
+                         {'dataquality': 'D',
+                          'number_of_records': 1,
+                          'encoding': 'ASCII',
+                          'byteorder': '>',
+                          'record_length': 512,
+                          'filesize': 2560})
+        self.assertEqual(''.join(tr.data.astype(str)),
+                         '001:00:00:00 REF TEK 130\r\n')
 
 
 def suite():

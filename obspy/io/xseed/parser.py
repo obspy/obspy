@@ -688,6 +688,8 @@ class Parser(object):
         comment_pattern = re.compile(r"^#.*\+")
 
         last_blockette_id = None
+        # No fields with number 0 exist.
+        last_field_number = 0
         for line in data.splitlines():
             m = re.match(pattern, line)
             if m:
@@ -700,12 +702,25 @@ class Parser(object):
                 # g[3]: Everything afterwards.
                 g = m.groups()
                 blockette_number = g[0]
+                field_number = int(g[1])
                 # A new blockette is starting.
-                if blockette_number != last_blockette_id:
+                # Either
+                # * when the blockette number increases or
+                # * (for blockette 58) when the field number suddenly decreases
+                # to 3 again.
+                # This catches a rare issue where blockette 58 is repeated
+                # twice (gain for a channel + total sensitivity) and the
+                # comments don't contain any `+` which would alternatively
+                # trigger a new blockette to be created.
+                if (blockette_number != last_blockette_id) or \
+                        ((blockette_number == "058") and
+                         (field_number == 3) and
+                         (field_number < last_field_number)):
                     if len(blockettefieldlist) > 0:
                         blockettelist.append(blockettefieldlist)
                         blockettefieldlist = list()
                     last_blockette_id = blockette_number
+                    last_field_number = 0
                 # Single field lines.
                 if not g[2]:
                     # Units of blkts 41 and 61 are normal.
@@ -717,7 +732,8 @@ class Parser(object):
                     else:
                         value = g[3].strip().split()[-1]
                     blockettefieldlist.append((blockette_number, g[1], value))
-                # Multiple field liens.
+                    last_field_number = field_number
+                # Multiple field lines.
                 else:
                     first_field = int(g[1])
                     last_field = int(g[2])
@@ -726,12 +742,15 @@ class Parser(object):
                     for i, value in enumerate(values):
                         blockettefieldlist.append(
                             (blockette_number, first_field + i, value))
+                    last_field_number = field_number
             elif re.match(comment_pattern, line):
                 # Comment line with a + in it means blockette is
                 # finished start a new one
                 if len(blockettefieldlist) > 0:
                     blockettelist.append(blockettefieldlist)
                     blockettefieldlist = list()
+                    last_blockette_id = blockette_number
+                    last_field_number = 0
         # Add last blockette
         if len(blockettefieldlist) > 0:
             blockettelist.append(blockettefieldlist)

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.9" version="0.9">
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
   <EventParameters publicID="smi:eu.emsc/unid">
     <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
       <time>
@@ -20,6 +20,7 @@
         <timeResidual>1.6</timeResidual>
         <horizontalSlownessResidual>1.7</horizontalSlownessResidual>
         <backazimuthResidual>1.8</backazimuthResidual>
+        <timeUsed>true</timeUsed>
         <weight>0.48</weight>
         <earthModelID>smi:ch.ethz.sed/earthmodel/U21</earthModelID>
         <creationInfo>
@@ -34,9 +35,21 @@
       <arrival>
         <pickID>smi:geonet.org.nz/pick/4965459</pickID>
         <phase>P*</phase>
-        <azimuth>356.0</azimuth>
-        <distance>45.036</distance>
-        <horizontalSlownessResidual>-0.736</horizontalSlownessResidual>
+        <horizontalSlownessUsed>true</horizontalSlownessUsed>
+        <weight>0.48</weight>
+      </arrival>
+      <arrival>
+        <pickID>smi:geonet.org.nz/pick/4965460</pickID>
+        <phase>P*</phase>
+        <backazimuthUsed>true</backazimuthUsed>
+        <weight>0.48</weight>
+      </arrival>
+      <arrival>
+        <pickID>smi:geonet.org.nz/pick/4965461</pickID>
+        <phase>P*</phase>
+        <timeUsed>true</timeUsed>
+        <horizontalSlownessUsed>true</horizontalSlownessUsed>
+        <backazimuthUsed>true</backazimuthUsed>
         <weight>0.48</weight>
       </arrival>
     </origin>

@@ -5,6 +5,8 @@ from future.builtins import *  # NOQA
 
 import unittest
 
+from obspy import UTCDateTime
+from obspy.core.inventory import Comment
 from obspy.core.util import (ComplexWithUncertainties, Enum,
                              FloatWithUncertainties)
 from obspy.core.util.obspy_types import (FloatWithUncertaintiesAndUnit)
@@ -115,6 +117,21 @@ class UtilTypesTestCase(unittest.TestCase):
         self.assertEqual(f.lower_uncertainty, 0.5)
         self.assertEqual(f.upper_uncertainty, 1.5)
         self.assertEqual(f.unit, "AB")
+
+    def test_comment_str(self):
+        """
+        Tests the __str__ method of the Comment object.
+        """
+        c = Comment(value='test_comment', id=9,
+                    begin_effective_time=UTCDateTime(1240561632),
+                    end_effective_time=UTCDateTime(1584561632), authors=[])
+
+        self.assertEqual(str(c), "Comment:\ttest_comment\n"
+                         "\tBegin Effective Time:\t2009-04-24T08:27:12"
+                         ".000000Z\n"
+                         "\tEnd Effective Time:\t2020-03-18T20:00:32.000000Z\n"
+                         "\tAuthors:\t\t[]\n"
+                         "\tId:\t\t\t9")
 
 
 def suite():

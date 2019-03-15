@@ -92,6 +92,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
     Tests suite for util module of obspy.io.mseed.
     """
     def setUp(self):
+        self.maxDiff = None
         # Directory where the test files are located
         self.path = os.path.dirname(__file__)
         # mseed steim compression is big endian
@@ -200,6 +201,64 @@ class MSEEDUtilTestCase(unittest.TestCase):
         self.assertEqual(info['record_length'], 4096)
         self.assertEqual(info['number_of_records'], 2)
         self.assertEqual(info['excess_bytes'], 0)
+
+    def test_get_record_information_negative_sr_rate_and_mult(self):
+        """
+        Tests the method for negative sampling rate factors and multipliers.
+        """
+        filename = os.path.join(
+            self.path, 'data', 'single_record_negative_sr_fact_and_mult.mseed')
+        info = util.get_record_information(filename)
+        self.assertEqual(info, {
+            'activity_flags': 0,
+            'byteorder': '>',
+            'channel': 'VHZ',
+            'data_quality_flags': 0,
+            'encoding': 10,
+            'endtime': UTCDateTime(1991, 2, 21, 23, 59, 50, 430000),
+            'excess_bytes': 0,
+            'filesize': 4096,
+            'io_and_clock_flags': 0,
+            'location': '',
+            'network': 'MN',
+            'npts': 60,
+            'number_of_records': 1,
+            'record_length': 4096,
+            'samp_rate': 0.1,
+            'starttime': UTCDateTime(1991, 2, 21, 23, 50, 0, 430000),
+            'station': 'TNV',
+            'time_correction': 0
+        })
+
+    def test_issue2069(self):
+        """
+        Tests the util._get_ms_file_info method with sample rate of 0.
+        Reads a datafile and sets sr factor and multipier to 0 and and mseed
+        ASCII LOG file with a sample rate of 0.
+        """
+
+        # Test with a file by setting sr = 0
+        filename = os.path.join(self.path, 'data',
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        fmt = '>HHBBBxHHhhBBBxlxxH'
+        with open(filename, "rb") as fh:
+            with io.BytesIO(fh.read()) as buf:
+                buf.seek(20, 0)
+                data = buf.read(28)
+                values = list(unpack(fmt, data))
+                values[7] = 0
+                values[8] = 0
+                data = pack(fmt, *values)
+                buf.seek(20, 0)
+                buf.write(data)
+                buf.seek(0, 0)
+                info = util.get_record_information(buf)
+                self.assertEqual(info['samp_rate'], 0)
+
+        # Test with an actual sr = 0 file
+        filename = os.path.join(self.path, 'data', 'rt130_sr0_cropped.mseed')
+        info = util.get_record_information(filename)
+        self.assertEqual(info['samp_rate'], 0)
 
     def test_get_data_quality(self):
         """
@@ -1237,6 +1296,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         filename = os.path.join(self.path, "data",
                                 "record_with_invalid_word_order.mseed")
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             info = util.get_record_information(filename)
 
         self.assertEqual(len(w), 1)

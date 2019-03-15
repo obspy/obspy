@@ -288,6 +288,7 @@ class Client(object):
         :type password: str
         :param password: Password for given user name.
         """
+        self.user = user
         self._set_opener(user, password)
 
     def set_eida_token(self, token):
@@ -838,6 +839,7 @@ class Client(object):
             if attach_response:
                 self._attach_responses(st)
             self._attach_dataselect_url_to_stream(st)
+            st.trim(starttime, endtime)
             return st
 
     def _attach_responses(self, st):
@@ -1452,9 +1454,9 @@ class Client(object):
                             wadl_queue.put((url, None))
                         else:
                             raise
-                    except urllib_request.URLError as e:
+                    except urllib_request.URLError:
                         wadl_queue.put((url, "timeout"))
-                    except socket_timeout as e:
+                    except socket_timeout:
                         wadl_queue.put((url, "timeout"))
             return ThreadURL()
 

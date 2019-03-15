@@ -160,6 +160,10 @@ class InternalMSEEDError(ObsPyMSEEDError):
     pass
 
 
+class InternalMSEEDParseTimeError(InternalMSEEDError):
+    pass
+
+
 class InternalMSEEDWarning(UserWarning):
     pass
 

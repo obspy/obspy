@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
+  <eventParameters publicID="smi:eu.emsc/unid">
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <origin publicID="smi:www.iris.edu/ws/event/query?originId=7680412">
+        <time>
+          <value>2011-03-11T05:46:24.120000Z</value>
+        </time>
+        <latitude>
+          <value>38.297</value>
+        </latitude>
+        <longitude>
+          <value>142.373</value>
+        </longitude>
+        <arrival publicID="smi:ch.ethz.sed/pick/117634_smi_www.iris.edu/ws/event/query?originId=7680412">
+          <timeWeight>0.48</timeWeight>
+          <pickID>smi:ch.ethz.sed/pick/117634</pickID>
+          <phase>Pn</phase>
+          <azimuth>12.0</azimuth>
+          <distance>0.5</distance>
+          <takeoffAngle>
+            <value>11.0</value>
+          </takeoffAngle>
+          <timeResidual>1.6</timeResidual>
+          <horizontalSlownessResidual>1.7</horizontalSlownessResidual>
+          <backazimuthResidual>1.8</backazimuthResidual>
+          <earthModelID>smi:ch.ethz.sed/earthmodel/U21</earthModelID>
+          <creationInfo>
+            <agencyID>EMSC</agencyID>
+            <agencyURI>smi:smi-registry/organization/EMSC</agencyURI>
+            <author>Erika Mustermann</author>
+            <authorURI>smi:smi-registry/organization/EMSC</authorURI>
+            <creationTime>2012-04-04T16:40:50.000000Z</creationTime>
+            <version>1.0.1</version>
+          </creationInfo>
+        </arrival>
+        <arrival publicID="smi:geonet.org.nz/pick/4965459_smi_www.iris.edu/ws/event/query?originId=7680412">
+          <horizontalSlownessWeight>0.48</horizontalSlownessWeight>
+          <pickID>smi:geonet.org.nz/pick/4965459</pickID>
+          <phase>P*</phase>
+        </arrival>
+        <arrival publicID="smi:geonet.org.nz/pick/4965460_smi_www.iris.edu/ws/event/query?originId=7680412">
+          <backazimuthWeight>0.48</backazimuthWeight>
+          <pickID>smi:geonet.org.nz/pick/4965460</pickID>
+          <phase>P*</phase>
+        </arrival>
+        <arrival publicID="smi:geonet.org.nz/pick/4965461_smi_www.iris.edu/ws/event/query?originId=7680412">
+          <timeWeight>0.48</timeWeight>
+          <horizontalSlownessWeight>0.48</horizontalSlownessWeight>
+          <backazimuthWeight>0.48</backazimuthWeight>
+          <pickID>smi:geonet.org.nz/pick/4965461</pickID>
+          <phase>P*</phase>
+        </arrival>
+      </origin>
+    </event>
+  </eventParameters>
+</q:quakeml>

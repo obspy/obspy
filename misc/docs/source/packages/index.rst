@@ -100,6 +100,7 @@ categories.*
     obspy.io.nied.knet
     obspy.io.pdas
     obspy.io.reftek
+    obspy.io.rg16
     obspy.io.sac
     obspy.io.seisan
     obspy.io.seg2
@@ -107,7 +108,7 @@ categories.*
     obspy.io.sh
     obspy.io.wav
     obspy.io.win
-   obspy.io.y
+    obspy.io.y
 
 .. rubric:: Event Data Import/Export Plug-ins
 
@@ -133,8 +134,9 @@ categories.*
 
     obspy.io.cmtsolution
     obspy.io.cnv
-    obspy.io.iaspei
+    obspy.io.focmec
     obspy.io.gse2
+    obspy.io.iaspei
     obspy.io.json
     obspy.io.kml
     obspy.io.ndk
@@ -142,10 +144,10 @@ categories.*
     obspy.io.nlloc
     obspy.io.nordic
     obspy.io.pde
-    obspy.io.seiscomp
-    obspy.io.scardec
-    obspy.io.shapefile
     obspy.io.quakeml
+    obspy.io.scardec
+    obspy.io.seiscomp
+    obspy.io.shapefile
     obspy.io.zmap
 
 .. rubric:: Inventory Data Import/Export Plug-ins

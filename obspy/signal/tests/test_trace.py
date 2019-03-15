@@ -40,7 +40,9 @@ class TraceTestCase(unittest.TestCase):
             paz_simulate=paz_le3d1s, remove_sensitivity=True,
             simulate_sensitivity=True)
         tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_le3d1s)
-        np.testing.assert_array_equal(tr.data, data)
+        # There is some strange issue on Win32bit (see #2188). Thus we just
+        # use assert_allclose() here instead of testing for full equality.
+        np.testing.assert_allclose(tr.data, data)
 
     def test_filter(self):
         """

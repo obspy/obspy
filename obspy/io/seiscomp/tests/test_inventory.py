@@ -26,6 +26,8 @@ import unittest
 from obspy.core.inventory import read_inventory
 from obspy.core.inventory.response import (CoefficientsTypeResponseStage,
                                            FIRResponseStage)
+from obspy.io.seiscomp.inventory import (
+    _count_complex, _parse_list_of_complex_string)
 
 
 class SC3MLTestCase(unittest.TestCase):
@@ -239,12 +241,8 @@ class SC3MLTestCase(unittest.TestCase):
                             continue
 
                         if isinstance(sc3ml, FIRResponseStage):
-                            for sc3ml_FIR, stationxml_FIR in zip(sc3ml.__dict__
-                                                                 .items(),
-                                                                 stationxml.
-                                                                 __dict__
-                                                                 .items()):
-                                self.assertEqual(sc3ml_FIR, stationxml_FIR)
+                            self.assertEqual(sc3ml.__dict__,
+                                             stationxml.__dict__)
 
                     """ Check poles / zeros """
                     sc3ml_paz = sc3ml_cha.response.get_paz()
@@ -262,6 +260,23 @@ class SC3MLTestCase(unittest.TestCase):
                     for sc3ml, stationxml in zip(sc3ml_paz.zeros,
                                                  stationxml_paz.zeros):
                         self.assertEqual(sc3ml, stationxml)
+
+    def test_parse_complex_list(self):
+        """
+        Tests parsing list of complex numbers from seiscomp3 xml.
+        """
+        complex_string = ("  (   -0.037 ,     0.037 )  (-0.037,-0.037)"
+                          "(-6909,     9208)( -6909  ,-9208)  ")
+        self.assertEqual(_count_complex(complex_string), 4)
+        parsed = _parse_list_of_complex_string(complex_string)
+        self.assertEqual(parsed, [('-0.037', '0.037'), ('-0.037', '-0.037'),
+                                  ('-6909', '9208'), ('-6909', '-9208')])
+        # test some bad string
+        complex_string = "  (   -0.037 ,     0.037 )  (-0.037,-0.037"
+        with self.assertRaises(ValueError):
+            _count_complex(complex_string)
+        with self.assertRaises(ValueError):
+            _parse_list_of_complex_string(complex_string)
 
 
 def suite():

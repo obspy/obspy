@@ -1,4 +1,5 @@
 Ackerley, Nick
+Allgeyer, Sebastien
 Ammon, Charles J.
 Antunes, Emanuel
 Arnarsson, Ólafur St.
@@ -9,10 +10,12 @@ Bernardi, Fabrizio
 Bernauer, Felix
 Bes de Berc, Maxime
 Beyreuther, Moritz
+Boltz, Shawn
 Bonaimé, Sébastien
 Carothers, Lloyd
 Chamberlain, Calum
 Chambers, Derrick
+Chen, Zhao
 Clark, Adam
 Danecek, Peter
 Dramsch, Jesper Sören
@@ -52,15 +55,18 @@ Lopes, Rui L.
 MacCarthy, Jonathan
 Maggi, Alessia
 Martin, Henri
+Medlin, Andrew
 Megies, Tobias
 Meschede, Matthias
 Michelini, Alberto
 Miller, Nathaniel C.
 Morgenstern, Bernhard
+Murray-Bergquist, Louisa
 Nof, Ran Novitsky
 Panning, Mark P.
 Rapagnani, Giovanni
 Parker, Tom
+Pestourie, Romain
 Reyes, Celso
 Ringler, Adam
 Rothenhäusler, Nicolas
@@ -74,6 +80,7 @@ Sippl, Christian
 Snoke, Arthur
 Stähler, Simon C.
 Stange, Stefan
+Strutz, Dominik
 Sullivan, Benjamin
 Tian, Dongdong
 Trabant, Chad

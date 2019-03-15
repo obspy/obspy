@@ -24,7 +24,7 @@ from obspy import UTCDateTime
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
-                   Longitude, _unified_content_strings, _textwrap)
+                   Longitude, _unified_content_strings, _textwrap, Site)
 
 
 @python_2_unicode_compatible
@@ -108,7 +108,7 @@ class Station(BaseNode):
         self.longitude = longitude
         self.elevation = elevation
         self.channels = channels or []
-        self.site = site
+        self.site = site if site is not None else Site()
         self.vault = vault
         self.geology = geology
         self.equipments = equipments or []
@@ -320,7 +320,7 @@ class Station(BaseNode):
 
     def select(self, location=None, channel=None, time=None, starttime=None,
                endtime=None, sampling_rate=None):
-        """
+        r"""
         Returns the :class:`Station` object with only the
         :class:`~obspy.core.inventory.channel.Channel`\ s that match the given
         criteria (e.g. all channels with ``channel="EHZ"``).

@@ -192,7 +192,8 @@ class NRL(object):
 
         >>> nrl = NRL()
         >>> response = nrl.get_response(
-        ...     sensor_keys=['Nanometrics', 'Trillium Compact', '120 s'],
+        ...     sensor_keys=['Nanometrics', 'Trillium Compact 120 (Vault, '
+        ...                  'Posthole, OBS)', '754 V/m/s'],
         ...     datalogger_keys=['REF TEK', 'RT 130 & 130-SMA', '1', '200'])
         >>> print(response)   # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         Channel Response
@@ -216,7 +217,11 @@ class NRL(object):
         # Combine both by replace stage one in the data logger with stage
         # one of the sensor.
         dl_resp.response_stages.pop(0)
-        dl_resp.response_stages.insert(0, sensor_resp.response_stages[0])
+        sensor_stage0 = sensor_resp.response_stages[0]
+        dl_resp.response_stages.insert(0, sensor_stage0)
+        dl_resp.instrument_sensitivity.input_units = sensor_stage0.input_units
+        dl_resp.instrument_sensitivity.input_units_description = \
+            sensor_stage0.input_units_description
         try:
             dl_resp.recalculate_overall_sensitivity()
         except ValueError:

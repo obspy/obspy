@@ -2,23 +2,27 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import PY2, native_str
 
-import copy
+import builtins
+import io
 import os
-import sys
+import pickle
 import unittest
 import warnings
-import tempfile
 
 from matplotlib import rcParams
 import numpy as np
 
-from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
-                              Pick, ResourceIdentifier, WaveformStreamID,
-                              read_events, Magnitude, FocalMechanism, Arrival)
+from obspy import UTCDateTime, read_events
+from obspy.core.event import (Catalog, Comment, CreationInfo, Event,
+                              FocalMechanism, Magnitude, Origin, Pick,
+                              ResourceIdentifier, WaveformStreamID)
 from obspy.core.event.source import farfield
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import BASEMAP_VERSION, CARTOPY_VERSION
+from obspy.core.util import (
+    BASEMAP_VERSION, CARTOPY_VERSION, PROJ4_VERSION, MATPLOTLIB_VERSION)
+from obspy.core.util.base import _get_entry_points
+from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import ImageComparison
 from obspy.core.event.base import QuantityError
 
@@ -34,15 +38,15 @@ class EventTestCase(unittest.TestCase):
     Test suite for obspy.core.event.Event
     """
     def setUp(self):
+        """
+        Setup code to run before each test. Temporary replaces the state on
+        the ResourceIdentifier class level to reset the ResourceID mechanisms
+        before each run.
+        """
         # directory where the test files are located
         path = os.path.join(os.path.dirname(__file__), 'data')
         self.path = path
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
     def test_str(self):
         """
@@ -52,6 +56,16 @@ class EventTestCase(unittest.TestCase):
         s = event.short_str()
         self.assertEqual("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
                          " | 4.3 ML | manual", s)
+
+    def test_str_empty_origin(self):
+        """
+        Ensure an event with an empty origin returns a str without raising a
+        TypeError (#2119).
+        """
+        event = Event(origins=[Origin()])
+        out = event.short_str()
+        self.assertIsInstance(out, str)
+        self.assertEqual(out, 'None | None, None')
 
     def test_eq(self):
         """
@@ -111,43 +125,12 @@ class EventTestCase(unittest.TestCase):
         self.assertFalse(hasattr(p, "test_1"))
         self.assertFalse(hasattr(p, "test_2"))
 
-    def test_event_copying_does_not_raise_duplicate_resource_id_warning(self):
-        """
-        Tests that copying an event does not raise a duplicate resource id
-        warning.
-        """
-        ev = read_events()[0]
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            ev2 = copy.copy(ev)
-            self.assertEqual(len(w), 0)
-            ev3 = copy.deepcopy(ev)
-            self.assertEqual(len(w), 0)
-        # The two events should compare equal.
-        self.assertEqual(ev, ev2)
-        self.assertEqual(ev, ev3)
-        # get resource_ids and referred objects from each of the events
-        rid1 = ev.resource_id
-        rid2 = ev2.resource_id
-        rid3 = ev3.resource_id
-        rob1 = rid1.get_referred_object()
-        rob2 = rid2.get_referred_object()
-        rob3 = rid3.get_referred_object()
-        # A shallow copy should just use the exact same resource identifier,
-        # while a deep copy should not, although they should be qual.
-        self.assertIs(rid1, rid2)
-        self.assertIsNot(rid1, rid3)
-        self.assertEqual(rid1, rid3)
-        # make sure the object_id on the resource_ids are not the same
-        self.assertEqual(rid1._object_id, rid2._object_id)
-        self.assertNotEqual(rid1._object_id, rid3._object_id)
-        # copy should point to the same object, deep copy should not
-        self.assertIs(rob1, rob2)
-        self.assertIsNot(rob1, rob3)
-        # although the referred objects should be equal
-        self.assertEqual(rob1, rob3)
-
     @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    @unittest.skipIf(
+        BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+        'matplotlib 3.0.1 is not campatible with basemap')
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
     def test_plot_farfield_without_quiver_with_maps(self):
         """
         Tests to plot P/S wave farfield radiation pattern, also with beachball
@@ -182,13 +165,6 @@ class OriginTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.event.Origin
     """
-    def setUp(self):
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
-
     def test_creation_info(self):
         # 1 - empty Origin class will set creation_info to None
         orig = Origin()
@@ -247,11 +223,38 @@ class CatalogTestCase(unittest.TestCase):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.iris_xml = os.path.join(path, 'iris_events.xml')
         self.neries_xml = os.path.join(path, 'neries_events.xml')
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
+
+    def test_read_invalid_filename(self):
+        """
+        Tests that we get a sane error message when calling read_events()
+        with a filename that doesn't exist
+        """
+        doesnt_exist = 'dsfhjkfs'
+        for i in range(10):
+            if os.path.exists(doesnt_exist):
+                doesnt_exist += doesnt_exist
+                continue
+            break
+        else:
+            self.fail('unable to get invalid file path')
+        doesnt_exist = native_str(doesnt_exist)
+
+        if PY2:
+            exception_type = getattr(builtins, 'IOError')
+        else:
+            exception_type = getattr(builtins, 'FileNotFoundError')
+        exception_msg = "[Errno 2] No such file or directory: '{}'"
+
+        formats = _get_entry_points(
+            'obspy.plugin.catalog', 'readFormat').keys()
+        # try read_inventory() with invalid filename for all registered read
+        # plugins and also for filetype autodiscovery
+        formats = [None] + list(formats)
+        for format in formats:
+            with self.assertRaises(exception_type) as e:
+                read_events(doesnt_exist, format=format)
+            self.assertEqual(
+                str(e.exception), exception_msg.format(doesnt_exist))
 
     def test_creation_info(self):
         cat = Catalog()
@@ -487,41 +490,36 @@ class CatalogTestCase(unittest.TestCase):
         cat = read_events(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
-    def test_latest_in_scope_object_returned(self):
+    def test_can_pickle(self):
         """
-        Test that the most recently defined object with the same resource_id,
-        that is still in scope, is returned from the get_referred_object
-        method
+        Ensure a catalog can be pickled and unpickled and that the results are
+        equal.
         """
-        cat1 = read_events()
-        # The resource_id attached to the first event is self-pointing
-        self.assertIs(cat1[0], cat1[0].resource_id.get_referred_object())
-        # make a copy and re-read catalog
-        cat2 = cat1.copy()
-        cat3 = read_events()
-        # the resource_id on the new catalogs point to their attached objects
-        self.assertIs(cat1[0], cat1[0].resource_id.get_referred_object())
-        self.assertIs(cat2[0], cat2[0].resource_id.get_referred_object())
-        self.assertIs(cat3[0], cat3[0].resource_id.get_referred_object())
-        # now delete cat1 and make sure cat2 and cat3 still work
-        del cat1
-        self.assertIs(cat2[0], cat2[0].resource_id.get_referred_object())
-        self.assertIs(cat3[0], cat3[0].resource_id.get_referred_object())
-        # create a resource_id with the same id as the last defined object
-        # with the same resource id (that is still in scope) is returned
-        new_id = cat2[0].resource_id.id
-        rid = ResourceIdentifier(new_id)
-        self.assertIs(rid.get_referred_object(), cat3[0])
-        del cat3
-        # raises UserWarning
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", UserWarning)
-            self.assertIs(rid.get_referred_object(), cat2[0])
-        del cat2
-        self.assertIs(rid.get_referred_object(), None)
+        cat = read_events()
+        cat_bytes = pickle.dumps(cat)
+        cat2 = pickle.loads(cat_bytes)
+        self.assertEqual(cat, cat2)
+
+    def test_issue_2173(self):
+        """
+        Ensure events with empty origins are equal after round-trip to disk.
+        See #2173.
+        """
+        # create event and save to disk
+        origin = Origin(time=UTCDateTime('2016-01-01'))
+        event1 = Event(origins=[origin])
+        bio = io.BytesIO()
+        event1.write(bio, 'quakeml')
+        # read from disk
+        event2 = read_events(bio)[0]
+        # saved and loaded event should be equal
+        self.assertEqual(event1, event2)
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+@unittest.skipIf(
+    BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+    'matplotlib 3.0.1 is not campatible with basemap')
 class CatalogBasemapTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.event.Catalog.plot with Basemap
@@ -529,12 +527,9 @@ class CatalogBasemapTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
     def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters, using Basemap.
@@ -593,6 +588,21 @@ class CatalogBasemapTestCase(unittest.TestCase):
                      resolution='l', continent_fill_color='0.3',
                      color='date', colormap='gist_heat')
 
+    def test_plot_catalog_before_1900(self):
+        """
+        Tests plotting events with origin times before 1900
+        """
+        cat = read_events()
+        cat[1].origins[0].time = UTCDateTime(813, 2, 4, 14, 13)
+
+        # just checking this runs without error is fine, no need to check
+        # content
+        with MatplotlibBackend("AGG", sloppy=True):
+            cat.plot(outfile=io.BytesIO(), method='basemap')
+            # also test with just a single event
+            cat.events = [cat[1]]
+            cat.plot(outfile=io.BytesIO(), method='basemap')
+
 
 @unittest.skipIf(not HAS_CARTOPY, 'Cartopy not installed or too old')
 class CatalogCartopyTestCase(unittest.TestCase):
@@ -602,11 +612,6 @@ class CatalogCartopyTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
     def test_catalog_plot_global(self):
         """
@@ -704,377 +709,13 @@ class WaveformStreamIDTestCase(unittest.TestCase):
             self.assertEqual(waveform_id.location_code, None)
             self.assertEqual(waveform_id.channel_code, None)
 
-
-class ResourceIdentifierTestCase(unittest.TestCase):
-    """
-    Test suite for obspy.core.event.ResourceIdentifier.
-    """
-    def setUp(self):
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
-
-    def test_same_resource_id_different_referred_object(self):
+    def test_id_property(self):
         """
-        Tests the handling of the case that different ResourceIdentifier
-        instances are created that have the same resource id but different
-        objects. The referred objects should still return the same objects
-        used in the ResourceIdentifier construction or set_referred_object
-        call. However, if an object is set to a resource_id that is not
-        equal to the last object set it should issue a warning.
+        Enure the `id` property of WaveformStreamID returns the same as
+        `get_seed_string`"
         """
-        warnings.simplefilter('default')
-        object_a = UTCDateTime(1000)
-        object_b = UTCDateTime(1000)
-        object_c = UTCDateTime(1001)
-        self.assertFalse(object_a is object_b)
-        id = 'obspy.org/tests/test_resource'
-        res_a = ResourceIdentifier(id=id, referred_object=object_a)
-        # Now create a new resource with the same id but a different object.
-        # This should not raise a warning as the object a and b are equal.
-        with warnings.catch_warnings(record=True) as w:
-            res_b = ResourceIdentifier(id=id, referred_object=object_b)
-            self.assertEqual(len(w), 0)
-        # if the set object is not equal to the last object set to the same
-        # resource_id, however, a warning should be issued.
-        with warnings.catch_warnings(record=True) as w:
-            res_c = ResourceIdentifier(id=id, referred_object=object_c)
-            self.assertEqual(len(w), 1)
-            expected_text = 'which is not equal to the last object bound'
-            self.assertIn(expected_text, str(w[0]))
-        # even though the resource_id are the same, the referred objects
-        # should point to the original (different) objects
-        self.assertIs(object_a, res_a.get_referred_object())
-        self.assertIs(object_b, res_b.get_referred_object())
-        self.assertIs(object_c, res_c.get_referred_object())
-
-    def test_objects_garbage_collection(self):
-        """
-        Test that the ResourceIdentifier class does not mess with the garbage
-        collection of the attached objects.
-        """
-        object_a = UTCDateTime()
-        ref_count = sys.getrefcount(object_a)
-        _res_id = ResourceIdentifier(referred_object=object_a)
-        self.assertEqual(sys.getrefcount(object_a), ref_count)
-        self.assertTrue(bool(_res_id))
-
-    def test_id_without_reference_not_in_global_list(self):
-        """
-        This tests some internal workings of the ResourceIdentifier class.
-        NEVER modify the __resource_id_weak_dict!
-
-        Only those ResourceIdentifiers that have a reference to an object that
-        is referred to somewhere else should stay in the dictionary.
-        """
-        r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        _r1 = ResourceIdentifier()  # NOQA
-        self.assertEqual(len(list(r_dict.keys())), 0)
-        # Adding a ResourceIdentifier with an object that does not have a
-        # reference will result in a dict that contains None, but that will
-        # get removed when the resource_id goes out of scope
-        _r2 = ResourceIdentifier(referred_object=UTCDateTime())  # NOQA
-        # raises UserWarning
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", UserWarning)
-            self.assertEqual(_r2.get_referred_object(), None)
-        del _r2  # delete rid to get its id out of r_dict keys
-        # Give it a reference and it will stick around.
-        obj = UTCDateTime()
-        _r3 = ResourceIdentifier(referred_object=obj)  # NOQA
-        self.assertEqual(len(list(r_dict.keys())), 1)
-
-    def test_adding_a_referred_object_after_creation(self):
-        """
-        Check that the referred objects can also be made available after the
-        ResourceIdentifier instances have been created.
-        """
-        obj = UTCDateTime()
-        res_id = "obspy.org/time/test"
-        ref_a = ResourceIdentifier(res_id)
-        ref_b = ResourceIdentifier(res_id)
-        ref_c = ResourceIdentifier(res_id)
-        # All three will have no resource attached.
-        self.assertEqual(ref_a.get_referred_object(), None)
-        self.assertEqual(ref_b.get_referred_object(), None)
-        self.assertEqual(ref_c.get_referred_object(), None)
-        # Setting the object for one will make it available to all other
-        # instances, provided they weren't bound to specific objects.
-        ref_b.set_referred_object(obj)
-        self.assertIs(ref_a.get_referred_object(), obj)
-        self.assertIs(ref_b.get_referred_object(), obj)
-        self.assertIs(ref_c.get_referred_object(), obj)
-
-    def test_getting_gc_no_shared_resource_id(self):
-        """
-        Test that calling get_referred_object on a resource id whose object
-        has been garbage collected, and whose resource_id is unique,
-        returns None
-        """
-        obj1 = UTCDateTime()
-        rid1 = ResourceIdentifier(referred_object=obj1)
-        # delete obj1, make sure rid1 return None
-        del obj1
-        # raises UserWarning
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", UserWarning)
-            self.assertIs(rid1.get_referred_object(), None)
-
-    def test_getting_gc_with_shared_resource_id(self):
-        """
-        Test that calling get_referred_object on a resource id whose object
-        has been garbage collected, but that has another object that shares
-        the same resource_id, returns the other object with the same resource
-        id and issues a warning
-        """
-        uri = 'testuri'
-        obj1 = UTCDateTime(1000)
-        obj2 = UTCDateTime(1000)
-        rid1 = ResourceIdentifier(uri, referred_object=obj1)
-        rid2 = ResourceIdentifier(uri, referred_object=obj2)
-        self.assertFalse(rid1.get_referred_object() is
-                         rid2.get_referred_object())
-        self.assertNotEqual(rid1._object_id, rid2._object_id)
-        del obj1
-        warnings.simplefilter('default')
-        with warnings.catch_warnings(record=True) as w:
-            rid1.get_referred_object()
-            self.assertEqual(len(w), 1)
-            self.assertIn('The object with identity', str(w[0]))
-        # now both rids should return the same object
-        self.assertIs(rid1.get_referred_object(), rid2.get_referred_object())
-        # the object id should now be bound to obj2
-        self.assertEqual(rid1._object_id, rid2._object_id)
-
-    def test_resources_in_global_dict_get_garbage_collected(self):
-        """
-        Tests that the ResourceIdentifiers in the class level resource dict get
-        deleted if they have no other reference and the object they refer to
-        goes out of scope.
-        """
-        obj_a = UTCDateTime()
-        obj_b = UTCDateTime()
-        res1 = ResourceIdentifier(referred_object=obj_a)
-        res2 = ResourceIdentifier(referred_object=obj_b)
-        # Now two keys should be in the global dict.
-        rdict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        self.assertEqual(len(list(rdict.keys())), 2)
-        del obj_a, obj_b
-        # raises UserWarnings
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", UserWarning)
-            self.assertIs(res1.get_referred_object(), None)
-            self.assertIs(res2.get_referred_object(), None)
-
-    def test_quakeml_regex(self):
-        """
-        Tests that regex used to check for QuakeML validatity actually works.
-        """
-        # This one contains all valid characters. It should pass the
-        # validation.
-        res_id = (
-            "smi:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            "1234567890-.*()_~'/abcdefghijklmnopqrstuvwxyzABCDEFGHIKLMNOPQR"
-            "STUVWXYZ0123456789-.*()_~'+?=,;&")
-        res = ResourceIdentifier(res_id)
-        self.assertEqual(res_id, res.get_quakeml_uri())
-        # The id has to valid from start to end. Due to the spaces this cannot
-        # automatically be converted to a correct one.
-        res_id = ("something_before smi:local/something  something_after")
-        res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.get_quakeml_uri)
-        # A colon is an invalid character.
-        res_id = ("smi:local/hello:yea")
-        res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.get_quakeml_uri)
-        # Space as well
-        res_id = ("smi:local/hello yea")
-        res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.get_quakeml_uri)
-        # Dots are fine
-        res_id = ("smi:local/hello....yea")
-        res = ResourceIdentifier(res_id)
-        self.assertEqual(res_id, res.get_quakeml_uri())
-        # Hats not
-        res_id = ("smi:local/hello^^yea")
-        res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.get_quakeml_uri)
-
-    def test_resource_id_valid_quakemluri(self):
-        """
-        Test that a resource identifier per default (i.e. no arguments to
-        __init__()) gets set up with a QUAKEML conform ID.
-        """
-        rid = ResourceIdentifier()
-        self.assertEqual(rid.id, rid.get_quakeml_uri())
-
-    def test_resource_id_tracking(self):
-        """
-        The class keeps track of all instances.
-        """
-        # Create a couple of lightweight objects for testing purposes.
-        t1 = UTCDateTime(2013, 1, 1)
-        t2 = UTCDateTime(2013, 1, 2)
-        t3 = UTCDateTime(2013, 1, 3)
-
-        # First assert, that all ResourceIds are tracked correctly.
-        r1 = ResourceIdentifier("a", referred_object=t1)
-        r2 = ResourceIdentifier("b", referred_object=t2)
-        r3 = ResourceIdentifier("c", referred_object=t3)
-
-        self.assertEqual(
-            ResourceIdentifier._ResourceIdentifier__resource_id_tracker,
-            {"a": 1, "b": 1, "c": 1})
-
-        # Create a new instance, similar to the first one.
-        r4 = ResourceIdentifier("a", referred_object=t1)
-        self.assertEqual(
-            ResourceIdentifier._ResourceIdentifier__resource_id_tracker,
-            {"a": 2, "b": 1, "c": 1})
-
-        # Now delete r2 and r4. They should not be tracked anymore.
-        del r2
-        del r4
-        self.assertEqual(
-            ResourceIdentifier._ResourceIdentifier__resource_id_tracker,
-            {"a": 1, "c": 1})
-
-        # Delete the two others. Nothing should be tracked any more.
-        del r1
-        del r3
-        self.assertEqual(
-            ResourceIdentifier._ResourceIdentifier__resource_id_tracker, {})
-
-    def test_automatic_dereferring_if_resource_id_goes_out_of_scope(self):
-        """
-        Tests that objects that have no more referrer are no longer stored in
-        the reference dictionary.
-        """
-        t1 = UTCDateTime(2010, 1, 1)  # test object
-        r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        rid = 'a'  # test resource id
-
-        # Create object and assert the reference has been created.
-        r1 = ResourceIdentifier(rid, referred_object=t1)
-        self.assertEqual(r1.get_referred_object(), t1)
-        self.assertTrue(rid in r_dict)
-        # Deleting the object should remove the reference.
-        del r1
-        self.assertFalse(rid in r_dict)
-        # Now create two equal references.
-        r1 = ResourceIdentifier(rid, referred_object=t1)
-        r2 = ResourceIdentifier(rid, referred_object=t1)
-        self.assertEqual(r1.get_referred_object(), t1)
-        # Deleting one should not remove the reference.
-        del r1
-        self.assertEqual(r2.get_referred_object(), t1)
-        self.assertTrue(rid in r_dict)
-        # Deleting the second one should
-        del r2
-        self.assertFalse(rid in r_dict)
-
-    def test_initialize_with_resource_identifier(self):
-        """
-        Test initializing an ResourceIdentifier with an ResourceIdentifier.
-        """
-        rid = ResourceIdentifier()
-        rid2 = ResourceIdentifier(str(rid))
-        rid3 = ResourceIdentifier(rid)
-        self.assertEqual(rid, rid2)
-        self.assertEqual(rid, rid3)
-
-    def test_error_message_for_failing_quakeml_id_conversion(self):
-        """
-        Converting an id to a QuakeML compatible id might fail. Test the
-        error message.
-        """
-        invalid_id = "http://example.org"
-        rid = ResourceIdentifier(invalid_id)
-        with self.assertRaises(ValueError) as e:
-            rid.get_quakeml_uri()
-        self.assertEqual(
-            e.exception.args[0],
-            "The id 'http://example.org' is not a valid QuakeML resource "
-            "identifier. ObsPy tried modifying it to "
-            "'smi:local/http://example.org' but it is still not valid. Please "
-            "make sure all resource ids are either valid or can be made valid "
-            "by prefixing them with 'smi:<authority_id>/'. Valid ids are "
-            "specified in the QuakeML manual section 3.1 and in particular "
-            "exclude colons for the final part.")
-
-
-class ResourceIDEventScopeTestCase(unittest.TestCase):
-    """
-    Test suit for ensuring event scoping of objects bound to
-    ResourceIdentifier instances
-    """
-
-    def make_test_catalog(self):
-        """
-        Make a test catalog with fixed resource IDs some of which reference
-        other objects belonging to the event (eg arrivals -> picks)
-        """
-        pick_rid = ResourceIdentifier(id='obspy.org/tests/test_pick')
-        origin_rid = ResourceIdentifier(id='obspy.org/tests/test_origin')
-        arrival_rid = ResourceIdentifier(id='obspy.org/tests/test_arrival')
-        ar_pick_rid = ResourceIdentifier(id='obspy.org/tests/test_pick')
-        catatlog_rid = ResourceIdentifier(id='obspy.org/tests/test_catalog')
-
-        picks = [Pick(time=UTCDateTime(), resource_id=pick_rid)]
-        arrivals = [Arrival(resource_id=arrival_rid, pick_id=ar_pick_rid)]
-        origins = [Origin(arrivals=arrivals, resource_id=origin_rid)]
-        events = [Event(picks=picks, origins=origins)]
-        events[0].preferred_origin_id = str(origin_rid.id)
-        catalog = Catalog(events=events, resource_id=catatlog_rid)
-        # next bind all unbound resource_ids to the current event scope
-        catalog.resource_id.bind_resource_ids()
-        return catalog
-
-    def setUp(self):
-        # Clear the Resource Identifier dict for the tests. NEVER do this
-        # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
-        # Also clear the tracker.
-        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
-        # set the test catalog as an attr for test access
-        self.catalog = self.make_test_catalog()
-        # save the catalog to a temp file for testing reading in the catalog
-        self.catalog_path = tempfile.mkstemp()[1]
-        self.catalog.write(self.catalog_path, 'quakeml')
-        # create a list of equal catalogs/events created with read and copy
-        self.event_list = [
-            self.catalog[0],
-            read_events(self.catalog_path)[0],
-            read_events(self.catalog_path)[0],
-            self.catalog.copy()[0],
-            self.catalog.copy()[0],
-        ]
-
-    def test_preferred_origins(self):
-        """
-        test that the objects bound to the preferred origins are event scoped
-        """
-        for ev in self.event_list:
-            self.assertIs(ev.preferred_origin(), ev.origins[0])
-
-    def test_arrivals_refer_to_picks_in_same_event(self):
-        """
-        ensure the pick_ids of the arrivals refer to the pick belonging
-        to the same event
-        """
-        for ev in self.event_list:
-            pick_id = ev.picks[0].resource_id
-            arrival_pick_id = ev.origins[0].arrivals[0].pick_id
-            self.assertEqual(pick_id, arrival_pick_id)
-            pick = ev.picks[0]
-            arrival_pick = arrival_pick_id.get_referred_object()
-            self.assertIs(pick, arrival_pick)
-
-    def tearDown(self):
-        # remove the temp file
-        os.remove(self.catalog_path)
+        waveform_id = WaveformStreamID(seed_string="BW.FUR.01.EHZ")
+        self.assertEqual(waveform_id.id, waveform_id.get_seed_string())
 
 
 class BaseTestCase(unittest.TestCase):
@@ -1095,6 +736,19 @@ class BaseTestCase(unittest.TestCase):
             # setting a typoed or custom field should warn!
             err.confidence_levle = 80
             self.assertEqual(len(w), 1)
+
+    def test_quantity_error_equality(self):
+        """
+        Comparisons between empty quantity errors and None should return True.
+        Non-empty quantity errors should return False.
+        """
+        err1 = QuantityError()
+        self.assertEqual(err1, None)
+        err2 = QuantityError(uncertainty=10)
+        self.assertNotEqual(err2, None)
+        self.assertNotEqual(err2, err1)
+        err3 = QuantityError(uncertainty=10)
+        self.assertEqual(err3, err2)
 
     def test_event_type_objects_warn_on_non_default_key(self):
         """
@@ -1134,22 +788,6 @@ class BaseTestCase(unittest.TestCase):
             "On Origin object: Value '-inf' for 'latitude' is "
             "not a finite floating point value.")
 
-    def test_resource_ids_refer_to_newest_object(self):
-        """
-        Tests that resource ids which are assigned multiple times but point to
-        identical objects always point to the newest object. This prevents some
-        odd behaviour.
-        """
-        t1 = UTCDateTime(2010, 1, 1)
-        t2 = UTCDateTime(2010, 1, 1)
-
-        rid = ResourceIdentifier("a", referred_object=t1)  # @UnusedVariable
-        rid = ResourceIdentifier("a", referred_object=t2)
-
-        del t1
-
-        self.assertEqual(rid.get_referred_object(), t2)
-
 
 def suite():
     suite = unittest.TestSuite()
@@ -1159,7 +797,6 @@ def suite():
     suite.addTest(unittest.makeSuite(EventTestCase, 'test'))
     suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
     suite.addTest(unittest.makeSuite(WaveformStreamIDTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(ResourceIdentifierTestCase, 'test'))
     suite.addTest(unittest.makeSuite(BaseTestCase, 'test'))
     return suite
 

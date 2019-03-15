@@ -14,17 +14,21 @@ import unittest
 import warnings
 
 from obspy import read_events, Catalog, UTCDateTime, read
-from obspy.core.event import Pick, WaveformStreamID, Arrival, Amplitude
-from obspy.core.event import Event, Origin, Magnitude, OriginQuality
-from obspy.core.event import EventDescription, CreationInfo
+from obspy.core.event import (
+    Pick, WaveformStreamID, Arrival, Amplitude, Event, Origin, Magnitude,
+    OriginQuality, EventDescription, CreationInfo, OriginUncertainty,
+    ConfidenceEllipsoid, QuantityError, FocalMechanism, MomentTensor,
+    NodalPlane, NodalPlanes, ResourceIdentifier, Tensor)
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import TemporaryWorkingDirectory
-from obspy.io.nordic.core import _is_sfile, read_spectral_info, read_nordic
-from obspy.io.nordic.core import readwavename, blanksfile, _write_nordic
-from obspy.io.nordic.core import nordpick, readheader
-from obspy.io.nordic.core import _int_conv, _readheader, _evmagtonor
-from obspy.io.nordic.core import write_select, NordicParsingError
-from obspy.io.nordic.core import _float_conv, _nortoevmag, _str_conv
+
+from obspy.io.nordic import NordicParsingError
+from obspy.io.nordic.core import (
+    _is_sfile, read_spectral_info, read_nordic, readwavename, blanksfile,
+    _write_nordic, nordpick, readheader, _readheader,  write_select)
+from obspy.io.nordic.utils import (
+    _int_conv, _float_conv, _str_conv, _nortoevmag, _evmagtonor,
+    _get_line_tags)
 
 
 class TestNordicMethods(unittest.TestCase):
@@ -42,6 +46,9 @@ class TestNordicMethods(unittest.TestCase):
         """
         # Set-up a test event
         test_event = full_test_event()
+        # Sort the magnitudes - they are sorted on writing and we need to check
+        # like-for-like
+        test_event.magnitudes.sort(key=lambda obj: obj['mag'], reverse=True)
         # Add the event to a catalogue which can be used for QuakeML testing
         test_cat = Catalog()
         test_cat += test_event
@@ -105,6 +112,10 @@ class TestNordicMethods(unittest.TestCase):
                          test_ev.amplitudes[0].period)
         self.assertEqual(read_ev.amplitudes[0].snr,
                          test_ev.amplitudes[0].snr)
+        self.assertEqual(read_ev.amplitudes[2].period,
+                         test_ev.amplitudes[2].period)
+        self.assertEqual(read_ev.amplitudes[2].snr,
+                         test_ev.amplitudes[2].snr)
         # Check coda magnitude pick
         # Resource ids get overwritten because you can't have two the same in
         # memory
@@ -274,6 +285,7 @@ class TestNordicMethods(unittest.TestCase):
             warnings.simplefilter('ignore', UserWarning)
             test_event = read_nordic(testing_path)[0]
             header_event = read_nordic(not_extra_header)[0]
+        self.assertEqual(len(header_event.origins), 2)
         self.assertEqual(test_event.origins[0].time,
                          header_event.origins[0].time)
         self.assertEqual(test_event.origins[0].latitude,
@@ -284,20 +296,27 @@ class TestNordicMethods(unittest.TestCase):
                          header_event.origins[0].depth)
 
     def test_header_mapping(self):
-        head_1 = readheader(os.path.join(self.testing_path,
-                                         '01-0411-15L.S201309'))
+        # Raise "UserWarning: Lines of type I..."
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            head_1 = readheader(os.path.join(self.testing_path,
+                                             '01-0411-15L.S201309'))
         with open(os.path.join(self.testing_path,
                                '01-0411-15L.S201309'), 'r') as f:
             # raises "UserWarning: AIN in header, currently unsupported"
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
-                head_2 = _readheader(f=f)
+                tagged_lines = _get_line_tags(f=f)
+                head_2 = _readheader(head_lines=tagged_lines['1'])
         _assert_similarity(head_1, head_2)
 
     def test_missing_header(self):
         # Check that a suitable error is raised
         with self.assertRaises(NordicParsingError):
-            readheader(os.path.join(self.testing_path, 'Sfile_no_header'))
+            # Raises AIN warning
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                readheader(os.path.join(self.testing_path, 'Sfile_no_header'))
 
     def test_reading_string_io(self):
         filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
@@ -356,13 +375,9 @@ class TestNordicMethods(unittest.TestCase):
         """
         Check that we convert magnitudes as we should!
         """
-        magnitude_map = [('L', 'ML'),
-                         ('B', 'mB'),
-                         ('S', 'Ms'),
-                         ('W', 'MW'),
-                         ('G', 'MbLg'),
-                         ('C', 'Mc'),
-                         ]
+        magnitude_map = [
+            ('L', 'ML'), ('B', 'mB'), ('S', 'MS'), ('W', 'MW'), ('G', 'MbLg'),
+            ('C', 'Mc'), ('s', 'Ms')]
         for magnitude in magnitude_map:
             self.assertEqual(magnitude[0], _evmagtonor(magnitude[1]))
             self.assertEqual(_nortoevmag(magnitude[0]), magnitude[1])
@@ -385,6 +400,25 @@ class TestNordicMethods(unittest.TestCase):
         testing_path = os.path.join(self.testing_path, '01-0411-15L.S201309')
         wavefiles = readwavename(testing_path)
         self.assertEqual(len(wavefiles), 1)
+        # Test that full paths are handled
+        test_event = full_test_event()
+        # Add the event to a catalogue which can be used for QuakeML testing
+        test_cat = Catalog()
+        test_cat += test_event
+        # Check the read-write s-file functionality
+        with TemporaryWorkingDirectory():
+            sfile = _write_nordic(
+                test_cat[0], filename=None, userid='TEST', evtype='L',
+                outdir='.', wavefiles=['walrus/test'], explosion=True,
+                overwrite=True)
+            self.assertEqual(readwavename(sfile), ['test'])
+        # Check that multiple wavefiles are read properly
+        with TemporaryWorkingDirectory():
+            sfile = _write_nordic(
+                test_cat[0], filename=None, userid='TEST', evtype='L',
+                outdir='.', wavefiles=['walrus/test', 'albert'],
+                explosion=True, overwrite=True)
+            self.assertEqual(readwavename(sfile), ['test', 'albert'])
 
     def test_read_event(self):
         """
@@ -395,7 +429,30 @@ class TestNordicMethods(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
             event = read_nordic(testing_path)[0]
-        self.assertEqual(len(event.origins), 1)
+        self.assertEqual(len(event.origins), 2)
+        self.assertEqual(len(event.picks), 17)
+
+    def test_read_latin1(self):
+        """
+        Check that we can read dos formatted, latin1 encoded files.
+        """
+        with warnings.catch_warnings():
+            # Lots of unsupported line warnings
+            warnings.simplefilter('ignore', UserWarning)
+            dos_file = os.path.join(self.testing_path, 'dos-file.sfile')
+            self.assertTrue(_is_sfile(dos_file))
+            event = readheader(dos_file)
+            self.assertEqual(event.origins[0].latitude, 60.328)
+            cat = read_events(dos_file)
+            self.assertEqual(cat[0].origins[0].latitude, 60.328)
+            wavefiles = readwavename(dos_file)
+            self.assertEqual(wavefiles[0], "90121311.0851W41")
+            spectral_info = read_spectral_info(dos_file)
+            self.assertEqual(len(spectral_info.keys()), 10)
+            self.assertEqual(spectral_info[('AVERAGE', '')]['stress_drop'],
+                             27.7)
+            with self.assertRaises(UnicodeDecodeError):
+                readheader(dos_file, 'ASCII')
 
     def test_read_many_events(self):
         testing_path = os.path.join(self.testing_path, 'select.out')
@@ -412,9 +469,13 @@ class TestNordicMethods(unittest.TestCase):
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 write_select(cat, filename=tf.name)
-            cat_back = read_events(tf.name)
-            for event_1, event_2 in zip(cat, cat_back):
-                _assert_similarity(event_1=event_1, event_2=event_2)
+            self.assertTrue(_is_sfile(tf.name))
+            with warnings.catch_warnings():
+                # Type I warning
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        for event_1, event_2 in zip(cat, cat_back):
+            _assert_similarity(event_1=event_1, event_2=event_2)
 
     def test_write_plugin(self):
         cat = read_events()
@@ -430,6 +491,26 @@ class TestNordicMethods(unittest.TestCase):
                 cat_back = read_events(tf.name)
             for event_1, event_2 in zip(cat, cat_back):
                 _assert_similarity(event_1=event_1, event_2=event_2)
+
+    def test_more_than_three_mags(self):
+        cat = Catalog()
+        cat += full_test_event()
+        cat[0].magnitudes.append(Magnitude(
+            mag=0.9, magnitude_type='MS', creation_info=CreationInfo('TES'),
+            origin_id=cat[0].origins[0].resource_id))
+        with NamedTemporaryFile(suffix='.out') as tf:
+            # raises UserWarning: mb is not convertible
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat.write(tf.name, format='nordic')
+            # raises "UserWarning: AIN in header, currently unsupported"
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+            for event_1, event_2 in zip(cat, cat_back):
+                self.assertTrue(
+                    len(event_1.magnitudes) == len(event_2.magnitudes))
+                _assert_similarity(event_1, event_2)
 
     def test_inaccurate_picks(self):
         testing_path = os.path.join(self.testing_path, 'bad_picks.sfile')
@@ -469,7 +550,10 @@ class TestNordicMethods(unittest.TestCase):
         Test reading the info from spectral analysis.
         """
         testing_path = os.path.join(self.testing_path, 'automag.out')
-        spec_inf = read_spectral_info(testing_path)
+        with warnings.catch_warnings():
+            # Userwarning, type I
+            warnings.simplefilter('ignore', UserWarning)
+            spec_inf = read_spectral_info(testing_path)
         self.assertEqual(len(spec_inf), 5)
         # This should actually test that what we are reading in is correct.
         average = spec_inf[('AVERAGE', '')]
@@ -492,11 +576,10 @@ class TestNordicMethods(unittest.TestCase):
                   'Sfile_no_location']
         for sfile in sfiles:
             self.assertTrue(_is_sfile(os.path.join(self.testing_path, sfile)))
-        self.assertFalse(_is_sfile(os.path.join(self.testing_path,
-                                                'Sfile_no_header')))
-        self.assertFalse(_is_sfile(os.path.join(self.path, '..', '..',
-                                                'nlloc', 'tests', 'data',
-                                                'nlloc.hyp')))
+        self.assertFalse(
+            _is_sfile(os.path.join(self.testing_path, 'Sfile_no_header')))
+        self.assertFalse(_is_sfile(os.path.join(
+            self.path, '..', '..', 'nlloc', 'tests', 'data', 'nlloc.hyp')))
 
     def test_read_picks_across_day_end(self):
         testing_path = os.path.join(self.testing_path, 'sfile_over_day')
@@ -545,6 +628,172 @@ class TestNordicMethods(unittest.TestCase):
         self.assertEqual(
             int([p for p in pick_strings if p.split()[0] == 'WZ11' and
                  p.split()[1] == 'HZ'][0].split()[-1]), 30)
+
+    def test_large_negative_longitude(self):
+        event = full_test_event()
+        event.origins[0].longitude = -120
+        with NamedTemporaryFile(suffix=".out") as tf:
+            event.write(tf.name, format="NORDIC")
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                event_back = read_events(tf.name)
+        _assert_similarity(event, event_back[0])
+
+    def test_write_preferred_origin(self):
+        event = full_test_event()
+        preferred_origin = Origin(
+            time=UTCDateTime("2012-03-26") + 2.2, latitude=47.0,
+            longitude=35.0, depth=18000)
+        event.origins.append(preferred_origin)
+        event.preferred_origin_id = preferred_origin.resource_id
+        with NamedTemporaryFile(suffix=".out") as tf:
+            event.write(tf.name, format="NORDIC")
+            with warnings.catch_warnings():
+                # Type I warning
+                warnings.simplefilter('ignore', UserWarning)
+                event_back = read_events(tf.name)
+        self.assertEqual(preferred_origin.latitude,
+                         event_back[0].origins[0].latitude)
+        self.assertEqual(preferred_origin.longitude,
+                         event_back[0].origins[0].longitude)
+        self.assertEqual(preferred_origin.depth,
+                         event_back[0].origins[0].depth)
+        self.assertEqual(preferred_origin.time,
+                         event_back[0].origins[0].time)
+
+    def test_read_high_precision_pick(self):
+        """
+        Nordic supports writing to milliseconds in high-precision mode,
+        obspy < 1.2.0 did not properly read this, see #2348.
+        """
+        # raises "UserWarning: AIN in header, currently unsupported"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_high_precision_picks"))
+        event = cat[0]
+        pick_times = {
+            "LSd1": UTCDateTime(2010, 11, 26, 1, 28, 46.859),
+            "LSd3": UTCDateTime(2010, 11, 26, 1, 28, 48.132),
+            "LSd2": UTCDateTime(2010, 11, 26, 1, 28, 48.183),
+            "LSd4": UTCDateTime(2010, 11, 26, 1, 28, 49.744)}
+        for key, value in pick_times.items():
+            pick = [p for p in event.picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
+
+    def test_high_precision_read_write(self):
+        """ Test that high-precision writing works. """
+        # raises "UserWarning: AIN in header, currently unsupported"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_high_precision_picks"))
+        event = cat[0]
+        pick_times = {
+            "LSd1": UTCDateTime(2010, 11, 26, 1, 28, 46.859),
+            "LSd3": UTCDateTime(2010, 11, 26, 1, 28, 48.132),
+            "LSd2": UTCDateTime(2010, 11, 26, 1, 28, 48.183),
+            "LSd4": UTCDateTime(2010, 11, 26, 1, 28, 49.744)}
+        for key, value in pick_times.items():
+            pick = [p for p in event.picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
+        with NamedTemporaryFile(suffix=".out") as tf:
+            write_select(cat, filename=tf.name)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        self.assertEqual(len(cat_back), 1)
+        for key, value in pick_times.items():
+            pick = [p for p in cat_back[0].picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
+        # Check that writing to standard accuracy just gives a rounded version
+        with NamedTemporaryFile(suffix=".out") as tf:
+            cat.write(format="NORDIC", filename=tf.name, high_accuracy=False)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        self.assertEqual(len(cat_back), 1)
+        for key, value in pick_times.items():
+            pick = [p for p in cat_back[0].picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            rounded_pick_time = UTCDateTime(
+                value.year, value.month, value.day, value.hour, value.minute)
+            rounded_pick_time += round(
+                value.second + (value.microsecond / 1e6), 2)
+            self.assertEqual(pick[0].time, rounded_pick_time)
+
+    def test_long_phase_name(self):
+        """ Nordic format supports 8 char phase names, sometimes. """
+        # raises "UserWarning: AIN in header, currently unsupported"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_long_phase"))
+        # This file has one event with one pick
+        pick = cat[0].picks[0]
+        arrival = cat[0].origins[0].arrivals[0]
+        self.assertEqual(pick.phase_hint, "PKiKP")
+        self.assertEqual(arrival.time_weight, 1)
+        with NamedTemporaryFile(suffix=".out") as tf:
+            write_select(cat, filename=tf.name)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        pick = cat_back[0].picks[0]
+        arrival = cat_back[0].origins[0].arrivals[0]
+        self.assertEqual(pick.phase_hint, "PKiKP")
+        self.assertEqual(arrival.time_weight, 1)
+
+    def test_read_write_over_day(self):
+        """
+        Nordic picks are relative to origin time - check that this works
+        over day boundaries.
+        """
+        event = full_test_event()
+        event.origins[0].time -= 3600
+        self.assertGreater(
+            event.picks[0].time.date, event.origins[0].time.date)
+        with NamedTemporaryFile(suffix=".out") as tf:
+            write_select(Catalog([event]), filename=tf.name)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                event_back = read_events(tf.name)[0]
+        _assert_similarity(event, event_back)
+
+    def test_seconds_overflow(self):
+        """
+        #2348 indicates that SEISAN sometimes overflows seconds into column 29.
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_seconds_overflow"))
+        event = cat[0]
+        pick_times = {
+            "LSb2": UTCDateTime(2009, 7, 2, 6, 49) + 100.24}
+        for key, value in pick_times.items():
+            pick = [p for p in event.picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
+        with NamedTemporaryFile(suffix=".out") as tf:
+            write_select(cat, filename=tf.name)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        self.assertEqual(len(cat_back), 1)
+        for key, value in pick_times.items():
+            pick = [p for p in cat_back[0].picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
 
 
 def _assert_similarity(event_1, event_2, verbose=False):
@@ -600,11 +849,11 @@ def _test_similarity(event_1, event_2, verbose=False):
                                 return False
                     if arr_1["distance"] and round(
                             arr_1["distance"]) != round(arr_2["distance"]):
-                            if verbose:
-                                print('%s does not match %s for key %s' %
-                                      (arr_1[arr_key], arr_2[arr_key],
-                                       arr_key))
-                            return False
+                        if verbose:
+                            print('%s does not match %s for key %s' %
+                                  (arr_1[arr_key], arr_2[arr_key],
+                                   arr_key))
+                        return False
     # Check picks
     if len(event_1.picks) != len(event_2.picks):
         if verbose:
@@ -641,11 +890,14 @@ def _test_similarity(event_1, event_2, verbose=False):
     for amp_1, amp_2 in zip(event_1.amplitudes, event_2.amplitudes):
         # Assuming same ordering of amplitudes
         for key in amp_1.keys():
-            if key not in ["resource_id", "pick_id", "waveform_id", "snr"]:
+            if key not in ["resource_id", "pick_id", "waveform_id", "snr",
+                           "magnitude_hint", 'type']:
                 if not amp_1[key] == amp_2[key]:
                     if verbose:
                         print('%s is not the same as %s for key %s' %
                               (amp_1[key], amp_2[key], key))
+                        print(amp_1)
+                        print(amp_2)
                     return False
             elif key == "waveform_id":
                 if pick_1[key].station_code != pick_2[key].station_code:
@@ -661,6 +913,15 @@ def _test_similarity(event_1, event_2, verbose=False):
                     if verbose:
                         print('Channel codes do not match')
                     return False
+            elif key in ["magnitude_hint", "type"]:
+                # Reading back in will define both, but input event might have
+                # None
+                if amp_1[key] is not None:
+                    if not amp_1[key] == amp_2[key]:
+                        if verbose:
+                            print('%s is not the same as %s for key %s' %
+                                  (amp_1[key], amp_2[key], key))
+                        return False
     return True
 
 
@@ -669,82 +930,107 @@ def full_test_event():
     Function to generate a basic, full test event
     """
     test_event = Event()
-    test_event.origins.append(Origin())
-    test_event.origins[0].time = UTCDateTime("2012-03-26") + 1.2
+    test_event.origins.append(Origin(
+        time=UTCDateTime("2012-03-26") + 1.2, latitude=45.0, longitude=25.0,
+        depth=15000))
     test_event.event_descriptions.append(EventDescription())
     test_event.event_descriptions[0].text = 'LE'
-    test_event.origins[0].latitude = 45.0
-    test_event.origins[0].longitude = 25.0
-    test_event.origins[0].depth = 15000
     test_event.creation_info = CreationInfo(agency_id='TES')
-    test_event.origins[0].quality = OriginQuality(standard_error=0.01)
-    test_event.magnitudes.append(Magnitude())
-    test_event.magnitudes[0].mag = 0.1
-    test_event.magnitudes[0].magnitude_type = 'ML'
-    test_event.magnitudes[0].creation_info = CreationInfo('TES')
-    test_event.magnitudes[0].origin_id = test_event.origins[0].resource_id
-    test_event.magnitudes.append(Magnitude())
-    test_event.magnitudes[1].mag = 0.5
-    test_event.magnitudes[1].magnitude_type = 'Mc'
-    test_event.magnitudes[1].creation_info = CreationInfo('TES')
-    test_event.magnitudes[1].origin_id = test_event.origins[0].resource_id
-    test_event.magnitudes.append(Magnitude())
-    test_event.magnitudes[2].mag = 1.3
-    test_event.magnitudes[2].magnitude_type = 'Ms'
-    test_event.magnitudes[2].creation_info = CreationInfo('TES')
-    test_event.magnitudes[2].origin_id = test_event.origins[0].resource_id
+    test_event.magnitudes.append(Magnitude(
+        mag=0.1, magnitude_type='ML', creation_info=CreationInfo('TES'),
+        origin_id=test_event.origins[0].resource_id))
+    test_event.magnitudes.append(Magnitude(
+        mag=0.5, magnitude_type='Mc', creation_info=CreationInfo('TES'),
+        origin_id=test_event.origins[0].resource_id))
+    test_event.magnitudes.append(Magnitude(
+        mag=1.3, magnitude_type='Ms', creation_info=CreationInfo('TES'),
+        origin_id=test_event.origins[0].resource_id))
 
     # Define the test pick
     _waveform_id_1 = WaveformStreamID(station_code='FOZ', channel_code='SHZ',
                                       network_code='NZ')
     _waveform_id_2 = WaveformStreamID(station_code='WTSZ', channel_code='BH1',
                                       network_code=' ')
-    # Pick to associate with amplitude
-    test_event.picks.append(
+    # Pick to associate with amplitude - 0
+    test_event.picks = [
         Pick(waveform_id=_waveform_id_1, phase_hint='IAML',
              polarity='undecidable', time=UTCDateTime("2012-03-26") + 1.68,
-             evaluation_mode="manual"))
-    # Need a second pick for coda
-    test_event.picks.append(
+             evaluation_mode="manual"),
         Pick(waveform_id=_waveform_id_1, onset='impulsive', phase_hint='PN',
              polarity='positive', time=UTCDateTime("2012-03-26") + 1.68,
-             evaluation_mode="manual"))
-    # Unassociated pick
-    test_event.picks.append(
+             evaluation_mode="manual"),
+        Pick(waveform_id=_waveform_id_1, phase_hint='IAML',
+             polarity='undecidable', time=UTCDateTime("2012-03-26") + 1.68,
+             evaluation_mode="manual"),
         Pick(waveform_id=_waveform_id_2, onset='impulsive', phase_hint='SG',
              polarity='undecidable', time=UTCDateTime("2012-03-26") + 1.72,
-             evaluation_mode="manual"))
-    # Unassociated pick
-    test_event.picks.append(
+             evaluation_mode="manual"),
         Pick(waveform_id=_waveform_id_2, onset='impulsive', phase_hint='PN',
              polarity='undecidable', time=UTCDateTime("2012-03-26") + 1.62,
-             evaluation_mode="automatic"))
+             evaluation_mode="automatic")]
     # Test a generic local magnitude amplitude pick
-    test_event.amplitudes.append(
+    test_event.amplitudes = [
         Amplitude(generic_amplitude=2.0, period=0.4,
                   pick_id=test_event.picks[0].resource_id,
                   waveform_id=test_event.picks[0].waveform_id, unit='m',
-                  magnitude_hint='ML', category='point', type='AML'))
-    # Test a coda magnitude pick
-    test_event.amplitudes.append(
+                  magnitude_hint='ML', category='point', type='AML'),
         Amplitude(generic_amplitude=10,
                   pick_id=test_event.picks[1].resource_id,
                   waveform_id=test_event.picks[1].waveform_id, type='END',
                   category='duration', unit='s', magnitude_hint='Mc',
-                  snr=2.3))
-    test_event.origins[0].arrivals.append(
+                  snr=2.3),
+        Amplitude(generic_amplitude=5.0, period=0.6,
+                  pick_id=test_event.picks[2].resource_id,
+                  waveform_id=test_event.picks[0].waveform_id, unit='m',
+                  category='point', type='AML')]
+    test_event.origins[0].arrivals = [
         Arrival(time_weight=0, phase=test_event.picks[1].phase_hint,
-                pick_id=test_event.picks[1].resource_id))
-    test_event.origins[0].arrivals.append(
-        Arrival(time_weight=2, phase=test_event.picks[2].phase_hint,
-                pick_id=test_event.picks[2].resource_id,
-                backazimuth_residual=5, time_residual=0.2, distance=15,
-                azimuth=25))
-    test_event.origins[0].arrivals.append(
+                pick_id=test_event.picks[1].resource_id),
         Arrival(time_weight=2, phase=test_event.picks[3].phase_hint,
                 pick_id=test_event.picks[3].resource_id,
                 backazimuth_residual=5, time_residual=0.2, distance=15,
-                azimuth=25))
+                azimuth=25),
+        Arrival(time_weight=2, phase=test_event.picks[4].phase_hint,
+                pick_id=test_event.picks[4].resource_id,
+                backazimuth_residual=5, time_residual=0.2, distance=15,
+                azimuth=25)]
+    # Add in error info (line E)
+    test_event.origins[0].quality = OriginQuality(
+        standard_error=0.01, azimuthal_gap=36)
+    # Origin uncertainty in Seisan is output as long-lat-depth, quakeML has
+    # semi-major and semi-minor
+    test_event.origins[0].origin_uncertainty = OriginUncertainty(
+        confidence_ellipsoid=ConfidenceEllipsoid(
+            semi_major_axis_length=3000, semi_minor_axis_length=1000,
+            semi_intermediate_axis_length=2000, major_axis_plunge=20,
+            major_axis_azimuth=100, major_axis_rotation=4))
+    test_event.origins[0].time_errors = QuantityError(uncertainty=0.5)
+    # Add in fault-plane solution info (line F) - Note have to check program
+    # used to determine which fields are filled....
+    test_event.focal_mechanisms.append(FocalMechanism(
+        nodal_planes=NodalPlanes(nodal_plane_1=NodalPlane(
+            strike=180, dip=20, rake=30, strike_errors=QuantityError(10),
+            dip_errors=QuantityError(10), rake_errors=QuantityError(20))),
+        method_id=ResourceIdentifier("smi:nc.anss.org/focalMechanism/FPFIT"),
+        creation_info=CreationInfo(agency_id="NC"), misfit=0.5,
+        station_distribution_ratio=0.8))
+    # Need to test high-precision origin and that it is preferred origin.
+    # Moment tensor includes another origin
+    test_event.origins.append(Origin(
+        time=UTCDateTime("2012-03-26") + 1.2, latitude=45.1, longitude=25.2,
+        depth=14500))
+    test_event.magnitudes.append(Magnitude(
+        mag=0.1, magnitude_type='MW', creation_info=CreationInfo('TES'),
+        origin_id=test_event.origins[-1].resource_id))
+    # Moment tensors go with focal-mechanisms
+    test_event.focal_mechanisms.append(FocalMechanism(
+        moment_tensor=MomentTensor(
+            derived_origin_id=test_event.origins[-1].resource_id,
+            moment_magnitude_id=test_event.magnitudes[-1].resource_id,
+            scalar_moment=100, tensor=Tensor(
+                m_rr=100, m_tt=100, m_pp=10, m_rt=1, m_rp=20, m_tp=15),
+            method_id=ResourceIdentifier(
+                'smi:nc.anss.org/momentTensor/BLAH'))))
     return test_event
 
 

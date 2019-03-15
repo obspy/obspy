@@ -2237,6 +2237,21 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
 
+    def test_get_availability_with_multiple_channel_epochs(self):
+        """
+        Make sure to get rid of du
+        """
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data,
+                         "channel_level_fdsn_with_multiple_epochs.txt"))
+        c.get_availability()
+        self.assertEqual(list(c.stations.keys()), [("TA", "857A")])
+        self.assertEqual(len(c.stations[("TA", "857A")].channels), 1)
+        chan = c.stations[("TA", "857A")].channels[0]
+        self.assertEqual(chan.intervals[0].start, c.restrictions.starttime)
+        self.assertEqual(chan.intervals[0].end, c.restrictions.endtime)
+
     def test_excluding_networks_and_stations(self):
         """
         Tests the excluding of networks and stations.
@@ -2349,6 +2364,76 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
         self.assertEqual([("AK", "BAGL")],
+                         sorted(c.stations.keys()))
+
+        # When 'channel' or 'location' are set they should override
+        # 'channel_priorities' and 'location_priorities'. If this isn't
+        # happening this test will fail, as we're requesting data
+        # with a channel and location what are not covered by the default
+        # priorities lists.
+        #
+        # The tests are a bit strange in the way that the availability
+        # filtering does not enforce the set "location" + "channel" but only
+        # the priority lists. Location + channel are already set at the queries
+        # to the datacenters so they can be assumed to be correct.
+        #
+        # The availability information contains uncommon channel + location
+        # combinations and only one station will be selected first.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            # This will be ignored as soon as channel and location are being
+            # set.
+            channel_priorities=["EH*", "BH*"],
+            location_priorities=["", "01"])
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "uncommon_channel_location.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BAGLD")], sorted(c.stations.keys()))
+
+        # With a set location, the channel priorities are still active.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            channel_priorities=["EH*", "BH*"],
+            location_priorities=["", "01"],
+            location="31")
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "uncommon_channel_location.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BAGLC"), ("AK", "BAGLD")],
+                         sorted(c.stations.keys()))
+
+        # Same with the set channel.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            channel_priorities=["EH*", "BH*"],
+            location_priorities=["", "01"],
+            channel="RST")
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "uncommon_channel_location.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BAGLB"), ("AK", "BAGLD")],
+                         sorted(c.stations.keys()))
+
+        # If both are set, the priorities are properly ignored.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            channel_priorities=["EH*", "BH*"],
+            location_priorities=["", "01"],
+            location="31",
+            channel="RST")
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "uncommon_channel_location.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BAGLA"), ("AK", "BAGLB"), ("AK", "BAGLC"),
+                          ("AK", "BAGLD")],
                          sorted(c.stations.keys()))
 
     def test_excluding_networks_and_stations_with_an_inventory_object(self):
@@ -2485,6 +2570,37 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             # Write something to make sure the context manager works.
             with open(filename, "w") as buf:
                 buf.write("obspy")
+
+    def test_warning_when_location_prios_excludes_all_channels(self):
+        """
+        Tests that the logger raises a warning when the location_priorities
+        settings excludes all channels.
+        """
+        # No warning should have been raised yet.
+        self.assertEqual(self.logger.warning.call_count, 0)
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data,
+                         "channel_level_fdsn_obscure_location_code.txt"))
+        c.get_availability()
+        # Nothing should have been selected.
+        self.assertEqual(c.stations, {})
+        # But a warning should have been raised.
+        self.assertEqual(self.logger.warning.call_count, 1)
+        self.assertEqual(
+            self.logger.warning.call_args[0][0],
+            "Client 'Test' - No channel at station AK.BAGL has been selected "
+            "due to the `location_priorities` settings.")
+
+        self.logger.warning.reset_mock()
+        self.assertEqual(self.logger.warning.call_count, 0)
+        # Having non-default location priorities should not warn.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            location_priorities=["00"])
+        self.assertEqual(c.stations, {})
+        self.assertEqual(self.logger.warning.call_count, 0)
 
 
 class DownloadHelperTestCase(unittest.TestCase):

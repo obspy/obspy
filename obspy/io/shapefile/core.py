@@ -53,15 +53,15 @@ def _write_shapefile(obj, filename, extra_fields=None, **kwargs):
         it will be appended. Other files will be created with respective
         suffixes accordingly.
     :type extra_fields: list
-    :param extra_fields: Currently only implemented for ``obj`` of type
-        :class:`~obspy.core.event.Catalog`. List of extra fields to write to
+    :param extra_fields: List of extra fields to write to
         the shapefile table. Each item in the list has to be specified as a
         tuple of: field name (i.e. name of database column, ``str``), field
         type (single character as used by ``pyshp``: ``'C'`` for string
         fields, ``'N'`` for integer/float fields - use precision ``None`` for
         integer fields, ``'L'`` for boolean fields), field width (``int``),
         field precision (``int``) and field values (``list`` of individual
-        values, must have same length as ``catalog``).
+        values, must have same length as given catalog object or as the sum of
+        all station objects across all networks of a given inventory).
     """
     if not HAS_PYSHP:
         raise ImportError(IMPORTERROR_MSG)
@@ -70,20 +70,27 @@ def _write_shapefile(obj, filename, extra_fields=None, **kwargs):
     if not filename.endswith(".shp"):
         filename += ".shp"
 
-    writer = shapefile.Writer(shapefile.POINT)
+    if PYSHP_VERSION >= [2., 0, 0]:
+        writer = shapefile.Writer(target=filename, shapeType=shapefile.POINT)
+    else:
+        writer = shapefile.Writer(shapeType=shapefile.POINT)
     writer.autoBalance = 1
 
     # create the layer
     if isinstance(obj, Catalog):
         _add_catalog_layer(writer, obj, extra_fields=extra_fields)
     elif isinstance(obj, Inventory):
-        _add_inventory_layer(writer, obj)
+        _add_inventory_layer(writer, obj, extra_fields=extra_fields)
     else:
         msg = ("Object for shapefile output must be "
                "a Catalog or Inventory.")
         raise TypeError(msg)
 
-    writer.save(filename)
+    if PYSHP_VERSION >= [2.0, 0, 0]:
+        writer.close()
+    else:
+        writer.save(filename)
+
     _save_projection_file(filename.rsplit('.', 1)[0] + '.prj')
 
 
@@ -205,12 +212,15 @@ def _add_catalog_layer(writer, catalog, extra_fields=None):
             _add_record(writer, feature)
 
 
-def _add_inventory_layer(writer, inventory):
+def _add_inventory_layer(writer, inventory, extra_fields=None):
     """
     :type writer: :class:`shapefile.Writer`.
     :param writer: pyshp Writer object
     :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: Inventory data to add as a new layer.
+    :type extra_fields: list
+    :param extra_fields: List of extra fields to write to the shapefile table.
+        For details see :func:`_write_shapefile()`.
     """
     # [name, type, width, precision]
     # field name is 10 chars max
@@ -230,8 +240,18 @@ def _add_inventory_layer(writer, inventory):
         ["Channels", 'C', 254, None],
     ]
 
-    _create_layer(writer, field_definitions)
+    _create_layer(writer, field_definitions, extra_fields)
 
+    station_count = sum(len(net) for net in inventory)
+    if extra_fields:
+        for name, type_, width, precision, values in extra_fields:
+            if len(values) != station_count:
+                msg = ("list of values for each item in 'extra_fields' must "
+                       "have same length as the count of all Stations "
+                       "combined across all Networks.")
+                raise ValueError(msg)
+
+    i = 0
     for net in inventory:
         for sta in net:
             channel_list = ",".join(["%s.%s" % (cha.location_code, cha.code)
@@ -266,9 +286,15 @@ def _add_inventory_layer(writer, inventory):
             if channel_list:
                 feature["Channels"] = channel_list
 
+            if extra_fields:
+                for name, _, _, _, values in extra_fields:
+                    feature[name] = values[i]
+
             if sta.latitude is not None and sta.longitude is not None:
                 writer.point(sta.longitude, sta.latitude)
                 _add_record(writer, feature)
+
+            i += 1
 
 
 wgs84_wkt = \
@@ -335,13 +361,13 @@ def _add_record(writer, feature):
         # various hacks for old pyshp < 1.2.11
         if not PYSHP_VERSION_AT_LEAST_1_2_11:
             if type_ == 'C':
-                # mimick pyshp 1.2.12 behavior of putting 'None' in string
+                # mimic pyshp 1.2.12 behavior of putting 'None' in string
                 # fields for value of `None`
                 if value is None:
                     value = 'None'
                 else:
                     value = native_str(value)
-            # older pyshp is not correctly writing dates as thenowadays used
+            # older pyshp is not correctly writing dates as used nowadays
             # '%Y%m%d' (8 chars), work around this
             elif type_ == 'D':
                 if isinstance(value, (UTCDateTime, datetime.date)):
