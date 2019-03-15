@@ -168,9 +168,9 @@ class PsdTestCase(unittest.TestCase):
         file_welch_even = os.path.join(self.path, "pitsa_welch_window_512.npy")
         file_welch_odd = os.path.join(self.path, "pitsa_welch_window_513.npy")
 
-        for file, N in zip((file_welch_even, file_welch_odd), (512, 513)):
+        for file, n in zip((file_welch_even, file_welch_odd), (512, 513)):
             window_pitsa = np.load(file)
-            window_obspy = welch_window(N)
+            window_obspy = welch_window(n)
             np.testing.assert_array_almost_equal(window_pitsa, window_obspy)
 
     def test_ppsd(self):

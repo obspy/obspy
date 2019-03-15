@@ -14,7 +14,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import copy
-import ctypes as C
+import ctypes as C  # NOQA
 from collections import defaultdict, Iterable
 from copy import deepcopy
 import itertools
