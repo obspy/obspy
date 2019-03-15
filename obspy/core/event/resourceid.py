@@ -466,7 +466,7 @@ class ResourceIdentifier(object):
         """
         Converts the current ID to a valid QuakeML URI.
 
-        This method is deprecated, use get_quakeml_id instead.
+        This method is deprecated, use :meth:`get_quakeml_id` instead.
 
         Only an invalid QuakeML ResourceIdentifier string it will be converted
         to a valid one.  Otherwise nothing will happen but after calling this
@@ -511,7 +511,7 @@ class ResourceIdentifier(object):
     @deprecated()
     def get_quakeml_uri(self, authority_id="local"):
         """
-        Deprecated, use get_quakeml_uri_str instead.
+        This method is deprecated, use :meth:`get_quakeml_uri_str` instead.
         """
         return self.get_quakeml_uri_str(authority_id=authority_id)
 
