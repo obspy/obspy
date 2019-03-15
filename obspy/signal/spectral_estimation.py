@@ -1841,13 +1841,11 @@ class PPSD(object):
 
         ax.semilogx()
         if xaxis_frequency:
-            xlim = map(lambda x: 1.0 / x, period_lim)
             ax.set_xlabel('Frequency [Hz]')
             ax.invert_xaxis()
         else:
-            xlim = period_lim
             ax.set_xlabel('Period [s]')
-        ax.set_xlim(sorted(xlim))
+        ax.set_xlim(period_lim)
         ax.set_ylim(self.db_bin_edges[0], self.db_bin_edges[-1])
         if self.special_handling is None:
             ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
