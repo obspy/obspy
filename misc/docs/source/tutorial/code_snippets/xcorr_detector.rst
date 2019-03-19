@@ -2,10 +2,8 @@
 Cross-Correlation Detector
 ==========================
 
-These code snippets show how to use the functions
-:func:`~obspy.signal.cross_correlation.correlate_stream_template`,
-:func:`~obspy.signal.cross_correlation.similarity_detector` and
-:func:`~obspy.signal.cross_correlation.insert_amplitude_ratio`.
+These code snippets show how to use the function
+:func:`~obspy.signal.cross_correlation.correlate_detector`.
 
 --------------------------------
 Detection based on one component
@@ -111,10 +109,6 @@ After that, cross-correlations are calculated and other, similar earthquakes in 
     height = 0.5  # similarity threshold
     distance = 10  # distance between detections in seconds
     detections = similarity_detector(ccs, height, distance, plot_detections=stream)
-
-Note, that the stream of cross-correlations in the variable ccs is also suitable for use with
-:func:`~obspy.signal.trigger.coincidence_trigger`, but that function will return the trigger time,
-when we are interested in the time when the similarity is maximized.
 
 In the following, we create the similarity trace on our own and introduce the
 constraint that the cross-correlation should be larger than 0.5 at all stations.

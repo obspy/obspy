@@ -12,13 +12,13 @@ import os
 import unittest
 import warnings
 
-from obspy import UTCDateTime, read
+from obspy import UTCDateTime, read, Trace
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.libnames import _load_cdll
 from obspy.core.util.testing import ImageComparison
 from obspy.signal.cross_correlation import (
         correlate, correlate_template, correlate_stream_template,
-        insert_amplitude_ratio, similarity_detector,
+        correlation_detector,
         xcorr_pick_correction, xcorr_3c, xcorr_max,
         xcorr, _xcorr_padzeros, _xcorr_slice, _find_peaks)
 from obspy.signal.trigger import coincidence_trigger
@@ -501,14 +501,15 @@ class CrossCorrelationTestCase(unittest.TestCase):
                                          normalize=normalize)
                 np.testing.assert_allclose(cc3, cc4)
 
-    def test_correlate_stream_template_and_similarity_detector(self):
+    def test_correlate_stream_template_and_correlation_detector(self):
         template = read().filter('highpass', freq=5).normalize()
         pick = UTCDateTime('2009-08-24T00:20:07.73')
         template.trim(pick, pick + 10)
         n1 = len(template[0])
         n2 = 100 * 3600  # 1 hour
+        dt = template[0].stats.delta
         # shift one template Trace
-        template[1].stats.starttime += 20
+        template[1].stats.starttime += 5
         stream = template.copy()
         np.random.seed(42)
         for tr, trt in zip(stream, template):
@@ -521,33 +522,81 @@ class CrossCorrelationTestCase(unittest.TestCase):
             tr.data[20*n1:21*n1] += 2 * trt.data
         # make one template trace a bit shorter
         template[2].data = template[2].data[:-n1 // 5]
-        # test if all three events found
+        # make two stream traces a bit shorter
+        stream[0].trim(5, None)
+        stream[1].trim(1, 20)
+        # second template
+        pick2 = stream[0].stats.starttime + 20 * n1 * dt
+        template2 = stream.slice(pick2 - 5, pick2 + 5)
+        # test cross correlation
+        stream_orig = stream.copy()
+        template_orig = template.copy()
         ccs = correlate_stream_template(stream, template)
-        detections = similarity_detector(ccs, 0.2, 30)
-        self.assertEqual(len(detections), 3)
         self.assertEqual(len(ccs), len(stream))
-        self.assertEqual(stream[0].stats.starttime, ccs[0].stats.starttime)
-        insert_amplitude_ratio(detections, stream, template,
-                               template_magnitude=1)
+#        self.assertEqual(stream[2].stats.starttime, ccs[0].stats.starttime)
+        self.assertEqual(stream_orig, stream)
+        self.assertEqual(template_orig, template)
+        # test if traces with not matching seed ids are discarded
+        ccs = correlate_stream_template(stream[:2], template[1:])
+        self.assertEqual(len(ccs), 1)
+        self.assertEqual(stream_orig, stream)
+        self.assertEqual(template_orig, template)
+        # test template_time parameter
+        ccs1 = correlate_stream_template(stream, template)
+        template_time = template[0].stats.starttime + 100
+        ccs2 = correlate_stream_template(stream, template,
+                                         template_time=template_time)
+        self.assertEqual(len(ccs2), len(ccs1))
+        delta = ccs2[0].stats.starttime - ccs1[0].stats.starttime
+        self.assertAlmostEqual(delta, 100)
+        # test if all three events found
+        detections, sims = correlation_detector(stream, template, 0.2, 30)
+        self.assertEqual(len(detections), 3)
+        dtime = pick + n1 * dt + 24 * 3600
+        self.assertAlmostEqual(detections[0]['time'], dtime)
+        self.assertEqual(len(sims), 1)
+        self.assertEqual(stream_orig, stream)
+        self.assertEqual(template_orig, template)
+        # test if xcorr stream is suitable for coincidence_trigger
+        # result should be the same, return values related
+        ccs = correlate_stream_template(stream, template)
+        triggers = coincidence_trigger(None, 0.2, -1, ccs, 2,
+                                       max_trigger_length=30, details=True)
+        self.assertEqual(len(triggers), 2)
+        for d, t in zip(detections[1:], triggers):
+            self.assertAlmostEqual(np.mean(t['cft_peaks']), d['similarity'])
+        # test template_magnitudes
+        detections, _ = correlation_detector(stream, template, 0.2, 30,
+                                             template_magnitudes=1)
         self.assertAlmostEqual(detections[1]['amplitude_ratio'], 100, delta=1)
         self.assertAlmostEqual(detections[1]['magnitude'], 1 + 8 / 3,
                                delta=0.01)
         self.assertAlmostEqual(detections[2]['amplitude_ratio'], 2, delta=2)
+        detections, _ = correlation_detector(stream, template, 0.2, 30,
+                                             template_magnitudes=True)
+        self.assertAlmostEqual(detections[1]['amplitude_ratio'], 100, delta=1)
+        self.assertNotIn('magnitude', detections[1])
+        self.assertEqual(stream_orig, stream)
+        self.assertEqual(template_orig, template)
         # test similarity parameter with additional constraints
         # test details=True
-        ccmatrix = np.array([tr.data for tr in ccs])
-        comp_thres = np.sum(ccmatrix > 0.2, axis=0) > 1
-        similarity = ccs[0].copy()
-        similarity.data = np.mean(ccmatrix, axis=0) * comp_thres
-        detections = similarity_detector(ccs, 0.1, 30,
-                                         similarity=similarity, details=True)
+        def simf(ccs):
+            ccmatrix = np.array([tr.data for tr in ccs])
+            comp_thres = np.sum(ccmatrix > 0.2, axis=0) > 1
+            similarity = ccs[0].copy()
+            similarity.data = np.mean(ccmatrix, axis=0) * comp_thres
+            return similarity
+        detections, _ = correlation_detector(stream, template, 0.1, 30,
+                                             similarity_func=simf,
+                                             details=True)
         self.assertEqual(len(detections), 2)
         for d in detections:
             self.assertAlmostEqual(np.mean(list(d['cc_values'].values())),
                                    d['similarity'])
         # test if properties from find_peaks function are returned
-        detections = similarity_detector(ccs, 0.1, 30, threshold=0.16,
-                                         similarity=similarity, details=True)
+        detections, sims = correlation_detector(stream, template, 0.1, 30,
+                                                threshold=0.16, details=True,
+                                                similarity_func=simf)
         try:
             from scipy.signal import find_peaks  # noqa
         except ImportError:
@@ -557,30 +606,47 @@ class CrossCorrelationTestCase(unittest.TestCase):
             self.assertEqual(len(detections), 1)
             self.assertIn('left_threshold', detections[0])
         # also check the _find_peaks function
-        distance = int(round(30 / similarity.stats.delta))
-        indices = _find_peaks(similarity.data, 0.1, distance, distance)
+        distance = int(round(30 / sims[0].stats.delta))
+        indices = _find_peaks(sims[0].data, 0.1, distance, distance)
         self.assertEqual(len(indices), 2)
-        # test if xcorr stream is suitable for coincidence_trigger
-        # result should be the same, return values related
-        triggers = coincidence_trigger(None, 0.2, -1, ccs, 2,
-                                       max_trigger_length=30, details=True)
-        self.assertEqual(len(triggers), 2)
-        for d, t in zip(detections, triggers):
-            self.assertAlmostEqual(np.mean(t['cft_peaks']), d['similarity'])
         # test distance parameter
-        d = similarity_detector(ccs, 0.2, 500)
-        self.assertEqual(len(d), 1)
-        # test if traces with not matching seed ids are discarded
-        ccs = correlate_stream_template(stream[:2], template[1:])
-        self.assertEqual(len(ccs), 1)
-        # test template_time parameter
-        ccs1 = correlate_stream_template(stream, template)
-        template_time = template[0].stats.starttime + 100
-        ccs2 = correlate_stream_template(stream, template,
-                                         template_time=template_time)
-        self.assertEqual(len(ccs2), len(ccs1))
-        delta = ccs2[0].stats.starttime - ccs1[0].stats.starttime
-        self.assertAlmostEqual(delta, 100)
+        detections, _ = correlation_detector(stream, template, 0.2, 500)
+        self.assertEqual(len(detections), 1)
+        # test more than one template
+        # just 2 detections for first template, because second template has
+        # a higher similarity for third detection
+        templates = (template, template2)
+        templatetime2 = pick2 - 10
+        template_times = (template[0].stats.starttime, templatetime2)
+        detections, _ = correlation_detector(stream, templates, (0.2, 0.3), 30,
+                                             plot=stream,
+                                             template_times=template_times,
+                                             template_magnitudes=(2, 5))
+        self.assertGreater(len(detections), 0)
+        self.assertIn('template_id', detections[0])
+        detections0 = [d for d in detections if d['template_id'] == 0]
+        self.assertEqual(len(detections0), 2)
+        self.assertEqual(len(detections), 3)
+        self.assertAlmostEqual(detections[2]['similarity'], 1)
+        self.assertAlmostEqual(detections[2]['magnitude'], 5)
+        self.assertEqual(detections[2]['time'], templatetime2)
+        # test if everything is correct if template2 and stream do not have
+        # any ids in common
+        templates = (template, template2[2:])
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            detections, sims = correlation_detector(
+                    stream[:1], templates, 0.2, 30, plot=True,
+                    template_times=templatetime2, template_magnitudes=2)
+        detections0 = [d for d in detections if d['template_id'] == 0]
+        self.assertEqual(len(detections0), 3)
+        self.assertEqual(len(detections), 3)
+        self.assertEqual(len(sims), 2)
+        self.assertIsInstance(sims[0], Trace)
+        self.assertIs(sims[1], None)
+
+
+
 
 
 def suite():

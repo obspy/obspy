@@ -22,6 +22,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from bisect import bisect_left
+from copy import copy
 import ctypes as C  # NOQA
 from distutils.version import LooseVersion
 import warnings
@@ -851,23 +852,29 @@ def templates_max_similarity(st, time, streams_templates):
 
 
 def _prep_streams_correlate(stream, template, template_time=None):
+    """
+    Prepare stream and template for cross-correlation
+
+    Select traces in stream and template with the same seed id and trim
+    stream to correct start and end times.
+    """
     if len({tr.stats.sampling_rate for tr in stream + template}) > 1:
         raise ValueError('Traces have different sampling rate')
     ids = {tr.id for tr in stream} & {tr.id for tr in template}
     if len(ids) == 0:
         raise ValueError('No traces with matching ids in template and stream')
-    stream = stream.copy()
-    template = template.copy()
+    stream = copy(stream)
+    template = copy(template)
     stream.traces = [tr for tr in stream if tr.id in ids]
     template.traces = [tr for tr in template if tr.id in ids]
-    if len(stream) != len(template):
-        msg = ('Length of template stream and data stream are different. '
-               'Make sure the data does not contain gaps.')
-        raise ValueError(msg)
     template.sort()
     stream.sort()
-    starttime = min(tr.stats.starttime for tr in stream)
-    endtime = max(tr.stats.endtime for tr in stream)
+    if len(stream) != len(template):
+        msg = ('Length of prepared template stream and data stream are '
+               'different. Make sure the data does not contain gaps.')
+        raise ValueError(msg)
+    starttime = max(tr.stats.starttime for tr in stream)
+    endtime = min(tr.stats.endtime for tr in stream)
     starttime_template = min(tr.stats.starttime for tr in template)
     len_templ = max(tr.stats.endtime - tr.stats.starttime for tr in template)
     if template_time is None:
@@ -875,37 +882,26 @@ def _prep_streams_correlate(stream, template, template_time=None):
     else:
         template_offset = template_time - starttime_template
     # trim traces
-    for tr, trt in zip(stream, template):
-        trim1 = trt.stats.starttime - starttime_template
-        len_this_template = trt.stats.endtime - trt.stats.starttime
-        trim2 = trim1 + len_this_template - len_templ
-        tr.trim(starttime + trim1, endtime + trim2, pad=True, fill_value=0)
+    trim1 = [trt.stats.starttime - starttime_template for trt in template]
+    trim2 = [trt.stats.endtime - starttime_template - len_templ
+             for trt in template]
+    trim1 = [t - min(trim1) for t in trim1]
+    trim2 = [t - max(trim2) for t in trim2]
+    for i, tr in enumerate(stream):
+        assert trim1[i] >= 0
+        assert trim2[i] <= 0
+        tr = tr.slice(starttime + trim1[i], endtime + trim2[i])
         tr.stats.starttime = starttime + template_offset
+        stream.traces[i] = tr
     return stream, template
 
 
-def correlate_stream_template(stream, template, template_time=None, **kwargs):
+def _correlate_prepared_stream_template(stream, template, **kwargs):
     """
     Calculate cross-correlation of traces in stream with traces in template
 
-    Only matching seed ids are correlated, other traces are silently discarded.
-    The template stream might have traces of different length and different
-    start times. The data stream must not have gaps and will be padded with
-    zeros as necessary.
-
-    :param stream: Stream with data traces.
-    :param template: Stream with template traces (should be shorter than data).
-    :param template_time: UTCDateTime associated with template event
-        (e.g. origin time, default is the start time of the template stream).
-        The start times of the returned Stream will be shifted by the given
-        template time minus the template start time.
-    :param kwargs: kwargs are passed to
-        :func:`~obspy.signal.cross_correlation.correlate_template` function.
-
-    :return: Stream with cross-correlations.
+    Operates on prepared streams.
     """
-    stream, template = _prep_streams_correlate(stream, template,
-                                               template_time=template_time)
     for tr, trt in zip(stream, template):
         tr.data = correlate_template(tr, trt, mode='valid', **kwargs)
     # make sure xcorrs have the same length, can differ by one sample
@@ -921,7 +917,41 @@ def correlate_stream_template(stream, template, template_time=None, **kwargs):
     return stream
 
 
+def correlate_stream_template(stream, template, template_time=None, **kwargs):
+    """
+    Calculate cross-correlation of traces in stream with traces in template
+
+    Only matching seed ids are correlated, other traces are silently discarded.
+    The template stream might have traces of different length and different
+    start times. The data stream must not have gaps and will be sliced
+    as necessary.
+
+    :param stream: Stream with data traces.
+    :param template: Stream with template traces (should be shorter than data).
+    :param template_time: UTCDateTime associated with template event
+        (e.g. origin time, default is the start time of the template stream).
+        The start times of the returned Stream will be shifted by the given
+        template time minus the template start time.
+    :param kwargs: kwargs are passed to
+        :func:`~obspy.signal.cross_correlation.correlate_template` function.
+
+    :return: Stream with cross-correlations.
+
+    :note:
+        Use :func:`~obspy.signal.cross_correlation.correlation_detector`
+        for detecting events based on their similarity.
+        The returned stream of cross-correlations is suitable for
+        use with :func:`~obspy.signal.trigger.coincidence_trigger`, though.
+    """
+    stream, template = _prep_streams_correlate(stream, template,
+                                               template_time=template_time)
+    return _correlate_prepared_stream_template(stream, template, **kwargs)
+
+
 def _calc_mean(stream):
+    """
+    Return trace with mean of traces in stream
+    """
     if len(stream) == 0:
         return stream
     matrix = np.array([tr.data for tr in stream])
@@ -952,43 +982,11 @@ def _find_peaks(data, height, holdon_samples, holdoff_samples):
     return detections_index
 
 
-def similarity_detector(cross_correlations, height, distance,
-                        similarity=None, plot_detections=None, details=False,
-                        **kwargs):
+def _similarity_detector(similarity, height, distance,
+                         details=False, cross_correlations=None, **kwargs):
     """
     Detector based on the similarity of waveforms
-
-    This detector evaluates the cross-correlation stream returned by
-    :func:`~obspy.signal.cross_correlation.correlate_stream_template`.
-    It utilizes the SciPy function :func:`~scipy.signal.find_peaks`.
-    For a SciPy version smaller than 1.1 it uses a custom function
-    for peak finding. The parameters `heigth`, `distance`
-    (converted to samples) and other kwargs are passed to
-    :func:`~scipy.signal.find_peaks`.
-
-    :param cross_correlations: Stream with cross-correlations. The similarity
-        is calculated as the mean of the cross-correlation value over all
-        channels.
-    :param height: Similarity value to trigger a detection.
-    :param distance: The distance in seconds between two detections.
-    :param similarity: The similarity Trace can be directly specified.
-        Otherwise the similarity is calculated as the mean of
-        cross-correlations.
-    :param plot_detections: Plot detections together with the data of the
-        supplied stream. The default `plot_detections=None` does not plot
-        anything. `plot_detections=True` plots the similarity trace together
-        with the detections. If a stream is passed as argument, the traces
-        in the stream will be plotted together with the similarity trace and
-        detections.
-    :param details: By default the list returned by this function includes
-        detection time and similarity value. If set to True it also returns
-        the individual cross-correlation values for all channels and properties
-        from :func:`~scipy.signal.find_peaks`.
-
-    :return: List of event detections sorted chronologically.
     """
-    if similarity is None:
-        similarity = _calc_mean(cross_correlations)
     starttime = similarity.stats.starttime
     dt = similarity.stats.delta
     if distance is not None:
@@ -1013,46 +1011,13 @@ def similarity_detector(cross_correlations, height, distance,
                 if k != 'peak_heights':
                     detection[k[:-1] if k.endswith('s') else k] = v[i]
         detections.append(detection)
-    if plot_detections:
-        import matplotlib.pyplot as plt
-        from obspy.imaging.util import _set_xaxis_obspy_dates
-        if plot_detections is True:
-            plot_detections = []
-        akw = dict(xy=(0.02, 0.95), xycoords='axes fraction', va='top')
-        num = len(plot_detections) + 1
-        fig, ax = plt.subplots(num, 1, sharex=True)
-        if num == 1:
-            ax = [ax]
-        for detection in detections:
-            for i in range(num):
-                ax[i].axvline(detection['time'].matplotlib_date,
-                              color='orange')
-        for i, tr in enumerate(plot_detections):
-            ax[i].plot(tr.times('matplotlib'), tr.data, 'k')
-            ax[i].annotate(tr.id, **akw)
-        ax[-1].plot(similarity.times('matplotlib'), similarity.data, 'k')
-        ax[-1].annotate('similarity', **akw)
-        if isinstance(height, (float, int)):
-            ax[-1].axhline(height)
-        _set_xaxis_obspy_dates(ax[-1])
-        plt.show()
     return detections
 
 
-def insert_amplitude_ratio(detections, stream, template, template_time=None,
-                           template_magnitude=None):
+def _insert_amplitude_ratio(detections, stream, template, template_time=None,
+                            template_magnitude=None):
     """
-    Insert amplitude ratio and magnitude into detections.
-
-    :param detections: List of detections from
-       :func:`~obspy.signal.cross_correlation.similarity_detector`.
-    :param stream,template,template_time: Must be the same objects
-       that were passed to
-       :func:`~obspy.signal.cross_correlation.correlate_stream_template`.
-    :param template_magnutde: If provided, magnitude of detections will be
-        calculated.
-
-    :return: Updated list of detections.
+    Insert amplitude ratio and magnitude into detections
     """
     stream, template = _prep_streams_correlate(stream, template,
                                                template_time=template_time)
@@ -1066,6 +1031,151 @@ def insert_amplitude_ratio(detections, stream, template, template_time=None,
             magdiff = 4 / 3 * np.log10(ratio)
             detection['magnitude'] = template_magnitude + magdiff
     return detections
+
+
+def __get_item(list_, index):
+    try:
+        return list_[index]
+    except TypeError:
+        return list_
+
+
+def correlation_detector(stream, templates, heights, distance,
+                         template_times=None, template_magnitudes=None,
+                         similarity_func=_calc_mean, details=None,
+                         plot=None, **kwargs):
+    """
+    Detector based on the cross-correlation of waveforms
+
+    This detector cross-correlates the stream with each of the template
+    streams (compare with
+    :func:`~obspy.signal.cross_correlation.correlate_stream_template`).
+    A similarity is defined, by default it is the mean of all
+    cross-correlation functions for each template.
+    If the similarity exceeds the `height` threshold a detection is triggered.
+    This peak finding utilizes the SciPy function
+    :func:`~scipy.signal.find_peaks` with parameters `height` and `distance`.
+    For a SciPy version smaller than 1.1 it uses a custom function
+    for peak finding.
+
+    :param stream: Stream with data traces.
+    :param templates: List of streams with template traces.
+        Each template stream should be shorter than the data stream.
+        This argument can also be a single template stream.
+    :param heights: Similarity values to trigger a detection,
+        one for each template. This argument can also be a single value.
+    :param distance: The distance in seconds between two detections.
+    :param template_times: UTCDateTimes associated with template event
+        (e.g. origin times,
+        default are the start times of the template streams).
+        This argument can also be a single value.
+    :param template_magnitudes: Magnitudes of the template events.
+        If provided, amplitude ratios between templates and detections will
+        be calculated and the magnitude of detections will be estimated.
+        This argument can also be a single value.
+        This argument can be set to `True`,
+        then only amplitude ratios will be calculated.
+    :param similarity_func: By default, the similarity will be calculated by
+        the mean of cross-correlations. If provided, `similarity_func` will be
+        called with the stream of cross correaltions and the returned trace
+        will be used as similarity. See the tutorial for an example.
+    :param details: If set to True detections include detailed information.
+    :param plot: Plot detections together with the data of the
+        supplied stream. The default `plot=None` does not plot
+        anything. `plot=True` plots the similarity traces together
+        with the detections. If a stream is passed as argument, the traces
+        in the stream will be plotted together with the similarity traces and
+        detections.
+    :param kwargs: Suitable kwargs are passed to
+        :func:`~obspy.signal.cross_correlation.correlate_template` function.
+        All other kwargs are passed to :func:`~scipy.signal.find_peaks`.
+
+    :return: List of event detections sorted chronologically and
+        list of similarity traces - one for each template.
+        Each detection is a dictionary with the follwoing keys:
+        time, similarity, template_id,
+        amplitude_ratio, magnitude (if template_magnitudes is provided),
+        cross-correlation values, properties returned by find_peaks
+        (if details are requested)
+    """
+    if isinstance(templates, Stream):
+        templates = [templates]
+    cckeys = ('normalize', 'demean', 'method')
+    cckwargs = {k: v for k, v in kwargs.items() if k in cckeys}
+    pfkwargs = {k: v for k, v in kwargs.items() if k not in cckeys}
+    possible_detections = []
+    similarities = []
+    for template_id, template in enumerate(templates):
+        template_time = __get_item(template_times, template_id)
+        try:
+            ccs = correlate_stream_template(stream, template,
+                                            template_time=template_time,
+                                            **cckwargs)
+        except ValueError as ex:
+            msg = '{} -> do not use template {}'.format(ex, template_id)
+            warnings.warn(msg)
+            similarities.append(None)
+            continue
+        similarity = similarity_func(ccs)
+        height = __get_item(heights, template_id)
+        detections_template = _similarity_detector(
+            similarity, height, distance, details=details,
+            cross_correlations=ccs, **pfkwargs)
+        for d in detections_template:
+            d['template_id'] = template_id
+        if template_magnitudes is True:
+            template_magnitude = None
+        else:
+            template_magnitude = __get_item(template_magnitudes, template_id)
+        if template_magnitudes is not None:
+            _insert_amplitude_ratio(detections_template, stream, template,
+                                    template_time=template_time,
+                                    template_magnitude=template_magnitude)
+        possible_detections.extend(detections_template)
+        similarities.append(similarity)
+    # discard detetctions with small distance, prefer those with high
+    # similarity
+    if len(templates) == 1:
+        detections = possible_detections
+    else:
+        detections = []
+        times = []
+        for pd in sorted(possible_detections, key=lambda d: -d['similarity']):
+            if all(abs(pd['time'] - t) > distance for t in times):
+                times.append(pd['time'])
+                detections.append(pd)
+        detections = sorted(detections, key=lambda d: d['time'])
+    if plot:
+        import matplotlib.pyplot as plt
+        from obspy.imaging.util import _set_xaxis_obspy_dates
+        if plot is True:
+            plot = []
+        akw = dict(xy=(0.02, 0.95), xycoords='axes fraction', va='top')
+        num1 = len(plot)
+        num2 = len(similarities)
+        fig, ax = plt.subplots(num1 + num2, 1, sharex=True)
+        if num1 + num2 == 1:
+            ax = [ax]
+        for detection in detections:
+            tid = detection.get('template_id', 0)
+            color = 'C{}'.format((tid + 1) % 10)
+            for i in list(range(num1)) + [num1 + tid]:
+                ax[i].axvline(detection['time'].matplotlib_date, color=color)
+        for i, tr in enumerate(plot):
+            ax[i].plot(tr.times('matplotlib'), tr.data, 'k')
+            ax[i].annotate(tr.id, **akw)
+        for i, tr in enumerate(similarities):
+            if tr is not None:
+                ax[num1+i].plot(tr.times('matplotlib'), tr.data, 'k')
+                height = __get_item(heights, i)
+                if isinstance(height, (float, int)):
+                    ax[num1+i].axhline(height)
+            text = ('similarity' if num2 == 1 else
+                    'similarity template {}'.format(i))
+            ax[num1+i].annotate(text, **akw)
+        _set_xaxis_obspy_dates(ax[-1])
+        plt.show()
+    return detections, similarities
 
 
 if __name__ == '__main__':
