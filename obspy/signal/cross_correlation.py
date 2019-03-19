@@ -46,7 +46,7 @@ def _pad_zeros(a, num, num2=None):
 
 def _call_scipy_correlate(a, b, mode, method):
     """
-    Call the correct correlate function depending on Scipy version and method
+    Call the correct correlate function depending on Scipy version and method.
     """
     if LooseVersion(scipy.__version__) >= LooseVersion('0.19'):
         cc = scipy.signal.correlate(a, b, mode=mode, method=method)
@@ -62,7 +62,7 @@ def _call_scipy_correlate(a, b, mode, method):
 
 def _xcorr_padzeros(a, b, shift, method):
     """
-    Cross-correlation using SciPy with mode='valid' and precedent zero padding
+    Cross-correlation using SciPy with mode='valid' and precedent zero padding.
     """
     if shift is None:
         shift = (len(a) + len(b) - 1) // 2
@@ -76,7 +76,7 @@ def _xcorr_padzeros(a, b, shift, method):
 
 def _xcorr_slice(a, b, shift, method):
     """
-    Cross-correlation using SciPy with mode='full' and subsequent slicing
+    Cross-correlation using SciPy with mode='full' and subsequent slicing.
     """
     mid = (len(a) + len(b) - 1) // 2
     if shift is None:
@@ -209,7 +209,7 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto',
 
 
 def _window_sum(data, window_len):
-    """Rolling sum of data"""
+    """Rolling sum of data."""
     window_sum = np.cumsum(data)
     # in-place equivalent of
     # window_sum = window_sum[window_len:] - window_sum[:-window_len]
@@ -853,7 +853,7 @@ def templates_max_similarity(st, time, streams_templates):
 
 def _prep_streams_correlate(stream, template, template_time=None):
     """
-    Prepare stream and template for cross-correlation
+    Prepare stream and template for cross-correlation.
 
     Select traces in stream and template with the same seed id and trim
     stream to correct start and end times.
@@ -898,7 +898,7 @@ def _prep_streams_correlate(stream, template, template_time=None):
 
 def _correlate_prepared_stream_template(stream, template, **kwargs):
     """
-    Calculate cross-correlation of traces in stream with traces in template
+    Calculate cross-correlation of traces in stream with traces in template.
 
     Operates on prepared streams.
     """
@@ -919,12 +919,12 @@ def _correlate_prepared_stream_template(stream, template, **kwargs):
 
 def correlate_stream_template(stream, template, template_time=None, **kwargs):
     """
-    Calculate cross-correlation of traces in stream with traces in template
+    Calculate cross-correlation of traces in stream with traces in template.
 
     Only matching seed ids are correlated, other traces are silently discarded.
-    The template stream might have traces of different length and different
-    start times. The data stream must not have gaps and will be sliced
-    as necessary.
+    The template stream and data stream might have traces of different
+    length and different start times.
+    The data stream must not have gaps and will be sliced as necessary.
 
     :param stream: Stream with data traces.
     :param template: Stream with template traces (should be shorter than data).
@@ -937,11 +937,25 @@ def correlate_stream_template(stream, template, template_time=None, **kwargs):
 
     :return: Stream with cross-correlations.
 
-    :note:
+    .. note::
+
         Use :func:`~obspy.signal.cross_correlation.correlation_detector`
         for detecting events based on their similarity.
         The returned stream of cross-correlations is suitable for
         use with :func:`~obspy.signal.trigger.coincidence_trigger`, though.
+
+    .. rubric:: Example
+
+    >>> from obspy import read, UTCDateTime
+    >>> data = read().filter('highpass', freq=5)
+    >>> pick = UTCDateTime('2009-08-24T00:20:07.73')
+    >>> template = data.slice(pick, pick + 10)
+    >>> ccs = correlate_stream_template(data, template)
+    >>> print(ccs)
+    3 Trace(s) in Stream:
+    BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:22.990000Z | 100.0 Hz, 2000 samples
+    BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:22.990000Z | 100.0 Hz, 2000 samples
+    BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:22.990000Z | 100.0 Hz, 2000 samples
     """
     stream, template = _prep_streams_correlate(stream, template,
                                                template_time=template_time)
@@ -950,7 +964,7 @@ def correlate_stream_template(stream, template, template_time=None, **kwargs):
 
 def _calc_mean(stream):
     """
-    Return trace with mean of traces in stream
+    Return trace with mean of traces in stream.
     """
     if len(stream) == 0:
         return stream
@@ -962,7 +976,7 @@ def _calc_mean(stream):
 
 def _find_peaks(data, height, holdon_samples, holdoff_samples):
     """
-    Peak finding function used for Scipy versions smaller than 1.1
+    Peak finding function used for Scipy versions smaller than 1.1.
     """
     cond = data >= height
     # loop through True values in cond array and guarantee hold time
@@ -988,7 +1002,7 @@ def _find_peaks(data, height, holdon_samples, holdoff_samples):
 def _similarity_detector(similarity, height, distance,
                          details=False, cross_correlations=None, **kwargs):
     """
-    Detector based on the similarity of waveforms
+    Detector based on the similarity of waveforms.
     """
     starttime = similarity.stats.starttime
     dt = similarity.stats.delta
@@ -1020,7 +1034,7 @@ def _similarity_detector(similarity, height, distance,
 def _insert_amplitude_ratio(detections, stream, template, template_time=None,
                             template_magnitude=None):
     """
-    Insert amplitude ratio and magnitude into detections
+    Insert amplitude ratio and magnitude into detections.
     """
     stream, template = _prep_streams_correlate(stream, template,
                                                template_time=template_time)
@@ -1045,7 +1059,7 @@ def _get_item(list_, index):
 
 def _plot_detections(detections, similarities, stream=None, heights=None):
     """
-    Plot detections together with similarity traces and data stream
+    Plot detections together with similarity traces and data stream.
     """
     import matplotlib.pyplot as plt
     from obspy.imaging.util import _set_xaxis_obspy_dates
@@ -1089,7 +1103,7 @@ def correlation_detector(stream, templates, heights, distance,
                          similarity_func=_calc_mean, details=None,
                          plot=None, **kwargs):
     """
-    Detector based on the cross-correlation of waveforms
+    Detector based on the cross-correlation of waveforms.
 
     This detector cross-correlates the stream with each of the template
     streams (compare with
@@ -1141,6 +1155,19 @@ def correlation_detector(stream, templates, heights, distance,
         amplitude_ratio, magnitude (if template_magnitudes is provided),
         cross-correlation values, properties returned by find_peaks
         (if details are requested)
+
+    .. rubric:: Example
+
+    >>> from obspy import read, UTCDateTime
+    >>> data = read().filter('highpass', freq=5)
+    >>> pick = UTCDateTime('2009-08-24T00:20:07.73')
+    >>> template = data.slice(pick, pick + 10)
+    >>> detections, sims = correlation_detector(data, template, 0.5, 10)
+    >>> print(detections)
+    [{'time': UTCDateTime(2009, 8, 24, 0, 20, 7, 730000), 'similarity': 0.99999999999999944, 'template_id': 0}]
+
+    A more advanced `turorial <tutorial/code_snippets/xcorr_detector.html>`
+    is available.
     """
     if isinstance(templates, Stream):
         templates = [templates]
