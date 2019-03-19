@@ -1,3 +1,5 @@
+.. _correlation-detector-tutorial:
+
 ==========================
 Cross-Correlation Detector
 ==========================

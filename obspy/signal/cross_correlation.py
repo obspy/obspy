@@ -1168,7 +1168,7 @@ def correlation_detector(stream, templates, heights, distance,
       'similarity': 0.99999999999999944,
       'template_id': 0}]
 
-    A more advanced `turorial <tutorial/code_snippets/xcorr_detector.html>`
+    A more advanced :ref:`tutorial <correlation-detector-tutorial>`
     is available.
     """
     if isinstance(templates, Stream):
