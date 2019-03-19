@@ -77,9 +77,9 @@ around 8 minutes after the 2013 test.
       'template_id': 0}]
 
 
----------------------------------------------------------------
-Multi-station detection of swarm earthquakes with two templates
----------------------------------------------------------------
+--------------------------------------------------------------------
+Multi-station detection of swarm earthquakes with multiple templates
+--------------------------------------------------------------------
 
 In this example we load 12 hours of data from the start of the 2018 Novy Kostel
 earthquake swarm in Northwestern Bohemia/Czech Republic near the border to Germany.
@@ -120,11 +120,11 @@ After that, cross-correlations are calculated and other, similar earthquakes in 
     distance = 10  # distance between detections in seconds
     detections, sims = correlation_detector(stream, templates, height, distance, plot=stream)
 
-By default, the similarity is calulated by the mean of cross-correlations.
-In the following, we create a custom function which calulates the similarity trace
+By default, the similarity is calculated by the mean of cross-correlations.
+In the following, we create a custom function which calculates the similarity trace
 from a stream of cross-correlations and applies the
 constraint that the cross-correlation should be larger than 0.5 at all stations.
-The function is then passed to the detecor.
+The function is then passed to the detector.
 
 .. plot::
     :context: close-figs
@@ -132,7 +132,7 @@ The function is then passed to the detecor.
 
     def similarity_component_thres(ccs, thres, num_components):
         """Return Trace with mean of ccs
-        and set values to zero if number of components above thresshold is not reached"""
+        and set values to zero if number of components above threshold is not reached"""
         ccmatrix = np.array([tr.data for tr in ccs])
         header = dict(sampling_rate=ccs[0].stats.sampling_rate,
                       starttime=ccs[0].stats.starttime)
