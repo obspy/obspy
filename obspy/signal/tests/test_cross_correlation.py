@@ -17,10 +17,10 @@ from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.libnames import _load_cdll
 from obspy.core.util.testing import ImageComparison
 from obspy.signal.cross_correlation import (
-        correlate, correlate_template, correlate_stream_template,
-        correlation_detector,
-        xcorr_pick_correction, xcorr_3c, xcorr_max,
-        xcorr, _xcorr_padzeros, _xcorr_slice, _find_peaks)
+    correlate, correlate_template, correlate_stream_template,
+    correlation_detector,
+    xcorr_pick_correction, xcorr_3c, xcorr_max,
+    xcorr, _xcorr_padzeros, _xcorr_slice, _find_peaks)
 from obspy.signal.trigger import coincidence_trigger
 
 
@@ -580,6 +580,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.assertEqual(template_orig, template)
         # test similarity parameter with additional constraints
         # test details=True
+
         def simf(ccs):
             ccmatrix = np.array([tr.data for tr in ccs])
             comp_thres = np.sum(ccmatrix > 0.2, axis=0) > 1
@@ -636,17 +637,14 @@ class CrossCorrelationTestCase(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             detections, sims = correlation_detector(
-                    stream[:1], templates, 0.2, 30, plot=True,
-                    template_times=templatetime2, template_magnitudes=2)
+                stream[:1], templates, 0.2, 30, plot=True,
+                template_times=templatetime2, template_magnitudes=2)
         detections0 = [d for d in detections if d['template_id'] == 0]
         self.assertEqual(len(detections0), 3)
         self.assertEqual(len(detections), 3)
         self.assertEqual(len(sims), 2)
         self.assertIsInstance(sims[0], Trace)
         self.assertIs(sims[1], None)
-
-
-
 
 
 def suite():

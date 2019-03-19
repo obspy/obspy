@@ -1035,7 +1035,7 @@ def _insert_amplitude_ratio(detections, stream, template, template_time=None,
     return detections
 
 
-def __get_item(list_, index):
+def _get_item(list_, index):
     try:
         return list_[index]
     except TypeError:
@@ -1064,7 +1064,7 @@ def _plot_detections(detections, similarities, stream=None, heights=None):
     for i, tr in enumerate(similarities):
         if tr is not None:
             ax[num1+i].plot(tr.times('matplotlib'), tr.data, 'k')
-            height = __get_item(heights, i)
+            height = _get_item(heights, i)
             if isinstance(height, (float, int)):
                 ax[num1+i].axhline(height)
         text = ('similarity' if num2 == 1 else
@@ -1140,7 +1140,7 @@ def correlation_detector(stream, templates, heights, distance,
     possible_detections = []
     similarities = []
     for template_id, template in enumerate(templates):
-        template_time = __get_item(template_times, template_id)
+        template_time = _get_item(template_times, template_id)
         try:
             ccs = correlate_stream_template(stream, template,
                                             template_time=template_time,
@@ -1151,7 +1151,7 @@ def correlation_detector(stream, templates, heights, distance,
             similarities.append(None)
             continue
         similarity = similarity_func(ccs)
-        height = __get_item(heights, template_id)
+        height = _get_item(heights, template_id)
         detections_template = _similarity_detector(
             similarity, height, distance, details=details,
             cross_correlations=ccs, **pfkwargs)
@@ -1160,7 +1160,7 @@ def correlation_detector(stream, templates, heights, distance,
         if template_magnitudes is True:
             template_magnitude = None
         else:
-            template_magnitude = __get_item(template_magnitudes, template_id)
+            template_magnitude = _get_item(template_magnitudes, template_id)
         if template_magnitudes is not None:
             _insert_amplitude_ratio(detections_template, stream, template,
                                     template_time=template_time,
