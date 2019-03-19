@@ -888,8 +888,6 @@ def _prep_streams_correlate(stream, template, template_time=None):
     trim1 = [t - min(trim1) for t in trim1]
     trim2 = [t - max(trim2) for t in trim2]
     for i, tr in enumerate(stream):
-        assert trim1[i] >= 0
-        assert trim2[i] <= 0
         tr = tr.slice(starttime + trim1[i], endtime + trim2[i])
         tr.stats.starttime = starttime + template_offset
         stream.traces[i] = tr
