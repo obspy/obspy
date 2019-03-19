@@ -1056,22 +1056,25 @@ def _plot_detections(detections, similarities, stream=None, heights=None):
         color = 'C{}'.format((tid + 1) % 10)
         for i in list(range(num1)) + [num1 + tid]:
             ax[i].axvline(detection['time'].matplotlib_date, color=color)
-    ax_set_dates = None
     for i, tr in enumerate(stream):
         ax[i].plot(tr.times('matplotlib'), tr.data, 'k')
         ax[i].annotate(tr.id, **akw)
-        ax_set_dates = ax[i]
     for i, tr in enumerate(similarities):
         if tr is not None:
             ax[num1+i].plot(tr.times('matplotlib'), tr.data, 'k')
-            ax_set_dates = ax[num1+i]
             height = _get_item(heights, i)
             if isinstance(height, (float, int)):
                 ax[num1+i].axhline(height)
         text = ('similarity' if num2 == 1 else
                 'similarity template {}'.format(i))
         ax[num1+i].annotate(text, **akw)
-    _set_xaxis_obspy_dates(ax_set_dates)
+    try:
+        _set_xaxis_obspy_dates(ax[-1])
+    except ValueError:
+        # work-around for python 2.7, minimum dependencies, see
+        # https://travis-ci.org/obspy/obspy/jobs/508313177
+        # can be safely removed later
+        pass
     plt.show()
 
 
