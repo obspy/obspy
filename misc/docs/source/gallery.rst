@@ -167,16 +167,20 @@ Gallery
     :alt: Cross-Correlation Detector
 
     from obspy import read, Trace, UTCDateTime as UTC
-    from obspy.signal.cross_correlation import correlate_stream_template, similarity_detector
+    from obspy.signal.cross_correlation import correlation_detector
 
     stream = read('https://examples.obspy.org/NKC_PLN_ROHR.HHZ.2018.130.mseed')
     stream.filter('highpass', freq=1, zerophase=True)
-    otime = UTC('2018-05-10 14:24:50')
-    template = stream.select(station='NKC').slice(otime + 2, otime + 7)
-    template += stream.select(station='ROHR').slice(otime + 2, otime + 7)
-    template += stream.select(station='PLN').slice(otime + 6, otime + 12)
-    ccs = correlate_stream_template(stream, template, template_time=otime)
-    detections = similarity_detector(ccs, 0.5, 10, plot_detections=stream)
+    otimes = [UTC('2018-05-10 14:24:50'), UTC('2018-05-10 19:42:08')]
+    templates = []
+    for otime in otimes:
+        template = stream.select(station='NKC').slice(otime + 2, otime + 7)
+        template += stream.select(station='ROHR').slice(otime + 2, otime + 7)
+        template += stream.select(station='PLN').slice(otime + 6, otime + 12)
+        templates.append(template)
+    height = 0.5  # similarity threshold
+    distance = 10  # distance between detections in seconds
+    detections, sims = correlation_detector(stream, templates, height, distance, plot=stream)
 
 .. gallery-plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html

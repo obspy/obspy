@@ -1040,6 +1040,38 @@ def __get_item(list_, index):
         return list_
 
 
+def _plot_detections(detections, similarities, stream=None, heights=None):
+    import matplotlib.pyplot as plt
+    from obspy.imaging.util import _set_xaxis_obspy_dates
+    if stream in (True, None):
+        stream = []
+    akw = dict(xy=(0.02, 0.95), xycoords='axes fraction', va='top')
+    num1 = len(stream)
+    num2 = len(similarities)
+    fig, ax = plt.subplots(num1 + num2, 1, sharex=True)
+    if num1 + num2 == 1:
+        ax = [ax]
+    for detection in detections:
+        tid = detection.get('template_id', 0)
+        color = 'C{}'.format((tid + 1) % 10)
+        for i in list(range(num1)) + [num1 + tid]:
+            ax[i].axvline(detection['time'].matplotlib_date, color=color)
+    for i, tr in enumerate(stream):
+        ax[i].plot(tr.times('matplotlib'), tr.data, 'k')
+        ax[i].annotate(tr.id, **akw)
+    for i, tr in enumerate(similarities):
+        if tr is not None:
+            ax[num1+i].plot(tr.times('matplotlib'), tr.data, 'k')
+            height = __get_item(heights, i)
+            if isinstance(height, (float, int)):
+                ax[num1+i].axhline(height)
+        text = ('similarity' if num2 == 1 else
+                'similarity template {}'.format(i))
+        ax[num1+i].annotate(text, **akw)
+    _set_xaxis_obspy_dates(ax[-1])
+    plt.show()
+
+
 def correlation_detector(stream, templates, heights, distance,
                          template_times=None, template_magnitudes=None,
                          similarity_func=_calc_mean, details=None,
@@ -1077,7 +1109,7 @@ def correlation_detector(stream, templates, heights, distance,
         then only amplitude ratios will be calculated.
     :param similarity_func: By default, the similarity will be calculated by
         the mean of cross-correlations. If provided, `similarity_func` will be
-        called with the stream of cross correaltions and the returned trace
+        called with the stream of cross correlations and the returned trace
         will be used as similarity. See the tutorial for an example.
     :param details: If set to True detections include detailed information.
     :param plot: Plot detections together with the data of the
@@ -1092,7 +1124,7 @@ def correlation_detector(stream, templates, heights, distance,
 
     :return: List of event detections sorted chronologically and
         list of similarity traces - one for each template.
-        Each detection is a dictionary with the follwoing keys:
+        Each detection is a dictionary with the following keys:
         time, similarity, template_id,
         amplitude_ratio, magnitude (if template_magnitudes is provided),
         cross-correlation values, properties returned by find_peaks
@@ -1133,7 +1165,7 @@ def correlation_detector(stream, templates, heights, distance,
                                     template_magnitude=template_magnitude)
         possible_detections.extend(detections_template)
         similarities.append(similarity)
-    # discard detetctions with small distance, prefer those with high
+    # discard detections with small distance, prefer those with high
     # similarity
     if len(templates) == 1:
         detections = possible_detections
@@ -1145,36 +1177,9 @@ def correlation_detector(stream, templates, heights, distance,
                 times.append(pd['time'])
                 detections.append(pd)
         detections = sorted(detections, key=lambda d: d['time'])
-    if plot:
-        import matplotlib.pyplot as plt
-        from obspy.imaging.util import _set_xaxis_obspy_dates
-        if plot is True:
-            plot = []
-        akw = dict(xy=(0.02, 0.95), xycoords='axes fraction', va='top')
-        num1 = len(plot)
-        num2 = len(similarities)
-        fig, ax = plt.subplots(num1 + num2, 1, sharex=True)
-        if num1 + num2 == 1:
-            ax = [ax]
-        for detection in detections:
-            tid = detection.get('template_id', 0)
-            color = 'C{}'.format((tid + 1) % 10)
-            for i in list(range(num1)) + [num1 + tid]:
-                ax[i].axvline(detection['time'].matplotlib_date, color=color)
-        for i, tr in enumerate(plot):
-            ax[i].plot(tr.times('matplotlib'), tr.data, 'k')
-            ax[i].annotate(tr.id, **akw)
-        for i, tr in enumerate(similarities):
-            if tr is not None:
-                ax[num1+i].plot(tr.times('matplotlib'), tr.data, 'k')
-                height = __get_item(heights, i)
-                if isinstance(height, (float, int)):
-                    ax[num1+i].axhline(height)
-            text = ('similarity' if num2 == 1 else
-                    'similarity template {}'.format(i))
-            ax[num1+i].annotate(text, **akw)
-        _set_xaxis_obspy_dates(ax[-1])
-        plt.show()
+    if plot is not None:
+        _plot_detections(detections, similarities, stream=plot,
+                         heights=heights)
     return detections, similarities
 
 
