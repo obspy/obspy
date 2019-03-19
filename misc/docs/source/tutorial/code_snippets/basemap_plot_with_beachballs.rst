@@ -69,3 +69,9 @@ Basemap Plot of the Globe with Beachballs
 
 .. plot:: tutorial/code_snippets/basemap_plot_with_beachballs2.py
    :include-source:
+
+Basemap Plot of the Globe with Beachball using read_events
+==========================================================
+
+.. plot:: tutorial/code_snippets/basemap_with_beachball_read_events.py
+   :include-source:
