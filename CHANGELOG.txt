@@ -107,9 +107,8 @@ master:
    * 'domain' parameter in correlate function is deprecated in favour of new
      'method' parameter to be consistent with recent SciPy versions
      (see #2042).
-   * Add `correlate_stream_template()`, `similarity_detector()` and
-     `insert_amplitude_ratio()` functions to detect events based on template
-     matching.
+   * Add `correlate_stream_template()` and `correlation_detector()`
+     functions to detect events based on template matching (see #2315)
 
 1.1.1: (doi: 10.5281/zenodo.1040770)
  - General:
