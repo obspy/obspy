@@ -533,7 +533,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
         template_orig = template.copy()
         ccs = correlate_stream_template(stream, template)
         self.assertEqual(len(ccs), len(stream))
-#        self.assertEqual(stream[2].stats.starttime, ccs[0].stats.starttime)
+        self.assertEqual(stream[1].stats.starttime, ccs[0].stats.starttime)
         self.assertEqual(stream_orig, stream)
         self.assertEqual(template_orig, template)
         # test if traces with not matching seed ids are discarded
