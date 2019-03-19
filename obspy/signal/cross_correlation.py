@@ -31,6 +31,7 @@ import numpy as np
 import scipy
 
 from obspy import Stream, Trace
+from obspy.core.util.decorator import deprecated
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
@@ -735,6 +736,7 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
     return (pick2_corr, coeff)
 
 
+@deprecated('Please use function correlation_detector()')
 def templates_max_similarity(st, time, streams_templates):
     """
     Compares all event templates in the streams_templates list of streams
