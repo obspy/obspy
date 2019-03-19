@@ -951,11 +951,11 @@ def correlate_stream_template(stream, template, template_time=None, **kwargs):
     >>> pick = UTCDateTime('2009-08-24T00:20:07.73')
     >>> template = data.slice(pick, pick + 10)
     >>> ccs = correlate_stream_template(data, template)
-    >>> print(ccs)
+    >>> print(ccs)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
-    BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:22.990000Z | 100.0 Hz, 2000 samples
-    BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:22.990000Z | 100.0 Hz, 2000 samples
-    BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:22.990000Z | 100.0 Hz, 2000 samples
+    BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 2000 samples
+    BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 2000 samples
+    BW.RJOB..EHZ | ... - 2009-08-24T00:20:22.990000Z | 100.0 Hz, 2000 samples
     """
     stream, template = _prep_streams_correlate(stream, template,
                                                template_time=template_time)
@@ -1163,8 +1163,10 @@ def correlation_detector(stream, templates, heights, distance,
     >>> pick = UTCDateTime('2009-08-24T00:20:07.73')
     >>> template = data.slice(pick, pick + 10)
     >>> detections, sims = correlation_detector(data, template, 0.5, 10)
-    >>> print(detections)
-    [{'time': UTCDateTime(2009, 8, 24, 0, 20, 7, 730000), 'similarity': 0.99999999999999944, 'template_id': 0}]
+    >>> print(detections)   # doctest: +NORMALIZE_WHITESPACE
+    [{'time': UTCDateTime(2009, 8, 24, 0, 20, 7, 730000),
+      'similarity': 0.99999999999999944,
+      'template_id': 0}]
 
     A more advanced `turorial <tutorial/code_snippets/xcorr_detector.html>`
     is available.
