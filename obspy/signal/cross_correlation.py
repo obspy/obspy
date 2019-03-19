@@ -961,6 +961,9 @@ def _calc_mean(stream):
 
 
 def _find_peaks(data, height, holdon_samples, holdoff_samples):
+    """
+    Peak finding function used for Scipy versions smaller than 1.1
+    """
     cond = data >= height
     # loop through True values in cond array and guarantee hold time
     similarity_cond = data[cond]
@@ -1041,6 +1044,9 @@ def _get_item(list_, index):
 
 
 def _plot_detections(detections, similarities, stream=None, heights=None):
+    """
+    Plot detections together with similarity traces and data stream
+    """
     import matplotlib.pyplot as plt
     from obspy.imaging.util import _set_xaxis_obspy_dates
     if stream in (True, None):

@@ -3,7 +3,7 @@ Cross-Correlation Detector
 ==========================
 
 These code snippets show how to use the function
-:func:`~obspy.signal.cross_correlation.correlate_detector`.
+:func:`~obspy.signal.cross_correlation.correlation_detector`.
 
 --------------------------------
 Detection based on one component
