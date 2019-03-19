@@ -1,7 +1,7 @@
-Description: hardcode clean version number for deb packages of releases
- Somehow with our git-based version getter routine we get "-dirty" version
- numbers even when building clean packages from release tags. So it's easiest
- to simply hard code the version number.
+Description: ensure clean version number for deb packages of releases
+ Somehow with our git-based version getter routine we get "--dirty" version
+ numbers even when building clean packages from release tags. So we just always
+ avoid the '--dirty' from being appended.
 Author: Tobias Megies
 Bug: https://github.com/obspy/obspy/issues/2363
 ---
