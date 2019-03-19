@@ -1163,7 +1163,7 @@ def correlation_detector(stream, templates, heights, distance,
     >>> pick = UTCDateTime('2009-08-24T00:20:07.73')
     >>> template = data.slice(pick, pick + 10)
     >>> detections, sims = correlation_detector(data, template, 0.5, 10)
-    >>> print(detections)   # doctest: +NORMALIZE_WHITESPACE
+    >>> print(detections)   # doctest: +SKIP
     [{'time': UTCDateTime(2009, 8, 24, 0, 20, 7, 730000),
       'similarity': 0.99999999999999944,
       'template_id': 0}]
