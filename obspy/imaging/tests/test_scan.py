@@ -12,8 +12,10 @@ import unittest
 from os.path import abspath, dirname, join, pardir
 import warnings
 
+import matplotlib.pyplot as plt
+
 from obspy import read, UTCDateTime
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, get_example_file
 from obspy.core.util.misc import TemporaryWorkingDirectory, CatchOutput
 from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.scan import main as obspy_scan
@@ -72,6 +74,47 @@ class ScanTestCase(unittest.TestCase):
 
         with ImageComparison(self.path, 'scan.png') as ic:
             scanner.plot(ic.name)
+
+    def test_scan_plot_by_id_with_wildcard(self):
+        """
+        Test selecting what to plot after scanning with wildcards in selected
+        SEED IDs
+        """
+        files = [
+            "BW.UH1._.EHZ.D.2010.147.a.slist.gz",
+            "BW.UH1._.EHZ.D.2010.147.b.slist.gz",
+            "BW.UH1._.SHZ.D.2010.147.cut.slist.gz",
+            "BW.UH2._.SHZ.D.2010.147.cut.slist.gz",
+            "BW.UH3._.SHE.D.2010.147.cut.slist.gz",
+            "BW.UH3._.SHN.D.2010.147.cut.slist.gz",
+            "BW.UH3._.SHZ.D.2010.147.cut.slist.gz",
+            "BW.UH4._.EHZ.D.2010.147.cut.slist.gz",
+            "IUANMO.seed"]
+
+        scanner = Scanner()
+
+        for filename in files:
+            scanner.parse(get_example_file(filename))
+
+        expected = [
+            ('*.UH[12]*',
+             ['BW.UH2..SHZ\n100.0%',
+              'BW.UH1..SHZ\n100.0%',
+              'BW.UH1..EHZ\n10.7%']),
+            ('*Z',
+             ['IU.ANMO.00.LHZ\n100.0%',
+              'BW.UH4..EHZ\n100.0%',
+              'BW.UH3..SHZ\n100.0%',
+              'BW.UH2..SHZ\n100.0%',
+              'BW.UH1..SHZ\n100.0%',
+              'BW.UH1..EHZ\n10.7%'])]
+
+        for seed_id, expected_labels in expected:
+            fig, ax = plt.subplots()
+            fig = scanner.plot(fig=fig, show=False, seed_ids=[seed_id])
+            got = [label.get_text() for label in ax.get_yticklabels()]
+            self.assertEqual(got, expected_labels)
+            plt.close(fig)
 
     def test_scanner_manually_add_streams(self):
         """
