@@ -1,3 +1,4 @@
+hardcode_version_number.diff
 remove_basemap_warning.diff
 rename_console_scripts_on_py3
 patch_libmseed_test_data_location.diff

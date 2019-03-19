@@ -1,0 +1,122 @@
+Description: hardcode clean version number for deb packages of releases
+ Somehow with our git-based version getter routine we get "-dirty" version
+ numbers even when building clean packages from release tags. So it's easiest
+ to simply hard code the version number.
+Author: Tobias Megies
+Bug: https://github.com/obspy/obspy/issues/2363
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/misc/debian/deb__build_debs.sh
++++ b/misc/debian/deb__build_debs.sh
+@@ -68,14 +68,7 @@ wq
+ EOL
+ # get version number from the tag, the debian version
+ # has to be increased manually if necessary.
+-VERSION=`python -c "\
+-import sys
+-import os
+-UTIL_PATH = os.path.abspath(os.path.join('$GITDIR', 'obspy', 'core', 'util'))
+-sys.path.insert(0, UTIL_PATH)
+-from version import get_git_version
+-version = get_git_version(dirty=False, append_remote_tracking_branch=False)
+-print(version)"`
++VERSION=1.2.0
+ # our package is not really dirty, just minor changes for packaging applied
+ VERSION_COMPLETE=${VERSION}-${DEBVERSION}~${CODENAME}
+ # the commented code shows how to update the changelog
+--- a/obspy/core/util/version.py
++++ b/obspy/core/util/version.py
+@@ -37,7 +37,6 @@ import inspect
+ import io
+ import os
+ import re
+-from subprocess import STDOUT, CalledProcessError, check_output
+ 
+ 
+ __all__ = ("get_git_version")
+@@ -51,75 +50,7 @@ VERSION_FILE = os.path.join(OBSPY_ROOT,
+ 
+ def call_git_describe(abbrev=10, dirty=True,
+                       append_remote_tracking_branch=True):
+-    try:
+-        p = check_output(['git', 'rev-parse', '--show-toplevel'],
+-                         cwd=OBSPY_ROOT, stderr=STDOUT)
+-        path = p.decode().strip()
+-    except (OSError, CalledProcessError):
+-        return None
+-
+-    if os.path.normpath(path) != OBSPY_ROOT:
+-        return None
+-
+-    command = ['git', 'describe', '--abbrev=%d' % abbrev, '--always', '--tags']
+-    if dirty:
+-        command.append("--dirty")
+-    try:
+-        p = check_output(['git', 'describe', '--dirty', '--abbrev=%d' % abbrev,
+-                          '--always', '--tags'],
+-                         cwd=OBSPY_ROOT, stderr=STDOUT)
+-        line = p.decode().strip()
+-    except (OSError, CalledProcessError):
+-        return None
+-
+-    remote_tracking_branch = None
+-    if append_remote_tracking_branch:
+-        try:
+-            # find out local alias of remote and name of remote tracking branch
+-            p = check_output(['git', 'branch', '-vv'],
+-                             cwd=OBSPY_ROOT, stderr=STDOUT)
+-            remote_info = [line_.rstrip()
+-                           for line_ in p.decode().splitlines()]
+-            remote_info = [line_ for line_ in remote_info
+-                           if line_.startswith('*')][0]
+-            remote_info = re.sub(r".*? \[([^ :]*).*?\] .*", r"\1", remote_info)
+-            remote, branch = remote_info.split("/")
+-            # find out real name of remote
+-            p = check_output(['git', 'remote', '-v'],
+-                             cwd=OBSPY_ROOT, stderr=STDOUT)
+-            stdout = [line_.strip() for line_ in p.decode().splitlines()]
+-            remote = [line_ for line_ in stdout
+-                      if line_.startswith(remote)][0].split()[1]
+-            if remote.startswith("git@github.com:"):
+-                remote = re.sub(r"git@github.com:(.*?)/.*", r"\1", remote)
+-            elif remote.startswith("https://github.com/"):
+-                remote = re.sub(r"https://github.com/(.*?)/.*", r"\1", remote)
+-            elif remote.startswith("git://github.com"):
+-                remote = re.sub(r"git://github.com/(.*?)/.*", r"\1", remote)
+-            else:
+-                remote = None
+-            if remote is not None:
+-                remote_tracking_branch = re.sub(r'[^A-Za-z0-9._-]', r'_',
+-                                                '%s-%s' % (remote, branch))
+-        except (IndexError, OSError, ValueError, CalledProcessError):
+-            pass
+-
+-    # (this line prevents official releases)
+-    # should work again now, see #482 and obspy/obspy@b437f31
+-    if "-" not in line and "." not in line:
+-        version = "0.0.0.dev+0.g%s" % line
+-    else:
+-        parts = line.split('-', 1)
+-        version = parts[0]
+-        try:
+-            version += '.post+' + parts[1]
+-            if remote_tracking_branch is not None:
+-                version += '.' + remote_tracking_branch
+-        # IndexError means we are at a release version tag cleanly,
+-        # add nothing additional
+-        except IndexError:
+-            pass
+-    return version
++    return "1.2.0"
+ 
+ 
+ def read_release_version():
+@@ -133,7 +64,7 @@ def read_release_version():
+ 
+ def write_release_version(version):
+     with io.open(VERSION_FILE, "wb") as fh:
+-        fh.write(("%s\n" % version).encode('ascii', 'strict'))
++        fh.write("1.2.0".encode('ascii', 'strict'))
+ 
+ 
+ def get_git_version(abbrev=10, dirty=True, append_remote_tracking_branch=True):
