@@ -1,0 +1,3 @@
+{
+  "obspy/core/tests/test_stream.py": true
+}
