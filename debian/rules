@@ -4,6 +4,7 @@
 
 export DH_ALWAYS_EXCLUDE=CVS:.git:.gitignore:__pycache__:src
 export PYBUILD_SYSTEM=distutils
+export PYBUILD_NAME=obspy
 
 %:
 	# XXX somehow pybuild wants to build py37 even if it's not installed and we
