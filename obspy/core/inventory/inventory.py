@@ -1037,27 +1037,6 @@ class Inventory(ComparingObject):
 
         return fig
 
-    def sort(self):
-        """
-        Sorts the lists in a inventory first by code and then by starting date.
-        """
-
-        pri = "code"
-        sec = "start_date"
-
-        self.networks = sorted(self.networks,
-                               key=lambda item: [getattr(item, pri),
-                                                 getattr(item, sec)])
-        for net in self.networks:
-            net.stations = sorted(net.stations,
-                                  key=lambda item: [getattr(item, pri),
-                                                    getattr(item, sec)])
-            for sta in net:
-                sta.channels = sorted(sta.channels,
-                                      key=lambda item: [getattr(item, pri),
-                                                        getattr(item, sec)])
-        inv = copy.copy(self)
-        return inv
 
 if __name__ == '__main__':
     import doctest
