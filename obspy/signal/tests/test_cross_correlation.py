@@ -578,6 +578,13 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.assertNotIn('magnitude', detections[1])
         self.assertEqual(stream_orig, stream)
         self.assertEqual(template_orig, template)
+        # test template names
+        detections, _ = correlation_detector(stream, template, 0.2, 30,
+                                             template_names='eq')
+        self.assertEqual(detections[0]['template_name'], 'eq')
+        detections, _ = correlation_detector(stream, template, 0.2, 30,
+                                             template_names=['eq'], plot=True)
+        self.assertEqual(detections[0]['template_name'], 'eq')
         # test similarity parameter with additional constraints
         # test details=True
 

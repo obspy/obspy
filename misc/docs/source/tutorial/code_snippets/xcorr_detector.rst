@@ -110,6 +110,7 @@ After that, cross-correlations are calculated and other, similar earthquakes in 
         templates.append(template)
 
     template_magnitudes = [2.9, 2.8]
+    template_names = ['1st template', '2nd template']
     templates[0].plot()
 
 .. plot::
@@ -118,7 +119,7 @@ After that, cross-correlations are calculated and other, similar earthquakes in 
 
     height = 0.5  # similarity threshold
     distance = 10  # distance between detections in seconds
-    detections, sims = correlation_detector(stream, templates, height, distance, plot=stream)
+    detections, sims = correlation_detector(stream, templates, height, distance, template_names=template_names, plot=stream)
 
 By default, the similarity is calculated by the mean of cross-correlations.
 In the following, we create a custom function which calculates the similarity trace
@@ -145,7 +146,7 @@ The function is then passed to the detector.
 
     detections, sims = correlation_detector(
             stream, templates, height, distance, similarity_func=simf, plot=stream,
-            template_times=otimes, template_magnitudes=template_magnitudes)
+            template_times=otimes, template_magnitudes=template_magnitudes, template_names=template_names)
 
 Now, we have only 11 detections, probably from two specific earthquake clusters.
 To get more detections, we need to relax the constraints again.
@@ -174,6 +175,7 @@ data and templates:
         templates.append(template)
 
     template_magnitudes = [2.9, 2.8]
+    template_names = ['1st template', '2nd template']
 
     def similarity_component_thres(ccs, thres, num_components):
         """Return Trace with mean of ccs
@@ -189,8 +191,8 @@ data and templates:
         return similarity_component_thres(ccs, 0.5, 3)
 
     detections, sims = correlation_detector(
-            stream, templates, 0.5, 10, similarity_func=simf,
-            template_times=otimes, template_magnitudes=template_magnitudes)
+            stream, templates, 0.5, 10, similarity_func=simf, template_times=otimes,
+            template_magnitudes=template_magnitudes, template_names=template_names)
 
 .. testcode::
 
@@ -200,56 +202,67 @@ data and templates:
 
     [{'time': 2018-05-10T12:34:56.631599Z,
       'similarity': 0.72489172487200071,
+      'template_name': '1st template',
       'template_id': 0,
       'amplitude_ratio': 0.042826872986209588,
       'magnitude': 1.0756218205928332},
      {'time': 2018-05-10T14:24:50.001599Z,
       'similarity': 1.0000000000000027,
+      'template_name': '1st template',
       'template_id': 0,
       'amplitude_ratio': 1.0,
       'magnitude': 2.8999999999999999},
      {'time': 2018-05-10T14:27:50.921599Z,
       'similarity': 0.57155043392492588,
+      'template_name': '1st template',
       'template_id': 0,
       'amplitude_ratio': 0.019130460518598909,
       'magnitude': 0.60896723296053024},
      {'time': 2018-05-10T14:41:07.691599Z,
       'similarity': 0.772879074393792,
+      'template_name': '1st template',
       'template_id': 0,
       'amplitude_ratio': 0.57507924545222067,
       'magnitude': 2.5796369256528813},
      {'time': 2018-05-10T14:55:50.001599Z,
       'similarity': 0.57467717600499058,
+      'template_name': '1st template',
       'template_id': 0,
       'amplitude_ratio': 0.078631249252299668,
       'magnitude': 1.4274602340872211},
      {'time': 2018-05-10T15:12:10.141599Z,
       'similarity': 0.6852082687836063,
+      'template_name': '1st template',
       'template_id': 0,
       'amplitude_ratio': 0.11301513001944399,
       'magnitude': 1.6375154520085005},
      {'time': 2018-05-10T17:58:11.861599Z,
       'similarity': 0.74731725616064482,
+      'template_name': '2nd template',
       'template_id': 1,
       'amplitude_ratio': 0.23222879133919266,
       'magnitude': 1.9545547491304716},
      {'time': 2018-05-10T19:22:29.511599Z,
       'similarity': 0.70112087830579739,
+      'template_name': '1st template',
       'template_id': 0,
       'amplitude_ratio': 0.68929540439903225,
       'magnitude': 2.6845405106924867},
      {'time': 2018-05-10T19:34:50.271599Z,
       'similarity': 0.63060024934168146,
+      'template_name': '2nd template',
       'template_id': 1,
       'amplitude_ratio': 0.51910269908035278,
       'magnitude': 2.4203377160050512},
      {'time': 2018-05-10T19:41:55.021599Z,
       'similarity': 0.68000312618108072,
+      'template_name': '2nd template',
       'template_id': 1,
       'amplitude_ratio': 0.054704354180392788,
       'magnitude': 1.1173625270371177},
      {'time': 2018-05-10T19:42:08.001599Z,
       'similarity': 0.99999999999999434,
+      'template_name': '2nd template',
       'template_id': 1,
       'amplitude_ratio': 1.0,
       'magnitude': 2.7999999999999998}]

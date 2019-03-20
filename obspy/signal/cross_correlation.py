@@ -1049,13 +1049,16 @@ def _insert_amplitude_ratio(detections, stream, template, template_time=None,
 
 
 def _get_item(list_, index):
+    if isinstance(list_, str):
+        return list_
     try:
         return list_[index]
     except TypeError:
         return list_
 
 
-def _plot_detections(detections, similarities, stream=None, heights=None):
+def _plot_detections(detections, similarities, stream=None, heights=None,
+                     template_names=None):
     """
     Plot detections together with similarity traces and data stream.
     """
@@ -1083,7 +1086,9 @@ def _plot_detections(detections, similarities, stream=None, heights=None):
             height = _get_item(heights, i)
             if isinstance(height, (float, int)):
                 ax[num1+i].axhline(height)
-        text = ('similarity' if num2 == 1 else
+        template_name = _get_item(template_names, i)
+        text = ('similarity {}'.format(template_name) if template_name else
+                'similarity' if num2 == 1 else
                 'similarity template {}'.format(i))
         ax[num1+i].annotate(text, **akw)
     try:
@@ -1098,6 +1103,7 @@ def _plot_detections(detections, similarities, stream=None, heights=None):
 
 def correlation_detector(stream, templates, heights, distance,
                          template_times=None, template_magnitudes=None,
+                         template_names=None,
                          similarity_func=_calc_mean, details=None,
                          plot=None, **kwargs):
     """
@@ -1131,6 +1137,8 @@ def correlation_detector(stream, templates, heights, distance,
         This argument can also be a single value.
         This argument can be set to `True`,
         then only amplitude ratios will be calculated.
+    :param template_names: List of template names, the corresponding
+        template name will be inserted into the detection.
     :param similarity_func: By default, the similarity will be calculated by
         the mean of cross-correlations. If provided, `similarity_func` will be
         called with the stream of cross correlations and the returned trace
@@ -1151,6 +1159,7 @@ def correlation_detector(stream, templates, heights, distance,
         Each detection is a dictionary with the following keys:
         time, similarity, template_id,
         amplitude_ratio, magnitude (if template_magnitudes is provided),
+        template_name (if template_names is provided),
         cross-correlation values, properties returned by find_peaks
         (if details are requested)
 
@@ -1193,6 +1202,9 @@ def correlation_detector(stream, templates, heights, distance,
             similarity, height, distance, details=details,
             cross_correlations=ccs, **pfkwargs)
         for d in detections_template:
+            template_name = _get_item(template_names, template_id)
+            if template_name is not None:
+                d['template_name'] = template_name
             d['template_id'] = template_id
         if template_magnitudes is True:
             template_magnitude = None
@@ -1218,7 +1230,7 @@ def correlation_detector(stream, templates, heights, distance,
         detections = sorted(detections, key=lambda d: d['time'])
     if plot is not None:
         _plot_detections(detections, similarities, stream=plot,
-                         heights=heights)
+                         heights=heights, template_names=template_names)
     return detections, similarities
 
 

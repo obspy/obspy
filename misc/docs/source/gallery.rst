@@ -180,7 +180,8 @@ Gallery
         templates.append(template)
     height = 0.5  # similarity threshold
     distance = 10  # distance between detections in seconds
-    detections, sims = correlation_detector(stream, templates, height, distance, plot=stream)
+    template_names = ['1st template', '2nd template']
+    detections, sims = correlation_detector(stream, templates, height, distance, plot=stream, template_names=template_names)
 
 .. gallery-plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
