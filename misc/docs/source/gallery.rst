@@ -87,8 +87,8 @@ Gallery
     :alt: Second Basemap Plot with Beachballs
 
 .. gallery-plot:: tutorial/code_snippets/basemap_with_beachball_read_events.py
-	:target: tutorial/code_snippets/basemap_plot_with_beachballs.html
-	:alt: Basemap Plot with Beachball read_events
+    :target: tutorial/code_snippets/basemap_plot_with_beachballs.html
+    :alt: Basemap Plot with Beachball read_events
 
 .. gallery-plot:: tutorial/code_snippets/merging_seismograms.py
     :target: tutorial/code_snippets/merging_seismograms.html
