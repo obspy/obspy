@@ -24,8 +24,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import ctypes as C
-import math as M
+import ctypes as C  # NOQA
+import math
 import os
 import warnings
 
@@ -350,8 +350,8 @@ def corn_freq_2_paz(fc, damp=0.707):
     :param damping: Corner frequency
     :return: Dictionary containing poles, zeros and gain
     """
-    poles = [-(damp + M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc,
-             -(damp - M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]
+    poles = [-(damp + math.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc,
+             -(damp - math.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]
     return {'poles': poles, 'zeros': [0j, 0j], 'gain': 1, 'sensitivity': 1.0}
 
 

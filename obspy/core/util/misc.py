@@ -743,7 +743,7 @@ def _yield_resource_id_parent_attr(obj):
             elif hasattr(obj, '__dict__'):
                 for item, val in obj.__dict__.items():
                     for out in func(val, obj, item):
-                            yield out
+                        yield out
 
     return func(obj)
 

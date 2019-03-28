@@ -22,6 +22,7 @@ from obspy.core.event.source import farfield
 from obspy.core.util import (
     BASEMAP_VERSION, CARTOPY_VERSION, PROJ4_VERSION, MATPLOTLIB_VERSION)
 from obspy.core.util.base import _get_entry_points
+from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import ImageComparison
 from obspy.core.event.base import QuantityError
 
@@ -126,9 +127,10 @@ class EventTestCase(unittest.TestCase):
 
     @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
     @unittest.skipIf(
-        BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+        BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
         'matplotlib 3.0.1 is not campatible with basemap')
-    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
     def test_plot_farfield_without_quiver_with_maps(self):
         """
         Tests to plot P/S wave farfield radiation pattern, also with beachball
@@ -516,7 +518,7 @@ class CatalogTestCase(unittest.TestCase):
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 @unittest.skipIf(
-    BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+    BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
     'matplotlib 3.0.1 is not campatible with basemap')
 class CatalogBasemapTestCase(unittest.TestCase):
     """
@@ -526,7 +528,8 @@ class CatalogBasemapTestCase(unittest.TestCase):
         # directory where the test files are located
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
-    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
     def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters, using Basemap.
@@ -584,6 +587,21 @@ class CatalogBasemapTestCase(unittest.TestCase):
             cat.plot(method='basemap', outfile=ic.name, projection='local',
                      resolution='l', continent_fill_color='0.3',
                      color='date', colormap='gist_heat')
+
+    def test_plot_catalog_before_1900(self):
+        """
+        Tests plotting events with origin times before 1900
+        """
+        cat = read_events()
+        cat[1].origins[0].time = UTCDateTime(813, 2, 4, 14, 13)
+
+        # just checking this runs without error is fine, no need to check
+        # content
+        with MatplotlibBackend("AGG", sloppy=True):
+            cat.plot(outfile=io.BytesIO(), method='basemap')
+            # also test with just a single event
+            cat.events = [cat[1]]
+            cat.plot(outfile=io.BytesIO(), method='basemap')
 
 
 @unittest.skipIf(not HAS_CARTOPY, 'Cartopy not installed or too old')

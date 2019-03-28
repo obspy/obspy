@@ -79,6 +79,22 @@ class TriggerTestCase(unittest.TestCase):
         self.assertEqual(nptime, 17545)
         self.assertEqual(pfm, 'IPU0')
 
+    def test_pk_baer_cf(self):
+        """
+        Test pk_baer against implementation for UNESCO short course
+        """
+        filename = os.path.join(self.path, 'manz_waldk.a01.gz')
+        with gzip.open(filename) as f:
+            data = np.loadtxt(f, dtype=np.float32)
+        df, ntdownmax, ntupevent, thr1, thr2, npreset_len, np_dur = \
+            (200.0, 20, 60, 7.0, 12.0, 100, 100)
+        nptime, pfm, cf = pk_baer(data, df, ntdownmax, ntupevent,
+                                  thr1, thr2, npreset_len, np_dur,
+                                  return_cf=True)
+        self.assertEqual(nptime, 17545)
+        self.assertEqual(pfm, 'IPU0')
+        self.assertEqual(len(cf), 119999)
+
     def test_ar_pick(self):
         """
         Test ar_pick against implementation for UNESCO short course

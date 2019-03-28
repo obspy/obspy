@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import inspect
+import io
 import os
 import re
 import unittest
@@ -276,6 +277,32 @@ class NLLOCTestCase(unittest.TestCase):
         self.assertEqual(
             cat[0].creation_info.creation_time,
             UTCDateTime(2017, 5, 9, 11, 0, 22))
+
+    def test_issue_2222(self):
+        """
+        Test that hour values of 24 don't break parser.
+        """
+
+        # modify the example file to contain an hour 24 and second 60
+        nll_str = open(get_example_file('nlloc.hyp')).read().splitlines()
+        # first add a line with hour 24
+        str_list = list(nll_str[-3])
+        str_list[37:41] = '2400'
+        nll_str[-3] = ''.join(str_list)
+        # then add a line with second 60
+        str_list = list(nll_str[-4])
+        str_list[46:48] = '60'
+        nll_str[-4] = ''.join(str_list)
+        # write to string io and read into catalog object
+        str_io = io.StringIO()
+        str_io.write('\n'.join(nll_str))
+        str_io.seek(0)
+        cat = read_nlloc_hyp(str_io)
+        # check catalog is populated and pick times are right
+        self.assertEqual(len(cat), 1)
+        pick1, pick2 = cat[0].picks[-1], cat[0].picks[-2]
+        self.assertEqual(pick1.time.hour, 0)
+        self.assertEqual(pick2.time.second, 0)
 
 
 def suite():

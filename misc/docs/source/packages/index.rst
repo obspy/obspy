@@ -134,6 +134,7 @@ categories.*
 
     obspy.io.cmtsolution
     obspy.io.cnv
+    obspy.io.focmec
     obspy.io.gse2
     obspy.io.iaspei
     obspy.io.json

@@ -190,9 +190,9 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
     # maximum likelihood origin time info line
     line = lines["GEOGRAPHIC"]
 
-    year, month, day, hour, minute = map(int, line.split()[1:6])
+    year, mon, day, hour, min = map(int, line.split()[1:6])
     seconds = float(line.split()[6])
-    time = UTCDateTime(year, month, day, hour, minute, seconds)
+    time = UTCDateTime(year, mon, day, hour, min, seconds, strict=False)
 
     # distribution statistics line
     line = lines["STATISTICS"]
@@ -328,8 +328,11 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         # when reading the .hyp file.. to conform with QuakeML standard set an
         # empty network code
         wid = WaveformStreamID(network_code="", station_code=station)
+        # have to split this into ints for overflow to work correctly
         date, hourmin, sec = map(str, line[6:9])
-        t = UTCDateTime.strptime(date + hourmin, "%Y%m%d%H%M") + float(sec)
+        ymd = [int(date[:4]), int(date[4:6]), int(date[6:8])]
+        hm = [int(hourmin[:2]), int(hourmin[2:4])]
+        t = UTCDateTime(*(ymd + hm), strict=False) + float(sec)
         pick.waveform_id = wid
         pick.time = t
         pick.time_errors.uncertainty = float(line[10])

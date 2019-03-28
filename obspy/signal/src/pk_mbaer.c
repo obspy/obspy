@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------
 # Filename: pk_mbaer.c
-#  Purpose: C-Verions of Baer Picker based on Fortran code of Baer
+#  Purpose: C-Version of Baer Picker based on Fortran code of Baer
 #   Author: Andreas Rietbrock, Joachim Wassermann
 # Copyright (C) A. Rietbrock, J. Wassermann
 #---------------------------------------------------------------------*/
@@ -10,8 +10,8 @@
 #include <math.h>
 #include <string.h>
 
-
 static void preset(float *, int , float *, float *, float *, /*@out@*/ float *, /*@out@*/ float *, float *, int *, /*@out@*/ int *, /*@out@*/ int *, /*@out@*/ int *, char *, /*@out@*/ int *, float );
+
 /*
 *******************************************************************************
 c====================================================================
@@ -82,7 +82,7 @@ c preset_len  | no of points taken for the estimation of variance of
 
 *******************************************************************************
 int ppick (reltrc,npts,pptime,pfm,
-     samplespersec,tdownmax,tupevent,thrshl1,thrshl2,preset_len,p_dur)
+     samplespersec,tdownmax,tupevent,thrshl1,thrshl2,preset_len,p_dur,cf)
 float *reltrc;
 int npts;
 int *pptime;
@@ -92,10 +92,10 @@ int tdownmax,tupevent;
 float thrshl1,thrshl2;
 int preset_len;
 int p_dur;
-{
+float *cf
 */
 
-int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec, int tdownmax, int tupevent, float thrshl1, float thrshl2, int preset_len, int p_dur){
+int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec, int tdownmax, int tupevent, float thrshl1, float thrshl2, int preset_len, int p_dur,float *cf){
       int len2;
       int *trace = NULL;
       int ipkflg;
@@ -116,6 +116,9 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
       int ii;
       float min,max;
       float scale;
+
+      int cf_counter=0;
+
 
       len2 = 2*preset_len;  /*
                             the variance of SF(t) is updated as long as
@@ -160,7 +163,7 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
       mean = 0;
       dtime = 0;
 
-      preset(reltrc,preset_len,&rawold,&y2,&yt,&ssx,&ssx2,&sdev,&num,&itar,
+      preset(/*@IN@*/reltrc,preset_len,&rawold,&y2,&yt,/*@OUT@*/&ssx,&ssx2,&sdev,&num,&itar,
          &ptime,&preptime,pfm,&ipkflg,samplespersec);
 
       omega = y2/yt;    /* set weighting factor */
@@ -265,10 +268,13 @@ label160:
       edat= edat*edat;         /* corresponds to SF(t) */
       omega= y2/yt;
 
-      if(sdev > 0)
+      if(sdev > 0) {
           edev= (edat-mean)/sdev;  /* corresponds to CF(t), mean corresponds
                                       to S(t)
                                    */
+          cf[cf_counter]=edev;
+          cf_counter++;
+      }
 
       iamp = (int) (abs(trace[i]) + 0.5);
       if(iamp > amp)

@@ -20,7 +20,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import math as M
+import math
 
 import numpy as np
 from matplotlib import mlab
@@ -43,8 +43,8 @@ def _nearest_pow_2(x):
     :rtype: Int
     :return: Nearest power of 2 to x
     """
-    a = M.pow(2, M.ceil(np.log2(x)))
-    b = M.pow(2, M.floor(np.log2(x)))
+    a = math.pow(2, math.ceil(np.log2(x)))
+    b = math.pow(2, math.floor(np.log2(x)))
     if abs(a - x) < abs(b - x):
         return a
     else:

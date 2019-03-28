@@ -15,6 +15,8 @@ from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
 import builtins
+import copy
+import io
 import os
 import unittest
 import warnings
@@ -42,6 +44,10 @@ class InventoryTestCase(unittest.TestCase):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.nperr = np.geterr()
         np.seterr(all='ignore')
+        path = os.path.join(os.path.dirname(__file__), 'data')
+        self.path = path
+        self.station_xml1 = os.path.join(path, 'IU_ANMO_00_BHZ.xml')
+        self.station_xml2 = os.path.join(path, 'IU_ULN_00_LH1.xml')
 
     def tearDown(self):
         np.seterr(**self.nperr)
@@ -195,6 +201,27 @@ class InventoryTestCase(unittest.TestCase):
                 inv.plot_response(0.01, output="ACC", channel="*N",
                                   station="[WR]*", time=t, outfile=ic.name)
 
+    def test_response_plot_epoch_times_in_label(self):
+        """
+        Tests response plot with epoch times in labels switched on.
+        """
+        import matplotlib.pyplot as plt
+        inv = read_inventory().select(station='RJOB', channel='EHZ')
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            fig = inv.plot_response(0.01, label_epoch_dates=True, show=False)
+        try:
+            legend = fig.axes[0].get_legend()
+            texts = legend.get_texts()
+            expecteds = ['BW.RJOB..EHZ\n2001-05-15 -- 2006-12-12',
+                         'BW.RJOB..EHZ\n2006-12-13 -- 2007-12-17',
+                         'BW.RJOB..EHZ\n2007-12-17 -- open']
+            self.assertEqual(len(texts), 3)
+            for text, expected in zip(texts, expecteds):
+                self.assertEqual(text.get_text(), expected)
+        finally:
+            plt.close(fig)
+
     def test_inventory_merging_metadata_update(self):
         """
         Tests the metadata update during merging of inventory objects.
@@ -342,6 +369,27 @@ class InventoryTestCase(unittest.TestCase):
                        dict(network='GR', channel='EHZ')]:
             inv_ = inv.remove(**kwargs)
             self.assertEqual(inv_, inv)
+
+    def test_issue_2266(self):
+        """
+        Ensure the remove method works for more than just channel level
+        inventories. See #2266.
+        """
+        # get inventory and remove all channel level info
+        inv = obspy.read_inventory()
+        for net in inv:
+            for sta in net:
+                sta.channels = []
+        # filter by one of the networks
+        inv_net = copy.deepcopy(inv).remove(network='BW')
+        self.assertEqual(len(inv_net.networks), 1)
+        # filter by the stations, this should also remove network BW
+        inv_sta = copy.deepcopy(inv).remove(station='RJOB')
+        self.assertEqual(len(inv_sta.networks), 1)
+        self.assertEqual(len(inv_sta.networks[0].stations), 2)
+        # but is keep empty is selected network BW should remain
+        inv_sta = copy.deepcopy(inv).remove(station='RJOB', keep_empty=True)
+        self.assertEqual(len(inv_sta.networks), 2)
 
     def test_inventory_select(self):
         """
@@ -555,11 +603,55 @@ class InventoryTestCase(unittest.TestCase):
             self.assertEqual(
                 str(e.exception), exception_msg.format(doesnt_exist))
 
+    def test_inventory_can_be_initialized_with_no_arguments(self):
+        """
+        Source and networks need not be specified.
+        """
+        inv = Inventory()
+        self.assertEqual(inv.networks, [])
+        self.assertEqual(inv.source, "ObsPy %s" % obspy.__version__)
+
+        # Should also be serializable.
+        with io.BytesIO() as buf:
+            # This actually would not be a valid StationXML file but there
+            # might be uses for this.
+            inv.write(buf, format="stationxml")
+            buf.seek(0, 0)
+            inv2 = read_inventory(buf)
+
+        self.assertEqual(inv, inv2)
+
+    def test_copy(self):
+        """
+        Test for copying inventory.
+        """
+        inv = read_inventory()
+        inv2 = inv.copy()
+        self.assertIsNot(inv, inv2)
+        self.assertEqual(inv, inv2)
+        # make sure changing inv2 doesnt affect inv
+        original_latitude = inv2[0][0][0].latitude
+        inv2[0][0][0].latitude = original_latitude + 1
+        self.assertEqual(inv[0][0][0].latitude, original_latitude)
+        self.assertEqual(inv2[0][0][0].latitude, original_latitude + 1)
+        self.assertNotEqual(inv[0][0][0].latitude, inv2[0][0][0].latitude)
+
+    def test_read_inventory_with_wildcard(self):
+        """
+        Tests the read_inventory() function with a filename wild card.
+        """
+        # without wildcard..
+        expected = read_inventory(self.station_xml1)
+        expected += read_inventory(self.station_xml2)
+        # with wildcard
+        got = read_inventory(os.path.join(self.path, "IU_*_00*.xml"))
+        self.assertEqual(expected, got)
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 @unittest.skipIf(
-    BASEMAP_VERSION >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
-    'matplotlib 3.0.1 is not campatible with basemap')
+    BASEMAP_VERSION or [] >= [1, 1, 0] and MATPLOTLIB_VERSION == [3, 0, 1],
+    'matplotlib 3.0.1 is not compatible with basemap')
 class InventoryBasemapTestCase(unittest.TestCase):
     """
     Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Basemap.
@@ -572,7 +664,8 @@ class InventoryBasemapTestCase(unittest.TestCase):
     def tearDown(self):
         np.seterr(**self.nperr)
 
-    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
     def test_location_plot_global(self):
         """
         Tests the inventory location preview plot, default parameters, using
@@ -622,7 +715,8 @@ class InventoryBasemapTestCase(unittest.TestCase):
                      size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                      outfile=ic.name)
 
-    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
     def test_combined_station_event_plot(self):
         """
         Tests the combined plotting of inventory/event data in one plot,

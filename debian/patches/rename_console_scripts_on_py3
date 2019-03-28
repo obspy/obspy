@@ -7,7 +7,7 @@ Author: megies@geophysik.uni-muenchen.de
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/setup.py
 +++ b/setup.py
-@@ -450,6 +450,13 @@ ENTRY_POINTS = {
+@@ -513,6 +513,13 @@ ENTRY_POINTS = {
      }
  
  
