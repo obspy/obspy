@@ -13,7 +13,8 @@ from lxml import etree
 
 from obspy.core.event import (Catalog, Event, FocalMechanism, Magnitude,
                               MomentTensor, Origin, Pick, ResourceIdentifier,
-                              Tensor, WaveformStreamID, read_events)
+                              Tensor, WaveformStreamID, read_events,
+                              EventDescription)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
@@ -1106,6 +1107,27 @@ class QuakeMLTestCase(unittest.TestCase):
             'the resulting object.')
         # It should of course not be set.
         self.assertIsNone(cat[0].origins[0].depth_type)
+
+    def test_issue_2339(self):
+        """
+        Make sure an empty EventDescription object does not prevent a catalog
+        from being saved to disk and re-read, while still being equal.
+        """
+        # create a catalog  with an empty event description
+        empty_description = EventDescription()
+        cat1 = Catalog(events=[read_events()[0]])
+        cat1[0].event_descriptions.append(empty_description)
+        # serialize the catalog using quakeml and re-read
+        bio = io.BytesIO()
+        cat1.write(bio, 'quakeml')
+        bio.seek(0)
+        cat2 = read_events(bio)
+        # the text of the empty EventDescription instances should be equal
+        text1 = cat1[0].event_descriptions[-1].text
+        text2 = cat2[0].event_descriptions[-1].text
+        self.assertEqual(text1, text2)
+        # the two catalogs should be equal
+        self.assertEqual(cat1, cat2)
 
 
 def suite():

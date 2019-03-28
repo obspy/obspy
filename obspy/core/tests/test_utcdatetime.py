@@ -7,6 +7,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import copy
 import datetime
 import itertools
+import sys
 import unittest
 import warnings
 from functools import partial
@@ -1479,6 +1480,47 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(utc.replace(hour=25, strict=False), utc + 25 * 3600)
         self.assertEqual(utc.replace(minute=1000, strict=False), utc + 60000)
         self.assertEqual(utc.replace(second=60, strict=False), utc + 60)
+
+    def test_strftime_with_years_less_than_1900(self):
+        """
+        Try that some strftime commands we use (e.g. in plotting) work even
+        with years less than 1900 (underlying datetime.datetime.strftime raises
+        ValueError if year <1900.
+        """
+        t = UTCDateTime(1888, 1, 2, 1, 39, 37)
+        self.assertEqual(t.strftime('%Y-%m-%d'), '1888-01-02')
+        t = UTCDateTime(998, 11, 9, 1, 39, 37)
+        self.assertEqual(t.strftime('%Y-%m-%d'), '0998-11-09')
+        # some things we can't easily fix by string formatting alone..
+        # (but it only fails on Python <3.2, i.e. for us that means Python 2.7)
+        if sys.version_info.major == 2:
+            with self.assertRaises(ValueError) as context:
+                t.strftime('%Y-%m-%d %A')
+                self.assertTrue(
+                    "the datetime strftime() methods require year >= 1900" in
+                    str(context.exception))
+
+    def test_strftime_replacement(self):
+        """
+        Explicitly test this function.
+
+        Can be removed once we drop support for Python 2.
+        """
+        t = UTCDateTime(1888, 1, 2, 1, 39, 37)
+        self.assertEqual(t._strftime_replacement('%Y-%m-%d'), '1888-01-02')
+        t = UTCDateTime(998, 11, 9, 1, 39, 37)
+        self.assertEqual(t._strftime_replacement('%Y-%m-%d'), '0998-11-09')
+
+    def test_string_parsing_at_instantiating_before_1000(self):
+        """
+        Try instantiating the UTCDateTime object with strings containing years
+        before 1000.
+        """
+        for value in ["998-01-01", "98-01-01", "9-01-01"]:
+            with self.assertRaises(ValueError) as e:
+                UTCDateTime(value)
+            msg = "'%s' does not start with a 4 digit year" % value
+            self.assertEqual(msg, e.exception.args[0])
 
 
 def suite():

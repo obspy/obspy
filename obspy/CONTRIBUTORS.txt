@@ -3,6 +3,7 @@ Allgeyer, Sebastien
 Ammon, Charles J.
 Antunes, Emanuel
 Arnarsson, Ólafur St.
+Bagagli, Matteo
 Bank, Markus
 Barsch, Robert
 Behr, Yannik
@@ -10,6 +11,7 @@ Bernardi, Fabrizio
 Bernauer, Felix
 Bes de Berc, Maxime
 Beyreuther, Moritz
+Boltz, Shawn
 Bonaimé, Sébastien
 Carothers, Lloyd
 Chamberlain, Calum
@@ -53,11 +55,13 @@ Lopes, Rui L.
 MacCarthy, Jonathan
 Maggi, Alessia
 Martin, Henri
+Medlin, Andrew
 Megies, Tobias
 Meschede, Matthias
 Michelini, Alberto
 Miller, Nathaniel C.
 Morgenstern, Bernhard
+Murray-Bergquist, Louisa
 Nof, Ran Novitsky
 Panning, Mark P.
 Rapagnani, Giovanni
@@ -76,6 +80,7 @@ Sippl, Christian
 Snoke, Arthur
 Stähler, Simon C.
 Stange, Stefan
+Strutz, Dominik
 Sullivan, Benjamin
 Tian, Dongdong
 Trabant, Chad

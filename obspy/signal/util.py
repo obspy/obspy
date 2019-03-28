@@ -14,8 +14,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native
 
-import ctypes as C
-import math as M
+import ctypes as C  # NOQA
+import math
 
 import numpy as np
 from scipy import fftpack, fix, signal
@@ -91,8 +91,8 @@ def next_pow_2(i):
     256
     """
     # do not use NumPy here, math is much faster for single values
-    buf = M.ceil(M.log(i) / M.log(2))
-    return native(int(M.pow(2, buf)))
+    buf = math.ceil(math.log(i) / math.log(2))
+    return native(int(math.pow(2, buf)))
 
 
 def prev_pow_2(i):
@@ -105,7 +105,7 @@ def prev_pow_2(i):
     128
     """
     # do not use NumPy here, math is much faster for single values
-    return int(M.pow(2, M.floor(M.log(i, 2))))
+    return int(math.pow(2, math.floor(math.log(i, 2))))
 
 
 def nearest_pow_2(x):
@@ -115,8 +115,8 @@ def nearest_pow_2(x):
     the input and returns them if they are closer than the next bigger power
     of 2.
     """
-    a = M.pow(2, M.ceil(M.log(x, 2)))
-    b = M.pow(2, M.floor(M.log(x, 2)))
+    a = math.pow(2, math.ceil(math.log(x, 2)))
+    b = math.pow(2, math.floor(math.log(x, 2)))
     if abs(a - x) < abs(b - x):
         return int(a)
     else:

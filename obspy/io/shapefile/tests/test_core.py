@@ -92,6 +92,17 @@ expected_catalog_fields_with_region.append(['Region', 'C', 50, 0])
 expected_catalog_records_with_region = copy.deepcopy(expected_catalog_records)
 expected_catalog_records_with_region[0].append('SOUTHEAST OF HONSHU, JAPAN')
 expected_catalog_records_with_region[1].append('GERMANY')
+# set up expected results with extra 'Comment' field
+expected_inventory_fields_with_comment = copy.deepcopy(
+    expected_inventory_fields)
+expected_inventory_fields_with_comment.append(['Comment', 'C', 50, 0])
+expected_inventory_records_with_comment = copy.deepcopy(
+    expected_inventory_records)
+expected_inventory_records_with_comment[0].append('Abc')
+expected_inventory_records_with_comment[1].append(None)
+expected_inventory_records_with_comment[2].append('123')
+expected_inventory_records_with_comment[3].append('Some comment')
+expected_inventory_records_with_comment[4].append('')
 
 
 def _assert_records_and_fields(got_fields, got_records, expected_fields,
@@ -266,6 +277,54 @@ class ShapefileTestCase(unittest.TestCase):
                     got_fields=shp.fields, got_records=shp.records(),
                     expected_fields=expected_catalog_fields_with_region,
                     expected_records=expected_catalog_records_with_region)
+                self.assertEqual(shp.shapeType, shapefile.POINT)
+                _close_shapefile_reader(shp)
+            # For some reason, on windows the files are still in use when
+            # TemporaryWorkingDirectory tries to remove the directory.
+            self.assertTrue(fh_shp.closed)
+            self.assertTrue(fh_dbf.closed)
+            self.assertTrue(fh_shx.closed)
+
+    def test_write_inventory_shapefile_with_extra_field(self):
+        """
+        Tests writing an inventory with an additional custom database column
+        """
+        inv = read_inventory()
+        extra_fields = [('Comment', 'C', 50, None,
+                        ['Abc', None, '123', 'Some comment', ''])]
+        bad_extra_fields_wrong_length = [('Comment', 'C', 50, None, ['ABC'])]
+        bad_extra_fields_name_clash = [('Station', 'C', 50, None, ['ABC'])]
+
+        with TemporaryWorkingDirectory():
+            # test some bad calls that should raise an Exception
+            with self.assertRaises(ValueError) as cm:
+                _write_shapefile(
+                    inv, "inventory.shp",
+                    extra_fields=bad_extra_fields_wrong_length)
+            self.assertEqual(
+                str(cm.exception), "list of values for each item in "
+                "'extra_fields' must have same length as the count of all "
+                "Stations combined across all Networks.")
+            with self.assertRaises(ValueError) as cm:
+                _write_shapefile(
+                    inv, "inventory.shp",
+                    extra_fields=bad_extra_fields_name_clash)
+            self.assertEqual(
+                str(cm.exception), "Conflict with existing field named "
+                "'Station'.")
+            # now test a good call that should work
+            _write_shapefile(inv, "inventory.shp", extra_fields=extra_fields)
+            for suffix in SHAPEFILE_SUFFIXES:
+                self.assertTrue(os.path.isfile("inventory" + suffix))
+            with open("inventory.shp", "rb") as fh_shp, \
+                    open("inventory.dbf", "rb") as fh_dbf, \
+                    open("inventory.shx", "rb") as fh_shx:
+                shp = shapefile.Reader(shp=fh_shp, shx=fh_shx, dbf=fh_dbf)
+                # check contents of shapefile that we just wrote
+                _assert_records_and_fields(
+                    got_fields=shp.fields, got_records=shp.records(),
+                    expected_fields=expected_inventory_fields_with_comment,
+                    expected_records=expected_inventory_records_with_comment)
                 self.assertEqual(shp.shapeType, shapefile.POINT)
                 _close_shapefile_reader(shp)
             # For some reason, on windows the files are still in use when

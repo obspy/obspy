@@ -185,9 +185,8 @@ class SlownessModel(object):
         min_s_so_far = 1.1e300
         # First remove any critical points previously stored
         # so these are effectively re-initialised... it's probably silly
-        self.critical_depths = np.empty(
-            max(len(self.v_mod.layers), 3),
-            dtype=CriticalDepth)
+        self.critical_depths = np.zeros(len(self.v_mod.layers) + 1,
+                                        dtype=CriticalDepth)
         cd_count = 0
         self.high_slowness_layer_depths_p = []  # lists of DepthRange
         self.high_slowness_layer_depths_s = []
@@ -1017,8 +1016,8 @@ class SlownessModel(object):
             new_count = np.ceil(absdiff / self.max_delta_p).astype(np.int_)
             steps = diff / new_count
 
-            for start, Np, delta in zip(top_p, new_count, steps):
-                for j in range(1, Np):
+            for start, n, delta in zip(top_p, new_count, steps):
+                for j in range(1, n):
                     newp = start + j * delta
                     self.add_slowness(newp, self.p_wave)
                     self.add_slowness(newp, self.s_wave)
@@ -1046,8 +1045,8 @@ class SlownessModel(object):
             new_count = np.ceil(diff / self.max_depth_interval).astype(np.int_)
             steps = diff / new_count
 
-            for start, Nd, delta in zip(top_depth, new_count, steps):
-                new_depth = start + np.arange(1, Nd) * delta
+            for start, nd, delta in zip(top_depth, new_count, steps):
+                new_depth = start + np.arange(1, nd) * delta
                 if wave == self.s_wave:
                     velocity = self.v_mod.evaluate_above(new_depth, 'S')
 
@@ -1585,13 +1584,13 @@ class SlownessModel(object):
                 prev_depth = high_s_zone_depth.bot_depth
         # Check for inconsistencies in fluid zones.
         prev_depth = -1e300
-        for fluidZone in self.fluid_layer_depths:
-            if fluidZone.top_depth >= fluidZone.bot_depth:
+        for fluid_zone in self.fluid_layer_depths:
+            if fluid_zone.top_depth >= fluid_zone.bot_depth:
                 raise SlownessModelError(
                     "Fluid zone has zero or negative thickness!")
-            if fluidZone.top_depth <= prev_depth:
+            if fluid_zone.top_depth <= prev_depth:
                 raise SlownessModelError("Fluid zone overlaps previous zone.")
-            prev_depth = fluidZone.bot_depth
+            prev_depth = fluid_zone.bot_depth
         # Check for inconsistencies in slowness layers.
         for layers in [self.p_layers, self.s_layers]:
             if layers is None:

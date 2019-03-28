@@ -12,7 +12,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from obspy.core.util.testing import ImageComparison
+from obspy.core.util.testing import ImageComparison, MATPLOTLIB_VERSION
 from obspy.signal.tests.test_spectral_estimation import _get_ppsd
 
 
@@ -47,9 +47,15 @@ class PPSDTestCase(unittest.TestCase):
         """
         Test plot of ppsd example data, normal (non-cumulative) style.
         """
+        # mpl < 2.2 has slightly offset ticks/ticklabels, so needs a higher
+        # tolerance (see e.g. http://tests.obspy.org/102260)
+        reltol = 2
+        if MATPLOTLIB_VERSION < [2, 2]:
+            reltol = 4
         # Catch underflow warnings due to plotting on log-scale.
         with np.errstate(all='ignore'):
-            with ImageComparison(self.path, 'ppsd_freq.png', reltol=2.0) as ic:
+            with ImageComparison(self.path, 'ppsd_freq.png',
+                                 reltol=reltol) as ic:
                 self.ppsd.plot(
                     show=False, show_coverage=False, show_histogram=True,
                     show_percentiles=True, percentiles=[20, 40],

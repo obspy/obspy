@@ -15,6 +15,7 @@ from future.utils import PY2
 
 import builtins
 import doctest
+import glob
 import inspect
 import io
 import os
@@ -36,8 +37,8 @@ from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
                    'io.ah', 'io.arclink', 'io.ascii', 'io.cmtsolution',
-                   'io.cnv', 'io.css', 'io.iaspei', 'io.win', 'io.gcf',
-                   'io.gse2', 'io.json', 'io.kinemetrics', 'io.kml',
+                   'io.cnv', 'io.css', 'io.focmec', 'io.iaspei', 'io.win',
+                   'io.gcf', 'io.gse2', 'io.json', 'io.kinemetrics', 'io.kml',
                    'io.mseed', 'io.ndk', 'io.nied', 'io.nlloc', 'io.nordic',
                    'io.pdas', 'io.pde', 'io.quakeml', 'io.reftek', 'io.rg16',
                    'io.sac', 'io.scardec', 'io.seg2', 'io.segy', 'io.seisan',
@@ -347,7 +348,7 @@ def get_dependency_version(package_name, raw_string=False):
     try:
         version_string = pkg_resources.get_distribution(package_name).version
     except pkg_resources.DistributionNotFound:
-        return None
+        return []
     if raw_string:
         return version_string
     version_list = version_string.split("rc")[0].strip("~")
@@ -363,7 +364,8 @@ def get_proj_version(raw_string=False):
     (see basemap issue 433).  Checking this will allow us to raise a warning
     when plotting using basemap.
 
-    :returns: Package version as a list of three integers.
+    :returns: Package version as a list of three integers. Empty list if pyproj
+        not installed.
         With option ``raw_string=True`` returns raw version string instead.
         The last version number can indicate different things like it being a
         version from the old svn trunk, the latest git repo, some release
@@ -371,7 +373,10 @@ def get_proj_version(raw_string=False):
         If the last number cannot be converted to an integer it will be set to
         0.
     """
-    from pyproj import Proj
+    try:
+        from pyproj import Proj
+    except ImportError:
+        return []
 
     # proj4 is a c library, prproj wraps this.  proj_version is an attribute
     # of the Proj class that is only set when the projection is made. Make
@@ -630,6 +635,51 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
                 if not chunk:
                     continue
                 fh.write(chunk)
+
+
+def _generic_reader(pathname_or_url=None, callback_func=None,
+                    **kwargs):
+    if not isinstance(pathname_or_url, (str, native_str)):
+        # not a string - we assume a file-like object
+        try:
+            # first try reading directly
+            generic = callback_func(pathname_or_url, **kwargs)
+        except TypeError:
+            # if this fails, create a temporary file which is read directly
+            # from the file system
+            pathname_or_url.seek(0)
+            with NamedTemporaryFile() as fh:
+                fh.write(pathname_or_url.read())
+                generic = callback_func(fh.name, **kwargs)
+        return generic
+    elif isinstance(pathname_or_url, bytes) and \
+            pathname_or_url.strip().startswith(b'<'):
+        # XML string
+        return callback_func(io.BytesIO(pathname_or_url), **kwargs)
+    elif "://" in pathname_or_url[:10]:
+        # URL
+        # extract extension if any
+        suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
+        with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
+            download_to_file(url=pathname_or_url, filename_or_buffer=fh)
+            generic = callback_func(fh.name, **kwargs)
+        return generic
+    else:
+        pathname = pathname_or_url
+        # File name(s)
+        pathnames = sorted(glob.glob(pathname))
+        if not pathnames:
+            # try to give more specific information why the stream is empty
+            if glob.has_magic(pathname) and not glob.glob(pathname):
+                raise Exception("No file matching file pattern: %s" % pathname)
+            elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
+                raise IOError(2, "No such file or directory", pathname)
+
+        generic = callback_func(pathnames[0], **kwargs)
+        if len(pathnames) > 1:
+            for filename in pathnames[1:]:
+                generic.extend(callback_func(filename, **kwargs))
+        return generic
 
 
 if __name__ == '__main__':

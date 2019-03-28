@@ -195,6 +195,15 @@ Gallery
     inv.plot_response(0.001, station="RJOB")
 
 .. gallery-plot::
+    :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot_response.html
+    :alt: Bode plot of Inventory indicating different epochs
+
+    from obspy import read_inventory
+    inv = read_inventory()
+    inv = inv.select(station='RJOB', channel='EHZ')
+    inv.plot_response(0.001, label_epoch_dates=True)
+
+.. gallery-plot::
     :target: packages/autogen/obspy.core.inventory.response.Response.plot.html
     :alt: Bode plot of Response class
 
