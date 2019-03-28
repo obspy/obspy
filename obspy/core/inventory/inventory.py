@@ -1120,6 +1120,7 @@ class Inventory(ComparingObject):
     def sort(self):
         """
         Sorts the lists in a inventory first by code and then by starting date.
+        Works inplace.
         """
 
         pri = "code"
@@ -1136,8 +1137,6 @@ class Inventory(ComparingObject):
                 sta.channels = sorted(sta.channels,
                                       key=lambda item: [getattr(item, pri),
                                                         getattr(item, sec)])
-        inv = copy.copy(self)
-        return inv
 
 
 if __name__ == '__main__':
