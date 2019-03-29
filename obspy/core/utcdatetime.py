@@ -395,15 +395,20 @@ class UTCDateTime(object):
                 msg = "Failed to convert 'julday' to int: {!s}".format(
                     kwargs['julday'])
                 raise TypeError(msg)
-            if not (1 <= int(kwargs['julday']) <= 366):
-                msg = "'julday' out of bounds: {!s}".format(kwargs['julday'])
-                raise ValueError(msg)
             if 'year' in kwargs:
                 # year given as kwargs
                 year = kwargs['year']
             elif len(args) == 1:
                 # year is first (and only) argument
                 year = args[0]
+            if not (1 <= int(kwargs['julday']) <= 366) and \
+                    (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)):
+                msg = "'julday' out of bounds: {!s}".format(kwargs['julday'])
+                raise ValueError(msg)
+            if not (1 <= int(kwargs['julday']) <= 365) and not \
+                    (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)):
+                msg = "'julday' out of bounds: {!s}".format(kwargs['julday'])
+                raise ValueError(msg)
             try:
                 temp = "%4d%03d" % (int(year),
                                     int(kwargs['julday']))
