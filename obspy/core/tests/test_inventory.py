@@ -48,6 +48,8 @@ class InventoryTestCase(unittest.TestCase):
         self.path = path
         self.station_xml1 = os.path.join(path, 'IU_ANMO_00_BHZ.xml')
         self.station_xml2 = os.path.join(path, 'IU_ULN_00_LH1.xml')
+        self.data_unsorted = os.path.join(path, 'sort_testdata_unsorted.xml')
+        self.data_sorted = os.path.join(path, 'sort_testdata_sorted.xml')
 
     def tearDown(self):
         np.seterr(**self.nperr)
@@ -646,6 +648,17 @@ class InventoryTestCase(unittest.TestCase):
         # with wildcard
         got = read_inventory(os.path.join(self.path, "IU_*_00*.xml"))
         self.assertEqual(expected, got)
+
+    def test_sort(self):
+        """
+        Test the inventory.sort method.
+        """
+        inv_unsorted = read_inventory(self.data_unsorted)
+        inv_sorted = read_inventory(self.data_sorted)
+
+        inv_unsorted.sort()
+
+        self.assertEqual(inv_unsorted, inv_sorted)
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
