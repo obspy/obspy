@@ -1225,11 +1225,11 @@ class Inventory(ComparingObject):
                    "comments", "start_date", "end_date",
                    "restricted_status", "alternate_code",
                    "historical_code", "data_availability"]
-        
+
         # helper function to get list of attributes to compare afterwards
         def att_list(obj, attributes):
             return [getattr(obj, att) for att in attributes]
-        
+
         # initialize the merge types:
         if merge_type == "standard":
             inv_merge = "same"
@@ -1274,7 +1274,7 @@ class Inventory(ComparingObject):
         # we want to preserve the original inventories and return a new one
         inv_a = copy.deepcopy(self)
         inv_b = copy.deepcopy(inv_2)
-        
+
         def merge_conflicting_networks(_net_a, _net_b):
             """
             This function is called in case of conflicting channels and deals
