@@ -1522,6 +1522,35 @@ class UTCDateTimeTestCase(unittest.TestCase):
             msg = "'%s' does not start with a 4 digit year" % value
             self.assertEqual(msg, e.exception.args[0])
 
+    def test_leap_years(self):
+        """
+        Test for issue #2369, correct implementation of juldays for leap years.
+        """
+
+        with self.assertRaises(ValueError):
+            UTCDateTime(year=2018, julday=366)
+
+        with self.assertRaises(ValueError):
+            UTCDateTime(year=2018, julday=366)
+
+        try:
+            UTCDateTime(year=2018, julday=365)
+        except ValueError:
+            self.fail("UTCDateTime() raised ValueError unexpectedly!")
+
+        try:
+            UTCDateTime(year=2016, julday=365)
+        except ValueError:
+            self.fail("UTCDateTime() raised ValueError unexpectedly!")
+
+        try:
+            UTCDateTime(year=2016, julday=366)
+        except ValueError:
+            self.fail("UTCDateTime() raised ValueError unexpectedly!")
+
+        with self.assertRaises(ValueError):
+            UTCDateTime(year=2016, julday=367)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
