@@ -28,6 +28,9 @@ master:
      have been deselected due to the default location priorities setting. This
      is a pure usability improvement as it has been confusing users
      (see #2159).
+ - obspy.io.mseed:
+   * Add add ability to write int64 data to mseed if it can safely be downcast 
+     to int32 data, otherwise raises ObsPyMSEEDError. (see #2356)
  - obspy.io.nordic:
    * Add ability to read and write focal mechanisms and moment tensor
      information. (see #1924)
