@@ -102,7 +102,9 @@ KEYWORDS = [
     'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED', ]
 
 # when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
+# and in obspy/io/mseed/core.py change downcasting check to numpy.can_cast()
 # when bumping to numpy 1.7.0: get rid of if/else when loading npz file to PPSD
+# and get rid of helper function _np_copy_astype() in obspy/io/mseed/core.py
 INSTALL_REQUIRES = [
     'future>=0.12.4',
     'numpy>=1.6.1',
