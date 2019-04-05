@@ -237,7 +237,7 @@ CALCULATED VALUES
 ''' % (filename,)  # noqa
         self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
 
-    def test_record_with_sine_calibration(self):
+    def test_record_with_step_calibration(self):
         """
         Regression tests as there was an issue with the record analyzer for
         negative sampling rates and factors.
@@ -296,6 +296,123 @@ CALCULATED VALUES
 ''' % (filename,)  # noqa
         self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
 
+
+    def test_record_with_sine_calibration(self):
+        """
+        Regression tests as there was an issue with the record analyzer for
+        negative sampling rates and factors.
+        """
+        filename = os.path.join(
+            os.path.dirname(__file__), 'data',
+            'blockette310.mseed')
+
+        with CatchOutput() as out:
+            obspy_recordanalyzer([filename])
+
+        expected = '''FILE: %s
+Record Number: 0
+Record Offset: 0 byte
+Header Endianness: Big Endian
+
+FIXED SECTION OF DATA HEADER
+    Sequence number: 2624
+    Data header/quality indicator: M
+    Station identifier code: KIEV
+    Location identifier: 00
+    Channel identifier: LHZ
+    Network code: IU
+    Record start time: 2018-02-13T20:01:45.069500Z
+    Number of samples: 10
+    Sample rate factor: 1
+    Sample rate multiplier: 1
+    Activity flags: 1
+    I/O and clock flags: 32
+    Data quality flags: 0
+    Number of blockettes that follow: 3
+    Time correction: 0
+    Beginning of data: 128
+    First blockette: 48
+
+BLOCKETTES
+    1000:    Encoding Format: 11
+        Word Order: 1
+        Data Record Length: 9
+    1001:    Timing quality: 100
+        mu_sec: 38
+        Frame count: 6
+    310:    Calibration Start Time: 2018-02-13T20:02:00.000000Z
+        Calibration Duration: 0
+        Period of Signal: 24000000
+        Calibration Signal Amplitude: -30.0
+        Calibration Monitor Channel: EC0
+        Calibration Reference Amplitude: 0
+        Coupling: resistive
+        Rolloff: 3DB@10Hz
+
+CALCULATED VALUES
+    Corrected Starttime: 2018-02-13T20:01:45.069538Z
+
+''' % (filename,)  # noqa
+        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
+
+
+    def test_record_with_random_calibration(self):
+        """
+        Regression tests as there was an issue with the record analyzer for
+        negative sampling rates and factors.
+        """
+        filename = os.path.join(
+            os.path.dirname(__file__), 'data',
+            'blockette320.mseed')
+
+        with CatchOutput() as out:
+            obspy_recordanalyzer([filename])
+
+        expected = '''FILE: %s
+Record Number: 0
+Record Offset: 0 byte
+Header Endianness: Big Endian
+
+FIXED SECTION OF DATA HEADER
+    Sequence number: 2712
+    Data header/quality indicator: M
+    Station identifier code: KIEV
+    Location identifier: 00
+    Channel identifier: LHZ
+    Network code: IU
+    Record start time: 2018-02-13T23:26:57.069500Z
+    Number of samples: 1
+    Sample rate factor: 1
+    Sample rate multiplier: 1
+    Activity flags: 1
+    I/O and clock flags: 32
+    Data quality flags: 0
+    Number of blockettes that follow: 3
+    Time correction: 0
+    Beginning of data: 128
+    First blockette: 48
+
+BLOCKETTES
+    1000:    Encoding Format: 11
+        Word Order: 1
+        Data Record Length: 9
+    1001:    Timing quality: 100
+        mu_sec: 38
+        Frame count: 6
+    320:    Calibration Start Time: 2018-02-13T23:27:00.000000Z
+        Calibration Duration: 14400
+        Peak-To-Peak Amplitude: -24
+        Calibration Monitor Channel: EC0
+        Calibration Reference Amplitude: 0
+        Coupling: resistive
+        Rolloff: 3DB@10Hz
+        Noise Type: Telegraf
+
+CALCULATED VALUES
+    Corrected Starttime: 2018-02-13T23:26:57.069538Z
+
+''' % (filename,)  # noqa
+        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
 
 def suite():
     return unittest.makeSuite(RecordAnalyserTestCase, 'test')
