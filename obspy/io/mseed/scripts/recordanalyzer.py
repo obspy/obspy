@@ -262,6 +262,41 @@ class RecordAnalyser(object):
                     raise IOError(msg)
                 raise
             blkt_dict['Sampling Rate'] = float(unpack_values[0])
+        elif blkt_type == 300:
+            # Step calibration blockette
+            _tmp = self.file.read(56)
+            try:
+                unpack_values = unpack(native_str('%sHHBBBBHBBLLf3sxL12s12s'
+                                                  % self.endian), _tmp)
+            except Exception:
+                if len(_tmp) == 0:
+                    msg = "Unexpected end of file."
+                    raise IOError(msg)
+                raise
+            blkt_dict['Calibration Start Time'] = \
+                UTCDateTime(year=int(unpack_values[0]),
+                            julday=int(unpack_values[1]),
+                            hour=int(unpack_values[2]),
+                            minute=int(unpack_values[3]),
+                            second=int(unpack_values[4]),
+                            microsecond=int(unpack_values[5]))
+
+            blkt_dict['Number of Step Calibrations'] = int(unpack_values[7])
+            blkt_dict['Step Duration'] = int(float(unpack_values[8])/10000.)
+            blkt_dict['Interval Duration'] = int(unpack_values[9])
+            blkt_dict['Calibration Signal Amplitude'] = \
+                float(unpack_values[11])
+            blkt_dict['Calibration Monitor Channel'] = str(unpack_values[12])
+            blkt_dict['Calibration Reference Amplitude'] = \
+                str(unpack_values[13])
+            blkt_dict['Coupling'] = str(unpack_values[14]).rstrip('\x00')
+            blkt_dict['Rolloff'] = str(unpack_values[15]).strip()
+        elif blkt_type == 310:
+            pass
+        elif blkt_type == 320:
+            pass
+        elif blkt_type == 390:
+            pass
         elif blkt_type == 1000:
             _tmp = self.file.read(4)
             try:

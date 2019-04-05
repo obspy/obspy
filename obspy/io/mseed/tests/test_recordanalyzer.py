@@ -237,6 +237,65 @@ CALCULATED VALUES
 ''' % (filename,)  # noqa
         self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
 
+    def test_record_with_sine_calibration(self):
+        """
+        Regression tests as there was an issue with the record analyzer for
+        negative sampling rates and factors.
+        """
+        filename = os.path.join(
+            os.path.dirname(__file__), 'data',
+            'blockette300.mseed')
+
+        with CatchOutput() as out:
+            obspy_recordanalyzer([filename])
+
+        expected = '''FILE: %s
+Record Number: 0
+Record Offset: 0 byte
+Header Endianness: Big Endian
+
+FIXED SECTION OF DATA HEADER
+    Sequence number: 36680
+    Data header/quality indicator: M
+    Station identifier code: KIEV
+    Location identifier: 00
+    Channel identifier: BHZ
+    Network code: IU
+    Record start time: 2018-02-13T22:43:59.019500Z
+    Number of samples: 20
+    Sample rate factor: 20
+    Sample rate multiplier: 1
+    Activity flags: 1
+    I/O and clock flags: 32
+    Data quality flags: 0
+    Number of blockettes that follow: 3
+    Time correction: 0
+    Beginning of data: 128
+    First blockette: 48
+
+BLOCKETTES
+    1000:    Encoding Format: 11
+        Word Order: 1
+        Data Record Length: 9
+    1001:    Timing quality: 100
+        mu_sec: 38
+        Frame count: 6
+    300:    Calibration Start Time: 2018-02-13T22:44:00.000000Z
+        Number of Step Calibrations: 1
+        Step Duration: 0
+        Interval Duration: 9000000
+        Calibration Signal Amplitude: -30.0
+        Calibration Monitor Channel: EC0
+        Calibration Reference Amplitude: 0
+        Coupling: resistive
+        Rolloff: 3DB@10Hz
+
+CALCULATED VALUES
+    Corrected Starttime: 2018-02-13T22:43:59.019538Z
+
+''' % (filename,)  # noqa
+        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
+
 
 def suite():
     return unittest.makeSuite(RecordAnalyserTestCase, 'test')
