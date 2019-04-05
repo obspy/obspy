@@ -296,7 +296,6 @@ CALCULATED VALUES
 ''' % (filename,)  # noqa
         self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
 
-
     def test_record_with_sine_calibration(self):
         """
         Regression tests as there was an issue with the record analyzer for
@@ -355,7 +354,6 @@ CALCULATED VALUES
 ''' % (filename,)  # noqa
         self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
 
-
     def test_record_with_random_calibration(self):
         """
         Regression tests as there was an issue with the record analyzer for
@@ -413,6 +411,7 @@ CALCULATED VALUES
 
 ''' % (filename,)  # noqa
         self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
+
 
 def suite():
     return unittest.makeSuite(RecordAnalyserTestCase, 'test')
