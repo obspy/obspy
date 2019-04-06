@@ -403,13 +403,15 @@ def write_nlloc_obs(catalog, filename, **kwargs):
         date = pick.time.strftime("%Y%m%d")
         hourminute = pick.time.strftime("%H%M")
         seconds = pick.time.second + pick.time.microsecond * 1e-6
-        time_error = pick.time_errors.uncertainty or 0.0
-        if time_error == 0.0:
+
+        time_error = pick.time_errors.uncertainty or None
+        if time_error is None:
             try:
                 time_error = (pick.time_errors.upper_uncertainty +
                               pick.time_errors.lower_uncertainty) / 2.0
             except Exception:
-                pass
+                time_error = 0.0
+
         info_ = fmt % (station.ljust(6), "?".ljust(4), component.ljust(4),
                        onset.ljust(1), phase_type.ljust(6), polarity.ljust(1),
                        date, hourminute, seconds, time_error, -1, -1, -1)
