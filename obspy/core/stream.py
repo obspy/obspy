@@ -2638,10 +2638,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 raise ValueError(msg)
             return self._rotate_to_zne(inventory, **kwargs)
         elif method == "->UVW":
-            #first rotate incoming information to ZNE as above
-            self._rotate_to_zne(inventory, **kwargs)
-            #rotate from ZNE to UVW which should be constant transformation 
-            return obspy.signal.rotate.rotate2zne(data1,90,-35.3,data2,330,-35.3,data3,210,-35.3,inverse=True)
+            # First rotate to ZNE as above, then rotate zne to uvw:
+            zne_stream = self._rotate_to_zne(inventory, **kwargs)
+            z = zne_stream[0]
+            n = zne_stream[1]
+            e = zne_stream[2]
+            return obspy.signal.rotate.rotate2zne(z, 90, -35.3, n, 330, \
+                -35.3, e, 210, -35.3, inverse=True)
         elif method == "NE->RT":
             func = "rotate_ne_rt"
         elif method == "RT->NE":
@@ -3321,10 +3324,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         st = self.select(network=network, station=station, location=location)
         st = (st.select(channel=channels[0]) + st.select(channel=channels[1]) +
               st.select(channel=channels[2]))
-        # remove the original unrotated traces from the stream
-        for tr in st.traces:
-            self.remove(tr)
-        # cut data so that we end up with a set of matching pieces for the tree
+        # Store original traces to be replaced if everything passes 
+        unrotated_traces = Stream()
+        for tr in st:
+            unrotated_traces.append(tr)
+        # cut data so that we end up with a set of matching pieces for the three
         # components (i.e. cut away any parts where one of the three components
         # has no data)
         st._trim_common_channels()
@@ -3358,6 +3362,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 tr.data = new_data
                 tr.stats.channel = tr.stats.channel[:-1] + component
             self.traces += traces
+        # remove the original unrotated traces from the stream
+        for tr in unrotated_traces.traces:
+            self.remove(tr)
         return self
 
 
