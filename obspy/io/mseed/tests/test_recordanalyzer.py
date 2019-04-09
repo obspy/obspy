@@ -237,10 +237,9 @@ CALCULATED VALUES
 ''' % (filename,)  # noqa
         self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
 
-    def test_record_with_step_calibration(self):
+    def test_step_cal_blockette(self):
         """
-        Regression tests as there was an issue with the record analyzer for
-        negative sampling rates and factors.
+        Test the step calibration blockette type 300.
         """
         filename = os.path.join(
             os.path.dirname(__file__), 'data',
@@ -286,7 +285,7 @@ BLOCKETTES
         Interval Duration: 9000000
         Calibration Signal Amplitude: -30.0
         Calibration Monitor Channel: EC0
-        Calibration Reference Amplitude: 0
+        Calibration Reference Amplitude: 0.0
         Coupling: resistive
         Rolloff: 3DB@10Hz
 
@@ -296,10 +295,9 @@ CALCULATED VALUES
 ''' % (filename,)  # noqa
         self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
 
-    def test_record_with_sine_calibration(self):
+    def test_sine_cal_blockette(self):
         """
-        Regression tests as there was an issue with the record analyzer for
-        negative sampling rates and factors.
+        Test the step calibration blockette type 310.
         """
         filename = os.path.join(
             os.path.dirname(__file__), 'data',
@@ -340,24 +338,23 @@ BLOCKETTES
         mu_sec: 38
         Frame count: 6
     310:    Calibration Start Time: 2018-02-13T20:02:00.000000Z
-        Calibration Duration: 0
-        Period of Signal: 24000000
+        Calibration Duration: 2400
+        Period of Signal: 250
         Calibration Signal Amplitude: -30.0
         Calibration Monitor Channel: EC0
-        Calibration Reference Amplitude: 0
+        Calibration Reference Amplitude: 0.0
         Coupling: resistive
-        Rolloff: 3DB@10Hz
+        Rolloff: 3DB@10Hz    
 
 CALCULATED VALUES
     Corrected Starttime: 2018-02-13T20:01:45.069538Z
 
 ''' % (filename,)  # noqa
-        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
+        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noq
 
-    def test_record_with_random_calibration(self):
+    def test_random_cal_blockette(self):
         """
-        Regression tests as there was an issue with the record analyzer for
-        negative sampling rates and factors.
+        Test the random calibration blockette type 320.
         """
         filename = os.path.join(
             os.path.dirname(__file__), 'data',
@@ -403,14 +400,14 @@ BLOCKETTES
         Calibration Monitor Channel: EC0
         Calibration Reference Amplitude: 0
         Coupling: resistive
-        Rolloff: 3DB@10Hz
+        Rolloff: 3DB@10Hz    
         Noise Type: Telegraf
 
 CALCULATED VALUES
     Corrected Starttime: 2018-02-13T23:26:57.069538Z
 
 ''' % (filename,)  # noqa
-        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noqa
+        self.assertEqual(expected, out.stdout.replace("\t", "    "))  # noq
 
 
 def suite():
