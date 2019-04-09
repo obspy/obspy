@@ -2592,17 +2592,23 @@ class StreamTestCase(unittest.TestCase):
                          set('ZNE'))
 
 
-#    def test_method_rotate_to_UVW(self):
-#        """
-#        Tests rotating all traces to UVW Galperin Coordinates given an inventory. 
-#        Using data from T. Meggies example in 'Bug in rotate2zne with non-orthogonal comps'
-#        """
-#        # Find stream with inventory that is in uvw Galperin coords
-#        inv = read_inventory("/path/to/ffbx.stationxml", format="STATIONXML")
-
-        # Use stream.rotate to rotate to zne coordinates as that method has already been tested 
-        # Use stream.rotate to rotate back to uvw 
-        # Test that rotation to uvw works with self.assertEqual(original_inv, new_uvw)
+    def test_method_rotate_to_UVW(self):
+        """
+        Tests rotating all traces to UVW Galperin Coordinates given an inventory. 
+        Using data from T. Meggies example in 'Bug in rotate2zne with non-orthogonal comps'
+        """
+        # Find stream and inventory in uvw Galperin coords 
+        #inv = read_inventory('some inventory with things in uvw')
+        st = read('http://examples.obspy.org/step_table_galperin_and_xyz.mseed')
+        st = st.select(station='TRC*')
+        st = st[0:3]
+        # use stream.rotate() to rotate to ZNE
+        ZNE_st = st.rotate('->ZNE')
+        # rotate new stream back
+        rotated_st = ZNE_st.rotate('->UVW')
+        # compare data: 
+        for tr_got, tr_expected in zip(rotated_st, st):
+            np.testing.assert_allclose(tr_got.data, tr_expected.data)
 
 
     def test_stream_rotate_Exception(self):
