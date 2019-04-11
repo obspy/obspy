@@ -324,7 +324,7 @@ class Trace(object):
         if not self.stats == other.stats:
             return False
         # comparison of ndarrays is supported by NumPy
-        if not np.array_equal(self, other):
+        if not np.array_equal(self.data, other.data):
             return False
 
         return True
