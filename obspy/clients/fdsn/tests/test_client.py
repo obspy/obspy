@@ -32,7 +32,7 @@ import numpy as np
 import requests
 
 from obspy import UTCDateTime, read, read_inventory, Stream, Trace
-from obspy.core.compatibility import mock, RegExTextCase
+from obspy.core.compatibility import mock, RegExTestCase
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
@@ -93,7 +93,7 @@ def normalize_version_number(string):
     return [l.strip() for l in repl.splitlines()]
 
 
-class ClientTestCase(RegExTextCase):
+class ClientTestCase(RegExTestCase):
     """
     Test cases for obspy.clients.fdsn.client.Client.
     """

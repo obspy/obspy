@@ -47,11 +47,11 @@ else:
 
 
 if PY2:
-    class RegExTextCase(unittest.TestCase):
+    class RegExTestCase(unittest.TestCase):
         def assertRaisesRegex(self, exception, regex):
             return self.assertRaisesRegexp(exception, regex)
 else:
-    class RegExTextCase(unittest.TestCase):
+    class RegExTestCase(unittest.TestCase):
         pass
 
 
@@ -80,7 +80,7 @@ else:
 
 
 if PY2:
-    from ConfigParser import SaveConfigParser as ConfigParser  # NOQA
+    from ConfigParser import SafeConfigParser as ConfigParser  # NOQA
 else:
     from configparser import ConfigParser  # NOQA
 
