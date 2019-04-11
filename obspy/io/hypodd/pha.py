@@ -82,7 +82,6 @@ def _is_pha(filename):
     return temp.startswith(b'#') and len(temp.split()) == 15
 
 
-
 def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
               ph2comp={'P': 'Z', 'S': 'N'}, encoding='utf-8'):
     """

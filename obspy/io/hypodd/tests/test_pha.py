@@ -14,6 +14,7 @@ class PHATestCase(unittest.TestCase):
     """
     Test suite for obspy.io.hypodd.pha
     """
+
     def setUp(self):
         path = os.path.dirname(__file__)
         self.fname = os.path.join(path, 'data', 'example.pha')
@@ -21,11 +22,9 @@ class PHATestCase(unittest.TestCase):
     def test_is_pha(self):
         self.assertEqual(pha._is_pha(self.fname), True)
 
-
     def test_read_pha(self):
         cat = read_events(self.fname)
         self.assertEqual(len(cat), 2)
-
 
     def test_populate_waveform_id(self):
         # read invenroty - FUR with channels, WET without channels
