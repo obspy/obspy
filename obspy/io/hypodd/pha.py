@@ -64,7 +64,7 @@ def _block2event(block, seed_map, id_default, ph2comp):
                     depth=1000 * float(dp),
                     time=time)
     magnitude = Magnitude(mag=mg, resource_id="smi:local/magnitude/" + id_)
-    event = Event(resource_id=id_,
+    event = Event(resource_id="smi:local/event/" + id_,
                   picks=picks,
                   origins=[origin],
                   magnitudes=[magnitude],
