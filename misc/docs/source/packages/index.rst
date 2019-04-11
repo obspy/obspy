@@ -95,6 +95,7 @@ categories.*
     obspy.io.css
     obspy.io.gcf
     obspy.io.gse2
+    obspy.io.hypodd
     obspy.io.kinemetrics
     obspy.io.mseed
     obspy.io.nied.knet
