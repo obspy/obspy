@@ -281,8 +281,8 @@ BLOCKETTES
         Frame count: 6
     300:    Calibration Start Time: 2018-02-13T22:44:00.000000Z
         Number of Step Calibrations: 1
-        Step Duration: 0
-        Interval Duration: 9000000
+        Step Duration in Seconds: 0
+        Interval Duration in Seconds: 900
         Calibration Signal Amplitude: -30.0
         Calibration Monitor Channel: EC0
         Calibration Reference Amplitude: 0.0
@@ -338,8 +338,8 @@ BLOCKETTES
         mu_sec: 38
         Frame count: 6
     310:    Calibration Start Time: 2018-02-13T20:02:00.000000Z
-        Calibration Duration: 2400
-        Period of Signal: 250
+        Calibration Duration in Seconds: 2400
+        Period of Signal in Seconds: 0
         Calibration Signal Amplitude: -30.0
         Calibration Monitor Channel: EC0
         Calibration Reference Amplitude: 0.0
@@ -395,7 +395,7 @@ BLOCKETTES
         mu_sec: 38
         Frame count: 6
     320:    Calibration Start Time: 2018-02-13T23:27:00.000000Z
-        Calibration Duration: 14400
+        Calibration Duration in Seconds: 14400
         Peak-To-Peak Amplitude: -24
         Calibration Monitor Channel: EC0
         Calibration Reference Amplitude: 0
