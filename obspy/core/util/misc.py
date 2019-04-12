@@ -752,7 +752,9 @@ def _yield_resource_id_parent_attr(obj):
 def _seed_id_map(
         inventory=None, user_id_map=None, key='{sta.code}',
         seed_factory='{net.code}.{{}}.{cha.location_code}.{cha.code:.2}{{}}'):
-    """Return mapping between station code and seed id expressions"""
+    """
+    Return mapping between station code and seed id expressions
+    """
     id_map = {}
     if inventory is not None:
         msg = 'Multiple seed ids found for station {}. Use first.'
