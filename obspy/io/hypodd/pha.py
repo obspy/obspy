@@ -77,10 +77,15 @@ def _block2event(block, seed_map, id_default, ph2comp):
 def _is_pha(filename):
     try:
         with open(filename, 'rb') as f:
-            temp = f.readline()
+            line = f.readline()
+        assert line.startswith(b'#')
+        assert len(line.split()) == 15
+        yr, mo, dy, hr, mn, sc = line.split()[1:7]
+        UTCDateTime(int(yr), int(mo), int(dy), int(hr), int(mn), float(sc))
     except Exception:
         return False
-    return temp.startswith(b'#') and len(temp.split()) == 15
+    else:
+        return True
 
 
 def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
