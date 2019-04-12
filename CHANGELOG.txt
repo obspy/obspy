@@ -94,6 +94,9 @@ master:
  - obspy.io.shapefile:
    * Add possibility to add custom database columns when writing catalog or
      inventory objects to shapefile (see #2012 and #2305)
+ - obspy.io.xseed:
+   * Ability to parse SEED files with extra newlines between blockettes
+     (see #2383)
  - obspy.io
     * added read support for receiver gather format v. 1.6 (see #2070)
     * added read support for FOCMEC 'out' and 'lst' files (see #2156)
