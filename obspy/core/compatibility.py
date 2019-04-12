@@ -48,8 +48,10 @@ else:
 
 if PY2:
     class RegExTestCase(unittest.TestCase):
-        def assertRaisesRegex(self, exception, regex):  # NOQA
-            return self.assertRaisesRegexp(exception, regex)
+        def assertRaisesRegex(self, exception, regex, callable,  # NOQA
+                              *args, **kwargs):
+            return self.assertRaisesRegexp(exception, regex, callable,
+                                           *args, **kwargs)
 else:
     class RegExTestCase(unittest.TestCase):
         pass
