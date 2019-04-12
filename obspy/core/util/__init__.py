@@ -34,7 +34,8 @@ from obspy.core.util.base import (ALL_MODULES, DEFAULT_MODULES,
                                   PROJ4_VERSION)
 from obspy.core.util.misc import (BAND_CODE, CatchOutput, complexify_string,
                                   guess_delta, loadtxt, score_at_percentile,
-                                  to_int_or_zero, SuppressOutput)
+                                  to_int_or_zero, SuppressOutput,
+                                  _seed_id_map)
 from obspy.core.util.obspy_types import (ComplexWithUncertainties, Enum,
                                          FloatWithUncertainties)
 from obspy.core.util.testing import add_doctests, add_unittests

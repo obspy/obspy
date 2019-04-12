@@ -12,29 +12,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 import io
-from warnings import warn
 
 from obspy import UTCDateTime
 from obspy.core.event import (
     Catalog, Event, Origin, Magnitude, Pick, WaveformStreamID, Arrival,
     OriginQuality)
-
-
-def _seed_id_map(
-        inventory=None, user_id_map=None,
-        seed_factory='{net.code}.{{}}.{cha.location_code}.{cha.code:.2}{{}}'):
-    id_map = {}
-    if inventory is not None:
-        msg = 'Multiple seed ids found for station {sta.code}. Use first.'
-        for net in inventory:
-            for sta in net:
-                for cha in sta:
-                    seedid = seed_factory.format(net=net, cha=cha)
-                    if id_map.setdefault(sta.code, seedid) != seedid:
-                        warn(msg.format(sta=sta))
-    if user_id_map is not None:
-        id_map.update(user_id_map)
-    return id_map
+from obspy.core.util import _seed_id_map
 
 
 def _block2event(block, seed_map, id_default, ph2comp):
