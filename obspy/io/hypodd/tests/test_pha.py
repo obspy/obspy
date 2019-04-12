@@ -17,11 +17,15 @@ class PHATestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        path = os.path.dirname(__file__)
-        self.fname = os.path.join(path, 'data', 'example.pha')
+        self.path = os.path.dirname(__file__)
+        self.fname = os.path.join(self.path, 'data', 'example.pha')
 
     def test_is_pha(self):
         self.assertEqual(pha._is_pha(self.fname), True)
+
+    def test_is_not_pha(self):
+        fname = os.path.join(self.path, 'test_pha.py')
+        self.assertEqual(pha._is_pha(fname), False)
 
     def test_read_pha(self):
         cat = read_events(self.fname)
