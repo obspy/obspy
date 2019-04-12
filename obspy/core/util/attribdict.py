@@ -184,8 +184,9 @@ class AttribDict(compatibility.collections_abc.MutableMapping):
         :return: value cast to correct type.
         """
         typ = self._types[key]
-        new_type = typ[0] if isinstance(
-            typ, compatibility.collections_abc.Sequence) else typ
+        new_type = (
+            typ[0] if isinstance(typ, compatibility.collections_abc.Sequence)
+            else typ)
         msg = ('Attribute "%s" must be of type %s, not %s. Attempting to '
                'cast %s to %s') % (key, typ, type(value), value, new_type)
         warnings.warn(msg)
