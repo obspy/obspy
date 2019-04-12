@@ -219,10 +219,13 @@ class SEG2(object):
             dtype = np.int32
             sample_size = 4
         elif data_format_code == 3:
-            msg = ('\nData format code 3 (20-bit SEG-D floating point) not '
-                   'supported yet.\nPlease contact the ObsPy developers with '
-                   'a sample file.')
-            raise NotImplementedError(msg)
+            dtype = np.int16
+            sample_size = 2.5
+            if number_of_samples_in_data_block % 4 != 0:
+                raise SEG2InvalidFileError(
+                    'Data format code 3 requires that the number of samples '
+                    'is divisible by 4, but sample count is %d' % (
+                        number_of_samples_in_data_block, ))
         else:
             msg = 'Unrecognized data format code'
             raise SEG2InvalidFileError(msg)
@@ -248,9 +251,29 @@ class SEG2(object):
 
         # Unpack the data.
         data = from_buffer(
-            self.file_pointer.read(number_of_samples_in_data_block *
-                                   sample_size),
+            self.file_pointer.read(
+                int(number_of_samples_in_data_block * sample_size)),
             dtype=dtype)
+        if data_format_code == 3:
+            # Convert one's complement to two's complement by adding one to
+            # negative numbers.
+            one_to_two = (data < 0)
+            # The first two bytes (1 word) of every 10 bytes (5 words) contains
+            # a 4-bit exponent for each of the 4 remaining 2-byte (int16)
+            # samples.
+            exponents = data[0::5].view(np.uint16)
+            result = np.empty(number_of_samples_in_data_block, dtype=np.int32)
+            # Apply the negative correction, then multiply by correct exponent.
+            result[0::4] = ((data[1::5] + one_to_two[1::5]) *
+                            2**((exponents & 0x000f) >> 0))
+            result[1::4] = ((data[2::5] + one_to_two[2::5]) *
+                            2**((exponents & 0x00f0) >> 4))
+            result[2::4] = ((data[3::5] + one_to_two[3::5]) *
+                            2**((exponents & 0x0f00) >> 8))
+            result[3::4] = ((data[4::5] + one_to_two[4::5]) *
+                            2**((exponents & 0xf000) >> 12))
+            data = result
+
         # Integrate SEG2 file header into each trace header
         tmp = self.stream.stats.seg2.copy()
         tmp.update(header['seg2'])
