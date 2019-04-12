@@ -305,7 +305,7 @@ ENTRY_POINTS = {
         'IMS10BULLETIN = obspy.io.iaspei.core',
         'EVT = obspy.io.sh.evt',
         'FOCMEC = obspy.io.focmec.core',
-        'PHA = obspy.io.hypodd.pha'
+        'HYPODDPHA = obspy.io.hypodd.pha'
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -384,7 +384,7 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.focmec.core:_is_focmec',
         'readFormat = obspy.io.focmec.core:_read_focmec',
         ],
-    'obspy.plugin.event.PHA': [
+    'obspy.plugin.event.HYPODDPHA': [
         'isFormat = obspy.io.hypodd.pha:_is_pha',
         'readFormat = obspy.io.hypodd.pha:_read_pha',
         ],
