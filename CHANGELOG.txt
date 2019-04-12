@@ -53,7 +53,7 @@ master:
    * obspy-scan can now be used with wildcarded SEED IDs when specifying what
      to plot after scanning data (see #2227)
  - obspy.io.mseed:
-   * The recocordanalyzer can now detect calibration blockettes 300, 310,
+   * The recordanalyzer can now detect calibration blockettes 300, 310,
      and 320 (see #2370).
  - obspy.io.nordic:
    * Add ability to read and write focal mechanisms and moment tensor
