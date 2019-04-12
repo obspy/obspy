@@ -17,7 +17,7 @@ from obspy import UTCDateTime
 from obspy.core.event import (
     Catalog, Event, Origin, Magnitude, Pick, WaveformStreamID, Arrival,
     OriginQuality)
-from obspy.core.util import _seed_id_map
+from obspy.core.util.misc import _seed_id_map
 
 
 def _block2event(block, seed_map, id_default, ph2comp):
