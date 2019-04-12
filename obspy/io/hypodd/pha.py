@@ -57,7 +57,8 @@ def _block2event(block, seed_map, id_default, ph2comp):
         picks.append(pick)
         arrivals.append(arrival)
     qu = None if rms == '0.0' else OriginQuality(standard_error=float(rms))
-    origin = Origin(arrivals=arrivals, resource_id="smi:local/origin/" + id_
+    origin = Origin(arrivals=arrivals,
+                    resource_id="smi:local/origin/" + id_,
                     quality=qu,
                     latitude=float(la),
                     longitude=float(lo),
