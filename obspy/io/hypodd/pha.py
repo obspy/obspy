@@ -12,6 +12,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 import io
+from warnings import warn
 
 from obspy import UTCDateTime
 from obspy.core.event import (
@@ -19,21 +20,21 @@ from obspy.core.event import (
     OriginQuality)
 
 
-def _seed_id_map(inventory=None, id_map=None, id_default='.{}..{}'):
-    if id_map is None:
-        id_map = {}
-    ret = id_map.copy()
+def _seed_id_map(
+        inventory=None, user_id_map=None,
+        seed_factory='{net.code}.{{}}.{cha.location_code}.{cha.code:.2}{{}}'):
+    id_map = {}
     if inventory is not None:
+        msg = 'Multiple seed ids found for station {sta.code}. Use first.'
         for net in inventory:
             for sta in net:
-                if len(sta) == 0:
-                    temp = id_map.get(sta.code, id_default)
-                    temp = temp.split('.', 2)[-1]
-                else:
-                    cha = sta[0]
-                    temp = cha.location_code + '.' + cha.code[:-1] + '{}'
-                ret[sta.code] = net.code + '.{}.' + temp
-    return ret
+                for cha in sta:
+                    seedid = seed_factory.format(net=net, cha=cha)
+                    if id_map.setdefault(sta.code, seedid) != seedid:
+                        warn(msg.format(sta=sta))
+    if user_id_map is not None:
+        id_map.update(user_id_map)
+    return id_map
 
 
 def _block2event(block, seed_map, id_default, ph2comp):
@@ -121,7 +122,7 @@ def _read_pha(filename, inventory=None, id_map=None, id_default='.{}..{}',
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: An ObsPy Catalog object.
     """
-    seed_map = _seed_id_map(inventory, id_map, id_default)
+    seed_map = _seed_id_map(inventory, id_map)
     with io.open(filename, 'r', encoding=encoding) as f:
         text = f.read()
     events = [_block2event(block, seed_map, id_default, ph2comp)
