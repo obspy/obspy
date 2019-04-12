@@ -23,7 +23,7 @@ from obspy.core.event import (Arrival, Catalog, Event,
                               OriginUncertainty, Pick, ResourceIdentifier,
                               StationMagnitude, WaveformStreamID)
 from obspy.core.event.header import EvaluationMode, EventType, PickOnset
-from obspy.core.util import _seed_id_map
+from obspy.core.util.misc import _seed_id_map
 from obspy.io.sh.core import to_utcdatetime
 
 
