@@ -136,6 +136,7 @@ categories.*
     obspy.io.cnv
     obspy.io.focmec
     obspy.io.gse2
+    obspy.io.hypodd
     obspy.io.iaspei
     obspy.io.json
     obspy.io.kml

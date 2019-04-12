@@ -97,6 +97,7 @@ master:
  - obspy.io
     * added read support for receiver gather format v. 1.6 (see #2070)
     * added read support for FOCMEC 'out' and 'lst' files (see #2156)
+    * added read support for HypoDD 'pha' files (see #2378)
  - obspy.signal.trigger:
     * fix a bug in AR picker (see #2157)
     * option to return Baer-Kradolfer characteristic function from pk_mbaer

@@ -99,7 +99,7 @@ class EvtTestCase(unittest.TestCase):
                             id_map={'UBR': 'BLB.{}.00.BH{}'})[0].picks
         waveform_ids = [p.waveform_id.get_seed_string() for p in picks]
         self.assertIn('GR.FUR..HHZ', waveform_ids)
-        self.assertIn('GR.WET.11.DHZ', waveform_ids)
+        self.assertIn('BLA.WET.11.DHZ', waveform_ids)
         self.assertIn('BLB.UBR.00.BHZ', waveform_ids)
         self.assertIn('BLA.WERD.11.DHZ', waveform_ids)
 
