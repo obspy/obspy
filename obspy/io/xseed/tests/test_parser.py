@@ -73,6 +73,17 @@ class ParserTestCase(unittest.TestCase):
         sp = Parser(strict=True)
         self.assertRaises(SEEDParserException, sp.read, data)
 
+    def test_newline_between_blockettes(self):
+        """
+        A very rare case.
+        """
+        # Handcrafted files.
+        filename = os.path.join(self.path,
+                                'dataless.seed.newline_between_blockettes')
+        p = Parser(filename)
+        self.assertEqual(sorted(list(p.blockettes.keys())),
+                         [10, 11, 30, 33, 34])
+
     def test_string(self):
         """
         Tests string representation of L{obspy.io.xseed.Parser} object.
