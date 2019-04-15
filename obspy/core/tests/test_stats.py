@@ -269,7 +269,8 @@ class StatsTestCase(unittest.TestCase):
         """
         stats = Stats()
         for val in self.nslc:
-            setattr(stats, val, None)
+            with warnings.catch_warnings(record=True):
+                setattr(stats, val, None)
             self.assertEqual(getattr(stats, val), 'None')
 
     def test_casted_stats_nscl_writes_to_mseed(self):
@@ -283,8 +284,9 @@ class StatsTestCase(unittest.TestCase):
         stats_items = set(Stats())
         new_stats = Stats()
         new_stats.__dict__.update({x: st[0].stats[x] for x in stats_items})
-        new_stats.network = 1
-        new_stats.station = 1.1
+        with warnings.catch_warnings(record=True):
+            new_stats.network = 1
+            new_stats.station = 1.1
         new_stats.channel = 'Non'
         st[0].stats = new_stats
         # try writing stream to bytes buffer
@@ -314,7 +316,8 @@ class StatsTestCase(unittest.TestCase):
 
         for a_str in the_strs:
             for nslc in self.nslc:
-                setattr(stats, nslc, a_str)
+                with warnings.catch_warnings(record=True):
+                    setattr(stats, nslc, a_str)
                 self.assertIsInstance(getattr(stats, nslc), (str, native_str))
 
 

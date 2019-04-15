@@ -15,7 +15,7 @@ from future.builtins import *  # NOQA
 
 import copy
 import ctypes as C  # NOQA
-from collections import defaultdict, Iterable
+from collections import defaultdict
 from copy import deepcopy
 import itertools
 from math import pi
@@ -24,6 +24,7 @@ import warnings
 import numpy as np
 import scipy.interpolate
 
+from .. import compatibility
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertainties,
@@ -402,7 +403,8 @@ class CoefficientsTypeResponseStage(ResponseStage):
         if value == []:
             self._numerator = []
             return
-        value = list(value) if isinstance(value, Iterable) else [value]
+        value = list(value) if isinstance(
+            value, compatibility.collections_abc.Iterable) else [value]
         for _i, x in enumerate(value):
             if not isinstance(x, FloatWithUncertaintiesAndUnit):
                 value[_i] = FloatWithUncertaintiesAndUnit(x)
@@ -417,7 +419,8 @@ class CoefficientsTypeResponseStage(ResponseStage):
         if value == []:
             self._denominator = []
             return
-        value = list(value) if isinstance(value, Iterable) else [value]
+        value = list(value) if isinstance(
+            value, compatibility.collections_abc.Iterable) else [value]
         for _i, x in enumerate(value):
             if not isinstance(x, FloatWithUncertaintiesAndUnit):
                 value[_i] = FloatWithUncertaintiesAndUnit(x)

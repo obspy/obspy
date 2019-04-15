@@ -7,9 +7,11 @@ it work with various versions of our dependencies.
 """
 from future.utils import PY2
 
+import collections
 import io
 import json
 import sys
+import unittest
 
 import numpy as np
 
@@ -37,6 +39,24 @@ else:
     string_types = (str,)  # NOQA
 
 
+# Importing the ABCs from collections will no longer work with Python 3.8.
+if PY2:
+    collections_abc = collections  # NOQA
+else:
+    collections_abc = collections.abc  # NOQA
+
+
+if PY2:
+    class RegExTestCase(unittest.TestCase):
+        def assertRaisesRegex(self, exception, regex, callable,  # NOQA
+                              *args, **kwargs):
+            return self.assertRaisesRegexp(exception, regex, callable,
+                                           *args, **kwargs)
+else:
+    class RegExTestCase(unittest.TestCase):
+        pass
+
+
 # NumPy does not offer the from_buffer method under Python 3 and instead
 # relies on the built-in memoryview object.
 if PY2:
@@ -52,7 +72,6 @@ if PY2:
             return np.frombuffer(data, dtype=dtype).copy()
         else:
             return np.array([], dtype=dtype)
-    import ConfigParser as configparser  # NOQA
 else:
     def from_buffer(data, dtype):
         try:
@@ -60,7 +79,12 @@ else:
         except Exception:
             pass
         return np.array(memoryview(data)).view(dtype).copy()  # NOQA
-    import configparser  # NOQA
+
+
+if PY2:
+    from ConfigParser import SafeConfigParser as ConfigParser  # NOQA
+else:
+    from configparser import ConfigParser  # NOQA
 
 
 def is_text_buffer(obj):

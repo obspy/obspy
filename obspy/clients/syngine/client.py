@@ -14,7 +14,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import collections
 import io
 import zipfile
 
@@ -572,7 +571,7 @@ class Client(WaveformClient, HTTPClient):
             # Write the bulk content.
             for item in bulk:
                 # Dictionary like items.
-                if isinstance(item, collections.Mapping):
+                if isinstance(item, compatibility.collections_abc.Mapping):
                     if "latitude" in item or "longitude" in item:
                         if not ("latitude" in item and "longitude" in item):
                             raise ValueError(
@@ -591,7 +590,7 @@ class Client(WaveformClient, HTTPClient):
                         raise ValueError("Item '%s' in bulk is malformed." %
                                          str(item))
                 # Iterable items.
-                elif isinstance(item, collections.Container):
+                elif isinstance(item, compatibility.collections_abc.Container):
                     if len(item) != 2:
                         raise ValueError("Item '%s' in bulk must have two "
                                          "entries." % str(item))

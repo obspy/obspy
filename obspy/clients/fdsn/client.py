@@ -14,7 +14,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
-import collections
 import copy
 import gzip
 import io
@@ -30,7 +29,7 @@ from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
-from obspy.core.compatibility import urlparse
+from obspy.core.compatibility import urlparse, collections_abc
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_SERVICES,
@@ -1879,7 +1878,7 @@ def parse_simple_xml(xml_string):
 def get_bulk_string(bulk, arguments):
     # If its an iterable, we build up the query string from it
     # StringIO objects also have __iter__ so check for 'read' as well
-    if isinstance(bulk, collections.Iterable) \
+    if isinstance(bulk, collections_abc.Iterable) \
             and not hasattr(bulk, "read") \
             and not isinstance(bulk, (str, native_str)):
         tmp = ["%s=%s" % (key, convert_to_string(value))
