@@ -14,7 +14,6 @@ import warnings
 import numpy as np
 
 from obspy import read
-from obspy.core import AttribDict
 
 
 TRACE2_HEADER = {'ACQUISITION_DATE': '07/JAN/2013',
@@ -41,7 +40,7 @@ TRACE2_HEADER = {'ACQUISITION_DATE': '07/JAN/2013',
                  'LOCATION': 'LOCATION',
                  'LOW_CUT_FILTER': '10.000000 12.000000',
                  'NETWORK_NAME': 'BANK',
-                 'NOTE': AttribDict({'Comment': ''}),
+                 'NOTE': ['Comment'],
                  'OBSERVER': 'OBSERVER',
                  'REAL_TIME_AVAILABLE': 'FALSE',
                  'REGISTRATION_DIRECTION': 'X',
@@ -67,7 +66,7 @@ TRACE3_HEADER = {
     'INSTRUMENT': 'GEOMETRICS SmartSeis 0000',
     'TRACE_SORT': 'AS_ACQUIRED',
     'UNITS': 'METERS',
-    'NOTE': AttribDict({'DISPLAY_SCALE': '48'}),
+    'NOTE': ['DISPLAY_SCALE 48'],
     'CHANNEL_NUMBER': '1',
     'DELAY': '-0.010',
     'DESCALING_FACTOR': '0.001199',

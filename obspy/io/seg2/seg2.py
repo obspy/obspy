@@ -16,7 +16,7 @@ from future.builtins import *  # NOQA
 from future.utils import PY2
 
 from copy import deepcopy
-from struct import unpack
+from struct import unpack, unpack_from
 import warnings
 
 import numpy as np
@@ -285,52 +285,58 @@ class SEG2(object):
         Parse the free form section stored in free_form_str and save it in
         attrib_dict.
         """
-        # Separate the strings.
-        strings = free_form_str.split(self.string_terminator)
-        # This is not fully according to the SEG-2 format specification (or
-        # rather the specification only speaks about on offset of 2 bytes
-        # between strings and a string_terminator between two free form
-        # strings. The file I have show the following separation between two
-        # strings: 'random offset byte', 'string_terminator',
-        # 'random offset byte'
-        # Therefore every string has to be at least 3 bytes wide to be
-        # acceptable after being split at the string terminator.
+        def cleanup_and_decode_string(value):
+            # Some software/hardware produces invalid characters.
+            def is_good_char(c):
+                return c in (b'0123456789'
+                             b'abcdefghijklmnopqrstuvwxyz'
+                             b'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                             b'!"#$%&\'()*+,-./:; <=>?@[\\]^_`{|}~ ')
 
-        def is_good_char(c):
-            return c in (b'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN'
-                         b'OPQRSTUVWXYZ!"#$%&\'()*+,-./:; <=>?@[\\]^_`{|}~ ')
+            # A loop over a bytestring in Python 3 returns integers. This can
+            # be solved with a number of imports from the python-future module
+            # and all kinds of subtle changes throughout this file. Separating
+            # the handling for Python 2 and 3 seems the cleaner and simpler
+            # approach.
+            if PY2:
+                return "".join(filter(is_good_char, value)).strip()
+            else:
+                return "".join(map(chr, filter(is_good_char, value))).strip()
 
-        # A loop over a bytestring in Python 3 returns integers. This can be
-        # solved with a number of imports from the python-future module and
-        # all kinds of subtle changes throughout this file. Separating the
-        # handling for Python 2 and 3 seems the cleaner and simpler approach.
-        if PY2:
-            strings = ["".join(filter(is_good_char, _i))
-                       for _i in strings
-                       if len(_i) >= 3]
-        else:
-            strings = ["".join(map(chr, filter(is_good_char, _i)))
-                       for _i in strings
-                       if len(_i) >= 3]
+        # Separate the strings. Every string starts with a 2-byte offset to the
+        # next string, and ends with a terminator. An offset of 0 indicates the
+        # end of the strings.
+        offset = 0
+        strings = []
+        while offset + 2 < len(free_form_str):
+            strlen, = unpack_from(self.endian + b'H', free_form_str, offset)
+            if strlen == 0:
+                break
+            curstr = free_form_str[offset + 2:offset + strlen]
+            try:
+                curstrlen = curstr.index(self.string_terminator)
+            except ValueError:
+                strings.append(curstr)
+            else:
+                strings.append(curstr[:curstrlen])
+            offset += strlen
 
         # Every string has the structure OPTION<SPACE>VALUE. Write to
         # stream.stats attribute.
         for string in strings:
-            string = string.strip()
-            string = string.split(' ')
-            key = string[0].strip()
-            value = ' '.join(string[1:]).strip()
+            string = string.strip().split(b' ', 1)
+            key = cleanup_and_decode_string(string[0])
+            try:
+                value = string[1]
+            except IndexError:
+                value = ''
+            if key == 'NOTE':
+                value = [cleanup_and_decode_string(line)
+                         for line in value.split(self.line_terminator)
+                         if line]
+            else:
+                value = cleanup_and_decode_string(value)
             setattr(attrib_dict, key, value)
-        # Parse the notes string again.
-        if hasattr(attrib_dict, 'NOTE'):
-            notes = attrib_dict.NOTE.split(self.line_terminator.decode())
-            attrib_dict.NOTE = AttribDict()
-            for note in notes:
-                note = note.strip()
-                note = note.split(' ')
-                key = note[0].strip()
-                value = ' '.join(note[1:]).strip()
-                setattr(attrib_dict.NOTE, key, value)
 
 
 def _is_seg2(filename):
