@@ -207,19 +207,19 @@ class SEG2(object):
 
         # Parse the data format code.
         if data_format_code == 4:
-            dtype = np.float32
+            dtype = self.endian + b'f4'
             sample_size = 4
         elif data_format_code == 5:
-            dtype = np.float64
+            dtype = self.endian + b'f8'
             sample_size = 8
         elif data_format_code == 1:
-            dtype = np.int16
+            dtype = self.endian + b'i2'
             sample_size = 2
         elif data_format_code == 2:
-            dtype = np.int32
+            dtype = self.endian + b'i4'
             sample_size = 4
         elif data_format_code == 3:
-            dtype = np.int16
+            dtype = self.endian + b'i2'
             sample_size = 2.5
             if number_of_samples_in_data_block % 4 != 0:
                 raise SEG2InvalidFileError(
@@ -261,7 +261,7 @@ class SEG2(object):
             # The first two bytes (1 word) of every 10 bytes (5 words) contains
             # a 4-bit exponent for each of the 4 remaining 2-byte (int16)
             # samples.
-            exponents = data[0::5].view(np.uint16)
+            exponents = data[0::5].view(self.endian + b'u2')
             result = np.empty(number_of_samples_in_data_block, dtype=np.int32)
             # Apply the negative correction, then multiply by correct exponent.
             result[0::4] = ((data[1::5] + one_to_two[1::5]) *
