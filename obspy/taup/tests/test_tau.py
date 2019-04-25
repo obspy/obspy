@@ -1008,7 +1008,8 @@ class TestTauPyModel:
         The problem is first in finding the moho, and second in coarsely-
         sampling slowness. Also, why bother.
         """
-        model_names = ["2_layer_model", "5_layer_model"]
+        model_names = ["2_layer_model", "5_layer_model",
+                       "2_layer_no_discontinuity_model"]
         expected_results = [
             [("p", 18.143), ("Pn", 19.202), ("PcP", 19.884), ("sP", 22.054),
              ("ScP", 23.029), ("PcS", 26.410), ("s", 31.509), ("Sn", 33.395),

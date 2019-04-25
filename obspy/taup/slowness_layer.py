@@ -326,7 +326,7 @@ def create_from_vlayer(v_layer, is_p_wave, radius_of_planet,
         bot_depth = ret["bot_depth"]
         bot_vel = evaluate_velocity_at_bottom(v_layer, wave_type)
 
-        if bot_depth.shape:
+        if bot_depth.shape and bot_depth.size:
             if bot_depth[-1] == radius_of_planet and bot_vel[-1] == 0.0:
                 bot_depth[-1] = 1.0
         ret['bot_p'] = (radius_of_planet - bot_depth) / bot_vel
