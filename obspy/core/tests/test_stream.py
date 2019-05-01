@@ -2597,18 +2597,24 @@ class StreamTestCase(unittest.TestCase):
         Tests rotating all traces to UVW Galperin Coordinates given an inventory. 
         Using data from T. Meggies example in 'Bug in rotate2zne with non-orthogonal comps'
         """
-        # Find stream and inventory in uvw Galperin coords 
-        #inv = read_inventory('some inventory with things in uvw')
+        # create and trim stream in UVW coordinates:
         st = read('http://examples.obspy.org/step_table_galperin_and_xyz.mseed')
         st = st.select(station='TRC*')
         st = st[0:3]
+        t1 = UTCDateTime('2017-10-11T12:33:15')
+        t2 = UTCDateTime('2017-10-11T12:33:40')
+        st.trim(t1,t2)
+        # Create inventory for this stream:
+        inv = read_inventory("core/tests/data/uvw_inventory.xml")
         # use stream.rotate() to rotate to ZNE
-        ZNE_st = st.rotate('->ZNE')
+        ZNE_st = st.rotate(method='->ZNE', inventory=inv)
         # rotate new stream back
-        rotated_st = ZNE_st.rotate('->UVW')
+        #rotated_st = ZNE_st.rotate('->UVW', inventory=inv)
+        from obspy.signal.rotate import rotate2zne
+        rotated_st = rotate2zne(st[0], 90, -35.3, st[1], 330, -35.3, st[2], 210, -35.3)
         # compare data: 
         for tr_got, tr_expected in zip(rotated_st, st):
-            np.testing.assert_allclose(tr_got.data, tr_expected.data)
+            np.testing.assert_allclose(tr_got, tr_expected)
 
 
     def test_stream_rotate_Exception(self):

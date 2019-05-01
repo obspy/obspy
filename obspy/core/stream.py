@@ -2596,8 +2596,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 Trims common channels used in rotation to time spans that are
                 available for all three channels (i.e. cuts away parts for
                 which one or two channels used in rotation do not have data).
-            ``'->UVW'``: Rotates data from three components into UVW (Galperin 
-                orientation).
+            ``'->UVW'``: Rotates data from three components into UVW components 
+                (Galperin orientation).
             ``'NE->RT'``: Rotates the North- and East-components of a
                 seismogram to radial and transverse components.
             ``'RT->NE'``: Rotates the radial and transverse components of a
@@ -2638,13 +2638,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 raise ValueError(msg)
             return self._rotate_to_zne(inventory, **kwargs)
         elif method == "->UVW":
+            from obspy.signal.rotate import rotate2zne
             # First rotate to ZNE as above, then rotate zne to uvw:
             zne_stream = self._rotate_to_zne(inventory, **kwargs)
             z = zne_stream[0]
             n = zne_stream[1]
             e = zne_stream[2]
-            return obspy.signal.rotate.rotate2zne(z, 90, -35.3, n, 330, \
-                -35.3, e, 210, -35.3, inverse=True)
+            return rotate2zne(z, 90, -35.3, n, 330, -35.3, e, 210, -35.3, inverse=True)
         elif method == "NE->RT":
             func = "rotate_ne_rt"
         elif method == "RT->NE":
