@@ -186,6 +186,44 @@ class BaseNode(ComparingObject):
 
         return True
 
+    def sort(self, keys=("code", "start_date"), max_level="Channel"):
+        """
+        Sorts the list of stations/channels in a network/station type by one
+        or more keys in descending importance.
+        Works inplace.
+        :param keys: Specifies the key by which to sort in descending order.
+        The default is set to sort first by code and then by starting_date.
+        :type keys: tuple
+        .:param max_level: Specifies the deepest level to sort. Valid inputs
+        are "Station" and "Channel".
+        :type max_level: str
+        """
+
+        input_level = self.__class__.__name__
+
+        def sort_fct(x): return [getattr(x, i) for i in keys]
+
+        # network is not a valid level but needed to get the right levels
+        levels = ["Network", "Station", "Channel"]
+        # implements only the levels we want to sort
+        # discards channel if level is station
+        levels = levels[:levels.index(max_level)+1]
+        # discards stations if level is station
+        levels = levels[levels.index(input_level)+1:]
+        # add a "s" to get the right attribute names
+        levels = [(level + "s").lower() for level in levels]
+
+        print(levels)
+
+        # sort first possible level
+        setattr(self, levels[0],
+                sorted(getattr(self, levels[0]), key=sort_fct))
+        # if possible: sort second possible level
+        if len(levels) > 1:
+            for sta in getattr(self, levels[0]):
+                setattr(sta, levels[1], sorted(getattr(sta, levels[1]),
+                        key=sort_fct))
+
 
 class DataAvailability(ComparingObject):
     """

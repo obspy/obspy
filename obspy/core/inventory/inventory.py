@@ -1117,27 +1117,25 @@ class Inventory(ComparingObject):
 
         return fig
 
-    def sort(self):
+    def sort(self, keys=("code", "start_date"), max_level="Channel"):
         """
         Sorts the lists in a inventory first by code and then by starting date.
         Works inplace.
+        :param keys: Specifies the key by which to sort in descending order.
+        The default is set to sort first by code and then by starting_date.
+        :type keys: tuple
+        .:param max_level: Specifies the deepest level to sort. Valid inputs
+        are "Network", "Station" and "Channel".
+        :type max_level: str
         """
 
-        pri = "code"
-        sec = "start_date"
+        def sort_fct(x): return [getattr(x, i) for i in keys]
 
-        self.networks = sorted(self.networks,
-                               key=lambda item: [getattr(item, pri),
-                                                 getattr(item, sec)])
-        for net in self.networks:
-            net.stations = sorted(net.stations,
-                                  key=lambda item: [getattr(item, pri),
-                                                    getattr(item, sec)])
-            for sta in net:
-                sta.channels = sorted(sta.channels,
-                                      key=lambda item: [getattr(item, pri),
-                                                        getattr(item, sec)])
+        self.networks = sorted(self.networks, key=sort_fct)
 
+        if max_level == "Channel" or max_level == "Station":
+            for net in self.networks:
+                net.sort(keys, max_level)
 
 if __name__ == '__main__':
     import doctest
