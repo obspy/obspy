@@ -1117,9 +1117,7 @@ class Inventory(ComparingObject):
 
         return fig
 
-    def merge(self, inv_2, merge_type="standard", inventory_merge=None,
-              network_merge=None, station_merge=None, channel_merge=None,
-              reset_created=True):
+    def merge(self, inv_2, reset_created=True):
         """
         Merges two Inventories. There are multiple options to chose in case of
         conflicting entries. More information's on these below.
@@ -1128,66 +1126,6 @@ class Inventory(ComparingObject):
 
         :param inv_2: Second inventory to merge the first with.
         :type inv_2: class:`~obspy.core.inventory.inventory.Inventory`
-
-        :param merge_type: Gives to standard options to choose from:
-            "standard": The merge type you normally want to use.
-            inventory_merge is set to same.
-            network_merge is set to standard.
-            station_merge is set to standard.
-            channel_merge is set to standard.
-            "strict": Use this option for strict presets.
-            inventory_merge is set to strict.
-            network_merge is set to standard.
-            station_merge is set to same.
-            channel_merge is set to same.
-        :type merge_type: string
-
-        :param inventory_merge: Following options are available:
-            "strict": Inventories are only kept if all relevant
-            attributes are the same. (Except for created.)
-            "first": If network attributes are different the
-            attributes of Inventory 1 are kept.
-            "second": If network attributes are different the
-            attributes of Inventory 2 are kept.
-            "same": If network attributes are different only not
-            conflicting ones are kept all others are set to None.
-        :type inventory_merge: string
-
-        :param network_merge: Following options are available:
-            Different start and end times are no conflict as long as
-            the times are not overlapping.
-            "standard": Networks are only kept if all relevant
-            attributes are the same.
-            "first": If network attributes are different the
-            attributes of Inventory 1 are kept.
-            "second": If network attributes are different the
-            attributes of Inventory 2 are kept.
-            "same": If network attributes are different only not
-            conflicting ones are kept all others are set to None.
-        :type station_merge: string
-
-        :param station_merge: Following options are available:
-            Different start and end times are no conflict as long as
-            the times are not overlapping.
-            "standard": Stations are only kept if all relevant
-            attributes are the same.
-            "first": If station attributes are different the
-            attributes of Inventory 1 are kept.
-            "second": If station attributes are different the
-            attributes of Inventory 2 are kept.
-            "same": If Station attributes are different only not
-            conflicting ones are kept all others are set to None.
-        :type station_merge: string
-
-        :param channel_merge: Following options are available:
-            "standard": If times are not overlapping channels with the
-            same code are kept even when relevant parameters are
-            different. If times are overlapping the channel of inv_2
-            is discarded.
-            "all": All channels are kept even if the times are
-            overlapping and the parameters differ.
-        :type channel_merge: string
-
         :param reset_created: If True the created time is set to the merge
         time. If false it is set accordingly to inventory_merge.
         :type reset_created: bool
@@ -1230,46 +1168,22 @@ class Inventory(ComparingObject):
         def att_list(obj, attributes):
             return [getattr(obj, att) for att in attributes]
 
-        # initialize the merge types:
-        if merge_type == "standard":
-            inv_merge = "same"
-            cha_merge, sta_merge, net_merge = ["standard"]*3
-        elif merge_type == "strict":
-            inv_merge = "strict"
-            cha_merge, sta_merge, net_merge = "standard", "same", "same"
-        else:
-            msg = ("{} is not a valid merge type".format(merge_type))
-            raise ValueError(msg)
+        def compare_and_replace(obj_a, obj_b, list):
+            """" Compares two objects by a list and replaces "None" values in
+            obj_a if given by obj_b  """
 
-        # change the individual types if user specifies them:
-        if inventory_merge:
-            if inventory_merge in ["strict", "first", "second", "same"]:
-                inv_merge = inventory_merge
-            else:
-                msg = ("{} is not a valid inventory merge "
-                       "type".format(inventory_merge))
-                raise ValueError(msg)
-        if network_merge:
-            if network_merge in ["standard", "first", "second", "same"]:
-                net_merge = network_merge
-            else:
-                msg = ("{} is not a valid network merge "
-                       "type".format(network_merge))
-                raise ValueError(msg)
-        if station_merge:
-            if station_merge in ["standard", "first", "second", "same"]:
-                sta_merge = station_merge
-            else:
-                msg = ("{} is not a valid station merge "
-                       "type".format(station_merge))
-                raise ValueError(msg)
-        if channel_merge:
-            if channel_merge in ["standard", "all"]:
-                cha_merge = channel_merge
-            else:
-                msg = ("{} is not a valid channel merge "
-                       "type".format(channel_merge))
-                raise ValueError(msg)
+            equal = True
+
+            for att in list:
+                att_a = getattr(obj_a, att)
+                att_b = getattr(obj_b, att)
+                if att_a != att_b:
+                    if att_a in (None, "None", "none"):
+                        setattr(obj_a, att, att_b)
+                    else:
+                        equal = False
+
+            return equal
 
         # we want to preserve the original inventories and return a new one
         inv_a = copy.deepcopy(self)
@@ -1281,46 +1195,49 @@ class Inventory(ComparingObject):
             with them according to merge type.
             """
             # if we go on here it means the code is the same
-            # if we go on here it means the code is the same
-            if (att_list(net_a, net_att) != att_list(net_b, net_att)) and \
-                    net_merge == "standard":
-                if (net_a.start_date >= net_b.end_date or
-                        net_b.start_date >= net_a.end_date):
-                    # if not already existing: appended
-                    if att_list(net_b, net_att) not in [
-                       att_list(_net, net_att) for _net in inv_a.networks]:
-                        inv_a.networks.append(net_b)
-                else:
-                    if net_a in net_a.stations:
-                        inv_a.networks.remove(net_a)
-            elif att_list(net_a, net_att) != att_list(net_b, net_att):
-                # we don't need a if statement for "first" because inv_a is
-                # the basis for the output inventory
-                if net_merge == "second":
-                    for att in net_att:
-                        if getattr(net_a, att) != getattr(net_b, att):
-                            setattr(net_a, att, getattr(net_b, att))
-                elif net_merge == "same":
-                    for att in net_att:
-                        if getattr(net_a, att) != getattr(net_b, att):
-                            setattr(net_a, att, None)
-            else:
-                # if we go on here all attributes are the same and we can
-                # compare the individual stations
 
-                for sta_b in _net_b:
-                    if sta_b.code not in [_sta.code for _sta in _net_a]:
-                        # if station doesn't exist we can append it without
-                        # checks
-                        _net_a.stations.append(sta_b)
-                        continue
-                    # if sta_b already exist we need to compare it to all
-                    # stations individually
-                    for sta_a in _net_a.stations:
-                        if sta_a.code != sta_b.code:
-                            # we are only interested in conflicting entries
+            # check if times are overlapping (+/-1 to catch neighbouring)
+            if ((_net_a.start_date < _net_b.start_date and
+                 _net_a.end_date+1 < _net_b.end_date) or
+                (_net_a.start_date-1 > _net_b.start_date and
+                 _net_a.end_date > _net_b.end_date)):
+                inv_a.networks.append(_net_b)
+            # overlapping or neighbouring:
+            else:
+                # now check if all attributes are equal
+                if not compare_and_replace(net_a, net_b, net_att):
+                    # check if neighbouring
+                    if ((_net_a.start_date < _net_b.end_date + 1) or
+                       (_net_a.end_date+1 > _net_b.start_date)):
+                        if net_b not in [_net for _net in inv_a]:
+                            inv_a.networks.append(_net_b)
+                    else:
+                        msg = ("{} and {} have different attributes but "
+                               "overlap in time. Please merge "
+                               "manually".format(_net_a, _net_b))
+                        raise ValueError(msg)
+                else:
+                    if _net_a.start_date > _net_b.start_date:
+                        _net_a.start_date = _net_b.start_date
+                    elif _net_a.end_date < _net_b.end_date:
+                        _net_a.end_date = _net_b.end_date
+
+                    # if we go on here all attributes are the same and we can
+                    # compare the individual stations
+
+                    for sta_b in _net_b:
+                        if sta_b.code not in [_sta.code for _sta in _net_a]:
+                            # if station doesn't exist we can append it without
+                            # checks
+                            _net_a.stations.append(sta_b)
                             continue
-                        merge_conflicting_stations(sta_a, sta_b)
+                        # if sta_b already exist we need to compare it to all
+                        # stations individually
+                        for sta_a in _net_a.stations:
+                            if sta_a.code != sta_b.code:
+                                # we are only interested in conflicting entries
+                                continue
+                            merge_conflicting_stations(sta_a, sta_b)
 
         def merge_conflicting_stations(sta_a, sta_b):
             """
@@ -1328,137 +1245,114 @@ class Inventory(ComparingObject):
             with them according to merge type.
             """
             # if we go on here it means the code is the same
-            if (att_list(sta_a, sta_att) != att_list(sta_b, sta_att)) and \
-                    sta_merge == "standard":
-                if (sta_a.start_date >= sta_b.end_date or
-                        sta_b.start_date >= sta_a.end_date):
-                    # if not already existing: appended
-                    if att_list(sta_b, sta_att) not in [
-                       att_list(_sta, sta_att)for _sta in net_a.stations]:
-                        net_a.stations.append(sta_b)
-                else:
-                    if sta_a in net_a.stations:
-                        net_a.stations.remove(sta_a)
-            elif att_list(sta_a, sta_att) != att_list(sta_b, sta_att):
-                # we don't need a if statement for "first" because inv_a is
-                # the basis for the output inventory
-                if sta_merge == "second":
-                    for att in sta_att:
-                        if getattr(sta_a, att) != getattr(sta_b, att):
-                            setattr(sta_a, att, getattr(sta_b, att))
-                elif sta_merge == "same":
-                    for att in sta_att:
-                        if getattr(sta_a, att) != getattr(sta_b, att):
-                            setattr(sta_a, att, None)
-
-                # now the station are "same" and we can continue
-                for cha_b in sta_b.channels:
-                    if cha_b.code not in [cha.code for cha in sta_a]:
-                        # if channel doesn't exist we can append
-                        # it without checks
-                        sta_a.channels.append(cha_b)
-                        continue
-                    # if cha_b already exist we need to compare it to
-                    # all channels individually
-                    for cha_a in sta_a.channels:
-                        if cha_a.code != cha_b.code:
-                            # we are only interested in the
-                            # conflicting entries
-                            continue
-                        merge_conflicting_channels(cha_a, cha_b, sta_a)
+            # check if times are overlapping (+/-1 to catch neighbouring)
+            if ((sta_a.start_date < sta_b.start_date and
+                 sta_a.end_date + 1 < sta_b.end_date) or
+                (sta_a.start_date - 1 > sta_b.start_date and
+                 sta_a.end_date > sta_b.end_date)):
+                if sta_b not in [_sta for _sta in net_a]:
+                    net_a.stations.append(sta_b)
+            # overlapping or neighbouring:
             else:
-                # if we go on here all attributes are the same and
-                # we can compare the individual channels
-                for cha_b in sta_b.channels:
-                    if cha_b.code not in [cha.code for cha in sta_a]:
-                        # if channel doesn't exist we can append
-                        # it without checks
-                        sta_a.channels.append(cha_b)
-                        continue
-                    # if cha_b already exist we need to compare it to
-                    # all channels individually
-                    for cha_a in sta_a.channels:
-                        if cha_a.code != cha_b.code:
-                            # we are only interested in the
-                            # conflicting entries
+                # now check if all attributes are equal
+                if not compare_and_replace(sta_a, sta_b, sta_att):
+                    # check if neighbouring
+                    if ((sta_a.start_date < sta_b.end_date + 1) or
+                       (sta_a.end_date + 1 > sta_b.start_date)):
+                        net_a.stations.append(sta_b)
+                    else:
+                        msg = ("{} and {} have different attributes but "
+                               "overlap in time. Please merge "
+                               "manually".format(sta_a, sta_b))
+                        raise ValueError(msg)
+                else:
+                    if sta_a.start_date > sta_b.start_date:
+                        sta_a.start_date = sta_b.start_date
+                    elif sta_a.end_date < sta_b.end_date:
+                        sta_a.end_date = sta_b.end_date
+
+                    # if we go on here all attributes are the same and we can
+                    # compare the individual channels
+
+                    for cha_b in sta_b:
+                        if cha_b.code not in [_cha.code for _cha in sta_a]:
+                            # if station doesn't exist we can append it without
+                            # checks
+                            sta_a.channels.append(cha_b)
                             continue
-                        merge_conflicting_channels(cha_a, cha_b, sta_a)
+                        # if cha_b already exist we need to compare it to all
+                        # stations individually
+                        for cha_a in sta_a.channels:
+                            if cha_a.code != cha_b.code:
+                                # we are only interested in conflicting entries
+                                continue
+                            merge_conflicting_channels(cha_a, cha_b, sta_a)
 
         def merge_conflicting_channels(cha_a, cha_b, sta_a):
             """
             This function is called in case of conflicting channels and deals
             with them according to merge type.
             """
-            # if we go on here it means that the code is the same
-            if att_list(cha_a, cha_att) != att_list(cha_b, cha_att):
-                # some attributes are conflicting so deal with them according
-                # to channel merge type
-                if cha_merge == "standard":
-                    # check if times are not overlapping
-                    if (cha_a.start_date >= cha_b.end_date or
-                            cha_b.start_date >= cha_a.end_date):
-                        # if not already existing: appended
-                        if cha_b not in [cha for cha in sta_a.channels]:
-                            sta_a.channels.append(cha_b)
-                    else:
-                        # if times are overlapping and the channels are
-                        # different we want to remove them
-                        if cha_a in sta_a.channels:
-                            sta_a.channels.remove(cha_a)
-                elif cha_merge == "all":
-                    # conflicts doesn't matter so we append all channels
-                    # check if not already appended:
-                    if cha_b not in [cha for cha in sta_a.channels]:
+
+            # if we go on here it means the code is the same
+            # check if times are overlapping (+/-1 to catch neighbouring)
+            if ((cha_a.start_date < cha_b.start_date and
+                 cha_a.end_date + 1 < cha_b.end_date) or
+                (cha_a.start_date - 1 > cha_b.start_date and
+                 cha_a.end_date > cha_b.end_date)):
+                if cha_b not in [_cha for _cha in sta_a]:
+                    sta_a.channels.append(cha_b)
+            # overlapping or neighbouring:
+            else:
+                # now check if all attributes are equal
+                if not compare_and_replace(cha_a, cha_b, cha_att):
+                    # check if neighbouring
+                    if ((cha_a.start_date < cha_b.end_date + 1) or
+                       (cha_a.end_date + 1 > cha_b.start_date)):
                         sta_a.channels.append(cha_b)
+                    else:
+                        msg = ("{} and {} have different attributes but "
+                               "overlap in time. Please merge "
+                               "manually".format(cha_a, cha_b))
+                        raise ValueError(msg)
+                else:
+                    if cha_a.start_date > cha_b.start_date:
+                        cha_a.start_date = cha_b.start_date
+                    elif cha_a.end_date < cha_b.end_date:
+                        cha_a.end_date = cha_b.end_date
 
         # the main part of the function starts here the functions defined
         # before are called afterwards
 
-        if (att_list(inv_a, inv_att) != att_list(inv_b, inv_att)) and \
-                inv_merge == "strict":
-            msg = "The two networks can't be merged because of differing " \
-                  "attributes. Try different inventory_merge method."
-            raise ValueError(msg)
-        else:
-            if att_list(inv_a, inv_att) != att_list(inv_b, inv_att):
-                # we don't need a if statement for "first" because inv_a is
-                # the basis for the output inventory
-                if inv_merge == "second":
-                    for att in inv_att:
-                        if getattr(inv_a, att) != getattr(inv_a, att):
-                            setattr(inv_a, att, getattr(inv_a, att))
-                        if reset_created:
-                            inv_a.created = obspy.UTCDateTime.now()
-                        else:
-                            inv_a.created = inv_b.created
-                elif inv_merge == "same":
-                    for att in inv_att:
-                        if getattr(inv_a, att) != getattr(inv_a, att):
-                            setattr(inv_a, att, None)
-                        if reset_created:
-                            inv_a.created = obspy.UTCDateTime.now()
-                        else:
-                            inv_a.created = None
+        # inventory's always get merged
+        if not compare_and_replace(inv_a, inv_b, inv_att):
+            # we keep the attributes of the first inventory
+            for att in inv_att:
+                    if getattr(inv_a, att) != getattr(inv_a, att):
+                        setattr(inv_a, att, getattr(inv_a, att))
 
-            for net_b in inv_b.networks:
-                if net_b.code not in [net.code for net in inv_a.networks]:
-                    # if network doesn't exist we can append it without checks
-                    inv_a.networks.append(net_b)
+        # start comparing the individual networks
+        for net_b in inv_b.networks:
+            if net_b.code not in [net.code for net in inv_a.networks]:
+                # if network doesn't exist we can append it without checks
+                inv_a.networks.append(net_b)
+                continue
+            # if net_b already exist we need to compare it to all networks
+            # individually.
+            for net_a in inv_a.networks:
+                if net_a.code != net_b.code:
+                    # we are only interested in the conflicting entries
                     continue
-                # if net_b already exist we need to compare it to all networks
-                # individually. Keep a network index for appending afterwards.
-                for net_a in inv_a.networks:
-                    if net_a.code != net_b.code:
-                        # we are only interested in the conflicting entries
-                        continue
-                    # there is a conflict
-                    merge_conflicting_networks(net_a, net_b)
+                # there is a conflict
+                merge_conflicting_networks(net_a, net_b)
 
         # update the available of ... numbers
         for net in inv_a.networks:
             net.selected_number_of_stations = len(net.stations)
             for sta in net.stations:
                 sta.selected_number_of_channels = len(sta.channels)
+        # update the created time to now
+        inv_a.created = obspy.UTCDateTime.now()
 
         return inv_a
 
