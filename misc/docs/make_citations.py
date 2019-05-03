@@ -2,7 +2,9 @@
 
 import glob
 import os
+from distutils.version import LooseVersion
 
+import pybtex
 from pybtex.database.input import bibtex
 from pybtex.style.names.lastfirst import NameStyle
 from pybtex.style.template import field, join, node, optional, sentence, words
@@ -26,7 +28,10 @@ REPLACE_TOKEN = [
 @node
 def names(children, data, role, **kwargs):
     assert not children
-    persons = data.persons[role]
+    if LooseVersion(pybtex.__version__) >= '0.22.0':
+        persons = data['entry'].persons[role]
+    else:
+        persons = data.persons[role]
     return join(**kwargs)[[NameStyle().format(person, abbr=True)
                            for person in persons]].format_data(data)
 
@@ -151,7 +156,10 @@ for key in sorted(entries.keys()):
         msg = "BibTeX entry type %s not implemented"
         raise NotImplementedError(msg % (entry.type))
     out = '   * - .. [%s]%s'
-    line = formats[entry.type].format_data(entry).plaintext()
+    if LooseVersion(pybtex.__version__) >= '0.22.0':
+        line = str(formats[entry.type].format_data({'entry': entry}))
+    else:
+        line = formats[entry.type].format_data(entry).plaintext()
     # replace special content, e.g. <nbsp>
     for old, new in REPLACE_TOKEN:
         line = line.replace(old, new)
