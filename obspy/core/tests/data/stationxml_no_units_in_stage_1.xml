@@ -30,8 +30,8 @@
             <Value>3141.49</Value>
             <Frequency>0.0001</Frequency>
             <InputUnits>
-              <Name>COUNTS</Name>
-              <Description>DIGITAL COUNTS</Description>
+              <Name>M/S</Name>
+              <Description>Meters per second</Description>
             </InputUnits>
             <OutputUnits>
               <Name>COUNTS</Name>

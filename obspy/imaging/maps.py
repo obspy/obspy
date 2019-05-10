@@ -19,7 +19,7 @@ import warnings
 import numpy as np
 from matplotlib.colorbar import Colorbar
 from matplotlib.dates import AutoDateFormatter, AutoDateLocator, date2num
-import matplotlib.patheffects as PathEffects
+from matplotlib import patheffects
 from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
                                MaxNLocator)
 
@@ -37,7 +37,7 @@ if BASEMAP_VERSION:
                       "when rendering countries and continents. ObsPy will "
                       "still work but the maps might be wrong. Please update "
                       "your basemap installation.")
-    if PROJ4_VERSION[0] == 5:
+    if PROJ4_VERSION and PROJ4_VERSION[0] == 5:
         msg = (
             "basemap/pyproj with proj4 version >= 5 has a bug that results in "
             "inverted map axes. Your maps may be wrong. Please use another "
@@ -457,12 +457,12 @@ def _plot_basemap_into_axes(
                 ax.text(xpt, ypt, name, weight="heavy",
                         color="k", zorder=100,
                         path_effects=[
-                            PathEffects.withStroke(linewidth=3,
+                            patheffects.withStroke(linewidth=3,
                                                    foreground="white")])
         elif len(lons) == 1:
             ax.text(x[0], y[0], labels[0], weight="heavy", color="k",
                     path_effects=[
-                        PathEffects.withStroke(linewidth=3,
+                        patheffects.withStroke(linewidth=3,
                                                foreground="white")])
 
     # scatter plot is removing valid x/y points with invalid color value,
@@ -726,7 +726,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
                 map_ax.text(xpt, ypt, name, weight="heavy", color="k",
                             zorder=100, transform=ccrs.Geodetic(),
                             path_effects=[
-                                PathEffects.withStroke(linewidth=3,
+                                patheffects.withStroke(linewidth=3,
                                                        foreground="white")])
 
     scatter = map_ax.scatter(lons, lats, marker=marker, s=size, c=color,

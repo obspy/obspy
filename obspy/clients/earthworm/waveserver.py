@@ -58,7 +58,7 @@ class TraceBuf2(object):
     """
     byteswap = False
     ndata = 0           # number of samples in instance
-    inputType = None    # NumPy data type
+    input_type = None   # NumPy data type
 
     def read_tb2(self, tb2):
         """
@@ -69,7 +69,7 @@ class TraceBuf2(object):
             return 0   # not enough array to hold header
         head = tb2[:64]
         self.parse_header(head)
-        nbytes = 64 + self.ndata * self.inputType.itemsize
+        nbytes = 64 + self.ndata * self.input_type.itemsize
         if len(tb2) < nbytes:
             return 0   # not enough array to hold data specified in header
         dat = tb2[64:nbytes]
@@ -88,7 +88,7 @@ class TraceBuf2(object):
             endian = b'<'
         else:
             raise ValueError
-        self.inputType = get_numpy_type(dtype)
+        self.input_type = get_numpy_type(dtype)
         (self.pinno, self.ndata, ts, te, self.rate, self.sta, self.net,
          self.chan, self.loc, self.version, tp, self.qual, _pad) = \
             struct.unpack(endian + pack_str, head)
@@ -103,7 +103,7 @@ class TraceBuf2(object):
         """
         Parse tracebuf char array data into self.data
         """
-        self.data = from_buffer(dat, self.inputType)
+        self.data = from_buffer(dat, self.input_type)
         ndat = len(self.data)
         if self.ndata != ndat:
             msg = 'data count in header (%d) != data count (%d)'
@@ -291,7 +291,7 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None,
         new_tb = TraceBuf2()
         new_tb.parse_header(dat[p:p + 64])
         p += 64
-        nbytes = new_tb.ndata * new_tb.inputType.itemsize
+        nbytes = new_tb.ndata * new_tb.input_type.itemsize
 
         if dat_len < p + nbytes:
             break   # not enough array to hold data specified in header
@@ -299,7 +299,7 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None,
         if current_tb is not None:
             if cleanup and new_tb.start - current_tb.end == period:
                 buf = dat[p:p + nbytes]
-                bufs.append(from_buffer(buf, current_tb.inputType))
+                bufs.append(from_buffer(buf, current_tb.input_type))
                 current_tb.end = new_tb.end
 
             else:
@@ -315,7 +315,7 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None,
             current_tb = new_tb
             tbl.append(current_tb)
             period = 1 / current_tb.rate
-            bufs = [from_buffer(dat[p:p + nbytes], current_tb.inputType)]
+            bufs = [from_buffer(dat[p:p + nbytes], current_tb.input_type)]
 
         p += nbytes
 

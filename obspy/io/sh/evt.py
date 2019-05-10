@@ -23,6 +23,7 @@ from obspy.core.event import (Arrival, Catalog, Event,
                               OriginUncertainty, Pick, ResourceIdentifier,
                               StationMagnitude, WaveformStreamID)
 from obspy.core.event.header import EvaluationMode, EventType, PickOnset
+from obspy.core.util.misc import _seed_id_map
 from obspy.io.sh.core import to_utcdatetime
 
 
@@ -139,23 +140,6 @@ def _mags(obj, evid, stamag=False, wid=None):
     return mags, pm
 
 
-def _seed_id_map(inventory=None, id_map=None, id_default='.{}..{}'):
-    if id_map is None:
-        id_map = {}
-    ret = id_map.copy()
-    if inventory is not None:
-        for net in inventory:
-            for sta in net:
-                if len(sta) == 0:
-                    temp = id_map.get(sta.code, id_default)
-                    temp = temp.split('.', 2)[-1]
-                else:
-                    cha = sta[0]
-                    temp = cha.location_code + '.' + cha.code[:-1] + '{}'
-                ret[sta.code] = net.code + '.{}.' + temp
-    return ret
-
-
 def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}',
               encoding='utf-8'):
     """
@@ -191,7 +175,7 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}',
 
         Compare with http://www.seismic-handler.org/wiki/ShmDocFileEvt
     """
-    seed_map = _seed_id_map(inventory, id_map, id_default)
+    seed_map = _seed_id_map(inventory, id_map)
     with io.open(filename, 'r', encoding=encoding) as f:
         temp = f.read()
     # first create phases and phases_o dictionaries for different phases
@@ -234,18 +218,9 @@ def _read_evt(filename, inventory=None, id_map=None, id_default='.{}..{}',
         magnitudes = []
         pm = None
         for p in phases[evid]:
-            try:
-                sta = p['station code']
-            except KeyError:
-                sta = ''
-            try:
-                comp = p['component']
-            except KeyError:
-                comp = ''
-            try:
-                wid = seed_map[sta]
-            except KeyError:
-                wid = id_default
+            sta = p.get('station code', '')
+            comp = p.get('component', '')
+            wid = seed_map.get(sta, id_default)
             wid = WaveformStreamID(seed_string=wid.format(sta, comp))
             pick = Pick(waveform_id=wid, **_kw(p, 'pick'))
             arrival = Arrival(pick_id=pick.resource_id, **_kw(p, 'arrival'))

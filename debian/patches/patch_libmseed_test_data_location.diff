@@ -8,9 +8,9 @@ Bug: https://github.com/obspy/obspy/issues/1568
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/obspy/io/mseed/tests/test_mseed_reading_and_writing.py
 +++ b/obspy/io/mseed/tests/test_mseed_reading_and_writing.py
-@@ -1441,13 +1441,12 @@ class MSEEDReadingAndWritingTestCase(uni
+@@ -1454,13 +1454,12 @@ class MSEEDReadingAndWritingTestCase(uni
              else:  # pragma: no cover
-                 raise NotImplemented
+                 raise NotImplementedError
  
 -        folder = os.path.join(self.path, os.path.pardir, "src", "libmseed",
 -                              "test")

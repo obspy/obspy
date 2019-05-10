@@ -173,7 +173,7 @@ install:
   # "conda install -c conda-forge --no-update-dependencies pyshp", because the
   # pyshp conda package lists 0 dependencies, anyway, so use "--no-deps" to
   # really avoid installing/updating any other packages
-  - conda install -c conda-forge --no-update-dependencies --no-deps pyshp
+  - conda install -c conda-forge --no-update-deps --no-deps pyshp || pip install pyshp
   # install packages not available via conda
   - pip install codecov
   - pip install geographiclib

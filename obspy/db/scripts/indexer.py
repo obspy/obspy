@@ -36,7 +36,7 @@ import sys
 from argparse import ArgumentParser
 
 if sys.version_info.major == 2:
-    import BaseHTTPServer as http_server
+    import BaseHTTPServer as http_server  # NOQA
 else:
     import http.server as http_server
 

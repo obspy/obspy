@@ -27,7 +27,8 @@ from obspy.core.compatibility import mock
 from obspy.core.util import (
     BASEMAP_VERSION, CARTOPY_VERSION, MATPLOTLIB_VERSION, PROJ4_VERSION)
 from obspy.core.util.testing import ImageComparison
-from obspy.core.inventory import Channel, Network, Response, Station
+from obspy.core.inventory import (Channel, Inventory, Network, Response,
+                                  Station)
 
 
 class NetworkTestCase(unittest.TestCase):
@@ -145,6 +146,27 @@ class NetworkTestCase(unittest.TestCase):
                 net.plot_response(0.002, output="DISP", channel="B*E",
                                   time=t, outfile=ic.name)
 
+    def test_response_plot_epoch_times_in_label(self):
+        """
+        Tests response plot with epoch times in labels switched on.
+        """
+        import matplotlib.pyplot as plt
+        net = read_inventory().select(station='RJOB', channel='EHZ')[0]
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            fig = net.plot_response(0.01, label_epoch_dates=True, show=False)
+        try:
+            legend = fig.axes[0].get_legend()
+            texts = legend.get_texts()
+            expecteds = ['BW.RJOB..EHZ\n2001-05-15 -- 2006-12-12',
+                         'BW.RJOB..EHZ\n2006-12-13 -- 2007-12-17',
+                         'BW.RJOB..EHZ\n2007-12-17 -- open']
+            self.assertEqual(len(texts), 3)
+            for text, expected in zip(texts, expecteds):
+                self.assertEqual(text.get_text(), expected)
+        finally:
+            plt.close(fig)
+
     def test_len(self):
         """
         Tests the __len__ property.
@@ -258,6 +280,28 @@ class NetworkTestCase(unittest.TestCase):
         self.assertEqual(len(net.select(time=UTCDateTime(2007, 1, 1))), 1)
         self.assertEqual(len(net.select(time=UTCDateTime(2008, 1, 1))), 2)
 
+    def test_empty_network_code(self):
+        """
+        Tests that an empty sring is acceptabble.
+        """
+        # An empty string is allowed.
+        n = Network(code="")
+        self.assertEqual(n.code, "")
+
+        # But None is not allowed.
+        with self.assertRaises(ValueError) as e:
+            Network(code=None)
+        self.assertEqual(e.exception.args[0], "A code is required")
+
+        # Should still serialize to something.
+        inv = Inventory(networks=[n])
+        with io.BytesIO() as buf:
+            inv.write(buf, format="stationxml", validate=True)
+            buf.seek(0, 0)
+            inv2 = read_inventory(buf)
+
+        self.assertEqual(inv, inv2)
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 @unittest.skipIf(
@@ -275,7 +319,8 @@ class NetworkBasemapTestCase(unittest.TestCase):
     def tearDown(self):
         np.seterr(**self.nperr)
 
-    @unittest.skipIf(PROJ4_VERSION[0] == 5, 'unsupported proj4 library')
+    @unittest.skipIf(PROJ4_VERSION and PROJ4_VERSION[0] == 5,
+                     'unsupported proj4 library')
     def test_location_plot_global(self):
         """
         Tests the network location preview plot, default parameters, using

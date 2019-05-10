@@ -8,7 +8,7 @@ Bug: https://github.com/obspy/obspy/commit/bc7bb622bae20d2d281646ba1934ab7be27b6
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/obspy/imaging/maps.py
 +++ b/obspy/imaging/maps.py
-@@ -33,11 +33,6 @@ BASEMAP_VERSION = get_basemap_version()
+@@ -32,11 +32,6 @@ from obspy.geodetics.base import mean_lo
  if BASEMAP_VERSION:
      from mpl_toolkits.basemap import Basemap
      HAS_BASEMAP = True
@@ -17,6 +17,6 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -                      "when rendering countries and continents. ObsPy will "
 -                      "still work but the maps might be wrong. Please update "
 -                      "your basemap installation.")
- else:
-     HAS_BASEMAP = False
- 
+     if PROJ4_VERSION and PROJ4_VERSION[0] == 5:
+         msg = (
+             "basemap/pyproj with proj4 version >= 5 has a bug that results in "

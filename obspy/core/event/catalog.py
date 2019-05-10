@@ -22,18 +22,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import glob
-import io
 import copy
-import os
 import warnings
 
 import numpy as np
 
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, _read_from_plugin
-from obspy.core.util.base import (ENTRY_POINTS, download_to_file,
-                                  sanitize_filename)
+from obspy.core.util import _read_from_plugin
+from obspy.core.util.base import ENTRY_POINTS, _generic_reader
 from obspy.core.util.decorator import map_example_filename, uncompress_file
 from obspy.core.util.misc import buffered_load_entry_point
 from obspy.imaging.cm import obspy_sequential
@@ -152,9 +148,7 @@ class Catalog(object):
         """
         if not isinstance(other, Catalog):
             return False
-        if self.events != other.events:
-            return False
-        return True
+        return self.events == other.events
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -814,47 +808,8 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog
         return _create_example_catalog()
-    elif not isinstance(pathname_or_url, (str, native_str)):
-        # not a string - we assume a file-like object
-        try:
-            # first try reading directly
-            catalog = _read(pathname_or_url, format, **kwargs)
-        except TypeError:
-            # if this fails, create a temporary file which is read directly
-            # from the file system
-            pathname_or_url.seek(0)
-            with NamedTemporaryFile() as fh:
-                fh.write(pathname_or_url.read())
-                catalog = _read(fh.name, format, **kwargs)
-        return catalog
-    elif isinstance(pathname_or_url, bytes) and \
-            pathname_or_url.strip().startswith(b'<'):
-        # XML string
-        return _read(io.BytesIO(pathname_or_url), format, **kwargs)
-    elif "://" in pathname_or_url[:10]:
-        # URL
-        # extract extension if any
-        suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
-        with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
-            download_to_file(url=pathname_or_url, filename_or_buffer=fh)
-            catalog = _read(fh.name, format, **kwargs)
-        return catalog
     else:
-        pathname = pathname_or_url
-        # File name(s)
-        pathnames = sorted(glob.glob(pathname))
-        if not pathnames:
-            # try to give more specific information why the stream is empty
-            if glob.has_magic(pathname) and not glob.glob(pathname):
-                raise Exception("No file matching file pattern: %s" % pathname)
-            elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
-                raise IOError(2, "No such file or directory", pathname)
-
-        catalog = _read(pathnames[0], format, **kwargs)
-        if len(pathnames) > 1:
-            for filename in pathnames[1:]:
-                catalog.extend(_read(filename, format, **kwargs).events)
-        return catalog
+        return _generic_reader(pathname_or_url, _read, format=format, **kwargs)
 
 
 @uncompress_file

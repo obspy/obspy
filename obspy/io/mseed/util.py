@@ -8,7 +8,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import collections
-import ctypes as C
+import ctypes as C  # NOQA
 import os
 import sys
 import warnings

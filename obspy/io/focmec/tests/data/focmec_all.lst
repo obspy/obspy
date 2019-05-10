@@ -1,0 +1,350 @@
+  Fri Sep  8 14:57:09 2017 for program Focmec
+ Sakhalin:  8 BB  + 198 NEIC P 0.2 rat thresh 20 P, 0.2 SH, 0.2 SV
+ Input from a file focmec_all.inp
+ 12-MAY-90 Sakhalin Island Event: 8 BB stations nocrust odel , 1990 QED
+
+ Statn  Azimuth    TOA   Key  Log10 Ratio  NumPol  DenTOA  Comment
+  YSS    164.2    154.9   D                                
+  PET     63.0     91.6   C                                
+  MAT    193.5     86.2   D                                
+  TSRJ   200.0     81.7   D                                
+  YONJ   207.3     79.1   D                                
+  WKYJ   199.8     78.3   C                                
+  SHK    208.6     77.3   C                                
+  TKSJ   204.1     77.1   C                                
+  SHNJ   212.2     75.6   C                                
+  BJI    253.4     70.7   -                                
+ Not including emergent polarity picks
+  TIK    349.7     65.8   D                                
+  SSE    228.7     65.3   -                                
+  IRK    292.1     65.3   D                                
+  ILT     31.7     62.5   D                                
+  LZH    259.3     60.3   D                                
+  GUMO   175.0     57.3   C                                
+  GUA    174.9     57.3   +                                
+  BAG    215.5     56.6   C                                
+  KMI    246.3     55.6   -                                
+  DAV    203.6     52.5   C                                
+  LOE    240.1     51.7   D                                
+  CHG    244.2     51.3   D                                
+  FRU    288.9     51.3   D                                
+  NST    240.4     50.1   D                                
+  DSH    287.5     47.3   D                                
+  APA    332.5     47.2   D                                
+  NDI    272.2     46.9   D                                
+  DAG    354.6     46.2   C                                
+  LAT    173.8     45.1   C                                
+  PGC     51.1     43.5   C                                
+  QUE    280.8     43.4   D                                
+  PMG    173.9     43.4   C                                
+  MCW     50.8     43.3   D                                
+  OBN    319.6     43.1   D                                
+  GMW     51.8     42.9   D                                
+  HYB    261.5     42.7   D                                
+  PNT     48.6     42.6   D                                
+  BMW     52.9     42.6   C                                
+  RMW     51.3     42.6   C                                
+  EDM     42.2     42.4   D                                
+  LON     52.0     42.3   D                                
+  SHW     52.7     42.2   C                                
+  DPW     49.1     41.6   D                                
+  GDH      6.2     41.5   C                                
+  NEW     48.2     41.4   C                                
+  VGB     52.5     41.4   D                                
+  POO    266.1     41.3   D                                
+  BOM    267.2     41.0   D                                
+  MTN    191.9     41.0   C                                
+  SES     43.4     40.6   D                                
+  FFC     35.6     40.2   D                                
+  AKU    351.0     39.6   D                                
+  BKR    305.0     39.6   D                                
+  HRY     46.7     39.2   D                                
+  ORV     57.8     39.2   D                                
+  KNA    193.9     39.1   C                                
+  LRM     47.7     39.1   D                                
+  LCCM    47.4     38.9   D                                
+  BGMT    47.9     38.7   D                                
+  MEMT    47.0     38.6   -                                
+  REY    352.3     38.6   D                                
+  CMB     58.3     38.3   D                                
+  SIM    312.8     38.2   D                                
+  COP    331.7     38.1   C                                
+  IMW     48.3     37.9   D                                
+  PTI     49.9     37.9   D                                
+  CTA    175.6     37.3   C                                
+  WB5    187.6     37.3   C                                
+  BCH     60.2     37.2   D                                
+  CLI    317.8     37.2   C                                
+  BW06    48.3     37.2   D                                
+  QIS    182.3     37.1   C                                
+  KRA    324.2     37.0   D                                
+  DUG     52.1     37.0   D                                
+  UZH    322.0     36.9   D                                
+  CFR    316.4     36.9   D                                
+  BRN    329.4     36.8   D                                
+  VRI    317.7     36.8   D                                
+  SPC    323.5     36.8   D                                
+  DAU     51.0     36.7   D                                
+  KSP    326.8     36.7   D                                
+  TLB    316.0     36.6   C                                
+  MLR    317.9     36.5   D                                
+  RSSD    44.1     36.4   D                                
+  CLL    328.9     36.3   D                                
+  PSN    315.4     36.3   D                                
+  BRG    328.1     36.3   D                                
+  MSU     52.9     36.3   C                                
+  CMP    318.2     36.2   C                                
+  PRU    327.2     36.1   -                                
+  WIT    333.2     36.0   D                                
+  PEC     59.3     36.0   D                                
+  SRO    323.8     35.9   D                                
+  DRA    318.3     35.8   D                                
+  MOX    329.3     35.8   D                                
+  EKA    339.9     35.8   -                                
+  GZR    319.7     35.8   D                                
+  ZST    324.7     35.8   D                                
+  VKA    325.2     35.7   D                                
+  WTS    332.7     35.6   D                                
+  BZS    320.5     35.6   C                                
+  TIM    320.8     35.6   D                                
+  KHC    327.3     35.5   D                                
+  MBL    201.5     35.5   C                                
+  PVL    316.7     35.5   D                                
+  JMB    315.5     35.5   D                                
+  DBN    333.7     35.5   D                                
+  GRF    329.0     35.4   -                                
+  UDU    141.7     35.3   -                                
+  KMR    326.4     35.2   D                                
+  NDE    142.5     35.2   C                                
+  DIM    315.9     35.1   D                                
+  GOL     47.9     35.1   D                                
+  GLD     47.8     35.1   D                                
+  ENN    332.6     35.0   D                                
+  PGB    317.0     35.0   D                                
+  SCH     16.8     35.0   D                                
+  MEM    332.5     35.0   D                                
+  PLD    316.4     35.0   D                                
+  KRO    142.8     34.9   C                                
+  BHG    326.9     34.9   D                                
+  VTS    317.6     34.9   D                                
+  UCC    333.5     34.9   D                                
+  RZN    316.1     34.9   D                                
+  FUR    328.1     34.8   D                                
+  VUN    143.9     34.8   C                                
+  PTJ    324.0     34.7   D                                
+  DOU    333.1     34.6   D                                
+  KKB    317.3     34.6   D                                
+  SQTA   327.6     34.5   D                                
+  QLP    177.8     34.4   C                                
+  SKO    318.4     34.3   D                                
+  VAY    317.2     34.3   D                                
+  RMO     28.0     31.0   C                                
+  SLE    329.6     34.3   D                                
+  ADI    303.8     34.3   D                                
+  SAX    328.8     34.2   D                                
+  ZLA    329.5     34.2   D                                
+  OSS    328.0     34.1   D                                
+  MML    303.2     34.1   D                                
+  LLS    328.8     34.0   D                                
+  VDL    328.3     33.9   D                                
+  OHR    318.2     33.9   D                                
+  BRS    170.1     33.7   D                                
+  TMA    328.5     33.6   D                                
+  MMK    329.0     33.4   D                                
+  DIX    329.4     33.2   D                                
+  EMS    329.7     33.1   D                                
+  PRNI   302.1     33.0   D                                
+  MEKA   201.3     32.7   C                                
+  MBH    301.9     32.7   D                                
+  HLW    304.3     31.7   D                                
+  MEO     46.5     31.4   D                                
+  CMS    176.6     31.6   C                                
+  FORR   192.0     31.5   C                                
+  CBM     20.3     31.4   C                                
+  MRWA   202.7     31.2   C                                
+  COOL   197.9     31.0   C                                
+  ETER   330.6     30.9   D                                
+  BAL    201.7     30.8   C                                
+  RIV    172.2     30.6   D                                
+  ECRI   334.4     30.1   D                                
+  ADE    182.6     30.1   C                                
+  MUN    201.7     30.0   C                                
+  EMON   338.0     29.9   D                                
+  KCHT   323.3     29.8   D                                
+  CNB    173.9     29.8   D                                
+  SBS    322.9     29.8   D                                
+  ESEL   329.5     29.7   D                                
+  NWAO   200.6     29.6   C                                
+  ZGN    322.8     29.6   D                                
+  STS    338.6     29.5   D                                
+  ERUA   337.5     29.5   D                                
+  ETOR   333.4     29.5   D                                
+  RSCP    37.0     29.2   D                                
+  GUD    334.8     29.2   D                                
+  ECHE   332.1     29.2   D                                
+  TOO    177.1     29.1   C                                
+  ACU    331.3     29.0   D                                
+  EPLA   335.9     28.9   D                                
+  EVIA   332.8     28.9   D                                
+  ARO    284.3     28.9   D                                
+  EALH   331.7     28.8   D                                
+  EBAN   333.6     28.8   D                                
+  JSC     34.5     28.8   C                                
+  ENIJ   332.0     28.8   D                                
+  EHOR   334.5     28.8   D                                
+  AFC    333.1     28.8   D                                
+  LIS    337.7     28.7   D                                
+  EVAL   335.6     28.6   D                                
+  EPRU   334.2     28.6   D                                
+  EJIF   334.2     28.5   D                                
+  CFTV   338.6     27.1   D                                
+  BUL    273.6     11.1   C                                
+  SBA    173.6     11.0   C                                
+  ARE     51.6     10.6   C                                
+  SPA    180.0     10.5   C                                
+  LPB     47.5     10.4   C                                
+  BLA     32.6     28.1   D                                
+  BLA     32.6     31.0   R                                
+  BLA     32.6     31.0   F                                
+  CCM     39.7     30.6   D                                
+  CCM     39.7     33.2   R                                
+  COR     54.7     40.8   D                                
+  COR     54.7     42.5   R                                
+  COR     54.7     42.5   B                                
+  HRV     24.2     29.2   D                                
+  HRV     24.2     32.0   R                                
+  HRV     24.2     32.0   F                                
+  KEV    336.5     45.2   D                                
+  KEV    336.5     46.4   L                                
+  KEV    336.5     46.4   B                                
+  KIP     97.8     44.0   C                                
+  KIP     97.8     45.4   R                                
+  KIP     97.8     45.4   B                                
+  PAS     59.8     35.7   D                                
+  PAS     59.8     37.9   R                                
+  PAS     59.8     37.9   B                                
+  TOL    334.5     28.0   D                                
+  TOL    334.5     30.9   L                                
+  TOL    334.5     30.9   F                                
+  BLA     44.8     31.0   H      0.8847 SH    R      28.06  -119100.0,-18450.0,500,1000,0.03,0
+  COR     54.7     42.5   H      1.1785 SH    R      40.75  -227400.0,-15830.0,500,1000,0.03,0
+  HRV     24.2     32.0   H      0.6013 SH    R      29.25  -85120.0,-25080.0,500,1000,0.03,0.
+  KEV    336.5     46.4   H      0.3287 SH    L      45.20  95680.0,-44900.0,500,1000,0.03,0.0
+  KIP     97.8     45.4   H      0.8291 SH    R      44.05  -138800.0,20840.0,500,1000,0.03,0.
+  KIP     97.8     45.4   V      0.8033 SV    B      44.05  -131700.0,20840.0,500,1000,0.03,0.
+  PAS     59.8     37.9   H      1.0783 SH    R      35.68  -140400.0,-12980.0,500,1000,0.03,0
+  TOL    334.5     30.9   H      0.2576 SH    L      28.00  47310.0,-31070.0,500,1000,0.03,0.0
+  TOL    334.5     30.9   S     -0.2762 SS    F      30.90  1013.0,2103.0
+  HRV     24.2     32.0   S     -0.4283 SS    F      31.95  2619.0,-7748.0
+  KEV    336.5     46.4   S     -0.0830 SS    B      46.37  -3618.0,4124.0
+ Polarities/Errors:  P 197/20.0  SV 007/ 0.2  SH 008/ 0.2
+ 11 ratios, maximum of  0 with |o-c| diff >  0.2000    Focus VP/VS: 1.8225
+For ratios,  0.100 = P radiation cutoff  0.100 = S radiation cutoff
+ FLAG is NUM, DEN, N&D if n, d, both below curoff
+ If FLAG N&D, total ratios used decreased by 1
+ The minimum, increment and maximum B axis trend:     0.00    5.00  355.00
+ The limits for the B axis plunge:     0.00    5.00   90.00
+ The limits for Angle:     0.00    5.00  175.00
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+     Dip,Strike,Rake     80.61    66.98   -69.72
+     Dip,Strike,Rake     22.27   180.80  -154.49   Auxiliary Plane
+     Lower Hem. Trend, Plunge of A,N     90.80    67.73   336.98     9.39
+     Lower Hem. Trend, Plunge of P,T    359.56    50.33   140.06    32.61
+     B trend, B plunge, Angle:  243.53  20.00 100.00
+
+ P Polarity error at  PET  TSRJ YONJ DAG  PGC  BMW  RMW  SHW  GDH  NEW  COP 
+ P Polarity weights:  0.04 0.01 0.01 0.97 0.53 0.50 0.53 0.50 0.99 0.58 0.90
+                      CLI  TLB  MSU  CMP  BZS  RMO  BRS  CBM  RIV  CNB  JSC 
+                      0.81 0.79 0.50 0.81 0.83 0.81 0.64 0.88 0.57 0.54 0.73
+                      BUL  ARE  LPB 
+                      0.41 0.40 0.42
+  Total P polarity weight is 14.723   Total number:  25
+
+          Log10(Ratio)                              Ratio     S Polarity
+     Observed  Calculated    Difference  Station     Type     Obs.  Calc. Flag
+      0.8847      0.8833       0.0014      BLA        SH       R      R       
+      1.1785      1.0116       0.1669      COR        SH       R      R       
+      0.6013      0.5223       0.0790      HRV        SH       R      R       
+      0.3287      0.2978       0.0309      KEV        SH       L      L       
+      0.8291      1.0280      -0.1989      KIP        SH       R      R       
+      0.8033      0.6702       0.1331      KIP        SV       B      B       
+      1.0783      1.1370      -0.0587      PAS        SH       R      R       
+      0.2576      0.2282       0.0294      TOL        SH       L      L       
+     -0.2762     -0.2558      -0.0204      TOL        SS       F      F       
+     -0.4283     -0.2806      -0.1477      HRV        SS       F      F       
+     -0.0830      0.0782      -0.1612      KEV        SS       B      B       
+
+Total number of ratios used is  11
+RMS error for the 11 acceptable solutions is 0.1147
+  Highest absolute velue of diff for those solutions is  0.1989
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+     Dip,Strike,Rake     76.43    59.08   -64.23
+     Dip,Strike,Rake     28.90   174.99  -150.97   Auxiliary Plane
+     Lower Hem. Trend, Plunge of A,N     84.99    61.10   329.08    13.57
+     Lower Hem. Trend, Plunge of P,T    358.82    51.71   128.90    26.95
+     B trend, B plunge, Angle:  232.62  25.00 105.00
+
+ P Polarity error at  WKYJ SHK  TKSJ SHNJ IRK  DAG  PGC  BMW  RMW  SHW  GDH 
+ P Polarity weights:  0.02 0.06 0.03 0.05 0.04 0.96 0.48 0.45 0.48 0.46 0.99
+                      NEW  COP  CLI  TLB  MSU  CMP  BZS  RMO  BRS  CBM  RIV 
+                      0.54 0.90 0.79 0.79 0.48 0.81 0.83 0.81 0.46 0.88 0.39
+                      CNB  JSC  BUL  SBA  ARE  SPA  LPB 
+                      0.36 0.73 0.52 0.11 0.47 0.14 0.50
+  Total P polarity weight is 14.509   Total number:  29
+
+          Log10(Ratio)                              Ratio     S Polarity
+     Observed  Calculated    Difference  Station     Type     Obs.  Calc. Flag
+      0.8847      0.8950      -0.0103      BLA        SH       R      R       
+      1.1785      1.0810       0.0975      COR        SH       R      R       
+      0.6013      0.5442       0.0571      HRV        SH       R      R       
+      0.3287      0.3666      -0.0379      KEV        SH       L      L       
+      0.8291      0.9341      -0.1050      KIP        SH       R      R       
+      0.8033      0.7815       0.0218      KIP        SV       B      B       
+      1.0783      1.1857      -0.1074      PAS        SH       R      R       
+      0.2576      0.2271       0.0305      TOL        SH       L      L       
+     -0.2762     -0.4076       0.1314      TOL        SS       F      F    NUM
+     -0.4283     -0.4503       0.0220      HRV        SS       F      F       
+     -0.0830      0.0713      -0.1543      KEV        SS       B      B       
+
+Total number of ratios used is  11
+RMS error for the 11 acceptable solutions is 0.0852
+  Highest absolute velue of diff for those solutions is  0.1543
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+     Dip,Strike,Rake     80.95    62.42   -64.66
+     Dip,Strike,Rake     26.81   170.80  -159.58   Auxiliary Plane
+     Lower Hem. Trend, Plunge of A,N     80.80    63.19   332.42     9.05
+     Lower Hem. Trend, Plunge of P,T    359.27    47.94   131.67    31.32
+     B trend, B plunge, Angle:  238.15  25.00 100.00
+
+ P Polarity error at  WKYJ SHK  TKSJ SHNJ DAG  PGC  BMW  RMW  SHW  GDH  NEW 
+ P Polarity weights:  0.04 0.07 0.05 0.06 0.98 0.45 0.42 0.45 0.43 0.99 0.51
+                      COP  CLI  TLB  MSU  CMP  BZS  RMO  BRS  CBM  RIV  CNB 
+                      0.90 0.79 0.78 0.43 0.80 0.82 0.76 0.58 0.84 0.51 0.49
+                      JSC  BUL  ARE  LPB 
+                      0.67 0.40 0.36 0.38
+  Total P polarity weight is 13.966   Total number:  26
+
+          Log10(Ratio)                              Ratio     S Polarity
+     Observed  Calculated    Difference  Station     Type     Obs.  Calc. Flag
+      0.8847      0.9667      -0.0820      BLA        SH       R      R       
+      1.1785      1.1329       0.0456      COR        SH       R      R       
+      0.6013      0.6017      -0.0004      HRV        SH       R      R       
+      0.3287      0.3386      -0.0099      KEV        SH       L      L       
+      0.8291      0.9053      -0.0762      KIP        SH       R      R       
+      0.8033      0.6341       0.1692      KIP        SV       B      B       
+      1.0783      1.2733      -0.1950      PAS        SH       R      R       
+      0.2576      0.2422       0.0154      TOL        SH       L      L       
+     -0.2762     -0.1664      -0.1098      TOL        SS       F      F       
+     -0.4283     -0.2877      -0.1406      HRV        SS       F      F       
+     -0.0830     -0.0430      -0.0400      KEV        SS       B      B       
+
+Total number of ratios used is  11
+RMS error for the 11 acceptable solutions is 0.1023
+  Highest absolute velue of diff for those solutions is  0.1950
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+ There are   3 acceptable solutions

@@ -37,7 +37,6 @@ class UtilGeodeticsTestCase(unittest.TestCase):
                           27.4675551, 17.28133229, -27.65771704, -162.65420626)
         self.assertRaises(StopIteration, calc_vincenty_inverse,
                           27.4675551, 17.28133229, -27.65771704, -162.65420626)
-        self.assertRaises(StopIteration, calc_vincenty_inverse, 0, 0, 0, 13)
         # working examples
         res = calc_vincenty_inverse(0, 0.2, 0, 20)
         self.assertAlmostEqual(res[0], 2204125.9174282863)
@@ -45,6 +44,10 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         self.assertAlmostEqual(res[2], 270.0)
         res = calc_vincenty_inverse(0, 0, 0, 10)
         self.assertAlmostEqual(res[0], 1113194.9077920639)
+        self.assertAlmostEqual(res[1], 90.0)
+        self.assertAlmostEqual(res[2], 270.0)
+        res = calc_vincenty_inverse(0, 0, 0, 13)
+        self.assertAlmostEqual(res[0], 1447153.3801296828)
         self.assertAlmostEqual(res[1], 90.0)
         self.assertAlmostEqual(res[2], 270.0)
         res = calc_vincenty_inverse(0, 0, 0, 17)

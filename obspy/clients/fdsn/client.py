@@ -14,7 +14,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
-import collections
 import copy
 import gzip
 import io
@@ -30,17 +29,17 @@ from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
-from obspy.core.compatibility import urlparse
+from obspy.core.compatibility import urlparse, collections_abc
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
-                     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
-                     FDSNRedirectException, FDSNNoDataException)
+                     WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_SERVICES,
+                     FDSNException, FDSNRedirectException, FDSNNoDataException)
 from .wadl_parser import WADLParser
 
 if PY2:
     from urllib import urlencode
     import urllib2 as urllib_request
-    import Queue as queue
+    import Queue as queue  # NOQA
 else:
     from urllib.parse import urlencode
     import urllib.request as urllib_request
@@ -140,7 +139,7 @@ class Client(object):
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
                  timeout=120, service_mappings=None, force_redirect=False,
-                 eida_token=None):
+                 eida_token=None, _discover_services=True):
         """
         Initializes an FDSN Web Service client.
 
@@ -202,6 +201,13 @@ class Client(object):
             used. This mechanism is only available on select EIDA nodes. The
             token can be provided in form of the PGP message as a string, or
             the filename of a local file with the PGP message in it.
+        :type _discover_services: bool
+        :param _discover_services: By default the client will query information
+            about the FDSN endpoint when it is instantiated.  In certain cases,
+            this may place a heavy load on the FDSN service provider.  If set
+            to ``False``, no service discovery is performed and default
+            parameter support is assumed. This parameter is experimental and
+            will likely be removed in the future.
         """
         self.debug = debug
         self.user = user
@@ -253,7 +259,10 @@ class Client(object):
                     print("\t%s: '%s'" % (key, value))
             print("Request Headers: %s" % str(self.request_headers))
 
-        self._discover_services()
+        if _discover_services:
+            self._discover_services()
+        else:
+            self.services = DEFAULT_SERVICES
 
         # Use EIDA token if provided - this requires setting new url openers.
         #
@@ -291,7 +300,7 @@ class Client(object):
         self.user = user
         self._set_opener(user, password)
 
-    def set_eida_token(self, token):
+    def set_eida_token(self, token, validate=True):
         """
         Fetch user and password from the server using the provided token,
         resulting in subsequent web service requests for waveforms being
@@ -308,8 +317,11 @@ class Client(object):
             This mechanism is only available on select EIDA nodes. The token
             can be provided in form of the PGP message as a string, or the
             filename of a local file with the PGP message in it.
+        :type validate: bool
+        :param validate: Whether to sanity check the token before sending it to
+            the EIDA server or not.
         """
-        user, password = self._resolve_eida_token(token)
+        user, password = self._resolve_eida_token(token, validate=validate)
         self.set_credentials(user, password)
 
     def _set_opener(self, user, password):
@@ -333,7 +345,7 @@ class Client(object):
         if self.debug:
             print('Installed new opener with handlers: {!s}'.format(handlers))
 
-    def _resolve_eida_token(self, token):
+    def _resolve_eida_token(self, token, validate=True):
         """
         Use the token to get credentials.
         """
@@ -350,16 +362,17 @@ class Client(object):
             with open(token_file, 'rb') as fh:
                 token = fh.read().decode()
         # sanity check on the token
-        if not _validate_eida_token(token):
-            if token_file:
-                msg = ("Read EIDA token from file '{}' but it does not "
-                       "seem to contain a valid PGP message.").format(
-                            token_file)
-            else:
-                msg = ("EIDA token does not seem to be a valid PGP message. "
-                       "If you passed a filename, make sure the file "
-                       "actually exists.")
-            raise ValueError(msg)
+        if validate:
+            if not _validate_eida_token(token):
+                if token_file:
+                    msg = ("Read EIDA token from file '{}' but it does not "
+                           "seem to contain a valid PGP message.").format(
+                                token_file)
+                else:
+                    msg = ("EIDA token does not seem to be a valid PGP "
+                           "message. If you passed a filename, make sure the "
+                           "file actually exists.")
+                raise ValueError(msg)
 
         # force https so that we don't send around tokens unsecurely
         url = 'https://{}/fdsnws/dataselect/1/auth'.format(
@@ -839,6 +852,7 @@ class Client(object):
             if attach_response:
                 self._attach_responses(st)
             self._attach_dataselect_url_to_stream(st)
+            st.trim(starttime, endtime)
             return st
 
     def _attach_responses(self, st):
@@ -1864,7 +1878,7 @@ def parse_simple_xml(xml_string):
 def get_bulk_string(bulk, arguments):
     # If its an iterable, we build up the query string from it
     # StringIO objects also have __iter__ so check for 'read' as well
-    if isinstance(bulk, collections.Iterable) \
+    if isinstance(bulk, collections_abc.Iterable) \
             and not hasattr(bulk, "read") \
             and not isinstance(bulk, (str, native_str)):
         tmp = ["%s=%s" % (key, convert_to_string(value))
@@ -1908,6 +1922,9 @@ def _validate_eida_token(token):
     """
     if re.search(pattern='BEGIN PGP MESSAGE', string=token,
                  flags=re.IGNORECASE):
+        return True
+    elif re.search(pattern='BEGIN PGP SIGNED MESSAGE', string=token,
+                   flags=re.IGNORECASE):
         return True
     return False
 

@@ -174,7 +174,82 @@ DEFAULT_TYPES = {
     "orderby": str,
     "catalog": str,
     "contributor": str,
-    "updatedafter": UTCDateTime}
+    "updatedafter": UTCDateTime,
+    "format": str}
+
+DEFAULT_VALUES = {
+    "starttime": None,
+    "endtime": None,
+    "network": None,
+    "station": None,
+    "location": None,
+    "channel": None,
+    "quality": "B",
+    "minimumlength": 0.0,
+    "longestonly": False,
+    "startbefore": None,
+    "startafter": None,
+    "endbefore": None,
+    "endafter": None,
+    "maxlongitude": 180.0,
+    "minlongitude": -180.0,
+    "longitude": 0.0,
+    "maxlatitude": 90.0,
+    "minlatitude": -90.0,
+    "latitude": 0.0,
+    "maxdepth": None,
+    "mindepth": None,
+    "maxmagnitude": None,
+    "minmagnitude": None,
+    "magnitudetype": None,
+    "maxradius": 180.0,
+    "minradius": 0.0,
+    "level": "station",
+    "includerestricted": True,
+    "includeavailability": False,
+    "includeallorigins": False,
+    "includeallmagnitudes": False,
+    "includearrivals": False,
+    "matchtimeseries": False,
+    "eventid": None,
+    "limit": None,
+    "offset": 1,
+    "orderby": "time",
+    "catalog": None,
+    "contributor": None,
+    "updatedafter": None,
+}
+
+# This creates a services dictionary containing default and optional services,
+# with reasonable types and default values, but none are required. Its purpose
+# is to look like what would be returned from an actual services query on a
+# minimal and very permissive service provider, without actually having to
+# do the query.
+DEFAULT_SERVICES = {}
+for service in ["dataselect", "event", "station"]:
+    DEFAULT_SERVICES[service] = {}
+
+    for default_param in DEFAULT_PARAMETERS[service]:
+        DEFAULT_SERVICES[service][default_param] = {
+            "default_value": DEFAULT_VALUES[default_param],
+            "type": DEFAULT_TYPES[default_param],
+            "required": False,
+        }
+
+    for optional_param in OPTIONAL_PARAMETERS[service]:
+        if optional_param == "format":
+            if service == "dataselect":
+                default_val = "miniseed"
+            else:
+                default_val = "xml"
+        else:
+            default_val = DEFAULT_VALUES[optional_param]
+
+        DEFAULT_SERVICES[service][optional_param] = {
+            "default_value": default_val,
+            "type": DEFAULT_TYPES[optional_param],
+            "required": False,
+        }
 
 # This list collects WADL parameters that will not be parsed because they are
 # not useful for the ObsPy client.

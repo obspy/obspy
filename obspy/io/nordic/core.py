@@ -14,13 +14,18 @@ Nordic file format support for ObsPy
     the arrival.pick_id linking the arrival (which contain calculated
     information) with the pick.resource_id (where the pick contains only
     physical measured information).
+
+.. versionchanged:: 1.2.0
+
+    The number of stations used to calculate the origin was previously
+    incorrectly stored in a comment. From version 1.2.0 this is now stored
+    in `origin.quality.used_station_count`
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import warnings
-from collections import defaultdict
 import datetime
 import os
 import io
@@ -28,27 +33,23 @@ import io
 from obspy import UTCDateTime, read
 from obspy.geodetics import kilometers2degrees, degrees2kilometers
 from obspy.core.event import (
-    Event, Origin, Magnitude, Comment, Catalog, EventDescription, CreationInfo,
+    Event, Origin, Magnitude, Catalog, EventDescription, CreationInfo,
     OriginQuality, Pick, WaveformStreamID, Arrival, Amplitude,
     FocalMechanism, MomentTensor, NodalPlane, NodalPlanes, QuantityError,
     Tensor, ResourceIdentifier)
+from obspy.io.nordic import NordicParsingError
+from obspy.io.nordic.utils import (
+    _int_conv, _str_conv, _float_conv, _evmagtonor, _nortoevmag,
+    _get_line_tags)
 
 
-mag_mapping = {"ML": "L", "MLv": "L", "mB": "B", "Ms": "s", "MS": "S",
-               "MW": "W", "MbLg": "G", "Mc": "C"}
-
-onsets = {'I': 'impulsive', 'E': 'emergent'}
-# List of currently implemented line-endings, which in Nordic mark what format
-# info in that line will be.
-accepted_tags = ['1', '6', '7', 'E', ' ', 'F', 'M', '3']
-
-
-class NordicParsingError(Exception):
-    """
-    Internal general error for IO operations in obspy.core.io.nordic.
-    """
-    def __init__(self, value):
-        self.value = value
+POLARITY_MAPPING = {"": "undecidable", "C": "positive", "D": "negative"}
+INV_POLARITY_MAPPING = {item: key for key, item in POLARITY_MAPPING.items()}
+ONSET_MAPPING = {'I': 'impulsive', 'E': 'emergent'}
+INV_ONSET_MAPPING = {item: key for key, item in ONSET_MAPPING.items()}
+EVALUATION_MAPPING = {'A': 'automatic', ' ': 'manual'}
+INV_EVALUTATION_MAPPING = {
+    item: key for key, item in EVALUATION_MAPPING.items()}
 
 
 def _is_sfile(sfile, encoding='latin-1'):
@@ -96,155 +97,6 @@ def _is_sfile(sfile, encoding='latin-1'):
             return False
     else:
         return False
-
-
-def _get_line_tags(f, report=True):
-    """
-    Associate lines with a known line-type
-    :param f: File open in read
-    :param report: Whether to report warnings about lines not implemented
-    """
-    f.seek(0)
-    line = f.readline()
-    if len(line.rstrip()) != 80:
-        # Cannot be Nordic
-        raise NordicParsingError(
-            "Lines are not 80 characters long: not a nordic file")
-    f.seek(0)
-    tags = defaultdict(list)
-    for i, line in enumerate(f):
-        try:
-            line_id = line.rstrip()[79]
-        except IndexError:
-            line_id = ' '
-        if line_id in accepted_tags:
-            tags[line_id].append((line, i))
-        elif report:
-            warnings.warn("Lines of type %s have not been implemented yet, "
-                          "please submit a development request" % line_id)
-    return tags
-
-
-def _int_conv(string):
-    """
-    Convenience tool to convert from string to integer.
-
-    If empty string return None rather than an error.
-
-    >>> _int_conv('12')
-    12
-    >>> _int_conv('')
-
-    """
-    try:
-        intstring = int(string)
-    except Exception:
-        intstring = None
-    return intstring
-
-
-def _float_conv(string):
-    """
-    Convenience tool to convert from string to float.
-
-    If empty string return None rather than an error.
-
-    >>> _float_conv('12')
-    12.0
-    >>> _float_conv('')
-    >>> _float_conv('12.324')
-    12.324
-    """
-    try:
-        floatstring = float(string)
-    except Exception:
-        floatstring = None
-    return floatstring
-
-
-def _str_conv(number, rounded=False):
-    """
-    Convenience tool to convert a number, either float or int into a string.
-
-    If the int or float is None, returns empty string.
-
-    >>> print(_str_conv(12.3))
-    12.3
-    >>> print(_str_conv(12.34546, rounded=1))
-    12.3
-    >>> print(_str_conv(None))
-    <BLANKLINE>
-    >>> print(_str_conv(1123040))
-    11.2e5
-    """
-    if not number:
-        return str(' ')
-    if not rounded and isinstance(number, (float, int)):
-        if number < 100000:
-            string = str(number)
-        else:
-            exponant = int('{0:.2E}'.format(number).split('E+')[-1]) - 1
-            divisor = 10 ** exponant
-            string = '{0:.1f}'.format(number / divisor) + 'e' + str(exponant)
-    elif rounded == 2 and isinstance(number, (float, int)):
-        if number < 100000:
-            string = '{0:.2f}'.format(number)
-        else:
-            exponant = int('{0:.2E}'.format(number).split('E+')[-1]) - 1
-            divisor = 10 ** exponant
-            string = '{0:.2f}'.format(number / divisor) + 'e' + str(exponant)
-    elif rounded == 1 and isinstance(number, (float, int)):
-        if number < 100000:
-            string = '{0:.1f}'.format(number)
-        else:
-            exponant = int('{0:.2E}'.format(number).split('E+')[-1]) - 1
-            divisor = 10 ** exponant
-            string = '{0:.1f}'.format(number / divisor) + 'e' + str(exponant)
-    else:
-        return str(number)
-    return string
-
-
-def _evmagtonor(mag_type):
-    """
-    Switch from obspy event magnitude types to seisan syntax.
-
-    >>> print(_evmagtonor('mB'))  # doctest: +SKIP
-    B
-    >>> print(_evmagtonor('M'))  # doctest: +SKIP
-    W
-    >>> print(_evmagtonor('bob'))  # doctest: +SKIP
-    <BLANKLINE>
-    """
-    if mag_type == 'M':
-        warnings.warn('Converting generic magnitude to moment magnitude')
-        return "W"
-    try:
-        mag = mag_mapping[mag_type]
-    except KeyError:
-        warnings.warn(mag_type + ' is not convertible')
-        return ''
-    return mag
-
-
-def _nortoevmag(mag_type):
-    """
-    Switch from nordic type magnitude notation to obspy event magnitudes.
-
-    >>> print(_nortoevmag('B'))  # doctest: +SKIP
-    mB
-    >>> print(_nortoevmag('bob'))  # doctest: +SKIP
-    <BLANKLINE>
-    """
-    if mag_type.upper() == "L":
-        return "ML"
-    inv_mag_mapping = {item: key for key, item in mag_mapping.items()}
-    try:
-        mag = inv_mag_mapping[mag_type]
-    except KeyError:
-        warnings.warn(mag_type + ' is not convertible')
-        return ''
-    return mag
 
 
 def readheader(sfile, encoding='latin-1'):
@@ -349,21 +201,29 @@ def _read_origin(line):
         except ValueError:
             new_event.origins[0].__dict__[key] = None
     if new_event.origins[0].depth:
-        new_event.origins[0].depth *= 1000
+        new_event.origins[0].depth *= 1000.
     if line[43].strip():
         warnings.warn("Depth indicator {0} has not been mapped "
                       "to the event".format(line[43]))
     if line[44].strip():
         warnings.warn("Origin location indicator {0} has not been mapped "
                       "to the event".format(line[44]))
+    if line[10] == "F":
+        new_event.origins[0].time_fixed = True
     new_event.creation_info = CreationInfo(agency_id=line[45:48].strip())
     new_event.origins[0].creation_info = CreationInfo(
         agency_id=line[45:48].strip())
-    ksta = Comment(text='Number of stations=' + line[49:51].strip())
-    new_event.origins[0].comments.append(ksta)
-    if _float_conv(line[51:55]) is not None:
+    used_station_count = line[49:51].strip()
+    if used_station_count != '':
         new_event.origins[0].quality = OriginQuality(
-            standard_error=_float_conv(line[51:55]))
+            used_station_count=int(used_station_count))
+    timeres = _float_conv(line[51:55])
+    if timeres is not None:
+        if new_event.origins[0].quality is not None:
+            new_event.origins[0].quality.standard_error = timeres
+        else:
+            new_event.origins[0].quality = OriginQuality(
+                standard_error=timeres)
     # Read in magnitudes if they are there.
     magnitudes = []
     magnitudes.extend(_read_mags(line, new_event))
@@ -714,7 +574,11 @@ def _read_picks(tagged_lines, new_event):
         if len(line) < 80:
             line = line.ljust(80)  # Pick-lines without a tag may be short.
         weight = line[14]
-        if weight == '_':
+        if weight not in ' 012349_':  # Long phase name
+            weight = line[8]
+            phase = line[10:17].strip()
+            polarity = ''
+        elif weight == '_':
             phase = line[10:17]
             weight = 0
             polarity = ''
@@ -723,34 +587,23 @@ def _read_picks(tagged_lines, new_event):
             polarity = line[16]
             if weight == ' ':
                 weight = 0
-        polarity_maps = {"": "undecidable", "C": "positive", "D": "negative"}
-        try:
-            polarity = polarity_maps[polarity]
-        except KeyError:
-            polarity = "undecidable"
+        polarity = POLARITY_MAPPING.get(polarity, "undecidable")
         # It is valid nordic for the origin to be hour 23 and picks to be hour
         # 00 or 24: this signifies a pick over a day boundary.
-        if int(line[18:20]) == 0 and evtime.hour == 23:
+        pick_hour = int(line[18:20])
+        pick_minute = int(line[20:22])
+        pick_seconds = float(line[22:29])  # 29 should be blank, but sometimes
+        # SEISAN appears to overflow here, see #2348
+        if pick_hour == 0 and evtime.hour == 23:
             day_add = 86400
-            pick_hour = 0
-        elif int(line[18:20]) == 24:
+        elif pick_hour >= 24:  # Nordic supports up to 48 hours advanced.
             day_add = 86400
-            pick_hour = 0
+            pick_hour -= 24
         else:
             day_add = 0
-            pick_hour = int(line[18:20])
-        try:
-            time = UTCDateTime(evtime.year, evtime.month, evtime.day,
-                               pick_hour, int(line[20:22]),
-                               float(line[23:28])) + day_add
-        except ValueError:
-            time = UTCDateTime(evtime.year, evtime.month, evtime.day,
-                               int(line[18:20]), pick_hour,
-                               float("0." + line[23:38].split('.')[1])) +\
-                60 + day_add
-            # Add 60 seconds on to the time, this copes with s-file
-            # preference to write seconds in 1-60 rather than 0-59 which
-            # datetime objects accept
+        time = UTCDateTime(
+            year=evtime.year, month=evtime.month, day=evtime.day,
+            hour=pick_hour, minute=pick_minute) + (pick_seconds + day_add)
         if header[57:60] == 'AIN':
             ain = _float_conv(line[57:60])
             warnings.warn('AIN: %s in header, currently unsupported' % ain)
@@ -766,17 +619,14 @@ def _read_picks(tagged_lines, new_event):
         pick = Pick(waveform_id=_waveform_id, phase_hint=phase,
                     polarity=polarity, time=time)
         try:
-            pick.onset = onsets[line[9]]
+            pick.onset = ONSET_MAPPING[line[9]]
         except KeyError:
             pass
-        if line[15] == 'A':
-            pick.evaluation_mode = 'automatic'
-        else:
-            pick.evaluation_mode = 'manual'
+        pick.evaluation_mode = EVALUATION_MAPPING.get(line[15], "manual")
         # Note these two are not always filled - velocity conversion not yet
         # implemented, needs to be converted from km/s to s/deg
         # if not velocity == 999.0:
-            # new_event.picks[pick_index].horizontal_slowness = 1.0 / velocity
+        #     new_event.picks[pick_index].horizontal_slowness = 1.0 / velocity
         if _float_conv(line[46:51]) is not None:
             pick.backazimuth = _float_conv(line[46:51])
         # Create new obspy.event.Amplitude class which references above Pick
@@ -802,9 +652,9 @@ def _read_picks(tagged_lines, new_event):
             if snr:
                 _amplitude.snr = snr
             new_event.amplitudes.append(_amplitude)
-        elif _int_conv(line[28:33]) is not None:
-            # Create an amplitude instance for code duration also
-            _amplitude = Amplitude(generic_amplitude=_int_conv(line[28:33]),
+        elif _int_conv(line[29:33]) is not None:
+            # Create an amplitude instance for coda duration also
+            _amplitude = Amplitude(generic_amplitude=_int_conv(line[29:33]),
                                    pick_id=pick.resource_id,
                                    waveform_id=pick.waveform_id)
             # Amplitude for coda magnitude
@@ -953,7 +803,7 @@ def blanksfile(wavefile, evtype, userid, overwrite=False, evtime=None):
 
 
 def write_select(catalog, filename, userid='OBSP', evtype='L',
-                 wavefiles=None):
+                 wavefiles=None, high_accuracy=True):
     """
     Function to write a catalog to a select file in nordic format.
 
@@ -970,6 +820,10 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
     :param wavefiles:
         Waveforms to associate the events with, must be ordered in the same
          way as the events in the catalog.
+    :type high_accuracy: bool
+    :param high_accuracy:
+        Whether to output pick seconds at 6.3f (high_accuracy) or
+        5.2f (standard)
     """
     if not wavefiles:
         wavefiles = ['DUMMY' for _i in range(len(catalog))]
@@ -978,7 +832,7 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
             select = io.StringIO()
             _write_nordic(event=event, filename=None, userid=userid,
                           evtype=evtype, wavefiles=wavfile,
-                          string_io=select)
+                          string_io=select, high_accuracy=high_accuracy)
             select.seek(0)
             for line in select:
                 fout.write(line)
@@ -987,7 +841,7 @@ def write_select(catalog, filename, userid='OBSP', evtype='L',
 
 def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
                   wavefiles='DUMMY', explosion=False,
-                  overwrite=True, string_io=None):
+                  overwrite=True, string_io=None, high_accuracy=True):
     """
     Write an :class:`~obspy.core.event.Event` to a nordic formatted s-file.
 
@@ -1015,6 +869,10 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
     :param string_io:
         If given, will write to the StringIO object in memory rather than to
         the filename.
+    :type high_accuracy: bool
+    :param high_accuracy:
+        Whether to output pick seconds at 6.3f (high_accuracy) or
+        5.2f (standard)
 
     :returns: str: name of nordic file written
 
@@ -1215,7 +1073,7 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
                 ' VELO AIN AR TRES W  DIS CAZ7\n')
     # Now call the populate sfile function
     if len(event.picks) > 0:
-        newpicks = '\n'.join(nordpick(event))
+        newpicks = '\n'.join(nordpick(event, high_accuracy=high_accuracy))
         sfile.write(newpicks + '\n')
         sfile.write('\n'.rjust(81))
     if not string_io:
@@ -1260,17 +1118,17 @@ def _write_moment_tensor_line(focal_mechanism):
     # Sort out the second line
     lines[1][1:3] = 'MT'
     lines[1][3:9] = _str_conv(
-        focal_mechanism.moment_tensor.tensor.m_rr, 3).rjust(6)
+        focal_mechanism.moment_tensor.tensor.m_rr, 3)[0:6].rjust(6)
     lines[1][10:16] = _str_conv(
-        focal_mechanism.moment_tensor.tensor.m_tt, 3).rjust(6)
+        focal_mechanism.moment_tensor.tensor.m_tt, 3)[0:6].rjust(6)
     lines[1][17:23] = _str_conv(
-        focal_mechanism.moment_tensor.tensor.m_pp, 3).rjust(6)
+        focal_mechanism.moment_tensor.tensor.m_pp, 3)[0:6].rjust(6)
     lines[1][24:30] = _str_conv(
-        focal_mechanism.moment_tensor.tensor.m_rt, 3).rjust(6)
+        focal_mechanism.moment_tensor.tensor.m_rt, 3)[0:6].rjust(6)
     lines[1][31:37] = _str_conv(
-        focal_mechanism.moment_tensor.tensor.m_rp, 3).rjust(6)
+        focal_mechanism.moment_tensor.tensor.m_rp, 3)[0:6].rjust(6)
     lines[1][38:44] = _str_conv(
-        focal_mechanism.moment_tensor.tensor.m_tp, 3).rjust(6)
+        focal_mechanism.moment_tensor.tensor.m_tp, 3)[0:6].rjust(6)
     if hasattr(magnitude, 'creation_info') and hasattr(
             magnitude.creation_info, 'agency_id'):
         lines[1][45:48] = magnitude.creation_info.agency_id.rjust(3)[0:3]
@@ -1343,12 +1201,16 @@ def _write_hyp_error_line(origin):
     return ''.join(error_line)
 
 
-def nordpick(event):
+def nordpick(event, high_accuracy=True):
     """
     Format picks in an :class:`~obspy.core.event.event.Event` to nordic.
 
     :type event: :class:`~obspy.core.event.event.Event`
     :param event: A single obspy event.
+    :type high_accuracy: bool
+    :param high_accuracy:
+        Whether to output pick seconds at 6.3f (high_accuracy) or
+        5.2f (standard).
 
     :returns: List of String
 
@@ -1361,62 +1223,53 @@ def nordpick(event):
         from the values stored in seisan.  Multiple weights are also
         not supported.
     """
+    # Nordic picks do not have a date associated with them - we need time
+    # relative to some origin time.
+    try:
+        origin = event.preferred_origin() or event.origins[0]
+        origin_date = origin.time.date
+    except IndexError:
+        origin = Origin()
+        origin_date = min([p.time for p in event.picks]).date
     pick_strings = []
+    if high_accuracy:
+        pick_rounding = 3
+    else:
+        pick_rounding = 2
     for pick in event.picks:
         if not pick.waveform_id:
             msg = ('No waveform id for pick at time %s, skipping' % pick.time)
             warnings.warn(msg)
             continue
-        # Convert string to short sting
-        if pick.onset == 'impulsive':
-            impulsivity = 'I'
-        elif pick.onset == 'emergent':
-            impulsivity = 'E'
-        else:
-            impulsivity = ' '
-
-        # Convert string to short string
-        if pick.polarity == 'positive':
-            polarity = 'C'
-        elif pick.polarity == 'negative':
-            polarity = 'D'
-        else:
-            polarity = ' '
+        impulsivity = _str_conv(INV_ONSET_MAPPING.get(pick.onset))
+        polarity = _str_conv(INV_POLARITY_MAPPING.get(pick.polarity))
         # Extract velocity: Note that horizontal slowness in quakeML is stored
         # as s/deg
-        if pick.horizontal_slowness is not None:
-            # velocity = 1.0 / pick.horizontal_slowness
-            velocity = ' '  # Currently this conversion is unsupported.
-        else:
-            velocity = ' '
-        # Extract azimuth
-        if pick.backazimuth is not None:
-            azimuth = pick.backazimuth
-        else:
-            azimuth = ' '
+        # if pick.horizontal_slowness is not None:
+        #     # velocity = 1.0 / pick.horizontal_slowness
+        #     velocity = ' '  # Currently this conversion is unsupported.
+        # else:
+        #     velocity = ' '
+        velocity = ' '
+        azimuth = _str_conv(pick.backazimuth)
         # Extract the correct arrival info for this pick - assuming only one
         # arrival per pick...
-        try:
-            origin = event.preferred_origin() or event.origins[0]
-            arrival = [arrival for arrival in origin.arrivals
-                       if arrival.pick_id == pick.resource_id]
-        except IndexError:
-            arrival = []
+        arrival = [arrival for arrival in origin.arrivals
+                   if arrival.pick_id == pick.resource_id]
         if len(arrival) > 0:
+            if len(arrival) > 1:
+                warnings.warn("Multiple arrivals for pick - only writing one")
             arrival = arrival[0]
             # Extract weight - should be stored as 0-4, or 9 for seisan.
-            if arrival.time_weight is not None:
-                weight = int(arrival.time_weight)
-            else:
-                weight = '0'
+            weight = _str_conv(int(arrival.time_weight or 0))
             # Extract azimuth residual
             if arrival.backazimuth_residual is not None:
-                azimuthres = int(arrival.backazimuth_residual)
+                azimuthres = _str_conv(int(arrival.backazimuth_residual))
             else:
                 azimuthres = ' '
             # Extract time residual
             if arrival.time_residual is not None:
-                timeres = arrival.time_residual
+                timeres = _str_conv(arrival.time_residual, rounded=2)
             else:
                 timeres = ' '
             # Extract distance
@@ -1425,30 +1278,22 @@ def nordpick(event):
                 if distance >= 100.0:
                     distance = str(_int_conv(distance))
                 elif 10.0 < distance < 100.0:
-                    distance = _str_conv(round(distance, 1), 1)
+                    distance = _str_conv(round(distance, 1), rounded=1)
                 elif distance < 10.0:
-                    distance = _str_conv(round(distance, 2), 2)
+                    distance = _str_conv(round(distance, 2), rounded=2)
                 else:
                     distance = _str_conv(distance, False)
             else:
                 distance = ' '
             # Extract CAZ
             if arrival.azimuth is not None:
-                caz = int(arrival.azimuth)
+                caz = _str_conv(int(arrival.azimuth))
             else:
                 caz = ' '
         else:
-            caz = ' '
-            distance = ' '
-            timeres = ' '
-            azimuthres = ' '
-            azimuth = ' '
-            weight = 0
-        if not pick.phase_hint:
-            # Cope with some authorities not providing phase hints :(
-            phase_hint = ' '
-        else:
-            phase_hint = pick.phase_hint
+            caz, distance, timeres, azimuthres, azimuth, weight = (
+                ' ', ' ', ' ', ' ', ' ', 0)
+        phase_hint = pick.phase_hint or ' '
         # Extract amplitude: note there can be multiple amplitudes, but they
         # should be associated with different picks.
         amplitude = [amplitude for amplitude in event.amplitudes
@@ -1496,38 +1341,58 @@ def nordpick(event):
             peri_round = False
             amp = None
             coda = ' '
-        # If the weight is 0 then we don't need to print it
-        if weight == 0 or weight == '0':
-            weight = None  # this will return an empty string using _str_conv
-        elif weight is not None:
-            weight = int(weight)
-        if pick.evaluation_mode == "automatic":
-            eval_mode = "A"
-        elif pick.evaluation_mode == "manual":
-            eval_mode = " "
-        else:
-            warnings.warn("Evaluation mode %s is not supported"
-                          % pick.evaluation_mode)
-            eval_mode = " "
+        eval_mode = INV_EVALUTATION_MAPPING.get(pick.evaluation_mode, None)
+        if eval_mode is None:
+            warnings.warn("Evaluation mode {0} is not mappable".format(
+                pick.evaluation_mode))
         # Generate a print string and attach it to the list
         channel_code = pick.waveform_id.channel_code or '   '
-        pick_strings.append(
-            " {0}{1}{2} {3}{4}{5}{6}{7} {8}{9}{10}.{11}{12}"
-            "{13}{14}{15}{16}    {17}{18}  {19}{20} ".format(
-                pick.waveform_id.station_code.ljust(5), channel_code[0],
-                channel_code[-1], impulsivity, phase_hint.ljust(4),
-                _str_conv(weight).rjust(1), eval_mode, polarity.rjust(1),
-                str(pick.time.hour).rjust(2), str(pick.time.minute).rjust(2),
-                str(pick.time.second).rjust(3),
-                str(float(pick.time.microsecond) /
-                    (10 ** 4)).split('.')[0].zfill(2),
-                _str_conv(coda).rjust(5)[0:5],
-                _str_conv(amp, rounded=1).rjust(7)[0:7],
-                _str_conv(peri, rounded=peri_round).rjust(5),
-                _str_conv(azimuth).rjust(6), _str_conv(velocity).rjust(5),
-                _str_conv(azimuthres).rjust(3),
-                _str_conv(timeres, rounded=2).rjust(5)[0:5], distance.rjust(5),
-                _str_conv(caz).rjust(4)))
+        pick_hour = pick.time.hour
+        if pick.time.date > origin_date:
+            # pick hours up to 48 are supported
+            days_diff = (pick.time.date - origin_date).days
+            if days_diff > 1:
+                raise NordicParsingError(
+                    "Pick is {0} days from the origin, must be < 48 "
+                    "hours".format(days_diff))
+            pick_hour += 24
+        pick_seconds = pick.time.second + (pick.time.microsecond / 1e6)
+        if len(phase_hint) > 4:
+            # Weight goes in 9 and phase_hint runs through 11-18
+            if polarity != ' ':
+                UserWarning("Polarity not written due to phase hint length")
+            phase_info = (
+                _str_conv(weight).rjust(1) + impulsivity + phase_hint.ljust(8))
+        else:
+            phase_info = (
+                ' ' + impulsivity + phase_hint.ljust(4) +
+                _str_conv(weight).rjust(1) + eval_mode +
+                polarity.rjust(1) + ' ')
+        pick_string_formatter = (
+            " {station:5s}{instrument:1s}{component:1s}{phase_info:10s}"
+            "{hour:2d}{minute:2d}{seconds:6s}{coda:5s}{amp:7s}{period:5s}"
+            "{azimuth:6s}{velocity:5s}    {azimuthres:3s}{timeres:5s}  "
+            "{distance:5s}{caz:4s} ")
+        # Note that pick seconds rounding only works because SEISAN does not
+        # enforce that seconds stay 0 <= seconds < 60, so rounding something
+        # like seconds = 59.997 to 2dp gets to 60.00, which SEISAN is happy
+        # with.  It appears that SEISAN is happy with large numbers of seconds
+        # see #2348.
+        pick_strings.append(pick_string_formatter.format(
+            station=pick.waveform_id.station_code,
+            instrument=channel_code[0], component=channel_code[-1],
+            phase_info=phase_info, hour=pick_hour,
+            minute=pick.time.minute,
+            seconds=_str_conv(pick_seconds, rounded=pick_rounding),
+            coda=_str_conv(coda).rjust(5)[0:5],
+            amp=_str_conv(amp, rounded=1).rjust(7)[0:7],
+            period=_str_conv(peri, rounded=peri_round).rjust(5)[0:5],
+            azimuth=_str_conv(azimuth).rjust(6)[0:6],
+            velocity=_str_conv(velocity).rjust(5)[0:5],
+            azimuthres=_str_conv(azimuthres).rjust(3)[0:3],
+            timeres=_str_conv(timeres, rounded=2).rjust(5)[0:5],
+            distance=distance.rjust(5)[0:5],
+            caz=_str_conv(caz).rjust(4)[0:4]))
         # Note that currently finalweight is unsupported, nor is velocity, or
         # angle of incidence.  This is because obspy.event stores slowness in
         # s/deg and takeoff angle, which would require computation from the

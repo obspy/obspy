@@ -1478,10 +1478,10 @@ class WaveformPlotting(object):
                 loc="lower right", prop=dict(size="small"))
 
     def _time_to_xvalue(self, t):
-            if self.type == 'relative':
-                return t - self.reftime
-            else:
-                return date2num(t.datetime)
+        if self.type == 'relative':
+            return t - self.reftime
+        else:
+            return date2num(t.datetime)
 
 
 if __name__ == '__main__':

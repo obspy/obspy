@@ -917,9 +917,9 @@ class SeismicPhase(object):
         # parameters that are associated with high slowness zones. If so,
         # then we will need to insert a "shadow zone" into our time and
         # distance arrays. It is represented by a repeated ray parameter.
-        for isPwave in [True, False]:
+        for is_pwave in [True, False]:
             hsz = tau_model.s_mod.high_slowness_layer_depths_p \
-                if isPwave \
+                if is_pwave \
                 else tau_model.s_mod.high_slowness_layer_depths_s
             index_offset = 0
             for hszi in hsz:
@@ -934,11 +934,11 @@ class SeismicPhase(object):
                         # Check for downgoing legs that cross the high
                         # slowness zone with the same wave type.
                         if (self.branch_seq[leg_num] == branch_num and
-                                self.wave_type[leg_num] == isPwave and
+                                self.wave_type[leg_num] == is_pwave and
                                 self.down_going[leg_num] is True and
                                 self.branch_seq[leg_num - 1] ==
                                 branch_num - 1 and
-                                self.wave_type[leg_num - 1] == isPwave and
+                                self.wave_type[leg_num - 1] == is_pwave and
                                 self.down_going[leg_num - 1] is True):
                             found_overlap = True
                             break
@@ -1495,12 +1495,12 @@ def closest_branch_to_depth(tau_model, depth_string):
     discon_branch = -1
     discon_max = 1e300
     discon_depth = float(depth_string)
-    for i, tBranch in enumerate(tau_model.tau_branches[0]):
-        if (abs(discon_depth - tBranch.top_depth) < discon_max and not
-                any(ndc == tBranch.top_depth
+    for i, t_branch in enumerate(tau_model.tau_branches[0]):
+        if (abs(discon_depth - t_branch.top_depth) < discon_max and not
+                any(ndc == t_branch.top_depth
                     for ndc in tau_model.no_discon_depths)):
             discon_branch = i
-            discon_max = abs(discon_depth - tBranch.top_depth)
+            discon_max = abs(discon_depth - t_branch.top_depth)
     return discon_branch
 
 

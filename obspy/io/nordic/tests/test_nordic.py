@@ -21,10 +21,13 @@ from obspy.core.event import (
     NodalPlane, NodalPlanes, ResourceIdentifier, Tensor)
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import TemporaryWorkingDirectory
+
+from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.core import (
     _is_sfile, read_spectral_info, read_nordic, readwavename, blanksfile,
-    _write_nordic, nordpick, readheader, _int_conv, _readheader, _evmagtonor,
-    write_select, NordicParsingError, _float_conv, _nortoevmag, _str_conv,
+    _write_nordic, nordpick, readheader, _readheader,  write_select)
+from obspy.io.nordic.utils import (
+    _int_conv, _float_conv, _str_conv, _nortoevmag, _evmagtonor,
     _get_line_tags)
 
 
@@ -293,8 +296,11 @@ class TestNordicMethods(unittest.TestCase):
                          header_event.origins[0].depth)
 
     def test_header_mapping(self):
-        head_1 = readheader(os.path.join(self.testing_path,
-                                         '01-0411-15L.S201309'))
+        # Raise "UserWarning: Lines of type I..."
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            head_1 = readheader(os.path.join(self.testing_path,
+                                             '01-0411-15L.S201309'))
         with open(os.path.join(self.testing_path,
                                '01-0411-15L.S201309'), 'r') as f:
             # raises "UserWarning: AIN in header, currently unsupported"
@@ -307,7 +313,10 @@ class TestNordicMethods(unittest.TestCase):
     def test_missing_header(self):
         # Check that a suitable error is raised
         with self.assertRaises(NordicParsingError):
-            readheader(os.path.join(self.testing_path, 'Sfile_no_header'))
+            # Raises AIN warning
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                readheader(os.path.join(self.testing_path, 'Sfile_no_header'))
 
     def test_reading_string_io(self):
         filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
@@ -427,19 +436,23 @@ class TestNordicMethods(unittest.TestCase):
         """
         Check that we can read dos formatted, latin1 encoded files.
         """
-        dos_file = os.path.join(self.testing_path, 'dos-file.sfile')
-        self.assertTrue(_is_sfile(dos_file))
-        event = readheader(dos_file)
-        self.assertEqual(event.origins[0].latitude, 60.328)
-        cat = read_events(dos_file)
-        self.assertEqual(cat[0].origins[0].latitude, 60.328)
-        wavefiles = readwavename(dos_file)
-        self.assertEqual(wavefiles[0], "90121311.0851W41")
-        spectral_info = read_spectral_info(dos_file)
-        self.assertEqual(len(spectral_info.keys()), 10)
-        self.assertEqual(spectral_info[('AVERAGE', '')]['stress_drop'], 27.7)
-        with self.assertRaises(UnicodeDecodeError):
-            readheader(dos_file, 'ASCII')
+        with warnings.catch_warnings():
+            # Lots of unsupported line warnings
+            warnings.simplefilter('ignore', UserWarning)
+            dos_file = os.path.join(self.testing_path, 'dos-file.sfile')
+            self.assertTrue(_is_sfile(dos_file))
+            event = readheader(dos_file)
+            self.assertEqual(event.origins[0].latitude, 60.328)
+            cat = read_events(dos_file)
+            self.assertEqual(cat[0].origins[0].latitude, 60.328)
+            wavefiles = readwavename(dos_file)
+            self.assertEqual(wavefiles[0], "90121311.0851W41")
+            spectral_info = read_spectral_info(dos_file)
+            self.assertEqual(len(spectral_info.keys()), 10)
+            self.assertEqual(spectral_info[('AVERAGE', '')]['stress_drop'],
+                             27.7)
+            with self.assertRaises(UnicodeDecodeError):
+                readheader(dos_file, 'ASCII')
 
     def test_read_many_events(self):
         testing_path = os.path.join(self.testing_path, 'select.out')
@@ -457,9 +470,12 @@ class TestNordicMethods(unittest.TestCase):
                 warnings.simplefilter('ignore', UserWarning)
                 write_select(cat, filename=tf.name)
             self.assertTrue(_is_sfile(tf.name))
-            cat_back = read_events(tf.name)
-            for event_1, event_2 in zip(cat, cat_back):
-                _assert_similarity(event_1=event_1, event_2=event_2)
+            with warnings.catch_warnings():
+                # Type I warning
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        for event_1, event_2 in zip(cat, cat_back):
+            _assert_similarity(event_1=event_1, event_2=event_2)
 
     def test_write_plugin(self):
         cat = read_events()
@@ -534,7 +550,10 @@ class TestNordicMethods(unittest.TestCase):
         Test reading the info from spectral analysis.
         """
         testing_path = os.path.join(self.testing_path, 'automag.out')
-        spec_inf = read_spectral_info(testing_path)
+        with warnings.catch_warnings():
+            # Userwarning, type I
+            warnings.simplefilter('ignore', UserWarning)
+            spec_inf = read_spectral_info(testing_path)
         self.assertEqual(len(spec_inf), 5)
         # This should actually test that what we are reading in is correct.
         average = spec_inf[('AVERAGE', '')]
@@ -615,8 +634,10 @@ class TestNordicMethods(unittest.TestCase):
         event.origins[0].longitude = -120
         with NamedTemporaryFile(suffix=".out") as tf:
             event.write(tf.name, format="NORDIC")
-            event_back = read_events(tf.name)
-            _assert_similarity(event, event_back[0])
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                event_back = read_events(tf.name)
+        _assert_similarity(event, event_back[0])
 
     def test_write_preferred_origin(self):
         event = full_test_event()
@@ -627,15 +648,152 @@ class TestNordicMethods(unittest.TestCase):
         event.preferred_origin_id = preferred_origin.resource_id
         with NamedTemporaryFile(suffix=".out") as tf:
             event.write(tf.name, format="NORDIC")
-            event_back = read_events(tf.name)
-            self.assertEqual(preferred_origin.latitude,
-                             event_back[0].origins[0].latitude)
-            self.assertEqual(preferred_origin.longitude,
-                             event_back[0].origins[0].longitude)
-            self.assertEqual(preferred_origin.depth,
-                             event_back[0].origins[0].depth)
-            self.assertEqual(preferred_origin.time,
-                             event_back[0].origins[0].time)
+            with warnings.catch_warnings():
+                # Type I warning
+                warnings.simplefilter('ignore', UserWarning)
+                event_back = read_events(tf.name)
+        self.assertEqual(preferred_origin.latitude,
+                         event_back[0].origins[0].latitude)
+        self.assertEqual(preferred_origin.longitude,
+                         event_back[0].origins[0].longitude)
+        self.assertEqual(preferred_origin.depth,
+                         event_back[0].origins[0].depth)
+        self.assertEqual(preferred_origin.time,
+                         event_back[0].origins[0].time)
+
+    def test_read_high_precision_pick(self):
+        """
+        Nordic supports writing to milliseconds in high-precision mode,
+        obspy < 1.2.0 did not properly read this, see #2348.
+        """
+        # raises "UserWarning: AIN in header, currently unsupported"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_high_precision_picks"))
+        event = cat[0]
+        pick_times = {
+            "LSd1": UTCDateTime(2010, 11, 26, 1, 28, 46.859),
+            "LSd3": UTCDateTime(2010, 11, 26, 1, 28, 48.132),
+            "LSd2": UTCDateTime(2010, 11, 26, 1, 28, 48.183),
+            "LSd4": UTCDateTime(2010, 11, 26, 1, 28, 49.744)}
+        for key, value in pick_times.items():
+            pick = [p for p in event.picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
+
+    def test_high_precision_read_write(self):
+        """ Test that high-precision writing works. """
+        # raises "UserWarning: AIN in header, currently unsupported"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_high_precision_picks"))
+        event = cat[0]
+        pick_times = {
+            "LSd1": UTCDateTime(2010, 11, 26, 1, 28, 46.859),
+            "LSd3": UTCDateTime(2010, 11, 26, 1, 28, 48.132),
+            "LSd2": UTCDateTime(2010, 11, 26, 1, 28, 48.183),
+            "LSd4": UTCDateTime(2010, 11, 26, 1, 28, 49.744)}
+        for key, value in pick_times.items():
+            pick = [p for p in event.picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
+        with NamedTemporaryFile(suffix=".out") as tf:
+            write_select(cat, filename=tf.name)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        self.assertEqual(len(cat_back), 1)
+        for key, value in pick_times.items():
+            pick = [p for p in cat_back[0].picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
+        # Check that writing to standard accuracy just gives a rounded version
+        with NamedTemporaryFile(suffix=".out") as tf:
+            cat.write(format="NORDIC", filename=tf.name, high_accuracy=False)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        self.assertEqual(len(cat_back), 1)
+        for key, value in pick_times.items():
+            pick = [p for p in cat_back[0].picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            rounded_pick_time = UTCDateTime(
+                value.year, value.month, value.day, value.hour, value.minute)
+            rounded_pick_time += round(
+                value.second + (value.microsecond / 1e6), 2)
+            self.assertEqual(pick[0].time, rounded_pick_time)
+
+    def test_long_phase_name(self):
+        """ Nordic format supports 8 char phase names, sometimes. """
+        # raises "UserWarning: AIN in header, currently unsupported"
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_long_phase"))
+        # This file has one event with one pick
+        pick = cat[0].picks[0]
+        arrival = cat[0].origins[0].arrivals[0]
+        self.assertEqual(pick.phase_hint, "PKiKP")
+        self.assertEqual(arrival.time_weight, 1)
+        with NamedTemporaryFile(suffix=".out") as tf:
+            write_select(cat, filename=tf.name)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        pick = cat_back[0].picks[0]
+        arrival = cat_back[0].origins[0].arrivals[0]
+        self.assertEqual(pick.phase_hint, "PKiKP")
+        self.assertEqual(arrival.time_weight, 1)
+
+    def test_read_write_over_day(self):
+        """
+        Nordic picks are relative to origin time - check that this works
+        over day boundaries.
+        """
+        event = full_test_event()
+        event.origins[0].time -= 3600
+        self.assertGreater(
+            event.picks[0].time.date, event.origins[0].time.date)
+        with NamedTemporaryFile(suffix=".out") as tf:
+            write_select(Catalog([event]), filename=tf.name)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                event_back = read_events(tf.name)[0]
+        _assert_similarity(event, event_back)
+
+    def test_seconds_overflow(self):
+        """
+        #2348 indicates that SEISAN sometimes overflows seconds into column 29.
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_seconds_overflow"))
+        event = cat[0]
+        pick_times = {
+            "LSb2": UTCDateTime(2009, 7, 2, 6, 49) + 100.24}
+        for key, value in pick_times.items():
+            pick = [p for p in event.picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
+        with NamedTemporaryFile(suffix=".out") as tf:
+            write_select(cat, filename=tf.name)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                cat_back = read_events(tf.name)
+        self.assertEqual(len(cat_back), 1)
+        for key, value in pick_times.items():
+            pick = [p for p in cat_back[0].picks
+                    if p.waveform_id.station_code == key]
+            self.assertEqual(len(pick), 1)
+            self.assertEqual(pick[0].time, value)
 
 
 def _assert_similarity(event_1, event_2, verbose=False):
@@ -691,11 +849,11 @@ def _test_similarity(event_1, event_2, verbose=False):
                                 return False
                     if arr_1["distance"] and round(
                             arr_1["distance"]) != round(arr_2["distance"]):
-                            if verbose:
-                                print('%s does not match %s for key %s' %
-                                      (arr_1[arr_key], arr_2[arr_key],
-                                       arr_key))
-                            return False
+                        if verbose:
+                            print('%s does not match %s for key %s' %
+                                  (arr_1[arr_key], arr_2[arr_key],
+                                   arr_key))
+                        return False
     # Check picks
     if len(event_1.picks) != len(event_2.picks):
         if verbose:

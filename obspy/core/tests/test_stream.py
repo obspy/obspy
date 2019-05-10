@@ -363,6 +363,33 @@ class StreamTestCase(unittest.TestCase):
             st.append(Trace(data=data, header={'network': network}))
         self.assertEqual(len(st.get_gaps()), 0)
 
+    def test_get_gaps_masked(self):
+        """
+        Test get_gaps method of the Stream objects (Issue #2299)
+        """
+        # Create a Stream with a masked array (analogous to a merged Stream)
+        st = Stream()
+        data = np.ma.array(np.arange(0, 100, step=1))
+        data.mask = np.zeros(data.shape)
+        data.mask[50:60] = 1
+        st.append(Trace(data=data))
+        # Expected gap
+        gap = ["", "", "", "",
+               UTCDateTime(1970, 1, 1, 0, 0, 49),
+               UTCDateTime(1970, 1, 1, 0, 1, 0),
+               10., 10]
+        # Get the gaps
+        gaps = st.get_gaps()
+        # Assert the number of gaps
+        self.assertEqual(len(gaps), 1)
+        # Verify the resulting gap list matches what is expected
+        for _i in range(6):
+            self.assertEqual(gaps[0][_i], gap[_i])
+        self.assertAlmostEqual(float(gaps[0][6]), float(gap[6]), places=3)
+        self.assertAlmostEqual(float(gaps[0][7]), float(gap[7]))
+        # Double-check that the initial Stream is unmodified
+        self.assertEqual(len(st), 1)
+
     def test_pop(self):
         """
         Test the pop method of the Stream object.
@@ -1458,6 +1485,31 @@ class StreamTestCase(unittest.TestCase):
         endtime = gap[5]
         self.assertEqual(endtime, tr2.stats.starttime)
 
+    def test_get_gaps_overlap(self):
+        """
+         Tests the get_gaps method of the Stream objects.
+
+         Test for Issue #1403. Tests if wrong overlaps are returned.
+        """
+        data = [
+            ("2016-01-07T00:00:50.388393Z", 6158),
+            ("2016-01-07T00:00:57.248393Z", 1370),
+            ("2016-01-07T00:01:31.458393Z", 4107)]
+
+        x = np.arange(20000)
+        tr = Trace(x)
+        tr.stats.starttime = UTCDateTime("2016-01-07T00:00:50.388393Z")
+        tr.stats.sampling_rate = 100
+
+        st = Stream()
+        for i, (start, numsamp) in enumerate(data):
+            tr_ = tr.slice(starttime=UTCDateTime(start))
+            tr_.data = tr_.data[:numsamp]
+            st.append(tr_)
+
+        # min_gap=1 is used to only show the gaps
+        self.assertEqual(len(st.get_gaps(min_gap=1)), 0)
+
     def test_comparisons(self):
         """
         Tests all rich comparison operators (==, !=, <, <=, >, >=)
@@ -1868,7 +1920,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 2)
         # headonly
         tr = read('https://examples.obspy.org/test.sac', headonly=True)[0]
-        self.assertFalse(tr.data)
+        self.assertEqual(tr.data.size, 0)
 
     def test_copy(self):
         """
@@ -2197,10 +2249,10 @@ class StreamTestCase(unittest.TestCase):
                 tr1.simulate(**kwargs)
                 tr1.stats.processing.pop()
             tr2 = st.select(component=component)[0]
-            # There is some strange issue on Win32bit (see #2188). Thus we just
-            # use assert_allclose() here instead of testing for full equality.
-            if platform.system() == "Windows" and \
-                    platform.architecture()[0] == "32bit":  # pragma: no cover
+            # There is some strange issue on Win32bit (see #2188) and Win64bit
+            # (see #2330). Thus we just use assert_allclose() here instead of
+            # testing for full equality.
+            if platform.system() == "Windows":  # pragma: no cover
                 self.assertEqual(tr1.stats, tr2.stats)
                 np.testing.assert_allclose(tr1.data, tr2.data)
             else:

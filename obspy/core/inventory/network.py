@@ -21,7 +21,8 @@ import warnings
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .station import Station
-from .util import BaseNode, _unified_content_strings, _textwrap
+from .util import (
+    BaseNode, _unified_content_strings, _textwrap, _response_plot_label)
 
 
 @python_2_unicode_compatible
@@ -566,7 +567,8 @@ class Network(BaseNode):
 
     def plot_response(self, min_freq, output="VEL", station="*", location="*",
                       channel="*", time=None, starttime=None, endtime=None,
-                      axes=None, unwrap_phase=False, show=True, outfile=None):
+                      axes=None, unwrap_phase=False, show=True, outfile=None,
+                      label_epoch_dates=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
         network's channels.
@@ -619,6 +621,9 @@ class Network(BaseNode):
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
+        :type label_epoch_dates: bool
+        :param label_epoch_dates: Whether to add channel epoch dates in the
+            plot's legend labels.
 
         .. rubric:: Basic Usage
 
@@ -648,12 +653,12 @@ class Network(BaseNode):
 
         for sta in matching.stations:
             for cha in sta.channels:
+                label = _response_plot_label(
+                    self, sta, cha, label_epoch_dates=label_epoch_dates)
                 try:
                     cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
-                             label=".".join((self.code, sta.code,
-                                             cha.location_code, cha.code)),
-                             unwrap_phase=unwrap_phase, show=False,
-                             outfile=None)
+                             label=label, unwrap_phase=unwrap_phase,
+                             show=False, outfile=None)
                 except ZeroSamplingRate:
                     msg = ("Skipping plot of channel with zero "
                            "sampling rate:\n%s")

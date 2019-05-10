@@ -544,6 +544,7 @@ class MatplotlibBackend(object):
         :func:`matplotlib.use` first and also shows a warning if the backend
         was not switched successfully.
     """
+
     def __init__(self, backend, sloppy=True):
         self.temporary_backend = backend
         self.sloppy = sloppy
@@ -743,9 +744,30 @@ def _yield_resource_id_parent_attr(obj):
             elif hasattr(obj, '__dict__'):
                 for item, val in obj.__dict__.items():
                     for out in func(val, obj, item):
-                            yield out
+                        yield out
 
     return func(obj)
+
+
+def _seed_id_map(
+        inventory=None, user_id_map=None, key='{sta.code}',
+        seed_factory='{net.code}.{{}}.{cha.location_code}.{cha.code:.2}{{}}'):
+    """
+    Return mapping between station code and seed id expressions
+    """
+    id_map = {}
+    if inventory is not None:
+        msg = 'Multiple seed ids found for station {}. Use first.'
+        for net in inventory:
+            for sta in net:
+                for cha in sta:
+                    k = key.format(net=net, sta=sta, cha=cha)
+                    v = seed_factory.format(net=net, sta=sta, cha=cha)
+                    if id_map.setdefault(k, v) != v:
+                        warnings.warn(msg.format(k))
+    if user_id_map is not None:
+        id_map.update(user_id_map)
+    return id_map
 
 
 if __name__ == '__main__':

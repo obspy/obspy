@@ -324,7 +324,7 @@ class Trace(object):
         if not self.stats == other.stats:
             return False
         # comparison of ndarrays is supported by NumPy
-        if not np.array_equal(self, other):
+        if not np.array_equal(self.data, other.data):
             return False
 
         return True
@@ -1141,7 +1141,8 @@ class Trace(object):
         array([2, 3, 4, 5, 6, 7, 8])
         """
         # check time order and swap eventually
-        if starttime and endtime and starttime > endtime:
+        if (isinstance(starttime, UTCDateTime) and
+                isinstance(endtime, UTCDateTime) and starttime > endtime):
             raise ValueError("startime is larger than endtime")
         # cut it
         if starttime:
@@ -2357,13 +2358,21 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             fitting  number to retain the current end time of the trace if
             not given.
         :type time_shift: float
-        :param time_shift: Interpolation can also shift the data with
-            subsample accuracy. The time shift is always given in seconds. A
-            positive shift means the data is shifted towards the future,
-            e.g. a positive time delta. Please note that a time shift in
-            the Fourier domain is always more accurate than this. When using
-            Lanczos interpolation with large values of ``a`` and away from the
-            boundaries this is nonetheless pretty good.
+        :param time_shift: Shift the trace by adding time_shift to the
+            starttime. The time shift is always given in seconds.
+            A positive shift means the data is shifted towards the future,
+            e.g. a positive time delta.
+            Note that this parameter solely affects the metadata.
+            The actual interpolation of the underlaying data is governed
+            by the parameters sampling_rate, starttime and npts.
+
+            .. note::
+
+                Interpolation can also shift the data with
+                subsample accuracy.  Please note that a time shift in
+                the Fourier domain is always more accurate than this.
+                When using Lanczos interpolation with large values of ``a``
+                and away from the boundaries this is nonetheless pretty good.
 
         .. rubric:: _`New in version 0.11:`
 

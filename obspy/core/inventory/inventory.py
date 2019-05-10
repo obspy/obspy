@@ -12,24 +12,22 @@ Provides the Inventory class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import python_2_unicode_compatible, native_str
+from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
-import os
 import textwrap
 import warnings
 
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
-                                  _read_from_plugin, NamedTemporaryFile,
-                                  download_to_file, sanitize_filename)
-from obspy.core.util.decorator import map_example_filename
+                                  _read_from_plugin, _generic_reader)
+from obspy.core.util.decorator import map_example_filename, uncompress_file
 from obspy.core.util.misc import buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .network import Network
-from .util import _unified_content_strings, _textwrap
+from .util import _unified_content_strings, _textwrap, _response_plot_label
 
 # Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
@@ -41,9 +39,7 @@ def _create_example_inventory():
     """
     Create an example inventory.
     """
-    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "data")
-    path = os.path.join(data_dir, "BW_GR_misc.xml")
-    return read_inventory(path, format="STATIONXML")
+    return read_inventory('/path/to/BW_GR_misc.xml', format="STATIONXML")
 
 
 @map_example_filename("path_or_file_object")
@@ -51,9 +47,12 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     """
     Function to read inventory files.
 
-    :param path_or_file_object: File name or file like object. If this
-        attribute is omitted, an example :class:`Inventory`
-        object will be returned.
+    :type path_or_file_object: str or file-like object.
+    :param path_or_file_object: String containing a file name or a URL or a
+        open file-like object. Wildcards are allowed for a file name. If this
+        attribute is omitted, an example
+        :class:`~obspy.core.inventory.inventory.Inventory` object will be
+        returned.
     :type format: str
     :param format: Format of the file to read (e.g. ``"STATIONXML"``). See the
         `Supported Formats`_ section below for a list of supported formats.
@@ -85,17 +84,19 @@ def read_inventory(path_or_file_object=None, format=None, *args, **kwargs):
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
         return _create_example_inventory()
-    elif isinstance(path_or_file_object, (str, native_str)) and \
-            "://" in path_or_file_object:
-        # some URL
-        # extract extension if any
-        suffix = \
-            os.path.basename(path_or_file_object).partition('.')[2] or '.tmp'
-        with NamedTemporaryFile(suffix=sanitize_filename(suffix)) as fh:
-            download_to_file(url=path_or_file_object, filename_or_buffer=fh)
-            return read_inventory(fh.name, format=format)
-    return _read_from_plugin("inventory", path_or_file_object,
-                             format=format, *args, **kwargs)[0]
+    else:
+        return _generic_reader(path_or_file_object, _read, format=format,
+                               **kwargs)
+
+
+@uncompress_file
+def _read(filename, format=None, **kwargs):
+    """
+    Reads a single event file into a ObsPy Catalog object.
+    """
+    inventory, format = _read_from_plugin('inventory', filename, format=format,
+                                          **kwargs)
+    return inventory
 
 
 @python_2_unicode_compatible
@@ -105,8 +106,9 @@ class Inventory(ComparingObject):
 
     In essence just a container for one or more networks.
     """
-    def __init__(self, networks, source, sender=None, created=None,
-                 module=SOFTWARE_MODULE, module_uri=SOFTWARE_URI):
+    def __init__(self, networks=None, source=SOFTWARE_MODULE, sender=None,
+                 created=None, module=SOFTWARE_MODULE,
+                 module_uri=SOFTWARE_URI):
         """
         :type networks: list of
             :class:`~obspy.core.inventory.network.Network`
@@ -132,7 +134,7 @@ class Inventory(ComparingObject):
             StationXML standard and how to output it to StationXML
             see the :ref:`ObsPy Tutorial <stationxml-extra>`.
         """
-        self.networks = networks
+        self.networks = networks if networks is not None else []
         self.source = source
         self.sender = sender
         self.module = module
@@ -142,6 +144,32 @@ class Inventory(ComparingObject):
             self.created = obspy.UTCDateTime()
         else:
             self.created = created
+
+    def __eq__(self, other):
+        """
+        __eq__ method of the Inventory object.
+
+        :type other: :class:`~obspy.core.inventory.Inventory`
+        :param other: Inventory object for comparison.
+        :rtype: bool
+        :return: ``True`` if both Inventories are equal.
+
+        .. rubric:: Example
+
+        >>> from obspy.core.inventory import read_inventory
+        >>> inv = read_inventory()
+        >>> inv2 = inv.copy()
+        >>> inv is inv2
+        False
+        >>> inv == inv2
+        True
+        """
+        if not isinstance(other, Inventory):
+            return False
+        return self.networks == other.networks
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __add__(self, other):
         new = copy.deepcopy(self)
@@ -272,6 +300,23 @@ class Inventory(ComparingObject):
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
 
+    def extend(self, network_list):
+        """
+        Extends the current Catalog object with a list of Network objects.
+        """
+        if isinstance(network_list, list):
+            for _i in network_list:
+                # Make sure each item in the list is a event.
+                if not isinstance(_i, Network):
+                    msg = 'Extend only accepts a list of Network objects.'
+                    raise TypeError(msg)
+            self.networks.extend(network_list)
+        elif isinstance(network_list, Inventory):
+            self.networks.extend(network_list.networks)
+        else:
+            msg = 'Extend only supports a list of Network objects as argument.'
+            raise TypeError(msg)
+
     def write(self, path_or_file_object, format, **kwargs):
         """
         Writes the inventory object to a file or file-like object in
@@ -318,6 +363,33 @@ class Inventory(ComparingObject):
                              ', '.join(ENTRY_POINTS['inventory_write']))
             raise ValueError(msg)
         return write_format(self, path_or_file_object, **kwargs)
+
+    def copy(self):
+        """
+        Return a deepcopy of the Inventory object.
+
+        :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
+        :return: Copy of current inventory.
+
+        .. rubric:: Examples
+
+        1. Create an Inventory and copy it
+
+            >>> from obspy import read_inventory
+            >>> inv = read_inventory()
+            >>> inv2 = inv.copy()
+
+           The two objects are not the same:
+
+            >>> inv is inv2
+            False
+
+           But they are (currently) equal:
+
+            >>> inv == inv2
+            True
+        """
+        return copy.deepcopy(self)
 
     @property
     def networks(self):
@@ -666,12 +738,14 @@ class Inventory(ComparingObject):
             without child elements (stations/channels) will still be included
             in the result.
         """
+        # Select all objects that are to be removed.
         selected = self.select(network=network, station=station,
                                location=location, channel=channel)
         selected_networks = [net for net in selected]
         selected_stations = [sta for net in selected_networks for sta in net]
         selected_channels = [cha for net in selected_networks
                              for sta in net for cha in sta]
+        # Iterate inventory tree and rebuild it excluding selected components.
         networks = []
         for net in self:
             if net in selected_networks and station == '*' and \
@@ -687,12 +761,14 @@ class Inventory(ComparingObject):
                     if cha in selected_channels:
                         continue
                     channels.append(cha)
-                if not channels and not keep_empty:
+                channels_were_empty = not bool(sta.channels)
+                if not channels and not (keep_empty or channels_were_empty):
                     continue
                 sta = copy.copy(sta)
                 sta.channels = channels
                 stations.append(sta)
-            if not stations and not keep_empty:
+            stations_were_empty = not bool(net.stations)
+            if not stations and not (keep_empty or stations_were_empty):
                 continue
             net = copy.copy(net)
             net.stations = stations
@@ -921,7 +997,8 @@ class Inventory(ComparingObject):
     def plot_response(self, min_freq, output="VEL", network="*", station="*",
                       location="*", channel="*", time=None, starttime=None,
                       endtime=None, axes=None, unwrap_phase=False,
-                      plot_degrees=False, show=True, outfile=None):
+                      plot_degrees=False, show=True, outfile=None,
+                      label_epoch_dates=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
         inventory's channels.
@@ -980,6 +1057,9 @@ class Inventory(ComparingObject):
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
+        :type label_epoch_dates: bool
+        :param label_epoch_dates: Whether to add channel epoch dates in the
+            plot's legend labels.
 
         .. rubric:: Basic Usage
 
@@ -1010,11 +1090,11 @@ class Inventory(ComparingObject):
         for net in matching.networks:
             for sta in net.stations:
                 for cha in sta.channels:
+                    label = _response_plot_label(
+                        net, sta, cha, label_epoch_dates=label_epoch_dates)
                     try:
                         cha.plot(min_freq=min_freq, output=output,
-                                 axes=(ax1, ax2),
-                                 label=".".join((net.code, sta.code,
-                                                 cha.location_code, cha.code)),
+                                 axes=(ax1, ax2), label=label,
                                  unwrap_phase=unwrap_phase,
                                  plot_degrees=plot_degrees, show=False,
                                  outfile=None)

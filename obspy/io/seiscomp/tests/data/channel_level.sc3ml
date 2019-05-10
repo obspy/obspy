@@ -386,8 +386,8 @@
             <dataloggerChannel>0</dataloggerChannel>
             <sensorSerialNumber>yyyy</sensorSerialNumber>
             <sensorChannel>0</sensorChannel>
-            <sampleRateNumerator>40</sampleRateNumerator>
-            <sampleRateDenominator>1</sampleRateDenominator>
+            <sampleRateNumerator>0</sampleRateNumerator>
+            <sampleRateDenominator>0</sampleRateDenominator>
             <depth>4</depth>
             <azimuth>0</azimuth>
             <dip>-90</dip>

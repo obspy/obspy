@@ -1,0 +1,152 @@
+  Fri Sep  8 14:54:58 2017 for program Focmec
+ Sakhalin:  8 BB stations 0.2 polarity errors 1 ratio error:  0.16 cut-off
+ Input from a file focmec_8sta.inp
+ 12-MAY-90 Sakhalin Island event:  161221 disp picks
+
+ Statn  Azimuth    TOA   Key  Log10 Ratio  NumPol  DenTOA  Comment
+  BLA     32.6     28.1   D                                
+  BLA     32.6     31.0   R                                
+  BLA     32.6     31.0   F                                
+  CCM     39.7     30.6   D                                
+  CCM     39.7     33.2   R                                
+  COR     54.7     40.8   D                                
+  COR     54.7     42.5   R                                
+  COR     54.7     42.5   B                                
+  HRV     24.2     29.2   D                                
+  HRV     24.2     32.0   R                                
+  HRV     24.2     32.0   F                                
+  KEV    336.5     45.2   D                                
+  KEV    336.5     46.4   L                                
+  KEV    336.5     46.4   B                                
+  KIP     97.8     44.0   C                                
+  KIP     97.8     45.4   R                                
+  KIP     97.8     45.4   B                                
+  PAS     59.8     35.7   D                                
+  PAS     59.8     37.9   R                                
+  PAS     59.8     37.9   B                                
+  TOL    334.5     28.0   D                                
+  TOL    334.5     30.9   L                                
+  TOL    334.5     30.9   F                                
+  BLA     44.8     31.0   H      0.8847 SH    R      28.06  -119100.0,-18450.0,500,1000,0.03,0
+  COR     54.7     42.5   H      1.1785 SH    R      40.75  -227400.0,-15830.0,500,1000,0.03,0
+  HRV     24.2     32.0   H      0.6013 SH    R      29.25  -85120.0,-25080.0,500,1000,0.03,0.
+  KEV    336.5     46.4   H      0.3287 SH    L      45.20  95680.0,-44900.0,500,1000,0.03,0.0
+  KIP     97.8     45.4   H      0.8291 SH    R      44.05  -138800.0,20840.0,500,1000,0.03,0.
+  KIP     97.8     45.4   V      0.8033 SV    B      44.05  -131700.0,20840.0,500,1000,0.03,0.
+  PAS     59.8     37.9   H      1.0783 SH    R      35.68  -140400.0,-12980.0,500,1000,0.03,0
+  TOL    334.5     30.9   H      0.2576 SH    L      28.00  47310.0,-31070.0,500,1000,0.03,0.0
+  TOL    334.5     30.9   S     -0.2762 SS    F      30.90  1013.0,2103.0
+  HRV     24.2     32.0   S     -0.4283 SS    F      31.95  2619.0,-7748.0
+  KEV    336.5     46.4   S     -0.0830 SS    B      46.37  -3618.0,4124.0
+   8 P Pol.  7 SV Pol.  8 SH Pol.  0.2 allowed (weighted) errors
+ 11 ratios, maximum of  1 with |o-c| diff >  0.1600    Focus VP/VS: 1.8225
+For ratios,  0.100 = P radiation cutoff  0.100 = S radiation cutoff
+ FLAG is NUM, DEN, N&D if n, d, both below curoff
+ If FLAG N&D, total ratios used decreased by 1
+ The minimum, increment and maximum B axis trend:     0.00    5.00  355.00
+ The limits for the B axis plunge:     0.00    5.00   90.00
+ The limits for Angle:     0.00    5.00  175.00
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+     Dip,Strike,Rake     76.43    59.08   -64.23
+     Dip,Strike,Rake     28.90   174.99  -150.97   Auxiliary Plane
+     Lower Hem. Trend, Plunge of A,N     84.99    61.10   329.08    13.57
+     Lower Hem. Trend, Plunge of P,T    358.82    51.71   128.90    26.95
+     B trend, B plunge, Angle:  232.62  25.00 105.00
+
+          Log10(Ratio)                              Ratio     S Polarity
+     Observed  Calculated    Difference  Station     Type     Obs.  Calc. Flag
+      0.8847      0.8950      -0.0103      BLA        SH       R      R       
+      1.1785      1.0810       0.0975      COR        SH       R      R       
+      0.6013      0.5442       0.0571      HRV        SH       R      R       
+      0.3287      0.3666      -0.0379      KEV        SH       L      L       
+      0.8291      0.9341      -0.1050      KIP        SH       R      R       
+      0.8033      0.7815       0.0218      KIP        SV       B      B       
+      1.0783      1.1857      -0.1074      PAS        SH       R      R       
+      0.2576      0.2271       0.0305      TOL        SH       L      L       
+     -0.2762     -0.4076       0.1314      TOL        SS       F      F    NUM
+     -0.4283     -0.4503       0.0220      HRV        SS       F      F       
+     -0.0830      0.0713      -0.1543      KEV        SS       B      B       
+
+Total number of ratios used is  11
+RMS error for the 11 acceptable solutions is 0.0852
+  Highest absolute velue of diff for those solutions is  0.1543
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+     Dip,Strike,Rake     77.05    54.08   -59.13
+     Dip,Strike,Rake     33.23   164.64  -155.85   Auxiliary Plane
+     Lower Hem. Trend, Plunge of A,N     74.64    56.77   324.08    12.95
+     Lower Hem. Trend, Plunge of P,T    357.35    48.59   120.35    25.66
+     B trend, B plunge, Angle:  226.45  30.00 105.00
+
+          Log10(Ratio)                              Ratio     S Polarity
+     Observed  Calculated    Difference  Station     Type     Obs.  Calc. Flag
+      0.8847      0.9935      -0.1088      BLA        SH       R      R       
+      1.1785      1.2400      -0.0615      COR        SH       R      R       
+      0.6013      0.6442      -0.0429      HRV        SH       R      R       
+      0.3287      0.3735      -0.0448      KEV        SH       L      L       
+      0.8291      0.7903       0.0388      KIP        SH       R      R       
+      0.8033      0.7316       0.0717      KIP        SV       B      B       
+      1.0783      1.3614      -0.2831     *PAS        SH       R      R       
+      0.2576      0.2301       0.0275      TOL        SH       L      L       
+     -0.2762     -0.3168       0.0406      TOL        SS       F      F       
+     -0.4283     -0.4598       0.0315      HRV        SS       F      F       
+     -0.0830     -0.0675      -0.0155      KEV        SS       B      B       
+
+Total number of ratios used is  10
+RMS error for the 11 acceptable solutions is 0.0545
+  Highest absolute velue of diff for those solutions is  0.1088
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+     Dip,Strike,Rake     77.05    59.89   -59.13
+     Dip,Strike,Rake     33.23   170.44  -155.85   Auxiliary Plane
+     Lower Hem. Trend, Plunge of A,N     80.44    56.77   329.89    12.95
+     Lower Hem. Trend, Plunge of P,T      3.15    48.59   126.16    25.66
+     B trend, B plunge, Angle:  232.26  30.00 105.00
+
+          Log10(Ratio)                              Ratio     S Polarity
+     Observed  Calculated    Difference  Station     Type     Obs.  Calc. Flag
+      0.8847      0.8993      -0.0146      BLA        SH       R      R       
+      1.1785      1.0816       0.0969      COR        SH       R      R       
+      0.6013      0.5304       0.0709      HRV        SH       R      R       
+      0.3287      0.4612      -0.1325      KEV        SH       L      L       
+      0.8291      0.9300      -0.1009      KIP        SH       R      R       
+      0.8033      0.7843       0.0190      KIP        SV       B      B       
+      1.0783      1.1907      -0.1124      PAS        SH       R      R       
+      0.2576      0.3384      -0.0808      TOL        SH       L      L       
+     -0.2762     -0.4976       0.2214     *TOL        SS       F      F    NUM
+     -0.4283     -0.3138      -0.1145      HRV        SS       F      F       
+     -0.0830     -0.0562      -0.0268      KEV        SS       B      B       
+
+Total number of ratios used is  10
+RMS error for the 11 acceptable solutions is 0.0870
+  Highest absolute velue of diff for those solutions is  0.1325
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+     Dip,Strike,Rake     77.76    54.50   -54.06
+     Dip,Strike,Rake     37.70   160.80  -159.71   Auxiliary Plane
+     Lower Hem. Trend, Plunge of A,N     70.80    52.30   324.50    12.24
+     Lower Hem. Trend, Plunge of P,T      0.57    45.19   117.44    24.18
+     B trend, B plunge, Angle:  225.76  35.00 105.00
+
+          Log10(Ratio)                              Ratio     S Polarity
+     Observed  Calculated    Difference  Station     Type     Obs.  Calc. Flag
+      0.8847      1.0094      -0.1247      BLA        SH       R      R       
+      1.1785      1.2565      -0.0780      COR        SH       R      R       
+      0.6013      0.6467      -0.0454      HRV        SH       R      R       
+      0.3287      0.4517      -0.1230      KEV        SH       L      L       
+      0.8291      0.7705       0.0586      KIP        SH       R      R       
+      0.8033      0.7299       0.0734      KIP        SV       B      B       
+      1.0783      1.3868      -0.3085     *PAS        SH       R      R       
+      0.2576      0.3317      -0.0741      TOL        SH       L      L       
+     -0.2762     -0.3104       0.0342      TOL        SS       F      F       
+     -0.4283     -0.3560      -0.0723      HRV        SS       F      F       
+     -0.0830     -0.2170       0.1340      KEV        SS       B      B       
+
+Total number of ratios used is  10
+RMS error for the 11 acceptable solutions is 0.0880
+  Highest absolute velue of diff for those solutions is  0.1340
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+ There are   4 acceptable solutions

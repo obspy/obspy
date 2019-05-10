@@ -762,6 +762,24 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(revision_number, "C39 SEG Y REV1")
         self.assertEqual(end_header_mark, "ABCDEFGHIJKLMNOPQRSTUV")
 
+    def test_packing_raises_nice_error_messages(self):
+        """
+        SEG-Y is fairly restrictive in what ranges are allowed for its header
+        values. Thus we attempt to raise nice and helpful error messages.
+        """
+        tr = obspy.read()[0]
+        tr.data = np.float32(np.zeros(100000))
+        with io.BytesIO() as buf:
+            with self.assertRaises(ValueError) as err:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    tr.write(buf, format="segy")
+        self.assertEqual(
+            err.exception.args[0],
+            "Failed to pack header value `number_of_samples_per_data_trace` "
+            "(100000) with format `>h` due to: `'h' format requires -32768 <="
+            " number <= 32767`")
+
 
 def rms(x, y):
     """

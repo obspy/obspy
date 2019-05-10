@@ -282,6 +282,10 @@ class BaseRoutingClient(HTTPClient):
                 continue
             collection += _i
 
+        # Explitly close the thread pool as somehow this does not work
+        # automatically under linux. See #2342.
+        pool.close()
+
         return collection
 
     def _handle_requests_http_error(self, r):

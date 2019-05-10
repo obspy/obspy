@@ -30,7 +30,7 @@ from .header import (BINARY_FILE_HEADER_FORMAT,
                      DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, ENDIAN,
                      TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
 from .unpack import OnTheFlyDataUnpacker
-from .util import unpack_header_value
+from .util import unpack_header_value, _pack_attribute_nicer_exception
 
 
 class SEGYError(Exception):
@@ -498,13 +498,13 @@ class SEGYBinaryFileHeader(object):
             if length == 2:
                 format = ('%sh' % endian).encode('ascii', 'strict')
                 # Write to file.
-                file.write(pack(format, getattr(self, name)))
+                file.write(_pack_attribute_nicer_exception(self, name, format))
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
                 format = ('%si' % endian).encode('ascii', 'strict')
                 # Write to file.
-                file.write(pack(format, getattr(self, name)))
+                file.write(_pack_attribute_nicer_exception(self, name, format))
             # These are the two unassigned values in the binary file header.
             elif name.startswith('unassigned'):
                 temp = getattr(self, name)

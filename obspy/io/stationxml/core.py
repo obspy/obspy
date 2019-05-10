@@ -21,10 +21,10 @@ import os
 import re
 import warnings
 
-from collections import Mapping
 from lxml import etree
 
 import obspy
+from obspy.core import compatibility
 from obspy.core.util import AttribDict
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
@@ -388,6 +388,7 @@ def _read_channel(cha_element, _ns):
     response = cha_element.find(_ns("Response"))
     if response is not None:
         channel.response = _read_response(response, _ns)
+        channel.response._attempt_to_fix_units()
     return channel
 
 
@@ -1426,7 +1427,9 @@ def _write_element(parent, element, name):
         parent.set(custom_name, element['value'])
     else:  # if not a attribute, then create a tag
         sub = etree.SubElement(parent, custom_name, attrib=attrib)
-        if isinstance(element['value'], Mapping):  # nested extra tags
+        if isinstance(
+                element['value'],
+                compatibility.collections_abc.Mapping):  # nested extra tags
             for tagname, tag_element in element['value'].items():
                 _write_element(sub, tag_element, tagname)
         else:

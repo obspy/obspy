@@ -40,6 +40,13 @@ WGS84_A = 6378137.0
 WGS84_F = 1 / 298.257223563
 
 
+def _isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+    """
+    Equivalent of the :meth:`math.isclose` method compatible with python 2.7.
+    """
+    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+
 def calc_vincenty_inverse(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
     """
     Vincenty Inverse Solution of Geodesics on the Ellipsoid.
@@ -111,7 +118,7 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
 
     b = a * (1 - f)  # semiminor axis
 
-    if (abs(lat1 - lat2) < 1e-8) and (abs(lon1 - lon2) < 1e-8):
+    if _isclose(lat1, lat2) and _isclose(lon1, lon2):
         return 0.0, 0.0, 0.0
 
     # convert latitudes and longitudes to radians:
@@ -140,41 +147,28 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
                 pow((math.cos(u_1) * math.sin(u_2) - math.sin(u_1) *
                      math.cos(u_2) * math.cos(dlon)), 2)
             sin_sigma = math.sqrt(sqr_sin_sigma)
+
             cos_sigma = math.sin(u_1) * math.sin(u_2) + math.cos(u_1) * \
                 math.cos(u_2) * math.cos(dlon)
             sigma = math.atan2(sin_sigma, cos_sigma)
             sin_alpha = math.cos(u_1) * math.cos(u_2) * math.sin(dlon) / \
-                math.sin(sigma)
-            alpha = math.asin(sin_alpha)
-            cos2sigma_m = math.cos(sigma) - \
-                (2 * math.sin(u_1) * math.sin(u_2) / pow(math.cos(alpha), 2))
-            c = (f / 16) * pow(math.cos(alpha), 2) * \
-                (4 + f * (4 - 3 * pow(math.cos(alpha), 2)))
+                sin_sigma
+
+            sqr_cos_alpha = 1 - sin_alpha * sin_alpha
+            if _isclose(sqr_cos_alpha, 0):
+                # Equatorial line
+                cos2sigma_m = 0
+            else:
+                cos2sigma_m = cos_sigma - \
+                    (2 * math.sin(u_1) * math.sin(u_2) / sqr_cos_alpha)
+
+            c = (f / 16) * sqr_cos_alpha * (4 + f * (4 - 3 * sqr_cos_alpha))
             last_dlon = dlon
-            dlon = omega + (1 - c) * f * math.sin(alpha) * \
-                (sigma + c * math.sin(sigma) *
-                    (cos2sigma_m + c * math.cos(sigma) *
+            dlon = omega + (1 - c) * f * sin_alpha * \
+                (sigma + c * sin_sigma *
+                    (cos2sigma_m + c * cos_sigma *
                         (-1 + 2 * pow(cos2sigma_m, 2))))
 
-            u2 = pow(math.cos(alpha), 2) * (a * a - b * b) / (b * b)
-            _a = 1 + (u2 / 16384) * (4096 + u2 * (-768 + u2 *
-                                                  (320 - 175 * u2)))
-            _b = (u2 / 1024) * (256 + u2 * (-128 + u2 * (74 - 47 * u2)))
-            delta_sigma = _b * sin_sigma * \
-                (cos2sigma_m + (_b / 4) *
-                    (cos_sigma * (-1 + 2 * pow(cos2sigma_m, 2)) - (_b / 6) *
-                        cos2sigma_m * (-3 + 4 * sqr_sin_sigma) *
-                        (-3 + 4 * pow(cos2sigma_m, 2))))
-
-            dist = b * _a * (sigma - delta_sigma)
-            alpha12 = math.atan2(
-                (math.cos(u_2) * math.sin(dlon)),
-                (math.cos(u_1) * math.sin(u_2) -
-                 math.sin(u_1) * math.cos(u_2) * math.cos(dlon)))
-            alpha21 = math.atan2(
-                (math.cos(u_1) * math.sin(dlon)),
-                (-math.sin(u_1) * math.cos(u_2) +
-                 math.cos(u_1) * math.sin(u_2) * math.cos(dlon)))
             iterlimit -= 1
             if iterlimit < 0:
                 # iteration limit reached
@@ -182,6 +176,25 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
     except ValueError:
         # usually "math domain error"
         raise StopIteration
+
+    u2 = sqr_cos_alpha * (a * a - b * b) / (b * b)
+    _a = 1 + (u2 / 16384) * (4096 + u2 * (-768 + u2 * (320 - 175 * u2)))
+    _b = (u2 / 1024) * (256 + u2 * (-128 + u2 * (74 - 47 * u2)))
+    delta_sigma = _b * sin_sigma * \
+        (cos2sigma_m + (_b / 4) *
+            (cos_sigma * (-1 + 2 * pow(cos2sigma_m, 2)) - (_b / 6) *
+                cos2sigma_m * (-3 + 4 * sqr_sin_sigma) *
+                (-3 + 4 * pow(cos2sigma_m, 2))))
+
+    dist = b * _a * (sigma - delta_sigma)
+    alpha12 = math.atan2(
+        (math.cos(u_2) * math.sin(dlon)),
+        (math.cos(u_1) * math.sin(u_2) -
+            math.sin(u_1) * math.cos(u_2) * math.cos(dlon)))
+    alpha21 = math.atan2(
+        (math.cos(u_1) * math.sin(dlon)),
+        (-math.sin(u_1) * math.cos(u_2) +
+            math.cos(u_1) * math.sin(u_2) * math.cos(dlon)))
 
     if alpha12 < 0.0:
         alpha12 = alpha12 + (2.0 * math.pi)

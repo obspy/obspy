@@ -6,7 +6,7 @@ Scan a directory to determine the data availability.
 Scan all specified files/directories, determine which time spans are covered
 for which stations and plot everything in summarized in one overview plot.
 Start times of traces with available data are marked by crosses, gaps are
-indicated by vertical red lines.
+indicated by vertical red lines, and overlaps are indicated by blue lines.
 The sampling rate must stay the same for each station, but may vary between the
 stations.
 
@@ -34,6 +34,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import fnmatch
 import os
 import sys
 import warnings
@@ -309,9 +310,25 @@ class Scanner(object):
         :type seed_ids: list of str
         :param seed_ids: Whether to consider only a specific set of SEED IDs
             (e.g. ``seed_ids=["GR.FUR..BHZ", "GR.WET..BHZ"]``) or just all SEED
-            IDs encountered in data (if left ``None``).
+            IDs encountered in data (if left ``None``). Given SEED IDs may
+            contain ``fnmatch``-style wildcards (e.g. ``"BW.UH?..[EH]H*"``).
         """
         import matplotlib.pyplot as plt
+
+        data_keys = list(self.data.keys())
+        if seed_ids is not None:
+            ids = []
+            for id_ in seed_ids:
+                # allow fnmatch type wildcards in given seed ids
+                if any(special in id_ for special in '*?[]!'):
+                    ids.extend(fnmatch.filter(data_keys, id_))
+                else:
+                    ids.append(id_)
+            # make sure we don't have duplicates in case multiple wildcard
+            # patterns were given and some ids were matched by more than one
+            # pattern
+            ids = list(set(ids))
+            seed_ids = ids
 
         if fig:
             if fig.axes:
@@ -434,7 +451,7 @@ class Scanner(object):
         :param endtime: Whether to use a fixed end time for the plot and
             data percentage calculation.
         :type seed_ids: list of str
-        :param endtime: Whether to consider only a specific set of SEED IDs
+        :param seed_ids: Whether to consider only a specific set of SEED IDs
             (e.g. ``seed_ids=["GR.FUR..BHZ", "GR.WET..BHZ"]``) or just all SEED
             IDs encountered in data (if left ``None``).
         """
@@ -712,9 +729,11 @@ def main(argv=None):
                              'time-axis axis accordingly.')
     parser.add_argument('--id', action='append',
                         help='Optional, a SEED channel identifier '
-                             "(e.g. 'GR.FUR..HHZ'). You may provide this " +
-                             'option multiple times. Only these ' +
-                             'channels will be plotted.')
+                             "(e.g. 'GR.FUR..HHZ'). You may provide this "
+                             'option multiple times. Only these '
+                             'channels will be plotted. Given SEED IDs may '
+                             'contain fnmatch-style wildcards (e.g. '
+                             "'BW.UH?..[EH]H*').")
     parser.add_argument('-t', '--event-time', default=None, type=UTCDateTime,
                         action='append',
                         help='Optional, a UTCDateTime compatible string ' +

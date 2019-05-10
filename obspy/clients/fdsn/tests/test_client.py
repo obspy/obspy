@@ -32,18 +32,29 @@ import numpy as np
 import requests
 
 from obspy import UTCDateTime, read, read_inventory, Stream, Trace
-from obspy.core.compatibility import mock
+from obspy.core.compatibility import mock, RegExTestCase
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNException, FDSNRedirectException,
-                                       FDSNNoDataException)
+                                       FDSNNoDataException, DEFAULT_SERVICES)
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
+
+
+def _normalize_stats(obj):
+    if isinstance(obj, Stream):
+        for tr in obj:
+            _normalize_stats(tr)
+    else:
+        if "processing" in obj.stats:
+            del obj.stats["processing"]
+        if "_fdsnws_dataselect_url" in obj.stats:
+            del obj.stats._fdsnws_dataselect_url
 
 
 def failmsg(got, expected, ignore_lines=[]):
@@ -82,7 +93,7 @@ def normalize_version_number(string):
     return [l.strip() for l in repl.splitlines()]
 
 
-class ClientTestCase(unittest.TestCase):
+class ClientTestCase(RegExTestCase):
     """
     Test cases for obspy.clients.fdsn.client.Client.
     """
@@ -304,6 +315,20 @@ class ClientTestCase(unittest.TestCase):
         # queryauth)
         self.assertEqual(client.user, user)
 
+    def test_trim_stream_after_get_waveform(self):
+        """
+        Tests that stream is properly trimmed to user requested times after
+        fetching from datacenter, see #1887
+        """
+        c = Client(
+            service_mappings={'dataselect':
+                              'http://eida.ipgp.fr/fdsnws/dataselect/1'})
+        starttime = UTCDateTime('2016-11-01T00:00:00')
+        endtime = UTCDateTime('2016-11-01T00:00:10')
+        stream = c.get_waveforms('G', 'PEL', '*', 'LHZ', starttime, endtime)
+        self.assertEqual(starttime, stream[0].stats.starttime)
+        self.assertEqual(endtime, stream[0].stats.endtime)
+
     def test_service_discovery_iris(self):
         """
         Tests the automatic discovery of services with the IRIS endpoint. The
@@ -376,6 +401,16 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(
             set(self.client.services["available_event_contributors"]),
             expected)
+
+    def test_discover_services_defaults(self):
+        """
+        A Client initialized with _discover_services=False shouldn't perform
+        any services/WADL queries on the endpoint, and should show only the
+        default service parameters.
+        """
+        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+                        _discover_services=False)
+        self.assertEqual(client.services, DEFAULT_SERVICES)
 
     def test_simple_xml_parser(self):
         """
@@ -551,6 +586,8 @@ class ClientTestCase(unittest.TestCase):
                 del tr.stats._fdsnws_dataselect_url
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
+            # The client trims by default.
+            _normalize_stats(got)
             self.assertEqual(got, expected, "Dataselect failed for query %s" %
                              repr(query))
             # test output to file
@@ -576,10 +613,181 @@ class ClientTestCase(unittest.TestCase):
         got = client.get_waveforms(*query)
         file_ = os.path.join(self.datapath, filename)
         expected = read(file_)
-        # Remove fdsnws URL as it is not in the data from the disc.
-        for tr in got:
-            del tr.stats._fdsnws_dataselect_url
+        _normalize_stats(got)
         self.assertEqual(got, expected, failmsg(got, expected))
+
+    def test_iris_example_queries_event_discover_services_false(self):
+        """
+        Tests the (sometimes modified) example queries given on the IRIS
+        web page, without service discovery.
+
+        Used to be tested against files but that was not maintainable. It
+        now tests if the queries return what was asked for.
+        """
+        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+                        _discover_services=False)
+
+        # Event id query.
+        cat = client.get_events(eventid=609301)
+        self.assertEqual(len(cat), 1)
+        self.assertIn("609301", cat[0].resource_id.id)
+
+        # Temporal query.
+        cat = client.get_events(
+            starttime=UTCDateTime("2001-01-07T01:00:00"),
+            endtime=UTCDateTime("2001-01-07T01:05:00"), catalog="ISC")
+        self.assertGreater(len(cat), 0)
+        for event in cat:
+            self.assertEqual(event.origins[0].extra.catalog.value, "ISC")
+            self.assertGreater(event.origins[0].time,
+                               UTCDateTime("2001-01-07T01:00:00"))
+            self.assertGreater(UTCDateTime("2001-01-07T01:05:00"),
+                               event.origins[0].time)
+
+        # Misc query.
+        cat = client.get_events(
+            starttime=UTCDateTime("2001-01-07T14:00:00"),
+            endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
+            maxlatitude=40, minlongitude=-170, maxlongitude=170,
+            includeallmagnitudes=True, minmagnitude=4, orderby="magnitude")
+        self.assertGreater(len(cat), 0)
+        for event in cat:
+            self.assertGreater(event.origins[0].time,
+                               UTCDateTime("2001-01-07T14:00:00"))
+            self.assertGreater(UTCDateTime("2001-01-08T00:00:00"),
+                               event.origins[0].time)
+            self.assertGreater(event.origins[0].latitude, 14.9)
+            self.assertGreater(40.1, event.origins[0].latitude)
+            self.assertGreater(event.origins[0].latitude, -170.1)
+            self.assertGreater(170.1, event.origins[0].latitude)
+            # events returned by FDSNWS can contain many magnitudes with a wide
+            # range, and currently (at least for IRIS) the magnitude threshold
+            # sent to the server checks if at least one magnitude matches, it
+            # does not only check the preferred magnitude..
+            self.assertTrue(any(m.mag >= 3.999 for m in event.magnitudes))
+
+    def test_iris_example_queries_station_discover_services_false(self):
+        """
+        Tests the (sometimes modified) example queries given on IRIS webpage,
+        without service discovery.
+
+        This test used to download files but that is almost impossible to
+        keep up to date - thus it is now a bit smarter and tests the
+        returned inventory in different ways.
+        """
+        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+                        _discover_services=False)
+
+        # Radial query.
+        inv = client.get_stations(latitude=-56.1, longitude=-26.7,
+                                  maxradius=15)
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                dist = locations2degrees(sta.latitude, sta.longitude,
+                                         -56.1, -26.7)
+                # small tolerance for WGS84.
+                self.assertGreater(15.1, dist, "%s.%s" % (net.code,
+                                                          sta.code))
+
+        # Misc query.
+        inv = client.get_stations(
+            startafter=UTCDateTime("2003-01-07"),
+            endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
+            maxlatitude=55, minlongitude=170, maxlongitude=-170, network="IM")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                msg = "%s.%s" % (net.code, sta.code)
+                self.assertGreater(sta.start_date, UTCDateTime("2003-01-07"),
+                                   msg)
+                if sta.end_date is not None:
+                    self.assertGreater(UTCDateTime("2011-02-07"), sta.end_date,
+                                       msg)
+                self.assertGreater(sta.latitude, 14.9, msg)
+                self.assertGreater(55.1, sta.latitude, msg)
+                self.assertFalse(-170.1 <= sta.longitude <= 170.1, msg)
+                self.assertEqual(net.code, "IM", msg)
+
+        # Simple query
+        inv = client.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2001-01-01"), net="IU", sta="ANMO")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                self.assertGreater(UTCDateTime("2001-01-01"), sta.start_date)
+                if sta.end_date is not None:
+                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
+                self.assertEqual(net.code, "IU")
+                self.assertEqual(sta.code, "ANMO")
+
+        # Station wildcard query.
+        inv = client.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2002-01-01"), network="IU", sta="A*",
+            location="00")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                self.assertGreater(UTCDateTime("2002-01-01"), sta.start_date)
+                if sta.end_date is not None:
+                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
+                self.assertEqual(net.code, "IU")
+                self.assertTrue(sta.code.startswith("A"))
+
+    def test_iris_example_queries_dataselect_discover_services_false(self):
+        """
+        Tests the (sometimes modified) example queries given on IRIS webpage,
+        without discovering services first.
+        """
+        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+                        _discover_services=False)
+
+        queries = [
+            ("IU", "ANMO", "00", "BHZ",
+             UTCDateTime("2010-02-27T06:30:00.000"),
+             UTCDateTime("2010-02-27T06:40:00.000")),
+            ("IU", "A*", "*", "BHZ",
+             UTCDateTime("2010-02-27T06:30:00.000"),
+             UTCDateTime("2010-02-27T06:31:00.000")),
+            ("IU", "A??", "*0", "BHZ",
+             UTCDateTime("2010-02-27T06:30:00.000"),
+             UTCDateTime("2010-02-27T06:31:00.000")),
+        ]
+        result_files = ["dataselect_example.mseed",
+                        "dataselect_example_wildcards.mseed",
+                        "dataselect_example_mixed_wildcards.mseed",
+                        ]
+        for query, filename in zip(queries, result_files):
+            # test output to stream
+            got = client.get_waveforms(*query)
+            # Assert that the meta-information about the provider is stored.
+            for tr in got:
+                self.assertEqual(
+                    tr.stats._fdsnws_dataselect_url,
+                    client.base_url + "/fdsnws/dataselect/1/query")
+            # Remove fdsnws URL as it is not in the data from the disc.
+            for tr in got:
+                del tr.stats._fdsnws_dataselect_url
+            file_ = os.path.join(self.datapath, filename)
+            expected = read(file_)
+            _normalize_stats(got)
+            self.assertEqual(got, expected, "Dataselect failed for query %s" %
+                             repr(query))
+            # test output to file
+            with NamedTemporaryFile() as tf:
+                client.get_waveforms(*query, filename=tf.name)
+                with open(tf.name, 'rb') as fh:
+                    got = fh.read()
+                with open(file_, 'rb') as fh:
+                    expected = fh.read()
+            self.assertEqual(got, expected, "Dataselect failed for query %s" %
+                             repr(query))
 
     def test_conflicting_params(self):
         """
@@ -1362,11 +1570,11 @@ class ClientTestCase(unittest.TestCase):
                     endtime=UTCDateTime("2010-02-27T06:40:00.000"))
 
         # test invalid token/token file
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 ValueError,
                 'EIDA token does not seem to be a valid PGP message'):
             client = Client('GFZ', eida_token="spam")
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 ValueError,
                 "Read EIDA token from file '[^']*event_helpstring.txt' but it "
                 "does not seem to contain a valid PGP message."):

@@ -24,6 +24,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import sys
+import string
 from argparse import ArgumentParser
 from collections import OrderedDict
 from copy import deepcopy
@@ -262,6 +263,117 @@ class RecordAnalyser(object):
                     raise IOError(msg)
                 raise
             blkt_dict['Sampling Rate'] = float(unpack_values[0])
+        elif blkt_type == 300:
+            # Step calibration blockette
+            _tmp = self.file.read(56)
+            try:
+                unpack_values = unpack(native_str('%sHHBBBBHBBLLf3sxL12s12s'
+                                                  % self.endian), _tmp)
+            except Exception:
+                if len(_tmp) == 0:
+                    msg = "Unexpected end of file."
+                    raise IOError(msg)
+                raise
+            blkt_dict['Calibration Start Time'] = \
+                UTCDateTime(year=int(unpack_values[0]),
+                            julday=int(unpack_values[1]),
+                            hour=int(unpack_values[2]),
+                            minute=int(unpack_values[3]),
+                            second=int(unpack_values[4]),
+                            microsecond=int(unpack_values[5]))
+
+            blkt_dict['Number of Step Calibrations'] = int(unpack_values[7])
+            blkt_dict['Step Duration in Seconds'] = \
+                int(float(unpack_values[8])/10000.)
+            blkt_dict['Interval Duration in Seconds'] = \
+                int(float(unpack_values[9])/10000.)
+            blkt_dict['Calibration Signal Amplitude'] = \
+                float(unpack_values[11])
+            blkt_dict['Calibration Monitor Channel'] = \
+                unpack_values[12].decode('ascii', errors="replace")
+            blkt_dict['Calibration Reference Amplitude'] = \
+                float(unpack_values[13])
+            tmp = unpack_values[14].decode('ascii', errors="replace")
+            blkt_dict['Coupling'] = ""
+            for c in tmp:
+                if c in string.printable:
+                    blkt_dict['Coupling'] += c
+            blkt_dict['Coupling'] = blkt_dict['Coupling'].rstrip()
+            blkt_dict['Rolloff'] = \
+                unpack_values[15].decode('ascii', errors="replace").rstrip()
+        elif blkt_type == 310:
+            # Sine calibration blockette
+            _tmp = self.file.read(56)
+            try:
+                unpack_values = unpack(native_str('%sHHBBBBHBBLff3sxL12s12s'
+                                                  % self.endian), _tmp)
+            except Exception:
+                if len(_tmp) == 0:
+                    msg = "Unexpected end of file."
+                    raise IOError(msg)
+                raise
+            blkt_dict['Calibration Start Time'] = \
+                UTCDateTime(year=int(unpack_values[0]),
+                            julday=int(unpack_values[1]),
+                            hour=int(unpack_values[2]),
+                            minute=int(unpack_values[3]),
+                            second=int(unpack_values[4]),
+                            microsecond=int(unpack_values[5]))
+
+            blkt_dict['Calibration Duration in Seconds'] = \
+                int(float(unpack_values[9])/10000.)
+            blkt_dict['Period of Signal in Seconds'] = \
+                int(float(unpack_values[10])/10000.)
+            blkt_dict['Calibration Signal Amplitude'] = \
+                float(unpack_values[11])
+            blkt_dict['Calibration Monitor Channel'] = \
+                unpack_values[12].decode('ascii', errors="replace")
+            blkt_dict['Calibration Reference Amplitude'] = \
+                float(unpack_values[13])
+            tmp = unpack_values[14].decode('ascii', errors="replace")
+            blkt_dict['Coupling'] = ""
+            for c in tmp:
+                if c in string.printable:
+                    blkt_dict['Coupling'] += c
+            blkt_dict['Coupling'] = blkt_dict['Coupling'].rstrip()
+            blkt_dict['Rolloff'] = \
+                unpack_values[15].decode('ascii', errors="replace")
+        elif blkt_type == 320:
+            # Pseudo-random calibration blockette
+            _tmp = self.file.read(60)
+            try:
+                unpack_values = unpack(native_str('%sHHBBBBHBBLf3sxL12s12s8s'
+                                                  % self.endian), _tmp)
+            except Exception:
+                if len(_tmp) == 0:
+                    msg = "Unexpected end of file."
+                    raise IOError(msg)
+                raise
+            blkt_dict['Calibration Start Time'] = \
+                UTCDateTime(year=int(unpack_values[0]),
+                            julday=int(unpack_values[1]),
+                            hour=int(unpack_values[2]),
+                            minute=int(unpack_values[3]),
+                            second=int(unpack_values[4]),
+                            microsecond=int(unpack_values[5]))
+
+            blkt_dict['Calibration Duration in Seconds'] = \
+                int(float(unpack_values[9])/10000.)
+            blkt_dict['Peak-To-Peak Amplitude'] = int(unpack_values[10])
+            blkt_dict['Calibration Monitor Channel'] = \
+                unpack_values[11].decode('ascii', errors="replace")
+            blkt_dict['Calibration Reference Amplitude'] = \
+                str(unpack_values[12])
+            tmp = blkt_dict['Coupling'] = \
+                unpack_values[13].decode('ascii', errors="replace")
+            blkt_dict['Coupling'] = ""
+            for c in tmp:
+                if c in string.printable:
+                    blkt_dict['Coupling'] += c
+            blkt_dict['Rolloff'] = \
+                unpack_values[14].decode('ascii', errors="replace")
+            blkt_dict['Noise Type'] = \
+                unpack_values[15].decode('ascii', errors="replace")
         elif blkt_type == 1000:
             _tmp = self.file.read(4)
             try:
@@ -345,23 +457,23 @@ class RecordAnalyser(object):
         for key in self.fixed_header.keys():
             # Don't print empty values to ease testing.
             if self.fixed_header[key] != "":
-                ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
+                ret_val += '    %s: %s\n' % (key, self.fixed_header[key])
             else:
-                ret_val += '\t%s:\n' % (key)
+                ret_val += '    %s:\n' % (key)
         ret_val += '\nBLOCKETTES\n'
         for key in self.blockettes.keys():
-            ret_val += '\t%i:' % key
+            ret_val += '    %i:' % key
             if not len(self.blockettes[key]):
-                ret_val += '\tNOT YET IMPLEMENTED\n'
+                ret_val += '    NOT YET IMPLEMENTED\n'
             for _i, blkt_key in enumerate(self.blockettes[key].keys()):
                 if _i == 0:
-                    tabs = '\t'
+                    tabs = '    '
                 else:
-                    tabs = '\t\t'
+                    tabs = '        '
                 ret_val += '%s%s: %s\n' % (tabs, blkt_key,
                                            self.blockettes[key][blkt_key])
         ret_val += '\nCALCULATED VALUES\n'
-        ret_val += '\tCorrected Starttime: %s\n' % self.corrected_starttime
+        ret_val += '    Corrected Starttime: %s\n' % self.corrected_starttime
         return ret_val
 
     def _repr_pretty_(self, p, cycle):

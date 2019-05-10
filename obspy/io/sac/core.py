@@ -354,7 +354,7 @@ def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
 
 
 def _internal_read_sac(buf, headonly=False, debug_headers=False, fsize=True,
-                       **kwargs):  # @UnusedVariable
+                       byteorder=None, **kwargs):  # @UnusedVariable
     """
     Reads an SAC file and returns an ObsPy Stream object.
 
@@ -377,6 +377,11 @@ def _internal_read_sac(buf, headonly=False, debug_headers=False, fsize=True,
     :param fsize: Check if file size is consistent with theoretical size
         from header. Defaults to ``True``.
     :type fsize: bool
+    :param byteorder: If omitted or None, automatic byte-order checking is
+        done, starting with native order. If byteorder is specified and
+        incorrect, a :class:`SacIOError` is raised. Only valid for binary
+        files.
+    :type byteorder: str {'little', 'big'}, optional
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
@@ -386,7 +391,8 @@ def _internal_read_sac(buf, headonly=False, debug_headers=False, fsize=True,
 
     # read SAC file
     sac = SACTrace.read(buf, headonly=headonly, ascii=False,
-                        checksize=fsize, encoding=encoding_str)
+                        byteorder=byteorder, checksize=fsize,
+                        encoding=encoding_str)
     # assign all header entries to a new dictionary compatible with an ObsPy
     tr = sac.to_obspy_trace(debug_headers=debug_headers, encoding=encoding_str)
 

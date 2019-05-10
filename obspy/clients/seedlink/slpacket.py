@@ -15,7 +15,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import ctypes as C
+import ctypes as C  # NOQA
 
 import numpy as np
 

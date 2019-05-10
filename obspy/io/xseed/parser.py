@@ -2278,8 +2278,9 @@ class Parser(object):
             root_attribute = self.temp['abbreviations']
         # Loop over all blockettes in data.
         while blockette_id != 0:
-            # remove spaces between blockettes
-            while data.read(1) == b' ':
+            # remove spaces between blockettes. In some cases these might be
+            # newlines.
+            while data.read(1) in [b' ', b'\n']:
                 continue
             data.seek(data.tell() - 1)
             try:

@@ -74,8 +74,8 @@ class BaseNode(ComparingObject):
 
     @code.setter
     def code(self, value):
-        if not value:
-            msg = "A Code is required"
+        if value is None:
+            msg = "A code is required"
             raise ValueError(msg)
         self._code = str(value).strip()
 
@@ -578,7 +578,7 @@ class Site(ComparingObject):
         Description of a site location using name and optional geopolitical
         boundaries (country, city, etc.).
     """
-    def __init__(self, name, description=None, town=None, county=None,
+    def __init__(self, name="", description=None, town=None, county=None,
                  region=None, country=None):
         """
         :type name: str
@@ -872,6 +872,24 @@ def _seed_id_keyfunction(x):
         x = [x, ]
 
     return x
+
+
+def _response_plot_label(network, station, channel, label_epoch_dates):
+    label = ".".join((network.code, station.code,
+                      channel.location_code, channel.code))
+    if label_epoch_dates:
+        start = channel.start_date
+        if start is None:
+            start = 'open'
+        else:
+            start = str(start.date)
+        end = channel.end_date
+        if end is None:
+            end = 'open'
+        else:
+            end = str(end.date)
+        label += '\n{} -- {}'.format(start, end)
+    return label
 
 
 if __name__ == '__main__':
