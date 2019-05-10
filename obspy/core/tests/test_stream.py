@@ -2604,15 +2604,14 @@ class StreamTestCase(unittest.TestCase):
         t1 = UTCDateTime('2017-10-11T12:33:15')
         t2 = UTCDateTime('2017-10-11T12:33:40')
         st.trim(t1,t2)
+        st1 = st.copy()
         # Create inventory for this stream:
-        inv = read_inventory("core/tests/data/uvw_inventory.xml")
+        inv = read_inventory("data/uvw_inventory.xml")
         # use stream.rotate() to rotate to ZNE
-        ZNE_st = st.rotate(method='->ZNE', inventory=inv)
-        # rotate new stream back
-        #rotated_st = ZNE_st.rotate('->UVW', inventory=inv)
-        from obspy.signal.rotate import rotate2zne
-        rotated_st = rotate2zne(st[0], 90, -35.3, st[1], 330, -35.3, st[2], 210, -35.3)
-        # compare data: 
+        ZNE_st = st1.rotate(method='->ZNE', inventory=inv, components='UVW')
+        # rotate new stream back using new method:
+        rotated_st = st1.rotate(method='->UVW', inventory=inv)
+        # compare data to see if the rotated version matched original UVW stream:
         for tr_got, tr_expected in zip(rotated_st, st):
             np.testing.assert_allclose(tr_got, tr_expected)
 
