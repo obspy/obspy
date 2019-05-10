@@ -213,8 +213,6 @@ class BaseNode(ComparingObject):
         # add a "s" to get the right attribute names
         levels = [(level + "s").lower() for level in levels]
 
-        print(levels)
-
         # sort first possible level
         setattr(self, levels[0],
                 sorted(getattr(self, levels[0]), key=sort_fct))

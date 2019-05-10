@@ -23,7 +23,8 @@ from matplotlib import rcParams
 from obspy import read_inventory, UTCDateTime
 from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.util.testing import ImageComparison
-
+from obspy.core.inventory.station import Station
+from obspy.core.inventory.channel import Channel
 
 class StationTestCase(unittest.TestCase):
     """
@@ -181,6 +182,32 @@ class StationTestCase(unittest.TestCase):
         self.assertEqual(len(sta.select(sampling_rate=20.0 - 1E-6)), 3)
         self.assertEqual(len(sta.select(sampling_rate=1.0 + 1E-6)), 3)
         self.assertEqual(len(sta.select(sampling_rate=0.1 - 1E-6)), 3)
+
+    def test_sort(self):
+        """
+            Test the network.sort method.
+        """
+        cha_1 = Channel(code="A", start_date=UTCDateTime(0),
+                        location_code="A", latitude=1.0, longitude=1.0,
+                        depth=1, elevation=1)
+        cha_2 = Channel(code="A", start_date=UTCDateTime(1),
+                        location_code="A", latitude=1.0, longitude=1.0,
+                        depth=1, elevation=1)
+        cha_3 = Channel(code="B", start_date=UTCDateTime(0),
+                        location_code="A", latitude=1.0, longitude=1.0,
+                        depth=1, elevation=1)
+        # sorted
+        sorted_station = Station(code="S", start_date=UTCDateTime(0),
+                                 latitude=1.0, longitude=1.0, elevation=1,
+                                 channels=[cha_1, cha_2, cha_3])
+        # unsorted
+        unsorted_station = Station(code="S", start_date=UTCDateTime(0),
+                                   latitude=1.0, longitude=1.0, elevation=1,
+                                   channels=[cha_3, cha_2, cha_1])
+
+        unsorted_station.sort()
+
+        self.assertEqual(unsorted_station, sorted_station)
 
 
 def suite():

@@ -302,6 +302,50 @@ class NetworkTestCase(unittest.TestCase):
 
         self.assertEqual(inv, inv2)
 
+    def test_sort(self):
+        """
+        Test the network.sort method.
+        """
+        cha_1 = Channel(code="A", start_date=UTCDateTime(0),
+                        location_code="A", latitude=1.0, longitude=1.0,
+                        depth=1, elevation=1)
+        cha_2 = Channel(code="A", start_date=UTCDateTime(1),
+                        location_code="A", latitude=1.0, longitude=1.0,
+                        depth=1, elevation=1)
+        cha_3 = Channel(code="B", start_date=UTCDateTime(0),
+                        location_code="A", latitude=1.0, longitude=1.0,
+                        depth=1, elevation=1)
+        # sorted
+        sta_1_s = Station(code="A", start_date=UTCDateTime(0),
+                          latitude=1.0, longitude=1.0, elevation=1,
+                          channels=[cha_1, cha_2, cha_3])
+        sta_2_s = Station(code="A", start_date=UTCDateTime(1),
+                          latitude=1.0, longitude=1.0, elevation=1,
+                          channels=[cha_1, cha_2, cha_3])
+        sta_3_s = Station(code="B", start_date=UTCDateTime(0),
+                          latitude=1.0, longitude=1.0, elevation=1,
+                          channels=[cha_1, cha_2, cha_3])
+        # unsorted
+        sta_1_u = Station(code="B", start_date=UTCDateTime(0),
+                          latitude=1.0, longitude=1.0, elevation=1,
+                          channels=[cha_3, cha_2, cha_1])
+        sta_2_u = Station(code="A", start_date=UTCDateTime(1),
+                          latitude=1.0, longitude=1.0, elevation=1,
+                          channels=[cha_3, cha_2, cha_1])
+        sta_3_u = Station(code="A", start_date=UTCDateTime(0),
+                          latitude=1.0, longitude=1.0, elevation=1,
+                          channels=[cha_3, cha_2, cha_1])
+
+        unsorted_network = Network(code="S", start_date=UTCDateTime(0),
+                                   stations=[sta_3_u, sta_2_u, sta_1_u])
+
+        sorted_network = Network(code="S", start_date=UTCDateTime(0),
+                                 stations=[sta_1_s, sta_2_s, sta_3_s])
+
+        unsorted_network.sort()
+
+        self.assertEqual(unsorted_network, sorted_network)
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 @unittest.skipIf(
