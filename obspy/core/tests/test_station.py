@@ -26,6 +26,7 @@ from obspy.core.util.testing import ImageComparison
 from obspy.core.inventory.station import Station
 from obspy.core.inventory.channel import Channel
 
+
 class StationTestCase(unittest.TestCase):
     """
     Tests the for :class:`~obspy.core.inventory.station.Station` class.

@@ -199,6 +199,22 @@ class BaseNode(ComparingObject):
         :type max_level: str
         """
 
+        if max_level not in ["Channel, Station"]:
+            msg = 'Wrong maximum level. Please use "Station" or "Channel"'
+            raise Exception(msg)
+
+        # use only keys shared by networks, stations and channels
+        for key in keys:
+            if key not in ['alternate_code', 'code', 'data_availability',
+                           'end_date', 'historical_code', 'is_active',
+                           'restricted_status', 'start_date', 'elevation',
+                           'latitude', 'longitude']:
+                msg = 'Incorrect key. Please chose from: "alternate_code", ' \
+                      '"code", "data_availability", "end_date"", ' \
+                      '"historical_code", "is_active", "restricted_status",' \
+                      '"start_date", "elevation", "latitude", "longitude" '
+                raise Exception(msg)
+
         input_level = self.__class__.__name__
 
         def sort_fct(x): return [getattr(x, i) for i in keys]
