@@ -1525,31 +1525,32 @@ class UTCDateTimeTestCase(unittest.TestCase):
     def test_leap_years(self):
         """
         Test for issue #2369, correct implementation of juldays for leap years.
+
+        Test one leap year (2016; valid juldays 365, 366; invalid julday 367)
+        and one regular year (2018; valid juldays 364, 365; invalid julday 366)
         """
-
+        # these should fail
         with self.assertRaises(ValueError):
             UTCDateTime(year=2018, julday=366)
-
-        with self.assertRaises(ValueError):
-            UTCDateTime(year=2018, julday=366)
-
-        try:
-            UTCDateTime(year=2018, julday=365)
-        except ValueError:
-            self.fail("UTCDateTime() raised ValueError unexpectedly!")
-
-        try:
-            UTCDateTime(year=2016, julday=365)
-        except ValueError:
-            self.fail("UTCDateTime() raised ValueError unexpectedly!")
-
-        try:
-            UTCDateTime(year=2016, julday=366)
-        except ValueError:
-            self.fail("UTCDateTime() raised ValueError unexpectedly!")
-
         with self.assertRaises(ValueError):
             UTCDateTime(year=2016, julday=367)
+
+        # these should work and check we got the expected output
+        got = UTCDateTime(year=2018, julday=364)
+        expected = UTCDateTime(2018, 12, 30)
+        self.assertEqual(got, expected)
+
+        got = UTCDateTime(year=2018, julday=365)
+        expected = UTCDateTime(2018, 12, 31)
+        self.assertEqual(got, expected)
+
+        got = UTCDateTime(year=2016, julday=365)
+        expected = UTCDateTime(2016, 12, 30)
+        self.assertEqual(got, expected)
+
+        got = UTCDateTime(year=2016, julday=366)
+        expected = UTCDateTime(2016, 12, 31)
+        self.assertEqual(got, expected)
 
 
 def suite():

@@ -402,13 +402,10 @@ class UTCDateTime(object):
             elif len(args) == 1:
                 # year is first (and only) argument
                 year = args[0]
-            if not (1 <= int(kwargs['julday']) <= 366) and \
-                    calendar.isleap(year):
-                msg = "'julday' out of bounds: {!s}".format(kwargs['julday'])
-                raise ValueError(msg)
-            if not (1 <= int(kwargs['julday']) <= 365) and \
-                    not calendar.isleap(year):
-                msg = "'julday' out of bounds: {!s}".format(kwargs['julday'])
+            days_in_year = calendar.isleap(year) and 366 or 365
+            if not (1 <= int(kwargs['julday']) <= days_in_year):
+                msg = "'julday' out of bounds for year {!s}: {!s}".format(
+                    year, kwargs['julday'])
                 raise ValueError(msg)
             try:
                 temp = "%4d%03d" % (int(year),
