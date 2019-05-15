@@ -14,10 +14,9 @@ import warnings
 import numpy as np
 
 from obspy import read
-from obspy.core import AttribDict
 
 
-TRACE1_HEADER = {'ACQUISITION_DATE': '07/JAN/2013',
+TRACE2_HEADER = {'ACQUISITION_DATE': '07/JAN/2013',
                  'ACQUISITION_DATE_UTC': '07/JAN/2013',
                  'ACQUISITION_TIME': '10:30:41',
                  'ACQUISITION_TIME_MICROSECONDS': '0',
@@ -41,7 +40,7 @@ TRACE1_HEADER = {'ACQUISITION_DATE': '07/JAN/2013',
                  'LOCATION': 'LOCATION',
                  'LOW_CUT_FILTER': '10.000000 12.000000',
                  'NETWORK_NAME': 'BANK',
-                 'NOTE': AttribDict({'Comment': ''}),
+                 'NOTE': ['Comment'],
                  'OBSERVER': 'OBSERVER',
                  'REAL_TIME_AVAILABLE': 'FALSE',
                  'REGISTRATION_DIRECTION': 'X',
@@ -61,6 +60,26 @@ TRACE1_HEADER = {'ACQUISITION_DATE': '07/JAN/2013',
                  'TRIGGER_SAMPLE_NO': '8000',
                  'TRIGGER_SOURCE': '0',
                  'UNITS': 'METERS'}
+TRACE3_HEADER = {
+    'ACQUISITION_DATE': '7/MAR/2018',
+    'ACQUISITION_TIME': '3:12:45',
+    'INSTRUMENT': 'GEOMETRICS SmartSeis 0000',
+    'TRACE_SORT': 'AS_ACQUIRED',
+    'UNITS': 'METERS',
+    'NOTE': ['DISPLAY_SCALE 48'],
+    'CHANNEL_NUMBER': '1',
+    'DELAY': '-0.010',
+    'DESCALING_FACTOR': '0.001199',
+    'LINE_ID': '00-00',
+    'LOW_CUT_FILTER': '0 0',
+    'NOTCH_FREQUENCY': '0',
+    'RAW_RECORD': '1068.DAT',
+    'RECEIVER_LOCATION': '1004.00',
+    'SAMPLE_INTERVAL': '0.000125',
+    'SKEW': '-0.00001796',
+    'SOURCE_LOCATION': '1000.00',
+    'STACK': '8',
+}
 
 
 class SEG2TestCase(unittest.TestCase):
@@ -95,7 +114,31 @@ class SEG2TestCase(unittest.TestCase):
                                         atol=1e-7))
         # test seg2 specific header values
         # (trace headers include SEG2 file header)
-        self.assertEqual(st[0].stats.seg2, TRACE1_HEADER)
+        self.assertEqual(st[0].stats.seg2, TRACE2_HEADER)
+
+    def test_read_data_format_3(self):
+        """
+        Test reading a SEG2 data format code 3 file (20-bit floating point).
+        """
+        basename = os.path.join(self.path,
+                                '20180307_031245000.0')
+        # read SEG2 data (in counts, int32)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            st = read(basename + ".seg2")
+        self.assertEqual(len(w), 2)
+        self.assertIn('custom', str(w[1]))
+        # read reference ASCII data
+        with gzip.open(basename + '.DAT.gz', 'rb') as f:
+            results = np.loadtxt(f, ndmin=2).T
+        for tr, result in zip(st, results):
+            # convert raw data to unit'd
+            scaled_data = tr.data * tr.stats.calib
+            np.testing.assert_allclose(scaled_data, result,
+                                       rtol=1e-7, atol=1e-7)
+        # test seg2 specific header values
+        # (trace headers include SEG2 file header)
+        self.assertEqual(st[0].stats.seg2, TRACE3_HEADER)
 
 
 def suite():

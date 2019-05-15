@@ -74,6 +74,10 @@ master:
      16/32bit integers, see #2058 and #2059)
  - obspy.io.rg16:
    * implement module to read waveforms and headers from fcnt format (see #2265).
+ - obspy.io.seg2:
+   * Handle data format code 3 trace data (#2022, #2385).
+   * Improve parsing of free-form entries (#2385).
+   * Fix non-native endian data loading (#2385).
  - obspy.io.quakeml:
    * Allow writing invalid ids but raise a warning
      (see #2104, #2090, #2093, #1872).

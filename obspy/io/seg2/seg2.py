@@ -16,7 +16,7 @@ from future.builtins import *  # NOQA
 from future.utils import PY2
 
 from copy import deepcopy
-from struct import unpack
+from struct import unpack, unpack_from
 import warnings
 
 import numpy as np
@@ -102,28 +102,32 @@ class SEG2(object):
         file_descriptor_block = self.file_pointer.read(32)
 
         # Determine the endianness and check if the block id is valid.
-        if unpack(b'B', file_descriptor_block[0:1])[0] == 0x55 and \
-           unpack(b'B', file_descriptor_block[1:2])[0] == 0x3a:
+        if unpack_from(b'2B', file_descriptor_block) == (0x55, 0x3a):
             self.endian = b'<'
-        elif unpack(b'B', file_descriptor_block[0:1])[0] == 0x3a and \
-                unpack(b'B', file_descriptor_block[1:2])[0] == 0x55:
+        elif unpack_from(b'2B', file_descriptor_block) == (0x3a, 0x55):
             self.endian = b'>'
         else:
             msg = 'Wrong File Descriptor Block ID'
             raise SEG2InvalidFileError(msg)
 
         # Check the revision number.
-        revision_number = unpack(self.endian + b'H',
-                                 file_descriptor_block[2:4])[0]
+        revision_number, = unpack_from(self.endian + b'H',
+                                       file_descriptor_block, 2)
         if revision_number != 1:
             msg = '\nOnly SEG 2 revision 1 is officially supported. This file '
             msg += 'has revision %i. Reading it might fail.' % revision_number
             msg += '\nPlease contact the ObsPy developers with a sample file.'
             warnings.warn(msg)
-        size_of_trace_pointer_sub_block = unpack(
-            self.endian + b'H', file_descriptor_block[4:6])[0]
-        number_of_traces = unpack(
-            self.endian + b'H', file_descriptor_block[6:8])[0]
+
+        # Determine trace counts.
+        (size_of_trace_pointer_sub_block,
+         number_of_traces
+         ) = unpack_from(self.endian + b'HH', file_descriptor_block, 4)
+        if number_of_traces * 4 > size_of_trace_pointer_sub_block:
+            msg = ('File indicates %d traces, but there are only %d trace '
+                   'pointers.') % (number_of_traces,
+                                   size_of_trace_pointer_sub_block // 4)
+            raise SEG2InvalidFileError(msg)
 
         # Define the string and line terminators.
         (size_of_string_terminator,
@@ -132,7 +136,7 @@ class SEG2(object):
          size_of_line_terminator,
          first_line_terminator_char,
          second_line_terminator_char
-         ) = unpack(b'BccBcc', file_descriptor_block[8:14])
+         ) = unpack_from(b'BccBcc', file_descriptor_block, 8)
 
         # Assemble the string terminator.
         if size_of_string_terminator == 1:
@@ -156,12 +160,8 @@ class SEG2(object):
         # Read the trace pointer sub-block and retrieve all the pointers.
         trace_pointer_sub_block = \
             self.file_pointer.read(size_of_trace_pointer_sub_block)
-        self.trace_pointers = []
-        for _i in range(number_of_traces):
-            index = _i * 4
-            self.trace_pointers.append(
-                unpack(self.endian + b'L',
-                       trace_pointer_sub_block[index:index + 4])[0])
+        self.trace_pointers = unpack_from(
+            self.endian + (b'L' * number_of_traces), trace_pointer_sub_block)
 
         # The rest of the header up to where the first trace pointer points is
         # a free form section.
@@ -199,30 +199,33 @@ class SEG2(object):
            0x4422:
             msg = 'Invalid trace descriptor block id.'
             raise SEG2InvalidFileError(msg)
-        size_of_this_block = unpack(self.endian + b'H',
-                                    trace_descriptor_block[2:4])[0]
-        number_of_samples_in_data_block = \
-            unpack(self.endian + b'L', trace_descriptor_block[8:12])[0]
-        data_format_code = unpack(b'B', trace_descriptor_block[12:13])[0]
+        size_of_this_block, = unpack_from(self.endian + b'H',
+                                          trace_descriptor_block, 2)
+        number_of_samples_in_data_block, = \
+            unpack_from(self.endian + b'L', trace_descriptor_block, 8)
+        data_format_code, = unpack_from(b'B', trace_descriptor_block, 12)
 
         # Parse the data format code.
         if data_format_code == 4:
-            dtype = np.float32
+            dtype = self.endian + b'f4'
             sample_size = 4
         elif data_format_code == 5:
-            dtype = np.float64
+            dtype = self.endian + b'f8'
             sample_size = 8
         elif data_format_code == 1:
-            dtype = np.int16
+            dtype = self.endian + b'i2'
             sample_size = 2
         elif data_format_code == 2:
-            dtype = np.int32
+            dtype = self.endian + b'i4'
             sample_size = 4
         elif data_format_code == 3:
-            msg = ('\nData format code 3 (20-bit SEG-D floating point) not '
-                   'supported yet.\nPlease contact the ObsPy developers with '
-                   'a sample file.')
-            raise NotImplementedError(msg)
+            dtype = self.endian + b'i2'
+            sample_size = 2.5
+            if number_of_samples_in_data_block % 4 != 0:
+                raise SEG2InvalidFileError(
+                    'Data format code 3 requires that the number of samples '
+                    'is divisible by 4, but sample count is %d' % (
+                        number_of_samples_in_data_block, ))
         else:
             msg = 'Unrecognized data format code'
             raise SEG2InvalidFileError(msg)
@@ -248,9 +251,29 @@ class SEG2(object):
 
         # Unpack the data.
         data = from_buffer(
-            self.file_pointer.read(number_of_samples_in_data_block *
-                                   sample_size),
+            self.file_pointer.read(
+                int(number_of_samples_in_data_block * sample_size)),
             dtype=dtype)
+        if data_format_code == 3:
+            # Convert one's complement to two's complement by adding one to
+            # negative numbers.
+            one_to_two = (data < 0)
+            # The first two bytes (1 word) of every 10 bytes (5 words) contains
+            # a 4-bit exponent for each of the 4 remaining 2-byte (int16)
+            # samples.
+            exponents = data[0::5].view(self.endian + b'u2')
+            result = np.empty(number_of_samples_in_data_block, dtype=np.int32)
+            # Apply the negative correction, then multiply by correct exponent.
+            result[0::4] = ((data[1::5] + one_to_two[1::5]) *
+                            2**((exponents & 0x000f) >> 0))
+            result[1::4] = ((data[2::5] + one_to_two[2::5]) *
+                            2**((exponents & 0x00f0) >> 4))
+            result[2::4] = ((data[3::5] + one_to_two[3::5]) *
+                            2**((exponents & 0x0f00) >> 8))
+            result[3::4] = ((data[4::5] + one_to_two[4::5]) *
+                            2**((exponents & 0xf000) >> 12))
+            data = result
+
         # Integrate SEG2 file header into each trace header
         tmp = self.stream.stats.seg2.copy()
         tmp.update(header['seg2'])
@@ -262,52 +285,58 @@ class SEG2(object):
         Parse the free form section stored in free_form_str and save it in
         attrib_dict.
         """
-        # Separate the strings.
-        strings = free_form_str.split(self.string_terminator)
-        # This is not fully according to the SEG-2 format specification (or
-        # rather the specification only speaks about on offset of 2 bytes
-        # between strings and a string_terminator between two free form
-        # strings. The file I have show the following separation between two
-        # strings: 'random offset byte', 'string_terminator',
-        # 'random offset byte'
-        # Therefore every string has to be at least 3 bytes wide to be
-        # acceptable after being split at the string terminator.
+        def cleanup_and_decode_string(value):
+            # Some software/hardware produces invalid characters.
+            def is_good_char(c):
+                return c in (b'0123456789'
+                             b'abcdefghijklmnopqrstuvwxyz'
+                             b'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                             b'!"#$%&\'()*+,-./:; <=>?@[\\]^_`{|}~ ')
 
-        def is_good_char(c):
-            return c in (b'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN'
-                         b'OPQRSTUVWXYZ!"#$%&\'()*+,-./:; <=>?@[\\]^_`{|}~ ')
+            # A loop over a bytestring in Python 3 returns integers. This can
+            # be solved with a number of imports from the python-future module
+            # and all kinds of subtle changes throughout this file. Separating
+            # the handling for Python 2 and 3 seems the cleaner and simpler
+            # approach.
+            if PY2:
+                return "".join(filter(is_good_char, value)).strip()
+            else:
+                return "".join(map(chr, filter(is_good_char, value))).strip()
 
-        # A loop over a bytestring in Python 3 returns integers. This can be
-        # solved with a number of imports from the python-future module and
-        # all kinds of subtle changes throughout this file. Separating the
-        # handling for Python 2 and 3 seems the cleaner and simpler approach.
-        if PY2:
-            strings = ["".join(filter(is_good_char, _i))
-                       for _i in strings
-                       if len(_i) >= 3]
-        else:
-            strings = ["".join(map(chr, filter(is_good_char, _i)))
-                       for _i in strings
-                       if len(_i) >= 3]
+        # Separate the strings. Every string starts with a 2-byte offset to the
+        # next string, and ends with a terminator. An offset of 0 indicates the
+        # end of the strings.
+        offset = 0
+        strings = []
+        while offset + 2 < len(free_form_str):
+            strlen, = unpack_from(self.endian + b'H', free_form_str, offset)
+            if strlen == 0:
+                break
+            curstr = free_form_str[offset + 2:offset + strlen]
+            try:
+                curstrlen = curstr.index(self.string_terminator)
+            except ValueError:
+                strings.append(curstr)
+            else:
+                strings.append(curstr[:curstrlen])
+            offset += strlen
 
         # Every string has the structure OPTION<SPACE>VALUE. Write to
         # stream.stats attribute.
         for string in strings:
-            string = string.strip()
-            string = string.split(' ')
-            key = string[0].strip()
-            value = ' '.join(string[1:]).strip()
+            string = string.strip().split(b' ', 1)
+            key = cleanup_and_decode_string(string[0])
+            try:
+                value = string[1]
+            except IndexError:
+                value = ''
+            if key == 'NOTE':
+                value = [cleanup_and_decode_string(line)
+                         for line in value.split(self.line_terminator)
+                         if line]
+            else:
+                value = cleanup_and_decode_string(value)
             setattr(attrib_dict, key, value)
-        # Parse the notes string again.
-        if hasattr(attrib_dict, 'NOTE'):
-            notes = attrib_dict.NOTE.split(self.line_terminator.decode())
-            attrib_dict.NOTE = AttribDict()
-            for note in notes:
-                note = note.strip()
-                note = note.split(' ')
-                key = note[0].strip()
-                value = ' '.join(note[1:]).strip()
-                setattr(attrib_dict.NOTE, key, value)
 
 
 def _is_seg2(filename):
@@ -321,19 +350,16 @@ def _is_seg2(filename):
         file_pointer.close()
     try:
         # Determine the endianness and check if the block id is valid.
-        if unpack(b'B', file_descriptor_block[0:1])[0] == 0x55 and \
-           unpack(b'B', file_descriptor_block[1:2])[0] == 0x3a:
+        if unpack_from(b'2B', file_descriptor_block) == (0x55, 0x3a):
             endian = b'<'
-        elif unpack(b'B', file_descriptor_block[0:1])[0] == 0x3a and \
-                unpack(b'B', file_descriptor_block[1:2])[0] == 0x55:
+        elif unpack_from(b'2B', file_descriptor_block) == (0x3a, 0x55):
             endian = b'>'
         else:
             return False
     except Exception:
         return False
     # Check the revision number.
-    revision_number = unpack(endian + b'H',
-                             file_descriptor_block[2:4])[0]
+    revision_number, = unpack_from(endian + b'H', file_descriptor_block, 2)
     if revision_number != 1:
         return False
     return True
