@@ -475,6 +475,14 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
 
     res = []
 
+    if stream.get_gaps():
+        msg = 'Input stream must not include gaps:\n' + str(stream)
+        raise ValueError(msg)
+
+    if len(stream) != 3:
+        msg = 'Input stream expected to be three components:\n' + str(stream)
+        raise ValueError(msg)
+
     # check that sampling rates do not vary
     fs = stream[0].stats.sampling_rate
     if len(stream) != len(stream.select(sampling_rate=fs)):
