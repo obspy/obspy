@@ -447,9 +447,9 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
     :param var_noise: resembles a sphere of noise in PM where the 3C is
         excluded
     :type var_noise: float
-    :param frqlow: lower frequency for PM
+    :param frqlow: lower frequency. Only used for ``method='vidale'``.
     :type frqlow: float
-    :param frqhigh: higher frequency for PM
+    :param frqhigh: higher frequency. Only used for ``method='vidale'``.
     :type frqhigh: float
     :param stime: Start time of interest
     :type stime: :class:`obspy.core.utcdatetime.UTCDateTime`
