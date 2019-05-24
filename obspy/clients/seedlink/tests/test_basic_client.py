@@ -41,6 +41,20 @@ class ClientTestCase(unittest.TestCase):
         for offset in (3600, 2000, 1000, 500):
             _test_offset_from_realtime(offset)
 
+    def test_get_station(self):
+        """
+        Test fetching station information
+        """
+        client = self.client
+
+        stations = client.get_stations(station='F*')
+        self.assertIn(('G', 'FDF'), stations)
+        # should have at least 7 stations
+        self.assertTrue(len(stations) > 2)
+        # only fetch one station
+        stations = client.get_stations(network='G', station='FDF')
+        self.assertEqual([('G', 'FDF')], stations)
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')

@@ -12,7 +12,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import fnmatch
 import warnings
+
+from lxml import etree
 
 from obspy import Stream
 from .slclient import SLClient, SLPacket
@@ -49,6 +52,7 @@ class Client(object):
         self._slclient = SLClient(loglevel=debug and "DEBUG" or "CRITICAL",
                                   timeout=self.timeout)
         self._server_url = "%s:%i" % (server, port)
+        self._station_cache = None
 
     def _connect(self):
         """
@@ -127,6 +131,56 @@ class Client(object):
         stream.trim(starttime, endtime)
         self.stream = None
         return stream
+
+    def get_stations(self, network=None, station=None, cache=True):
+        """
+        Request available stations from the seedlink server.
+
+        Supports ``fnmatch`` wildcards, e.g. ``*`` and ``?`` in ``network`` and
+        ``station``.
+
+        >>> client = Client('rtserver.ipgp.fr')
+        >>> netsta = client.get_stations(station="FDF")
+        >>> print(netsta)
+        [('G', 'FDF')]
+
+        Available station information is cached after the first request to the
+        server, so use ``cache=False`` on subsequent requests if there is a
+        need to force fetching new information from the server (should only
+        concern programs running in background for a very long time).
+
+        :type network: str
+        :param network: Network code. No wildcards supported by ObsPy.
+        :type station: str
+        :param station: Station code. No wildcards supported by ObsPy.
+        :type cache: bool
+        :param cache: Subsequent function calls are cached, use ``cache=False``
+            to force fetching station metadata again from the server.
+        :rtype: list
+        :returns: list of 2-tuples with network/station code combinations for
+            which data is served by the server.
+        """
+        if cache and self._station_cache is not None:
+            stations = [(net, sta) for net, sta in self._station_cache
+                        if fnmatch.fnmatch(net, network or '*') and
+                        fnmatch.fnmatch(sta, station or '*')]
+            return sorted(stations)
+
+        self._slclient.infolevel = "STATIONS"
+        self._slclient.verbose = 1
+        self._connect()
+        self._slclient.initialize()
+        # self._slclient.run()
+        self._slclient.run(packet_handler=self._packet_handler)
+        info = self._slclient.slconn.info_string
+        xml = etree.fromstring(info)
+        station_cache = set()
+        for tag in xml.xpath('./station'):
+            net = tag.attrib['network']
+            sta = tag.attrib['name']
+            station_cache.add((net, sta))
+        self._station_cache = station_cache
+        return self.get_stations(network=network, station=station, cache=True)
 
     def _packet_handler(self, count, slpack):
         """
