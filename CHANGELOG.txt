@@ -69,7 +69,8 @@ master:
      has been added to turn this off. (see #2351 and #2348)
    * Allow long-phase names (both reading and writing) - longer than 4 char.
      (see #2351)
-   * Include AIN as takeoff-angle when reading and writing nordic files.
+   * Include AIN as takeoff-angle when reading and writing nordic files
+     (see #2404).
  - obspy.io.reftek:
    * Implement reading reftek encodings '16' and '32' (uncompressed data,
      16/32bit integers, see #2058 and #2059)
