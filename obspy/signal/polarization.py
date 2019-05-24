@@ -447,9 +447,9 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
     :param var_noise: resembles a sphere of noise in PM where the 3C is
         excluded
     :type var_noise: float
-    :param frqlow: lower frequency for PM
+    :param frqlow: lower frequency. Only used for ``method='vidale'``.
     :type frqlow: float
-    :param frqhigh: higher frequency for PM
+    :param frqhigh: higher frequency. Only used for ``method='vidale'``.
     :type frqhigh: float
     :param stime: Start time of interest
     :type stime: :class:`obspy.core.utcdatetime.UTCDateTime`
@@ -475,6 +475,14 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
 
     res = []
 
+    if stream.get_gaps():
+        msg = 'Input stream must not include gaps:\n' + str(stream)
+        raise ValueError(msg)
+
+    if len(stream) != 3:
+        msg = 'Input stream expected to be three components:\n' + str(stream)
+        raise ValueError(msg)
+
     # check that sampling rates do not vary
     fs = stream[0].stats.sampling_rate
     if len(stream) != len(stream.select(sampling_rate=fs)):
@@ -498,24 +506,21 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         offset = 0
         while (newstart + (nsamp + nstep) / fs) < etime:
             try:
-                data = []
-                z = []
-                n = []
-                e = []
                 for i, tr in enumerate(stream):
                     dat = tr.data[spoint[i] + offset:
                                   spoint[i] + offset + nsamp]
                     dat = (dat - dat.mean()) * tap
-                    if "Z" in tr.stats.channel:
+                    if tr.stats.channel[-1].upper() == "Z":
                         z = dat.copy()
-                    if "N" in tr.stats.channel:
+                    elif tr.stats.channel[-1].upper() == "N":
                         n = dat.copy()
-                    if "E" in tr.stats.channel:
+                    elif tr.stats.channel[-1].upper() == "E":
                         e = dat.copy()
+                    else:
+                        msg = "Unexpected channel code '%s'" % tr.stats.channel
+                        raise ValueError(msg)
 
-                data.append(z)
-                data.append(n)
-                data.append(e)
+                data = [z, n, e]
             except IndexError:
                 break
 
