@@ -637,7 +637,7 @@ class TestNordicMethods(unittest.TestCase):
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 event_back = read_events(tf.name)
-        _assert_similarity(event, event_back[0], verbose=True)
+        _assert_similarity(event, event_back[0])
 
     def test_write_preferred_origin(self):
         event = full_test_event()
