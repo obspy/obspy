@@ -637,7 +637,7 @@ class TestNordicMethods(unittest.TestCase):
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
                 event_back = read_events(tf.name)
-        _assert_similarity(event, event_back[0])
+        _assert_similarity(event, event_back[0], verbose=True)
 
     def test_write_preferred_origin(self):
         event = full_test_event()
@@ -989,11 +989,11 @@ def full_test_event():
         Arrival(time_weight=2, phase=test_event.picks[3].phase_hint,
                 pick_id=test_event.picks[3].resource_id,
                 backazimuth_residual=5, time_residual=0.2, distance=15,
-                azimuth=25),
+                azimuth=25, takeoff_angle=10),
         Arrival(time_weight=2, phase=test_event.picks[4].phase_hint,
                 pick_id=test_event.picks[4].resource_id,
                 backazimuth_residual=5, time_residual=0.2, distance=15,
-                azimuth=25)]
+                azimuth=25, takeoff_angle=170)]
     # Add in error info (line E)
     test_event.origins[0].quality = OriginQuality(
         standard_error=0.01, azimuthal_gap=36)

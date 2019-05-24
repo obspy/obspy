@@ -556,8 +556,6 @@ def _read_picks(tagged_lines, new_event):
     """
     evtime = new_event.origins[0].time
     pickline = []
-    # Set a default, ignored later unless overwritten
-    snr = None
     # pick-lines can be tagged by either ' ' or '4'
     tags = [' ', '4']
     for tag in tags:
@@ -569,6 +567,7 @@ def _read_picks(tagged_lines, new_event):
             pass
     header = sorted(tagged_lines['7'], key=lambda tup: tup[1])[0][0]
     for line in pickline:
+        ain, snr = (None, None)
         if line[18:28].strip() == '':  # If line is empty miss it
             continue
         if len(line) < 80:
@@ -606,7 +605,6 @@ def _read_picks(tagged_lines, new_event):
             hour=pick_hour, minute=pick_minute) + (pick_seconds + day_add)
         if header[57:60] == 'AIN':
             ain = _float_conv(line[57:60])
-            warnings.warn('AIN: %s in header, currently unsupported' % ain)
         elif header[57:60] == 'SNR':
             snr = _float_conv(line[57:60])
         else:
@@ -679,6 +677,8 @@ def _read_picks(tagged_lines, new_event):
                 arrival.distance = kilometers2degrees(_float_conv(line[70:75]))
             if _int_conv(line[76:79]) is not None:
                 arrival.azimuth = _int_conv(line[76:79])
+            if ain is not None:
+                arrival.takeoff_angle = ain
             new_event.origins[0].arrivals.append(arrival)
         new_event.picks.append(pick)
     return new_event
@@ -1267,6 +1267,10 @@ def nordpick(event, high_accuracy=True):
                 azimuthres = _str_conv(int(arrival.backazimuth_residual))
             else:
                 azimuthres = ' '
+            if arrival.takeoff_angle is not None:
+                ain = _str_conv(int(arrival.takeoff_angle))
+            else:
+                ain = ' '
             # Extract time residual
             if arrival.time_residual is not None:
                 timeres = _str_conv(arrival.time_residual, rounded=2)
@@ -1291,8 +1295,8 @@ def nordpick(event, high_accuracy=True):
             else:
                 caz = ' '
         else:
-            caz, distance, timeres, azimuthres, azimuth, weight = (
-                ' ', ' ', ' ', ' ', ' ', 0)
+            caz, distance, timeres, azimuthres, azimuth, weight, ain = (
+                ' ', ' ', ' ', ' ', ' ', 0, ' ')
         phase_hint = pick.phase_hint or ' '
         # Extract amplitude: note there can be multiple amplitudes, but they
         # should be associated with different picks.
@@ -1371,7 +1375,7 @@ def nordpick(event, high_accuracy=True):
         pick_string_formatter = (
             " {station:5s}{instrument:1s}{component:1s}{phase_info:10s}"
             "{hour:2d}{minute:2d}{seconds:6s}{coda:5s}{amp:7s}{period:5s}"
-            "{azimuth:6s}{velocity:5s}    {azimuthres:3s}{timeres:5s}  "
+            "{azimuth:6s}{velocity:5s}{ain:4s}{azimuthres:3s}{timeres:5s}  "
             "{distance:5s}{caz:4s} ")
         # Note that pick seconds rounding only works because SEISAN does not
         # enforce that seconds stay 0 <= seconds < 60, so rounding something
@@ -1389,6 +1393,7 @@ def nordpick(event, high_accuracy=True):
             period=_str_conv(peri, rounded=peri_round).rjust(5)[0:5],
             azimuth=_str_conv(azimuth).rjust(6)[0:6],
             velocity=_str_conv(velocity).rjust(5)[0:5],
+            ain=ain.rjust(4)[0:4],
             azimuthres=_str_conv(azimuthres).rjust(3)[0:3],
             timeres=_str_conv(timeres, rounded=2).rjust(5)[0:5],
             distance=distance.rjust(5)[0:5],
