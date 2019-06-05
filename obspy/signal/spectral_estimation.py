@@ -150,7 +150,8 @@ class PPSD(object):
     demeaning, tapering and so on is done internally) and plot it like ...
 
     >>> ppsd.add(st) # doctest: +SKIP
-    >>> print(ppsd.times) # doctest: +SKIP
+    >>> print(ppsd.times_processed) # doctest: +SKIP
+    [UTCDateTime(...), UTCDateTime(...), ..., UTCDateTime(...)]
     >>> ppsd.plot() # doctest: +SKIP
 
     ... but the example stream is too short and does not contain enough data.
@@ -1144,8 +1145,8 @@ class PPSD(object):
         # sum up the columns to cumulative entries
         hist_stack_cumul = hist_stack.cumsum(axis=1)
         # normalize every column with its overall number of entries
-        # (can vary from the number of self.times because of values outside
-        #  the histogram db ranges)
+        # (can vary from the number of self.times_processed because of values
+        #  outside the histogram db ranges)
         norm = hist_stack_cumul[:, -1].copy().astype(np.float64)
         # avoid zero division
         norm[norm == 0] = 1

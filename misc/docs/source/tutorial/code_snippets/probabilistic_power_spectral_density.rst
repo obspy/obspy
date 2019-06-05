@@ -48,14 +48,16 @@ successfully added to the ppsd estimate.
     True
 
 We can check what time ranges are represented in the ppsd estimate.
-``ppsd.times`` contains a sorted list of start times of the one hour long
-slices that the psds are computed from (here only the first two are printed).
+``ppsd.times_processed`` contains a sorted list of start times of the one hour
+long slices that the psds are computed from (here only the first two are
+printed). Other attributes storing information about the data fed into the
+``PPSD`` object are ``ppsd.times_data`` and ``ppsd.times_gaps``.
 
 .. doctest::
 
-    >>> print(ppsd.times[:2])
+    >>> print(ppsd.times_processed[:2])
     [UTCDateTime(2011, 2, 6, 0, 0, 0, 935000), UTCDateTime(2011, 2, 6, 0, 30, 0, 935000)]
-    >>> print("number of psd segments:", len(ppsd.times))
+    >>> print("number of psd segments:", len(ppsd.times_processed))
     number of psd segments: 47
 
 Adding the same stream again will do nothing (return value ``False``), the ppsd
@@ -65,7 +67,7 @@ object makes sure that no overlapping data segments go into the ppsd estimate.
 
     >>> ppsd.add(st)
     False
-    >>> print("number of psd segments:", len(ppsd.times))
+    >>> print("number of psd segments:", len(ppsd.times_processed))
     number of psd segments: 47
 
 Additional information from other files/sources can be added step by step.
