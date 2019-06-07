@@ -2645,7 +2645,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             n = zne_stream[1]
             e = zne_stream[2]
             return rotate2zne(z, 90, -35.3, n, 330, -35.3, e, 210, -35.3,
-                                inverse=True)
+                            inverse=True)
         elif method == "NE->RT":
             func = "rotate_ne_rt"
         elif method == "RT->NE":
