@@ -288,7 +288,6 @@ def _create_example_stream(headonly=False):
 
     Data arrays are stored in NumPy's NPZ format. The header information are
     fixed values.
-
     PAZ of the used instrument, needed to demonstrate simulate_seismometer()
     etc.::
 
