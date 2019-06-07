@@ -1,0 +1,37 @@
+* **************************************************
+* NETWORK     : IU
+* STATION     : ANMO
+* LOCATION    : 00
+* CHANNEL     : BHZ
+* CREATED     : 2014-09-15T11:48:45.805735Z
+* START       : 2012-03-12T20:28:00.000000Z
+* END         : 2599-12-31T23:59:59.000000Z
+* DESCRIPTION : Albuquerque, New Mexico, USA
+* LATITUDE    : 34.945981
+* LONGITUDE   : -106.457133
+* ELEVATION   : 1671.0
+* DEPTH       : 145.0
+* DIP (SEED)  : -90.0
+* AZIMUTH     : 0.0
+* SAMPLE RATE : 20.0
+* INPUT UNIT  : M
+* OUTPUT UNIT : COUNTS
+* INSTTYPE    : Geotech KS-54000 Borehole Seismometer
+* INSTGAIN    : 1952.1 (M/S)
+* SENSITIVITY : 3275080000.0 (M/S)
+* A0          : 83826.0
+* **************************************************
+ZEROS 3
+ +0.000000e+00 +0.000000e+00
+ +0.000000e+00 +0.000000e+00
+ +0.000000e+00 +0.000000e+00
+POLES 5
+ -5.333170e+01 +0.000000e+00
+ -2.490010e+01 +2.710650e+01
+ -2.490010e+01 -2.710650e+01
+ -4.800400e-03 +0.000000e+00
+ -7.370980e-02 +0.000000e+00
+CONSTANT 2.745369e+14
+
+
+
