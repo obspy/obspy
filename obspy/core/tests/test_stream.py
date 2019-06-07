@@ -2591,48 +2591,48 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(set(tr.stats.channel[-1] for tr in result),
                          set('ZNE'))
 
-
-    def test_method_rotate_to_UVW(self):
+    def test_method_rotate_to_uvw(self):
         """
-        Tests rotating all traces to UVW Galperin Coordinates given an inventory. 
-        Using data from T. Meggies example in 'Bug in rotate2zne with non-orthogonal comps'
+        Tests rotating all traces to UVW Galperin Coordinates given an
+        inventory. Using data from T. Meggies example in 'Bug in
+        rotate2zne with non-orthogonal comps'
         """
         # create and trim stream in UVW coordinates:
-        st = read('http://examples.obspy.org/step_table_galperin_and_xyz.mseed')
+        st = read('\
+                http://examples.obspy.org/step_table_galperin_and_xyz.mseed')
         st = st.select(station='TRC*')
         st = st[0:3]
         t1 = UTCDateTime('2017-10-11T12:33:15')
         t2 = UTCDateTime('2017-10-11T12:33:40')
-        st.trim(t1,t2)
+        st.trim(t1, t2)
         st1 = st.copy()
         # Create inventory for this stream:
         inv = read_inventory("data/uvw_inventory.xml")
         # use stream.rotate() to rotate to ZNE
-        ZNE_st = st1.rotate(method='->ZNE', inventory=inv, components='UVW')
+        zne_st = st1.rotate(method='->ZNE', inventory=inv, components='UVW')
         # rotate new stream back using new method:
-        rotated_st = st1.rotate(method='->UVW', inventory=inv)
-        # compare data to see if the rotated version matched original UVW stream:
+        rotated_st = zne_st.rotate(method='->UVW', inventory=inv)
+        # compare rotated version to original UVW stream:
         for tr_got, tr_expected in zip(rotated_st, st):
             np.testing.assert_allclose(tr_got, tr_expected)
 
-
-    def test_stream_rotate_Exception(self):
+    def test_stream_rotate_exception(self):
         """
-        Tests that if an exception is raised when rotating a stream, 
+        Tests that if an exception is raised when rotating a stream,
         the stream is not emptied.
         """
         inv1 = read_inventory()
-        inv2 = inv1.select(station = "FUR")
+        inv2 = inv1.select(station="FUR")
         stream = read()
         with self.assertRaises(Exception):
-            stream.rotate("->ZNE", inventory = inv2, components = ("ZNE"))
-            self.assertEqual(len(stream),3)
+            stream.rotate("->ZNE", inventory=inv2, components=("ZNE"))
+            self.assertEqual(len(stream), 3)
         # test another method:
         with self.assertRaises(Exception):
-            tr = st.select(component='E')
+            tr = stream.select(component='E')
             stream.remove(tr)
-            stream.rotate("NE->RT", inventory = inv2, components = ("ZNE"))
-            self.assertEqual(len(stream),2)
+            stream.rotate("NE->RT", inventory=inv2, components=("ZNE"))
+            self.assertEqual(len(stream), 2)
 
     def test_write_empty_stream(self):
         """
