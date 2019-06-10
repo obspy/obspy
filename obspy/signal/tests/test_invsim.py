@@ -20,6 +20,7 @@ import numpy as np
 from obspy import Trace, UTCDateTime, read, read_inventory
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import SuppressOutput
+from obspy.core.util.testing import traces_almost_equal
 from obspy.io.sac import attach_paz
 from obspy.signal.headers import clibevresp
 from obspy.signal.invsim import (
@@ -428,8 +429,7 @@ class InvSimTestCase(unittest.TestCase):
         seedresp['filename'] = stringio
         tr2.data = simulate_seismometer(tr2.data, tr2.stats.sampling_rate,
                                         seedresp=seedresp)
-
-        self.assertEqual(tr1, tr2)
+        self.assertTrue(traces_almost_equal(tr1, tr2))
 
     def test_segfaulting_resp_file(self):
         """

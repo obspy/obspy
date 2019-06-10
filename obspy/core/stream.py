@@ -544,6 +544,14 @@ class Stream(object):
         """
         Implements rich comparison of Stream objects for "==" operator.
 
+        Trace order does not effect the comparison because the traces are
+        sorted beforehand.
+
+        This function strictly compares the data and stats objects of each
+        trace contained by the streams. If less strict behavior is desired,
+        which may be the case for testing, consider using the
+        :func:`~obspy.core.util.testing.stream_almost_equal` function.
+
         :type other: :class:`~obspy.core.stream.Stream`
         :param other: Stream object for comparison.
         :rtype: bool

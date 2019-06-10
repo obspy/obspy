@@ -2658,7 +2658,9 @@ class StreamTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(StreamTestCase, 'test')
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(StreamTestCase, 'test'))
+    return suite
 
 
 if __name__ == '__main__':

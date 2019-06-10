@@ -2741,7 +2741,9 @@ class TraceTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(TraceTestCase, 'test')
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(TraceTestCase, 'test'))
+    return suite
 
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@ master:
  - obspy.core:
    * Fixed "==" comparison for Stream and Trace which was very slow in case of
      traces with >1e6 samples (see #2377)
+   * Added almost_equal method for Stream and Trace classes (see #2286).
    * Casting FDSN identifiers to strings upon setting in the stats dictionary
      (see #1997).
    * UTCDateTime objects will now always evaluate equal if their string
