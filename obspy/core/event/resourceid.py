@@ -21,6 +21,8 @@ from copy import deepcopy
 from uuid import uuid4
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
+from obspy.core.util.decorator import deprecated
+
 
 class _ResourceKey(object):
     """
@@ -459,27 +461,73 @@ class ResourceIdentifier(object):
             id_order[self._resource_key] = []
         id_order[self._resource_key].append(self._object_key)
 
+    @deprecated()
     def convert_id_to_quakeml_uri(self, authority_id="local"):
         """
         Converts the current ID to a valid QuakeML URI.
 
+        This method is deprecated, use :meth:`get_quakeml_id` instead.
+
         Only an invalid QuakeML ResourceIdentifier string it will be converted
         to a valid one.  Otherwise nothing will happen but after calling this
         method the user can be sure that the ID is a valid QuakeML URI.
+
         The resulting ID will be of the form
             smi:authority_id/prefix/resource_id
+
         :type authority_id: str, optional
         :param authority_id: The base url of the resulting string. Defaults to
             ``"local"``.
         """
-        self.id = self.get_quakeml_uri(authority_id=authority_id)
+        self.id = self.get_quakeml_uri_str(authority_id=authority_id)
 
+    def get_quakeml_id(self, authority_id="local"):
+        """
+        Returns a resource id with a valid QuakeML URI.
+
+        Only an invalid QuakeML ResourceIdentifier string it will be converted
+        to a valid one.  Otherwise the returned resource id will be identical
+        to the original.
+
+        The new resource id will have the same referred object as the
+        original.
+
+        The resulting ID will be of the form
+            smi:authority_id/prefix/resource_id
+
+        :type authority_id: str, optional
+        :param authority_id: The base url of the resulting string. Defaults to
+            ``"local"``.
+        :return: A new ResourceIdentifier instance with a valid quakeml uri.
+        """
+        new_id = self.get_quakeml_uri_str(authority_id=authority_id)
+        rid = ResourceIdentifier(new_id)
+        referred_obj = self.get_referred_object()
+        if referred_obj is not None:
+            rid.set_referred_object(referred_obj, warn=False,
+                                    parent=self._parent_key)
+        return rid
+
+    @deprecated()
     def get_quakeml_uri(self, authority_id="local"):
         """
-        Returns the ID as a valid QuakeML URI if possible. Does not
-        change the ID itself.
+        This method is deprecated, use :meth:`get_quakeml_uri_str` instead.
+        """
+        return self.get_quakeml_uri_str(authority_id=authority_id)
+
+    def get_quakeml_uri_str(self, authority_id="local"):
+        """
+        Returns an id with a valid QuakeML URI.
+
+        If no valid QuakeML is possible a ValueError is raised.
+
+        :type authority_id: str, optional
+        :param authority_id: The base url of the resulting string. Defaults to
+            ``"local"``.
+        :return: A new ResourceIdentifier instance with a valid quakeml uri.
+
         >>> res_id = ResourceIdentifier("some_id")
-        >>> print(res_id.get_quakeml_uri())
+        >>> print(res_id.get_quakeml_uri_str())
         smi:local/some_id
         >>> # Did not change the actual resource id.
         >>> print(res_id.id)
@@ -664,6 +712,7 @@ class ResourceIdentifier(object):
     # return the referred object, if in scope, else None.
     __call__ = get_referred_object
 
+    @deprecated()
     def regenerate_uuid(self):
         """
         Regenerates the uuid part of the ID. Does nothing for resource

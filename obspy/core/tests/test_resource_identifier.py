@@ -25,6 +25,7 @@ from obspy import UTCDateTime, read_events
 from obspy.core import event as event
 from obspy.core.event.resourceid import ResourceIdentifier, _ResourceKey
 from obspy.core.util.misc import _yield_obj_parent_attr
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.testing import (create_diverse_catalog,
                                      setup_context_testcase,
                                      WarningsCapture)
@@ -183,28 +184,28 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             "1234567890-.*()_~'/abcdefghijklmnopqrstuvwxyzABCDEFGHIKLMNOPQR"
             "STUVWXYZ0123456789-.*()_~'+?=,;&")
         res = ResourceIdentifier(res_id)
-        self.assertEqual(res_id, res.get_quakeml_uri())
+        self.assertEqual(res_id, res.get_quakeml_uri_str())
         # The id has to valid from start to end. Due to the spaces this cannot
         # automatically be converted to a correct one.
         res_id = "something_before smi:local/something  something_after"
         res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.get_quakeml_uri)
+        self.assertRaises(ValueError, res.get_quakeml_uri_str)
         # A colon is an invalid character.
         res_id = "smi:local/hello:yea"
         res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.get_quakeml_uri)
+        self.assertRaises(ValueError, res.get_quakeml_uri_str)
         # Space as well
         res_id = "smi:local/hello yea"
         res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.get_quakeml_uri)
+        self.assertRaises(ValueError, res.get_quakeml_uri_str)
         # Dots are fine
         res_id = "smi:local/hello....yea"
         res = ResourceIdentifier(res_id)
-        self.assertEqual(res_id, res.get_quakeml_uri())
+        self.assertEqual(res_id, res.get_quakeml_uri_str())
         # Hats not
         res_id = "smi:local/hello^^yea"
         res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.get_quakeml_uri)
+        self.assertRaises(ValueError, res.get_quakeml_uri_str)
 
     def test_resource_id_valid_quakemluri(self):
         """
@@ -212,7 +213,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         __init__()) gets set up with a QUAKEML conform ID.
         """
         rid = ResourceIdentifier()
-        self.assertEqual(rid.id, rid.get_quakeml_uri())
+        self.assertEqual(rid.id, rid.get_quakeml_uri_str())
 
     def test_de_referencing_when_object_goes_out_of_scope(self):
         """
@@ -263,7 +264,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         invalid_id = "http://example.org"
         rid = ResourceIdentifier(invalid_id)
         with self.assertRaises(ValueError) as e:
-            rid.get_quakeml_uri()
+            rid.get_quakeml_uri_str()
         self.assertEqual(
             e.exception.args[0],
             "The id 'http://example.org' is not a valid QuakeML resource "
@@ -658,6 +659,42 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             # But rid1 should have been bound to new_obj1 (so it no longer
             # needs to call get_object_hook to find it
             self.assertIs(rid1.get_referred_object(), new_obj1)
+
+    def test_mutative_methods_deprecation(self):
+        """
+        Because Resource ids are hashable they should be immutable. Make
+        sure any methods that mutate resource_ids are deprecated. Currently
+        there are two:
+
+        1. `convert_id_to_quakeml_uri`
+        2. `regnerate_uuid`
+        """
+        rid = ResourceIdentifier('not_a_valid_quakeml_uri')
+        with WarningsCapture() as w:
+            rid.convert_id_to_quakeml_uri()
+        self.assertGreaterEqual(len(w), 1)
+        self.assertTrue([isinstance(x, ObsPyDeprecationWarning) for x in w])
+
+        rid = ResourceIdentifier()
+        with WarningsCapture() as w:
+            rid.regenerate_uuid()
+        self.assertGreaterEqual(len(w), 1)
+        self.assertTrue([isinstance(x, ObsPyDeprecationWarning) for x in w])
+
+    def test_get_quakeml_id(self):
+        """
+        Tests for returning valid quakeml ids using the get_quakeml_id method.
+        """
+        obj = UTCDateTime('2017-09-17')
+        rid1 = ResourceIdentifier('invalid_id', referred_object=obj)
+        rid2 = rid1.get_quakeml_id(authority_id='remote')
+        # The resource ids should not be equal but should refer to the same
+        # object.
+        self.assertNotEqual(rid2, rid1)
+        self.assertIs(rid1.get_referred_object(), rid2.get_referred_object())
+        # A valid resource id should return a resource id that is equal.
+        rid3 = rid2.get_quakeml_id()
+        self.assertEqual(rid2, rid3)
 
 
 def get_instances(obj, cls=None, is_attr=None, has_attr=None):

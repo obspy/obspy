@@ -1096,7 +1096,7 @@ class Pickler(object):
 
     def _id(self, obj):
         try:
-            return obj.get_quakeml_uri()
+            return obj.get_quakeml_uri_str()
         except Exception:
             msg = ("'%s' is not a valid QuakeML URI. It will be in the final "
                    "file but note that the file will not be a valid QuakeML "

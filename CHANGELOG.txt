@@ -33,6 +33,10 @@ master:
    * Modified stream.get_gaps() to deal with overlaps correctly (see #1403)
    * Added option "label_epoch_dates" to Inventory/Network.plot_response() to
      optionally add channel epoch start/end dates to legend labels (see #2309)
+   * Deprecated the convert_id_to_quakeml_uri, regenerate_uuid, and
+     get_quakeml_uri methods of the ResourceIdentifier class (see #2303).
+   * Added get_quakeml_uri_str and get_quakeml_id methods to the
+     ResourceIdentifier class (see #2303).
  - obspy.clients.fdsn:
    * Add new `_discover_services` boolean flag to the Client, which allows the
      Client to skip the initial services query at instantiation.  This can
