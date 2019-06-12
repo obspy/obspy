@@ -35,6 +35,7 @@ from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guess_delta
 from obspy.core.util.decorator import deprecated_keywords
 from obspy.io.xseed import Parser
+from obspy.io.xseed.utils import SEEDParserException
 
 
 HTTP_ACCEPTED_DATA_METHODS = ["PUT", "POST"]
@@ -753,16 +754,24 @@ master/seishub/plugins/seismology/waveform.py
                 msg = "Wildcards in seed_id are not allowed."
                 raise ValueError(msg)
 
-        if len(station_list) > 1:
-            warnings.warn("Received more than one XSEED file. Using first.")
-
-        xml_doc = station_list[0]
-        res = self.client.station.get_resource(xml_doc['resource_name'])
-        reslist = self.client.xml_seeds.setdefault(seed_id, [])
-        if res not in reslist:
-            reslist.append(res)
-        parser = Parser(res)
-        paz = parser.get_paz(seed_id=seed_id, datetime=UTCDateTime(datetime))
+        for xml_doc in station_list:
+            res = self.client.station.get_resource(xml_doc['resource_name'])
+            reslist = self.client.xml_seeds.setdefault(seed_id, [])
+            if res not in reslist:
+                reslist.append(res)
+            parser = Parser(res)
+            try:
+                paz = parser.get_paz(seed_id=seed_id,
+                                     datetime=UTCDateTime(datetime))
+            except SEEDParserException as e:
+                not_found_msg = 'No channel found with the given SEED id:'
+                if str(e).startswith(not_found_msg):
+                    continue
+                raise
+            break
+        else:
+            msg = 'No channel found with the given SEED id: %s' % seed_id
+            raise SEEDParserException(msg)
         return paz
 
 
