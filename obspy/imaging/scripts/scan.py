@@ -186,6 +186,16 @@ def load_npz(file_, data_dict, samp_int_dict):
     # check obspy version the npz was done with
     if "__version__" in npz_dict:
         version_string = npz_dict["__version__"].item()
+        # saw some error loading a npz written on Py2 when loading on Py3 with
+        # the version string being bytes so that the following `split(".")`
+        # raises an Exception. Not sure what is going on and no time to track
+        # it down properly right now, in any case the following hack should not
+        # cause any problems and it's only used to check if a warning needs to
+        # be shown at the moment
+        try:
+            version_string = version_string.decode('ASCII')
+        except Exception:
+            pass
     else:
         version_string = None
     # npz data computed with obspy < 1.1.0 are slightly different
