@@ -998,7 +998,6 @@ class Response(ComparingObject):
                                            pz_transfer_function_type=pzt,
                                            normalization_frequency=frequency,
                                            zeros=[0. + 1j], poles=[0. + 1j])
-            print(stg1)            
             stage.append(stg1)
         response = cls(instrument_sensitivity=sensitivity,
                        response_stages=stage)
