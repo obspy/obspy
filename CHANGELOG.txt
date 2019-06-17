@@ -62,6 +62,8 @@ master:
  - obspy.imaging:
    * obspy-scan can now be used with wildcarded SEED IDs when specifying what
      to plot after scanning data (see #2227)
+   * fix a problem in Scanner when loading npz on Python3 that was written on
+     Python2 (see #2413)
  - obspy.io.mseed:
    * The recordanalyzer can now detect calibration blockettes 300, 310,
      and 320 (see #2370).
