@@ -37,7 +37,7 @@ from distutils.command.install import install
 from distutils.errors import DistutilsSetupError
 from distutils.util import change_root
 
-from setuptools import Extension, setup
+from setuptools import Extension, find_packages, setup
 
 
 # The minimum python version which can be used to run ObsPy
@@ -505,18 +505,6 @@ ENTRY_POINTS = {
         'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
         ],
     }
-
-
-def find_packages():
-    """
-    Simple function to find all modules under the current folder.
-    """
-    modules = []
-    for dirpath, _, filenames in os.walk(os.path.join(SETUP_DIRECTORY,
-                                                      "obspy")):
-        if "__init__.py" in filenames:
-            modules.append(os.path.relpath(dirpath, SETUP_DIRECTORY))
-    return [_i.replace(os.sep, ".") for _i in modules]
 
 
 # monkey patches for MS Visual Studio
