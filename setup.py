@@ -20,23 +20,7 @@ For more information visit https://www.obspy.org.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-# Importing setuptools monkeypatches some of distutils commands so things like
-# 'python setup.py develop' work. Wrap in try/except so it is not an actual
-# dependency. Inplace installation with pip works also without importing
-# setuptools.
-try:
-    import setuptools  # @UnusedImport # NOQA
-except ImportError:
-    pass
 
-try:
-    import numpy  # @UnusedImport # NOQA
-except ImportError:
-    msg = ("No module named numpy. "
-           "Please install numpy first, it is needed before installing ObsPy.")
-    raise ImportError(msg)
-
-import fnmatch
 import glob
 import inspect
 import os
@@ -44,14 +28,16 @@ import platform
 import shutil
 import subprocess
 import sys
-from distutils.util import change_root
-from distutils.errors import DistutilsSetupError
 
-from numpy.distutils.core import setup
-from numpy.distutils.ccompiler import get_default_compiler
-from numpy.distutils.command.build import build
-from numpy.distutils.command.install import install
-from numpy.distutils.misc_util import Configuration
+import setuptools
+
+from distutils.ccompiler import get_default_compiler
+from distutils.command.build import build
+from distutils.command.install import install
+from distutils.errors import DistutilsSetupError
+from distutils.util import change_root
+
+from setuptools import Extension, setup
 
 
 # The minimum python version which can be used to run ObsPy
@@ -550,7 +536,7 @@ def export_symbols(*path):
 
 # adds --with-system-libs command-line option if possible
 def add_features():
-    if 'setuptools' not in sys.modules or not hasattr(setuptools, 'Feature'):
+    if not hasattr(setuptools, 'Feature'):
         return {}
 
     class ExternalLibFeature(setuptools.Feature):
@@ -583,11 +569,11 @@ def add_features():
     }
 
 
-def configuration(parent_package="", top_path=None):
+def get_extensions():
     """
     Config function mainly used to compile C code.
     """
-    config = Configuration("", parent_package, top_path)
+    extensions = []
 
     # GSE2
     path = os.path.join("obspy", "io", "gse2", "src", "GSE_UTI")
@@ -597,8 +583,9 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'gse_functions.def')
-    config.add_extension(_get_lib_name("gse2", add_extension_suffix=False),
-                         files, **kwargs)
+    extensions.append(
+        Extension(_get_lib_name("gse2", add_extension_suffix=False),
+                  files, **kwargs))
 
     # LIBMSEED
     path = os.path.join("obspy", "io", "mseed", "src")
@@ -617,8 +604,9 @@ def configuration(parent_package="", top_path=None):
             export_symbols(path, 'obspy-readbuffer.def')
     if EXTERNAL_LIBMSEED:
         kwargs['libraries'] = ['mseed']
-    config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
-                         files, **kwargs)
+    extensions.append(
+        Extension(_get_lib_name("mseed", add_extension_suffix=False),
+                  files, **kwargs))
 
     # SEGY
     path = os.path.join("obspy", "io", "segy", "src")
@@ -628,8 +616,9 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsegy.def')
-    config.add_extension(_get_lib_name("segy", add_extension_suffix=False),
-                         files, **kwargs)
+    extensions.append(
+        Extension(_get_lib_name("segy", add_extension_suffix=False),
+                  files, **kwargs))
 
     # SIGNAL
     path = os.path.join("obspy", "signal", "src")
@@ -639,8 +628,9 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsignal.def')
-    config.add_extension(_get_lib_name("signal", add_extension_suffix=False),
-                         files, **kwargs)
+    extensions.append(
+        Extension(_get_lib_name("signal", add_extension_suffix=False),
+                  files, **kwargs))
 
     # EVALRESP
     path = os.path.join("obspy", "signal", "src")
@@ -657,8 +647,9 @@ def configuration(parent_package="", top_path=None):
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
     if EXTERNAL_EVALRESP:
         kwargs['libraries'] = ['evresp']
-    config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
-                         files, **kwargs)
+    extensions.append(
+        Extension(_get_lib_name("evresp", add_extension_suffix=False),
+                  files, **kwargs))
 
     # TAU
     path = os.path.join("obspy", "taup", "src")
@@ -668,44 +659,11 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libtau.def')
-    config.add_extension(_get_lib_name("tau", add_extension_suffix=False),
-                         files, **kwargs)
+    extensions.append(
+        Extension(_get_lib_name("tau", add_extension_suffix=False),
+                  files, **kwargs))
 
-    add_data_files(config)
-
-    return config
-
-
-def add_data_files(config):
-    """
-    Recursively include all non python files
-    """
-    # python files are included per default, we only include data files
-    # here
-    EXCLUDE_WILDCARDS = ['*.py', '*.pyc', '*.pyo', '*.pdf', '.git*']
-    EXCLUDE_DIRS = ['src', '__pycache__']
-    common_prefix = SETUP_DIRECTORY + os.path.sep
-    for root, dirs, files in os.walk(os.path.join(SETUP_DIRECTORY, 'obspy')):
-        root = root.replace(common_prefix, '')
-        for name in files:
-            if any(fnmatch.fnmatch(name, w) for w in EXCLUDE_WILDCARDS):
-                continue
-            config.add_data_files(os.path.join(root, name))
-        for folder in EXCLUDE_DIRS:
-            if folder in dirs:
-                dirs.remove(folder)
-
-    # Force include the contents of some directories.
-    FORCE_INCLUDE_DIRS = [
-        os.path.join(SETUP_DIRECTORY, 'obspy', 'io', 'mseed', 'src',
-                     'libmseed', 'test')]
-
-    for folder in FORCE_INCLUDE_DIRS:
-        for root, _, files in os.walk(folder):
-            for filename in files:
-                config.add_data_files(
-                    os.path.relpath(os.path.join(root, filename),
-                                    SETUP_DIRECTORY))
+    return extensions
 
 
 # Auto-generate man pages from --help output
@@ -792,6 +750,32 @@ def setupPackage():
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
         packages=find_packages(),
+        include_package_data=True,
+        exclude_package_data={
+            'obspy.io.css': ['contrib/*'],
+            # NOTE: If the libmseed test data wasn't used in our tests, we
+            # could just ignore src/* everywhere.
+            'obspy.io.gse2': ['src/*'],
+            'obspy.io.mseed': [
+                # Only keep src/libmseed/test/* except for the C files.
+                'src/*.c',
+                'src/*.def',
+                'src/libmseed/.clang-format',
+                'src/libmseed/ChangeLog',
+                'src/libmseed/Makefile*',
+                'src/libmseed/README.byteorder',
+                'src/libmseed/doc/*',
+                'src/libmseed/example/*',
+                'src/libmseed/test/Makefile',
+                'src/libmseed/*.h',
+                'src/libmseed/*.in',
+                'src/libmseed/*.map',
+                'src/libmseed/*.md',
+            ],
+            'obspy.io.segy': ['src/*'],
+            'obspy.signal': ['src/*'],
+            'obspy.taup': ['src/*'],
+        },
         namespace_packages=[],
         zip_safe=False,
         python_requires=f'>={MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}',
@@ -802,14 +786,14 @@ def setupPackage():
         # this is needed for "easy_install obspy==dev"
         download_url=("https://github.com/obspy/obspy/zipball/master"
                       "#egg=obspy=dev"),
-        include_package_data=True,
         entry_points=ENTRY_POINTS,
+        ext_modules=get_extensions(),
         ext_package='obspy.lib',
         cmdclass={
             'build_man': Help2ManBuild,
             'install_man': Help2ManInstall
         },
-        configuration=configuration)
+    )
 
 
 if __name__ == '__main__':
