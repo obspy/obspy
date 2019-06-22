@@ -40,8 +40,10 @@ import fnmatch
 import glob
 import inspect
 import os
-import sys
 import platform
+import shutil
+import subprocess
+import sys
 from distutils.util import change_root
 from distutils.errors import DistutilsSetupError
 
@@ -49,7 +51,6 @@ from numpy.distutils.core import setup
 from numpy.distutils.ccompiler import get_default_compiler
 from numpy.distutils.command.build import build
 from numpy.distutils.command.install import install
-from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
 
 
@@ -713,8 +714,8 @@ class Help2ManBuild(build):
 
     def finalize_options(self):
         build.finalize_options(self)
-        self.help2man = find_executable('help2man')
-        if not self.help2man:
+        self.help2man = shutil.which('help2man')
+        if self.help2man is None:
             raise DistutilsSetupError('Building man pages requires help2man.')
 
     def run(self):
@@ -729,11 +730,11 @@ class Help2ManBuild(build):
 
             output = os.path.join(mandir, ep.name + '.1')
             print('Generating %s ...' % (output))
-            exec_command([self.help2man,
-                          '--no-info', '--no-discard-stderr',
-                          '--output', output,
-                          '"%s -m %s"' % (sys.executable,
-                                          ep.module_name)])
+            subprocess.call([self.help2man,
+                             '--no-info', '--no-discard-stderr',
+                             '--output', output,
+                             '"%s -m %s"' % (sys.executable,
+                                             ep.module_name)])
 
 
 class Help2ManInstall(install):
@@ -814,7 +815,6 @@ def setupPackage():
 if __name__ == '__main__':
     # clean --all does not remove extensions automatically
     if 'clean' in sys.argv and '--all' in sys.argv:
-        import shutil
         # delete complete build directory
         path = os.path.join(SETUP_DIRECTORY, 'build')
         try:
