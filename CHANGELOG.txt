@@ -1,5 +1,6 @@
 master:
  - obspy.core:
+   * Added a flat response class method (see #2408)
    * Fixed "==" comparison for Stream and Trace which was very slow in case of
      traces with >1e6 samples (see #2377)
    * Added almost_equal method for Stream and Trace classes (see #2286).

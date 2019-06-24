@@ -961,6 +961,51 @@ class Response(ComparingObject):
 
         return sampling_rates
 
+    @classmethod
+    def get_flat_response(cls, sensitivity=1., frequency=1.,
+                          input_units="M/S", output_units="M/S",
+                          include_pole_zero_stage=False):
+
+        """
+        Makes a flat response object.
+
+        :type sensitivity: float, optional
+        :param sensitivity : The sensitivity of the response, defaults to 1.
+        :type frequency: float, optional
+        :param frequency: The frequency where the sensitivity is stated,
+            defaults to 1 Hz.
+        :type input_units: string, optional
+        :param input_units: The input units going into the response object,
+            default units are "M/S"
+        :type output_units: string, optional
+        :param input_units: The output units going out of the response object,
+            default units are "M/S"
+        :type include_pole_zero_stage: bool, optional
+        :param include_poles_zero_stage: This option allows for a pole/zero
+            stage to be include. If a pole zero stage is included it adds
+            one pole and one zero both with the value of 0 + 1j.  This allows
+            for the user to apply a deconvolution routine.  E.g. it allows
+            the user to include the tapering, detrendings, and filtering
+            during the response removal.
+        """
+        sensitivity = InstrumentSensitivity(sensitivity, frequency,
+                                            input_units, output_units)
+        stage = []
+        if include_pole_zero_stage:
+            pzt = "laplace hz"
+            stg1 = PolesZerosResponseStage(stage_sequence_number=1,
+                                           stage_gain=sensitivity,
+                                           stage_gain_frequency=frequency,
+                                           input_units=input_units,
+                                           output_units=output_units,
+                                           pz_transfer_function_type=pzt,
+                                           normalization_frequency=frequency,
+                                           zeros=[0. + 1j], poles=[0. + 1j])
+            stage.append(stg1)
+        response = cls(instrument_sensitivity=sensitivity,
+                       response_stages=stage)
+        return response
+
     def recalculate_overall_sensitivity(self, frequency=None):
         """
         Recalculates the overall sensitivity.

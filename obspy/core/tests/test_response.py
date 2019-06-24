@@ -25,12 +25,13 @@ from matplotlib import rcParams
 
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
-    _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage)
+    _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage,
+    Response)
 from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
 from obspy.core.util.testing import ImageComparison
-from obspy.signal.invsim import evalresp
+from obspy.signal.invsim import evalresp, simulate_seismometer
 from obspy.io.xseed import Parser
 
 
@@ -482,6 +483,46 @@ class ResponseTestCase(unittest.TestCase):
             [2.411908e+05 + 2.283852e+04j,
              2.445572e+05 - 2.480459e+03j,
              -2.455459e-01 + 4.888214e-02j], rtol=1e-6)
+
+    def test_get_flat_response_without_poles_and_zeros(self):
+        """
+        Tests the get_flat_response calss method without poles and zeros.
+        """
+
+        resp = Response.get_flat_response()
+        self.assertEqual(resp.instrument_sensitivity.value, 1.)
+        self.assertEqual(resp.instrument_sensitivity.frequency, 1.)
+        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
+        self.assertEqual(resp.instrument_sensitivity.output_units, "M/S")
+
+    def test_get_flat_response_with_poles_and_zeros(self):
+        """
+        Tests the get_flat_response calss method with poles and zeros.
+        """
+
+        resp = Response.get_flat_response(include_pole_zero_stage=True)
+        self.assertEqual(resp.instrument_sensitivity.value, 1.)
+        self.assertEqual(resp.instrument_sensitivity.frequency, 1.)
+        self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
+        self.assertEqual(resp.instrument_sensitivity.output_units, "M/S")
+        self.assertEqual(resp.response_stages[0].poles, [0+1j])
+        self.assertEqual(resp.response_stages[0].zeros, [0+1j])
+        self.assertEqual(resp.response_stages[0].normalization_factor, 1.)
+        self.assertEqual(resp.response_stages[0].normalization_frequency, 1.)
+
+        # Test that we are able to not change some numbers
+        pzresp = resp.get_paz()
+        paz = {}
+        paz['poles'] = pzresp.poles
+        paz['zeros'] = pzresp.zeros
+        paz['gain'] = pzresp.normalization_factor
+        paz['sensitivity'] = resp.instrument_sensitivity.value
+
+        data = np.arange(9, dtype=np.float64)
+        result = simulate_seismometer(data, 1, paz_remove=paz,
+                                      water_level=False, taper=False,
+                                      zero_mean=False, pitsasim=False)
+        np.testing.assert_allclose(data, result)
 
     def test_recalculate_overall_sensitivity(self):
         """
