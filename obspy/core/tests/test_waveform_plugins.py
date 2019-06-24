@@ -129,6 +129,19 @@ class WaveformPluginsTestCase(unittest.TestCase):
                             st = read(temp, format=format)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
+                            # BytesIO with an offset (additional data in front
+                            # but file pointer at right position in file), with
+                            # and without autodetection
+                            for autodetect in (format, None):
+                                temp.seek(0)
+                                temp2 = io.BytesIO()
+                                dummy_bytes = b'123456'
+                                temp2.write(dummy_bytes)
+                                temp2.write(temp.read())
+                                temp2.seek(len(dummy_bytes))
+                                st = read(outfile, format=autodetect)
+                                self.assertEqual(len(st), 1)
+                                self.assertEqual(st[0].stats._format, format)
                         # Q files consist of two files - deleting additional
                         # file
                         if format == 'Q':
