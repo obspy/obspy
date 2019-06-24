@@ -31,7 +31,7 @@ from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
 from obspy.core.util.testing import ImageComparison
-from obspy.signal.invsim import evalresp
+from obspy.signal.invsim import evalresp, simulate_seismometer
 from obspy.io.xseed import Parser
 
 
@@ -509,6 +509,20 @@ class ResponseTestCase(unittest.TestCase):
         self.assertEqual(resp.response_stages[0].zeros, [0+1j])
         self.assertEqual(resp.response_stages[0].normalization_factor, 1.)
         self.assertEqual(resp.response_stages[0].normalization_frequency, 1.)
+
+        # Test that we are able to not change some numbers
+        pzresp = resp.get_paz()
+        paz = {}
+        paz['poles'] = pzresp.poles
+        paz['zeros'] = pzresp.zeros
+        paz['gain'] = pzresp.normalization_factor
+        paz['sensitivity'] = resp.instrument_sensitivity.value
+
+        data = np.arange(9, dtype=np.float64)
+        result = simulate_seismometer(data, 1, paz_remove=paz,
+                                      water_level=False, taper=False,
+                                      zero_mean=False, pitsasim=False)
+        np.testing.assert_allclose(data, result)
 
     def test_recalculate_overall_sensitivity(self):
         """

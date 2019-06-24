@@ -983,7 +983,10 @@ class Response(ComparingObject):
         :type include_pole_zero_stage: bool, optional
         :param include_poles_zero_stage: This option allows for a pole/zero
             stage to be include. If a pole zero stage is included it adds
-            one pole and one zero both with the value of 0 + 1j.
+            one pole and one zero both with the value of 0 + 1j.  This allows
+            for the user to apply a deconvolution routine.  E.g. it allows
+            the user to include the tapering, detrendings, and filtering
+            during the response removal.
         """
         sensitivity = InstrumentSensitivity(sensitivity, frequency,
                                             input_units, output_units)
