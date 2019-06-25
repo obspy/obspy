@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 The gse2.bulletin test suite.
-
 :author:
     EOST (École et Observatoire des Sciences de la Terre)
 :copyright:
@@ -316,6 +315,23 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(sta_mag_2.method_id, None)
         self.assertNotEqual(sta_mag_2.creation_info, None)
         self.assertEqual(len(sta_mag_2.comments), 0)
+        # Test with a file containig Mag2 but not Mag1
+        filename = os.path.join(self.path, 'event.txt')
+        catalog = _read_gse2(filename)
+        station_magnitudes = catalog[0].station_magnitudes
+        self.assertEqual(len(station_magnitudes), 5)
+        sta_mag_3 = station_magnitude[0]
+        self.assertEqual(sta_mag_3.resource_id.id,
+                         'quakeml:ldg/magnitude/station/6867444/1')
+        self.assertEqual(sta_mag_3.origin_id.id, 'quakeml:ldg/origin/375628')
+        self.assertEqual(sta_mag_3.mag, 1.7)
+        self.assertEqual(sta_mag_3.station_magnitude_type, 'Md')
+        self.assertEqual(sta_mag_3.amplitude_id.id,
+                         'quakeml:ldg/amplitude/6867444')
+        self.assertEqual(sta_mag_3.method_id, None)
+        self.assertEqual(sta_mag_3.waveform_id, None)
+        self.assertNotEqual(sta_mag_3.creation_info, None)
+        self.assertEqual(len(sta_mag_3.comments), 0)
 
         waveform_2 = sta_mag_2.waveform_id
         self.assertEqual(waveform_2.network_code, 'XX')
@@ -332,7 +348,9 @@ class BulletinTestCase(unittest.TestCase):
         catalog = _read_gse2(filename)
         self.assertEqual(len(catalog), 1)
         amplitudes = catalog[0].amplitudes
-        self.assertEqual(len(amplitudes), 6)
+        # test a new feature: don't store an object amplitude if the magnitude
+        # type is not defined
+        self.assertEqual(len(amplitudes), 4)
         # Test first amplitude
         amplitude_1 = amplitudes[0]
         self.assertEqual(
@@ -363,20 +381,20 @@ class BulletinTestCase(unittest.TestCase):
         # Test second amplitude
         amplitude_2 = amplitudes[1]
         self.assertEqual(
-            amplitude_2.resource_id, 'smi:local/amplitude/3586513')
-        self.assertEqual(amplitude_2.generic_amplitude, 2.9)
+            amplitude_2.resource_id, 'smi:local/amplitude/3586555')
+        self.assertEqual(amplitude_2.generic_amplitude, 4.5)
         self.assertEqual(amplitude_2.type, None)
         self.assertEqual(amplitude_2.category, None)
         self.assertEqual(amplitude_2.unit, None)
         self.assertEqual(amplitude_2.method_id, None)
-        self.assertEqual(amplitude_2.period, 0.6)
-        self.assertEqual(amplitude_2.snr, 4.9)
+        self.assertEqual(amplitude_2.period, 0.8)
+        self.assertEqual(amplitude_2.snr, 7.3)
         self.assertEqual(amplitude_2.time_window, None)
-        self.assertEqual(amplitude_2.pick_id, 'smi:local/pick/3586513')
+        self.assertEqual(amplitude_2.pick_id, 'smi:local/pick/3586555')
         # WaveformStreamId
         waveform_2 = amplitude_2.waveform_id
         self.assertEqual(waveform_2.network_code, 'XX')
-        self.assertEqual(waveform_2.station_code, 'GERES')
+        self.assertEqual(waveform_2.station_code, 'FINES')
         self.assertEqual(waveform_2.channel_code, None)
         self.assertEqual(waveform_2.location_code, None)
         self.assertEqual(waveform_2.resource_uri, None)
