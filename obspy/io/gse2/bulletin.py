@@ -905,7 +905,6 @@ class Unpickler(object):
                 public_id = "amplitude/%s" % line_id
                 amplitude.resource_id = self._get_res_id(public_id)
                 event.amplitudes.append(amplitude)
-                
                 for i in [0, 1]:
                     sta_mag = StationMagnitude()
                     sta_mag.creation_info = self._get_creation_info()
