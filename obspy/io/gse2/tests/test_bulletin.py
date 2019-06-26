@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 The gse2.bulletin test suite.
+
 :author:
     EOST (École et Observatoire des Sciences de la Terre)
 :copyright:
@@ -367,7 +368,7 @@ class BulletinTestCase(unittest.TestCase):
         amplitudes = catalog[0].amplitudes
         # test a new feature: don't store an object amplitude if the magnitude
         # type is not defined
-        self.assertEqual(len(amplitudes), 4)
+        self.assertEqual(len(amplitudes), 6)
         # Test first amplitude
         amplitude_1 = amplitudes[0]
         self.assertEqual(
@@ -398,26 +399,26 @@ class BulletinTestCase(unittest.TestCase):
         # Test second amplitude
         amplitude_2 = amplitudes[1]
         self.assertEqual(
-            amplitude_2.resource_id, 'smi:local/amplitude/3586555')
-        self.assertEqual(amplitude_2.generic_amplitude, 4.5)
+            amplitude_2.resource_id, 'smi:local/amplitude/3586513')
+        self.assertEqual(amplitude_2.generic_amplitude, 2.9)
         self.assertEqual(amplitude_2.type, None)
         self.assertEqual(amplitude_2.category, None)
         self.assertEqual(amplitude_2.unit, None)
         self.assertEqual(amplitude_2.method_id, None)
-        self.assertEqual(amplitude_2.period, 0.8)
-        self.assertEqual(amplitude_2.snr, 7.3)
+        self.assertEqual(amplitude_2.period, 0.6)
+        self.assertEqual(amplitude_2.snr, 4.9)
         self.assertEqual(amplitude_2.time_window, None)
-        self.assertEqual(amplitude_2.pick_id, 'smi:local/pick/3586555')
+        self.assertEqual(amplitude_2.pick_id, 'smi:local/pick/3586513')
         # WaveformStreamId
         waveform_2 = amplitude_2.waveform_id
         self.assertEqual(waveform_2.network_code, 'XX')
-        self.assertEqual(waveform_2.station_code, 'FINES')
+        self.assertEqual(waveform_2.station_code, 'GERES')
         self.assertEqual(waveform_2.channel_code, None)
         self.assertEqual(waveform_2.location_code, None)
         self.assertEqual(waveform_2.resource_uri, None)
         self.assertEqual(amplitude_2.filter_id, None)
         self.assertEqual(amplitude_2.scaling_time, None)
-        self.assertEqual(amplitude_2.magnitude_hint, 'mb')
+        self.assertEqual(amplitude_2.magnitude_hint, None)
         self.assertEqual(amplitude_2.evaluation_mode, None)
         self.assertEqual(amplitude_2.evaluation_status, None)
         self.assertNotEqual(amplitude_2.creation_info, None)
@@ -439,7 +440,7 @@ class BulletinTestCase(unittest.TestCase):
             'GREECE-ALBANIA BORDER REGION')
         self.assertEqual(len(event_1.comments), 1)
         self.assertEqual(len(event_1.picks), 9)
-        self.assertEqual(len(event_1.amplitudes), 4)
+        self.assertEqual(len(event_1.amplitudes), 6)
         self.assertEqual(len(event_1.origins), 1)
         self.assertEqual(len(event_1.magnitudes), 2)
         self.assertEqual(len(event_1.station_magnitudes), 4)
@@ -452,7 +453,7 @@ class BulletinTestCase(unittest.TestCase):
             'VANCOUVER ISLAND REGION')
         self.assertEqual(len(event_2.comments), 1)
         self.assertEqual(len(event_2.picks), 7)
-        self.assertEqual(len(event_2.amplitudes), 2)
+        self.assertEqual(len(event_2.amplitudes), 5)
         self.assertEqual(len(event_2.origins), 1)
         self.assertEqual(len(event_2.magnitudes), 1)
         self.assertEqual(len(event_2.station_magnitudes), 2)
@@ -562,7 +563,7 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(
             sta_mag.resource_id, 'quakeml:idc/magnitude/station/3586432/0')
         # Test Amplitude ResourceIdentifier
-        self.assertEqual(len(event.amplitudes), 4)
+        self.assertEqual(len(event.amplitudes), 6)
         amplitude = event.amplitudes[0]
         self.assertEqual(
             amplitude.resource_id, 'quakeml:idc/amplitude/3586432')
@@ -613,7 +614,7 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(len(event.picks), 9)
         pick = event.picks[0]
         self.assertEqual(pick.phase_hint, 'Pg')
-        self.assertEqual(len(event.amplitudes), 3)
+        self.assertEqual(len(event.amplitudes), 4)
         amplitude = event.amplitudes[0]
         self.assertEqual(amplitude.generic_amplitude, 2.9)
 
@@ -718,7 +719,7 @@ class BulletinTestCase(unittest.TestCase):
             'GREECE-ALBANIA BORDER REGION')
         self.assertEqual(len(event_1.comments), 1)
         self.assertEqual(len(event_1.picks), 9)
-        self.assertEqual(len(event_1.amplitudes), 4)
+        self.assertEqual(len(event_1.amplitudes), 6)
         self.assertEqual(len(event_1.origins), 1)
         self.assertEqual(len(event_1.magnitudes), 2)
         self.assertEqual(len(event_1.station_magnitudes), 4)
@@ -731,7 +732,7 @@ class BulletinTestCase(unittest.TestCase):
             'VANCOUVER ISLAND REGION')
         self.assertEqual(len(event_2.comments), 1)
         self.assertEqual(len(event_2.picks), 7)
-        self.assertEqual(len(event_2.amplitudes), 2)
+        self.assertEqual(len(event_2.amplitudes), 5)
         self.assertEqual(len(event_2.origins), 1)
         self.assertEqual(len(event_2.magnitudes), 1)
         self.assertEqual(len(event_2.station_magnitudes), 2)
