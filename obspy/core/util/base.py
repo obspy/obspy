@@ -100,6 +100,7 @@ class NamedTemporaryFile(io.BufferedIOBase):
     >>> os.path.exists(tf.name)
     False
     """
+
     def __init__(self, dir=None, suffix='.tmp', prefix='obspy-'):
         fd, self.name = tempfile.mkstemp(dir=dir, prefix=prefix, suffix=suffix)
         self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
@@ -520,7 +521,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
         module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
         ep_list = [ep.dist.key, "obspy.plugin.%s.%s" % (group, name), method]
         entry_info = str(get_entry_info(*ep_list))
-        func_str = ':func:`%s`' % entry_info.split(' = ')[1].replace(':','.')
+        func_str = ':func:`%s`' % entry_info.split(' = ')[1].replace(':', '.')
         mod_list.append((name, module_short, func_str))
 
     mod_list = sorted(mod_list)
@@ -549,6 +550,7 @@ class ComparingObject(object):
     """
     Simple base class that implements == and != based on self.__dict__
     """
+
     def __eq__(self, other):
         return (isinstance(other, self.__class__)
                 and self.__dict__ == other.__dict__)
