@@ -29,7 +29,7 @@ import numpy as np
 import pkg_resources
 import requests
 from future.utils import native_str
-from pkg_resources import iter_entry_points
+from pkg_resources import get_entry_info, iter_entry_points
 
 from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 
@@ -519,8 +519,8 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     for name, ep in eps.items():
         module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
         ep_list = [ep.dist.key, "obspy.plugin.%s.%s" % (group, name), method]
-        func = buffered_load_entry_point(*ep_list)
-        func_str = ':func:`%s`' % ".".join((ep.module_name, func.__name__))
+        entry_info = str(get_entry_info(*ep_list))
+        func_str = ':func:`%s`' % entry_info.split(' = ')[1].replace(':','.')
         mod_list.append((name, module_short, func_str))
 
     mod_list = sorted(mod_list)
