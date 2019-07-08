@@ -546,6 +546,19 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     return ret
 
 
+def _add_format_plugin_table(func, group, method, numspaces=4):
+    """
+    A function to populate the docstring of func with its plugin table.
+    """
+    if '%s' in func.__doc__:
+        if PY2 and method == "write":
+            func.im_func.func_doc = func.__doc__ % make_format_plugin_table(
+                group, method, numspaces=numspaces)
+        else:
+            func.__doc__ = func.__doc__ % make_format_plugin_table(
+                group, method, numspaces=numspaces)
+
+
 class ComparingObject(object):
     """
     Simple base class that implements == and != based on self.__dict__
