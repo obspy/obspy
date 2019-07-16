@@ -222,6 +222,10 @@ class PPSD(object):
         NPZ_STORE_KEYS_LIST_TYPES +
         NPZ_STORE_KEYS_SIMPLE_TYPES +
         NPZ_STORE_KEYS_VERSION_NUMBERS)
+    # A mapping of values for storing info in the NPZ file. This is needed
+    # because some types are not loadable without allowing pickle (#2409).
+    NPZ_SIMPLE_TYPE_MAP = {None: ''}
+    NPZ_SIMPLE_TYPE_MAP_R = {v: i for i, v in NPZ_SIMPLE_TYPE_MAP.items()}
 
     def __init__(self, stats, metadata, skip_on_gaps=False,
                  db_bins=(-200, -50, 1.), ppsd_length=3600.0, overlap=0.5,
@@ -1277,8 +1281,11 @@ class PPSD(object):
         out = {}
         for key in self.NPZ_STORE_KEYS:
             value = getattr(self, key)
-            # All None values need to be replaced with empty strings (#2409).
-            out[key] = value if value is not None else ''
+            # Some values need to be replaced to allow non-pickle
+            # serialization (#2409).
+            if key in self.NPZ_STORE_KEYS_SIMPLE_TYPES:
+                value = self.NPZ_SIMPLE_TYPE_MAP.get(value, value)
+            out[key] = value
         np.savez_compressed(filename, **out)
 
     @staticmethod
@@ -1319,8 +1326,7 @@ class PPSD(object):
                 elif key in (ppsd.NPZ_STORE_KEYS_SIMPLE_TYPES +
                              ppsd.NPZ_STORE_KEYS_VERSION_NUMBERS):
                     data_ = data_.item()
-                    if data_ == '':  # Convert empty str back to None
-                        data_ = None
+                    data_ = ppsd.NPZ_SIMPLE_TYPE_MAP_R.get(data_, data_)
                 # convert floating point POSIX second timestamps from older npz
                 # files
                 if (key in ppsd.NPZ_STORE_KEYS_LIST_TYPES and
@@ -1375,8 +1381,8 @@ class PPSD(object):
             _check_npz_ppsd_version(self, data)
             # check if all metadata agree
             for key in self.NPZ_STORE_KEYS_SIMPLE_TYPES:
-                value = data[key].item()
-                value = None if value == '' else value
+                value_ = data[key].item()
+                value = self.NPZ_SIMPLE_TYPE_MAP_R.get(value_, value_)
                 if getattr(self, key) != value:
                     msg = ("Mismatch in '%s' attribute.\n\tCurrent:\n\t%s\n\t"
                            "Loaded:\n\t%s")
