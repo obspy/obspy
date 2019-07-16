@@ -31,7 +31,7 @@ from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
 from obspy.core.util.testing import ImageComparison
-from obspy.signal.invsim import evalresp, simulate_seismometer
+from obspy.signal.invsim import evalresp
 from obspy.io.xseed import Parser
 
 
@@ -495,18 +495,24 @@ class ResponseTestCase(unittest.TestCase):
         self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
         self.assertEqual(resp.instrument_sensitivity.output_units, "M/S")
 
+        frequencies = [0.1, 0.01, 0.001]
+        result = resp.get_evalresp_response_for_frequencies(
+                    frequencies=frequencies, output='VEL')
+        values = [1. + 0.j]*3
+        np.testing.assert_allclose(values, result)
+
     def test_get_flat_response_with_poles_and_zeros(self):
         """
         Tests the get_flat_response calss method with poles and zeros.
         """
 
-        resp = Response.get_flat_response(include_pole_zero_stage=True)
+        resp = Response.get_flat_response(include_pole_zero_at_zero=True)
         self.assertEqual(resp.instrument_sensitivity.value, 1.)
         self.assertEqual(resp.instrument_sensitivity.frequency, 1.)
         self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
         self.assertEqual(resp.instrument_sensitivity.output_units, "M/S")
-        self.assertEqual(resp.response_stages[0].poles, [0+1j])
-        self.assertEqual(resp.response_stages[0].zeros, [0+1j])
+        self.assertEqual(resp.response_stages[0].poles, [0.+0.j])
+        self.assertEqual(resp.response_stages[0].zeros, [0.+0.j])
         self.assertEqual(resp.response_stages[0].normalization_factor, 1.)
         self.assertEqual(resp.response_stages[0].normalization_frequency, 1.)
 
@@ -518,11 +524,11 @@ class ResponseTestCase(unittest.TestCase):
         paz['gain'] = pzresp.normalization_factor
         paz['sensitivity'] = resp.instrument_sensitivity.value
 
-        data = np.arange(9, dtype=np.float64)
-        result = simulate_seismometer(data, 1, paz_remove=paz,
-                                      water_level=False, taper=False,
-                                      zero_mean=False, pitsasim=False)
-        np.testing.assert_allclose(data, result)
+        frequencies = [0.1, 0.01, 0.001]
+        result = resp.get_evalresp_response_for_frequencies(
+                    frequencies=frequencies, output='VEL')
+        values = [1. + 0.j]*3
+        np.testing.assert_allclose(values, result)
 
     def test_recalculate_overall_sensitivity(self):
         """

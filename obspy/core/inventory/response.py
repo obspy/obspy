@@ -964,7 +964,7 @@ class Response(ComparingObject):
     @classmethod
     def get_flat_response(cls, sensitivity=1., frequency=1.,
                           input_units="M/S", output_units="M/S",
-                          include_pole_zero_stage=False):
+                          include_pole_zero_at_zero=False):
 
         """
         Makes a flat response object.
@@ -981,28 +981,34 @@ class Response(ComparingObject):
         :param input_units: The output units going out of the response object,
             default units are "M/S"
         :type include_pole_zero_stage: bool, optional
-        :param include_poles_zero_stage: This option allows for a pole/zero
+        :param include_pole_zero_at_zero: This option allows for a pole/zero
             stage to be include. If a pole zero stage is included it adds
-            one pole and one zero both with the value of 0 + 1j.  This allows
+            one pole and one zero both with the value of 0 + 0j.  This allows
             for the user to apply a deconvolution routine.  E.g. it allows
             the user to include the tapering, detrendings, and filtering
             during the response removal.
         """
-        sensitivity = InstrumentSensitivity(sensitivity, frequency,
-                                            input_units, output_units)
+        instrument_sensitivity = InstrumentSensitivity(sensitivity,
+                                                       frequency,
+                                                       input_units,
+                                                       output_units)
         stage = []
-        if include_pole_zero_stage:
-            pzt = "laplace hz"
-            stg1 = PolesZerosResponseStage(stage_sequence_number=1,
-                                           stage_gain=sensitivity,
-                                           stage_gain_frequency=frequency,
-                                           input_units=input_units,
-                                           output_units=output_units,
-                                           pz_transfer_function_type=pzt,
-                                           normalization_frequency=frequency,
-                                           zeros=[0. + 1j], poles=[0. + 1j])
-            stage.append(stg1)
-        response = cls(instrument_sensitivity=sensitivity,
+        pzt = "laplace hz"
+        zeros = []
+        poles = []
+        if include_pole_zero_at_zero:
+            zeros.append(0. + 0.j)
+            poles.append(0. + 0.j)
+        stg1 = PolesZerosResponseStage(stage_sequence_number=1,
+                                       stage_gain=sensitivity,
+                                       stage_gain_frequency=frequency,
+                                       input_units=input_units,
+                                       output_units=output_units,
+                                       pz_transfer_function_type=pzt,
+                                       normalization_frequency=frequency,
+                                       zeros=zeros, poles=poles)
+        stage.append(stg1)
+        response = cls(instrument_sensitivity=instrument_sensitivity,
                        response_stages=stage)
         return response
 
