@@ -85,7 +85,6 @@ install:
   - conda info -a
   - |
       if [[ "$MINIMUM_DEPENDENCIES" == 'True' ]]; then
-        conda install libgfortran=1
         NUMPY="numpy=1.7.2"
         SCIPY="scipy=0.11.0"
         MATPLOTLIB="matplotlib=1.1.1"
@@ -93,6 +92,7 @@ install:
         BASEMAP=""
         PYPROJ="pyproj"
         PROJ4="proj4"
+        GFORTRAN="libgfortran=1"
         # ancient matplotlib needs to be turned to AGG before anything else,
         # otherwise it tries to import incompatible version of Qt as a backend
         # and hick-ups..
@@ -107,7 +107,8 @@ install:
         BASEMAP="basemap"
         PYPROJ="pyproj"
         PROJ4="proj4"
-      # elif [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
+        GFORTRAN=""
+    # elif [[ "$ARCHITECTURE_32BIT" == "True" ]]; then
       #   # Special packages for 32bit. Also let conda resolve to the latest
       #   # versions.
       #   NUMPY="numpy"
@@ -125,14 +126,16 @@ install:
         BASEMAP="basemap"
         PYPROJ="pyproj"
         PROJ4="proj4=4.9.3"
-      else
+        GFORTRAN=""
+    else
         NUMPY="numpy"
         SCIPY="scipy"
         MATPLOTLIB="matplotlib>=2.0.0"
         BASEMAP="basemap"
         PYPROJ="pyproj"
         PROJ4="proj4"
-      fi
+        GFORTRAN=""
+    fi
   - |
     if [[ "${PYTHON_VERSION}" == '3.7' ]]; then
       FREETYPE="freetype"
@@ -148,6 +151,7 @@ install:
         $BASEMAP
         $PYPROJ
         $PROJ4
+        $GFORTRAN
         coverage
         decorator
         docopt
