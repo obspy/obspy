@@ -62,11 +62,13 @@ def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0):
         ncols_ = len(row)
         for j, kind__ in enumerate(row):
             kind_.append(kind__)
-            kwargs = {"aspect": "equal", "adjustable": "datalim"}
+            kwargs = {"adjustable": "datalim"}
             if kind__ in ("p_quiver", "p_sphere", "s_quiver", "s_sphere"):
                 kwargs["projection"] = "3d"
-            axes.append(fig.add_subplot(
-                nrows, ncols_, i * ncols_ + j + 1, **kwargs))
+            else:  # equal aspect never worked on 3d plot, see mpl #13474
+                kwargs["aspect"] = "equal"
+            ax = fig.add_subplot(nrows, ncols_, i * ncols_ + j + 1, **kwargs)
+            axes.append(ax)
     return fig, axes, kind_
 
 
