@@ -993,7 +993,7 @@ class Response(ComparingObject):
                                                        input_units,
                                                        output_units)
         stage = []
-        pzt = "laplace hz"
+        pzt = "LAPLACE (HERTZ)"
         zeros = []
         poles = []
         if include_pole_zero_at_zero:
