@@ -80,6 +80,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda config --set restore_free_channel true
+  - conda config --add channels conda-forge
   # Useful for debugging any issues with conda
   - conda info -a
   - |
