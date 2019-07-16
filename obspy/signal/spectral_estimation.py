@@ -1274,7 +1274,11 @@ class PPSD(object):
         :type filename: str
         :param filename: Name of numpy .npz output file
         """
-        out = dict([(key, getattr(self, key)) for key in self.NPZ_STORE_KEYS])
+        out = {}
+        for key in self.NPZ_STORE_KEYS:
+            value = getattr(self, key)
+            # All None values need to be replaced with empty strings (#2409).
+            out[key] = value if value is not None else ''
         np.savez_compressed(filename, **out)
 
     @staticmethod
@@ -1315,6 +1319,8 @@ class PPSD(object):
                 elif key in (ppsd.NPZ_STORE_KEYS_SIMPLE_TYPES +
                              ppsd.NPZ_STORE_KEYS_VERSION_NUMBERS):
                     data_ = data_.item()
+                    if data_ == '':  # Convert empty str back to None
+                        data_ = None
                 # convert floating point POSIX second timestamps from older npz
                 # files
                 if (key in ppsd.NPZ_STORE_KEYS_LIST_TYPES and
@@ -1331,7 +1337,7 @@ class PPSD(object):
 
         # XXX get rid of if/else again when bumping minimal numpy to 1.7
         if NUMPY_VERSION >= [1, 7]:
-            with np.load(filename) as data:
+            with np.load(filename, allow_pickle=True) as data:
                 return _load(data)
         else:
             data = np.load(filename)
@@ -1369,7 +1375,9 @@ class PPSD(object):
             _check_npz_ppsd_version(self, data)
             # check if all metadata agree
             for key in self.NPZ_STORE_KEYS_SIMPLE_TYPES:
-                if getattr(self, key) != data[key].item():
+                value = data[key].item()
+                value = None if value == '' else value
+                if getattr(self, key) != value:
                     msg = ("Mismatch in '%s' attribute.\n\tCurrent:\n\t%s\n\t"
                            "Loaded:\n\t%s")
                     msg = msg % (key, getattr(self, key), data[key].item())

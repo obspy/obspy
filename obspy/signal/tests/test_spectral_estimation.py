@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import gzip
+import io
 import os
 import unittest
 import warnings
@@ -136,7 +137,7 @@ class PsdTestCase(unittest.TestCase):
         fn_psd_pitsa = "pitsa_noise_psd_samprate_100_nfft_512_noverlap_0.npy"
         file_psd_pitsa = os.path.join(self.path, fn_psd_pitsa)
 
-        noise = np.load(file_noise)
+        noise = np.load(file_noise, allow_pickle=True)
         # in principle to mimic PITSA's results detrend should be specified as
         # some linear detrending (e.g. from matplotlib.mlab.detrend_linear)
         psd_obspy, _ = psd(noise, NFFT=nfft, Fs=sampling_rate,
@@ -802,7 +803,7 @@ class PsdTestCase(unittest.TestCase):
                "consider updating your ObsPy installation.".format(
                    PPSD(stats=Stats(), metadata=None).ppsd_version))
         # 1 - loading a npz
-        data = np.load(self.example_ppsd_npz)
+        data = np.load(self.example_ppsd_npz, allow_pickle=True)
         # we have to load, modify 'ppsd_version' and save the npz file for the
         # test..
         items = {key: data[key] for key in data.files}
@@ -835,6 +836,21 @@ class PsdTestCase(unittest.TestCase):
                     "must be a plain dictionary with key 'sensitivity' "
                     "stating the overall sensitivity`.")
         self.assertEqual(str(e.exception), expected)
+
+    def test_can_read_npz_without_pickle(self):
+        """
+        Ensures that a default PPSD can be written and read without having to
+        allow np.load the use of pickle. See #2409.
+        """
+        # Init a test PPSD and empty byte stream.
+        ppsd = PPSD.load_npz(self.example_ppsd_npz)
+        byte_me = io.BytesIO()
+        # Save PPSD to byte stream and rewind to 0.
+        ppsd.save_npz(byte_me)
+        byte_me.seek(0)
+        # Load dict, will raise an exception if pickle is needed.
+        loaded_dict = dict(np.load(byte_me, allow_pickle=False))
+        self.assertIsInstance(loaded_dict, dict)
 
 
 def suite():
