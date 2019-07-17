@@ -125,6 +125,7 @@ master:
  - obspy.signal.polarization:
    * Fix an issue in selecting Z/N/E traces from given stream (see #2365)
  - obspy.signal.PPSD:
+   * Changed numpy-based serialization as to not require pickling (see #2424).
    * Fixed exact trace cutting for PSD segments (see #2040).
    * Timestamp representations internally and in npz I/O were changed to use
      integer nanosecond POSIX timestamps to avoid any potential floating point
