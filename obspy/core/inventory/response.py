@@ -12,10 +12,14 @@ Classes related to instrument responses.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY2
 
 import copy
 import ctypes as C  # NOQA
-from collections import defaultdict
+if PY2:
+    from collections import defaultdict
+else:
+    from collections.abc import defaultdict
 from copy import deepcopy
 import itertools
 from math import pi
