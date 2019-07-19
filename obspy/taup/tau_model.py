@@ -6,9 +6,12 @@ Internal TauModel class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
+from future.utils import PY2, native_str
 
-from collections import OrderedDict
+if PY2:
+    from collections import OrderedDict
+else:
+    from collections.abc import OrderedDict
 import os
 from copy import deepcopy
 from itertools import count
