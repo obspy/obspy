@@ -489,8 +489,8 @@ class ResponseTestCase(unittest.TestCase):
         Tests the get_flat_response calss method without poles and zeros.
         """
 
-        resp = Response.get_flat_response()
-        self.assertEqual(resp.instrument_sensitivity.value, 1.)
+        resp = Response.get_flat_response(sensitivity=5.)
+        self.assertEqual(resp.instrument_sensitivity.value, 5.)
         self.assertEqual(resp.instrument_sensitivity.frequency, 1.)
         self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
         self.assertEqual(resp.instrument_sensitivity.output_units, "M/S")
@@ -498,7 +498,7 @@ class ResponseTestCase(unittest.TestCase):
         frequencies = [0.1, 0.01, 0.001]
         result = resp.get_evalresp_response_for_frequencies(
                     frequencies=frequencies, output='VEL')
-        values = [1. + 0.j]*3
+        values = [5. + 0.j]*3
         np.testing.assert_allclose(values, result)
 
     def test_get_flat_response_with_poles_and_zeros(self):
@@ -506,8 +506,9 @@ class ResponseTestCase(unittest.TestCase):
         Tests the get_flat_response calss method with poles and zeros.
         """
 
-        resp = Response.get_flat_response(include_pole_zero_at_zero=True)
-        self.assertEqual(resp.instrument_sensitivity.value, 1.)
+        resp = Response.get_flat_response(include_pole_zero_at_zero=True,
+                                          sensitivity=5.)
+        self.assertEqual(resp.instrument_sensitivity.value, 5.)
         self.assertEqual(resp.instrument_sensitivity.frequency, 1.)
         self.assertEqual(resp.instrument_sensitivity.input_units, "M/S")
         self.assertEqual(resp.instrument_sensitivity.output_units, "M/S")
@@ -527,7 +528,22 @@ class ResponseTestCase(unittest.TestCase):
         frequencies = [0.1, 0.01, 0.001]
         result = resp.get_evalresp_response_for_frequencies(
                     frequencies=frequencies, output='VEL')
-        values = [1. + 0.j]*3
+        values = [5. + 0.j]*3
+        np.testing.assert_allclose(values, result)
+
+    def test_flat_response_to_acceleration(self):
+        """
+        Tests if the get flat response can convert by a
+        factor of 2pi to displacement.
+        """
+
+        resp = Response.get_flat_response(include_pole_zero_at_zero=True,
+                                          sensitivity=1.)
+
+        frequencies = np.asarray([0.1, 0.01, 0.001])
+        result = resp.get_evalresp_response_for_frequencies(
+                    frequencies=frequencies, output='DISP')
+        values = frequencies * 2 * np.pi * 1j
         np.testing.assert_allclose(values, result)
 
     def test_recalculate_overall_sensitivity(self):
