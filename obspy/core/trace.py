@@ -2742,7 +2742,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             plot is saved to file (filename must have a valid image suffix
             recognizable by matplotlib e.g. '.png').
         """
-        limit_numpy_fft_cache()
+        if np.__version__ < '1.17.0':
+            limit_numpy_fft_cache()
 
         from obspy.core.inventory import PolynomialResponseStage
         from obspy.signal.invsim import (cosine_taper, cosine_sac_taper,
