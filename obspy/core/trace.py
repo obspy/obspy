@@ -23,7 +23,7 @@ from decorator import decorator
 
 from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict, create_empty_data_chunk
+from obspy.core.util import AttribDict, create_empty_data_chunk, NUMPY_VERSION
 from obspy.core.util.base import _get_function_from_entry_point
 from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
 from obspy.core.util.misc import (flat_not_masked_contiguous, get_window_times,
@@ -2742,7 +2742,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             plot is saved to file (filename must have a valid image suffix
             recognizable by matplotlib e.g. '.png').
         """
-        if np.__version__ < '1.17.0':
+        if NUMPY_VERSION < [1, 17]:
             limit_numpy_fft_cache()
 
         from obspy.core.inventory import PolynomialResponseStage
