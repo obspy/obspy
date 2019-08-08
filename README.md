@@ -38,3 +38,7 @@ The **detailed changelog** is available [here](CHANGELOG.txt).
   * Lion Krischer, Tobias Megies, Robert Barsch, Moritz Beyreuther, Thomas Lecocq, Corentin Caudron and Joachim Wassermann (2015), [ObsPy: a bridge for seismology into the scientific Python ecosystem](http://iopscience.iop.org/1749-4699/8/1/014003/), _Computational Science & Discovery_, 8(1), 014003, doi:`10.1088/1749-4699/8/1/014003`
   * [concept DOI, that always resolves to latest ObsPy versions: `10.5281/zenodo.1040769`](https://doi.org/10.5281/zenodo.1040769) (see [Zenodo FAQ](http://help.zenodo.org/#versioning))
   * [specific version DOIs for all released ObsPy versions](https://zenodo.org/search?ln=en&p=obspy&action_search=)
+
+### Impact
+
+![ObsPy impact statistics](https://user-images.githubusercontent.com/1842780/62694458-abeaae00-b9d4-11e9-8652-f548c9ea18f1.png)
