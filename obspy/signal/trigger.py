@@ -28,12 +28,8 @@ characteristic functions and a coincidence triggering routine.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2
 
-if PY2:
-    from collections import deque
-else:
-    from collections.abc import deque
+from collections import deque
 import ctypes as C  # NOQA
 import warnings
 

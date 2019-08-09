@@ -23,6 +23,7 @@ from socket import timeout as socket_timeout
 import textwrap
 import threading
 import warnings
+from collections import OrderedDict
 
 from lxml import etree
 
@@ -39,13 +40,10 @@ if PY2:
     from urllib import urlencode
     import urllib2 as urllib_request
     import Queue as queue  # NOQA
-    from collections import OrderedDict
-
 else:
     from urllib.parse import urlencode
     import urllib.request as urllib_request
     import queue
-    from collections.abc import OrderedDict
 
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}

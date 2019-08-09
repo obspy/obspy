@@ -11,12 +11,8 @@ Various types used in ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2
 
-if PY2:
-    from collections import OrderedDict
-else:
-    from collections.abc import OrderedDict
+from collections import OrderedDict
 
 try:
     import __builtin__
