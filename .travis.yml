@@ -136,12 +136,6 @@ install:
         PROJ4="proj4"
         GFORTRAN=""
       fi
-  - |
-    if [[ "${PYTHON_VERSION}" == '3.7' ]]; then
-      FREETYPE="freetype"
-    else
-      FREETYPE="freetype<2.8"
-    fi
   # proj4 version 5.2.0 has issues with psuedocyl projections (see basemap #433).
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
@@ -162,7 +156,6 @@ install:
         nose
         requests
         sqlalchemy
-        $FREETYPE
         cryptography
   - source activate test-environment
   # additional, optional packages that run some more tests but are not
