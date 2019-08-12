@@ -23,10 +23,7 @@ import re
 import sys
 import tempfile
 import unicodedata
-if PY2:
-    from collections import OrderedDict
-else:
-    from collections.abc import OrderedDict
+from collections import OrderedDict
 
 import numpy as np
 import pkg_resources

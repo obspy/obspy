@@ -6,17 +6,14 @@ Tests the high level obspy.taup.tau interface.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
+from future.utils import native_str
 
 import collections
 import inspect
 import os
 import unittest
 import warnings
-if PY2:
-    from collections import OrderedDict
-else:
-    from collections.abc import OrderedDict
+from collections import OrderedDict
 
 import numpy as np
 

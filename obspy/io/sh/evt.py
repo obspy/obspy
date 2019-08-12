@@ -12,12 +12,8 @@ SeismicHandler evt file bindings to ObsPy core module.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2
 
-if PY2:
-    from collections import defaultdict
-else:
-    from collections.abc import defaultdict
+from collections import defaultdict
 import io
 from math import cos, pi
 from warnings import warn

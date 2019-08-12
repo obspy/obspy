@@ -11,13 +11,9 @@ Utility functions for Nordic file format support for ObsPy
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import PY2
 
 import warnings
-if PY2:
-    from collections import defaultdict
-else:
-    from collections.abc import defaultdict
+from collections import defaultdict
 
 from obspy.io.nordic import NordicParsingError
 

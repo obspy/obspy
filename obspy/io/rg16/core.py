@@ -4,12 +4,8 @@ Receiver Gather (version 1.6-1) bindings to ObsPy core module.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2
 
-if PY2:
-    from collections import namedtuple
-else:
-    from collections.abc import namedtuple
+from collections import namedtuple
 
 import numpy as np
 
