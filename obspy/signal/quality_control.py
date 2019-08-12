@@ -30,6 +30,7 @@ from uuid import uuid4
 
 import numpy as np
 
+from obspy.core import compatibility
 from obspy import Stream, UTCDateTime, read, __version__
 from obspy.core.util.base import get_dependency_version
 from obspy.io.mseed.util import get_flags
@@ -615,7 +616,7 @@ class MSEEDMetadata(object):
 
         # If passed as a dictionary, serialize and derialize to get the
         # mapping from Python object to JSON type.
-        if isinstance(qc_metrics, collections.Mapping):
+        if isinstance(qc_metrics, compatibility.collections_abc.Mapping):
             qc_metrics = json.loads(self.get_json_meta(validate=False))
         elif hasattr(qc_metrics, "read"):
             qc_metrics = json.load(qc_metrics)
