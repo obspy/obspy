@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import PY3, native_str
 
+import collections
 import copy
 import fnmatch
 import math
@@ -3117,6 +3118,78 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         for tr in self:
             tr.remove_sensitivity(*args, **kwargs)
         return self
+
+    def stack(self, group='all', type='normal', npts_tol=0):
+        """
+        Return stream with traces stacked by the same selected metadata.
+
+        :param group: Stack waveforms together which have the same metadata given
+            by this parameter. The parameter should name the corresponding keys
+            of the stats object, e.g. `'{network}.{station}'` for stacking all
+            locations and channels of the stations and returning a stream
+            consisting of one stacked trace for each station. This parameter can
+            take two special values, `'seedid'` which stacks the waveforms by
+            seedid and `'all'` (default) which stacks together
+            all traces in the stream.
+        :param type: Type of stack, one of the following:
+            `'normal'`: normal stack (default),
+            `('pw', order)`: phase weighted stack of given order,
+            see Schimmel and Paulssen (1997),
+            `('root', order)`: root stack of given order.
+        :param npts_tol: Tolerate traces with different number of points
+            with a difference up to this value. Surplus samples are discarded.
+
+        :returns: New stream object with stacked traces.
+
+        >>> from obspy import read
+        >>> st = read()
+        >>> stack = st.stack()
+        >>> print(stack)
+        1 Trace(s) in Stream:
+        BW.RJOB.. | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
+        """
+        if len(type) == 2:
+            type, order = type
+        groups = collections.defaultdict(list)
+        if group == 'seedid':
+            group = '{network}.{station}.{location}.{channel}'
+        for tr in self:
+            groups[group.format(**tr.stats)].append(tr)
+        stacks = []
+        for groupid, grouptrcs in groups.items():
+            header = {k: v for k, v in grouptrcs[0].stats.items()
+                      if all(tr.stats.get(k) == v for tr in grouptrcs)}
+            header['stack'] = groupid
+            npts_all = [len(tr) for tr in grouptrcs]
+            npts_dif = max(npts_all) - min(npts_all)
+            npts = min(npts_all)
+            if npts_dif > npts_tol:
+                msg = ('Difference of number of points of the traces is higher '
+                       'than requested tolerance ({} > {})')
+                raise ValueError(msg.format(npts_dif, npts_tol))
+            elif npts_dif > 0:
+                grouptrcs = [copy.copy(tr) for tr in grouptrcs]
+                for tr in grouptrcs:
+                    tr.data = tr.data[:npts]
+            data = np.array([tr.data for tr in grouptrcs])
+            if type == 'normal':
+                stack = np.mean(data, axis=0)
+            elif type == 'pw':
+                from scipy.signal import hilbert
+                from scipy.fftpack import next_fast_len
+                nfft = next_fast_len(npts)
+                anal_sig = hilbert(data, N=nfft)[:, :npts]
+                norm_anal_sig = anal_sig / np.abs(anal_sig)
+                phase_stack = np.abs(np.mean(norm_anal_sig, axis=0)) ** order
+                stack = np.mean(data, axis=0) * phase_stack
+            elif type == 'root':
+                r = np.mean(np.sign(data) * np.abs(data)
+                            ** (1 / order), axis=0)
+                stack = np.sign(r) * np.abs(r) ** order
+            else:
+                raise ValueError('stack type is not valid.')
+            stacks.append(grouptrcs[0].__class__(data=stack, header=header))
+        return self.__class__(stacks)
 
     @staticmethod
     def _dummy_stream_from_string(s):
