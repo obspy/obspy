@@ -3154,11 +3154,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         1 Trace(s) in Stream:
         BW.RJOB.. | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
         """
+        if group == 'seedid':
+            group = '{network}.{station}.{location}.{channel}'
         if len(type) == 2:
             type, order = type
         groups = collections.defaultdict(list)
-        if group == 'seedid':
-            group = '{network}.{station}.{location}.{channel}'
         for tr in self:
             groups[group.format(**tr.stats)].append(tr)
         stacks = []
