@@ -3123,14 +3123,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Return stream with traces stacked by the same selected metadata.
 
-        :param group: Stack waveforms together which have the same metadata given
-            by this parameter. The parameter should name the corresponding keys
-            of the stats object, e.g. `'{network}.{station}'` for stacking all
+        :param group: Stack waveforms together which have the same metadata
+            given by this parameter. The parameter should name the
+            corresponding keys of the stats object,
+            e.g. `'{network}.{station}'` for stacking all
             locations and channels of the stations and returning a stream
-            consisting of one stacked trace for each station. This parameter can
-            take two special values, `'seedid'` which stacks the waveforms by
-            seedid and `'all'` (default) which stacks together
-            all traces in the stream.
+            consisting of one stacked trace for each station.
+            This parameter can take two special values,
+            `'seedid'` which stacks the waveforms by seedid and
+            `'all'` (default) which stacks together all traces in the stream.
         :param type: Type of stack, one of the following:
             `'linear'`: average stack (default),
             `('pw', order)`: phase weighted stack of given order,
@@ -3139,7 +3140,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param npts_tol: Tolerate traces with different number of points
             with a difference up to this value. Surplus samples are discarded.
 
-        :returns: New stream object with stacked traces.
+        :returns: New stream object with stacked traces. The metadata of each
+            trace corresponds to the metadata of the original traces
+            if those are the same. Additionaly, the entries
+            `stack` (result of the format operation on the group parameter) and
+            `stack_count` (number of stacked traces)
+            are written to the stats object.
 
         >>> from obspy import read
         >>> st = read()
@@ -3160,12 +3166,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             header = {k: v for k, v in grouptrcs[0].stats.items()
                       if all(tr.stats.get(k) == v for tr in grouptrcs)}
             header['stack'] = groupid
+            header['stack_count'] = len(grouptrcs)
             npts_all = [len(tr) for tr in grouptrcs]
             npts_dif = max(npts_all) - min(npts_all)
             npts = min(npts_all)
             if npts_dif > npts_tol:
-                msg = ('Difference of number of points of the traces is higher '
-                       'than requested tolerance ({} > {})')
+                msg = ('Difference of number of points of the traces is higher'
+                       ' than requested tolerance ({} > {})')
                 raise ValueError(msg.format(npts_dif, npts_tol))
             elif npts_dif > 0:
                 grouptrcs = [copy.copy(tr) for tr in grouptrcs]
