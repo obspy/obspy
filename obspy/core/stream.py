@@ -3191,7 +3191,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 stack = np.mean(data, axis=0) * phase_stack
             elif type == 'root':
                 r = np.mean(np.sign(data) * np.abs(data)
-                            ** (1 / order), axis=0)
+                            ** (1. / order), axis=0)
                 stack = np.sign(r) * np.abs(r) ** order
             else:
                 raise ValueError('stack type is not valid.')
