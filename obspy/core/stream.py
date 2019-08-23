@@ -3119,7 +3119,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.remove_sensitivity(*args, **kwargs)
         return self
 
-    def stack(self, group='all', type='normal', npts_tol=0):
+    def stack(self, group='all', type='linear', npts_tol=0):
         """
         Return stream with traces stacked by the same selected metadata.
 
@@ -3132,7 +3132,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             seedid and `'all'` (default) which stacks together
             all traces in the stream.
         :param type: Type of stack, one of the following:
-            `'normal'`: normal stack (default),
+            `'linear'`: average stack (default),
             `('pw', order)`: phase weighted stack of given order,
             see Schimmel and Paulssen (1997),
             `('root', order)`: root stack of given order.
