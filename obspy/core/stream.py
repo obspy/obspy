@@ -3135,7 +3135,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: Type of stack, one of the following:
             `'linear'`: average stack (default),
             `('pw', order)`: phase weighted stack of given order,
-            see Schimmel and Paulssen (1997),
+            see [Schimmel1997]_,
             `('root', order)`: root stack of given order.
         :param npts_tol: Tolerate traces with different number of points
             with a difference up to this value. Surplus samples are discarded.
