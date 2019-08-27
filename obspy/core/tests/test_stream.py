@@ -2656,6 +2656,56 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(e.exception.args[0],
                              'Can not write empty stream to file.')
 
+    def test_stack(self):
+        """
+        Tests error message when trying to write an empty stream
+        """
+        st = read()
+        st2 = st.stack()
+        self.assertEqual(len(st2), 1)
+        self.assertEqual(st2[0].stats.stack, 'all')
+        self.assertEqual(st2[0].stats.stack_count, 3)
+        st += st.copy()
+        st2 = st.stack('seedid')
+        self.assertEqual(len(st2), 3)
+        self.assertEqual(st2[0].stats.stack, st[0].id)
+        self.assertEqual(st2[0].id, st[0].id)
+        self.assertEqual(st2[0].stats.stack_count, 2)
+        for tr in st[3:]:
+            tr.stats.station = 'OTH'
+        st2 = st.stack('{network}.{station}')
+        self.assertEqual(len(st2), 2)
+        self.assertEqual(st2[0].stats.stack, st2[0].id[:-2])
+        self.assertEqual(st2[0].stats.stack_count, 3)
+
+        st = read()
+        st[2].data = st[2].data[:-1]
+        npts = len(st[0])
+        self.assertRaises(ValueError, st.stack)
+        st2 = st.stack(npts_tol=1)
+        self.assertEqual(len(st2), 1)
+        self.assertEqual(len(st2[0]), npts-1)
+
+        st = read()
+        st2 = st.stack()
+        st3 = st.stack(type=('pw', 0))
+        st4 = st.stack(type=('root', 1))
+        self.assertEqual(len(st2), 1)
+        self.assertEqual(len(st3), 1)
+        self.assertEqual(len(st4), 1)
+        np.testing.assert_allclose(st3[0].data, st2[0].data)
+        np.testing.assert_allclose(st4[0].data, st2[0].data)
+        st3 = st.stack(type=('pw', 2))
+        st4 = st.stack(type=('root', 2))
+        self.assertEqual(np.sum(np.abs(st3[0].data) <= np.abs(st2[0].data)),
+                         npts)
+        all_data = np.array([tr.data for tr in st])
+        same_sign = np.logical_or(np.all(all_data < 0, axis=0),
+                                      np.all(all_data > 0, axis=0))
+        npts = np.sum(same_sign)
+        self.assertEqual(np.sum(np.abs(st3[0].data[same_sign]) <=
+                                np.abs(st2[0].data[same_sign])), npts)
+
 
 def suite():
     suite = unittest.TestSuite()

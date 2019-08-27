@@ -3179,7 +3179,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 for tr in grouptrcs:
                     tr.data = tr.data[:npts]
             data = np.array([tr.data for tr in grouptrcs])
-            if type == 'normal':
+            if type == 'linear':
                 stack = np.mean(data, axis=0)
             elif type == 'pw':
                 from scipy.signal import hilbert
