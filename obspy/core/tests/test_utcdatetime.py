@@ -1522,6 +1522,19 @@ class UTCDateTimeTestCase(unittest.TestCase):
             msg = "'%s' does not start with a 4 digit year" % value
             self.assertEqual(msg, e.exception.args[0])
 
+    def test_start_end_of_day(self):
+        """
+        Tests the parsing of 'today' as argument.
+        """
+        now = UTCDateTime.now()
+        t = UTCDateTime(now.year, now.month, now.day)
+        nt = UTCDateTime().start_of_day()
+        self.assertEqual(t, nt)
+
+        t = UTCDateTime(now.year, now.month, now.day, 23, 59, 59, 999999)
+        nt = UTCDateTime().end_of_day()
+        self.assertEqual(t, nt)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')

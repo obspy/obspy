@@ -1680,6 +1680,31 @@ class UTCDateTime(object):
         from matplotlib.dates import date2num
         return date2num(self.datetime)
 
+    def start_of_day(self):
+        """
+        Helper method to get the beginning of the day of the current
+        UTCDateTime object.
+
+        >>> UTCDateTime("2018-01-01 14:05:11").start_of_day()
+        UTCDateTime(2018, 1, 1, 0, 0)
+
+        """
+        return UTCDateTime(self.datetime.replace(hour=0, minute=0,
+                                                 second=0, microsecond=0))
+
+    def end_of_day(self):
+        """
+        Helper method to get the end of the day of the current
+        UTCDateTime object, 1 ns before midnight.
+
+        >>> t = UTCDateTime("2018-01-01 14:05:11").end_of_day()
+        UTCDateTime(2018, 1, 1, 23, 59, 59, 999999)
+
+        """
+        return UTCDateTime(self.datetime.replace(hour=23, minute=59,
+                                                 second=59,
+                                                 microsecond=999999))
+
 
 def _datetime_to_ns(dt):
     """
