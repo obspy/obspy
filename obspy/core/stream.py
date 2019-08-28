@@ -3150,7 +3150,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> from obspy import read
         >>> st = read()
         >>> stack = st.stack()
-        >>> print(stack)
+        >>> print(stack)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
         BW.RJOB.. | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
         """

@@ -2668,14 +2668,16 @@ class StreamTestCase(unittest.TestCase):
         st += st.copy()
         st2 = st.stack('seedid')
         self.assertEqual(len(st2), 3)
-        self.assertEqual(st2[0].stats.stack, st[0].id)
-        self.assertEqual(st2[0].id, st[0].id)
+        self.assertEqual({tr.stats.stack for tr in st2}, {tr.id for tr in st})
+        self.assertEqual({tr.id for tr in st2}, {tr.id for tr in st})
         self.assertEqual(st2[0].stats.stack_count, 2)
         for tr in st[3:]:
             tr.stats.station = 'OTH'
         st2 = st.stack('{network}.{station}')
         self.assertEqual(len(st2), 2)
-        self.assertEqual(st2[0].stats.stack, st2[0].id[:-2])
+        self.assertEqual(
+            {tr.stats.stack for tr in st2},
+            {'.'.join((tr.stats.network, tr.stats.station)) for tr in st})
         self.assertEqual(st2[0].stats.stack_count, 3)
 
         st = read()
@@ -2701,7 +2703,7 @@ class StreamTestCase(unittest.TestCase):
                          npts)
         all_data = np.array([tr.data for tr in st])
         same_sign = np.logical_or(np.all(all_data < 0, axis=0),
-                                      np.all(all_data > 0, axis=0))
+                                  np.all(all_data > 0, axis=0))
         npts = np.sum(same_sign)
         self.assertEqual(np.sum(np.abs(st3[0].data[same_sign]) <=
                                 np.abs(st2[0].data[same_sign])), npts)
