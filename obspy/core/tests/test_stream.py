@@ -2658,7 +2658,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_stack(self):
         """
-        Tests error message when trying to write an empty stream
+        Tests stack method
         """
         st = read()
         st2 = st.stack()
@@ -2687,6 +2687,7 @@ class StreamTestCase(unittest.TestCase):
         st2 = st.stack(npts_tol=1)
         self.assertEqual(len(st2), 1)
         self.assertEqual(len(st2[0]), npts-1)
+        self.assertEqual(len(st[0]), npts)
 
         st = read()
         st2 = st.stack()
@@ -2705,7 +2706,7 @@ class StreamTestCase(unittest.TestCase):
         same_sign = np.logical_or(np.all(all_data < 0, axis=0),
                                   np.all(all_data > 0, axis=0))
         npts = np.sum(same_sign)
-        self.assertEqual(np.sum(np.abs(st3[0].data[same_sign]) <=
+        self.assertEqual(np.sum(np.abs(st4[0].data[same_sign]) <=
                                 np.abs(st2[0].data[same_sign])), npts)
 
 
