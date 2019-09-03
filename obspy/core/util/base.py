@@ -385,7 +385,7 @@ def get_proj_version(raw_string=False):
     _proj = Proj(proj='utm', zone=10, ellps='WGS84')
     if hasattr(_proj, 'proj_version_str'):
         version_string = str(getattr(_proj, 'proj_version_str'))
-    elif hasattr(_proj, 'proj_version')::
+    elif hasattr(_proj, 'proj_version'):
         version_string = str(getattr(_proj, 'proj_version'))
     else:
         from pyproj import proj_version_str
