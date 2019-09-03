@@ -383,7 +383,10 @@ def get_proj_version(raw_string=False):
     # of the Proj class that is only set when the projection is made. Make
     # a dummy projection and get the version
     _proj = Proj(proj='utm', zone=10, ellps='WGS84')
-    version_string = str(getattr(_proj, 'proj_version_str', 'proj_version'))
+    if hasattr(_proj, 'proj_version_str'):
+        version_string = str(getattr(_proj, 'proj_version_str'))
+    else:
+        version_string = str(getattr(_proj, 'proj_version'))
     if raw_string:
         return version_string
     version_list = [to_int_or_zero(no) for no in version_string.split(".")]
