@@ -14,9 +14,9 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            conda create -n test-env
-            source activate test-env
-            conda install -y flake8 pep8-naming
+            /opt/conda/bin/conda create -n test-env
+            /opt/conda/bin/conda activate test-env
+            /opt/conda/bin/conda install -y flake8 pep8-naming
 
       - run:
           name: run linting
