@@ -19,5 +19,5 @@ jobs:
       - run:
           name: run linting
           command: |
-            flake8 --version
-            flake8 --verbose --ignore=E402,$(python -c 'import pycodestyle; print(pycodestyle.DEFAULT_IGNORE)') --exclude=__init__.py obspy
+            /opt/conda/bin/flake8 --version
+            /opt/conda/bin/flake8 --verbose --ignore=E402,$(python -c 'import pycodestyle; print(pycodestyle.DEFAULT_IGNORE)') --exclude=__init__.py obspy
