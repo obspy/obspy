@@ -188,6 +188,8 @@ class Client(object):
                     # This socket is already connected to the proxy
                 else:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    if self.timeout is not None:
+                        s.settimeout(self.timeout)
                     s.connect((self.host, self.port))
 
                 with io.BytesIO() as tf:
