@@ -109,7 +109,7 @@ EXTRAS_REQUIRES['all'] = [dep for depl in EXTRAS_REQUIRES.values()
 
 # package specific settings
 KEYWORDS = [
-    'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
+    'ALSEP', 'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'DMX', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
@@ -171,6 +171,9 @@ ENTRY_POINTS = {
         'REFTEK130 = obspy.io.reftek.core',
         'RG16 = obspy.io.rg16.core',
         'DMX = obspy.io.dmx.core',
+        'ALSEP_PSE = obspy.io.alsep.core',
+        'ALSEP_WTN = obspy.io.alsep.core',
+        'ALSEP_WTH = obspy.io.alsep.core',
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -288,10 +291,22 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.RG16': [
         'isFormat = obspy.io.rg16.core:_is_rg16',
         'readFormat = obspy.io.rg16.core:_read_rg16',
-    ],
+        ],
     'obspy.plugin.waveform.DMX': [
         'isFormat = obspy.io.dmx.core:_is_dmx',
         'readFormat = obspy.io.dmx.core:_read_dmx',
+    ],
+    'obspy.plugin.waveform.ALSEP_PSE': [
+        'isFormat = obspy.io.alsep.core:_is_pse',
+        'readFormat = obspy.io.alsep.core:_read_pse',
+        ],
+    'obspy.plugin.waveform.ALSEP_WTN': [
+        'isFormat = obspy.io.alsep.core:_is_wtn',
+        'readFormat = obspy.io.alsep.core:_read_wtn',
+        ],
+    'obspy.plugin.waveform.ALSEP_WTH': [
+        'isFormat = obspy.io.alsep.core:_is_wth',
+        'readFormat = obspy.io.alsep.core:_read_wth',
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
