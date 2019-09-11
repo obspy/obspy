@@ -184,7 +184,8 @@ class Client(object):
         while not success:
             try:
                 if self.proxy:
-                    s, _, _ = http_proxy_connect(address, proxy, auth)
+                    s, _, _ = http_proxy_connect(address, proxy, auth,
+                                                 timeout=self.timeout)
                     # This socket is already connected to the proxy
                 else:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

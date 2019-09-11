@@ -46,7 +46,7 @@ def valid_address(addr):
     return is_valid
 
 
-def http_proxy_connect(address, proxy, auth=None):
+def http_proxy_connect(address, proxy, auth=None, timeout=None):
     """
     Establish a socket connection through an HTTP proxy.
 
@@ -83,6 +83,8 @@ def http_proxy_connect(address, proxy, auth=None):
             raise ValueError('Invalid authentication specification')
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    if timeout is not None:
+        s.settimeout(timeout)
     s.connect(proxy)
     fp = s.makefile('rw')
 
