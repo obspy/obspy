@@ -2660,17 +2660,21 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests stack method
         """
+        # check number of traces and headers
+        # stack with default options
         st = read()
         st2 = st.stack()
         self.assertEqual(len(st2), 1)
         self.assertEqual(st2[0].stats.stack, 'all')
         self.assertEqual(st2[0].stats.stack_count, 3)
+        # stack by SEED id
         st += st.copy()
-        st2 = st.stack('seedid')
+        st2 = st.stack('id')
         self.assertEqual(len(st2), 3)
         self.assertEqual({tr.stats.stack for tr in st2}, {tr.id for tr in st})
         self.assertEqual({tr.id for tr in st2}, {tr.id for tr in st})
         self.assertEqual(st2[0].stats.stack_count, 2)
+        # stack by other metadata
         for tr in st[3:]:
             tr.stats.station = 'OTH'
         st2 = st.stack('{network}.{station}')
@@ -2680,6 +2684,7 @@ class StreamTestCase(unittest.TestCase):
             {'.'.join((tr.stats.network, tr.stats.station)) for tr in st})
         self.assertEqual(st2[0].stats.stack_count, 3)
 
+        # check npts_tol option and correct npts of stack
         st = read()
         st[2].data = st[2].data[:-1]
         npts = len(st[0])
@@ -2689,6 +2694,25 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(st2[0]), npts-1)
         self.assertEqual(len(st[0]), npts)
 
+        # check correct setting of metadata
+        st = read()
+        st[0].stats.back_azimuth -= 10
+        st2 = st.stack()
+        self.assertEqual(st2[0].stats.station, st[0].stats.station)
+        self.assertEqual(st2[0].stats.inclination, st[0].stats.inclination)
+        self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
+        self.assertEqual(st2[0].stats.channel, '')
+        self.assertNotIn('azimuth', st2[0].stats)
+        st[0].stats.starttime += 10
+        st2 = st.stack()
+        self.assertEqual(st2[0].stats.starttime, UTCDateTime(0))
+
+        # Check pw and root stacking types, these must result in the linear
+        # stack for order 0, resp. 1.
+        # For larger order pw stack is always of smaller magnitude than linear
+        # stack. For a root stack this is not always the case, but its
+        # magnitude is definitely smaller if all stacked samples have the
+        # same sign.
         st = read()
         st2 = st.stack()
         st3 = st.stack(type=('pw', 0))
