@@ -177,20 +177,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
         # Test that error message is indeed raised when data cannot be downcast
         # Create dummy stream that cannot be properly downcast to int64
-        x_int64 = np.array([1, 2, 3, 2 ** 55], dtype=np.int64)
-        x_int64_negative = np.array([1, -2, 3, -2 ** 55], dtype=np.int64)
-        tr_int64 = Trace(x_int64)
-        tr_int64_negative = Trace(x_int64_negative)
-        st_int64 = Stream()
-        st_int64.append(tr_int64)
-        st_int64_negative = Stream()
-        st_int64_negative.append(tr_int64_negative)
-
-        with io.BytesIO() as buf:
-            with self.assertRaises(ObsPyMSEEDError):
-                st_int64.write(buf, format="mseed")
-            with self.assertRaises(ObsPyMSEEDError):
-                st_int64_negative.write(buf, format="mseed")
+        for x in [2 ** 55, -2 ** 55]:
+            data = np.array([1, 2, -3, x, -1], dtype=np.int64)
+            st = Stream([Trace(data)])
+            with io.BytesIO() as buf:
+                with self.assertRaises(ObsPyMSEEDError):
+                    st.write(buf, format="mseed")
 
     def test_get_record_information(self):
         """
