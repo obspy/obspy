@@ -34,13 +34,14 @@ from obspy import UTCDateTime, read
 from obspy.geodetics import kilometers2degrees, degrees2kilometers
 from obspy.core.event import (
     Event, Origin, Magnitude, Catalog, EventDescription, CreationInfo,
-    OriginQuality, Pick, WaveformStreamID, Arrival, Amplitude,
-    FocalMechanism, MomentTensor, NodalPlane, NodalPlanes, QuantityError,
-    Tensor, ResourceIdentifier)
+    OriginQuality, OriginUncertainty, Pick, WaveformStreamID, Arrival,
+    Amplitude, FocalMechanism, MomentTensor, NodalPlane, NodalPlanes,
+    QuantityError, Tensor, ResourceIdentifier)
 from obspy.io.nordic import NordicParsingError
 from obspy.io.nordic.utils import (
     _int_conv, _str_conv, _float_conv, _evmagtonor, _nortoevmag,
     _get_line_tags)
+from obspy.io.nordic.ellipse import _ellipse
 
 
 POLARITY_MAPPING = {"": "undecidable", "C": "positive", "D": "negative"}
@@ -430,6 +431,7 @@ def _extract_event(event_str, catalog, wav_names, return_wavnames=False):
     tagged_lines = _get_line_tags(f=tmp_sfile)
     new_event = _readheader(head_lines=tagged_lines['1'])
     new_event = _read_uncertainty(tagged_lines, new_event)
+    new_event = _read_highaccuracy(tagged_lines, new_event)
     new_event = _read_focal_mechanisms(tagged_lines, new_event)
     new_event = _read_moment_tensors(tagged_lines, new_event)
     if return_wavnames:
@@ -457,12 +459,62 @@ def _read_uncertainty(tagged_lines, event):
     except ValueError:
         pass
     if errors['x_err']:
-        warnings.warn("Hypocentral Error estimates found, but not converted.")
+        e = _ellipse.from_uncerts(errors['x_err'],
+                                  errors['y_err'], errors['xy_cov'])
+        event.origins[0].origin_uncertainty = OriginUncertainty(
+            max_horizontal_uncertainty=e.a*1000.,
+            min_horizontal_uncertainty=e.b*1000.,
+            azimuth_max_horizontal_uncertainty=e.theta,
+            preferred_description="uncertainty ellipse")
     try:
         event.origins[0].quality = OriginQuality(
             azimuthal_gap=int(line[5:8]), standard_error=float(line[14:20]))
     except ValueError:
         pass
+    return event
+
+
+def _read_highaccuracy(tagged_lines, event):
+    """
+    Read high accuracy origin line.
+    """
+    if 'H' not in tagged_lines.keys():
+        return event
+    # In principle there shouldn't be more than one high precision line
+    line = tagged_lines['H'][0][0]
+    try:
+        dt = {'Y':  int(line[1:5]),  'MO': int(line[6:8]),
+              'D':  int(line[8:10]),  'H': int(line[11:13]),
+              'MI': int(line[13:15]), 'S': float(line[16:23])}
+    except ValueError:
+        pass
+    try:
+        ev_time = UTCDateTime(dt['Y'], dt['MO'], dt['D'],
+                              dt['H'], dt['MI'], 0, 0) + dt['S']
+        if abs(event.origins[0].time - ev_time) < 0.1:
+            event.origins[0].time = ev_time
+        else:
+            print('High accuracy time differs from normal time by >0.1s')
+    except ValueError:
+        pass
+    try:
+        values = {'latitude': float(line[23:32]),
+                  'longitude': float(line[33:43]),
+                  'depth': float(line[44:52]), 'rms': float(line[53:59])}
+    except ValueError:
+        pass
+    if values['latitude']:
+        event.origins[0].latitude = values['latitude']
+    if values['longitude']:
+        event.origins[0].longitude = values['longitude']
+    if values['depth']:
+        event.origins[0].depth = values['depth']*1000.
+    if values['rms']:
+        if event.origins[0].quality is not None:
+            event.origins[0].quality.standard_error = values['rms']
+        else:
+            event.origins[0].quality = OriginQuality(
+                standard_error=values['rms'])
     return event
 
 

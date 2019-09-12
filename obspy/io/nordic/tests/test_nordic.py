@@ -795,6 +795,44 @@ class TestNordicMethods(unittest.TestCase):
             self.assertEqual(len(pick), 1)
             self.assertEqual(pick[0].time, value)
 
+    def test_read_high_accuracy(self):
+        """
+        Verify that high-accuracy locations are read, if present
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_highaccuracy"))
+        event = cat[0]
+        event_time = event.origins[0].time
+        event_lat = event.origins[0].latitude
+        event_lon = event.origins[0].longitude
+        event_depth = event.origins[0].depth
+        event_rms = event.origins[0].quality.standard_error
+        self.assertEqual(event_time,
+                         UTCDateTime(2015, 4, 24, 15, 25, 37) + 0.676)
+        self.assertEqual(event_lat, 37.29242)
+        self.assertEqual(event_lon, -32.26983)
+        self.assertEqual(event_depth, 1969.)
+        self.assertEqual(event_rms, 0.051)
+
+    def test_read_uncert_ellipse(self):
+        """
+        Verify that confidence ellipse values are properly calculated
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_events(
+                os.path.join(self.testing_path, "sfile_highaccuracy"))
+        event = cat[0]
+        val = event.origins[0].origin_uncertainty
+        hor_max = val['max_horizontal_uncertainty']
+        hor_min = val['min_horizontal_uncertainty']
+        azi_max = val['azimuth_max_horizontal_uncertainty']
+        self.assertAlmostEqual(hor_max, 1255.9106483)
+        self.assertAlmostEqual(hor_min, 204.089351696)
+        self.assertAlmostEqual(azi_max, 167.9407699)
+
 
 def _assert_similarity(event_1, event_2, verbose=False):
     """

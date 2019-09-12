@@ -23,7 +23,7 @@ MAG_MAPPING = {"ML": "L", "MLv": "L", "mB": "B", "Ms": "s", "MS": "S",
 INV_MAG_MAPPING = {item: key for key, item in MAG_MAPPING.items()}
 # List of currently implemented line-endings, which in Nordic mark what format
 # info in that line will be.
-ACCEPTED_TAGS = ('1', '6', '7', 'E', ' ', 'F', 'M', '3')
+ACCEPTED_TAGS = ('1', '6', '7', 'E', ' ', 'F', 'M', '3', 'H')
 
 
 def _int_conv(string):
