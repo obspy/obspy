@@ -14,7 +14,7 @@ import warnings
 import numpy as np
 
 import obspy
-from obspy.core.compatibility import from_buffer
+from obspy.core.compatibility import from_buffer, mock
 from obspy.core.util import NamedTemporaryFile, AttribDict
 from obspy.io.segy.header import (DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
                                   DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS)
@@ -768,15 +768,23 @@ class SEGYTestCase(unittest.TestCase):
         values. Thus we attempt to raise nice and helpful error messages.
         """
         tr = obspy.read()[0]
-        tr.data = np.float32(np.zeros(100000))
-        with io.BytesIO() as buf:
-            with self.assertRaises(ValueError) as err:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    tr.write(buf, format="segy")
+        tr.data = np.float32(np.zeros(3))
+        # mock the number of traces per ensemble with an invalid number to
+        # trigger error message. we have a more meaningful message for number
+        # of samples now, so we can't use that anymore for testing any
+        # arbitrary invalid binary header value
+        with mock.patch.object(
+                SEGYBinaryFileHeader, 'number_of_data_traces_per_ensemble',
+                create=True, new_callable=mock.PropertyMock,
+                return_value=100000):
+            with io.BytesIO() as buf:
+                with self.assertRaises(ValueError) as err:
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore")
+                        tr.write(buf, format="segy")
         self.assertEqual(
             err.exception.args[0],
-            "Failed to pack header value `number_of_samples_per_data_trace` "
+            "Failed to pack header value `number_of_data_traces_per_ensemble` "
             "(100000) with format `>h` due to: `'h' format requires -32768 <="
             " number <= 32767`")
 
