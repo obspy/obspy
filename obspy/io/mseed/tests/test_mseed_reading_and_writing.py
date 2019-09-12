@@ -21,7 +21,7 @@ from obspy.core import AttribDict
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import CatchOutput, NamedTemporaryFile
 from obspy.io.mseed import (util, InternalMSEEDWarning,
-                            InternalMSEEDError)
+                            InternalMSEEDError, ObsPyMSEEDError)
 from obspy.io.mseed.core import _is_mseed, _read_mseed, _write_mseed
 from obspy.io.mseed.headers import ENCODINGS, clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
@@ -154,6 +154,35 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
                     np.testing.assert_array_equal(this_stream[0].data,
                                                   new_stream[0].data)
+
+    def test_downcast_int64_to_int32(self):
+        """
+        Checks that sample stream of dtype int64 can be downcast to int 32 and
+        written to mseed by downcasting the data to int32 type data.
+        """
+        # create a dummy stream with int64 data
+        x = np.array([1, 2, -3, 4], dtype=np.int64)
+        tr = Trace(x)
+        st = Stream()
+        st.append(tr)
+
+        # make sure the data can be written to mseed
+        with io.BytesIO() as buf:
+            st.write(buf, format="mseed")
+            st2 = read(buf)
+        self.assertEqual(len(st), len(st2))
+        for tr, tr2 in zip(st, st2):
+            self.assertTrue(np.array_equal(tr.data, tr2.data))
+        self.assertEqual(st[0].data.dtype.type, np.int64)
+
+        # Test that error message is indeed raised when data cannot be downcast
+        # Create dummy stream that cannot be properly downcast to int64
+        for x in [2 ** 55, -2 ** 55]:
+            data = np.array([1, 2, -3, x, -1], dtype=np.int64)
+            st = Stream([Trace(data)])
+            with io.BytesIO() as buf:
+                with self.assertRaises(ObsPyMSEEDError):
+                    st.write(buf, format="mseed")
 
     def test_get_record_information(self):
         """
