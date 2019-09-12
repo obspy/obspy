@@ -133,9 +133,9 @@ install:
         NUMPY="numpy"
         SCIPY="scipy"
         MATPLOTLIB="matplotlib"
-        BASEMAP="basemap=1.2.1"
+        BASEMAP="basemap>=1.2.1"
         PYPROJ="pyproj"
-        PROJ4="proj4=4.9.3"
+        PROJ4="proj4"
         GFORTRAN=""
       else
         NUMPY="numpy"
