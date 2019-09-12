@@ -20,7 +20,6 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
-from obspy.core.util.obspy_types import ObsPyException
 from .header import (BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_CODE_DTYPE,
                      ENDIAN, TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
 from .segy import _read_segy as _read_segyrev1
@@ -278,7 +277,7 @@ def _write_segy(stream, filename, data_encoding=None, byteorder=None,
         if len(tr) > MAX_NUMBER_OF_SAMPLES:
             msg = ('Can not write traces with more than {:d} samples (trace '
                    'at index {:d}):\n{!s}')
-            raise ObsPyException(msg.format(MAX_NUMBER_OF_SAMPLES, i, tr))
+            raise ValueError(msg.format(MAX_NUMBER_OF_SAMPLES, i, tr))
 
     # Some sanity checks to catch invalid arguments/keyword arguments.
     if data_encoding is not None and data_encoding not in VALID_FORMATS:

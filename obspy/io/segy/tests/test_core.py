@@ -16,7 +16,6 @@ import numpy as np
 
 from obspy import UTCDateTime, read, Trace, Stream
 from obspy.core.util import NamedTemporaryFile, AttribDict
-from obspy.core.util.obspy_types import ObsPyException
 from obspy.io.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
                                 _is_segy, _is_su, _read_segy, _read_su,
                                 _write_segy, _write_su)
@@ -684,7 +683,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         tr.stats.sampling_rate = 100
         st = Stream([tr])
         bio = io.BytesIO()
-        with self.assertRaises(ObsPyException) as e:
+        with self.assertRaises(ValueError) as e:
             _write_segy(st, bio, data_encoding=2)
         self.assertEqual(
             str(e.exception),
