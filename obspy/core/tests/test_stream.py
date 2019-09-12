@@ -2702,7 +2702,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st2[0].stats.inclination, st[0].stats.inclination)
         self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
         self.assertEqual(st2[0].stats.channel, '')
-        self.assertNotIn('azimuth', st2[0].stats)
+        self.assertNotIn('back_azimuth', st2[0].stats)
         st[0].stats.starttime += 10
         st2 = st.stack()
         self.assertEqual(st2[0].stats.starttime, UTCDateTime(0))
