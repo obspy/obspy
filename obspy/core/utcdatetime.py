@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import datetime
+import calendar
 import math
 import operator
 import re
@@ -395,15 +396,17 @@ class UTCDateTime(object):
                 msg = "Failed to convert 'julday' to int: {!s}".format(
                     kwargs['julday'])
                 raise TypeError(msg)
-            if not (1 <= int(kwargs['julday']) <= 366):
-                msg = "'julday' out of bounds: {!s}".format(kwargs['julday'])
-                raise ValueError(msg)
             if 'year' in kwargs:
                 # year given as kwargs
                 year = kwargs['year']
             elif len(args) == 1:
                 # year is first (and only) argument
                 year = args[0]
+            days_in_year = calendar.isleap(year) and 366 or 365
+            if not (1 <= int(kwargs['julday']) <= days_in_year):
+                msg = "'julday' out of bounds for year {!s}: {!s}".format(
+                    year, kwargs['julday'])
+                raise ValueError(msg)
             try:
                 temp = "%4d%03d" % (int(year),
                                     int(kwargs['julday']))
