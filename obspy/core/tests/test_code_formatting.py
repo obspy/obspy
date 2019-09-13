@@ -26,6 +26,9 @@ else:
 
 # List of flake8 error codes to ignore. Keep it as small as possible - there
 # usually is little reason to fight flake8.
+# NOTE: Keep consistent between..
+#   - obspy/core/tests/test_code_formatting.py FLAKE8_IGNORE_CODES
+#   - .circleci/config.yml --ignore
 FLAKE8_IGNORE_CODES = [
     # E402 module level import not at top of file
     # This is really annoying when using the standard library import hooks
