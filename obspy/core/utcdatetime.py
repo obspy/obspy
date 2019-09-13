@@ -30,6 +30,12 @@ from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 # is called a lot. Thus pre-compile it.
 _YEAR0REGEX = re.compile(r"^(\d{1,3}[-/,])(.*)$")
 
+_ISO8601_REGEX = re.compile(
+    r"^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?"
+    r"|W([0-4]\d|5[0-3])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6"
+    r"])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17"
+    r"[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
+
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 # XXX the strftime problem seems to be specific to Python < 3.2
 # XXX so this can be removed after dropping Python 2 support
@@ -66,9 +72,9 @@ class UTCDateTime(object):
     :param args: The creation of a new `UTCDateTime` object depends from the
         given input parameters. All possible options are summarized in the
         `Examples`_ section below.
-    :type iso8601: bool, optional
-    :param iso8601: Enforce `ISO8601:2004`_ detection. Works only with a string
-        as first input argument.
+    :type iso8601: bool or None, optional
+    :param iso8601: Enforce/disable `ISO8601:2004`_ mode. Defaults to ``None``
+        for auto detection. Works only with a string as first input argument.
     :type strict: bool, optional
     :param strict: If True, Conform to `ISO8601:2004`_ limits on positional
         and keyword arguments. If False, allow hour, minute, second, and
@@ -268,7 +274,7 @@ class UTCDateTime(object):
             self._ns = ns
             return
         # iso8601 flag
-        iso8601 = kwargs.pop('iso8601', False) is True
+        iso8601 = kwargs.pop('iso8601', None)
         # check parameter
         if len(args) == 0 and len(kwargs) == 0:
             # use current date/time if no argument is given
@@ -331,13 +337,17 @@ class UTCDateTime(object):
                         "'%s' does not start with a 4 digit year" % value)
 
                 # check for ISO8601 date string
-                if value.count("T") == 1 or iso8601:
+                if iso8601 is True or (iso8601 is None and
+                                       re.match(_ISO8601_REGEX, value)):
                     try:
                         self._from_iso8601_string(value)
                         return
                     except Exception:
+                        # if iso8601 is enforce raise here otherwise fallback
+                        # to non iso8601
                         if iso8601:
                             raise
+
                 # try to apply some standard patterns
                 value = value.replace('T', ' ')
                 value = value.replace('_', ' ')
