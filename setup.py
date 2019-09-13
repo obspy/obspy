@@ -86,7 +86,7 @@ EXTERNAL_LIBMSEED = False
 KEYWORDS = [
     'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'beamforming', 'cross correlation', 'database', 'dataless',
-    'Dataless SEED', 'win', 'earthquakes', 'Earthworm', 'EIDA',
+    'Dataless SEED', 'DMX', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
     'focal mechanism', 'FOCMEC', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P',
     'IASPEI', 'imaging', 'IMS', 'instrument correction',
@@ -99,7 +99,8 @@ KEYWORDS = [
     'SeisHub', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
     'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
-    'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED', ]
+    'WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston', 'XML-SEED',
+    'XSEED', ]
 
 # when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
 # and in obspy/io/mseed/core.py change downcasting check to numpy.can_cast()
@@ -169,6 +170,7 @@ ENTRY_POINTS = {
         'GCF = obspy.io.gcf.core',
         'REFTEK130 = obspy.io.reftek.core',
         'RG16 = obspy.io.rg16.core',
+        'DMX = obspy.io.dmx.core',
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -286,6 +288,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.RG16': [
         'isFormat = obspy.io.rg16.core:_is_rg16',
         'readFormat = obspy.io.rg16.core:_read_rg16',
+    ],
+    'obspy.plugin.waveform.DMX': [
+        'isFormat = obspy.io.dmx.core:_is_dmx',
+        'readFormat = obspy.io.dmx.core:_read_dmx',
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
