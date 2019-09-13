@@ -92,6 +92,8 @@ master:
      plots (see #2471, #2477)
    * Fixed a bug in Stream.plot(type='section', reftime=..., ...) that caused
      wrong relative start times of traces relative to given reftime (see #2493)
+ - obspy.io.dmx:
+   * Add read support for INGV's DMX format (see #2452)
  - obspy.io.gcf:
    * Fixes Python 3.8 compatibility of GCF reader. (see #2505)
  - obspy.io.mseed:
