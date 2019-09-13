@@ -73,6 +73,12 @@ class CodeFormattingTestCase(unittest.TestCase):
         # codes..
         default_ignore_codes = \
             flake8.get_style_guide().options.__dict__['ignore']
+        try:
+            import pycodestyle
+        except ImportError:
+            pass
+        else:
+            default_ignore_codes += pycodestyle.DEFAULT_IGNORE.split(',')
         ignore_codes = list(set(default_ignore_codes + FLAKE8_IGNORE_CODES))
         # --hang-closing allows valid indented closing brackets, see
         # https://github.com/PyCQA/pycodestyle/issues/103#issuecomment-17366719
