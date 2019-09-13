@@ -343,8 +343,8 @@ class UTCDateTime(object):
                         self._from_iso8601_string(value)
                         return
                     except Exception:
-                        # if iso8601 is enforce raise here otherwise fallback
-                        # to non iso8601
+                        # raise here if iso8601 is enforced otherwise fallback
+                        # to non iso8601 detection by continuing below
                         if iso8601:
                             raise
 
