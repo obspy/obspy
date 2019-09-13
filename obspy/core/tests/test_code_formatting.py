@@ -34,6 +34,8 @@ FLAKE8_IGNORE_CODES = [
     # This is really annoying when using the standard library import hooks
     # from the future package.
     "E402",
+    "E504",
+    "W504",
 ]
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",
