@@ -1082,15 +1082,15 @@ def _plot_detections(detections, similarities, stream=None, heights=None,
         ax[i].annotate(tr.id, **akw)
     for i, tr in enumerate(similarities):
         if tr is not None:
-            ax[num1+i].plot(tr.times('matplotlib'), tr.data, 'k')
+            ax[num1 + i].plot(tr.times('matplotlib'), tr.data, 'k')
             height = _get_item(heights, i)
             if isinstance(height, (float, int)):
-                ax[num1+i].axhline(height)
+                ax[num1 + i].axhline(height)
         template_name = _get_item(template_names, i)
         text = ('similarity {}'.format(template_name) if template_name else
                 'similarity' if num2 == 1 else
                 'similarity template {}'.format(i))
-        ax[num1+i].annotate(text, **akw)
+        ax[num1 + i].annotate(text, **akw)
     try:
         _set_xaxis_obspy_dates(ax[-1])
     except ValueError:

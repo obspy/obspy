@@ -367,7 +367,7 @@ class Client(object):
                 if token_file:
                     msg = ("Read EIDA token from file '{}' but it does not "
                            "seem to contain a valid PGP message.").format(
-                                token_file)
+                               token_file)
                 else:
                     msg = ("EIDA token does not seem to be a valid PGP "
                            "message. If you passed a filename, make sure the "

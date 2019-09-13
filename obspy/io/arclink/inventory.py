@@ -409,7 +409,7 @@ def _read_channel(inventory_root, cha_element):
     numerator = _attr2obj(cha_element, "sampleRateNumerator", int)
     denominator = _attr2obj(cha_element, "sampleRateDenominator", int)
 
-    rate = numerator/denominator
+    rate = numerator / denominator
 
     channel.sample_rate_ratio_number_samples = numerator
     channel.sample_rate_ratio_number_seconds = denominator
@@ -423,7 +423,7 @@ def _read_channel(inventory_root, cha_element):
                          ClockDrift)
         if channel.sample_rate != 0.0:
             channel.clock_drift_in_seconds_per_sample = \
-                _read_float_var(temp/channel.sample_rate, ClockDrift)
+                _read_float_var(temp / channel.sample_rate, ClockDrift)
         else:
             msg = "Clock drift division by sample rate of 0: using sec/sample"
             warnings.warn(msg)

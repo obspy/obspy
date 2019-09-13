@@ -62,7 +62,7 @@ def _read_rg16(filename, headonly=False, starttime=None, endtime=None,
     traces = []
     for i in range(0, record_count):
         nbr_bytes_trace_block = _cmp_jump(filename, trace_block_start)
-        trace_starttime = _read(filename, trace_block_start + 20 + 2*32, 8,
+        trace_starttime = _read(filename, trace_block_start + 20 + 2 * 32, 8,
                                 'binary') / 1e6
         trace_endtime = trace_starttime + record_length
         if starttime.timestamp <= trace_starttime < endtime.timestamp or\
@@ -115,7 +115,7 @@ def _cmp_record_length(fi):
     base_scan_interval = _read(fi, 22, 1, 'binary')
     sampling_rate = int(1000 / (base_scan_interval / 16))
     gen_head_2 = _read_initial_headers(fi)['general_header_2']
-    record_length = gen_head_2['extended_record_length'] - 1/sampling_rate
+    record_length = gen_head_2['extended_record_length'] - 1 / sampling_rate
     return record_length
 
 
@@ -170,7 +170,7 @@ def _make_stats(fi, tr_block_start, standard_orientation, details):
     chan = band_map[sampling_rate] + instrument_code + component
     npts = _read(fi, tr_block_start + 27, 3, 'binary')
     start_time = _read(fi, tr_block_start + 20 + 2 * 32, 8, 'binary') / 1e6
-    end_time = start_time + (npts - 1) * (1/sampling_rate)
+    end_time = start_time + (npts - 1) * (1 / sampling_rate)
     network = _read(fi, tr_block_start + 20, 3, 'binary')
     station = _read(fi, tr_block_start + 23, 3, 'binary')
     location = _read(fi, tr_block_start + 26, 1, 'binary')
@@ -589,7 +589,7 @@ def _read_channel_sets(fi):
     nbr_channel_set = _read(fi, 28, 1, 'bcd')
     start_byte = 64
     for i in range(0, nbr_channel_set):
-        channel_set_name = str(i+1)
+        channel_set_name = str(i + 1)
         channel_sets[channel_set_name] = _read_channel_set(fi, start_byte)
         start_byte += 32
     return channel_sets
@@ -637,7 +637,7 @@ def _read_extended_headers(fi):
     """
     extended_headers = {}
     nbr_channel_set = _read(fi, 28, 1, 'bcd')
-    start_byte = 32 + 32 + 32*nbr_channel_set
+    start_byte = 32 + 32 + 32 * nbr_channel_set
     extended_headers['1'] = _read_extended_header_1(fi, start_byte)
     start_byte += 32
     extended_headers['2'] = _read_extended_header_2(fi, start_byte)
@@ -649,13 +649,13 @@ def _read_extended_headers(fi):
         nbr_coeff_remain = coeffs % 8
         for i in range(3, nbr_extended_headers):
             start_byte += 32
-            extended_header_name = str(i+1)
+            extended_header_name = str(i + 1)
             if i == nbr_extended_headers - 1:
-                header = _read_extended_header(fi, start_byte, i+1,
+                header = _read_extended_header(fi, start_byte, i + 1,
                                                nbr_coeff_remain)
                 extended_headers[extended_header_name] = header
             else:
-                header = _read_extended_header(fi, start_byte, i+1, 8)
+                header = _read_extended_header(fi, start_byte, i + 1, 8)
                 extended_headers[extended_header_name] = header
     return extended_headers
 
@@ -743,7 +743,7 @@ def _read_extended_header(fi, start_byte, block_number, nbr_coeff):
     """
     extended_header = {}
     for i in range(0, nbr_coeff):
-        key = 'coeff_' + str(i+1)
+        key = 'coeff_' + str(i + 1)
         extended_header[key] = _read(fi, start_byte, 4, 'IEEE')
         start_byte += 4
     return extended_header
