@@ -127,6 +127,16 @@ install:
         PYPROJ="pyproj"
         PROJ4="proj4=4.9.3"
         GFORTRAN=""
+      elif [[ "${PYTHON_VERSION}" == '3.7' ]]; then
+        # Pin proj4 to 4.9.3 for map testing - see basemap #433
+        # Let conda resolve to the latest versions otherwise.
+        NUMPY="numpy"
+        SCIPY="scipy"
+        MATPLOTLIB="matplotlib"
+        BASEMAP="basemap>=1.2.1"
+        PYPROJ="pyproj"
+        PROJ4="proj4"
+        GFORTRAN=""
       else
         NUMPY="numpy"
         SCIPY="scipy"

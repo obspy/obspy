@@ -382,7 +382,13 @@ def get_proj_version(raw_string=False):
     # proj4 is a c library, prproj wraps this.  proj_version is an attribute
     # of the Proj class that is only set when the projection is made. Make
     # a dummy projection and get the version
-    version_string = str(Proj(proj='utm', zone=10, ellps='WGS84').proj_version)
+    _proj = Proj(proj='utm', zone=10, ellps='WGS84')
+    if hasattr(_proj, 'proj_version'):
+        version_string = str(getattr(_proj, 'proj_version'))
+    else:
+        from pyproj import proj_version_str
+        version_string = proj_version_str
+
     if raw_string:
         return version_string
     version_list = [to_int_or_zero(no) for no in version_string.split(".")]
