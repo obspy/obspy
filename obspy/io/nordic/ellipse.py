@@ -23,8 +23,9 @@ class _ellipse:
         """Defines an ellipse
 
         The ellipse is assumed to be centered at zero with its semi-major axis
-        axis aligned along the x-axis unless orientation and/or center are set
-        otherwise
+        axis aligned along the NORTH axis (geographic standard, not math
+        standard!) unless orientation and/or center are set otherwise
+        You can think of it as theta (geographic angle) = 90-phi (math angle)
 
         Inputs:
             a=length of semi-major axis
@@ -44,15 +45,13 @@ class _ellipse:
         self.y = center[1]
 
     @classmethod
-    def from_uncerts(cls, x_err, y_err, c_xy, center=(0, 0), debug=False):
-        """Set error ellipse using common epicenter uncertainties
+    def from_cov(cls, cov, center=(0, 0), debug=False):
+        """Set error ellipse using covariance matrix
 
-        Call as e=ellipse.from_uncerts(x_err,y_err,c_xy,center)
+        Call as e=_ellipse.from_cov(cov,center)
 
         Inputs:
-            x_err: x error (m)
-            y_err: y error (m)
-            c_xy:  x-y covariance (m^2)
+            cov: covariance matrix [[c_xx, c_xy], [c_xy, c_yy]]
             center:  center position (x,y)
         Sources:
             http://www.visiondummy.com/2014/04/
@@ -60,26 +59,44 @@ class _ellipse:
             https://blogs.sas.com/content/iml/2014/07/23/
                     prediction-ellipses-from-covariance.html
         """
-        cov = [[x_err**2, c_xy], [c_xy, y_err**2]]
         evals, evecs = np.linalg.eig(cov)
+        evals = np.sqrt(evals)
         if debug:
             print(evecs)
             print(evals)
-        # Sort eigenvalues in decreasing order and select semi-major and
-        # semi-minor axes
+        # Sort eigenvalues in decreasing order
         sort_indices = np.argsort(evals)[::-1]
+        # Select semi-major and semi-minor axes
         a, b = evals[sort_indices[0]], evals[sort_indices[1]]
-        # Calculate angle of semi-major axis (e-vector w/ largest e-value)
+        # Calculate angle of semi-major axis
         x_v1, y_v1 = evecs[:, sort_indices[0]]
-        theta = (np.degrees(np.arctan((x_v1)/(y_v1))) + 180) % 180
+        if y_v1 == 0.:
+            theta = 90.
+        else:
+            theta = (np.degrees(np.arctan((x_v1)/(y_v1))) + 180) % 180
         return cls(a, b, theta, center)
 
     @classmethod
-    def from_uncerts_baz(cls, x_err, y_err, c_xy, dist, baz,
-                         viewpoint=(0, 0), debug=False):
-        """Set error ellipse using common epicenter uncertainties, back-azimuth
+    def from_uncerts(cls, x_err, y_err, c_xy, center=(0, 0), debug=False):
+        """Set error ellipse using Nordic epicenter uncertainties
 
-        Call as e=ellipse.from_uncerts_baz(xerr,yerr,c_xy,dist,baz[,viewpt])
+        Call as e=_ellipse.from_uncerts(x_err,y_err,c_xy,center)
+
+        Inputs:
+            x_err: x error (m)
+            y_err: y error (m)
+            c_xy:  x-y covariance (m^2)
+            center:  center position (x,y)
+        """
+        cov = [[x_err**2, c_xy], [c_xy, y_err**2]]
+        return cls.from_cov(cov, center)
+
+    @classmethod
+    def from_uncerts_baz(cls, x_err, y_err, c_xy, dist, baz,
+                         viewpoint=(0, 0)):
+        """Set error ellipse using uncertainties, distance and back-azimuth
+
+        Call as e=_ellipse.from_uncerts_baz(xerr,yerr,c_xy,dist,baz[,viewpt])
 
         Inputs:
             x_err: x error (m)
@@ -93,12 +110,54 @@ class _ellipse:
         y = viewpoint[1] + dist*np.cos(np.radians(baz))
         return cls.from_uncerts(x_err, y_err, c_xy, (x, y))
 
+    def to_cov(self, debug=False):
+        """Convert to covariance matrix notation
+
+        Call as cov, center =myellipse.to_uncerts()
+
+        Input:
+            _ellipse class object
+        Outputs:
+            cov: covariance matrix [[c_xx, c_xy], [c_xy, c_yy]]
+            center:  center position (x,y)
+        Sources:
+            https://stackoverflow.com/questions/41807958/
+                    convert-position-confidence-ellipse-to-covariance-matrix
+        """
+        sin_theta = np.sin(np.radians(self.theta))
+        cos_theta = np.cos(np.radians(self.theta))
+        # The following is BACKWARDs from math standard
+        # but consistent with geographic notation
+        c_yy = self.a**2 * cos_theta**2 + self.b**2 * sin_theta**2
+        c_xx = self.a**2 * sin_theta**2 + self.b**2 * cos_theta**2
+        c_xy = (self.a**2 - self.b**2) * sin_theta * cos_theta
+        return [[c_xx, c_xy], [c_xy, c_yy]],  (self.x, self.y)
+
+    def to_uncerts(self, debug=False):
+        """Convert to Nordic uncertainty values
+
+        Call as x_err, y_err, c_xy, center =myellipse.to_uncerts()
+
+        Input:
+            _ellipse class object
+        Outputs:
+            x_err: x error (m)
+            y_err: y error (m)
+            c_xy:  x-y covariance (m^2)
+            center:  center position (x,y)
+        """
+        cov, center = self.to_cov()
+        assert cov[0][1] == cov[1][0]
+        x_err = np.sqrt(cov[0][0])
+        y_err = np.sqrt(cov[1][1])
+        c_xy = cov[0][1]
+        return x_err, y_err, c_xy, center
+
     def __repr__(self):
         """String describing the ellipse
         """
         s = f'<a={self.a:.3g}, b={self.b:.3g}'
-        if self.theta != 0:
-            s += f', theta={self.theta:5.1f}'
+        s += f', theta={self.theta:5.1f}'
         if self.x != 0 or self.y != 0:
             s += f', center=({self.x:.3g},{self.y:.3g})'
         s += '>'

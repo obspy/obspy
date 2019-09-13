@@ -29,6 +29,7 @@ from obspy.io.nordic.core import (
 from obspy.io.nordic.utils import (
     _int_conv, _float_conv, _str_conv, _nortoevmag, _evmagtonor,
     _get_line_tags)
+from obspy.io.nordic.ellipse import _ellipse
 
 
 class TestNordicMethods(unittest.TestCase):
@@ -816,9 +817,50 @@ class TestNordicMethods(unittest.TestCase):
         self.assertEqual(event_depth, 1969.)
         self.assertEqual(event_rms, 0.051)
 
+    def test_uncert_ellipse(self, debug=False):
+        """
+        Verify that confidence ellipse is properly calculated and inverted
+        """
+        center = (20, 30)
+        # First try simple cases without correlation
+        x_errs = (0.5, 1.33, 1.0)
+        y_errs = (1.33, 0.5, 1.0)
+        for c_xy in [0, 0.2, 0.4, 0.6]:
+            for (x_err, y_err) in zip(x_errs, y_errs):
+                ell = _ellipse.from_uncerts(x_err, y_err, c_xy, center)
+                (x_err_out, y_err_out, c_xy_out, center_out) = ell.to_uncerts()
+                if debug:
+                    print()
+                    print(x_err, y_err, c_xy, center)
+                    print(ell)
+                    print(x_err_out, y_err_out, c_xy_out, center_out)
+                self.assertAlmostEqual(x_err, x_err_out)
+                self.assertAlmostEqual(y_err, y_err_out)
+                self.assertAlmostEqual(c_xy, c_xy_out)
+                self.assertAlmostEqual(center, center_out)
+        # Now a specific case with a finite covariance
+        x_err = 0.5
+        y_err = 1.1
+        c_xy = -0.2149
+        # Calculate ellipse
+        ell = _ellipse.from_uncerts(x_err, y_err, c_xy, center)
+        self.assertAlmostEqual(ell.a, 1.120674193646)
+        self.assertAlmostEqual(ell.b, 0.451762494786)
+        self.assertAlmostEqual(ell.theta, 167.9407699)
+        # Calculate covariance error from ellipse
+        (x_err_out, y_err_out, c_xy_out, center_out) = ell.to_uncerts()
+        if debug:
+            print(x_err, y_err, c_xy, center)
+            print(ell)
+            print(x_err_out, y_err_out, c_xy_out, center_out)
+        self.assertAlmostEqual(x_err, x_err_out)
+        self.assertAlmostEqual(y_err, y_err_out)
+        self.assertAlmostEqual(c_xy, c_xy_out)
+        self.assertAlmostEqual(center, center_out)
+
     def test_read_uncert_ellipse(self):
         """
-        Verify that confidence ellipse values are properly calculated
+        Verify that confidence ellipse is properly read/calculated from nordic
         """
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -829,8 +871,8 @@ class TestNordicMethods(unittest.TestCase):
         hor_max = val['max_horizontal_uncertainty']
         hor_min = val['min_horizontal_uncertainty']
         azi_max = val['azimuth_max_horizontal_uncertainty']
-        self.assertAlmostEqual(hor_max, 1255.9106483)
-        self.assertAlmostEqual(hor_min, 204.089351696)
+        self.assertAlmostEqual(hor_max, 1120.674193646)
+        self.assertAlmostEqual(hor_min,  451.762494786)
         self.assertAlmostEqual(azi_max, 167.9407699)
 
 
