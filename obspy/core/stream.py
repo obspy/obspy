@@ -3132,7 +3132,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             This parameter can take two special values,
             ``'id'`` which stacks the waveforms by SEED id and
             ``'all'`` (default) which stacks together all traces in the stream.
-        :type tpye: str or tuple
+        :type type: str or tuple
         :param type: Type of stack, one of the following:
             ``'linear'``: average stack (default),
             ``('pw', order)``: phase weighted stack of given order,
