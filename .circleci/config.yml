@@ -24,4 +24,4 @@ jobs:
             #   - obspy/core/tests/test_code_formatting.py FLAKE8_IGNORE_CODES
             #   - .circleci/config.yml --ignore
             # --hang-closing allows valid indented closing brackets, see https://github.com/PyCQA/pycodestyle/issues/103#issuecomment-17366719
-            /opt/conda/bin/flake8 --verbose --hang-closing --ignore=E402,E504,W504,$(python -c 'import pycodestyle; print(pycodestyle.DEFAULT_IGNORE)') --exclude=__init__.py obspy
+            /opt/conda/bin/flake8 --verbose --hang-closing --ignore=E402,E504,W504,$(python -c 'import pycodestyle; print(pycodestyle.DEFAULT_IGNORE)'),$(python -c 'from flake8.api import legacy as flake8; print(",".join(flake8.get_style_guide().options.__dict__["ignore"]))') --exclude=__init__.py obspy
