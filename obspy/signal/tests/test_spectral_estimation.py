@@ -26,6 +26,7 @@ from obspy.core.util.testing import (
     ImageComparison, ImageComparisonException, MATPLOTLIB_VERSION)
 from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, welch_taper, welch_window)
+from obspy.signal.spectral_estimation import earthquake_models
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -540,6 +541,29 @@ class PsdTestCase(unittest.TestCase):
             ppsd._plot_histogram(fig=fig, draw=True)
             with np.errstate(under='ignore'):
                 fig.savefig(ic.name)
+
+    def test_earthquake_models(self):
+        """
+        Test earthquake models
+        """
+        ppsd = _get_ppsd()
+        test_magnitudes = [3.5, 2.5, 1.5]
+        for magnitude in test_magnitudes:
+            key = (magnitude, 10)
+            fig = ppsd.plot(show_earthquakes=(magnitude-0.5, magnitude+0.5,
+                                              5, 15),
+                          show_noise_models=False, show=False)
+            ax = fig.axes[0]
+            line = ax.lines[0]
+            frequencies, accelerations = earthquake_models[key]
+            accelerations = np.array(accelerations)
+            periods = 1 / np.array(frequencies)
+            power = accelerations / (periods ** (-.5))
+            power = 20 * np.log10(power / 2)
+            self.assertEqual(list(line.get_ydata()), list(power))
+            self.assertEqual(list(line.get_xdata()), list(periods))
+            caption = '$^{M%.1f}_{10km}$' % (key[0])
+            self.assertIn(ax.texts[0].get_text(), caption)
 
     def test_ppsd_add_npz(self):
         """
