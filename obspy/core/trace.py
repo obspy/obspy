@@ -2528,8 +2528,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 [self.stats.starttime + t_ for t_ in time_array])
         elif type == "matplotlib":
             from matplotlib.dates import date2num
-            time_array = (date2num(self.stats.starttime.datetime)
-                          + time_array / 86400.0)
+            time_array = (
+                date2num(self.stats.starttime.datetime) + time_array / 86400.0)
         else:
             msg = "Invalid `type`: {}".format(type)
             raise ValueError(msg)

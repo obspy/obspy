@@ -1286,7 +1286,7 @@ class UTCDateTime(object):
             if strftime_key not in strftime_string:
                 continue
             strftime_string = strftime_string.replace(
-                    strftime_key, '{%s:%s}' % (property_name, format_spec))
+                strftime_key, '{%s:%s}' % (property_name, format_spec))
             replacement = getattr(self, property_name)
             if func is not None:
                 replacement = func(replacement)

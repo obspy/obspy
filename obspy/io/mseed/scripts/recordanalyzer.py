@@ -284,9 +284,9 @@ class RecordAnalyser(object):
 
             blkt_dict['Number of Step Calibrations'] = int(unpack_values[7])
             blkt_dict['Step Duration in Seconds'] = \
-                int(float(unpack_values[8])/10000.)
+                int(float(unpack_values[8]) / 10000.)
             blkt_dict['Interval Duration in Seconds'] = \
-                int(float(unpack_values[9])/10000.)
+                int(float(unpack_values[9]) / 10000.)
             blkt_dict['Calibration Signal Amplitude'] = \
                 float(unpack_values[11])
             blkt_dict['Calibration Monitor Channel'] = \
@@ -321,9 +321,9 @@ class RecordAnalyser(object):
                             microsecond=int(unpack_values[5]))
 
             blkt_dict['Calibration Duration in Seconds'] = \
-                int(float(unpack_values[9])/10000.)
+                int(float(unpack_values[9]) / 10000.)
             blkt_dict['Period of Signal in Seconds'] = \
-                int(float(unpack_values[10])/10000.)
+                int(float(unpack_values[10]) / 10000.)
             blkt_dict['Calibration Signal Amplitude'] = \
                 float(unpack_values[11])
             blkt_dict['Calibration Monitor Channel'] = \
@@ -358,7 +358,7 @@ class RecordAnalyser(object):
                             microsecond=int(unpack_values[5]))
 
             blkt_dict['Calibration Duration in Seconds'] = \
-                int(float(unpack_values[9])/10000.)
+                int(float(unpack_values[9]) / 10000.)
             blkt_dict['Peak-To-Peak Amplitude'] = int(unpack_values[10])
             blkt_dict['Calibration Monitor Channel'] = \
                 unpack_values[11].decode('ascii', errors="replace")

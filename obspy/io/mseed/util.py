@@ -1331,10 +1331,12 @@ def _check_flag_value(flag_value):
                                     raise ValueError(msg)
                                 next(duration_iter)
 
-                        elif isinstance(dur_values[0], collections_abc.Sequence):
+                        elif isinstance(dur_values[0],
+                                        collections_abc.Sequence):
                             # List of tuples (start, end)
                             for value in dur_values:
-                                if not isinstance(value, collections_abc.Sequence):
+                                if not isinstance(value,
+                                                  collections_abc.Sequence):
                                     msg = "Incorrect type %s for flag duration"
                                     raise ValueError(msg % str(type(value)))
                                 elif len(value) != 2:

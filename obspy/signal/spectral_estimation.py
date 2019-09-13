@@ -798,8 +798,8 @@ class PPSD(object):
                 else:
                     # throw warnings if trace length is different
                     # than ppsd_length..!?!
-                    slice = tr.slice(t1, t1 + self.ppsd_length
-                                     - tr.stats.delta)
+                    slice = tr.slice(
+                        t1, t1 + self.ppsd_length - tr.stats.delta)
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?
                     success = self.__process(slice)

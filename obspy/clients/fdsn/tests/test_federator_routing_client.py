@@ -60,16 +60,14 @@ AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00
                 "AF CER -- BHE 2007-03-15T00:47:00 2599-12-31T23:59:59\n"
                 "AF CER -- BHN 2007-03-15T00:47:00 2599-12-31T23:59:59"),
              "http://webservices1.rm.ingv.it": (
-                "AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00"
-             )})
+                "AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00")})
         self.assertEqual(
             FederatorRoutingClient._split_routing_response(data, "station"),
             {"http://geofon.gfz-potsdam2.de": (
                 "AF CER -- BHE 2007-03-15T00:47:00 2599-12-31T23:59:59\n"
                 "AF CER -- BHN 2007-03-15T00:47:00 2599-12-31T23:59:59"),
                 "http://webservices2.rm.ingv.it": (
-                    "AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00"
-                )})
+                    "AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00")})
 
         # Error handling.
         with self.assertRaises(ValueError) as e:
