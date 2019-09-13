@@ -69,7 +69,10 @@ class CodeFormattingTestCase(unittest.TestCase):
         default_ignore_codes = \
             flake8.get_style_guide().options.__dict__['ignore']
         ignore_codes = list(set(default_ignore_codes + FLAKE8_IGNORE_CODES))
-        style_guide = flake8.get_style_guide(ignore=ignore_codes)
+        # --hang-closing allows valid indented closing brackets, see
+        # https://github.com/PyCQA/pycodestyle/issues/103#issuecomment-17366719
+        style_guide = flake8.get_style_guide(
+            ignore=ignore_codes, hang_closing=True)
 
         untracked_files = get_untracked_files_from_git() or []
         files = []
