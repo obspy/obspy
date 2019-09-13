@@ -36,6 +36,12 @@ FLAKE8_IGNORE_CODES = [
     "E402",
     "E504",
     "W504",
+    # E133 closing bracket is missing indentation
+    #   this is an Error shown for one alternative form of closing bracket,
+    #   closing it without indentation with regard to opening line. This gets
+    #   raised when --hang-closing is selected to allow the form with 4 spaces
+    #   as indent (which is valid according to PEP8 but raised by pycodestyle)
+    "E133",
 ]
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",
