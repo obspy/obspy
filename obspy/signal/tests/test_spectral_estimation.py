@@ -351,10 +351,12 @@ class PsdTestCase(unittest.TestCase):
 
         # load expected results, for both only PAZ and full response
         filename_paz = os.path.join(self.path, 'IUANMO_ppsd_paz.npz')
-        results_paz = PPSD.load_npz(filename_paz, metadata=None)
+        results_paz = PPSD.load_npz(filename_paz, metadata=None,
+                                    allow_pickle=True)
         filename_full = os.path.join(self.path,
                                      'IUANMO_ppsd_fullresponse.npz')
-        results_full = PPSD.load_npz(filename_full, metadata=None)
+        results_full = PPSD.load_npz(filename_full, metadata=None,
+                                     allow_pickle=True)
 
         # Calculate the PPSDs and test against expected results
         # first: only PAZ
@@ -722,7 +724,7 @@ class PsdTestCase(unittest.TestCase):
         """
         Test plot of several period bins over time
         """
-        ppsd = PPSD.load_npz(self.example_ppsd_npz)
+        ppsd = PPSD.load_npz(self.example_ppsd_npz, allow_pickle=True)
 
         restrictions = {'starttime': UTCDateTime(2011, 2, 6, 1, 1),
                         'endtime': UTCDateTime(2011, 2, 7, 21, 12),
@@ -818,7 +820,7 @@ class PsdTestCase(unittest.TestCase):
                 PPSD.load_npz(filename)
         self.assertEqual(str(e.exception), msg)
         # 2 - adding a npz
-        ppsd = PPSD.load_npz(self.example_ppsd_npz)
+        ppsd = PPSD.load_npz(self.example_ppsd_npz, allow_pickle=True)
         for method in (ppsd.add_npz, ppsd._add_npz):
             with NamedTemporaryFile() as tf:
                 filename = tf.name
@@ -843,7 +845,7 @@ class PsdTestCase(unittest.TestCase):
         allow np.load the use of pickle. See #2409.
         """
         # Init a test PPSD and empty byte stream.
-        ppsd = PPSD.load_npz(self.example_ppsd_npz)
+        ppsd = PPSD.load_npz(self.example_ppsd_npz, allow_pickle=True)
         byte_me = io.BytesIO()
         # Save PPSD to byte stream and rewind to 0.
         ppsd.save_npz(byte_me)
@@ -851,6 +853,10 @@ class PsdTestCase(unittest.TestCase):
         # Load dict, will raise an exception if pickle is needed.
         loaded_dict = dict(np.load(byte_me, allow_pickle=False))
         self.assertIsInstance(loaded_dict, dict)
+        # A helpful error message is issued when allow_pickle is needed.
+        with self.assertRaises(ValueError) as context:
+            PPSD.load_npz(self.example_ppsd_npz)
+        self.assertIn('Loading PPSD results', str(context.exception))
 
 
 def suite():

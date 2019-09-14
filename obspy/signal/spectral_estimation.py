@@ -1289,7 +1289,7 @@ class PPSD(object):
         np.savez_compressed(filename, **out)
 
     @staticmethod
-    def load_npz(filename, metadata=None):
+    def load_npz(filename, metadata=None, allow_pickle=False):
         """
         Load previously computed PPSD results.
 
@@ -1306,6 +1306,11 @@ class PPSD(object):
             :class:`~obspy.io.xseed Parser` or str or dict
         :param metadata: Response information of instrument. See notes in
             :meth:`PPSD.__init__` for details.
+        :type allow_pickle: bool
+        :param allow_pickle:
+            Allow the pickle protocol to be used when de-serializing saved
+            PPSDs. This is only required for PPSDs by obspy versions less than
+            1.2.0.
         """
         def _load(data):
             # the information regarding stats is set from the npz
@@ -1317,7 +1322,13 @@ class PPSD(object):
                 # we have to convert those back to lists (or simple types), so
                 # that additionally processed data can be appended/inserted
                 # later.
-                data_ = data[key]
+                try:
+                    data_ = data[key]
+                except ValueError:
+                    msg = ("Loading PPSD results saved with obspy versions < "
+                           "1.2 requires setting the allow_pickle parameter "
+                           "of PPSD.load_npz to True")
+                    raise ValueError(msg)
                 if key in ppsd.NPZ_STORE_KEYS_LIST_TYPES:
                     if key in ['_times_data', '_times_gaps']:
                         data_ = data_.tolist()
@@ -1343,7 +1354,7 @@ class PPSD(object):
 
         # XXX get rid of if/else again when bumping minimal numpy to 1.7
         if NUMPY_VERSION >= [1, 7]:
-            with np.load(filename, allow_pickle=True) as data:
+            with np.load(filename, allow_pickle=allow_pickle) as data:
                 return _load(data)
         else:
             data = np.load(filename)
