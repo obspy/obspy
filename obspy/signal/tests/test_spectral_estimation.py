@@ -842,7 +842,8 @@ class PsdTestCase(unittest.TestCase):
     def test_can_read_npz_without_pickle(self):
         """
         Ensures that a default PPSD can be written and read without having to
-        allow np.load the use of pickle. See #2409.
+        allow np.load the use of pickle, or that a helpful error message is
+        raised if allow_pickle is required. See #2409.
         """
         # Init a test PPSD and empty byte stream.
         ppsd = PPSD.load_npz(self.example_ppsd_npz, allow_pickle=True)
@@ -857,6 +858,32 @@ class PsdTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             PPSD.load_npz(self.example_ppsd_npz)
         self.assertIn('Loading PPSD results', str(context.exception))
+
+    def test_can_add_npz_without_pickle(self):
+        """
+        Ensure PPSD can be be added without using the pickle protocol, or
+        that a helpful error message is raised if allow_pickle is required.
+        See #2409.
+        """
+
+        def _save_nps_require_pickle(filename, ppsd):
+            """ Save npz in such a way that requires pickle to load"""
+            out = {}
+            for key in PPSD.NPZ_STORE_KEYS:
+                out[key] = getattr(ppsd, key)
+            np.savez_compressed(filename, **out)
+
+        ppsd = _internal_get_ppsd()
+        # save PPSD in such a way to mock old versions.
+        with NamedTemporaryFile(suffix='.npz') as ntemp:
+            temp_path = ntemp.name
+            _save_nps_require_pickle(temp_path, ppsd)
+            # We should be able to load the files when allowing pickle.
+            ppsd.add_npz(temp_path, allow_pickle=True)
+            # If not allow_pickle,  a helpful error msg should be raised.
+            with self.assertRaises(ValueError) as context:
+                ppsd.add_npz(temp_path)
+            self.assertIn('Loading PPSD results', str(context.exception))
 
 
 def suite():
