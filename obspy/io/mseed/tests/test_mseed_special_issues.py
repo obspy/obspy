@@ -223,7 +223,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
 
     def test_invalid_data_type(self):
         """
-        Writing data of type int64 and int16 are not supported.
+        Writing data of type int64 and int8 are not supported.
 
         int64 data can now be written since #2356 if it can be downcast to
         int32.
