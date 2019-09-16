@@ -87,7 +87,7 @@ class CoreTestCase(unittest.TestCase):
         st.verify()
         self.assertEqual(st[0].data.sum(), -90928.0)
         np.testing.assert_array_equal(
-            st[0].data[:5], [ 148., 238., 133., 9., -92.])
+            st[0].data[:5], [148., 238., 133., 9., -92.])
 
         self.assertEqual(st[1].data.sum(), 3003120.0)
         np.testing.assert_array_equal(
