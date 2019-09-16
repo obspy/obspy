@@ -4,6 +4,7 @@ INGV DMX bindings to ObsPy core module.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from tempfile import SpooledTemporaryFile
 
@@ -13,31 +14,31 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util.attribdict import AttribDict
 
 
-descript_trace_dtypes = np.dtype([('network', "4S"),
-                                  ("st_name", "5S"),
-                                  ("component", "1S"),
-                                  ("insstype", np.int16),
-                                  ("begintime", np.double),
-                                  ("localtime", np.int16),
-                                  ("datatype", "1S"),
-                                  ("descriptor", "1S"),
-                                  ("digi_by", np.int16),
-                                  ("processed", np.int16),
-                                  ("length", np.int32),
-                                  ("rate", np.float32),
-                                  ("mindata", np.float32),
-                                  ("maxdata", np.float32),
-                                  ("avenoise", np.float32),
-                                  ("numclip", np.int32),
-                                  ("timecorrect", np.double),
-                                  ("rate_correct", np.float32),
+descript_trace_dtypes = np.dtype([(native_str("network"), native_str("4S")),
+                                  (native_str("st_name"), native_str("5S")),
+                                  (native_str("component"), native_str("1S")),
+                                  (native_str("insstype"), np.int16),
+                                  (native_str("begintime"), np.double),
+                                  (native_str("localtime"), np.int16),
+                                  (native_str("datatype"), native_str("1S")),
+                                  (native_str("descriptor"), native_str("1S")),
+                                  (native_str("digi_by"), np.int16),
+                                  (native_str("processed"), np.int16),
+                                  (native_str("length"), np.int32),
+                                  (native_str("rate"), np.float32),
+                                  (native_str("mindata"), np.float32),
+                                  (native_str("maxdata"), np.float32),
+                                  (native_str("avenoise"), np.float32),
+                                  (native_str("numclip"), np.int32),
+                                  (native_str("timecorrect"), np.double),
+                                  (native_str("rate_correct"), np.float32),
                                   ])
 
-structtag_dtypes = np.dtype([("sinc", "1S"),
-                             ("machine", "1S"),
-                             ("id_struct", np.int16),
-                             ("len_struct", np.int32),
-                             ("len_data", np.int32)])
+structtag_dtypes = np.dtype([(native_str("sinc"), native_str("1S")),
+                             (native_str("machine"), native_str("1S")),
+                             (native_str("id_struct"), np.int16),
+                             (native_str("len_struct"), np.int32),
+                             (native_str("len_data"), np.int32)])
 
 types = {"s": ("uint16", "H", 2), "q": ("int16", "h", 2),
          "u": ("uint16", "H", 2), "i": ("int16", "h", 2),
