@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The obspy_dmx.core test suite.
+The obspy.io.dmx.core test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -17,7 +17,7 @@ from obspy.io.dmx.core import _read_dmx
 
 class CoreTestCase(unittest.TestCase):
     """
-    Test cases for win core interface
+    Test cases for dmx core interface
     """
     def setUp(self):
         # directory where the test files are located
@@ -27,7 +27,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = os.path.join(self.path, '181223 120000.DMX')
+        filename = os.path.join(self.path, '181223_120000.DMX')
         # 1
         st = read(filename)
         st.verify()
@@ -44,13 +44,12 @@ class CoreTestCase(unittest.TestCase):
 
     def test_read_via_module(self):
         """
-        Read files via obspy.io.win.core._read_win function.
+        Read files via obspy.io.mdx.core._read_dmx function directly.
         """
-        filename = os.path.join(self.path, '181223 120000.DMX')
+        filename = os.path.join(self.path, '181223_120000.DMX')
         # 1
         st = _read_dmx(filename)
         st.verify()
-        st.sort(keys=['channel'])
         self.assertEqual(len(st), 186)
         self.assertEqual(st[0].stats.starttime,
                          UTCDateTime(2018, 12, 23, 12, 0))
@@ -60,18 +59,21 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(st[0]), 3000)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 50.0)
         self.assertEqual(st[0].stats.channel, 'E')
+        self.assertEqual(st[0].id, 'IT.STR1..E')
 
     def test_read_with_station(self):
         """
-                Read files via obspy.io.win.core._read_win function.
-                """
-        filename = os.path.join(self.path, '181223 120000.DMX')
+        Read files and passing a station keyword argument.
+        """
+        filename = os.path.join(self.path, '181223_120000.DMX')
         # 1
         st = read(filename, station='EMPL')
         st.verify()
 
         self.assertEqual(len(st), 3)
         self.assertEqual(st[0].id, "IT.EMPL..E")
+        for tr in st:
+            self.assertEqual(tr.stats.station, "EMPL")
 
 
 def suite():

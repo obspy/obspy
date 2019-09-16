@@ -6,28 +6,30 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from tempfile import SpooledTemporaryFile
-from obspy.core.util.attribdict import AttribDict
-from obspy import Stream, Trace, UTCDateTime
+
 import numpy as np
 
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core.util.attribdict import AttribDict
+
 descript_trace_dtypes = np.dtype([('network', "4S"),
-                                 ("st_name", "5S"),
-                                 ("component", "1S"),
-                                 ("insstype", np.int16),
-                                 ("begintime", np.double),
-                                 ("localtime", np.int16),
-                                 ("datatype", "1S"),
-                                 ("descriptor", "1S"),
-                                 ("digi_by", np.int16),
-                                 ("processed", np.int16),
-                                 ("length", np.int32),
-                                 ("rate", np.float32),
-                                 ("mindata", np.float32),
-                                 ("maxdata", np.float32),
-                                 ("avenoise", np.float32),
-                                 ("numclip", np.int32),
-                                 ("timecorrect", np.double),
-                                 ("rate_correct", np.float32),
+                                  ("st_name", "5S"),
+                                  ("component", "1S"),
+                                  ("insstype", np.int16),
+                                  ("begintime", np.double),
+                                  ("localtime", np.int16),
+                                  ("datatype", "1S"),
+                                  ("descriptor", "1S"),
+                                  ("digi_by", np.int16),
+                                  ("processed", np.int16),
+                                  ("length", np.int32),
+                                  ("rate", np.float32),
+                                  ("mindata", np.float32),
+                                  ("maxdata", np.float32),
+                                  ("avenoise", np.float32),
+                                  ("numclip", np.int32),
+                                  ("timecorrect", np.double),
+                                  ("rate_correct", np.float32),
                                   ])
 
 structtag_dtypes = np.dtype([("sinc", "1S"),
@@ -70,7 +72,7 @@ def readdescripttrace(fid):
 
 def readdata(fid, n, t):
     target = types[t]
-    return np.fromfile(fid, eval("np.%s" % target[0]), n)
+    return np.fromfile(fid, np.dtype(target[0]), n)
 
 
 def _is_dmx(filename):
@@ -93,9 +95,7 @@ def _is_dmx(filename):
 
 
 def _read_dmx(filename, **kwargs):
-    station = None
-    if "station" in kwargs:
-        station = kwargs["station"]
+    station = kwargs.get("station", None)
 
     traces = []
     with open(filename, "rb") as fid:

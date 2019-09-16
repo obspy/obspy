@@ -100,7 +100,7 @@ KEYWORDS = [
     'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston', 'XML-SEED',
-    'XSEED', ]
+    'XSEED']
 
 # when bumping to numpy 1.9.0: replace bytes() in io.reftek with np.tobytes()
 # and in obspy/io/mseed/core.py change downcasting check to numpy.can_cast()
