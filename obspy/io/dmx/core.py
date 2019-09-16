@@ -128,7 +128,6 @@ def _read_dmx(filename, **kwargs):
                 fid.seek(int(structtag.len_struct) + int(structtag.len_data), 1)
 
     st = Stream(traces=traces)
-    # print(st)
     return st
 
 
