@@ -25,34 +25,26 @@ passed to the :func:`obspy.io.dmx.core._read_dmx`. Its format
 
 >>> from obspy import read
 >>> # these two are equivalent, but the second case should be faster:
->>> st = read("/path/to/181223_120000.DMX")
+>>> st = read("/path/to/131114_090600.dmx")
 >>> print(st)  #doctest: +NORMALIZE_WHITESPACE
-186 Trace(s) in Stream:
-IT.STR1..E | 2018-12-23T12:00:00.000000Z - 2018-12-23T12:00:59.980000Z | 50.0 Hz, 3000 samples
-...
-(184 other traces)
-...
-IT.SSY..Z | 2018-12-23T12:00:00.000000Z - 2018-12-23T12:00:59.990000Z | 100.0 Hz, 6000 samples
-[Use "print(Stream.__str__(extended=True))" to print all Traces]
->>> st = read("/path/to/181223_120000.DMX", format='DMX')
+2 Trace(s) in Stream:
+ETNA.EMFO..Z | 2013-11-14T09:06:00.000000Z - 2013-11-14T09:06:59.990000Z | 100.0 Hz, 6000 samples
+ETNA.EMPL..Z | 2013-11-14T09:06:00.000000Z - 2013-11-14T09:06:59.990000Z | 100.0 Hz, 6000 samples
+
+>>> st = read("/path/to/131114_090600.dmx", format='DMX')
 >>> print(st)  #doctest: +NORMALIZE_WHITESPACE
-186 Trace(s) in Stream:
-IT.STR1..E | 2018-12-23T12:00:00.000000Z - 2018-12-23T12:00:59.980000Z | 50.0 Hz, 3000 samples
-...
-(184 other traces)
-...
-IT.SSY..Z | 2018-12-23T12:00:00.000000Z - 2018-12-23T12:00:59.990000Z | 100.0 Hz, 6000 samples
-[Use "print(Stream.__str__(extended=True))" to print all Traces]
+2 Trace(s) in Stream:
+ETNA.EMFO..Z | 2013-11-14T09:06:00.000000Z - 2013-11-14T09:06:59.990000Z | 100.0 Hz, 6000 samples
+ETNA.EMPL..Z | 2013-11-14T09:06:00.000000Z - 2013-11-14T09:06:59.990000Z | 100.0 Hz, 6000 samples
 
 If the file is very large and only one station code needs to be fetched,
 using the ``station`` parameter may speed the reading process:
 
->>> st = read("/path/to/181223_120000.DMX", station="STR1")
+>>> st = read("/path/to/131114_090600.dmx", station="EMFO")
 >>> print(st)  # doctest: +ELLIPSIS
-3 Trace(s) in Stream:
-IT.STR1..E | 2018-12-23T12:00:00.000000Z - 2018-12-23T12:00:59.980000Z | 50.0 Hz, 3000 samples
-IT.STR1..N | 2018-12-23T12:00:00.000000Z - 2018-12-23T12:00:59.980000Z | 50.0 Hz, 3000 samples
-IT.STR1..Z | 2018-12-23T12:00:00.000000Z - 2018-12-23T12:00:59.980000Z | 50.0 Hz, 3000 samples
+1 Trace(s) in Stream:
+ETNA.EMFO..Z | 2013-11-14T09:06:00.000000Z - 2013-11-14T09:06:59.990000Z | 100.0 Hz, 6000 samples
+
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

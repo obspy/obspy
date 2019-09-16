@@ -27,50 +27,51 @@ class CoreTestCase(unittest.TestCase):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = os.path.join(self.path, '181223_120000.DMX')
+        filename = os.path.join(self.path, '131114_090600.dmx')
         # 1
         st = read(filename)
         st.verify()
-        self.assertEqual(len(st), 186)
+        self.assertEqual(len(st), 2)
         self.assertEqual(st[0].stats.starttime,
-                         UTCDateTime(2018, 12, 23, 12, 0))
+                         UTCDateTime(2013, 11, 14, 9, 6))
         self.assertEqual(st[0].stats.endtime,
-                         UTCDateTime(2018, 12, 23, 12, 0, 59, 980000))
+                         UTCDateTime(2013, 11, 14, 9, 6, 59, 990000))
         self.assertTrue("dmx" in st[0].stats)
-        self.assertEqual(len(st[0]), 3000)
-        self.assertAlmostEqual(st[0].stats.sampling_rate, 50.0)
-        self.assertEqual(st[0].stats.channel, 'E')
+        self.assertEqual(len(st[0]), 6000)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
+        self.assertEqual(st[0].stats.channel, 'Z')
+        self.assertEqual(st[0].id, 'ETNA.EMFO..Z')
 
     def test_read_via_module(self):
         """
         Read files via obspy.io.mdx.core._read_dmx function directly.
         """
-        filename = os.path.join(self.path, '181223_120000.DMX')
+        filename = os.path.join(self.path, '131114_090600.dmx')
         # 1
         st = _read_dmx(filename)
         st.verify()
-        self.assertEqual(len(st), 186)
+        self.assertEqual(len(st), 2)
         self.assertEqual(st[0].stats.starttime,
-                         UTCDateTime(2018, 12, 23, 12, 0))
+                         UTCDateTime(2013, 11, 14, 9, 6))
         self.assertEqual(st[0].stats.endtime,
-                         UTCDateTime(2018, 12, 23, 12, 0, 59, 980000))
+                         UTCDateTime(2013, 11, 14, 9, 6, 59, 990000))
         self.assertTrue("dmx" in st[0].stats)
-        self.assertEqual(len(st[0]), 3000)
-        self.assertAlmostEqual(st[0].stats.sampling_rate, 50.0)
-        self.assertEqual(st[0].stats.channel, 'E')
-        self.assertEqual(st[0].id, 'IT.STR1..E')
+        self.assertEqual(len(st[0]), 6000)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
+        self.assertEqual(st[0].stats.channel, 'Z')
+        self.assertEqual(st[0].id, 'ETNA.EMFO..Z')
 
     def test_read_with_station(self):
         """
         Read files and passing a station keyword argument.
         """
-        filename = os.path.join(self.path, '181223_120000.DMX')
+        filename = os.path.join(self.path, '131114_090600.dmx')
         # 1
         st = read(filename, station='EMPL')
         st.verify()
 
-        self.assertEqual(len(st), 3)
-        self.assertEqual(st[0].id, "IT.EMPL..E")
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].id, "ETNA.EMPL..Z")
         for tr in st:
             self.assertEqual(tr.stats.station, "EMPL")
 
