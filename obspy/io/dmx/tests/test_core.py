@@ -31,7 +31,6 @@ class CoreTestCase(unittest.TestCase):
         # 1
         st = read(filename)
         st.verify()
-        st.sort(keys=['channel'])
         self.assertEqual(len(st), 186)
         self.assertEqual(st[0].stats.starttime,
                          UTCDateTime(2018, 12, 23, 12, 0))
