@@ -30,11 +30,24 @@ from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 # is called a lot. Thus pre-compile it.
 _YEAR0REGEX = re.compile(r"^(\d{1,3}[-/,])(.*)$")
 
-_ISO8601_REGEX = re.compile(
-    r"^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?"
-    r"|W([0-4]\d|5[0-3])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6"
-    r"])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17"
-    r"[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
+# based on https://www.myintervals.com/blog/2009/05/20/iso-8601, w/ week 53 fix
+_ISO8601_REGEX = re.compile(r"""
+    ^
+    ([\+-]?\d{4}(?!\d{2}\b))
+    ((-?)
+     ((0[1-9]|1[0-2])
+      (\3([12]\d|0[1-9]|3[01]))?
+      |W([0-4]\d|5[0-3])(-?[1-7])?
+      |(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6]))
+     )
+     ([T\s]
+      ((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?
+      (\17[0-5]\d([\.,]\d+)?)?
+      ([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?
+     )?
+    )?
+    $
+    """, re.VERBOSE)
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 # XXX the strftime problem seems to be specific to Python < 3.2
