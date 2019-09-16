@@ -40,11 +40,9 @@ structtag_dtypes = np.dtype([(native_str("sinc"), native_str("1S")),
                              (native_str("len_struct"), np.int32),
                              (native_str("len_data"), np.int32)])
 
-types = {"s": ("uint16", "H", 2), "q": ("int16", "h", 2),
-         "u": ("uint16", "H", 2), "i": ("int16", "h", 2),
-         "2": ("int32", "i", 4), "l": ("int32", "i", 4),
-         "r": ("uint16", "H", 2), "f": ("float32", "f", 4),
-         "d": ("float64", "d", 8)}
+types = {"s": np.uint16, "q": np.int16, "u": np.uint16, "i": np.int16,
+         "2": np.int32, "l": np.int32, "r": np.uint16, "f": np.float32,
+         "d": np.float64}
 
 
 def readstructtag(fid):
@@ -74,7 +72,7 @@ def readdescripttrace(fid):
 
 def readdata(fid, n, t):
     target = types[t]
-    return np.fromfile(fid, np.dtype(target[0]), n)
+    return np.fromfile(fid, target, n)
 
 
 def _is_dmx(filename):
