@@ -12,6 +12,7 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util.attribdict import AttribDict
 
+
 descript_trace_dtypes = np.dtype([('network', "4S"),
                                   ("st_name", "5S"),
                                   ("component", "1S"),
@@ -125,7 +126,8 @@ def _read_dmx(filename, **kwargs):
                 else:
                     fid.seek(int(structtag.len_data), 1)
             else:
-                fid.seek(int(structtag.len_struct) + int(structtag.len_data), 1)
+                fid.seek(
+                    int(structtag.len_struct) + int(structtag.len_data), 1)
 
     st = Stream(traces=traces)
     return st

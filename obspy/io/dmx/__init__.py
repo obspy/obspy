@@ -53,9 +53,6 @@ using the ``station`` parameter may speed the reading process:
 IT.STR1..E | 2018-12-23T12:00:00.000000Z - 2018-12-23T12:00:59.980000Z | 50.0 Hz, 3000 samples
 IT.STR1..N | 2018-12-23T12:00:00.000000Z - 2018-12-23T12:00:59.980000Z | 50.0 Hz, 3000 samples
 IT.STR1..Z | 2018-12-23T12:00:00.000000Z - 2018-12-23T12:00:59.980000Z | 50.0 Hz, 3000 samples
-
-
-
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
