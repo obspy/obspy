@@ -9,7 +9,6 @@
        :toctree: autogen
        :nosignatures:
 
-       bulletin
        core
 
     .. comment to end block
