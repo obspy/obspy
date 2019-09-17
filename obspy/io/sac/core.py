@@ -54,7 +54,6 @@ def _internal_is_sac(buf):
     :rtype: bool
     :return: ``True`` if a SAC file.
     """
-    starting_pos = buf.tell()
     try:
         # read delta (first header float)
         delta_bin = buf.read(4)
@@ -106,9 +105,6 @@ def _internal_is_sac(buf):
             return False
     except Exception:
         return False
-    finally:
-        # Reset buffer head position after reading.
-        buf.seek(starting_pos, 0)
     return True
 
 
@@ -143,24 +139,20 @@ def _internal_is_sac_xy(buf):
     :rtype: bool
     :return: ``True`` if a alphanumeric SAC file.
     """
-    cur_pos = buf.tell()
     try:
-        try:
-            hdcards = []
-            # read in the header cards
-            for _i in range(30):
-                hdcards.append(buf.readline())
-            npts = int(hdcards[15].split()[-1])
-            # read in the seismogram
-            seis = buf.read(-1).split()
-        except Exception:
-            return False
-        # check that npts header value and seismogram length are consistent
-        if npts != len(seis):
-            return False
-        return True
-    finally:
-        buf.seek(cur_pos, 0)
+        hdcards = []
+        # read in the header cards
+        for _i in range(30):
+            hdcards.append(buf.readline())
+        npts = int(hdcards[15].split()[-1])
+        # read in the seismogram
+        seis = buf.read(-1).split()
+    except Exception:
+        return False
+    # check that npts header value and seismogram length are consistent
+    if npts != len(seis):
+        return False
+    return True
 
 
 def _read_sac_xy(filename, headonly=False, debug_headers=False,
