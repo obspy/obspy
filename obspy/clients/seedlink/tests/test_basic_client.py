@@ -39,7 +39,14 @@ class ClientTestCase(unittest.TestCase):
         # buffer stores data and how close to realtime the data is available,
         # so check some different offsets and see if we get some data
         for offset in (3600, 2000, 1000, 500):
-            _test_offset_from_realtime(offset)
+            try:
+                _test_offset_from_realtime(offset)
+            except AssertionError:
+                continue
+            else:
+                break
+        else:
+            raise
 
     def test_get_station(self):
         """
