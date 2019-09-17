@@ -775,7 +775,7 @@ class PsdTestCase(unittest.TestCase):
         Matplotlib version 3 shifts the x-axis labels but everything else looks
         the same. Skipping test for matplotlib >= 3 on 05/12/2018.
         """
-        ppsd = PPSD.load_npz(self.example_ppsd_npz)
+        ppsd = PPSD.load_npz(self.example_ppsd_npz, allow_pickle=True)
 
         # add some gaps in the middle
         for i in sorted(list(range(30, 40)) + list(range(8, 18)) + [4])[::-1]:
