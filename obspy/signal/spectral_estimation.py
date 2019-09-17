@@ -227,7 +227,7 @@ class PPSD(object):
     NPZ_SIMPLE_TYPE_MAP = {None: ''}
     NPZ_SIMPLE_TYPE_MAP_R = {v: i for i, v in NPZ_SIMPLE_TYPE_MAP.items()}
     # Add current version as a class attribute to avoid hard coding it.
-    _CURRENT_VERSION = 2
+    _CURRENT_VERSION = 3
 
     def __init__(self, stats, metadata, skip_on_gaps=False,
                  db_bins=(-200, -50, 1.), ppsd_length=3600.0, overlap=0.5,
@@ -1311,7 +1311,7 @@ class PPSD(object):
         :type allow_pickle: bool
         :param allow_pickle:
             Allow the pickle protocol to be used when de-serializing saved
-            PPSDs. This is only required for npz files written by obspy
+            PPSDs. This is only required for npz files written by ObsPy
             versions less than 1.2.0.
         """
         def _load(data):
@@ -1327,7 +1327,7 @@ class PPSD(object):
                 try:
                     data_ = data[key]
                 except ValueError:
-                    msg = ("Loading PPSD results saved with obspy versions < "
+                    msg = ("Loading PPSD results saved with ObsPy versions < "
                            "1.2 requires setting the allow_pickle parameter "
                            "of PPSD.load_npz to True")
                     raise ValueError(msg)
@@ -1384,7 +1384,7 @@ class PPSD(object):
         :type allow_pickle: bool
         :param allow_pickle:
             Allow the pickle protocol to be used when de-serializing saved
-            PPSDs. This is only required for npz files written by obspy
+            PPSDs. This is only required for npz files written by ObsPy
             versions less than 1.2.0.
         """
         for filename in glob.glob(filename):
@@ -1456,9 +1456,9 @@ class PPSD(object):
                 with np.load(filename, allow_pickle=allow_pickle) as data:
                     _add(data)
             except ValueError:
-                msg = ("Loading PPSD results saved with obspy versions < "
+                msg = ("Loading PPSD results saved with ObsPy versions < "
                        "1.2 requires setting the allow_pickle parameter "
-                        "of PPSD.load_npz to True.")
+                       "of PPSD.load_npz to True.")
                 raise ValueError(msg)
         else:
             data = np.load(filename)
@@ -2068,7 +2068,7 @@ def get_nhnm():
 
 
 def _check_npz_ppsd_version(ppsd, npzfile):
-    # add some future-proofing and show a warning if older obspy
+    # add some future-proofing and show a warning if older ObsPy
     # versions should read a more recent ppsd npz file, since this is very
     # like problematic
     if npzfile['ppsd_version'].item() > ppsd.ppsd_version:
