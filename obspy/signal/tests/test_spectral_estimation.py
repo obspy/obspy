@@ -861,7 +861,7 @@ class PsdTestCase(unittest.TestCase):
 
     def test_can_add_npz_without_pickle(self):
         """
-        Ensure PPSD can be be added without using the pickle protocol, or
+        Ensure PPSD can be added without using the pickle protocol, or
         that a helpful error message is raised if allow_pickle is required.
         See #2409.
         """
