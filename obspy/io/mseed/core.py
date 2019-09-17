@@ -8,7 +8,6 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import ctypes as C  # NOQA
-import io
 import os
 import warnings
 from struct import pack
@@ -18,6 +17,7 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import NATIVE_BYTEORDER
+from obspy.core.util.decorator import file_format_check
 from . import (util, InternalMSEEDError, ObsPyMSEEDFilesizeTooSmallError,
                ObsPyMSEEDFilesizeTooLargeError, ObsPyMSEEDError)
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
@@ -26,12 +26,14 @@ from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SelectTime, Blkt100S, Blkt1001S, clibmseed)
 
 
-def _is_mseed(filename):
+@file_format_check
+def _is_mseed(filename, **kwargs):
     """
     Checks whether a file is Mini-SEED/full SEED or not.
 
-    :type filename: str
-    :param filename: Mini-SEED/full SEED file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked for
+        Mini-SEED/full SEED content
     :rtype: bool
     :return: ``True`` if a Mini-SEED file.
 
@@ -44,27 +46,7 @@ def _is_mseed(filename):
 
     Thus it cannot be used to validate a Mini-SEED or SEED file.
     """
-    # Open filehandler or use an existing file like object.
-    if not hasattr(filename, 'read'):
-        file_size = os.path.getsize(filename)
-        with io.open(filename, 'rb') as fh:
-            return __is_mseed(fh, file_size=file_size)
-    else:
-        initial_pos = filename.tell()
-        try:
-            if hasattr(filename, "getbuffer"):
-                file_size = filename.getbuffer().nbytes
-            try:
-                file_size = os.fstat(filename.fileno()).st_size
-            except Exception:
-                _p = filename.tell()
-                filename.seek(0, 2)
-                file_size = filename.tell()
-                filename.seek(_p, 0)
-            return __is_mseed(filename, file_size)
-        finally:
-            # Reset pointer.
-            filename.seek(initial_pos, 0)
+    return __is_mseed(filename, file_size=kwargs['_file_size'])
 
 
 def __is_mseed(fp, file_size):  # NOQA
