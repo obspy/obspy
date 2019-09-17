@@ -564,6 +564,29 @@ class WaveformPluginsTestCase(unittest.TestCase):
             self.assertEqual(
                 str(e.exception), exception_msg.format(doesnt_exist))
 
+    def test_is_format_check_keep_file_position(self):
+        """
+        Makes sure that file format checks leave any provided open file-like
+        objects open and rewind them to initial position.
+        """
+        formats_ep = _get_default_eps('obspy.plugin.waveform', 'isFormat')
+        data = b'0123456789' * 2000
+        position = 14
+        with io.BytesIO(data) as buf:
+            buf.seek(position)
+            for ep in formats_ep.values():
+                is_format = buffered_load_entry_point(
+                    ep.dist.key, 'obspy.plugin.waveform.' + ep.name,
+                    'isFormat')
+                is_format(buf)
+                self.assertFalse(
+                    buf.closed,
+                    "Buffer was closed by function " + is_format.func_name)
+                self.assertEqual(
+                    position, buf.tell(),
+                    "Buffer's position was changed by function " +
+                    is_format.func_name)
+
 
 def suite():
     return unittest.makeSuite(WaveformPluginsTestCase, 'test')
