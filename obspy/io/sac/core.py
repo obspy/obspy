@@ -19,15 +19,17 @@ import struct
 from obspy import Stream
 
 from obspy.core.compatibility import is_bytes_buffer
+from obspy.core.util.decorator import file_format_check
 from .sactrace import SACTrace
 
 
-def _is_sac(filename):
+@file_format_check
+def _is_sac(filename, **kwargs):
     """
     Checks whether a file is a SAC file or not.
 
-    :param filename: SAC file to be checked.
-    :type filename: str, open file, or file-like object
+    :param filename: Open binary file-like object
+    :type filename: :class:`io.BytesIOBase`
     :rtype: bool
     :return: ``True`` if a SAC file.
 
@@ -39,13 +41,8 @@ def _is_sac(filename):
     >>> _is_sac(get_example_file('test.mseed'))
     False
     """
-    if is_bytes_buffer(filename):
-        return _internal_is_sac(filename)
-    elif isinstance(filename, (str, bytes)):
-        with open(filename, "rb") as fh:
-            return _internal_is_sac(fh)
-    else:
-        raise ValueError("Cannot open '%s'." % filename)
+    fh = filename
+    return _internal_is_sac(fh)
 
 
 def _internal_is_sac(buf):
@@ -115,12 +112,13 @@ def _internal_is_sac(buf):
     return True
 
 
-def _is_sac_xy(filename):
+@file_format_check
+def _is_sac_xy(filename, **kwargs):
     """
     Checks whether a file is alphanumeric SAC file or not.
 
-    :param filename: Alphanumeric SAC file to be checked.
-    :type filename: str, open file, or file-like object
+    :param filename: Open alphanumeric SAC file-like object to be checked.
+    :type filename: :class:`io.BytesIOBase`
     :rtype: bool
     :return: ``True`` if a alphanumeric SAC file.
 
@@ -132,13 +130,8 @@ def _is_sac_xy(filename):
     >>> _is_sac_xy(get_example_file('test.sac'))
     False
     """
-    if is_bytes_buffer(filename):
-        return _internal_is_sac_xy(filename)
-    elif isinstance(filename, (str, bytes)):
-        with open(filename, "rb") as fh:
-            return _internal_is_sac_xy(fh)
-    else:
-        raise ValueError("Cannot open '%s'." % filename)
+    fh = filename
+    return _internal_is_sac_xy(fh)
 
 
 def _internal_is_sac_xy(buf):
