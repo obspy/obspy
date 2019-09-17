@@ -572,20 +572,28 @@ class WaveformPluginsTestCase(unittest.TestCase):
         formats_ep = _get_default_eps('obspy.plugin.waveform', 'isFormat')
         data = b'0123456789' * 2000
         position = 14
-        with io.BytesIO(data) as buf:
-            buf.seek(position)
-            for ep in formats_ep.values():
-                is_format = buffered_load_entry_point(
-                    ep.dist.key, 'obspy.plugin.waveform.' + ep.name,
-                    'isFormat')
+        fails_closing = []
+        fails_position_change = []
+        for ep in formats_ep.values():
+            is_format = buffered_load_entry_point(
+                ep.dist.key, 'obspy.plugin.waveform.' + ep.name,
+                'isFormat')
+            with io.BytesIO(data) as buf:
+                buf.seek(position)
                 is_format(buf)
-                self.assertFalse(
-                    buf.closed,
-                    "Buffer was closed by function " + is_format.func_name)
-                self.assertEqual(
-                    position, buf.tell(),
-                    "Buffer's position was changed by function " +
-                    is_format.func_name)
+                if buf.closed:
+                    fails_closing.append(is_format.func_name)
+                elif buf.tell() != position:
+                    fails_position_change.append(is_format.func_name)
+        if fails_closing or fails_position_change:
+            msg = []
+            if fails_closing:
+                msg.append("Buffer was closed by function(s): " +
+                           ' '.join(fails_closing))
+            if fails_position_change:
+                msg.append("Buffer's position was changed by function(s): " +
+                           ' '.join(fails_position_change))
+            self.fail(' '.join(msg))
 
 
 def suite():
