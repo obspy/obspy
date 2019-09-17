@@ -17,6 +17,8 @@ master:
    * fixed UTCDateTime(..., julday=366) for non-leap years. This was returning
      January 1st of the next year in case of non-leap years being used. Now it
      properly raises an out-of-bounds ValueError (see #2369)
+   * better ISO8601 detection for UTCDateTime objects and UTCDateTime(...,
+     iso8601=False) now completely disables ISO8601 handling (see #2447)
    * Added replace method to UTCDateTime class (see #2077).
    * Added remove method to Inventory class (see #2088).
    * Added id property to WaveformStreamID (see #2131).

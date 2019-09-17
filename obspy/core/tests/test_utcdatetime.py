@@ -1552,6 +1552,24 @@ class UTCDateTimeTestCase(unittest.TestCase):
         expected = UTCDateTime(2016, 12, 31)
         self.assertEqual(got, expected)
 
+    def test_issue_2447(self):
+        """
+        Setting iso8601=False should disable ISO8601 parsing.
+
+        See issue #2447.
+        """
+        # auto detection
+        self.assertEqual(UTCDateTime('2019-01-01T02-02:33'),
+                         UTCDateTime(2019, 1, 1, 4, 33, 0))
+        self.assertEqual(UTCDateTime('2019-01-01 02-02:33'),
+                         UTCDateTime(2019, 1, 1, 2, 2, 33))
+        # enforce ISO8601 mode
+        self.assertEqual(UTCDateTime('2019-01-01T02-02:33', iso8601=True),
+                         UTCDateTime(2019, 1, 1, 4, 33, 0))
+        # skip ISO8601 mode
+        self.assertEqual(UTCDateTime('2019-01-01T02-02:33', iso8601=False),
+                         UTCDateTime(2019, 1, 1, 2, 2, 33))
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
