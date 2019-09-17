@@ -140,10 +140,12 @@ master:
    * Timestamp representations internally and in npz I/O were changed to use
      integer nanosecond POSIX timestamps to avoid any potential floating point
      inaccuracies and since this is also what UTCDateTime is based on nowadays
-     (see #2045)
+     (see #2045).
    * Fixed the check for new PSD slices whether they should be added or whether
-     they would add unwanted duplicated data (see #2229)
-   * Fix `period_lim` option when `xaxis_frequency=True` (see #2246)
+     they would add unwanted duplicated data (see #2229).
+   * Fix `period_lim` option when `xaxis_frequency=True` (see #2246).
+   * Added `allow_pickle` parameter to `PPSD.add_npz` and `PPSD.load_npz` and
+     set its default to `False` (see #2457).
  - obspy.signal.cross_correlation:
    * Add new `correlate_template()` function with 'full' normalization option,
      required for correlations in template-matching
