@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA
 
 import functools
 import inspect
+import io
 import os
 import re
 import socket
@@ -243,6 +244,52 @@ def skip_if_no_data(func, *args, **kwargs):
     if not args[0]:
         return
     return func(*args, **kwargs)
+
+
+@decorator
+def file_format_check(func, filename, **kwargs):
+    """
+    Decorator to use on file format checker routines.
+
+    The decorator determines if the given input is e.g. a filename or a
+    file-like object, and makes sure the decorated file format checker receives
+    a :class:`io.BufferedIOBase` object to work on. The decorator also makes
+    sure to bring any given file-like object back to it's original file
+    position after the decorated routine performed it's checking.
+    The decorated function will be called with an additional kwarg
+    ``_file_size``.
+
+    .. rubric:: Notes
+
+    For this to work the decorated checker routine *must not close the file*.
+    Also, if a file-like object opened as a text stream with automatic decoding
+    is provided, it will be passed down to the checker routine as is.
+    """
+    # Open filehandle or..
+    if not hasattr(filename, 'read'):
+        file_size = os.path.getsize(filename)
+        kwargs['_file_size'] = file_size
+        with io.open(filename, 'rb') as fh:
+            return func(fh, **kwargs)
+    # ..use an existing open file or file-like object.
+    else:
+        fh = filename
+        initial_pos = fh.tell()
+        try:
+            if hasattr(fh, "getbuffer"):
+                file_size = fh.getbuffer().nbytes
+            try:
+                file_size = os.fstat(fh.fileno()).st_size
+            except Exception:
+                _p = fh.tell()
+                fh.seek(0, 2)
+                file_size = fh.tell()
+                fh.seek(_p, 0)
+            kwargs['_file_size'] = file_size
+            return func(fh, **kwargs)
+        finally:
+            # Reset pointer.
+            fh.seek(initial_pos, 0)
 
 
 def map_example_filename(arg_kwarg_name):
