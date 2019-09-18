@@ -63,27 +63,27 @@ def _internal_is_sac(buf):
         delta_bin = buf.read(4)
         delta = struct.unpack(native_str('<f'), delta_bin)[0]
         # read nvhdr (70 header floats, 6 position in header integers)
-        buf.seek(4 * 70 + 4 * 6)
+        buf.seek(starting_pos + 4 * 70 + 4 * 6, 0)
         nvhdr_bin = buf.read(4)
         nvhdr = struct.unpack(native_str('<i'), nvhdr_bin)[0]
         # read leven (70 header floats, 35 header integers, 0 position in
         # header bool)
-        buf.seek(4 * 70 + 4 * 35)
+        buf.seek(starting_pos + 4 * 70 + 4 * 35, 0)
         leven_bin = buf.read(4)
         leven = struct.unpack(native_str('<i'), leven_bin)[0]
         # read lpspol (70 header floats, 35 header integers, 1 position in
         # header bool)
-        buf.seek(4 * 70 + 4 * 35 + 4 * 1)
+        buf.seek(starting_pos + 4 * 70 + 4 * 35 + 4 * 1, 0)
         lpspol_bin = buf.read(4)
         lpspol = struct.unpack(native_str('<i'), lpspol_bin)[0]
         # read lovrok (70 header floats, 35 header integers, 2 position in
         # header bool)
-        buf.seek(4 * 70 + 4 * 35 + 4 * 2)
+        buf.seek(starting_pos + 4 * 70 + 4 * 35 + 4 * 2, 0)
         lovrok_bin = buf.read(4)
         lovrok = struct.unpack(native_str('<i'), lovrok_bin)[0]
         # read lcalda (70 header floats, 35 header integers, 3 position in
         # header bool)
-        buf.seek(4 * 70 + 4 * 35 + 4 * 3)
+        buf.seek(starting_pos + 4 * 70 + 4 * 35 + 4 * 3, 0)
         lcalda_bin = buf.read(4)
         lcalda = struct.unpack(native_str('<i'), lcalda_bin)[0]
         # check if file is big-endian

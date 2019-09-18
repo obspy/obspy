@@ -440,7 +440,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
             # check format
             is_format = is_format(filename)
             if position is not None:
-                filename.seek(0, 0)
+                filename.seek(position, 0)
             if is_format:
                 break
         else:
