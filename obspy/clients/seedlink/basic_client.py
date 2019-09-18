@@ -49,10 +49,19 @@ class Client(object):
         """
         self.timeout = timeout
         self.debug = debug
-        self._slclient = SLClient(loglevel=debug and "DEBUG" or "CRITICAL",
-                                  timeout=self.timeout)
+        self.loglevel = debug and "DEBUG" or "CRITICAL"
         self._server_url = "%s:%i" % (server, port)
         self._station_cache = None
+        self._station_cache_level = None
+
+    def _init_client(self):
+        """
+        Make fresh connection to seedlink server
+
+        Should be done before any request to server, since SLClient keeps
+        things like multiselect etc for subsequent requests
+        """
+        self._slclient = SLClient(loglevel=self.loglevel, timeout=self.timeout)
 
     def _connect(self):
         """
@@ -120,6 +129,7 @@ class Client(object):
         else:
             loccha = channel
         seedlink_id = "%s_%s:%s" % (network, station, loccha)
+        self._init_client()
         self._slclient.multiselect = seedlink_id
         self._slclient.begin_time = starttime
         self._slclient.end_time = endtime
@@ -166,6 +176,7 @@ class Client(object):
                         fnmatch.fnmatch(sta, station or '*')]
             return sorted(stations)
 
+        self._init_client()
         self._slclient.infolevel = "STATIONS"
         self._slclient.verbose = 1
         self._connect()
