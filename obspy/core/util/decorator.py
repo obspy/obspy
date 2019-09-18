@@ -267,6 +267,10 @@ def file_format_check(func, filename, **kwargs):
     """
     # Open filehandle or..
     if not hasattr(filename, 'read'):
+        if not os.path.exists(filename):
+            msg = 'File not found: ' + filename
+            # we can raise FileNotFoundError after dropping Python2
+            raise Exception(msg)
         file_size = os.path.getsize(filename)
         kwargs['_file_size'] = file_size
         with io.open(filename, 'rb') as fh:
