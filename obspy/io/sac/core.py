@@ -55,6 +55,7 @@ def _internal_is_sac(buf):
     :return: ``True`` if a SAC file.
     """
     try:
+        starting_pos = buf.tell()
         # read delta (first header float)
         delta_bin = buf.read(4)
         delta = struct.unpack(native_str('<f'), delta_bin)[0]
