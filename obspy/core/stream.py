@@ -29,8 +29,8 @@ from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
                                   _read_from_plugin, _generic_reader)
-from obspy.core.util.decorator import (map_example_filename,
-                                       raise_if_masked, uncompress_file)
+from obspy.core.util.decorator import (map_example_filename, raise_if_masked,
+                                       uncompress_file, file_format_check)
 from obspy.core.util.misc import get_window_times, buffered_load_entry_point
 from obspy.core.util.obspy_types import ObsPyException
 
@@ -3372,12 +3372,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
 
-def _is_pickle(filename):  # @UnusedVariable
+@file_format_check
+def _is_pickle(filename, **kwargs):  # @UnusedVariable
     """
     Check whether a file is a pickled ObsPy Stream file.
 
-    :type filename: str
-    :param filename: Name of the pickled ObsPy Stream file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if pickled file.
 
@@ -3386,17 +3387,11 @@ def _is_pickle(filename):  # @UnusedVariable
     >>> _is_pickle('/path/to/pickle.file')  # doctest: +SKIP
     True
     """
-    if isinstance(filename, (str, native_str)):
-        try:
-            with open(filename, 'rb') as fp:
-                st = pickle.load(fp)
-        except Exception:
-            return False
-    else:
-        try:
-            st = pickle.load(filename)
-        except Exception:
-            return False
+    fh = filename
+    try:
+        st = pickle.load(fh)
+    except Exception:
+        return False
     return isinstance(st, Stream)
 
 
