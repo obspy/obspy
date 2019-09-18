@@ -95,19 +95,29 @@ class Client(object):
         G.FDF.00.BHN | 20... | 20.0 Hz, ... samples
         G.FDF.00.BHE | 20... | 20.0 Hz, ... samples
 
+        Depending on server capabilities, '*' multi-character wildcards might
+        work in any parameter:
+
+        >>> st = client.get_waveforms("*", "FDF", "*", "B*", t, t + 5)
+        >>> st = st.sort(reverse=True)
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        G.FDF.00.BHZ | 20... | 20.0 Hz, ... samples
+        G.FDF.00.BHN | 20... | 20.0 Hz, ... samples
+        G.FDF.00.BHE | 20... | 20.0 Hz, ... samples
+
         .. note::
 
             Support of wildcards strongly depends on the queried seedlink
             server. In general, '?' as single character wildcard seems to work
             well in location code and channel code fields for most servers.
-            Usage of '*' for multiple characters in location and channel code
-            field is not supported. No wildcards are supported in
-            network and station code fields by ObsPy.
+            Usage of '*' relies on the server supporting info requests on
+            station or even channel level, see :meth:`Client.get_info()`.
 
         :type network: str
-        :param network: Network code. No wildcards supported by ObsPy.
+        :param network: Network code. See note on wildcards above.
         :type station: str
-        :param station: Station code. No wildcards supported by ObsPy.
+        :param station: Station code. See note on wildcards above.
         :type location: str
         :param location: Location code. See note on wildcards above.
         :type channel: str
@@ -117,12 +127,35 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End time of requested time window.
         """
+        # need to do an info request?
+        if any('*' in x for x in (network, station, location, channel)) \
+                or ('?' in x for x in (network, station)):
+            # need to do an info request on channel level?
+            if any('*' in x for x in (location, channel)):
+                info = self.get_info(network=network, station=station,
+                                     location=location, channel=channel,
+                                     level='channel', cache=True)
+                multiselect = ["%s_%s:%s%s" % (net, sta, loc, cha)
+                               for net, sta, loc, cha in info]
+            # otherwise keep location/channel wildcards and do request on
+            # station level only
+            else:
+                info = self.get_info(network=network, station=station,
+                                     level='station', cache=True)
+                multiselect = ["%s_%s:%s%s" % (net, sta, location, channel)
+                               for net, sta in info]
+            multiselect = ','.join(multiselect)
+            return self._multiselect_request(multiselect, starttime, endtime)
+
+        # if no info request is needed, we just work with the given input
+        # (might have some '?' wildcards in loc/cha)
         if len(location) > 2:
             msg = ("Location code ('%s') only supports a maximum of 2 "
                    "characters.") % location
             raise ValueError(msg)
         elif len(location) == 1:
-            msg = "Single character location codes are untested."
+            msg = ("Single character location codes that are not an '*' are "
+                   "untested.")
             warnings.warn(msg)
         if location:
             loccha = "%2s%3s" % (location, channel)
@@ -155,6 +188,7 @@ class Client(object):
         stream = self.stream
         stream.trim(starttime, endtime)
         self.stream = None
+        stream.sort()
         return stream
 
     def get_info(self, network=None, station=None, location=None, channel=None,
