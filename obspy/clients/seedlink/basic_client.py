@@ -259,7 +259,9 @@ class Client(object):
             info = [(net, sta, loc, cha) for net, sta, loc, cha in
                     self._station_cache if
                     fnmatch.fnmatch(net, network or '*') and
-                    fnmatch.fnmatch(sta, station or '*')]
+                    fnmatch.fnmatch(sta, station or '*') and
+                    fnmatch.fnmatch(loc, location or '*') and
+                    fnmatch.fnmatch(cha, channel or '*')]
             return sorted(info)
 
         self._init_client()
@@ -295,8 +297,9 @@ class Client(object):
         # change results to an Inventory object
         self._station_cache = station_cache
         self._station_cache_level = level
-        return self.get_info(network=network, station=station, cache=True,
-                             level=level)
+        return self.get_info(
+            network=network, station=station, location=location,
+            channel=channel, cache=True, level=level)
 
     def _packet_handler(self, count, slpack):
         """
