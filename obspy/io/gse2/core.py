@@ -9,22 +9,24 @@ from future.builtins import *  # NOQA
 import numpy as np
 
 from obspy import Stream, Trace
+from obspy.core.util.decorator import file_format_check
+
 from . import libgse1, libgse2
 
 
-def _is_gse2(filename):
+@file_format_check
+def _is_gse2(filename, **kwargs):
     """
     Checks whether a file is GSE2 or not.
 
-    :type filename: str
-    :param filename: GSE2 file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a GSE2 file.
     """
-    # Open file.
+    fh = filename
     try:
-        with open(filename, 'rb') as f:
-            libgse2.is_gse2(f)
+        libgse2.is_gse2(fh)
     except Exception:
         return False
     return True
@@ -111,21 +113,21 @@ def _write_gse2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
             libgse2.write(trace.stats, trace.data, f, inplace)
 
 
-def _is_gse1(filename):
+@file_format_check
+def _is_gse1(filename, **kwargs):
     """
     Checks whether a file is GSE1 or not.
 
-    :type filename: str
-    :param filename: GSE1 file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a GSE1 file.
     """
-    # Open file.
-    with open(filename, 'rb') as f:
-        try:
-            data = f.readline()
-        except Exception:
-            return False
+    fh = filename
+    try:
+        data = fh.readline()
+    except Exception:
+        return False
     if data.startswith(b'WID1') or data.startswith(b'XW01'):
         return True
     return False
