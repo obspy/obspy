@@ -12,6 +12,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.compatibility import from_buffer
+from obspy.core.util.decorator import file_format_check
 
 
 DTYPE = {
@@ -38,71 +39,73 @@ DTYPE = {
 }
 
 
-def _is_css(filename):
+@file_format_check
+def _is_css(filename, **kwargs):
     """
     Checks whether a file is CSS waveform data (header) or not.
 
-    :type filename: str
-    :param filename: CSS file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a CSS waveform header file.
     """
+    fh = filename
     # Fixed file format.
     # Tests:
     #  - the length of each line (283 chars)
     #  - two epochal time fields
     #    (for position of dot and if they convert to UTCDateTime)
     #  - supported data type descriptor
-    try:
-        with open(filename, "rb") as fh:
-            lines = fh.readlines()
-            # check for empty file
-            if not lines:
-                return False
-            # check every line
-            for line in lines:
-                assert(len(line.rstrip(b"\n\r")) == 283)
-                assert(b"." in line[26:28])
-                UTCDateTime(float(line[16:33]))
-                assert(b"." in line[71:73])
-                UTCDateTime(float(line[61:78]))
-                assert(line[143:145] in DTYPE)
-    except Exception:
+    lines = fh.readlines()
+    # check for empty file
+    if not lines:
         return False
+    # check every line
+    for line in lines:
+        try:
+            assert(len(line.rstrip(b"\n\r")) == 283)
+            assert(b"." in line[26:28])
+            UTCDateTime(float(line[16:33]))
+            assert(b"." in line[71:73])
+            UTCDateTime(float(line[61:78]))
+            assert(line[143:145] in DTYPE)
+        except Exception:
+            return False
     return True
 
 
-def _is_nnsa_kb_core(filename):
+@file_format_check
+def _is_nnsa_kb_core(filename, **kwargs):
     """
     Checks whether a file is NNSA KB Core waveform data (header) or not.
 
-    :type filename: str
-    :param filename: NNSA KB Core file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
     :rtype: bool
     :return: ``True`` if a NNSA KB Core waveform header file.
     """
+    fh = filename
     # Fixed file format.
     # Tests:
     #  - the length of each line (287 chars)
     #  - two epochal time fields
     #    (for position of dot and if they convert to UTCDateTime)
     #  - supported data type descriptor
-    try:
-        with open(filename, "rb") as fh:
-            lines = fh.readlines()
-            # check for empty file
-            if not lines:
-                return False
-            # check every line
-            for line in lines:
-                assert(len(line.rstrip(b"\n\r")) == 287)
-                assert(line[27:28] == b".")
-                UTCDateTime(float(line[16:33]))
-                assert(line[73:74] == b".")
-                UTCDateTime(float(line[62:79]))
-                assert(line[144:146] in DTYPE)
-    except Exception:
+    lines = fh.readlines()
+    # check for empty file
+    if not lines:
         return False
+    # check every line
+    for line in lines:
+        try:
+            assert(len(line.rstrip(b"\n\r")) == 287)
+            assert(line[27:28] == b".")
+            UTCDateTime(float(line[16:33]))
+            assert(line[73:74] == b".")
+            UTCDateTime(float(line[62:79]))
+            assert(line[144:146] in DTYPE)
+        except Exception:
+            return False
     return True
 
 
