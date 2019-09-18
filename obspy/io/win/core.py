@@ -13,41 +13,45 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.compatibility import from_buffer
+from obspy.core.util.decorator import file_format_check
 
 
-def _is_win(filename, century="20"):  # @UnusedVariable
+@file_format_check
+def _is_win(filename, **kwargs):
     """
     Checks whether a file is WIN or not.
 
-    :type filename: str
-    :param filename: WIN file to be checked.
+    :type filename: :class:`io.BytesIOBase`
+    :param filename: Open file or file-like object to be checked
+    :type century: str
+    :param century: two characters for century
     :rtype: bool
     :return: ``True`` if a WIN file.
     """
+    fh = filename
     # as long we don't have full format description we just try to read the
     # file like _read_win and check for errors
     century = "20"  # hardcoded ;(
     try:
-        with open(filename, "rb") as fpin:
-            fpin.read(4)
-            buff = fpin.read(6)
-            yy = "%s%02x" % (century, ord(buff[0:1]))
-            mm = "%x" % ord(buff[1:2])
-            dd = "%x" % ord(buff[2:3])
-            hh = "%x" % ord(buff[3:4])
-            mi = "%x" % ord(buff[4:5])
-            sec = "%x" % ord(buff[5:6])
+        fh.read(4)
+        buff = fh.read(6)
+        yy = "%s%02x" % (century, ord(buff[0:1]))
+        mm = "%x" % ord(buff[1:2])
+        dd = "%x" % ord(buff[2:3])
+        hh = "%x" % ord(buff[3:4])
+        mi = "%x" % ord(buff[4:5])
+        sec = "%x" % ord(buff[5:6])
 
-            # This will raise for invalid dates.
-            UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
-                        int(sec))
-            buff = fpin.read(4)
-            '%02x' % ord(buff[0:1])
-            '%02x' % ord(buff[1:2])
-            int('%x' % (ord(buff[2:3]) >> 4))
-            ord(buff[3:4])
-            idata00 = fpin.read(4)
-            from_buffer(idata00, native_str('>i'))[0]
+        # This will raise for invalid dates.
+        UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
+                    int(sec))
+        buff = fh.read(4)
+        '%02x' % ord(buff[0:1])
+        '%02x' % ord(buff[1:2])
+        int('%x' % (ord(buff[2:3]) >> 4))
+        ord(buff[3:4])
+        idata00 = fh.read(4)
+        from_buffer(idata00, native_str('>i'))[0]
     except Exception:
         return False
     return True
